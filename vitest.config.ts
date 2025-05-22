@@ -14,9 +14,6 @@ export default defineConfig({
     globals: true,
     environment: "jsdom",
     setupFiles: "./vitest.setup.ts",
-    env: {
-      VITE_BASE_API_URL: "https://mock.codegate.ai",
-    },
     exclude: [
       "**/node_modules/**",
       "**/dist/**",
