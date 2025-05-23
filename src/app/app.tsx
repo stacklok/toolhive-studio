@@ -1,10 +1,3 @@
-
-
 export function App() {
-
-  return (
-    <>
-      ToolHive Studio
-    </>
-  )
+  return <>Hello, world!</>;
 }
