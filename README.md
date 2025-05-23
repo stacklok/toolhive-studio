@@ -15,7 +15,6 @@ Currently, two official plugins are available:
 
 This project uses [pnpm](https://pnpm.io/) as the package manager. If you don't have pnpm installed, check the [doc](https://pnpm.io/installation).
 
-
 ### Development Commands
 
 ```bash
@@ -30,6 +29,9 @@ pnpm run build
 
 # Preview production build
 pnpm run preview
+
+# Generate API client from OpenAPI spec
+pnpm run generate-client
 
 # Run tests
 pnpm run test
