@@ -11,6 +11,52 @@ Currently, two official plugins are available:
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
 - [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
+## Getting Started
+
+This project uses [pnpm](https://pnpm.io/) as the package manager. If you don't have pnpm installed, check the [doc](https://pnpm.io/installation).
+
+
+### Development Commands
+
+```bash
+# Install dependencies
+pnpm install
+
+# Start development server (with hot reload)
+pnpm run dev
+
+# Build for production
+pnpm run build
+
+# Preview production build
+pnpm run preview
+
+# Run tests
+pnpm run test
+
+# Run tests with coverage
+pnpm run test:coverage
+
+# Run linting
+pnpm run lint
+
+# Run type checking
+pnpm run type-check
+
+# Format code with Prettier
+pnpm run format
+
+# Check Prettier formatting
+pnpm run prettier
+```
+
+### Development Workflow
+
+1. **Install dependencies**: `pnpm install`
+2. **Start development server**: `pnpm run dev`
+3. **Open your browser** to `http://localhost:5173` (or the port shown in terminal)
+4. **Make changes** to your code and see them reflected instantly with Hot Module Replacement (HMR)
+
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
