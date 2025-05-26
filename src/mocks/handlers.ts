@@ -5,7 +5,6 @@ import {
   serverListFixture,
   createServerResponseFixture,
   getServerByName,
-  openapiFixture,
 } from "./fixtures";
 
 export const handlers = [
