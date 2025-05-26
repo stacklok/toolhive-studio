@@ -85,8 +85,4 @@ export const handlers = [
 
     return new HttpResponse(null, { status: 204 });
   }),
-
-  http.get("*/api/openapi.json", () => {
-    return HttpResponse.json(openapiFixture);
-  }),
 ];
