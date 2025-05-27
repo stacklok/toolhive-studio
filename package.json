@@ -13,7 +13,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
-    "type-check": "tsc --noEmit -p ./tsconfig.app.json"
+    "type-check": "tsc --noEmit -p ./tsconfig.app.json",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@hey-api/client-fetch": "^0.10.1",
@@ -41,12 +42,15 @@
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@vitejs/plugin-react-swc": "^3.9.0",
+    "@vitest/coverage-istanbul": "^3.1.4",
     "eslint": "^9.25.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
+    "husky": "^9.1.7",
     "jsdom": "^26.1.0",
     "msw": "^2.8.4",
+    "lint-staged": "^16.0.0",
     "prettier": "3.5.3",
     "tw-animate-css": "^1.3.0",
     "typescript": "~5.8.3",
@@ -54,5 +58,11 @@
     "vite": "^6.3.5",
     "vitest": "^3.1.4",
     "vitest-fail-on-console": "^0.7.1"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --write",
+      "eslint --max-warnings 0 ."
+    ]
   }
 }

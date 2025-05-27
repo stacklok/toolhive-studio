@@ -2,7 +2,7 @@ import type {
   V1ServerListResponse,
   RuntimeContainerInfo,
   V1CreateServerResponse,
-} from "../../common/api/generated/types.gen";
+} from "@/common/api/generated/types.gen";
 
 export const mockServers: RuntimeContainerInfo[] = [
   {

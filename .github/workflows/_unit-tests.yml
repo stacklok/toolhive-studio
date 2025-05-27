@@ -1,0 +1,24 @@
+name: Unit Tests
+permissions:
+  contents: write
+on:
+  workflow_call:
+jobs:
+  tests:
+    name: Vitest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Run tests
+        run: pnpm run test:coverage
+
+      # NOTE: The StacklokLabs organisation is not onboarded into Coveralls
+      # - name: Send coverage to Coveralls
+      #   uses: coverallsapp/github-action@648a8eb78e6d50909eff900e4ec85cab4524a45b #v2.3.6
+      #   with:
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}

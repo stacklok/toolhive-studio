@@ -4,7 +4,7 @@ import { cleanup } from "@testing-library/react";
 import { afterEach, expect, beforeAll, vi, afterAll } from "vitest";
 import failOnConsole from "vitest-fail-on-console";
 import { client } from "./src/common/api/generated/client.gen";
-import { server } from "./src/mocks/node";
+import { server } from "./src/common/mocks/node";
 
 expect.extend(testingLibraryMatchers);
 

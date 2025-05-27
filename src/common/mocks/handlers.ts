@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import type { V1CreateRequest } from "../common/api/generated/types.gen";
+import type { V1CreateRequest } from "@/common/api/generated/types.gen";
 import {
   versionFixture,
   serverListFixture,
@@ -9,7 +9,7 @@ import {
 import { mswEndpoint } from "./msw-endpoint";
 
 export const handlers = [
-  http.get("/health", () => {
+  http.get(mswEndpoint("/health"), () => {
     return new HttpResponse({
       status: 204,
     });
