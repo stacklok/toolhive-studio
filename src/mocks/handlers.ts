@@ -6,6 +6,7 @@ import {
   createServerResponseFixture,
   getServerByName,
 } from "./fixtures";
+import { mswEndpoint } from "./msw-endpoint";
 
 export const handlers = [
   http.get("/health", () => {
@@ -14,15 +15,15 @@ export const handlers = [
     });
   }),
 
-  http.get("*/api/v1beta/version", () => {
+  http.get(mswEndpoint("/api/v1beta/version"), () => {
     return HttpResponse.json(versionFixture);
   }),
 
-  http.get("*/api/v1beta/servers", () => {
+  http.get(mswEndpoint("/api/v1beta/servers"), () => {
     return HttpResponse.json(serverListFixture);
   }),
 
-  http.post("*/api/v1beta/servers", async ({ request }) => {
+  http.post(mswEndpoint("/api/v1beta/servers"), async ({ request }) => {
     try {
       const { name, target_port } = (await request.json()) as V1CreateRequest;
 
@@ -41,7 +42,7 @@ export const handlers = [
     }
   }),
 
-  http.get("*/api/v1beta/servers/:name", ({ params }) => {
+  http.get(mswEndpoint("/api/v1beta/servers/:name"), ({ params }) => {
     const { name } = params;
 
     const server = getServerByName(name as string);
@@ -52,7 +53,7 @@ export const handlers = [
     return HttpResponse.json(server);
   }),
 
-  http.delete("*/api/v1beta/servers/:name", ({ params }) => {
+  http.delete(mswEndpoint("/api/v1beta/servers/:name"), ({ params }) => {
     const { name } = params;
 
     const server = getServerByName(name as string);
@@ -63,7 +64,7 @@ export const handlers = [
     return new HttpResponse(null, { status: 204 });
   }),
 
-  http.post("*/api/v1beta/servers/:name/stop", ({ params }) => {
+  http.post(mswEndpoint("/api/v1beta/servers/:name/stop"), ({ params }) => {
     const { name } = params;
 
     const server = getServerByName(name as string);
@@ -74,7 +75,7 @@ export const handlers = [
     return new HttpResponse(null, { status: 204 });
   }),
 
-  http.post("*/api/v1beta/servers/:name/restart", ({ params }) => {
+  http.post(mswEndpoint("/api/v1beta/servers/:name/restart"), ({ params }) => {
     const { name } = params;
 
     const server = getServerByName(name as string);
