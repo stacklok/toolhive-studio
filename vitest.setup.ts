@@ -1,10 +1,10 @@
-// import { server } from './src/mocks/msw/node'
 import * as testingLibraryMatchers from "@testing-library/jest-dom/matchers";
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
-import { afterEach, expect, beforeAll, vi } from "vitest";
+import { afterEach, expect, beforeAll, vi, afterAll } from "vitest";
 import failOnConsole from "vitest-fail-on-console";
 import { client } from "./src/common/api/generated/client.gen";
+import { server } from "./src/mocks/node";
 
 expect.extend(testingLibraryMatchers);
 
@@ -13,23 +13,21 @@ afterEach(() => {
 });
 
 beforeAll(() => {
-  // server.listen({
-  //   onUnhandledRequest: 'error',
-  // })
+  server.listen({
+    onUnhandledRequest: "error",
+  });
   client.setConfig({
-    baseUrl: "https://foo.bar.com", // In some cases, node-fetch will not work without a valid base URL
+    baseUrl: "https://mock.toolhive-react.com",
     fetch,
   });
 });
 afterEach(() => {
-  // server.resetHandlers();
+  server.resetHandlers();
   vi.clearAllMocks();
 });
-// afterAll(() => server.close());
+afterAll(() => server.close());
 
-const SILENCED_MESSAGES = [
-  "Not implemented: navigation (except hash changes)", // React Router specific bug, which can be safely ignored
-];
+const SILENCED_MESSAGES = ["Not implemented: navigation (except hash changes)"];
 
 failOnConsole({
   shouldFailOnDebug: false,
