@@ -15,7 +15,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Run tests
-        run: npm run test:coverage
+        run: pnpm run test:coverage
 
       # NOTE: The StacklokLabs organisation is not onboarded into Coveralls
       # - name: Send coverage to Coveralls
