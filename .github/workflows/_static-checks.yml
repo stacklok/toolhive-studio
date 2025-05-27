@@ -15,7 +15,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Run prettier
-        run: npm run prettier
+        run: pnpm run prettier
 
   lint:
     name: ESLint Check
@@ -28,7 +28,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Run linter
-        run: npm run lint
+        run: pnpm run lint
 
   tsc:
     name: TS Types Check
@@ -41,7 +41,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Run Tsc
-        run: npm run type-check
+        run: pnpm run type-check
 
   build:
     name: Build App Check
@@ -56,4 +56,4 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Build App
-        run: npm run build
+        run: pnpm run build
