@@ -5,4 +5,3 @@ export {
   mockServers,
   getServerByName,
 } from "./servers";
-export { openapiFixture } from "./openapi";
