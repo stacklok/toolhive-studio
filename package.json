@@ -47,6 +47,7 @@
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
     "jsdom": "^26.1.0",
+    "msw": "^2.8.4",
     "prettier": "3.5.3",
     "tw-animate-css": "^1.3.0",
     "typescript": "~5.8.3",
