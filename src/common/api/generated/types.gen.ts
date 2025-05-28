@@ -4,37 +4,37 @@ export type RuntimeContainerInfo = {
   /**
    * Created is the container creation timestamp
    */
-  created?: string;
+  Created?: string;
   /**
    * ID is the container ID
    */
-  id?: string;
+  ID?: string;
   /**
    * Image is the container image
    */
-  image?: string;
+  Image?: string;
   /**
    * Labels is the container labels
    */
-  labels?: {
+  Labels?: {
     [key: string]: string;
   };
   /**
    * Name is the container name
    */
-  name?: string;
+  Name?: string;
   /**
    * Ports is the container port mappings
    */
-  ports?: Array<RuntimePortMapping>;
+  Ports?: Array<RuntimePortMapping>;
   /**
    * State is the container state
    */
-  state?: string;
+  State?: string;
   /**
    * Status is the container status
    */
-  status?: string;
+  Status?: string;
 };
 
 export type RuntimePortMapping = {
