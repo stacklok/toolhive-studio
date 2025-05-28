@@ -4,7 +4,7 @@ import type {
   V1CreateServerResponse,
 } from "@/common/api/generated/types.gen";
 
-const mockServers: RuntimeContainerInfo[] = [
+export const MOCK_MCP_SERVERS = [
   {
     id: "container-1",
     name: "jupyter-notebook",
@@ -81,10 +81,10 @@ const mockServers: RuntimeContainerInfo[] = [
       "toolhive.type": "cache",
     },
   },
-];
+] as const satisfies RuntimeContainerInfo[];
 
 export const serverListFixture: V1ServerListResponse = {
-  servers: mockServers,
+  servers: MOCK_MCP_SERVERS,
 };
 
 export const createServerResponseFixture: V1CreateServerResponse = {
@@ -96,5 +96,5 @@ export const createServerResponseFixture: V1CreateServerResponse = {
 export const getServerByName = (
   name: string,
 ): RuntimeContainerInfo | undefined => {
-  return mockServers.find((server) => server.name === name);
+  return MOCK_MCP_SERVERS.find((server) => server.name === name);
 };
