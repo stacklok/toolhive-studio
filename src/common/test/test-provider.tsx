@@ -13,11 +13,7 @@ type RouteConfig = {
   pathConfig?: string;
 };
 
-const TestQueryClientProvider = ({
-  children,
-}: {
-  children: ReactNode;
-}) => {
+const TestQueryClientProvider = ({ children }: { children: ReactNode }) => {
   return (
     <QueryClientProvider
       client={

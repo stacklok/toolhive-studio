@@ -1,6 +1,17 @@
 {
   "entry": ["src/main.tsx"],
   "project": ["src/**"],
-  "ignore": ["src/common/api/generated/**", "src/common/hooks/use-servers.ts", "src/common/lib/utils.ts"],
-  "ignoreDependencies": ["tailwindcss", "tailwind-merge", "clsx", "class-variance-authority", "lucide-react", "@testing-library/user-event"]
+  "ignore": [
+    "src/common/api/generated/**",
+    "src/common/hooks/use-servers.ts",
+    "src/common/lib/utils.ts"
+  ],
+  "ignoreDependencies": [
+    "tailwindcss",
+    "tailwind-merge",
+    "clsx",
+    "class-variance-authority",
+    "lucide-react",
+    "@testing-library/user-event"
+  ]
 }
