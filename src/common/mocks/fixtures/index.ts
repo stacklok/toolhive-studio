@@ -2,6 +2,6 @@ export { versionFixture } from "./version";
 export {
   serverListFixture,
   createServerResponseFixture,
-  mockServers,
+  // mockServers,
   getServerByName,
 } from "./servers";

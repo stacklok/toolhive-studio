@@ -4,7 +4,7 @@ import type {
   V1CreateServerResponse,
 } from "@/common/api/generated/types.gen";
 
-export const mockServers: RuntimeContainerInfo[] = [
+const mockServers: RuntimeContainerInfo[] = [
   {
     id: "container-1",
     name: "jupyter-notebook",
