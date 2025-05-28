@@ -7,12 +7,14 @@ export default {
     "src/common/lib/utils.ts"
   ],
   "ignoreDependencies": [
-    "tailwindcss",
-    "tw-animate-css",
     "tailwind-merge",
     "clsx",
     "class-variance-authority",
     "lucide-react",
     "@testing-library/user-event"
-  ]
+  ],
+  compilers: {
+    // this is needed to support css entry files
+    css: (text: string) => [...text.matchAll(/(?<=@)import[^;]+/g)].join('\n'),
+  },
 }
