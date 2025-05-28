@@ -3,9 +3,9 @@ import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { routeTree } from "./app/route-tree.gen";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import "./index.css";
-import { QueryClient } from "@tanstack/react-query";
 
 // @tanstack/react-router setup
 declare module "@tanstack/react-router" {
@@ -13,9 +13,10 @@ declare module "@tanstack/react-router" {
     router: typeof router;
   }
 }
+const queryClient = new QueryClient({});
 const router = createRouter({
   routeTree,
-  context: { queryClient: new QueryClient({}) },
+  context: { queryClient },
 });
 
 // @hey-api/openapi-ts setup
@@ -29,7 +30,9 @@ if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <StrictMode>
-      <RouterProvider router={router} />
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
     </StrictMode>,
   );
 }
