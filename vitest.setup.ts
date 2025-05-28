@@ -14,7 +14,7 @@ afterEach(() => {
 
 beforeAll(() => {
   server.listen({
-    onUnhandledRequest: "warn",
+    onUnhandledRequest: "error",
   });
   client.setConfig({
     baseUrl: "https://foo.bar.com",
