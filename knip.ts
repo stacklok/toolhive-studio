@@ -15,6 +15,7 @@ export default {
   ],
   compilers: {
     // this is needed to support css entry files
+    // see: https://knip.dev/features/compilers#css
     css: (text: string) => [...text.matchAll(/(?<=@)import[^;]+/g)].join('\n'),
   },
 }
