@@ -17,7 +17,7 @@ beforeAll(() => {
     onUnhandledRequest: "error",
   });
   client.setConfig({
-    baseUrl: "https://mock.toolhive-react.com",
+    baseUrl: "https://foo.bar.com",
     fetch,
   });
 });

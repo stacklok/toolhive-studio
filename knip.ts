@@ -2,6 +2,7 @@ export default {
   entry: ["src/main.tsx", "src/index.css"],
   project: ["src/**"],
   ignore: [
+    "src/app/route-tree.gen.ts",
     "src/common/api/generated/**",
     "src/common/hooks/use-servers.ts",
     "src/common/lib/utils.ts",

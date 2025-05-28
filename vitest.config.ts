@@ -15,7 +15,7 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: "./vitest.setup.ts",
     env: {
-      VITE_BASE_API_URL: "https://foo.bar.ai",
+      VITE_BASE_API_URL: "https://foo.bar.com",
     },
     exclude: [
       "**/node_modules/**",
