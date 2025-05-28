@@ -1,4 +1,4 @@
-{
+export default {
   "entry": ["src/main.tsx", "src/index.css"],
   "project": ["src/**"],
   "ignore": [
