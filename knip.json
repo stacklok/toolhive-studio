@@ -1,5 +1,5 @@
 {
-  "entry": ["src/main.tsx"],
+  "entry": ["src/main.tsx", "src/index.css"],
   "project": ["src/**"],
   "ignore": [
     "src/common/api/generated/**",
@@ -8,6 +8,7 @@
   ],
   "ignoreDependencies": [
     "tailwindcss",
+    "tw-animate-css",
     "tailwind-merge",
     "clsx",
     "class-variance-authority",
