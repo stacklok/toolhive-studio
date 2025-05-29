@@ -7,7 +7,7 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/")({
   loader: ({ context: { queryClient } }) =>
     queryClient.ensureQueryData(
-      // @ts-expect-error - TODO: the `all=true` query param is not documented
+      // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
       getApiV1BetaServersOptions({ query: { all: true } }),
     ),
   component: Index,
@@ -15,10 +15,10 @@ export const Route = createFileRoute("/")({
 
 export function Index() {
   const serversQuery = useSuspenseQuery(
-    // @ts-expect-error - TODO: the `all=true` query param is not documented
+    // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
     getApiV1BetaServersOptions({ query: { all: true } }),
   );
-  // TODO: Why is the JSON stringified?!
+  // TODO: https://github.com/stacklok/toolhive/issues/495
   const parsed: V1ServerListResponse = JSON.parse(serversQuery.data as string);
   const servers = parsed.servers;
 

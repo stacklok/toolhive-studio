@@ -12,7 +12,7 @@ it("should render list of MCP servers", async () => {
   renderRoute(router);
   await waitFor(() => {
     for (const mcpServer of MOCK_MCP_SERVERS) {
-      expect(screen.queryByText(mcpServer.name)).toBeInTheDocument();
+      expect(screen.queryByText(mcpServer.Name)).toBeInTheDocument();
     }
   });
 });
