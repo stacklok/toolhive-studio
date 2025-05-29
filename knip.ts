@@ -6,6 +6,7 @@ export default {
     "src/common/api/generated/**",
     "src/common/hooks/use-servers.ts",
     "src/common/lib/utils.ts",
+    "src/common/components/ui",
   ],
   ignoreDependencies: [
     "tailwind-merge",

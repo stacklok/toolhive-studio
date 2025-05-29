@@ -6,77 +6,77 @@ import type {
 
 export const MOCK_MCP_SERVERS = [
   {
-    id: "container-1",
-    name: "jupyter-notebook",
-    image: "jupyter/base-notebook:latest",
-    state: "running",
-    status: "Up 2 hours",
-    created: "2024-01-15T10:30:00Z",
-    ports: [
+    ID: "container-1",
+    Name: "jupyter-notebook",
+    Image: "jupyter/base-notebook:latest",
+    State: "running",
+    Status: "Up 2 hours",
+    Created: "2024-01-15T10:30:00Z",
+    Ports: [
       {
         containerPort: 8888,
         hostPort: 8888,
         protocol: "tcp",
       },
     ],
-    labels: {
+    Labels: {
       "toolhive.server": "jupyter-notebook",
       "toolhive.type": "notebook",
     },
   },
   {
-    id: "container-2",
-    name: "vscode-server",
-    image: "codercom/code-server:latest",
-    state: "running",
-    status: "Up 1 hour",
-    created: "2024-01-15T11:30:00Z",
-    ports: [
+    ID: "container-2",
+    Name: "vscode-server",
+    Image: "codercom/code-server:latest",
+    State: "running",
+    Status: "Up 1 hour",
+    Created: "2024-01-15T11:30:00Z",
+    Ports: [
       {
         containerPort: 8080,
         hostPort: 8080,
         protocol: "tcp",
       },
     ],
-    labels: {
+    Labels: {
       "toolhive.server": "vscode-server",
       "toolhive.type": "ide",
     },
   },
   {
-    id: "container-3",
-    name: "postgres-db",
-    image: "postgres:15",
-    state: "stopped",
-    status: "Exited (0) 30 minutes ago",
-    created: "2024-01-15T09:00:00Z",
-    ports: [
+    ID: "container-3",
+    Name: "postgres-db",
+    Image: "postgres:15",
+    State: "stopped",
+    Status: "Exited (0) 30 minutes ago",
+    Created: "2024-01-15T09:00:00Z",
+    Ports: [
       {
         containerPort: 5432,
         hostPort: 5432,
         protocol: "tcp",
       },
     ],
-    labels: {
+    Labels: {
       "toolhive.server": "postgres-db",
       "toolhive.type": "database",
     },
   },
   {
-    id: "container-4",
-    name: "redis-cache",
-    image: "redis:7-alpine",
-    state: "running",
-    status: "Up 3 hours",
-    created: "2024-01-15T08:00:00Z",
-    ports: [
+    ID: "container-4",
+    Name: "redis-cache",
+    Image: "redis:7-alpine",
+    State: "running",
+    Status: "Up 3 hours",
+    Created: "2024-01-15T08:00:00Z",
+    Ports: [
       {
         containerPort: 6379,
         hostPort: 6379,
         protocol: "tcp",
       },
     ],
-    labels: {
+    Labels: {
       "toolhive.server": "redis-cache",
       "toolhive.type": "cache",
     },
@@ -96,5 +96,5 @@ export const createServerResponseFixture: V1CreateServerResponse = {
 export const getServerByName = (
   name: string,
 ): RuntimeContainerInfo | undefined => {
-  return MOCK_MCP_SERVERS.find((server) => server.name === name);
+  return MOCK_MCP_SERVERS.find((server) => server.Name === name);
 };

@@ -21,7 +21,9 @@ export const handlers = [
   }),
 
   http.get(mswEndpoint("/api/v1beta/servers"), () => {
-    return HttpResponse.json(serverListFixture);
+    // TODO: Don't stringify after
+    // https://github.com/stacklok/toolhive/issues/495 is resolved
+    return HttpResponse.json(JSON.stringify(serverListFixture));
   }),
 
   http.post(mswEndpoint("/api/v1beta/servers"), async ({ request }) => {

@@ -3,41 +3,41 @@
     "schemas": {
       "runtime.ContainerInfo": {
         "properties": {
-          "created": {
+          "Created": {
             "description": "Created is the container creation timestamp",
             "type": "string"
           },
-          "id": {
+          "ID": {
             "description": "ID is the container ID",
             "type": "string"
           },
-          "image": {
+          "Image": {
             "description": "Image is the container image",
             "type": "string"
           },
-          "labels": {
+          "Labels": {
             "additionalProperties": {
               "type": "string"
             },
             "description": "Labels is the container labels",
             "type": "object"
           },
-          "name": {
+          "Name": {
             "description": "Name is the container name",
             "type": "string"
           },
-          "ports": {
+          "Ports": {
             "description": "Ports is the container port mappings",
             "items": {
               "$ref": "#/components/schemas/runtime.PortMapping"
             },
             "type": "array"
           },
-          "state": {
+          "State": {
             "description": "State is the container state",
             "type": "string"
           },
-          "status": {
+          "Status": {
             "description": "Status is the container status",
             "type": "string"
           }
