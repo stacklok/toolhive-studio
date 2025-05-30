@@ -20,20 +20,20 @@ import type { V1CreateRequest } from "@/common/api/generated";
 import { useCallback } from "react";
 
 const transformData = (data: FormSchemaRunMcpCommand): V1CreateRequest => {
-  switch (data.command) {
-    case "docker_run": {
+  switch (data.type) {
+    case "docker_image": {
       return {
         name: data.name,
         transport: data.transport,
         image: data.image,
+        cmd_arguments: data.cmd_arguments,
       };
     }
-    case "npx":
-    case "uvx": {
+    case "package_manager": {
       return {
         name: data.name,
         transport: data.transport,
-        image: `${data.command}://${data.command}`,
+        image: `${data.protocol}://${data.package_name}`,
         cmd_arguments: data.cmd_arguments,
       };
     }
@@ -54,7 +54,9 @@ export function DialogFormRunMcpServerWithCommand({
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore — there appears to be a bug with @hookform/resolvers/zod https://github.com/colinhacks/zod/issues/3987
     resolver: zodResolver(formSchemaRunMcpCommand),
-    defaultValues: {},
+    defaultValues: {
+      type: "docker_image",
+    },
   });
 
   const handleSubmit = useCallback(
@@ -77,10 +79,10 @@ export function DialogFormRunMcpServerWithCommand({
             className="space-y-4"
           >
             <DialogHeader>
-              <DialogTitle>Run server with command</DialogTitle>
+              <DialogTitle>Custom MCP server</DialogTitle>
               <DialogDescription>
-                ToolHive allows you to run an MCP server using an arbitrary
-                command. We will containerize it, and run it securely for you.
+                ToolHive allows you to securely run a custom MCP server from a
+                Docker image or a package manager command.
               </DialogDescription>
             </DialogHeader>
             <FormFieldsRunMcpCommand form={form} />

@@ -33,10 +33,10 @@ it("should contain the menu to run an MCP server", async () => {
     expect(screen.getByRole("menu")).toBeVisible();
   });
   expect(
-    screen.getByRole("menuitem", { name: "Run server from the registry" }),
+    screen.getByRole("menuitem", { name: "From the registry" }),
   ).toBeVisible();
   expect(
-    screen.getByRole("menuitem", { name: "Run server with command" }),
+    screen.getByRole("menuitem", { name: "Custom MCP server" }),
   ).toBeVisible();
 });
 
@@ -52,9 +52,9 @@ it("should be able to launch a dialog to run an MCP server with a command", asyn
   });
   await userEvent.click(screen.getByRole("button", { name: "Run MCP server" }));
   await userEvent.click(
-    screen.getByRole("menuitem", { name: "Run server with command" }),
+    screen.getByRole("menuitem", { name: "Custom MCP server" }),
   );
   expect(
-    screen.getByRole("dialog", { name: "Run server with command" }),
+    screen.getByRole("dialog", { name: "Custom MCP server" }),
   ).toBeVisible();
 });

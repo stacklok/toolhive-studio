@@ -28,16 +28,16 @@ export function DropdownMenuRunMcpServer({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="bottom" align="end">
-        <DropdownMenuItem aria-label="Run server from the registry">
-          Run server from the registry
+        <DropdownMenuItem aria-label="From the registry">
+          From the registry
           <DropdownMenuShortcut>⌘N</DropdownMenuShortcut>
         </DropdownMenuItem>
 
         <DropdownMenuItem
           onSelect={() => openRunCommandDialog()}
-          aria-label="Run server with command"
+          aria-label="Custom MCP server"
         >
-          Run server with command
+          Custom MCP server
           <DropdownMenuShortcut>⌘⇧N</DropdownMenuShortcut>
         </DropdownMenuItem>
       </DropdownMenuContent>

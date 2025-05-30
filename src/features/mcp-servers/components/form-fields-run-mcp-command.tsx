@@ -1,6 +1,5 @@
 import {
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -18,16 +17,35 @@ import {
   SelectValue,
 } from "@/common/components/ui/select";
 import { TooltipInfoIcon } from "@/common/components/ui/tooltip-info-icon";
+import { Tabs, TabsList, TabsTrigger } from "@/common/components/ui/tabs";
 
 export function FormFieldsRunMcpCommand({
   form,
 }: {
   form: UseFormReturn<FormSchemaRunMcpCommand>;
 }) {
-  const commandValue = form.watch("command");
+  const typeValue = form.watch("type");
+  const protocolValue = form.watch("protocol") ?? "npx";
 
   return (
     <>
+      <FormField
+        control={form.control}
+        name="type"
+        render={({ field }) => (
+          <Tabs
+            defaultValue={field.value}
+            onValueChange={field.onChange}
+            className="w-full"
+          >
+            <TabsList id={field.name} className="grid w-full grid-cols-2">
+              <TabsTrigger value="docker_image">Docker image</TabsTrigger>
+              <TabsTrigger value="package_manager">Package manager</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        )}
+      />
+
       <FormField
         control={form.control}
         name="name"
@@ -55,6 +73,7 @@ export function FormFieldsRunMcpCommand({
           </FormItem>
         )}
       />
+
       <FormField
         control={form.control}
         name="transport"
@@ -86,39 +105,8 @@ export function FormFieldsRunMcpCommand({
           </FormItem>
         )}
       />
-      <FormField
-        control={form.control}
-        name="command"
-        render={({ field }) => (
-          <FormItem>
-            <div className="flex items-center gap-1">
-              <FormLabel htmlFor={field.name}>Command</FormLabel>
-              <TooltipInfoIcon>
-                The command to run the MCP server.
-              </TooltipInfoIcon>
-            </div>
-            <FormControl>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-                name={field.name}
-              >
-                <SelectTrigger id={field.name} className="w-full">
-                  <SelectValue placeholder="e.g. docker run, npx, uvx" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="docker_run">docker run</SelectItem>
-                  <SelectItem value="npx">npx</SelectItem>
-                  <SelectItem value="uvx">uvx</SelectItem>
-                </SelectContent>
-              </Select>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
 
-      {commandValue === "docker_run" ? (
+      {typeValue === "docker_image" ? (
         <FormField
           control={form.control}
           name="image"
@@ -144,29 +132,98 @@ export function FormFieldsRunMcpCommand({
         />
       ) : null}
 
-      {commandValue === "npx" || commandValue === "uvx" ? (
+      {typeValue === "package_manager" ? (
         <FormField
           control={form.control}
-          name="cmd_arguments"
+          name="protocol"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Command arguments</FormLabel>
+              <div className="flex items-center gap-1">
+                <FormLabel htmlFor={field.name}>Protocol</FormLabel>
+                <TooltipInfoIcon>
+                  ToolHive supports running MCP servers directly from supported
+                  package managers.
+                </TooltipInfoIcon>
+              </div>
               <FormControl>
-                <Input
-                  placeholder="e.g. -y my-awesome-mcp-server"
+                <Select
+                  onValueChange={field.onChange}
                   defaultValue={field.value}
-                  onChange={(e) => field.onChange(e.target.value)}
                   name={field.name}
-                />
+                >
+                  <SelectTrigger id={field.name} className="w-full">
+                    <SelectValue placeholder="e.g. npx, uvx, go" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="npx">npx</SelectItem>
+                    <SelectItem value="uvx">uvx</SelectItem>
+                    <SelectItem value="go">go</SelectItem>
+                  </SelectContent>
+                </Select>
               </FormControl>
-              <FormDescription>
-                Space separated arguments for the command.
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
       ) : null}
+
+      {typeValue === "package_manager" ? (
+        <FormField
+          control={form.control}
+          name="package_name"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex items-center gap-1">
+                <FormLabel htmlFor={field.name}>Package name</FormLabel>
+                <TooltipInfoIcon>
+                  The name of the package to run the MCP server from.
+                </TooltipInfoIcon>
+              </div>
+              <FormControl>
+                <div className="flex items-center">
+                  <div className="flex items-center bg-muted px-2 text-sm text-muted-foreground h-9 border border-r-0 rounded-l-md border-input shadow-xs">
+                    {`${protocolValue}://`}
+                  </div>
+                  <Input
+                    className="rounded-l-none"
+                    placeholder="e.g. my-awesome-server"
+                    defaultValue={field.value}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    name={field.name}
+                    id={field.name}
+                  />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      ) : null}
+
+      <FormField
+        control={form.control}
+        name="cmd_arguments"
+        render={({ field }) => (
+          <FormItem>
+            <div className="flex items-center gap-1">
+              <FormLabel>Command arguments</FormLabel>
+              <TooltipInfoIcon>
+                Space separated arguments for the command.
+              </TooltipInfoIcon>
+            </div>
+            <FormLabel></FormLabel>
+            <FormControl>
+              <Input
+                placeholder="e.g. -y --oauth-setup"
+                defaultValue={field.value}
+                onChange={(e) => field.onChange(e.target.value)}
+                name={field.name}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </>
   );
 }

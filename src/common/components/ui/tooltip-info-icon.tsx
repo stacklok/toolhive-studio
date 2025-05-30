@@ -9,7 +9,7 @@ export function TooltipInfoIcon({ children }: { children: ReactNode }) {
       <TooltipTrigger asChild autoFocus={false}>
         <InfoIcon className="size-4 text-muted-foreground rounded-full" />
       </TooltipTrigger>
-      <TooltipContent className="max-w-120">{children}</TooltipContent>
+      <TooltipContent>{children}</TooltipContent>
     </Tooltip>
   );
 }

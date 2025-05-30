@@ -2,28 +2,26 @@ import z from "zod";
 
 // TODO: Add secrets into the form schema
 const commonFields = z.object({
-  name: z.string().min(1),
+  name: z.string().nonempty(),
   transport: z.union([z.literal("sse"), z.literal("stdio")]),
+  cmd_arguments: z
+    .string()
+    .optional()
+    .transform((val) => val?.split(" ")),
 });
 
-export const formSchemaRunMcpCommand = z.discriminatedUnion("command", [
+export const formSchemaRunMcpCommand = z.discriminatedUnion("type", [
   z
     .object({
-      command: z.literal("docker_run"),
-
-      image: z.string(),
+      type: z.literal("docker_image"),
+      image: z.string().nonempty(),
     })
     .merge(commonFields),
   z
     .object({
-      command: z.literal("npx"),
-      cmd_arguments: z.string().transform((val) => val.split(" ")),
-    })
-    .merge(commonFields),
-  z
-    .object({
-      command: z.literal("uvx"),
-      cmd_arguments: z.string().transform((val) => val.split(" ")),
+      type: z.literal("package_manager"),
+      protocol: z.union([z.literal("npx"), z.literal("uvx"), z.literal("go")]),
+      package_name: z.string().min(1),
     })
     .merge(commonFields),
   // .and(commonFields),
