@@ -63,8 +63,10 @@ export function DialogFormRunMcpServerWithCommand({
       <DialogContent>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit((data) => {
-              onSubmit(transformData(data));
+            // NOTE: There is a type inference bug that seems to happen only in
+            // CI, hence the need for a type assertion here.
+            onSubmit={form.handleSubmit((data: FormSchemaRunMcpCommand) => {
+              onSubmit(transformData(data as FormSchemaRunMcpCommand));
               onOpenChange(false);
             })}
             className="space-y-4"
