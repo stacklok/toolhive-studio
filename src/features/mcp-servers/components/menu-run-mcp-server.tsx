@@ -8,10 +8,6 @@ import {
 } from "@/common/components/ui/dropdown-menu";
 import { PlusIcon } from "lucide-react";
 
-// NOTE: To activate the Dialog component from within a Context Menu or Dropdown Menu,
-// you must encase the Context Menu or Dropdown Menu component in the Dialog
-// component.
-// https://ui.shadcn.com/docs/components/dialog#:~:text=Share-,Notes,-To%20activate%20the
 export function DropdownMenuRunMcpServer({
   className,
   openRunCommandDialog,

@@ -79,7 +79,7 @@ it("fails when name is empty", () => {
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
-        name: ["Too small: expected string to have >1 characters"],
+        name: ["Name is required"],
       }),
     }),
   );
@@ -98,7 +98,7 @@ it("fails when transport is empty", () => {
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
-        transport: ["Invalid input"],
+        transport: ["Please select either SSE or stdio."],
       }),
     }),
   );
@@ -117,7 +117,7 @@ it("fails when transport is invalid", () => {
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
-        transport: ["Invalid input"],
+        transport: ["Please select either SSE or stdio."],
       }),
     }),
   );
@@ -174,7 +174,7 @@ it("docker > fails when image is empty", () => {
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
-        image: ["Too small: expected string to have >1 characters"],
+        image: ["Docker image is required"],
       }),
     }),
   );
@@ -194,7 +194,7 @@ it("package_manager > fails when protocol is empty", () => {
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
-        protocol: ["Invalid input"],
+        protocol: ["Please select either npx, uvx, or go."],
       }),
     }),
   );
@@ -214,7 +214,7 @@ it("package_manager > fails when protocol is invalid", () => {
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
-        protocol: ["Invalid input"],
+        protocol: ["Please select either npx, uvx, or go."],
       }),
     }),
   );
@@ -234,7 +234,7 @@ it("package_manager > fails when package_name is empty", () => {
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
-        package_name: ["Too small: expected string to have >1 characters"],
+        package_name: ["Package name is required"],
       }),
     }),
   );
