@@ -48,7 +48,7 @@ export function DialogFormRunMcpServerWithCommand({
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const form = useForm<FormSchemaRunMcpCommand>({
+  const form = useForm({
     // Type instantiation is excessively deep and possibly infinite
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore — there appears to be a bug with @hookform/resolvers/zod https://github.com/colinhacks/zod/issues/3987
@@ -63,9 +63,7 @@ export function DialogFormRunMcpServerWithCommand({
       <DialogContent>
         <Form {...form}>
           <form
-            // NOTE: There is a type inference bug that seems to happen only in
-            // CI, hence the need for a type assertion here.
-            onSubmit={form.handleSubmit((data: FormSchemaRunMcpCommand) => {
+            onSubmit={form.handleSubmit((data) => {
               onSubmit(transformData(data as FormSchemaRunMcpCommand));
               onOpenChange(false);
             })}
