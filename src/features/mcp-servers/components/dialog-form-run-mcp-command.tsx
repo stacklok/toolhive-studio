@@ -17,7 +17,6 @@ import {
 } from "@/common/components/ui/dialog";
 import { Button } from "@/common/components/ui/button";
 import type { V1CreateRequest } from "@/common/api/generated";
-import { useCallback } from "react";
 
 const transformData = (data: FormSchemaRunMcpCommand): V1CreateRequest => {
   switch (data.type) {
@@ -59,23 +58,15 @@ export function DialogFormRunMcpServerWithCommand({
     },
   });
 
-  const handleSubmit = useCallback(
-    (data: FormSchemaRunMcpCommand) => {
-      onSubmit(transformData(data));
-      onOpenChange(false);
-    },
-    [onOpenChange, onSubmit],
-  );
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            onError={(e) => {
-              console.log(e);
-            }}
+            onSubmit={form.handleSubmit((data) => {
+              onSubmit(transformData(data));
+              onOpenChange(false);
+            })}
             className="space-y-4"
           >
             <DialogHeader>
