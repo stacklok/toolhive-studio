@@ -1,5 +1,4 @@
 import { Form } from "@/common/components/ui/form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   formSchemaRunMcpCommand,
   type FormSchemaRunMcpCommand,
@@ -17,6 +16,7 @@ import {
 } from "@/common/components/ui/dialog";
 import { Button } from "@/common/components/ui/button";
 import type { V1CreateRequest } from "@/common/api/generated";
+import { zodV4Resolver } from "@/common/lib/zod-v4-resolver";
 
 const transformData = (data: FormSchemaRunMcpCommand): V1CreateRequest => {
   switch (data.type) {
@@ -25,7 +25,7 @@ const transformData = (data: FormSchemaRunMcpCommand): V1CreateRequest => {
         name: data.name,
         transport: data.transport,
         image: data.image,
-        cmd_arguments: data.cmd_arguments,
+        cmd_arguments: data.cmd_arguments?.split(" "),
       };
     }
     case "package_manager": {
@@ -33,7 +33,7 @@ const transformData = (data: FormSchemaRunMcpCommand): V1CreateRequest => {
         name: data.name,
         transport: data.transport,
         image: `${data.protocol}://${data.package_name}`,
-        cmd_arguments: data.cmd_arguments,
+        cmd_arguments: data.cmd_arguments?.split(" "),
       };
     }
   }
@@ -48,11 +48,8 @@ export function DialogFormRunMcpServerWithCommand({
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const form = useForm({
-    // Type instantiation is excessively deep and possibly infinite
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore — there appears to be a bug with @hookform/resolvers/zod https://github.com/colinhacks/zod/issues/3987
-    resolver: zodResolver(formSchemaRunMcpCommand),
+  const form = useForm<FormSchemaRunMcpCommand>({
+    resolver: zodV4Resolver(formSchemaRunMcpCommand),
     defaultValues: {
       type: "docker_image",
     },
