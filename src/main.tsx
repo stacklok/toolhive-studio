@@ -4,6 +4,8 @@ import ReactDOM from "react-dom/client";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { routeTree } from "./app/route-tree.gen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { TooltipProvider } from "@radix-ui/react-tooltip";
+import { Toaster } from "./common/components/ui/sonner";
 
 import "./index.css";
 
@@ -31,7 +33,10 @@ if (!rootElement.innerHTML) {
   root.render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
+        <TooltipProvider delayDuration={0}>
+          <Toaster />
+          <RouterProvider router={router} />
+        </TooltipProvider>
       </QueryClientProvider>
     </StrictMode>,
   );

@@ -8,11 +8,7 @@ export default {
     "src/common/lib/utils.ts",
     "src/common/components/ui/**",
   ],
-  ignoreDependencies: [
-    "lucide-react",
-    "@testing-library/user-event",
-    "@radix-ui/react-slot",
-  ],
+  ignoreDependencies: ["@testing-library/user-event"],
   compilers: {
     // this is needed to support css entry files
     // see: https://knip.dev/features/compilers#css
