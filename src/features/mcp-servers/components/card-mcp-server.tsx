@@ -1,7 +1,7 @@
 import {
   Card,
-  CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/common/components/ui/card";
@@ -26,14 +26,14 @@ export function CardMcpServer({
         <CardTitle className="flex items-center gap-2">{name}</CardTitle>
         <CardDescription>{image}</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardFooter className="mt-auto">
         <div className="flex gap-2 items-center">
           <TooltipStatusMcpServer state={state} status={status} />
           <span className="capitalize text-sm text-muted-foreground">
             {state}
           </span>
         </div>
-      </CardContent>
+      </CardFooter>
     </Card>
   );
 }

@@ -1,4 +1,4 @@
-import type { HTMLProps } from "react";
+import type { ComponentProps, HTMLProps } from "react";
 
 import { twMerge } from "tailwind-merge";
 import { CommandIcon } from "lucide-react";
@@ -31,10 +31,26 @@ function TopNavLogo() {
   );
 }
 
+function TopNavLink(props: ComponentProps<typeof Link>) {
+  return (
+    <Link
+      {...props}
+      className={twMerge(
+        props.className,
+        "text-muted-foreground",
+        "data-[status='active']:text-foreground",
+        "hover:text-foreground",
+        "transition-colors",
+      )}
+    />
+  );
+}
+
 function TopNavLinks() {
   return (
-    <div className="flex items-center gap-2">
-      <Link to="/">Installed</Link>
+    <div className="flex items-center gap-4">
+      <TopNavLink to="/">Installed</TopNavLink>
+      <TopNavLink to="/registry">Registry</TopNavLink>
     </div>
   );
 }

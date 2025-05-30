@@ -6,6 +6,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/common/components/ui/dropdown-menu";
+import { Link } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
 
 export function DropdownMenuRunMcpServer({
@@ -24,9 +25,11 @@ export function DropdownMenuRunMcpServer({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="bottom" align="end">
-        <DropdownMenuItem aria-label="From the registry">
-          From the registry
-          <DropdownMenuShortcut>⌘N</DropdownMenuShortcut>
+        <DropdownMenuItem aria-label="From the registry" asChild>
+          <Link to="/registry">
+            From the registry
+            <DropdownMenuShortcut>⌘N</DropdownMenuShortcut>
+          </Link>
         </DropdownMenuItem>
 
         <DropdownMenuItem

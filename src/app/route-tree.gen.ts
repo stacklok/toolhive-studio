@@ -11,9 +11,16 @@
 // Import Routes
 
 import { Route as rootRoute } from "./routes/__root";
+import { Route as RegistryImport } from "./routes/registry";
 import { Route as IndexImport } from "./routes/index";
 
 // Create/Update Routes
+
+const RegistryRoute = RegistryImport.update({
+  id: "/registry",
+  path: "/registry",
+  getParentRoute: () => rootRoute,
+} as any);
 
 const IndexRoute = IndexImport.update({
   id: "/",
@@ -32,6 +39,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof IndexImport;
       parentRoute: typeof rootRoute;
     };
+    "/registry": {
+      id: "/registry";
+      path: "/registry";
+      fullPath: "/registry";
+      preLoaderRoute: typeof RegistryImport;
+      parentRoute: typeof rootRoute;
+    };
   }
 }
 
@@ -39,32 +53,37 @@ declare module "@tanstack/react-router" {
 
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute;
+  "/registry": typeof RegistryRoute;
 }
 
 export interface FileRoutesByTo {
   "/": typeof IndexRoute;
+  "/registry": typeof RegistryRoute;
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute;
   "/": typeof IndexRoute;
+  "/registry": typeof RegistryRoute;
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: "/";
+  fullPaths: "/" | "/registry";
   fileRoutesByTo: FileRoutesByTo;
-  to: "/";
-  id: "__root__" | "/";
+  to: "/" | "/registry";
+  id: "__root__" | "/" | "/registry";
   fileRoutesById: FileRoutesById;
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
+  RegistryRoute: typeof RegistryRoute;
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  RegistryRoute: RegistryRoute,
 };
 
 export const routeTree = rootRoute
@@ -77,11 +96,15 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/"
+        "/",
+        "/registry"
       ]
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/registry": {
+      "filePath": "registry.tsx"
     }
   }
 }
