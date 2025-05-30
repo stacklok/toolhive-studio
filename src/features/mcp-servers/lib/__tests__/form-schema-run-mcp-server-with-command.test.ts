@@ -17,7 +17,7 @@ it("passes with valid docker image", () => {
     transport: "stdio",
     type: "docker_image",
     image: "ghcr.io/github/github-mcp-server",
-    cmd_arguments: ["-y", "--oauth-setup"],
+    cmd_arguments: "-y --oauth-setup",
   });
 });
 
@@ -39,7 +39,7 @@ it("passes with valid npx command", () => {
     type: "package_manager",
     protocol: "npx",
     package_name: "server-everything",
-    cmd_arguments: ["-y", "--oauth-setup"],
+    cmd_arguments: "-y --oauth-setup",
   });
 });
 
@@ -62,7 +62,7 @@ it("passes with valid uvx command", () => {
     type: "package_manager",
     protocol: "uvx",
     package_name: "mcp-server-fetch",
-    cmd_arguments: ["-y", "--oauth-setup"],
+    cmd_arguments: "-y --oauth-setup",
   });
 });
 
@@ -79,7 +79,7 @@ it("fails when name is empty", () => {
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
-        name: ["String must contain at least 1 character(s)"],
+        name: ["Too small: expected string to have >1 characters"],
       }),
     }),
   );
@@ -136,9 +136,7 @@ it("fails when type is empty", () => {
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
-        type: [
-          "Invalid discriminator value. Expected 'docker_image' | 'package_manager'",
-        ],
+        type: ["Invalid input"],
       }),
     }),
   );
@@ -157,9 +155,7 @@ it("fails when type is invalid", () => {
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
-        type: [
-          "Invalid discriminator value. Expected 'docker_image' | 'package_manager'",
-        ],
+        type: ["Invalid input"],
       }),
     }),
   );
@@ -178,7 +174,7 @@ it("docker > fails when image is empty", () => {
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
-        image: ["String must contain at least 1 character(s)"],
+        image: ["Too small: expected string to have >1 characters"],
       }),
     }),
   );
@@ -238,7 +234,7 @@ it("package_manager > fails when package_name is empty", () => {
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
-        package_name: ["String must contain at least 1 character(s)"],
+        package_name: ["Too small: expected string to have >1 characters"],
       }),
     }),
   );
