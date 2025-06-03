@@ -22,22 +22,21 @@ const router = createRouter({
 });
 
 // @hey-api/openapi-ts setup
-const baseUrl = import.meta.env.VITE_BASE_API_URL || "";
+const baseUrl = import.meta.env.VITE_BASE_API_URL || "http://localhost:8080";
 client.setConfig({
   baseUrl,
 });
 
 const rootElement = document.getElementById("root")!;
-if (!rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement);
-  root.render(
-    <StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider delayDuration={0}>
-          <Toaster />
-          <RouterProvider router={router} />
-        </TooltipProvider>
-      </QueryClientProvider>
-    </StrictMode>,
-  );
-}
+console.log("rendering app", "baseUrl:", baseUrl, rootElement);
+const root = ReactDOM.createRoot(rootElement);
+root.render(
+  <StrictMode>
+     <QueryClientProvider client={queryClient}>
+      <TooltipProvider delayDuration={0}>
+        <Toaster />
+        <RouterProvider router={router} />
+      </TooltipProvider>
+    </QueryClientProvider>
+  </StrictMode>,
+);

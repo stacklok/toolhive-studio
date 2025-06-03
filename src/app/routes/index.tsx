@@ -26,6 +26,7 @@ export function Index() {
     getApiV1BetaServersOptions({ query: { all: true } }),
   );
   // TODO: https://github.com/stacklok/toolhive/issues/495
+  console.log(serversQuery.data);
   const parsed: V1ServerListResponse = JSON.parse(serversQuery.data as string);
   const servers = parsed.servers;
 
