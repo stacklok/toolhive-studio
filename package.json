@@ -9,7 +9,9 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "prepare": "husky install"
+    "type-check": "tsc --noEmit -p ./tsconfig.app.json",
+    "prepare": "husky install",
+    "knip": "knip"
   },
   "keywords": [],
   "author": {
