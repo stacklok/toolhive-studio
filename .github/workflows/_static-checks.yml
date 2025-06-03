@@ -69,4 +69,4 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Build App
-        run: pnpm run build
+        run: pnpm run make
