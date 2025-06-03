@@ -11,6 +11,8 @@
     "publish": "electron-forge publish",
     "type-check": "tsc --noEmit -p ./tsconfig.app.json",
     "prepare": "husky install",
+    "test": "vitest",
+    "test:coverage": "vitest run --coverage",
     "knip": "knip"
   },
   "keywords": [],
