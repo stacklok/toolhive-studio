@@ -5,6 +5,8 @@ export default {
     "src/main.ts",
     "src/preload.ts",
     "forge.config.ts",
+    "utils/fetch-thv.ts",
+    "vite.renderer.config.ts",
   ],
   project: ["src/**"],
   ignore: [
@@ -14,7 +16,6 @@ export default {
     "src/common/lib/utils.ts",
     "src/common/components/ui/**",
   ],
-  ignoreDependencies: ["@testing-library/user-event"],
   compilers: {
     // this is needed to support css entry files
     // see: https://knip.dev/features/compilers#css
