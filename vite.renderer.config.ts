@@ -17,7 +17,7 @@ export default defineConfig(async () => {
         routeFileIgnorePattern: "__tests__",
       }),
       react(),
-      tailwindcss(),   // now loaded via dynamic import → no require() conflict
+      tailwindcss(), // now loaded via dynamic import → no require() conflict
     ],
     resolve: {
       alias: {

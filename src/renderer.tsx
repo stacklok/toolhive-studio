@@ -32,7 +32,7 @@ console.log("rendering app", "baseUrl:", baseUrl, rootElement);
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <StrictMode>
-     <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
       <TooltipProvider delayDuration={0}>
         <Toaster />
         <RouterProvider router={router} />

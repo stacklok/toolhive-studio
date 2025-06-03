@@ -1,23 +1,22 @@
-
-import { mkdir, access, writeFile, chmod } from 'node:fs/promises';
-import { createReadStream } from 'node:fs'; // Only for unzipping
-import path from 'node:path';
-import tar from 'tar';
-import unzipper from 'unzipper';
+import { mkdir, access, writeFile, chmod } from "node:fs/promises";
+import { createReadStream } from "node:fs"; // Only for unzipping
+import path from "node:path";
+import tar from "tar";
+import unzipper from "unzipper";
 
 // If using Node < 18, uncomment the next line and run: npm i node-fetch@^3
 // import fetch from 'node-fetch';
 
-const VERSION = process.env.THV_VERSION ?? 'v0.0.39';
+const VERSION = process.env.THV_VERSION ?? "v0.0.39";
 
 const mapOS: Record<NodeJS.Platform, string> = {
-  win32: 'windows',
-  darwin: 'darwin',
-  linux: 'linux',
+  win32: "windows",
+  darwin: "darwin",
+  linux: "linux",
 };
 const mapArch: Record<string, string> = {
-  x64: 'amd64',
-  arm64: 'arm64',
+  x64: "amd64",
+  arm64: "arm64",
 };
 
 export async function ensureThv(
@@ -28,17 +27,17 @@ export async function ensureThv(
   const cpu = mapArch[arch];
   if (!os || !cpu) throw new Error(`Unsupported combo ${platform}/${arch}`);
 
-  const ext = os === 'windows' ? 'zip' : 'tar.gz';
+  const ext = os === "windows" ? "zip" : "tar.gz";
 
   // GitHub tag always starts with "v", filename never has it.
-  const tag = VERSION.startsWith('v') ? VERSION : `v${VERSION}`;
-  const versionNum = VERSION.startsWith('v') ? VERSION.slice(1) : VERSION;
+  const tag = VERSION.startsWith("v") ? VERSION : `v${VERSION}`;
+  const versionNum = VERSION.startsWith("v") ? VERSION.slice(1) : VERSION;
 
   const assetName = `toolhive_${versionNum}_${os}_${cpu}.${ext}`;
   const url = `https://github.com/stacklok/toolhive/releases/download/${tag}/${assetName}`;
 
-  const binDir = path.resolve(__dirname, '..', 'bin', `${platform}-${arch}`);
-  const binPath = path.join(binDir, os === 'windows' ? 'thv.exe' : 'thv');
+  const binDir = path.resolve(__dirname, "..", "bin", `${platform}-${arch}`);
+  const binPath = path.join(binDir, os === "windows" ? "thv.exe" : "thv");
 
   try {
     await access(binPath);
@@ -60,7 +59,7 @@ export async function ensureThv(
   await writeFile(archivePath, buf);
 
   // ---------- extract ----------
-  if (ext === 'zip') {
+  if (ext === "zip") {
     await createReadStream(archivePath)
       .pipe(unzipper.Extract({ path: binDir }))
       .promise();
@@ -71,4 +70,3 @@ export async function ensureThv(
   await chmod(binPath, 0o755);
   return binPath;
 }
-
