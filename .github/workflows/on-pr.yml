@@ -12,6 +12,11 @@ jobs:
     uses: ./.github/workflows/_static-checks.yml
     secrets: inherit
 
+  build-matrix:
+    name: Build Matrix
+    uses: ./.github/workflows/_build-matrix.yml
+    secrets: inherit
+
   unit-tests:
     name: Unit Tests
     uses: ./.github/workflows/_unit-tests.yml

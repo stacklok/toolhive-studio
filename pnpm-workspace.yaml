@@ -1,2 +1,7 @@
-ignoredBuiltDependencies:
+onlyBuiltDependencies:
+  - "@swc/core"
+  - "@tailwindcss/oxide"
+  - electron
+  - electron-winstaller
+  - esbuild
   - msw
