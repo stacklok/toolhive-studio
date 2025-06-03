@@ -22,13 +22,11 @@ This project uses [pnpm](https://pnpm.io/) as the package manager. If you don't 
 pnpm install
 
 # Start development server (with hot reload)
-pnpm run dev
+pnpm run make  # Only need to run it once, to fetch `thv` binary
+pnpm run start
 
 # Build for production
-pnpm run build
-
-# Preview production build
-pnpm run preview
+pnpm run make
 
 # Generate API client from OpenAPI spec
 pnpm run generate-client
