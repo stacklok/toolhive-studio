@@ -126,6 +126,9 @@ importers:
       '@testing-library/user-event':
         specifier: ^14.6.1
         version: 14.6.1(@testing-library/dom@10.4.0)
+      '@types/electron-squirrel-startup':
+        specifier: ^1.0.2
+        version: 1.0.2
       '@types/node':
         specifier: ^22.15.21
         version: 22.15.29
@@ -1671,6 +1674,9 @@ packages:
 
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
+
+  '@types/electron-squirrel-startup@1.0.2':
+    resolution: {integrity: sha512-AzxnvBzNh8K/0SmxMmZtpJf1/IWoGXLP+pQDuUaVkPyotI8ryvAtBSqgxR/qOSvxWHYWrxkeNsJ+Ca5xOuUxJQ==}
 
   '@types/estree@1.0.7':
     resolution: {integrity: sha512-w28IoSUCJpidD/TGviZwwMJckNESJZXFu7NBZ5YJ4mEUnNraUn9Pm8HSZm/jDF1pDWYKspWE7oVphigUPRakIQ==}
@@ -6226,6 +6232,8 @@ snapshots:
   '@types/cookie@0.6.0': {}
 
   '@types/deep-eql@4.0.2': {}
+
+  '@types/electron-squirrel-startup@1.0.2': {}
 
   '@types/estree@1.0.7': {}
 
