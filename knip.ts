@@ -1,5 +1,5 @@
 export default {
-  entry: ["src/main.tsx", "src/index.css"],
+  entry: ["src/renderer.tsx", "src/index.css", "src/main.ts", "src/preload.ts"],
   project: ["src/**"],
   ignore: [
     "src/app/route-tree.gen.ts",
