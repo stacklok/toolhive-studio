@@ -1,5 +1,11 @@
 export default {
-  entry: ["src/renderer.tsx", "src/index.css", "src/main.ts", "src/preload.ts"],
+  entry: [
+    "src/renderer.tsx",
+    "src/index.css",
+    "src/main.ts",
+    "src/preload.ts",
+    "forge.config.ts",
+  ],
   project: ["src/**"],
   ignore: [
     "src/app/route-tree.gen.ts",

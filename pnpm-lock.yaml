@@ -90,9 +90,6 @@ importers:
       '@electron-forge/maker-deb':
         specifier: ^7.8.1
         version: 7.8.1
-      '@electron-forge/maker-rpm':
-        specifier: ^7.8.1
-        version: 7.8.1
       '@electron-forge/maker-squirrel':
         specifier: ^7.8.1
         version: 7.8.1
@@ -361,10 +358,6 @@ packages:
 
   '@electron-forge/maker-deb@7.8.1':
     resolution: {integrity: sha512-tjjeesQtCP5Xht1X7gl4+K9bwoETPmQfBkOVAY/FZIxPj40uQh/hOUtLX2tYENNGNVZ1ryDYRs8TuPi+I41Vfw==}
-    engines: {node: '>= 16.4.0'}
-
-  '@electron-forge/maker-rpm@7.8.1':
-    resolution: {integrity: sha512-TF6wylft3BHkw9zdHcxmjEPBZYgTIc0jE31skFnMEQ/aExbNRiNaCZvsXy+7ptTWZxhxUKRc9KHhLFRMCmOK8g==}
     engines: {node: '>= 16.4.0'}
 
   '@electron-forge/maker-squirrel@7.8.1':
@@ -2382,12 +2375,6 @@ packages:
 
   electron-installer-debian@3.2.0:
     resolution: {integrity: sha512-58ZrlJ1HQY80VucsEIG9tQ//HrTlG6sfofA3nRGr6TmkX661uJyu4cMPPh6kXW+aHdq/7+q25KyQhDrXvRL7jw==}
-    engines: {node: '>= 10.0.0'}
-    os: [darwin, linux]
-    hasBin: true
-
-  electron-installer-redhat@3.4.0:
-    resolution: {integrity: sha512-gEISr3U32Sgtj+fjxUAlSDo3wyGGq6OBx7rF5UdpIgbnpUvMN4W5uYb0ThpnAZ42VEJh/3aODQXHbFS4f5J3Iw==}
     engines: {node: '>= 10.0.0'}
     os: [darwin, linux]
     hasBin: true
@@ -4981,16 +4968,6 @@ snapshots:
       - bluebird
       - supports-color
 
-  '@electron-forge/maker-rpm@7.8.1':
-    dependencies:
-      '@electron-forge/maker-base': 7.8.1
-      '@electron-forge/shared-types': 7.8.1
-    optionalDependencies:
-      electron-installer-redhat: 3.4.0
-    transitivePeerDependencies:
-      - bluebird
-      - supports-color
-
   '@electron-forge/maker-squirrel@7.8.1':
     dependencies:
       '@electron-forge/maker-base': 7.8.1
@@ -7108,19 +7085,6 @@ snapshots:
       electron-installer-common: 0.10.4
       fs-extra: 9.1.0
       get-folder-size: 2.0.1
-      lodash: 4.17.21
-      word-wrap: 1.2.5
-      yargs: 16.2.0
-    transitivePeerDependencies:
-      - supports-color
-    optional: true
-
-  electron-installer-redhat@3.4.0:
-    dependencies:
-      '@malept/cross-spawn-promise': 1.1.1
-      debug: 4.4.1
-      electron-installer-common: 0.10.4
-      fs-extra: 9.1.0
       lodash: 4.17.21
       word-wrap: 1.2.5
       yargs: 16.2.0
