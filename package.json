@@ -80,5 +80,11 @@
     "tailwindcss": "^4.1.7",
     "tw-animate-css": "^1.3.0",
     "zod": "3.25.42"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --write",
+      "eslint --max-warnings 0 ."
+    ]
   }
 }
