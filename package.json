@@ -8,6 +8,8 @@
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
+    "prettier": "prettier . --check",
+    "format": "prettier . --write",
     "lint": "eslint .",
     "publish": "electron-forge publish",
     "type-check": "tsc --noEmit -p ./tsconfig.json",
