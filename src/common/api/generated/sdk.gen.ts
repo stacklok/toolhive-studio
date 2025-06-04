@@ -7,28 +7,28 @@ import type {
 } from "@hey-api/client-fetch";
 import type {
   GetApiOpenapiJsonData,
-  GetApiOpenapiJsonResponse,
+  GetApiOpenapiJsonResponses,
   GetApiV1BetaServersData,
-  GetApiV1BetaServersResponse,
+  GetApiV1BetaServersResponses,
   PostApiV1BetaServersData,
-  PostApiV1BetaServersResponse,
-  PostApiV1BetaServersError,
+  PostApiV1BetaServersResponses,
+  PostApiV1BetaServersErrors,
   DeleteApiV1BetaServersByNameData,
-  DeleteApiV1BetaServersByNameResponse,
-  DeleteApiV1BetaServersByNameError,
+  DeleteApiV1BetaServersByNameResponses,
+  DeleteApiV1BetaServersByNameErrors,
   GetApiV1BetaServersByNameData,
-  GetApiV1BetaServersByNameResponse,
-  GetApiV1BetaServersByNameError,
+  GetApiV1BetaServersByNameResponses,
+  GetApiV1BetaServersByNameErrors,
   PostApiV1BetaServersByNameRestartData,
-  PostApiV1BetaServersByNameRestartResponse,
-  PostApiV1BetaServersByNameRestartError,
+  PostApiV1BetaServersByNameRestartResponses,
+  PostApiV1BetaServersByNameRestartErrors,
   PostApiV1BetaServersByNameStopData,
-  PostApiV1BetaServersByNameStopResponse,
-  PostApiV1BetaServersByNameStopError,
+  PostApiV1BetaServersByNameStopResponses,
+  PostApiV1BetaServersByNameStopErrors,
   GetApiV1BetaVersionData,
-  GetApiV1BetaVersionResponse,
+  GetApiV1BetaVersionResponses,
   GetHealthData,
-  GetHealthResponse,
+  GetHealthResponses,
 } from "./types.gen";
 import { client as _heyApiClient } from "./client.gen";
 
@@ -57,7 +57,7 @@ export const getApiOpenapiJson = <ThrowOnError extends boolean = false>(
   options?: Options<GetApiOpenapiJsonData, ThrowOnError>,
 ) => {
   return (options?.client ?? _heyApiClient).get<
-    GetApiOpenapiJsonResponse,
+    GetApiOpenapiJsonResponses,
     unknown,
     ThrowOnError
   >({
@@ -74,7 +74,7 @@ export const getApiV1BetaServers = <ThrowOnError extends boolean = false>(
   options?: Options<GetApiV1BetaServersData, ThrowOnError>,
 ) => {
   return (options?.client ?? _heyApiClient).get<
-    GetApiV1BetaServersResponse,
+    GetApiV1BetaServersResponses,
     unknown,
     ThrowOnError
   >({
@@ -91,15 +91,15 @@ export const postApiV1BetaServers = <ThrowOnError extends boolean = false>(
   options: Options<PostApiV1BetaServersData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<
-    PostApiV1BetaServersResponse,
-    PostApiV1BetaServersError,
+    PostApiV1BetaServersResponses,
+    PostApiV1BetaServersErrors,
     ThrowOnError
   >({
     url: "/api/v1beta/servers",
     ...options,
     headers: {
       "Content-Type": "application/json",
-      ...options?.headers,
+      ...options.headers,
     },
   });
 };
@@ -114,8 +114,8 @@ export const deleteApiV1BetaServersByName = <
   options: Options<DeleteApiV1BetaServersByNameData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).delete<
-    DeleteApiV1BetaServersByNameResponse,
-    DeleteApiV1BetaServersByNameError,
+    DeleteApiV1BetaServersByNameResponses,
+    DeleteApiV1BetaServersByNameErrors,
     ThrowOnError
   >({
     url: "/api/v1beta/servers/{name}",
@@ -131,8 +131,8 @@ export const getApiV1BetaServersByName = <ThrowOnError extends boolean = false>(
   options: Options<GetApiV1BetaServersByNameData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<
-    GetApiV1BetaServersByNameResponse,
-    GetApiV1BetaServersByNameError,
+    GetApiV1BetaServersByNameResponses,
+    GetApiV1BetaServersByNameErrors,
     ThrowOnError
   >({
     url: "/api/v1beta/servers/{name}",
@@ -150,8 +150,8 @@ export const postApiV1BetaServersByNameRestart = <
   options: Options<PostApiV1BetaServersByNameRestartData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<
-    PostApiV1BetaServersByNameRestartResponse,
-    PostApiV1BetaServersByNameRestartError,
+    PostApiV1BetaServersByNameRestartResponses,
+    PostApiV1BetaServersByNameRestartErrors,
     ThrowOnError
   >({
     url: "/api/v1beta/servers/{name}/restart",
@@ -169,8 +169,8 @@ export const postApiV1BetaServersByNameStop = <
   options: Options<PostApiV1BetaServersByNameStopData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<
-    PostApiV1BetaServersByNameStopResponse,
-    PostApiV1BetaServersByNameStopError,
+    PostApiV1BetaServersByNameStopResponses,
+    PostApiV1BetaServersByNameStopErrors,
     ThrowOnError
   >({
     url: "/api/v1beta/servers/{name}/stop",
@@ -186,7 +186,7 @@ export const getApiV1BetaVersion = <ThrowOnError extends boolean = false>(
   options?: Options<GetApiV1BetaVersionData, ThrowOnError>,
 ) => {
   return (options?.client ?? _heyApiClient).get<
-    GetApiV1BetaVersionResponse,
+    GetApiV1BetaVersionResponses,
     unknown,
     ThrowOnError
   >({
@@ -203,7 +203,7 @@ export const getHealth = <ThrowOnError extends boolean = false>(
   options?: Options<GetHealthData, ThrowOnError>,
 ) => {
   return (options?.client ?? _heyApiClient).get<
-    GetHealthResponse,
+    GetHealthResponses,
     unknown,
     ThrowOnError
   >({
