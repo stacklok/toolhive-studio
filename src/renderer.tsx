@@ -1,7 +1,11 @@
 import { client } from "./common/api/generated/client.gen";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
+import {
+  RouterProvider,
+  createMemoryHistory,
+  createRouter,
+} from "@tanstack/react-router";
 import { routeTree } from "./app/route-tree.gen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
@@ -15,10 +19,16 @@ declare module "@tanstack/react-router" {
     router: typeof router;
   }
 }
+
+const memoryHistory = createMemoryHistory({
+  initialEntries: ["/"],
+});
+
 const queryClient = new QueryClient({});
 const router = createRouter({
   routeTree,
   context: { queryClient },
+  history: memoryHistory,
 });
 
 // @hey-api/openapi-ts setup

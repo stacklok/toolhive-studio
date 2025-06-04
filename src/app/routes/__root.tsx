@@ -16,5 +16,9 @@ export const Route = createRootRouteWithContext<{
       </Main>
     </>
   ),
-  errorComponent: ({ error }) => <div>{error.message}</div>,
+  errorComponent: ({ error }) => <div>error: {error.message}</div>,
+  notFoundComponent: () => <div>Not found component</div>,
+  onError: (error) => {
+    console.error(error);
+  },
 });
