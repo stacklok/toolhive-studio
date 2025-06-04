@@ -2,6 +2,7 @@ import type { ForgeConfig } from "@electron-forge/shared-types";
 import { MakerSquirrel } from "@electron-forge/maker-squirrel";
 import { MakerZIP } from "@electron-forge/maker-zip";
 import { MakerDeb } from "@electron-forge/maker-deb";
+import { MakerDMG } from "@electron-forge/maker-dmg";
 // import { MakerRpm } from '@electron-forge/maker-rpm';
 import { VitePlugin } from "@electron-forge/plugin-vite";
 import { FusesPlugin } from "@electron-forge/plugin-fuses";
@@ -37,6 +38,7 @@ const config: ForgeConfig = {
       iconUrl: "./icons/icon.ico", // Application icon in Control Panel
       setupIcon: "./icons/icon.ico", // Setup.exe icon
     }),
+    new MakerDMG({}),
     new MakerZIP({}, ["darwin"]),
     // new MakerRpm({}),
     new MakerDeb({
