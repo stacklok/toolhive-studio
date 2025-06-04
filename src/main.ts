@@ -1,4 +1,5 @@
-import { app, BrowserWindow } from "electron";
+import * as sdk from "./common/api/generated/sdk.gen";
+import { app, BrowserWindow, ipcMain } from "electron";
 import path from "node:path";
 import { existsSync } from "node:fs";
 import started from "electron-squirrel-startup";
@@ -74,8 +75,15 @@ const createWindow = () => {
   mainWindow.webContents.openDevTools();
 };
 
+const addIpcHandlers = () => {
+  Object.entries(sdk).map(([k, v]) => {
+    ipcMain.handle(k, v);
+  });
+};
+
 app.on("ready", () => {
   startToolhive();
+  addIpcHandlers();
   createWindow();
 });
 
