@@ -23,13 +23,14 @@ function CardContentMcpServer({
   status,
   repoUrl,
 }: CardContentMcpServerProps) {
+  const stateText = state === "running" ? "Running" : "Stopped";
   return (
     <CardContent>
       <div className="flex items-center justify-between border-t border-border pt-4">
         <div className="flex gap-2 items-center">
           <TooltipStatusMcpServer state={state} status={status} />
           <span className="capitalize text-sm text-muted-foreground">
-            {state}
+            {stateText}
           </span>
         </div>
         {repoUrl && (
