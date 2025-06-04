@@ -9,6 +9,14 @@ import { FuseV1Options, FuseVersion } from "@electron/fuses";
 
 import { ensureThv } from "./utils/fetch-thv";
 
+function isValidPlatform(platform: string): platform is NodeJS.Platform {
+  return ["win32", "darwin", "linux"].includes(platform);
+}
+
+function isValidArchitecture(arch: string): arch is NodeJS.Architecture {
+  return ["x64", "arm64"].includes(arch);
+}
+
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
@@ -77,6 +85,13 @@ const config: ForgeConfig = {
    */
   hooks: {
     generateAssets: async (_forgeConfig, platform, arch) => {
+      if (!isValidPlatform(platform)) {
+        throw new Error(`Unsupported platform: ${platform}`);
+      }
+      if (!isValidArchitecture(arch)) {
+        throw new Error(`Unsupported architecture: ${arch}`);
+      }
+
       // Download/cached the exact binary needed for this build target
       await ensureThv(platform, arch);
     },
