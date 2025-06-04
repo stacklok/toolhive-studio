@@ -1,5 +1,8 @@
+/// <reference types="../forge.env.d.ts" />
+
 import { app, BrowserWindow } from "electron";
 import path from "node:path";
+import { existsSync } from "node:fs";
 import started from "electron-squirrel-startup";
 import { spawn } from "node:child_process";
 
@@ -8,7 +11,6 @@ const binName = process.platform === "win32" ? "thv.exe" : "thv";
 const binPath = app.isPackaged
   ? path.join(
       process.resourcesPath,
-      "..",
       "bin",
       `${process.platform}-${process.arch}`,
       binName,
@@ -23,15 +25,28 @@ const binPath = app.isPackaged
     );
 
 console.log(`ToolHive binary path: ${binPath}`);
+console.log(`Binary file exists: ${existsSync(binPath)}`);
 
 // For cleaning up the process
 let toolhiveProcess: ReturnType<typeof spawn> | undefined;
 
 function startToolhive() {
+  // Check if binary exists before trying to spawn
+  if (!existsSync(binPath)) {
+    console.error(`ToolHive binary not found at: ${binPath}`);
+    return;
+  }
+
+  console.log(`Starting ToolHive from: ${binPath}`);
   toolhiveProcess = spawn(binPath, ["serve", "--openapi"], {
     stdio: "ignore", // or 'inherit' or ['pipe', ...] for logs
     detached: true,
   });
+
+  toolhiveProcess.on("error", (error) => {
+    console.error("Failed to start ToolHive:", error);
+  });
+
   toolhiveProcess.unref();
 }
 
@@ -51,7 +66,7 @@ const createWindow = () => {
   });
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+    mainWindow.loadURL(`${MAIN_WINDOW_VITE_DEV_SERVER_URL}/`);
   } else {
     mainWindow.loadFile(
       path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`),
