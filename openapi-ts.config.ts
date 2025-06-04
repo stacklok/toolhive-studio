@@ -11,7 +11,6 @@ export default defineConfig({
   plugins: [
     ...defaultPlugins,
     "@hey-api/client-fetch",
-    "@tanstack/react-query",
     {
       name: "@hey-api/typescript",
       enums: false,
