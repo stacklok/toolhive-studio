@@ -1,5 +1,3 @@
-/// <reference types="../forge.env.d.ts" />
-
 import { app, BrowserWindow } from "electron";
 import path from "node:path";
 import { existsSync } from "node:fs";
