@@ -1,24 +1,25 @@
+name: Build Matrix
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
 jobs:
   build:
-    strategy: { matrix: { os: [macos-latest] } }
+    name: Build App on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    env:
+      NODE_OPTIONS: "--max_old_space_size=4096"
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      # Ensures every later `node` is v20 / ABI 115
-      - uses: volta-cli/action@v4
-        with: { node-version: 20 }
-
-      - run: |
-          corepack enable
-          corepack prepare pnpm@10.11.0 --activate
-          pnpm install         # no --ignore-scripts !
-
-      # Sanity-check that the native binary is present
-      - run: |
-          node -e "console.log('forge will use', process.version, process.versions.modules)"
-          ls $(dirname $(node -e "process.stdout.write(require.resolve('macos-alias'))"))/../build/Release
+      - name: Setup
+        uses: ./.github/actions/setup
 
       - name: Build App
         run: pnpm run make
