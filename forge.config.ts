@@ -12,6 +12,7 @@ import { ensureThv } from "./utils/fetch-thv";
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
+    icon: "./icons/icon",
     /**
      * Everything under bin/ is copied into
      * <app>/Contents/Resources/bin/ (macOS)
@@ -23,10 +24,19 @@ const config: ForgeConfig = {
   rebuildConfig: {},
 
   makers: [
-    new MakerSquirrel({}),
+    new MakerSquirrel({
+      // Windows Squirrel installer configuration
+      iconUrl: "./icons/icon.ico", // Application icon in Control Panel
+      setupIcon: "./icons/icon.ico", // Setup.exe icon
+    }),
     new MakerZIP({}, ["darwin"]),
     // new MakerRpm({}),
-    new MakerDeb({}),
+    new MakerDeb({
+      options: {
+        // Linux .deb package icon
+        icon: "./icons/icon.png",
+      },
+    }),
   ],
 
   plugins: [
@@ -62,7 +72,7 @@ const config: ForgeConfig = {
   ],
 
   /**
-   * Hooks are the glue that let us pull ToolHive (“thv”)
+   * Hooks are the glue that let us pull ToolHive ("thv")
    * right before dev-server start or a production build.
    */
   hooks: {
