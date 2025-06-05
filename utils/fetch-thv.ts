@@ -1,7 +1,7 @@
 import { mkdir, access, writeFile, chmod } from "node:fs/promises";
 import { createReadStream } from "node:fs"; // Only for unzipping
 import path from "node:path";
-import tar from "tar";
+import * as tar from "tar";
 import unzipper from "unzipper";
 
 // If using Node < 18, uncomment the next line and run: npm i node-fetch@^3
@@ -9,11 +9,12 @@ import unzipper from "unzipper";
 
 const VERSION = process.env.THV_VERSION ?? "v0.0.39";
 
-const mapOS: Record<NodeJS.Platform, string> = {
+const mapOS: Partial<Record<NodeJS.Platform, string>> = {
   win32: "windows",
   darwin: "darwin",
   linux: "linux",
 };
+
 const mapArch: Record<string, string> = {
   x64: "amd64",
   arm64: "arm64",
