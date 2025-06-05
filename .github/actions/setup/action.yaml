@@ -12,6 +12,13 @@ runs:
         version: "10.11.0"
         run_install: false
 
+    - name: Install build tools
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential python3 python3-pip
+      shell: bash
+
     - name: Install Node.js
       uses: actions/setup-node@v4
       with:
@@ -20,4 +27,8 @@ runs:
 
     - name: Install dependencies
       run: "pnpm install --frozen-lockfile"
+      shell: bash
+
+    - name: Rebuild native modules
+      run: "pnpm exec electron-rebuild --version 36.4.0 --force"
       shell: bash

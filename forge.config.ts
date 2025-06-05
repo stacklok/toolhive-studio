@@ -38,7 +38,7 @@ const config: ForgeConfig = {
       iconUrl: "./icons/icon.ico", // Application icon in Control Panel
       setupIcon: "./icons/icon.ico", // Setup.exe icon
     }),
-    new MakerDMG({}),
+    new MakerDMG({}, ["darwin"]),
     new MakerZIP({}, ["darwin"]),
     // new MakerRpm({}),
     new MakerDeb({
