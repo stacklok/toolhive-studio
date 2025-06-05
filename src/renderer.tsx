@@ -10,6 +10,7 @@ import { routeTree } from "./app/route-tree.gen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { Toaster } from "./common/components/ui/sonner";
+import { ThemeProvider } from "./common/components/theme/theme-provider";
 
 import "./index.css";
 
@@ -42,11 +43,13 @@ console.log("rendering app", "baseUrl:", baseUrl, rootElement);
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider delayDuration={0}>
-        <Toaster />
-        <RouterProvider router={router} />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ThemeProvider defaultTheme="system" storageKey="toolhive-ui-theme">
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider delayDuration={0}>
+          <Toaster />
+          <RouterProvider router={router} />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   </StrictMode>,
 );

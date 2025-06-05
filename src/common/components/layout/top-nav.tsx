@@ -3,6 +3,7 @@ import type { HTMLProps } from "react";
 import { twMerge } from "tailwind-merge";
 import { CommandIcon } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { ThemeToggle } from "../theme/theme-toggle";
 
 function TopNavContainer(props: HTMLProps<HTMLElement>) {
   return (
@@ -44,6 +45,9 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
     <TopNavContainer {...props}>
       <TopNavLogo />
       <TopNavLinks />
+      <div className="ml-auto">
+        <ThemeToggle />
+      </div>
     </TopNavContainer>
   );
 }
