@@ -19,8 +19,8 @@
     "prepare": "husky install",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
-    "fetch-openapi": "curl https://raw.githubusercontent.com/stacklok/toolhive/refs/heads/main/docs/server/swagger.json > src/common/api/openapi.json",
-    "generate-client": "npm run fetch-openapi && openapi-ts",
+    "update-api": "node scripts/update-api.mjs",
+    "generate-client": "pnpm run update-api && openapi-ts",
     "generate-client:nofetch": "openapi-ts",
     "knip": "knip"
   },

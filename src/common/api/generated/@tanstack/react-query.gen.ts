@@ -3,6 +3,13 @@
 import {
   type Options,
   getApiOpenapiJson,
+  getApiV1BetaDiscoveryClients,
+  getApiV1BetaRegistry,
+  postApiV1BetaRegistry,
+  deleteApiV1BetaRegistryByName,
+  getApiV1BetaRegistryByName,
+  getApiV1BetaRegistryByNameServers,
+  getApiV1BetaRegistryByNameServersByServerName,
   getApiV1BetaServers,
   postApiV1BetaServers,
   deleteApiV1BetaServersByName,
@@ -15,6 +22,16 @@ import {
 import { queryOptions, type UseMutationOptions } from "@tanstack/react-query";
 import type {
   GetApiOpenapiJsonData,
+  GetApiV1BetaDiscoveryClientsData,
+  GetApiV1BetaRegistryData,
+  PostApiV1BetaRegistryData,
+  PostApiV1BetaRegistryError,
+  DeleteApiV1BetaRegistryByNameData,
+  DeleteApiV1BetaRegistryByNameError,
+  DeleteApiV1BetaRegistryByNameResponse,
+  GetApiV1BetaRegistryByNameData,
+  GetApiV1BetaRegistryByNameServersData,
+  GetApiV1BetaRegistryByNameServersByServerNameData,
   GetApiV1BetaServersData,
   PostApiV1BetaServersData,
   PostApiV1BetaServersError,
@@ -90,6 +107,212 @@ export const getApiOpenapiJsonOptions = (
       return data;
     },
     queryKey: getApiOpenapiJsonQueryKey(options),
+  });
+};
+
+export const getApiV1BetaDiscoveryClientsQueryKey = (
+  options?: Options<GetApiV1BetaDiscoveryClientsData>,
+) => createQueryKey("getApiV1BetaDiscoveryClients", options);
+
+/**
+ * List all clients status
+ * List all clients compatible with ToolHive and their status
+ */
+export const getApiV1BetaDiscoveryClientsOptions = (
+  options?: Options<GetApiV1BetaDiscoveryClientsData>,
+) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1BetaDiscoveryClients({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getApiV1BetaDiscoveryClientsQueryKey(options),
+  });
+};
+
+export const getApiV1BetaRegistryQueryKey = (
+  options?: Options<GetApiV1BetaRegistryData>,
+) => createQueryKey("getApiV1BetaRegistry", options);
+
+/**
+ * List registries
+ * Get a list of the current registries
+ */
+export const getApiV1BetaRegistryOptions = (
+  options?: Options<GetApiV1BetaRegistryData>,
+) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1BetaRegistry({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getApiV1BetaRegistryQueryKey(options),
+  });
+};
+
+export const postApiV1BetaRegistryQueryKey = (
+  options?: Options<PostApiV1BetaRegistryData>,
+) => createQueryKey("postApiV1BetaRegistry", options);
+
+/**
+ * Add a registry
+ * Add a new registry
+ */
+export const postApiV1BetaRegistryOptions = (
+  options?: Options<PostApiV1BetaRegistryData>,
+) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await postApiV1BetaRegistry({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: postApiV1BetaRegistryQueryKey(options),
+  });
+};
+
+/**
+ * Add a registry
+ * Add a new registry
+ */
+export const postApiV1BetaRegistryMutation = (
+  options?: Partial<Options<PostApiV1BetaRegistryData>>,
+): UseMutationOptions<
+  unknown,
+  PostApiV1BetaRegistryError,
+  Options<PostApiV1BetaRegistryData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    unknown,
+    PostApiV1BetaRegistryError,
+    Options<PostApiV1BetaRegistryData>
+  > = {
+    mutationFn: async (localOptions) => {
+      const { data } = await postApiV1BetaRegistry({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Remove a registry
+ * Remove a specific registry
+ */
+export const deleteApiV1BetaRegistryByNameMutation = (
+  options?: Partial<Options<DeleteApiV1BetaRegistryByNameData>>,
+): UseMutationOptions<
+  DeleteApiV1BetaRegistryByNameResponse,
+  DeleteApiV1BetaRegistryByNameError,
+  Options<DeleteApiV1BetaRegistryByNameData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    DeleteApiV1BetaRegistryByNameResponse,
+    DeleteApiV1BetaRegistryByNameError,
+    Options<DeleteApiV1BetaRegistryByNameData>
+  > = {
+    mutationFn: async (localOptions) => {
+      const { data } = await deleteApiV1BetaRegistryByName({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const getApiV1BetaRegistryByNameQueryKey = (
+  options: Options<GetApiV1BetaRegistryByNameData>,
+) => createQueryKey("getApiV1BetaRegistryByName", options);
+
+/**
+ * Get a registry
+ * Get details of a specific registry
+ */
+export const getApiV1BetaRegistryByNameOptions = (
+  options: Options<GetApiV1BetaRegistryByNameData>,
+) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1BetaRegistryByName({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getApiV1BetaRegistryByNameQueryKey(options),
+  });
+};
+
+export const getApiV1BetaRegistryByNameServersQueryKey = (
+  options: Options<GetApiV1BetaRegistryByNameServersData>,
+) => createQueryKey("getApiV1BetaRegistryByNameServers", options);
+
+/**
+ * List servers in a registry
+ * Get a list of servers in a specific registry
+ */
+export const getApiV1BetaRegistryByNameServersOptions = (
+  options: Options<GetApiV1BetaRegistryByNameServersData>,
+) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1BetaRegistryByNameServers({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getApiV1BetaRegistryByNameServersQueryKey(options),
+  });
+};
+
+export const getApiV1BetaRegistryByNameServersByServerNameQueryKey = (
+  options: Options<GetApiV1BetaRegistryByNameServersByServerNameData>,
+) => createQueryKey("getApiV1BetaRegistryByNameServersByServerName", options);
+
+/**
+ * Get a server from a registry
+ * Get details of a specific server in a registry
+ */
+export const getApiV1BetaRegistryByNameServersByServerNameOptions = (
+  options: Options<GetApiV1BetaRegistryByNameServersByServerNameData>,
+) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1BetaRegistryByNameServersByServerName({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getApiV1BetaRegistryByNameServersByServerNameQueryKey(options),
   });
 };
 
