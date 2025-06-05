@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "description": "My Electron application description",
   "main": ".vite/build/main.js",
+  "engines": {
+    "node": ">=22.0.0 <23.0.0"
+  },
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
@@ -14,6 +17,8 @@
     "publish": "electron-forge publish",
     "type-check": "tsc --noEmit -p ./tsconfig.json",
     "prepare": "husky install",
+    "postinstall": "electron-rebuild --version 36.4.0",
+    "rebuild": "electron-rebuild -f -w",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
     "fetch-openapi": "curl https://raw.githubusercontent.com/stacklok/toolhive/refs/heads/main/docs/server/swagger.json > src/common/api/openapi.json",
@@ -37,6 +42,7 @@
     "@electron-forge/plugin-vite": "^7.8.1",
     "@electron-forge/shared-types": "^7.8.1",
     "@electron/fuses": "^1.8.0",
+    "@electron/rebuild": "^4.0.1",
     "@eslint/js": "^9.25.0",
     "@hey-api/openapi-ts": "^0.68.0",
     "@tanstack/router-plugin": "^1.120.15",
@@ -50,7 +56,7 @@
     "@types/unzipper": "^0.10.11",
     "@vitejs/plugin-react-swc": "^3.9.0",
     "@vitest/coverage-istanbul": "^3.1.4",
-    "electron": "36.3.2",
+    "electron": "36.4.0",
     "eslint": "^9.25.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
