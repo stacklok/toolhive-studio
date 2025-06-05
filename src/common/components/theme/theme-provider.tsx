@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import type { Theme } from "../../contexts/theme-context";
-import {
-  ThemeProviderContext,
-  isValidTheme,
-} from "../../contexts/theme-context";
+import { ThemeProviderContext } from "../../contexts/theme-context";
 
 type ThemeProviderProps = {
   children: React.ReactNode;
   defaultTheme?: Theme;
   storageKey?: string;
+};
+
+const isValidTheme = (value: string | null): value is Theme => {
+  const validThemes = ["dark", "light", "system"];
+  return value !== null && validThemes.includes(value);
 };
 
 export function ThemeProvider({

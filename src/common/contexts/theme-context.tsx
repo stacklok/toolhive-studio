@@ -14,8 +14,3 @@ const initialState: ThemeProviderState = {
 
 export const ThemeProviderContext =
   createContext<ThemeProviderState>(initialState);
-
-export const isValidTheme = (value: string | null): value is Theme => {
-  const validThemes = ["dark", "light", "system"];
-  return value !== null && validThemes.includes(value);
-};
