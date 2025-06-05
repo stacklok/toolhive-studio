@@ -30,7 +30,7 @@ export function Index() {
         <h1 className="font-semibold text-3xl">Installed</h1>
         <Button className="ml-auto">
           <PlusIcon />
-          Run MCP server
+          Add tool
         </Button>
       </div>
       {!servers || servers.length === 0 ? (
