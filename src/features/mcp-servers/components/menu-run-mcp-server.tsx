@@ -20,7 +20,7 @@ export function DropdownMenuRunMcpServer({
       <DropdownMenuTrigger asChild>
         <Button className={className}>
           <PlusIcon />
-          Run MCP server
+          Add a tool
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="bottom" align="end">

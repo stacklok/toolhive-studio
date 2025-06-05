@@ -15,7 +15,10 @@ export default {
     "src/common/hooks/use-servers.ts",
     "src/common/lib/utils.ts",
     "src/common/components/ui/**",
+    "src/common/hooks/use-toast-mutation.ts",
+    "src/features/mcp-servers/components/menu-run-mcp-server.tsx",
   ],
+  ignoreDependencies: ["@radix-ui/react-dropdown-menu"],
   compilers: {
     // this is needed to support css entry files
     // see: https://knip.dev/features/compilers#css

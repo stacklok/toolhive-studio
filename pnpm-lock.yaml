@@ -25,6 +25,9 @@ importers:
       "@radix-ui/react-slot":
         specifier: ^1.2.3
         version: 1.2.3(@types/react@19.1.6)(react@19.1.0)
+      "@radix-ui/react-switch":
+        specifier: ^1.2.5
+        version: 1.2.5(@types/react-dom@19.1.5(@types/react@19.1.6))(@types/react@19.1.6)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       "@radix-ui/react-tabs":
         specifier: ^1.1.12
         version: 1.1.12(@types/react-dom@19.1.5(@types/react@19.1.6))(@types/react@19.1.6)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -37,6 +40,9 @@ importers:
       "@tanstack/react-query":
         specifier: ^5.77.2
         version: 5.79.2(react@19.1.0)
+      "@tanstack/react-query-devtools":
+        specifier: ^5.80.5
+        version: 5.80.5(@tanstack/react-query@5.79.2(react@19.1.0))(react@19.1.0)
       "@tanstack/react-router":
         specifier: ^1.120.11
         version: 1.120.15(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -337,6 +343,13 @@ packages:
     resolution:
       {
         integrity: sha512-t3yaEOuGu9NlIZ+hIeGbBjFtZT7j2cb2tg0fuaJKeGotchRjjLfrBA9Kwf8quhpP1EUuxModQg04q/mBwyg8uA==,
+      }
+    engines: { node: ">=6.9.0" }
+
+  "@babel/runtime@7.27.6":
+    resolution:
+      {
+        integrity: sha512-vbavdySgbTTrmFE+EsiqUTzlOr5bzlnJtUv9PynGCAKvfQqjIXbvFdumPM/GxMDfyuGMJaJAU6TO4zc1Jf1i8Q==,
       }
     engines: { node: ">=6.9.0" }
 
@@ -1646,6 +1659,22 @@ packages:
       "@types/react":
         optional: true
 
+  "@radix-ui/react-switch@1.2.5":
+    resolution:
+      {
+        integrity: sha512-5ijLkak6ZMylXsaImpZ8u4Rlf5grRmoc0p0QeX9VJtlrM4f5m3nCTX8tWga/zOA8PZYIR/t0p2Mnvd7InrJ6yQ==,
+      }
+    peerDependencies:
+      "@types/react": "*"
+      "@types/react-dom": "*"
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+      react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      "@types/react":
+        optional: true
+      "@types/react-dom":
+        optional: true
+
   "@radix-ui/react-tabs@1.1.12":
     resolution:
       {
@@ -2237,6 +2266,21 @@ packages:
       {
         integrity: sha512-kr+KQrBuqd6495eP9S41BoftFI1H50XA9O+6FmbnTx/Te6bjiq1mj8rt9rJjW3YZSO2aaUNUres0TWesJW1j1g==,
       }
+
+  "@tanstack/query-devtools@5.80.0":
+    resolution:
+      {
+        integrity: sha512-D6gH4asyjaoXrCOt5vG5Og/YSj0D/TxwNQgtLJIgWbhbWCC/emu2E92EFoVHh4ppVWg1qT2gKHvKyQBEFZhCuA==,
+      }
+
+  "@tanstack/react-query-devtools@5.80.5":
+    resolution:
+      {
+        integrity: sha512-+amzmlESL7e02Le28mEE8W5oiK5j/N/lBWu/dO3IbrD24SlP8cnfvYMMWTxLVkqZ9DJWEB3BqML8snAovl03uw==,
+      }
+    peerDependencies:
+      "@tanstack/react-query": ^5.80.5
+      react: ^18 || ^19
 
   "@tanstack/react-query@5.79.2":
     resolution:
@@ -7703,6 +7747,8 @@ snapshots:
 
   "@babel/runtime@7.27.4": {}
 
+  "@babel/runtime@7.27.6": {}
+
   "@babel/template@7.27.2":
     dependencies:
       "@babel/code-frame": 7.27.1
@@ -8728,6 +8774,21 @@ snapshots:
     optionalDependencies:
       "@types/react": 19.1.6
 
+  "@radix-ui/react-switch@1.2.5(@types/react-dom@19.1.5(@types/react@19.1.6))(@types/react@19.1.6)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)":
+    dependencies:
+      "@radix-ui/primitive": 1.1.2
+      "@radix-ui/react-compose-refs": 1.1.2(@types/react@19.1.6)(react@19.1.0)
+      "@radix-ui/react-context": 1.1.2(@types/react@19.1.6)(react@19.1.0)
+      "@radix-ui/react-primitive": 2.1.3(@types/react-dom@19.1.5(@types/react@19.1.6))(@types/react@19.1.6)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      "@radix-ui/react-use-controllable-state": 1.2.2(@types/react@19.1.6)(react@19.1.0)
+      "@radix-ui/react-use-previous": 1.1.1(@types/react@19.1.6)(react@19.1.0)
+      "@radix-ui/react-use-size": 1.1.1(@types/react@19.1.6)(react@19.1.0)
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+    optionalDependencies:
+      "@types/react": 19.1.6
+      "@types/react-dom": 19.1.5(@types/react@19.1.6)
+
   "@radix-ui/react-tabs@1.1.12(@types/react-dom@19.1.5(@types/react@19.1.6))(@types/react@19.1.6)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)":
     dependencies:
       "@radix-ui/primitive": 1.1.2
@@ -9024,6 +9085,14 @@ snapshots:
 
   "@tanstack/query-core@5.79.2": {}
 
+  "@tanstack/query-devtools@5.80.0": {}
+
+  "@tanstack/react-query-devtools@5.80.5(@tanstack/react-query@5.79.2(react@19.1.0))(react@19.1.0)":
+    dependencies:
+      "@tanstack/query-devtools": 5.80.0
+      "@tanstack/react-query": 5.79.2(react@19.1.0)
+      react: 19.1.0
+
   "@tanstack/react-query@5.79.2(react@19.1.0)":
     dependencies:
       "@tanstack/query-core": 5.79.2
@@ -9123,7 +9192,7 @@ snapshots:
   "@testing-library/dom@10.4.0":
     dependencies:
       "@babel/code-frame": 7.27.1
-      "@babel/runtime": 7.27.4
+      "@babel/runtime": 7.27.6
       "@types/aria-query": 5.0.4
       aria-query: 5.3.0
       chalk: 4.1.2

@@ -11,6 +11,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { Toaster } from "./common/components/ui/sonner";
 import { ThemeProvider } from "./common/components/theme/theme-provider";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 import "./index.css";
 
@@ -39,7 +40,6 @@ client.setConfig({
 });
 
 const rootElement = document.getElementById("root")!;
-console.log("rendering app", "baseUrl:", baseUrl, rootElement);
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <StrictMode>
@@ -49,6 +49,7 @@ root.render(
           <Toaster />
           <RouterProvider router={router} />
         </TooltipProvider>
+        <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </ThemeProvider>
   </StrictMode>,
