@@ -7,8 +7,8 @@ import {
 
 import type { RuntimeContainerInfo } from "@/common/api/generated";
 import { ActionsMcpServer } from "./actions-mcp-server";
-import { useMutationRestartServerList } from "../hooks/useMutationRestartServer";
-import { useMutationStopServerList } from "../hooks/useMutationStopServer";
+import { useMutationRestartServerList } from "../hooks/use-mutation-restart-server";
+import { useMutationStopServerList } from "../hooks/use-mutation-stop-server";
 
 type CardContentMcpServerProps = {
   state: RuntimeContainerInfo["State"];

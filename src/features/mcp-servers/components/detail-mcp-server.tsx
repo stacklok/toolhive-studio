@@ -2,8 +2,8 @@ import { Button } from "@/common/components/ui/button";
 import { Link } from "@tanstack/react-router";
 import { ExternalLink } from "lucide-react";
 import { ActionsMcpServer } from "./actions-mcp-server";
-import { useMutationRestartServer } from "../hooks/useMutationRestartServer";
-import { useMutationStopServer } from "../hooks/useMutationStopServer";
+import { useMutationRestartServer } from "../hooks/use-mutation-restart-server";
+import { useMutationStopServer } from "../hooks/use-mutation-stop-server";
 import {
   Tabs,
   TabsContent,
