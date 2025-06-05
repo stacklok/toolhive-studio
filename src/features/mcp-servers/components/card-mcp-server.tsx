@@ -6,9 +6,9 @@ import {
 } from "@/common/components/ui/card";
 
 import type { RuntimeContainerInfo } from "@/common/api/generated";
-import { Switch } from "@/common/components/ui/switch";
-import { useMutationRestartServer } from "@/common/hooks/useMutationRestartServer";
-import { useMutationStopServer } from "@/common/hooks/useMutationStopServer";
+import { ActionsMcpServer } from "./actions-mcp-server";
+import { useMutationRestartServerList } from "../hooks/useMutationRestartServer";
+import { useMutationStopServerList } from "../hooks/useMutationStopServer";
 
 type CardContentMcpServerProps = {
   state: RuntimeContainerInfo["State"];
@@ -17,52 +17,39 @@ type CardContentMcpServerProps = {
   name: string;
 };
 
-function getStatusText(state: RuntimeContainerInfo["State"]) {
-  // We will have enum in the next API refactor
-  if (state === "running") return "Running";
-  if (state === "restarting") return "Restarting";
-  if (state === "exited") return "Stopped";
-  return "Unknown";
-}
-
 function CardContentMcpServer({ name, state }: CardContentMcpServerProps) {
-  const isRestarting = state === "restarting";
   const isRunning = state === "running";
-  const { mutateAsync: restartMutate } = useMutationRestartServer({
-    name,
-  });
-  const { mutateAsync: stopMutate } = useMutationStopServer({
-    name,
-  });
+  const { mutateAsync: restartMutate, isPending: isRestartPending } =
+    useMutationRestartServerList({
+      name,
+    });
+  const { mutateAsync: stopMutate, isPending: isStopPending } =
+    useMutationStopServerList({
+      name,
+    });
 
   return (
     <CardContent>
-      <div className="flex items-center justify-between">
-        <div className="flex gap-2 items-center">
-          <Switch
-            checked={isRunning}
-            disabled={isRestarting}
-            onCheckedChange={() => {
-              if (isRunning) {
-                stopMutate({
-                  path: {
-                    name,
-                  },
-                });
-              } else {
-                restartMutate({
-                  path: {
-                    name,
-                  },
-                });
-              }
-            }}
-          />
-          <span className="capitalize text-sm text-muted-foreground">
-            {getStatusText(state)}
-          </span>
-        </div>
-        <div className="flex gap-2 items-center"></div>
+      <div className="flex items-center justify-between border-t border-border pt-4">
+        <ActionsMcpServer
+          state={state}
+          isPending={isRestartPending || isStopPending}
+          mutate={() => {
+            if (isRunning) {
+              return stopMutate({
+                path: {
+                  name,
+                },
+              });
+            }
+
+            return restartMutate({
+              path: {
+                name,
+              },
+            });
+          }}
+        />
       </div>
     </CardContent>
   );
@@ -82,9 +69,9 @@ export function CardMcpServer({
   transport?: string;
 }) {
   return (
-    <Card>
+    <Card className="gap-3 py-5 hover:border-black dark:hover:border-white transition-colors">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">{name}</CardTitle>
+        <CardTitle className="flex items-center text-xl">{name}</CardTitle>
       </CardHeader>
       <CardContentMcpServer
         state={state}
