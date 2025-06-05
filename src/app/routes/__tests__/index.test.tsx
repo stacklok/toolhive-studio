@@ -6,8 +6,8 @@ import { createTestRouter } from "@/common/test/create-test-router";
 import { MOCK_MCP_SERVERS } from "@/common/mocks/fixtures/servers";
 import { renderHook } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useMutationRestartServer } from "@/common/hooks/useMutationRestartServer";
-import { useMutationStopServer } from "@/common/hooks/useMutationStopServer";
+import { useMutationRestartServer } from "@/features/mcp-servers/hooks/use-mutation-restart-server";
+import { useMutationStopServer } from "@/features/mcp-servers/hooks/use-mutation-stop-server";
 
 const router = createTestRouter(Index);
 
