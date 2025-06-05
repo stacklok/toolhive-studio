@@ -103,7 +103,7 @@ export function GridCardsMcpServers({
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {filteredMcpServers.map((mcpServer) => (
           <Link
-            key={mcpServer.ID}
+            key={mcpServer.Name}
             to="/server/$serverName"
             // The default value should be disappear in the next openapi version
             params={{ serverName: mcpServer.Name ?? "" }}
