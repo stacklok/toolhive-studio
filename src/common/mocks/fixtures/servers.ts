@@ -47,7 +47,7 @@ export const MOCK_MCP_SERVERS = [
     ID: "container-3",
     Name: "postgres-db",
     Image: "postgres:15",
-    State: "stopped",
+    State: "exited",
     Status: "Exited (0) 30 minutes ago",
     Created: "2024-01-15T09:00:00Z",
     Ports: [
