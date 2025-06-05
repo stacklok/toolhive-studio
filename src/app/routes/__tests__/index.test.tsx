@@ -4,8 +4,24 @@ import { Index } from "../index";
 import { renderRoute } from "@/common/test/render-route";
 import { createTestRouter } from "@/common/test/create-test-router";
 import { MOCK_MCP_SERVERS } from "@/common/mocks/fixtures/servers";
+import { renderHook } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useMutationRestartServer } from "@/common/hooks/useMutationRestartServer";
+import { useMutationStopServer } from "@/common/hooks/useMutationStopServer";
 
 const router = createTestRouter(Index);
+
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+};
 
 it("should render list of MCP servers", async () => {
   renderRoute(router);
@@ -22,8 +38,30 @@ it("should render list of MCP servers", async () => {
 it("should contain the menu to run an MCP server", async () => {
   renderRoute(router);
   await waitFor(() => {
-    expect(
-      screen.getByRole("button", { name: "Run MCP server" }),
-    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "Add tool" })).toBeVisible();
   });
+});
+
+it("should provide restart server mutation", async () => {
+  const serverName = "jupyter-notebook";
+  const { result } = renderHook(
+    () => useMutationRestartServer({ name: serverName }),
+    { wrapper: createWrapper() },
+  );
+
+  expect(result.current).toBeDefined();
+  expect(typeof result.current.mutateAsync).toBe("function");
+  expect(result.current.isPending).toBe(false);
+});
+
+it("should provide stop server mutation", async () => {
+  const serverName = "jupyter-notebook";
+  const { result } = renderHook(
+    () => useMutationStopServer({ name: serverName }),
+    { wrapper: createWrapper() },
+  );
+
+  expect(result.current).toBeDefined();
+  expect(typeof result.current.mutateAsync).toBe("function");
+  expect(result.current.isPending).toBe(false);
 });
