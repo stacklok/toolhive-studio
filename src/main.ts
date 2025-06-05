@@ -1,9 +1,10 @@
-import { app, BrowserWindow, Tray } from "electron";
+import { app, BrowserWindow, Tray, ipcMain } from "electron";
 import path from "node:path";
 import { existsSync } from "node:fs";
 import started from "electron-squirrel-startup";
 import { spawn } from "node:child_process";
 import { initTray } from "./system-tray";
+import { setAutoLaunch, getAutoLaunchStatus } from "./auto-launch";
 
 // Determine the binary path for both dev and prod
 const binName = process.platform === "win32" ? "thv.exe" : "thv";
@@ -55,10 +56,15 @@ if (started) {
   app.quit();
 }
 
+// Check if app should start hidden
+const shouldStartHidden =
+  process.argv.includes("--hidden") || process.argv.includes("--start-hidden");
+
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
+    show: !shouldStartHidden, // Don't show window if starting hidden
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       webSecurity: false, // TODO: urgently remove this
@@ -73,12 +79,18 @@ const createWindow = () => {
     );
   }
 
-  mainWindow.webContents.openDevTools();
+  if (!shouldStartHidden) {
+    mainWindow.webContents.openDevTools();
+  }
+
+  return mainWindow;
 };
+
+let mainWindow: BrowserWindow | null = null;
 
 app.on("ready", () => {
   startToolhive();
-  createWindow();
+  mainWindow = createWindow();
 });
 
 app.whenReady().then(() => {
@@ -95,7 +107,9 @@ app.on("window-all-closed", () => {
 
 app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
+    mainWindow = createWindow();
+  } else if (mainWindow) {
+    mainWindow.show();
   }
 });
 
@@ -108,5 +122,30 @@ app.on("will-quit", () => {
   }
 });
 
-// If you want, you can add error handling, port polling, etc.
-// You can also pass arguments to toolhive: spawn(binPath, ['--port', '1234'], ...)
+// IPC handlers for auto-launch management
+ipcMain.handle("get-auto-launch-status", () => {
+  return getAutoLaunchStatus();
+});
+
+ipcMain.handle("set-auto-launch", (_event, enabled: boolean) => {
+  setAutoLaunch(enabled);
+  return getAutoLaunchStatus(); // Return the new status
+});
+
+// IPC handlers for app control
+ipcMain.handle("show-app", () => {
+  if (mainWindow) {
+    mainWindow.show();
+    mainWindow.focus();
+  }
+});
+
+ipcMain.handle("hide-app", () => {
+  if (mainWindow) {
+    mainWindow.hide();
+  }
+});
+
+ipcMain.handle("quit-app", () => {
+  app.quit();
+});
