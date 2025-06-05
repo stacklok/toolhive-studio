@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "description": "My Electron application description",
   "main": ".vite/build/main.js",
+  "engines": {
+    "node": ">=22.0.0 <23.0.0"
+  },
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
@@ -30,6 +33,7 @@
   "devDependencies": {
     "@electron-forge/cli": "^7.8.1",
     "@electron-forge/maker-deb": "^7.8.1",
+    "@electron-forge/maker-dmg": "^7.8.1",
     "@electron-forge/maker-squirrel": "^7.8.1",
     "@electron-forge/maker-zip": "^7.8.1",
     "@electron-forge/plugin-fuses": "^7.8.1",
@@ -49,7 +53,7 @@
     "@types/unzipper": "^0.10.11",
     "@vitejs/plugin-react-swc": "^3.9.0",
     "@vitest/coverage-istanbul": "^3.1.4",
-    "electron": "36.3.2",
+    "electron": "36.4.0",
     "eslint": "^9.25.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
