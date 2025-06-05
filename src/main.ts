@@ -1,8 +1,9 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, Tray } from "electron";
 import path from "node:path";
 import { existsSync } from "node:fs";
 import started from "electron-squirrel-startup";
 import { spawn } from "node:child_process";
+import { initTray } from "./system-tray";
 
 // Determine the binary path for both dev and prod
 const binName = process.platform === "win32" ? "thv.exe" : "thv";
@@ -25,8 +26,9 @@ const binPath = app.isPackaged
 console.log(`ToolHive binary path: ${binPath}`);
 console.log(`Binary file exists: ${existsSync(binPath)}`);
 
-// For cleaning up the process
+// For cleaning up
 let toolhiveProcess: ReturnType<typeof spawn> | undefined;
+let tray: Tray | null = null;
 
 function startToolhive() {
   // Check if binary exists before trying to spawn
@@ -79,6 +81,12 @@ app.on("ready", () => {
   createWindow();
 });
 
+app.whenReady().then(() => {
+  tray = initTray({
+    toolHiveIsRunning: !!toolhiveProcess,
+  });
+});
+
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
@@ -94,6 +102,9 @@ app.on("activate", () => {
 app.on("will-quit", () => {
   if (toolhiveProcess && !toolhiveProcess.killed) {
     toolhiveProcess.kill();
+  }
+  if (tray) {
+    tray.destroy();
   }
 });
 
