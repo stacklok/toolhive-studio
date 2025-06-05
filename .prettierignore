@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Lock files
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Build outputs
+dist/
+build/
+out/
+.vite/
+
+# Logs
+*.log
+
+# Auto-generated files
+.DS_Store
+
+# Coverage reports
+coverage/ 
