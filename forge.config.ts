@@ -26,7 +26,7 @@ const config: ForgeConfig = {
      * <app>/Contents/Resources/bin/ (macOS)
      * <app>/resources/bin/       (Win/Linux)
      */
-    extraResource: ["bin/"],
+    extraResource: ["bin/", "icons/"],
   },
 
   rebuildConfig: {},
