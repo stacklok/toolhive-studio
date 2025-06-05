@@ -3,11 +3,10 @@ import { createReadStream } from "node:fs"; // Only for unzipping
 import path from "node:path";
 import * as tar from "tar";
 import unzipper from "unzipper";
+import { TOOLHIVE_VERSION } from "./constants";
 
 // If using Node < 18, uncomment the next line and run: npm i node-fetch@^3
 // import fetch from 'node-fetch';
-
-const VERSION = process.env.THV_VERSION ?? "v0.0.39";
 
 const mapOS: Partial<Record<NodeJS.Platform, string>> = {
   win32: "windows",
@@ -31,8 +30,12 @@ export async function ensureThv(
   const ext = os === "windows" ? "zip" : "tar.gz";
 
   // GitHub tag always starts with "v", filename never has it.
-  const tag = VERSION.startsWith("v") ? VERSION : `v${VERSION}`;
-  const versionNum = VERSION.startsWith("v") ? VERSION.slice(1) : VERSION;
+  const tag = TOOLHIVE_VERSION.startsWith("v")
+    ? TOOLHIVE_VERSION
+    : `v${TOOLHIVE_VERSION}`;
+  const versionNum = TOOLHIVE_VERSION.startsWith("v")
+    ? TOOLHIVE_VERSION.slice(1)
+    : TOOLHIVE_VERSION;
 
   const assetName = `toolhive_${versionNum}_${os}_${cpu}.${ext}`;
   const url = `https://github.com/stacklok/toolhive/releases/download/${tag}/${assetName}`;
