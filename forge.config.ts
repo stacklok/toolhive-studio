@@ -38,7 +38,7 @@ const config: ForgeConfig = {
       name: "@electron-forge/publisher-github",
       config: {
         repository: {
-          owner: "stacklok",
+          owner: "StacklokLabs",
           name: "toolhive-react",
         },
         draft: false,
