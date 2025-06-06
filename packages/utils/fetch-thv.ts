@@ -40,7 +40,13 @@ export async function ensureThv(
   const assetName = `toolhive_${versionNum}_${os}_${cpu}.${ext}`;
   const url = `https://github.com/stacklok/toolhive/releases/download/${tag}/${assetName}`;
 
-  const binDir = path.resolve(__dirname, "..", "bin", `${platform}-${arch}`);
+  const binDir = path.resolve(
+    __dirname,
+    "..",
+    "..",
+    "bin",
+    `${platform}-${arch}`,
+  );
   const binPath = path.join(binDir, os === "windows" ? "thv.exe" : "thv");
 
   try {
