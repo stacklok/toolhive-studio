@@ -14,6 +14,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
   showApp: () => ipcRenderer.invoke("show-app"),
   hideApp: () => ipcRenderer.invoke("hide-app"),
   quitApp: () => ipcRenderer.invoke("quit-app"),
+
+  // ToolHive port
+  getToolhivePort: () => ipcRenderer.invoke("get-toolhive-port"),
 });
 
 // Type definitions for the exposed API
@@ -23,6 +26,7 @@ export interface ElectronAPI {
   showApp: () => Promise<void>;
   hideApp: () => Promise<void>;
   quitApp: () => Promise<void>;
+  getToolhivePort: () => Promise<number | undefined>;
 }
 
 declare global {

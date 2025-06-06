@@ -5,6 +5,7 @@ import started from "electron-squirrel-startup";
 import { spawn } from "node:child_process";
 import { initTray } from "./system-tray";
 import { setAutoLaunch, getAutoLaunchStatus } from "./auto-launch";
+import net from "node:net";
 
 // Determine the binary path for both dev and prod
 const binName = process.platform === "win32" ? "thv.exe" : "thv";
@@ -30,24 +31,42 @@ console.log(`Binary file exists: ${existsSync(binPath)}`);
 // For cleaning up
 let toolhiveProcess: ReturnType<typeof spawn> | undefined;
 let tray: Tray | null = null;
+let toolhivePort: number | undefined;
 
-function startToolhive() {
-  // Check if binary exists before trying to spawn
+function findFreePort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.listen(0, () => {
+      const address = server.address();
+      if (typeof address === "object" && address && address.port) {
+        const port = address.port;
+        server.close(() => resolve(port));
+      } else {
+        reject(new Error("Failed to get port"));
+      }
+    });
+    server.on("error", reject);
+  });
+}
+
+async function startToolhive() {
   if (!existsSync(binPath)) {
     console.error(`ToolHive binary not found at: ${binPath}`);
     return;
   }
-
-  console.log(`Starting ToolHive from: ${binPath}`);
-  toolhiveProcess = spawn(binPath, ["serve", "--openapi"], {
-    stdio: "ignore", // or 'inherit' or ['pipe', ...] for logs
-    detached: true,
-  });
-
+  toolhivePort = await findFreePort();
+  console.log(`Starting ToolHive from: ${binPath} on port ${toolhivePort}`);
+  toolhiveProcess = spawn(
+    binPath,
+    ["serve", "--openapi", `--port=${toolhivePort}`],
+    {
+      stdio: "ignore",
+      detached: true,
+    },
+  );
   toolhiveProcess.on("error", (error) => {
     console.error("Failed to start ToolHive:", error);
   });
-
   toolhiveProcess.unref();
 }
 
@@ -62,8 +81,8 @@ const shouldStartHidden =
 
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1040,
+    height: 700,
     show: !shouldStartHidden, // Don't show window if starting hidden
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -148,4 +167,8 @@ ipcMain.handle("hide-app", () => {
 
 ipcMain.handle("quit-app", () => {
   app.quit();
+});
+
+ipcMain.handle("get-toolhive-port", () => {
+  return toolhivePort;
 });

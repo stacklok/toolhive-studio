@@ -33,11 +33,18 @@ const router = createRouter({
   history: memoryHistory,
 });
 
-// @hey-api/openapi-ts setup
-const baseUrl = import.meta.env.VITE_BASE_API_URL || "http://localhost:8080";
-client.setConfig({
-  baseUrl,
-});
+if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
+  console.error("ToolHive port API not available in renderer");
+}
+
+try {
+  const port = await window.electronAPI.getToolhivePort();
+  const baseUrl = `http://localhost:${port}`;
+  client.setConfig({ baseUrl });
+} catch (e) {
+  console.error("Failed to get ToolHive port from main process", e);
+  throw e;
+}
 
 const rootElement = document.getElementById("root")!;
 const root = ReactDOM.createRoot(rootElement);
