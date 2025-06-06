@@ -84,6 +84,7 @@ export function GridCardsRegistryServer({
       )}
 
       <FormCatalogCreation
+        key={selectedServer?.name}
         server={selectedServer}
         isOpen={isModalOpen}
         onOpenChange={setIsModalOpen}
