@@ -28,7 +28,7 @@ function RouteComponent() {
   const repo = serverData.Labels["org.opencontainers.image.source"];
 
   return (
-    <div>
+    <>
       <Link
         to="/"
         className="mb-2 flex items-center gap-1 text-muted-foreground"
@@ -36,15 +36,21 @@ function RouteComponent() {
         <ChevronLeft size="16" />
         <span className="text-sm">Back</span>
       </Link>
-      <h2 className="text-3xl font-bold">{serverData.Name}</h2>
+      <div className="flex items-center mb-6">
+        <h1 className="font-semibold text-3xl">{serverData.Name}</h1>
+      </div>
       <Separator className="my-5" />
 
-      <DetailMcpServer
-        serverName={serverData.Name}
-        description={description}
-        repo={repo}
-        state={serverData.State}
-      />
-    </div>
+      {!serverData ? (
+        <div>No MCP server found</div>
+      ) : (
+        <DetailMcpServer
+          serverName={serverData.Name}
+          description={description}
+          repo={repo}
+          state={serverData.State}
+        />
+      )}
+    </>
   );
 }
