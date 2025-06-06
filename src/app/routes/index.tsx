@@ -25,13 +25,12 @@ export function Index() {
     // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
     getApiV1BetaServersOptions({ query: { all: true } }),
   );
+  const [isRunWithCommandOpen, setIsRunWithCommandOpen] = useState(false);
+  const { mutateAsync } = useToastMutation(postApiV1BetaServersMutation());
+
   // TODO: https://github.com/stacklok/toolhive/issues/495
   const parsed: V1ServerListResponse = JSON.parse(serversQuery.data as string);
   const servers = parsed.servers;
-  console.log({ servers });
-  const [isRunWithCommandOpen, setIsRunWithCommandOpen] = useState(false);
-
-  const { mutateAsync } = useToastMutation(postApiV1BetaServersMutation());
 
   return (
     <>
