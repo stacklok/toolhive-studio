@@ -1,3 +1,6 @@
+packages:
+  - 'packages/*'
+  - 'scripts'
 onlyBuiltDependencies:
   - "@swc/core"
   - "@tailwindcss/oxide"

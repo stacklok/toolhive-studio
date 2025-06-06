@@ -7,12 +7,13 @@ export default defineConfig(async () => {
   const { TanStackRouterVite } = await import("@tanstack/router-plugin/vite");
 
   return {
+    root: __dirname,
     plugins: [
       TanStackRouterVite({
         target: "react",
         autoCodeSplitting: true,
-        routesDirectory: "./src/app/routes",
-        generatedRouteTree: "./src/app/route-tree.gen.ts",
+        routesDirectory: "./src/routes",
+        generatedRouteTree: "./src/route-tree.gen.ts",
         quoteStyle: "double",
         routeFileIgnorePattern: "__tests__",
       }),

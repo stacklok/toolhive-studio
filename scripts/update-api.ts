@@ -1,11 +1,11 @@
 #!/usr/bin/env ts-node
 import { writeFile } from "node:fs/promises";
 import * as path from "node:path";
-import { TOOLHIVE_VERSION } from "../utils/constants";
+import { TOOLHIVE_VERSION } from "../packages/utils/constants";
 
 (async () => {
   const url = `https://raw.githubusercontent.com/stacklok/toolhive/${TOOLHIVE_VERSION}/docs/server/swagger.json`;
-  const dest = path.resolve("./src/common/api/openapi.json");
+  const dest = path.resolve("./packages/rerender/src/common/api/openapi.json");
 
   console.log(`Fetching OpenAPI spec from: ${url}`);
   const res = await fetch(url);
