@@ -4,12 +4,12 @@ export type Theme = "dark" | "light" | "system";
 
 type ThemeProviderState = {
   theme: Theme;
-  setTheme: (theme: Theme) => void;
+  setTheme: (theme: Theme) => Promise<void>;
 };
 
 const initialState: ThemeProviderState = {
   theme: "system",
-  setTheme: () => null,
+  setTheme: async () => {},
 };
 
 export const ThemeProviderContext =

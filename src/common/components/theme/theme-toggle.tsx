@@ -11,6 +11,14 @@ import { Sun, Moon, Monitor } from "lucide-react";
 export function ThemeToggle() {
   const { setTheme } = useTheme();
 
+  const handleThemeChange = async (theme: "light" | "dark" | "system") => {
+    try {
+      await setTheme(theme);
+    } catch (error) {
+      console.error("Failed to change theme:", error);
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -22,21 +30,21 @@ export function ThemeToggle() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-24">
         <DropdownMenuItem
-          onClick={() => setTheme("light")}
+          onClick={() => handleThemeChange("light")}
           className="cursor-pointer"
         >
           <Sun className="size-4 mr-2" />
           Light
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => setTheme("dark")}
+          onClick={() => handleThemeChange("dark")}
           className="cursor-pointer"
         >
           <Moon className="size-4 mr-2" />
           Dark
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => setTheme("system")}
+          onClick={() => handleThemeChange("system")}
           className="cursor-pointer"
         >
           <Monitor className="size-4 mr-2" />
