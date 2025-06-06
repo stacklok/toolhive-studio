@@ -3,7 +3,8 @@ import { MakerSquirrel } from "@electron-forge/maker-squirrel";
 import { MakerZIP } from "@electron-forge/maker-zip";
 import { MakerDeb } from "@electron-forge/maker-deb";
 import { MakerDMG } from "@electron-forge/maker-dmg";
-// import { MakerRpm } from '@electron-forge/maker-rpm';
+import { MakerRpm } from "@electron-forge/maker-rpm";
+// import { MakerFlatpak } from "@electron-forge/maker-flatpak";
 import { VitePlugin } from "@electron-forge/plugin-vite";
 import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
@@ -32,6 +33,20 @@ const config: ForgeConfig = {
 
   rebuildConfig: {},
 
+  publishers: [
+    {
+      name: "@electron-forge/publisher-github",
+      config: {
+        repository: {
+          owner: "stacklok",
+          name: "toolhive-react",
+        },
+        draft: false,
+        prerelease: false,
+      },
+    },
+  ],
+
   makers: [
     new MakerSquirrel({
       // Windows Squirrel installer configuration
@@ -40,13 +55,30 @@ const config: ForgeConfig = {
     }),
     new MakerDMG({}, ["darwin"]),
     new MakerZIP({}, ["darwin"]),
-    // new MakerRpm({}),
+    new MakerZIP({}, ["linux"]),
+    new MakerRpm({
+      options: {
+        // RPM package icon
+        icon: "./icons/icon.png",
+      },
+    }),
     new MakerDeb({
       options: {
         // Linux .deb package icon
         icon: "./icons/icon.png",
       },
     }),
+    // Flatpak maker - uncomment and configure when ready to use
+    // Requirements: install elfutils package and add Flathub remote
+    // Run: flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+    // new MakerFlatpak({
+    //   options: {
+    //     categories: ["Development", "Utility"],
+    //     files: [
+    //       // Add required files configuration here
+    //     ],
+    //   },
+    // }),
   ],
 
   plugins: [
