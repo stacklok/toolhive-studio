@@ -37,27 +37,29 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
   console.error("ToolHive port API not available in renderer");
 }
 
-try {
-  const port = await window.electronAPI.getToolhivePort();
-  const baseUrl = `http://localhost:${port}`;
-  client.setConfig({ baseUrl });
-} catch (e) {
-  console.error("Failed to get ToolHive port from main process", e);
-  throw e;
-}
+(async () => {
+  try {
+    const port = await window.electronAPI.getToolhivePort();
+    const baseUrl = `http://localhost:${port}`;
+    client.setConfig({ baseUrl });
+  } catch (e) {
+    console.error("Failed to get ToolHive port from main process", e);
+    throw e;
+  }
 
-const rootElement = document.getElementById("root")!;
-const root = ReactDOM.createRoot(rootElement);
-root.render(
-  <StrictMode>
-    <ThemeProvider defaultTheme="system" storageKey="toolhive-ui-theme">
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider delayDuration={0}>
-          <Toaster />
-          <RouterProvider router={router} />
-        </TooltipProvider>
-        <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
-    </ThemeProvider>
-  </StrictMode>,
-);
+  const rootElement = document.getElementById("root")!;
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(
+    <StrictMode>
+      <ThemeProvider defaultTheme="system" storageKey="toolhive-ui-theme">
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider delayDuration={0}>
+            <Toaster />
+            <RouterProvider router={router} />
+          </TooltipProvider>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </QueryClientProvider>
+      </ThemeProvider>
+    </StrictMode>,
+  );
+})();
