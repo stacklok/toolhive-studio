@@ -1,0 +1,57 @@
+name: Release
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write # Required for GitHub publisher to upload release assets
+
+jobs:
+  security:
+    name: Security Checks
+    uses: ./.github/workflows/_security-checks.yml
+
+  static-checks:
+    name: Static Checks
+    uses: ./.github/workflows/_static-checks.yml
+    secrets: inherit
+
+  unit-tests:
+    name: Unit Tests
+    uses: ./.github/workflows/_unit-tests.yml
+    secrets: inherit
+
+  build-and-release:
+    name: Build and Release on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    needs: [security, static-checks, unit-tests]
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    env:
+      NODE_OPTIONS: "--max_old_space_size=4096"
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Update version from tag
+        run: |
+          # Extract version from tag (remove 'v' prefix if present)
+          VERSION=${GITHUB_REF#refs/tags/v}
+          VERSION=${VERSION#v}
+          echo "Setting version to: $VERSION"
+          
+          # Update package.json version
+          npm version $VERSION --no-git-tag-version --allow-same-version
+          
+          echo "Updated package.json version to $VERSION"
+
+      - name: Build and Publish to GitHub Release
+        run: pnpm run publish
+        env:
+          # Ensure the correct Node.js version is used for native modules
+          npm_config_target_platform: ${{ runner.os == 'Linux' && 'linux' || (runner.os == 'macOS' && 'darwin' || 'win32') }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
