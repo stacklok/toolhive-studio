@@ -4,7 +4,7 @@ import { existsSync } from "node:fs";
 import started from "electron-squirrel-startup";
 import { spawn } from "node:child_process";
 import { initTray } from "./system-tray";
-import { setAutoLaunch, getAutoLaunchStatus } from "../utils/auto-launch";
+import { setAutoLaunch, getAutoLaunchStatus } from "./auto-launch";
 import net from "node:net";
 
 // Forge environment variables

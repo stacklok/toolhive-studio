@@ -31,7 +31,7 @@
     "packages/rerender/src/features",
     "packages/rerender/src/renderer.tsx",
     "packages/rerender/src/vite-env.d.ts",
-    "packages/utils/auto-launch.ts",
+    "packages/main/auto-launch.ts",
     "packages/preload/preload.ts",
     "packages/rerender/src/routes",
     "packages/rerender/src/route-tree.gen.ts"
