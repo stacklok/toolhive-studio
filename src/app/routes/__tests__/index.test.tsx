@@ -8,6 +8,7 @@ import { renderHook } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useMutationRestartServer } from "@/features/mcp-servers/hooks/use-mutation-restart-server";
 import { useMutationStopServer } from "@/features/mcp-servers/hooks/use-mutation-stop-server";
+import userEvent from "@testing-library/user-event";
 
 const router = createTestRouter(Index);
 
@@ -38,8 +39,27 @@ it("should render list of MCP servers", async () => {
 it("should contain the menu to run an MCP server", async () => {
   renderRoute(router);
   await waitFor(() => {
-    expect(screen.getByRole("button", { name: "Add tool" })).toBeVisible();
+    expect(
+      screen.getByRole("button", {
+        name: /add a tool/i,
+      }),
+    ).toBeVisible();
   });
+
+  await userEvent.click(
+    screen.getByRole("button", {
+      name: /add a tool/i,
+    }),
+  );
+  await waitFor(() => {
+    expect(screen.getByRole("menu")).toBeVisible();
+  });
+  expect(
+    screen.getByRole("menuitem", { name: "From the Store" }),
+  ).toBeVisible();
+  expect(
+    screen.getByRole("menuitem", { name: "Custom MCP server" }),
+  ).toBeVisible();
 });
 
 it("should provide restart server mutation", async () => {

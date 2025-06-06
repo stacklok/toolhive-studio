@@ -44,7 +44,7 @@ export function DropdownMenuRunMcpServer({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="bottom" align="end">
-        <DropdownMenuItem asChild aria-label="From the registry">
+        <DropdownMenuItem asChild aria-label="From the Store">
           <Link to="/store">
             From the Store
             <DropdownMenuShortcut>⌘N</DropdownMenuShortcut>
