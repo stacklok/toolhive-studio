@@ -5,6 +5,12 @@ import { CommandIcon } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { ThemeToggle } from "../theme/theme-toggle";
 import { SettingsDropdown } from "../settings/settings-dropdown";
+import {
+  NavigationMenu,
+  NavigationMenuList,
+  NavigationMenuItem,
+  NavigationMenuLink,
+} from "../ui/navigation-menu";
 
 function TopNavContainer(props: HTMLProps<HTMLElement>) {
   return (
@@ -35,9 +41,20 @@ function TopNavLogo() {
 
 function TopNavLinks() {
   return (
-    <div className="flex items-center gap-2">
-      <Link to="/">Installed</Link>
-    </div>
+    <NavigationMenu>
+      <NavigationMenuList>
+        <NavigationMenuItem>
+          <NavigationMenuLink asChild>
+            <Link to="/">Installed</Link>
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <NavigationMenuLink asChild>
+            <Link to="/store">Store</Link>
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+      </NavigationMenuList>
+    </NavigationMenu>
   );
 }
 
