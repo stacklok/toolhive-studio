@@ -25,6 +25,7 @@ export function ActionsMcpServer({
     <div className="flex gap-2">
       <div onClick={(e) => e.preventDefault()}>
         <Switch
+          aria-label="Mutate server"
           className="cursor-pointer"
           checked={isRunning || isPending}
           disabled={isRestarting}
