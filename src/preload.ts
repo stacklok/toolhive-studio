@@ -17,6 +17,15 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
   // ToolHive port
   getToolhivePort: () => ipcRenderer.invoke("get-toolhive-port"),
+
+  // Theme management
+  darkMode: {
+    toggle: () => ipcRenderer.invoke("dark-mode:toggle"),
+    system: () => ipcRenderer.invoke("dark-mode:system"),
+    set: (theme: "light" | "dark" | "system") =>
+      ipcRenderer.invoke("dark-mode:set", theme),
+    get: () => ipcRenderer.invoke("dark-mode:get"),
+  },
 });
 
 // Type definitions for the exposed API
@@ -27,6 +36,15 @@ export interface ElectronAPI {
   hideApp: () => Promise<void>;
   quitApp: () => Promise<void>;
   getToolhivePort: () => Promise<number | undefined>;
+  darkMode: {
+    toggle: () => Promise<boolean>;
+    system: () => Promise<boolean>;
+    set: (theme: "light" | "dark" | "system") => Promise<boolean>;
+    get: () => Promise<{
+      shouldUseDarkColors: boolean;
+      themeSource: "system" | "light" | "dark";
+    }>;
+  };
 }
 
 declare global {

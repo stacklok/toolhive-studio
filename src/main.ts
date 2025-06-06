@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Tray, ipcMain } from "electron";
+import { app, BrowserWindow, Tray, ipcMain, nativeTheme } from "electron";
 import path from "node:path";
 import { existsSync } from "node:fs";
 import started from "electron-squirrel-startup";
@@ -139,6 +139,36 @@ app.on("will-quit", () => {
   if (tray) {
     tray.destroy();
   }
+});
+
+// IPC handlers for theme management
+ipcMain.handle("dark-mode:toggle", () => {
+  if (nativeTheme.shouldUseDarkColors) {
+    nativeTheme.themeSource = "light";
+  } else {
+    nativeTheme.themeSource = "dark";
+  }
+  return nativeTheme.shouldUseDarkColors;
+});
+
+ipcMain.handle("dark-mode:system", () => {
+  nativeTheme.themeSource = "system";
+  return nativeTheme.shouldUseDarkColors;
+});
+
+ipcMain.handle(
+  "dark-mode:set",
+  (_event, theme: "light" | "dark" | "system") => {
+    nativeTheme.themeSource = theme;
+    return nativeTheme.shouldUseDarkColors;
+  },
+);
+
+ipcMain.handle("dark-mode:get", () => {
+  return {
+    shouldUseDarkColors: nativeTheme.shouldUseDarkColors,
+    themeSource: nativeTheme.themeSource,
+  };
 });
 
 // IPC handlers for auto-launch management
