@@ -43,10 +43,10 @@ jobs:
           VERSION=${GITHUB_REF#refs/tags/v}
           VERSION=${VERSION#v}
           echo "Setting version to: $VERSION"
-          
+
           # Update package.json version
           npm version $VERSION --no-git-tag-version --allow-same-version
-          
+
           echo "Updated package.json version to $VERSION"
 
       - name: Build and Publish to GitHub Release
@@ -54,4 +54,4 @@ jobs:
         env:
           # Ensure the correct Node.js version is used for native modules
           npm_config_target_platform: ${{ runner.os == 'Linux' && 'linux' || (runner.os == 'macOS' && 'darwin' || 'win32') }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
