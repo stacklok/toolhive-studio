@@ -19,7 +19,7 @@
     "prepare": "husky install",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
-    "update-api": "node scripts/update-api.mjs",
+    "update-api": "ts-node scripts/update-api.ts",
     "generate-client": "pnpm run update-api && openapi-ts",
     "generate-client:nofetch": "openapi-ts",
     "knip": "knip"
@@ -65,6 +65,7 @@
     "msw": "^2.8.4",
     "prettier": "3.5.3",
     "tar": "^7.4.3",
+    "ts-node": "^10.9.2",
     "typescript": "5.8.3",
     "typescript-eslint": "^8.30.1",
     "unzipper": "^0.12.3",
