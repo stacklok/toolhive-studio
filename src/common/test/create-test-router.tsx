@@ -1,19 +1,19 @@
 import {
   createMemoryHistory,
+  createRootRoute,
+  createRoute,
   Outlet,
-  RootRoute,
-  Route,
   Router,
 } from "@tanstack/react-router";
 import type { JSX } from "react";
 
 export function createTestRouter(component: () => JSX.Element) {
-  const rootRoute = new RootRoute({
+  const rootRoute = createRootRoute({
     component: Outlet,
     errorComponent: ({ error }) => <div>{error.message}</div>,
   });
 
-  const componentRoute = new Route({
+  const componentRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: "/",
     component,

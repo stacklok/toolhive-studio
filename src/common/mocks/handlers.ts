@@ -8,6 +8,7 @@ import {
   getServerByName,
   serverListFixture,
 } from "./fixtures/servers";
+import { clientsFixture } from "./fixtures/clients";
 
 export const handlers = [
   http.get(mswEndpoint("/health"), () => {
@@ -87,5 +88,11 @@ export const handlers = [
     }
 
     return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.get(mswEndpoint("/api/v1beta/discovery/clients"), () => {
+    // TODO: Don't stringify after
+    // https://github.com/stacklok/toolhive/issues/495 is resolved
+    return HttpResponse.json(JSON.stringify(clientsFixture));
   }),
 ];

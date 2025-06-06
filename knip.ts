@@ -12,6 +12,7 @@ export default {
   ignore: [
     "src/app/route-tree.gen.ts",
     "src/app/routes/store.tsx",
+    "src/app/routes/clients.tsx",
     "src/common/api/generated/**",
     "src/common/hooks/use-servers.ts",
     "src/common/lib/utils.ts",

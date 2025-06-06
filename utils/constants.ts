@@ -1,1 +1,1 @@
-export const TOOLHIVE_VERSION = process.env.THV_VERSION ?? "v0.0.41";
+export const TOOLHIVE_VERSION = process.env.THV_VERSION ?? "v0.0.42";
