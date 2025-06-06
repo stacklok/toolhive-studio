@@ -1,6 +1,6 @@
 import { Button } from "@/common/components/ui/button";
 import { Link } from "@tanstack/react-router";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Trash2 } from "lucide-react";
 import { ActionsMcpServer } from "./actions-mcp-server";
 import { useMutationRestartServer } from "../hooks/use-mutation-restart-server";
 import { useMutationStopServer } from "../hooks/use-mutation-stop-server";
@@ -10,6 +10,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/common/components/ui/tabs";
+import { useDeleteServer } from "../hooks/use-delete-server";
 
 export function DetailMcpServer({
   serverName,
@@ -30,6 +31,10 @@ export function DetailMcpServer({
     useMutationStopServer({
       name: serverName,
     });
+
+  const { mutateAsync: deleteServer } = useDeleteServer({
+    name: serverName,
+  });
 
   return (
     <div className="mt-8">
@@ -89,7 +94,20 @@ export function DetailMcpServer({
                   }}
                 />
               </div>
-              <div>
+              <div className="flex gap-4">
+                <Button
+                  disabled={state === "running"}
+                  variant="outline"
+                  onClick={() =>
+                    deleteServer({
+                      path: {
+                        name: serverName,
+                      },
+                    })
+                  }
+                >
+                  <Trash2 /> Remove
+                </Button>
                 <Button variant="outline" asChild>
                   <Link to={repo} target="_blank" rel="noopener noreferrer">
                     <ExternalLink /> Github
