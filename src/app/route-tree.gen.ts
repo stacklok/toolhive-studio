@@ -11,10 +11,17 @@
 // Import Routes
 
 import { Route as rootRoute } from "./routes/__root";
+import { Route as StoreImport } from "./routes/store";
 import { Route as IndexImport } from "./routes/index";
 import { Route as ServerServerNameImport } from "./routes/server/$serverName";
 
 // Create/Update Routes
+
+const StoreRoute = StoreImport.update({
+  id: "/store",
+  path: "/store",
+  getParentRoute: () => rootRoute,
+} as any);
 
 const IndexRoute = IndexImport.update({
   id: "/",
@@ -39,6 +46,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof IndexImport;
       parentRoute: typeof rootRoute;
     };
+    "/store": {
+      id: "/store";
+      path: "/store";
+      fullPath: "/store";
+      preLoaderRoute: typeof StoreImport;
+      parentRoute: typeof rootRoute;
+    };
     "/server/$serverName": {
       id: "/server/$serverName";
       path: "/server/$serverName";
@@ -53,36 +67,41 @@ declare module "@tanstack/react-router" {
 
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute;
+  "/store": typeof StoreRoute;
   "/server/$serverName": typeof ServerServerNameRoute;
 }
 
 export interface FileRoutesByTo {
   "/": typeof IndexRoute;
+  "/store": typeof StoreRoute;
   "/server/$serverName": typeof ServerServerNameRoute;
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute;
   "/": typeof IndexRoute;
+  "/store": typeof StoreRoute;
   "/server/$serverName": typeof ServerServerNameRoute;
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: "/" | "/server/$serverName";
+  fullPaths: "/" | "/store" | "/server/$serverName";
   fileRoutesByTo: FileRoutesByTo;
-  to: "/" | "/server/$serverName";
-  id: "__root__" | "/" | "/server/$serverName";
+  to: "/" | "/store" | "/server/$serverName";
+  id: "__root__" | "/" | "/store" | "/server/$serverName";
   fileRoutesById: FileRoutesById;
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
+  StoreRoute: typeof StoreRoute;
   ServerServerNameRoute: typeof ServerServerNameRoute;
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  StoreRoute: StoreRoute,
   ServerServerNameRoute: ServerServerNameRoute,
 };
 
@@ -97,11 +116,15 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
+        "/store",
         "/server/$serverName"
       ]
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/store": {
+      "filePath": "store.tsx"
     },
     "/server/$serverName": {
       "filePath": "server/$serverName.tsx"

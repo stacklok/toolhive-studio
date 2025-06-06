@@ -25,7 +25,7 @@ export function GridCardsMcpServers({
 
   const availableStates = useMemo(() => {
     const states = mcpServers
-      .map((server) => server.State)
+      .map((server) => server.state)
       .filter((state): state is string => Boolean(state))
       .filter((state, index, arr) => arr.indexOf(state) === index)
       .sort();

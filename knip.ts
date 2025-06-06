@@ -11,12 +11,11 @@ export default {
   project: ["src/**"],
   ignore: [
     "src/app/route-tree.gen.ts",
+    "src/app/routes/store.tsx",
     "src/common/api/generated/**",
     "src/common/hooks/use-servers.ts",
     "src/common/lib/utils.ts",
     "src/common/components/ui/**",
-    "src/common/hooks/use-toast-mutation.ts",
-    "src/features/mcp-servers/components/menu-run-mcp-server.tsx",
   ],
   compilers: {
     // this is needed to support css entry files
