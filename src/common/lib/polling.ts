@@ -4,7 +4,7 @@
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export interface PollingOptions {
+interface PollingOptions {
   /** Maximum number of attempts before giving up */
   maxAttempts?: number;
   /** Delay between attempts in milliseconds */
@@ -19,7 +19,7 @@ export interface PollingOptions {
  * @param options Polling configuration options
  * @returns Promise that resolves to true if condition is met, false if timeout
  */
-export const poll = async <T>(
+const poll = async <T>(
   conditionFn: () => Promise<T>,
   predicate: (result: T) => boolean,
   options: PollingOptions = {},
