@@ -13,8 +13,8 @@ it('should render list of MCP servers', async () => {
   await waitFor(() => {
     for (const mcpServer of MOCK_MCP_SERVERS) {
       expect(
-        screen.queryByText(mcpServer.Name),
-        `Expected ${mcpServer.Name} to be in the document`
+        screen.queryByText(mcpServer.name),
+        `Expected ${mcpServer.name} to be in the document`
       ).toBeVisible()
     }
   })

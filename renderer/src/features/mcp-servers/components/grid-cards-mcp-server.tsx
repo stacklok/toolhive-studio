@@ -1,4 +1,4 @@
-import type { RuntimeContainerInfo } from '@/common/api/generated'
+import type { WorkloadsWorkload } from '@/common/api/generated'
 import { CardMcpServer } from './card-mcp-server'
 import { useState, useMemo } from 'react'
 import { Input } from '@/common/components/ui/input'
@@ -16,7 +16,7 @@ import { Link } from '@tanstack/react-router'
 export function GridCardsMcpServers({
   mcpServers,
 }: {
-  mcpServers: RuntimeContainerInfo[]
+  mcpServers: WorkloadsWorkload[]
 }) {
   const [filters, setFilters] = useState({
     text: '',
@@ -25,7 +25,7 @@ export function GridCardsMcpServers({
 
   const availableStates = useMemo(() => {
     const states = mcpServers
-      .map((server) => server.state)
+      .map((server) => server.status)
       .filter((state): state is string => Boolean(state))
       .filter((state, index, arr) => arr.indexOf(state) === index)
       .sort()
@@ -36,14 +36,14 @@ export function GridCardsMcpServers({
     return mcpServers.filter((mcpServer) => {
       if (filters.text.trim()) {
         const searchTerm = filters.text.toLowerCase()
-        const name = mcpServer.Name?.toLowerCase() || ''
-        const image = mcpServer.Image?.toLowerCase() || ''
+        const name = mcpServer.name?.toLowerCase() || ''
+        const image = mcpServer.package?.toLowerCase() || ''
         if (!name.includes(searchTerm) && !image.includes(searchTerm)) {
           return false
         }
       }
 
-      if (filters.state !== 'all' && mcpServer.State !== filters.state) {
+      if (filters.state !== 'all' && mcpServer.status !== filters.state) {
         return false
       }
 
@@ -104,18 +104,17 @@ export function GridCardsMcpServers({
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {filteredMcpServers.map((mcpServer) => (
           <Link
-            key={mcpServer.Name}
+            key={mcpServer.name}
             to="/server/$serverName"
             // The default value should be disappear in the next openapi version
-            params={{ serverName: mcpServer.Name ?? '' }}
+            params={{ serverName: mcpServer.name ?? '' }}
             className="block"
           >
             <CardMcpServer
-              key={mcpServer.ID}
-              image={mcpServer.Image}
-              name={mcpServer.Name}
-              state={mcpServer.State}
-              status={mcpServer.Status}
+              key={mcpServer.name}
+              name={mcpServer.name}
+              status={mcpServer.status}
+              statusContext={mcpServer.status_context}
             />
           </Link>
         ))}

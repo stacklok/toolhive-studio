@@ -1,26 +1,29 @@
-import type { RuntimeContainerInfo } from '@/common/api/generated'
+import type {
+  V1WorkloadListResponse,
+  WorkloadsWorkload,
+} from '@/common/api/generated'
 import {
-  postApiV1BetaServersByNameRestartMutation,
-  getApiV1BetaServersByNameQueryKey,
-  getApiV1BetaServersQueryKey,
+  postApiV1BetaWorkloadsByNameRestartMutation,
+  getApiV1BetaWorkloadsByNameQueryKey,
+  getApiV1BetaWorkloadsQueryKey,
 } from '@/common/api/generated/@tanstack/react-query.gen'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { useQueryClient } from '@tanstack/react-query'
 
-const mutationData = {
-  ...postApiV1BetaServersByNameRestartMutation(),
+const getMutationData = (name: string) => ({
+  ...postApiV1BetaWorkloadsByNameRestartMutation(),
   successMsg: `Server ${name} restarted successfully`,
   errorMsg: `Failed to restart server ${name}`,
   loadingMsg: `Restarting server ${name}...`,
-}
+})
 
 export function useMutationRestartServerList({ name }: { name: string }) {
   const queryClient = useQueryClient()
   // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
-  const queryKey = getApiV1BetaServersQueryKey({ query: { all: true } })
+  const queryKey = getApiV1BetaWorkloadsQueryKey({ query: { all: true } })
 
   return useToastMutation({
-    ...mutationData,
+    ...getMutationData(name),
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey })
 
@@ -30,14 +33,14 @@ export function useMutationRestartServerList({ name }: { name: string }) {
         if (!oldData) return oldData
 
         const parsed = JSON.parse(oldData)
-        if (!parsed?.servers) return oldData
+        if (!parsed?.workloads) return oldData
 
         const updatedData = {
           ...parsed,
-          servers: parsed.servers.map((server: RuntimeContainerInfo) =>
-            server.Name === name ? { ...server, State: 'running' } : server
+          workloads: parsed.workloads.map((server: WorkloadsWorkload) =>
+            server.name === name ? { ...server, status: 'running' } : server
           ),
-        }
+        } as V1WorkloadListResponse
         // Convert to string because of https://github.com/stacklok/toolhive/issues/497
         return JSON.stringify(updatedData)
       })
@@ -55,9 +58,9 @@ export function useMutationRestartServerList({ name }: { name: string }) {
 
 export function useMutationRestartServer({ name }: { name: string }) {
   const queryClient = useQueryClient()
-  const queryKey = getApiV1BetaServersByNameQueryKey({ path: { name } })
+  const queryKey = getApiV1BetaWorkloadsByNameQueryKey({ path: { name } })
   return useToastMutation({
-    ...mutationData,
+    ...getMutationData(name),
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey })
 
@@ -71,8 +74,8 @@ export function useMutationRestartServer({ name }: { name: string }) {
 
         const updatedData = {
           ...parsed,
-          State: 'running',
-        }
+          status: 'running',
+        } as WorkloadsWorkload
         // Convert to string because of https://github.com/stacklok/toolhive/issues/497
         return JSON.stringify(updatedData)
       })
@@ -88,7 +91,7 @@ export function useMutationRestartServer({ name }: { name: string }) {
     onSettled: () => {
       queryClient.invalidateQueries({
         // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
-        queryKey: getApiV1BetaServersQueryKey({ query: { all: true } }),
+        queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
       })
     },
   })

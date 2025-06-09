@@ -8,6 +8,11 @@ import type {
 import type {
   GetApiOpenapiJsonData,
   GetApiOpenapiJsonResponse,
+  GetApiV1BetaClientsData,
+  GetApiV1BetaClientsResponse,
+  PostApiV1BetaClientsData,
+  PostApiV1BetaClientsResponse,
+  PostApiV1BetaClientsError,
   GetApiV1BetaDiscoveryClientsData,
   GetApiV1BetaDiscoveryClientsResponse,
   GetApiV1BetaRegistryData,
@@ -26,25 +31,25 @@ import type {
   GetApiV1BetaRegistryByNameServersByServerNameData,
   GetApiV1BetaRegistryByNameServersByServerNameResponse,
   GetApiV1BetaRegistryByNameServersByServerNameError,
-  GetApiV1BetaServersData,
-  GetApiV1BetaServersResponse,
-  PostApiV1BetaServersData,
-  PostApiV1BetaServersResponse,
-  PostApiV1BetaServersError,
-  DeleteApiV1BetaServersByNameData,
-  DeleteApiV1BetaServersByNameResponse,
-  DeleteApiV1BetaServersByNameError,
-  GetApiV1BetaServersByNameData,
-  GetApiV1BetaServersByNameResponse,
-  GetApiV1BetaServersByNameError,
-  PostApiV1BetaServersByNameRestartData,
-  PostApiV1BetaServersByNameRestartResponse,
-  PostApiV1BetaServersByNameRestartError,
-  PostApiV1BetaServersByNameStopData,
-  PostApiV1BetaServersByNameStopResponse,
-  PostApiV1BetaServersByNameStopError,
   GetApiV1BetaVersionData,
   GetApiV1BetaVersionResponse,
+  GetApiV1BetaWorkloadsData,
+  GetApiV1BetaWorkloadsResponse,
+  PostApiV1BetaWorkloadsData,
+  PostApiV1BetaWorkloadsResponse,
+  PostApiV1BetaWorkloadsError,
+  DeleteApiV1BetaWorkloadsByNameData,
+  DeleteApiV1BetaWorkloadsByNameResponse,
+  DeleteApiV1BetaWorkloadsByNameError,
+  GetApiV1BetaWorkloadsByNameData,
+  GetApiV1BetaWorkloadsByNameResponse,
+  GetApiV1BetaWorkloadsByNameError,
+  PostApiV1BetaWorkloadsByNameRestartData,
+  PostApiV1BetaWorkloadsByNameRestartResponse,
+  PostApiV1BetaWorkloadsByNameRestartError,
+  PostApiV1BetaWorkloadsByNameStopData,
+  PostApiV1BetaWorkloadsByNameStopResponse,
+  PostApiV1BetaWorkloadsByNameStopError,
   GetHealthData,
   GetHealthResponse,
 } from './types.gen'
@@ -81,6 +86,44 @@ export const getApiOpenapiJson = <ThrowOnError extends boolean = false>(
   >({
     url: '/api/openapi.json',
     ...options,
+  })
+}
+
+/**
+ * List all clients
+ * List all registered clients in ToolHive
+ */
+export const getApiV1BetaClients = <ThrowOnError extends boolean = false>(
+  options?: Options<GetApiV1BetaClientsData, ThrowOnError>
+) => {
+  return (options?.client ?? _heyApiClient).get<
+    GetApiV1BetaClientsResponse,
+    unknown,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/clients',
+    ...options,
+  })
+}
+
+/**
+ * Register a new client
+ * Register a new client with ToolHive
+ */
+export const postApiV1BetaClients = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1BetaClientsData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostApiV1BetaClientsResponse,
+    PostApiV1BetaClientsError,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/clients',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
   })
 }
 
@@ -221,118 +264,6 @@ export const getApiV1BetaRegistryByNameServersByServerName = <
 }
 
 /**
- * List all servers
- * Get a list of all running servers
- */
-export const getApiV1BetaServers = <ThrowOnError extends boolean = false>(
-  options?: Options<GetApiV1BetaServersData, ThrowOnError>
-) => {
-  return (options?.client ?? _heyApiClient).get<
-    GetApiV1BetaServersResponse,
-    unknown,
-    ThrowOnError
-  >({
-    url: '/api/v1beta/servers',
-    ...options,
-  })
-}
-
-/**
- * Create a new server
- * Create and start a new server
- */
-export const postApiV1BetaServers = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiV1BetaServersData, ThrowOnError>
-) => {
-  return (options.client ?? _heyApiClient).post<
-    PostApiV1BetaServersResponse,
-    PostApiV1BetaServersError,
-    ThrowOnError
-  >({
-    url: '/api/v1beta/servers',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  })
-}
-
-/**
- * Delete a server
- * Delete a server
- */
-export const deleteApiV1BetaServersByName = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<DeleteApiV1BetaServersByNameData, ThrowOnError>
-) => {
-  return (options.client ?? _heyApiClient).delete<
-    DeleteApiV1BetaServersByNameResponse,
-    DeleteApiV1BetaServersByNameError,
-    ThrowOnError
-  >({
-    url: '/api/v1beta/servers/{name}',
-    ...options,
-  })
-}
-
-/**
- * Get server details
- * Get details of a specific server
- */
-export const getApiV1BetaServersByName = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiV1BetaServersByNameData, ThrowOnError>
-) => {
-  return (options.client ?? _heyApiClient).get<
-    GetApiV1BetaServersByNameResponse,
-    GetApiV1BetaServersByNameError,
-    ThrowOnError
-  >({
-    url: '/api/v1beta/servers/{name}',
-    ...options,
-  })
-}
-
-/**
- * Restart a server
- * Restart a running server
- */
-export const postApiV1BetaServersByNameRestart = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<PostApiV1BetaServersByNameRestartData, ThrowOnError>
-) => {
-  return (options.client ?? _heyApiClient).post<
-    PostApiV1BetaServersByNameRestartResponse,
-    PostApiV1BetaServersByNameRestartError,
-    ThrowOnError
-  >({
-    url: '/api/v1beta/servers/{name}/restart',
-    ...options,
-  })
-}
-
-/**
- * Stop a server
- * Stop a running server
- */
-export const postApiV1BetaServersByNameStop = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<PostApiV1BetaServersByNameStopData, ThrowOnError>
-) => {
-  return (options.client ?? _heyApiClient).post<
-    PostApiV1BetaServersByNameStopResponse,
-    PostApiV1BetaServersByNameStopError,
-    ThrowOnError
-  >({
-    url: '/api/v1beta/servers/{name}/stop',
-    ...options,
-  })
-}
-
-/**
  * Get server version
  * Returns the current version of the server
  */
@@ -345,6 +276,120 @@ export const getApiV1BetaVersion = <ThrowOnError extends boolean = false>(
     ThrowOnError
   >({
     url: '/api/v1beta/version',
+    ...options,
+  })
+}
+
+/**
+ * List all workloads
+ * Get a list of all running workloads
+ */
+export const getApiV1BetaWorkloads = <ThrowOnError extends boolean = false>(
+  options?: Options<GetApiV1BetaWorkloadsData, ThrowOnError>
+) => {
+  return (options?.client ?? _heyApiClient).get<
+    GetApiV1BetaWorkloadsResponse,
+    unknown,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/workloads',
+    ...options,
+  })
+}
+
+/**
+ * Create a new workload
+ * Create and start a new workload
+ */
+export const postApiV1BetaWorkloads = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1BetaWorkloadsData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostApiV1BetaWorkloadsResponse,
+    PostApiV1BetaWorkloadsError,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/workloads',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  })
+}
+
+/**
+ * Delete a workload
+ * Delete a workload
+ */
+export const deleteApiV1BetaWorkloadsByName = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<DeleteApiV1BetaWorkloadsByNameData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).delete<
+    DeleteApiV1BetaWorkloadsByNameResponse,
+    DeleteApiV1BetaWorkloadsByNameError,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/workloads/{name}',
+    ...options,
+  })
+}
+
+/**
+ * Get workload details
+ * Get details of a specific workload
+ */
+export const getApiV1BetaWorkloadsByName = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<GetApiV1BetaWorkloadsByNameData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).get<
+    GetApiV1BetaWorkloadsByNameResponse,
+    GetApiV1BetaWorkloadsByNameError,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/workloads/{name}',
+    ...options,
+  })
+}
+
+/**
+ * Restart a workload
+ * Restart a running workload
+ */
+export const postApiV1BetaWorkloadsByNameRestart = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1BetaWorkloadsByNameRestartData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostApiV1BetaWorkloadsByNameRestartResponse,
+    PostApiV1BetaWorkloadsByNameRestartError,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/workloads/{name}/restart',
+    ...options,
+  })
+}
+
+/**
+ * Stop a workload
+ * Stop a running workload
+ */
+export const postApiV1BetaWorkloadsByNameStop = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1BetaWorkloadsByNameStopData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostApiV1BetaWorkloadsByNameStopResponse,
+    PostApiV1BetaWorkloadsByNameStopError,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/workloads/{name}/stop',
     ...options,
   })
 }
