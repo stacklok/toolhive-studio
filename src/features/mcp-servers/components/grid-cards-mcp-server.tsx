@@ -87,7 +87,7 @@ export function GridCardsMcpServers({
             <SelectTrigger>
               <SelectValue placeholder="All States" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent position="popper" align="end">
               {availableStates.map((state) => (
                 <SelectItem key={state} value={state}>
                   {state === "all"
