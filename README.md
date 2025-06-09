@@ -1,104 +1,65 @@
-# React + TypeScript + Vite
+# ToolHive Studio
 
-> [!NOTE]  
-> This is just preliminary work to put the React user interface in place for the
-> larger ToolHive Studio project. This is probably a temporary repository.
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+This is the front-end for ToolHive Studio, an Electron application built with React, TypeScript, and Vite.
 
 ## Getting Started
 
-This project uses [pnpm](https://pnpm.io/) as the package manager. If you don't have pnpm installed, check the [doc](https://pnpm.io/installation).
+This project uses [pnpm](https://pnpm.io/) as the package manager.
 
-### Development Commands
+It is recommended to use a Node.js version manager like `nvm` or `fnm`. The required Node.js version is specified in the `.nvmrc` file (which points to the latest LTS version).
 
-```bash
-# Install dependencies
-pnpm install
+> [!IMPORTANT]
+> Make sure the Docker daemon is running before you start, as it is required by ToolHive.
 
-# Start development server (with hot reload)
-pnpm run make  # Only need to run it once, to fetch `thv` binary
-pnpm run start
+To get started, follow these steps:
 
-# Build for production
-pnpm run make
+1.  **Install dependencies**:
+    ```bash
+    pnpm install
+    ```
+2.  **Run the initial build**:
 
-# Generate API client from OpenAPI spec
-pnpm run generate-client
+    ```bash
+    pnpm run make
+    ```
 
-# Run tests
-pnpm run test
+    This command needs to be run once to build the application before starting the development server.
 
-# Run tests with coverage
-pnpm run test:coverage
+3.  **Start the development server**:
+    ```bash
+    pnpm run start
+    ```
+    This will start the Electron application with hot reload for the renderer process.
 
-# Run linting
-pnpm run lint
+## Available Scripts
 
-# Run type checking
-pnpm run type-check
+Here are the most common scripts you will use during development:
 
-# Format code with Prettier
-pnpm run format
+- `pnpm run start`: Starts the development server with hot reload.
+- `pnpm run lint`: Lints the code using ESLint.
+- `pnpm run format`: Formats the code with Prettier.
+- `pnpm run type-check`: Runs TypeScript type checking.
+- `pnpm run test`: Runs tests using Vitest.
+- `pnpm run test:coverage`: Runs tests with coverage.
 
-# Check Prettier formatting
-pnpm run prettier
-```
+### Building and Packaging
 
-### Development Workflow
+- `pnpm run package`: Packages the application for the current platform.
+- `pnpm run make`: Creates distributable packages for the application.
 
-1. **Install dependencies**: `pnpm install`
-2. **Start development server**: `pnpm run dev`
-3. **Open your browser** to `http://localhost:5173` (or the port shown in terminal)
-4. **Make changes** to your code and see them reflected instantly with Hot Module Replacement (HMR)
+### API Client Generation
 
-## Expanding the ESLint configuration
+- `pnpm run generate-client`: Fetches the latest OpenAPI specification and generates the API client.
+- `pnpm run generate-client:nofetch`: Generates the API client from the existing local OpenAPI specification.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Project Structure
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-});
-```
+The project is structured as a typical Electron application:
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- `main/`: Contains the code for the Electron main process.
+- `preload/`: Contains the preload scripts for the Electron renderer process.
+- `renderer/`: Contains the React application for the renderer process. This is where the UI components live.
 
-```js
-// eslint.config.js
-import reactX from "eslint-plugin-react-x";
-import reactDom from "eslint-plugin-react-dom";
+## ESLint Configuration
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    "react-x": reactX,
-    "react-dom": reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs["recommended-typescript"].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-});
-```
+The project uses ESLint with `typescript-eslint` for linting TypeScript code. The configuration is in the `eslint.config.mjs` file. It includes rules for React hooks and React Refresh.

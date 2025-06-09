@@ -22,18 +22,18 @@
     "noUncheckedIndexedAccess": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./rerender/src/*"]
+      "@/*": ["./renderer/src/*"]
     },
     "types": ["vitest/globals", "@testing-library/jest-dom/vitest"]
   },
   "include": [
     "forge.env.d.ts",
-    "rerender/src/features",
-    "rerender/src/renderer.tsx",
-    "rerender/src/vite-env.d.ts",
+    "renderer/src/features",
+    "renderer/src/renderer.tsx",
+    "renderer/src/vite-env.d.ts",
     "main/auto-launch.ts",
     "preload/preload.ts",
-    "rerender/src/routes",
-    "rerender/src/route-tree.gen.ts"
+    "renderer/src/routes",
+    "renderer/src/route-tree.gen.ts"
   ]
 }
