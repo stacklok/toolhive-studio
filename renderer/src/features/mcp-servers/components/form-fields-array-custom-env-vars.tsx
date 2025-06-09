@@ -39,7 +39,6 @@ export function FormFieldsArrayCustomEnvVars({
     addEnvVarButton.current?.scrollIntoView({
       behavior: 'smooth',
       block: 'nearest',
-      inline: 'nearest',
     })
   }
 
