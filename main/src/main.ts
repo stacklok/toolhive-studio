@@ -7,6 +7,10 @@ import { initTray } from "./system-tray";
 import { setAutoLaunch, getAutoLaunchStatus } from "./auto-launch";
 import net from "node:net";
 
+// Forge environment variables
+declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined;
+declare const MAIN_WINDOW_VITE_NAME: string;
+
 // Determine the binary path for both dev and prod
 const binName = process.platform === "win32" ? "thv.exe" : "thv";
 const binPath = app.isPackaged
@@ -18,6 +22,7 @@ const binPath = app.isPackaged
     )
   : path.resolve(
       __dirname,
+      "..",
       "..",
       "..",
       "bin",
@@ -86,7 +91,7 @@ const createWindow = () => {
     show: !shouldStartHidden, // Don't show window if starting hidden
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
-      webSecurity: false, // TODO: urgently remove this
+      webSecurity: false, // TODO: fix security configuration
     },
   });
 

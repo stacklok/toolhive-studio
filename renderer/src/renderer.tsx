@@ -6,7 +6,7 @@ import {
   createMemoryHistory,
   createRouter,
 } from "@tanstack/react-router";
-import { routeTree } from "./app/route-tree.gen";
+import { routeTree } from "./route-tree.gen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { Toaster } from "./common/components/ui/sonner";

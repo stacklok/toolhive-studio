@@ -8,7 +8,6 @@ import { MakerRpm } from "@electron-forge/maker-rpm";
 import { VitePlugin } from "@electron-forge/plugin-vite";
 import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
-
 import { ensureThv } from "./utils/fetch-thv";
 
 function isValidPlatform(platform: string): platform is NodeJS.Platform {
@@ -85,20 +84,20 @@ const config: ForgeConfig = {
     new VitePlugin({
       build: [
         {
-          entry: "src/main.ts",
-          config: "vite.main.config.ts",
+          entry: "main/src/main.ts",
+          config: "main/vite.main.config.ts",
           target: "main",
         },
         {
-          entry: "src/preload.ts",
-          config: "vite.preload.config.ts",
+          entry: "preload/src/preload.ts",
+          config: "preload/vite.preload.config.ts",
           target: "preload",
         },
       ],
       renderer: [
         {
           name: "main_window",
-          config: "vite.renderer.config.ts",
+          config: "renderer/vite.renderer.config.ts",
         },
       ],
     }),
