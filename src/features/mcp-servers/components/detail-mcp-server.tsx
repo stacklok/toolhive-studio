@@ -46,14 +46,14 @@ export function DetailMcpServer({
         <TabsList className="flex flex-col h-fit w-48 space-y-1 bg-transparent p-0 shrink-0">
           <TabsTrigger
             value="health"
-            className="w-full justify-start py-2 px-4 data-[state=active]:bg-gray-100 !shadow-none border-none hover:bg-gray-100 transition-colors cursor-pointer"
+            className="w-full justify-start py-2 px-4 !shadow-none border-none hover:bg-muted transition-colors cursor-pointer"
           >
             Health
           </TabsTrigger>
 
           <TabsTrigger
             value="description"
-            className="w-full justify-start py-2 px-4 data-[state=active]:bg-gray-100 !shadow-none border-none hover:bg-gray-100 transition-colors cursor-pointer"
+            className="w-full justify-start py-2 px-4 !shadow-none border-none hover:bg-muted transition-colors cursor-pointer"
           >
             Description
           </TabsTrigger>
