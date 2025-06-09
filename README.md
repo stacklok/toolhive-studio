@@ -83,7 +83,7 @@ environment.
 
 | Variable            | Required | Build-time | Run-time | Description                                                                                           |
 | ------------------- | -------- | ---------- | -------- | ----------------------------------------------------------------------------------------------------- |
-| `VITE_SENTRY_DSN`   | `false`  | `true`     | `true`   | Sentry DSN. The URL that events are posted to.                                                       |
+| `VITE_SENTRY_DSN`   | `false`  | `true`     | `true`   | Sentry DSN. The URL that events are posted to.                                                        |
 | `SENTRY_AUTH_TOKEN` | `false`  | `true`     | `false`  | Sentry authentication token. Used for sourcemap uploads at build-time to enable readable stacktraces. |
 | `SENTRY_ORG`        | `false`  | `true`     | `false`  | Sentry organization. Used for sourcemap uploads at build-time to enable readable stacktraces.         |
 | `SENTRY_PROJECT`    | `false`  | `true`     | `false`  | Sentry project name. Used for sourcemap uploads at build-time to enable readable stacktraces.         |
