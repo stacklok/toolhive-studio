@@ -8,6 +8,12 @@ const commonFields = z.object({
     "Please select either SSE or stdio.",
   ),
   cmd_arguments: z.string().optional(),
+  environment_variables: z
+    .object({
+      key: z.string().nonempty("Key is required"),
+      value: z.string().nonempty("Value is required"),
+    })
+    .array(),
 });
 
 export const formSchemaRunMcpCommand = z.discriminatedUnion("type", [

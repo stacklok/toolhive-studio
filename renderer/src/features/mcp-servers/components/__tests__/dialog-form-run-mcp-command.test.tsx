@@ -11,6 +11,37 @@ const onSubmitMock = vi.fn();
 window.HTMLElement.prototype.hasPointerCapture = vi.fn();
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
+it("should be able to run an MCP server while omitting optional fields", async () => {
+  render(
+    <Dialog open>
+      <DialogFormRunMcpServerWithCommand
+        isOpen
+        onOpenChange={() => {}}
+        onSubmit={onSubmitMock}
+      />
+    </Dialog>,
+  );
+
+  await userEvent.click(screen.getByRole("tab", { name: "Docker image" }));
+
+  await userEvent.type(screen.getByLabelText("Name"), "foo-bar");
+
+  await userEvent.click(screen.getByLabelText("Transport"));
+  await userEvent.click(screen.getByRole("option", { name: "stdio" }));
+
+  await userEvent.type(
+    screen.getByLabelText("Docker image"),
+    "ghcr.io/github/github-mcp-server",
+  );
+
+  await userEvent.click(screen.getByRole("button", { name: "Submit" }));
+  expect(onSubmitMock).toHaveBeenCalledWith({
+    name: "foo-bar",
+    transport: "stdio",
+    image: "ghcr.io/github/github-mcp-server",
+  });
+});
+
 it("should be able to run an MCP server with docker", async () => {
   render(
     <Dialog open>
@@ -39,13 +70,34 @@ it("should be able to run an MCP server with docker", async () => {
     "-y --oauth-setup",
   );
 
+  await userEvent.click(
+    screen.getByRole("button", { name: "Add environment variable" }),
+  );
+  await userEvent.type(
+    screen.getByLabelText("Environment variable key"),
+    "MY_ENV_VAR",
+  );
+  await userEvent.type(
+    screen.getByLabelText("Environment variable value"),
+    "123_FOO",
+  );
+
   await userEvent.click(screen.getByRole("button", { name: "Submit" }));
-  expect(onSubmitMock).toHaveBeenCalledWith({
-    name: "foo-bar",
-    transport: "stdio",
-    image: "ghcr.io/github/github-mcp-server",
-    cmd_arguments: ["-y", "--oauth-setup"],
-  });
+
+  const payload = onSubmitMock.mock.calls[0]?.[0];
+  expect(payload).toBeDefined();
+  expect(payload["name"], "Should have name").toBe("foo-bar");
+  expect(payload["transport"], "Should have transport").toBe("stdio");
+  expect(payload["image"], "Should have image").toBe(
+    "ghcr.io/github/github-mcp-server",
+  );
+  expect(payload["cmd_arguments"], "Should have cmd_arguments").toEqual([
+    "-y",
+    "--oauth-setup",
+  ]);
+  expect(payload["env_vars"], "Should have env_vars").toEqual([
+    "MY_ENV_VAR=123_FOO",
+  ]);
 });
 
 it("should be able to run an MCP server with npx", async () => {
@@ -79,13 +131,34 @@ it("should be able to run an MCP server with npx", async () => {
     "-y --oauth-setup",
   );
 
+  await userEvent.click(
+    screen.getByRole("button", { name: "Add environment variable" }),
+  );
+  await userEvent.type(
+    screen.getByLabelText("Environment variable key"),
+    "MY_ENV_VAR",
+  );
+  await userEvent.type(
+    screen.getByLabelText("Environment variable value"),
+    "123_FOO",
+  );
+
   await userEvent.click(screen.getByRole("button", { name: "Submit" }));
-  expect(onSubmitMock).toHaveBeenCalledWith({
-    name: "foo-bar",
-    transport: "stdio",
-    image: "npx://@modelcontextprotocol/server-everything",
-    cmd_arguments: ["-y", "--oauth-setup"],
-  });
+
+  const payload = onSubmitMock.mock.calls[0]?.[0];
+  expect(payload).toBeDefined();
+  expect(payload["name"], "Should have name").toBe("foo-bar");
+  expect(payload["transport"], "Should have transport").toBe("stdio");
+  expect(payload["image"], "Should have image").toBe(
+    "npx://@modelcontextprotocol/server-everything",
+  );
+  expect(payload["cmd_arguments"], "Should have cmd_arguments").toEqual([
+    "-y",
+    "--oauth-setup",
+  ]);
+  expect(payload["env_vars"], "Should have env_vars").toEqual([
+    "MY_ENV_VAR=123_FOO",
+  ]);
 });
 
 it("should be able to run an MCP server with uvx", async () => {
@@ -119,13 +192,32 @@ it("should be able to run an MCP server with uvx", async () => {
     "-y --oauth-setup",
   );
 
+  await userEvent.click(
+    screen.getByRole("button", { name: "Add environment variable" }),
+  );
+  await userEvent.type(
+    screen.getByLabelText("Environment variable key"),
+    "MY_ENV_VAR",
+  );
+  await userEvent.type(
+    screen.getByLabelText("Environment variable value"),
+    "123_FOO",
+  );
+
   await userEvent.click(screen.getByRole("button", { name: "Submit" }));
-  expect(onSubmitMock).toHaveBeenCalledWith({
-    name: "foo-bar",
-    transport: "stdio",
-    image: "uvx://mcp-server-fetch",
-    cmd_arguments: ["-y", "--oauth-setup"],
-  });
+
+  const payload = onSubmitMock.mock.calls[0]?.[0];
+  expect(payload).toBeDefined();
+  expect(payload["name"], "Should have name").toBe("foo-bar");
+  expect(payload["transport"], "Should have transport").toBe("stdio");
+  expect(payload["image"], "Should have image").toBe("uvx://mcp-server-fetch");
+  expect(payload["cmd_arguments"], "Should have cmd_arguments").toEqual([
+    "-y",
+    "--oauth-setup",
+  ]);
+  expect(payload["env_vars"], "Should have env_vars").toEqual([
+    "MY_ENV_VAR=123_FOO",
+  ]);
 });
 
 it("should be able to run an MCP server with go", async () => {
@@ -159,11 +251,32 @@ it("should be able to run an MCP server with go", async () => {
     "-y --oauth-setup",
   );
 
+  await userEvent.click(
+    screen.getByRole("button", { name: "Add environment variable" }),
+  );
+  await userEvent.type(
+    screen.getByLabelText("Environment variable key"),
+    "MY_ENV_VAR",
+  );
+  await userEvent.type(
+    screen.getByLabelText("Environment variable value"),
+    "123_FOO",
+  );
+
   await userEvent.click(screen.getByRole("button", { name: "Submit" }));
-  expect(onSubmitMock).toHaveBeenCalledWith({
-    name: "foo-bar",
-    transport: "stdio",
-    image: "go://github.com/example/go-mcp-server",
-    cmd_arguments: ["-y", "--oauth-setup"],
-  });
+
+  const payload = onSubmitMock.mock.calls[0]?.[0];
+  expect(payload).toBeDefined();
+  expect(payload["name"], "Should have name").toBe("foo-bar");
+  expect(payload["transport"], "Should have transport").toBe("stdio");
+  expect(payload["image"], "Should have image").toBe(
+    "go://github.com/example/go-mcp-server",
+  );
+  expect(payload["cmd_arguments"], "Should have cmd_arguments").toEqual([
+    "-y",
+    "--oauth-setup",
+  ]);
+  expect(payload["env_vars"], "Should have env_vars").toEqual([
+    "MY_ENV_VAR=123_FOO",
+  ]);
 });
