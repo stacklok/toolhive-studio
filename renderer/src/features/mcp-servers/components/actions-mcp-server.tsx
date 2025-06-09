@@ -1,12 +1,12 @@
-import type { RuntimeContainerInfo } from "@/common/api/generated/types.gen";
-import { Switch } from "@/common/components/ui/switch";
+import type { RuntimeContainerInfo } from '@/common/api/generated/types.gen'
+import { Switch } from '@/common/components/ui/switch'
 
-function getStatusText(state: RuntimeContainerInfo["State"]) {
+function getStatusText(state: RuntimeContainerInfo['State']) {
   // We will have enum in the next API refactor
-  if (state === "running") return "Running";
-  if (state === "restarting") return "Restarting";
-  if (state === "exited") return "Stopped";
-  return "Unknown";
+  if (state === 'running') return 'Running'
+  if (state === 'restarting') return 'Restarting'
+  if (state === 'exited') return 'Stopped'
+  return 'Unknown'
 }
 
 export function ActionsMcpServer({
@@ -14,12 +14,12 @@ export function ActionsMcpServer({
   isPending,
   mutate,
 }: {
-  state: RuntimeContainerInfo["State"];
-  isPending: boolean;
-  mutate: () => void;
+  state: RuntimeContainerInfo['State']
+  isPending: boolean
+  mutate: () => void
 }) {
-  const isRestarting = state === "restarting";
-  const isRunning = state === "running";
+  const isRestarting = state === 'restarting'
+  const isRunning = state === 'running'
 
   return (
     <div className="flex gap-2">
@@ -32,9 +32,9 @@ export function ActionsMcpServer({
           onCheckedChange={() => mutate()}
         />
       </div>
-      <span className="capitalize text-sm text-muted-foreground">
+      <span className="text-muted-foreground text-sm capitalize">
         {getStatusText(state)}
       </span>
     </div>
-  );
+  )
 }

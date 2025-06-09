@@ -1,11 +1,11 @@
-import { Main } from "@/common/components/layout/main";
-import { TopNav } from "@/common/components/layout/top-nav";
-import type { QueryClient } from "@tanstack/react-query";
-import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { Main } from '@/common/components/layout/main'
+import { TopNav } from '@/common/components/layout/top-nav'
+import type { QueryClient } from '@tanstack/react-query'
+import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
+import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 
 export const Route = createRootRouteWithContext<{
-  queryClient: QueryClient;
+  queryClient: QueryClient
 }>()({
   component: () => (
     <>
@@ -19,6 +19,6 @@ export const Route = createRootRouteWithContext<{
   errorComponent: ({ error }) => <div>error: {error.message}</div>,
   notFoundComponent: () => <div>Not found component</div>,
   onError: (error) => {
-    console.error(error);
+    console.error(error)
   },
-});
+})

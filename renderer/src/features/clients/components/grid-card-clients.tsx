@@ -1,10 +1,10 @@
-import type { ClientMcpClientStatus } from "@/common/api/generated";
-import { CardClient } from "./card-client";
+import type { ClientMcpClientStatus } from '@/common/api/generated'
+import { CardClient } from './card-client'
 
 export function GridCardClients({
   clients,
 }: {
-  clients: ClientMcpClientStatus[];
+  clients: ClientMcpClientStatus[]
 }) {
   return (
     <div className="space-y-6">
@@ -14,5 +14,5 @@ export function GridCardClients({
         ))}
       </div>
     </div>
-  );
+  )
 }

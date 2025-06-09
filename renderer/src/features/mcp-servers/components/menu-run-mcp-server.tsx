@@ -1,39 +1,39 @@
-import { Button } from "@/common/components/ui/button";
+import { Button } from '@/common/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
-} from "@/common/components/ui/dropdown-menu";
-import { PlusIcon } from "lucide-react";
-import { Link } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { useNavigate } from "@tanstack/react-router";
+} from '@/common/components/ui/dropdown-menu'
+import { PlusIcon } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import { useEffect } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 
 export function DropdownMenuRunMcpServer({
   className,
   openRunCommandDialog,
 }: {
-  className?: string;
-  openRunCommandDialog: () => void;
+  className?: string
+  openRunCommandDialog: () => void
 }) {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "n") {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n') {
         if (e.shiftKey) {
-          e.preventDefault();
-          openRunCommandDialog();
+          e.preventDefault()
+          openRunCommandDialog()
         } else {
-          e.preventDefault();
-          navigate({ to: "/store" });
+          e.preventDefault()
+          navigate({ to: '/store' })
         }
       }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [navigate, openRunCommandDialog]);
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [navigate, openRunCommandDialog])
 
   return (
     <DropdownMenu>
@@ -60,5 +60,5 @@ export function DropdownMenuRunMcpServer({
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }

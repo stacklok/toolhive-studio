@@ -1,56 +1,56 @@
-import { useTheme } from "../../hooks/use-theme";
-import { Button } from "../ui/button";
+import { useTheme } from '../../hooks/use-theme'
+import { Button } from '../ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { Sun, Moon, Monitor } from "lucide-react";
+} from '../ui/dropdown-menu'
+import { Sun, Moon, Monitor } from 'lucide-react'
 
 export function ThemeToggle() {
-  const { setTheme } = useTheme();
+  const { setTheme } = useTheme()
 
-  const handleThemeChange = async (theme: "light" | "dark" | "system") => {
+  const handleThemeChange = async (theme: 'light' | 'dark' | 'system') => {
     try {
-      await setTheme(theme);
+      await setTheme(theme)
     } catch (error) {
-      console.error("Failed to change theme:", error);
+      console.error('Failed to change theme:', error)
     }
-  };
+  }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="cursor-pointer">
-          <Sun className="size-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Moon className="absolute size-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+          <Sun className="size-5 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+          <Moon className="absolute size-5 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-24">
         <DropdownMenuItem
-          onClick={() => handleThemeChange("light")}
+          onClick={() => handleThemeChange('light')}
           className="cursor-pointer"
         >
-          <Sun className="size-4 mr-2" />
+          <Sun className="mr-2 size-4" />
           Light
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => handleThemeChange("dark")}
+          onClick={() => handleThemeChange('dark')}
           className="cursor-pointer"
         >
-          <Moon className="size-4 mr-2" />
+          <Moon className="mr-2 size-4" />
           Dark
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => handleThemeChange("system")}
+          onClick={() => handleThemeChange('system')}
           className="cursor-pointer"
         >
-          <Monitor className="size-4 mr-2" />
+          <Monitor className="mr-2 size-4" />
           System
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }

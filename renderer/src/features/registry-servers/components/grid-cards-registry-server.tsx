@@ -1,60 +1,60 @@
-import type { RegistryServer } from "@/common/api/generated/types.gen";
-import { CardRegistryServer } from "./card-registry-server";
-import { FormCatalogCreation } from "./form-catalog-creation";
-import { useState, useMemo } from "react";
-import { Input } from "@/common/components/ui/input";
+import type { RegistryServer } from '@/common/api/generated/types.gen'
+import { CardRegistryServer } from './card-registry-server'
+import { FormCatalogCreation } from './form-catalog-creation'
+import { useState, useMemo } from 'react'
+import { Input } from '@/common/components/ui/input'
 
 export function GridCardsRegistryServer({
   servers,
   onSubmit,
 }: {
-  servers: RegistryServer[];
+  servers: RegistryServer[]
   onSubmit?: (
     server: RegistryServer,
-    data: { name: string; envVars: { name: string; value: string }[] },
-  ) => void;
+    data: { name: string; envVars: { name: string; value: string }[] }
+  ) => void
 }) {
-  const [filter, setFilter] = useState("");
+  const [filter, setFilter] = useState('')
   const [selectedServer, setSelectedServer] = useState<RegistryServer | null>(
-    null,
-  );
-  const [isModalOpen, setIsModalOpen] = useState(false);
+    null
+  )
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const filteredServers = useMemo(() => {
-    const searchTerm = filter.toLowerCase();
+    const searchTerm = filter.toLowerCase()
     return servers
       .filter((server) => {
-        const name = server.name?.toLowerCase() || "";
-        const description = server.description?.toLowerCase() || "";
-        return name.includes(searchTerm) || description.includes(searchTerm);
+        const name = server.name?.toLowerCase() || ''
+        const description = server.description?.toLowerCase() || ''
+        return name.includes(searchTerm) || description.includes(searchTerm)
       })
       .sort((a, b) => {
-        const nameA = a.name?.toLowerCase() || "";
-        const nameB = b.name?.toLowerCase() || "";
-        return nameA.localeCompare(nameB);
-      });
-  }, [servers, filter]);
+        const nameA = a.name?.toLowerCase() || ''
+        const nameB = b.name?.toLowerCase() || ''
+        return nameA.localeCompare(nameB)
+      })
+  }, [servers, filter])
 
   const handleCardClick = (server: RegistryServer) => {
-    setSelectedServer(server);
-    setIsModalOpen(true);
-  };
+    setSelectedServer(server)
+    setIsModalOpen(true)
+  }
 
   const handleModalSubmit = (data: {
-    name: string;
-    envVars: { name: string; value: string }[];
+    name: string
+    envVars: { name: string; value: string }[]
   }) => {
     if (selectedServer && onSubmit) {
-      onSubmit(selectedServer, data);
+      onSubmit(selectedServer, data)
     } else {
       // Fallback for when onSubmit is not provided
-      console.log("Installing server:", {
+      console.log('Installing server:', {
         serverName: data.name,
         sourceServer: selectedServer,
         envVars: data.envVars,
-      });
+      })
     }
-  };
+  }
 
   return (
     <div className="space-y-6">
@@ -76,7 +76,7 @@ export function GridCardsRegistryServer({
         ))}
       </div>
       {filteredServers.length === 0 && (
-        <div className="text-center text-muted-foreground py-12">
+        <div className="text-muted-foreground py-12 text-center">
           <p className="text-sm">
             No registry servers found matching the current filter
           </p>
@@ -91,5 +91,5 @@ export function GridCardsRegistryServer({
         onSubmit={handleModalSubmit}
       />
     </div>
-  );
+  )
 }

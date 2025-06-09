@@ -5,8 +5,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/common/components/ui/dialog";
-import { Button } from "@/common/components/ui/button";
+} from '@/common/components/ui/dialog'
+import { Button } from '@/common/components/ui/button'
 import {
   Form,
   FormControl,
@@ -15,35 +15,35 @@ import {
   FormLabel,
   FormMessage,
   FormDescription,
-} from "@/common/components/ui/form";
-import { Input } from "@/common/components/ui/input";
-import { Switch } from "@/common/components/ui/switch";
-import { useForm } from "react-hook-form";
-import type { RegistryServer } from "@/common/api/generated/types.gen";
-import { zodV4Resolver } from "@/common/lib/zod-v4-resolver";
-import { z } from "zod/v4";
+} from '@/common/components/ui/form'
+import { Input } from '@/common/components/ui/input'
+import { Switch } from '@/common/components/ui/switch'
+import { useForm } from 'react-hook-form'
+import type { RegistryServer } from '@/common/api/generated/types.gen'
+import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
+import { z } from 'zod/v4'
 
 const formCatalogCreationSchema = z.object({
-  serverName: z.string().min(1, "Server name is required"),
+  serverName: z.string().min(1, 'Server name is required'),
   envVars: z.array(
     z.object({
       name: z.string(),
       value: z.string().optional(),
       useDefault: z.boolean().default(false),
-    }),
+    })
   ),
-});
+})
 
-type FormCatalogCreationSchema = z.infer<typeof formCatalogCreationSchema>;
+type FormCatalogCreationSchema = z.infer<typeof formCatalogCreationSchema>
 
 interface FormCatalogCreationProps {
-  server: RegistryServer | null;
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+  server: RegistryServer | null
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
   onSubmit: (data: {
-    name: string;
-    envVars: { name: string; value: string }[];
-  }) => void;
+    name: string
+    envVars: { name: string; value: string }[]
+  }) => void
 }
 
 export function FormCatalogCreation({
@@ -55,40 +55,43 @@ export function FormCatalogCreation({
   const form = useForm<FormCatalogCreationSchema>({
     resolver: zodV4Resolver(formCatalogCreationSchema),
     defaultValues: {
-      serverName: server?.name || "",
+      serverName: server?.name || '',
       envVars:
         server?.env_vars?.map((envVar) => ({
-          name: envVar.name || "",
-          value: envVar.default || "",
+          name: envVar.name || '',
+          value: envVar.default || '',
           useDefault: !!envVar.default,
         })) || [],
     },
-  });
+  })
 
   const handleSubmit = (data: FormCatalogCreationSchema) => {
     const envVarsToSubmit = data.envVars
       .filter((envVar) => envVar.value || !envVar.useDefault)
       .map((envVar) => ({
         name: envVar.name,
-        value: envVar.value || "",
-      }));
+        value: envVar.value || '',
+      }))
 
     onSubmit({
       name: data.serverName,
       envVars: envVarsToSubmit,
-    });
-    onOpenChange(false);
-  };
+    })
+    onOpenChange(false)
+  }
 
-  if (!server) return null;
+  if (!server) return null
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="w-screen h-screen max-w-none max-h-none min-w-full m-0 rounded-none overflow-y-auto">
+      <DialogContent
+        className="m-0 h-screen max-h-none w-screen max-w-none min-w-full overflow-y-auto
+          rounded-none"
+      >
         <Form {...form} key={server?.name}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="h-full flex flex-col"
+            className="flex h-full flex-col"
           >
             <DialogHeader className="flex-shrink-0 px-6 pt-6">
               <DialogTitle>Configure {server.name}</DialogTitle>
@@ -124,7 +127,7 @@ export function FormCatalogCreation({
                 {server.env_vars && server.env_vars.length > 0 ? (
                   <>
                     <div className="border-t pt-6">
-                      <h3 className="text-lg font-medium mb-4">
+                      <h3 className="mb-4 text-lg font-medium">
                         Environment Variables
                       </h3>
                       <div className="space-y-4">
@@ -140,12 +143,12 @@ export function FormCatalogCreation({
                                     <FormLabel className="flex items-center gap-2">
                                       {envVar.name}
                                       {envVar.required && (
-                                        <span className="text-red-500 text-xs">
+                                        <span className="text-xs text-red-500">
                                           *
                                         </span>
                                       )}
                                       {envVar.secret && (
-                                        <span className="text-orange-500 text-xs bg-orange-100 px-1 rounded">
+                                        <span className="rounded bg-orange-100 px-1 text-xs text-orange-500">
                                           secret
                                         </span>
                                       )}
@@ -163,19 +166,19 @@ export function FormCatalogCreation({
                                         name={`envVars.${index}.useDefault`}
                                         render={({ field: switchField }) => (
                                           <FormItem className="flex items-center gap-2">
-                                            <FormLabel className="text-sm text-muted-foreground">
+                                            <FormLabel className="text-muted-foreground text-sm">
                                               Use default
                                             </FormLabel>
                                             <FormControl>
                                               <Switch
                                                 checked={switchField.value}
                                                 onCheckedChange={(checked) => {
-                                                  switchField.onChange(checked);
+                                                  switchField.onChange(checked)
                                                   if (checked) {
                                                     form.setValue(
                                                       `envVars.${index}.value`,
-                                                      envVar.default || "",
-                                                    );
+                                                      envVar.default || ''
+                                                    )
                                                   }
                                                 }}
                                               />
@@ -189,14 +192,14 @@ export function FormCatalogCreation({
                                 <FormControl>
                                   <Input
                                     {...field}
-                                    type={envVar.secret ? "password" : "text"}
+                                    type={envVar.secret ? 'password' : 'text'}
                                     placeholder={
                                       envVar.default
                                         ? `Default: ${envVar.default}`
-                                        : "Enter value..."
+                                        : 'Enter value...'
                                     }
                                     disabled={form.watch(
-                                      `envVars.${index}.useDefault`,
+                                      `envVars.${index}.useDefault`
                                     )}
                                   />
                                 </FormControl>
@@ -209,7 +212,7 @@ export function FormCatalogCreation({
                     </div>
                   </>
                 ) : (
-                  <div className="text-center text-muted-foreground py-8 border-t">
+                  <div className="text-muted-foreground border-t py-8 text-center">
                     <p>
                       This server doesn't require any environment variables.
                     </p>
@@ -232,5 +235,5 @@ export function FormCatalogCreation({
         </Form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

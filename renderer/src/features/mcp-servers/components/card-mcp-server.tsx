@@ -3,34 +3,34 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/common/components/ui/card";
+} from '@/common/components/ui/card'
 
-import type { RuntimeContainerInfo } from "@/common/api/generated";
-import { ActionsMcpServer } from "./actions-mcp-server";
-import { useMutationRestartServerList } from "../hooks/use-mutation-restart-server";
-import { useMutationStopServerList } from "../hooks/use-mutation-stop-server";
+import type { RuntimeContainerInfo } from '@/common/api/generated'
+import { ActionsMcpServer } from './actions-mcp-server'
+import { useMutationRestartServerList } from '../hooks/use-mutation-restart-server'
+import { useMutationStopServerList } from '../hooks/use-mutation-stop-server'
 
 type CardContentMcpServerProps = {
-  state: RuntimeContainerInfo["State"];
-  status: RuntimeContainerInfo["Status"];
-  repoUrl?: string;
-  name: string;
-};
+  state: RuntimeContainerInfo['State']
+  status: RuntimeContainerInfo['Status']
+  repoUrl?: string
+  name: string
+}
 
 function CardContentMcpServer({ name, state }: CardContentMcpServerProps) {
-  const isRunning = state === "running";
+  const isRunning = state === 'running'
   const { mutateAsync: restartMutate, isPending: isRestartPending } =
     useMutationRestartServerList({
       name,
-    });
+    })
   const { mutateAsync: stopMutate, isPending: isStopPending } =
     useMutationStopServerList({
       name,
-    });
+    })
 
   return (
     <CardContent>
-      <div className="flex items-center justify-between border-t border-border pt-4">
+      <div className="border-border flex items-center justify-between border-t pt-4">
         <ActionsMcpServer
           state={state}
           isPending={isRestartPending || isStopPending}
@@ -40,19 +40,19 @@ function CardContentMcpServer({ name, state }: CardContentMcpServerProps) {
                 path: {
                   name,
                 },
-              });
+              })
             }
 
             return restartMutate({
               path: {
                 name,
               },
-            });
+            })
           }}
         />
       </div>
     </CardContent>
-  );
+  )
 }
 
 export function CardMcpServer({
@@ -61,15 +61,15 @@ export function CardMcpServer({
   status,
   repoUrl,
 }: {
-  name: RuntimeContainerInfo["Name"];
-  state: RuntimeContainerInfo["State"];
-  status: RuntimeContainerInfo["Status"];
-  image: RuntimeContainerInfo["Image"];
-  repoUrl?: string;
-  transport?: string;
+  name: RuntimeContainerInfo['Name']
+  state: RuntimeContainerInfo['State']
+  status: RuntimeContainerInfo['Status']
+  image: RuntimeContainerInfo['Image']
+  repoUrl?: string
+  transport?: string
 }) {
   return (
-    <Card className="gap-3 py-5 hover:border-black dark:hover:border-white transition-colors">
+    <Card className="gap-3 py-5 transition-colors hover:border-black dark:hover:border-white">
       <CardHeader>
         <CardTitle className="flex items-center text-xl">{name}</CardTitle>
       </CardHeader>
@@ -81,5 +81,5 @@ export function CardMcpServer({
         name={name as string}
       />
     </Card>
-  );
+  )
 }
