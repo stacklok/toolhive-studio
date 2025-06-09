@@ -10,7 +10,7 @@ import net from 'node:net'
 
 // Sentry setup
 Sentry.init({
-  dsn: process.env.SENTRY_DSN,
+  dsn: import.meta.env.VITE_SENTRY_DSN,
 })
 
 // Forge environment variables
