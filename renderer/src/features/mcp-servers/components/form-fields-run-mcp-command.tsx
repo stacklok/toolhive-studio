@@ -211,7 +211,6 @@ export function FormFieldsRunMcpCommand({
                 Space separated arguments for the command.
               </TooltipInfoIcon>
             </div>
-            <FormLabel></FormLabel>
             <FormControl>
               <Input
                 placeholder="e.g. -y --oauth-setup"

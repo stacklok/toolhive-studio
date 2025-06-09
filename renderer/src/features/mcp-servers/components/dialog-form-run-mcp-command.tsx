@@ -17,26 +17,51 @@ import {
 import { Button } from "@/common/components/ui/button";
 import type { V1CreateRequest } from "@/common/api/generated";
 import { zodV4Resolver } from "@/common/lib/zod-v4-resolver";
+import { FormFieldsArrayCustomEnvVars } from "./form-fields-array-custom-env-vars";
 
-const transformData = (data: FormSchemaRunMcpCommand): V1CreateRequest => {
-  switch (data.type) {
+function mapEnvVars(envVars: { key: string; value: string }[]) {
+  return envVars.map((envVar) => `${envVar.key}=${envVar.value}`);
+}
+
+const transformTypeSpecificData = (
+  values: FormSchemaRunMcpCommand,
+): V1CreateRequest => {
+  const type = values.type;
+  switch (type) {
     case "docker_image": {
       return {
-        name: data.name,
-        transport: data.transport,
-        image: data.image,
-        cmd_arguments: data.cmd_arguments?.split(" "),
+        name: values.name,
+        transport: values.transport,
+        image: values.image,
       };
     }
     case "package_manager": {
       return {
-        name: data.name,
-        transport: data.transport,
-        image: `${data.protocol}://${data.package_name}`,
-        cmd_arguments: data.cmd_arguments?.split(" "),
+        name: values.name,
+        transport: values.transport,
+        image: `${values.protocol}://${values.package_name}`,
       };
     }
+    default:
+      return type satisfies never;
   }
+};
+
+const transformData = (values: FormSchemaRunMcpCommand): V1CreateRequest => {
+  const data = transformTypeSpecificData(values);
+
+  if (values.cmd_arguments != null) {
+    data.cmd_arguments = values.cmd_arguments.split(" ");
+  }
+
+  if (
+    Array.isArray(values.environment_variables) &&
+    values.environment_variables.length > 0
+  ) {
+    data.env_vars = mapEnvVars(values.environment_variables);
+  }
+
+  return data;
 };
 
 export function DialogFormRunMcpServerWithCommand({
@@ -74,6 +99,8 @@ export function DialogFormRunMcpServerWithCommand({
               </DialogDescription>
             </DialogHeader>
             <FormFieldsRunMcpCommand form={form} />
+
+            <FormFieldsArrayCustomEnvVars form={form} />
 
             <DialogFooter>
               <Button type="submit">Submit</Button>

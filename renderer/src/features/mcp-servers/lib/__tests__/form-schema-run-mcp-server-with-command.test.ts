@@ -8,6 +8,7 @@ it("passes with valid docker image", () => {
     type: "docker_image",
     image: "ghcr.io/github/github-mcp-server",
     cmd_arguments: "-y --oauth-setup",
+    environment_variables: [],
   };
 
   const result = formSchemaRunMcpCommand.safeParse(validInput);
@@ -18,6 +19,7 @@ it("passes with valid docker image", () => {
     type: "docker_image",
     image: "ghcr.io/github/github-mcp-server",
     cmd_arguments: "-y --oauth-setup",
+    environment_variables: [],
   });
 });
 
@@ -29,6 +31,7 @@ it("passes with valid npx command", () => {
     protocol: "npx",
     package_name: "server-everything",
     cmd_arguments: "-y --oauth-setup",
+    environment_variables: [],
   };
 
   const result = formSchemaRunMcpCommand.safeParse(validInput);
@@ -40,6 +43,7 @@ it("passes with valid npx command", () => {
     protocol: "npx",
     package_name: "server-everything",
     cmd_arguments: "-y --oauth-setup",
+    environment_variables: [],
   });
 });
 
@@ -51,6 +55,7 @@ it("passes with valid uvx command", () => {
     protocol: "uvx",
     package_name: "mcp-server-fetch",
     cmd_arguments: "-y --oauth-setup",
+    environment_variables: [],
   };
 
   const result = formSchemaRunMcpCommand.safeParse(validInput);
@@ -63,6 +68,7 @@ it("passes with valid uvx command", () => {
     protocol: "uvx",
     package_name: "mcp-server-fetch",
     cmd_arguments: "-y --oauth-setup",
+    environment_variables: [],
   });
 });
 
@@ -73,6 +79,7 @@ it("fails when name is empty", () => {
     type: "docker_image",
     image: "ghcr.io/github/github-mcp-server",
     cmd_arguments: "-y --oauth-setup",
+    environment_variables: [],
   };
 
   const result = formSchemaRunMcpCommand.safeParse(invalidInput);
@@ -92,6 +99,7 @@ it("fails when transport is empty", () => {
     type: "docker_image",
     image: "ghcr.io/github/github-mcp-server",
     cmd_arguments: "-y --oauth-setup",
+    environment_variables: [],
   };
 
   const result = formSchemaRunMcpCommand.safeParse(invalidInput);
@@ -111,6 +119,7 @@ it("fails when transport is invalid", () => {
     type: "docker_image",
     image: "ghcr.io/github/github-mcp-server",
     cmd_arguments: "-y --oauth-setup",
+    environment_variables: [],
   };
 
   const result = formSchemaRunMcpCommand.safeParse(invalidInput);
@@ -130,6 +139,7 @@ it("fails when type is empty", () => {
     type: "",
     image: "ghcr.io/github/github-mcp-server",
     cmd_arguments: "-y --oauth-setup",
+    environment_variables: [],
   };
 
   const result = formSchemaRunMcpCommand.safeParse(invalidInput);
@@ -149,6 +159,7 @@ it("fails when type is invalid", () => {
     type: "foobar",
     image: "ghcr.io/github/github-mcp-server",
     cmd_arguments: "-y --oauth-setup",
+    environment_variables: [],
   };
 
   const result = formSchemaRunMcpCommand.safeParse(invalidInput);
@@ -161,6 +172,48 @@ it("fails when type is invalid", () => {
   );
 });
 
+it("fails when environment_variables is missing key", () => {
+  const invalidInput = {
+    name: "github",
+    transport: "stdio",
+    type: "docker_image",
+    image: "ghcr.io/github/github-mcp-server",
+    cmd_arguments: "-y --oauth-setup",
+    environment_variables: [{ value: "some-value" }], // Missing key
+  };
+  const result = formSchemaRunMcpCommand.safeParse(invalidInput);
+  expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
+    expect.objectContaining({
+      fieldErrors: expect.objectContaining({
+        environment_variables: [
+          "Invalid input: expected string, received undefined",
+        ],
+      }),
+    }),
+  );
+});
+
+it("fails when environment_variables is missing value", () => {
+  const invalidInput = {
+    name: "github",
+    transport: "stdio",
+    type: "docker_image",
+    image: "ghcr.io/github/github-mcp-server",
+    cmd_arguments: "-y --oauth-setup",
+    environment_variables: [{ key: "SOME_KEY" }], // Missing value
+  };
+  const result = formSchemaRunMcpCommand.safeParse(invalidInput);
+  expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
+    expect.objectContaining({
+      fieldErrors: expect.objectContaining({
+        environment_variables: [
+          "Invalid input: expected string, received undefined",
+        ],
+      }),
+    }),
+  );
+});
+
 it("docker > fails when image is empty", () => {
   const invalidInput = {
     name: "github",
@@ -168,6 +221,7 @@ it("docker > fails when image is empty", () => {
     type: "docker_image",
     image: "",
     cmd_arguments: "-y --oauth-setup",
+    environment_variables: [],
   };
 
   const result = formSchemaRunMcpCommand.safeParse(invalidInput);
@@ -188,6 +242,7 @@ it("package_manager > fails when protocol is empty", () => {
     protocol: "",
     package_name: "mcp-server-fetch",
     cmd_arguments: "-y --oauth-setup",
+    environment_variables: [],
   };
 
   const result = formSchemaRunMcpCommand.safeParse(invalidInput);
@@ -208,6 +263,7 @@ it("package_manager > fails when protocol is invalid", () => {
     protocol: "foobar",
     package_name: "mcp-server-fetch",
     cmd_arguments: "-y --oauth-setup",
+    environment_variables: [],
   };
 
   const result = formSchemaRunMcpCommand.safeParse(invalidInput);
@@ -228,6 +284,7 @@ it("package_manager > fails when package_name is empty", () => {
     protocol: "uvx",
     package_name: "",
     cmd_arguments: "-y --oauth-setup",
+    environment_variables: [],
   };
 
   const result = formSchemaRunMcpCommand.safeParse(invalidInput);
