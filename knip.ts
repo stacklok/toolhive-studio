@@ -9,6 +9,9 @@ export default {
     "rerender/vite.renderer.config.ts",
     "rerender/src/**/*.test.{ts,tsx}",
     "rerender/src/**/__tests__/**/*.{ts,tsx}",
+    "rerender/src/common/test/**/*.{ts,tsx}",
+    "rerender/src/common/mocks/**/*.{ts,tsx}",
+    "rerender/vitest.setup.ts",
   ],
   project: ["rerender/src/**"],
   paths: {
@@ -27,6 +30,7 @@ export default {
   ignoreDependencies: [
     "@electron-forge/maker-flatpak",
     "@electron-forge/publisher-github",
+    "@vitest/coverage-istanbul",
   ],
   compilers: {
     // this is needed to support css entry files
