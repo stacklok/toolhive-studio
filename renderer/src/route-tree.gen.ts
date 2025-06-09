@@ -10,111 +10,111 @@
 
 // Import Routes
 
-import { Route as rootRoute } from "./routes/__root";
-import { Route as StoreImport } from "./routes/store";
-import { Route as ClientsImport } from "./routes/clients";
-import { Route as IndexImport } from "./routes/index";
-import { Route as ServerServerNameImport } from "./routes/server/$serverName";
+import { Route as rootRoute } from './routes/__root'
+import { Route as StoreImport } from './routes/store'
+import { Route as ClientsImport } from './routes/clients'
+import { Route as IndexImport } from './routes/index'
+import { Route as ServerServerNameImport } from './routes/server/$serverName'
 
 // Create/Update Routes
 
 const StoreRoute = StoreImport.update({
-  id: "/store",
-  path: "/store",
+  id: '/store',
+  path: '/store',
   getParentRoute: () => rootRoute,
-} as any);
+} as any)
 
 const ClientsRoute = ClientsImport.update({
-  id: "/clients",
-  path: "/clients",
+  id: '/clients',
+  path: '/clients',
   getParentRoute: () => rootRoute,
-} as any);
+} as any)
 
 const IndexRoute = IndexImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRoute,
-} as any);
+} as any)
 
 const ServerServerNameRoute = ServerServerNameImport.update({
-  id: "/server/$serverName",
-  path: "/server/$serverName",
+  id: '/server/$serverName',
+  path: '/server/$serverName',
   getParentRoute: () => rootRoute,
-} as any);
+} as any)
 
 // Populate the FileRoutesByPath interface
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/": {
-      id: "/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof IndexImport;
-      parentRoute: typeof rootRoute;
-    };
-    "/clients": {
-      id: "/clients";
-      path: "/clients";
-      fullPath: "/clients";
-      preLoaderRoute: typeof ClientsImport;
-      parentRoute: typeof rootRoute;
-    };
-    "/store": {
-      id: "/store";
-      path: "/store";
-      fullPath: "/store";
-      preLoaderRoute: typeof StoreImport;
-      parentRoute: typeof rootRoute;
-    };
-    "/server/$serverName": {
-      id: "/server/$serverName";
-      path: "/server/$serverName";
-      fullPath: "/server/$serverName";
-      preLoaderRoute: typeof ServerServerNameImport;
-      parentRoute: typeof rootRoute;
-    };
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/clients': {
+      id: '/clients'
+      path: '/clients'
+      fullPath: '/clients'
+      preLoaderRoute: typeof ClientsImport
+      parentRoute: typeof rootRoute
+    }
+    '/store': {
+      id: '/store'
+      path: '/store'
+      fullPath: '/store'
+      preLoaderRoute: typeof StoreImport
+      parentRoute: typeof rootRoute
+    }
+    '/server/$serverName': {
+      id: '/server/$serverName'
+      path: '/server/$serverName'
+      fullPath: '/server/$serverName'
+      preLoaderRoute: typeof ServerServerNameImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
 // Create and export the route tree
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute;
-  "/clients": typeof ClientsRoute;
-  "/store": typeof StoreRoute;
-  "/server/$serverName": typeof ServerServerNameRoute;
+  '/': typeof IndexRoute
+  '/clients': typeof ClientsRoute
+  '/store': typeof StoreRoute
+  '/server/$serverName': typeof ServerServerNameRoute
 }
 
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute;
-  "/clients": typeof ClientsRoute;
-  "/store": typeof StoreRoute;
-  "/server/$serverName": typeof ServerServerNameRoute;
+  '/': typeof IndexRoute
+  '/clients': typeof ClientsRoute
+  '/store': typeof StoreRoute
+  '/server/$serverName': typeof ServerServerNameRoute
 }
 
 export interface FileRoutesById {
-  __root__: typeof rootRoute;
-  "/": typeof IndexRoute;
-  "/clients": typeof ClientsRoute;
-  "/store": typeof StoreRoute;
-  "/server/$serverName": typeof ServerServerNameRoute;
+  __root__: typeof rootRoute
+  '/': typeof IndexRoute
+  '/clients': typeof ClientsRoute
+  '/store': typeof StoreRoute
+  '/server/$serverName': typeof ServerServerNameRoute
 }
 
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: "/" | "/clients" | "/store" | "/server/$serverName";
-  fileRoutesByTo: FileRoutesByTo;
-  to: "/" | "/clients" | "/store" | "/server/$serverName";
-  id: "__root__" | "/" | "/clients" | "/store" | "/server/$serverName";
-  fileRoutesById: FileRoutesById;
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths: '/' | '/clients' | '/store' | '/server/$serverName'
+  fileRoutesByTo: FileRoutesByTo
+  to: '/' | '/clients' | '/store' | '/server/$serverName'
+  id: '__root__' | '/' | '/clients' | '/store' | '/server/$serverName'
+  fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  ClientsRoute: typeof ClientsRoute;
-  StoreRoute: typeof StoreRoute;
-  ServerServerNameRoute: typeof ServerServerNameRoute;
+  IndexRoute: typeof IndexRoute
+  ClientsRoute: typeof ClientsRoute
+  StoreRoute: typeof StoreRoute
+  ServerServerNameRoute: typeof ServerServerNameRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -122,11 +122,11 @@ const rootRouteChildren: RootRouteChildren = {
   ClientsRoute: ClientsRoute,
   StoreRoute: StoreRoute,
   ServerServerNameRoute: ServerServerNameRoute,
-};
+}
 
 export const routeTree = rootRoute
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()
 
 /* ROUTE_MANIFEST_START
 {

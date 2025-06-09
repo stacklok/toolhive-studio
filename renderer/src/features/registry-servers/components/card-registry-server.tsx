@@ -3,26 +3,27 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
-} from "@/common/components/ui/card";
-import type { RegistryServer } from "@/common/api/generated/types.gen";
-import { Plus } from "lucide-react";
+} from '@/common/components/ui/card'
+import type { RegistryServer } from '@/common/api/generated/types.gen'
+import { Plus } from 'lucide-react'
 
 export function CardRegistryServer({
   server,
   onClick,
 }: {
-  server: RegistryServer;
-  onClick?: () => void;
+  server: RegistryServer
+  onClick?: () => void
 }) {
   return (
     <Card
-      className="gap-3 py-5 hover:border-black dark:hover:border-white transition-colors cursor-pointer"
+      className="cursor-pointer gap-3 py-5 transition-colors hover:border-black
+        dark:hover:border-white"
       onClick={onClick}
     >
       <CardHeader>
         <CardTitle className="flex items-center justify-between text-xl">
           <span>{server.name}</span>
-          <Plus className="size-5 text-muted-foreground" />
+          <Plus className="text-muted-foreground size-5" />
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -31,5 +32,5 @@ export function CardRegistryServer({
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

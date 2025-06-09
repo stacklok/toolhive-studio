@@ -18,8 +18,8 @@ import {
   postApiV1BetaServersByNameStop,
   getApiV1BetaVersion,
   getHealth,
-} from "../sdk.gen";
-import { queryOptions, type UseMutationOptions } from "@tanstack/react-query";
+} from '../sdk.gen'
+import { queryOptions, type UseMutationOptions } from '@tanstack/react-query'
 import type {
   GetApiOpenapiJsonData,
   GetApiV1BetaDiscoveryClientsData,
@@ -48,53 +48,53 @@ import type {
   PostApiV1BetaServersByNameStopResponse,
   GetApiV1BetaVersionData,
   GetHealthData,
-} from "../types.gen";
-import { client as _heyApiClient } from "../client.gen";
+} from '../types.gen'
+import { client as _heyApiClient } from '../client.gen'
 
 export type QueryKey<TOptions extends Options> = [
-  Pick<TOptions, "baseUrl" | "body" | "headers" | "path" | "query"> & {
-    _id: string;
-    _infinite?: boolean;
+  Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
+    _id: string
+    _infinite?: boolean
   },
-];
+]
 
 const createQueryKey = <TOptions extends Options>(
   id: string,
   options?: TOptions,
-  infinite?: boolean,
+  infinite?: boolean
 ): [QueryKey<TOptions>[0]] => {
   const params: QueryKey<TOptions>[0] = {
     _id: id,
     baseUrl: (options?.client ?? _heyApiClient).getConfig().baseUrl,
-  } as QueryKey<TOptions>[0];
+  } as QueryKey<TOptions>[0]
   if (infinite) {
-    params._infinite = infinite;
+    params._infinite = infinite
   }
   if (options?.body) {
-    params.body = options.body;
+    params.body = options.body
   }
   if (options?.headers) {
-    params.headers = options.headers;
+    params.headers = options.headers
   }
   if (options?.path) {
-    params.path = options.path;
+    params.path = options.path
   }
   if (options?.query) {
-    params.query = options.query;
+    params.query = options.query
   }
-  return [params];
-};
+  return [params]
+}
 
 export const getApiOpenapiJsonQueryKey = (
-  options?: Options<GetApiOpenapiJsonData>,
-) => createQueryKey("getApiOpenapiJson", options);
+  options?: Options<GetApiOpenapiJsonData>
+) => createQueryKey('getApiOpenapiJson', options)
 
 /**
  * Get OpenAPI specification
  * Returns the OpenAPI specification for the API
  */
 export const getApiOpenapiJsonOptions = (
-  options?: Options<GetApiOpenapiJsonData>,
+  options?: Options<GetApiOpenapiJsonData>
 ) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
@@ -103,23 +103,23 @@ export const getApiOpenapiJsonOptions = (
         ...queryKey[0],
         signal,
         throwOnError: true,
-      });
-      return data;
+      })
+      return data
     },
     queryKey: getApiOpenapiJsonQueryKey(options),
-  });
-};
+  })
+}
 
 export const getApiV1BetaDiscoveryClientsQueryKey = (
-  options?: Options<GetApiV1BetaDiscoveryClientsData>,
-) => createQueryKey("getApiV1BetaDiscoveryClients", options);
+  options?: Options<GetApiV1BetaDiscoveryClientsData>
+) => createQueryKey('getApiV1BetaDiscoveryClients', options)
 
 /**
  * List all clients status
  * List all clients compatible with ToolHive and their status
  */
 export const getApiV1BetaDiscoveryClientsOptions = (
-  options?: Options<GetApiV1BetaDiscoveryClientsData>,
+  options?: Options<GetApiV1BetaDiscoveryClientsData>
 ) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
@@ -128,23 +128,23 @@ export const getApiV1BetaDiscoveryClientsOptions = (
         ...queryKey[0],
         signal,
         throwOnError: true,
-      });
-      return data;
+      })
+      return data
     },
     queryKey: getApiV1BetaDiscoveryClientsQueryKey(options),
-  });
-};
+  })
+}
 
 export const getApiV1BetaRegistryQueryKey = (
-  options?: Options<GetApiV1BetaRegistryData>,
-) => createQueryKey("getApiV1BetaRegistry", options);
+  options?: Options<GetApiV1BetaRegistryData>
+) => createQueryKey('getApiV1BetaRegistry', options)
 
 /**
  * List registries
  * Get a list of the current registries
  */
 export const getApiV1BetaRegistryOptions = (
-  options?: Options<GetApiV1BetaRegistryData>,
+  options?: Options<GetApiV1BetaRegistryData>
 ) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
@@ -153,23 +153,23 @@ export const getApiV1BetaRegistryOptions = (
         ...queryKey[0],
         signal,
         throwOnError: true,
-      });
-      return data;
+      })
+      return data
     },
     queryKey: getApiV1BetaRegistryQueryKey(options),
-  });
-};
+  })
+}
 
 export const postApiV1BetaRegistryQueryKey = (
-  options?: Options<PostApiV1BetaRegistryData>,
-) => createQueryKey("postApiV1BetaRegistry", options);
+  options?: Options<PostApiV1BetaRegistryData>
+) => createQueryKey('postApiV1BetaRegistry', options)
 
 /**
  * Add a registry
  * Add a new registry
  */
 export const postApiV1BetaRegistryOptions = (
-  options?: Options<PostApiV1BetaRegistryData>,
+  options?: Options<PostApiV1BetaRegistryData>
 ) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
@@ -178,19 +178,19 @@ export const postApiV1BetaRegistryOptions = (
         ...queryKey[0],
         signal,
         throwOnError: true,
-      });
-      return data;
+      })
+      return data
     },
     queryKey: postApiV1BetaRegistryQueryKey(options),
-  });
-};
+  })
+}
 
 /**
  * Add a registry
  * Add a new registry
  */
 export const postApiV1BetaRegistryMutation = (
-  options?: Partial<Options<PostApiV1BetaRegistryData>>,
+  options?: Partial<Options<PostApiV1BetaRegistryData>>
 ): UseMutationOptions<
   unknown,
   PostApiV1BetaRegistryError,
@@ -206,19 +206,19 @@ export const postApiV1BetaRegistryMutation = (
         ...options,
         ...localOptions,
         throwOnError: true,
-      });
-      return data;
+      })
+      return data
     },
-  };
-  return mutationOptions;
-};
+  }
+  return mutationOptions
+}
 
 /**
  * Remove a registry
  * Remove a specific registry
  */
 export const deleteApiV1BetaRegistryByNameMutation = (
-  options?: Partial<Options<DeleteApiV1BetaRegistryByNameData>>,
+  options?: Partial<Options<DeleteApiV1BetaRegistryByNameData>>
 ): UseMutationOptions<
   DeleteApiV1BetaRegistryByNameResponse,
   DeleteApiV1BetaRegistryByNameError,
@@ -234,23 +234,23 @@ export const deleteApiV1BetaRegistryByNameMutation = (
         ...options,
         ...localOptions,
         throwOnError: true,
-      });
-      return data;
+      })
+      return data
     },
-  };
-  return mutationOptions;
-};
+  }
+  return mutationOptions
+}
 
 export const getApiV1BetaRegistryByNameQueryKey = (
-  options: Options<GetApiV1BetaRegistryByNameData>,
-) => createQueryKey("getApiV1BetaRegistryByName", options);
+  options: Options<GetApiV1BetaRegistryByNameData>
+) => createQueryKey('getApiV1BetaRegistryByName', options)
 
 /**
  * Get a registry
  * Get details of a specific registry
  */
 export const getApiV1BetaRegistryByNameOptions = (
-  options: Options<GetApiV1BetaRegistryByNameData>,
+  options: Options<GetApiV1BetaRegistryByNameData>
 ) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
@@ -259,23 +259,23 @@ export const getApiV1BetaRegistryByNameOptions = (
         ...queryKey[0],
         signal,
         throwOnError: true,
-      });
-      return data;
+      })
+      return data
     },
     queryKey: getApiV1BetaRegistryByNameQueryKey(options),
-  });
-};
+  })
+}
 
 export const getApiV1BetaRegistryByNameServersQueryKey = (
-  options: Options<GetApiV1BetaRegistryByNameServersData>,
-) => createQueryKey("getApiV1BetaRegistryByNameServers", options);
+  options: Options<GetApiV1BetaRegistryByNameServersData>
+) => createQueryKey('getApiV1BetaRegistryByNameServers', options)
 
 /**
  * List servers in a registry
  * Get a list of servers in a specific registry
  */
 export const getApiV1BetaRegistryByNameServersOptions = (
-  options: Options<GetApiV1BetaRegistryByNameServersData>,
+  options: Options<GetApiV1BetaRegistryByNameServersData>
 ) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
@@ -284,23 +284,23 @@ export const getApiV1BetaRegistryByNameServersOptions = (
         ...queryKey[0],
         signal,
         throwOnError: true,
-      });
-      return data;
+      })
+      return data
     },
     queryKey: getApiV1BetaRegistryByNameServersQueryKey(options),
-  });
-};
+  })
+}
 
 export const getApiV1BetaRegistryByNameServersByServerNameQueryKey = (
-  options: Options<GetApiV1BetaRegistryByNameServersByServerNameData>,
-) => createQueryKey("getApiV1BetaRegistryByNameServersByServerName", options);
+  options: Options<GetApiV1BetaRegistryByNameServersByServerNameData>
+) => createQueryKey('getApiV1BetaRegistryByNameServersByServerName', options)
 
 /**
  * Get a server from a registry
  * Get details of a specific server in a registry
  */
 export const getApiV1BetaRegistryByNameServersByServerNameOptions = (
-  options: Options<GetApiV1BetaRegistryByNameServersByServerNameData>,
+  options: Options<GetApiV1BetaRegistryByNameServersByServerNameData>
 ) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
@@ -309,23 +309,23 @@ export const getApiV1BetaRegistryByNameServersByServerNameOptions = (
         ...queryKey[0],
         signal,
         throwOnError: true,
-      });
-      return data;
+      })
+      return data
     },
     queryKey: getApiV1BetaRegistryByNameServersByServerNameQueryKey(options),
-  });
-};
+  })
+}
 
 export const getApiV1BetaServersQueryKey = (
-  options?: Options<GetApiV1BetaServersData>,
-) => createQueryKey("getApiV1BetaServers", options);
+  options?: Options<GetApiV1BetaServersData>
+) => createQueryKey('getApiV1BetaServers', options)
 
 /**
  * List all servers
  * Get a list of all running servers
  */
 export const getApiV1BetaServersOptions = (
-  options?: Options<GetApiV1BetaServersData>,
+  options?: Options<GetApiV1BetaServersData>
 ) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
@@ -334,23 +334,23 @@ export const getApiV1BetaServersOptions = (
         ...queryKey[0],
         signal,
         throwOnError: true,
-      });
-      return data;
+      })
+      return data
     },
     queryKey: getApiV1BetaServersQueryKey(options),
-  });
-};
+  })
+}
 
 export const postApiV1BetaServersQueryKey = (
-  options: Options<PostApiV1BetaServersData>,
-) => createQueryKey("postApiV1BetaServers", options);
+  options: Options<PostApiV1BetaServersData>
+) => createQueryKey('postApiV1BetaServers', options)
 
 /**
  * Create a new server
  * Create and start a new server
  */
 export const postApiV1BetaServersOptions = (
-  options: Options<PostApiV1BetaServersData>,
+  options: Options<PostApiV1BetaServersData>
 ) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
@@ -359,19 +359,19 @@ export const postApiV1BetaServersOptions = (
         ...queryKey[0],
         signal,
         throwOnError: true,
-      });
-      return data;
+      })
+      return data
     },
     queryKey: postApiV1BetaServersQueryKey(options),
-  });
-};
+  })
+}
 
 /**
  * Create a new server
  * Create and start a new server
  */
 export const postApiV1BetaServersMutation = (
-  options?: Partial<Options<PostApiV1BetaServersData>>,
+  options?: Partial<Options<PostApiV1BetaServersData>>
 ): UseMutationOptions<
   PostApiV1BetaServersResponse,
   PostApiV1BetaServersError,
@@ -387,19 +387,19 @@ export const postApiV1BetaServersMutation = (
         ...options,
         ...localOptions,
         throwOnError: true,
-      });
-      return data;
+      })
+      return data
     },
-  };
-  return mutationOptions;
-};
+  }
+  return mutationOptions
+}
 
 /**
  * Delete a server
  * Delete a server
  */
 export const deleteApiV1BetaServersByNameMutation = (
-  options?: Partial<Options<DeleteApiV1BetaServersByNameData>>,
+  options?: Partial<Options<DeleteApiV1BetaServersByNameData>>
 ): UseMutationOptions<
   DeleteApiV1BetaServersByNameResponse,
   DeleteApiV1BetaServersByNameError,
@@ -415,23 +415,23 @@ export const deleteApiV1BetaServersByNameMutation = (
         ...options,
         ...localOptions,
         throwOnError: true,
-      });
-      return data;
+      })
+      return data
     },
-  };
-  return mutationOptions;
-};
+  }
+  return mutationOptions
+}
 
 export const getApiV1BetaServersByNameQueryKey = (
-  options: Options<GetApiV1BetaServersByNameData>,
-) => createQueryKey("getApiV1BetaServersByName", options);
+  options: Options<GetApiV1BetaServersByNameData>
+) => createQueryKey('getApiV1BetaServersByName', options)
 
 /**
  * Get server details
  * Get details of a specific server
  */
 export const getApiV1BetaServersByNameOptions = (
-  options: Options<GetApiV1BetaServersByNameData>,
+  options: Options<GetApiV1BetaServersByNameData>
 ) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
@@ -440,23 +440,23 @@ export const getApiV1BetaServersByNameOptions = (
         ...queryKey[0],
         signal,
         throwOnError: true,
-      });
-      return data;
+      })
+      return data
     },
     queryKey: getApiV1BetaServersByNameQueryKey(options),
-  });
-};
+  })
+}
 
 export const postApiV1BetaServersByNameRestartQueryKey = (
-  options: Options<PostApiV1BetaServersByNameRestartData>,
-) => createQueryKey("postApiV1BetaServersByNameRestart", options);
+  options: Options<PostApiV1BetaServersByNameRestartData>
+) => createQueryKey('postApiV1BetaServersByNameRestart', options)
 
 /**
  * Restart a server
  * Restart a running server
  */
 export const postApiV1BetaServersByNameRestartOptions = (
-  options: Options<PostApiV1BetaServersByNameRestartData>,
+  options: Options<PostApiV1BetaServersByNameRestartData>
 ) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
@@ -465,19 +465,19 @@ export const postApiV1BetaServersByNameRestartOptions = (
         ...queryKey[0],
         signal,
         throwOnError: true,
-      });
-      return data;
+      })
+      return data
     },
     queryKey: postApiV1BetaServersByNameRestartQueryKey(options),
-  });
-};
+  })
+}
 
 /**
  * Restart a server
  * Restart a running server
  */
 export const postApiV1BetaServersByNameRestartMutation = (
-  options?: Partial<Options<PostApiV1BetaServersByNameRestartData>>,
+  options?: Partial<Options<PostApiV1BetaServersByNameRestartData>>
 ): UseMutationOptions<
   PostApiV1BetaServersByNameRestartResponse,
   PostApiV1BetaServersByNameRestartError,
@@ -493,23 +493,23 @@ export const postApiV1BetaServersByNameRestartMutation = (
         ...options,
         ...localOptions,
         throwOnError: true,
-      });
-      return data;
+      })
+      return data
     },
-  };
-  return mutationOptions;
-};
+  }
+  return mutationOptions
+}
 
 export const postApiV1BetaServersByNameStopQueryKey = (
-  options: Options<PostApiV1BetaServersByNameStopData>,
-) => createQueryKey("postApiV1BetaServersByNameStop", options);
+  options: Options<PostApiV1BetaServersByNameStopData>
+) => createQueryKey('postApiV1BetaServersByNameStop', options)
 
 /**
  * Stop a server
  * Stop a running server
  */
 export const postApiV1BetaServersByNameStopOptions = (
-  options: Options<PostApiV1BetaServersByNameStopData>,
+  options: Options<PostApiV1BetaServersByNameStopData>
 ) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
@@ -518,19 +518,19 @@ export const postApiV1BetaServersByNameStopOptions = (
         ...queryKey[0],
         signal,
         throwOnError: true,
-      });
-      return data;
+      })
+      return data
     },
     queryKey: postApiV1BetaServersByNameStopQueryKey(options),
-  });
-};
+  })
+}
 
 /**
  * Stop a server
  * Stop a running server
  */
 export const postApiV1BetaServersByNameStopMutation = (
-  options?: Partial<Options<PostApiV1BetaServersByNameStopData>>,
+  options?: Partial<Options<PostApiV1BetaServersByNameStopData>>
 ): UseMutationOptions<
   PostApiV1BetaServersByNameStopResponse,
   PostApiV1BetaServersByNameStopError,
@@ -546,23 +546,23 @@ export const postApiV1BetaServersByNameStopMutation = (
         ...options,
         ...localOptions,
         throwOnError: true,
-      });
-      return data;
+      })
+      return data
     },
-  };
-  return mutationOptions;
-};
+  }
+  return mutationOptions
+}
 
 export const getApiV1BetaVersionQueryKey = (
-  options?: Options<GetApiV1BetaVersionData>,
-) => createQueryKey("getApiV1BetaVersion", options);
+  options?: Options<GetApiV1BetaVersionData>
+) => createQueryKey('getApiV1BetaVersion', options)
 
 /**
  * Get server version
  * Returns the current version of the server
  */
 export const getApiV1BetaVersionOptions = (
-  options?: Options<GetApiV1BetaVersionData>,
+  options?: Options<GetApiV1BetaVersionData>
 ) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
@@ -571,15 +571,15 @@ export const getApiV1BetaVersionOptions = (
         ...queryKey[0],
         signal,
         throwOnError: true,
-      });
-      return data;
+      })
+      return data
     },
     queryKey: getApiV1BetaVersionQueryKey(options),
-  });
-};
+  })
+}
 
 export const getHealthQueryKey = (options?: Options<GetHealthData>) =>
-  createQueryKey("getHealth", options);
+  createQueryKey('getHealth', options)
 
 /**
  * Health check
@@ -593,9 +593,9 @@ export const getHealthOptions = (options?: Options<GetHealthData>) => {
         ...queryKey[0],
         signal,
         throwOnError: true,
-      });
-      return data;
+      })
+      return data
     },
     queryKey: getHealthQueryKey(options),
-  });
-};
+  })
+}

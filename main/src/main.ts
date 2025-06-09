@@ -1,87 +1,87 @@
-import { app, BrowserWindow, Tray, ipcMain, nativeTheme } from "electron";
-import path from "node:path";
-import { existsSync } from "node:fs";
-import started from "electron-squirrel-startup";
-import { spawn } from "node:child_process";
-import { initTray } from "./system-tray";
-import { setAutoLaunch, getAutoLaunchStatus } from "./auto-launch";
-import net from "node:net";
+import { app, BrowserWindow, Tray, ipcMain, nativeTheme } from 'electron'
+import path from 'node:path'
+import { existsSync } from 'node:fs'
+import started from 'electron-squirrel-startup'
+import { spawn } from 'node:child_process'
+import { initTray } from './system-tray'
+import { setAutoLaunch, getAutoLaunchStatus } from './auto-launch'
+import net from 'node:net'
 
 // Forge environment variables
-declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined;
-declare const MAIN_WINDOW_VITE_NAME: string;
+declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined
+declare const MAIN_WINDOW_VITE_NAME: string
 
 // Determine the binary path for both dev and prod
-const binName = process.platform === "win32" ? "thv.exe" : "thv";
+const binName = process.platform === 'win32' ? 'thv.exe' : 'thv'
 const binPath = app.isPackaged
   ? path.join(
       process.resourcesPath,
-      "bin",
+      'bin',
       `${process.platform}-${process.arch}`,
-      binName,
+      binName
     )
   : path.resolve(
       __dirname,
-      "..",
-      "..",
-      "bin",
+      '..',
+      '..',
+      'bin',
       `${process.platform}-${process.arch}`,
-      binName,
-    );
+      binName
+    )
 
-console.log(`ToolHive binary path: ${binPath}`);
-console.log(`Binary file exists: ${existsSync(binPath)}`);
+console.log(`ToolHive binary path: ${binPath}`)
+console.log(`Binary file exists: ${existsSync(binPath)}`)
 
 // For cleaning up
-let toolhiveProcess: ReturnType<typeof spawn> | undefined;
-let tray: Tray | null = null;
-let toolhivePort: number | undefined;
+let toolhiveProcess: ReturnType<typeof spawn> | undefined
+let tray: Tray | null = null
+let toolhivePort: number | undefined
 
 function findFreePort(): Promise<number> {
   return new Promise((resolve, reject) => {
-    const server = net.createServer();
+    const server = net.createServer()
     server.listen(0, () => {
-      const address = server.address();
-      if (typeof address === "object" && address && address.port) {
-        const port = address.port;
-        server.close(() => resolve(port));
+      const address = server.address()
+      if (typeof address === 'object' && address && address.port) {
+        const port = address.port
+        server.close(() => resolve(port))
       } else {
-        reject(new Error("Failed to get port"));
+        reject(new Error('Failed to get port'))
       }
-    });
-    server.on("error", reject);
-  });
+    })
+    server.on('error', reject)
+  })
 }
 
 async function startToolhive() {
   if (!existsSync(binPath)) {
-    console.error(`ToolHive binary not found at: ${binPath}`);
-    return;
+    console.error(`ToolHive binary not found at: ${binPath}`)
+    return
   }
-  toolhivePort = await findFreePort();
-  console.log(`Starting ToolHive from: ${binPath} on port ${toolhivePort}`);
+  toolhivePort = await findFreePort()
+  console.log(`Starting ToolHive from: ${binPath} on port ${toolhivePort}`)
   toolhiveProcess = spawn(
     binPath,
-    ["serve", "--openapi", `--port=${toolhivePort}`],
+    ['serve', '--openapi', `--port=${toolhivePort}`],
     {
-      stdio: "ignore",
+      stdio: 'ignore',
       detached: true,
-    },
-  );
-  toolhiveProcess.on("error", (error) => {
-    console.error("Failed to start ToolHive:", error);
-  });
-  toolhiveProcess.unref();
+    }
+  )
+  toolhiveProcess.on('error', (error) => {
+    console.error('Failed to start ToolHive:', error)
+  })
+  toolhiveProcess.unref()
 }
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
-  app.quit();
+  app.quit()
 }
 
 // Check if app should start hidden
 const shouldStartHidden =
-  process.argv.includes("--hidden") || process.argv.includes("--start-hidden");
+  process.argv.includes('--hidden') || process.argv.includes('--start-hidden')
 
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
@@ -89,120 +89,120 @@ const createWindow = () => {
     height: 700,
     show: !shouldStartHidden, // Don't show window if starting hidden
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
+      preload: path.join(__dirname, 'preload.js'),
       webSecurity: false, // TODO: fix security configuration
     },
-  });
+  })
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(`${MAIN_WINDOW_VITE_DEV_SERVER_URL}/`);
+    mainWindow.loadURL(`${MAIN_WINDOW_VITE_DEV_SERVER_URL}/`)
   } else {
     mainWindow.loadFile(
-      path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`),
-    );
+      path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)
+    )
   }
 
   if (!shouldStartHidden) {
-    mainWindow.webContents.openDevTools();
+    mainWindow.webContents.openDevTools()
   }
 
-  return mainWindow;
-};
+  return mainWindow
+}
 
-let mainWindow: BrowserWindow | null = null;
+let mainWindow: BrowserWindow | null = null
 
-app.on("ready", () => {
-  startToolhive();
-  mainWindow = createWindow();
-});
+app.on('ready', () => {
+  startToolhive()
+  mainWindow = createWindow()
+})
 
 app.whenReady().then(() => {
   tray = initTray({
     toolHiveIsRunning: !!toolhiveProcess,
-  });
-});
+  })
+})
 
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit()
   }
-});
+})
 
-app.on("activate", () => {
+app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
-    mainWindow = createWindow();
+    mainWindow = createWindow()
   } else if (mainWindow) {
-    mainWindow.show();
+    mainWindow.show()
   }
-});
+})
 
-app.on("will-quit", () => {
+app.on('will-quit', () => {
   if (toolhiveProcess && !toolhiveProcess.killed) {
-    toolhiveProcess.kill();
+    toolhiveProcess.kill()
   }
   if (tray) {
-    tray.destroy();
+    tray.destroy()
   }
-});
+})
 
 // IPC handlers for theme management
-ipcMain.handle("dark-mode:toggle", () => {
+ipcMain.handle('dark-mode:toggle', () => {
   if (nativeTheme.shouldUseDarkColors) {
-    nativeTheme.themeSource = "light";
+    nativeTheme.themeSource = 'light'
   } else {
-    nativeTheme.themeSource = "dark";
+    nativeTheme.themeSource = 'dark'
   }
-  return nativeTheme.shouldUseDarkColors;
-});
+  return nativeTheme.shouldUseDarkColors
+})
 
-ipcMain.handle("dark-mode:system", () => {
-  nativeTheme.themeSource = "system";
-  return nativeTheme.shouldUseDarkColors;
-});
+ipcMain.handle('dark-mode:system', () => {
+  nativeTheme.themeSource = 'system'
+  return nativeTheme.shouldUseDarkColors
+})
 
 ipcMain.handle(
-  "dark-mode:set",
-  (_event, theme: "light" | "dark" | "system") => {
-    nativeTheme.themeSource = theme;
-    return nativeTheme.shouldUseDarkColors;
-  },
-);
+  'dark-mode:set',
+  (_event, theme: 'light' | 'dark' | 'system') => {
+    nativeTheme.themeSource = theme
+    return nativeTheme.shouldUseDarkColors
+  }
+)
 
-ipcMain.handle("dark-mode:get", () => {
+ipcMain.handle('dark-mode:get', () => {
   return {
     shouldUseDarkColors: nativeTheme.shouldUseDarkColors,
     themeSource: nativeTheme.themeSource,
-  };
-});
+  }
+})
 
 // IPC handlers for auto-launch management
-ipcMain.handle("get-auto-launch-status", () => {
-  return getAutoLaunchStatus();
-});
+ipcMain.handle('get-auto-launch-status', () => {
+  return getAutoLaunchStatus()
+})
 
-ipcMain.handle("set-auto-launch", (_event, enabled: boolean) => {
-  setAutoLaunch(enabled);
-  return getAutoLaunchStatus(); // Return the new status
-});
+ipcMain.handle('set-auto-launch', (_event, enabled: boolean) => {
+  setAutoLaunch(enabled)
+  return getAutoLaunchStatus() // Return the new status
+})
 
 // IPC handlers for app control
-ipcMain.handle("show-app", () => {
+ipcMain.handle('show-app', () => {
   if (mainWindow) {
-    mainWindow.show();
-    mainWindow.focus();
+    mainWindow.show()
+    mainWindow.focus()
   }
-});
+})
 
-ipcMain.handle("hide-app", () => {
+ipcMain.handle('hide-app', () => {
   if (mainWindow) {
-    mainWindow.hide();
+    mainWindow.hide()
   }
-});
+})
 
-ipcMain.handle("quit-app", () => {
-  app.quit();
-});
+ipcMain.handle('quit-app', () => {
+  app.quit()
+})
 
-ipcMain.handle("get-toolhive-port", () => {
-  return toolhivePort;
-});
+ipcMain.handle('get-toolhive-port', () => {
+  return toolhivePort
+})

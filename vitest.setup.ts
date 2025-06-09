@@ -1,33 +1,33 @@
-import * as testingLibraryMatchers from "@testing-library/jest-dom/matchers";
-import "@testing-library/jest-dom/vitest";
-import { cleanup } from "@testing-library/react";
-import { afterEach, expect, beforeAll, vi, afterAll } from "vitest";
-import failOnConsole from "vitest-fail-on-console";
-import { client } from "./renderer/src/common/api/generated/client.gen";
-import { server } from "./renderer/src/common/mocks/node";
+import * as testingLibraryMatchers from '@testing-library/jest-dom/matchers'
+import '@testing-library/jest-dom/vitest'
+import { cleanup } from '@testing-library/react'
+import { afterEach, expect, beforeAll, vi, afterAll } from 'vitest'
+import failOnConsole from 'vitest-fail-on-console'
+import { client } from './renderer/src/common/api/generated/client.gen'
+import { server } from './renderer/src/common/mocks/node'
 
-expect.extend(testingLibraryMatchers);
+expect.extend(testingLibraryMatchers)
 
 afterEach(() => {
-  cleanup();
-});
+  cleanup()
+})
 
 beforeAll(() => {
   server.listen({
-    onUnhandledRequest: "error",
-  });
+    onUnhandledRequest: 'error',
+  })
   client.setConfig({
-    baseUrl: "https://foo.bar.com",
+    baseUrl: 'https://foo.bar.com',
     fetch,
-  });
-});
+  })
+})
 afterEach(() => {
-  server.resetHandlers();
-  vi.clearAllMocks();
-});
-afterAll(() => server.close());
+  server.resetHandlers()
+  vi.clearAllMocks()
+})
+afterAll(() => server.close())
 
-const SILENCED_MESSAGES = ["Not implemented: navigation (except hash changes)"];
+const SILENCED_MESSAGES = ['Not implemented: navigation (except hash changes)']
 
 failOnConsole({
   shouldFailOnDebug: false,
@@ -36,6 +36,6 @@ failOnConsole({
   shouldFailOnLog: false,
   shouldFailOnWarn: true,
   silenceMessage: (message: string) => {
-    return SILENCED_MESSAGES.some((m) => message.includes(m));
+    return SILENCED_MESSAGES.some((m) => message.includes(m))
   },
-});
+})

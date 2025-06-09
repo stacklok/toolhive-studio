@@ -1,31 +1,31 @@
-import { useFieldArray, type UseFormReturn } from "react-hook-form";
+import { useFieldArray, type UseFormReturn } from 'react-hook-form'
 
-import { PlusIcon, TrashIcon } from "lucide-react";
-import type { FormSchemaRunMcpCommand } from "../lib/form-schema-run-mcp-server-with-command";
+import { PlusIcon, TrashIcon } from 'lucide-react'
+import type { FormSchemaRunMcpCommand } from '../lib/form-schema-run-mcp-server-with-command'
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/common/components/ui/form";
-import { TooltipInfoIcon } from "@/common/components/ui/tooltip-info-icon";
-import { Input } from "@/common/components/ui/input";
-import { Button } from "@/common/components/ui/button";
-import { useRef } from "react";
-import { flushSync } from "react-dom";
+} from '@/common/components/ui/form'
+import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
+import { Input } from '@/common/components/ui/input'
+import { Button } from '@/common/components/ui/button'
+import { useRef } from 'react'
+import { flushSync } from 'react-dom'
 
 export function FormFieldsArrayCustomEnvVars({
   form,
 }: {
-  form: UseFormReturn<FormSchemaRunMcpCommand>;
+  form: UseFormReturn<FormSchemaRunMcpCommand>
 }) {
   const { fields, append, remove } = useFieldArray<FormSchemaRunMcpCommand>({
     control: form.control,
-    name: "environment_variables",
-  });
+    name: 'environment_variables',
+  })
 
-  const addEnvVarButton = useRef<HTMLButtonElement>(null);
+  const addEnvVarButton = useRef<HTMLButtonElement>(null)
 
   /**
    * Adds a new environment variable field to the form.
@@ -34,14 +34,14 @@ export function FormFieldsArrayCustomEnvVars({
    */
   const addEnvVar = () => {
     flushSync(() => {
-      append({ key: "", value: "" });
-    });
+      append({ key: '', value: '' })
+    })
     addEnvVarButton.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "nearest",
-      inline: "nearest",
-    });
-  };
+      behavior: 'smooth',
+      block: 'nearest',
+      inline: 'nearest',
+    })
+  }
 
   return (
     <>
@@ -49,8 +49,8 @@ export function FormFieldsArrayCustomEnvVars({
         <FormLabel
           htmlFor={
             fields.length > 0
-              ? "environment_variables.0.key"
-              : "add-env-var-button"
+              ? 'environment_variables.0.key'
+              : 'add-env-var-button'
           }
         >
           Environment variables
@@ -126,5 +126,5 @@ export function FormFieldsArrayCustomEnvVars({
         <PlusIcon /> Add environment variable
       </Button>
     </>
-  );
+  )
 }

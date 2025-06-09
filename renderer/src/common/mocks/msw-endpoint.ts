@@ -1,4 +1,4 @@
-import type json from "../api/openapi.json";
+import type json from '../api/openapi.json'
 
 /**
  * OpenAPI spec uses curly braces to denote path parameters
@@ -16,9 +16,9 @@ import type json from "../api/openapi.json";
 type ReplacePathParams<T extends string> =
   T extends `${infer Start}{${infer Param}}${infer End}`
     ? `${Start}:${Param}${ReplacePathParams<End>}`
-    : T;
+    : T
 
-type Endpoint = ReplacePathParams<keyof typeof json.paths>;
+type Endpoint = ReplacePathParams<keyof typeof json.paths>
 
 /**
  * Constructs a full URL for an endpoint defined in the OpenAPI spec. Uses the
@@ -27,5 +27,5 @@ type Endpoint = ReplacePathParams<keyof typeof json.paths>;
  * to the OpenAPI spec.
  */
 export function mswEndpoint(endpoint: Endpoint) {
-  return new URL(endpoint, import.meta.env.VITE_BASE_API_URL).toString();
+  return new URL(endpoint, import.meta.env.VITE_BASE_API_URL).toString()
 }

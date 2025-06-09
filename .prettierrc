@@ -1,1 +1,14 @@
-{}
+{
+  "semi": false,
+  "trailingComma": "es5",
+  "singleQuote": true,
+  "tabWidth": 2,
+  "useTabs": false,
+  "plugins": [
+    "prettier-plugin-tailwindcss",
+    "prettier-plugin-classnames",
+    "prettier-plugin-merge"
+  ],
+  "tailwindFunctions": ["tv", "twMerge", "cn"],
+  "customFunctions": ["tv", "twMerge", "cn"]
+}
