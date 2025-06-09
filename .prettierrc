@@ -9,6 +9,6 @@
     "prettier-plugin-classnames",
     "prettier-plugin-merge"
   ],
-  "tailwindFunctions": ["tv", "twMerge", "composeTailwindRenderProps"],
-  "customFunctions": ["tv", "twMerge", "composeTailwindRenderProps"]
+  "tailwindFunctions": ["tv", "twMerge", "cn"],
+  "customFunctions": ["tv", "twMerge", "cn"]
 }
