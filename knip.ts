@@ -7,6 +7,8 @@ export default {
     "forge.config.ts",
     "utils/fetch-thv.ts",
     "rerender/vite.renderer.config.ts",
+    "rerender/src/**/*.test.{ts,tsx}",
+    "rerender/src/**/__tests__/**/*.{ts,tsx}",
   ],
   project: ["rerender/src/**"],
   paths: {
