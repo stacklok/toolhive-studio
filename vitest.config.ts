@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(__dirname, "./renderer/src"),
     },
   },
   test: {
@@ -25,7 +25,7 @@ export default defineConfig({
     ],
     css: false,
     coverage: {
-      include: ["src/**/*.{js,jsx}", "src/**/*.{ts,tsx}"],
+      include: ["renderer/src/**/*.{js,jsx}", "renderer/src/**/*.{ts,tsx}"],
       exclude: [
         "coverage/**",
         "dist/**",
@@ -43,8 +43,8 @@ export default defineConfig({
         "**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*",
         "**/vitest.{workspace,projects}.[jt]s?(on)",
         "**/.{eslint,mocha,prettier}rc.{?(c|m)js,yml}",
-        "src/**/*stories.tsx",
-        "src/types/**/*.{ts,tsx}",
+        "renderer/src/**/*stories.tsx",
+        "renderer/src/types/**/*.{ts,tsx}",
       ],
       enabled: false,
       provider: "istanbul",

@@ -11,7 +11,6 @@ export default {
     "renderer/src/**/__tests__/**/*.{ts,tsx}",
     "renderer/src/common/test/**/*.{ts,tsx}",
     "renderer/src/common/mocks/**/*.{ts,tsx}",
-    "renderer/vitest.setup.ts",
   ],
   project: ["renderer/src/**"],
   paths: {
@@ -30,7 +29,6 @@ export default {
   ignoreDependencies: [
     "@electron-forge/maker-flatpak",
     "@electron-forge/publisher-github",
-    "@vitest/coverage-istanbul",
   ],
   compilers: {
     // this is needed to support css entry files
