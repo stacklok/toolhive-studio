@@ -3,9 +3,15 @@ import path from 'node:path'
 import { existsSync } from 'node:fs'
 import started from 'electron-squirrel-startup'
 import { spawn } from 'node:child_process'
+import * as Sentry from '@sentry/electron/main'
 import { initTray } from './system-tray'
 import { setAutoLaunch, getAutoLaunchStatus } from './auto-launch'
 import net from 'node:net'
+
+// Sentry setup
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+})
 
 // Forge environment variables
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined

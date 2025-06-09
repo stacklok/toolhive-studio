@@ -60,6 +60,19 @@ The project is structured as a typical Electron application:
 - `preload/`: Contains the preload scripts for the Electron renderer process.
 - `renderer/`: Contains the React application for the renderer process. This is where the UI components live.
 
+## Environment variables
+
+> [!IMPORTANT]  
+> Electron applications can be decompiled, so do not store sensitive information in environment variables. Use secure methods to handle sensitive data.
+
+The project uses environment variables for configuration. You can set these in a
+`.env` file in the root directory. The `.env.example` file provides a template
+for the required variables.
+
+| Variable     | Required | Description                    |
+| ------------ | -------- | ------------------------------ |
+| `SENTRY_DSN` | `false`  | Sentry DSN for error tracking. |
+
 ## ESLint Configuration
 
 The project uses ESLint with `typescript-eslint` for linting TypeScript code. The configuration is in the `eslint.config.mjs` file. It includes rules for React hooks and React Refresh.

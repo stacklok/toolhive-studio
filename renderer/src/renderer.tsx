@@ -9,11 +9,35 @@ import {
 import { routeTree } from './route-tree.gen'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { TooltipProvider } from '@radix-ui/react-tooltip'
+import * as Sentry from '@sentry/electron/renderer'
 import { Toaster } from './common/components/ui/sonner'
 import { ThemeProvider } from './common/components/theme/theme-provider'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 import './index.css'
+
+// Sentry setup
+Sentry.init({
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/electron/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration(),
+  ],
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // Capture Replay for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+})
 
 // @tanstack/react-router setup
 declare module '@tanstack/react-router' {
