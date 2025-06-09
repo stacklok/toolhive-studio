@@ -2,8 +2,8 @@ export default {
   entry: [
     "renderer/src/renderer.tsx",
     "renderer/src/index.css",
-    "main/main.ts",
-    "preload/preload.ts",
+    "main/src/main.ts",
+    "preload/src/preload.ts",
     "forge.config.ts",
     "utils/fetch-thv.ts",
     "renderer/vite.renderer.config.ts",

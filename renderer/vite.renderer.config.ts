@@ -8,6 +8,9 @@ export default defineConfig(async () => {
 
   return {
     root: __dirname,
+    build: {
+      outDir: path.resolve(__dirname, "../.vite/renderer/main_window"),
+    },
     plugins: [
       TanStackRouterVite({
         target: "react",
