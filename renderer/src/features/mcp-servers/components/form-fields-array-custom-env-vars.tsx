@@ -84,7 +84,12 @@ export function FormFieldsArrayCustomEnvVars({
             )}
           />
 
-          <Button type="button" variant="outline" onClick={() => remove(index)}>
+          <Button
+            aria-label="Remove environment variable"
+            type="button"
+            variant="outline"
+            onClick={() => remove(index)}
+          >
             <TrashIcon />
           </Button>
         </div>
