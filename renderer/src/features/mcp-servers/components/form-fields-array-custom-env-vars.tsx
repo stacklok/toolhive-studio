@@ -12,6 +12,8 @@ import {
 import { TooltipInfoIcon } from "@/common/components/ui/tooltip-info-icon";
 import { Input } from "@/common/components/ui/input";
 import { Button } from "@/common/components/ui/button";
+import { useRef } from "react";
+import { flushSync } from "react-dom";
 
 export function FormFieldsArrayCustomEnvVars({
   form,
@@ -22,6 +24,24 @@ export function FormFieldsArrayCustomEnvVars({
     control: form.control,
     name: "environment_variables",
   });
+
+  const addEnvVarButton = useRef<HTMLButtonElement>(null);
+
+  /**
+   * Adds a new environment variable field to the form.
+   * Because adding a new field may cause the button to be scrolled out of view,
+   * we use `flushSync` to ensure that the button is rendered before we scroll to it.
+   */
+  const addEnvVar = () => {
+    flushSync(() => {
+      append({ key: "", value: "" });
+    });
+    addEnvVarButton.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "nearest",
+    });
+  };
 
   return (
     <>
@@ -100,7 +120,8 @@ export function FormFieldsArrayCustomEnvVars({
         variant="outline"
         className="w-full"
         aria-label="Add environment variable"
-        onClick={() => append({ key: "", value: "" })}
+        ref={addEnvVarButton}
+        onClick={() => addEnvVar()}
       >
         <PlusIcon /> Add environment variable
       </Button>
