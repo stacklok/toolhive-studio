@@ -24,7 +24,6 @@ const binPath = app.isPackaged
       __dirname,
       "..",
       "..",
-      "..",
       "bin",
       `${process.platform}-${process.arch}`,
       binName,
