@@ -82,27 +82,29 @@ export function DialogFormRunMcpServerWithCommand({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="p-0">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) => {
               onSubmit(transformData(data as FormSchemaRunMcpCommand))
               onOpenChange(false)
             })}
-            className="space-y-4"
           >
-            <DialogHeader>
+            <DialogHeader className="mb-4 p-6">
               <DialogTitle>Custom MCP server</DialogTitle>
               <DialogDescription>
                 ToolHive allows you to securely run a custom MCP server from a
                 Docker image or a package manager command.
               </DialogDescription>
             </DialogHeader>
-            <FormFieldsRunMcpCommand form={form} />
 
-            <FormFieldsArrayCustomEnvVars form={form} />
+            <div className="relative max-h-[65dvh] space-y-4 overflow-y-auto px-6">
+              <FormFieldsRunMcpCommand form={form} />
 
-            <DialogFooter>
+              <FormFieldsArrayCustomEnvVars form={form} />
+            </div>
+
+            <DialogFooter className="p-6">
               <Button type="submit">Submit</Button>
             </DialogFooter>
           </form>
