@@ -4,10 +4,10 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/common/components/ui/form";
-import { Input } from "@/common/components/ui/input";
-import { type FormSchemaRunMcpCommand } from "../lib/form-schema-run-mcp-server-with-command";
-import { type UseFormReturn } from "react-hook-form";
+} from '@/common/components/ui/form'
+import { Input } from '@/common/components/ui/input'
+import { type FormSchemaRunMcpCommand } from '../lib/form-schema-run-mcp-server-with-command'
+import { type UseFormReturn } from 'react-hook-form'
 
 import {
   Select,
@@ -15,17 +15,17 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/common/components/ui/select";
-import { TooltipInfoIcon } from "@/common/components/ui/tooltip-info-icon";
-import { Tabs, TabsList, TabsTrigger } from "@/common/components/ui/tabs";
+} from '@/common/components/ui/select'
+import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
+import { Tabs, TabsList, TabsTrigger } from '@/common/components/ui/tabs'
 
 export function FormFieldsRunMcpCommand({
   form,
 }: {
-  form: UseFormReturn<FormSchemaRunMcpCommand>;
+  form: UseFormReturn<FormSchemaRunMcpCommand>
 }) {
-  const typeValue = form.watch("type");
-  const protocolValue = form.watch("protocol") ?? "npx";
+  const typeValue = form.watch('type')
+  const protocolValue = form.watch('protocol') ?? 'npx'
 
   return (
     <>
@@ -106,7 +106,7 @@ export function FormFieldsRunMcpCommand({
         )}
       />
 
-      {typeValue === "docker_image" ? (
+      {typeValue === 'docker_image' ? (
         <FormField
           control={form.control}
           name="image"
@@ -132,7 +132,7 @@ export function FormFieldsRunMcpCommand({
         />
       ) : null}
 
-      {typeValue === "package_manager" ? (
+      {typeValue === 'package_manager' ? (
         <FormField
           control={form.control}
           name="protocol"
@@ -167,7 +167,7 @@ export function FormFieldsRunMcpCommand({
         />
       ) : null}
 
-      {typeValue === "package_manager" ? (
+      {typeValue === 'package_manager' ? (
         <FormField
           control={form.control}
           name="package_name"
@@ -181,7 +181,10 @@ export function FormFieldsRunMcpCommand({
               </div>
               <FormControl>
                 <div className="flex items-center">
-                  <div className="flex items-center bg-muted px-2 text-sm text-muted-foreground h-9 border border-r-0 rounded-l-md border-input shadow-xs">
+                  <div
+                    className="bg-muted text-muted-foreground border-input flex h-9 items-center rounded-l-md
+                      border border-r-0 px-2 text-sm shadow-xs"
+                  >
                     {`${protocolValue}://`}
                   </div>
                   <Input
@@ -224,5 +227,5 @@ export function FormFieldsRunMcpCommand({
         )}
       />
     </>
-  );
+  )
 }

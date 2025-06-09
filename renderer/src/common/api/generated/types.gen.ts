@@ -3,26 +3,26 @@
 /**
  * ClientType is the type of MCP client
  */
-export type ClientMcpClient = string;
+export type ClientMcpClient = string
 
 export type ClientMcpClientStatus = {
-  client_type?: ClientMcpClient;
+  client_type?: ClientMcpClient
   /**
    * Installed indicates whether the client is installed on the system
    */
-  installed?: boolean;
+  installed?: boolean
   /**
    * Registered indicates whether the client is registered in the ToolHive configuration
    */
-  registered?: boolean;
-};
+  registered?: boolean
+}
 
 /**
  * Network defines network permissions
  */
 export type PermissionsNetworkPermissions = {
-  outbound?: PermissionsOutboundNetworkPermissions;
-};
+  outbound?: PermissionsOutboundNetworkPermissions
+}
 
 /**
  * Outbound defines outbound network permissions
@@ -31,26 +31,26 @@ export type PermissionsOutboundNetworkPermissions = {
   /**
    * AllowHost is a list of allowed hosts
    */
-  allow_host?: Array<string>;
+  allow_host?: Array<string>
   /**
    * AllowPort is a list of allowed ports
    */
-  allow_port?: Array<number>;
+  allow_port?: Array<number>
   /**
    * AllowTransport is a list of allowed transport protocols (tcp, udp)
    */
-  allow_transport?: Array<string>;
+  allow_transport?: Array<string>
   /**
    * InsecureAllowAll allows all outbound network connections
    */
-  insecure_allow_all?: boolean;
-};
+  insecure_allow_all?: boolean
+}
 
 /**
  * Permissions defines the security profile and access permissions for the server
  */
 export type PermissionsProfile = {
-  network?: PermissionsNetworkPermissions;
+  network?: PermissionsNetworkPermissions
   /**
    * Read is a list of mount declarations that the container can read from
    * These can be in the following formats:
@@ -58,39 +58,39 @@ export type PermissionsProfile = {
    * - host-path:container-path: Different paths for host and container
    * - resource-uri:container-path: Mount a resource identified by URI to a container path
    */
-  read?: Array<string>;
+  read?: Array<string>
   /**
    * Write is a list of mount declarations that the container can write to
    * These follow the same format as Read mounts but with write permissions
    */
-  write?: Array<string>;
-};
+  write?: Array<string>
+}
 
 export type RegistryEnvVar = {
   /**
    * Default is the value to use if the environment variable is not explicitly provided
    * Only used for non-required variables
    */
-  default?: string;
+  default?: string
   /**
    * Description is a human-readable explanation of the variable's purpose
    */
-  description?: string;
+  description?: string
   /**
    * Name is the environment variable name (e.g., API_KEY)
    */
-  name?: string;
+  name?: string
   /**
    * Required indicates whether this environment variable must be provided
    * If true and not provided via command line or secrets, the user will be prompted for a value
    */
-  required?: boolean;
+  required?: boolean
   /**
    * Secret indicates whether this environment variable contains sensitive information
    * If true, the value will be stored as a secret rather than as a plain environment variable
    */
-  secret?: boolean;
-};
+  secret?: boolean
+}
 
 /**
  * Metadata contains additional information about the server such as popularity metrics
@@ -99,29 +99,29 @@ export type RegistryMetadata = {
   /**
    * LastUpdated is the timestamp when the server was last updated, in RFC3339 format
    */
-  last_updated?: string;
+  last_updated?: string
   /**
    * Pulls indicates how many times the server image has been downloaded
    */
-  pulls?: number;
+  pulls?: number
   /**
    * Stars represents the popularity rating or number of stars for the server
    */
-  stars?: number;
-};
+  stars?: number
+}
 
 /**
  * Provenance contains verification and signing metadata
  */
 export type RegistryProvenance = {
-  attestation?: RegistryVerifiedAttestation;
-  cert_issuer?: string;
-  repository_ref?: string;
-  repository_uri?: string;
-  runner_environment?: string;
-  signer_identity?: string;
-  sigstore_url?: string;
-};
+  attestation?: RegistryVerifiedAttestation
+  cert_issuer?: string
+  repository_ref?: string
+  repository_uri?: string
+  runner_environment?: string
+  signer_identity?: string
+  sigstore_url?: string
+}
 
 /**
  * Full registry data
@@ -130,18 +130,18 @@ export type RegistryRegistry = {
   /**
    * LastUpdated is the timestamp when the registry was last updated, in RFC3339 format
    */
-  last_updated?: string;
+  last_updated?: string
   /**
    * Servers is a map of server names to their corresponding server definitions
    */
   servers?: {
-    [key: string]: RegistryServer;
-  };
+    [key: string]: RegistryServer
+  }
   /**
    * Version is the schema version of the registry
    */
-  version?: string;
-};
+  version?: string
+}
 
 /**
  * Server details
@@ -151,118 +151,118 @@ export type RegistryServer = {
    * Args are the default command-line arguments to pass to the MCP server container.
    * These arguments will be prepended to any command-line arguments provided by the user.
    */
-  args?: Array<string>;
+  args?: Array<string>
   /**
    * Description is a human-readable description of the server's purpose and functionality
    */
-  description?: string;
+  description?: string
   /**
    * DockerTags lists the available Docker tags for this server image
    */
-  docker_tags?: Array<string>;
+  docker_tags?: Array<string>
   /**
    * EnvVars defines environment variables that can be passed to the server
    */
-  env_vars?: Array<RegistryEnvVar>;
+  env_vars?: Array<RegistryEnvVar>
   /**
    * Image is the Docker image reference for the MCP server
    */
-  image?: string;
-  metadata?: RegistryMetadata;
+  image?: string
+  metadata?: RegistryMetadata
   /**
    * Name is the identifier for the MCP server, used when referencing the server in commands
    * If not provided, it will be auto-generated from the image name
    */
-  name?: string;
-  permissions?: PermissionsProfile;
-  provenance?: RegistryProvenance;
+  name?: string
+  permissions?: PermissionsProfile
+  provenance?: RegistryProvenance
   /**
    * RepositoryURL is the URL to the source code repository for the server
    */
-  repository_url?: string;
+  repository_url?: string
   /**
    * Tags are categorization labels for the server to aid in discovery and filtering
    */
-  tags?: Array<string>;
+  tags?: Array<string>
   /**
    * TargetPort is the port for the container to expose (only applicable to SSE transport)
    */
-  target_port?: number;
+  target_port?: number
   /**
    * Tools is a list of tool names provided by this MCP server
    */
-  tools?: Array<string>;
+  tools?: Array<string>
   /**
    * Transport defines the communication protocol for the server (stdio or sse)
    */
-  transport?: string;
-};
+  transport?: string
+}
 
 export type RegistryVerifiedAttestation = {
-  predicate?: unknown;
-  predicate_type?: string;
-};
+  predicate?: unknown
+  predicate_type?: string
+}
 
 export type RuntimeContainerInfo = {
   /**
    * Created is the container creation timestamp
    */
-  created?: string;
+  created?: string
   /**
    * ID is the container ID
    */
-  id?: string;
+  id?: string
   /**
    * Image is the container image
    */
-  image?: string;
+  image?: string
   /**
    * Labels is the container labels
    */
   labels?: {
-    [key: string]: string;
-  };
+    [key: string]: string
+  }
   /**
    * Name is the container name
    */
-  name?: string;
+  name?: string
   /**
    * Ports is the container port mappings
    */
-  ports?: Array<RuntimePortMapping>;
+  ports?: Array<RuntimePortMapping>
   /**
    * State is the container state
    */
-  state?: string;
+  state?: string
   /**
    * Status is the container status
    */
-  status?: string;
-};
+  status?: string
+}
 
 export type RuntimePortMapping = {
   /**
    * ContainerPort is the port inside the container
    */
-  containerPort?: number;
+  containerPort?: number
   /**
    * HostPort is the port on the host
    */
-  hostPort?: number;
+  hostPort?: number
   /**
    * Protocol is the protocol (tcp, udp)
    */
-  protocol?: string;
-};
+  protocol?: string
+}
 
 export type SecretsSecretParameter = {
-  name?: string;
-  target?: string;
-};
+  name?: string
+  target?: string
+}
 
 export type V1ClientStatusResponse = {
-  clients?: Array<ClientMcpClientStatus>;
-};
+  clients?: Array<ClientMcpClientStatus>
+}
 
 /**
  * Request to create a new server
@@ -271,49 +271,49 @@ export type V1CreateRequest = {
   /**
    * Authorization configuration
    */
-  authz_config?: string;
+  authz_config?: string
   /**
    * Command arguments to pass to the container
    */
-  cmd_arguments?: Array<string>;
+  cmd_arguments?: Array<string>
   /**
    * Environment variables to set in the container
    */
-  env_vars?: Array<string>;
+  env_vars?: Array<string>
   /**
    * Host to bind to
    */
-  host?: string;
+  host?: string
   /**
    * Docker image to use
    */
-  image?: string;
+  image?: string
   /**
    * Name of the server
    */
-  name?: string;
-  oidc?: V1OidcOptions;
+  name?: string
+  oidc?: V1OidcOptions
   /**
    * Permission profile to apply
    */
-  permission_profile?: string;
+  permission_profile?: string
   /**
    * Secret parameters to inject
    */
-  secrets?: Array<SecretsSecretParameter>;
+  secrets?: Array<SecretsSecretParameter>
   /**
    * Port to expose from the container
    */
-  target_port?: number;
+  target_port?: number
   /**
    * Transport configuration
    */
-  transport?: string;
+  transport?: string
   /**
    * Volume mounts
    */
-  volumes?: Array<string>;
-};
+  volumes?: Array<string>
+}
 
 /**
  * Response after successfully creating a server
@@ -322,12 +322,12 @@ export type V1CreateServerResponse = {
   /**
    * Name of the created server
    */
-  name?: string;
+  name?: string
   /**
    * Port the server is listening on
    */
-  port?: number;
-};
+  port?: number
+}
 
 /**
  * Response containing registry details
@@ -336,28 +336,28 @@ export type V1GetRegistryResponse = {
   /**
    * Last updated timestamp
    */
-  last_updated?: string;
+  last_updated?: string
   /**
    * Name of the registry
    */
-  name?: string;
-  registry?: RegistryRegistry;
+  name?: string
+  registry?: RegistryRegistry
   /**
    * Number of servers in the registry
    */
-  server_count?: number;
+  server_count?: number
   /**
    * Version of the registry schema
    */
-  version?: string;
-};
+  version?: string
+}
 
 /**
  * Response containing server details
  */
 export type V1GetServerResponse = {
-  server?: RegistryServer;
-};
+  server?: RegistryServer
+}
 
 /**
  * Response containing a list of servers
@@ -366,8 +366,8 @@ export type V1ListServersResponse = {
   /**
    * List of servers in the registry
    */
-  servers?: Array<RegistryServer>;
-};
+  servers?: Array<RegistryServer>
+}
 
 /**
  * OIDC configuration options
@@ -376,20 +376,20 @@ export type V1OidcOptions = {
   /**
    * Expected audience
    */
-  audience?: string;
+  audience?: string
   /**
    * OAuth2 client ID
    */
-  client_id?: string;
+  client_id?: string
   /**
    * OIDC issuer URL
    */
-  issuer?: string;
+  issuer?: string
   /**
    * JWKS URL for key verification
    */
-  jwks_url?: string;
-};
+  jwks_url?: string
+}
 
 /**
  * Basic information about a registry
@@ -398,20 +398,20 @@ export type V1RegistryInfo = {
   /**
    * Last updated timestamp
    */
-  last_updated?: string;
+  last_updated?: string
   /**
    * Name of the registry
    */
-  name?: string;
+  name?: string
   /**
    * Number of servers in the registry
    */
-  server_count?: number;
+  server_count?: number
   /**
    * Version of the registry schema
    */
-  version?: string;
-};
+  version?: string
+}
 
 /**
  * Response containing a list of registries
@@ -420,8 +420,8 @@ export type V1RegistryListResponse = {
   /**
    * List of registries
    */
-  registries?: Array<V1RegistryInfo>;
-};
+  registries?: Array<V1RegistryInfo>
+}
 
 /**
  * Response containing a list of servers
@@ -430,434 +430,434 @@ export type V1ServerListResponse = {
   /**
    * List of container information for each server
    */
-  servers?: Array<RuntimeContainerInfo>;
-};
+  servers?: Array<RuntimeContainerInfo>
+}
 
 export type V1VersionResponse = {
-  version?: string;
-};
+  version?: string
+}
 
 export type GetApiOpenapiJsonData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: "/api/openapi.json";
-};
+  body?: never
+  path?: never
+  query?: never
+  url: '/api/openapi.json'
+}
 
 export type GetApiOpenapiJsonResponses = {
   /**
    * OpenAPI specification
    */
   200: {
-    [key: string]: unknown;
-  };
-};
+    [key: string]: unknown
+  }
+}
 
 export type GetApiOpenapiJsonResponse =
-  GetApiOpenapiJsonResponses[keyof GetApiOpenapiJsonResponses];
+  GetApiOpenapiJsonResponses[keyof GetApiOpenapiJsonResponses]
 
 export type GetApiV1BetaDiscoveryClientsData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: "/api/v1beta/discovery/clients";
-};
+  body?: never
+  path?: never
+  query?: never
+  url: '/api/v1beta/discovery/clients'
+}
 
 export type GetApiV1BetaDiscoveryClientsResponses = {
   /**
    * OK
    */
-  200: V1ClientStatusResponse;
-};
+  200: V1ClientStatusResponse
+}
 
 export type GetApiV1BetaDiscoveryClientsResponse =
-  GetApiV1BetaDiscoveryClientsResponses[keyof GetApiV1BetaDiscoveryClientsResponses];
+  GetApiV1BetaDiscoveryClientsResponses[keyof GetApiV1BetaDiscoveryClientsResponses]
 
 export type GetApiV1BetaRegistryData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: "/api/v1beta/registry";
-};
+  body?: never
+  path?: never
+  query?: never
+  url: '/api/v1beta/registry'
+}
 
 export type GetApiV1BetaRegistryResponses = {
   /**
    * OK
    */
-  200: V1RegistryListResponse;
-};
+  200: V1RegistryListResponse
+}
 
 export type GetApiV1BetaRegistryResponse =
-  GetApiV1BetaRegistryResponses[keyof GetApiV1BetaRegistryResponses];
+  GetApiV1BetaRegistryResponses[keyof GetApiV1BetaRegistryResponses]
 
 export type PostApiV1BetaRegistryData = {
   body?: {
-    [key: string]: unknown;
-  };
-  path?: never;
-  query?: never;
-  url: "/api/v1beta/registry";
-};
+    [key: string]: unknown
+  }
+  path?: never
+  query?: never
+  url: '/api/v1beta/registry'
+}
 
 export type PostApiV1BetaRegistryErrors = {
   /**
    * Not Implemented
    */
-  501: string;
-};
+  501: string
+}
 
 export type PostApiV1BetaRegistryError =
-  PostApiV1BetaRegistryErrors[keyof PostApiV1BetaRegistryErrors];
+  PostApiV1BetaRegistryErrors[keyof PostApiV1BetaRegistryErrors]
 
 export type DeleteApiV1BetaRegistryByNameData = {
-  body?: never;
+  body?: never
   path: {
     /**
      * Registry name
      */
-    name: string;
-  };
-  query?: never;
-  url: "/api/v1beta/registry/{name}";
-};
+    name: string
+  }
+  query?: never
+  url: '/api/v1beta/registry/{name}'
+}
 
 export type DeleteApiV1BetaRegistryByNameErrors = {
   /**
    * Not Found
    */
-  404: string;
-};
+  404: string
+}
 
 export type DeleteApiV1BetaRegistryByNameError =
-  DeleteApiV1BetaRegistryByNameErrors[keyof DeleteApiV1BetaRegistryByNameErrors];
+  DeleteApiV1BetaRegistryByNameErrors[keyof DeleteApiV1BetaRegistryByNameErrors]
 
 export type DeleteApiV1BetaRegistryByNameResponses = {
   /**
    * No Content
    */
-  204: string;
-};
+  204: string
+}
 
 export type DeleteApiV1BetaRegistryByNameResponse =
-  DeleteApiV1BetaRegistryByNameResponses[keyof DeleteApiV1BetaRegistryByNameResponses];
+  DeleteApiV1BetaRegistryByNameResponses[keyof DeleteApiV1BetaRegistryByNameResponses]
 
 export type GetApiV1BetaRegistryByNameData = {
-  body?: never;
+  body?: never
   path: {
     /**
      * Registry name
      */
-    name: string;
-  };
-  query?: never;
-  url: "/api/v1beta/registry/{name}";
-};
+    name: string
+  }
+  query?: never
+  url: '/api/v1beta/registry/{name}'
+}
 
 export type GetApiV1BetaRegistryByNameErrors = {
   /**
    * Not Found
    */
-  404: string;
-};
+  404: string
+}
 
 export type GetApiV1BetaRegistryByNameError =
-  GetApiV1BetaRegistryByNameErrors[keyof GetApiV1BetaRegistryByNameErrors];
+  GetApiV1BetaRegistryByNameErrors[keyof GetApiV1BetaRegistryByNameErrors]
 
 export type GetApiV1BetaRegistryByNameResponses = {
   /**
    * OK
    */
-  200: V1GetRegistryResponse;
-};
+  200: V1GetRegistryResponse
+}
 
 export type GetApiV1BetaRegistryByNameResponse =
-  GetApiV1BetaRegistryByNameResponses[keyof GetApiV1BetaRegistryByNameResponses];
+  GetApiV1BetaRegistryByNameResponses[keyof GetApiV1BetaRegistryByNameResponses]
 
 export type GetApiV1BetaRegistryByNameServersData = {
-  body?: never;
+  body?: never
   path: {
     /**
      * Registry name
      */
-    name: string;
-  };
-  query?: never;
-  url: "/api/v1beta/registry/{name}/servers";
-};
+    name: string
+  }
+  query?: never
+  url: '/api/v1beta/registry/{name}/servers'
+}
 
 export type GetApiV1BetaRegistryByNameServersErrors = {
   /**
    * Not Found
    */
-  404: string;
-};
+  404: string
+}
 
 export type GetApiV1BetaRegistryByNameServersError =
-  GetApiV1BetaRegistryByNameServersErrors[keyof GetApiV1BetaRegistryByNameServersErrors];
+  GetApiV1BetaRegistryByNameServersErrors[keyof GetApiV1BetaRegistryByNameServersErrors]
 
 export type GetApiV1BetaRegistryByNameServersResponses = {
   /**
    * OK
    */
-  200: V1ListServersResponse;
-};
+  200: V1ListServersResponse
+}
 
 export type GetApiV1BetaRegistryByNameServersResponse =
-  GetApiV1BetaRegistryByNameServersResponses[keyof GetApiV1BetaRegistryByNameServersResponses];
+  GetApiV1BetaRegistryByNameServersResponses[keyof GetApiV1BetaRegistryByNameServersResponses]
 
 export type GetApiV1BetaRegistryByNameServersByServerNameData = {
-  body?: never;
+  body?: never
   path: {
     /**
      * Registry name
      */
-    name: string;
+    name: string
     /**
      * Server name
      */
-    serverName: string;
-  };
-  query?: never;
-  url: "/api/v1beta/registry/{name}/servers/{serverName}";
-};
+    serverName: string
+  }
+  query?: never
+  url: '/api/v1beta/registry/{name}/servers/{serverName}'
+}
 
 export type GetApiV1BetaRegistryByNameServersByServerNameErrors = {
   /**
    * Not Found
    */
-  404: string;
-};
+  404: string
+}
 
 export type GetApiV1BetaRegistryByNameServersByServerNameError =
-  GetApiV1BetaRegistryByNameServersByServerNameErrors[keyof GetApiV1BetaRegistryByNameServersByServerNameErrors];
+  GetApiV1BetaRegistryByNameServersByServerNameErrors[keyof GetApiV1BetaRegistryByNameServersByServerNameErrors]
 
 export type GetApiV1BetaRegistryByNameServersByServerNameResponses = {
   /**
    * OK
    */
-  200: V1GetServerResponse;
-};
+  200: V1GetServerResponse
+}
 
 export type GetApiV1BetaRegistryByNameServersByServerNameResponse =
-  GetApiV1BetaRegistryByNameServersByServerNameResponses[keyof GetApiV1BetaRegistryByNameServersByServerNameResponses];
+  GetApiV1BetaRegistryByNameServersByServerNameResponses[keyof GetApiV1BetaRegistryByNameServersByServerNameResponses]
 
 export type GetApiV1BetaServersData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: "/api/v1beta/servers";
-};
+  body?: never
+  path?: never
+  query?: never
+  url: '/api/v1beta/servers'
+}
 
 export type GetApiV1BetaServersResponses = {
   /**
    * OK
    */
-  200: V1ServerListResponse;
-};
+  200: V1ServerListResponse
+}
 
 export type GetApiV1BetaServersResponse =
-  GetApiV1BetaServersResponses[keyof GetApiV1BetaServersResponses];
+  GetApiV1BetaServersResponses[keyof GetApiV1BetaServersResponses]
 
 export type PostApiV1BetaServersData = {
   /**
    * Create server request
    */
-  body: V1CreateRequest;
-  path?: never;
-  query?: never;
-  url: "/api/v1beta/servers";
-};
+  body: V1CreateRequest
+  path?: never
+  query?: never
+  url: '/api/v1beta/servers'
+}
 
 export type PostApiV1BetaServersErrors = {
   /**
    * Bad Request
    */
-  400: string;
+  400: string
   /**
    * Conflict
    */
-  409: string;
-};
+  409: string
+}
 
 export type PostApiV1BetaServersError =
-  PostApiV1BetaServersErrors[keyof PostApiV1BetaServersErrors];
+  PostApiV1BetaServersErrors[keyof PostApiV1BetaServersErrors]
 
 export type PostApiV1BetaServersResponses = {
   /**
    * Created
    */
-  201: V1CreateServerResponse;
-};
+  201: V1CreateServerResponse
+}
 
 export type PostApiV1BetaServersResponse =
-  PostApiV1BetaServersResponses[keyof PostApiV1BetaServersResponses];
+  PostApiV1BetaServersResponses[keyof PostApiV1BetaServersResponses]
 
 export type DeleteApiV1BetaServersByNameData = {
-  body?: never;
+  body?: never
   path: {
     /**
      * Server name
      */
-    name: string;
-  };
+    name: string
+  }
   query?: {
     /**
      * Force deletion
      */
-    force?: boolean;
-  };
-  url: "/api/v1beta/servers/{name}";
-};
+    force?: boolean
+  }
+  url: '/api/v1beta/servers/{name}'
+}
 
 export type DeleteApiV1BetaServersByNameErrors = {
   /**
    * Not Found
    */
-  404: string;
-};
+  404: string
+}
 
 export type DeleteApiV1BetaServersByNameError =
-  DeleteApiV1BetaServersByNameErrors[keyof DeleteApiV1BetaServersByNameErrors];
+  DeleteApiV1BetaServersByNameErrors[keyof DeleteApiV1BetaServersByNameErrors]
 
 export type DeleteApiV1BetaServersByNameResponses = {
   /**
    * No Content
    */
-  204: string;
-};
+  204: string
+}
 
 export type DeleteApiV1BetaServersByNameResponse =
-  DeleteApiV1BetaServersByNameResponses[keyof DeleteApiV1BetaServersByNameResponses];
+  DeleteApiV1BetaServersByNameResponses[keyof DeleteApiV1BetaServersByNameResponses]
 
 export type GetApiV1BetaServersByNameData = {
-  body?: never;
+  body?: never
   path: {
     /**
      * Server name
      */
-    name: string;
-  };
-  query?: never;
-  url: "/api/v1beta/servers/{name}";
-};
+    name: string
+  }
+  query?: never
+  url: '/api/v1beta/servers/{name}'
+}
 
 export type GetApiV1BetaServersByNameErrors = {
   /**
    * Not Found
    */
-  404: string;
-};
+  404: string
+}
 
 export type GetApiV1BetaServersByNameError =
-  GetApiV1BetaServersByNameErrors[keyof GetApiV1BetaServersByNameErrors];
+  GetApiV1BetaServersByNameErrors[keyof GetApiV1BetaServersByNameErrors]
 
 export type GetApiV1BetaServersByNameResponses = {
   /**
    * OK
    */
-  200: RuntimeContainerInfo;
-};
+  200: RuntimeContainerInfo
+}
 
 export type GetApiV1BetaServersByNameResponse =
-  GetApiV1BetaServersByNameResponses[keyof GetApiV1BetaServersByNameResponses];
+  GetApiV1BetaServersByNameResponses[keyof GetApiV1BetaServersByNameResponses]
 
 export type PostApiV1BetaServersByNameRestartData = {
-  body?: never;
+  body?: never
   path: {
     /**
      * Server name
      */
-    name: string;
-  };
-  query?: never;
-  url: "/api/v1beta/servers/{name}/restart";
-};
+    name: string
+  }
+  query?: never
+  url: '/api/v1beta/servers/{name}/restart'
+}
 
 export type PostApiV1BetaServersByNameRestartErrors = {
   /**
    * Not Found
    */
-  404: string;
-};
+  404: string
+}
 
 export type PostApiV1BetaServersByNameRestartError =
-  PostApiV1BetaServersByNameRestartErrors[keyof PostApiV1BetaServersByNameRestartErrors];
+  PostApiV1BetaServersByNameRestartErrors[keyof PostApiV1BetaServersByNameRestartErrors]
 
 export type PostApiV1BetaServersByNameRestartResponses = {
   /**
    * No Content
    */
-  204: string;
-};
+  204: string
+}
 
 export type PostApiV1BetaServersByNameRestartResponse =
-  PostApiV1BetaServersByNameRestartResponses[keyof PostApiV1BetaServersByNameRestartResponses];
+  PostApiV1BetaServersByNameRestartResponses[keyof PostApiV1BetaServersByNameRestartResponses]
 
 export type PostApiV1BetaServersByNameStopData = {
-  body?: never;
+  body?: never
   path: {
     /**
      * Server name
      */
-    name: string;
-  };
-  query?: never;
-  url: "/api/v1beta/servers/{name}/stop";
-};
+    name: string
+  }
+  query?: never
+  url: '/api/v1beta/servers/{name}/stop'
+}
 
 export type PostApiV1BetaServersByNameStopErrors = {
   /**
    * Not Found
    */
-  404: string;
-};
+  404: string
+}
 
 export type PostApiV1BetaServersByNameStopError =
-  PostApiV1BetaServersByNameStopErrors[keyof PostApiV1BetaServersByNameStopErrors];
+  PostApiV1BetaServersByNameStopErrors[keyof PostApiV1BetaServersByNameStopErrors]
 
 export type PostApiV1BetaServersByNameStopResponses = {
   /**
    * No Content
    */
-  204: string;
-};
+  204: string
+}
 
 export type PostApiV1BetaServersByNameStopResponse =
-  PostApiV1BetaServersByNameStopResponses[keyof PostApiV1BetaServersByNameStopResponses];
+  PostApiV1BetaServersByNameStopResponses[keyof PostApiV1BetaServersByNameStopResponses]
 
 export type GetApiV1BetaVersionData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: "/api/v1beta/version";
-};
+  body?: never
+  path?: never
+  query?: never
+  url: '/api/v1beta/version'
+}
 
 export type GetApiV1BetaVersionResponses = {
   /**
    * OK
    */
-  200: V1VersionResponse;
-};
+  200: V1VersionResponse
+}
 
 export type GetApiV1BetaVersionResponse =
-  GetApiV1BetaVersionResponses[keyof GetApiV1BetaVersionResponses];
+  GetApiV1BetaVersionResponses[keyof GetApiV1BetaVersionResponses]
 
 export type GetHealthData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: "/health";
-};
+  body?: never
+  path?: never
+  query?: never
+  url: '/health'
+}
 
 export type GetHealthResponses = {
   /**
    * No Content
    */
-  204: string;
-};
+  204: string
+}
 
-export type GetHealthResponse = GetHealthResponses[keyof GetHealthResponses];
+export type GetHealthResponse = GetHealthResponses[keyof GetHealthResponses]
 
 export type ClientOptions = {
-  baseUrl: `${string}://src` | (string & {});
-};
+  baseUrl: `${string}://src` | (string & {})
+}

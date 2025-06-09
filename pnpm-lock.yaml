@@ -201,6 +201,15 @@ importers:
       prettier:
         specifier: 3.5.3
         version: 3.5.3
+      prettier-plugin-classnames:
+        specifier: ^0.7.8
+        version: 0.7.8(prettier@3.5.3)
+      prettier-plugin-merge:
+        specifier: ^0.7.4
+        version: 0.7.4(prettier@3.5.3)
+      prettier-plugin-tailwindcss:
+        specifier: ^0.6.12
+        version: 0.6.12(prettier@3.5.3)
       tar:
         specifier: ^7.4.3
         version: 7.4.3
@@ -2515,6 +2524,10 @@ packages:
     resolution: {integrity: sha512-58lmxKSA4BNyLz+HHMUzlOEpg09FV+ev6ZMe3vJihgdxzgcwZ8VoEEPmALCZG9LmqfVoNMMKpttIYTVG6uDY7A==}
     engines: {node: '>=0.3.1'}
 
+  diff@5.1.0:
+    resolution: {integrity: sha512-D+mk+qE8VC/PAUrlAU34N+VfXev0ghe5ywmpqrawphmVZc1bEfn56uo9qpyGp1p4xpzOHkSW4ztBd6L7Xx4ACw==}
+    engines: {node: '>=0.3.1'}
+
   diff@7.0.0:
     resolution: {integrity: sha512-PJWHUb1RFevKCwaFA9RlG5tCd+FO5iRh9A8HEtkmBH2Li03iJriB6m6JIN4rGz3K3JLawI7/veA1xzRKP6ISBw==}
     engines: {node: '>=0.3.1'}
@@ -3937,6 +3950,80 @@ packages:
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
+
+  prettier-plugin-classnames@0.7.8:
+    resolution: {integrity: sha512-TC2a9n/kQKF1Zv1nQTpbIwJJJDLaiRO0BGqEMTmRRfROofbigM4e5zHLsv5Nl6xV53WU1xpjPoRdoaLemLt/oA==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      prettier: ^2 || ^3
+      prettier-plugin-astro: '*'
+      prettier-plugin-svelte: '*'
+    peerDependenciesMeta:
+      prettier-plugin-astro:
+        optional: true
+      prettier-plugin-svelte:
+        optional: true
+
+  prettier-plugin-merge@0.7.4:
+    resolution: {integrity: sha512-cxuInnqaO8d/zZx/tk8PEKtab8QetiBsOlXH+kYqBF66lSwJoy491jQT3ocOdJ/8nzom40QGGq/wUblFe7zRxw==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      prettier: ^2 || ^3
+
+  prettier-plugin-tailwindcss@0.6.12:
+    resolution: {integrity: sha512-OuTQKoqNwV7RnxTPwXWzOFXy6Jc4z8oeRZYGuMpRyG3WbuR3jjXdQFK8qFBMBx8UHWdHrddARz2fgUenild6aw==}
+    engines: {node: '>=14.21.3'}
+    peerDependencies:
+      '@ianvs/prettier-plugin-sort-imports': '*'
+      '@prettier/plugin-pug': '*'
+      '@shopify/prettier-plugin-liquid': '*'
+      '@trivago/prettier-plugin-sort-imports': '*'
+      '@zackad/prettier-plugin-twig': '*'
+      prettier: ^3.0
+      prettier-plugin-astro: '*'
+      prettier-plugin-css-order: '*'
+      prettier-plugin-import-sort: '*'
+      prettier-plugin-jsdoc: '*'
+      prettier-plugin-marko: '*'
+      prettier-plugin-multiline-arrays: '*'
+      prettier-plugin-organize-attributes: '*'
+      prettier-plugin-organize-imports: '*'
+      prettier-plugin-sort-imports: '*'
+      prettier-plugin-style-order: '*'
+      prettier-plugin-svelte: '*'
+    peerDependenciesMeta:
+      '@ianvs/prettier-plugin-sort-imports':
+        optional: true
+      '@prettier/plugin-pug':
+        optional: true
+      '@shopify/prettier-plugin-liquid':
+        optional: true
+      '@trivago/prettier-plugin-sort-imports':
+        optional: true
+      '@zackad/prettier-plugin-twig':
+        optional: true
+      prettier-plugin-astro:
+        optional: true
+      prettier-plugin-css-order:
+        optional: true
+      prettier-plugin-import-sort:
+        optional: true
+      prettier-plugin-jsdoc:
+        optional: true
+      prettier-plugin-marko:
+        optional: true
+      prettier-plugin-multiline-arrays:
+        optional: true
+      prettier-plugin-organize-attributes:
+        optional: true
+      prettier-plugin-organize-imports:
+        optional: true
+      prettier-plugin-sort-imports:
+        optional: true
+      prettier-plugin-style-order:
+        optional: true
+      prettier-plugin-svelte:
+        optional: true
 
   prettier@3.5.3:
     resolution: {integrity: sha512-QQtaxnoDJeAkDvDKWCLiwIXkTgRhwYDEQCghU9Z6q03iyek/rxRh/2lC3HB7P8sWT2xC/y5JDctPLBIGzHKbhw==}
@@ -7539,6 +7626,8 @@ snapshots:
 
   diff@4.0.2: {}
 
+  diff@5.1.0: {}
+
   diff@7.0.0: {}
 
   dir-compare@4.2.0:
@@ -9134,6 +9223,19 @@ snapshots:
       commander: 9.5.0
 
   prelude-ls@1.2.1: {}
+
+  prettier-plugin-classnames@0.7.8(prettier@3.5.3):
+    dependencies:
+      prettier: 3.5.3
+
+  prettier-plugin-merge@0.7.4(prettier@3.5.3):
+    dependencies:
+      diff: 5.1.0
+      prettier: 3.5.3
+
+  prettier-plugin-tailwindcss@0.6.12(prettier@3.5.3):
+    dependencies:
+      prettier: 3.5.3
 
   prettier@3.5.3: {}
 

@@ -4,7 +4,7 @@ import type {
   Options as ClientOptions,
   TDataShape,
   Client,
-} from "@hey-api/client-fetch";
+} from '@hey-api/client-fetch'
 import type {
   GetApiOpenapiJsonData,
   GetApiOpenapiJsonResponse,
@@ -47,8 +47,8 @@ import type {
   GetApiV1BetaVersionResponse,
   GetHealthData,
   GetHealthResponse,
-} from "./types.gen";
-import { client as _heyApiClient } from "./client.gen";
+} from './types.gen'
+import { client as _heyApiClient } from './client.gen'
 
 export type Options<
   TData extends TDataShape = TDataShape,
@@ -59,30 +59,30 @@ export type Options<
    * individual options. This might be also useful if you want to implement a
    * custom client.
    */
-  client?: Client;
+  client?: Client
   /**
    * You can pass arbitrary values through the `meta` object. This can be
    * used to access values that aren't defined as part of the SDK function.
    */
-  meta?: Record<string, unknown>;
-};
+  meta?: Record<string, unknown>
+}
 
 /**
  * Get OpenAPI specification
  * Returns the OpenAPI specification for the API
  */
 export const getApiOpenapiJson = <ThrowOnError extends boolean = false>(
-  options?: Options<GetApiOpenapiJsonData, ThrowOnError>,
+  options?: Options<GetApiOpenapiJsonData, ThrowOnError>
 ) => {
   return (options?.client ?? _heyApiClient).get<
     GetApiOpenapiJsonResponse,
     unknown,
     ThrowOnError
   >({
-    url: "/api/openapi.json",
+    url: '/api/openapi.json',
     ...options,
-  });
-};
+  })
+}
 
 /**
  * List all clients status
@@ -91,55 +91,55 @@ export const getApiOpenapiJson = <ThrowOnError extends boolean = false>(
 export const getApiV1BetaDiscoveryClients = <
   ThrowOnError extends boolean = false,
 >(
-  options?: Options<GetApiV1BetaDiscoveryClientsData, ThrowOnError>,
+  options?: Options<GetApiV1BetaDiscoveryClientsData, ThrowOnError>
 ) => {
   return (options?.client ?? _heyApiClient).get<
     GetApiV1BetaDiscoveryClientsResponse,
     unknown,
     ThrowOnError
   >({
-    url: "/api/v1beta/discovery/clients",
+    url: '/api/v1beta/discovery/clients',
     ...options,
-  });
-};
+  })
+}
 
 /**
  * List registries
  * Get a list of the current registries
  */
 export const getApiV1BetaRegistry = <ThrowOnError extends boolean = false>(
-  options?: Options<GetApiV1BetaRegistryData, ThrowOnError>,
+  options?: Options<GetApiV1BetaRegistryData, ThrowOnError>
 ) => {
   return (options?.client ?? _heyApiClient).get<
     GetApiV1BetaRegistryResponse,
     unknown,
     ThrowOnError
   >({
-    url: "/api/v1beta/registry",
+    url: '/api/v1beta/registry',
     ...options,
-  });
-};
+  })
+}
 
 /**
  * Add a registry
  * Add a new registry
  */
 export const postApiV1BetaRegistry = <ThrowOnError extends boolean = false>(
-  options?: Options<PostApiV1BetaRegistryData, ThrowOnError>,
+  options?: Options<PostApiV1BetaRegistryData, ThrowOnError>
 ) => {
   return (options?.client ?? _heyApiClient).post<
     unknown,
     PostApiV1BetaRegistryError,
     ThrowOnError
   >({
-    url: "/api/v1beta/registry",
+    url: '/api/v1beta/registry',
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       ...options?.headers,
     },
-  });
-};
+  })
+}
 
 /**
  * Remove a registry
@@ -148,17 +148,17 @@ export const postApiV1BetaRegistry = <ThrowOnError extends boolean = false>(
 export const deleteApiV1BetaRegistryByName = <
   ThrowOnError extends boolean = false,
 >(
-  options: Options<DeleteApiV1BetaRegistryByNameData, ThrowOnError>,
+  options: Options<DeleteApiV1BetaRegistryByNameData, ThrowOnError>
 ) => {
   return (options.client ?? _heyApiClient).delete<
     DeleteApiV1BetaRegistryByNameResponse,
     DeleteApiV1BetaRegistryByNameError,
     ThrowOnError
   >({
-    url: "/api/v1beta/registry/{name}",
+    url: '/api/v1beta/registry/{name}',
     ...options,
-  });
-};
+  })
+}
 
 /**
  * Get a registry
@@ -167,17 +167,17 @@ export const deleteApiV1BetaRegistryByName = <
 export const getApiV1BetaRegistryByName = <
   ThrowOnError extends boolean = false,
 >(
-  options: Options<GetApiV1BetaRegistryByNameData, ThrowOnError>,
+  options: Options<GetApiV1BetaRegistryByNameData, ThrowOnError>
 ) => {
   return (options.client ?? _heyApiClient).get<
     GetApiV1BetaRegistryByNameResponse,
     GetApiV1BetaRegistryByNameError,
     ThrowOnError
   >({
-    url: "/api/v1beta/registry/{name}",
+    url: '/api/v1beta/registry/{name}',
     ...options,
-  });
-};
+  })
+}
 
 /**
  * List servers in a registry
@@ -186,17 +186,17 @@ export const getApiV1BetaRegistryByName = <
 export const getApiV1BetaRegistryByNameServers = <
   ThrowOnError extends boolean = false,
 >(
-  options: Options<GetApiV1BetaRegistryByNameServersData, ThrowOnError>,
+  options: Options<GetApiV1BetaRegistryByNameServersData, ThrowOnError>
 ) => {
   return (options.client ?? _heyApiClient).get<
     GetApiV1BetaRegistryByNameServersResponse,
     GetApiV1BetaRegistryByNameServersError,
     ThrowOnError
   >({
-    url: "/api/v1beta/registry/{name}/servers",
+    url: '/api/v1beta/registry/{name}/servers',
     ...options,
-  });
-};
+  })
+}
 
 /**
  * Get a server from a registry
@@ -208,55 +208,55 @@ export const getApiV1BetaRegistryByNameServersByServerName = <
   options: Options<
     GetApiV1BetaRegistryByNameServersByServerNameData,
     ThrowOnError
-  >,
+  >
 ) => {
   return (options.client ?? _heyApiClient).get<
     GetApiV1BetaRegistryByNameServersByServerNameResponse,
     GetApiV1BetaRegistryByNameServersByServerNameError,
     ThrowOnError
   >({
-    url: "/api/v1beta/registry/{name}/servers/{serverName}",
+    url: '/api/v1beta/registry/{name}/servers/{serverName}',
     ...options,
-  });
-};
+  })
+}
 
 /**
  * List all servers
  * Get a list of all running servers
  */
 export const getApiV1BetaServers = <ThrowOnError extends boolean = false>(
-  options?: Options<GetApiV1BetaServersData, ThrowOnError>,
+  options?: Options<GetApiV1BetaServersData, ThrowOnError>
 ) => {
   return (options?.client ?? _heyApiClient).get<
     GetApiV1BetaServersResponse,
     unknown,
     ThrowOnError
   >({
-    url: "/api/v1beta/servers",
+    url: '/api/v1beta/servers',
     ...options,
-  });
-};
+  })
+}
 
 /**
  * Create a new server
  * Create and start a new server
  */
 export const postApiV1BetaServers = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiV1BetaServersData, ThrowOnError>,
+  options: Options<PostApiV1BetaServersData, ThrowOnError>
 ) => {
   return (options.client ?? _heyApiClient).post<
     PostApiV1BetaServersResponse,
     PostApiV1BetaServersError,
     ThrowOnError
   >({
-    url: "/api/v1beta/servers",
+    url: '/api/v1beta/servers',
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       ...options?.headers,
     },
-  });
-};
+  })
+}
 
 /**
  * Delete a server
@@ -265,34 +265,34 @@ export const postApiV1BetaServers = <ThrowOnError extends boolean = false>(
 export const deleteApiV1BetaServersByName = <
   ThrowOnError extends boolean = false,
 >(
-  options: Options<DeleteApiV1BetaServersByNameData, ThrowOnError>,
+  options: Options<DeleteApiV1BetaServersByNameData, ThrowOnError>
 ) => {
   return (options.client ?? _heyApiClient).delete<
     DeleteApiV1BetaServersByNameResponse,
     DeleteApiV1BetaServersByNameError,
     ThrowOnError
   >({
-    url: "/api/v1beta/servers/{name}",
+    url: '/api/v1beta/servers/{name}',
     ...options,
-  });
-};
+  })
+}
 
 /**
  * Get server details
  * Get details of a specific server
  */
 export const getApiV1BetaServersByName = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiV1BetaServersByNameData, ThrowOnError>,
+  options: Options<GetApiV1BetaServersByNameData, ThrowOnError>
 ) => {
   return (options.client ?? _heyApiClient).get<
     GetApiV1BetaServersByNameResponse,
     GetApiV1BetaServersByNameError,
     ThrowOnError
   >({
-    url: "/api/v1beta/servers/{name}",
+    url: '/api/v1beta/servers/{name}',
     ...options,
-  });
-};
+  })
+}
 
 /**
  * Restart a server
@@ -301,17 +301,17 @@ export const getApiV1BetaServersByName = <ThrowOnError extends boolean = false>(
 export const postApiV1BetaServersByNameRestart = <
   ThrowOnError extends boolean = false,
 >(
-  options: Options<PostApiV1BetaServersByNameRestartData, ThrowOnError>,
+  options: Options<PostApiV1BetaServersByNameRestartData, ThrowOnError>
 ) => {
   return (options.client ?? _heyApiClient).post<
     PostApiV1BetaServersByNameRestartResponse,
     PostApiV1BetaServersByNameRestartError,
     ThrowOnError
   >({
-    url: "/api/v1beta/servers/{name}/restart",
+    url: '/api/v1beta/servers/{name}/restart',
     ...options,
-  });
-};
+  })
+}
 
 /**
  * Stop a server
@@ -320,48 +320,48 @@ export const postApiV1BetaServersByNameRestart = <
 export const postApiV1BetaServersByNameStop = <
   ThrowOnError extends boolean = false,
 >(
-  options: Options<PostApiV1BetaServersByNameStopData, ThrowOnError>,
+  options: Options<PostApiV1BetaServersByNameStopData, ThrowOnError>
 ) => {
   return (options.client ?? _heyApiClient).post<
     PostApiV1BetaServersByNameStopResponse,
     PostApiV1BetaServersByNameStopError,
     ThrowOnError
   >({
-    url: "/api/v1beta/servers/{name}/stop",
+    url: '/api/v1beta/servers/{name}/stop',
     ...options,
-  });
-};
+  })
+}
 
 /**
  * Get server version
  * Returns the current version of the server
  */
 export const getApiV1BetaVersion = <ThrowOnError extends boolean = false>(
-  options?: Options<GetApiV1BetaVersionData, ThrowOnError>,
+  options?: Options<GetApiV1BetaVersionData, ThrowOnError>
 ) => {
   return (options?.client ?? _heyApiClient).get<
     GetApiV1BetaVersionResponse,
     unknown,
     ThrowOnError
   >({
-    url: "/api/v1beta/version",
+    url: '/api/v1beta/version',
     ...options,
-  });
-};
+  })
+}
 
 /**
  * Health check
  * Check if the API is healthy
  */
 export const getHealth = <ThrowOnError extends boolean = false>(
-  options?: Options<GetHealthData, ThrowOnError>,
+  options?: Options<GetHealthData, ThrowOnError>
 ) => {
   return (options?.client ?? _heyApiClient).get<
     GetHealthResponse,
     unknown,
     ThrowOnError
   >({
-    url: "/health",
+    url: '/health',
     ...options,
-  });
-};
+  })
+}

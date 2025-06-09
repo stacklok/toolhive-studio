@@ -1,27 +1,27 @@
-import { useFieldArray, type UseFormReturn } from "react-hook-form";
+import { useFieldArray, type UseFormReturn } from 'react-hook-form'
 
-import { PlusIcon, TrashIcon } from "lucide-react";
-import type { FormSchemaRunMcpCommand } from "../lib/form-schema-run-mcp-server-with-command";
+import { PlusIcon, TrashIcon } from 'lucide-react'
+import type { FormSchemaRunMcpCommand } from '../lib/form-schema-run-mcp-server-with-command'
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/common/components/ui/form";
-import { TooltipInfoIcon } from "@/common/components/ui/tooltip-info-icon";
-import { Input } from "@/common/components/ui/input";
-import { Button } from "@/common/components/ui/button";
+} from '@/common/components/ui/form'
+import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
+import { Input } from '@/common/components/ui/input'
+import { Button } from '@/common/components/ui/button'
 
 export function FormFieldsArrayCustomEnvVars({
   form,
 }: {
-  form: UseFormReturn<FormSchemaRunMcpCommand>;
+  form: UseFormReturn<FormSchemaRunMcpCommand>
 }) {
   const { fields, append, remove } = useFieldArray<FormSchemaRunMcpCommand>({
     control: form.control,
-    name: "environment_variables",
-  });
+    name: 'environment_variables',
+  })
 
   return (
     <>
@@ -29,8 +29,8 @@ export function FormFieldsArrayCustomEnvVars({
         <FormLabel
           htmlFor={
             fields.length > 0
-              ? "environment_variables.0.key"
-              : "add-env-var-button"
+              ? 'environment_variables.0.key'
+              : 'add-env-var-button'
           }
         >
           Environment variables
@@ -100,10 +100,10 @@ export function FormFieldsArrayCustomEnvVars({
         variant="outline"
         className="w-full"
         aria-label="Add environment variable"
-        onClick={() => append({ key: "", value: "" })}
+        onClick={() => append({ key: '', value: '' })}
       >
         <PlusIcon /> Add environment variable
       </Button>
     </>
-  );
+  )
 }

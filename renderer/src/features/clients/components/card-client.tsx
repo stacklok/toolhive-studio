@@ -1,11 +1,11 @@
-import type { ClientMcpClientStatus } from "@/common/api/generated";
+import type { ClientMcpClientStatus } from '@/common/api/generated'
 import {
   Card,
   CardHeader,
   CardTitle,
   CardContent,
-} from "@/common/components/ui/card";
-import { Switch } from "@/common/components/ui/switch";
+} from '@/common/components/ui/card'
+import { Switch } from '@/common/components/ui/switch'
 
 export function CardClient({ client }: { client: ClientMcpClientStatus }) {
   return (
@@ -22,5 +22,5 @@ export function CardClient({ client }: { client: ClientMcpClientStatus }) {
         <Switch className="cursor-pointer" checked={client.installed} />
       </CardContent>
     </Card>
-  );
+  )
 }
