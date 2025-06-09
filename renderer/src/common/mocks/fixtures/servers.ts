@@ -1,10 +1,30 @@
 import type {
-  V1WorkloadListResponse,
   WorkloadsWorkload,
+  V1WorkloadListResponse,
   V1CreateWorkloadResponse,
-} from '@/common/api/generated/types.gen'
+} from '@/common/api/generated'
 
 export const MOCK_MCP_SERVERS = [
+  {
+    name: 'postgres-db',
+    package: 'ghcr.io/postgres/postgres-mcp-server:latest',
+    url: 'http://127.0.0.1:28135/sse#postgres-db',
+    port: 28135,
+    tool_type: 'mcp',
+    status: 'stopped' as const,
+    status_context: 'Exited (0) 30 minutes ago',
+    created_at: '2025-06-09T15:35:15+02:00',
+  },
+  {
+    name: 'vscode-server',
+    package: 'ghcr.io/vscode/vscode-mcp-server:latest',
+    url: 'http://127.0.0.1:28136/sse#vscode-server',
+    port: 28136,
+    tool_type: 'mcp',
+    status: 'running' as const,
+    status_context: 'Up 45 minutes',
+    created_at: '2025-06-09T15:30:15+02:00',
+  },
   {
     name: 'github',
     package: 'ghcr.io/github/github-mcp-server:latest',
