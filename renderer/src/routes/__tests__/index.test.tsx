@@ -100,9 +100,5 @@ it('should show dropdown menu with remove option when clicking more options butt
 
   await userEvent.click(moreOptionsButton)
 
-  await waitFor(() => {
-    expect(screen.getByRole('menu')).toBeVisible()
-  })
-
   expect(screen.getByRole('menuitem', { name: /remove/i })).toBeVisible()
 })

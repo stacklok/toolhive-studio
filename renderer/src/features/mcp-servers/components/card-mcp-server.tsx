@@ -90,11 +90,12 @@ export function CardMcpServer({
                 size="icon"
                 aria-label="More options"
                 className="ml-2"
+                onClick={(e) => e.stopPropagation()}
               >
                 <MoreVertical className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" role="menu">
               <DropdownMenuItem>
                 <Trash2 className="mr-2 h-4 w-4" />
                 Remove
