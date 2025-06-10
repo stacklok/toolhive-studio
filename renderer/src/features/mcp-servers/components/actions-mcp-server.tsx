@@ -1,5 +1,6 @@
 import type { WorkloadsWorkload } from '@/common/api/generated/types.gen'
 import { Switch } from '@/common/components/ui/switch'
+import { cn } from '@/common/lib/utils'
 
 function getStatusText(status: WorkloadsWorkload['status']) {
   // We will have enum in the next API refactor
@@ -27,7 +28,11 @@ export function ActionsMcpServer({
       <div onClick={(e) => e.preventDefault()}>
         <Switch
           aria-label="Mutate server"
-          className="cursor-pointer"
+          className={cn(
+            'cursor-pointer',
+            isRunning &&
+              'dark:data-[state=checked]:bg-primary data-[state=checked]:bg-green-600'
+          )}
           checked={isRunning || isPending}
           disabled={isRestarting}
           onCheckedChange={() => mutate()}
