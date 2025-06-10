@@ -3,6 +3,7 @@ import {
   getApiV1BetaWorkloadsOptions,
   postApiV1BetaWorkloadsMutation,
 } from '@/common/api/generated/@tanstack/react-query.gen'
+import { Button } from '@/common/components/ui/button'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { DialogFormRunMcpServerWithCommand } from '@/features/mcp-servers/components/dialog-form-run-mcp-command'
 import { GridCardsMcpServers } from '@/features/mcp-servers/components/grid-cards-mcp-server'
@@ -36,6 +37,7 @@ export function Index() {
     <>
       <div className="mb-6 flex items-center">
         <h1 className="text-3xl font-semibold">Installed</h1>
+        <Button onClick={() => myUndefinedFunction()}>Foo</Button>
         <DropdownMenuRunMcpServer
           openRunCommandDialog={() => setIsRunWithCommandOpen(true)}
           className="ml-auto"
