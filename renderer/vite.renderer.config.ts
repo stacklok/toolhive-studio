@@ -1,5 +1,6 @@
 import path from 'path'
 import { defineConfig } from 'vite'
+import { sentryVitePlugin } from '@sentry/vite-plugin'
 import react from '@vitejs/plugin-react-swc'
 
 export default defineConfig(async () => {
@@ -9,6 +10,7 @@ export default defineConfig(async () => {
   return {
     root: __dirname,
     build: {
+      sourcemap: true, // Required for Sentry sourcemaps
       outDir: path.resolve(__dirname, '../.vite/renderer/main_window'),
     },
     plugins: [
@@ -22,6 +24,11 @@ export default defineConfig(async () => {
       }),
       react(),
       tailwindcss(), // now loaded via dynamic import → no require() conflict
+      sentryVitePlugin({
+        authToken: process.env.SENTRY_AUTH_TOKEN, // NOTE: This should be available only during CI
+        org: process.env.SENTRY_ORG, // NOTE: This should be available only during CI
+        project: process.env.SENTRY_PROJECT, // NOTE: This should be available only during CI
+      }),
     ],
     resolve: {
       alias: {

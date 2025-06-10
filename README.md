@@ -61,6 +61,34 @@ The project is structured as a typical Electron application:
 - `preload/`: Contains the preload scripts for the Electron renderer process.
 - `renderer/`: Contains the React application for the renderer process. This is where the UI components live.
 
+## Environment variables
+
+> [!IMPORTANT]  
+> Electron applications can be decompiled, so do not store sensitive information
+> in runtime environment variables. Use secure methods to handle sensitive data.
+
+The project uses environment variables for configuration.
+
+You can set these in a `.env` file in the root directory when developing
+locally. The `.env.example` file provides a template for the required variables.
+
+For building and deploying the application, these should be configured in Github
+actions secrets/variables (as appropriate).
+
+To expose environment variables at _**run time**_, you need to prefix them with
+`VITE_`. This will make them available on `import.meta.env` (**not** `process.env`))
+
+For example, if you want to expose a variable named `API_URL`, you
+should define it as `VITE_API_URL` in the `.env` file (locally) or in the CI
+environment.
+
+| Variable            | Required | Build-time | Run-time | Description                                                                                           |
+| ------------------- | -------- | ---------- | -------- | ----------------------------------------------------------------------------------------------------- |
+| `VITE_SENTRY_DSN`   | `false`  | `true`     | `true`   | Sentry DSN. The URL that events are posted to.                                                        |
+| `SENTRY_AUTH_TOKEN` | `false`  | `true`     | `false`  | Sentry authentication token. Used for sourcemap uploads at build-time to enable readable stacktraces. |
+| `SENTRY_ORG`        | `false`  | `true`     | `false`  | Sentry organization. Used for sourcemap uploads at build-time to enable readable stacktraces.         |
+| `SENTRY_PROJECT`    | `false`  | `true`     | `false`  | Sentry project name. Used for sourcemap uploads at build-time to enable readable stacktraces.         |
+
 ## ESLint Configuration
 
 The project uses ESLint with `typescript-eslint` for linting TypeScript code. The configuration is in the `eslint.config.mjs` file. It includes rules for React hooks and React Refresh.
