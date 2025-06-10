@@ -1,4 +1,11 @@
-import { app, BrowserWindow, Tray, ipcMain, nativeTheme } from 'electron'
+import {
+  app,
+  BrowserWindow,
+  Tray,
+  ipcMain,
+  nativeTheme,
+  session,
+} from 'electron'
 import path from 'node:path'
 import { existsSync } from 'node:fs'
 import started from 'electron-squirrel-startup'
@@ -6,6 +13,7 @@ import { spawn } from 'node:child_process'
 import { initTray } from './system-tray'
 import { setAutoLaunch, getAutoLaunchStatus } from './auto-launch'
 import net from 'node:net'
+import { getCspString } from './csp'
 
 // Forge environment variables
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined
@@ -82,15 +90,16 @@ if (started) {
 // Check if app should start hidden
 const shouldStartHidden =
   process.argv.includes('--hidden') || process.argv.includes('--start-hidden')
-
+const isDevelopment = process.env.NODE_ENV === 'development'
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
     width: 1040,
     height: 700,
     show: !shouldStartHidden, // Don't show window if starting hidden
     webPreferences: {
+      contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
-      webSecurity: false, // TODO: fix security configuration
+      webSecurity: !isDevelopment,
     },
   })
 
@@ -117,6 +126,21 @@ app.on('ready', () => {
 })
 
 app.whenReady().then(() => {
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    if (isDevelopment) {
+      return callback({ responseHeaders: details.responseHeaders })
+    }
+    if (toolhivePort == null) {
+      throw new Error('[content-security-policy] ToolHive port is not set')
+    }
+    return callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [getCspString(toolhivePort)],
+      },
+    })
+  })
+
   tray = initTray({
     toolHiveIsRunning: !!toolhiveProcess,
   })
