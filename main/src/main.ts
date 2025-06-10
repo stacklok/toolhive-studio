@@ -87,15 +87,11 @@ if (started) {
   app.quit()
 }
 
-// Check if app should start hidden
-const shouldStartHidden =
-  process.argv.includes('--hidden') || process.argv.includes('--start-hidden')
 const isDevelopment = process.env.NODE_ENV === 'development'
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
     width: 1040,
     height: 700,
-    show: !shouldStartHidden, // Don't show window if starting hidden
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
@@ -109,10 +105,6 @@ const createWindow = () => {
     mainWindow.loadFile(
       path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)
     )
-  }
-
-  if (!shouldStartHidden) {
-    mainWindow.webContents.openDevTools()
   }
 
   return mainWindow
