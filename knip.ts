@@ -29,6 +29,7 @@ export default {
   ignoreDependencies: [
     '@electron-forge/maker-flatpak',
     '@electron-forge/publisher-github',
+    '@electron-forge/maker-base',
   ],
   compilers: {
     // this is needed to support css entry files
