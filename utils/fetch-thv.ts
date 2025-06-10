@@ -1,74 +1,187 @@
-import { mkdir, access, writeFile, chmod } from 'node:fs/promises'
 import { createReadStream } from 'node:fs'
+import { mkdir, access, writeFile, chmod, rm } from 'node:fs/promises'
+import { execFile } from 'node:child_process'
+import { promisify } from 'node:util'
 import * as tar from 'tar'
 import * as unzipper from 'unzipper'
 import * as path from 'node:path'
 import { spawn } from 'node:child_process'
 import { TOOLHIVE_VERSION } from './constants'
 
-const mapOS: Partial<Record<NodeJS.Platform, string>> = {
+const execFileAsync = promisify(execFile)
+
+const PLATFORM_MAP: Partial<Record<NodeJS.Platform, string>> = {
   win32: 'windows',
   darwin: 'darwin',
   linux: 'linux',
-}
+} as const
 
-const mapArch: Record<string, string> = {
+const ARCH_MAP: Record<string, string> = {
   x64: 'amd64',
   arm64: 'arm64',
+} as const
+
+const GITHUB_API_URL =
+  'https://api.github.com/repos/stacklok/toolhive/releases/latest'
+
+function normalizeVersion(version: string): string {
+  return version.startsWith('v') ? version.slice(1) : version
 }
 
-export async function ensureThv(
-  platform: NodeJS.Platform = process.platform,
-  arch: NodeJS.Architecture = process.arch
-): Promise<string> {
-  const os = mapOS[platform]
-  const cpu = mapArch[arch]
-  if (!os || !cpu) throw new Error(`Unsupported combo ${platform}/${arch}`)
+function parseVersion(version: string): number[] {
+  return normalizeVersion(version).split('.').map(Number)
+}
 
-  const ext = os === 'windows' ? 'zip' : 'tar.gz'
+function isCurrentVersionOlder(
+  currentVersionTag: string,
+  latestVersionTag: string
+): boolean {
+  const currentVersion = parseVersion(currentVersionTag)
+  const latestVersion = parseVersion(latestVersionTag)
 
-  // GitHub tag always starts with "v", filename never has it.
-  const tag = TOOLHIVE_VERSION.startsWith('v')
-    ? TOOLHIVE_VERSION
-    : `v${TOOLHIVE_VERSION}`
-  const versionNum = TOOLHIVE_VERSION.startsWith('v')
-    ? TOOLHIVE_VERSION.slice(1)
-    : TOOLHIVE_VERSION
+  for (let i = 0; i < latestVersion.length; i++) {
+    const part1 = currentVersion[i] || 0
+    const part2 = latestVersion[i] || 0
 
-  const assetName = `toolhive_${versionNum}_${os}_${cpu}.${ext}`
-  const url = `https://github.com/stacklok/toolhive/releases/download/${tag}/${assetName}`
+    if (part1 < part2) return true
+    if (part1 > part2) return false
+  }
 
-  const binDir = path.resolve(__dirname, '..', 'bin', `${platform}-${arch}`)
-  const binPath = path.join(binDir, os === 'windows' ? 'thv.exe' : 'thv')
+  return false
+}
+
+async function getBinaryVersion(binPath: string): Promise<string | null> {
+  try {
+    const { stdout } = await execFileAsync(binPath, ['version'])
+    const versionMatch = stdout.trim().match(/v?\d+\.\d+\.\d+/)
+    return versionMatch?.[0] ?? null
+  } catch (error) {
+    console.log('Error getting binary version:', error)
+    return null
+  }
+}
+
+async function fetchLatestRelease(): Promise<string | null> {
+  try {
+    const response = await fetch(GITHUB_API_URL)
+    if (!response.ok) return null
+
+    const data = await response.json()
+    return data.tag_name ?? null
+  } catch {
+    return null
+  }
+}
+
+async function checkBinaryVersion(binPath: string): Promise<boolean> {
+  const latestTag = await fetchLatestRelease()
 
   try {
     await access(binPath)
-    return binPath
-  } catch {
-    /* not found */
-  }
 
+    const currentBinVersion = await getBinaryVersion(binPath)
+    if (!currentBinVersion) return true
+    if (!latestTag) return false
+    const isBinVersionOlder = isCurrentVersionOlder(
+      currentBinVersion,
+      latestTag
+    )
+    const constantThvVersion = normalizeVersion(TOOLHIVE_VERSION)
+    if (isBinVersionOlder) {
+      console.log(
+        `A new version of ToolHive is available: ${latestTag} (current binary: ${currentBinVersion})`
+      )
+      console.log(
+        'Visit https://github.com/stacklok/toolhive/releases/latest for details'
+      )
+    }
+    const shouldDownload =
+      constantThvVersion !== normalizeVersion(currentBinVersion)
+    return shouldDownload
+  } catch {
+    return true
+  }
+}
+
+async function cleanBinaryDirectory(binDir: string): Promise<void> {
+  try {
+    await rm(binDir, { recursive: true, force: true })
+  } catch {
+    // binary directory does not exist
+  }
+}
+
+async function downloadAndExtractBinary(
+  url: string,
+  binDir: string,
+  assetName: string
+): Promise<void> {
   console.log(`↧ downloading ${assetName} …`)
   await mkdir(binDir, { recursive: true })
 
-  // ---------- download ----------
-  const res = await fetch(url)
-  if (!res.ok) {
-    throw new Error(`Download failed (${res.status}) – ${url}`)
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(`Download failed (${response.status}) – ${url}`)
   }
-  const buf = Buffer.from(await res.arrayBuffer())
-  const archivePath = path.join(binDir, assetName)
-  await writeFile(archivePath, buf)
 
-  // ---------- extract ----------
-  if (ext === 'zip') {
+  const buffer = Buffer.from(await response.arrayBuffer())
+  const archivePath = path.join(binDir, assetName)
+  await writeFile(archivePath, buffer)
+
+  const isZip = assetName.endsWith('.zip')
+  if (isZip) {
     await createReadStream(archivePath)
       .pipe(unzipper.Extract({ path: binDir }))
       .promise()
   } else {
     await tar.x({ file: archivePath, cwd: binDir })
   }
+}
 
+function createBinaryPath(
+  platform: NodeJS.Platform,
+  arch: NodeJS.Architecture
+) {
+  const os = PLATFORM_MAP[platform]
+  const cpu = ARCH_MAP[arch]
+
+  if (!os || !cpu) {
+    throw new Error(
+      `Unsupported platform/architecture combination: ${platform}/${arch}`
+    )
+  }
+
+  const isWindows = os === 'windows'
+  const extension = isWindows ? 'zip' : 'tar.gz'
+
+  const tag = TOOLHIVE_VERSION.startsWith('v')
+    ? TOOLHIVE_VERSION
+    : `v${TOOLHIVE_VERSION}`
+  const versionNum = normalizeVersion(TOOLHIVE_VERSION)
+
+  const assetName = `toolhive_${versionNum}_${os}_${cpu}.${extension}`
+  const downloadUrl = `https://github.com/stacklok/toolhive/releases/download/${tag}/${assetName}`
+
+  const binDir = path.resolve(__dirname, '..', 'bin', `${platform}-${arch}`)
+  const binPath = path.join(binDir, isWindows ? 'thv.exe' : 'thv')
+
+  return { os, binDir, binPath, assetName, downloadUrl }
+}
+
+export async function ensureThv(
+  platform: NodeJS.Platform = process.platform,
+  arch: NodeJS.Architecture = process.arch
+): Promise<string> {
+  const { binDir, binPath, assetName, downloadUrl } = createBinaryPath(
+    platform,
+    arch
+  )
+
+  const shouldDownload = await checkBinaryVersion(binPath)
+  if (!shouldDownload) return binPath
+
+  await cleanBinaryDirectory(binDir)
+  await downloadAndExtractBinary(downloadUrl, binDir, assetName)
   await chmod(binPath, 0o755)
   return binPath
 }
