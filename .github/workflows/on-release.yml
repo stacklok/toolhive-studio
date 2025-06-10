@@ -30,10 +30,6 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     env:
       NODE_OPTIONS: '--max_old_space_size=4096'
-      SENTRY_DSN: ${{ vars.SENTRY_DSN }}
-      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-      SENTRY_ORG: ${{ vars.SENTRY_ORG }}
-      SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -59,3 +55,7 @@ jobs:
           # Ensure the correct Node.js version is used for native modules
           npm_config_target_platform: ${{ runner.os == 'Linux' && 'linux' || (runner.os == 'macOS' && 'darwin' || 'win32') }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SENTRY_DSN: ${{ vars.SENTRY_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
