@@ -1,8 +1,8 @@
 import {
   getApiV1BetaRegistryByNameServersOptions,
-  postApiV1BetaServersMutation,
-  getApiV1BetaServersByNameOptions,
-  getApiV1BetaServersQueryKey,
+  postApiV1BetaWorkloadsMutation,
+  getApiV1BetaWorkloadsByNameOptions,
+  getApiV1BetaWorkloadsQueryKey,
 } from '@/common/api/generated/@tanstack/react-query.gen'
 import { pollServerStatus } from '@/common/lib/polling'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
@@ -27,7 +27,7 @@ export function Store() {
   const storeData = useLoaderData({ from: '/store' })
   const queryClient = useQueryClient()
   const { mutateAsync } = useToastMutation({
-    ...postApiV1BetaServersMutation(),
+    ...postApiV1BetaWorkloadsMutation(),
     loadingMsg: 'Creating server...',
     errorMsg: 'Failed to create server',
   })
@@ -69,7 +69,7 @@ export function Store() {
 
       const isServerReady = await pollServerStatus(() =>
         queryClient.fetchQuery(
-          getApiV1BetaServersByNameOptions({ path: { name: serverName } })
+          getApiV1BetaWorkloadsByNameOptions({ path: { name: serverName } })
         )
       )
 
@@ -83,7 +83,7 @@ export function Store() {
         // Invalidate queries to refresh server lists
         queryClient.invalidateQueries({
           // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
-          queryKey: getApiV1BetaServersQueryKey({ query: { all: true } }),
+          queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
         })
       } else {
         toast.warning(

@@ -1,4 +1,5 @@
-import { getApiV1BetaServersByNameOptions } from '@/common/api/generated/@tanstack/react-query.gen'
+import type { WorkloadsWorkload } from '@/common/api/generated'
+import { getApiV1BetaWorkloadsByNameOptions } from '@/common/api/generated/@tanstack/react-query.gen'
 import { Separator } from '@/common/components/ui/separator'
 import { DetailMcpServer } from '@/features/mcp-servers/components/detail-mcp-server'
 import { useSuspenseQuery } from '@tanstack/react-query'
@@ -9,7 +10,7 @@ export const Route = createFileRoute('/server/$serverName')({
   component: RouteComponent,
   loader: ({ context: { queryClient }, params: { serverName } }) =>
     queryClient.ensureQueryData(
-      getApiV1BetaServersByNameOptions({
+      getApiV1BetaWorkloadsByNameOptions({
         path: { name: serverName },
       })
     ),
@@ -18,14 +19,14 @@ export const Route = createFileRoute('/server/$serverName')({
 function RouteComponent() {
   const { serverName } = Route.useParams()
   const { data } = useSuspenseQuery(
-    getApiV1BetaServersByNameOptions({
+    getApiV1BetaWorkloadsByNameOptions({
       path: { name: serverName },
     })
   )
 
-  const serverData = JSON.parse(data as unknown as string)
-  const description = serverData.Labels['org.opencontainers.image.description']
-  const repo = serverData.Labels['org.opencontainers.image.source']
+  const serverData = JSON.parse(data as unknown as string) as WorkloadsWorkload
+  const repo = serverData.package ?? ''
+  const url = serverData.url ?? ''
 
   return (
     <>
@@ -37,7 +38,7 @@ function RouteComponent() {
         <span className="text-sm">Back</span>
       </Link>
       <div className="mb-6 flex items-center">
-        <h1 className="text-3xl font-semibold">{serverData.Name}</h1>
+        <h1 className="text-3xl font-semibold">{serverData.name}</h1>
       </div>
       <Separator className="my-5" />
 
@@ -45,10 +46,10 @@ function RouteComponent() {
         <div>No MCP server found</div>
       ) : (
         <DetailMcpServer
-          serverName={serverData.Name}
-          description={description}
+          url={url}
+          serverName={serverData.name ?? ''}
           repo={repo}
-          state={serverData.State}
+          status={serverData.status}
         />
       )}
     </>
