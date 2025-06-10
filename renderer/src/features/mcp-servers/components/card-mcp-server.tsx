@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
 } from '@/common/components/ui/dropdown-menu'
 import { Button } from '@/common/components/ui/button'
-import { MoreVertical, Trash2, List } from 'lucide-react'
+import { MoreVertical, Trash2 } from 'lucide-react'
 
 import type { WorkloadsWorkload } from '@/common/api/generated'
 import { ActionsMcpServer } from './actions-mcp-server'
@@ -95,10 +95,6 @@ export function CardMcpServer({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
-                <List className="mr-2 h-4 w-4" />
-                Logs
-              </DropdownMenuItem>
               <DropdownMenuItem>
                 <Trash2 className="mr-2 h-4 w-4" />
                 Remove
