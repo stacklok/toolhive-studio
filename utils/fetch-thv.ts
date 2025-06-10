@@ -1,12 +1,10 @@
 import { mkdir, access, writeFile, chmod } from 'node:fs/promises'
-import { createReadStream } from 'node:fs' // Only for unzipping
-import path from 'node:path'
+import { createReadStream } from 'node:fs'
 import * as tar from 'tar'
-import unzipper from 'unzipper'
+import * as unzipper from 'unzipper'
+import * as path from 'node:path'
+import { spawn } from 'node:child_process'
 import { TOOLHIVE_VERSION } from './constants'
-
-// If using Node < 18, uncomment the next line and run: npm i node-fetch@^3
-// import fetch from 'node-fetch';
 
 const mapOS: Partial<Record<NodeJS.Platform, string>> = {
   win32: 'windows',
@@ -73,4 +71,25 @@ export async function ensureThv(
 
   await chmod(binPath, 0o755)
   return binPath
+}
+
+if (require.main === module) {
+  ;(async () => {
+    const args = process.argv.slice(2)
+    const runIdx = args.indexOf('--run')
+    const shouldRun = runIdx !== -1
+    if (shouldRun) args.splice(runIdx, 1)
+
+    const thvPath = await ensureThv()
+
+    if (shouldRun) {
+      const child = spawn(thvPath, args, { stdio: 'inherit' })
+      child.on('exit', (code) => process.exit(code ?? 0))
+    } else {
+      console.log(thvPath)
+    }
+  })().catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
 }

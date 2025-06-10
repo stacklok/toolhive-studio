@@ -17,10 +17,10 @@ To get started, follow these steps:
     ```bash
     pnpm install
     ```
-2.  **Run the initial build**:
+2.  **Make sure thv is downloaded and runs properly**:
 
     ```bash
-    pnpm run make
+    pnpm thv
     ```
 
     This command needs to be run once to build the application before starting the development server.
@@ -30,6 +30,7 @@ To get started, follow these steps:
     pnpm run start
     ```
     This will start the Electron application with hot reload for the renderer process.
+
 
 ## Available Scripts
 
@@ -41,6 +42,7 @@ Here are the most common scripts you will use during development:
 - `pnpm run type-check`: Runs TypeScript type checking.
 - `pnpm run test`: Runs tests using Vitest.
 - `pnpm run test:coverage`: Runs tests with coverage.
+- `pnpm run thv`: Run the same `thv` binary that the dev server uses
 
 ### Building and Packaging
 

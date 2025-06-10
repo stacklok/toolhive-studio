@@ -17,6 +17,7 @@
     "publish": "electron-forge publish",
     "type-check": "tsc --noEmit -p ./tsconfig.json",
     "prepare": "husky install",
+    "thv": "ts-node ./utils/fetch-thv.ts --run",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
     "update-api": "ts-node scripts/update-api.ts",
