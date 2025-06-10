@@ -87,10 +87,7 @@ async function checkBinaryVersion(binPath: string): Promise<boolean> {
       latestTag
     )
     const constantThvVersion = normalizeVersion(TOOLHIVE_VERSION)
-    if (
-      isBinVersionOlder &&
-      constantThvVersion === normalizeVersion(currentBinVersion)
-    ) {
+    if (isBinVersionOlder) {
       console.log(
         `A new version of ToolHive is available: ${latestTag} (current binary: ${currentBinVersion})`
       )
@@ -99,7 +96,7 @@ async function checkBinaryVersion(binPath: string): Promise<boolean> {
       )
     }
     const shouldDownload =
-      isBinVersionOlder && constantThvVersion === normalizeVersion(latestTag)
+      constantThvVersion !== normalizeVersion(currentBinVersion)
     return shouldDownload
   } catch {
     return true
