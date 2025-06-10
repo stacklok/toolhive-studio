@@ -31,7 +31,6 @@ To get started, follow these steps:
     ```
     This will start the Electron application with hot reload for the renderer process.
 
-
 ## Available Scripts
 
 Here are the most common scripts you will use during development:
