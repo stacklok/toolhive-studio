@@ -85,3 +85,24 @@ it('should stop server', async () => {
     expect(vscodeSwitch).not.toBeChecked()
   })
 })
+
+it('should show dropdown menu with remove option when clicking more options button', async () => {
+  renderRoute(router)
+
+  await waitFor(() => {
+    expect(screen.getByText('postgres-db')).toBeVisible()
+  })
+
+  const postgresCard = screen.getByRole('link', { name: /postgres-db/i })
+  const moreOptionsButton = within(postgresCard).getByRole('button', {
+    name: /more options/i,
+  })
+
+  await userEvent.click(moreOptionsButton)
+
+  await waitFor(() => {
+    expect(screen.getByRole('menu')).toBeVisible()
+  })
+
+  expect(screen.getByRole('menuitem', { name: /remove/i })).toBeVisible()
+})
