@@ -86,12 +86,14 @@ async function startToolhive() {
 if (started) {
   app.quit()
 }
-
+const shouldStartHidden =
+  process.argv.includes('--hidden') || process.argv.includes('--start-hidden')
 const isDevelopment = process.env.NODE_ENV === 'development'
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
     width: 1040,
     height: 700,
+    show: !shouldStartHidden,
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
@@ -105,6 +107,10 @@ const createWindow = () => {
     mainWindow.loadFile(
       path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)
     )
+  }
+
+  if (!shouldStartHidden && !app.isPackaged) {
+    mainWindow.webContents.openDevTools()
   }
 
   return mainWindow
