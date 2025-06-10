@@ -74,7 +74,7 @@ export function DetailMcpServer({
           </TabsContent>
 
           <TabsContent value="description" className="mt-0 w-full">
-            <div className="flex flex-col gap-6 p-2">
+            <div className="flex flex-col gap-6">
               {description && (
                 <div className="text-muted-foreground text-base">
                   {description}
