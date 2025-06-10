@@ -18,23 +18,18 @@ import {
 } from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
 import { Switch } from '@/common/components/ui/switch'
+import { Badge } from '@/common/components/ui/badge'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/common/components/ui/tooltip'
 import { useForm } from 'react-hook-form'
 import type { RegistryServer } from '@/common/api/generated/types.gen'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { z } from 'zod/v4'
-
-const formCatalogCreationSchema = z.object({
-  serverName: z.string().min(1, 'Server name is required'),
-  envVars: z.array(
-    z.object({
-      name: z.string(),
-      value: z.string().optional(),
-      useDefault: z.boolean().default(false),
-    })
-  ),
-})
-
-type FormCatalogCreationSchema = z.infer<typeof formCatalogCreationSchema>
+import { useMemo } from 'react'
 
 interface FormCatalogCreationProps {
   server: RegistryServer | null
@@ -52,8 +47,52 @@ export function FormCatalogCreation({
   onOpenChange,
   onSubmit,
 }: FormCatalogCreationProps) {
+  // Create dynamic schema based on server's env vars
+  const formSchema = useMemo(() => {
+    if (!server?.env_vars) {
+      return z.object({
+        serverName: z.string().min(1, 'Server name is required'),
+        envVars: z.array(
+          z.object({
+            name: z.string(),
+            value: z.string().optional(),
+            useDefault: z.boolean().default(false),
+          })
+        ),
+      })
+    }
+
+    const envVarSchema = z
+      .object({
+        name: z.string(),
+        value: z.string().optional(),
+        useDefault: z.boolean().default(false),
+      })
+      .refine(
+        (data) => {
+          const serverEnvVar = server.env_vars?.find(
+            (env) => env.name === data.name
+          )
+          if (!serverEnvVar?.required) return true
+          if (data.useDefault) return true
+          return data.value && data.value.trim() !== ''
+        },
+        {
+          message: 'This field is required',
+          path: ['value'],
+        }
+      )
+
+    return z.object({
+      serverName: z.string().min(1, 'Server name is required'),
+      envVars: z.array(envVarSchema),
+    })
+  }, [server?.env_vars])
+
+  type FormCatalogCreationSchema = z.infer<typeof formSchema>
+
   const form = useForm<FormCatalogCreationSchema>({
-    resolver: zodV4Resolver(formCatalogCreationSchema),
+    resolver: zodV4Resolver(formSchema),
     defaultValues: {
       serverName: server?.name || '',
       envVars:
@@ -65,7 +104,7 @@ export function FormCatalogCreation({
     },
   })
 
-  const handleSubmit = (data: FormCatalogCreationSchema) => {
+  const onValidate = (data: FormCatalogCreationSchema) => {
     const envVarsToSubmit = data.envVars
       .filter((envVar) => envVar.value || !envVar.useDefault)
       .map((envVar) => ({
@@ -90,7 +129,7 @@ export function FormCatalogCreation({
       >
         <Form {...form} key={server?.name}>
           <form
-            onSubmit={form.handleSubmit(handleSubmit)}
+            onSubmit={form.handleSubmit(onValidate)}
             className="flex h-full flex-col"
           >
             <DialogHeader className="flex-shrink-0 px-6 pt-6">
@@ -148,9 +187,22 @@ export function FormCatalogCreation({
                                         </span>
                                       )}
                                       {envVar.secret && (
-                                        <span className="rounded bg-orange-100 px-1 text-xs text-orange-500">
-                                          secret
-                                        </span>
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Badge variant="secondary">
+                                                secret
+                                              </Badge>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>
+                                                Secret indicates whether this
+                                                environment variable contains
+                                                sensitive information
+                                              </p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
                                       )}
                                     </FormLabel>
                                     {envVar.description && (
