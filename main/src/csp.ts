@@ -13,6 +13,7 @@ const cspMap = {
   'manifest-src': "'self'",
   'media-src': "'self' blob: data:",
   'worker-src': "'self'",
+  'child-src': "'none'",
 }
 
 export const cspString = Object.entries(cspMap)
