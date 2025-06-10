@@ -38,7 +38,7 @@ const config: ForgeConfig = {
       config: {
         repository: {
           owner: 'StacklokLabs',
-          name: 'toolhive-react',
+          name: 'toolhive-studio',
         },
         draft: false,
         prerelease: false,
