@@ -15,11 +15,11 @@ export function CardClient({ client }: { client: ClientMcpClientStatus }) {
           {client.client_type}
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        {client.installed}
-        {client.registered}
-        <div className="text-muted-foreground text-sm"></div>
-        <Switch className="cursor-pointer" checked={client.installed} />
+      <CardContent className="flex items-center gap-2">
+        <Switch className="cursor-pointer" checked={client.registered} />
+        <div className="text-muted-foreground text-sm">
+          {client.registered ? 'Connected' : 'Disconnected'}
+        </div>
       </CardContent>
     </Card>
   )

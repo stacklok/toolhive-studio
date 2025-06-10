@@ -5,20 +5,20 @@ import {
   CardTitle,
 } from '@/common/components/ui/card'
 
-import type { RuntimeContainerInfo } from '@/common/api/generated'
+import type { WorkloadsWorkload } from '@/common/api/generated'
 import { ActionsMcpServer } from './actions-mcp-server'
 import { useMutationRestartServerList } from '../hooks/use-mutation-restart-server'
 import { useMutationStopServerList } from '../hooks/use-mutation-stop-server'
 
 type CardContentMcpServerProps = {
-  state: RuntimeContainerInfo['State']
-  status: RuntimeContainerInfo['Status']
+  status: WorkloadsWorkload['status']
+  statusContext: WorkloadsWorkload['status_context']
   repoUrl?: string
   name: string
 }
 
-function CardContentMcpServer({ name, state }: CardContentMcpServerProps) {
-  const isRunning = state === 'running'
+function CardContentMcpServer({ name, status }: CardContentMcpServerProps) {
+  const isRunning = status === 'running'
   const { mutateAsync: restartMutate, isPending: isRestartPending } =
     useMutationRestartServerList({
       name,
@@ -32,7 +32,7 @@ function CardContentMcpServer({ name, state }: CardContentMcpServerProps) {
     <CardContent>
       <div className="border-border flex items-center justify-between border-t pt-4">
         <ActionsMcpServer
-          state={state}
+          status={status}
           isPending={isRestartPending || isStopPending}
           mutate={() => {
             if (isRunning) {
@@ -57,14 +57,13 @@ function CardContentMcpServer({ name, state }: CardContentMcpServerProps) {
 
 export function CardMcpServer({
   name,
-  state,
   status,
+  statusContext,
   repoUrl,
 }: {
-  name: RuntimeContainerInfo['Name']
-  state: RuntimeContainerInfo['State']
-  status: RuntimeContainerInfo['Status']
-  image: RuntimeContainerInfo['Image']
+  name: WorkloadsWorkload['name']
+  status: WorkloadsWorkload['status']
+  statusContext: WorkloadsWorkload['status_context']
   repoUrl?: string
   transport?: string
 }) {
@@ -74,8 +73,8 @@ export function CardMcpServer({
         <CardTitle className="flex items-center text-xl">{name}</CardTitle>
       </CardHeader>
       <CardContentMcpServer
-        state={state}
         status={status}
+        statusContext={statusContext}
         repoUrl={repoUrl}
         // name could be undefined this should be fixed in the API refactor
         name={name as string}

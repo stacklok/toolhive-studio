@@ -11,18 +11,21 @@ import {
   TabsTrigger,
 } from '@/common/components/ui/tabs'
 import { useDeleteServer } from '../hooks/use-delete-server'
+import type { WorkloadsWorkload } from '@/common/api/generated'
 
 export function DetailMcpServer({
   serverName,
   description,
   repo,
-  state,
+  status,
 }: {
   serverName: string
-  description: string
+  description?: string
   repo: string
-  state: string
+  status: WorkloadsWorkload['status']
+  url: WorkloadsWorkload['url']
 }) {
+  const isRunning = status === 'running'
   const { mutateAsync: restartMutate, isPending: isRestartPending } =
     useMutationRestartServer({
       name: serverName,
@@ -72,15 +75,16 @@ export function DetailMcpServer({
 
           <TabsContent value="description" className="mt-0 w-full">
             <div className="flex flex-col gap-6 p-2">
-              <div className="text-muted-foreground text-base">
-                {description}
-              </div>
+              {description && (
+                <div className="text-muted-foreground text-base">
+                  {description}
+                </div>
+              )}
               <div className="border-border border p-4">
                 <ActionsMcpServer
-                  state={state}
+                  status={status}
                   isPending={isRestartPending || isStopPending}
                   mutate={() => {
-                    const isRunning = state === 'running'
                     if (isRunning) {
                       return stopMutate({
                         path: {
@@ -98,7 +102,7 @@ export function DetailMcpServer({
               </div>
               <div className="flex gap-4">
                 <Button
-                  disabled={state === 'running'}
+                  disabled={isRunning}
                   variant="outline"
                   onClick={() =>
                     deleteServer({

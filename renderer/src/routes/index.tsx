@@ -1,7 +1,7 @@
-import type { V1ServerListResponse } from '@/common/api/generated'
+import type { V1WorkloadListResponse } from '@/common/api/generated'
 import {
-  getApiV1BetaServersOptions,
-  postApiV1BetaServersMutation,
+  getApiV1BetaWorkloadsOptions,
+  postApiV1BetaWorkloadsMutation,
 } from '@/common/api/generated/@tanstack/react-query.gen'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { DialogFormRunMcpServerWithCommand } from '@/features/mcp-servers/components/dialog-form-run-mcp-command'
@@ -15,7 +15,7 @@ export const Route = createFileRoute('/')({
   loader: ({ context: { queryClient } }) =>
     queryClient.ensureQueryData(
       // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
-      getApiV1BetaServersOptions({ query: { all: true } })
+      getApiV1BetaWorkloadsOptions({ query: { all: true } })
     ),
   component: Index,
 })
@@ -23,14 +23,14 @@ export const Route = createFileRoute('/')({
 export function Index() {
   const serversQuery = useSuspenseQuery(
     // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
-    getApiV1BetaServersOptions({ query: { all: true } })
+    getApiV1BetaWorkloadsOptions({ query: { all: true } })
   )
   const [isRunWithCommandOpen, setIsRunWithCommandOpen] = useState(false)
-  const { mutateAsync } = useToastMutation(postApiV1BetaServersMutation())
+  const { mutateAsync } = useToastMutation(postApiV1BetaWorkloadsMutation())
 
   // TODO: https://github.com/stacklok/toolhive/issues/495
-  const parsed: V1ServerListResponse = JSON.parse(serversQuery.data as string)
-  const servers = parsed.servers
+  const parsed: V1WorkloadListResponse = JSON.parse(serversQuery.data as string)
+  const servers = parsed.workloads
 
   return (
     <>

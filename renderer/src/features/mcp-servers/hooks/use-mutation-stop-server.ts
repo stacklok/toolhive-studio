@@ -1,17 +1,17 @@
 import type {
-  RuntimeContainerInfo,
-  V1ServerListResponse,
+  WorkloadsWorkload,
+  V1WorkloadListResponse,
 } from '@/common/api/generated'
 import {
-  postApiV1BetaServersByNameStopMutation,
-  getApiV1BetaServersByNameQueryKey,
-  getApiV1BetaServersQueryKey,
+  postApiV1BetaWorkloadsByNameStopMutation,
+  getApiV1BetaWorkloadsByNameQueryKey,
+  getApiV1BetaWorkloadsQueryKey,
 } from '@/common/api/generated/@tanstack/react-query.gen'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { useQueryClient } from '@tanstack/react-query'
 
-const createMutationData = (name: string) => ({
-  ...postApiV1BetaServersByNameStopMutation(),
+const getMutationData = (name: string) => ({
+  ...postApiV1BetaWorkloadsByNameStopMutation(),
   successMsg: `Server ${name} stopped successfully`,
   errorMsg: `Failed to stop server ${name}`,
   loadingMsg: `Stopping server ${name}...`,
@@ -20,10 +20,10 @@ const createMutationData = (name: string) => ({
 export function useMutationStopServerList({ name }: { name: string }) {
   const queryClient = useQueryClient()
   // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
-  const queryKey = getApiV1BetaServersQueryKey({ query: { all: true } })
+  const queryKey = getApiV1BetaWorkloadsQueryKey({ query: { all: true } })
 
   return useToastMutation({
-    ...createMutationData(name),
+    ...getMutationData(name),
 
     onMutate: async () => {
       await queryClient.cancelQueries({
@@ -31,16 +31,16 @@ export function useMutationStopServerList({ name }: { name: string }) {
       })
 
       const previousServer = queryClient.getQueryData(
-        getApiV1BetaServersByNameQueryKey({ path: { name } })
+        getApiV1BetaWorkloadsByNameQueryKey({ path: { name } })
       )
 
       queryClient.setQueryData(
-        getApiV1BetaServersByNameQueryKey({ path: { name } }),
-        (oldData: RuntimeContainerInfo | undefined) => {
+        getApiV1BetaWorkloadsByNameQueryKey({ path: { name } }),
+        (oldData: WorkloadsWorkload | undefined) => {
           if (!oldData) return oldData
           return {
             ...oldData,
-            State: 'exited',
+            status: 'stopped',
           }
         }
       )
@@ -48,15 +48,15 @@ export function useMutationStopServerList({ name }: { name: string }) {
       queryClient.setQueryData(queryKey, (oldData: string | undefined) => {
         if (!oldData) return oldData
 
-        const parsed: V1ServerListResponse = JSON.parse(oldData)
-        if (!parsed?.servers) return oldData
+        const parsed: V1WorkloadListResponse = JSON.parse(oldData)
+        if (!parsed?.workloads) return oldData
 
         const updatedData = {
           ...parsed,
-          servers: parsed.servers.map((server: RuntimeContainerInfo) =>
-            server.Name === name ? { ...server, State: 'exited' } : server
+          workloads: parsed.workloads.map((server: WorkloadsWorkload) =>
+            server.name === name ? { ...server, status: 'stopped' } : server
           ),
-        }
+        } as V1WorkloadListResponse
         // Convert to string because of https://github.com/stacklok/toolhive/issues/497
         return JSON.stringify(updatedData)
       })
@@ -74,10 +74,10 @@ export function useMutationStopServerList({ name }: { name: string }) {
 
 export function useMutationStopServer({ name }: { name: string }) {
   const queryClient = useQueryClient()
-  const queryKey = getApiV1BetaServersByNameQueryKey({ path: { name } })
+  const queryKey = getApiV1BetaWorkloadsByNameQueryKey({ path: { name } })
 
   return useToastMutation({
-    ...createMutationData(name),
+    ...getMutationData(name),
 
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey })
@@ -92,8 +92,8 @@ export function useMutationStopServer({ name }: { name: string }) {
 
         const updatedData = {
           ...parsed,
-          State: 'exited',
-        }
+          status: 'stopped',
+        } as WorkloadsWorkload
         // Convert to string because of https://github.com/stacklok/toolhive/issues/497
         return JSON.stringify(updatedData)
       })
@@ -109,7 +109,7 @@ export function useMutationStopServer({ name }: { name: string }) {
     onSettled: () => {
       queryClient.invalidateQueries({
         // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
-        queryKey: getApiV1BetaServersQueryKey({ query: { all: true } }),
+        queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
       })
     },
   })

@@ -1,25 +1,26 @@
-import type { RuntimeContainerInfo } from '@/common/api/generated/types.gen'
+import type { WorkloadsWorkload } from '@/common/api/generated/types.gen'
 import { Switch } from '@/common/components/ui/switch'
 
-function getStatusText(state: RuntimeContainerInfo['State']) {
+function getStatusText(status: WorkloadsWorkload['status']) {
   // We will have enum in the next API refactor
-  if (state === 'running') return 'Running'
-  if (state === 'restarting') return 'Restarting'
-  if (state === 'exited') return 'Stopped'
+  if (status === 'running') return 'Running'
+  if (status === 'restarting') return 'Restarting'
+  if (status === 'starting') return 'Starting'
+  if (status === 'stopped') return 'Stopped'
   return 'Unknown'
 }
 
 export function ActionsMcpServer({
-  state,
+  status,
   isPending,
   mutate,
 }: {
-  state: RuntimeContainerInfo['State']
+  status: WorkloadsWorkload['status']
   isPending: boolean
   mutate: () => void
 }) {
-  const isRestarting = state === 'restarting'
-  const isRunning = state === 'running'
+  const isRestarting = status === 'restarting'
+  const isRunning = status === 'running'
 
   return (
     <div className="flex gap-2">
@@ -33,7 +34,7 @@ export function ActionsMcpServer({
         />
       </div>
       <span className="text-muted-foreground text-sm capitalize">
-        {getStatusText(state)}
+        {getStatusText(status)}
       </span>
     </div>
   )

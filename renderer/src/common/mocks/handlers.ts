@@ -1,14 +1,13 @@
 import { http, HttpResponse } from 'msw'
-import type { V1CreateRequest } from '@/common/api/generated/types.gen'
-
+import {
+  createWorkloadResponseFixture,
+  getWorkloadByName,
+  workloadListFixture,
+} from './fixtures/servers'
 import { mswEndpoint } from './msw-endpoint'
 import { versionFixture } from './fixtures/version'
-import {
-  createServerResponseFixture,
-  getServerByName,
-  serverListFixture,
-} from './fixtures/servers'
 import { clientsFixture } from './fixtures/clients'
+import type { V1CreateRequest } from '../api/generated/types.gen'
 
 export const handlers = [
   http.get(mswEndpoint('/health'), () => {
@@ -21,20 +20,20 @@ export const handlers = [
     return HttpResponse.json(versionFixture)
   }),
 
-  http.get(mswEndpoint('/api/v1beta/servers'), () => {
+  http.get(mswEndpoint('/api/v1beta/workloads'), () => {
     // TODO: Don't stringify after
     // https://github.com/stacklok/toolhive/issues/495 is resolved
-    return HttpResponse.json(JSON.stringify(serverListFixture))
+    return HttpResponse.json(JSON.stringify(workloadListFixture))
   }),
 
-  http.post(mswEndpoint('/api/v1beta/servers'), async ({ request }) => {
+  http.post(mswEndpoint('/api/v1beta/workloads'), async ({ request }) => {
     try {
       const { name, target_port } = (await request.json()) as V1CreateRequest
 
       const response = {
-        ...createServerResponseFixture,
+        ...createWorkloadResponseFixture,
         name,
-        port: target_port || createServerResponseFixture.port,
+        port: target_port || createWorkloadResponseFixture.port,
       }
 
       return HttpResponse.json(response, { status: 201 })
@@ -46,10 +45,10 @@ export const handlers = [
     }
   }),
 
-  http.get(mswEndpoint('/api/v1beta/servers/:name'), ({ params }) => {
+  http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
     const { name } = params
 
-    const server = getServerByName(name as string)
+    const server = getWorkloadByName(name as string)
     if (!server) {
       return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
     }
@@ -57,10 +56,10 @@ export const handlers = [
     return HttpResponse.json(server)
   }),
 
-  http.delete(mswEndpoint('/api/v1beta/servers/:name'), ({ params }) => {
+  http.delete(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
     const { name } = params
 
-    const server = getServerByName(name as string)
+    const server = getWorkloadByName(name as string)
     if (!server) {
       return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
     }
@@ -68,10 +67,10 @@ export const handlers = [
     return new HttpResponse(null, { status: 204 })
   }),
 
-  http.post(mswEndpoint('/api/v1beta/servers/:name/stop'), ({ params }) => {
+  http.post(mswEndpoint('/api/v1beta/workloads/:name/stop'), ({ params }) => {
     const { name } = params
 
-    const server = getServerByName(name as string)
+    const server = getWorkloadByName(name as string)
     if (!server) {
       return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
     }
@@ -79,16 +78,19 @@ export const handlers = [
     return new HttpResponse(null, { status: 204 })
   }),
 
-  http.post(mswEndpoint('/api/v1beta/servers/:name/restart'), ({ params }) => {
-    const { name } = params
+  http.post(
+    mswEndpoint('/api/v1beta/workloads/:name/restart'),
+    ({ params }) => {
+      const { name } = params
 
-    const server = getServerByName(name as string)
-    if (!server) {
-      return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
+      const server = getWorkloadByName(name as string)
+      if (!server) {
+        return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
+      }
+
+      return new HttpResponse(null, { status: 204 })
     }
-
-    return new HttpResponse(null, { status: 204 })
-  }),
+  ),
 
   http.get(mswEndpoint('/api/v1beta/discovery/clients'), () => {
     // TODO: Don't stringify after
