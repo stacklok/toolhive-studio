@@ -126,7 +126,6 @@ app.whenReady().then(() => {
   tray = initTray({
     toolHiveIsRunning: !!toolhiveProcess,
   })
-  myUndefinedFunction()
 })
 
 app.on('window-all-closed', () => {
