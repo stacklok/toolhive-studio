@@ -13,6 +13,7 @@ const getCspMap = (port: number) => ({
   'manifest-src': "'self'",
   'media-src': "'self' blob: data:",
   'worker-src': "'self'",
+  'child-src': "'none'",
 })
 
 export const getCspString = (port: number) =>
