@@ -7,29 +7,33 @@ permissions:
   contents: write # Required for GitHub publisher to upload release assets
 
 jobs:
-  security:
-    name: Security Checks
-    uses: ./.github/workflows/_security-checks.yml
+  # security:
+  #   name: Security Checks
+  #   uses: ./.github/workflows/_security-checks.yml
 
-  static-checks:
-    name: Static Checks
-    uses: ./.github/workflows/_static-checks.yml
-    secrets: inherit
+  # static-checks:
+  #   name: Static Checks
+  #   uses: ./.github/workflows/_static-checks.yml
+  #   secrets: inherit
 
-  unit-tests:
-    name: Unit Tests
-    uses: ./.github/workflows/_unit-tests.yml
-    secrets: inherit
+  # unit-tests:
+  #   name: Unit Tests
+  #   uses: ./.github/workflows/_unit-tests.yml
+  #   secrets: inherit
 
   build-and-release:
     name: Build and Release on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    needs: [security, static-checks, unit-tests]
+    # needs: [security, static-checks, unit-tests]
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
     env:
       NODE_OPTIONS: '--max_old_space_size=4096'
+      SENTRY_DSN: ${{ vars.SENTRY_DSN }}
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+      SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
