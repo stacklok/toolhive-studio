@@ -4,6 +4,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/common/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/common/components/ui/dropdown-menu'
+import { Button } from '@/common/components/ui/button'
+import { MoreVertical, Trash2, List } from 'lucide-react'
 
 import type { WorkloadsWorkload } from '@/common/api/generated'
 import { ActionsMcpServer } from './actions-mcp-server'
@@ -73,7 +81,31 @@ export function CardMcpServer({
         dark:hover:border-white"
     >
       <CardHeader>
-        <CardTitle className="flex items-center text-xl">{name}</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center text-xl">{name}</CardTitle>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="More options"
+                className="ml-2"
+              >
+                <MoreVertical className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <List className="mr-2 h-4 w-4" />
+                Logs
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Remove
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </CardHeader>
       <CardContentMcpServer
         status={status}

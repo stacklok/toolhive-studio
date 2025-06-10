@@ -1,14 +1,6 @@
 import type { WorkloadsWorkload } from '@/common/api/generated/types.gen'
 import { Switch } from '@/common/components/ui/switch'
 import { cn } from '@/common/lib/utils'
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from '@/common/components/ui/dropdown-menu'
-import { Button } from '@/common/components/ui/button'
-import { MoreVertical, Trash2, List } from 'lucide-react'
 
 function getStatusText(status: WorkloadsWorkload['status']) {
   // We will have enum in the next API refactor
@@ -50,29 +42,6 @@ export function ActionsMcpServer({
       <span className="text-muted-foreground text-sm capitalize">
         {getStatusText(status)}
       </span>
-
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="More options"
-            className="ml-2"
-          >
-            <MoreVertical className="h-5 w-5" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem>
-            <List className="mr-2 h-4 w-4" />
-            Logs
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Trash2 className="mr-2 h-4 w-4" />
-            Remove
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
     </div>
   )
 }
