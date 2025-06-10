@@ -127,7 +127,7 @@ app.on('ready', () => {
 
 app.whenReady().then(() => {
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-    if (!isDevelopment) {
+    if (isDevelopment) {
       return callback({ responseHeaders: details.responseHeaders })
     }
     if (toolhivePort == null) {
