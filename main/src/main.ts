@@ -13,7 +13,7 @@ import { spawn } from 'node:child_process'
 import { initTray } from './system-tray'
 import { setAutoLaunch, getAutoLaunchStatus } from './auto-launch'
 import net from 'node:net'
-import { cspString } from './csp'
+import { getCspString } from './csp'
 
 // Forge environment variables
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined
@@ -126,16 +126,20 @@ app.on('ready', () => {
 })
 
 app.whenReady().then(() => {
-  if (!isDevelopment) {
-    session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-      callback({
-        responseHeaders: {
-          ...details.responseHeaders,
-          'Content-Security-Policy': [cspString],
-        },
-      })
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    if (isDevelopment) {
+      return callback({ responseHeaders: details.responseHeaders })
+    }
+    if (toolhivePort == null) {
+      throw new Error('[content-security-policy] ToolHive port is not set')
+    }
+    return callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [getCspString(toolhivePort)],
+      },
     })
-  }
+  })
 
   tray = initTray({
     toolHiveIsRunning: !!toolhiveProcess,
