@@ -102,6 +102,9 @@ importers:
       '@electron-forge/cli':
         specifier: ^7.8.1
         version: 7.8.1(encoding@0.1.13)
+      '@electron-forge/maker-base':
+        specifier: ^7.8.1
+        version: 7.8.1
       '@electron-forge/maker-deb':
         specifier: ^7.8.1
         version: 7.8.1

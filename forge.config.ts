@@ -9,6 +9,7 @@ import { VitePlugin } from '@electron-forge/plugin-vite'
 import { FusesPlugin } from '@electron-forge/plugin-fuses'
 import { FuseV1Options, FuseVersion } from '@electron/fuses'
 import { ensureThv } from './utils/fetch-thv'
+import MakerTarGz from './utils/forge-makers/MakerTarGz'
 
 function isValidPlatform(platform: string): platform is NodeJS.Platform {
   return ['win32', 'darwin', 'linux'].includes(platform)
@@ -38,7 +39,7 @@ const config: ForgeConfig = {
       config: {
         repository: {
           owner: 'StacklokLabs',
-          name: 'toolhive-react',
+          name: 'toolhive-studio',
         },
         draft: false,
         prerelease: false,
@@ -54,7 +55,7 @@ const config: ForgeConfig = {
     }),
     new MakerDMG({}, ['darwin']),
     new MakerZIP({}, ['darwin']),
-    new MakerZIP({}, ['linux']),
+    new MakerTarGz({}, ['linux']),
     new MakerRpm({
       options: {
         // RPM package icon
