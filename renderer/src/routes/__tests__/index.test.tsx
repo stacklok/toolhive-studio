@@ -103,7 +103,7 @@ it('should show dropdown menu with remove option when clicking more options butt
   expect(screen.getByRole('menuitem', { name: /remove/i })).toBeVisible()
 })
 
-it('should show confirmation dialog before deleting a server', async () => {
+it('should allow deleting a server through the dropdown menu', async () => {
   renderRoute(router)
 
   await waitFor(() => {
@@ -115,32 +115,19 @@ it('should show confirmation dialog before deleting a server', async () => {
     name: /more options/i,
   })
 
+  // Open dropdown and verify remove option
   await userEvent.click(moreOptionsButton)
   const removeMenuItem = screen.getByRole('menuitem', { name: /remove/i })
-  await userEvent.click(removeMenuItem)
+  expect(removeMenuItem).toBeVisible()
 
+  // Click remove and verify confirmation dialog
+  await userEvent.click(removeMenuItem)
   await waitFor(() => {
     expect(screen.getByRole('dialog')).toBeVisible()
     expect(screen.getByText(/confirm removal/i)).toBeInTheDocument()
   })
-})
 
-it('should show success notification after confirming deletion', async () => {
-  renderRoute(router)
-
-  await waitFor(() => {
-    expect(screen.getByText('postgres-db')).toBeVisible()
-  })
-
-  const postgresCard = screen.getByRole('link', { name: /postgres-db/i })
-  const moreOptionsButton = within(postgresCard).getByRole('button', {
-    name: /more options/i,
-  })
-
-  await userEvent.click(moreOptionsButton)
-  const removeMenuItem = screen.getByRole('menuitem', { name: /remove/i })
-  await userEvent.click(removeMenuItem)
-
+  // Confirm deletion
   const confirmButton = screen.getByRole('button', { name: /remove/i })
   await userEvent.click(confirmButton)
 })
