@@ -51,7 +51,9 @@ it('should restart server', async () => {
     expect(screen.getByText('postgres-db')).toBeVisible()
   })
 
-  const postgresCard = screen.getByRole('link', { name: /postgres-db/i })
+  const postgresCard = screen
+    .getByText('postgres-db')
+    .closest('[data-slot="card"]') as HTMLElement
   const postgresSwitch = within(postgresCard).getByRole('switch', {
     name: /mutate server/i,
   })
@@ -72,7 +74,9 @@ it('should stop server', async () => {
     expect(screen.getByText('vscode-server')).toBeVisible()
   })
 
-  const vscodeCard = screen.getByRole('link', { name: /vscode-server/i })
+  const vscodeCard = screen
+    .getByText('vscode-server')
+    .closest('[data-slot="card"]') as HTMLElement
   const vscodeSwitch = within(vscodeCard).getByRole('switch', {
     name: /mutate server/i,
   })
@@ -93,7 +97,9 @@ it('should show dropdown menu with remove option when clicking more options butt
     expect(screen.getByText('postgres-db')).toBeVisible()
   })
 
-  const postgresCard = screen.getByRole('link', { name: /postgres-db/i })
+  const postgresCard = screen
+    .getByText('postgres-db')
+    .closest('[data-slot="card"]') as HTMLElement
   const moreOptionsButton = within(postgresCard).getByRole('button', {
     name: /more options/i,
   })
@@ -110,7 +116,9 @@ it('should allow deleting a server through the dropdown menu', async () => {
     expect(screen.getByText('postgres-db')).toBeVisible()
   })
 
-  const postgresCard = screen.getByRole('link', { name: /postgres-db/i })
+  const postgresCard = screen
+    .getByText('postgres-db')
+    .closest('[data-slot="card"]') as HTMLElement
   const moreOptionsButton = within(postgresCard).getByRole('button', {
     name: /more options/i,
   })
