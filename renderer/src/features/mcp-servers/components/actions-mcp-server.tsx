@@ -8,6 +8,7 @@ function getStatusText(status: WorkloadsWorkload['status']) {
   if (status === 'restarting') return 'Restarting'
   if (status === 'starting') return 'Starting'
   if (status === 'stopped') return 'Stopped'
+  if (status === 'stopping') return 'Stopping'
   return 'Unknown'
 }
 
