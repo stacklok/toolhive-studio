@@ -35,7 +35,7 @@ export function Error({ error }: ErrorProps = {}) {
             </div>
           )}
           <Button onClick={handleReload} className="w-full">
-            <RefreshCw className="mr-2 h-4 w-4" />
+            <RefreshCw className="mr-2 size-4" />
             Try Again
           </Button>
         </CardContent>
