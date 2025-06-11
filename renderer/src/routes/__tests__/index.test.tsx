@@ -1,5 +1,5 @@
 import { screen, waitFor, within } from '@testing-library/react'
-import { expect, it } from 'vitest'
+import { expect, it, vi, beforeEach } from 'vitest'
 import { Index } from '../index'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
@@ -7,6 +7,22 @@ import { MOCK_MCP_SERVERS } from '@/common/mocks/fixtures/servers'
 import userEvent from '@testing-library/user-event'
 
 const router = createTestRouter(Index)
+
+// Mock clipboard API
+const mockClipboard = {
+  writeText: vi.fn(),
+  readText: vi.fn(),
+}
+
+beforeEach(() => {
+  // Reset mocks before each test
+  vi.clearAllMocks()
+
+  // Mock clipboard API
+  Object.assign(navigator, {
+    clipboard: mockClipboard,
+  })
+})
 
 it('should render list of MCP servers', async () => {
   renderRoute(router)
@@ -90,7 +106,7 @@ it('should stop server', async () => {
   })
 })
 
-it('should show dropdown menu with remove option when clicking more options button', async () => {
+it('should show dropdown menu with URL and remove option when clicking more options button', async () => {
   renderRoute(router)
 
   await waitFor(() => {
@@ -106,7 +122,34 @@ it('should show dropdown menu with remove option when clicking more options butt
 
   await userEvent.click(moreOptionsButton)
 
+  const urlInput = screen.getByDisplayValue(MOCK_MCP_SERVERS[0].url)
+  expect(urlInput).toBeVisible()
+  expect(urlInput).toHaveAttribute('readonly')
+  expect(screen.getByRole('button', { name: 'Copy URL' })).toBeVisible()
+
   expect(screen.getByRole('menuitem', { name: /remove/i })).toBeVisible()
+})
+
+it('should copy URL to clipboard when clicking copy button', async () => {
+  renderRoute(router)
+
+  await waitFor(() => {
+    expect(screen.getByText('postgres-db')).toBeVisible()
+  })
+
+  const postgresCard = screen
+    .getByText('postgres-db')
+    .closest('[data-slot="card"]') as HTMLElement
+  const moreOptionsButton = within(postgresCard).getByRole('button', {
+    name: /more options/i,
+  })
+
+  await userEvent.click(moreOptionsButton)
+
+  const copyButton = screen.getByRole('button', { name: 'Copy URL' })
+  await userEvent.click(copyButton)
+
+  expect(mockClipboard.writeText).toHaveBeenCalledWith(MOCK_MCP_SERVERS[0].url)
 })
 
 it('should allow deleting a server through the dropdown menu', async () => {

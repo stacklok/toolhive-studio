@@ -139,9 +139,9 @@ export function CardMcpServer({
                   variant="outline"
                   size="icon"
                   onClick={handleCopyUrl}
-                  className="shrink-0"
+                  aria-label="Copy URL"
                 >
-                  <Copy className="h-4 w-4" />
+                  <Copy className="size-4" />
                 </Button>
               </div>
               <DropdownMenuSeparator />
