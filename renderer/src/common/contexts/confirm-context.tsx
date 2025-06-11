@@ -47,11 +47,9 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
             {activeQuestion?.config.title && (
               <DialogTitle>{activeQuestion.config.title}</DialogTitle>
             )}
-            {activeQuestion?.config.description && (
-              <DialogDescription>
-                {activeQuestion.config.description}
-              </DialogDescription>
-            )}
+            <DialogDescription>
+              {activeQuestion?.config.description || ''}
+            </DialogDescription>
           </DialogHeader>
           <div className="py-2">{activeQuestion?.message}</div>
           <DialogFooter>

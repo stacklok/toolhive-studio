@@ -1,5 +1,8 @@
 import { useContext } from 'react'
-import { ConfirmContext, ConfirmContextType } from './confirm-context-ctx'
+import {
+  ConfirmContext,
+  ConfirmContextType,
+} from '@/common/contexts/confirm-context-ctx'
 
 export function useConfirm() {
   const context = useContext(

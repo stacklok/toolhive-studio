@@ -17,7 +17,7 @@ import type { WorkloadsWorkload } from '@/common/api/generated'
 import { ActionsMcpServer } from './actions-mcp-server'
 import { useMutationRestartServerList } from '../hooks/use-mutation-restart-server'
 import { useMutationStopServerList } from '../hooks/use-mutation-stop-server'
-import { useConfirm } from '@/common/contexts/use-confirm'
+import { useConfirm } from '@/common/hooks/use-confirm'
 
 type CardContentMcpServerProps = {
   status: WorkloadsWorkload['status']
