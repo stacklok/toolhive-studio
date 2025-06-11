@@ -73,6 +73,7 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
 
   const rootElement = document.getElementById('root')!
   const root = ReactDOM.createRoot(rootElement)
+
   root.render(
     <StrictMode>
       <ThemeProvider defaultTheme="system" storageKey="toolhive-ui-theme">
