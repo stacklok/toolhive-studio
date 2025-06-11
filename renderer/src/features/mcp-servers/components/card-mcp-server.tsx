@@ -103,10 +103,7 @@ export function CardMcpServer({
   }
 
   return (
-    <Card
-      className="gap-3 py-5 shadow-none transition-colors hover:border-black
-        dark:hover:border-white"
-    >
+    <Card className="gap-3 py-5 shadow-none transition-colors">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center text-xl">{name}</CardTitle>

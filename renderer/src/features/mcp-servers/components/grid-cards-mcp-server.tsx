@@ -11,7 +11,6 @@ import {
 } from '@/common/components/ui/select'
 import { Button } from '@/common/components/ui/button'
 import { X } from 'lucide-react'
-import { Link } from '@tanstack/react-router'
 
 export function GridCardsMcpServers({
   mcpServers,
@@ -103,20 +102,12 @@ export function GridCardsMcpServers({
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {filteredMcpServers.map((mcpServer) => (
-          <Link
+          <CardMcpServer
             key={mcpServer.name}
-            to="/server/$serverName"
-            // The default value should be disappear in the next openapi version
-            params={{ serverName: mcpServer.name ?? '' }}
-            className="block"
-          >
-            <CardMcpServer
-              key={mcpServer.name}
-              name={mcpServer.name}
-              status={mcpServer.status}
-              statusContext={mcpServer.status_context}
-            />
-          </Link>
+            name={mcpServer.name}
+            status={mcpServer.status}
+            statusContext={mcpServer.status_context}
+          />
         ))}
       </div>
 

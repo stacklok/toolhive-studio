@@ -25,6 +25,8 @@ export default {
     'renderer/src/common/components/ui/**',
     'renderer/src/vite-env.d.ts',
     'renderer/src/types/global.d.ts',
+    'renderer/src/features/mcp-servers/hooks/use-mutation-restart-server.ts',
+    'renderer/src/features/mcp-servers/hooks/use-mutation-stop-server.ts',
   ],
   ignoreDependencies: [
     '@electron-forge/maker-flatpak',
