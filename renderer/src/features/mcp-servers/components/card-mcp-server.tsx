@@ -17,6 +17,7 @@ import type { WorkloadsWorkload } from '@/common/api/generated'
 import { ActionsMcpServer } from './actions-mcp-server'
 import { useMutationRestartServerList } from '../hooks/use-mutation-restart-server'
 import { useMutationStopServerList } from '../hooks/use-mutation-stop-server'
+import { useConfirm } from '@/common/contexts/use-confirm'
 
 type CardContentMcpServerProps = {
   status: WorkloadsWorkload['status']
@@ -75,6 +76,24 @@ export function CardMcpServer({
   repoUrl?: string
   transport?: string
 }) {
+  const confirm = useConfirm()
+
+  const handleRemove = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if ('nativeEvent' in e && typeof e.nativeEvent.stopImmediatePropagation === 'function') {
+      e.nativeEvent.stopImmediatePropagation()
+    }
+    const result = await confirm(
+      `Are you sure you want to remove the server "${name}"?`,
+      {
+        title: 'Confirm Removal',
+        isDestructive: true,
+        buttons: { yes: 'Remove', no: 'Cancel' },
+      }
+    )
+    alert(`Confirmed: ${result}`)
+  }
+
   return (
     <Card
       className="gap-3 py-5 shadow-none transition-colors hover:border-black
@@ -96,7 +115,7 @@ export function CardMcpServer({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" role="menu">
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleRemove}>
                 <Trash2 className="mr-2 h-4 w-4" />
                 Remove
               </DropdownMenuItem>

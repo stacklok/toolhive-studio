@@ -102,3 +102,27 @@ it('should show dropdown menu with remove option when clicking more options butt
 
   expect(screen.getByRole('menuitem', { name: /remove/i })).toBeVisible()
 })
+
+it('should show confirmation dialog before deleting a server', async () => {
+  renderRoute(router)
+
+  await waitFor(() => {
+    expect(screen.getByText('postgres-db')).toBeVisible()
+  })
+
+  const postgresCard = screen.getByRole('link', { name: /postgres-db/i })
+  const moreOptionsButton = within(postgresCard).getByRole('button', {
+    name: /more options/i,
+  })
+
+  await userEvent.click(moreOptionsButton)
+  const removeMenuItem = screen.getByRole('menuitem', { name: /remove/i })
+  await userEvent.click(removeMenuItem)
+
+  // Assert that a confirmation dialog appears (look for a recognizable title or message)
+  await waitFor(() => {
+    expect(screen.getByRole('dialog')).toBeVisible()
+    // Optionally, check for a title or message
+    // expect(screen.getByText(/are you sure/i)).toBeInTheDocument()
+  })
+})

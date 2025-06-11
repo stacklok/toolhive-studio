@@ -13,6 +13,7 @@ import * as Sentry from '@sentry/electron/renderer'
 import { Toaster } from './common/components/ui/sonner'
 import { ThemeProvider } from './common/components/theme/theme-provider'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { ConfirmProvider } from './common/contexts/confirm-context'
 
 import './index.css'
 
@@ -77,13 +78,15 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
   root.render(
     <StrictMode>
       <ThemeProvider defaultTheme="system" storageKey="toolhive-ui-theme">
-        <QueryClientProvider client={queryClient}>
-          <TooltipProvider delayDuration={0}>
-            <Toaster />
-            <RouterProvider router={router} />
-          </TooltipProvider>
-          <ReactQueryDevtools initialIsOpen={false} />
-        </QueryClientProvider>
+        <ConfirmProvider>
+          <QueryClientProvider client={queryClient}>
+            <TooltipProvider delayDuration={0}>
+              <Toaster />
+              <RouterProvider router={router} />
+            </TooltipProvider>
+            <ReactQueryDevtools initialIsOpen={false} />
+          </QueryClientProvider>
+        </ConfirmProvider>
       </ThemeProvider>
     </StrictMode>
   )
