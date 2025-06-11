@@ -1,6 +1,6 @@
 import { createContext, ReactNode } from 'react'
 
-export type Buttons = {
+type Buttons = {
   yes: ReactNode
   no: ReactNode
 }
@@ -12,7 +12,7 @@ export type ConfirmConfig = {
   description?: ReactNode
 }
 
-export type ConfirmFunction = (
+type ConfirmFunction = (
   message: ReactNode,
   config: ConfirmConfig
 ) => Promise<boolean>
