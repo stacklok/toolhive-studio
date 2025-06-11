@@ -18,7 +18,7 @@ export function Error({ error }: ErrorProps = {}) {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mb-4 flex justify-center">
-            <AlertCircle className="text-destructive h-12 w-12" />
+            <AlertCircle className="text-destructive size-12" />
           </div>
           <CardTitle className="text-xl font-semibold">
             Oops, something went wrong
