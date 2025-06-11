@@ -5,6 +5,7 @@ import {
   ipcMain,
   nativeTheme,
   session,
+  shell,
 } from 'electron'
 import path from 'node:path'
 import { existsSync } from 'node:fs'
@@ -143,6 +144,16 @@ const createWindow = () => {
       }
     })
   }
+
+  // Handle external URLs
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    // Open external URLs in the default browser
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      shell.openExternal(url)
+      return { action: 'deny' }
+    }
+    return { action: 'allow' }
+  })
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(`${MAIN_WINDOW_VITE_DEV_SERVER_URL}/`)
