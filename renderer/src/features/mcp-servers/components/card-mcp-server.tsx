@@ -9,9 +9,12 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
 } from '@/common/components/ui/dropdown-menu'
 import { Button } from '@/common/components/ui/button'
-import { MoreVertical, Trash2 } from 'lucide-react'
+import { MoreVertical, Trash2, Copy } from 'lucide-react'
+import { toast } from 'sonner'
+import { Input } from '@/common/components/ui/input'
 
 import type { WorkloadsWorkload } from '@/common/api/generated'
 import { ActionsMcpServer } from './actions-mcp-server'
@@ -25,6 +28,7 @@ type CardContentMcpServerProps = {
   statusContext: WorkloadsWorkload['status_context']
   repoUrl?: string
   name: string
+  url: string
 }
 
 function CardContentMcpServer({ name, status }: CardContentMcpServerProps) {
@@ -40,26 +44,28 @@ function CardContentMcpServer({ name, status }: CardContentMcpServerProps) {
 
   return (
     <CardContent>
-      <div className="border-border flex items-center justify-between border-t pt-4">
-        <ActionsMcpServer
-          status={status}
-          isPending={isRestartPending || isStopPending}
-          mutate={() => {
-            if (isRunning) {
-              return stopMutate({
+      <div className="flex flex-col gap-4">
+        <div className="border-border flex items-center justify-between border-t pt-4">
+          <ActionsMcpServer
+            status={status}
+            isPending={isRestartPending || isStopPending}
+            mutate={() => {
+              if (isRunning) {
+                return stopMutate({
+                  path: {
+                    name,
+                  },
+                })
+              }
+
+              return restartMutate({
                 path: {
                   name,
                 },
               })
-            }
-
-            return restartMutate({
-              path: {
-                name,
-              },
-            })
-          }}
-        />
+            }}
+          />
+        </div>
       </div>
     </CardContent>
   )
@@ -70,16 +76,18 @@ export function CardMcpServer({
   status,
   statusContext,
   repoUrl,
+  url,
 }: {
-  name: WorkloadsWorkload['name']
+  name: string
   status: WorkloadsWorkload['status']
   statusContext: WorkloadsWorkload['status_context']
   repoUrl?: string
   transport?: string
+  url: string
 }) {
   const confirm = useConfirm()
   const { mutateAsync: deleteServer, isPending: isDeletePending } =
-    useDeleteServer({ name: name as string })
+    useDeleteServer({ name })
 
   const handleRemove = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -98,8 +106,13 @@ export function CardMcpServer({
       }
     )
     if (result) {
-      await deleteServer({ path: { name: name as string } })
+      await deleteServer({ path: { name } })
     }
+  }
+
+  const handleCopyUrl = async () => {
+    await navigator.clipboard.writeText(url)
+    toast('MCP server URL has been copied to clipboard')
   }
 
   return (
@@ -119,7 +132,19 @@ export function CardMcpServer({
                 <MoreVertical className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" role="menu">
+            <DropdownMenuContent align="end" role="menu" className="w-80">
+              <div className="flex items-center gap-2 p-2">
+                <Input value={url} readOnly className="font-mono text-sm" />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleCopyUrl}
+                  className="shrink-0"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+              <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={handleRemove}
                 disabled={isDeletePending}
@@ -135,8 +160,8 @@ export function CardMcpServer({
         status={status}
         statusContext={statusContext}
         repoUrl={repoUrl}
-        // name could be undefined this should be fixed in the API refactor
-        name={name as string}
+        name={name}
+        url={url}
       />
     </Card>
   )
