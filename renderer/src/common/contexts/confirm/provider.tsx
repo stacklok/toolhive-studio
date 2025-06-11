@@ -8,7 +8,7 @@ import {
   DialogDescription,
 } from '@/common/components/ui/dialog'
 import { Button } from '@/common/components/ui/button'
-import { ConfirmContext, type ConfirmConfig } from './context'
+import { ConfirmContext, type ConfirmConfig } from '.'
 
 export function ConfirmProvider({ children }: { children: ReactNode }) {
   const [activeQuestion, setActiveQuestion] = useState<{

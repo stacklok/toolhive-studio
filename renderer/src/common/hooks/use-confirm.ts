@@ -2,7 +2,7 @@ import { useContext } from 'react'
 import {
   ConfirmContext,
   type ConfirmContextType,
-} from '@/common/contexts/confirm/context'
+} from '@/common/contexts/confirm'
 
 export function useConfirm() {
   const context = useContext(
