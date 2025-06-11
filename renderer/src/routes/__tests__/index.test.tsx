@@ -119,11 +119,9 @@ it('should show confirmation dialog before deleting a server', async () => {
   const removeMenuItem = screen.getByRole('menuitem', { name: /remove/i })
   await userEvent.click(removeMenuItem)
 
-  // Assert that a confirmation dialog appears (look for a recognizable title or message)
   await waitFor(() => {
     expect(screen.getByRole('dialog')).toBeVisible()
-    // Optionally, check for a title or message
-    // expect(screen.getByText(/are you sure/i)).toBeInTheDocument()
+    expect(screen.getByText(/confirm removal/i)).toBeInTheDocument()
   })
 })
 
