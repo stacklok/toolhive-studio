@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { useState, ReactNode } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -8,37 +8,7 @@ import {
   DialogDescription,
 } from '@/common/components/ui/dialog'
 import { Button } from '@/common/components/ui/button'
-
-export type Buttons = {
-  yes: ReactNode
-  no: ReactNode
-}
-
-export type ConfirmConfig = {
-  buttons: Buttons
-  title?: ReactNode
-  isDestructive?: boolean
-  description?: ReactNode
-}
-
-export type ConfirmFunction = (
-  message: ReactNode,
-  config: ConfirmConfig
-) => Promise<boolean>
-
-export type ConfirmContextType = {
-  confirm: ConfirmFunction
-}
-
-const ConfirmContext = createContext<ConfirmContextType | null>(null)
-
-export function useConfirm() {
-  const context = useContext(ConfirmContext)
-  if (!context) {
-    throw new Error('useConfirm must be used within a ConfirmProvider')
-  }
-  return context.confirm
-}
+import { ConfirmContext, ConfirmConfig } from './confirm-context-ctx'
 
 export function ConfirmProvider({ children }: { children: ReactNode }) {
   const [activeQuestion, setActiveQuestion] = useState<{
@@ -54,7 +24,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
     setIsOpen(false)
   }
 
-  const confirm: ConfirmFunction = (message, config) => {
+  const confirm = (message: ReactNode, config: ConfirmConfig) => {
     return new Promise<boolean>((resolve) => {
       setActiveQuestion({ message, config, resolve })
       setIsOpen(true)
@@ -78,7 +48,9 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
               <DialogTitle>{activeQuestion.config.title}</DialogTitle>
             )}
             {activeQuestion?.config.description && (
-              <DialogDescription>{activeQuestion.config.description}</DialogDescription>
+              <DialogDescription>
+                {activeQuestion.config.description}
+              </DialogDescription>
             )}
           </DialogHeader>
           <div className="py-2">{activeQuestion?.message}</div>
@@ -91,7 +63,9 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
               {activeQuestion?.config.buttons.no ?? 'No'}
             </Button>
             <Button
-              variant={activeQuestion?.config.isDestructive ? 'destructive' : 'default'}
+              variant={
+                activeQuestion?.config.isDestructive ? 'destructive' : 'default'
+              }
               onClick={() => handleAnswer(true)}
               type="button"
             >
@@ -103,5 +77,3 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
     </ConfirmContext.Provider>
   )
 }
-
-export { ConfirmContext } 

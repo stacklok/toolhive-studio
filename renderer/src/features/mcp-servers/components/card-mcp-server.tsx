@@ -80,7 +80,10 @@ export function CardMcpServer({
 
   const handleRemove = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    if ('nativeEvent' in e && typeof e.nativeEvent.stopImmediatePropagation === 'function') {
+    if (
+      'nativeEvent' in e &&
+      typeof e.nativeEvent.stopImmediatePropagation === 'function'
+    ) {
       e.nativeEvent.stopImmediatePropagation()
     }
     const result = await confirm(
