@@ -14,6 +14,7 @@ export const MOCK_MCP_SERVERS = [
     status: 'stopped' as const,
     status_context: 'Exited (0) 30 minutes ago',
     created_at: '2025-06-09T15:35:15+02:00',
+    repo_url: 'https://github.com/postgres/postgres-mcp-server',
   },
   {
     name: 'vscode-server',
@@ -24,6 +25,7 @@ export const MOCK_MCP_SERVERS = [
     status: 'running' as const,
     status_context: 'Up 45 minutes',
     created_at: '2025-06-09T15:30:15+02:00',
+    repo_url: 'https://github.com/vscode/vscode-mcp-server',
   },
   {
     name: 'github',
@@ -34,6 +36,7 @@ export const MOCK_MCP_SERVERS = [
     status: 'stopped' as const,
     status_context: 'Exited (0) 49 minutes ago',
     created_at: '2025-06-09T15:33:15+02:00',
+    repo_url: 'https://github.com/github/github-mcp-server',
   },
   {
     name: 'osv-2',
@@ -44,6 +47,7 @@ export const MOCK_MCP_SERVERS = [
     status: 'running' as const,
     status_context: 'Up 54 minutes',
     created_at: '2025-06-06T17:57:36+02:00',
+    repo_url: 'https://github.com/stackloklabs/osv-mcp',
   },
   {
     name: 'osv',
@@ -54,6 +58,7 @@ export const MOCK_MCP_SERVERS = [
     status: 'running' as const,
     status_context: 'Up 54 minutes',
     created_at: '2025-06-06T17:21:14+02:00',
+    repo_url: 'https://github.com/stackloklabs/osv-mcp',
   },
   {
     name: 'fetch',
@@ -64,6 +69,7 @@ export const MOCK_MCP_SERVERS = [
     status: 'stopped' as const,
     status_context: 'Exited (137) 4 hours ago',
     created_at: '2025-06-06T14:53:43+02:00',
+    repo_url: 'https://github.com/modelcontextprotocol/fetch',
   },
   {
     name: 'fetch-registry-test',
@@ -74,6 +80,7 @@ export const MOCK_MCP_SERVERS = [
     status: 'stopped' as const,
     status_context: 'Exited (137) 3 days ago',
     created_at: '2025-06-06T13:04:28+02:00',
+    repo_url: 'https://github.com/modelcontextprotocol/fetch',
   },
   {
     name: 'semgrep',
@@ -84,6 +91,7 @@ export const MOCK_MCP_SERVERS = [
     status: 'stopped' as const,
     status_context: 'Exited (0) 3 days ago',
     created_at: '2025-06-05T17:44:40+02:00',
+    repo_url: 'https://github.com/semgrep/semgrep-mcp',
   },
   {
     name: 'slack',
@@ -94,6 +102,7 @@ export const MOCK_MCP_SERVERS = [
     status: 'stopped' as const,
     status_context: 'Exited (137) 4 days ago',
     created_at: '2025-05-23T16:38:30+02:00',
+    repo_url: 'https://github.com/modelcontextprotocol/slack',
   },
 ] as const satisfies WorkloadsWorkload[]
 

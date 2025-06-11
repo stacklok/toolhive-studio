@@ -127,6 +127,9 @@ it('should show dropdown menu with URL and remove option when clicking more opti
   expect(urlInput).toHaveAttribute('readonly')
   expect(screen.getByRole('button', { name: 'Copy URL' })).toBeVisible()
 
+  expect(
+    screen.getByRole('menuitem', { name: /github repository/i })
+  ).toBeVisible()
   expect(screen.getByRole('menuitem', { name: /remove/i })).toBeVisible()
 })
 

@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
 } from '@/common/components/ui/dropdown-menu'
 import { Button } from '@/common/components/ui/button'
-import { MoreVertical, Trash2, Copy } from 'lucide-react'
+import { MoreVertical, Trash2, Copy, Github } from 'lucide-react'
 import { toast } from 'sonner'
 import { Input } from '@/common/components/ui/input'
 
@@ -81,7 +81,7 @@ export function CardMcpServer({
   name: string
   status: WorkloadsWorkload['status']
   statusContext: WorkloadsWorkload['status_context']
-  repoUrl?: string
+  repoUrl: string
   transport?: string
   url: string
 }) {
@@ -145,9 +145,21 @@ export function CardMcpServer({
                 </Button>
               </div>
               <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <a
+                  href={repoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex cursor-pointer items-center"
+                >
+                  <Github className="mr-2 h-4 w-4" />
+                  GitHub Repository
+                </a>
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={handleRemove}
                 disabled={isDeletePending}
+                className="flex cursor-pointer items-center"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Remove
