@@ -52,7 +52,6 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
     if (!activeQuestion) return
     activeQuestion.resolve(answer)
     setIsOpen(false)
-    setTimeout(() => setActiveQuestion(null), 200) // Clean up after close
   }
 
   const confirm: ConfirmFunction = (message, config) => {
@@ -62,10 +61,17 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
     })
   }
 
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open)
+    if (!open) {
+      setActiveQuestion(null)
+    }
+  }
+
   return (
     <ConfirmContext.Provider value={{ confirm }}>
       {children}
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
         <DialogContent>
           <DialogHeader>
             {activeQuestion?.config.title && (
