@@ -108,7 +108,6 @@ export function GridCardsMcpServers({
             status={mcpServer.status}
             statusContext={mcpServer.status_context}
             url={mcpServer.url}
-            repoUrl={mcpServer.package}
           />
         ))}
       </div>

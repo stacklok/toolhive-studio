@@ -22,13 +22,13 @@ import { useMutationRestartServerList } from '../hooks/use-mutation-restart-serv
 import { useMutationStopServerList } from '../hooks/use-mutation-stop-server'
 import { useConfirm } from '@/common/hooks/use-confirm'
 import { useDeleteServer } from '../hooks/use-delete-server'
+import { useQuery } from '@tanstack/react-query'
+import { getApiV1BetaRegistryByNameServersByServerName } from '@/common/api/generated/sdk.gen'
 
 type CardContentMcpServerProps = {
   status: WorkloadsWorkload['status']
   statusContext: WorkloadsWorkload['status_context']
-  repoUrl?: string
   name: string
-  url: string
 }
 
 function CardContentMcpServer({ name, status }: CardContentMcpServerProps) {
@@ -75,19 +75,38 @@ export function CardMcpServer({
   name,
   status,
   statusContext,
-  repoUrl,
   url,
 }: {
   name: string
   status: WorkloadsWorkload['status']
   statusContext: WorkloadsWorkload['status_context']
-  repoUrl?: string
-  transport?: string
   url: string
 }) {
   const confirm = useConfirm()
   const { mutateAsync: deleteServer, isPending: isDeletePending } =
     useDeleteServer({ name })
+
+  const { data: serverDetails } = useQuery({
+    queryKey: ['serverDetails', name],
+    queryFn: async () => {
+      if (!name) return null
+      try {
+        const { data } = await getApiV1BetaRegistryByNameServersByServerName({
+          path: {
+            name: 'default',
+            serverName: name,
+          },
+        })
+
+        // @ts-expect-error - wtf
+        return JSON.parse(data ?? {})
+      } catch (error) {
+        console.error(`Failed to fetch details for server ${name}:`, error)
+        return null
+      }
+    },
+    enabled: Boolean(name),
+  })
 
   const handleRemove = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -114,6 +133,8 @@ export function CardMcpServer({
     await navigator.clipboard.writeText(url)
     toast('MCP server URL has been copied to clipboard')
   }
+
+  const repositoryUrl = serverDetails?.server?.repository_url
 
   return (
     <Card className="gap-3 py-5 shadow-none transition-colors">
@@ -145,10 +166,10 @@ export function CardMcpServer({
                 </Button>
               </div>
               <DropdownMenuSeparator />
-              {repoUrl && (
+              {repositoryUrl && (
                 <DropdownMenuItem asChild>
                   <a
-                    href={repoUrl}
+                    href={repositoryUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex cursor-pointer items-center"
@@ -173,9 +194,7 @@ export function CardMcpServer({
       <CardContentMcpServer
         status={status}
         statusContext={statusContext}
-        repoUrl={repoUrl}
         name={name}
-        url={url}
       />
     </Card>
   )
