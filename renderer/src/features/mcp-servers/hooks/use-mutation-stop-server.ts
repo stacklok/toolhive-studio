@@ -21,7 +21,9 @@ export function useMutationStopServerList({ name }: { name: string }) {
   const queryClient = useQueryClient()
   // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
   const queryKey = getApiV1BetaWorkloadsQueryKey({ query: { all: true } })
-
+  const serverQueryKey = getApiV1BetaWorkloadsByNameQueryKey({
+    path: { name },
+  })
   return useToastMutation({
     ...getMutationData(name),
 
@@ -30,17 +32,15 @@ export function useMutationStopServerList({ name }: { name: string }) {
         queryKey,
       })
 
-      const previousServer = queryClient.getQueryData(
-        getApiV1BetaWorkloadsByNameQueryKey({ path: { name } })
-      )
+      const previousServer = queryClient.getQueryData(serverQueryKey)
 
       queryClient.setQueryData(
-        getApiV1BetaWorkloadsByNameQueryKey({ path: { name } }),
+        serverQueryKey,
         (oldData: WorkloadsWorkload | undefined) => {
           if (!oldData) return oldData
           return {
             ...oldData,
-            status: 'stopped',
+            status: 'stopping',
           }
         }
       )
@@ -54,7 +54,7 @@ export function useMutationStopServerList({ name }: { name: string }) {
         const updatedData = {
           ...parsed,
           workloads: parsed.workloads.map((server: WorkloadsWorkload) =>
-            server.name === name ? { ...server, status: 'stopped' } : server
+            server.name === name ? { ...server, status: 'stopping' } : server
           ),
         } as V1WorkloadListResponse
         // Convert to string because of https://github.com/stacklok/toolhive/issues/497
@@ -63,7 +63,23 @@ export function useMutationStopServerList({ name }: { name: string }) {
 
       return { previousServer }
     },
-
+    onSuccess: () => {
+      queryClient.setQueryData(queryKey, (oldData: string | undefined) => {
+        if (!oldData) return oldData
+        const parsed = JSON.parse(oldData)
+        if (!parsed) return oldData
+        return JSON.stringify({ ...parsed, status: 'stopped' })
+      })
+      queryClient.setQueryData(
+        serverQueryKey,
+        (oldData: string | undefined) => {
+          if (!oldData) return oldData
+          const parsed = JSON.parse(oldData)
+          if (!parsed) return oldData
+          return JSON.stringify({ ...parsed, status: 'stopped' })
+        }
+      )
+    },
     onError: (_error, _variables, context) => {
       if (context?.previousServer) {
         queryClient.setQueryData(queryKey, context.previousServer)
@@ -92,7 +108,7 @@ export function useMutationStopServer({ name }: { name: string }) {
 
         const updatedData = {
           ...parsed,
-          status: 'stopped',
+          status: 'stopping',
         } as WorkloadsWorkload
         // Convert to string because of https://github.com/stacklok/toolhive/issues/497
         return JSON.stringify(updatedData)
@@ -105,6 +121,14 @@ export function useMutationStopServer({ name }: { name: string }) {
       if (context?.previousServerData) {
         queryClient.setQueryData(queryKey, context.previousServerData)
       }
+    },
+    onSuccess: () => {
+      queryClient.setQueryData(queryKey, (oldData: string | undefined) => {
+        if (!oldData) return oldData
+        const parsed = JSON.parse(oldData)
+        if (!parsed) return oldData
+        return JSON.stringify({ ...parsed, status: 'stopped' })
+      })
     },
     onSettled: () => {
       queryClient.invalidateQueries({
