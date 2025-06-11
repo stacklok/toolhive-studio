@@ -15,7 +15,7 @@ export const Route = createFileRoute('/clients')({
 export function Clients() {
   const { data } = useSuspenseQuery(getApiV1BetaDiscoveryClientsOptions())
 
-  const { clients }: V1ClientStatusResponse = JSON.parse(data as string)
+  const { clients = [] }: V1ClientStatusResponse = data
 
   return (
     <>
@@ -26,7 +26,7 @@ export function Clients() {
           Enable all clients
         </Button>
       </div>
-      {!clients || clients.length === 0 ? (
+      {clients.length === 0 ? (
         <div>No clients found</div>
       ) : (
         <GridCardClients clients={clients} />

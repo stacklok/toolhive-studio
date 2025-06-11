@@ -52,7 +52,7 @@ export function useToastMutation<
 
           if (Array.isArray(e.detail)) {
             const err = e.detail
-              ?.map((item) => `${item.msg} - ${JSON.stringify(item.loc)}`)
+              ?.map((item) => `${item.msg} - ${item.loc}`)
               .filter(Boolean)
               .join(', ')
 

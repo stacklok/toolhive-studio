@@ -24,17 +24,13 @@ export const Route = createFileRoute('/store')({
 })
 
 export function Store() {
-  const storeData = useLoaderData({ from: '/store' })
+  const { servers: serversList = [] } = useLoaderData({ from: '/store' })
   const queryClient = useQueryClient()
   const { mutateAsync } = useToastMutation({
     ...postApiV1BetaWorkloadsMutation(),
     loadingMsg: 'Creating server...',
     errorMsg: 'Failed to create server',
   })
-
-  // TODO: https://github.com/stacklok/toolhive/issues/495
-  const serversList =
-    (storeData && JSON.parse(storeData as string)).servers || []
 
   const handleSubmit = async (
     server: RegistryServer,
