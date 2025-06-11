@@ -21,7 +21,7 @@ export function NotFound() {
           </p>
           <Button asChild className="w-full">
             <Link to="/">
-              <Home className="mr-2 h-4 w-4" />
+              <Home className="mr-2 size-4" />
               Go to Installed
             </Link>
           </Button>
