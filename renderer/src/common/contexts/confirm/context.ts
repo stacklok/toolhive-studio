@@ -1,4 +1,4 @@
-import { createContext, ReactNode } from 'react'
+import { createContext, type ReactNode } from 'react'
 
 type Buttons = {
   yes: ReactNode

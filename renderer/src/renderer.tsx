@@ -13,9 +13,9 @@ import * as Sentry from '@sentry/electron/renderer'
 import { Toaster } from './common/components/ui/sonner'
 import { ThemeProvider } from './common/components/theme/theme-provider'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { ConfirmProvider } from './common/contexts/confirm-context'
 
 import './index.css'
+import { ConfirmProvider } from './common/contexts/confirm/provider'
 
 // Sentry setup
 Sentry.init({
