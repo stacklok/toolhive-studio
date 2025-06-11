@@ -18,6 +18,7 @@ import { ActionsMcpServer } from './actions-mcp-server'
 import { useMutationRestartServerList } from '../hooks/use-mutation-restart-server'
 import { useMutationStopServerList } from '../hooks/use-mutation-stop-server'
 import { useConfirm } from '@/common/hooks/use-confirm'
+import { useDeleteServer } from '../hooks/use-delete-server'
 
 type CardContentMcpServerProps = {
   status: WorkloadsWorkload['status']
@@ -77,6 +78,8 @@ export function CardMcpServer({
   transport?: string
 }) {
   const confirm = useConfirm()
+  const { mutateAsync: deleteServer, isPending: isDeletePending } =
+    useDeleteServer({ name: name as string })
 
   const handleRemove = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -94,7 +97,9 @@ export function CardMcpServer({
         buttons: { yes: 'Remove', no: 'Cancel' },
       }
     )
-    alert(`Confirmed: ${result}`)
+    if (result) {
+      await deleteServer({ path: { name: name as string } })
+    }
   }
 
   return (
@@ -118,7 +123,10 @@ export function CardMcpServer({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" role="menu">
-              <DropdownMenuItem onClick={handleRemove}>
+              <DropdownMenuItem
+                onClick={handleRemove}
+                disabled={isDeletePending}
+              >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Remove
               </DropdownMenuItem>
