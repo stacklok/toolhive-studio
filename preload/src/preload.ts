@@ -28,7 +28,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
 })
 
-// Type definitions for the exposed API
 export interface ElectronAPI {
   getAutoLaunchStatus: () => Promise<boolean>
   setAutoLaunch: (enabled: boolean) => Promise<boolean>
@@ -44,11 +43,5 @@ export interface ElectronAPI {
       shouldUseDarkColors: boolean
       themeSource: 'system' | 'light' | 'dark'
     }>
-  }
-}
-
-declare global {
-  interface Window {
-    electronAPI: ElectronAPI
   }
 }

@@ -5,7 +5,6 @@ export default {
     'main/src/main.ts',
     'preload/src/preload.ts',
     'forge.config.ts',
-    'utils/fetch-thv.ts',
     'renderer/vite.renderer.config.ts',
     'renderer/src/**/*.test.{ts,tsx}',
     'renderer/src/**/__tests__/**/*.{ts,tsx}',
@@ -25,6 +24,7 @@ export default {
     'renderer/src/common/lib/utils.ts',
     'renderer/src/common/components/ui/**',
     'renderer/src/vite-env.d.ts',
+    'renderer/src/types/global.d.ts',
   ],
   ignoreDependencies: [
     '@electron-forge/maker-flatpak',

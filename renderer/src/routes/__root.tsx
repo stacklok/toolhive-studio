@@ -1,5 +1,8 @@
+import { getHealth } from '@/common/api/generated'
 import { Main } from '@/common/components/layout/main'
 import { TopNav } from '@/common/components/layout/top-nav'
+import { Error } from '@/common/components/error'
+import { NotFound } from '@/common/components/not-found'
 import type { QueryClient } from '@tanstack/react-query'
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
@@ -16,9 +19,15 @@ export const Route = createRootRouteWithContext<{
       </Main>
     </>
   ),
-  errorComponent: ({ error }) => <div>error: {error.message}</div>,
-  notFoundComponent: () => <div>Not found component</div>,
+  errorComponent: ({ error }) => <Error error={error} />,
+  notFoundComponent: () => <NotFound />,
   onError: (error) => {
     console.error(error)
+  },
+  loader: async ({ context: { queryClient } }) => {
+    await queryClient.ensureQueryData({
+      queryKey: ['health'],
+      queryFn: () => getHealth({}),
+    })
   },
 })
