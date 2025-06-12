@@ -16,8 +16,13 @@ import { initTray, updateTrayStatus } from './system-tray'
 import { setAutoLaunch, getAutoLaunchStatus } from './auto-launch'
 import net from 'node:net'
 import { getCspString } from './csp'
+import { getApiV1BetaWorkloads } from '../../renderer/src/common/api/generated/sdk.gen'
+import { createClient } from '@hey-api/client-fetch'
+import type { WorkloadsWorkload } from '../../renderer/src/common/api/generated/types.gen'
 
-// Sentry setup
+// ────────────────────────────────────────────────────────────────────────────
+//  Sentry setup
+// ────────────────────────────────────────────────────────────────────────────
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
 })
@@ -26,7 +31,9 @@ Sentry.init({
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined
 declare const MAIN_WINDOW_VITE_NAME: string
 
-// Determine the binary path for both dev and prod
+// ────────────────────────────────────────────────────────────────────────────
+//  Determine the binary path for both dev and prod
+// ────────────────────────────────────────────────────────────────────────────
 const binName = process.platform === 'win32' ? 'thv.exe' : 'thv'
 const binPath = app.isPackaged
   ? path.join(
@@ -47,12 +54,17 @@ const binPath = app.isPackaged
 console.log(`ToolHive binary path: ${binPath}`)
 console.log(`Binary file exists: ${existsSync(binPath)}`)
 
-// For cleaning up
+// ────────────────────────────────────────────────────────────────────────────
+//  Globals
+// ────────────────────────────────────────────────────────────────────────────
 let toolhiveProcess: ReturnType<typeof spawn> | undefined
 let tray: Tray | null = null
 let toolhivePort: number | undefined
 let isQuitting = false
 
+// ────────────────────────────────────────────────────────────────────────────
+//  Utility: find a free TCP port
+// ────────────────────────────────────────────────────────────────────────────
 function findFreePort(): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = net.createServer()
@@ -69,6 +81,9 @@ function findFreePort(): Promise<number> {
   })
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+//  Start the embedded ToolHive API server
+// ────────────────────────────────────────────────────────────────────────────
 async function startToolhive() {
   if (!existsSync(binPath)) {
     console.error(`ToolHive binary not found at: ${binPath}`)
@@ -86,42 +101,107 @@ async function startToolhive() {
   )
   toolhiveProcess.on('error', (error) => {
     console.error('Failed to start ToolHive:', error)
-    // Update tray to show ToolHive is not running
-    if (tray) {
-      updateTrayStatus(tray, false)
-    }
+    if (tray) updateTrayStatus(tray, false)
   })
   toolhiveProcess.on('exit', (code) => {
     console.log(`ToolHive process exited with code: ${code}`)
     toolhiveProcess = undefined
-    // Update tray to show ToolHive is not running
-    if (tray) {
-      updateTrayStatus(tray, false)
-    }
+    if (tray) updateTrayStatus(tray, false)
   })
   toolhiveProcess.unref()
+  if (tray) updateTrayStatus(tray, true)
+}
 
-  // Update tray to show ToolHive is running
-  if (tray) {
-    updateTrayStatus(tray, true)
+/** TODO: replace with your real implementation that returns the
+ *  currently-running servers. */
+async function getRunningServers(): Promise<string[]> {
+  // Example: `spawn(binPath, ['ps', '--json'])` → parse, etc.
+  const client = createClient({ baseUrl: `http://localhost:${toolhivePort}` })
+  const {
+    data: { workloads },
+  } = await getApiV1BetaWorkloads({ client })
+  console.log('Fetching running servers from ToolHive API…')
+  console.log({ toolhivePort, workloads })
+  return workloads.map(({ name }: WorkloadsWorkload) => name)
+}
+
+/** Stop every running server in parallel and wait until *all* are down. */
+async function stopAllServers(): Promise<void> {
+  const servers = await getRunningServers()
+  console.log(`Found ${servers.length} running servers:`, servers)
+
+  if (!servers.length) {
+    console.log('No running servers – teardown complete')
+    return
+  }
+
+  console.log(`Stopping ${servers.length} servers…`)
+
+  const stopServer = (name: string) =>
+    new Promise<void>((resolve, reject) => {
+      const child = spawn(binPath, ['stop', name], { stdio: 'inherit' })
+      child.on('exit', (code) =>
+        code === 0
+          ? resolve()
+          : reject(new Error(`“thv stop ${name}” exited with code ${code}`))
+      )
+      child.on('error', reject)
+    })
+
+  const results = await Promise.allSettled(servers.map(stopServer))
+  const failures = results.filter((r) => r.status === 'rejected')
+  failures.forEach((f) =>
+    console.error((f as PromiseRejectedResult).reason?.message)
+  )
+  if (failures.length) throw new Error(`${failures.length} server(s) failed`)
+  console.log('All servers stopped cleanly')
+}
+
+let tearingDown = false
+
+/** Hold the quit, run teardown, then really exit. */
+async function blockQuit(event: Electron.Event, source: string) {
+  if (tearingDown) return
+  tearingDown = true
+  isQuitting = true
+  console.log(`[${source}] delaying quit for teardown…`)
+  event.preventDefault()
+
+  try {
+    await stopAllServers()
+  } catch (err) {
+    console.error('Teardown failed:', err)
+  } finally {
+    // Stop the embedded ToolHive server
+    if (toolhiveProcess && !toolhiveProcess.killed) {
+      toolhiveProcess.kill()
+    }
+    // Destroy tray (avoids orphaned icon on Windows)
+    tray?.destroy()
+    app.quit() // re-emits before-quit → will-quit → quit
   }
 }
 
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
+// ────────────────────────────────────────────────────────────────────────────
+//  Windows-installer helper (Squirrel)
+// ────────────────────────────────────────────────────────────────────────────
 if (started) {
   app.quit()
 }
 
-// Check if app should start hidden
+// ────────────────────────────────────────────────────────────────────────────
+//  Main-window creation
+// ────────────────────────────────────────────────────────────────────────────
 const shouldStartHidden =
   process.argv.includes('--hidden') || process.argv.includes('--start-hidden')
 const isDevelopment = process.env.NODE_ENV === 'development'
-const createWindow = () => {
+
+function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 1040,
     height: 700,
-    show: !shouldStartHidden, // Don't show window if starting hidden
-    autoHideMenuBar: true, // Hide the menu bar
+    show: !shouldStartHidden,
+    autoHideMenuBar: true,
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
@@ -129,14 +209,11 @@ const createWindow = () => {
     },
   })
 
-  // On Windows, handle minimize to tray behavior
+  // Windows: minimise-to-tray instead of close
   if (process.platform === 'win32') {
     mainWindow.on('minimize', () => {
-      if (shouldStartHidden || tray) {
-        mainWindow.hide()
-      }
+      if (shouldStartHidden || tray) mainWindow.hide()
     })
-
     mainWindow.on('close', (event) => {
       if (!isQuitting && tray) {
         event.preventDefault()
@@ -145,9 +222,8 @@ const createWindow = () => {
     })
   }
 
-  // Handle external URLs
+  // External links → default browser
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    // Open external URLs in the default browser
     if (url.startsWith('http://') || url.startsWith('https://')) {
       shell.openExternal(url)
       return { action: 'deny' }
@@ -168,6 +244,9 @@ const createWindow = () => {
 
 let mainWindow: BrowserWindow | null = null
 
+// ────────────────────────────────────────────────────────────────────────────
+//  App-lifecycle events
+// ────────────────────────────────────────────────────────────────────────────
 app.on('ready', () => {
   startToolhive()
   mainWindow = createWindow()
@@ -190,23 +269,18 @@ app.whenReady().then(() => {
   })
 
   try {
-    tray = initTray({
-      toolHiveIsRunning: !!toolhiveProcess,
-    })
+    tray = initTray({ toolHiveIsRunning: !!toolhiveProcess })
     console.log('System tray initialized successfully')
   } catch (error) {
     console.error('Failed to initialize system tray:', error)
-    // Continue without tray - the app should still work
   }
 
-  // Update tray when theme changes (for non-Windows platforms that use themed icons)
+  // Non-Windows platforms: refresh tray icon when theme changes
   nativeTheme.on('updated', () => {
     if (tray && process.platform !== 'win32') {
       try {
         tray.destroy()
-        tray = initTray({
-          toolHiveIsRunning: !!toolhiveProcess,
-        })
+        tray = initTray({ toolHiveIsRunning: !!toolhiveProcess })
       } catch (error) {
         console.error('Failed to update tray after theme change:', error)
       }
@@ -214,40 +288,47 @@ app.whenReady().then(() => {
   })
 })
 
+// Hold the quit if any window closes on non-macOS
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
+  if (process.platform !== 'darwin') app.quit()
 })
 
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     mainWindow = createWindow()
-  } else if (mainWindow) {
-    mainWindow.show()
-  }
-})
-
-app.on('before-quit', () => {
-  isQuitting = true
-})
-
-app.on('will-quit', () => {
-  if (toolhiveProcess && !toolhiveProcess.killed) {
-    toolhiveProcess.kill()
-  }
-  if (tray) {
-    tray.destroy()
-  }
-})
-
-// IPC handlers for theme management
-ipcMain.handle('dark-mode:toggle', () => {
-  if (nativeTheme.shouldUseDarkColors) {
-    nativeTheme.themeSource = 'light'
   } else {
-    nativeTheme.themeSource = 'dark'
+    mainWindow?.show()
   }
+})
+
+// ────────────────────────────────────────────────────────────────────────────
+//  Graceful-shutdown hooks
+// ────────────────────────────────────────────────────────────────────────────
+app.on('before-quit', (e) => blockQuit(e, 'before-quit'))
+app.on('will-quit', (e) => blockQuit(e, 'will-quit'))
+
+// Docker / Ctrl-C etc.
+;['SIGTERM', 'SIGINT'].forEach((sig) =>
+  process.on(sig as NodeJS.Signals, async () => {
+    if (tearingDown) return
+    tearingDown = true
+    isQuitting = true
+    console.log(`[${sig}] delaying exit for teardown…`)
+    try {
+      await stopAllServers()
+    } finally {
+      toolhiveProcess?.kill()
+      tray?.destroy()
+      process.exit(0)
+    }
+  })
+)
+
+// ────────────────────────────────────────────────────────────────────────────
+//  IPC handlers
+// ────────────────────────────────────────────────────────────────────────────
+ipcMain.handle('dark-mode:toggle', () => {
+  nativeTheme.themeSource = nativeTheme.shouldUseDarkColors ? 'light' : 'dark'
   return nativeTheme.shouldUseDarkColors
 })
 
@@ -264,41 +345,29 @@ ipcMain.handle(
   }
 )
 
-ipcMain.handle('dark-mode:get', () => {
-  return {
-    shouldUseDarkColors: nativeTheme.shouldUseDarkColors,
-    themeSource: nativeTheme.themeSource,
-  }
-})
+ipcMain.handle('dark-mode:get', () => ({
+  shouldUseDarkColors: nativeTheme.shouldUseDarkColors,
+  themeSource: nativeTheme.themeSource,
+}))
 
-// IPC handlers for auto-launch management
-ipcMain.handle('get-auto-launch-status', () => {
-  return getAutoLaunchStatus()
-})
+ipcMain.handle('get-auto-launch-status', () => getAutoLaunchStatus())
 
 ipcMain.handle('set-auto-launch', (_event, enabled: boolean) => {
   setAutoLaunch(enabled)
-  return getAutoLaunchStatus() // Return the new status
+  return getAutoLaunchStatus()
 })
 
-// IPC handlers for app control
 ipcMain.handle('show-app', () => {
-  if (mainWindow) {
-    mainWindow.show()
-    mainWindow.focus()
-  }
+  mainWindow?.show()
+  mainWindow?.focus()
 })
 
 ipcMain.handle('hide-app', () => {
-  if (mainWindow) {
-    mainWindow.hide()
-  }
+  mainWindow?.hide()
 })
 
 ipcMain.handle('quit-app', () => {
   app.quit()
 })
 
-ipcMain.handle('get-toolhive-port', () => {
-  return toolhivePort
-})
+ipcMain.handle('get-toolhive-port', () => toolhivePort)
