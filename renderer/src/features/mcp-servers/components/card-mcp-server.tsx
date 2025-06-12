@@ -93,8 +93,7 @@ export function CardMcpServer({
           },
         })
 
-        // @ts-expect-error - wtf
-        return JSON.parse(data ?? {})
+        return data ?? {}
       } catch (error) {
         console.error(`Failed to fetch details for server ${name}:`, error)
         return null
