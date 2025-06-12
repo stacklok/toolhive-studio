@@ -58,14 +58,9 @@ const config: ForgeConfig = {
   makers: [
     new MakerSquirrel({
       // Windows Squirrel installer configuration
-      iconUrl: './icons/icon.ico', // Application icon in Control Panel
       setupIcon: './icons/icon.ico', // Setup.exe icon
-      loadingGif: './icons/installer.gif', // Optional: Add a loading GIF during installation
       setupExe: 'ToolHive Studio Setup.exe',
       noMsi: true, // Don't create MSI installer
-      remoteReleases: '', // Optional: URL to check for updates
-      certificateFile: '', // Optional: Path to certificate for code signing
-      certificatePassword: '', // Optional: Certificate password
       authors: 'Stacklok Labs',
       description: 'ToolHive Studio - Development Environment',
       exe: 'ToolHive Studio.exe',
