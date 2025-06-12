@@ -101,14 +101,16 @@ export function GridCardsMcpServers({
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {filteredMcpServers.map((mcpServer) => (
-          <CardMcpServer
-            key={mcpServer.name}
-            name={mcpServer.name}
-            status={mcpServer.status}
-            statusContext={mcpServer.status_context}
-          />
-        ))}
+        {filteredMcpServers.map((mcpServer) =>
+          mcpServer.name ? (
+            <CardMcpServer
+              key={mcpServer.name}
+              name={mcpServer.name}
+              status={mcpServer.status}
+              statusContext={mcpServer.status_context}
+            />
+          ) : null
+        )}
       </div>
 
       {filteredMcpServers.length === 0 &&

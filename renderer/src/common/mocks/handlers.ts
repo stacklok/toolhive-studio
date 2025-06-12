@@ -101,10 +101,9 @@ export const handlers = [
 
   http.get(
     mswEndpoint('/api/v1beta/registry/:name/servers/:serverName'),
-    () => {
-      // TODO: Don't stringify after
-      // https://github.com/stacklok/toolhive/issues/495 is resolved
-      return HttpResponse.json(JSON.stringify(registryServerFixture))
+    ({ params }) => {
+      const { name } = params
+      return HttpResponse.json({ ...registryServerFixture, name })
     }
   ),
 ]
