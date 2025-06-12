@@ -56,7 +56,6 @@ export function useMutationStopServerList({ name }: { name: string }) {
               server.name === name ? { ...server, status: 'stopping' } : server
             ),
           } as V1WorkloadListResponse
-          // Convert to string because of https://github.com/stacklok/toolhive/issues/497
           return updatedData
         }
       )
@@ -108,7 +107,6 @@ export function useMutationStopServer({ name }: { name: string }) {
             ...oldData,
             status: 'stopping',
           } as WorkloadsWorkload
-          // Convert to string because of https://github.com/stacklok/toolhive/issues/497
           return updatedData
         }
       )

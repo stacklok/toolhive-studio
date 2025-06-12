@@ -40,7 +40,6 @@ export function useMutationRestartServerList({ name }: { name: string }) {
               server.name === name ? { ...server, status: 'running' } : server
             ),
           } as V1WorkloadListResponse
-          // Convert to string because of https://github.com/stacklok/toolhive/issues/497
           return updatedData
         }
       )
@@ -75,7 +74,6 @@ export function useMutationRestartServer({ name }: { name: string }) {
             ...oldData,
             status: 'running',
           } as WorkloadsWorkload
-          // Convert to string because of https://github.com/stacklok/toolhive/issues/497
           return updatedData
         }
       )
