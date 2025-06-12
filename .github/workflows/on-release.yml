@@ -27,7 +27,7 @@ jobs:
     needs: [security, static-checks, unit-tests]
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     env:
       NODE_OPTIONS: '--max_old_space_size=4096'
     steps:
@@ -38,6 +38,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Update version from tag
+        shell: bash
         run: |
           # Extract version from tag (remove 'v' prefix if present)
           VERSION=${GITHUB_REF#refs/tags/v}
