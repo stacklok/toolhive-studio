@@ -11,7 +11,7 @@ import { existsSync } from 'node:fs'
 import started from 'electron-squirrel-startup'
 import { spawn } from 'node:child_process'
 import * as Sentry from '@sentry/electron/main'
-import { initTray } from './system-tray'
+import { initTray, updateTrayStatus } from './system-tray'
 import { setAutoLaunch, getAutoLaunchStatus } from './auto-launch'
 import net from 'node:net'
 import { getCspString } from './csp'
@@ -50,6 +50,7 @@ console.log(`Binary file exists: ${existsSync(binPath)}`)
 let toolhiveProcess: ReturnType<typeof spawn> | undefined
 let tray: Tray | null = null
 let toolhivePort: number | undefined
+let isQuitting = false
 
 function findFreePort(): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -84,8 +85,25 @@ async function startToolhive() {
   )
   toolhiveProcess.on('error', (error) => {
     console.error('Failed to start ToolHive:', error)
+    // Update tray to show ToolHive is not running
+    if (tray) {
+      updateTrayStatus(tray, false)
+    }
+  })
+  toolhiveProcess.on('exit', (code) => {
+    console.log(`ToolHive process exited with code: ${code}`)
+    toolhiveProcess = undefined
+    // Update tray to show ToolHive is not running
+    if (tray) {
+      updateTrayStatus(tray, false)
+    }
   })
   toolhiveProcess.unref()
+
+  // Update tray to show ToolHive is running
+  if (tray) {
+    updateTrayStatus(tray, true)
+  }
 }
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -102,12 +120,29 @@ const createWindow = () => {
     width: 1040,
     height: 700,
     show: !shouldStartHidden, // Don't show window if starting hidden
+    autoHideMenuBar: true, // Hide the menu bar
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
       webSecurity: !isDevelopment,
     },
   })
+
+  // On Windows, handle minimize to tray behavior
+  if (process.platform === 'win32') {
+    mainWindow.on('minimize', () => {
+      if (shouldStartHidden || tray) {
+        mainWindow.hide()
+      }
+    })
+
+    mainWindow.on('close', (event) => {
+      if (!isQuitting && tray) {
+        event.preventDefault()
+        mainWindow.hide()
+      }
+    })
+  }
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(`${MAIN_WINDOW_VITE_DEV_SERVER_URL}/`)
@@ -143,8 +178,28 @@ app.whenReady().then(() => {
     })
   })
 
-  tray = initTray({
-    toolHiveIsRunning: !!toolhiveProcess,
+  try {
+    tray = initTray({
+      toolHiveIsRunning: !!toolhiveProcess,
+    })
+    console.log('System tray initialized successfully')
+  } catch (error) {
+    console.error('Failed to initialize system tray:', error)
+    // Continue without tray - the app should still work
+  }
+
+  // Update tray when theme changes (for non-Windows platforms that use themed icons)
+  nativeTheme.on('updated', () => {
+    if (tray && process.platform !== 'win32') {
+      try {
+        tray.destroy()
+        tray = initTray({
+          toolHiveIsRunning: !!toolhiveProcess,
+        })
+      } catch (error) {
+        console.error('Failed to update tray after theme change:', error)
+      }
+    }
   })
 })
 
@@ -160,6 +215,10 @@ app.on('activate', () => {
   } else if (mainWindow) {
     mainWindow.show()
   }
+})
+
+app.on('before-quit', () => {
+  isQuitting = true
 })
 
 app.on('will-quit', () => {
