@@ -43,7 +43,7 @@ body:
     attributes:
       label: Target Release
       description: Which release/milestone should this story be delivered in?
-      placeholder: "v1.2.0"
+      placeholder: "v0.1.0"
     validations:
       required: true
 
