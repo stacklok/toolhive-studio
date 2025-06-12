@@ -72,6 +72,11 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
     throw e
   }
 
+  // Listen for server shutdown event
+  const cleanup = window.electronAPI.onServerShutdown(() => {
+    router.navigate({ to: '/shutdown' })
+  })
+
   const rootElement = document.getElementById('root')!
   const root = ReactDOM.createRoot(rootElement)
 
@@ -90,4 +95,9 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
       </ThemeProvider>
     </StrictMode>
   )
+
+  // Cleanup listener on unmount
+  return () => {
+    cleanup()
+  }
 })()

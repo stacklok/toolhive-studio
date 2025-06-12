@@ -143,7 +143,7 @@ async function stopAllServers(): Promise<void> {
       child.on('exit', (code) =>
         code === 0
           ? resolve()
-          : reject(new Error(`“thv stop ${name}” exited with code ${code}`))
+          : reject(new Error(`"thv stop ${name}" exited with code ${code}`))
       )
       child.on('error', reject)
     })
@@ -166,6 +166,9 @@ async function blockQuit(event: Electron.Event, source: string) {
   isQuitting = true
   console.log(`[${source}] delaying quit for teardown…`)
   event.preventDefault()
+
+  // Notify renderer about server shutdown
+  mainWindow?.webContents.send('server-shutdown')
 
   try {
     await stopAllServers()

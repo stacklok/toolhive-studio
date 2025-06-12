@@ -26,6 +26,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('dark-mode:set', theme),
     get: () => ipcRenderer.invoke('dark-mode:get'),
   },
+
+  // Server shutdown
+  onServerShutdown: (callback: () => void) => {
+    ipcRenderer.on('server-shutdown', callback)
+    return () => {
+      ipcRenderer.removeListener('server-shutdown', callback)
+    }
+  },
 })
 
 export interface ElectronAPI {
@@ -44,4 +52,5 @@ export interface ElectronAPI {
       themeSource: 'system' | 'light' | 'dark'
     }>
   }
+  onServerShutdown: (callback: () => void) => () => void
 }
