@@ -1,14 +1,14 @@
 name: Task
 description: Create a new task (can be standalone or linked to a story)
-title: "[Task] "
-labels: ["task"]
+title: '[Task] '
+labels: ['task']
 body:
   - type: input
     id: task-title
     attributes:
       label: Task Title
       description: Clear, actionable title for this task
-      placeholder: "Implement user authentication..."
+      placeholder: 'Implement user authentication...'
     validations:
       required: true
 
@@ -20,7 +20,7 @@ body:
       placeholder: |
         ## Task Description
         Describe what needs to be implemented, changed, or fixed.
-        
+
         ## Technical Details
         Include any technical specifications or requirements.
     validations:
@@ -31,7 +31,7 @@ body:
     attributes:
       label: Related Story (Optional)
       description: If this task is part of a story, reference it here
-      placeholder: "#123 (story issue number)"
+      placeholder: '#123 (story issue number)'
 
   - type: textarea
     id: acceptance-criteria
@@ -82,4 +82,4 @@ body:
     attributes:
       label: Additional Context
       description: Any additional information, links, or references
-      placeholder: "Add any relevant technical details, links, or context here." 
+      placeholder: 'Add any relevant technical details, links, or context here.'

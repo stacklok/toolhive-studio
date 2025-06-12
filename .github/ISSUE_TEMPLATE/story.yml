@@ -1,14 +1,14 @@
 name: Story
 description: Create a new user story for feature development
-title: "[Story] "
-labels: ["story"]
+title: '[Story] '
+labels: ['story']
 body:
   - type: input
     id: story-title
     attributes:
       label: Story Title
       description: Brief, descriptive title for this story
-      placeholder: "As a user, I want to..."
+      placeholder: 'As a user, I want to...'
     validations:
       required: true
 
@@ -20,7 +20,7 @@ body:
       placeholder: |
         ## User Story
         As a [type of user], I want [goal] so that [benefit].
-        
+
         ## Context
         Provide additional context about why this story is needed.
     validations:
@@ -43,7 +43,7 @@ body:
     attributes:
       label: Target Release
       description: Which release/milestone should this story be delivered in?
-      placeholder: "v0.1.0"
+      placeholder: 'v0.1.0'
     validations:
       required: true
 
@@ -66,4 +66,4 @@ body:
     attributes:
       label: Additional Context
       description: Any additional information, mockups, or references
-      placeholder: "Add any relevant links, mockups, or additional context here." 
+      placeholder: 'Add any relevant links, mockups, or additional context here.'
