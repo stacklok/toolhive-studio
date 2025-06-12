@@ -7,51 +7,51 @@ import type {
 } from '@hey-api/client-fetch'
 import type {
   GetApiOpenapiJsonData,
-  GetApiOpenapiJsonResponse,
+  GetApiOpenapiJsonResponses,
   GetApiV1BetaClientsData,
-  GetApiV1BetaClientsResponse,
+  GetApiV1BetaClientsResponses,
   PostApiV1BetaClientsData,
-  PostApiV1BetaClientsResponse,
-  PostApiV1BetaClientsError,
+  PostApiV1BetaClientsResponses,
+  PostApiV1BetaClientsErrors,
   GetApiV1BetaDiscoveryClientsData,
-  GetApiV1BetaDiscoveryClientsResponse,
+  GetApiV1BetaDiscoveryClientsResponses,
   GetApiV1BetaRegistryData,
-  GetApiV1BetaRegistryResponse,
+  GetApiV1BetaRegistryResponses,
   PostApiV1BetaRegistryData,
-  PostApiV1BetaRegistryError,
+  PostApiV1BetaRegistryErrors,
   DeleteApiV1BetaRegistryByNameData,
-  DeleteApiV1BetaRegistryByNameResponse,
-  DeleteApiV1BetaRegistryByNameError,
+  DeleteApiV1BetaRegistryByNameResponses,
+  DeleteApiV1BetaRegistryByNameErrors,
   GetApiV1BetaRegistryByNameData,
-  GetApiV1BetaRegistryByNameResponse,
-  GetApiV1BetaRegistryByNameError,
+  GetApiV1BetaRegistryByNameResponses,
+  GetApiV1BetaRegistryByNameErrors,
   GetApiV1BetaRegistryByNameServersData,
-  GetApiV1BetaRegistryByNameServersResponse,
-  GetApiV1BetaRegistryByNameServersError,
+  GetApiV1BetaRegistryByNameServersResponses,
+  GetApiV1BetaRegistryByNameServersErrors,
   GetApiV1BetaRegistryByNameServersByServerNameData,
-  GetApiV1BetaRegistryByNameServersByServerNameResponse,
-  GetApiV1BetaRegistryByNameServersByServerNameError,
+  GetApiV1BetaRegistryByNameServersByServerNameResponses,
+  GetApiV1BetaRegistryByNameServersByServerNameErrors,
   GetApiV1BetaVersionData,
-  GetApiV1BetaVersionResponse,
+  GetApiV1BetaVersionResponses,
   GetApiV1BetaWorkloadsData,
-  GetApiV1BetaWorkloadsResponse,
+  GetApiV1BetaWorkloadsResponses,
   PostApiV1BetaWorkloadsData,
-  PostApiV1BetaWorkloadsResponse,
-  PostApiV1BetaWorkloadsError,
+  PostApiV1BetaWorkloadsResponses,
+  PostApiV1BetaWorkloadsErrors,
   DeleteApiV1BetaWorkloadsByNameData,
-  DeleteApiV1BetaWorkloadsByNameResponse,
-  DeleteApiV1BetaWorkloadsByNameError,
+  DeleteApiV1BetaWorkloadsByNameResponses,
+  DeleteApiV1BetaWorkloadsByNameErrors,
   GetApiV1BetaWorkloadsByNameData,
-  GetApiV1BetaWorkloadsByNameResponse,
-  GetApiV1BetaWorkloadsByNameError,
+  GetApiV1BetaWorkloadsByNameResponses,
+  GetApiV1BetaWorkloadsByNameErrors,
   PostApiV1BetaWorkloadsByNameRestartData,
-  PostApiV1BetaWorkloadsByNameRestartResponse,
-  PostApiV1BetaWorkloadsByNameRestartError,
+  PostApiV1BetaWorkloadsByNameRestartResponses,
+  PostApiV1BetaWorkloadsByNameRestartErrors,
   PostApiV1BetaWorkloadsByNameStopData,
-  PostApiV1BetaWorkloadsByNameStopResponse,
-  PostApiV1BetaWorkloadsByNameStopError,
+  PostApiV1BetaWorkloadsByNameStopResponses,
+  PostApiV1BetaWorkloadsByNameStopErrors,
   GetHealthData,
-  GetHealthResponse,
+  GetHealthResponses,
 } from './types.gen'
 import { client as _heyApiClient } from './client.gen'
 
@@ -80,7 +80,7 @@ export const getApiOpenapiJson = <ThrowOnError extends boolean = false>(
   options?: Options<GetApiOpenapiJsonData, ThrowOnError>
 ) => {
   return (options?.client ?? _heyApiClient).get<
-    GetApiOpenapiJsonResponse,
+    GetApiOpenapiJsonResponses,
     unknown,
     ThrowOnError
   >({
@@ -97,7 +97,7 @@ export const getApiV1BetaClients = <ThrowOnError extends boolean = false>(
   options?: Options<GetApiV1BetaClientsData, ThrowOnError>
 ) => {
   return (options?.client ?? _heyApiClient).get<
-    GetApiV1BetaClientsResponse,
+    GetApiV1BetaClientsResponses,
     unknown,
     ThrowOnError
   >({
@@ -114,15 +114,15 @@ export const postApiV1BetaClients = <ThrowOnError extends boolean = false>(
   options: Options<PostApiV1BetaClientsData, ThrowOnError>
 ) => {
   return (options.client ?? _heyApiClient).post<
-    PostApiV1BetaClientsResponse,
-    PostApiV1BetaClientsError,
+    PostApiV1BetaClientsResponses,
+    PostApiV1BetaClientsErrors,
     ThrowOnError
   >({
     url: '/api/v1beta/clients',
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options?.headers,
+      ...options.headers,
     },
   })
 }
@@ -137,7 +137,7 @@ export const getApiV1BetaDiscoveryClients = <
   options?: Options<GetApiV1BetaDiscoveryClientsData, ThrowOnError>
 ) => {
   return (options?.client ?? _heyApiClient).get<
-    GetApiV1BetaDiscoveryClientsResponse,
+    GetApiV1BetaDiscoveryClientsResponses,
     unknown,
     ThrowOnError
   >({
@@ -154,7 +154,7 @@ export const getApiV1BetaRegistry = <ThrowOnError extends boolean = false>(
   options?: Options<GetApiV1BetaRegistryData, ThrowOnError>
 ) => {
   return (options?.client ?? _heyApiClient).get<
-    GetApiV1BetaRegistryResponse,
+    GetApiV1BetaRegistryResponses,
     unknown,
     ThrowOnError
   >({
@@ -172,7 +172,7 @@ export const postApiV1BetaRegistry = <ThrowOnError extends boolean = false>(
 ) => {
   return (options?.client ?? _heyApiClient).post<
     unknown,
-    PostApiV1BetaRegistryError,
+    PostApiV1BetaRegistryErrors,
     ThrowOnError
   >({
     url: '/api/v1beta/registry',
@@ -194,8 +194,8 @@ export const deleteApiV1BetaRegistryByName = <
   options: Options<DeleteApiV1BetaRegistryByNameData, ThrowOnError>
 ) => {
   return (options.client ?? _heyApiClient).delete<
-    DeleteApiV1BetaRegistryByNameResponse,
-    DeleteApiV1BetaRegistryByNameError,
+    DeleteApiV1BetaRegistryByNameResponses,
+    DeleteApiV1BetaRegistryByNameErrors,
     ThrowOnError
   >({
     url: '/api/v1beta/registry/{name}',
@@ -213,8 +213,8 @@ export const getApiV1BetaRegistryByName = <
   options: Options<GetApiV1BetaRegistryByNameData, ThrowOnError>
 ) => {
   return (options.client ?? _heyApiClient).get<
-    GetApiV1BetaRegistryByNameResponse,
-    GetApiV1BetaRegistryByNameError,
+    GetApiV1BetaRegistryByNameResponses,
+    GetApiV1BetaRegistryByNameErrors,
     ThrowOnError
   >({
     url: '/api/v1beta/registry/{name}',
@@ -232,8 +232,8 @@ export const getApiV1BetaRegistryByNameServers = <
   options: Options<GetApiV1BetaRegistryByNameServersData, ThrowOnError>
 ) => {
   return (options.client ?? _heyApiClient).get<
-    GetApiV1BetaRegistryByNameServersResponse,
-    GetApiV1BetaRegistryByNameServersError,
+    GetApiV1BetaRegistryByNameServersResponses,
+    GetApiV1BetaRegistryByNameServersErrors,
     ThrowOnError
   >({
     url: '/api/v1beta/registry/{name}/servers',
@@ -254,8 +254,8 @@ export const getApiV1BetaRegistryByNameServersByServerName = <
   >
 ) => {
   return (options.client ?? _heyApiClient).get<
-    GetApiV1BetaRegistryByNameServersByServerNameResponse,
-    GetApiV1BetaRegistryByNameServersByServerNameError,
+    GetApiV1BetaRegistryByNameServersByServerNameResponses,
+    GetApiV1BetaRegistryByNameServersByServerNameErrors,
     ThrowOnError
   >({
     url: '/api/v1beta/registry/{name}/servers/{serverName}',
@@ -271,7 +271,7 @@ export const getApiV1BetaVersion = <ThrowOnError extends boolean = false>(
   options?: Options<GetApiV1BetaVersionData, ThrowOnError>
 ) => {
   return (options?.client ?? _heyApiClient).get<
-    GetApiV1BetaVersionResponse,
+    GetApiV1BetaVersionResponses,
     unknown,
     ThrowOnError
   >({
@@ -288,7 +288,7 @@ export const getApiV1BetaWorkloads = <ThrowOnError extends boolean = false>(
   options?: Options<GetApiV1BetaWorkloadsData, ThrowOnError>
 ) => {
   return (options?.client ?? _heyApiClient).get<
-    GetApiV1BetaWorkloadsResponse,
+    GetApiV1BetaWorkloadsResponses,
     unknown,
     ThrowOnError
   >({
@@ -305,15 +305,15 @@ export const postApiV1BetaWorkloads = <ThrowOnError extends boolean = false>(
   options: Options<PostApiV1BetaWorkloadsData, ThrowOnError>
 ) => {
   return (options.client ?? _heyApiClient).post<
-    PostApiV1BetaWorkloadsResponse,
-    PostApiV1BetaWorkloadsError,
+    PostApiV1BetaWorkloadsResponses,
+    PostApiV1BetaWorkloadsErrors,
     ThrowOnError
   >({
     url: '/api/v1beta/workloads',
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options?.headers,
+      ...options.headers,
     },
   })
 }
@@ -328,8 +328,8 @@ export const deleteApiV1BetaWorkloadsByName = <
   options: Options<DeleteApiV1BetaWorkloadsByNameData, ThrowOnError>
 ) => {
   return (options.client ?? _heyApiClient).delete<
-    DeleteApiV1BetaWorkloadsByNameResponse,
-    DeleteApiV1BetaWorkloadsByNameError,
+    DeleteApiV1BetaWorkloadsByNameResponses,
+    DeleteApiV1BetaWorkloadsByNameErrors,
     ThrowOnError
   >({
     url: '/api/v1beta/workloads/{name}',
@@ -347,8 +347,8 @@ export const getApiV1BetaWorkloadsByName = <
   options: Options<GetApiV1BetaWorkloadsByNameData, ThrowOnError>
 ) => {
   return (options.client ?? _heyApiClient).get<
-    GetApiV1BetaWorkloadsByNameResponse,
-    GetApiV1BetaWorkloadsByNameError,
+    GetApiV1BetaWorkloadsByNameResponses,
+    GetApiV1BetaWorkloadsByNameErrors,
     ThrowOnError
   >({
     url: '/api/v1beta/workloads/{name}',
@@ -366,8 +366,8 @@ export const postApiV1BetaWorkloadsByNameRestart = <
   options: Options<PostApiV1BetaWorkloadsByNameRestartData, ThrowOnError>
 ) => {
   return (options.client ?? _heyApiClient).post<
-    PostApiV1BetaWorkloadsByNameRestartResponse,
-    PostApiV1BetaWorkloadsByNameRestartError,
+    PostApiV1BetaWorkloadsByNameRestartResponses,
+    PostApiV1BetaWorkloadsByNameRestartErrors,
     ThrowOnError
   >({
     url: '/api/v1beta/workloads/{name}/restart',
@@ -385,8 +385,8 @@ export const postApiV1BetaWorkloadsByNameStop = <
   options: Options<PostApiV1BetaWorkloadsByNameStopData, ThrowOnError>
 ) => {
   return (options.client ?? _heyApiClient).post<
-    PostApiV1BetaWorkloadsByNameStopResponse,
-    PostApiV1BetaWorkloadsByNameStopError,
+    PostApiV1BetaWorkloadsByNameStopResponses,
+    PostApiV1BetaWorkloadsByNameStopErrors,
     ThrowOnError
   >({
     url: '/api/v1beta/workloads/{name}/stop',
@@ -402,7 +402,7 @@ export const getHealth = <ThrowOnError extends boolean = false>(
   options?: Options<GetHealthData, ThrowOnError>
 ) => {
   return (options?.client ?? _heyApiClient).get<
-    GetHealthResponse,
+    GetHealthResponses,
     unknown,
     ThrowOnError
   >({

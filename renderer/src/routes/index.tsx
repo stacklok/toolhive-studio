@@ -1,4 +1,3 @@
-import type { V1WorkloadListResponse } from '@/common/api/generated'
 import {
   getApiV1BetaWorkloadsOptions,
   postApiV1BetaWorkloadsMutation,
@@ -21,16 +20,14 @@ export const Route = createFileRoute('/')({
 })
 
 export function Index() {
-  const serversQuery = useSuspenseQuery(
+  const {
+    data: { workloads = [] },
+  } = useSuspenseQuery(
     // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
     getApiV1BetaWorkloadsOptions({ query: { all: true } })
   )
   const [isRunWithCommandOpen, setIsRunWithCommandOpen] = useState(false)
   const { mutateAsync } = useToastMutation(postApiV1BetaWorkloadsMutation())
-
-  // TODO: https://github.com/stacklok/toolhive/issues/495
-  const parsed: V1WorkloadListResponse = JSON.parse(serversQuery.data as string)
-  const servers = parsed.workloads
 
   return (
     <>
@@ -50,10 +47,10 @@ export function Index() {
           }}
         />
       </div>
-      {!servers || servers.length === 0 ? (
+      {workloads.length === 0 ? (
         <div>No servers found</div>
       ) : (
-        <GridCardsMcpServers mcpServers={servers} />
+        <GridCardsMcpServers mcpServers={workloads} />
       )}
     </>
   )

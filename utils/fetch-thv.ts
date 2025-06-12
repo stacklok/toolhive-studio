@@ -138,6 +138,18 @@ async function downloadAndExtractBinary(
   }
 }
 
+async function generateApiClient() {
+  console.log('🔄 Regenerating API client...')
+  try {
+    await execFileAsync('pnpm', ['run', 'generate-client'], {
+      cwd: path.resolve(__dirname, '..'),
+    })
+    console.log('✅ API client regenerated successfully')
+  } catch (error) {
+    console.warn('⚠️  Failed to regenerate API client:', error)
+  }
+}
+
 function createBinaryPath(
   platform: NodeJS.Platform,
   arch: NodeJS.Architecture
@@ -183,6 +195,8 @@ export async function ensureThv(
   await cleanBinaryDirectory(binDir)
   await downloadAndExtractBinary(downloadUrl, binDir, assetName)
   await chmod(binPath, 0o755)
+  await generateApiClient()
+
   return binPath
 }
 
