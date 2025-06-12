@@ -25,7 +25,7 @@ export function ActionsMcpServer({
   const isRunning = status === 'running'
 
   return (
-    <div className="flex gap-2">
+    <div className="flex items-center gap-2">
       <div onClick={(e) => e.preventDefault()}>
         <Switch
           aria-label="Mutate server"
