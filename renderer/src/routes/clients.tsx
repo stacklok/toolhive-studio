@@ -1,7 +1,6 @@
 import { getApiV1BetaDiscoveryClientsOptions } from '@/common/api/generated/@tanstack/react-query.gen'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import type { V1ClientStatusResponse } from '@/common/api/generated'
 import { GridCardClients } from '@/features/clients/components/grid-card-clients'
 import { Button } from '@/common/components/ui/button'
 import { Check } from 'lucide-react'
@@ -13,9 +12,9 @@ export const Route = createFileRoute('/clients')({
 })
 
 export function Clients() {
-  const { data } = useSuspenseQuery(getApiV1BetaDiscoveryClientsOptions())
-
-  const { clients = [] }: V1ClientStatusResponse = data
+  const {
+    data: { clients = [] },
+  } = useSuspenseQuery(getApiV1BetaDiscoveryClientsOptions())
 
   return (
     <>
