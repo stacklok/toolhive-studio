@@ -1,17 +1,8 @@
 name: Bug Report
 description: Report a bug or unexpected behavior
 title: '[Bug] '
-labels: ['bug']
+labels: ['Bug']
 body:
-  - type: input
-    id: bug-title
-    attributes:
-      label: Bug Title
-      description: Brief, descriptive title for this bug
-      placeholder: 'Button does not respond when clicked...'
-    validations:
-      required: true
-
   - type: textarea
     id: description
     attributes:
@@ -31,8 +22,6 @@ body:
         2. Click on '...'
         3. Scroll down to '...'
         4. See error
-    validations:
-      required: true
 
   - type: textarea
     id: expected-behavior
@@ -40,8 +29,6 @@ body:
       label: Expected Behavior
       description: What should have happened instead?
       placeholder: 'The button should...'
-    validations:
-      required: true
 
   - type: textarea
     id: actual-behavior
@@ -49,8 +36,6 @@ body:
       label: Actual Behavior
       description: What actually happened?
       placeholder: 'Instead, the button...'
-    validations:
-      required: true
 
   - type: dropdown
     id: priority
@@ -63,8 +48,6 @@ body:
         - High
         - Critical
       default: 1
-    validations:
-      required: true
 
   - type: textarea
     id: environment
