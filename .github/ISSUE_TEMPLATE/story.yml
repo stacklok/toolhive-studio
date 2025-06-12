@@ -1,7 +1,7 @@
 name: Story
 description: Create a new user story for feature development
 title: '[Story] '
-labels: ['story']
+labels: ['Story']
 body:
   - type: input
     id: story-title

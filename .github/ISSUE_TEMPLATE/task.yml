@@ -1,7 +1,7 @@
 name: Task
 description: Create a new task (can be standalone or linked to a story)
 title: '[Task] '
-labels: ['task']
+labels: ['Task']
 body:
   - type: input
     id: task-title
