@@ -29,6 +29,14 @@ const config: ForgeConfig = {
      * <app>/resources/bin/       (Win/Linux)
      */
     extraResource: ['bin/', 'icons/'],
+    // Windows specific options
+    win32metadata: {
+      CompanyName: 'Stacklok Labs',
+      FileDescription: 'ToolHive Studio',
+      OriginalFilename: 'ToolHive Studio.exe',
+      ProductName: 'ToolHive Studio',
+      InternalName: 'ToolHive Studio',
+    },
   },
 
   rebuildConfig: {},
@@ -50,8 +58,12 @@ const config: ForgeConfig = {
   makers: [
     new MakerSquirrel({
       // Windows Squirrel installer configuration
-      iconUrl: './icons/icon.ico', // Application icon in Control Panel
       setupIcon: './icons/icon.ico', // Setup.exe icon
+      setupExe: 'ToolHive Studio Setup.exe',
+      noMsi: true, // Don't create MSI installer
+      authors: 'Stacklok Labs',
+      description: 'ToolHive Studio - Development Environment',
+      exe: 'toolhive-studio.exe',
     }),
     new MakerDMG({}, ['darwin']),
     new MakerZIP({}, ['darwin']),
