@@ -23,15 +23,6 @@ body:
 
         ## Technical Details
         Include any technical specifications or requirements.
-    validations:
-      required: true
-
-  - type: input
-    id: related-story
-    attributes:
-      label: Related Story (Optional)
-      description: If this task is part of a story, reference it here
-      placeholder: '#123 (story issue number)'
 
   - type: textarea
     id: acceptance-criteria
@@ -43,8 +34,6 @@ body:
         - [ ] Criterion 2  
         - [ ] Tests are written and passing
         - [ ] Code is reviewed and approved
-    validations:
-      required: true
 
   - type: dropdown
     id: priority
@@ -74,8 +63,6 @@ body:
         - Documentation
         - DevOps
       default: 0
-    validations:
-      required: true
 
   - type: textarea
     id: additional-context
