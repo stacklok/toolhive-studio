@@ -30,6 +30,7 @@ export default {
     '@electron-forge/maker-flatpak',
     '@electron-forge/publisher-github',
     '@electron-forge/maker-base',
+    '@tailwindcss/vite',
   ],
   compilers: {
     // this is needed to support css entry files
