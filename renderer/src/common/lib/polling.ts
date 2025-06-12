@@ -67,10 +67,8 @@ export const pollServerStatus = async (
   return poll(
     conditionFn,
     (serverData) => {
-      // Parse the response if it's stringified (due to issue #495)
-      const serverInfo =
-        typeof serverData === 'string' ? JSON.parse(serverData) : serverData
-      return serverInfo?.State === 'running'
+      const serverInfo = serverData as { state?: string }
+      return serverInfo?.state === 'running'
     },
     options
   )
