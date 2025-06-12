@@ -1,0 +1,85 @@
+name: Task
+description: Create a new task (can be standalone or linked to a story)
+title: "[Task] "
+labels: ["task"]
+body:
+  - type: input
+    id: task-title
+    attributes:
+      label: Task Title
+      description: Clear, actionable title for this task
+      placeholder: "Implement user authentication..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Detailed description of what needs to be done
+      placeholder: |
+        ## Task Description
+        Describe what needs to be implemented, changed, or fixed.
+        
+        ## Technical Details
+        Include any technical specifications or requirements.
+    validations:
+      required: true
+
+  - type: input
+    id: related-story
+    attributes:
+      label: Related Story (Optional)
+      description: If this task is part of a story, reference it here
+      placeholder: "#123 (story issue number)"
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Define what needs to be completed for this task to be considered done
+      placeholder: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2  
+        - [ ] Tests are written and passing
+        - [ ] Code is reviewed and approved
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: What is the priority of this task?
+      options:
+        - Low
+        - Medium
+        - High
+        - Critical
+      default: 1
+    validations:
+      required: true
+
+  - type: dropdown
+    id: task-type
+    attributes:
+      label: Task Type
+      description: What type of task is this?
+      options:
+        - Feature
+        - Bug Fix
+        - Enhancement
+        - Refactoring
+        - Testing
+        - Documentation
+        - DevOps
+      default: 0
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any additional information, links, or references
+      placeholder: "Add any relevant technical details, links, or context here." 
