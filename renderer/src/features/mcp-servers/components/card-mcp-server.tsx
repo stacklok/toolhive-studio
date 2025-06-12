@@ -9,12 +9,9 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
 } from '@/common/components/ui/dropdown-menu'
 import { Button } from '@/common/components/ui/button'
-import { MoreVertical, Trash2, Copy, Github } from 'lucide-react'
-import { toast } from 'sonner'
-import { Input } from '@/common/components/ui/input'
+import { MoreVertical, Trash2, Github } from 'lucide-react'
 
 import type { WorkloadsWorkload } from '@/common/api/generated'
 import { ActionsMcpServer } from './actions-mcp-server'
@@ -75,12 +72,10 @@ export function CardMcpServer({
   name,
   status,
   statusContext,
-  url,
 }: {
   name: string
   status: WorkloadsWorkload['status']
   statusContext: WorkloadsWorkload['status_context']
-  url: string
 }) {
   const confirm = useConfirm()
   const { mutateAsync: deleteServer, isPending: isDeletePending } =
@@ -129,11 +124,6 @@ export function CardMcpServer({
     }
   }
 
-  const handleCopyUrl = async () => {
-    await navigator.clipboard.writeText(url)
-    toast('MCP server URL has been copied to clipboard')
-  }
-
   const repositoryUrl = serverDetails?.server?.repository_url
 
   return (
@@ -153,19 +143,7 @@ export function CardMcpServer({
                 <MoreVertical className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" role="menu" className="w-80">
-              <div className="flex items-center gap-2 p-2">
-                <Input value={url} readOnly className="font-mono text-sm" />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleCopyUrl}
-                  aria-label="Copy URL"
-                >
-                  <Copy className="size-4" />
-                </Button>
-              </div>
-              <DropdownMenuSeparator />
+            <DropdownMenuContent align="end" role="menu">
               {repositoryUrl && (
                 <DropdownMenuItem asChild>
                   <a
