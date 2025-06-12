@@ -1,0 +1,69 @@
+name: Story
+description: Create a new user story for feature development
+title: '[Story] '
+labels: ['story']
+body:
+  - type: input
+    id: story-title
+    attributes:
+      label: Story Title
+      description: Brief, descriptive title for this story
+      placeholder: 'As a user, I want to...'
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Detailed description of the story and its context
+      placeholder: |
+        ## User Story
+        As a [type of user], I want [goal] so that [benefit].
+
+        ## Context
+        Provide additional context about why this story is needed.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Define what needs to be completed for this story to be considered done
+      placeholder: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+        - [ ] Criterion 3
+    validations:
+      required: true
+
+  - type: input
+    id: target-release
+    attributes:
+      label: Target Release
+      description: Which release/milestone should this story be delivered in?
+      placeholder: 'v0.1.0'
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: What is the priority of this story?
+      options:
+        - Low
+        - Medium
+        - High
+        - Critical
+      default: 1
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any additional information, mockups, or references
+      placeholder: 'Add any relevant links, mockups, or additional context here.'

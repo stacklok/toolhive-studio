@@ -1,0 +1,85 @@
+name: Bug Report
+description: Report a bug or unexpected behavior
+title: '[Bug] '
+labels: ['bug']
+body:
+  - type: input
+    id: bug-title
+    attributes:
+      label: Bug Title
+      description: Brief, descriptive title for this bug
+      placeholder: 'Button does not respond when clicked...'
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: Clear description of what the bug is
+      placeholder: "Describe what's happening that shouldn't be happening..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Step-by-step instructions to reproduce the bug
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What should have happened instead?
+      placeholder: 'The button should...'
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: 'Instead, the button...'
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How critical is this bug?
+      options:
+        - Low
+        - Medium
+        - High
+        - Critical
+      default: 1
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: System information where the bug occurred
+      placeholder: |
+        - OS: [e.g., macOS 14.5, Windows 11]
+        - Browser: [e.g., Chrome 120, Safari 17]
+        - App Version: [e.g., v1.2.0]
+        - Device: [e.g., MacBook Pro, iPhone 15]
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Screenshots, logs, or any other relevant information
+      placeholder: 'Add any screenshots, error logs, or additional context here.'
