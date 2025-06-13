@@ -184,9 +184,6 @@ function createWindow() {
 
 let mainWindow: BrowserWindow | null = null
 
-// ────────────────────────────────────────────────────────────────────────────
-//  App-lifecycle events
-// ────────────────────────────────────────────────────────────────────────────
 app.on('ready', () => {
   startToolhive()
   mainWindow = createWindow()
@@ -241,9 +238,6 @@ app.on('activate', () => {
   }
 })
 
-// ────────────────────────────────────────────────────────────────────────────
-//  Graceful-shutdown hooks
-// ────────────────────────────────────────────────────────────────────────────
 app.on('before-quit', (e) => blockQuit(e, 'before-quit'))
 app.on('will-quit', (e) => blockQuit(e, 'will-quit'))
 
@@ -264,9 +258,6 @@ app.on('will-quit', (e) => blockQuit(e, 'will-quit'))
   })
 )
 
-// ────────────────────────────────────────────────────────────────────────────
-//  IPC handlers
-// ────────────────────────────────────────────────────────────────────────────
 ipcMain.handle('dark-mode:toggle', () => {
   nativeTheme.themeSource = nativeTheme.shouldUseDarkColors ? 'light' : 'dark'
   return nativeTheme.shouldUseDarkColors
