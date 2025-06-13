@@ -4,21 +4,32 @@ import { TopNav } from '@/common/components/layout/top-nav'
 import { Error } from '@/common/components/error'
 import { NotFound } from '@/common/components/not-found'
 import type { QueryClient } from '@tanstack/react-query'
-import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
+import {
+  createRootRouteWithContext,
+  Outlet,
+  useMatches,
+} from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 
-export const Route = createRootRouteWithContext<{
-  queryClient: QueryClient
-}>()({
-  component: () => (
+function RootComponent() {
+  const matches = useMatches()
+  const isShutdownRoute = matches.some((match) => match.routeId === '/shutdown')
+
+  return (
     <>
-      <TopNav />
+      {!isShutdownRoute && <TopNav />}
       <Main>
         <Outlet />
         <TanStackRouterDevtools />
       </Main>
     </>
-  ),
+  )
+}
+
+export const Route = createRootRouteWithContext<{
+  queryClient: QueryClient
+}>()({
+  component: RootComponent,
   errorComponent: ({ error }) => <Error error={error} />,
   notFoundComponent: () => <NotFound />,
   onError: (error) => {
