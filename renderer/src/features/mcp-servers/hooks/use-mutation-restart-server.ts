@@ -39,7 +39,7 @@ export function useMutationRestartServerList({ name }: { name: string }) {
             workloads: oldData.workloads?.map((server: WorkloadsWorkload) =>
               server.name === name ? { ...server, status: 'running' } : server
             ),
-          } as V1WorkloadListResponse
+          }
           return updatedData
         }
       )
@@ -73,7 +73,7 @@ export function useMutationRestartServer({ name }: { name: string }) {
           const updatedData = {
             ...oldData,
             status: 'running',
-          } as WorkloadsWorkload
+          }
           return updatedData
         }
       )
