@@ -143,10 +143,20 @@ function setupTrayMenu(tray: Tray, toolHiveIsRunning: boolean) {
       label: 'Quit App',
       type: 'normal',
       click: () => {
-        const mainWindow = BrowserWindow.getAllWindows()[0]
-
-        if (mainWindow) {
-          mainWindow.hide()
+        {
+          const mainWindow = BrowserWindow.getAllWindows()[0]
+          if (mainWindow) {
+            if (mainWindow.isMinimized()) {
+              mainWindow.restore()
+            }
+            mainWindow.show()
+            mainWindow.focus()
+            // On Windows, bring window to front
+            if (process.platform === 'win32') {
+              mainWindow.setAlwaysOnTop(true)
+              mainWindow.setAlwaysOnTop(false)
+            }
+          }
         }
 
         blockQuit('system-tray')
