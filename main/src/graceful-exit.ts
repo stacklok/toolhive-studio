@@ -10,8 +10,7 @@ async function getRunningServers(port: number): Promise<string[]> {
     // @ts-expect-error - wtf
     data: { workloads },
   } = await getApiV1BetaWorkloads({ client })
-  console.log('Fetching running servers from ToolHive API…')
-  console.log({ port, workloads })
+
   return workloads.map(({ name }: WorkloadsWorkload) => name)
 }
 
@@ -21,14 +20,14 @@ export async function stopAllServers(
   port: number
 ): Promise<void> {
   const servers = await getRunningServers(port)
-  console.log(`Found ${servers.length} running servers:`, servers)
+  console.info(`Found ${servers.length} running servers:`, servers)
 
   if (!servers.length) {
-    console.log('No running servers – teardown complete')
+    console.info('No running servers – teardown complete')
     return
   }
 
-  console.log(`Stopping ${servers.length} servers…`)
+  console.info(`Stopping ${servers.length} servers…`)
 
   const stopServer = (name: string) =>
     new Promise<void>((resolve, reject) => {
@@ -46,6 +45,7 @@ export async function stopAllServers(
   failures.forEach((f) =>
     console.error((f as PromiseRejectedResult).reason?.message)
   )
-  if (failures.length) throw new Error(`${failures.length} server(s) failed`)
-  console.log('All servers stopped cleanly')
+  if (failures.length)
+    throw new Error(`${failures.length} server(s) failed to stop`)
+  console.info('All servers stopped cleanly')
 }
