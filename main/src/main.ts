@@ -18,9 +18,6 @@ import net from 'node:net'
 import { getCspString } from './csp'
 import { stopAllServers } from './graceful-exit'
 
-// ────────────────────────────────────────────────────────────────────────────
-//  Sentry setup
-// ────────────────────────────────────────────────────────────────────────────
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
 })
@@ -29,9 +26,6 @@ Sentry.init({
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined
 declare const MAIN_WINDOW_VITE_NAME: string
 
-// ────────────────────────────────────────────────────────────────────────────
-//  Determine the binary path for both dev and prod
-// ────────────────────────────────────────────────────────────────────────────
 const binName = process.platform === 'win32' ? 'thv.exe' : 'thv'
 const binPath = app.isPackaged
   ? path.join(
@@ -52,17 +46,11 @@ const binPath = app.isPackaged
 console.log(`ToolHive binary path: ${binPath}`)
 console.log(`Binary file exists: ${existsSync(binPath)}`)
 
-// ────────────────────────────────────────────────────────────────────────────
-//  Globals
-// ────────────────────────────────────────────────────────────────────────────
 let toolhiveProcess: ReturnType<typeof spawn> | undefined
 let tray: Tray | null = null
 let toolhivePort: number | undefined
 let isQuitting = false
 
-// ────────────────────────────────────────────────────────────────────────────
-//  Utility: find a free TCP port
-// ────────────────────────────────────────────────────────────────────────────
 function findFreePort(): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = net.createServer()
@@ -79,9 +67,6 @@ function findFreePort(): Promise<number> {
   })
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-//  Start the embedded ToolHive API server
-// ────────────────────────────────────────────────────────────────────────────
 async function startToolhive() {
   if (!existsSync(binPath)) {
     console.error(`ToolHive binary not found at: ${binPath}`)
