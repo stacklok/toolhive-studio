@@ -8,6 +8,7 @@ import {
 } from 'electron'
 import path from 'node:path'
 import { existsSync } from 'node:fs'
+import { blockQuit } from './main'
 
 export const initTray = ({
   toolHiveIsRunning,
@@ -142,7 +143,7 @@ function setupTrayMenu(tray: Tray, toolHiveIsRunning: boolean) {
       label: 'Quit App',
       type: 'normal',
       click: () => {
-        app.quit()
+        blockQuit({ preventDefault: () => {} } as unknown, 'system-tray')
       },
     },
   ])

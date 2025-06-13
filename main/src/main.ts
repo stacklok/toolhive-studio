@@ -98,7 +98,7 @@ async function startToolhive() {
 let tearingDown = false
 
 /** Hold the quit, run teardown, then really exit. */
-async function blockQuit(event: Electron.Event, source: string) {
+export async function blockQuit(event: Electron.Event, source: string) {
   if (tearingDown) return
   tearingDown = true
   isQuitting = true
