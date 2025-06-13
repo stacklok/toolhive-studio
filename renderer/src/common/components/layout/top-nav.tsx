@@ -69,31 +69,15 @@ function TopNavLinks() {
 export function TopNav(props: HTMLProps<HTMLElement>) {
   useEffect(() => {
     // Show the update toast when the component mounts
-    toast.info(
-      <div className="flex items-center gap-2">
-        <span>Update installed!</span>
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={() => window.electronAPI.quitApp()}
-        >
-          <RotateCcw className="mr-2 h-4 w-4" />
-          Restart now
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => toast.dismiss('update-notification')}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      </div>,
-      {
-        duration: Infinity, // Never auto-dismiss
-        dismissible: false, // Disable the default dismiss behavior
-        id: 'update-notification', // Use a fixed ID to prevent duplicates
+    toast.info('Update installed!', {
+      duration: Infinity,
+      dismissible: false,
+      id: 'update-notification',
+      action: {
+        label: 'Restart now',
+        onClick: () => window.electronAPI.quitApp()
       }
-    )
+    })
   }, [])
 
   return (
