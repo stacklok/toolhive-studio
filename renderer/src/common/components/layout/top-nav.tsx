@@ -1,7 +1,7 @@
 import type { HTMLProps } from 'react'
 
 import { twMerge } from 'tailwind-merge'
-import { CommandIcon, Sparkles } from 'lucide-react'
+import { CommandIcon, RotateCcw, X } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { ThemeToggle } from '../theme/theme-toggle'
 import { SettingsDropdown } from '../settings/settings-dropdown'
@@ -12,6 +12,8 @@ import {
   NavigationMenuLink,
 } from '../ui/navigation-menu'
 import { Button } from '../ui/button'
+import { useEffect } from 'react'
+import { toast } from 'sonner'
 
 function TopNavContainer(props: HTMLProps<HTMLElement>) {
   return (
@@ -65,18 +67,40 @@ function TopNavLinks() {
 }
 
 export function TopNav(props: HTMLProps<HTMLElement>) {
+  useEffect(() => {
+    // Show the update toast when the component mounts
+    toast.info(
+      <div className="flex items-center gap-2">
+        <span>Update installed!</span>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => window.electronAPI.quitApp()}
+        >
+          <RotateCcw className="mr-2 h-4 w-4" />
+          Restart now
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => toast.dismiss('update-notification')}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>,
+      {
+        duration: Infinity, // Never auto-dismiss
+        dismissible: false, // Disable the default dismiss behavior
+        id: 'update-notification', // Use a fixed ID to prevent duplicates
+      }
+    )
+  }, [])
+
   return (
     <TopNavContainer {...props}>
       <TopNavLogo />
       <TopNavLinks />
       <div className="ml-auto flex items-center gap-2">
-        <div className="flex items-center gap-2 rounded-md bg-gray-100 px-3 py-1 text-xs">
-          Update installed!
-          <Button size="xs">
-            <Sparkles />
-            Restart now
-          </Button>
-        </div>
         <ThemeToggle />
         <SettingsDropdown />
       </div>
