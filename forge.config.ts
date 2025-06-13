@@ -66,7 +66,7 @@ const config: ForgeConfig = {
       exe: 'toolhive-studio.exe',
     }),
     new MakerDMG({}, ['darwin']),
-    new MakerZIP({}, ['darwin']),
+    new MakerZIP({}, ['darwin', 'win32']),
     new MakerTarGz({}, ['linux']),
     new MakerRpm({
       options: {
