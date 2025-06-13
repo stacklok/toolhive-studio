@@ -2,6 +2,8 @@
  * Generic polling utility that repeatedly executes a condition check until it passes or times out
  */
 
+import type { WorkloadsWorkload } from '../api/generated/types.gen'
+
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 interface PollingOptions {
@@ -61,14 +63,13 @@ const poll = async <T>(
  * @returns Promise that resolves to true if server is running, false if timeout
  */
 export const pollServerStatus = async (
-  conditionFn: () => Promise<unknown>,
+  conditionFn: () => Promise<WorkloadsWorkload>,
   options: PollingOptions = {}
 ): Promise<boolean> => {
   return poll(
     conditionFn,
-    (serverData) => {
-      const serverInfo = serverData as { state?: string }
-      return serverInfo?.state === 'running'
+    (serverData: WorkloadsWorkload) => {
+      return serverData?.status === 'running'
     },
     options
   )
