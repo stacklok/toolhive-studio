@@ -1,7 +1,7 @@
 import type { HTMLProps } from 'react'
 
 import { twMerge } from 'tailwind-merge'
-import { CommandIcon } from 'lucide-react'
+import { CommandIcon, Sparkles } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { ThemeToggle } from '../theme/theme-toggle'
 import { SettingsDropdown } from '../settings/settings-dropdown'
@@ -11,6 +11,7 @@ import {
   NavigationMenuItem,
   NavigationMenuLink,
 } from '../ui/navigation-menu'
+import { Button } from '../ui/button'
 
 function TopNavContainer(props: HTMLProps<HTMLElement>) {
   return (
@@ -69,6 +70,13 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
       <TopNavLogo />
       <TopNavLinks />
       <div className="ml-auto flex items-center gap-2">
+        <div className="flex items-center gap-2 rounded-md bg-gray-100 px-3 py-1 text-xs">
+          Update installed!
+          <Button size="xs">
+            <Sparkles />
+            Restart now
+          </Button>
+        </div>
         <ThemeToggle />
         <SettingsDropdown />
       </div>
