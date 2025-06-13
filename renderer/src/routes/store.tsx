@@ -73,7 +73,7 @@ export function Store() {
 
       if (isServerReady) {
         toast.success(`Server "${serverName}" is now running and ready!`, {
-          duration: 5000,
+          duration: 4000,
         })
 
         // Invalidate queries to refresh server lists
@@ -85,7 +85,7 @@ export function Store() {
         toast.warning(
           `Server "${serverName}" was created but may still be starting up. Check the servers list to monitor its status.`,
           {
-            duration: 8000,
+            duration: 4000,
           }
         )
       }
