@@ -29,9 +29,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Server shutdown
   onServerShutdown: (callback: () => void) => {
-    ipcRenderer.on('server-shutdown', callback)
+    ipcRenderer.on('graceful-exit', callback)
     return () => {
-      ipcRenderer.removeListener('server-shutdown', callback)
+      ipcRenderer.removeListener('graceful-exit', callback)
     }
   },
 })

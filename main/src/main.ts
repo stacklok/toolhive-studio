@@ -105,7 +105,7 @@ async function blockQuit(event: Electron.Event, source: string) {
   console.info(`[${source}] initiating graceful teardown...`)
   event.preventDefault()
 
-  mainWindow?.webContents.send('server-shutdown')
+  mainWindow?.webContents.send('graceful-exit')
 
   try {
     await stopAllServers(binPath, toolhivePort!)
