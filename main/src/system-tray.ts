@@ -143,7 +143,13 @@ function setupTrayMenu(tray: Tray, toolHiveIsRunning: boolean) {
       label: 'Quit App',
       type: 'normal',
       click: () => {
-        blockQuit({ preventDefault: () => {} } as unknown, 'system-tray')
+        const mainWindow = BrowserWindow.getAllWindows()[0]
+
+        if (mainWindow) {
+          mainWindow.hide()
+        }
+
+        blockQuit('system-tray')
       },
     },
   ])

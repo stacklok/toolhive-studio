@@ -98,12 +98,15 @@ async function startToolhive() {
 let tearingDown = false
 
 /** Hold the quit, run teardown, then really exit. */
-export async function blockQuit(event: Electron.Event, source: string) {
+export async function blockQuit(source: string, event?: Electron.Event) {
   if (tearingDown) return
   tearingDown = true
   isQuitting = true
   console.info(`[${source}] initiating graceful teardown...`)
-  event.preventDefault()
+
+  if (event) {
+    event.preventDefault()
+  }
 
   mainWindow?.webContents.send('graceful-exit')
 
@@ -238,8 +241,8 @@ app.on('activate', () => {
   }
 })
 
-app.on('before-quit', (e) => blockQuit(e, 'before-quit'))
-app.on('will-quit', (e) => blockQuit(e, 'will-quit'))
+app.on('before-quit', (e) => blockQuit('before-quit', e))
+app.on('will-quit', (e) => blockQuit('will-quit', e))
 
 // Docker / Ctrl-C etc.
 ;['SIGTERM', 'SIGINT'].forEach((sig) =>
