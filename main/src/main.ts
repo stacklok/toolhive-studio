@@ -102,10 +102,9 @@ async function blockQuit(event: Electron.Event, source: string) {
   if (tearingDown) return
   tearingDown = true
   isQuitting = true
-  console.log(`[${source}] delaying quit for teardown…`)
+  console.info(`[${source}] initiating graceful teardown...`)
   event.preventDefault()
 
-  // Notify renderer about server shutdown
   mainWindow?.webContents.send('server-shutdown')
 
   try {
@@ -117,9 +116,9 @@ async function blockQuit(event: Electron.Event, source: string) {
     if (toolhiveProcess && !toolhiveProcess.killed) {
       toolhiveProcess.kill()
     }
-    // Destroy tray (avoids orphaned icon on Windows)
+
     tray?.destroy()
-    app.quit() // re-emits before-quit → will-quit → quit
+    app.quit()
   }
 }
 
