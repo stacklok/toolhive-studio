@@ -16,9 +16,7 @@ import { initTray, updateTrayStatus } from './system-tray'
 import { setAutoLaunch, getAutoLaunchStatus } from './auto-launch'
 import net from 'node:net'
 import { getCspString } from './csp'
-import { getApiV1BetaWorkloads } from '../../renderer/src/common/api/generated/sdk.gen'
-import { createClient } from '@hey-api/client-fetch'
-import type { WorkloadsWorkload } from '../../renderer/src/common/api/generated/types.gen'
+import { stopAllServers } from './graceful-exit'
 
 // ────────────────────────────────────────────────────────────────────────────
 //  Sentry setup
@@ -112,52 +110,6 @@ async function startToolhive() {
   if (tray) updateTrayStatus(tray, true)
 }
 
-/** TODO: replace with your real implementation that returns the
- *  currently-running servers. */
-async function getRunningServers(): Promise<string[]> {
-  // Example: `spawn(binPath, ['ps', '--json'])` → parse, etc.
-  const client = createClient({ baseUrl: `http://localhost:${toolhivePort}` })
-  const {
-    // @ts-expect-error - wtf
-    data: { workloads },
-  } = await getApiV1BetaWorkloads({ client })
-  console.log('Fetching running servers from ToolHive API…')
-  console.log({ toolhivePort, workloads })
-  return workloads.map(({ name }: WorkloadsWorkload) => name)
-}
-
-/** Stop every running server in parallel and wait until *all* are down. */
-async function stopAllServers(): Promise<void> {
-  const servers = await getRunningServers()
-  console.log(`Found ${servers.length} running servers:`, servers)
-
-  if (!servers.length) {
-    console.log('No running servers – teardown complete')
-    return
-  }
-
-  console.log(`Stopping ${servers.length} servers…`)
-
-  const stopServer = (name: string) =>
-    new Promise<void>((resolve, reject) => {
-      const child = spawn(binPath, ['stop', name], { stdio: 'inherit' })
-      child.on('exit', (code) =>
-        code === 0
-          ? resolve()
-          : reject(new Error(`"thv stop ${name}" exited with code ${code}`))
-      )
-      child.on('error', reject)
-    })
-
-  const results = await Promise.allSettled(servers.map(stopServer))
-  const failures = results.filter((r) => r.status === 'rejected')
-  failures.forEach((f) =>
-    console.error((f as PromiseRejectedResult).reason?.message)
-  )
-  if (failures.length) throw new Error(`${failures.length} server(s) failed`)
-  console.log('All servers stopped cleanly')
-}
-
 let tearingDown = false
 
 /** Hold the quit, run teardown, then really exit. */
@@ -172,7 +124,7 @@ async function blockQuit(event: Electron.Event, source: string) {
   mainWindow?.webContents.send('server-shutdown')
 
   try {
-    await stopAllServers()
+    await stopAllServers(binPath, toolhivePort!)
   } catch (err) {
     console.error('Teardown failed:', err)
   } finally {
@@ -319,7 +271,7 @@ app.on('will-quit', (e) => blockQuit(e, 'will-quit'))
     isQuitting = true
     console.log(`[${sig}] delaying exit for teardown…`)
     try {
-      await stopAllServers()
+      await stopAllServers(binPath, toolhivePort!)
     } finally {
       toolhiveProcess?.kill()
       tray?.destroy()
