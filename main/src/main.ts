@@ -118,6 +118,7 @@ async function getRunningServers(): Promise<string[]> {
   // Example: `spawn(binPath, ['ps', '--json'])` → parse, etc.
   const client = createClient({ baseUrl: `http://localhost:${toolhivePort}` })
   const {
+    // @ts-expect-error - wtf
     data: { workloads },
   } = await getApiV1BetaWorkloads({ client })
   console.log('Fetching running servers from ToolHive API…')
