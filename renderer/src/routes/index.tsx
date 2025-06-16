@@ -10,7 +10,7 @@ import { DialogFormRunMcpServerWithCommand } from '@/features/mcp-servers/compon
 import { GridCardsMcpServers } from '@/features/mcp-servers/components/grid-cards-mcp-server'
 import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/menu-run-mcp-server'
 import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 
 export const Route = createFileRoute('/')({
@@ -32,6 +32,8 @@ export function Index() {
   const [isRunWithCommandOpen, setIsRunWithCommandOpen] = useState(false)
   const { mutateAsync } = useToastMutation(postApiV1BetaWorkloadsMutation())
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  navigate({ to: '/secrets-setup' })
 
   return (
     <>
