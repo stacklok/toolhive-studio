@@ -27,6 +27,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     get: () => ipcRenderer.invoke('dark-mode:get'),
   },
 
+  isMac: process.platform === 'darwin',
+
   // Server shutdown
   onServerShutdown: (callback: () => void) => {
     ipcRenderer.on('graceful-exit', callback)
@@ -52,5 +54,6 @@ export interface ElectronAPI {
       themeSource: 'system' | 'light' | 'dark'
     }>
   }
+  isMac: boolean
   onServerShutdown: (callback: () => void) => () => void
 }

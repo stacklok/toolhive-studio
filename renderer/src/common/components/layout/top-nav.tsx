@@ -22,7 +22,8 @@ function TopNavContainer(props: HTMLProps<HTMLElement>) {
         'bg-raised/10 backdrop-blur-xs',
         'border-mid h-12 border-b',
         'px-6 py-2',
-        'flex items-center gap-8'
+        'flex items-center gap-8',
+        window.electronAPI.isMac ? 'app-region-drag pl-24' : undefined
       )}
     >
       {props.children}
@@ -44,17 +45,17 @@ function TopNavLinks() {
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
-          <NavigationMenuLink asChild>
+          <NavigationMenuLink className="app-region-no-drag" asChild>
             <Link to="/">Installed</Link>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
-          <NavigationMenuLink asChild>
+          <NavigationMenuLink className="app-region-no-drag" asChild>
             <Link to="/store">Store</Link>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
-          <NavigationMenuLink asChild>
+          <NavigationMenuLink className="app-region-no-drag" asChild>
             <Link to="/clients">Clients</Link>
           </NavigationMenuLink>
         </NavigationMenuItem>
@@ -69,8 +70,8 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
       <TopNavLogo />
       <TopNavLinks />
       <div className="ml-auto flex items-center gap-2">
-        <ThemeToggle />
-        <SettingsDropdown />
+        <ThemeToggle className="app-region-no-drag" />
+        <SettingsDropdown className="app-region-no-drag" />
       </div>
     </TopNavContainer>
   )
