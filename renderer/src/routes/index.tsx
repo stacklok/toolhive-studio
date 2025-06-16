@@ -23,12 +23,11 @@ export const Route = createFileRoute('/')({
 })
 
 export function Index() {
-  const {
-    data: { workloads = [] },
-  } = useSuspenseQuery({
+  const { data } = useSuspenseQuery({
     // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
     ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
   })
+  const workloads = data?.workloads ?? []
   const [isRunWithCommandOpen, setIsRunWithCommandOpen] = useState(false)
   const { mutateAsync } = useToastMutation(postApiV1BetaWorkloadsMutation())
   const queryClient = useQueryClient()

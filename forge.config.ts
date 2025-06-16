@@ -70,14 +70,14 @@ const config: ForgeConfig = {
     new MakerTarGz({}, ['linux']),
     new MakerRpm({
       options: {
-        // RPM package icon
         icon: './icons/icon.png',
+        requires: ['docker >= 20.10'],
       },
     }),
     new MakerDeb({
       options: {
-        // Linux .deb package icon
         icon: './icons/icon.png',
+        depends: ['docker.io (>= 20.10)'],
       },
     }),
     // Flatpak maker - uncomment and configure when ready to use
