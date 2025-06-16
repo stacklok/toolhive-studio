@@ -69,14 +69,25 @@ function TopNavLinks() {
 export function TopNav(props: HTMLProps<HTMLElement>) {
   useEffect(() => {
     // Show the update toast when the component mounts
-    toast.info('Update installed!', {
+     toast.info('Update installed!', {
       duration: Infinity,
-      dismissible: false,
+      dismissible: true,
       id: 'update-notification',
+      cancel: {
+        label: 'Dismiss',
+        onClick: () => toast.dismiss('update-notification'),
+      },
       action: {
         label: 'Restart now',
         onClick: () => window.electronAPI.quitApp()
-      }
+      },
+      // render: ({ dismiss }) => (
+      //   <div className="flex items-center gap-2">
+      //     <span>Update available</span>
+      //     <Button onClick={() => { /* install logic */ }}>Install</Button>
+      //     <Button onClick={dismiss}>Dismiss</Button>
+      //   </div>
+      // ),
     })
   }, [])
 
