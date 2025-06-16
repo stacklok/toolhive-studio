@@ -193,7 +193,6 @@ app.on('ready', () => {
 })
 
 app.whenReady().then(() => {
-  myUndefinedFunction()
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     if (isDevelopment) {
       return callback({ responseHeaders: details.responseHeaders })

@@ -26,9 +26,6 @@ export default defineConfig({
       authToken: process.env.SENTRY_AUTH_TOKEN, // NOTE: This should be available only during CI
       org: process.env.SENTRY_ORG, // NOTE: This should be available only during CI
       project: process.env.SENTRY_PROJECT, // NOTE: This should be available only during CI
-      release: {
-        create: false, // We only want a single release to be created, which happens as a side-effect in /main/vite.main.config.ts
-      },
     }),
   ],
   css: {
