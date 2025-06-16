@@ -86,7 +86,7 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
         <ConfirmProvider>
           <QueryClientProvider client={queryClient}>
             <TooltipProvider delayDuration={0}>
-              <Toaster />
+              <Toaster position="top-right" />
               <RouterProvider router={router} />
             </TooltipProvider>
             <ReactQueryDevtools initialIsOpen={false} />
