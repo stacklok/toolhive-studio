@@ -144,12 +144,19 @@ function createWindow() {
     width: 1040,
     height: 700,
     show: !shouldStartHidden,
+
     autoHideMenuBar: true,
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
       webSecurity: !isDevelopment,
     },
+    ...(process.platform === 'darwin'
+      ? {
+          titleBarStyle: 'hidden',
+          trafficLightPosition: { x: 21, y: 16 },
+        }
+      : {}),
   })
 
   // Windows: minimise-to-tray instead of close

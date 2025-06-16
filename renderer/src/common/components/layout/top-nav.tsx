@@ -22,7 +22,9 @@ function TopNavContainer(props: HTMLProps<HTMLElement>) {
         'bg-raised/10 backdrop-blur-xs',
         'border-mid h-12 border-b',
         'px-6 py-2',
-        'flex items-center gap-8'
+        'flex items-center gap-8',
+        'app-region-drag',
+        window.electronAPI.isMac ? 'pl-24' : undefined
       )}
     >
       {props.children}
