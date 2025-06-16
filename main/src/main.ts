@@ -193,6 +193,7 @@ app.on('ready', () => {
 })
 
 app.whenReady().then(() => {
+  myUndefinedFunction()
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     if (isDevelopment) {
       return callback({ responseHeaders: details.responseHeaders })
@@ -292,7 +293,6 @@ ipcMain.handle('set-auto-launch', (_event, enabled: boolean) => {
 })
 
 ipcMain.handle('show-app', () => {
-  myUndefinedFunction()
   mainWindow?.show()
   mainWindow?.focus()
 })
