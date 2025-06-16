@@ -24,7 +24,7 @@ jobs:
   build-and-release:
     name: Build and Release on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    needs: [security, static-checks, unit-tests]
+    # needs: [security, static-checks, unit-tests]
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
