@@ -20,7 +20,6 @@ export function useDeleteServer({ name }: { name: string }) {
         // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
         queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
       })
-      console.log('redirecting')
       navigate({ to: '/' })
     },
   })
