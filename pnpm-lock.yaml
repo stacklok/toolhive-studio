@@ -215,7 +215,7 @@ importers:
         version: 3.5.3
       prettier-plugin-classnames:
         specifier: ^0.7.8
-        version: 0.7.8(prettier@3.5.3)
+        version: 0.7.9(prettier@3.5.3)
       prettier-plugin-merge:
         specifier: ^0.7.4
         version: 0.7.4(prettier@3.5.3)
@@ -763,6 +763,7 @@ packages:
 
   '@hey-api/client-fetch@0.13.1':
     resolution: {integrity: sha512-29jBRYNdxVGlx5oewFgOrkulZckpIpBIRHth3uHFn1PrL2ucMy52FvWOY3U3dVx2go1Z3kUmMi6lr07iOpUqqA==}
+    deprecated: Starting with v0.73.0, this package is bundled directly inside @hey-api/openapi-ts.
     peerDependencies:
       '@hey-api/openapi-ts': < 2
 
@@ -4423,8 +4424,8 @@ packages:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
 
-  prettier-plugin-classnames@0.7.8:
-    resolution: {integrity: sha512-TC2a9n/kQKF1Zv1nQTpbIwJJJDLaiRO0BGqEMTmRRfROofbigM4e5zHLsv5Nl6xV53WU1xpjPoRdoaLemLt/oA==}
+  prettier-plugin-classnames@0.7.9:
+    resolution: {integrity: sha512-UxyBThUBoxzaCUtU5WKe+lImhBAMJ8RkyHv4mS01O8Ckeick35CMJAXt4AkgYkKW5s5lgVbhqLhQbyVxiex2eQ==}
     engines: {node: '>=14'}
     peerDependencies:
       prettier: ^2 || ^3
@@ -10284,7 +10285,7 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier-plugin-classnames@0.7.8(prettier@3.5.3):
+  prettier-plugin-classnames@0.7.9(prettier@3.5.3):
     dependencies:
       prettier: 3.5.3
 
