@@ -292,6 +292,7 @@ ipcMain.handle('set-auto-launch', (_event, enabled: boolean) => {
 })
 
 ipcMain.handle('show-app', () => {
+  myUndefinedFunction()
   mainWindow?.show()
   mainWindow?.focus()
 })
