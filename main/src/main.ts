@@ -144,7 +144,6 @@ function createWindow() {
     width: 1040,
     height: 700,
     show: !shouldStartHidden,
-
     autoHideMenuBar: true,
     webPreferences: {
       contextIsolation: true,
