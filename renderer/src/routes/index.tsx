@@ -1,12 +1,13 @@
 import {
   getApiV1BetaWorkloadsOptions,
   postApiV1BetaWorkloadsMutation,
+  getApiV1BetaWorkloadsQueryKey,
 } from '@/common/api/generated/@tanstack/react-query.gen'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { DialogFormRunMcpServerWithCommand } from '@/features/mcp-servers/components/dialog-form-run-mcp-command'
 import { GridCardsMcpServers } from '@/features/mcp-servers/components/grid-cards-mcp-server'
 import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/menu-run-mcp-server'
-import { useSuspenseQuery } from '@tanstack/react-query'
+import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 
@@ -22,12 +23,17 @@ export const Route = createFileRoute('/')({
 export function Index() {
   const {
     data: { workloads = [] },
-  } = useSuspenseQuery(
+  } = useSuspenseQuery({
     // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
-    getApiV1BetaWorkloadsOptions({ query: { all: true } })
-  )
+    ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
+    refetchInterval: 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+  })
   const [isRunWithCommandOpen, setIsRunWithCommandOpen] = useState(false)
   const { mutateAsync } = useToastMutation(postApiV1BetaWorkloadsMutation())
+  const queryClient = useQueryClient()
 
   return (
     <>
@@ -41,9 +47,19 @@ export function Index() {
           isOpen={isRunWithCommandOpen}
           onOpenChange={setIsRunWithCommandOpen}
           onSubmit={(data) => {
-            mutateAsync({
-              body: data,
-            })
+            mutateAsync(
+              {
+                body: data,
+              },
+              {
+                onSuccess: () => {
+                  queryClient.invalidateQueries(
+                    // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
+                    getApiV1BetaWorkloadsQueryKey({ query: { all: true } })
+                  )
+                },
+              }
+            )
           }}
         />
       </div>
