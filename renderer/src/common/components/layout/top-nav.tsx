@@ -45,17 +45,17 @@ function TopNavLinks() {
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
-          <NavigationMenuLink asChild>
+          <NavigationMenuLink className="app-region-no-drag" asChild>
             <Link to="/">Installed</Link>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
-          <NavigationMenuLink asChild>
+          <NavigationMenuLink className="app-region-no-drag" asChild>
             <Link to="/store">Store</Link>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
-          <NavigationMenuLink asChild>
+          <NavigationMenuLink className="app-region-no-drag" asChild>
             <Link to="/clients">Clients</Link>
           </NavigationMenuLink>
         </NavigationMenuItem>
@@ -70,8 +70,8 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
       <TopNavLogo />
       <TopNavLinks />
       <div className="ml-auto flex items-center gap-2">
-        <ThemeToggle />
-        <SettingsDropdown />
+        <ThemeToggle className="app-region-no-drag" />
+        <SettingsDropdown className="app-region-no-drag" />
       </div>
     </TopNavContainer>
   )
