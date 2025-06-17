@@ -1,6 +1,7 @@
 import { useParams, Link } from '@tanstack/react-router'
 import { Button } from '@/common/components/ui/button'
 import { ChevronLeft } from 'lucide-react'
+import { Separator } from '@/common/components/ui/separator'
 
 export function LogsPage() {
   const { serverName } = useParams({ from: '/logs/$serverName' })
@@ -33,6 +34,7 @@ export function LogsPage() {
         </Link>
       </div>
       <h1 className="m-0 mb-6 p-0 text-3xl font-bold">{serverName}</h1>
+      <Separator />
       <div className="flex-1 overflow-auto rounded-md border border-gray-200">
         <div className="p-5 font-mono text-[13px] leading-[22px] font-normal text-gray-900">
           {mockLogs.map((log, index) => (
