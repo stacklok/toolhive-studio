@@ -75,6 +75,12 @@ describe('Logs Route', () => {
       expect(
         screen.queryByText(/server .* started successfully/i)
       ).not.toBeInTheDocument()
+
+      await userEvent.clear(search)
+
+      expect(
+        screen.queryByText(/server .* started successfully/i)
+      ).toBeVisible()
     })
   })
 })
