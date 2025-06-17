@@ -2,9 +2,12 @@ import { useParams, Link } from '@tanstack/react-router'
 import { Button } from '@/common/components/ui/button'
 import { ChevronLeft } from 'lucide-react'
 import { Separator } from '@/common/components/ui/separator'
+import { Input } from '@/common/components/ui/input'
+import { useState } from 'react'
 
 export function LogsPage() {
   const { serverName } = useParams({ from: '/logs/$serverName' })
+  const [search, setSearch] = useState('')
 
   const mockLogs = [
     `[2024-03-20 10:00:00] INFO: Server ${serverName} started successfully`,
@@ -18,6 +21,12 @@ export function LogsPage() {
     '[2024-03-20 10:00:08] INFO: Health check passed',
     '[2024-03-20 10:00:09] INFO: Monitoring system initialized',
   ]
+
+  const filteredLogs = search
+    ? mockLogs.filter((line) =>
+        line.toLowerCase().includes(search.toLowerCase())
+      )
+    : mockLogs
 
   return (
     <div className="container mx-auto flex flex-1 flex-col p-4">
@@ -34,10 +43,17 @@ export function LogsPage() {
         </Link>
       </div>
       <h1 className="m-0 mb-6 p-0 text-3xl font-bold">{serverName}</h1>
+      <Input
+        className="mb-4 w-full max-w-md"
+        placeholder="Search log"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        aria-label="Search log"
+      />
       <Separator />
       <div className="flex-1 overflow-auto rounded-md border border-gray-200">
         <div className="p-5 font-mono text-[13px] leading-[22px] font-normal text-gray-900">
-          {mockLogs.map((log, index) => (
+          {filteredLogs.map((log, index) => (
             <div key={index}>{log}</div>
           ))}
         </div>
