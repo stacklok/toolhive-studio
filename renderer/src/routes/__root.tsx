@@ -16,13 +16,13 @@ function RootComponent() {
   const isShutdownRoute = matches.some((match) => match.routeId === '/shutdown')
 
   return (
-    <>
+    <div className="flex h-screen min-h-0 flex-col">
       {!isShutdownRoute && <TopNav />}
       <Main>
         <Outlet />
         <TanStackRouterDevtools />
       </Main>
-    </>
+    </div>
   )
 }
 
