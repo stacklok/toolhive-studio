@@ -52,12 +52,12 @@ export function LogsPage() {
           onChange={(e) => setSearch(e.target.value)}
           aria-label="Search log"
         />
-        <div className="flex-1 overflow-auto rounded-md border border-gray-200">
-          <div className="p-5 font-mono text-[13px] leading-[22px] font-normal text-gray-900">
-            {filteredLogs.map((log, index) => (
-              <div key={index}>{log}</div>
-            ))}
-          </div>
+      </div>
+      <div className="flex-1 overflow-auto rounded-md border border-gray-200">
+        <div className="p-5 font-mono text-[13px] leading-[22px] font-normal text-gray-900">
+          {filteredLogs.map((log, index) => (
+            <div key={index}>{log}</div>
+          ))}
         </div>
       </div>
     </div>
