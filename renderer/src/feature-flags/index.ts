@@ -1,5 +1,7 @@
-import features from './toggles.json'
+import features from './toggles.json' assert { type: 'json' }
 
-export function isFeatureEnabled(feature: string): boolean {
+type FeatureName = keyof typeof features
+
+export function isFeatureEnabled(feature: FeatureName): boolean {
   return features[feature] === true
 }
