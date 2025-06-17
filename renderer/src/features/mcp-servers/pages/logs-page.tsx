@@ -28,10 +28,12 @@ export function LogsPage() {
         </Link>
       </div>
       <h1 className="mb-6 text-3xl font-bold">{serverName}</h1>
-      <div className="rounded-lg bg-black/90 p-4 font-mono text-sm whitespace-pre-wrap text-green-400">
-        {mockLogs.map((log, index) => (
-          <div key={index}>{log}</div>
-        ))}
+      <div className="rounded-md border border-gray-200">
+        <div className="p-4 font-mono text-[13px] leading-[22px] font-normal text-[#09090B]">
+          {mockLogs.map((log, index) => (
+            <div key={index}>{log}</div>
+          ))}
+        </div>
       </div>
     </div>
   )
