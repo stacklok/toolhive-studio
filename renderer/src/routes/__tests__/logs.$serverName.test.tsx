@@ -1,10 +1,16 @@
 import { screen, waitFor } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { LogsPage } from '@/features/mcp-servers/pages/logs-page'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
+import userEvent from '@testing-library/user-event'
 
 describe('Logs Route', () => {
+  beforeEach(() => {
+    // Mock console.warn to prevent test failures from expected warnings
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
   const testCases = [
     { serverName: 'test-server-1', description: 'simple server name' },
     {
@@ -22,6 +28,26 @@ describe('Logs Route', () => {
 
       await waitFor(() => {
         expect(screen.getByText(`Logs for ${serverName}`)).toBeVisible()
+      })
+    })
+
+    it(`should have a back button that navigates to root route for ${description}`, async () => {
+      const router = createTestRouter(LogsPage, '/logs/$serverName')
+      router.navigate({ to: '/logs/$serverName', params: { serverName } })
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByText(`Logs for ${serverName}`)).toBeVisible()
+      })
+
+      const backButton = screen.getByRole('button', { name: /back/i })
+      expect(backButton).toBeVisible()
+      expect(backButton.closest('a')).toHaveAttribute('href', '/')
+
+      await userEvent.click(backButton)
+
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe('/')
       })
     })
   })

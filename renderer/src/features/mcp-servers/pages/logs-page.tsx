@@ -1,10 +1,12 @@
-import { useParams } from '@tanstack/react-router'
+import { useParams, Link } from '@tanstack/react-router'
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@/common/components/ui/card'
+import { Button } from '@/common/components/ui/button'
+import { ArrowLeft } from 'lucide-react'
 
 export function LogsPage() {
   const { serverName } = useParams({ from: '/logs/$serverName' })
@@ -24,7 +26,12 @@ export function LogsPage() {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="mb-6 flex items-center">
+      <div className="mb-6 flex items-center gap-4">
+        <Link to="/">
+          <Button variant="ghost" size="icon" aria-label="Back">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        </Link>
         <h1 className="text-3xl font-semibold">Server Logs</h1>
       </div>
       <Card>
