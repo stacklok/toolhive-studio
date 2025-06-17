@@ -27,6 +27,6 @@ it('should show logs menu item in dropdown', async () => {
   await userEvent.click(moreOptionsButton)
 
   await waitFor(() => {
-    expect(screen.getByRole('menuitem', { name: /view logs/i })).toBeVisible()
+    expect(screen.getByRole('menuitem', { name: /logs/i })).toBeVisible()
   })
 })
