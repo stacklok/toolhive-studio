@@ -18,6 +18,7 @@ out/
 
 # Auto-generated files
 .DS_Store
+renderer/src/route-tree.gen.ts
 
 # Coverage reports
 coverage/ 
