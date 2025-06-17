@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from "./routes/__root"
 import { Route as StoreRouteImport } from "./routes/store"
 import { Route as ShutdownRouteImport } from "./routes/shutdown"
+import { Route as SecretsRouteImport } from "./routes/secrets"
 import { Route as ClientsRouteImport } from "./routes/clients"
 import { Route as IndexRouteImport } from "./routes/index"
 import { Route as LogsServerNameRouteImport } from "./routes/logs.$serverName"
@@ -23,6 +24,11 @@ const StoreRoute = StoreRouteImport.update({
 const ShutdownRoute = ShutdownRouteImport.update({
   id: "/shutdown",
   path: "/shutdown",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SecretsRoute = SecretsRouteImport.update({
+  id: "/secrets",
+  path: "/secrets",
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientsRoute = ClientsRouteImport.update({
@@ -44,6 +50,7 @@ const LogsServerNameRoute = LogsServerNameRouteImport.update({
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
   "/clients": typeof ClientsRoute
+  "/secrets": typeof SecretsRoute
   "/shutdown": typeof ShutdownRoute
   "/store": typeof StoreRoute
   "/logs/$serverName": typeof LogsServerNameRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
   "/clients": typeof ClientsRoute
+  "/secrets": typeof SecretsRoute
   "/shutdown": typeof ShutdownRoute
   "/store": typeof StoreRoute
   "/logs/$serverName": typeof LogsServerNameRoute
@@ -59,19 +67,33 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   "/": typeof IndexRoute
   "/clients": typeof ClientsRoute
+  "/secrets": typeof SecretsRoute
   "/shutdown": typeof ShutdownRoute
   "/store": typeof StoreRoute
   "/logs/$serverName": typeof LogsServerNameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: "/" | "/clients" | "/shutdown" | "/store" | "/logs/$serverName"
+  fullPaths:
+    | "/"
+    | "/clients"
+    | "/secrets"
+    | "/shutdown"
+    | "/store"
+    | "/logs/$serverName"
   fileRoutesByTo: FileRoutesByTo
-  to: "/" | "/clients" | "/shutdown" | "/store" | "/logs/$serverName"
+  to:
+    | "/"
+    | "/clients"
+    | "/secrets"
+    | "/shutdown"
+    | "/store"
+    | "/logs/$serverName"
   id:
     | "__root__"
     | "/"
     | "/clients"
+    | "/secrets"
     | "/shutdown"
     | "/store"
     | "/logs/$serverName"
@@ -80,6 +102,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ClientsRoute: typeof ClientsRoute
+  SecretsRoute: typeof SecretsRoute
   ShutdownRoute: typeof ShutdownRoute
   StoreRoute: typeof StoreRoute
   LogsServerNameRoute: typeof LogsServerNameRoute
@@ -99,6 +122,13 @@ declare module "@tanstack/react-router" {
       path: "/shutdown"
       fullPath: "/shutdown"
       preLoaderRoute: typeof ShutdownRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/secrets": {
+      id: "/secrets"
+      path: "/secrets"
+      fullPath: "/secrets"
+      preLoaderRoute: typeof SecretsRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/clients": {
@@ -128,6 +158,7 @@ declare module "@tanstack/react-router" {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ClientsRoute: ClientsRoute,
+  SecretsRoute: SecretsRoute,
   ShutdownRoute: ShutdownRoute,
   StoreRoute: StoreRoute,
   LogsServerNameRoute: LogsServerNameRoute,

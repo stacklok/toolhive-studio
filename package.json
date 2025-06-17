@@ -109,7 +109,7 @@
     "tailwind-merge": "^3.3.0",
     "tailwindcss": "^4.1.7",
     "tw-animate-css": "^1.3.0",
-    "zod": "3.25.64"
+    "zod": "3.25.67"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
