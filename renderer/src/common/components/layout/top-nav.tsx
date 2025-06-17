@@ -1,7 +1,7 @@
 import type { HTMLProps } from 'react'
 
 import { twMerge } from 'tailwind-merge'
-import { CommandIcon, RotateCcw, X } from 'lucide-react'
+import { CommandIcon } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { ThemeToggle } from '../theme/theme-toggle'
 import { SettingsDropdown } from '../settings/settings-dropdown'
@@ -11,9 +11,9 @@ import {
   NavigationMenuItem,
   NavigationMenuLink,
 } from '../ui/navigation-menu'
-import { Button } from '../ui/button'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
+import { isFeatureEnabled } from '@/feature-flags'
 
 function TopNavContainer(props: HTMLProps<HTMLElement>) {
   return (
@@ -69,8 +69,15 @@ function TopNavLinks() {
 
 export function TopNav(props: HTMLProps<HTMLElement>) {
   useEffect(() => {
-    // Show the update toast when the component mounts
-     toast.info('Update installed!', {
+    // this handles notifications for update-on-restart
+    // TODO: actually implement and test that this is only
+    // shown after an update is downloaded
+    //
+    if (!isFeatureEnabled('update-on-restart')) {
+      return
+    }
+
+    toast.info('Update installed!', {
       duration: Infinity,
       dismissible: true,
       id: 'update-notification',
@@ -80,15 +87,8 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
       },
       action: {
         label: 'Restart now',
-        onClick: () => window.electronAPI.quitApp()
+        onClick: () => window.electronAPI.quitApp(),
       },
-      // render: ({ dismiss }) => (
-      //   <div className="flex items-center gap-2">
-      //     <span>Update available</span>
-      //     <Button onClick={() => { /* install logic */ }}>Install</Button>
-      //     <Button onClick={dismiss}>Dismiss</Button>
-      //   </div>
-      // ),
     })
   }, [])
 
