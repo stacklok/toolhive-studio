@@ -92,3 +92,8 @@ environment.
 ## ESLint Configuration
 
 The project uses ESLint with `typescript-eslint` for linting TypeScript code. The configuration is in the `eslint.config.mjs` file. It includes rules for React hooks and React Refresh.
+---
+
+## License
+
+This project is licensed under the [Apache 2.0 License](./LICENSE).
