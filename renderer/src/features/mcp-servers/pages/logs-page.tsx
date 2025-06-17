@@ -42,20 +42,22 @@ export function LogsPage() {
           </Button>
         </Link>
       </div>
-      <h1 className="m-0 mb-6 p-0 text-3xl font-bold">{serverName}</h1>
-      <Input
-        className="mb-4 w-full max-w-[250px]"
-        placeholder="Search log"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        aria-label="Search log"
-      />
-      <Separator />
-      <div className="flex-1 overflow-auto rounded-md border border-gray-200">
-        <div className="p-5 font-mono text-[13px] leading-[22px] font-normal text-gray-900">
-          {filteredLogs.map((log, index) => (
-            <div key={index}>{log}</div>
-          ))}
+      <div className="flex flex-col gap-5">
+        <h1 className="m-0 mb-0 p-0 text-3xl font-bold">{serverName}</h1>
+        <Separator />
+        <Input
+          className="mb-4 w-full max-w-[250px]"
+          placeholder="Search log"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          aria-label="Search log"
+        />
+        <div className="flex-1 overflow-auto rounded-md border border-gray-200">
+          <div className="p-5 font-mono text-[13px] leading-[22px] font-normal text-gray-900">
+            {filteredLogs.map((log, index) => (
+              <div key={index}>{log}</div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
