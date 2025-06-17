@@ -13,7 +13,7 @@ const router = createTestRouter(() => (
   />
 ))
 
-it('should show logs menu item in dropdown', async () => {
+it('shows logs menu item in dropdown', async () => {
   renderRoute(router)
 
   await waitFor(() => {

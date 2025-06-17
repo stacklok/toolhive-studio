@@ -1,6 +1,6 @@
 import { screen, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { LogsPage } from '@/features/mcp-servers/pages/logs-page'
+import { LogsPage } from '@/features/mcp-servers/sub-pages/logs-page'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
 import userEvent from '@testing-library/user-event'
@@ -21,7 +21,7 @@ describe('Logs Route', () => {
   ]
 
   testCases.forEach(({ serverName, description }) => {
-    it(`should display server name as header for ${description}`, async () => {
+    it(`displays server name as header for ${description}`, async () => {
       const router = createTestRouter(LogsPage, '/logs/$serverName')
       router.navigate({ to: '/logs/$serverName', params: { serverName } })
       renderRoute(router)
@@ -31,7 +31,7 @@ describe('Logs Route', () => {
       })
     })
 
-    it(`should have a back button that navigates to root route for ${description}`, async () => {
+    it(`has a back button that navigates to root route for ${description}`, async () => {
       const router = createTestRouter(LogsPage, '/logs/$serverName')
       router.navigate({ to: '/logs/$serverName', params: { serverName } })
       renderRoute(router)
@@ -51,12 +51,11 @@ describe('Logs Route', () => {
       })
     })
 
-    it(`should filter logs when searching for ${description}`, async () => {
+    it(`filters logs when searching for ${description}`, async () => {
       const router = createTestRouter(LogsPage, '/logs/$serverName')
       router.navigate({ to: '/logs/$serverName', params: { serverName } })
       renderRoute(router)
 
-      // Wait for logs to appear
       await waitFor(() => {
         expect(screen.getByRole('heading', { name: serverName })).toBeVisible()
       })
@@ -66,12 +65,9 @@ describe('Logs Route', () => {
       ).toBeVisible()
 
       const search = screen.getByPlaceholderText('Search log')
-      // Type a search term that matches only one log line
       await userEvent.type(search, 'database')
 
-      // Only lines containing 'database' should be visible
       expect(screen.getByText(/database connection established/i)).toBeVisible()
-      // A line that doesn't match should not be in the document
       expect(
         screen.queryByText(/server .* started successfully/i)
       ).not.toBeInTheDocument()
