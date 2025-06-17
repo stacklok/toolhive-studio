@@ -1,10 +1,4 @@
 import { useParams, Link } from '@tanstack/react-router'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/common/components/ui/card'
 import { Button } from '@/common/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 
@@ -26,28 +20,19 @@ export function LogsPage() {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="mb-6 flex items-center gap-4">
+      <div className="mb-4 flex items-center gap-2">
         <Link to="/">
           <Button variant="ghost" size="icon" aria-label="Back">
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-5 w-5" />
           </Button>
         </Link>
-        <h1 className="text-3xl font-semibold">{serverName}</h1>
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Logs</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-lg bg-black p-4 font-mono text-green-400">
-            <pre className="whitespace-pre-wrap">
-              {mockLogs.map((log, index) => (
-                <div key={index}>{log}</div>
-              ))}
-            </pre>
-          </div>
-        </CardContent>
-      </Card>
+      <h1 className="mb-6 text-3xl font-bold">{serverName}</h1>
+      <div className="rounded-lg bg-black/90 p-4 font-mono text-sm whitespace-pre-wrap text-green-400">
+        {mockLogs.map((log, index) => (
+          <div key={index}>{log}</div>
+        ))}
+      </div>
     </div>
   )
 }
