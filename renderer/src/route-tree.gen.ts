@@ -8,76 +8,32 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-// Import Routes
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as StoreRouteImport } from './routes/store'
+import { Route as ShutdownRouteImport } from './routes/shutdown'
+import { Route as ClientsRouteImport } from './routes/clients'
+import { Route as IndexRouteImport } from './routes/index'
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as StoreImport } from './routes/store'
-import { Route as ShutdownImport } from './routes/shutdown'
-import { Route as ClientsImport } from './routes/clients'
-import { Route as IndexImport } from './routes/index'
-
-// Create/Update Routes
-
-const StoreRoute = StoreImport.update({
+const StoreRoute = StoreRouteImport.update({
   id: '/store',
   path: '/store',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const ShutdownRoute = ShutdownImport.update({
+const ShutdownRoute = ShutdownRouteImport.update({
   id: '/shutdown',
   path: '/shutdown',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const ClientsRoute = ClientsImport.update({
+const ClientsRoute = ClientsRouteImport.update({
   id: '/clients',
   path: '/clients',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const IndexRoute = IndexImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-// Populate the FileRoutesByPath interface
-
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/clients': {
-      id: '/clients'
-      path: '/clients'
-      fullPath: '/clients'
-      preLoaderRoute: typeof ClientsImport
-      parentRoute: typeof rootRoute
-    }
-    '/shutdown': {
-      id: '/shutdown'
-      path: '/shutdown'
-      fullPath: '/shutdown'
-      preLoaderRoute: typeof ShutdownImport
-      parentRoute: typeof rootRoute
-    }
-    '/store': {
-      id: '/store'
-      path: '/store'
-      fullPath: '/store'
-      preLoaderRoute: typeof StoreImport
-      parentRoute: typeof rootRoute
-    }
-  }
-}
-
-// Create and export the route tree
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -85,22 +41,19 @@ export interface FileRoutesByFullPath {
   '/shutdown': typeof ShutdownRoute
   '/store': typeof StoreRoute
 }
-
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/clients': typeof ClientsRoute
   '/shutdown': typeof ShutdownRoute
   '/store': typeof StoreRoute
 }
-
 export interface FileRoutesById {
-  __root__: typeof rootRoute
+  __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/clients': typeof ClientsRoute
   '/shutdown': typeof ShutdownRoute
   '/store': typeof StoreRoute
 }
-
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths: '/' | '/clients' | '/shutdown' | '/store'
@@ -109,12 +62,44 @@ export interface FileRouteTypes {
   id: '__root__' | '/' | '/clients' | '/shutdown' | '/store'
   fileRoutesById: FileRoutesById
 }
-
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ClientsRoute: typeof ClientsRoute
   ShutdownRoute: typeof ShutdownRoute
   StoreRoute: typeof StoreRoute
+}
+
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/store': {
+      id: '/store'
+      path: '/store'
+      fullPath: '/store'
+      preLoaderRoute: typeof StoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shutdown': {
+      id: '/shutdown'
+      path: '/shutdown'
+      fullPath: '/shutdown'
+      preLoaderRoute: typeof ShutdownRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clients': {
+      id: '/clients'
+      path: '/clients'
+      fullPath: '/clients'
+      preLoaderRoute: typeof ClientsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+  }
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -123,35 +108,6 @@ const rootRouteChildren: RootRouteChildren = {
   ShutdownRoute: ShutdownRoute,
   StoreRoute: StoreRoute,
 }
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-/* ROUTE_MANIFEST_START
-{
-  "routes": {
-    "__root__": {
-      "filePath": "__root.tsx",
-      "children": [
-        "/",
-        "/clients",
-        "/shutdown",
-        "/store"
-      ]
-    },
-    "/": {
-      "filePath": "index.tsx"
-    },
-    "/clients": {
-      "filePath": "clients.tsx"
-    },
-    "/shutdown": {
-      "filePath": "shutdown.tsx"
-    },
-    "/store": {
-      "filePath": "store.tsx"
-    }
-  }
-}
-ROUTE_MANIFEST_END */
