@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import type { ForgeConfig } from '@electron-forge/shared-types'
 import { MakerSquirrel } from '@electron-forge/maker-squirrel'
 import { MakerZIP } from '@electron-forge/maker-zip'
@@ -19,6 +20,8 @@ function isValidArchitecture(arch: string): arch is NodeJS.Architecture {
   return ['x64', 'arm64'].includes(arch)
 }
 
+console.log(process.env)
+
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
@@ -37,6 +40,23 @@ const config: ForgeConfig = {
       ProductName: 'ToolHive Studio',
       InternalName: 'ToolHive Studio',
     },
+    // MacOs signing and notarization
+    osxSign: process.env.DEVELOPER_ID_APPLICATION
+      ? {
+          identity: process.env.DEVELOPER_ID_APPLICATION,
+        }
+      : process.env.MAC_DEVELOPER_IDENTITY
+        ? {
+            identity: process.env.MAC_DEVELOPER_IDENTITY,
+          }
+        : undefined,
+    osxNotarize: process.env.DEVELOPER_ID_APPLICATION
+      ? {
+          teamId: process.env.TEAM_ID!,
+          appleId: process.env.APPLE_ID!,
+          appleIdPassword: process.env.APPLE_ID_PASSWORD!,
+        }
+      : undefined,
   },
 
   rebuildConfig: {},

@@ -180,6 +180,9 @@ importers:
       autoprefixer:
         specifier: ^10.4.21
         version: 10.4.21(postcss@8.5.4)
+      dotenv:
+        specifier: ^16.5.0
+        version: 16.5.0
       electron:
         specifier: 36.4.0
         version: 36.4.0
