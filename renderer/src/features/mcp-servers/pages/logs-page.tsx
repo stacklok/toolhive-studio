@@ -32,11 +32,11 @@ export function LogsPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
-        <h1 className="text-3xl font-semibold">Server Logs</h1>
+        <h1 className="text-3xl font-semibold">{serverName}</h1>
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Logs for {serverName}</CardTitle>
+          <CardTitle>Logs</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="rounded-lg bg-black p-4 font-mono text-green-400">

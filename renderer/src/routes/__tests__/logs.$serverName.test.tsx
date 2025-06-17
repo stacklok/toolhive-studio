@@ -21,13 +21,13 @@ describe('Logs Route', () => {
   ]
 
   testCases.forEach(({ serverName, description }) => {
-    it(`should display server name in header for ${description}`, async () => {
+    it(`should display server name as header for ${description}`, async () => {
       const router = createTestRouter(LogsPage, '/logs/$serverName')
       router.navigate({ to: '/logs/$serverName', params: { serverName } })
       renderRoute(router)
 
       await waitFor(() => {
-        expect(screen.getByText(`Logs for ${serverName}`)).toBeVisible()
+        expect(screen.getByRole('heading', { name: serverName })).toBeVisible()
       })
     })
 
@@ -37,7 +37,7 @@ describe('Logs Route', () => {
       renderRoute(router)
 
       await waitFor(() => {
-        expect(screen.getByText(`Logs for ${serverName}`)).toBeVisible()
+        expect(screen.getByRole('heading', { name: serverName })).toBeVisible()
       })
 
       const backButton = screen.getByRole('button', { name: /back/i })
