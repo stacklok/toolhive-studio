@@ -28,187 +28,16 @@ import type {
   RegistryServer,
 } from '@/common/api/generated/types.gen'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
-import { z } from 'zod/v4'
 import { useMemo } from 'react'
 import { Label } from '@/common/components/ui/label'
 import { cn } from '@/common/lib/utils'
-import { AsteriskIcon, ChevronDown } from 'lucide-react'
+import { AsteriskIcon } from 'lucide-react'
+import { groupEnvVars } from '../lib/group-env-vars'
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/common/components/ui/popover'
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/common/components/ui/command'
-
-function refineRequired(
-  value: {
-    name: string
-    value?: string | undefined
-  },
-  vars: RegistryEnvVar[]
-): boolean {
-  const isRequired = vars.find((s) => s.name === value.name)?.required
-  if (isRequired && !value.value) {
-    return false
-  }
-  return true
-}
-
-/**
- * Returns the form schema used to validate the "run from registry" form.
- * The schema is dynamically generated based on the server's environment variables.
- */
-function getFormSchema({ envVars, secrets }: GroupedEnvVars) {
-  return z.object({
-    serverName: z.string().min(1, 'Server name is required'),
-    secrets: z
-      .object({
-        name: z.union(secrets.map(({ name }) => z.literal(name ?? ''))),
-        value: z.string().optional(),
-      })
-      .refine((d) => refineRequired(d, secrets), {
-        error: 'This secret is required',
-        path: ['value'],
-      })
-      .array(),
-    envVars: z
-      .object({
-        name: z.union(envVars.map(({ name }) => z.literal(name ?? ''))),
-        value: z.string().optional(),
-      })
-      .refine((d) => refineRequired(d, secrets), {
-        error: 'This environment variable is required',
-        path: ['value'],
-      })
-      .array(),
-  })
-}
-
-type FormSchema = z.infer<ReturnType<typeof getFormSchema>>
-
-type GroupedEnvVars = {
-  secrets: RegistryEnvVar[]
-  envVars: RegistryEnvVar[]
-}
-
-/**
- * Groups environment variables specified by the server into 2 lists:
- * - secret: variables that are marked as secret
- * - non-secret: variables that are not marked as secret
- *
- * Additionally, it sorts the variables in the following order:
- * - Required variables first
- * - Alphabetically after that
- */
-function groupAndSortEnvVars(envVars: RegistryEnvVar[]): GroupedEnvVars {
-  return [...envVars]
-    .sort((a, b) => {
-      if (a.required && !b.required) return -1
-      if (!a.required && b.required) return 1
-      return (a.name ?? '').localeCompare(b.name ?? '') // NOTE: The OpenAPI spec says `name` is optional, but it's always present in reality
-    })
-    .reduce<GroupedEnvVars>(
-      (a, c) => {
-        if (c.secret) a.secrets.push(c)
-        else a.envVars.push(c)
-        return a
-      },
-      { secrets: [], envVars: [] }
-    )
-}
-
-const MOCK_SECRETS: { key: string }[] = [
-  {
-    key: 'CONFLUENCE_API_TOKEN',
-  },
-  {
-    key: 'JIRA_API_TOKEN',
-  },
-  {
-    key: 'GITHUB_ACCESS_TOKEN',
-  },
-  {
-    key: 'GITHUB_WEBHOOK_SECRET',
-  },
-  {
-    key: 'AWS_ACCESS_KEY_ID',
-  },
-]
-
-/**
- * A combobox for selecting a secret from the secret store.
- * NOTE: This is placeholder UI and doesn't actually fetch anything at this point.
- */
-function ComboboxSecretStore({
-  form,
-  index,
-}: {
-  form: UseFormReturn<FormSchema>
-  index: number
-}) {
-  return (
-    <FormField
-      control={form.control}
-      name={`secrets.${index}.value`}
-      render={({ field }) => (
-        <FormItem>
-          <Popover>
-            <PopoverTrigger asChild>
-              <FormControl>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  className="rounded-tl-none rounded-bl-none"
-                >
-                  <ChevronDown />
-                </Button>
-              </FormControl>
-            </PopoverTrigger>
-            <PopoverContent
-              align="end"
-              className="min-w-[200px] p-0"
-              side="bottom"
-            >
-              <Command>
-                <CommandInput placeholder="Search secrets..." className="h-9" />
-                <CommandList>
-                  <CommandEmpty>No secrets found</CommandEmpty>
-                  <CommandGroup>
-                    {MOCK_SECRETS.map((secret) => (
-                      <CommandItem
-                        key={secret.key}
-                        value={secret.key}
-                        className="font-mono"
-                        onSelect={(value) => {
-                          field.onChange(value)
-                        }}
-                      >
-                        {secret.key}
-                        {/* <Check
-                    className={cn(
-                      'ml-auto',
-                      value === secret.value ? 'opacity-100' : 'opacity-0'
-                    )}
-                  /> */}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-        </FormItem>
-      )}
-    />
-  )
-}
+  getFormSchemaRunFromRegistry,
+  type FormSchemaRunFromRegistry,
+} from '../lib/get-form-schema-run-from-registry'
+import { ComboboxSecretStore } from '@/common/components/secrets/combobox-secrets-store'
 
 /**
  * Renders an asterisk icon & tooltip for required fields.
@@ -235,7 +64,7 @@ function SecretRow({
   index,
 }: {
   secret: RegistryEnvVar
-  form: UseFormReturn<FormSchema>
+  form: UseFormReturn<FormSchemaRunFromRegistry>
   index: number
 }) {
   return (
@@ -264,28 +93,30 @@ function SecretRow({
           </FormItem>
         )}
       />
-      <div className="grid grid-cols-[auto_calc(var(--spacing)_*_8)]">
-        <FormField
-          control={form.control}
-          name={`secrets.${index}.value`}
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <Input
-                  {...field}
-                  className="rounded-tr-none rounded-br-none border-r-0 font-mono focus-visible:z-10"
-                  autoComplete="off"
-                  data-1p-ignore
-                  type="password"
-                  aria-label={`${secret.name ?? ''} value`}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <ComboboxSecretStore form={form} index={index} />
-      </div>
+
+      <FormField
+        control={form.control}
+        name={`secrets.${index}.value`}
+        render={({ field }) => (
+          <FormItem className="grid grid-cols-[auto_calc(var(--spacing)_*_8)]">
+            <FormControl>
+              <Input
+                {...field}
+                className="rounded-tr-none rounded-br-none border-r-0 font-mono focus-visible:z-10"
+                autoComplete="off"
+                data-1p-ignore
+                type="password"
+                aria-label={`${secret.name ?? ''} value`}
+              />
+            </FormControl>
+            <ComboboxSecretStore
+              onSelect={field.onChange}
+              value={field.value ?? ''}
+            />
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </div>
   )
 }
@@ -299,7 +130,7 @@ function EnvVarRow({
   index,
 }: {
   envVar: RegistryEnvVar
-  form: UseFormReturn<FormSchema>
+  form: UseFormReturn<FormSchemaRunFromRegistry>
   index: number
 }) {
   return (
@@ -354,10 +185,7 @@ interface FormCatalogCreationProps {
   server: RegistryServer | null
   isOpen: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (data: {
-    name: string
-    envVars: { name: string; value: string }[]
-  }) => void
+  onSubmit: (data: FormSchemaRunFromRegistry) => void
 }
 
 export function FormCatalogCreation({
@@ -367,15 +195,15 @@ export function FormCatalogCreation({
   onSubmit,
 }: FormCatalogCreationProps) {
   const groupedEnvVars = useMemo(
-    () => groupAndSortEnvVars(server?.env_vars || []),
+    () => groupEnvVars(server?.env_vars || []),
     [server?.env_vars]
   )
   const formSchema = useMemo(
-    () => getFormSchema(groupedEnvVars),
+    () => getFormSchemaRunFromRegistry(groupedEnvVars),
     [groupedEnvVars]
   )
 
-  const form = useForm<FormSchema>({
+  const form = useForm<FormSchemaRunFromRegistry>({
     resolver: zodV4Resolver(formSchema),
     defaultValues: {
       serverName: server?.name || '',
@@ -390,18 +218,8 @@ export function FormCatalogCreation({
     },
   })
 
-  const onValidate = (data: FormSchema) => {
-    const envVarsToSubmit = data.envVars
-      .filter((envVar) => envVar.value || !envVar.useDefault)
-      .map((envVar) => ({
-        name: envVar.name,
-        value: envVar.value || '',
-      }))
-
-    onSubmit({
-      name: data.serverName,
-      envVars: envVarsToSubmit,
-    })
+  const onValidate = (data: FormSchemaRunFromRegistry) => {
+    onSubmit(data)
     onOpenChange(false)
   }
 

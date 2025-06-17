@@ -3,16 +3,14 @@ import { CardRegistryServer } from './card-registry-server'
 import { FormCatalogCreation } from './form-catalog-creation'
 import { useState, useMemo } from 'react'
 import { Input } from '@/common/components/ui/input'
+import type { FormSchemaRunFromRegistry } from '../lib/get-form-schema-run-from-registry'
 
 export function GridCardsRegistryServer({
   servers,
   onSubmit,
 }: {
   servers: RegistryServer[]
-  onSubmit?: (
-    server: RegistryServer,
-    data: { name: string; envVars: { name: string; value: string }[] }
-  ) => void
+  onSubmit?: (server: RegistryServer, data: FormSchemaRunFromRegistry) => void
 }) {
   const [filter, setFilter] = useState('')
   const [selectedServer, setSelectedServer] = useState<RegistryServer | null>(
@@ -40,16 +38,13 @@ export function GridCardsRegistryServer({
     setIsModalOpen(true)
   }
 
-  const handleModalSubmit = (data: {
-    name: string
-    envVars: { name: string; value: string }[]
-  }) => {
+  const handleModalSubmit = (data: FormSchemaRunFromRegistry) => {
     if (selectedServer && onSubmit) {
       onSubmit(selectedServer, data)
     } else {
       // Fallback for when onSubmit is not provided
       console.log('Installing server:', {
-        serverName: data.name,
+        serverName: data.serverName,
         sourceServer: selectedServer,
         envVars: data.envVars,
       })
