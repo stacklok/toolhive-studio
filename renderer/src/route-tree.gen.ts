@@ -8,113 +8,121 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-// Import Routes
+import { Route as rootRouteImport } from "./routes/__root"
+import { Route as StoreRouteImport } from "./routes/store"
+import { Route as ShutdownRouteImport } from "./routes/shutdown"
+import { Route as ClientsRouteImport } from "./routes/clients"
+import { Route as IndexRouteImport } from "./routes/index"
+import { Route as LogsServerNameRouteImport } from "./routes/logs.$serverName"
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as StoreImport } from './routes/store'
-import { Route as ShutdownImport } from './routes/shutdown'
-import { Route as ClientsImport } from './routes/clients'
-import { Route as IndexImport } from './routes/index'
-
-// Create/Update Routes
-
-const StoreRoute = StoreImport.update({
-  id: '/store',
-  path: '/store',
-  getParentRoute: () => rootRoute,
+const StoreRoute = StoreRouteImport.update({
+  id: "/store",
+  path: "/store",
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const ShutdownRoute = ShutdownImport.update({
-  id: '/shutdown',
-  path: '/shutdown',
-  getParentRoute: () => rootRoute,
+const ShutdownRoute = ShutdownRouteImport.update({
+  id: "/shutdown",
+  path: "/shutdown",
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const ClientsRoute = ClientsImport.update({
-  id: '/clients',
-  path: '/clients',
-  getParentRoute: () => rootRoute,
+const ClientsRoute = ClientsRouteImport.update({
+  id: "/clients",
+  path: "/clients",
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const IndexRoute = IndexImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRoute,
+const IndexRoute = IndexRouteImport.update({
+  id: "/",
+  path: "/",
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-// Populate the FileRoutesByPath interface
-
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/clients': {
-      id: '/clients'
-      path: '/clients'
-      fullPath: '/clients'
-      preLoaderRoute: typeof ClientsImport
-      parentRoute: typeof rootRoute
-    }
-    '/shutdown': {
-      id: '/shutdown'
-      path: '/shutdown'
-      fullPath: '/shutdown'
-      preLoaderRoute: typeof ShutdownImport
-      parentRoute: typeof rootRoute
-    }
-    '/store': {
-      id: '/store'
-      path: '/store'
-      fullPath: '/store'
-      preLoaderRoute: typeof StoreImport
-      parentRoute: typeof rootRoute
-    }
-  }
-}
-
-// Create and export the route tree
+const LogsServerNameRoute = LogsServerNameRouteImport.update({
+  id: "/logs/$serverName",
+  path: "/logs/$serverName",
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/clients': typeof ClientsRoute
-  '/shutdown': typeof ShutdownRoute
-  '/store': typeof StoreRoute
+  "/": typeof IndexRoute
+  "/clients": typeof ClientsRoute
+  "/shutdown": typeof ShutdownRoute
+  "/store": typeof StoreRoute
+  "/logs/$serverName": typeof LogsServerNameRoute
 }
-
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/clients': typeof ClientsRoute
-  '/shutdown': typeof ShutdownRoute
-  '/store': typeof StoreRoute
+  "/": typeof IndexRoute
+  "/clients": typeof ClientsRoute
+  "/shutdown": typeof ShutdownRoute
+  "/store": typeof StoreRoute
+  "/logs/$serverName": typeof LogsServerNameRoute
 }
-
 export interface FileRoutesById {
-  __root__: typeof rootRoute
-  '/': typeof IndexRoute
-  '/clients': typeof ClientsRoute
-  '/shutdown': typeof ShutdownRoute
-  '/store': typeof StoreRoute
+  __root__: typeof rootRouteImport
+  "/": typeof IndexRoute
+  "/clients": typeof ClientsRoute
+  "/shutdown": typeof ShutdownRoute
+  "/store": typeof StoreRoute
+  "/logs/$serverName": typeof LogsServerNameRoute
 }
-
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/clients' | '/shutdown' | '/store'
+  fullPaths: "/" | "/clients" | "/shutdown" | "/store" | "/logs/$serverName"
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/clients' | '/shutdown' | '/store'
-  id: '__root__' | '/' | '/clients' | '/shutdown' | '/store'
+  to: "/" | "/clients" | "/shutdown" | "/store" | "/logs/$serverName"
+  id:
+    | "__root__"
+    | "/"
+    | "/clients"
+    | "/shutdown"
+    | "/store"
+    | "/logs/$serverName"
   fileRoutesById: FileRoutesById
 }
-
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ClientsRoute: typeof ClientsRoute
   ShutdownRoute: typeof ShutdownRoute
   StoreRoute: typeof StoreRoute
+  LogsServerNameRoute: typeof LogsServerNameRoute
+}
+
+declare module "@tanstack/react-router" {
+  interface FileRoutesByPath {
+    "/store": {
+      id: "/store"
+      path: "/store"
+      fullPath: "/store"
+      preLoaderRoute: typeof StoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/shutdown": {
+      id: "/shutdown"
+      path: "/shutdown"
+      fullPath: "/shutdown"
+      preLoaderRoute: typeof ShutdownRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/clients": {
+      id: "/clients"
+      path: "/clients"
+      fullPath: "/clients"
+      preLoaderRoute: typeof ClientsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/": {
+      id: "/"
+      path: "/"
+      fullPath: "/"
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/logs/$serverName": {
+      id: "/logs/$serverName"
+      path: "/logs/$serverName"
+      fullPath: "/logs/$serverName"
+      preLoaderRoute: typeof LogsServerNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+  }
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -122,36 +130,8 @@ const rootRouteChildren: RootRouteChildren = {
   ClientsRoute: ClientsRoute,
   ShutdownRoute: ShutdownRoute,
   StoreRoute: StoreRoute,
+  LogsServerNameRoute: LogsServerNameRoute,
 }
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-/* ROUTE_MANIFEST_START
-{
-  "routes": {
-    "__root__": {
-      "filePath": "__root.tsx",
-      "children": [
-        "/",
-        "/clients",
-        "/shutdown",
-        "/store"
-      ]
-    },
-    "/": {
-      "filePath": "index.tsx"
-    },
-    "/clients": {
-      "filePath": "clients.tsx"
-    },
-    "/shutdown": {
-      "filePath": "shutdown.tsx"
-    },
-    "/store": {
-      "filePath": "store.tsx"
-    }
-  }
-}
-ROUTE_MANIFEST_END */
