@@ -44,7 +44,7 @@ export function LogsPage() {
       </div>
       <h1 className="m-0 mb-6 p-0 text-3xl font-bold">{serverName}</h1>
       <Input
-        className="mb-4 w-full max-w-md"
+        className="mb-4 w-full max-w-[250px]"
         placeholder="Search log"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
