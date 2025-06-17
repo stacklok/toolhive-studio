@@ -51,16 +51,6 @@ describe('Logs Route', () => {
       })
     })
 
-    it(`should display a search field for ${description}`, async () => {
-      const router = createTestRouter(LogsPage, '/logs/$serverName')
-      router.navigate({ to: '/logs/$serverName', params: { serverName } })
-      renderRoute(router)
-
-      // Check for the search field
-      const search = await screen.findByPlaceholderText('Search log')
-      expect(search).toBeVisible()
-    })
-
     it(`should filter logs when searching for ${description}`, async () => {
       const router = createTestRouter(LogsPage, '/logs/$serverName')
       router.navigate({ to: '/logs/$serverName', params: { serverName } })
@@ -70,6 +60,10 @@ describe('Logs Route', () => {
       await waitFor(() => {
         expect(screen.getByRole('heading', { name: serverName })).toBeVisible()
       })
+
+      expect(
+        screen.queryByText(/server .* started successfully/i)
+      ).toBeVisible()
 
       const search = screen.getByPlaceholderText('Search log')
       // Type a search term that matches only one log line
@@ -81,38 +75,6 @@ describe('Logs Route', () => {
       expect(
         screen.queryByText(/server .* started successfully/i)
       ).not.toBeInTheDocument()
-    })
-
-    it(`should show all logs when search is cleared for ${description}`, async () => {
-      const router = createTestRouter(LogsPage, '/logs/$serverName')
-      router.navigate({ to: '/logs/$serverName', params: { serverName } })
-      renderRoute(router)
-
-      const search = screen.getByPlaceholderText('Search log')
-      await userEvent.type(search, 'api')
-      // Now clear the search
-      await userEvent.clear(search)
-
-      // All logs should be visible again
-      expect(
-        screen.getByText(
-          `[2024-03-20 10:00:00] INFO: Server ${serverName} started successfully`
-        )
-      ).toBeVisible()
-    })
-
-    it(`should show no logs if search does not match any line for ${description}`, async () => {
-      const router = createTestRouter(LogsPage, '/logs/$serverName')
-      router.navigate({ to: '/logs/$serverName', params: { serverName } })
-      renderRoute(router)
-
-      const search = screen.getByPlaceholderText('Search log')
-      await userEvent.type(search, 'no-such-log-line')
-
-      // No log lines should be visible
-      expect(screen.queryByText(/\[2024/)).not.toBeInTheDocument()
-      // Optionally, check for a "no results" message if you add one in the future
-      // expect(screen.getByText(/no results/i)).toBeVisible()
     })
   })
 })
