@@ -157,3 +157,13 @@
     background-color: oklch(0.4 0 0);
   }
 }
+
+@layer utilities {
+  .app-region-drag {
+    user-select: none;
+    app-region: drag;
+  }
+  .app-region-no-drag {
+    app-region: no-drag;
+  }
+}

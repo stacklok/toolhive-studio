@@ -46,9 +46,11 @@ jobs:
           echo "Setting version to: $VERSION"
 
           # Update package.json version
-          npm version $VERSION --no-git-tag-version --allow-same-version
-
+          npm version $VERSION --no-git-tag-version --allow-same-version 
           echo "Updated package.json version to $VERSION"
+
+          # Set SENTRY_RELEASE for build and publish step
+          echo "SENTRY_RELEASE=${VERSION}" >> $GITHUB_ENV
 
       - name: Build and Publish to GitHub Release
         run: pnpm run publish
@@ -60,3 +62,4 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ vars.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+          SENTRY_RELEASE: ${{ env.SENTRY_RELEASE }}

@@ -9,8 +9,9 @@ import {
 } from '@/common/components/ui/dropdown-menu'
 import { Button } from '@/common/components/ui/button'
 import { toast } from 'sonner'
+import { twMerge } from 'tailwind-merge'
 
-export function SettingsDropdown() {
+export function SettingsDropdown({ className }: { className?: string }) {
   const [isAutoLaunchEnabled, setIsAutoLaunchEnabled] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -67,7 +68,11 @@ export function SettingsDropdown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="cursor-pointer">
+        <Button
+          variant="ghost"
+          size="sm"
+          className={twMerge('cursor-pointer', className)}
+        >
           <SettingsIcon className="size-5" />
           <span className="sr-only">Settings</span>
         </Button>
