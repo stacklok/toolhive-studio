@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 
-export interface UseFilterSortOptions<T> {
+interface UseFilterSortOptions<T> {
   data: T[]
   filterFields: (item: T) => string[]
   sortBy?: (item: T) => string
