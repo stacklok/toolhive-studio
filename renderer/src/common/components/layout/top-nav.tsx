@@ -62,6 +62,11 @@ function TopNavLinks() {
             <Link to="/clients">Clients</Link>
           </NavigationMenuLink>
         </NavigationMenuItem>
+        <NavigationMenuItem>
+          <NavigationMenuLink className="app-region-no-drag" asChild>
+            <Link to="/secrets">Secrets</Link>
+          </NavigationMenuLink>
+        </NavigationMenuItem>
       </NavigationMenuList>
     </NavigationMenu>
   )
