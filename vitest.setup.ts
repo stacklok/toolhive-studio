@@ -27,6 +27,12 @@ afterEach(() => {
 })
 afterAll(() => server.close())
 
+vi.mock('./renderer/src/feature-flags/index.ts', () => {
+  return {
+    isFeatureEnabled: () => true,
+  }
+})
+
 const SILENCED_MESSAGES = ['Not implemented: navigation (except hash changes)']
 
 failOnConsole({

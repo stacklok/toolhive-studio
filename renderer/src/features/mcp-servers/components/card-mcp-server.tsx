@@ -22,6 +22,7 @@ import { useConfirm } from '@/common/hooks/use-confirm'
 import { useDeleteServer } from '../hooks/use-delete-server'
 import { useQuery } from '@tanstack/react-query'
 import { getApiV1BetaRegistryByNameServersByServerName } from '@/common/api/generated/sdk.gen'
+import { isFeatureEnabled } from '@/feature-flags'
 
 type CardContentMcpServerProps = {
   status: WorkloadsWorkload['status']
@@ -158,18 +159,20 @@ export function CardMcpServer({
                   </a>
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem
-                onClick={() =>
-                  navigate({
-                    to: '/logs/$serverName',
-                    params: { serverName: name },
-                  })
-                }
-                className="flex cursor-pointer items-center"
-              >
-                <Text className="mr-2 h-4 w-4" />
-                Logs
-              </DropdownMenuItem>
+              {isFeatureEnabled('logs') ? (
+                <DropdownMenuItem
+                  onClick={() =>
+                    navigate({
+                      to: '/logs/$serverName',
+                      params: { serverName: name },
+                    })
+                  }
+                  className="flex cursor-pointer items-center"
+                >
+                  <Text className="mr-2 h-4 w-4" />
+                  Logs
+                </DropdownMenuItem>
+              ) : null}
               <DropdownMenuItem
                 onClick={handleRemove}
                 disabled={isDeletePending}
