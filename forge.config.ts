@@ -20,8 +20,6 @@ function isValidArchitecture(arch: string): arch is NodeJS.Architecture {
   return ['x64', 'arm64'].includes(arch)
 }
 
-console.log(process.env)
-
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
@@ -40,23 +38,34 @@ const config: ForgeConfig = {
       ProductName: 'ToolHive Studio',
       InternalName: 'ToolHive Studio',
     },
-    // MacOs signing and notarization
-    osxSign: process.env.DEVELOPER_ID_APPLICATION
-      ? {
-          identity: process.env.DEVELOPER_ID_APPLICATION,
+
+    // MacOS Code Signing Configuration
+    osxSign: process.env.MAC_DEVELOPER_IDENTITY
+      ? { identity: process.env.MAC_DEVELOPER_IDENTITY }
+      : {}, // Auto-detect certificates
+
+    // MacOS Notarization Configuration
+    osxNotarize: (() => {
+      // Prefer Apple API Key method
+      if (process.env.APPLE_API_KEY) {
+        return {
+          appleApiKey: process.env.APPLE_API_KEY,
+          appleApiIssuer: process.env.APPLE_ISSUER_ID!,
+          appleApiKeyId: process.env.APPLE_KEY_ID!,
         }
-      : process.env.MAC_DEVELOPER_IDENTITY
-        ? {
-            identity: process.env.MAC_DEVELOPER_IDENTITY,
-          }
-        : undefined,
-    osxNotarize: process.env.DEVELOPER_ID_APPLICATION
-      ? {
+      }
+
+      // Fallback to Apple ID method
+      if (process.env.APPLE_ID) {
+        return {
           teamId: process.env.TEAM_ID!,
-          appleId: process.env.APPLE_ID!,
+          appleId: process.env.APPLE_ID,
           appleIdPassword: process.env.APPLE_ID_PASSWORD!,
         }
-      : undefined,
+      }
+
+      return undefined
+    })(),
   },
 
   rebuildConfig: {},
