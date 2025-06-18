@@ -1,0 +1,49 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+        cors:
+          allowed_origins:
+            - '*'
+          allowed_headers:
+            - '*'
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+  # Aggiungi metadata utili
+  resource:
+    attributes:
+      - key: service.name
+        value: 'toolhive-electron'
+        action: upsert
+      - key: service.version
+        value: '1.0.0'
+        action: upsert
+
+exporters:
+  # Export a Jaeger tramite OTLP
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+
+  # Log per debug
+  logging:
+    loglevel: debug
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [resource, batch]
+      exporters: [otlp/jaeger, logging]
+
+  telemetry:
+    logs:
+      level: 'debug'

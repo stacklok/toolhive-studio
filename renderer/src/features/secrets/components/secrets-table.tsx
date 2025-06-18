@@ -11,6 +11,7 @@ import { Input } from '@/common/components/ui/input'
 import { SecretDropdown } from './secret-dropdown'
 import { useFilterSort } from '@/common/hooks/use-filter-sort'
 import { ArrowUpDown, X } from 'lucide-react'
+import { useAnalytics } from '@/common/hooks/use-analytics'
 
 type Secret = {
   key: string
@@ -21,6 +22,7 @@ interface SecretsTableProps {
 }
 
 export function SecretsTable({ secrets }: SecretsTableProps) {
+  const { trackButtonClick } = useAnalytics()
   const {
     filter,
     setFilter,
@@ -54,7 +56,16 @@ export function SecretsTable({ secrets }: SecretsTableProps) {
             </Button>
           )}
         </div>
-        <Button variant="default">Add Secret</Button>
+        <Button
+          data-btn-click-event-action="add-secret"
+          variant="default"
+          onClick={() => {
+            console.log('add-secret')
+            // trackButtonClick('add-secret', 'test track button click')
+          }}
+        >
+          Add Secret
+        </Button>
       </div>
       <div className="overflow-hidden rounded-md border">
         <Table className="">
