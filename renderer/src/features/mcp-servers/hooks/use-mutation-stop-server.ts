@@ -19,7 +19,6 @@ const getMutationData = (name: string) => ({
 
 export function useMutationStopServerList({ name }: { name: string }) {
   const queryClient = useQueryClient()
-  // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
   const queryKey = getApiV1BetaWorkloadsQueryKey({ query: { all: true } })
   const serverQueryKey = getApiV1BetaWorkloadsByNameQueryKey({
     path: { name },
@@ -131,7 +130,6 @@ export function useMutationStopServer({ name }: { name: string }) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
         queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
       })
     },

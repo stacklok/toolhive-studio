@@ -83,6 +83,10 @@
       "permissions.Profile": {
         "description": "Permissions defines the security profile and access permissions for the server",
         "properties": {
+          "name": {
+            "description": "Name is the name of the profile",
+            "type": "string"
+          },
           "network": {
             "$ref": "#/components/schemas/permissions.NetworkPermissions"
           },
@@ -351,6 +355,25 @@
         },
         "type": "object"
       },
+      "v1.createSecretRequest": {
+        "description": "Request to create a new secret",
+        "properties": {
+          "key": { "description": "Secret key name", "type": "string" },
+          "value": { "description": "Secret value", "type": "string" }
+        },
+        "type": "object"
+      },
+      "v1.createSecretResponse": {
+        "description": "Response after creating a secret",
+        "properties": {
+          "key": {
+            "description": "Secret key that was created",
+            "type": "string"
+          },
+          "message": { "description": "Success message", "type": "string" }
+        },
+        "type": "object"
+      },
       "v1.createWorkloadResponse": {
         "description": "Response after successfully creating a workload",
         "properties": {
@@ -385,10 +408,39 @@
         },
         "type": "object"
       },
+      "v1.getSecretsProviderResponse": {
+        "description": "Response containing secrets provider details",
+        "properties": {
+          "capabilities": {
+            "$ref": "#/components/schemas/v1.providerCapabilitiesResponse"
+          },
+          "name": {
+            "description": "Name of the secrets provider",
+            "type": "string"
+          },
+          "provider_type": {
+            "description": "Type of the secrets provider",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "v1.getServerResponse": {
         "description": "Response containing server details",
         "properties": {
           "server": { "$ref": "#/components/schemas/registry.Server" }
+        },
+        "type": "object"
+      },
+      "v1.listSecretsResponse": {
+        "description": "Response containing a list of secret keys",
+        "properties": {
+          "keys": {
+            "description": "List of secret keys",
+            "items": { "$ref": "#/components/schemas/v1.secretKeyResponse" },
+            "type": "array",
+            "uniqueItems": false
+          }
         },
         "type": "object"
       },
@@ -413,6 +465,32 @@
           "jwks_url": {
             "description": "JWKS URL for key verification",
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "v1.providerCapabilitiesResponse": {
+        "description": "Capabilities of the secrets provider",
+        "properties": {
+          "can_cleanup": {
+            "description": "Whether the provider can cleanup all secrets",
+            "type": "boolean"
+          },
+          "can_delete": {
+            "description": "Whether the provider can delete secrets",
+            "type": "boolean"
+          },
+          "can_list": {
+            "description": "Whether the provider can list secrets",
+            "type": "boolean"
+          },
+          "can_read": {
+            "description": "Whether the provider can read secrets",
+            "type": "boolean"
+          },
+          "can_write": {
+            "description": "Whether the provider can write secrets",
+            "type": "boolean"
           }
         },
         "type": "object"
@@ -445,6 +523,60 @@
             "type": "array",
             "uniqueItems": false
           }
+        },
+        "type": "object"
+      },
+      "v1.secretKeyResponse": {
+        "description": "Secret key information",
+        "properties": {
+          "description": {
+            "description": "Optional description of the secret",
+            "type": "string"
+          },
+          "key": { "description": "Secret key name", "type": "string" }
+        },
+        "type": "object"
+      },
+      "v1.setupSecretsRequest": {
+        "description": "Request to setup a secrets provider",
+        "properties": {
+          "password": {
+            "description": "Password for encrypted provider (optional, can be set via environment variable)\nTODO Review environment variable for this",
+            "type": "string"
+          },
+          "provider_type": {
+            "description": "Type of the secrets provider (encrypted, 1password, none)",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "v1.setupSecretsResponse": {
+        "description": "Response after initializing a secrets provider",
+        "properties": {
+          "message": { "description": "Success message", "type": "string" },
+          "provider_type": {
+            "description": "Type of the secrets provider that was setup",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "v1.updateSecretRequest": {
+        "description": "Request to update an existing secret",
+        "properties": {
+          "value": { "description": "New secret value", "type": "string" }
+        },
+        "type": "object"
+      },
+      "v1.updateSecretResponse": {
+        "description": "Response after updating a secret",
+        "properties": {
+          "key": {
+            "description": "Secret key that was updated",
+            "type": "string"
+          },
+          "message": { "description": "Success message", "type": "string" }
         },
         "type": "object"
       },
@@ -584,6 +716,31 @@
           }
         },
         "summary": "Register a new client",
+        "tags": ["clients"]
+      }
+    },
+    "/api/v1beta/clients/{name}": {
+      "delete": {
+        "description": "Unregister a client from ToolHive",
+        "parameters": [
+          {
+            "description": "Client name to unregister",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "No Content" },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Invalid request"
+          }
+        },
+        "summary": "Unregister a client",
         "tags": ["clients"]
       }
     },
@@ -778,6 +935,277 @@
         "tags": ["registry"]
       }
     },
+    "/api/v1beta/secrets": {
+      "post": {
+        "description": "Setup the secrets provider with the specified type and configuration.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1.setupSecretsRequest"
+              }
+            }
+          },
+          "description": "Setup secrets provider request",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1.setupSecretsResponse"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Bad Request"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Setup or reconfigure secrets provider",
+        "tags": ["secrets"]
+      }
+    },
+    "/api/v1beta/secrets/default": {
+      "get": {
+        "description": "Get details of the default secrets provider",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1.getSecretsProviderResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Not Found - Provider not setup"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Get secrets provider details",
+        "tags": ["secrets"]
+      }
+    },
+    "/api/v1beta/secrets/default/keys": {
+      "get": {
+        "description": "Get a list of all secret keys from the default provider",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1.listSecretsResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Not Found - Provider not setup"
+          },
+          "405": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Method Not Allowed - Provider doesn't support listing"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "List secrets",
+        "tags": ["secrets"]
+      },
+      "post": {
+        "description": "Create a new secret in the default provider (encrypted provider only)",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1.createSecretRequest"
+              }
+            }
+          },
+          "description": "Create secret request",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1.createSecretResponse"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Not Found - Provider not setup"
+          },
+          "405": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Method Not Allowed - Provider doesn't support writing"
+          },
+          "409": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Conflict - Secret already exists"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Create a new secret",
+        "tags": ["secrets"]
+      }
+    },
+    "/api/v1beta/secrets/default/keys/{key}": {
+      "delete": {
+        "description": "Delete a secret from the default provider (encrypted provider only)",
+        "parameters": [
+          {
+            "description": "Secret key",
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "No Content"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Not Found - Provider not setup or secret not found"
+          },
+          "405": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Method Not Allowed - Provider doesn't support deletion"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Delete a secret",
+        "tags": ["secrets"]
+      },
+      "put": {
+        "description": "Update an existing secret in the default provider (encrypted provider only)",
+        "parameters": [
+          {
+            "description": "Secret key",
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1.updateSecretRequest"
+              }
+            }
+          },
+          "description": "Update secret request",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1.updateSecretResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Not Found - Provider not setup or secret not found"
+          },
+          "405": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Method Not Allowed - Provider doesn't support writing"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Update a secret",
+        "tags": ["secrets"]
+      }
+    },
     "/api/v1beta/version": {
       "get": {
         "description": "Returns the current version of the server",
@@ -798,6 +1226,14 @@
     "/api/v1beta/workloads": {
       "get": {
         "description": "Get a list of all running workloads",
+        "parameters": [
+          {
+            "description": "List all workloads, including stopped ones",
+            "in": "query",
+            "name": "all",
+            "schema": { "type": "boolean" }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -849,6 +1285,14 @@
           }
         },
         "summary": "Create a new workload",
+        "tags": ["workloads"]
+      }
+    },
+    "/api/v1beta/workloads/stop": {
+      "post": {
+        "description": "Stop all running workload",
+        "responses": { "202": { "description": "Accepted" } },
+        "summary": "Stop all workloads",
         "tags": ["workloads"]
       }
     },
@@ -955,6 +1399,12 @@
           }
         ],
         "responses": {
+          "202": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Accepted"
+          },
           "204": {
             "content": {
               "application/json": { "schema": { "type": "string" } }

@@ -78,7 +78,6 @@ export function Store() {
 
         // Invalidate queries to refresh server lists
         queryClient.invalidateQueries({
-          // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
           queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
         })
       } else {
