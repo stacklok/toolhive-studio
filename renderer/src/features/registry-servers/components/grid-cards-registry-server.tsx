@@ -1,9 +1,10 @@
 import type { RegistryServer } from '@/common/api/generated/types.gen'
 import { CardRegistryServer } from './card-registry-server'
 import { FormCatalogCreation } from './form-catalog-creation'
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { Input } from '@/common/components/ui/input'
 import type { FormSchemaRunFromRegistry } from '../lib/get-form-schema-run-from-registry'
+import { useFilterSort } from '@/common/hooks/use-filter-sort'
 
 export function GridCardsRegistryServer({
   servers,
@@ -12,26 +13,19 @@ export function GridCardsRegistryServer({
   servers: RegistryServer[]
   onSubmit?: (server: RegistryServer, data: FormSchemaRunFromRegistry) => void
 }) {
-  const [filter, setFilter] = useState('')
   const [selectedServer, setSelectedServer] = useState<RegistryServer | null>(
     null
   )
   const [isModalOpen, setIsModalOpen] = useState(false)
-
-  const filteredServers = useMemo(() => {
-    const searchTerm = filter.toLowerCase()
-    return servers
-      .filter((server) => {
-        const name = server.name?.toLowerCase() || ''
-        const description = server.description?.toLowerCase() || ''
-        return name.includes(searchTerm) || description.includes(searchTerm)
-      })
-      .sort((a, b) => {
-        const nameA = a.name?.toLowerCase() || ''
-        const nameB = b.name?.toLowerCase() || ''
-        return nameA.localeCompare(nameB)
-      })
-  }, [servers, filter])
+  const {
+    filter,
+    setFilter,
+    filteredData: filteredServers,
+  } = useFilterSort({
+    data: servers,
+    filterFields: (server) => [server.name || '', server.description || ''],
+    sortBy: (server) => server.name || '',
+  })
 
   const handleCardClick = (server: RegistryServer) => {
     setSelectedServer(server)

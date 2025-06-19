@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from "./routes/__root"
 import { Route as StoreRouteImport } from "./routes/store"
 import { Route as ShutdownRouteImport } from "./routes/shutdown"
+import { Route as SecretsRouteImport } from "./routes/secrets"
 import { Route as ClientsRouteImport } from "./routes/clients"
 import { Route as IndexRouteImport } from "./routes/index"
 
@@ -22,6 +23,11 @@ const StoreRoute = StoreRouteImport.update({
 const ShutdownRoute = ShutdownRouteImport.update({
   id: "/shutdown",
   path: "/shutdown",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SecretsRoute = SecretsRouteImport.update({
+  id: "/secrets",
+  path: "/secrets",
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientsRoute = ClientsRouteImport.update({
@@ -38,12 +44,14 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
   "/clients": typeof ClientsRoute
+  "/secrets": typeof SecretsRoute
   "/shutdown": typeof ShutdownRoute
   "/store": typeof StoreRoute
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
   "/clients": typeof ClientsRoute
+  "/secrets": typeof SecretsRoute
   "/shutdown": typeof ShutdownRoute
   "/store": typeof StoreRoute
 }
@@ -51,20 +59,22 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   "/": typeof IndexRoute
   "/clients": typeof ClientsRoute
+  "/secrets": typeof SecretsRoute
   "/shutdown": typeof ShutdownRoute
   "/store": typeof StoreRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: "/" | "/clients" | "/shutdown" | "/store"
+  fullPaths: "/" | "/clients" | "/secrets" | "/shutdown" | "/store"
   fileRoutesByTo: FileRoutesByTo
-  to: "/" | "/clients" | "/shutdown" | "/store"
-  id: "__root__" | "/" | "/clients" | "/shutdown" | "/store"
+  to: "/" | "/clients" | "/secrets" | "/shutdown" | "/store"
+  id: "__root__" | "/" | "/clients" | "/secrets" | "/shutdown" | "/store"
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ClientsRoute: typeof ClientsRoute
+  SecretsRoute: typeof SecretsRoute
   ShutdownRoute: typeof ShutdownRoute
   StoreRoute: typeof StoreRoute
 }
@@ -83,6 +93,13 @@ declare module "@tanstack/react-router" {
       path: "/shutdown"
       fullPath: "/shutdown"
       preLoaderRoute: typeof ShutdownRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/secrets": {
+      id: "/secrets"
+      path: "/secrets"
+      fullPath: "/secrets"
+      preLoaderRoute: typeof SecretsRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/clients": {
@@ -105,6 +122,7 @@ declare module "@tanstack/react-router" {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ClientsRoute: ClientsRoute,
+  SecretsRoute: SecretsRoute,
   ShutdownRoute: ShutdownRoute,
   StoreRoute: StoreRoute,
 }

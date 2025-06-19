@@ -21,7 +21,23 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      - name: Setup macOS code signing
+        uses: ./.github/actions/setup-macos-codesign
+        if: runner.os == 'macOS'
+        with:
+          apple-certificate: ${{ secrets.APPLE_CERTIFICATE }}
+          apple-certificate-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          keychain-password: ${{ secrets.KEYCHAIN_PASSWORD }}
+          apple-api-key: ${{ secrets.APPLE_API_KEY }}
+
+          apple-issuer-id: ${{ secrets.APPLE_ISSUER_ID }}
+          apple-key-id: ${{ secrets.APPLE_KEY_ID }}
+
       - name: Build App
         run: pnpm run make
         env:
           npm_config_target_platform: ${{ runner.os == 'Linux' && 'linux' || (runner.os == 'macOS' && 'darwin' || 'win32') }}
+          # Apple API Key method for notarization (set by composite action)
+          APPLE_API_KEY: ${{ env.APPLE_API_KEY_PATH }}
+          APPLE_ISSUER_ID: ${{ env.APPLE_ISSUER_ID }}
+          APPLE_KEY_ID: ${{ env.APPLE_KEY_ID }}

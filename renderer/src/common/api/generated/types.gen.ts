@@ -54,6 +54,10 @@ export type PermissionsOutboundNetworkPermissions = {
  * Permissions defines the security profile and access permissions for the server
  */
 export type PermissionsProfile = {
+  /**
+   * Name is the name of the profile
+   */
+  name?: string
   network?: PermissionsNetworkPermissions
   /**
    * Read is a list of mount declarations that the container can read from
@@ -282,6 +286,34 @@ export type V1CreateRequest = {
 }
 
 /**
+ * Request to create a new secret
+ */
+export type V1CreateSecretRequest = {
+  /**
+   * Secret key name
+   */
+  key?: string
+  /**
+   * Secret value
+   */
+  value?: string
+}
+
+/**
+ * Response after creating a secret
+ */
+export type V1CreateSecretResponse = {
+  /**
+   * Secret key that was created
+   */
+  key?: string
+  /**
+   * Success message
+   */
+  message?: string
+}
+
+/**
  * Response after successfully creating a workload
  */
 export type V1CreateWorkloadResponse = {
@@ -319,10 +351,35 @@ export type V1GetRegistryResponse = {
 }
 
 /**
+ * Response containing secrets provider details
+ */
+export type V1GetSecretsProviderResponse = {
+  capabilities?: V1ProviderCapabilitiesResponse
+  /**
+   * Name of the secrets provider
+   */
+  name?: string
+  /**
+   * Type of the secrets provider
+   */
+  provider_type?: string
+}
+
+/**
  * Response containing server details
  */
 export type V1GetServerResponse = {
   server?: RegistryServer
+}
+
+/**
+ * Response containing a list of secret keys
+ */
+export type V1ListSecretsResponse = {
+  /**
+   * List of secret keys
+   */
+  keys?: Array<V1SecretKeyResponse>
 }
 
 /**
@@ -358,6 +415,32 @@ export type V1OidcOptions = {
 }
 
 /**
+ * Capabilities of the secrets provider
+ */
+export type V1ProviderCapabilitiesResponse = {
+  /**
+   * Whether the provider can cleanup all secrets
+   */
+  can_cleanup?: boolean
+  /**
+   * Whether the provider can delete secrets
+   */
+  can_delete?: boolean
+  /**
+   * Whether the provider can list secrets
+   */
+  can_list?: boolean
+  /**
+   * Whether the provider can read secrets
+   */
+  can_read?: boolean
+  /**
+   * Whether the provider can write secrets
+   */
+  can_write?: boolean
+}
+
+/**
  * Basic information about a registry
  */
 export type V1RegistryInfo = {
@@ -387,6 +470,73 @@ export type V1RegistryListResponse = {
    * List of registries
    */
   registries?: Array<V1RegistryInfo>
+}
+
+/**
+ * Secret key information
+ */
+export type V1SecretKeyResponse = {
+  /**
+   * Optional description of the secret
+   */
+  description?: string
+  /**
+   * Secret key name
+   */
+  key?: string
+}
+
+/**
+ * Request to setup a secrets provider
+ */
+export type V1SetupSecretsRequest = {
+  /**
+   * Password for encrypted provider (optional, can be set via environment variable)
+   * TODO Review environment variable for this
+   */
+  password?: string
+  /**
+   * Type of the secrets provider (encrypted, 1password, none)
+   */
+  provider_type?: string
+}
+
+/**
+ * Response after initializing a secrets provider
+ */
+export type V1SetupSecretsResponse = {
+  /**
+   * Success message
+   */
+  message?: string
+  /**
+   * Type of the secrets provider that was setup
+   */
+  provider_type?: string
+}
+
+/**
+ * Request to update an existing secret
+ */
+export type V1UpdateSecretRequest = {
+  /**
+   * New secret value
+   */
+  value?: string
+}
+
+/**
+ * Response after updating a secret
+ */
+export type V1UpdateSecretResponse = {
+  /**
+   * Secret key that was updated
+   */
+  key?: string
+  /**
+   * Success message
+   */
+  message?: string
 }
 
 export type V1VersionResponse = {
@@ -509,6 +659,38 @@ export type PostApiV1BetaClientsResponses = {
 
 export type PostApiV1BetaClientsResponse =
   PostApiV1BetaClientsResponses[keyof PostApiV1BetaClientsResponses]
+
+export type DeleteApiV1BetaClientsByNameData = {
+  body?: never
+  path: {
+    /**
+     * Client name to unregister
+     */
+    name: string
+  }
+  query?: never
+  url: '/api/v1beta/clients/{name}'
+}
+
+export type DeleteApiV1BetaClientsByNameErrors = {
+  /**
+   * Invalid request
+   */
+  400: string
+}
+
+export type DeleteApiV1BetaClientsByNameError =
+  DeleteApiV1BetaClientsByNameErrors[keyof DeleteApiV1BetaClientsByNameErrors]
+
+export type DeleteApiV1BetaClientsByNameResponses = {
+  /**
+   * No Content
+   */
+  204: void
+}
+
+export type DeleteApiV1BetaClientsByNameResponse =
+  DeleteApiV1BetaClientsByNameResponses[keyof DeleteApiV1BetaClientsByNameResponses]
 
 export type GetApiV1BetaDiscoveryClientsData = {
   body?: never
@@ -695,6 +877,239 @@ export type GetApiV1BetaRegistryByNameServersByServerNameResponses = {
 export type GetApiV1BetaRegistryByNameServersByServerNameResponse =
   GetApiV1BetaRegistryByNameServersByServerNameResponses[keyof GetApiV1BetaRegistryByNameServersByServerNameResponses]
 
+export type PostApiV1BetaSecretsData = {
+  /**
+   * Setup secrets provider request
+   */
+  body: V1SetupSecretsRequest
+  path?: never
+  query?: never
+  url: '/api/v1beta/secrets'
+}
+
+export type PostApiV1BetaSecretsErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type PostApiV1BetaSecretsError =
+  PostApiV1BetaSecretsErrors[keyof PostApiV1BetaSecretsErrors]
+
+export type PostApiV1BetaSecretsResponses = {
+  /**
+   * Created
+   */
+  201: V1SetupSecretsResponse
+}
+
+export type PostApiV1BetaSecretsResponse =
+  PostApiV1BetaSecretsResponses[keyof PostApiV1BetaSecretsResponses]
+
+export type GetApiV1BetaSecretsDefaultData = {
+  body?: never
+  path?: never
+  query?: never
+  url: '/api/v1beta/secrets/default'
+}
+
+export type GetApiV1BetaSecretsDefaultErrors = {
+  /**
+   * Not Found - Provider not setup
+   */
+  404: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type GetApiV1BetaSecretsDefaultError =
+  GetApiV1BetaSecretsDefaultErrors[keyof GetApiV1BetaSecretsDefaultErrors]
+
+export type GetApiV1BetaSecretsDefaultResponses = {
+  /**
+   * OK
+   */
+  200: V1GetSecretsProviderResponse
+}
+
+export type GetApiV1BetaSecretsDefaultResponse =
+  GetApiV1BetaSecretsDefaultResponses[keyof GetApiV1BetaSecretsDefaultResponses]
+
+export type GetApiV1BetaSecretsDefaultKeysData = {
+  body?: never
+  path?: never
+  query?: never
+  url: '/api/v1beta/secrets/default/keys'
+}
+
+export type GetApiV1BetaSecretsDefaultKeysErrors = {
+  /**
+   * Not Found - Provider not setup
+   */
+  404: string
+  /**
+   * Method Not Allowed - Provider doesn't support listing
+   */
+  405: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type GetApiV1BetaSecretsDefaultKeysError =
+  GetApiV1BetaSecretsDefaultKeysErrors[keyof GetApiV1BetaSecretsDefaultKeysErrors]
+
+export type GetApiV1BetaSecretsDefaultKeysResponses = {
+  /**
+   * OK
+   */
+  200: V1ListSecretsResponse
+}
+
+export type GetApiV1BetaSecretsDefaultKeysResponse =
+  GetApiV1BetaSecretsDefaultKeysResponses[keyof GetApiV1BetaSecretsDefaultKeysResponses]
+
+export type PostApiV1BetaSecretsDefaultKeysData = {
+  /**
+   * Create secret request
+   */
+  body: V1CreateSecretRequest
+  path?: never
+  query?: never
+  url: '/api/v1beta/secrets/default/keys'
+}
+
+export type PostApiV1BetaSecretsDefaultKeysErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+  /**
+   * Not Found - Provider not setup
+   */
+  404: string
+  /**
+   * Method Not Allowed - Provider doesn't support writing
+   */
+  405: string
+  /**
+   * Conflict - Secret already exists
+   */
+  409: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type PostApiV1BetaSecretsDefaultKeysError =
+  PostApiV1BetaSecretsDefaultKeysErrors[keyof PostApiV1BetaSecretsDefaultKeysErrors]
+
+export type PostApiV1BetaSecretsDefaultKeysResponses = {
+  /**
+   * Created
+   */
+  201: V1CreateSecretResponse
+}
+
+export type PostApiV1BetaSecretsDefaultKeysResponse =
+  PostApiV1BetaSecretsDefaultKeysResponses[keyof PostApiV1BetaSecretsDefaultKeysResponses]
+
+export type DeleteApiV1BetaSecretsDefaultKeysByKeyData = {
+  body?: never
+  path: {
+    /**
+     * Secret key
+     */
+    key: string
+  }
+  query?: never
+  url: '/api/v1beta/secrets/default/keys/{key}'
+}
+
+export type DeleteApiV1BetaSecretsDefaultKeysByKeyErrors = {
+  /**
+   * Not Found - Provider not setup or secret not found
+   */
+  404: string
+  /**
+   * Method Not Allowed - Provider doesn't support deletion
+   */
+  405: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type DeleteApiV1BetaSecretsDefaultKeysByKeyError =
+  DeleteApiV1BetaSecretsDefaultKeysByKeyErrors[keyof DeleteApiV1BetaSecretsDefaultKeysByKeyErrors]
+
+export type DeleteApiV1BetaSecretsDefaultKeysByKeyResponses = {
+  /**
+   * No Content
+   */
+  204: string
+}
+
+export type DeleteApiV1BetaSecretsDefaultKeysByKeyResponse =
+  DeleteApiV1BetaSecretsDefaultKeysByKeyResponses[keyof DeleteApiV1BetaSecretsDefaultKeysByKeyResponses]
+
+export type PutApiV1BetaSecretsDefaultKeysByKeyData = {
+  /**
+   * Update secret request
+   */
+  body: V1UpdateSecretRequest
+  path: {
+    /**
+     * Secret key
+     */
+    key: string
+  }
+  query?: never
+  url: '/api/v1beta/secrets/default/keys/{key}'
+}
+
+export type PutApiV1BetaSecretsDefaultKeysByKeyErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+  /**
+   * Not Found - Provider not setup or secret not found
+   */
+  404: string
+  /**
+   * Method Not Allowed - Provider doesn't support writing
+   */
+  405: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type PutApiV1BetaSecretsDefaultKeysByKeyError =
+  PutApiV1BetaSecretsDefaultKeysByKeyErrors[keyof PutApiV1BetaSecretsDefaultKeysByKeyErrors]
+
+export type PutApiV1BetaSecretsDefaultKeysByKeyResponses = {
+  /**
+   * OK
+   */
+  200: V1UpdateSecretResponse
+}
+
+export type PutApiV1BetaSecretsDefaultKeysByKeyResponse =
+  PutApiV1BetaSecretsDefaultKeysByKeyResponses[keyof PutApiV1BetaSecretsDefaultKeysByKeyResponses]
+
 export type GetApiV1BetaVersionData = {
   body?: never
   path?: never
@@ -715,7 +1130,12 @@ export type GetApiV1BetaVersionResponse =
 export type GetApiV1BetaWorkloadsData = {
   body?: never
   path?: never
-  query?: never
+  query?: {
+    /**
+     * List all workloads, including stopped ones
+     */
+    all?: boolean
+  }
   url: '/api/v1beta/workloads'
 }
 
@@ -762,6 +1182,20 @@ export type PostApiV1BetaWorkloadsResponses = {
 
 export type PostApiV1BetaWorkloadsResponse =
   PostApiV1BetaWorkloadsResponses[keyof PostApiV1BetaWorkloadsResponses]
+
+export type PostApiV1BetaWorkloadsStopData = {
+  body?: never
+  path?: never
+  query?: never
+  url: '/api/v1beta/workloads/stop'
+}
+
+export type PostApiV1BetaWorkloadsStopResponses = {
+  /**
+   * Accepted
+   */
+  202: unknown
+}
 
 export type DeleteApiV1BetaWorkloadsByNameData = {
   body?: never
@@ -882,6 +1316,10 @@ export type PostApiV1BetaWorkloadsByNameStopError =
   PostApiV1BetaWorkloadsByNameStopErrors[keyof PostApiV1BetaWorkloadsByNameStopErrors]
 
 export type PostApiV1BetaWorkloadsByNameStopResponses = {
+  /**
+   * Accepted
+   */
+  202: string
   /**
    * No Content
    */

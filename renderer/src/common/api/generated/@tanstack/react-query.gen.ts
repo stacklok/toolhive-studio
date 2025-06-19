@@ -5,6 +5,7 @@ import {
   getApiOpenapiJson,
   getApiV1BetaClients,
   postApiV1BetaClients,
+  deleteApiV1BetaClientsByName,
   getApiV1BetaDiscoveryClients,
   getApiV1BetaRegistry,
   postApiV1BetaRegistry,
@@ -12,22 +13,36 @@ import {
   getApiV1BetaRegistryByName,
   getApiV1BetaRegistryByNameServers,
   getApiV1BetaRegistryByNameServersByServerName,
+  postApiV1BetaSecrets,
+  getApiV1BetaSecretsDefault,
+  getApiV1BetaSecretsDefaultKeys,
+  postApiV1BetaSecretsDefaultKeys,
+  deleteApiV1BetaSecretsDefaultKeysByKey,
+  putApiV1BetaSecretsDefaultKeysByKey,
   getApiV1BetaVersion,
   getApiV1BetaWorkloads,
   postApiV1BetaWorkloads,
+  postApiV1BetaWorkloadsStop,
   deleteApiV1BetaWorkloadsByName,
   getApiV1BetaWorkloadsByName,
   postApiV1BetaWorkloadsByNameRestart,
   postApiV1BetaWorkloadsByNameStop,
   getHealth,
 } from '../sdk.gen'
-import { queryOptions, type UseMutationOptions } from '@tanstack/react-query'
+import {
+  queryOptions,
+  type UseMutationOptions,
+  type DefaultError,
+} from '@tanstack/react-query'
 import type {
   GetApiOpenapiJsonData,
   GetApiV1BetaClientsData,
   PostApiV1BetaClientsData,
   PostApiV1BetaClientsError,
   PostApiV1BetaClientsResponse,
+  DeleteApiV1BetaClientsByNameData,
+  DeleteApiV1BetaClientsByNameError,
+  DeleteApiV1BetaClientsByNameResponse,
   GetApiV1BetaDiscoveryClientsData,
   GetApiV1BetaRegistryData,
   PostApiV1BetaRegistryData,
@@ -38,11 +53,26 @@ import type {
   GetApiV1BetaRegistryByNameData,
   GetApiV1BetaRegistryByNameServersData,
   GetApiV1BetaRegistryByNameServersByServerNameData,
+  PostApiV1BetaSecretsData,
+  PostApiV1BetaSecretsError,
+  PostApiV1BetaSecretsResponse,
+  GetApiV1BetaSecretsDefaultData,
+  GetApiV1BetaSecretsDefaultKeysData,
+  PostApiV1BetaSecretsDefaultKeysData,
+  PostApiV1BetaSecretsDefaultKeysError,
+  PostApiV1BetaSecretsDefaultKeysResponse,
+  DeleteApiV1BetaSecretsDefaultKeysByKeyData,
+  DeleteApiV1BetaSecretsDefaultKeysByKeyError,
+  DeleteApiV1BetaSecretsDefaultKeysByKeyResponse,
+  PutApiV1BetaSecretsDefaultKeysByKeyData,
+  PutApiV1BetaSecretsDefaultKeysByKeyError,
+  PutApiV1BetaSecretsDefaultKeysByKeyResponse,
   GetApiV1BetaVersionData,
   GetApiV1BetaWorkloadsData,
   PostApiV1BetaWorkloadsData,
   PostApiV1BetaWorkloadsError,
   PostApiV1BetaWorkloadsResponse,
+  PostApiV1BetaWorkloadsStopData,
   DeleteApiV1BetaWorkloadsByNameData,
   DeleteApiV1BetaWorkloadsByNameError,
   DeleteApiV1BetaWorkloadsByNameResponse,
@@ -184,6 +214,34 @@ export const postApiV1BetaClientsMutation = (
   > = {
     mutationFn: async (localOptions) => {
       const { data } = await postApiV1BetaClients({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Unregister a client
+ * Unregister a client from ToolHive
+ */
+export const deleteApiV1BetaClientsByNameMutation = (
+  options?: Partial<Options<DeleteApiV1BetaClientsByNameData>>
+): UseMutationOptions<
+  DeleteApiV1BetaClientsByNameResponse,
+  DeleteApiV1BetaClientsByNameError,
+  Options<DeleteApiV1BetaClientsByNameData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    DeleteApiV1BetaClientsByNameResponse,
+    DeleteApiV1BetaClientsByNameError,
+    Options<DeleteApiV1BetaClientsByNameData>
+  > = {
+    mutationFn: async (localOptions) => {
+      const { data } = await deleteApiV1BetaClientsByName({
         ...options,
         ...localOptions,
         throwOnError: true,
@@ -400,6 +458,218 @@ export const getApiV1BetaRegistryByNameServersByServerNameOptions = (
   })
 }
 
+export const postApiV1BetaSecretsQueryKey = (
+  options: Options<PostApiV1BetaSecretsData>
+) => createQueryKey('postApiV1BetaSecrets', options)
+
+/**
+ * Setup or reconfigure secrets provider
+ * Setup the secrets provider with the specified type and configuration.
+ */
+export const postApiV1BetaSecretsOptions = (
+  options: Options<PostApiV1BetaSecretsData>
+) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await postApiV1BetaSecrets({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: postApiV1BetaSecretsQueryKey(options),
+  })
+}
+
+/**
+ * Setup or reconfigure secrets provider
+ * Setup the secrets provider with the specified type and configuration.
+ */
+export const postApiV1BetaSecretsMutation = (
+  options?: Partial<Options<PostApiV1BetaSecretsData>>
+): UseMutationOptions<
+  PostApiV1BetaSecretsResponse,
+  PostApiV1BetaSecretsError,
+  Options<PostApiV1BetaSecretsData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaSecretsResponse,
+    PostApiV1BetaSecretsError,
+    Options<PostApiV1BetaSecretsData>
+  > = {
+    mutationFn: async (localOptions) => {
+      const { data } = await postApiV1BetaSecrets({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+export const getApiV1BetaSecretsDefaultQueryKey = (
+  options?: Options<GetApiV1BetaSecretsDefaultData>
+) => createQueryKey('getApiV1BetaSecretsDefault', options)
+
+/**
+ * Get secrets provider details
+ * Get details of the default secrets provider
+ */
+export const getApiV1BetaSecretsDefaultOptions = (
+  options?: Options<GetApiV1BetaSecretsDefaultData>
+) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1BetaSecretsDefault({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: getApiV1BetaSecretsDefaultQueryKey(options),
+  })
+}
+
+export const getApiV1BetaSecretsDefaultKeysQueryKey = (
+  options?: Options<GetApiV1BetaSecretsDefaultKeysData>
+) => createQueryKey('getApiV1BetaSecretsDefaultKeys', options)
+
+/**
+ * List secrets
+ * Get a list of all secret keys from the default provider
+ */
+export const getApiV1BetaSecretsDefaultKeysOptions = (
+  options?: Options<GetApiV1BetaSecretsDefaultKeysData>
+) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1BetaSecretsDefaultKeys({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: getApiV1BetaSecretsDefaultKeysQueryKey(options),
+  })
+}
+
+export const postApiV1BetaSecretsDefaultKeysQueryKey = (
+  options: Options<PostApiV1BetaSecretsDefaultKeysData>
+) => createQueryKey('postApiV1BetaSecretsDefaultKeys', options)
+
+/**
+ * Create a new secret
+ * Create a new secret in the default provider (encrypted provider only)
+ */
+export const postApiV1BetaSecretsDefaultKeysOptions = (
+  options: Options<PostApiV1BetaSecretsDefaultKeysData>
+) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await postApiV1BetaSecretsDefaultKeys({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: postApiV1BetaSecretsDefaultKeysQueryKey(options),
+  })
+}
+
+/**
+ * Create a new secret
+ * Create a new secret in the default provider (encrypted provider only)
+ */
+export const postApiV1BetaSecretsDefaultKeysMutation = (
+  options?: Partial<Options<PostApiV1BetaSecretsDefaultKeysData>>
+): UseMutationOptions<
+  PostApiV1BetaSecretsDefaultKeysResponse,
+  PostApiV1BetaSecretsDefaultKeysError,
+  Options<PostApiV1BetaSecretsDefaultKeysData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaSecretsDefaultKeysResponse,
+    PostApiV1BetaSecretsDefaultKeysError,
+    Options<PostApiV1BetaSecretsDefaultKeysData>
+  > = {
+    mutationFn: async (localOptions) => {
+      const { data } = await postApiV1BetaSecretsDefaultKeys({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Delete a secret
+ * Delete a secret from the default provider (encrypted provider only)
+ */
+export const deleteApiV1BetaSecretsDefaultKeysByKeyMutation = (
+  options?: Partial<Options<DeleteApiV1BetaSecretsDefaultKeysByKeyData>>
+): UseMutationOptions<
+  DeleteApiV1BetaSecretsDefaultKeysByKeyResponse,
+  DeleteApiV1BetaSecretsDefaultKeysByKeyError,
+  Options<DeleteApiV1BetaSecretsDefaultKeysByKeyData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    DeleteApiV1BetaSecretsDefaultKeysByKeyResponse,
+    DeleteApiV1BetaSecretsDefaultKeysByKeyError,
+    Options<DeleteApiV1BetaSecretsDefaultKeysByKeyData>
+  > = {
+    mutationFn: async (localOptions) => {
+      const { data } = await deleteApiV1BetaSecretsDefaultKeysByKey({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Update a secret
+ * Update an existing secret in the default provider (encrypted provider only)
+ */
+export const putApiV1BetaSecretsDefaultKeysByKeyMutation = (
+  options?: Partial<Options<PutApiV1BetaSecretsDefaultKeysByKeyData>>
+): UseMutationOptions<
+  PutApiV1BetaSecretsDefaultKeysByKeyResponse,
+  PutApiV1BetaSecretsDefaultKeysByKeyError,
+  Options<PutApiV1BetaSecretsDefaultKeysByKeyData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PutApiV1BetaSecretsDefaultKeysByKeyResponse,
+    PutApiV1BetaSecretsDefaultKeysByKeyError,
+    Options<PutApiV1BetaSecretsDefaultKeysByKeyData>
+  > = {
+    mutationFn: async (localOptions) => {
+      const { data } = await putApiV1BetaSecretsDefaultKeysByKey({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
 export const getApiV1BetaVersionQueryKey = (
   options?: Options<GetApiV1BetaVersionData>
 ) => createQueryKey('getApiV1BetaVersion', options)
@@ -493,6 +763,59 @@ export const postApiV1BetaWorkloadsMutation = (
   > = {
     mutationFn: async (localOptions) => {
       const { data } = await postApiV1BetaWorkloads({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+export const postApiV1BetaWorkloadsStopQueryKey = (
+  options?: Options<PostApiV1BetaWorkloadsStopData>
+) => createQueryKey('postApiV1BetaWorkloadsStop', options)
+
+/**
+ * Stop all workloads
+ * Stop all running workload
+ */
+export const postApiV1BetaWorkloadsStopOptions = (
+  options?: Options<PostApiV1BetaWorkloadsStopData>
+) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await postApiV1BetaWorkloadsStop({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: postApiV1BetaWorkloadsStopQueryKey(options),
+  })
+}
+
+/**
+ * Stop all workloads
+ * Stop all running workload
+ */
+export const postApiV1BetaWorkloadsStopMutation = (
+  options?: Partial<Options<PostApiV1BetaWorkloadsStopData>>
+): UseMutationOptions<
+  unknown,
+  DefaultError,
+  Options<PostApiV1BetaWorkloadsStopData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    unknown,
+    DefaultError,
+    Options<PostApiV1BetaWorkloadsStopData>
+  > = {
+    mutationFn: async (localOptions) => {
+      const { data } = await postApiV1BetaWorkloadsStop({
         ...options,
         ...localOptions,
         throwOnError: true,

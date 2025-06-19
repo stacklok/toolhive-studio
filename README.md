@@ -89,6 +89,39 @@ environment.
 | `SENTRY_ORG`        | `false`  | `true`     | `false`  | Sentry organization. Used for sourcemap uploads at build-time to enable readable stacktraces.         |
 | `SENTRY_PROJECT`    | `false`  | `true`     | `false`  | Sentry project name. Used for sourcemap uploads at build-time to enable readable stacktraces.         |
 
+## Code Signing
+
+> **Note:** Currently supports macOS only. Windows code signing is WIP.
+
+### Local Development
+
+Optional: Set `MAC_DEVELOPER_IDENTITY` in `.env` to use a specific certificate:
+
+```
+MAC_DEVELOPER_IDENTITY="Developer ID Application: Your Name (TEAM123)"
+```
+
+Local signing is not required for development.
+
+### CI/CD
+
+Requires these GitHub secrets:
+
+- `APPLE_CERTIFICATE` - Base64 encoded .p12 certificate
+- `APPLE_CERTIFICATE_PASSWORD` - Certificate password
+- `KEYCHAIN_PASSWORD` - Temporary keychain password
+- `APPLE_API_KEY` - Base64 encoded .p8 API key
+- `APPLE_ISSUER_ID` - Apple API Issuer ID
+- `APPLE_KEY_ID` - Apple API Key ID
+
+CI auto-detects the certificate. Apps are signed and notarized automatically.
+
 ## ESLint Configuration
 
 The project uses ESLint with `typescript-eslint` for linting TypeScript code. The configuration is in the `eslint.config.mjs` file. It includes rules for React hooks and React Refresh.
+
+---
+
+## License
+
+This project is licensed under the [Apache 2.0 License](./LICENSE).

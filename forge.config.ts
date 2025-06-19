@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import type { ForgeConfig } from '@electron-forge/shared-types'
 import { MakerSquirrel } from '@electron-forge/maker-squirrel'
 import { MakerZIP } from '@electron-forge/maker-zip'
@@ -37,6 +38,34 @@ const config: ForgeConfig = {
       ProductName: 'ToolHive Studio',
       InternalName: 'ToolHive Studio',
     },
+
+    // MacOS Code Signing Configuration
+    osxSign: process.env.MAC_DEVELOPER_IDENTITY
+      ? { identity: process.env.MAC_DEVELOPER_IDENTITY }
+      : {}, // Auto-detect certificates
+
+    // MacOS Notarization Configuration
+    osxNotarize: (() => {
+      // Prefer Apple API Key method
+      if (process.env.APPLE_API_KEY) {
+        return {
+          appleApiKey: process.env.APPLE_API_KEY,
+          appleApiIssuer: process.env.APPLE_ISSUER_ID!,
+          appleApiKeyId: process.env.APPLE_KEY_ID!,
+        }
+      }
+
+      // Fallback to Apple ID method
+      if (process.env.APPLE_ID) {
+        return {
+          teamId: process.env.TEAM_ID!,
+          appleId: process.env.APPLE_ID,
+          appleIdPassword: process.env.APPLE_ID_PASSWORD!,
+        }
+      }
+
+      return undefined
+    })(),
   },
 
   rebuildConfig: {},

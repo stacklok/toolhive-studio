@@ -136,6 +136,14 @@ async function downloadAndExtractBinary(
   } else {
     await tar.x({ file: archivePath, cwd: binDir })
   }
+
+  // Clean up the archive file after extraction
+  try {
+    await rm(archivePath)
+    console.log(`🗑️  Cleaned up archive: ${assetName}`)
+  } catch (error) {
+    console.warn(`⚠️  Failed to clean up archive ${assetName}:`, error)
+  }
 }
 
 async function generateApiClient() {
