@@ -17,6 +17,11 @@ export default defineConfig({
     env: {
       VITE_BASE_API_URL: 'https://foo.bar.com',
     },
+    includeSource: [
+      'renderer/src/**/*.{ts,tsx}',
+      'main/src/**/*.{ts,tsx}',
+      'preload/src/**/*.{ts,tsx}',
+    ],
     exclude: [
       '**/node_modules/**',
       '**/dist/**',
