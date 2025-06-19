@@ -146,15 +146,10 @@ function getPlatformSpecificWindowOptions() {
       trafficLightPosition: { x: 21, y: 16 },
     },
     win32: {
-      titleBarStyle: 'hidden' as const,
-      titleBarOverlay: {
-        color: '#00000000', // Transparent background
-        symbolColor: '#74747499', // Semi-transparent symbols
-        height: 32, // Height of the title bar area
-      },
+      frame: false, // Completely frameless for custom window controls
     },
     linux: {
-      titleBarStyle: 'hidden' as const, // Relies on window manager
+      frame: false, // Frameless for custom controls
     },
   }
 
@@ -331,3 +326,24 @@ ipcMain.handle('quit-app', () => {
 })
 
 ipcMain.handle('get-toolhive-port', () => toolhivePort)
+
+// Window control handlers for custom title bar
+ipcMain.handle('window-minimize', () => {
+  mainWindow?.minimize()
+})
+
+ipcMain.handle('window-maximize', () => {
+  if (mainWindow?.isMaximized()) {
+    mainWindow.unmaximize()
+  } else {
+    mainWindow?.maximize()
+  }
+})
+
+ipcMain.handle('window-close', () => {
+  mainWindow?.close()
+})
+
+ipcMain.handle('window-is-maximized', () => {
+  return mainWindow?.isMaximized() ?? false
+})

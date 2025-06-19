@@ -39,6 +39,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.removeListener('graceful-exit', callback)
     }
   },
+
+  // Window controls
+  windowControls: {
+    minimize: () => ipcRenderer.invoke('window-minimize'),
+    maximize: () => ipcRenderer.invoke('window-maximize'),
+    close: () => ipcRenderer.invoke('window-close'),
+    isMaximized: () => ipcRenderer.invoke('window-is-maximized'),
+  },
 })
 
 export interface ElectronAPI {
@@ -62,4 +70,10 @@ export interface ElectronAPI {
   isLinux: boolean
   platform: NodeJS.Platform
   onServerShutdown: (callback: () => void) => () => void
+  windowControls: {
+    minimize: () => Promise<void>
+    maximize: () => Promise<void>
+    close: () => Promise<void>
+    isMaximized: () => Promise<boolean>
+  }
 }

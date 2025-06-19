@@ -5,6 +5,7 @@ import { CommandIcon } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { ThemeToggle } from '../theme/theme-toggle'
 import { SettingsDropdown } from '../settings/settings-dropdown'
+import { WindowControls } from './window-controls'
 import {
   NavigationMenu,
   NavigationMenuList,
@@ -18,8 +19,8 @@ import { isFeatureEnabled } from '@/feature-flags'
 function getPlatformSpecificNavClasses() {
   const platformClasses = {
     darwin: 'pl-24', // Left padding for traffic light buttons
-    win32: 'pr-36', // Right padding for window controls
-    linux: '', // No extra padding needed (window manager handles controls)
+    win32: '', // No padding needed - custom controls are part of the layout
+    linux: '', // No padding needed - custom controls are part of the layout
   }
 
   return (
@@ -39,8 +40,9 @@ function TopNavContainer(props: HTMLProps<HTMLElement>) {
         'bg-raised/10 backdrop-blur-xs',
         'border-mid h-12 border-b',
         'px-6 py-2',
-        'flex items-center gap-8',
+        'grid grid-cols-[auto_1fr_auto] items-center gap-8',
         'app-region-drag',
+        'w-full min-w-full',
         getPlatformSpecificNavClasses()
       )}
     >
@@ -116,9 +118,10 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
     <TopNavContainer {...props}>
       <TopNavLogo />
       <TopNavLinks />
-      <div className="ml-auto flex items-center gap-2">
+      <div className="flex items-center gap-2 justify-self-end">
         <ThemeToggle className="app-region-no-drag" />
         <SettingsDropdown className="app-region-no-drag" />
+        <WindowControls />
       </div>
     </TopNavContainer>
   )
