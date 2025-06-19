@@ -19,7 +19,6 @@ const getMutationData = (name: string) => ({
 
 export function useMutationRestartServerList({ name }: { name: string }) {
   const queryClient = useQueryClient()
-  // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
   const queryKey = getApiV1BetaWorkloadsQueryKey({ query: { all: true } })
 
   return useToastMutation({
@@ -88,7 +87,6 @@ export function useMutationRestartServer({ name }: { name: string }) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
         queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
       })
     },
