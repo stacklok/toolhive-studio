@@ -22,9 +22,9 @@ describe('Clients Route', () => {
       screen.getByRole('heading', { name: /clients/i })
     ).toBeInTheDocument()
 
-    expect(screen.getByText('vscode')).toBeInTheDocument()
-    expect(screen.getByText('cursor')).toBeInTheDocument()
-    expect(screen.getByText('claude-code')).toBeInTheDocument()
+    expect(screen.getByText('VS Code')).toBeInTheDocument()
+    expect(screen.getByText('Cursor')).toBeInTheDocument()
+    expect(screen.getByText('Claude Code')).toBeInTheDocument()
     expect(screen.getAllByRole('switch')).toHaveLength(5)
   })
 })

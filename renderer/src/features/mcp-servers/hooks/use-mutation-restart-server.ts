@@ -14,7 +14,7 @@ const getMutationData = (name: string) => ({
   ...postApiV1BetaWorkloadsByNameRestartMutation(),
   successMsg: `Server ${name} restarted successfully`,
   errorMsg: `Failed to restart server ${name}`,
-  loadingMsg: `Restarting server ${name}...`,
+  loadingMsg: `Starting server ${name}...`,
 })
 
 export function useMutationRestartServerList({ name }: { name: string }) {
