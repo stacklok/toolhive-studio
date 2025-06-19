@@ -22,6 +22,7 @@ function isValidArchitecture(arch: string): arch is NodeJS.Architecture {
 
 const config: ForgeConfig = {
   packagerConfig: {
+    executableName: 'toolhive-studio',
     asar: true,
     icon: './icons/icon',
     /**
