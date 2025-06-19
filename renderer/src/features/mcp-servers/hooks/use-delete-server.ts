@@ -17,7 +17,6 @@ export function useDeleteServer({ name }: { name: string }) {
     ...deleteApiV1BetaWorkloadsByNameMutation(),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
         queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
       })
       navigate({ to: '/' })
