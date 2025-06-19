@@ -55,9 +55,7 @@ function getDefinedSecrets(secrets: FormSchemaRunFromRegistry['secrets']): {
  * Takes all of the secrets from the form and saves them serially to the
  * secret store. Accepts a `toastId`, which it uses to provide feedback on the
  * progress of the operation.
- * // NOTE 1: `thv` appears to hold a lock on the OS keychain while retrieving
- * the secret value, so we need to save them one by one.
- * // NOTE 2: We add a short, arbitrary delay to allow the `toast` message that
+ * // NOTE: We add a short, arbitrary delay to allow the `toast` message that
  * displays progress to show up-to-date progress.
  */
 async function saveSecrets(
