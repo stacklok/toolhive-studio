@@ -75,7 +75,11 @@ const createTrayWithSetup =
     }
   }
 
-export const initTray = createTrayWithSetup(setupTrayMenu)
+export const initTray = ({
+  toolHiveIsRunning,
+}: {
+  toolHiveIsRunning: boolean
+}) => createTrayWithSetup(setupTrayMenu)(toolHiveIsRunning)
 
 const getMainWindow = () => BrowserWindow.getAllWindows()[0]
 
