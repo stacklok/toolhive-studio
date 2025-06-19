@@ -24,10 +24,7 @@
     "paths": {
       "@/*": ["./renderer/src/*"]
     },
-    "types": [
-      "vitest/globals",
-      "@testing-library/jest-dom/vitest",
-    ]
+    "types": ["vitest/globals", "@testing-library/jest-dom/vitest"]
   },
   "include": ["forge.env.d.ts", "renderer/src", "preload/src"],
   "exclude": ["node_modules"]
