@@ -37,7 +37,7 @@ import {
   getFormSchemaRunFromRegistry,
   type FormSchemaRunFromRegistry,
 } from '../lib/get-form-schema-run-from-registry'
-import { ComboboxSecretStore } from '@/common/components/secrets/combobox-secrets-store'
+import { FormComboboxSecretStore } from '@/common/components/secrets/form-combobox-secrets-store'
 
 /**
  * Renders an asterisk icon & tooltip for required fields.
@@ -94,29 +94,28 @@ function SecretRow({
         )}
       />
 
-      <FormField
-        control={form.control}
-        name={`secrets.${index}.value`}
-        render={({ field }) => (
-          <FormItem className="grid grid-cols-[auto_calc(var(--spacing)_*_8)]">
-            <FormControl>
-              <Input
-                {...field}
-                className="rounded-tr-none rounded-br-none border-r-0 font-mono focus-visible:z-10"
-                autoComplete="off"
-                data-1p-ignore
-                type="password"
-                aria-label={`${secret.name ?? ''} value`}
-              />
-            </FormControl>
-            <ComboboxSecretStore
-              onSelect={field.onChange}
-              value={field.value ?? ''}
-            />
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="grid grid-cols-[auto_calc(var(--spacing)_*_8)]">
+        <FormField
+          control={form.control}
+          name={`secrets.${index}.value`}
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <Input
+                  {...field}
+                  className="rounded-tr-none rounded-br-none border-r-0 font-mono focus-visible:z-10"
+                  autoComplete="off"
+                  data-1p-ignore
+                  type="password"
+                  aria-label={`${secret.name ?? ''} value`}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormComboboxSecretStore form={form} name={`secrets.${index}.value`} />
+      </div>
     </div>
   )
 }
