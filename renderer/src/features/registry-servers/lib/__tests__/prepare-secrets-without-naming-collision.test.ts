@@ -6,8 +6,14 @@ test('should use original names when no collisions exist', () => {
   expect(
     prepareSecretsWithoutNamingCollision(
       [
-        { name: 'GITHUB_PERSONAL_ACCESS_TOKEN', value: 'foo-bar' },
-        { name: 'JIRA_API_KEY', value: 'foo-bar' },
+        {
+          name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
+          value: { secret: 'foo-bar', isFromStore: false },
+        },
+        {
+          name: 'JIRA_API_KEY',
+          value: { secret: 'foo-bar', isFromStore: false },
+        },
       ],
       {
         keys: [{ key: 'GRAFANA_API_KEY' }, { key: 'CONFLUENCE_API_KEY' }],
@@ -31,8 +37,14 @@ test('should append number suffix on collision', () => {
   expect(
     prepareSecretsWithoutNamingCollision(
       [
-        { name: 'GITHUB_PERSONAL_ACCESS_TOKEN', value: 'foo-bar' },
-        { name: 'JIRA_API_KEY', value: 'foo-bar' },
+        {
+          name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
+          value: { secret: 'foo-bar', isFromStore: false },
+        },
+        {
+          name: 'JIRA_API_KEY',
+          value: { secret: 'foo-bar', isFromStore: false },
+        },
       ],
       {
         keys: [
@@ -59,8 +71,14 @@ test('should increment number suffix when collision exists with numbered secret'
   expect(
     prepareSecretsWithoutNamingCollision(
       [
-        { name: 'GITHUB_PERSONAL_ACCESS_TOKEN', value: 'foo-bar' },
-        { name: 'JIRA_API_KEY', value: 'foo-bar' },
+        {
+          name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
+          value: { secret: 'foo-bar', isFromStore: false },
+        },
+        {
+          name: 'JIRA_API_KEY',
+          value: { secret: 'foo-bar', isFromStore: false },
+        },
       ],
       {
         keys: [
@@ -83,4 +101,29 @@ test('should increment number suffix when collision exists with numbered secret'
       value: 'foo-bar',
     },
   ])
+})
+
+test('should throw when secret from store is passed', () => {
+  expect(() =>
+    prepareSecretsWithoutNamingCollision(
+      [
+        {
+          name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
+          value: { secret: 'foo-bar', isFromStore: true },
+        },
+        {
+          name: 'JIRA_API_KEY',
+          value: { secret: 'foo-bar', isFromStore: false },
+        },
+      ],
+      {
+        keys: [
+          { key: 'GITHUB_PERSONAL_ACCESS_TOKEN' },
+          { key: 'GITHUB_PERSONAL_ACCESS_TOKEN_2' },
+          { key: 'JIRA_API_KEY' },
+          { key: 'JIRA_API_KEY_2' },
+        ],
+      }
+    )
+  ).toThrow()
 })

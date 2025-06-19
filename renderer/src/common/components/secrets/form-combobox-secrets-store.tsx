@@ -30,18 +30,24 @@ const MOCK_SECRETS: { key: string }[] = [
   },
 ]
 
+type ConstrainedFieldValues = FieldValues & {
+  secrets: {
+    name: string
+    value: {
+      secret: string
+      isFromStore: boolean
+    }
+  }[]
+}
+
 /**
  * A combobox for selecting a secret from the secret store.
  * NOTE: This component expects that the form has a field named `secrets` which
  * is an array of objects with a `key` & `value` property.
  */
-export function FormComboboxSecretStore<T extends FieldValues = FieldValues>({
-  form,
-  name,
-}: {
-  form: UseFormReturn<T>
-  name: Path<T>
-}) {
+export function FormComboboxSecretStore<
+  T extends ConstrainedFieldValues = ConstrainedFieldValues,
+>({ form, name }: { form: UseFormReturn<T>; name: Path<T> }) {
   return (
     <FormField
       control={form.control}
@@ -77,7 +83,7 @@ export function FormComboboxSecretStore<T extends FieldValues = FieldValues>({
                         value={secret.key}
                         className="font-mono"
                         onSelect={(value) => {
-                          field.onChange(value)
+                          field.onChange({ secret: value, isFromStore: true })
                         }}
                       >
                         {secret.key}

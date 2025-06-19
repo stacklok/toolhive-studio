@@ -102,7 +102,21 @@ function SecretRow({
             <FormItem>
               <FormControl>
                 <Input
-                  {...field}
+                  onBlur={field.onBlur}
+                  value={
+                    field.value.isFromStore
+                      ? 'foo-bar-123-xzy'
+                      : field.value.secret
+                  }
+                  disabled={field.disabled}
+                  name={field.name}
+                  ref={field.ref}
+                  onChange={(e) =>
+                    field.onChange({
+                      secret: e.target.value,
+                      isFromStore: false,
+                    })
+                  }
                   className="rounded-tr-none rounded-br-none border-r-0 font-mono focus-visible:z-10"
                   autoComplete="off"
                   data-1p-ignore
@@ -114,7 +128,10 @@ function SecretRow({
             </FormItem>
           )}
         />
-        <FormComboboxSecretStore form={form} name={`secrets.${index}.value`} />
+        <FormComboboxSecretStore<FormSchemaRunFromRegistry>
+          form={form}
+          name={`secrets.${index}.value`}
+        />
       </div>
     </div>
   )
@@ -208,7 +225,7 @@ export function FormCatalogCreation({
       serverName: server?.name || '',
       secrets: groupedEnvVars.secrets.map((s) => ({
         name: s.name || '',
-        value: s.default || '',
+        value: { secret: s.default || '', isFromStore: false },
       })),
       envVars: groupedEnvVars.envVars.map((e) => ({
         name: e.name || '',

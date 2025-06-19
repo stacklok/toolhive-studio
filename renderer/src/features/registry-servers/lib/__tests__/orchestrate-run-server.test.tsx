@@ -1,8 +1,10 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { orchestrateRunServer } from '../orchestrate-run-server'
+import type { FormSchemaRunFromRegistry } from '../get-form-schema-run-from-registry'
+import type { RegistryServer } from '@/common/api/generated'
 
 test('happy path', async () => {
-  const mockSaveSecret = vi.fn().mockResolvedValue({ key: 'TEST_SECRET' })
+  const mockSaveSecret = vi.fn().mockResolvedValue({ key: 'GITHUB_API_TOKEN' })
   const mockCreateWorkload = vi.fn().mockResolvedValue({})
   const mockGetIsServerReady = vi.fn().mockResolvedValue(true)
   const mockQueryClient = {
@@ -10,20 +12,25 @@ test('happy path', async () => {
     invalidateQueries: vi.fn(),
   } as unknown as QueryClient
 
-  const server = {
+  const server: RegistryServer = {
     name: 'test-server',
     image: 'test-image',
-    transport: 'tcp',
-    args: ['--arg1', '--arg2'],
-    target_port: 8080,
+    transport: 'stdio',
   }
 
-  const formData = {
+  const formData: FormSchemaRunFromRegistry = {
     serverName: 'Test Server',
-    envVars: [{ name: 'TEST_ENV', value: 'test-value' }],
+    envVars: [{ name: 'TEST_ENV', value: 'foo-bar' }],
     secrets: [
-      { name: 'TEST_SECRET', value: 'test-secret-value' },
-      { name: '', value: '' }, // Should be ignored
+      {
+        name: 'GITHUB_API_TOKEN',
+        value: { secret: 'foo-bar', isFromStore: false },
+      },
+      {
+        name: 'GRAFANA_API_TOKEN',
+        value: { secret: 'GRAFANA_API_TOKEN', isFromStore: true },
+      },
+      { name: '', value: { secret: '', isFromStore: false } }, // Should be ignored
     ],
   }
 
@@ -38,7 +45,7 @@ test('happy path', async () => {
 
   expect(mockSaveSecret).toHaveBeenCalledTimes(1)
   expect(mockSaveSecret).toHaveBeenCalledWith(
-    { body: { key: 'TEST_SECRET', value: 'test-secret-value' } },
+    { body: { key: 'GITHUB_API_TOKEN', value: 'foo-bar' } },
     expect.objectContaining({
       onError: expect.any(Function),
       onSuccess: expect.any(Function),
@@ -50,11 +57,15 @@ test('happy path', async () => {
     body: {
       name: 'Test Server',
       image: 'test-image',
-      transport: 'tcp',
-      env_vars: ['TEST_ENV=test-value'],
-      secrets: [{ name: 'TEST_SECRET', target: 'TEST_SECRET' }],
-      cmd_arguments: ['--arg1', '--arg2'],
-      target_port: 8080,
+      transport: 'stdio',
+      env_vars: ['TEST_ENV=foo-bar'],
+      secrets: [
+        { name: 'GITHUB_API_TOKEN', target: 'GITHUB_API_TOKEN' },
+        {
+          name: 'GRAFANA_API_TOKEN',
+          target: 'GRAFANA_API_TOKEN',
+        },
+      ],
     },
   })
 
@@ -62,4 +73,4 @@ test('happy path', async () => {
   expect(mockQueryClient.invalidateQueries).toHaveBeenCalledWith({
     queryKey: expect.anything(),
   })
-}, 10_000)
+})
