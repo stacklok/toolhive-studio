@@ -139,6 +139,31 @@ const shouldStartHidden =
   process.argv.includes('--hidden') || process.argv.includes('--start-hidden')
 const isDevelopment = process.env.NODE_ENV === 'development'
 
+function getPlatformSpecificWindowOptions() {
+  const platformConfigs = {
+    darwin: {
+      titleBarStyle: 'hidden' as const,
+      trafficLightPosition: { x: 21, y: 16 },
+    },
+    win32: {
+      titleBarStyle: 'hidden' as const,
+      titleBarOverlay: {
+        color: '#00000000', // Transparent background
+        symbolColor: '#74747499', // Semi-transparent symbols
+        height: 32, // Height of the title bar area
+      },
+    },
+    linux: {
+      titleBarStyle: 'hidden' as const, // Relies on window manager
+    },
+  }
+
+  return (
+    platformConfigs[process.platform as keyof typeof platformConfigs] ||
+    platformConfigs.linux
+  )
+}
+
 function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 1040,
@@ -150,12 +175,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       webSecurity: !isDevelopment,
     },
-    ...(process.platform === 'darwin'
-      ? {
-          titleBarStyle: 'hidden',
-          trafficLightPosition: { x: 21, y: 16 },
-        }
-      : {}),
+    ...getPlatformSpecificWindowOptions(),
   })
 
   // Windows: minimise-to-tray instead of close

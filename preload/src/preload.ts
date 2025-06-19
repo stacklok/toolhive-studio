@@ -28,6 +28,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
 
   isMac: process.platform === 'darwin',
+  isWindows: process.platform === 'win32',
+  isLinux: process.platform === 'linux',
+  platform: process.platform,
 
   // Server shutdown
   onServerShutdown: (callback: () => void) => {
@@ -55,5 +58,8 @@ export interface ElectronAPI {
     }>
   }
   isMac: boolean
+  isWindows: boolean
+  isLinux: boolean
+  platform: NodeJS.Platform
   onServerShutdown: (callback: () => void) => () => void
 }

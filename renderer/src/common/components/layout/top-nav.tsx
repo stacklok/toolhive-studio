@@ -15,6 +15,20 @@ import { useEffect } from 'react'
 import { toast } from 'sonner'
 import { isFeatureEnabled } from '@/feature-flags'
 
+function getPlatformSpecificNavClasses() {
+  const platformClasses = {
+    darwin: 'pl-24', // Left padding for traffic light buttons
+    win32: 'pr-36', // Right padding for window controls
+    linux: '', // No extra padding needed (window manager handles controls)
+  }
+
+  return (
+    platformClasses[
+      window.electronAPI.platform as keyof typeof platformClasses
+    ] || ''
+  )
+}
+
 function TopNavContainer(props: HTMLProps<HTMLElement>) {
   return (
     <nav
@@ -26,7 +40,8 @@ function TopNavContainer(props: HTMLProps<HTMLElement>) {
         'border-mid h-12 border-b',
         'px-6 py-2',
         'flex items-center gap-8',
-        window.electronAPI.isMac ? 'app-region-drag pl-24' : undefined
+        'app-region-drag',
+        getPlatformSpecificNavClasses()
       )}
     >
       {props.children}
