@@ -1,4 +1,4 @@
-import { ChevronDown } from 'lucide-react'
+import { Check, ChevronDown } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import type { FieldValues, Path, UseFormReturn } from 'react-hook-form'
@@ -11,6 +11,7 @@ import {
   CommandItem,
   CommandList,
 } from '../ui/command'
+import { cn } from '@/common/lib/utils'
 
 const MOCK_SECRETS: { key: string }[] = [
   {
@@ -87,12 +88,14 @@ export function FormComboboxSecretStore<
                         }}
                       >
                         {secret.key}
-                        {/* <Check
-                    className={cn(
-                      'ml-auto',
-                      value === secret.value ? 'opacity-100' : 'opacity-0'
-                    )}
-                  /> */}
+                        <Check
+                          className={cn(
+                            'ml-auto',
+                            field.value.secret === secret.key
+                              ? 'opacity-100'
+                              : 'opacity-0'
+                          )}
+                        />
                       </CommandItem>
                     ))}
                   </CommandGroup>
