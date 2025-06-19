@@ -27,7 +27,6 @@
     "types": [
       "vitest/globals",
       "@testing-library/jest-dom/vitest",
-      "vitest/importMeta"
     ]
   },
   "include": ["forge.env.d.ts", "renderer/src", "preload/src"],
