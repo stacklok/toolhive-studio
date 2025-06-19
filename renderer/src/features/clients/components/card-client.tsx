@@ -11,7 +11,7 @@ import { Switch } from '@/common/components/ui/switch'
 const CLIENT_TYPE_LABEL_MAP = {
   'roo-code': 'Roo Code',
   cline: 'Cline',
-  'vscode-insider': 'VS CodeI nsider',
+  'vscode-insider': 'VS Code Insider',
   vscode: 'VS Code',
   cursor: 'Cursor',
   'claude-code': 'Claude Code',
