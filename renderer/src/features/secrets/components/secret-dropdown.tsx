@@ -7,7 +7,11 @@ import {
 } from '@/common/components/ui/dropdown-menu'
 import { MoreVertical, Pencil, Trash2 } from 'lucide-react'
 
-export function SecretDropdown() {
+export function SecretDropdown({
+  onHandleClick,
+}: {
+  onHandleClick: () => void
+}) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -23,10 +27,13 @@ export function SecretDropdown() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" role="menu">
         <DropdownMenuItem asChild>
-          <a className="flex cursor-pointer items-center">
+          <div
+            className="flex cursor-pointer items-center"
+            onClick={onHandleClick}
+          >
             <Pencil className="mr-2 size-4" />
             Edit
-          </a>
+          </div>
         </DropdownMenuItem>
 
         <DropdownMenuItem

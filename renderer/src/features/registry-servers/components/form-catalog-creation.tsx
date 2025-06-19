@@ -266,46 +266,51 @@ export function FormCatalogCreation({
                 )}
               />
 
-              <section className="mb-10">
-                <Label className="mb-4">Secrets</Label>
+              {groupedEnvVars.secrets[0] ? (
+                <section className="mb-10">
+                  <Label className="mb-4">Secrets</Label>
 
-                <p className="text-muted-foreground mb-6 text-sm">
-                  Sensitive values that should not be exposed in plain text.
-                  They are typically used for API keys, tokens, or passwords.
-                  All secrets are encrypted and stored securely by ToolHive, and{' '}
-                  <span className="text-foreground font-semibold">never</span>{' '}
-                  leave your machine.
-                </p>
+                  <p className="text-muted-foreground mb-6 text-sm">
+                    Sensitive values that should not be exposed in plain text.
+                    They are typically used for API keys, tokens, or passwords.
+                    All secrets are encrypted and stored securely by ToolHive,
+                    and{' '}
+                    <span className="text-foreground font-semibold">never</span>{' '}
+                    leave your machine.
+                  </p>
 
-                {groupedEnvVars.secrets.map((secret, index) => (
-                  <SecretRow
-                    form={form}
-                    secret={secret}
-                    index={index}
-                    key={secret.name}
-                  />
-                ))}
-              </section>
+                  {groupedEnvVars.secrets.map((secret, index) => (
+                    <SecretRow
+                      form={form}
+                      secret={secret}
+                      index={index}
+                      key={secret.name}
+                    />
+                  ))}
+                </section>
+              ) : null}
 
-              <section className="mb-10">
-                <Label className="mb-4">Environment variables</Label>
+              {groupedEnvVars.envVars[0] ? (
+                <section className="mb-10">
+                  <Label className="mb-4">Environment variables</Label>
 
-                <p className="text-muted-foreground mb-6 text-sm">
-                  Non-sensitive values that can be used to configure the server.
-                  These variables are not encrypted and can be exposed in plain
-                  text. They are typically used for configuration options that
-                  do not contain sensitive information.
-                </p>
+                  <p className="text-muted-foreground mb-6 text-sm">
+                    Non-sensitive values that can be used to configure the
+                    server. These variables are not encrypted and can be exposed
+                    in plain text. They are typically used for configuration
+                    options that do not contain sensitive information.
+                  </p>
 
-                {groupedEnvVars.envVars.map((envVar, index) => (
-                  <EnvVarRow
-                    form={form}
-                    envVar={envVar}
-                    index={index}
-                    key={envVar.name}
-                  />
-                ))}
-              </section>
+                  {groupedEnvVars.envVars.map((envVar, index) => (
+                    <EnvVarRow
+                      form={form}
+                      envVar={envVar}
+                      index={index}
+                      key={envVar.name}
+                    />
+                  ))}
+                </section>
+              ) : null}
             </div>
 
             <DialogFooter className="flex-shrink-0 px-6 pb-6">

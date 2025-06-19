@@ -9,8 +9,10 @@ import {
 } from '@/common/components/ui/table'
 import { Input } from '@/common/components/ui/input'
 import { SecretDropdown } from './secret-dropdown'
+import { DialogFormSecret } from './dialog-form-secret'
 import { useFilterSort } from '@/common/hooks/use-filter-sort'
 import { ArrowUpDown, X } from 'lucide-react'
+import { useState } from 'react'
 
 type Secret = {
   key: string
@@ -21,6 +23,9 @@ interface SecretsTableProps {
 }
 
 export function SecretsTable({ secrets }: SecretsTableProps) {
+  const [isSecretDialogOpen, setIsSecretDialogOpen] = useState(false)
+  const [secretKey, setSecretKey] = useState<string | undefined>(undefined)
+
   const {
     filter,
     setFilter,
@@ -54,7 +59,15 @@ export function SecretsTable({ secrets }: SecretsTableProps) {
             </Button>
           )}
         </div>
-        <Button variant="default">Add Secret</Button>
+        <Button
+          variant="default"
+          onClick={() => {
+            setIsSecretDialogOpen(true)
+            setSecretKey('')
+          }}
+        >
+          Add Secret
+        </Button>
       </div>
       <div className="overflow-hidden rounded-md border">
         <Table className="">
@@ -81,7 +94,12 @@ export function SecretsTable({ secrets }: SecretsTableProps) {
                   {secret.key}
                 </TableCell>
                 <TableCell className="pr-2 pl-5 text-right">
-                  <SecretDropdown />
+                  <SecretDropdown
+                    onHandleClick={() => {
+                      setIsSecretDialogOpen(true)
+                      setSecretKey(secret.key)
+                    }}
+                  />
                 </TableCell>
               </TableRow>
             ))}
@@ -95,6 +113,12 @@ export function SecretsTable({ secrets }: SecretsTableProps) {
           </div>
         )}
       </div>
+
+      <DialogFormSecret
+        secretKey={secretKey}
+        isOpen={isSecretDialogOpen}
+        onOpenChange={setIsSecretDialogOpen}
+      />
     </div>
   )
 }

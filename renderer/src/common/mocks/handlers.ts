@@ -106,4 +106,8 @@ export const handlers = [
       return HttpResponse.json({ ...registryServerFixture, name })
     }
   ),
+
+  http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
+    return HttpResponse.json({ keys: [] })
+  }),
 ]
