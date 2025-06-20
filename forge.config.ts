@@ -22,9 +22,9 @@ function isValidArchitecture(arch: string): arch is NodeJS.Architecture {
 
 const config: ForgeConfig = {
   packagerConfig: {
-    executableName: 'toolhive-studio',
     asar: true,
     icon: './icons/icon',
+    executableName: 'toolhive-studio',
     /**
      * Everything under bin/ is copied into
      * <app>/Contents/Resources/bin/ (macOS)
@@ -92,22 +92,37 @@ const config: ForgeConfig = {
       setupExe: 'ToolHive Studio Setup.exe',
       noMsi: true, // Don't create MSI installer
       authors: 'Stacklok Labs',
-      description: 'ToolHive Studio - Development Environment',
       exe: 'toolhive-studio.exe',
+      name: 'toolhive-studio',
     }),
-    new MakerDMG({}, ['darwin']),
+    new MakerDMG(
+      {
+        name: 'ToolHive Studio',
+      },
+      ['darwin']
+    ),
     new MakerZIP({}, ['darwin', 'win32']),
     new MakerTarGz({}, ['linux']),
     new MakerRpm({
       options: {
+        name: 'toolhive-studio',
+        productName: 'ToolHive Studio',
+        genericName: 'ToolHive Studio',
         icon: './icons/icon.png',
         requires: ['docker >= 20.10'],
+        license: 'Apache-2.0',
       },
     }),
     new MakerDeb({
       options: {
+        name: 'toolhive-studio',
+        productName: 'ToolHive Studio',
+        genericName: 'ToolHive Studio',
         icon: './icons/icon.png',
         depends: ['docker.io (>= 20.10)'],
+        maintainer: 'Stacklok Labs',
+        homepage: 'https://github.com/StacklokLabs/toolhive-studio',
+        section: 'devel',
       },
     }),
     // Flatpak maker - uncomment and configure when ready to use
@@ -116,6 +131,7 @@ const config: ForgeConfig = {
     // new MakerFlatpak({
     //   options: {
     //     categories: ["Development", "Utility"],
+    //     license: "Apache-2.0",
     //     files: [
     //       // Add required files configuration here
     //     ],
