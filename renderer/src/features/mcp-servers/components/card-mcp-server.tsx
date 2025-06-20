@@ -136,7 +136,7 @@ export function CardMcpServer({
     // This could be a query parameter or any other condition that indicates a new server
     if ('newServerName' in search && search.newServerName === name) {
       setIsNewServer(true)
-      // cleat state after 2 seconds
+      // clear state after 2 seconds
       setTimeout(() => {
         setIsNewServer(false)
       }, 2000)
