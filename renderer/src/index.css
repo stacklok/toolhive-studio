@@ -42,7 +42,6 @@
 }
 
 :root {
-  font-size: 14.4px; /* 90% of 16px, scales down the entire app as everything is calculated in rem units */
   color-scheme: light dark;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
