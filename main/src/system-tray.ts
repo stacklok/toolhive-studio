@@ -9,6 +9,7 @@ import {
 import path from 'node:path'
 import { existsSync } from 'node:fs'
 import { blockQuit } from './main'
+import { getAutoLaunchStatus, setAutoLaunch } from './auto-launch'
 
 const getIconBasePath = () =>
   app.isPackaged
@@ -125,6 +126,23 @@ const showWindowWithFocus = (window: BrowserWindow) => {
   bringToFrontOnWindows(window)
 }
 
+const handleStartOnLogin = async (
+  currentTray: Tray,
+  toolHiveIsRunning: boolean
+) => {
+  const currentStatus = getAutoLaunchStatus()
+
+  try {
+    setAutoLaunch(!currentStatus)
+    console.log(`Auto-launch ${!currentStatus ? 'enabled' : 'disabled'}`)
+
+    // Update the tray menu to reflect the new state
+    setupTrayMenu(currentTray, toolHiveIsRunning)
+  } catch (error) {
+    console.error('Failed to toggle auto-launch:', error)
+  }
+}
+
 const createStatusMenuItem = (toolHiveIsRunning: boolean) => ({
   label: toolHiveIsRunning
     ? '🟢 ToolHive is running'
@@ -133,20 +151,33 @@ const createStatusMenuItem = (toolHiveIsRunning: boolean) => ({
   enabled: false,
 })
 
+const startOnLoginMenu = (currentTray: Tray, toolHiveIsRunning: boolean) => {
+  const isStartOnLogin = getAutoLaunchStatus()
+  return {
+    label: `Start on login${isStartOnLogin ? '\u2003✓' : ''}`,
+    accelerator: 'CmdOrCtrl+L',
+    type: 'normal' as const,
+    click: () => handleStartOnLogin(currentTray, toolHiveIsRunning),
+  }
+}
+
 const createShowMenuItem = () => ({
   label: 'Show App',
+  accelerator: 'CmdOrCtrl+S',
   type: 'normal' as const,
   click: withWindow(showWindowWithFocus),
 })
 
 const createHideMenuItem = () => ({
   label: 'Hide App',
+  accelerator: 'CmdOrCtrl+H',
   type: 'normal' as const,
   click: withWindow(hideWindow),
 })
 
 const createQuitMenuItem = () => ({
   label: 'Quit App',
+  accelerator: 'CmdOrCtrl+Q',
   type: 'normal' as const,
   click: () => {
     withWindow(showWindowWithFocus)()
@@ -156,8 +187,10 @@ const createQuitMenuItem = () => ({
 
 const createSeparator = () => ({ type: 'separator' as const })
 
-const createMenuTemplate = (toolHiveIsRunning: boolean) => [
+const createMenuTemplate = (currentTray: Tray, toolHiveIsRunning: boolean) => [
   createStatusMenuItem(toolHiveIsRunning),
+  createSeparator(),
+  startOnLoginMenu(currentTray, toolHiveIsRunning),
   createSeparator(),
   createShowMenuItem(),
   createHideMenuItem(),
@@ -197,7 +230,7 @@ const createClickHandler = () => {
 }
 
 function setupTrayMenu(tray: Tray, toolHiveIsRunning: boolean) {
-  const menuTemplate = createMenuTemplate(toolHiveIsRunning)
+  const menuTemplate = createMenuTemplate(tray, toolHiveIsRunning)
   const contextMenu = Menu.buildFromTemplate(menuTemplate)
 
   tray.setToolTip('ToolHive Studio')
