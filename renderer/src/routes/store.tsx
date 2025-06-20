@@ -18,7 +18,7 @@ export function Store() {
   return (
     <>
       <div className="mb-6 flex items-center">
-        <h1 className="text-3xl font-semibold">Store</h1>
+        <h1 className="text-xl font-semibold">Store</h1>
       </div>
       {serversList.length === 0 ? (
         <div>No items found</div>

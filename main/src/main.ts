@@ -143,7 +143,7 @@ function getPlatformSpecificWindowOptions() {
   const platformConfigs = {
     darwin: {
       titleBarStyle: 'hidden' as const,
-      trafficLightPosition: { x: 21, y: 14 },
+      trafficLightPosition: { x: 21, y: 24 },
     },
     win32: {
       frame: false, // Completely frameless for custom window controls
