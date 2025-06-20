@@ -2,13 +2,6 @@ import type { WorkloadsWorkload } from '@/common/api/generated'
 import { CardMcpServer } from './card-mcp-server'
 import { useState, useMemo } from 'react'
 import { Input } from '@/common/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/common/components/ui/select'
 import { Button } from '@/common/components/ui/button'
 import { X } from 'lucide-react'
 
@@ -21,15 +14,6 @@ export function GridCardsMcpServers({
     text: '',
     state: 'all',
   })
-
-  const availableStates = useMemo(() => {
-    const states = mcpServers
-      .map((server) => server.status)
-      .filter((state): state is string => Boolean(state))
-      .filter((state, index, arr) => arr.indexOf(state) === index)
-      .sort()
-    return ['all', ...states]
-  }, [mcpServers])
 
   const filteredMcpServers = useMemo(() => {
     return mcpServers.filter((mcpServer) => {
@@ -75,28 +59,6 @@ export function GridCardsMcpServers({
               <span className="sr-only">Clear search</span>
             </Button>
           )}
-        </div>
-
-        <div className="col-span-2 md:justify-items-end">
-          <Select
-            value={filters.state}
-            onValueChange={(value) =>
-              setFilters((prev) => ({ ...prev, state: value }))
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="All States" />
-            </SelectTrigger>
-            <SelectContent position="popper" align="end">
-              {availableStates.map((state) => (
-                <SelectItem key={state} value={state}>
-                  {state === 'all'
-                    ? 'All States'
-                    : state.charAt(0).toUpperCase() + state.slice(1)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
       </div>
 
