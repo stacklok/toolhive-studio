@@ -7,7 +7,7 @@ function refineSecret(
     name: string
     value?:
       | {
-          secret: string
+          secret?: string | undefined
           isFromStore: boolean
         }
       | undefined
@@ -49,7 +49,7 @@ export function getFormSchemaRunFromRegistry({
       .object({
         name: z.union(secrets.map(({ name }) => z.literal(name ?? ''))),
         value: z.object({
-          secret: z.string().min(1, 'Secret value is required'),
+          secret: z.string().optional(), // NOTE: This is optional to allow us to pre-populate the form with empty strings, we refine based on whether it is required by the server later.
           isFromStore: z.boolean(),
         }),
       })

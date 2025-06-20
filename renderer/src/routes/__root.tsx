@@ -10,6 +10,7 @@ import {
   useMatches,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+import { Toaster } from '@/common/components/ui/sonner'
 
 function RootComponent() {
   const matches = useMatches()
@@ -20,6 +21,12 @@ function RootComponent() {
       {!isShutdownRoute && <TopNav />}
       <Main>
         <Outlet />
+        <Toaster
+          duration={2_000}
+          position="top-right"
+          offset={{ top: 50 }}
+          closeButton
+        />
         <TanStackRouterDevtools />
       </Main>
     </>
