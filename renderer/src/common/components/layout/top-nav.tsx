@@ -74,7 +74,7 @@ function TopNavLinks() {
               data-[status=active]:bg-transparent data-[status=active]:before:absolute
               data-[status=active]:before:right-4 data-[status=active]:before:bottom-[-14px]
               data-[status=active]:before:left-4 data-[status=active]:before:h-0.5
-              data-[status=active]:before:rounded-t-full
+              data-[status=active]:before:rounded-t-[1px]
               data-[status=active]:before:opacity-90 data-[status=active]:before:content-['']
               data-[status=active]:hover:bg-transparent
               data-[status=active]:focus:bg-transparent data-[status=hover]:bg-transparent"
@@ -93,7 +93,7 @@ function TopNavLinks() {
               data-[status=active]:bg-transparent data-[status=active]:before:absolute
               data-[status=active]:before:right-4 data-[status=active]:before:bottom-[-14px]
               data-[status=active]:before:left-4 data-[status=active]:before:h-0.5
-              data-[status=active]:before:rounded-t-full
+              data-[status=active]:before:rounded-t-[1px]
               data-[status=active]:before:opacity-90 data-[status=active]:before:content-['']
               data-[status=active]:hover:bg-transparent
               data-[status=active]:focus:bg-transparent data-[status=hover]:bg-transparent"
@@ -112,7 +112,7 @@ function TopNavLinks() {
               data-[status=active]:bg-transparent data-[status=active]:before:absolute
               data-[status=active]:before:right-4 data-[status=active]:before:bottom-[-14px]
               data-[status=active]:before:left-4 data-[status=active]:before:h-0.5
-              data-[status=active]:before:rounded-t-full
+              data-[status=active]:before:rounded-t-[1px]
               data-[status=active]:before:opacity-90 data-[status=active]:before:content-['']
               data-[status=active]:hover:bg-transparent
               data-[status=active]:focus:bg-transparent"
@@ -131,7 +131,7 @@ function TopNavLinks() {
               data-[status=active]:bg-transparent data-[status=active]:before:absolute
               data-[status=active]:before:right-4 data-[status=active]:before:bottom-[-14px]
               data-[status=active]:before:left-4 data-[status=active]:before:h-0.5
-              data-[status=active]:before:rounded-t-full
+              data-[status=active]:before:rounded-t-[1px]
               data-[status=active]:before:opacity-90 data-[status=active]:before:content-['']
               data-[status=active]:hover:bg-transparent
               data-[status=active]:focus:bg-transparent"
