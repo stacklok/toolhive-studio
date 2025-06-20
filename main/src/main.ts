@@ -143,7 +143,7 @@ function getPlatformSpecificWindowOptions() {
   const platformConfigs = {
     darwin: {
       titleBarStyle: 'hidden' as const,
-      trafficLightPosition: { x: 21, y: 16 },
+      trafficLightPosition: { x: 21, y: 14 },
     },
     win32: {
       frame: false, // Completely frameless for custom window controls
@@ -171,12 +171,6 @@ function createWindow() {
       webSecurity: !isDevelopment,
     },
     ...getPlatformSpecificWindowOptions(),
-    ...(process.platform === 'darwin'
-      ? {
-          titleBarStyle: 'hidden',
-          trafficLightPosition: { x: 21, y: 14 },
-        }
-      : {}),
   })
 
   // Windows: minimise-to-tray instead of close
