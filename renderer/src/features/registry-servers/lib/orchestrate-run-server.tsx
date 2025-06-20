@@ -40,8 +40,14 @@ function getDefinedSecrets(
   secrets: FormSchemaRunFromRegistry['secrets']
 ): DefinedSecret[] {
   return secrets.reduce<DefinedSecret[]>((acc, { name, value }) => {
-    if (name && value) {
-      acc.push({ name, value })
+    if (name && value.secret) {
+      acc.push({
+        name,
+        value: {
+          secret: value.secret,
+          isFromStore: value.isFromStore ?? false,
+        },
+      })
     }
     return acc
   }, [])
@@ -295,7 +301,7 @@ export async function orchestrateRunServer({
       queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
     })
 
-    toast.success(`Server "${data.serverName}" is now running and ready!`, {
+    toast.success(`"${data.serverName}" started successfully.`, {
       id: toastID,
       duration: 5_000, // slightly longer than default
       action: (
@@ -306,7 +312,7 @@ export async function orchestrateRunServer({
             onClick={() => toast.dismiss(toastID)}
             className="ml-auto"
           >
-            Go to server
+            View
           </Link>
         </Button>
       ),

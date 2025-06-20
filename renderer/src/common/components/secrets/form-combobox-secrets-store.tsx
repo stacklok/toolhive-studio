@@ -35,7 +35,7 @@ type ConstrainedFieldValues = FieldValues & {
   secrets: {
     name: string
     value: {
-      secret: string
+      secret?: string | undefined
       isFromStore: boolean
     }
   }[]
