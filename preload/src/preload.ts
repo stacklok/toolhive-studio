@@ -28,6 +28,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
 
   isMac: process.platform === 'darwin',
+  isWindows: process.platform === 'win32',
+  isLinux: process.platform === 'linux',
+  platform: process.platform,
 
   // Server shutdown
   onServerShutdown: (callback: () => void) => {
@@ -35,6 +38,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return () => {
       ipcRenderer.removeListener('graceful-exit', callback)
     }
+  },
+
+  // Window controls
+  windowControls: {
+    minimize: () => ipcRenderer.invoke('window-minimize'),
+    maximize: () => ipcRenderer.invoke('window-maximize'),
+    close: () => ipcRenderer.invoke('window-close'),
+    isMaximized: () => ipcRenderer.invoke('window-is-maximized'),
   },
 })
 
@@ -55,5 +66,14 @@ export interface ElectronAPI {
     }>
   }
   isMac: boolean
+  isWindows: boolean
+  isLinux: boolean
+  platform: NodeJS.Platform
   onServerShutdown: (callback: () => void) => () => void
+  windowControls: {
+    minimize: () => Promise<void>
+    maximize: () => Promise<void>
+    close: () => Promise<void>
+    isMaximized: () => Promise<boolean>
+  }
 }

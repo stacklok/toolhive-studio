@@ -5,6 +5,7 @@ import { CommandIcon } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { ThemeToggle } from '../theme/theme-toggle'
 import { SettingsDropdown } from '../settings/settings-dropdown'
+import { WindowControls } from './window-controls'
 import {
   NavigationMenu,
   NavigationMenuList,
@@ -14,6 +15,20 @@ import {
 import { useEffect } from 'react'
 import { toast } from 'sonner'
 import { isFeatureEnabled } from '@/feature-flags'
+
+function getPlatformSpecificNavClasses() {
+  const platformClasses = {
+    darwin: 'pl-24', // Left padding for traffic light buttons
+    win32: 'pr-2', // Right padding for visual spacing with window edge
+    linux: '', // No padding needed - custom controls are part of the layout
+  }
+
+  return (
+    platformClasses[
+      window.electronAPI.platform as keyof typeof platformClasses
+    ] || ''
+  )
+}
 
 function TopNavContainer(props: HTMLProps<HTMLElement>) {
   return (
@@ -25,8 +40,10 @@ function TopNavContainer(props: HTMLProps<HTMLElement>) {
         'bg-raised/10 backdrop-blur-xs',
         'border-mid h-12 border-b',
         'px-6 py-2',
-        'flex items-center gap-8',
-        window.electronAPI.isMac ? 'app-region-drag pl-24' : undefined
+        'grid grid-cols-[auto_1fr_auto] items-center gap-8',
+        'app-region-drag',
+        'w-full min-w-full',
+        getPlatformSpecificNavClasses()
       )}
     >
       {props.children}
@@ -101,9 +118,10 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
     <TopNavContainer {...props}>
       <TopNavLogo />
       <TopNavLinks />
-      <div className="ml-auto flex items-center gap-2">
+      <div className="flex items-center gap-2 justify-self-end">
         <ThemeToggle className="app-region-no-drag" />
         <SettingsDropdown className="app-region-no-drag" />
+        <WindowControls />
       </div>
     </TopNavContainer>
   )
