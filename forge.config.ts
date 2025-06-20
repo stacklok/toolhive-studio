@@ -93,7 +93,7 @@ const config: ForgeConfig = {
       noMsi: true, // Don't create MSI installer
       authors: 'Stacklok Labs',
       exe: 'toolhive-studio.exe',
-      name: 'ToolHive Studio',
+      name: 'toolhive-studio',
     }),
     new MakerDMG(
       {
