@@ -16,6 +16,8 @@ import type { FormSchemaRunFromRegistry } from './get-form-schema-run-from-regis
 import { Progress } from '@/common/components/ui/progress'
 import type { DefinedSecret, PreparedSecret } from '../types'
 import { prepareSecretsWithoutNamingCollision } from './prepare-secrets-without-naming-collision'
+import { Link } from '@tanstack/react-router'
+import { Button } from '@/common/components/ui/button'
 
 type SaveSecretFn = UseMutateAsyncFunction<
   V1CreateSecretResponse,
@@ -192,7 +194,7 @@ export async function orchestrateRunServer({
   saveSecret: SaveSecretFn
   server: RegistryServer
 }) {
-  const toastID: string = server.name ?? new Date(Date.now()).toISOString()
+  const toastID: string = new Date(Date.now()).toISOString()
 
   let newlyCreatedSecrets: SecretsSecretParameter[] = []
 
@@ -288,19 +290,33 @@ export async function orchestrateRunServer({
   })
 
   if (await getIsServerReady(data.serverName)) {
-    toast.success(`Server "${data.serverName}" is now running and ready!`, {
-      id: toastID,
+    // Invalidate queries to refresh server lists
+    await queryClient.invalidateQueries({
+      queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
     })
 
-    // Invalidate queries to refresh server lists
-    queryClient.invalidateQueries({
-      queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
+    toast.success(`Server "${data.serverName}" is now running and ready!`, {
+      id: toastID,
+      duration: 5_000, // slightly longer than default
+      action: (
+        <Button asChild>
+          <Link
+            to="/"
+            search={{ newServerName: data.serverName }}
+            onClick={() => toast.dismiss(toastID)}
+            className="ml-auto"
+          >
+            Go to server
+          </Link>
+        </Button>
+      ),
     })
   } else {
     toast.warning(
       `Server "${data.serverName}" was created but may still be starting up. Check the servers list to monitor its status.`,
       {
         id: toastID,
+        duration: 2_000, // reset to default
       }
     )
   }

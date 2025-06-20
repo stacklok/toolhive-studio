@@ -171,6 +171,12 @@ function createWindow() {
       webSecurity: !isDevelopment,
     },
     ...getPlatformSpecificWindowOptions(),
+    ...(process.platform === 'darwin'
+      ? {
+          titleBarStyle: 'hidden',
+          trafficLightPosition: { x: 21, y: 14 },
+        }
+      : {}),
   })
 
   // Windows: minimise-to-tray instead of close

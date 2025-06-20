@@ -79,6 +79,7 @@ function SecretRow({
                 <Input
                   {...field}
                   autoComplete="off"
+                  tabIndex={-1}
                   className={cn(
                     'text-muted-foreground !border-input font-mono !ring-0',
                     secret.required ? 'pr-8' : ''
@@ -102,6 +103,7 @@ function SecretRow({
             <FormItem>
               <FormControl>
                 <Input
+                  id={`secrets.${index}.value`}
                   onBlur={field.onBlur}
                   value={
                     field.value.isFromStore
@@ -161,6 +163,7 @@ function EnvVarRow({
                 <Input
                   {...field}
                   autoComplete="off"
+                  tabIndex={-1}
                   className={cn(
                     'text-muted-foreground !border-input font-mono !ring-0',
                     envVar.required ? 'pr-8' : ''
@@ -186,6 +189,7 @@ function EnvVarRow({
                 className="font-mono"
                 autoComplete="off"
                 data-1p-ignore
+                id={`envVars.${index}.value`}
                 aria-label={`${envVar.name ?? ''} value`}
               />
             </FormControl>
@@ -237,6 +241,7 @@ export function FormCatalogCreation({
   const onValidate = (data: FormSchemaRunFromRegistry) => {
     onSubmit(data)
     onOpenChange(false)
+    form.reset()
   }
 
   if (!server) return null
@@ -244,15 +249,18 @@ export function FormCatalogCreation({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
-        className="m-0 h-screen max-h-none w-screen max-w-none min-w-full overflow-y-auto
-          rounded-none"
+        className="p-0 sm:max-w-2xl"
+        onInteractOutside={(e) => {
+          // Prevent closing the dialog when clicking outside
+          e.preventDefault()
+        }}
       >
         <Form {...form} key={server?.name}>
           <form
             onSubmit={form.handleSubmit(onValidate)}
             className="mx-auto flex h-full w-full max-w-3xl flex-col"
           >
-            <DialogHeader className="flex-shrink-0 px-6 pt-6">
+            <DialogHeader className="mb-4 p-6">
               <DialogTitle>Configure {server.name}</DialogTitle>
               <DialogDescription>
                 Set up the environment variables and name for this server
@@ -260,7 +268,7 @@ export function FormCatalogCreation({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="flex-1 overflow-y-auto px-6 py-6">
+            <div className="relative max-h-[65dvh] space-y-4 overflow-y-auto px-6">
               <FormField
                 control={form.control}
                 name="serverName"
@@ -284,7 +292,9 @@ export function FormCatalogCreation({
 
               {groupedEnvVars.secrets[0] ? (
                 <section className="mb-10">
-                  <Label className="mb-4">Secrets</Label>
+                  <Label className="mb-2" htmlFor="secrets.0.value">
+                    Secrets
+                  </Label>
 
                   <p className="text-muted-foreground mb-6 text-sm">
                     Sensitive values that should not be exposed in plain text.
@@ -308,7 +318,9 @@ export function FormCatalogCreation({
 
               {groupedEnvVars.envVars[0] ? (
                 <section className="mb-10">
-                  <Label className="mb-4">Environment variables</Label>
+                  <Label className="mb-2" htmlFor="envVars.0.value">
+                    Environment variables
+                  </Label>
 
                   <p className="text-muted-foreground mb-6 text-sm">
                     Non-sensitive values that can be used to configure the
@@ -329,7 +341,7 @@ export function FormCatalogCreation({
               ) : null}
             </div>
 
-            <DialogFooter className="flex-shrink-0 px-6 pb-6">
+            <DialogFooter className="p-6">
               <Button
                 type="button"
                 variant="outline"

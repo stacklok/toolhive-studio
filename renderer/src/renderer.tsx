@@ -10,7 +10,6 @@ import { routeTree } from './route-tree.gen'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { TooltipProvider } from '@radix-ui/react-tooltip'
 import * as Sentry from '@sentry/electron/renderer'
-import { Toaster } from './common/components/ui/sonner'
 import { ThemeProvider } from './common/components/theme/theme-provider'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
@@ -86,7 +85,6 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
         <ConfirmProvider>
           <QueryClientProvider client={queryClient}>
             <TooltipProvider delayDuration={0}>
-              <Toaster position="top-right" />
               <RouterProvider router={router} />
             </TooltipProvider>
             <ReactQueryDevtools initialIsOpen={false} />

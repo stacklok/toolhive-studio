@@ -9,6 +9,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { FormSchemaRunFromRegistry } from '../lib/get-form-schema-run-from-registry'
 import { useCallback } from 'react'
 import { orchestrateRunServer } from '../lib/orchestrate-run-server'
+import { useNavigate } from '@tanstack/react-router'
 
 export function useRunFromRegistry() {
   const queryClient = useQueryClient()
@@ -19,6 +20,8 @@ export function useRunFromRegistry() {
   const { mutateAsync: createWorkload } = useMutation({
     ...postApiV1BetaWorkloadsMutation(),
   })
+
+  const navigate = useNavigate()
 
   const getIsServerReady: (serverName: string) => Promise<boolean> =
     useCallback(
@@ -42,8 +45,9 @@ export function useRunFromRegistry() {
         createWorkload,
         queryClient,
         getIsServerReady,
+        navigate,
       }),
-    [createWorkload, getIsServerReady, queryClient, saveSecret]
+    [createWorkload, getIsServerReady, navigate, queryClient, saveSecret]
   )
 
   return {
