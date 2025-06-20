@@ -9,7 +9,7 @@ function Secrets() {
   return (
     <>
       <div className="mb-6 flex items-center">
-        <h1 className="text-xl font-semibold">Secrets</h1>
+        <h1 className="text-3xl font-semibold">Secrets</h1>
       </div>
       <SecretsTable secrets={[]} />
     </>
