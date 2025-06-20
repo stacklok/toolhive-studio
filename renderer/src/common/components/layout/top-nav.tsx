@@ -16,7 +16,7 @@ import { useEffect } from 'react'
 import { toast } from 'sonner'
 import { isFeatureEnabled } from '@/feature-flags'
 
-function getPlatformSpecificNavClasses() {
+function getPlatformSpecificHeaderClasses() {
   const platformClasses = {
     darwin: 'pl-24', // Left padding for traffic light buttons
     win32: 'pr-2', // Right padding for visual spacing with window edge
@@ -32,22 +32,22 @@ function getPlatformSpecificNavClasses() {
 
 function TopNavContainer(props: HTMLProps<HTMLElement>) {
   return (
-    <nav
+    <header
       {...props}
       className={twMerge(
         props.className,
         'sticky top-0 z-50',
         'bg-raised/10 backdrop-blur-xs',
-        'border-mid h-12 border-b',
-        'px-6 py-2',
+        'border-mid h-16 border-b',
+        'px-6',
         'grid grid-cols-[auto_1fr_auto] items-center gap-8',
         'app-region-drag',
         'w-full min-w-full',
-        getPlatformSpecificNavClasses()
+        getPlatformSpecificHeaderClasses()
       )}
     >
       {props.children}
-    </nav>
+    </header>
   )
 }
 
