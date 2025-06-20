@@ -1,5 +1,5 @@
 import type { V1ListSecretsResponse } from '@/common/api/generated'
-import type { PreparedSecret } from '../types'
+import type { DefinedSecret, PreparedSecret } from '../types'
 import { SECRET_NAME_REGEX } from './secret-name-regex'
 
 /**
@@ -17,20 +17,22 @@ export function prepareSecretsWithoutNamingCollision(
    * NOTE: For simplicity, we are expecting that any undefined secrets are
    * already filtered out by this stage
    */
-  secrets: {
-    name: string
-    value: string
-  }[],
-  existingSecrets: V1ListSecretsResponse
+  secrets: DefinedSecret[],
+  fetchedSecrets: V1ListSecretsResponse
 ): PreparedSecret[] {
   // A map is the most efficient way to check for existing keys
   const keyMap = new Set(
-    existingSecrets.keys
+    fetchedSecrets.keys
       ?.filter((k) => k != null)
       .map((secret) => secret.key || '') || []
   )
 
   return secrets.map((secret) => {
+    // Invariant — this should never happen
+    if (secret.value.isFromStore) {
+      throw new Error('Secret value from store should not be recreated')
+    }
+
     let secretStoreKey = secret.name
 
     // Early return — if the key does not exist, we can use it as is
@@ -38,7 +40,7 @@ export function prepareSecretsWithoutNamingCollision(
       return {
         secretStoreKey,
         target: secret.name,
-        value: secret.value,
+        value: secret.value.secret,
       }
     }
 
@@ -68,7 +70,7 @@ export function prepareSecretsWithoutNamingCollision(
     return {
       secretStoreKey,
       target: secret.name,
-      value: secret.value,
+      value: secret.value.secret,
     }
   })
 }

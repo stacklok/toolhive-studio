@@ -14,7 +14,7 @@ import { QueryClient, type UseMutateAsyncFunction } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { FormSchemaRunFromRegistry } from './get-form-schema-run-from-registry'
 import { Progress } from '@/common/components/ui/progress'
-import type { PreparedSecret } from '../types'
+import type { DefinedSecret, PreparedSecret } from '../types'
 import { prepareSecretsWithoutNamingCollision } from './prepare-secrets-without-naming-collision'
 
 type SaveSecretFn = UseMutateAsyncFunction<
@@ -34,16 +34,10 @@ type CreateWorkloadFn = UseMutateAsyncFunction<
 /**
  * A utility function to filter out secrets that are not defined.
  */
-function getDefinedSecrets(secrets: FormSchemaRunFromRegistry['secrets']): {
-  name: string
-  value: string
-}[] {
-  return secrets.reduce<
-    {
-      name: string
-      value: string
-    }[]
-  >((acc, { name, value }) => {
+function getDefinedSecrets(
+  secrets: FormSchemaRunFromRegistry['secrets']
+): DefinedSecret[] {
+  return secrets.reduce<DefinedSecret[]>((acc, { name, value }) => {
     if (name && value) {
       acc.push({ name, value })
     }
@@ -153,6 +147,33 @@ function prepareCreateWorkloadData(
   }
 }
 
+type GroupedSecrets = {
+  newSecrets: DefinedSecret[]
+  existingSecrets: DefinedSecret[]
+}
+
+/**
+ * Groups secrets into two categories: new secrets (not from the store) and
+ * existing secrets (from the store). We need this separation to know which
+ * secrets need to be encrypted and stored before creating the server workload.
+ */
+function groupSecrets(secrets: DefinedSecret[]): {
+  newSecrets: DefinedSecret[]
+  existingSecrets: DefinedSecret[]
+} {
+  return secrets.reduce<GroupedSecrets>(
+    (acc, secret) => {
+      if (secret.value.isFromStore) {
+        acc.existingSecrets.push(secret)
+      } else {
+        acc.newSecrets.push(secret)
+      }
+      return acc
+    },
+    { newSecrets: [], existingSecrets: [] }
+  )
+}
+
 /**
  * Orchestrates the "onSubmit" action for the "Run from Registry" form.
  */
@@ -173,32 +194,42 @@ export async function orchestrateRunServer({
 }) {
   const toastID: string = server.name ?? new Date(Date.now()).toISOString()
 
-  let storedSecrets: SecretsSecretParameter[] = []
+  let newlyCreatedSecrets: SecretsSecretParameter[] = []
 
-  // NOTE: Due to how we populate the names of the secrets, we may have
-  // secrets with a `key` but no `value`. We filter those out.
+  // NOTE: Due to how we populate the names of the secrets in the form, we may
+  // have secrets with a `key` but no `value`. We filter those out.
   const definedSecrets = getDefinedSecrets(data.secrets)
 
-  // Step 1: Fetch existing secrets & handle naming collisions
+  // Step 1: Group secrets into new and existing
+  // We need to know which secrets are new (not from the store) and which are
+  // existing (already stored). This helps us handle the encryption and storage
+  // of secrets correctly.
+  const { existingSecrets, newSecrets } = groupSecrets(definedSecrets)
+
+  // Step 2: Fetch existing secrets & handle naming collisions
   // We need an up-to-date list of secrets so we can handle any existing keys
   // safely & correctly. This is done with a manual fetch call to avoid freshness issues /
   // side-effects from the `useQuery` hook.
   // In the event of a naming collision, we will append an incrementing number
   // to the secret name, e.g. `MY_API_TOKEN` -> `MY_API_TOKEN_2`
-  const { data: existingSecrets } = await getApiV1BetaSecretsDefaultKeys({
+  const { data: fetchedSecrets } = await getApiV1BetaSecretsDefaultKeys({
     throwOnError: true,
   })
-  const preparedSecrets = prepareSecretsWithoutNamingCollision(
-    definedSecrets,
-    existingSecrets
+  const preparedNewSecrets = prepareSecretsWithoutNamingCollision(
+    newSecrets,
+    fetchedSecrets
   )
 
-  // Step 2: Encrypt secrets
+  // Step 3: Encrypt secrets
   // If there are secrets with values, create them in the secret store first.
   // We need the data returned by the API to pass along with the "run workload" request.
-  if (preparedSecrets.length > 0) {
+  if (preparedNewSecrets.length > 0) {
     try {
-      storedSecrets = await saveSecrets(preparedSecrets, saveSecret, toastID)
+      newlyCreatedSecrets = await saveSecrets(
+        preparedNewSecrets,
+        saveSecret,
+        toastID
+      )
     } catch (error) {
       toast.error(
         [
@@ -213,13 +244,21 @@ export async function orchestrateRunServer({
     }
   }
 
-  // Step 3: Create the MCP server workload
+  // Step 4: Create the MCP server workload
   // Prepare the request data and send it to the API
   // We pass the encrypted secrets along with the request.
+  const secretsForRequest: SecretsSecretParameter[] = [
+    ...newlyCreatedSecrets,
+    ...existingSecrets.map((secret) => ({
+      name: secret.value.secret,
+      target: secret.name,
+    })),
+  ]
+
   const createRequest: V1CreateRequest = prepareCreateWorkloadData(
     server,
     data,
-    storedSecrets
+    secretsForRequest
   )
 
   try {
@@ -239,7 +278,7 @@ export async function orchestrateRunServer({
     return
   }
 
-  // Step 4: Poll server status
+  // Step 5: Poll server status
   // After the server is created, we need to wait for it to be ready.
   // We use a polling function to check the server status.
   // When the server is ready, we show feedback to the user.

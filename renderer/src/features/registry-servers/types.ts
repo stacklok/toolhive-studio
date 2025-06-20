@@ -6,3 +6,11 @@ export type PreparedSecret = {
   /** The value of the secret */
   value: string
 }
+
+export type DefinedSecret = {
+  name: string
+  value: {
+    secret: string
+    isFromStore: boolean
+  }
+}

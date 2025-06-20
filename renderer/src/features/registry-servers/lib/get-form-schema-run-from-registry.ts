@@ -2,7 +2,26 @@ import type { RegistryEnvVar } from '@/common/api/generated/types.gen'
 import z from 'zod/v4'
 import type { GroupedEnvVars } from './group-env-vars'
 
-function refineRequired(
+function refineSecret(
+  value: {
+    name: string
+    value?:
+      | {
+          secret: string
+          isFromStore: boolean
+        }
+      | undefined
+  },
+  vars: RegistryEnvVar[]
+): boolean {
+  const isRequired = vars.find((s) => s.name === value.name)?.required
+  if (isRequired && !value.value?.secret) {
+    return false
+  }
+  return true
+}
+
+function refineEnvVar(
   value: {
     name: string
     value?: string | undefined
@@ -29,9 +48,12 @@ export function getFormSchemaRunFromRegistry({
     secrets: z
       .object({
         name: z.union(secrets.map(({ name }) => z.literal(name ?? ''))),
-        value: z.string().optional(),
+        value: z.object({
+          secret: z.string().min(1, 'Secret value is required'),
+          isFromStore: z.boolean(),
+        }),
       })
-      .refine((d) => refineRequired(d, secrets), {
+      .refine((d) => refineSecret(d, secrets), {
         error: 'This secret is required',
         path: ['value'],
       })
@@ -41,7 +63,7 @@ export function getFormSchemaRunFromRegistry({
         name: z.union(envVars.map(({ name }) => z.literal(name ?? ''))),
         value: z.string().optional(),
       })
-      .refine((d) => refineRequired(d, secrets), {
+      .refine((d) => refineEnvVar(d, envVars), {
         error: 'This environment variable is required',
         path: ['value'],
       })

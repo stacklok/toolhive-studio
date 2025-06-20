@@ -17,28 +17,191 @@ import {
   FormDescription,
 } from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
-import { Switch } from '@/common/components/ui/switch'
-import { Badge } from '@/common/components/ui/badge'
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@/common/components/ui/tooltip'
-import { useForm } from 'react-hook-form'
-import type { RegistryServer } from '@/common/api/generated/types.gen'
+import { useForm, type UseFormReturn } from 'react-hook-form'
+import type {
+  RegistryEnvVar,
+  RegistryServer,
+} from '@/common/api/generated/types.gen'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
-import { z } from 'zod/v4'
 import { useMemo } from 'react'
+import { Label } from '@/common/components/ui/label'
+import { cn } from '@/common/lib/utils'
+import { AsteriskIcon } from 'lucide-react'
+import { groupEnvVars } from '../lib/group-env-vars'
+import {
+  getFormSchemaRunFromRegistry,
+  type FormSchemaRunFromRegistry,
+} from '../lib/get-form-schema-run-from-registry'
+import { FormComboboxSecretStore } from '@/common/components/secrets/form-combobox-secrets-store'
+
+/**
+ * Renders an asterisk icon & tooltip for required fields.
+ * NOTE: USes absolute positioning & assumes that it is being rendered inside a container with `position: relative`.
+ */
+function TooltipValueRequired() {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild autoFocus={false}>
+        <AsteriskIcon className="text-muted-foreground absolute top-2 right-2 size-5 rounded-full px-0.5" />
+      </TooltipTrigger>
+      <TooltipContent>Required</TooltipContent>
+    </Tooltip>
+  )
+}
+
+/**
+ * A row containing the key/value pair for a SECRET.
+ * Also composes the UI to load in a previously saved secret.
+ */
+function SecretRow({
+  secret,
+  form,
+  index,
+}: {
+  secret: RegistryEnvVar
+  form: UseFormReturn<FormSchemaRunFromRegistry>
+  index: number
+}) {
+  return (
+    <div className="mb-2 grid grid-cols-2 gap-4">
+      <FormField
+        control={form.control}
+        name={`secrets.${index}.name`}
+        render={({ field }) => (
+          <FormItem>
+            <div className="relative">
+              <FormControl>
+                <Input
+                  {...field}
+                  autoComplete="off"
+                  className={cn(
+                    'text-muted-foreground !border-input font-mono !ring-0',
+                    secret.required ? 'pr-8' : ''
+                  )}
+                  aria-label={secret.name ?? ''}
+                  readOnly
+                />
+              </FormControl>
+              {secret.required && <TooltipValueRequired />}
+            </div>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <div className="grid grid-cols-[auto_calc(var(--spacing)_*_8)]">
+        <FormField
+          control={form.control}
+          name={`secrets.${index}.value`}
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <Input
+                  onBlur={field.onBlur}
+                  value={
+                    field.value.isFromStore
+                      ? 'foo-bar-123-xzy'
+                      : field.value.secret
+                  }
+                  disabled={field.disabled}
+                  name={field.name}
+                  ref={field.ref}
+                  onChange={(e) =>
+                    field.onChange({
+                      secret: e.target.value,
+                      isFromStore: false,
+                    })
+                  }
+                  className="rounded-tr-none rounded-br-none border-r-0 font-mono focus-visible:z-10"
+                  autoComplete="off"
+                  data-1p-ignore
+                  type="password"
+                  aria-label={`${secret.name ?? ''} value`}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormComboboxSecretStore<FormSchemaRunFromRegistry>
+          form={form}
+          name={`secrets.${index}.value`}
+        />
+      </div>
+    </div>
+  )
+}
+
+/**
+ * A row containing the key/value pair for an ENV VAR.
+ */
+function EnvVarRow({
+  envVar,
+  form,
+  index,
+}: {
+  envVar: RegistryEnvVar
+  form: UseFormReturn<FormSchemaRunFromRegistry>
+  index: number
+}) {
+  return (
+    <div className="mb-2 grid grid-cols-2 gap-4">
+      <FormField
+        control={form.control}
+        name={`envVars.${index}.name`}
+        render={({ field }) => (
+          <FormItem>
+            <div className="relative">
+              <FormControl>
+                <Input
+                  {...field}
+                  autoComplete="off"
+                  className={cn(
+                    'text-muted-foreground !border-input font-mono !ring-0',
+                    envVar.required ? 'pr-8' : ''
+                  )}
+                  aria-label={envVar.name ?? ''}
+                  readOnly
+                />
+              </FormControl>
+              {envVar.required && <TooltipValueRequired />}
+            </div>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name={`envVars.${index}.value`}
+        render={({ field }) => (
+          <FormItem>
+            <FormControl>
+              <Input
+                {...field}
+                className="font-mono"
+                autoComplete="off"
+                data-1p-ignore
+                aria-label={`${envVar.name ?? ''} value`}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </div>
+  )
+}
 
 interface FormCatalogCreationProps {
   server: RegistryServer | null
   isOpen: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (data: {
-    name: string
-    envVars: { name: string; value: string }[]
-  }) => void
+  onSubmit: (data: FormSchemaRunFromRegistry) => void
 }
 
 export function FormCatalogCreation({
@@ -47,75 +210,32 @@ export function FormCatalogCreation({
   onOpenChange,
   onSubmit,
 }: FormCatalogCreationProps) {
-  // Create dynamic schema based on server's env vars
-  const formSchema = useMemo(() => {
-    if (!server?.env_vars) {
-      return z.object({
-        serverName: z.string().min(1, 'Server name is required'),
-        envVars: z.array(
-          z.object({
-            name: z.string(),
-            value: z.string().optional(),
-            useDefault: z.boolean().default(false),
-          })
-        ),
-      })
-    }
+  const groupedEnvVars = useMemo(
+    () => groupEnvVars(server?.env_vars || []),
+    [server?.env_vars]
+  )
+  const formSchema = useMemo(
+    () => getFormSchemaRunFromRegistry(groupedEnvVars),
+    [groupedEnvVars]
+  )
 
-    const envVarSchema = z
-      .object({
-        name: z.string(),
-        value: z.string().optional(),
-        useDefault: z.boolean().default(false),
-      })
-      .refine(
-        (data) => {
-          const serverEnvVar = server.env_vars?.find(
-            (env) => env.name === data.name
-          )
-          if (!serverEnvVar?.required) return true
-          if (data.useDefault) return true
-          return data.value && data.value.trim() !== ''
-        },
-        {
-          message: 'This field is required',
-          path: ['value'],
-        }
-      )
-
-    return z.object({
-      serverName: z.string().min(1, 'Server name is required'),
-      envVars: z.array(envVarSchema),
-    })
-  }, [server?.env_vars])
-
-  type FormCatalogCreationSchema = z.infer<typeof formSchema>
-
-  const form = useForm<FormCatalogCreationSchema>({
+  const form = useForm<FormSchemaRunFromRegistry>({
     resolver: zodV4Resolver(formSchema),
     defaultValues: {
       serverName: server?.name || '',
-      envVars:
-        server?.env_vars?.map((envVar) => ({
-          name: envVar.name || '',
-          value: envVar.default || '',
-          useDefault: !!envVar.default,
-        })) || [],
+      secrets: groupedEnvVars.secrets.map((s) => ({
+        name: s.name || '',
+        value: { secret: s.default || '', isFromStore: false },
+      })),
+      envVars: groupedEnvVars.envVars.map((e) => ({
+        name: e.name || '',
+        value: e.default || '',
+      })),
     },
   })
 
-  const onValidate = (data: FormCatalogCreationSchema) => {
-    const envVarsToSubmit = data.envVars
-      .filter((envVar) => envVar.value || !envVar.useDefault)
-      .map((envVar) => ({
-        name: envVar.name,
-        value: envVar.value || '',
-      }))
-
-    onSubmit({
-      name: data.serverName,
-      envVars: envVarsToSubmit,
-    })
+  const onValidate = (data: FormSchemaRunFromRegistry) => {
+    onSubmit(data)
     onOpenChange(false)
   }
 
@@ -130,7 +250,7 @@ export function FormCatalogCreation({
         <Form {...form} key={server?.name}>
           <form
             onSubmit={form.handleSubmit(onValidate)}
-            className="flex h-full flex-col"
+            className="mx-auto flex h-full w-full max-w-3xl flex-col"
           >
             <DialogHeader className="flex-shrink-0 px-6 pt-6">
               <DialogTitle>Configure {server.name}</DialogTitle>
@@ -141,136 +261,72 @@ export function FormCatalogCreation({
             </DialogHeader>
 
             <div className="flex-1 overflow-y-auto px-6 py-6">
-              <div className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="serverName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Server Name</FormLabel>
-                      <FormDescription>
-                        Choose a unique name for this server instance
-                      </FormDescription>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="e.g. my-custom-server"
-                          autoFocus
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {server.env_vars && server.env_vars.length > 0 ? (
-                  <>
-                    <div className="border-t pt-6">
-                      <h3 className="mb-4 text-lg font-medium">
-                        Environment Variables
-                      </h3>
-                      <div className="space-y-4">
-                        {server.env_vars.map((envVar, index) => (
-                          <FormField
-                            key={envVar.name || index}
-                            control={form.control}
-                            name={`envVars.${index}.value`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <div className="flex items-center justify-between">
-                                  <div className="flex-1">
-                                    <FormLabel className="flex items-center gap-2">
-                                      {envVar.name}
-                                      {envVar.required && (
-                                        <span className="text-xs text-red-500">
-                                          *
-                                        </span>
-                                      )}
-                                      {envVar.secret && (
-                                        <TooltipProvider>
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <Badge variant="secondary">
-                                                secret
-                                              </Badge>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              <p>
-                                                Secret indicates whether this
-                                                environment variable contains
-                                                sensitive information
-                                              </p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        </TooltipProvider>
-                                      )}
-                                    </FormLabel>
-                                    {envVar.description && (
-                                      <FormDescription>
-                                        {envVar.description}
-                                      </FormDescription>
-                                    )}
-                                  </div>
-                                  {envVar.default && (
-                                    <div className="flex items-center gap-2">
-                                      <FormField
-                                        control={form.control}
-                                        name={`envVars.${index}.useDefault`}
-                                        render={({ field: switchField }) => (
-                                          <FormItem className="flex items-center gap-2">
-                                            <FormLabel className="text-muted-foreground text-sm">
-                                              Use default
-                                            </FormLabel>
-                                            <FormControl>
-                                              <Switch
-                                                checked={switchField.value}
-                                                onCheckedChange={(checked) => {
-                                                  switchField.onChange(checked)
-                                                  if (checked) {
-                                                    form.setValue(
-                                                      `envVars.${index}.value`,
-                                                      envVar.default || ''
-                                                    )
-                                                  }
-                                                }}
-                                              />
-                                            </FormControl>
-                                          </FormItem>
-                                        )}
-                                      />
-                                    </div>
-                                  )}
-                                </div>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    type={envVar.secret ? 'password' : 'text'}
-                                    placeholder={
-                                      envVar.default
-                                        ? `Default: ${envVar.default}`
-                                        : 'Enter value...'
-                                    }
-                                    disabled={form.watch(
-                                      `envVars.${index}.useDefault`
-                                    )}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-muted-foreground border-t py-8 text-center">
-                    <p>
-                      This server doesn't require any environment variables.
-                    </p>
-                  </div>
+              <FormField
+                control={form.control}
+                name="serverName"
+                render={({ field }) => (
+                  <FormItem className="mb-10">
+                    <FormLabel>Server Name</FormLabel>
+                    <FormDescription>
+                      Choose a unique name for this server instance
+                    </FormDescription>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="e.g. my-custom-server"
+                        autoFocus
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </div>
+              />
+
+              {groupedEnvVars.secrets[0] ? (
+                <section className="mb-10">
+                  <Label className="mb-4">Secrets</Label>
+
+                  <p className="text-muted-foreground mb-6 text-sm">
+                    Sensitive values that should not be exposed in plain text.
+                    They are typically used for API keys, tokens, or passwords.
+                    All secrets are encrypted and stored securely by ToolHive,
+                    and{' '}
+                    <span className="text-foreground font-semibold">never</span>{' '}
+                    leave your machine.
+                  </p>
+
+                  {groupedEnvVars.secrets.map((secret, index) => (
+                    <SecretRow
+                      form={form}
+                      secret={secret}
+                      index={index}
+                      key={secret.name}
+                    />
+                  ))}
+                </section>
+              ) : null}
+
+              {groupedEnvVars.envVars[0] ? (
+                <section className="mb-10">
+                  <Label className="mb-4">Environment variables</Label>
+
+                  <p className="text-muted-foreground mb-6 text-sm">
+                    Non-sensitive values that can be used to configure the
+                    server. These variables are not encrypted and can be exposed
+                    in plain text. They are typically used for configuration
+                    options that do not contain sensitive information.
+                  </p>
+
+                  {groupedEnvVars.envVars.map((envVar, index) => (
+                    <EnvVarRow
+                      form={form}
+                      envVar={envVar}
+                      index={index}
+                      key={envVar.name}
+                    />
+                  ))}
+                </section>
+              ) : null}
             </div>
 
             <DialogFooter className="flex-shrink-0 px-6 pb-6">
