@@ -19,7 +19,7 @@ export function Clients() {
   return (
     <>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-semibold">Clients</h1>
+        <h1 className="text-xl font-semibold">Clients</h1>
         <Button>
           <Check />
           Enable all clients

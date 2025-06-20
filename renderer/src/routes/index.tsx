@@ -33,7 +33,7 @@ export function Index() {
   return (
     <>
       <div className="mb-6 flex items-center">
-        <h1 className="text-3xl font-semibold">Installed</h1>
+        <h1 className="text-xl font-semibold">Installed</h1>
         <DropdownMenuRunMcpServer
           openRunCommandDialog={() => setIsRunWithCommandOpen(true)}
           className="ml-auto"
