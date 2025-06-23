@@ -1,5 +1,5 @@
 import { SettingsIcon, Check } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,22 +15,26 @@ export function SettingsDropdown({ className }: { className?: string }) {
   const [isAutoLaunchEnabled, setIsAutoLaunchEnabled] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    async function loadAutoLaunchStatus() {
-      try {
-        if (window.electronAPI) {
-          const status = await window.electronAPI.getAutoLaunchStatus()
-          setIsAutoLaunchEnabled(status)
-        }
-      } catch (error) {
-        console.error('Failed to load auto-launch status:', error)
-      } finally {
-        setIsLoading(false)
+  const loadAutoLaunchStatus = async () => {
+    try {
+      setIsLoading(true)
+      if (window.electronAPI) {
+        const status = await window.electronAPI.getAutoLaunchStatus()
+        console.log(`status ${status}`)
+        setIsAutoLaunchEnabled(status)
       }
+    } catch (error) {
+      console.error('Failed to load auto-launch status:', error)
+    } finally {
+      setIsLoading(false)
     }
+  }
 
-    loadAutoLaunchStatus()
-  }, [])
+  const handleDropdownOpenChange = (open: boolean) => {
+    if (open) {
+      loadAutoLaunchStatus()
+    }
+  }
 
   const handleAutoLaunchToggle = async () => {
     if (isLoading) return
@@ -66,7 +70,7 @@ export function SettingsDropdown({ className }: { className?: string }) {
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={handleDropdownOpenChange}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
