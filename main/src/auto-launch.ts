@@ -13,11 +13,11 @@ interface DesktopEntry {
   Comment: string
 }
 
-function createDesktopEntry(execPath: string): string {
+export function createDesktopEntry(execPath: string): string {
   const entry: DesktopEntry = {
     Type: 'Application',
     Name: 'ToolHive Studio',
-    Exec: `${execPath} --hidden`,
+    Exec: `"${execPath}" --hidden`,
     Hidden: 'false',
     NoDisplay: 'false',
     'X-GNOME-Autostart-enabled': 'true',
