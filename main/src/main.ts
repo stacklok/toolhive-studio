@@ -14,6 +14,7 @@ import { spawn } from 'node:child_process'
 import * as Sentry from '@sentry/electron/main'
 import { initTray, updateTrayStatus } from './system-tray'
 import { setAutoLaunch, getAutoLaunchStatus } from './auto-launch'
+import { createApplicationMenu } from './menu'
 import net from 'node:net'
 import { getCspString } from './csp'
 import { stopAllServers } from './graceful-exit'
@@ -162,7 +163,7 @@ function getPlatformSpecificWindowOptions() {
   const platformConfigs = {
     darwin: {
       titleBarStyle: 'hidden' as const,
-      trafficLightPosition: { x: 21, y: 24 },
+      trafficLightPosition: { x: 21, y: 30 },
     },
     win32: {
       frame: false, // Completely frameless for custom window controls
@@ -253,6 +254,8 @@ app.whenReady().then(() => {
   try {
     tray = initTray({ toolHiveIsRunning: !!toolhiveProcess })
     console.log('System tray initialized successfully')
+    // Setup application menu
+    createApplicationMenu(tray)
   } catch (error) {
     console.error('Failed to initialize system tray:', error)
   }
@@ -330,6 +333,12 @@ ipcMain.handle('get-auto-launch-status', () => getAutoLaunchStatus())
 
 ipcMain.handle('set-auto-launch', (_event, enabled: boolean) => {
   setAutoLaunch(enabled)
+  // Update tray menu if exists
+  if (tray) {
+    updateTrayStatus(tray, !!toolhiveProcess)
+  }
+  // Update menu
+  createApplicationMenu(tray)
   return getAutoLaunchStatus()
 })
 
