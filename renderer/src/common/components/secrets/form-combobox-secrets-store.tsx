@@ -1,4 +1,4 @@
-import { Check, ChevronDown, RefreshCwIcon } from 'lucide-react'
+import { Check, ChevronDown } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import type { FieldValues, Path, UseFormReturn } from 'react-hook-form'
@@ -14,7 +14,7 @@ import {
 import { cn } from '@/common/lib/utils'
 import { useQuery } from '@tanstack/react-query'
 import { getApiV1BetaSecretsDefaultKeysOptions } from '@/common/api/generated/@tanstack/react-query.gen'
-import { useEffect, useState } from 'react'
+import { RefreshButton } from '../refresh-button'
 
 type ConstrainedFieldValues = FieldValues & {
   secrets: {
@@ -27,31 +27,6 @@ type ConstrainedFieldValues = FieldValues & {
 }
 
 /**
- * A custom hook that resets a boolean value after a specified delay.
- */
-const useDelayedReset = (initialValue = false, delayMs = 1000) => {
-  const [value, setValue] = useState<boolean>(initialValue)
-
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout | undefined
-
-    if (value) {
-      timeoutId = setTimeout(() => {
-        setValue(false)
-      }, delayMs)
-    }
-
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId)
-      }
-    }
-  }, [value, delayMs])
-
-  return [value, setValue] as const
-}
-
-/**
  * A combobox for selecting a secret from the secret store.
  * NOTE: This component expects that the form has a field named `secrets` which
  * is an array of objects with a `key` & `value` property.
@@ -60,13 +35,6 @@ export function FormComboboxSecretStore<
   T extends ConstrainedFieldValues = ConstrainedFieldValues,
 >({ form, name }: { form: UseFormReturn<T>; name: Path<T> }) {
   const { data, refetch } = useQuery(getApiV1BetaSecretsDefaultKeysOptions())
-
-  const [isAnimating, setIsAnimating] = useDelayedReset(false, 500)
-
-  function handleRefresh() {
-    refetch()
-    setIsAnimating(true)
-  }
 
   return (
     <FormField
@@ -105,16 +73,7 @@ export function FormComboboxSecretStore<
                     className="ml-auto flex size-9 shrink-0 grow-0 items-center justify-center self-end
                       border-b"
                   >
-                    <Button
-                      className={cn('text-muted-foreground size-7')}
-                      variant="ghost"
-                      type="button"
-                      onClick={() => handleRefresh()}
-                    >
-                      <RefreshCwIcon
-                        className={isAnimating ? 'animate-spin' : ''}
-                      />
-                    </Button>
+                    <RefreshButton refresh={refetch} className="size-7" />
                   </div>
                 </div>
                 <CommandList>

@@ -1,4 +1,5 @@
 import { getApiV1BetaWorkloadsOptions } from '@/common/api/generated/@tanstack/react-query.gen'
+import { RefreshButton } from '@/common/components/refresh-button'
 import { DialogFormRunMcpServerWithCommand } from '@/features/mcp-servers/components/dialog-form-run-mcp-command'
 import { GridCardsMcpServers } from '@/features/mcp-servers/components/grid-cards-mcp-server'
 import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/menu-run-mcp-server'
@@ -16,7 +17,7 @@ export const Route = createFileRoute('/')({
 })
 
 export function Index() {
-  const { data } = useSuspenseQuery({
+  const { data, refetch } = useSuspenseQuery({
     ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
   })
   const workloads = data?.workloads ?? []
@@ -27,10 +28,12 @@ export function Index() {
     <>
       <div className="mb-6 flex items-center">
         <h1 className="text-3xl font-semibold">Installed</h1>
-        <DropdownMenuRunMcpServer
-          openRunCommandDialog={() => setIsRunWithCommandOpen(true)}
-          className="ml-auto"
-        />
+        <div className="ml-auto flex gap-2">
+          <RefreshButton refresh={refetch} />
+          <DropdownMenuRunMcpServer
+            openRunCommandDialog={() => setIsRunWithCommandOpen(true)}
+          />
+        </div>
         <DialogFormRunMcpServerWithCommand
           isOpen={isRunWithCommandOpen}
           onOpenChange={setIsRunWithCommandOpen}

@@ -11,7 +11,8 @@ import {
   DropdownMenuItem,
 } from '@/common/components/ui/dropdown-menu'
 import { Button } from '@/common/components/ui/button'
-import { MoreVertical, Trash2, Github } from 'lucide-react'
+import { MoreVertical, Trash2, Github, Text } from 'lucide-react'
+import { useNavigate } from '@tanstack/react-router'
 
 import type { WorkloadsWorkload } from '@/common/api/generated'
 import { ActionsMcpServer } from './actions-mcp-server'
@@ -22,6 +23,7 @@ import { useDeleteServer } from '../hooks/use-delete-server'
 import { useQuery } from '@tanstack/react-query'
 import { useSearch } from '@tanstack/react-router'
 import { getApiV1BetaRegistryByNameServersByServerName } from '@/common/api/generated/sdk.gen'
+import { isFeatureEnabled } from '@/feature-flags'
 import { useEffect, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 
@@ -81,6 +83,7 @@ export function CardMcpServer({
   statusContext: WorkloadsWorkload['status_context']
 }) {
   const confirm = useConfirm()
+  const navigate = useNavigate()
   const { mutateAsync: deleteServer, isPending: isDeletePending } =
     useDeleteServer({ name })
 
@@ -187,6 +190,20 @@ export function CardMcpServer({
                   </a>
                 </DropdownMenuItem>
               )}
+              {isFeatureEnabled('logs') ? (
+                <DropdownMenuItem
+                  onClick={() =>
+                    navigate({
+                      to: '/logs/$serverName',
+                      params: { serverName: name },
+                    })
+                  }
+                  className="flex cursor-pointer items-center"
+                >
+                  <Text className="mr-2 h-4 w-4" />
+                  Logs
+                </DropdownMenuItem>
+              ) : null}
               <DropdownMenuItem
                 onClick={handleRemove}
                 disabled={isDeletePending}
