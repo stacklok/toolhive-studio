@@ -12,7 +12,7 @@ export const Route = createFileRoute('/secrets')({
     await queryClient.ensureQueryData(getApiV1BetaSecretsDefaultKeysOptions()),
 })
 
-function Secrets() {
+export function Secrets() {
   const {
     data: { keys = [] },
   } = useSuspenseQuery(getApiV1BetaSecretsDefaultKeysOptions())
