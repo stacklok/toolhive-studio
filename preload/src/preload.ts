@@ -16,7 +16,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   quitApp: () => ipcRenderer.invoke('quit-app'),
 
   // ToolHive port
-  // getToolhivePort: () => ipcRenderer.invoke('get-toolhive-port'),
   getToolhivePort: () => 8080,
 
   // Theme management
