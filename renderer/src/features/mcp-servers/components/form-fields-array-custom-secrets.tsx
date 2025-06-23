@@ -73,6 +73,7 @@ export function FormFieldsArrayCustomSecrets({
                     defaultValue={field.value}
                     id={`secrets.${index}.name`}
                     name={field.name}
+                    className="font-mono"
                     onChange={(e) => field.onChange(e.target.value)}
                     placeholder="e.g. API_KEY"
                   />
@@ -89,6 +90,7 @@ export function FormFieldsArrayCustomSecrets({
                 <FormItem>
                   <FormControl>
                     <Input
+                      type="password"
                       aria-label="Secret value"
                       className="rounded-tr-none rounded-br-none border-r-0 font-mono focus-visible:z-10"
                       defaultValue={field.value.secret}

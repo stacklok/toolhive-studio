@@ -73,6 +73,7 @@ export function FormFieldsArrayCustomEnvVars({
                   <Input
                     aria-label="Environment variable key"
                     defaultValue={field.value}
+                    className="font-mono"
                     id={`envVars.${index}.name`}
                     name={field.name}
                     onChange={(e) => field.onChange(e.target.value)}
@@ -93,6 +94,7 @@ export function FormFieldsArrayCustomEnvVars({
                   <Input
                     aria-label="Environment variable value"
                     defaultValue={field.value}
+                    className="font-mono"
                     name={field.name}
                     onChange={(e) => field.onChange(e.target.value)}
                     placeholder="e.g. 123_ABC_789_XZY"
