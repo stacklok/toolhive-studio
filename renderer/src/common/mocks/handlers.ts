@@ -9,6 +9,7 @@ import { versionFixture } from './fixtures/version'
 import { clientsFixture } from './fixtures/clients'
 import type { V1CreateRequest } from '../api/generated/types.gen'
 import { registryServerFixture } from './fixtures/registry_server'
+import { MOCK_REGISTRY_RESPONSE } from './fixtures/registry'
 
 export const handlers = [
   http.get(mswEndpoint('/health'), () => {
@@ -99,6 +100,10 @@ export const handlers = [
     return HttpResponse.json(clientsFixture)
   }),
 
+  http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+    return HttpResponse.json({ servers: MOCK_REGISTRY_RESPONSE })
+  }),
+
   http.get(
     mswEndpoint('/api/v1beta/registry/:name/servers/:serverName'),
     ({ params }) => {
@@ -106,4 +111,8 @@ export const handlers = [
       return HttpResponse.json({ ...registryServerFixture, name })
     }
   ),
+
+  http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
+    return HttpResponse.json({ keys: [] })
+  }),
 ]

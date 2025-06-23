@@ -3,15 +3,6 @@ description: Create a new task (can be standalone or linked to a story)
 title: '[Task] '
 labels: ['Task']
 body:
-  - type: input
-    id: task-title
-    attributes:
-      label: Task Title
-      description: Clear, actionable title for this task
-      placeholder: 'Implement user authentication...'
-    validations:
-      required: true
-
   - type: textarea
     id: description
     attributes:

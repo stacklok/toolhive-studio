@@ -20,6 +20,20 @@ beforeAll(() => {
     baseUrl: 'https://foo.bar.com',
     fetch,
   })
+
+  window.HTMLElement.prototype.scrollIntoView = function () {}
+
+  global.ResizeObserver = class ResizeObserver {
+    disconnect() {
+      // do nothing
+    }
+    observe() {
+      // do nothing
+    }
+    unobserve() {
+      // do nothing
+    }
+  }
 })
 afterEach(() => {
   server.resetHandlers()

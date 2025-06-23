@@ -136,19 +136,27 @@ async function downloadAndExtractBinary(
   } else {
     await tar.x({ file: archivePath, cwd: binDir })
   }
-}
 
-async function generateApiClient() {
-  console.log('🔄 Regenerating API client...')
+  // Clean up the archive file after extraction
   try {
-    await execFileAsync('pnpm', ['run', 'generate-client'], {
-      cwd: path.resolve(__dirname, '..'),
-    })
-    console.log('✅ API client regenerated successfully')
+    await rm(archivePath)
+    console.log(`🗑️  Cleaned up archive: ${assetName}`)
   } catch (error) {
-    console.warn('⚠️  Failed to regenerate API client:', error)
+    console.warn(`⚠️  Failed to clean up archive ${assetName}:`, error)
   }
 }
+
+// async function generateApiClient() {
+//   console.log('🔄 Regenerating API client...')
+//   try {
+//     await execFileAsync('pnpm', ['run', 'generate-client'], {
+//       cwd: path.resolve(__dirname, '..'),
+//     })
+//     console.log('✅ API client regenerated successfully')
+//   } catch (error) {
+//     console.warn('⚠️  Failed to regenerate API client:', error)
+//   }
+// }
 
 function createBinaryPath(
   platform: NodeJS.Platform,
@@ -195,7 +203,7 @@ export async function ensureThv(
   await cleanBinaryDirectory(binDir)
   await downloadAndExtractBinary(downloadUrl, binDir, assetName)
   await chmod(binPath, 0o755)
-  await generateApiClient()
+  // await generateApiClient()
 
   return binPath
 }

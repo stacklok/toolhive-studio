@@ -16,7 +16,6 @@ import { useState } from 'react'
 export const Route = createFileRoute('/')({
   loader: ({ context: { queryClient } }) =>
     queryClient.ensureQueryData(
-      // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
       getApiV1BetaWorkloadsOptions({ query: { all: true } })
     ),
   component: Index,
@@ -24,7 +23,6 @@ export const Route = createFileRoute('/')({
 
 export function Index() {
   const { data } = useSuspenseQuery({
-    // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
     ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
   })
   const workloads = data?.workloads ?? []

@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import type { ForgeConfig } from '@electron-forge/shared-types'
 import { MakerSquirrel } from '@electron-forge/maker-squirrel'
 import { MakerZIP } from '@electron-forge/maker-zip'
@@ -23,6 +24,7 @@ const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     icon: './icons/icon',
+    executableName: 'toolhive-studio',
     /**
      * Everything under bin/ is copied into
      * <app>/Contents/Resources/bin/ (macOS)
@@ -37,6 +39,34 @@ const config: ForgeConfig = {
       ProductName: 'ToolHive Studio',
       InternalName: 'ToolHive Studio',
     },
+
+    // MacOS Code Signing Configuration
+    osxSign: process.env.MAC_DEVELOPER_IDENTITY
+      ? { identity: process.env.MAC_DEVELOPER_IDENTITY }
+      : {}, // Auto-detect certificates
+
+    // MacOS Notarization Configuration
+    osxNotarize: (() => {
+      // Prefer Apple API Key method
+      if (process.env.APPLE_API_KEY) {
+        return {
+          appleApiKey: process.env.APPLE_API_KEY,
+          appleApiIssuer: process.env.APPLE_ISSUER_ID!,
+          appleApiKeyId: process.env.APPLE_KEY_ID!,
+        }
+      }
+
+      // Fallback to Apple ID method
+      if (process.env.APPLE_ID) {
+        return {
+          teamId: process.env.TEAM_ID!,
+          appleId: process.env.APPLE_ID,
+          appleIdPassword: process.env.APPLE_ID_PASSWORD!,
+        }
+      }
+
+      return undefined
+    })(),
   },
 
   rebuildConfig: {},
@@ -62,22 +92,37 @@ const config: ForgeConfig = {
       setupExe: 'ToolHive Studio Setup.exe',
       noMsi: true, // Don't create MSI installer
       authors: 'Stacklok Labs',
-      description: 'ToolHive Studio - Development Environment',
       exe: 'toolhive-studio.exe',
+      name: 'toolhive-studio',
     }),
-    new MakerDMG({}, ['darwin']),
+    new MakerDMG(
+      {
+        name: 'ToolHive Studio',
+      },
+      ['darwin']
+    ),
     new MakerZIP({}, ['darwin', 'win32']),
     new MakerTarGz({}, ['linux']),
     new MakerRpm({
       options: {
+        name: 'toolhive-studio',
+        productName: 'ToolHive Studio',
+        genericName: 'ToolHive Studio',
         icon: './icons/icon.png',
         requires: ['docker >= 20.10'],
+        license: 'Apache-2.0',
       },
     }),
     new MakerDeb({
       options: {
+        name: 'toolhive-studio',
+        productName: 'ToolHive Studio',
+        genericName: 'ToolHive Studio',
         icon: './icons/icon.png',
         depends: ['docker.io (>= 20.10)'],
+        maintainer: 'Stacklok Labs',
+        homepage: 'https://github.com/StacklokLabs/toolhive-studio',
+        section: 'devel',
       },
     }),
     // Flatpak maker - uncomment and configure when ready to use
@@ -86,6 +131,7 @@ const config: ForgeConfig = {
     // new MakerFlatpak({
     //   options: {
     //     categories: ["Development", "Utility"],
+    //     license: "Apache-2.0",
     //     files: [
     //       // Add required files configuration here
     //     ],

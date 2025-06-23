@@ -9,18 +9,13 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from "./routes/__root"
-import { Route as StoreRouteImport } from "./routes/store"
 import { Route as ShutdownRouteImport } from "./routes/shutdown"
 import { Route as SecretsRouteImport } from "./routes/secrets"
+import { Route as RegistryRouteImport } from "./routes/registry"
 import { Route as ClientsRouteImport } from "./routes/clients"
 import { Route as IndexRouteImport } from "./routes/index"
 import { Route as LogsServerNameRouteImport } from "./routes/logs.$serverName"
 
-const StoreRoute = StoreRouteImport.update({
-  id: "/store",
-  path: "/store",
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ShutdownRoute = ShutdownRouteImport.update({
   id: "/shutdown",
   path: "/shutdown",
@@ -29,6 +24,11 @@ const ShutdownRoute = ShutdownRouteImport.update({
 const SecretsRoute = SecretsRouteImport.update({
   id: "/secrets",
   path: "/secrets",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegistryRoute = RegistryRouteImport.update({
+  id: "/registry",
+  path: "/registry",
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientsRoute = ClientsRouteImport.update({
@@ -50,26 +50,26 @@ const LogsServerNameRoute = LogsServerNameRouteImport.update({
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
   "/clients": typeof ClientsRoute
+  "/registry": typeof RegistryRoute
   "/secrets": typeof SecretsRoute
   "/shutdown": typeof ShutdownRoute
-  "/store": typeof StoreRoute
   "/logs/$serverName": typeof LogsServerNameRoute
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
   "/clients": typeof ClientsRoute
+  "/registry": typeof RegistryRoute
   "/secrets": typeof SecretsRoute
   "/shutdown": typeof ShutdownRoute
-  "/store": typeof StoreRoute
   "/logs/$serverName": typeof LogsServerNameRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   "/": typeof IndexRoute
   "/clients": typeof ClientsRoute
+  "/registry": typeof RegistryRoute
   "/secrets": typeof SecretsRoute
   "/shutdown": typeof ShutdownRoute
-  "/store": typeof StoreRoute
   "/logs/$serverName": typeof LogsServerNameRoute
 }
 export interface FileRouteTypes {
@@ -77,46 +77,39 @@ export interface FileRouteTypes {
   fullPaths:
     | "/"
     | "/clients"
+    | "/registry"
     | "/secrets"
     | "/shutdown"
-    | "/store"
     | "/logs/$serverName"
   fileRoutesByTo: FileRoutesByTo
   to:
     | "/"
     | "/clients"
+    | "/registry"
     | "/secrets"
     | "/shutdown"
-    | "/store"
     | "/logs/$serverName"
   id:
     | "__root__"
     | "/"
     | "/clients"
+    | "/registry"
     | "/secrets"
     | "/shutdown"
-    | "/store"
     | "/logs/$serverName"
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ClientsRoute: typeof ClientsRoute
+  RegistryRoute: typeof RegistryRoute
   SecretsRoute: typeof SecretsRoute
   ShutdownRoute: typeof ShutdownRoute
-  StoreRoute: typeof StoreRoute
   LogsServerNameRoute: typeof LogsServerNameRoute
 }
 
 declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    "/store": {
-      id: "/store"
-      path: "/store"
-      fullPath: "/store"
-      preLoaderRoute: typeof StoreRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     "/shutdown": {
       id: "/shutdown"
       path: "/shutdown"
@@ -129,6 +122,13 @@ declare module "@tanstack/react-router" {
       path: "/secrets"
       fullPath: "/secrets"
       preLoaderRoute: typeof SecretsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/registry": {
+      id: "/registry"
+      path: "/registry"
+      fullPath: "/registry"
+      preLoaderRoute: typeof RegistryRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/clients": {
@@ -158,9 +158,9 @@ declare module "@tanstack/react-router" {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ClientsRoute: ClientsRoute,
+  RegistryRoute: RegistryRoute,
   SecretsRoute: SecretsRoute,
   ShutdownRoute: ShutdownRoute,
-  StoreRoute: StoreRoute,
   LogsServerNameRoute: LogsServerNameRoute,
 }
 export const routeTree = rootRouteImport

@@ -13,6 +13,9 @@ import type {
   PostApiV1BetaClientsData,
   PostApiV1BetaClientsResponses,
   PostApiV1BetaClientsErrors,
+  DeleteApiV1BetaClientsByNameData,
+  DeleteApiV1BetaClientsByNameResponses,
+  DeleteApiV1BetaClientsByNameErrors,
   GetApiV1BetaDiscoveryClientsData,
   GetApiV1BetaDiscoveryClientsResponses,
   GetApiV1BetaRegistryData,
@@ -31,6 +34,24 @@ import type {
   GetApiV1BetaRegistryByNameServersByServerNameData,
   GetApiV1BetaRegistryByNameServersByServerNameResponses,
   GetApiV1BetaRegistryByNameServersByServerNameErrors,
+  PostApiV1BetaSecretsData,
+  PostApiV1BetaSecretsResponses,
+  PostApiV1BetaSecretsErrors,
+  GetApiV1BetaSecretsDefaultData,
+  GetApiV1BetaSecretsDefaultResponses,
+  GetApiV1BetaSecretsDefaultErrors,
+  GetApiV1BetaSecretsDefaultKeysData,
+  GetApiV1BetaSecretsDefaultKeysResponses,
+  GetApiV1BetaSecretsDefaultKeysErrors,
+  PostApiV1BetaSecretsDefaultKeysData,
+  PostApiV1BetaSecretsDefaultKeysResponses,
+  PostApiV1BetaSecretsDefaultKeysErrors,
+  DeleteApiV1BetaSecretsDefaultKeysByKeyData,
+  DeleteApiV1BetaSecretsDefaultKeysByKeyResponses,
+  DeleteApiV1BetaSecretsDefaultKeysByKeyErrors,
+  PutApiV1BetaSecretsDefaultKeysByKeyData,
+  PutApiV1BetaSecretsDefaultKeysByKeyResponses,
+  PutApiV1BetaSecretsDefaultKeysByKeyErrors,
   GetApiV1BetaVersionData,
   GetApiV1BetaVersionResponses,
   GetApiV1BetaWorkloadsData,
@@ -38,6 +59,8 @@ import type {
   PostApiV1BetaWorkloadsData,
   PostApiV1BetaWorkloadsResponses,
   PostApiV1BetaWorkloadsErrors,
+  PostApiV1BetaWorkloadsStopData,
+  PostApiV1BetaWorkloadsStopResponses,
   DeleteApiV1BetaWorkloadsByNameData,
   DeleteApiV1BetaWorkloadsByNameResponses,
   DeleteApiV1BetaWorkloadsByNameErrors,
@@ -124,6 +147,25 @@ export const postApiV1BetaClients = <ThrowOnError extends boolean = false>(
       'Content-Type': 'application/json',
       ...options.headers,
     },
+  })
+}
+
+/**
+ * Unregister a client
+ * Unregister a client from ToolHive
+ */
+export const deleteApiV1BetaClientsByName = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<DeleteApiV1BetaClientsByNameData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).delete<
+    DeleteApiV1BetaClientsByNameResponses,
+    DeleteApiV1BetaClientsByNameErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/clients/{name}',
+    ...options,
   })
 }
 
@@ -264,6 +306,130 @@ export const getApiV1BetaRegistryByNameServersByServerName = <
 }
 
 /**
+ * Setup or reconfigure secrets provider
+ * Setup the secrets provider with the specified type and configuration.
+ */
+export const postApiV1BetaSecrets = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1BetaSecretsData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostApiV1BetaSecretsResponses,
+    PostApiV1BetaSecretsErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/secrets',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+}
+
+/**
+ * Get secrets provider details
+ * Get details of the default secrets provider
+ */
+export const getApiV1BetaSecretsDefault = <
+  ThrowOnError extends boolean = false,
+>(
+  options?: Options<GetApiV1BetaSecretsDefaultData, ThrowOnError>
+) => {
+  return (options?.client ?? _heyApiClient).get<
+    GetApiV1BetaSecretsDefaultResponses,
+    GetApiV1BetaSecretsDefaultErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/secrets/default',
+    ...options,
+  })
+}
+
+/**
+ * List secrets
+ * Get a list of all secret keys from the default provider
+ */
+export const getApiV1BetaSecretsDefaultKeys = <
+  ThrowOnError extends boolean = false,
+>(
+  options?: Options<GetApiV1BetaSecretsDefaultKeysData, ThrowOnError>
+) => {
+  return (options?.client ?? _heyApiClient).get<
+    GetApiV1BetaSecretsDefaultKeysResponses,
+    GetApiV1BetaSecretsDefaultKeysErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/secrets/default/keys',
+    ...options,
+  })
+}
+
+/**
+ * Create a new secret
+ * Create a new secret in the default provider (encrypted provider only)
+ */
+export const postApiV1BetaSecretsDefaultKeys = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1BetaSecretsDefaultKeysData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostApiV1BetaSecretsDefaultKeysResponses,
+    PostApiV1BetaSecretsDefaultKeysErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/secrets/default/keys',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+}
+
+/**
+ * Delete a secret
+ * Delete a secret from the default provider (encrypted provider only)
+ */
+export const deleteApiV1BetaSecretsDefaultKeysByKey = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<DeleteApiV1BetaSecretsDefaultKeysByKeyData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).delete<
+    DeleteApiV1BetaSecretsDefaultKeysByKeyResponses,
+    DeleteApiV1BetaSecretsDefaultKeysByKeyErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/secrets/default/keys/{key}',
+    ...options,
+  })
+}
+
+/**
+ * Update a secret
+ * Update an existing secret in the default provider (encrypted provider only)
+ */
+export const putApiV1BetaSecretsDefaultKeysByKey = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PutApiV1BetaSecretsDefaultKeysByKeyData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).put<
+    PutApiV1BetaSecretsDefaultKeysByKeyResponses,
+    PutApiV1BetaSecretsDefaultKeysByKeyErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/secrets/default/keys/{key}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+}
+
+/**
  * Get server version
  * Returns the current version of the server
  */
@@ -315,6 +481,25 @@ export const postApiV1BetaWorkloads = <ThrowOnError extends boolean = false>(
       'Content-Type': 'application/json',
       ...options.headers,
     },
+  })
+}
+
+/**
+ * Stop all workloads
+ * Stop all running workload
+ */
+export const postApiV1BetaWorkloadsStop = <
+  ThrowOnError extends boolean = false,
+>(
+  options?: Options<PostApiV1BetaWorkloadsStopData, ThrowOnError>
+) => {
+  return (options?.client ?? _heyApiClient).post<
+    PostApiV1BetaWorkloadsStopResponses,
+    unknown,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/workloads/stop',
+    ...options,
   })
 }
 

@@ -139,6 +139,26 @@ const shouldStartHidden =
   process.argv.includes('--hidden') || process.argv.includes('--start-hidden')
 const isDevelopment = process.env.NODE_ENV === 'development'
 
+function getPlatformSpecificWindowOptions() {
+  const platformConfigs = {
+    darwin: {
+      titleBarStyle: 'hidden' as const,
+      trafficLightPosition: { x: 21, y: 24 },
+    },
+    win32: {
+      frame: false, // Completely frameless for custom window controls
+    },
+    linux: {
+      frame: false, // Frameless for custom controls
+    },
+  }
+
+  return (
+    platformConfigs[process.platform as keyof typeof platformConfigs] ||
+    platformConfigs.linux
+  )
+}
+
 function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 1040,
@@ -150,12 +170,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       webSecurity: !isDevelopment,
     },
-    ...(process.platform === 'darwin'
-      ? {
-          titleBarStyle: 'hidden',
-          trafficLightPosition: { x: 21, y: 16 },
-        }
-      : {}),
+    ...getPlatformSpecificWindowOptions(),
   })
 
   // Windows: minimise-to-tray instead of close
@@ -311,3 +326,24 @@ ipcMain.handle('quit-app', () => {
 })
 
 ipcMain.handle('get-toolhive-port', () => toolhivePort)
+
+// Window control handlers for custom title bar
+ipcMain.handle('window-minimize', () => {
+  mainWindow?.minimize()
+})
+
+ipcMain.handle('window-maximize', () => {
+  if (mainWindow?.isMaximized()) {
+    mainWindow.unmaximize()
+  } else {
+    mainWindow?.maximize()
+  }
+})
+
+ipcMain.handle('window-close', () => {
+  mainWindow?.close()
+})
+
+ipcMain.handle('window-is-maximized', () => {
+  return mainWindow?.isMaximized() ?? false
+})

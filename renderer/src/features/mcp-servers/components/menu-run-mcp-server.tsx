@@ -27,7 +27,7 @@ export function DropdownMenuRunMcpServer({
           openRunCommandDialog()
         } else {
           e.preventDefault()
-          navigate({ to: '/store' })
+          navigate({ to: '/registry' })
         }
       }
     }
@@ -44,9 +44,9 @@ export function DropdownMenuRunMcpServer({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="bottom" align="end">
-        <DropdownMenuItem asChild aria-label="From the Store">
-          <Link to="/store">
-            From the Store
+        <DropdownMenuItem asChild aria-label="From the registry">
+          <Link to="/registry">
+            From the registry
             <DropdownMenuShortcut>⌘N</DropdownMenuShortcut>
           </Link>
         </DropdownMenuItem>

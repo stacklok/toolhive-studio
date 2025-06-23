@@ -21,8 +21,11 @@ import { useMutationStopServerList } from '../hooks/use-mutation-stop-server'
 import { useConfirm } from '@/common/hooks/use-confirm'
 import { useDeleteServer } from '../hooks/use-delete-server'
 import { useQuery } from '@tanstack/react-query'
+import { useSearch } from '@tanstack/react-router'
 import { getApiV1BetaRegistryByNameServersByServerName } from '@/common/api/generated/sdk.gen'
 import { isFeatureEnabled } from '@/feature-flags'
+import { useEffect, useState } from 'react'
+import { twMerge } from 'tailwind-merge'
 
 type CardContentMcpServerProps = {
   status: WorkloadsWorkload['status']
@@ -126,10 +129,38 @@ export function CardMcpServer({
     }
   }
 
+  const search = useSearch({
+    strict: false,
+  })
+  const [isNewServer, setIsNewServer] = useState(false)
+
+  useEffect(() => {
+    // Check if the server is new by looking for a specific search parameter
+    // This could be a query parameter or any other condition that indicates a new server
+    if ('newServerName' in search && search.newServerName === name) {
+      setIsNewServer(true)
+      // clear state after 2 seconds
+      setTimeout(() => {
+        setIsNewServer(false)
+      }, 2000)
+    } else {
+      setIsNewServer(false)
+    }
+
+    return () => {
+      setIsNewServer(false)
+    }
+  }, [name, search])
+
   const repositoryUrl = serverDetails?.server?.repository_url
 
   return (
-    <Card className="gap-3 py-5 shadow-none transition-colors">
+    <Card
+      className={twMerge(
+        'gap-3 py-5 shadow-none transition-[color,box-shadow]',
+        isNewServer ? 'ring-2' : undefined
+      )}
+    >
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center text-xl">{name}</CardTitle>

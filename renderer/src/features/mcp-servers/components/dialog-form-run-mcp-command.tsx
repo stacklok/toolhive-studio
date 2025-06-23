@@ -82,7 +82,13 @@ export function DialogFormRunMcpServerWithCommand({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="p-0">
+      <DialogContent
+        className="p-0"
+        onInteractOutside={(e) => {
+          // Prevent closing the dialog when clicking outside
+          e.preventDefault()
+        }}
+      >
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) => {

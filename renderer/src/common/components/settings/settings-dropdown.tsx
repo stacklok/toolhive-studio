@@ -73,7 +73,7 @@ export function SettingsDropdown({ className }: { className?: string }) {
           size="sm"
           className={twMerge('cursor-pointer', className)}
         >
-          <SettingsIcon className="size-5" />
+          <SettingsIcon className="text-muted-foreground size-4" />
           <span className="sr-only">Settings</span>
         </Button>
       </DropdownMenuTrigger>

@@ -1,0 +1,66 @@
+name: 'Setup macOS Code Signing'
+description: 'Sets up macOS code signing certificates and Apple API key for notarization'
+
+inputs:
+  apple-certificate:
+    description: 'Base64 encoded .p12 certificate'
+    required: true
+  apple-certificate-password:
+    description: 'Password for the .p12 certificate'
+    required: true
+  keychain-password:
+    description: 'Password for the temporary keychain'
+    required: true
+  apple-api-key:
+    description: 'Base64 encoded Apple API key (.p8 file)'
+    required: false
+
+  apple-issuer-id:
+    description: 'Apple API Issuer ID'
+    required: false
+  apple-key-id:
+    description: 'Apple API Key ID'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup macOS code signing
+      if: runner.os == 'macOS'
+      shell: bash
+      env:
+        APPLE_CERTIFICATE: ${{ inputs.apple-certificate }}
+        APPLE_CERTIFICATE_PASSWORD: ${{ inputs.apple-certificate-password }}
+        KEYCHAIN_PASSWORD: ${{ inputs.keychain-password }}
+        APPLE_API_KEY: ${{ inputs.apple-api-key }}
+
+        APPLE_ISSUER_ID: ${{ inputs.apple-issuer-id }}
+        APPLE_KEY_ID: ${{ inputs.apple-key-id }}
+      run: |
+        # Create temporary keychain
+        security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+        security default-keychain -s build.keychain
+        security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+
+        # Import certificate
+        echo $APPLE_CERTIFICATE | base64 --decode > certificate.p12
+        security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+        security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+
+        # Setup Apple API Key for notarization
+        if [ -n "$APPLE_API_KEY" ]; then
+          echo $APPLE_API_KEY | base64 --decode > ~/AuthKey.p8
+          echo "APPLE_API_KEY_PATH=~/AuthKey.p8" >> $GITHUB_ENV
+        fi
+
+        # Set additional environment variables for subsequent steps
+        if [ -n "$APPLE_ISSUER_ID" ]; then
+          echo "APPLE_ISSUER_ID=$APPLE_ISSUER_ID" >> $GITHUB_ENV
+        fi
+
+        if [ -n "$APPLE_KEY_ID" ]; then
+          echo "APPLE_KEY_ID=$APPLE_KEY_ID" >> $GITHUB_ENV
+        fi
+
+        # Clean up
+        rm certificate.p12

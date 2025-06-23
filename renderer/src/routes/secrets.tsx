@@ -6,5 +6,12 @@ export const Route = createFileRoute('/secrets')({
 })
 
 function Secrets() {
-  return <SecretsTable secrets={[]} />
+  return (
+    <>
+      <div className="mb-6 flex items-center">
+        <h1 className="text-3xl font-semibold">Secrets</h1>
+      </div>
+      <SecretsTable secrets={[]} />
+    </>
+  )
 }
