@@ -13,7 +13,7 @@ const router = createTestRouter(() => (
   />
 ))
 
-it('shows logs menu item in dropdown', async () => {
+it('navigates to logs page when logs menu item is clicked', async () => {
   renderRoute(router)
 
   await waitFor(() => {
@@ -26,7 +26,10 @@ it('shows logs menu item in dropdown', async () => {
 
   await userEvent.click(moreOptionsButton)
 
+  const logsMenuItem = screen.getByRole('menuitem', { name: /logs/i })
+  await userEvent.click(logsMenuItem)
+
   await waitFor(() => {
-    expect(screen.getByRole('menuitem', { name: /logs/i })).toBeVisible()
+    expect(router.state.location.pathname).toBe('/logs/test-server')
   })
 })
