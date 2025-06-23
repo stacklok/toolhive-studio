@@ -76,12 +76,13 @@ async function startToolhive() {
   console.log(`Starting ToolHive from: ${binPath} on port ${toolhivePort}`)
   toolhiveProcess = spawn(
     binPath,
-    ['serve', '--openapi', `--port=${toolhivePort}`],
+    ['serve', '--openapi', '--host=127.0.0.1', `--port=${toolhivePort}`],
     {
       stdio: 'ignore',
-      detached: true,
+      detached: false,
     }
   )
+
   toolhiveProcess.on('error', (error) => {
     console.error('Failed to start ToolHive:', error)
     if (tray) updateTrayStatus(tray, false)
@@ -91,8 +92,6 @@ async function startToolhive() {
     toolhiveProcess = undefined
     if (tray) updateTrayStatus(tray, false)
   })
-  toolhiveProcess.unref()
-  if (tray) updateTrayStatus(tray, true)
 }
 
 let tearingDown = false
@@ -123,6 +122,26 @@ export async function blockQuit(source: string, event?: Electron.Event) {
     tray?.destroy()
     app.quit()
   }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+//  Single Instance Lock - Prevent multiple instances
+// ────────────────────────────────────────────────────────────────────────────
+const gotTheLock = app.requestSingleInstanceLock()
+
+if (!gotTheLock) {
+  console.log('Another instance is already running. Exiting...')
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    // Someone tried to run a second instance, focus our window instead
+    console.log('Second instance attempted, focusing existing window')
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore()
+      mainWindow.focus()
+      mainWindow.show()
+    }
+  })
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -224,7 +243,9 @@ app.whenReady().then(() => {
     return callback({
       responseHeaders: {
         ...details.responseHeaders,
-        'Content-Security-Policy': [getCspString(toolhivePort)],
+        'Content-Security-Policy': [
+          getCspString(toolhivePort, import.meta.env.VITE_SENTRY_DSN),
+        ],
       },
     })
   })
