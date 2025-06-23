@@ -92,6 +92,7 @@ export function SecretsTable({ secrets }: { secrets: V1SecretKeyResponse[] }) {
                       setIsSecretDialogOpen(true)
                       setSecretKey(secret.key)
                     }}
+                    secretKey={secret.key ?? ''}
                   />
                 </TableCell>
               </TableRow>

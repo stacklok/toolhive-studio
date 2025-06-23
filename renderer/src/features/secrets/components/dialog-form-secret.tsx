@@ -22,6 +22,8 @@ import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { z } from 'zod/v4'
 import { Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
+import { useMutationUpdateSecret } from '../hooks/use-mutation-update-secret'
+import { useMutationCerateSecret } from '../hooks/use-mutation-create-secret'
 
 const createSecretSchema = z.object({
   key: z.string().min(1, 'Secret name is required'),
@@ -62,8 +64,28 @@ export function DialogFormSecret({
       value: '',
     },
   })
+  const { mutateAsync: createSecret } = useMutationCerateSecret()
+  const { mutateAsync: updateSecret } = useMutationUpdateSecret(secretKey ?? '')
 
   const handleSubmit = async () => {
+    if (isEditMode) {
+      updateSecret({
+        path: {
+          key: secretKey ?? '',
+        },
+        body: {
+          value: form.getValues('value'),
+        },
+      })
+    } else {
+      createSecret({
+        body: {
+          key: form.getValues('key'),
+          value: form.getValues('value'),
+        },
+      })
+    }
+
     form.reset()
     onOpenChange(false)
   }
