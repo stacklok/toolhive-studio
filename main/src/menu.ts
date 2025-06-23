@@ -1,63 +1,80 @@
-import { Menu, app, type MenuItemConstructorOptions } from 'electron'
-import { ChildProcess } from 'node:child_process'
+import { Menu, app } from 'electron'
 import { getAutoLaunchStatus, setAutoLaunch } from './auto-launch'
 import { updateTrayStatus } from './system-tray'
 
-let tray: Electron.Tray | null = null
-let toolhiveProcess: ChildProcess | null = null
-
-export function setMenuReferences(
-  trayRef: Electron.Tray | null,
-  processRef: ChildProcess | null
+function createAutoLaunchItem(
+  accelerator: string,
+  trayRef: Electron.Tray | null
 ) {
-  tray = trayRef
-  toolhiveProcess = processRef
+  const currentStatus = getAutoLaunchStatus()
+
+  return {
+    label: 'Start on Login',
+    type: 'checkbox' as const,
+    checked: currentStatus,
+    accelerator,
+    click: () => {
+      try {
+        setAutoLaunch(!currentStatus)
+        if (trayRef) {
+          updateTrayStatus(trayRef, true)
+        }
+        createApplicationMenu(trayRef)
+      } catch (error) {
+        console.error('Failed to toggle auto-launch:', error)
+      }
+    },
+  }
 }
 
-export function createApplicationMenu() {
+export function createApplicationMenu(trayRef: Electron.Tray | null) {
   const isMac = process.platform === 'darwin'
+  const defaultMenu = Menu.getApplicationMenu()?.items ?? []
 
-  if (!isMac) return
+  const convertMenuItemsToTemplate = (
+    items: Electron.MenuItem[]
+  ): Electron.MenuItemConstructorOptions[] => {
+    return items.map((item) => ({
+      label: item.label,
+      type: item.type,
+      role: item.role,
+      enabled: item.enabled,
+      visible: item.visible,
+      checked: item.checked,
+      accelerator: item.accelerator,
+      submenu:
+        item.submenu && 'items' in item.submenu
+          ? convertMenuItemsToTemplate(item.submenu.items)
+          : undefined,
+    }))
+  }
 
-  const template = [
+  const existingMenus = convertMenuItemsToTemplate(defaultMenu)
+  const restMenuItems = existingMenus.slice(1)
+  const template: Electron.MenuItemConstructorOptions[] = [
     {
       label: app.getName(),
       submenu: [
-        { role: 'about' },
-        { type: 'separator' },
-        {
-          label: 'Start on Login',
-          type: 'checkbox',
-          checked: getAutoLaunchStatus(),
-          accelerator: 'Cmd+L',
-          click: () => {
-            try {
-              setAutoLaunch(!getAutoLaunchStatus())
-              updateApplicationMenuAutoLaunch()
-              if (tray) {
-                updateTrayStatus(tray, !!toolhiveProcess)
-              }
-            } catch (error) {
-              console.error('Failed to toggle auto-launch:', error)
-            }
-          },
-        },
-        { type: 'separator' },
-        { role: 'services' },
-        { type: 'separator' },
-        { role: 'hide' },
-        { role: 'hideOthers' },
-        { role: 'unhide' },
-        { type: 'separator' },
-        { role: 'quit' },
+        { role: 'about' as const },
+        { type: 'separator' as const },
+        createAutoLaunchItem(isMac ? 'Cmd+L' : 'Ctrl+L', trayRef),
+        { type: 'separator' as const },
+        ...(isMac
+          ? [
+              { role: 'services' as const },
+              { type: 'separator' as const },
+              { role: 'hide' as const },
+              { role: 'hideOthers' as const },
+              { role: 'unhide' as const },
+              { type: 'separator' as const },
+            ]
+          : []),
+        { role: 'quit' as const },
       ],
     },
+    ...restMenuItems,
   ]
 
-  const menu = Menu.buildFromTemplate(template as MenuItemConstructorOptions[])
+  const menu = Menu.buildFromTemplate(template)
   Menu.setApplicationMenu(menu)
-}
-
-export function updateApplicationMenuAutoLaunch() {
-  createApplicationMenu()
 }

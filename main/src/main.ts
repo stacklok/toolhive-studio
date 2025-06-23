@@ -14,11 +14,7 @@ import { spawn } from 'node:child_process'
 import * as Sentry from '@sentry/electron/main'
 import { initTray, updateTrayStatus } from './system-tray'
 import { setAutoLaunch, getAutoLaunchStatus } from './auto-launch'
-import {
-  createApplicationMenu,
-  updateApplicationMenuAutoLaunch,
-  setMenuReferences,
-} from './menu'
+import { createApplicationMenu } from './menu'
 import net from 'node:net'
 import { getCspString } from './csp'
 import { stopAllServers } from './graceful-exit'
@@ -219,9 +215,6 @@ app.on('ready', () => {
 })
 
 app.whenReady().then(() => {
-  // Setup application menu
-  createApplicationMenu()
-
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     if (isDevelopment) {
       return callback({ responseHeaders: details.responseHeaders })
@@ -240,9 +233,8 @@ app.whenReady().then(() => {
   try {
     tray = initTray({ toolHiveIsRunning: !!toolhiveProcess })
     console.log('System tray initialized successfully')
-
-    // Set references for menu synchronization
-    setMenuReferences(tray, toolhiveProcess ?? null)
+    // Setup application menu
+    createApplicationMenu(tray)
   } catch (error) {
     console.error('Failed to initialize system tray:', error)
   }
@@ -320,8 +312,6 @@ ipcMain.handle('get-auto-launch-status', () => getAutoLaunchStatus())
 
 ipcMain.handle('set-auto-launch', (_event, enabled: boolean) => {
   setAutoLaunch(enabled)
-  // Update application menu to reflect new status
-  updateApplicationMenuAutoLaunch()
   // Update tray menu if exists
   if (tray) {
     updateTrayStatus(tray, !!toolhiveProcess)
