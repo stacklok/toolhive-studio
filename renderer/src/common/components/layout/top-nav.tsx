@@ -19,7 +19,7 @@ import { isFeatureEnabled } from '@/feature-flags'
 function getPlatformSpecificHeaderClasses() {
   const platformClasses = {
     darwin: 'pl-26', // Left padding for traffic light buttons
-    win32: 'pr-7', // Right padding for visual spacing with window edge
+    win32: 'pr-2', // Right padding for visual spacing with window edge
     linux: '', // No padding needed - custom controls are part of the layout
   }
 
