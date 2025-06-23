@@ -82,6 +82,7 @@ export function FormComboboxSecretStore<
                   type="button"
                   role="combobox"
                   className="rounded-tl-none rounded-bl-none"
+                  aria-label="Use a secret from the store"
                 >
                   <ChevronDown />
                 </Button>
@@ -91,6 +92,7 @@ export function FormComboboxSecretStore<
               align="end"
               className="min-w-[200px] p-0"
               side="bottom"
+              aria-label="Secrets store"
             >
               <Command>
                 <div className="grid w-full grid-cols-[auto_calc(var(--spacing)_*_9)] items-end">
