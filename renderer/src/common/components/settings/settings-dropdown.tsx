@@ -20,7 +20,6 @@ export function SettingsDropdown({ className }: { className?: string }) {
       setIsLoading(true)
       if (window.electronAPI) {
         const status = await window.electronAPI.getAutoLaunchStatus()
-        console.log(`status ${status}`)
         setIsAutoLaunchEnabled(status)
       }
     } catch (error) {
