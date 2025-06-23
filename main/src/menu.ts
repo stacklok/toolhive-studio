@@ -7,7 +7,6 @@ function createAutoLaunchItem(
   trayRef: Electron.Tray | null
 ) {
   const currentStatus = getAutoLaunchStatus()
-
   return {
     label: 'Start on Login',
     type: 'checkbox' as const,

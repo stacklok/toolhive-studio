@@ -316,6 +316,8 @@ ipcMain.handle('set-auto-launch', (_event, enabled: boolean) => {
   if (tray) {
     updateTrayStatus(tray, !!toolhiveProcess)
   }
+  // Update menu
+  createApplicationMenu(tray)
   return getAutoLaunchStatus()
 })
 
