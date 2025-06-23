@@ -6,6 +6,8 @@ import {
   CardContent,
 } from '@/common/components/ui/card'
 import { Switch } from '@/common/components/ui/switch'
+import { useMutationRegisterClient } from '../hooks/use-mutation-register-client'
+import { useMutationUnregisterClient } from '../hooks/use-mutation-unregister-client'
 
 // There is an issue with openAPI generator in BE, similar issue https://github.com/stacklok/toolhive/issues/780
 const CLIENT_TYPE_LABEL_MAP = {
@@ -18,6 +20,13 @@ const CLIENT_TYPE_LABEL_MAP = {
 } as const
 
 export function CardClient({ client }: { client: ClientMcpClientStatus }) {
+  const { mutateAsync: registerClient } = useMutationRegisterClient(
+    client.client_type ?? ''
+  )
+  const { mutateAsync: unregisterClient } = useMutationUnregisterClient(
+    client.client_type ?? ''
+  )
+
   return (
     <Card className="gap-3 py-5">
       <CardHeader>
@@ -28,7 +37,25 @@ export function CardClient({ client }: { client: ClientMcpClientStatus }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="flex items-center gap-2">
-        <Switch className="cursor-pointer" checked={client.registered} />
+        <Switch
+          className="cursor-pointer"
+          checked={client.registered}
+          onCheckedChange={() => {
+            if (client.registered) {
+              unregisterClient({
+                path: {
+                  name: client.client_type ?? '',
+                },
+              })
+            } else {
+              registerClient({
+                body: {
+                  name: client.client_type ?? '',
+                },
+              })
+            }
+          }}
+        />
         <div className="text-muted-foreground text-sm">
           {client.registered ? 'Connected' : 'Disconnected'}
         </div>
