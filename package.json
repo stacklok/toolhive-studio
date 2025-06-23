@@ -1,6 +1,6 @@
 {
   "name": "toolhive-studio",
-  "productName": "Toolhive Studio",
+  "productName": "ToolHive Studio",
   "version": "0.0.5",
   "description": "My Electron application description",
   "main": ".vite/build/main.js",
