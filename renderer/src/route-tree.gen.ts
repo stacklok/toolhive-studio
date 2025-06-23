@@ -9,17 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from "./routes/__root"
-import { Route as StoreRouteImport } from "./routes/store"
 import { Route as ShutdownRouteImport } from "./routes/shutdown"
 import { Route as SecretsRouteImport } from "./routes/secrets"
+import { Route as RegistryRouteImport } from "./routes/registry"
 import { Route as ClientsRouteImport } from "./routes/clients"
 import { Route as IndexRouteImport } from "./routes/index"
 
-const StoreRoute = StoreRouteImport.update({
-  id: "/store",
-  path: "/store",
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ShutdownRoute = ShutdownRouteImport.update({
   id: "/shutdown",
   path: "/shutdown",
@@ -28,6 +23,11 @@ const ShutdownRoute = ShutdownRouteImport.update({
 const SecretsRoute = SecretsRouteImport.update({
   id: "/secrets",
   path: "/secrets",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegistryRoute = RegistryRouteImport.update({
+  id: "/registry",
+  path: "/registry",
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientsRoute = ClientsRouteImport.update({
@@ -44,50 +44,43 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
   "/clients": typeof ClientsRoute
+  "/registry": typeof RegistryRoute
   "/secrets": typeof SecretsRoute
   "/shutdown": typeof ShutdownRoute
-  "/store": typeof StoreRoute
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
   "/clients": typeof ClientsRoute
+  "/registry": typeof RegistryRoute
   "/secrets": typeof SecretsRoute
   "/shutdown": typeof ShutdownRoute
-  "/store": typeof StoreRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   "/": typeof IndexRoute
   "/clients": typeof ClientsRoute
+  "/registry": typeof RegistryRoute
   "/secrets": typeof SecretsRoute
   "/shutdown": typeof ShutdownRoute
-  "/store": typeof StoreRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: "/" | "/clients" | "/secrets" | "/shutdown" | "/store"
+  fullPaths: "/" | "/clients" | "/registry" | "/secrets" | "/shutdown"
   fileRoutesByTo: FileRoutesByTo
-  to: "/" | "/clients" | "/secrets" | "/shutdown" | "/store"
-  id: "__root__" | "/" | "/clients" | "/secrets" | "/shutdown" | "/store"
+  to: "/" | "/clients" | "/registry" | "/secrets" | "/shutdown"
+  id: "__root__" | "/" | "/clients" | "/registry" | "/secrets" | "/shutdown"
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ClientsRoute: typeof ClientsRoute
+  RegistryRoute: typeof RegistryRoute
   SecretsRoute: typeof SecretsRoute
   ShutdownRoute: typeof ShutdownRoute
-  StoreRoute: typeof StoreRoute
 }
 
 declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    "/store": {
-      id: "/store"
-      path: "/store"
-      fullPath: "/store"
-      preLoaderRoute: typeof StoreRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     "/shutdown": {
       id: "/shutdown"
       path: "/shutdown"
@@ -100,6 +93,13 @@ declare module "@tanstack/react-router" {
       path: "/secrets"
       fullPath: "/secrets"
       preLoaderRoute: typeof SecretsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/registry": {
+      id: "/registry"
+      path: "/registry"
+      fullPath: "/registry"
+      preLoaderRoute: typeof RegistryRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/clients": {
@@ -122,9 +122,9 @@ declare module "@tanstack/react-router" {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ClientsRoute: ClientsRoute,
+  RegistryRoute: RegistryRoute,
   SecretsRoute: SecretsRoute,
   ShutdownRoute: ShutdownRoute,
-  StoreRoute: StoreRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

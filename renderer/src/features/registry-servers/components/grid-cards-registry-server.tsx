@@ -1,6 +1,6 @@
 import type { RegistryServer } from '@/common/api/generated/types.gen'
 import { CardRegistryServer } from './card-registry-server'
-import { FormCatalogCreation } from './form-catalog-creation'
+import { FormRunFromRegistry } from './form-run-from-registry'
 import { useState } from 'react'
 import { Input } from '@/common/components/ui/input'
 import type { FormSchemaRunFromRegistry } from '../lib/get-form-schema-run-from-registry'
@@ -72,7 +72,7 @@ export function GridCardsRegistryServer({
         </div>
       )}
 
-      <FormCatalogCreation
+      <FormRunFromRegistry
         key={selectedServer?.name}
         server={selectedServer}
         isOpen={isModalOpen}
