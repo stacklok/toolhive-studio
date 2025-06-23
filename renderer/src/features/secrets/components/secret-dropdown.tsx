@@ -15,7 +15,7 @@ export function SecretDropdown({
   onHandleClick: () => void
   secretKey: string
 }) {
-  const { mutateAsync: deleteSecret } = useMutationDeleteSecret()
+  const { mutateAsync: deleteSecret } = useMutationDeleteSecret(secretKey)
 
   return (
     <DropdownMenu>

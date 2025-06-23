@@ -14,5 +14,6 @@ export function useMutationCerateSecret() {
         queryKey: getApiV1BetaSecretsDefaultKeysQueryKey(),
       })
     },
+    errorMsg: 'Failed to create secret',
   })
 }

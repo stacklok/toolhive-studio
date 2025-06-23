@@ -5,7 +5,7 @@ import {
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { useQueryClient } from '@tanstack/react-query'
 
-export function useMutationDeleteSecret() {
+export function useMutationDeleteSecret(secretKey: string) {
   const queryClient = useQueryClient()
   return useToastMutation({
     ...deleteApiV1BetaSecretsDefaultKeysByKeyMutation(),
@@ -14,5 +14,6 @@ export function useMutationDeleteSecret() {
         queryKey: getApiV1BetaSecretsDefaultKeysQueryKey(),
       })
     },
+    errorMsg: `Failed to delete secret ${secretKey}`,
   })
 }
