@@ -99,7 +99,7 @@ function TopNavLinks() {
               data-[status=active]:focus:bg-transparent data-[status=hover]:bg-transparent"
             asChild
           >
-            <Link to="/store">Store</Link>
+            <Link to="/registry">Registry</Link>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>

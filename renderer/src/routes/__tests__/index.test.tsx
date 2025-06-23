@@ -43,7 +43,9 @@ it('should contain the menu to run an MCP server', async () => {
   await waitFor(() => {
     expect(screen.getByRole('menu')).toBeVisible()
   })
-  expect(screen.getByRole('menuitem', { name: 'From the Store' })).toBeVisible()
+  expect(
+    screen.getByRole('menuitem', { name: 'From the registry' })
+  ).toBeVisible()
   expect(
     screen.getByRole('menuitem', { name: 'Custom MCP server' })
   ).toBeVisible()

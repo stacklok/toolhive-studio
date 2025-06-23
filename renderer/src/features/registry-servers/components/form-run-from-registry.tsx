@@ -201,19 +201,19 @@ function EnvVarRow({
   )
 }
 
-interface FormCatalogCreationProps {
+interface FormRunFromRegistryProps {
   server: RegistryServer | null
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (data: FormSchemaRunFromRegistry) => void
 }
 
-export function FormCatalogCreation({
+export function FormRunFromRegistry({
   server,
   isOpen,
   onOpenChange,
   onSubmit,
-}: FormCatalogCreationProps) {
+}: FormRunFromRegistryProps) {
   const groupedEnvVars = useMemo(
     () => groupEnvVars(server?.env_vars || []),
     [server?.env_vars]

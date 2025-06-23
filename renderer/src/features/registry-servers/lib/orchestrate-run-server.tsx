@@ -161,8 +161,8 @@ type GroupedSecrets = {
 }
 
 /**
- * Groups secrets into two categories: new secrets (not from the store) and
- * existing secrets (from the store). We need this separation to know which
+ * Groups secrets into two categories: new secrets (not from the registry) and
+ * existing secrets (from the registry). We need this separation to know which
  * secrets need to be encrypted and stored before creating the server workload.
  */
 function groupSecrets(secrets: DefinedSecret[]): {
@@ -209,7 +209,7 @@ export async function orchestrateRunServer({
   const definedSecrets = getDefinedSecrets(data.secrets)
 
   // Step 1: Group secrets into new and existing
-  // We need to know which secrets are new (not from the store) and which are
+  // We need to know which secrets are new (not from the registry) and which are
   // existing (already stored). This helps us handle the encryption and storage
   // of secrets correctly.
   const { existingSecrets, newSecrets } = groupSecrets(definedSecrets)
