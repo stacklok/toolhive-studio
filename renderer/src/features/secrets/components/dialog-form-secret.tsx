@@ -22,8 +22,6 @@ import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { z } from 'zod/v4'
 import { Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
-import { useMutationUpdateSecret } from '../hooks/use-mutation-update-secret'
-import { useMutationCerateSecret } from '../hooks/use-mutation-create-secret'
 
 const createSecretSchema = z.object({
   key: z.string().min(1, 'Secret name is required'),
@@ -48,12 +46,14 @@ interface SecretDialogProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   secretKey?: string
+  onSubmit: (data: SecretFormData) => void
 }
 
 export function DialogFormSecret({
   isOpen,
   onOpenChange,
   secretKey,
+  onSubmit,
 }: SecretDialogProps) {
   const isEditMode = !!secretKey
   const schema = isEditMode ? editSecretSchema : createSecretSchema
@@ -64,33 +64,14 @@ export function DialogFormSecret({
       value: '',
     },
   })
-  const { mutateAsync: createSecret } = useMutationCerateSecret()
-  const { mutateAsync: updateSecret } = useMutationUpdateSecret(secretKey ?? '')
 
-  const handleSubmit = async () => {
-    if (isEditMode) {
-      updateSecret({
-        path: {
-          key: secretKey ?? '',
-        },
-        body: {
-          value: form.getValues('value'),
-        },
-      })
-    } else {
-      createSecret({
-        body: {
-          key: form.getValues('key'),
-          value: form.getValues('value'),
-        },
-      })
-    }
-
+  const handleCancel = () => {
     form.reset()
     onOpenChange(false)
   }
 
-  const handleCancel = () => {
+  const handleSubmit = (data: SecretFormData) => {
+    onSubmit(data)
     form.reset()
     onOpenChange(false)
   }
@@ -99,7 +80,10 @@ export function DialogFormSecret({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent
+        className="max-w-md"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
