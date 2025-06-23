@@ -1,5 +1,4 @@
 import { SettingsIcon, Check } from 'lucide-react'
-import { useState } from 'react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,54 +7,26 @@ import {
   DropdownMenuTrigger,
 } from '@/common/components/ui/dropdown-menu'
 import { Button } from '@/common/components/ui/button'
-import { toast } from 'sonner'
 import { twMerge } from 'tailwind-merge'
+import {
+  useAutoLaunchStatus,
+  useSetAutoLaunch,
+} from '@/common/hooks/use-auto-launch'
 
 export function SettingsDropdown({ className }: { className?: string }) {
-  const [isAutoLaunchEnabled, setIsAutoLaunchEnabled] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-
-  const loadAutoLaunchStatus = async () => {
-    try {
-      setIsLoading(true)
-      if (window.electronAPI) {
-        const status = await window.electronAPI.getAutoLaunchStatus()
-        setIsAutoLaunchEnabled(status)
-      }
-    } catch (error) {
-      console.error('Failed to load auto-launch status:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const { data: autoLaunchStatus, isLoading, refetch } = useAutoLaunchStatus()
+  const { mutateAsync: setAutoLaunch, isPending: isSetPending } =
+    useSetAutoLaunch()
 
   const handleDropdownOpenChange = (open: boolean) => {
     if (open) {
-      loadAutoLaunchStatus()
+      refetch()
     }
   }
 
   const handleAutoLaunchToggle = async () => {
-    if (isLoading) return
-
-    try {
-      setIsLoading(true)
-      if (window.electronAPI) {
-        const newStatus =
-          await window.electronAPI.setAutoLaunch(!isAutoLaunchEnabled)
-        setIsAutoLaunchEnabled(newStatus)
-        toast.success(
-          newStatus
-            ? 'Auto-launch enabled - ToolHive will start with your system'
-            : 'Auto-launch disabled'
-        )
-      }
-    } catch (error) {
-      console.error('Failed to update auto-launch setting:', error)
-      toast.error('Failed to update auto-launch setting')
-    } finally {
-      setIsLoading(false)
-    }
+    if (isLoading || isSetPending) return
+    setAutoLaunch(!autoLaunchStatus)
   }
 
   const handleQuit = async () => {
@@ -87,7 +58,7 @@ export function SettingsDropdown({ className }: { className?: string }) {
           className="flex cursor-pointer items-center justify-between"
         >
           <span>Start on login</span>
-          {isAutoLaunchEnabled && <Check className="h-4 w-4" />}
+          {autoLaunchStatus && <Check className="h-4 w-4" />}
         </DropdownMenuItem>
         <DropdownMenuItem>
           <span>Check for updates</span>
