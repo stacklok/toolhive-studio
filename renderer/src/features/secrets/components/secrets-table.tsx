@@ -13,16 +13,9 @@ import { DialogFormSecret } from './dialog-form-secret'
 import { useFilterSort } from '@/common/hooks/use-filter-sort'
 import { ArrowUpDown, X } from 'lucide-react'
 import { useState } from 'react'
+import type { V1SecretKeyResponse } from '@/common/api/generated'
 
-type Secret = {
-  key: string
-}
-
-interface SecretsTableProps {
-  secrets: Secret[]
-}
-
-export function SecretsTable({ secrets }: SecretsTableProps) {
+export function SecretsTable({ secrets }: { secrets: V1SecretKeyResponse[] }) {
   const [isSecretDialogOpen, setIsSecretDialogOpen] = useState(false)
   const [secretKey, setSecretKey] = useState<string | undefined>(undefined)
 
@@ -33,8 +26,8 @@ export function SecretsTable({ secrets }: SecretsTableProps) {
     toggleSortOrder,
   } = useFilterSort({
     data: secrets,
-    filterFields: (secret) => [secret.key],
-    sortBy: (secret) => secret.key,
+    filterFields: (secret) => [secret.key ?? ''],
+    sortBy: (secret) => secret.key ?? '',
   })
 
   return (
