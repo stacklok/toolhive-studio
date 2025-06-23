@@ -10,6 +10,7 @@ import path from 'node:path'
 import { existsSync } from 'node:fs'
 import { blockQuit } from './main'
 import { getAutoLaunchStatus, setAutoLaunch } from './auto-launch'
+import { createApplicationMenu } from './menu'
 
 const getIconBasePath = () =>
   app.isPackaged
@@ -134,10 +135,12 @@ const handleStartOnLogin = async (
 
   try {
     setAutoLaunch(!currentStatus)
-    console.log(`Auto-launch ${!currentStatus ? 'enabled' : 'disabled'}`)
 
     // Update the tray menu to reflect the new state
     setupTrayMenu(currentTray, toolHiveIsRunning)
+
+    // Update the application menu to reflect the new state
+    createApplicationMenu(currentTray)
   } catch (error) {
     console.error('Failed to toggle auto-launch:', error)
   }
