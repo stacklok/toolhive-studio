@@ -8,7 +8,16 @@ it('passes with valid docker image', () => {
     type: 'docker_image',
     image: 'ghcr.io/github/github-mcp-server',
     cmd_arguments: '-y --oauth-setup',
-    environment_variables: [],
+    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    secrets: [
+      {
+        name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
+        value: {
+          secret: 'foo-bar',
+          isFromStore: false,
+        },
+      },
+    ],
   }
 
   const result = formSchemaRunMcpCommand.safeParse(validInput)
@@ -19,7 +28,21 @@ it('passes with valid docker image', () => {
     type: 'docker_image',
     image: 'ghcr.io/github/github-mcp-server',
     cmd_arguments: '-y --oauth-setup',
-    environment_variables: [],
+    envVars: [
+      {
+        name: 'GITHUB_ORG',
+        value: 'StacklokLabs',
+      },
+    ],
+    secrets: [
+      {
+        name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
+        value: {
+          isFromStore: false,
+          secret: 'foo-bar',
+        },
+      },
+    ],
   })
 })
 
@@ -31,7 +54,16 @@ it('passes with valid npx command', () => {
     protocol: 'npx',
     package_name: 'server-everything',
     cmd_arguments: '-y --oauth-setup',
-    environment_variables: [],
+    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    secrets: [
+      {
+        name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
+        value: {
+          secret: 'foo-bar',
+          isFromStore: false,
+        },
+      },
+    ],
   }
 
   const result = formSchemaRunMcpCommand.safeParse(validInput)
@@ -43,7 +75,16 @@ it('passes with valid npx command', () => {
     protocol: 'npx',
     package_name: 'server-everything',
     cmd_arguments: '-y --oauth-setup',
-    environment_variables: [],
+    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    secrets: [
+      {
+        name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
+        value: {
+          secret: 'foo-bar',
+          isFromStore: false,
+        },
+      },
+    ],
   })
 })
 
@@ -55,7 +96,16 @@ it('passes with valid uvx command', () => {
     protocol: 'uvx',
     package_name: 'mcp-server-fetch',
     cmd_arguments: '-y --oauth-setup',
-    environment_variables: [],
+    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    secrets: [
+      {
+        name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
+        value: {
+          secret: 'foo-bar',
+          isFromStore: false,
+        },
+      },
+    ],
   }
 
   const result = formSchemaRunMcpCommand.safeParse(validInput)
@@ -68,7 +118,16 @@ it('passes with valid uvx command', () => {
     protocol: 'uvx',
     package_name: 'mcp-server-fetch',
     cmd_arguments: '-y --oauth-setup',
-    environment_variables: [],
+    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    secrets: [
+      {
+        name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
+        value: {
+          secret: 'foo-bar',
+          isFromStore: false,
+        },
+      },
+    ],
   })
 })
 
@@ -79,7 +138,16 @@ it('fails when name is empty', () => {
     type: 'docker_image',
     image: 'ghcr.io/github/github-mcp-server',
     cmd_arguments: '-y --oauth-setup',
-    environment_variables: [],
+    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    secrets: [
+      {
+        name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
+        value: {
+          secret: 'foo-bar',
+          isFromStore: false,
+        },
+      },
+    ],
   }
 
   const result = formSchemaRunMcpCommand.safeParse(invalidInput)
@@ -99,7 +167,16 @@ it('fails when transport is empty', () => {
     type: 'docker_image',
     image: 'ghcr.io/github/github-mcp-server',
     cmd_arguments: '-y --oauth-setup',
-    environment_variables: [],
+    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    secrets: [
+      {
+        name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
+        value: {
+          secret: 'foo-bar',
+          isFromStore: false,
+        },
+      },
+    ],
   }
 
   const result = formSchemaRunMcpCommand.safeParse(invalidInput)
@@ -119,7 +196,16 @@ it('fails when transport is invalid', () => {
     type: 'docker_image',
     image: 'ghcr.io/github/github-mcp-server',
     cmd_arguments: '-y --oauth-setup',
-    environment_variables: [],
+    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    secrets: [
+      {
+        name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
+        value: {
+          secret: 'foo-bar',
+          isFromStore: false,
+        },
+      },
+    ],
   }
 
   const result = formSchemaRunMcpCommand.safeParse(invalidInput)
@@ -139,7 +225,16 @@ it('fails when type is empty', () => {
     type: '',
     image: 'ghcr.io/github/github-mcp-server',
     cmd_arguments: '-y --oauth-setup',
-    environment_variables: [],
+    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    secrets: [
+      {
+        name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
+        value: {
+          secret: 'foo-bar',
+          isFromStore: false,
+        },
+      },
+    ],
   }
 
   const result = formSchemaRunMcpCommand.safeParse(invalidInput)
@@ -159,7 +254,16 @@ it('fails when type is invalid', () => {
     type: 'foobar',
     image: 'ghcr.io/github/github-mcp-server',
     cmd_arguments: '-y --oauth-setup',
-    environment_variables: [],
+    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    secrets: [
+      {
+        name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
+        value: {
+          secret: 'foo-bar',
+          isFromStore: false,
+        },
+      },
+    ],
   }
 
   const result = formSchemaRunMcpCommand.safeParse(invalidInput)
@@ -172,43 +276,153 @@ it('fails when type is invalid', () => {
   )
 })
 
-it('fails when environment_variables is missing key', () => {
+it('fails when envVars is missing name', () => {
   const invalidInput = {
     name: 'github',
     transport: 'stdio',
     type: 'docker_image',
     image: 'ghcr.io/github/github-mcp-server',
     cmd_arguments: '-y --oauth-setup',
-    environment_variables: [{ value: 'some-value' }], // Missing key
+    envVars: [{ value: 'some-value' }], // Missing name
   }
   const result = formSchemaRunMcpCommand.safeParse(invalidInput)
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
-        environment_variables: [
-          'Invalid input: expected string, received undefined',
-        ],
+        envVars: ['Invalid input: expected string, received undefined'],
       }),
     })
   )
 })
 
-it('fails when environment_variables is missing value', () => {
+it('fails when envVars is missing value', () => {
   const invalidInput = {
     name: 'github',
     transport: 'stdio',
     type: 'docker_image',
     image: 'ghcr.io/github/github-mcp-server',
     cmd_arguments: '-y --oauth-setup',
-    environment_variables: [{ key: 'SOME_KEY' }], // Missing value
+    envVars: [{ name: 'SOME_KEY' }], // Missing value
+    secrets: [],
   }
   const result = formSchemaRunMcpCommand.safeParse(invalidInput)
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
-        environment_variables: [
-          'Invalid input: expected string, received undefined',
-        ],
+        envVars: ['Invalid input: expected string, received undefined'],
+      }),
+    })
+  )
+})
+
+it('fails when secrets is missing', () => {
+  const invalidInput = {
+    name: 'github',
+    transport: 'stdio',
+    type: 'docker_image',
+    image: 'ghcr.io/github/github-mcp-server',
+    cmd_arguments: '-y --oauth-setup',
+    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+  }
+  const result = formSchemaRunMcpCommand.safeParse(invalidInput)
+  expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
+    expect.objectContaining({
+      fieldErrors: expect.objectContaining({
+        secrets: ['Invalid input: expected array, received undefined'],
+      }),
+    })
+  )
+})
+
+it('fails when secrets is missing key', () => {
+  const invalidInput = {
+    name: 'github',
+    transport: 'stdio',
+    type: 'docker_image',
+    image: 'ghcr.io/github/github-mcp-server',
+    cmd_arguments: '-y --oauth-setup',
+    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    secrets: [{ value: { secret: 'foo-bar', isFromStore: false } }],
+  }
+  const result = formSchemaRunMcpCommand.safeParse(invalidInput)
+  expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
+    expect.objectContaining({
+      fieldErrors: expect.objectContaining({
+        secrets: ['Invalid input: expected string, received undefined'],
+      }),
+    })
+  )
+})
+
+it('fails when secrets is missing value', () => {
+  const invalidInput = {
+    name: 'github',
+    transport: 'stdio',
+    type: 'docker_image',
+    image: 'ghcr.io/github/github-mcp-server',
+    cmd_arguments: '-y --oauth-setup',
+    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    secrets: [{ name: 'GITHUB_PERSONAL_ACCESS_TOKEN' }], // Missing value
+  }
+  const result = formSchemaRunMcpCommand.safeParse(invalidInput)
+  expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
+    expect.objectContaining({
+      fieldErrors: expect.objectContaining({
+        secrets: ['Invalid input: expected object, received undefined'],
+      }),
+    })
+  )
+})
+
+it('fails when secrets is missing inner secret value', () => {
+  const invalidInput = {
+    name: 'github',
+    transport: 'stdio',
+    type: 'docker_image',
+    image: 'ghcr.io/github/github-mcp-server',
+    cmd_arguments: '-y --oauth-setup',
+    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    secrets: [
+      {
+        name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
+        value: {
+          isFromStore: false, // Missing value
+        },
+      },
+    ],
+  }
+  const result = formSchemaRunMcpCommand.safeParse(invalidInput)
+  expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
+    expect.objectContaining({
+      fieldErrors: expect.objectContaining({
+        secrets: ['Invalid input: expected string, received undefined'],
+      }),
+    })
+  )
+})
+
+it('fails when secrets is missing `isFromStore`', () => {
+  const invalidInput = {
+    name: 'github',
+    transport: 'stdio',
+    type: 'docker_image',
+    image: 'ghcr.io/github/github-mcp-server',
+    cmd_arguments: '-y --oauth-setup',
+    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    secrets: [
+      {
+        name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
+        value: {
+          secret: 'foo-bar', // Missing isFromStore
+        },
+      },
+    ],
+  }
+  const result = formSchemaRunMcpCommand.safeParse(invalidInput)
+  expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
+    expect.objectContaining({
+      fieldErrors: expect.objectContaining({
+        secrets: ['Invalid input: expected boolean, received undefined'],
       }),
     })
   )
@@ -221,7 +435,16 @@ it('docker > fails when image is empty', () => {
     type: 'docker_image',
     image: '',
     cmd_arguments: '-y --oauth-setup',
-    environment_variables: [],
+    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    secrets: [
+      {
+        name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
+        value: {
+          secret: 'foo-bar',
+          isFromStore: false,
+        },
+      },
+    ],
   }
 
   const result = formSchemaRunMcpCommand.safeParse(invalidInput)
@@ -242,7 +465,16 @@ it('package_manager > fails when protocol is empty', () => {
     protocol: '',
     package_name: 'mcp-server-fetch',
     cmd_arguments: '-y --oauth-setup',
-    environment_variables: [],
+    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    secrets: [
+      {
+        name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
+        value: {
+          secret: 'foo-bar',
+          isFromStore: false,
+        },
+      },
+    ],
   }
 
   const result = formSchemaRunMcpCommand.safeParse(invalidInput)
@@ -263,7 +495,16 @@ it('package_manager > fails when protocol is invalid', () => {
     protocol: 'foobar',
     package_name: 'mcp-server-fetch',
     cmd_arguments: '-y --oauth-setup',
-    environment_variables: [],
+    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    secrets: [
+      {
+        name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
+        value: {
+          secret: 'foo-bar',
+          isFromStore: false,
+        },
+      },
+    ],
   }
 
   const result = formSchemaRunMcpCommand.safeParse(invalidInput)
@@ -284,7 +525,16 @@ it('package_manager > fails when package_name is empty', () => {
     protocol: 'uvx',
     package_name: '',
     cmd_arguments: '-y --oauth-setup',
-    environment_variables: [],
+    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    secrets: [
+      {
+        name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
+        value: {
+          secret: 'foo-bar',
+          isFromStore: false,
+        },
+      },
+    ],
   }
 
   const result = formSchemaRunMcpCommand.safeParse(invalidInput)

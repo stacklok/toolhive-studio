@@ -1,6 +1,5 @@
 import z from 'zod/v4'
 
-// TODO: Add secrets into the form schema
 const commonFields = z.object({
   name: z.string().nonempty('Name is required'),
   transport: z.union(
@@ -8,10 +7,19 @@ const commonFields = z.object({
     'Please select either SSE or stdio.'
   ),
   cmd_arguments: z.string().optional(),
-  environment_variables: z
+  envVars: z
     .object({
-      key: z.string().nonempty('Key is required'),
+      name: z.string().nonempty('Key is required'),
       value: z.string().nonempty('Value is required'),
+    })
+    .array(),
+  secrets: z
+    .object({
+      name: z.string(),
+      value: z.object({
+        secret: z.string(),
+        isFromStore: z.boolean(),
+      }),
     })
     .array(),
 })

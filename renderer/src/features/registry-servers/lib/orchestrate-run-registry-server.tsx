@@ -14,10 +14,10 @@ import { QueryClient, type UseMutateAsyncFunction } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { FormSchemaRunFromRegistry } from './get-form-schema-run-from-registry'
 import { Progress } from '@/common/components/ui/progress'
-import type { DefinedSecret, PreparedSecret } from '../types'
-import { prepareSecretsWithoutNamingCollision } from './prepare-secrets-without-naming-collision'
+import { prepareSecretsWithoutNamingCollision } from '../../../common/lib/secrets/prepare-secrets-without-naming-collision'
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/common/components/ui/button'
+import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
 
 type SaveSecretFn = UseMutateAsyncFunction<
   V1CreateSecretResponse,
@@ -185,7 +185,7 @@ function groupSecrets(secrets: DefinedSecret[]): {
 /**
  * Orchestrates the "onSubmit" action for the "Run from Registry" form.
  */
-export async function orchestrateRunServer({
+export async function orchestrateRunRegistryServer({
   createWorkload,
   data,
   getIsServerReady,

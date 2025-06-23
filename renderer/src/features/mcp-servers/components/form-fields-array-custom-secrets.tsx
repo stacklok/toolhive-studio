@@ -14,15 +14,16 @@ import { Input } from '@/common/components/ui/input'
 import { Button } from '@/common/components/ui/button'
 import { useRef } from 'react'
 import { flushSync } from 'react-dom'
+import { FormComboboxSecretStore } from '@/common/components/secrets/form-combobox-secrets-store'
 
-export function FormFieldsArrayCustomEnvVars({
+export function FormFieldsArrayCustomSecrets({
   form,
 }: {
   form: UseFormReturn<FormSchemaRunMcpCommand>
 }) {
   const { fields, append, remove } = useFieldArray<FormSchemaRunMcpCommand>({
     control: form.control,
-    name: 'envVars',
+    name: 'secrets',
   })
 
   const addEnvVarButton = useRef<HTMLButtonElement>(null)
@@ -46,17 +47,14 @@ export function FormFieldsArrayCustomEnvVars({
     <>
       <div className="flex items-center gap-1">
         <FormLabel
-          htmlFor={
-            fields.length > 0
-              ? 'environment_variables.0.key'
-              : 'add-env-var-button'
-          }
+          htmlFor={fields.length > 0 ? 'secrets.0.key' : 'add-secret-button'}
         >
-          Environment variables
+          Secrets
         </FormLabel>
         <TooltipInfoIcon>
-          Environment variables are used to pass configuration settings to the
-          server.
+          Sensitive values that should not be exposed in plain text. They are
+          typically used for API keys, tokens, or passwords. All secrets are
+          encrypted and stored securely by ToolHive.
         </TooltipInfoIcon>
       </div>
       {fields.map((field, index) => (
@@ -66,14 +64,14 @@ export function FormFieldsArrayCustomEnvVars({
         >
           <FormField
             control={form.control}
-            name={`envVars.${index}.name`}
+            name={`secrets.${index}.name`}
             render={({ field }) => (
               <FormItem>
                 <FormControl>
                   <Input
-                    aria-label="Environment variable key"
+                    aria-label="Secret key"
                     defaultValue={field.value}
-                    id={`envVars.${index}.name`}
+                    id={`secrets.${index}.name`}
                     name={field.name}
                     onChange={(e) => field.onChange(e.target.value)}
                     placeholder="e.g. API_KEY"
@@ -83,28 +81,39 @@ export function FormFieldsArrayCustomEnvVars({
               </FormItem>
             )}
           />
-
-          <FormField
-            control={form.control}
-            name={`envVars.${index}.value`}
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Input
-                    aria-label="Environment variable value"
-                    defaultValue={field.value}
-                    name={field.name}
-                    onChange={(e) => field.onChange(e.target.value)}
-                    placeholder="e.g. 123_ABC_789_XZY"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-[auto_calc(var(--spacing)_*_9)]">
+            <FormField
+              control={form.control}
+              name={`secrets.${index}.value`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input
+                      aria-label="Secret value"
+                      className="rounded-tr-none rounded-br-none border-r-0 font-mono focus-visible:z-10"
+                      defaultValue={field.value.secret}
+                      name={field.name}
+                      onChange={(e) =>
+                        field.onChange({
+                          secret: e.target.value,
+                          isFromStore: false,
+                        })
+                      }
+                      placeholder="e.g. 123_ABC_789_XZY"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormComboboxSecretStore<FormSchemaRunMcpCommand>
+              form={form}
+              name={`secrets.${index}.value`}
+            />
+          </div>
 
           <Button
-            aria-label="Remove environment variable"
+            aria-label="Remove secret"
             type="button"
             variant="outline"
             onClick={() => remove(index)}
@@ -114,15 +123,15 @@ export function FormFieldsArrayCustomEnvVars({
         </div>
       ))}
       <Button
-        id="add-env-var-button"
+        id="add-secret-button"
         type="button"
         variant="outline"
         className="w-full"
-        aria-label="Add environment variable"
+        aria-label="Add secret"
         ref={addEnvVarButton}
         onClick={() => addEnvVar()}
       >
-        <PlusIcon /> Add environment variable
+        <PlusIcon /> Add secret
       </Button>
     </>
   )

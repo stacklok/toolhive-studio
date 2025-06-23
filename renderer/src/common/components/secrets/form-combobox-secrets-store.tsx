@@ -81,6 +81,7 @@ export function FormComboboxSecretStore<
                   variant="outline"
                   type="button"
                   role="combobox"
+                  size="icon"
                   className="rounded-tl-none rounded-bl-none"
                   aria-label="Use a secret from the store"
                 >
