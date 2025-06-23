@@ -9,15 +9,15 @@ const commonFields = z.object({
   cmd_arguments: z.string().optional(),
   envVars: z
     .object({
-      name: z.string().nonempty('Key is required'),
+      name: z.string().nonempty('Name is required'),
       value: z.string().nonempty('Value is required'),
     })
     .array(),
   secrets: z
     .object({
-      name: z.string(),
+      name: z.string().nonempty('Name is required'),
       value: z.object({
-        secret: z.string(),
+        secret: z.string().nonempty('Value is required'),
         isFromStore: z.boolean(),
       }),
     })

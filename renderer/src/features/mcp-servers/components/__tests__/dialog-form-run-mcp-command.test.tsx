@@ -106,6 +106,10 @@ it('should be able to run an MCP server with docker', async () => {
 
   // Secret from store
   await userEvent.click(screen.getByRole('button', { name: 'Add secret' }))
+  await userEvent.type(
+    screen.getAllByLabelText('Secret key')[1] as HTMLElement,
+    'MY_SECRET_2'
+  )
   await userEvent.click(
     screen.getAllByLabelText('Use a secret from the store')[1] as HTMLElement
   )
@@ -156,7 +160,7 @@ it('should be able to run an MCP server with docker', async () => {
       },
     },
     {
-      name: '',
+      name: 'MY_SECRET_2',
       value: {
         isFromStore: true,
         secret: 'SECRET_FROM_STORE',
@@ -205,6 +209,10 @@ it('should be able to run an MCP server with npx', async () => {
 
   // Secret from store
   await userEvent.click(screen.getByRole('button', { name: 'Add secret' }))
+  await userEvent.type(
+    screen.getAllByLabelText('Secret key')[1] as HTMLElement,
+    'MY_SECRET_2'
+  )
   await userEvent.click(
     screen.getAllByLabelText('Use a secret from the store')[1] as HTMLElement
   )
@@ -256,7 +264,7 @@ it('should be able to run an MCP server with npx', async () => {
       },
     },
     {
-      name: '',
+      name: 'MY_SECRET_2',
       value: {
         isFromStore: true,
         secret: 'SECRET_FROM_STORE',
@@ -305,6 +313,10 @@ it('should be able to run an MCP server with uvx', async () => {
 
   // Secret from store
   await userEvent.click(screen.getByRole('button', { name: 'Add secret' }))
+  await userEvent.type(
+    screen.getAllByLabelText('Secret key')[1] as HTMLElement,
+    'MY_SECRET_2'
+  )
   await userEvent.click(
     screen.getAllByLabelText('Use a secret from the store')[1] as HTMLElement
   )
@@ -356,7 +368,7 @@ it('should be able to run an MCP server with uvx', async () => {
       },
     },
     {
-      name: '',
+      name: 'MY_SECRET_2',
       value: {
         isFromStore: true,
         secret: 'SECRET_FROM_STORE',
@@ -405,6 +417,10 @@ it('should be able to run an MCP server with go', async () => {
 
   // Secret from store
   await userEvent.click(screen.getByRole('button', { name: 'Add secret' }))
+  await userEvent.type(
+    screen.getAllByLabelText('Secret key')[1] as HTMLElement,
+    'MY_SECRET_2'
+  )
   await userEvent.click(
     screen.getAllByLabelText('Use a secret from the store')[1] as HTMLElement
   )
@@ -456,7 +472,7 @@ it('should be able to run an MCP server with go', async () => {
       },
     },
     {
-      name: '',
+      name: 'MY_SECRET_2',
       value: {
         isFromStore: true,
         secret: 'SECRET_FROM_STORE',
