@@ -154,9 +154,10 @@ const createStatusMenuItem = (toolHiveIsRunning: boolean) => ({
 const startOnLoginMenu = (currentTray: Tray, toolHiveIsRunning: boolean) => {
   const isStartOnLogin = getAutoLaunchStatus()
   return {
-    label: `Start on login${isStartOnLogin ? '\u2003✓' : ''}`,
+    label: 'Start on login',
+    checked: isStartOnLogin,
     accelerator: 'CmdOrCtrl+L',
-    type: 'normal' as const,
+    type: 'checkbox' as const,
     click: () => handleStartOnLogin(currentTray, toolHiveIsRunning),
   }
 }
