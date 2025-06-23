@@ -1,7 +1,8 @@
 import { getApiV1BetaRegistryByNameServersOptions } from '@/common/api/generated/@tanstack/react-query.gen'
-import { createFileRoute, useLoaderData } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { GridCardsRegistryServer } from '@/features/registry-servers/components/grid-cards-registry-server'
 import { useRunFromRegistry } from '@/features/registry-servers/hooks/use-run-from-registry'
+import { useSuspenseQuery } from '@tanstack/react-query'
 
 export const Route = createFileRoute('/registry')({
   loader: async ({ context: { queryClient } }) =>
@@ -12,7 +13,10 @@ export const Route = createFileRoute('/registry')({
 })
 
 export function Registry() {
-  const { servers: serversList = [] } = useLoaderData({ from: '/registry' })
+  const { data } = useSuspenseQuery(
+    getApiV1BetaRegistryByNameServersOptions({ path: { name: 'default' } })
+  )
+  const { servers: serversList = [] } = data || {}
   const { handleSubmit } = useRunFromRegistry()
 
   return (
