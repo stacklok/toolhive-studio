@@ -63,8 +63,8 @@ export function Secrets() {
 
       {keys.length === 0 ? (
         <EmptyState
-          title="No secrets yet"
-          body="Add a secrets for use in your workloads. Secrets are encrypted and stored securely."
+          title="Securely store your secrets"
+          body="Create secrets to store API keys for use into your MCP Server configurations"
           actions={[
             <Button
               key="add"

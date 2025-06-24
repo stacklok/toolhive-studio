@@ -77,7 +77,14 @@ export function Index() {
           title="Add your first MCP server"
           body="Browse or search the registry for a specific tool"
           actions={[
-            <Button asChild key="add">
+            <Button
+              variant="outline"
+              key="add-custom-server"
+              onClick={() => setIsRunWithCommandOpen(true)}
+            >
+              Add custom server
+            </Button>,
+            <Button asChild key="add-from-registry">
               <Link to="/registry">
                 Browse registry <ChevronRight />
               </Link>
