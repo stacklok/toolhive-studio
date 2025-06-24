@@ -1,76 +1,134 @@
 /**
- * Generic polling utility that repeatedly executes a condition check until it passes or times out
+ * Functional, composable polling utilities
  */
 
 import type { WorkloadsWorkload } from '../api/generated/types.gen'
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-interface PollingOptions {
-  /** Maximum number of attempts before giving up */
+// Types
+interface PollingConfig {
   maxAttempts?: number
-  /** Delay between attempts in milliseconds */
   intervalMs?: number
-  /** Current attempt number (used internally for recursion) */
-  currentAttempt?: number
+  delayFirst?: boolean
 }
 
-/**
- * Generic polling function that executes a condition check repeatedly
- * @param conditionFn Function that returns true when the desired condition is met
- * @param options Polling configuration options
- * @returns Promise that resolves to true if condition is met, false if timeout
- */
-const poll = async <T>(
-  conditionFn: () => Promise<T>,
-  predicate: (result: T) => boolean,
-  options: PollingOptions = {}
-): Promise<boolean> => {
-  const { maxAttempts = 20, intervalMs = 2000, currentAttempt = 0 } = options
+type PollingPredicate<T> = (result: T, attempt: number) => boolean
+type PollingCondition<T> = () => Promise<T>
 
-  if (currentAttempt >= maxAttempts) {
-    return false
-  }
+interface PollingResult<T> {
+  success: boolean
+  result?: T
+  attempts: number
+  error?: Error
+}
 
-  if (currentAttempt > 0) {
-    await delay(intervalMs)
-  }
+// Core polling engine
+const createPoller = (config: PollingConfig = {}) => {
+  const { maxAttempts = 20, intervalMs = 2000, delayFirst = false } = config
 
-  try {
-    const result = await conditionFn()
+  return async <T>(
+    condition: PollingCondition<T>,
+    predicate: PollingPredicate<T>
+  ): Promise<PollingResult<T>> => {
+    const attemptRecursive = async (
+      attempt: number,
+      lastResult?: T,
+      lastError?: Error
+    ): Promise<PollingResult<T>> => {
+      if (attempt >= maxAttempts) {
+        return {
+          success: false,
+          result: lastResult,
+          attempts: attempt,
+          error: lastError,
+        }
+      }
 
-    if (predicate(result)) {
-      return true
+      if (attempt > 0 || delayFirst) {
+        await delay(intervalMs)
+      }
+
+      try {
+        const result = await condition()
+
+        if (predicate(result, attempt)) {
+          return { success: true, result, attempts: attempt + 1 }
+        }
+
+        return attemptRecursive(attempt + 1, result)
+      } catch (error) {
+        const err = error as Error
+
+        // Some predicates handle errors
+        try {
+          if (predicate(undefined as T, attempt)) {
+            return {
+              success: true,
+              result: lastResult,
+              attempts: attempt + 1,
+              error: err,
+            }
+          }
+        } catch {
+          // Continue polling
+        }
+
+        return attemptRecursive(attempt + 1, lastResult, err)
+      }
     }
 
-    return poll(conditionFn, predicate, {
-      ...options,
-      currentAttempt: currentAttempt + 1,
-    })
-  } catch {
-    // Continue polling on error
-    return poll(conditionFn, predicate, {
-      ...options,
-      currentAttempt: currentAttempt + 1,
-    })
+    return attemptRecursive(0)
   }
 }
 
-/**
- * Specialized polling function for server status
- * @param conditionFn Function that fetches and returns server data
- * @param options Polling configuration options
- * @returns Promise that resolves to true if server is running, false if timeout
- */
+// Predicate builders
+const untilTrue =
+  <T>(conditionFn: (result: T) => boolean): PollingPredicate<T> =>
+  (result) =>
+    conditionFn(result)
+
+// Succeeds when error occurs
+const untilError =
+  <T>(): PollingPredicate<T> =>
+  (result) =>
+    result === undefined
+
+// Specialized polling factories
+const pollUntilTrue = <T>(
+  condition: PollingCondition<T>,
+  predicate: (result: T) => boolean,
+  config?: PollingConfig
+) => createPoller(config)(condition, untilTrue(predicate))
+
+// Server utilities
+const serverPredicates = {
+  isRunning: (server: WorkloadsWorkload) => server?.status === 'running',
+  hasStatus: (status: string) => (server: WorkloadsWorkload) =>
+    server?.status === status,
+}
+
+// Public API
 export const pollServerStatus = async (
-  conditionFn: () => Promise<WorkloadsWorkload>,
-  options: PollingOptions = {}
+  fetchServer: () => Promise<WorkloadsWorkload>,
+  status: string,
+  config?: PollingConfig
 ): Promise<boolean> => {
-  return poll(
-    conditionFn,
-    (serverData: WorkloadsWorkload) => {
-      return serverData?.status === 'running'
-    },
-    options
+  const result = await pollUntilTrue(
+    fetchServer,
+    serverPredicates.hasStatus(status),
+    config
   )
+  return result.success
+}
+
+export const pollServerDelete = async (
+  fetchServer: () => Promise<WorkloadsWorkload>,
+  config?: PollingConfig
+): Promise<boolean> => {
+  const result = await createPoller(config)(
+    fetchServer,
+    untilError<WorkloadsWorkload>()
+  )
+  return result.success
 }
