@@ -4,14 +4,14 @@ import {
   CardTitle,
   CardContent,
 } from '@/common/components/ui/card'
-import type { RegistryServer } from '@/common/api/generated/types.gen'
+import type { RegistryImageMetadata } from '@/common/api/generated/types.gen'
 import { Plus } from 'lucide-react'
 
 export function CardRegistryServer({
   server,
   onClick,
 }: {
-  server: RegistryServer
+  server: RegistryImageMetadata
   onClick?: () => void
 }) {
   return (

@@ -25,7 +25,7 @@ import {
 import { useForm, type UseFormReturn } from 'react-hook-form'
 import type {
   RegistryEnvVar,
-  RegistryServer,
+  RegistryImageMetadata,
 } from '@/common/api/generated/types.gen'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { useMemo } from 'react'
@@ -202,7 +202,7 @@ function EnvVarRow({
 }
 
 interface FormRunFromRegistryProps {
-  server: RegistryServer | null
+  server: RegistryImageMetadata | null
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (data: FormSchemaRunFromRegistry) => void

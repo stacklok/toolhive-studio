@@ -1,4 +1,4 @@
-import type { RegistryServer } from '@/common/api/generated/types.gen'
+import type { RegistryImageMetadata } from '@/common/api/generated/types.gen'
 import { CardRegistryServer } from './card-registry-server'
 import { FormRunFromRegistry } from './form-run-from-registry'
 import { useState } from 'react'
@@ -10,12 +10,14 @@ export function GridCardsRegistryServer({
   servers,
   onSubmit,
 }: {
-  servers: RegistryServer[]
-  onSubmit?: (server: RegistryServer, data: FormSchemaRunFromRegistry) => void
+  servers: RegistryImageMetadata[]
+  onSubmit?: (
+    server: RegistryImageMetadata,
+    data: FormSchemaRunFromRegistry
+  ) => void
 }) {
-  const [selectedServer, setSelectedServer] = useState<RegistryServer | null>(
-    null
-  )
+  const [selectedServer, setSelectedServer] =
+    useState<RegistryImageMetadata | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const {
     filter,
@@ -27,7 +29,7 @@ export function GridCardsRegistryServer({
     sortBy: (server) => server.name || '',
   })
 
-  const handleCardClick = (server: RegistryServer) => {
+  const handleCardClick = (server: RegistryImageMetadata) => {
     setSelectedServer(server)
     setIsModalOpen(true)
   }

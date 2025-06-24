@@ -130,61 +130,7 @@
         },
         "type": "object"
       },
-      "registry.Metadata": {
-        "description": "Metadata contains additional information about the server such as popularity metrics",
-        "properties": {
-          "last_updated": {
-            "description": "LastUpdated is the timestamp when the server was last updated, in RFC3339 format",
-            "type": "string"
-          },
-          "pulls": {
-            "description": "Pulls indicates how many times the server image has been downloaded",
-            "type": "integer"
-          },
-          "stars": {
-            "description": "Stars represents the popularity rating or number of stars for the server",
-            "type": "integer"
-          }
-        },
-        "type": "object"
-      },
-      "registry.Provenance": {
-        "description": "Provenance contains verification and signing metadata",
-        "properties": {
-          "attestation": {
-            "$ref": "#/components/schemas/registry.VerifiedAttestation"
-          },
-          "cert_issuer": { "type": "string" },
-          "repository_ref": { "type": "string" },
-          "repository_uri": { "type": "string" },
-          "runner_environment": { "type": "string" },
-          "signer_identity": { "type": "string" },
-          "sigstore_url": { "type": "string" }
-        },
-        "type": "object"
-      },
-      "registry.Registry": {
-        "description": "Full registry data",
-        "properties": {
-          "last_updated": {
-            "description": "LastUpdated is the timestamp when the registry was last updated, in RFC3339 format",
-            "type": "string"
-          },
-          "servers": {
-            "additionalProperties": {
-              "$ref": "#/components/schemas/registry.Server"
-            },
-            "description": "Servers is a map of server names to their corresponding server definitions",
-            "type": "object"
-          },
-          "version": {
-            "description": "Version is the schema version of the registry",
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "registry.Server": {
+      "registry.ImageMetadata": {
         "description": "Server details",
         "properties": {
           "args": {
@@ -247,6 +193,60 @@
         },
         "type": "object"
       },
+      "registry.Metadata": {
+        "description": "Metadata contains additional information about the server such as popularity metrics",
+        "properties": {
+          "last_updated": {
+            "description": "LastUpdated is the timestamp when the server was last updated, in RFC3339 format",
+            "type": "string"
+          },
+          "pulls": {
+            "description": "Pulls indicates how many times the server image has been downloaded",
+            "type": "integer"
+          },
+          "stars": {
+            "description": "Stars represents the popularity rating or number of stars for the server",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "registry.Provenance": {
+        "description": "Provenance contains verification and signing metadata",
+        "properties": {
+          "attestation": {
+            "$ref": "#/components/schemas/registry.VerifiedAttestation"
+          },
+          "cert_issuer": { "type": "string" },
+          "repository_ref": { "type": "string" },
+          "repository_uri": { "type": "string" },
+          "runner_environment": { "type": "string" },
+          "signer_identity": { "type": "string" },
+          "sigstore_url": { "type": "string" }
+        },
+        "type": "object"
+      },
+      "registry.Registry": {
+        "description": "Full registry data",
+        "properties": {
+          "last_updated": {
+            "description": "LastUpdated is the timestamp when the registry was last updated, in RFC3339 format",
+            "type": "string"
+          },
+          "servers": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/registry.ImageMetadata"
+            },
+            "description": "Servers is a map of server names to their corresponding server definitions",
+            "type": "object"
+          },
+          "version": {
+            "description": "Version is the schema version of the registry",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "registry.VerifiedAttestation": {
         "properties": {
           "predicate": {},
@@ -258,6 +258,28 @@
         "properties": {
           "name": { "type": "string" },
           "target": { "type": "string" }
+        },
+        "type": "object"
+      },
+      "types.TransportType": {
+        "description": "TransportType is the type of transport used for this workload.",
+        "type": "string",
+        "x-enum-varnames": [
+          "TransportTypeStdio",
+          "TransportTypeSSE",
+          "TransportTypeStreamableHTTP",
+          "TransportTypeInspector"
+        ]
+      },
+      "v1.bulkOperationRequest": {
+        "description": "Request to perform bulk operations on workloads",
+        "properties": {
+          "names": {
+            "description": "Names of the workloads to operate on",
+            "items": { "type": "string" },
+            "type": "array",
+            "uniqueItems": false
+          }
         },
         "type": "object"
       },
@@ -428,7 +450,7 @@
       "v1.getServerResponse": {
         "description": "Response containing server details",
         "properties": {
-          "server": { "$ref": "#/components/schemas/registry.Server" }
+          "server": { "$ref": "#/components/schemas/registry.ImageMetadata" }
         },
         "type": "object"
       },
@@ -449,7 +471,7 @@
         "properties": {
           "servers": {
             "description": "List of servers in the registry",
-            "items": { "$ref": "#/components/schemas/registry.Server" },
+            "items": { "$ref": "#/components/schemas/registry.ImageMetadata" },
             "type": "array",
             "uniqueItems": false
           }
@@ -622,6 +644,9 @@
           "tool_type": {
             "description": "ToolType is the type of tool this workload represents.\nFor now, it will always be \"mcp\" - representing an MCP server.",
             "type": "string"
+          },
+          "transport_type": {
+            "$ref": "#/components/schemas/types.TransportType"
           },
           "url": {
             "description": "URL is the URL of the workload exposed by the ToolHive proxy.",
@@ -906,7 +931,7 @@
             "schema": { "type": "string" }
           },
           {
-            "description": "Server name",
+            "description": "ImageMetadata name",
             "in": "path",
             "name": "serverName",
             "required": true,
@@ -1288,11 +1313,99 @@
         "tags": ["workloads"]
       }
     },
+    "/api/v1beta/workloads/delete": {
+      "post": {
+        "description": "Delete multiple workloads by name",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1.bulkOperationRequest"
+              }
+            }
+          },
+          "description": "Bulk delete request",
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Bad Request"
+          }
+        },
+        "summary": "Delete workloads in bulk",
+        "tags": ["workloads"]
+      }
+    },
+    "/api/v1beta/workloads/restart": {
+      "post": {
+        "description": "Restart multiple workloads by name",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1.bulkOperationRequest"
+              }
+            }
+          },
+          "description": "Bulk restart request",
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Bad Request"
+          }
+        },
+        "summary": "Restart workloads in bulk",
+        "tags": ["workloads"]
+      }
+    },
     "/api/v1beta/workloads/stop": {
       "post": {
-        "description": "Stop all running workload",
-        "responses": { "202": { "description": "Accepted" } },
-        "summary": "Stop all workloads",
+        "description": "Stop multiple workloads by name",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1.bulkOperationRequest"
+              }
+            }
+          },
+          "description": "Bulk stop request",
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Bad Request"
+          }
+        },
+        "summary": "Stop workloads in bulk",
         "tags": ["workloads"]
       }
     },
@@ -1309,11 +1422,17 @@
           }
         ],
         "responses": {
-          "204": {
+          "202": {
             "content": {
               "application/json": { "schema": { "type": "string" } }
             },
-            "description": "No Content"
+            "description": "Accepted"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Bad Request"
           },
           "404": {
             "content": {
@@ -1369,11 +1488,17 @@
           }
         ],
         "responses": {
-          "204": {
+          "202": {
             "content": {
               "application/json": { "schema": { "type": "string" } }
             },
-            "description": "No Content"
+            "description": "Accepted"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Bad Request"
           },
           "404": {
             "content": {
@@ -1405,11 +1530,11 @@
             },
             "description": "Accepted"
           },
-          "204": {
+          "400": {
             "content": {
               "application/json": { "schema": { "type": "string" } }
             },
-            "description": "No Content"
+            "description": "Bad Request"
           },
           "404": {
             "content": {

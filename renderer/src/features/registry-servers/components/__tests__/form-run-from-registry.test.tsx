@@ -1,4 +1,7 @@
-import type { RegistryEnvVar, RegistryServer } from '@/common/api/generated'
+import type {
+  RegistryEnvVar,
+  RegistryImageMetadata,
+} from '@/common/api/generated'
 import { render, screen, waitFor } from '@testing-library/react'
 import { it, expect } from 'vitest'
 import { FormRunFromRegistry } from '../form-run-from-registry'
@@ -17,7 +20,7 @@ const queryClient = new QueryClient({
   },
 })
 
-const REGISTRY_SERVER: RegistryServer = {
+const REGISTRY_SERVER: RegistryImageMetadata = {
   name: 'foo-bar-server',
   image: 'ghcr.io/foo/bar:latest',
   description: 'foo bar',

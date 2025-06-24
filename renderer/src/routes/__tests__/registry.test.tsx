@@ -8,7 +8,7 @@ import { MOCK_REGISTRY_RESPONSE } from '@/common/mocks/fixtures/registry'
 import { mswEndpoint } from '@/common/mocks/msw-endpoint'
 import { Registry } from '../registry'
 import userEvent from '@testing-library/user-event'
-import type { RegistryServer } from '@/common/api/generated'
+import type { RegistryImageMetadata } from '@/common/api/generated'
 
 const router = createTestRouter(Registry)
 beforeEach(() => {
@@ -58,7 +58,7 @@ const REGISTRY_SERVER = {
   metadata: {},
   repository_url: 'https://github.com/foo/bar',
   tags: ['foo', 'bar'],
-} as const satisfies RegistryServer
+} as const satisfies RegistryImageMetadata
 
 it('should launch dialog with form when clicking on server', async () => {
   server.use(

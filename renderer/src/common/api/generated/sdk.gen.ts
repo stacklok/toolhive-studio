@@ -59,8 +59,15 @@ import type {
   PostApiV1BetaWorkloadsData,
   PostApiV1BetaWorkloadsResponses,
   PostApiV1BetaWorkloadsErrors,
+  PostApiV1BetaWorkloadsDeleteData,
+  PostApiV1BetaWorkloadsDeleteResponses,
+  PostApiV1BetaWorkloadsDeleteErrors,
+  PostApiV1BetaWorkloadsRestartData,
+  PostApiV1BetaWorkloadsRestartResponses,
+  PostApiV1BetaWorkloadsRestartErrors,
   PostApiV1BetaWorkloadsStopData,
   PostApiV1BetaWorkloadsStopResponses,
+  PostApiV1BetaWorkloadsStopErrors,
   DeleteApiV1BetaWorkloadsByNameData,
   DeleteApiV1BetaWorkloadsByNameResponses,
   DeleteApiV1BetaWorkloadsByNameErrors,
@@ -485,21 +492,71 @@ export const postApiV1BetaWorkloads = <ThrowOnError extends boolean = false>(
 }
 
 /**
- * Stop all workloads
- * Stop all running workload
+ * Delete workloads in bulk
+ * Delete multiple workloads by name
+ */
+export const postApiV1BetaWorkloadsDelete = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1BetaWorkloadsDeleteData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostApiV1BetaWorkloadsDeleteResponses,
+    PostApiV1BetaWorkloadsDeleteErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/workloads/delete',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+}
+
+/**
+ * Restart workloads in bulk
+ * Restart multiple workloads by name
+ */
+export const postApiV1BetaWorkloadsRestart = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1BetaWorkloadsRestartData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostApiV1BetaWorkloadsRestartResponses,
+    PostApiV1BetaWorkloadsRestartErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/workloads/restart',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+}
+
+/**
+ * Stop workloads in bulk
+ * Stop multiple workloads by name
  */
 export const postApiV1BetaWorkloadsStop = <
   ThrowOnError extends boolean = false,
 >(
-  options?: Options<PostApiV1BetaWorkloadsStopData, ThrowOnError>
+  options: Options<PostApiV1BetaWorkloadsStopData, ThrowOnError>
 ) => {
-  return (options?.client ?? _heyApiClient).post<
+  return (options.client ?? _heyApiClient).post<
     PostApiV1BetaWorkloadsStopResponses,
-    unknown,
+    PostApiV1BetaWorkloadsStopErrors,
     ThrowOnError
   >({
     url: '/api/v1beta/workloads/stop',
     ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
   })
 }
 

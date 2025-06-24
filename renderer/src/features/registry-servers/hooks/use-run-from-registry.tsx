@@ -1,4 +1,4 @@
-import { type RegistryServer } from '@/common/api/generated'
+import { type RegistryImageMetadata } from '@/common/api/generated'
 import {
   postApiV1BetaWorkloadsMutation,
   getApiV1BetaWorkloadsByNameOptions,
@@ -34,7 +34,7 @@ export function useRunFromRegistry() {
     )
 
   const handleSubmit = useCallback(
-    async (server: RegistryServer, data: FormSchemaRunFromRegistry) =>
+    async (server: RegistryImageMetadata, data: FormSchemaRunFromRegistry) =>
       orchestrateRunRegistryServer({
         server,
         data,
