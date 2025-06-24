@@ -1,38 +1,97 @@
-import { EmptyState } from '@/common/components/empty-state'
-import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
-import { Button } from '@/common/components/ui/button'
+import { getApiV1BetaSecretsDefaultKeysOptions } from '@/common/api/generated/@tanstack/react-query.gen'
 import { SecretsTable } from '@/features/secrets/components/secrets-table'
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
+import { useState } from 'react'
+import { DialogFormSecret } from '@/features/secrets/components/dialog-form-secret'
+import { Button } from '@/common/components/ui/button'
+import { useMutationCerateSecret } from '@/features/secrets/hooks/use-mutation-create-secret'
+import { useMutationUpdateSecret } from '@/features/secrets/hooks/use-mutation-update-secret'
 import { PlusIcon } from 'lucide-react'
+import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
+import { EmptyState } from '@/common/components/empty-state'
 
 export const Route = createFileRoute('/secrets')({
   component: Secrets,
+  loader: async ({ context: { queryClient } }) =>
+    await queryClient.ensureQueryData(getApiV1BetaSecretsDefaultKeysOptions()),
 })
 
-const SECRETS: {
-  key: string
-}[] = []
+export function Secrets() {
+  const {
+    data: { keys = [] },
+  } = useSuspenseQuery(getApiV1BetaSecretsDefaultKeysOptions())
+  const [isSecretDialogOpen, setIsSecretDialogOpen] = useState(false)
+  const [secretKey, setSecretKey] = useState<string | undefined>(undefined)
+  const { mutateAsync: createSecret } = useMutationCerateSecret()
+  const { mutateAsync: updateSecret } = useMutationUpdateSecret(secretKey ?? '')
 
-function Secrets() {
+  const onSubmit = async (data: { key?: string; value: string }) => {
+    if (data.key) {
+      await createSecret({
+        body: {
+          key: data.key,
+          value: data.value,
+        },
+      })
+    } else {
+      await updateSecret({
+        path: {
+          key: secretKey ?? '',
+        },
+        body: {
+          value: data.value,
+        },
+      })
+    }
+  }
+
   return (
     <>
-      <div className="mb-6 flex items-center">
+      <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-semibold">Secrets</h1>
+        <Button
+          variant="default"
+          onClick={() => {
+            setIsSecretDialogOpen(true)
+            setSecretKey('')
+          }}
+        >
+          Add Secret
+        </Button>
       </div>
-      {SECRETS.length === 0 ? (
+
+      {keys.length === 0 ? (
         <EmptyState
           title="No secrets yet"
           body="Add a secrets for use in your workloads. Secrets are encrypted and stored securely."
           actions={[
-            <Button key="add" onClick={() => alert('This should add a secret')}>
+            <Button
+              key="add"
+              onClick={() => {
+                setIsSecretDialogOpen(true)
+                setSecretKey('')
+              }}
+            >
               Add a secret <PlusIcon />
             </Button>,
           ]}
           illustration={IllustrationNoConnection}
         />
       ) : (
-        <SecretsTable secrets={SECRETS} />
+        <SecretsTable
+          secrets={keys}
+          setIsSecretDialogOpen={setIsSecretDialogOpen}
+          setSecretKey={setSecretKey}
+        />
       )}
+
+      <DialogFormSecret
+        secretKey={secretKey}
+        isOpen={isSecretDialogOpen}
+        onOpenChange={setIsSecretDialogOpen}
+        onSubmit={onSubmit}
+      />
     </>
   )
 }
