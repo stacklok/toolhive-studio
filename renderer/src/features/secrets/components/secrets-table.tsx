@@ -9,23 +9,20 @@ import {
 } from '@/common/components/ui/table'
 import { Input } from '@/common/components/ui/input'
 import { SecretDropdown } from './secret-dropdown'
-import { DialogFormSecret } from './dialog-form-secret'
 import { useFilterSort } from '@/common/hooks/use-filter-sort'
 import { ArrowUpDown, X } from 'lucide-react'
-import { useState } from 'react'
-
-type Secret = {
-  key: string
-}
-
+import type { V1SecretKeyResponse } from '@/common/api/generated'
 interface SecretsTableProps {
-  secrets: Secret[]
+  secrets: V1SecretKeyResponse[]
+  setIsSecretDialogOpen: (open: boolean) => void
+  setSecretKey: (key: string) => void
 }
 
-export function SecretsTable({ secrets }: SecretsTableProps) {
-  const [isSecretDialogOpen, setIsSecretDialogOpen] = useState(false)
-  const [secretKey, setSecretKey] = useState<string | undefined>(undefined)
-
+export function SecretsTable({
+  secrets,
+  setIsSecretDialogOpen,
+  setSecretKey,
+}: SecretsTableProps) {
   const {
     filter,
     setFilter,
@@ -33,41 +30,30 @@ export function SecretsTable({ secrets }: SecretsTableProps) {
     toggleSortOrder,
   } = useFilterSort({
     data: secrets,
-    filterFields: (secret) => [secret.key],
-    sortBy: (secret) => secret.key,
+    filterFields: (secret) => [secret.key ?? ''],
+    sortBy: (secret) => secret.key ?? '',
   })
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="relative max-w-md">
-          <Input
-            type="text"
-            placeholder="Filter secrets..."
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="pr-8"
-          />
-          {filter && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute top-1/2 right-1 size-6 -translate-y-1/2 p-0"
-              onClick={() => setFilter('')}
-            >
-              <X className="size-4" />
-            </Button>
-          )}
-        </div>
-        <Button
-          variant="default"
-          onClick={() => {
-            setIsSecretDialogOpen(true)
-            setSecretKey('')
-          }}
-        >
-          Add Secret
-        </Button>
+      <div className="relative max-w-md">
+        <Input
+          type="text"
+          placeholder="Filter secrets..."
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="pr-8"
+        />
+        {filter && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute top-1/2 right-1 size-6 -translate-y-1/2 p-0"
+            onClick={() => setFilter('')}
+          >
+            <X className="size-4" />
+          </Button>
+        )}
       </div>
       <div className="overflow-hidden rounded-md border">
         <Table className="">
@@ -97,8 +83,9 @@ export function SecretsTable({ secrets }: SecretsTableProps) {
                   <SecretDropdown
                     onHandleClick={() => {
                       setIsSecretDialogOpen(true)
-                      setSecretKey(secret.key)
+                      setSecretKey(secret.key ?? '')
                     }}
+                    secretKey={secret.key ?? ''}
                   />
                 </TableCell>
               </TableRow>
@@ -113,12 +100,6 @@ export function SecretsTable({ secrets }: SecretsTableProps) {
           </div>
         )}
       </div>
-
-      <DialogFormSecret
-        secretKey={secretKey}
-        isOpen={isSecretDialogOpen}
-        onOpenChange={setIsSecretDialogOpen}
-      />
     </div>
   )
 }

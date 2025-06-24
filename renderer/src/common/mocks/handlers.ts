@@ -7,9 +7,13 @@ import {
 import { mswEndpoint } from './msw-endpoint'
 import { versionFixture } from './fixtures/version'
 import { clientsFixture } from './fixtures/clients'
-import type { V1CreateRequest } from '../api/generated/types.gen'
+import type {
+  V1CreateRequest,
+  V1CreateSecretRequest,
+} from '../api/generated/types.gen'
 import { registryServerFixture } from './fixtures/registry_server'
 import { MOCK_REGISTRY_RESPONSE } from './fixtures/registry'
+import { secretsListFixture } from './fixtures/secrets'
 
 export const handlers = [
   http.get(mswEndpoint('/health'), () => {
@@ -113,6 +117,41 @@ export const handlers = [
   ),
 
   http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-    return HttpResponse.json({ keys: [] })
+    return HttpResponse.json(secretsListFixture)
   }),
+
+  http.post(
+    mswEndpoint('/api/v1beta/secrets/default/keys'),
+    async ({ request }) => {
+      const { key, value } = (await request.json()) as V1CreateSecretRequest
+
+      try {
+        return HttpResponse.json({ key, value }, { status: 201 })
+      } catch {
+        return HttpResponse.json(
+          { error: 'Invalid request body' },
+          { status: 400 }
+        )
+      }
+    }
+  ),
+  http.put(
+    mswEndpoint('/api/v1beta/secrets/default/keys/:key'),
+    async ({ request }) => {
+      const { value } = (await request.json()) as V1CreateSecretRequest
+
+      try {
+        return HttpResponse.json({ value }, { status: 201 })
+      } catch {
+        return HttpResponse.json(
+          { error: 'Invalid request body' },
+          { status: 400 }
+        )
+      }
+    }
+  ),
+  http.delete(
+    mswEndpoint('/api/v1beta/secrets/default/keys/:key'),
+    async () => new HttpResponse(null, { status: 204 })
+  ),
 ]

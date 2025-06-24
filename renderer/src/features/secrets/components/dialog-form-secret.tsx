@@ -46,12 +46,14 @@ interface SecretDialogProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   secretKey?: string
+  onSubmit: (data: SecretFormData) => void
 }
 
 export function DialogFormSecret({
   isOpen,
   onOpenChange,
   secretKey,
+  onSubmit,
 }: SecretDialogProps) {
   const isEditMode = !!secretKey
   const schema = isEditMode ? editSecretSchema : createSecretSchema
@@ -63,12 +65,13 @@ export function DialogFormSecret({
     },
   })
 
-  const handleSubmit = async () => {
+  const handleCancel = () => {
     form.reset()
     onOpenChange(false)
   }
 
-  const handleCancel = () => {
+  const handleSubmit = (data: SecretFormData) => {
+    onSubmit(data)
     form.reset()
     onOpenChange(false)
   }
@@ -77,7 +80,10 @@ export function DialogFormSecret({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent
+        className="max-w-md"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
