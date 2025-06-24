@@ -227,6 +227,18 @@ export async function orchestrateRunCustomServer({
   // to the secret name, e.g. `MY_API_TOKEN` -> `MY_API_TOKEN_2`
   const { data: fetchedSecrets } = await getApiV1BetaSecretsDefaultKeys({
     throwOnError: true,
+  }).catch((e) => {
+    toast.error(
+      [
+        `An error occurred while starting the server.`,
+        'Could not retrieve secrets from the secret store.',
+        e instanceof Error ? `\n${e.message}` : null,
+      ].join('\n'),
+      {
+        id: toastID,
+      }
+    )
+    throw e
   })
   const preparedNewSecrets = prepareSecretsWithoutNamingCollision(
     newSecrets,
