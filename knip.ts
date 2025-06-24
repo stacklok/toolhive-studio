@@ -20,6 +20,7 @@ export default {
     'renderer/src/routes/store.tsx',
     'renderer/src/routes/clients.tsx',
     'renderer/src/common/api/generated/**',
+    'renderer/src/common/components/illustrations/**',
     'renderer/src/common/hooks/use-servers.ts',
     'renderer/src/common/lib/utils.ts',
     'renderer/src/common/components/ui/**',
