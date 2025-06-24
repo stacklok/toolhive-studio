@@ -7,6 +7,9 @@ import { DialogFormSecret } from '@/features/secrets/components/dialog-form-secr
 import { Button } from '@/common/components/ui/button'
 import { useMutationCerateSecret } from '@/features/secrets/hooks/use-mutation-create-secret'
 import { useMutationUpdateSecret } from '@/features/secrets/hooks/use-mutation-update-secret'
+import { PlusIcon } from 'lucide-react'
+import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
+import { EmptyState } from '@/common/components/empty-state'
 
 export const Route = createFileRoute('/secrets')({
   component: Secrets,
@@ -59,7 +62,22 @@ export function Secrets() {
       </div>
 
       {keys.length === 0 ? (
-        <div>No secrets found</div>
+        <EmptyState
+          title="Securely store your secrets"
+          body="Create secrets to store API keys for use into your MCP Server configurations"
+          actions={[
+            <Button
+              key="add"
+              onClick={() => {
+                setIsSecretDialogOpen(true)
+                setSecretKey('')
+              }}
+            >
+              Add a secret <PlusIcon />
+            </Button>,
+          ]}
+          illustration={IllustrationNoConnection}
+        />
       ) : (
         <SecretsTable
           secrets={keys}

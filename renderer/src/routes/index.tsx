@@ -1,11 +1,17 @@
 import { getApiV1BetaWorkloadsOptions } from '@/common/api/generated/@tanstack/react-query.gen'
+import { EmptyState } from '@/common/components/empty-state'
+import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
+
+import { Button } from '@/common/components/ui/button'
+
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { ChevronRight } from 'lucide-react'
 import { RefreshButton } from '@/common/components/refresh-button'
 import { DialogFormRunMcpServerWithCommand } from '@/features/mcp-servers/components/dialog-form-run-mcp-command'
 import { GridCardsMcpServers } from '@/features/mcp-servers/components/grid-cards-mcp-server'
 import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/menu-run-mcp-server'
 import { useRunCustomServer } from '@/features/mcp-servers/hooks/use-run-custom-server'
-import { useSuspenseQuery } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 
 export const Route = createFileRoute('/')({
@@ -41,7 +47,25 @@ export function Index() {
         />
       </div>
       {workloads.length === 0 ? (
-        <div>No servers found</div>
+        <EmptyState
+          title="Add your first MCP server"
+          body="Browse or search the registry for a specific tool"
+          actions={[
+            <Button
+              variant="outline"
+              key="add-custom-server"
+              onClick={() => setIsRunWithCommandOpen(true)}
+            >
+              Add custom server
+            </Button>,
+            <Button asChild key="add-from-registry">
+              <Link to="/registry">
+                Browse registry <ChevronRight />
+              </Link>
+            </Button>,
+          ]}
+          illustration={IllustrationNoConnection}
+        />
       ) : (
         <GridCardsMcpServers mcpServers={workloads} />
       )}
