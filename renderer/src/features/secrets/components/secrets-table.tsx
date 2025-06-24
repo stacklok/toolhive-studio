@@ -7,11 +7,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/common/components/ui/table'
-import { Input } from '@/common/components/ui/input'
 import { SecretDropdown } from './secret-dropdown'
 import { useFilterSort } from '@/common/hooks/use-filter-sort'
-import { ArrowUpDown, X } from 'lucide-react'
+import { ArrowUpDown } from 'lucide-react'
 import type { V1SecretKeyResponse } from '@/common/api/generated'
+import { InputSearch } from '@/common/components/ui/input-search'
 interface SecretsTableProps {
   secrets: V1SecretKeyResponse[]
   setIsSecretDialogOpen: (open: boolean) => void
@@ -36,25 +36,11 @@ export function SecretsTable({
 
   return (
     <div className="space-y-6">
-      <div className="relative max-w-md">
-        <Input
-          type="text"
-          placeholder="Filter secrets..."
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="pr-8"
-        />
-        {filter && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute top-1/2 right-1 size-6 -translate-y-1/2 p-0"
-            onClick={() => setFilter('')}
-          >
-            <X className="size-4" />
-          </Button>
-        )}
-      </div>
+      <InputSearch
+        value={filter}
+        onChange={(v) => setFilter(v)}
+        placeholder="Search..."
+      />
       <div className="overflow-hidden rounded-md border">
         <Table className="">
           <TableHeader>

@@ -2,9 +2,9 @@ import type { RegistryImageMetadata } from '@/common/api/generated/types.gen'
 import { CardRegistryServer } from './card-registry-server'
 import { FormRunFromRegistry } from './form-run-from-registry'
 import { useState } from 'react'
-import { Input } from '@/common/components/ui/input'
 import type { FormSchemaRunFromRegistry } from '../lib/get-form-schema-run-from-registry'
 import { useFilterSort } from '@/common/hooks/use-filter-sort'
+import { InputSearch } from '@/common/components/ui/input-search'
 
 export function GridCardsRegistryServer({
   servers,
@@ -49,14 +49,11 @@ export function GridCardsRegistryServer({
 
   return (
     <div className="space-y-6">
-      <div className="max-w-md">
-        <Input
-          type="text"
-          placeholder="Filter by name or description..."
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-        />
-      </div>
+      <InputSearch
+        value={filter}
+        onChange={(v) => setFilter(v)}
+        placeholder="Search..."
+      />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {filteredServers.map((server) => (
           <CardRegistryServer

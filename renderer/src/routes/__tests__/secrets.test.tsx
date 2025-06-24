@@ -22,7 +22,7 @@ it('should render the table with secrets', async () => {
   expect(
     screen.getByRole('button', { name: /add secret/i })
   ).toBeInTheDocument()
-  expect(screen.getByPlaceholderText('Filter secrets...')).toBeInTheDocument()
+  expect(screen.getByPlaceholderText('Search...')).toBeInTheDocument()
 
   expect(screen.getByText('Github')).toBeInTheDocument()
   expect(screen.getByText('Grafana')).toBeInTheDocument()

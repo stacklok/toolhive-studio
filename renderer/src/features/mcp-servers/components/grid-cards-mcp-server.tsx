@@ -1,9 +1,7 @@
 import type { WorkloadsWorkload } from '@/common/api/generated'
 import { CardMcpServer } from './card-mcp-server'
 import { useState, useMemo } from 'react'
-import { Input } from '@/common/components/ui/input'
-import { Button } from '@/common/components/ui/button'
-import { X } from 'lucide-react'
+import { InputSearch } from '@/common/components/ui/input-search'
 
 export function GridCardsMcpServers({
   mcpServers,
@@ -36,31 +34,11 @@ export function GridCardsMcpServers({
 
   return (
     <div className="space-y-6">
-      <div className="grid w-full grid-cols-1 place-content-between gap-4 md:grid-cols-6 md:gap-0">
-        <div className="relative col-span-4 max-w-md flex-1">
-          <Input
-            type="text"
-            placeholder="Filter by name or image..."
-            value={filters.text}
-            onChange={(e) =>
-              setFilters((prev) => ({ ...prev, text: e.target.value }))
-            }
-            className="pr-10"
-          />
-          {filters.text && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setFilters((prev) => ({ ...prev, text: '' }))}
-              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 h-7 w-7
-                -translate-y-1/2"
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Clear search</span>
-            </Button>
-          )}
-        </div>
-      </div>
+      <InputSearch
+        onChange={(v) => setFilters((prev) => ({ ...prev, text: v }))}
+        value={filters.text}
+        placeholder="Search..."
+      />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {filteredMcpServers.map((mcpServer) =>
