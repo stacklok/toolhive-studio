@@ -14,10 +14,10 @@ import { QueryClient, type UseMutateAsyncFunction } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { FormSchemaRunFromRegistry } from './get-form-schema-run-from-registry'
 import { Progress } from '@/common/components/ui/progress'
-import type { DefinedSecret, PreparedSecret } from '../types'
-import { prepareSecretsWithoutNamingCollision } from './prepare-secrets-without-naming-collision'
+import { prepareSecretsWithoutNamingCollision } from '../../../common/lib/secrets/prepare-secrets-without-naming-collision'
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/common/components/ui/button'
+import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
 
 type SaveSecretFn = UseMutateAsyncFunction<
   V1CreateSecretResponse,
@@ -185,7 +185,7 @@ function groupSecrets(secrets: DefinedSecret[]): {
 /**
  * Orchestrates the "onSubmit" action for the "Run from Registry" form.
  */
-export async function orchestrateRunServer({
+export async function orchestrateRunRegistryServer({
   createWorkload,
   data,
   getIsServerReady,
@@ -202,42 +202,90 @@ export async function orchestrateRunServer({
 }) {
   const toastID: string = new Date(Date.now()).toISOString()
 
-  let newlyCreatedSecrets: SecretsSecretParameter[] = []
+  try {
+    let newlyCreatedSecrets: SecretsSecretParameter[] = []
 
-  // NOTE: Due to how we populate the names of the secrets in the form, we may
-  // have secrets with a `key` but no `value`. We filter those out.
-  const definedSecrets = getDefinedSecrets(data.secrets)
+    // NOTE: Due to how we populate the names of the secrets in the form, we may
+    // have secrets with a `key` but no `value`. We filter those out.
+    const definedSecrets = getDefinedSecrets(data.secrets)
 
-  // Step 1: Group secrets into new and existing
-  // We need to know which secrets are new (not from the registry) and which are
-  // existing (already stored). This helps us handle the encryption and storage
-  // of secrets correctly.
-  const { existingSecrets, newSecrets } = groupSecrets(definedSecrets)
+    // Step 1: Group secrets into new and existing
+    // We need to know which secrets are new (not from the registry) and which are
+    // existing (already stored). This helps us handle the encryption and storage
+    // of secrets correctly.
+    const { existingSecrets, newSecrets } = groupSecrets(definedSecrets)
 
-  // Step 2: Fetch existing secrets & handle naming collisions
-  // We need an up-to-date list of secrets so we can handle any existing keys
-  // safely & correctly. This is done with a manual fetch call to avoid freshness issues /
-  // side-effects from the `useQuery` hook.
-  // In the event of a naming collision, we will append an incrementing number
-  // to the secret name, e.g. `MY_API_TOKEN` -> `MY_API_TOKEN_2`
-  const { data: fetchedSecrets } = await getApiV1BetaSecretsDefaultKeys({
-    throwOnError: true,
-  })
-  const preparedNewSecrets = prepareSecretsWithoutNamingCollision(
-    newSecrets,
-    fetchedSecrets
-  )
-
-  // Step 3: Encrypt secrets
-  // If there are secrets with values, create them in the secret store first.
-  // We need the data returned by the API to pass along with the "run workload" request.
-  if (preparedNewSecrets.length > 0) {
-    try {
-      newlyCreatedSecrets = await saveSecrets(
-        preparedNewSecrets,
-        saveSecret,
-        toastID
+    // Step 2: Fetch existing secrets & handle naming collisions
+    // We need an up-to-date list of secrets so we can handle any existing keys
+    // safely & correctly. This is done with a manual fetch call to avoid freshness issues /
+    // side-effects from the `useQuery` hook.
+    // In the event of a naming collision, we will append an incrementing number
+    // to the secret name, e.g. `MY_API_TOKEN` -> `MY_API_TOKEN_2`
+    const { data: fetchedSecrets } = await getApiV1BetaSecretsDefaultKeys({
+      throwOnError: true,
+    }).catch((e) => {
+      toast.error(
+        [
+          `An error occurred while starting the server.`,
+          'Could not retrieve secrets from the secret store.',
+          e instanceof Error ? `\n${e.message}` : null,
+        ].join('\n'),
+        {
+          id: toastID,
+        }
       )
+      throw e
+    })
+    const preparedNewSecrets = prepareSecretsWithoutNamingCollision(
+      newSecrets,
+      fetchedSecrets
+    )
+
+    // Step 3: Encrypt secrets
+    // If there are secrets with values, create them in the secret store first.
+    // We need the data returned by the API to pass along with the "run workload" request.
+    if (preparedNewSecrets.length > 0) {
+      try {
+        newlyCreatedSecrets = await saveSecrets(
+          preparedNewSecrets,
+          saveSecret,
+          toastID
+        )
+      } catch (error) {
+        toast.error(
+          [
+            'An error occurred while starting the server.',
+            error instanceof Error ? `\n${error.message}` : null,
+          ].join(''),
+          {
+            id: toastID,
+          }
+        )
+        return
+      }
+    }
+
+    // Step 4: Create the MCP server workload
+    // Prepare the request data and send it to the API
+    // We pass the encrypted secrets along with the request.
+    const secretsForRequest: SecretsSecretParameter[] = [
+      ...newlyCreatedSecrets,
+      ...existingSecrets.map((secret) => ({
+        name: secret.value.secret,
+        target: secret.name,
+      })),
+    ]
+
+    const createRequest: V1CreateRequest = prepareCreateWorkloadData(
+      server,
+      data,
+      secretsForRequest
+    )
+
+    try {
+      await createWorkload({
+        body: createRequest,
+      })
     } catch (error) {
       toast.error(
         [
@@ -250,29 +298,47 @@ export async function orchestrateRunServer({
       )
       return
     }
-  }
 
-  // Step 4: Create the MCP server workload
-  // Prepare the request data and send it to the API
-  // We pass the encrypted secrets along with the request.
-  const secretsForRequest: SecretsSecretParameter[] = [
-    ...newlyCreatedSecrets,
-    ...existingSecrets.map((secret) => ({
-      name: secret.value.secret,
-      target: secret.name,
-    })),
-  ]
-
-  const createRequest: V1CreateRequest = prepareCreateWorkloadData(
-    server,
-    data,
-    secretsForRequest
-  )
-
-  try {
-    await createWorkload({
-      body: createRequest,
+    // Step 5: Poll server status
+    // After the server is created, we need to wait for it to be ready.
+    // We use a polling function to check the server status.
+    // When the server is ready, we show feedback to the user.
+    toast.loading(`Starting "${data.serverName}"...`, {
+      duration: 30_000,
+      id: toastID,
     })
+
+    if (await getIsServerReady(data.serverName)) {
+      // Invalidate queries to refresh server lists
+      await queryClient.invalidateQueries({
+        queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
+      })
+
+      toast.success(`"${data.serverName}" started successfully.`, {
+        id: toastID,
+        duration: 5_000, // slightly longer than default
+        action: (
+          <Button asChild>
+            <Link
+              to="/"
+              search={{ newServerName: data.serverName }}
+              onClick={() => toast.dismiss(toastID)}
+              className="ml-auto"
+            >
+              View
+            </Link>
+          </Button>
+        ),
+      })
+    } else {
+      toast.warning(
+        `Server "${data.serverName}" was created but may still be starting up. Check the servers list to monitor its status.`,
+        {
+          id: toastID,
+          duration: 2_000, // reset to default
+        }
+      )
+    }
   } catch (error) {
     toast.error(
       [
@@ -283,47 +349,6 @@ export async function orchestrateRunServer({
         id: toastID,
       }
     )
-    return
-  }
-
-  // Step 5: Poll server status
-  // After the server is created, we need to wait for it to be ready.
-  // We use a polling function to check the server status.
-  // When the server is ready, we show feedback to the user.
-  toast.loading(`Starting "${data.serverName}"...`, {
-    duration: 30_000,
-    id: toastID,
-  })
-
-  if (await getIsServerReady(data.serverName)) {
-    // Invalidate queries to refresh server lists
-    await queryClient.invalidateQueries({
-      queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
-    })
-
-    toast.success(`"${data.serverName}" started successfully.`, {
-      id: toastID,
-      duration: 5_000, // slightly longer than default
-      action: (
-        <Button asChild>
-          <Link
-            to="/"
-            search={{ newServerName: data.serverName }}
-            onClick={() => toast.dismiss(toastID)}
-            className="ml-auto"
-          >
-            View
-          </Link>
-        </Button>
-      ),
-    })
-  } else {
-    toast.warning(
-      `Server "${data.serverName}" was created but may still be starting up. Check the servers list to monitor its status.`,
-      {
-        id: toastID,
-        duration: 2_000, // reset to default
-      }
-    )
+    throw error
   }
 }

@@ -1,6 +1,7 @@
 import type { V1ListSecretsResponse } from '@/common/api/generated'
-import type { DefinedSecret, PreparedSecret } from '../types'
-import { SECRET_NAME_REGEX } from './secret-name-regex'
+
+import { SECRET_NAME_REGEX } from '../../../features/registry-servers/lib/secret-name-regex'
+import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
 
 /**
  * A utility function to update the keys used in the form schema to prevent any

@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query'
-import { orchestrateRunServer } from '../orchestrate-run-server'
+import { orchestrateRunRegistryServer } from '../orchestrate-run-registry-server'
 import type { FormSchemaRunFromRegistry } from '../get-form-schema-run-from-registry'
 import type { RegistryServer } from '@/common/api/generated'
 
@@ -34,7 +34,7 @@ test('happy path', async () => {
     ],
   }
 
-  await orchestrateRunServer({
+  await orchestrateRunRegistryServer({
     createWorkload: mockCreateWorkload,
     data: formData,
     getIsServerReady: mockGetIsServerReady,

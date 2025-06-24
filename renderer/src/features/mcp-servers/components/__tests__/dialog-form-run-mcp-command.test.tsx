@@ -1,25 +1,48 @@
-import { render } from '@testing-library/react'
+import { render, waitFor } from '@testing-library/react'
 import { screen } from '@testing-library/react'
 
 import { it, vi } from 'vitest'
 import { DialogFormRunMcpServerWithCommand } from '../dialog-form-run-mcp-command'
 import userEvent from '@testing-library/user-event'
 import { Dialog } from '@/common/components/ui/dialog'
+import { server } from '@/common/mocks/node'
+import { http, HttpResponse } from 'msw'
+import { mswEndpoint } from '@/common/mocks/msw-endpoint'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const onSubmitMock = vi.fn()
 
 window.HTMLElement.prototype.hasPointerCapture = vi.fn()
 window.HTMLElement.prototype.scrollIntoView = vi.fn()
 
+beforeEach(() => {
+  server.use(
+    http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
+      return HttpResponse.json({ keys: [{ key: 'SECRET_FROM_STORE' }] })
+    })
+  )
+})
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      gcTime: 0,
+      staleTime: 0,
+    },
+  },
+})
+
 it('should be able to run an MCP server while omitting optional fields', async () => {
   render(
-    <Dialog open>
-      <DialogFormRunMcpServerWithCommand
-        isOpen
-        onOpenChange={() => {}}
-        onSubmit={onSubmitMock}
-      />
-    </Dialog>
+    <QueryClientProvider client={queryClient}>
+      <Dialog open>
+        <DialogFormRunMcpServerWithCommand
+          isOpen
+          onOpenChange={() => {}}
+          onSubmit={onSubmitMock}
+        />
+      </Dialog>
+    </QueryClientProvider>
   )
 
   await userEvent.click(screen.getByRole('tab', { name: 'Docker image' }))
@@ -39,18 +62,24 @@ it('should be able to run an MCP server while omitting optional fields', async (
     name: 'foo-bar',
     transport: 'stdio',
     image: 'ghcr.io/github/github-mcp-server',
+    cmd_arguments: undefined,
+    envVars: [],
+    secrets: [],
+    type: 'docker_image',
   })
 })
 
 it('should be able to run an MCP server with docker', async () => {
   render(
-    <Dialog open>
-      <DialogFormRunMcpServerWithCommand
-        isOpen
-        onOpenChange={() => {}}
-        onSubmit={onSubmitMock}
-      />
-    </Dialog>
+    <QueryClientProvider client={queryClient}>
+      <Dialog open>
+        <DialogFormRunMcpServerWithCommand
+          isOpen
+          onOpenChange={() => {}}
+          onSubmit={onSubmitMock}
+        />
+      </Dialog>
+    </QueryClientProvider>
   )
 
   await userEvent.click(screen.getByRole('tab', { name: 'Docker image' }))
@@ -70,6 +99,28 @@ it('should be able to run an MCP server with docker', async () => {
     '-y --oauth-setup'
   )
 
+  // Inline secret
+  await userEvent.click(screen.getByRole('button', { name: 'Add secret' }))
+  await userEvent.type(screen.getByLabelText('Secret key'), 'MY_SECRET')
+  await userEvent.type(screen.getByLabelText('Secret value'), 'foo-bar')
+
+  // Secret from store
+  await userEvent.click(screen.getByRole('button', { name: 'Add secret' }))
+  await userEvent.type(
+    screen.getAllByLabelText('Secret key')[1] as HTMLElement,
+    'MY_SECRET_2'
+  )
+  await userEvent.click(
+    screen.getAllByLabelText('Use a secret from the store')[1] as HTMLElement
+  )
+  await waitFor(() => {
+    expect(screen.getByRole('dialog', { name: 'Secrets store' })).toBeVisible()
+  })
+  await userEvent.click(
+    screen.getByRole('option', { name: 'SECRET_FROM_STORE' })
+  )
+
+  // Environment variable
   await userEvent.click(
     screen.getByRole('button', { name: 'Add environment variable' })
   )
@@ -79,7 +130,7 @@ it('should be able to run an MCP server with docker', async () => {
   )
   await userEvent.type(
     screen.getByLabelText('Environment variable value'),
-    '123_FOO'
+    'foo-bar'
   )
 
   await userEvent.click(screen.getByRole('button', { name: 'Submit' }))
@@ -91,24 +142,44 @@ it('should be able to run an MCP server with docker', async () => {
   expect(payload['image'], 'Should have image').toBe(
     'ghcr.io/github/github-mcp-server'
   )
-  expect(payload['cmd_arguments'], 'Should have cmd_arguments').toEqual([
-    '-y',
-    '--oauth-setup',
+  expect(payload['cmd_arguments'], 'Should have cmd_arguments').toEqual(
+    '-y --oauth-setup'
+  )
+  expect(payload['envVars'], 'Should have env_vars').toEqual([
+    {
+      name: 'MY_ENV_VAR',
+      value: 'foo-bar',
+    },
   ])
-  expect(payload['env_vars'], 'Should have env_vars').toEqual([
-    'MY_ENV_VAR=123_FOO',
+  expect(payload['secrets'], 'Should have secrets').toEqual([
+    {
+      name: 'MY_SECRET',
+      value: {
+        secret: 'foo-bar',
+        isFromStore: false,
+      },
+    },
+    {
+      name: 'MY_SECRET_2',
+      value: {
+        isFromStore: true,
+        secret: 'SECRET_FROM_STORE',
+      },
+    },
   ])
 })
 
 it('should be able to run an MCP server with npx', async () => {
   render(
-    <Dialog open>
-      <DialogFormRunMcpServerWithCommand
-        isOpen
-        onOpenChange={() => {}}
-        onSubmit={onSubmitMock}
-      />
-    </Dialog>
+    <QueryClientProvider client={queryClient}>
+      <Dialog open>
+        <DialogFormRunMcpServerWithCommand
+          isOpen
+          onOpenChange={() => {}}
+          onSubmit={onSubmitMock}
+        />
+      </Dialog>
+    </QueryClientProvider>
   )
 
   await userEvent.click(screen.getByRole('tab', { name: 'Package manager' }))
@@ -131,6 +202,28 @@ it('should be able to run an MCP server with npx', async () => {
     '-y --oauth-setup'
   )
 
+  // Inline secret
+  await userEvent.click(screen.getByRole('button', { name: 'Add secret' }))
+  await userEvent.type(screen.getByLabelText('Secret key'), 'MY_SECRET')
+  await userEvent.type(screen.getByLabelText('Secret value'), 'foo-bar')
+
+  // Secret from store
+  await userEvent.click(screen.getByRole('button', { name: 'Add secret' }))
+  await userEvent.type(
+    screen.getAllByLabelText('Secret key')[1] as HTMLElement,
+    'MY_SECRET_2'
+  )
+  await userEvent.click(
+    screen.getAllByLabelText('Use a secret from the store')[1] as HTMLElement
+  )
+  await waitFor(() => {
+    expect(screen.getByRole('dialog', { name: 'Secrets store' })).toBeVisible()
+  })
+  await userEvent.click(
+    screen.getByRole('option', { name: 'SECRET_FROM_STORE' })
+  )
+
+  // Environment variable
   await userEvent.click(
     screen.getByRole('button', { name: 'Add environment variable' })
   )
@@ -140,7 +233,7 @@ it('should be able to run an MCP server with npx', async () => {
   )
   await userEvent.type(
     screen.getByLabelText('Environment variable value'),
-    '123_FOO'
+    'foo-bar'
   )
 
   await userEvent.click(screen.getByRole('button', { name: 'Submit' }))
@@ -149,27 +242,48 @@ it('should be able to run an MCP server with npx', async () => {
   expect(payload).toBeDefined()
   expect(payload['name'], 'Should have name').toBe('foo-bar')
   expect(payload['transport'], 'Should have transport').toBe('stdio')
-  expect(payload['image'], 'Should have image').toBe(
-    'npx://@modelcontextprotocol/server-everything'
+  expect(payload['protocol'], 'Should have protocol').toBe('npx')
+  expect(payload['package_name'], 'Should have package name').toBe(
+    '@modelcontextprotocol/server-everything'
   )
-  expect(payload['cmd_arguments'], 'Should have cmd_arguments').toEqual([
-    '-y',
-    '--oauth-setup',
+  expect(payload['cmd_arguments'], 'Should have cmd_arguments').toEqual(
+    '-y --oauth-setup'
+  )
+  expect(payload['envVars'], 'Should have env_vars').toEqual([
+    {
+      name: 'MY_ENV_VAR',
+      value: 'foo-bar',
+    },
   ])
-  expect(payload['env_vars'], 'Should have env_vars').toEqual([
-    'MY_ENV_VAR=123_FOO',
+  expect(payload['secrets'], 'Should have secrets').toEqual([
+    {
+      name: 'MY_SECRET',
+      value: {
+        secret: 'foo-bar',
+        isFromStore: false,
+      },
+    },
+    {
+      name: 'MY_SECRET_2',
+      value: {
+        isFromStore: true,
+        secret: 'SECRET_FROM_STORE',
+      },
+    },
   ])
 })
 
 it('should be able to run an MCP server with uvx', async () => {
   render(
-    <Dialog open>
-      <DialogFormRunMcpServerWithCommand
-        isOpen
-        onOpenChange={() => {}}
-        onSubmit={onSubmitMock}
-      />
-    </Dialog>
+    <QueryClientProvider client={queryClient}>
+      <Dialog open>
+        <DialogFormRunMcpServerWithCommand
+          isOpen
+          onOpenChange={() => {}}
+          onSubmit={onSubmitMock}
+        />
+      </Dialog>
+    </QueryClientProvider>
   )
 
   await userEvent.click(screen.getByRole('tab', { name: 'Package manager' }))
@@ -192,6 +306,28 @@ it('should be able to run an MCP server with uvx', async () => {
     '-y --oauth-setup'
   )
 
+  // Inline secret
+  await userEvent.click(screen.getByRole('button', { name: 'Add secret' }))
+  await userEvent.type(screen.getByLabelText('Secret key'), 'MY_SECRET')
+  await userEvent.type(screen.getByLabelText('Secret value'), 'foo-bar')
+
+  // Secret from store
+  await userEvent.click(screen.getByRole('button', { name: 'Add secret' }))
+  await userEvent.type(
+    screen.getAllByLabelText('Secret key')[1] as HTMLElement,
+    'MY_SECRET_2'
+  )
+  await userEvent.click(
+    screen.getAllByLabelText('Use a secret from the store')[1] as HTMLElement
+  )
+  await waitFor(() => {
+    expect(screen.getByRole('dialog', { name: 'Secrets store' })).toBeVisible()
+  })
+  await userEvent.click(
+    screen.getByRole('option', { name: 'SECRET_FROM_STORE' })
+  )
+
+  // Environment variable
   await userEvent.click(
     screen.getByRole('button', { name: 'Add environment variable' })
   )
@@ -201,7 +337,7 @@ it('should be able to run an MCP server with uvx', async () => {
   )
   await userEvent.type(
     screen.getByLabelText('Environment variable value'),
-    '123_FOO'
+    'foo-bar'
   )
 
   await userEvent.click(screen.getByRole('button', { name: 'Submit' }))
@@ -210,25 +346,48 @@ it('should be able to run an MCP server with uvx', async () => {
   expect(payload).toBeDefined()
   expect(payload['name'], 'Should have name').toBe('foo-bar')
   expect(payload['transport'], 'Should have transport').toBe('stdio')
-  expect(payload['image'], 'Should have image').toBe('uvx://mcp-server-fetch')
-  expect(payload['cmd_arguments'], 'Should have cmd_arguments').toEqual([
-    '-y',
-    '--oauth-setup',
+  expect(payload['protocol'], 'Should have protocol').toBe('uvx')
+  expect(payload['package_name'], 'Should have package name').toBe(
+    'mcp-server-fetch'
+  )
+  expect(payload['cmd_arguments'], 'Should have cmd_arguments').toEqual(
+    '-y --oauth-setup'
+  )
+  expect(payload['envVars'], 'Should have env_vars').toEqual([
+    {
+      name: 'MY_ENV_VAR',
+      value: 'foo-bar',
+    },
   ])
-  expect(payload['env_vars'], 'Should have env_vars').toEqual([
-    'MY_ENV_VAR=123_FOO',
+  expect(payload['secrets'], 'Should have secrets').toEqual([
+    {
+      name: 'MY_SECRET',
+      value: {
+        secret: 'foo-bar',
+        isFromStore: false,
+      },
+    },
+    {
+      name: 'MY_SECRET_2',
+      value: {
+        isFromStore: true,
+        secret: 'SECRET_FROM_STORE',
+      },
+    },
   ])
 })
 
 it('should be able to run an MCP server with go', async () => {
   render(
-    <Dialog open>
-      <DialogFormRunMcpServerWithCommand
-        isOpen
-        onOpenChange={() => {}}
-        onSubmit={onSubmitMock}
-      />
-    </Dialog>
+    <QueryClientProvider client={queryClient}>
+      <Dialog open>
+        <DialogFormRunMcpServerWithCommand
+          isOpen
+          onOpenChange={() => {}}
+          onSubmit={onSubmitMock}
+        />
+      </Dialog>
+    </QueryClientProvider>
   )
 
   await userEvent.click(screen.getByRole('tab', { name: 'Package manager' }))
@@ -251,6 +410,28 @@ it('should be able to run an MCP server with go', async () => {
     '-y --oauth-setup'
   )
 
+  // Inline secret
+  await userEvent.click(screen.getByRole('button', { name: 'Add secret' }))
+  await userEvent.type(screen.getByLabelText('Secret key'), 'MY_SECRET')
+  await userEvent.type(screen.getByLabelText('Secret value'), 'foo-bar')
+
+  // Secret from store
+  await userEvent.click(screen.getByRole('button', { name: 'Add secret' }))
+  await userEvent.type(
+    screen.getAllByLabelText('Secret key')[1] as HTMLElement,
+    'MY_SECRET_2'
+  )
+  await userEvent.click(
+    screen.getAllByLabelText('Use a secret from the store')[1] as HTMLElement
+  )
+  await waitFor(() => {
+    expect(screen.getByRole('dialog', { name: 'Secrets store' })).toBeVisible()
+  })
+  await userEvent.click(
+    screen.getByRole('option', { name: 'SECRET_FROM_STORE' })
+  )
+
+  // Environment variable
   await userEvent.click(
     screen.getByRole('button', { name: 'Add environment variable' })
   )
@@ -260,7 +441,7 @@ it('should be able to run an MCP server with go', async () => {
   )
   await userEvent.type(
     screen.getByLabelText('Environment variable value'),
-    '123_FOO'
+    'foo-bar'
   )
 
   await userEvent.click(screen.getByRole('button', { name: 'Submit' }))
@@ -269,14 +450,33 @@ it('should be able to run an MCP server with go', async () => {
   expect(payload).toBeDefined()
   expect(payload['name'], 'Should have name').toBe('foo-bar')
   expect(payload['transport'], 'Should have transport').toBe('stdio')
-  expect(payload['image'], 'Should have image').toBe(
-    'go://github.com/example/go-mcp-server'
+  expect(payload['protocol'], 'Should have protocol').toBe('go')
+  expect(payload['package_name'], 'Should have package name').toBe(
+    'github.com/example/go-mcp-server'
   )
-  expect(payload['cmd_arguments'], 'Should have cmd_arguments').toEqual([
-    '-y',
-    '--oauth-setup',
+  expect(payload['cmd_arguments'], 'Should have cmd_arguments').toEqual(
+    '-y --oauth-setup'
+  )
+  expect(payload['envVars'], 'Should have env_vars').toEqual([
+    {
+      name: 'MY_ENV_VAR',
+      value: 'foo-bar',
+    },
   ])
-  expect(payload['env_vars'], 'Should have env_vars').toEqual([
-    'MY_ENV_VAR=123_FOO',
+  expect(payload['secrets'], 'Should have secrets').toEqual([
+    {
+      name: 'MY_SECRET',
+      value: {
+        secret: 'foo-bar',
+        isFromStore: false,
+      },
+    },
+    {
+      name: 'MY_SECRET_2',
+      value: {
+        isFromStore: true,
+        secret: 'SECRET_FROM_STORE',
+      },
+    },
   ])
 })

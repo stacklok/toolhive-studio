@@ -1,16 +1,10 @@
-import {
-  getApiV1BetaWorkloadsOptions,
-  postApiV1BetaWorkloadsMutation,
-  getApiV1BetaWorkloadsQueryKey,
-  getApiV1BetaWorkloadsByNameOptions,
-} from '@/common/api/generated/@tanstack/react-query.gen'
+import { getApiV1BetaWorkloadsOptions } from '@/common/api/generated/@tanstack/react-query.gen'
 import { RefreshButton } from '@/common/components/refresh-button'
-import { useToastMutation } from '@/common/hooks/use-toast-mutation'
-import { pollServerStatus } from '@/common/lib/polling'
 import { DialogFormRunMcpServerWithCommand } from '@/features/mcp-servers/components/dialog-form-run-mcp-command'
 import { GridCardsMcpServers } from '@/features/mcp-servers/components/grid-cards-mcp-server'
 import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/menu-run-mcp-server'
-import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
+import { useRunCustomServer } from '@/features/mcp-servers/hooks/use-run-custom-server'
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 
@@ -28,8 +22,7 @@ export function Index() {
   })
   const workloads = data?.workloads ?? []
   const [isRunWithCommandOpen, setIsRunWithCommandOpen] = useState(false)
-  const { mutateAsync } = useToastMutation(postApiV1BetaWorkloadsMutation())
-  const queryClient = useQueryClient()
+  const { handleSubmit } = useRunCustomServer()
 
   return (
     <>
@@ -44,28 +37,7 @@ export function Index() {
         <DialogFormRunMcpServerWithCommand
           isOpen={isRunWithCommandOpen}
           onOpenChange={setIsRunWithCommandOpen}
-          onSubmit={(data) => {
-            mutateAsync(
-              {
-                body: data,
-              },
-              {
-                onSuccess: async () => {
-                  await pollServerStatus(() =>
-                    queryClient.fetchQuery(
-                      getApiV1BetaWorkloadsByNameOptions({
-                        path: { name: data.name as string },
-                      })
-                    )
-                  )
-                  queryClient.invalidateQueries(
-                    // @ts-expect-error - https://github.com/stacklok/toolhive/issues/497
-                    getApiV1BetaWorkloadsQueryKey({ query: { all: true } })
-                  )
-                },
-              }
-            )
-          }}
+          onSubmit={handleSubmit}
         />
       </div>
       {workloads.length === 0 ? (
