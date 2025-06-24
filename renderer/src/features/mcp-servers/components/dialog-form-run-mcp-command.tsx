@@ -15,61 +15,16 @@ import {
   DialogTitle,
 } from '@/common/components/ui/dialog'
 import { Button } from '@/common/components/ui/button'
-import type { V1CreateRequest } from '@/common/api/generated'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { FormFieldsArrayCustomEnvVars } from './form-fields-array-custom-env-vars'
-
-function mapEnvVars(envVars: { key: string; value: string }[]) {
-  return envVars.map((envVar) => `${envVar.key}=${envVar.value}`)
-}
-
-const transformTypeSpecificData = (
-  values: FormSchemaRunMcpCommand
-): V1CreateRequest => {
-  const type = values.type
-  switch (type) {
-    case 'docker_image': {
-      return {
-        name: values.name,
-        transport: values.transport,
-        image: values.image,
-      }
-    }
-    case 'package_manager': {
-      return {
-        name: values.name,
-        transport: values.transport,
-        image: `${values.protocol}://${values.package_name}`,
-      }
-    }
-    default:
-      return type satisfies never
-  }
-}
-
-const transformData = (values: FormSchemaRunMcpCommand): V1CreateRequest => {
-  const data = transformTypeSpecificData(values)
-
-  if (values.cmd_arguments != null) {
-    data.cmd_arguments = values.cmd_arguments.split(' ')
-  }
-
-  if (
-    Array.isArray(values.environment_variables) &&
-    values.environment_variables.length > 0
-  ) {
-    data.env_vars = mapEnvVars(values.environment_variables)
-  }
-
-  return data
-}
+import { FormFieldsArrayCustomSecrets } from './form-fields-array-custom-secrets'
 
 export function DialogFormRunMcpServerWithCommand({
   onSubmit,
   isOpen,
   onOpenChange,
 }: {
-  onSubmit: (data: V1CreateRequest) => void
+  onSubmit: (data: FormSchemaRunMcpCommand) => void
   isOpen: boolean
   onOpenChange: (open: boolean) => void
 }) {
@@ -83,7 +38,7 @@ export function DialogFormRunMcpServerWithCommand({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
-        className="p-0"
+        className="p-0 sm:max-w-2xl"
         onInteractOutside={(e) => {
           // Prevent closing the dialog when clicking outside
           e.preventDefault()
@@ -92,7 +47,8 @@ export function DialogFormRunMcpServerWithCommand({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) => {
-              onSubmit(transformData(data as FormSchemaRunMcpCommand))
+              onSubmit(data)
+              form.reset()
               onOpenChange(false)
             })}
           >
@@ -106,7 +62,7 @@ export function DialogFormRunMcpServerWithCommand({
 
             <div className="relative max-h-[65dvh] space-y-4 overflow-y-auto px-6">
               <FormFieldsRunMcpCommand form={form} />
-
+              <FormFieldsArrayCustomSecrets form={form} />
               <FormFieldsArrayCustomEnvVars form={form} />
             </div>
 

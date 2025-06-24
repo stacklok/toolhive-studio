@@ -1,4 +1,3 @@
-import { type RegistryServer } from '@/common/api/generated'
 import {
   postApiV1BetaWorkloadsMutation,
   getApiV1BetaWorkloadsByNameOptions,
@@ -6,11 +5,12 @@ import {
 } from '@/common/api/generated/@tanstack/react-query.gen'
 import { pollServerStatus } from '@/common/lib/polling'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { FormSchemaRunFromRegistry } from '../lib/get-form-schema-run-from-registry'
-import { useCallback } from 'react'
-import { orchestrateRunRegistryServer } from '../lib/orchestrate-run-registry-server'
 
-export function useRunFromRegistry() {
+import { useCallback } from 'react'
+import type { FormSchemaRunMcpCommand } from '../lib/form-schema-run-mcp-server-with-command'
+import { orchestrateRunCustomServer } from '../lib/orchestrate-run-custom-server'
+
+export function useRunCustomServer() {
   const queryClient = useQueryClient()
 
   const { mutateAsync: saveSecret } = useMutation({
@@ -34,9 +34,8 @@ export function useRunFromRegistry() {
     )
 
   const handleSubmit = useCallback(
-    async (server: RegistryServer, data: FormSchemaRunFromRegistry) =>
-      orchestrateRunRegistryServer({
-        server,
+    async (data: FormSchemaRunMcpCommand) =>
+      orchestrateRunCustomServer({
         data,
         saveSecret,
         createWorkload,

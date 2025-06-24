@@ -95,7 +95,7 @@ function SecretRow({
         )}
       />
 
-      <div className="grid grid-cols-[auto_calc(var(--spacing)_*_8)]">
+      <div className="grid grid-cols-[auto_calc(var(--spacing)_*_9)]">
         <FormField
           control={form.control}
           name={`secrets.${index}.value`}
@@ -299,10 +299,7 @@ export function FormRunFromRegistry({
                   <p className="text-muted-foreground mb-6 text-sm">
                     Sensitive values that should not be exposed in plain text.
                     They are typically used for API keys, tokens, or passwords.
-                    All secrets are encrypted and stored securely by ToolHive,
-                    and{' '}
-                    <span className="text-foreground font-semibold">never</span>{' '}
-                    leave your machine.
+                    All secrets are encrypted and stored securely by ToolHive.
                   </p>
 
                   {groupedEnvVars.secrets.map((secret, index) => (
