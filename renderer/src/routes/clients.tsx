@@ -3,7 +3,7 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { GridCardClients } from '@/features/clients/components/grid-card-clients'
 import { Button } from '@/common/components/ui/button'
-import { Check, ExternalLinkIcon } from 'lucide-react'
+import { ExternalLinkIcon } from 'lucide-react'
 import { EmptyState } from '@/common/components/empty-state'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
 
@@ -22,10 +22,6 @@ export function Clients() {
     <>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-semibold">Clients</h1>
-        <Button>
-          <Check />
-          Enable all clients
-        </Button>
       </div>
       {clients.length === 0 ? (
         <EmptyState
