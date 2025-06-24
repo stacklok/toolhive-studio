@@ -228,8 +228,8 @@ function createWindow() {
 
 let mainWindow: BrowserWindow | null = null
 
-app.on('ready', () => {
-  startToolhive()
+app.on('ready', async () => {
+  await startToolhive()
   mainWindow = createWindow()
 })
 
