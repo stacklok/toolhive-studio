@@ -1,5 +1,5 @@
 import { it, expect } from 'vitest'
-import { formSchemaRunMcpCommand } from '../form-schema-run-mcp-server-with-command'
+import { getFormSchemaRunMcpCommand } from '../form-schema-run-mcp-server-with-command'
 
 it('passes with valid docker image', () => {
   const validInput = {
@@ -20,7 +20,7 @@ it('passes with valid docker image', () => {
     ],
   }
 
-  const result = formSchemaRunMcpCommand.safeParse(validInput)
+  const result = getFormSchemaRunMcpCommand([]).safeParse(validInput)
   expect(result.success, `${result.error}`).toBe(true)
   expect(result.data).toStrictEqual({
     name: 'github',
@@ -66,7 +66,7 @@ it('passes with valid npx command', () => {
     ],
   }
 
-  const result = formSchemaRunMcpCommand.safeParse(validInput)
+  const result = getFormSchemaRunMcpCommand([]).safeParse(validInput)
   expect(result.success, `${result.error}`).toBe(true)
   expect(result.data).toStrictEqual({
     name: 'server-everything',
@@ -108,7 +108,7 @@ it('passes with valid uvx command', () => {
     ],
   }
 
-  const result = formSchemaRunMcpCommand.safeParse(validInput)
+  const result = getFormSchemaRunMcpCommand([]).safeParse(validInput)
   expect(result.success, `${result.error}`).toBe(true)
   // NOTE: cmd_arguments is transformed to an array
   expect(result.data).toStrictEqual({
@@ -150,11 +150,42 @@ it('fails when name is empty', () => {
     ],
   }
 
-  const result = formSchemaRunMcpCommand.safeParse(invalidInput)
+  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
         name: ['Name is required'],
+      }),
+    })
+  )
+})
+
+it('fails when name is not unique', () => {
+  const invalidInput = {
+    name: 'foo-bar',
+    transport: 'stdio',
+    type: 'docker_image',
+    image: 'ghcr.io/github/github-mcp-server',
+    cmd_arguments: '-y --oauth-setup',
+    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    secrets: [
+      {
+        name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
+        value: {
+          secret: 'foo-bar',
+          isFromStore: false,
+        },
+      },
+    ],
+  }
+
+  const result = getFormSchemaRunMcpCommand([{ name: 'foo-bar' }]).safeParse(
+    invalidInput
+  )
+  expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
+    expect.objectContaining({
+      fieldErrors: expect.objectContaining({
+        name: ['This name is already in use'],
       }),
     })
   )
@@ -179,7 +210,7 @@ it('fails when transport is empty', () => {
     ],
   }
 
-  const result = formSchemaRunMcpCommand.safeParse(invalidInput)
+  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
@@ -208,7 +239,7 @@ it('fails when transport is invalid', () => {
     ],
   }
 
-  const result = formSchemaRunMcpCommand.safeParse(invalidInput)
+  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
@@ -237,7 +268,7 @@ it('fails when type is empty', () => {
     ],
   }
 
-  const result = formSchemaRunMcpCommand.safeParse(invalidInput)
+  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
@@ -266,7 +297,7 @@ it('fails when type is invalid', () => {
     ],
   }
 
-  const result = formSchemaRunMcpCommand.safeParse(invalidInput)
+  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
@@ -285,7 +316,7 @@ it('fails when envVars is missing name', () => {
     cmd_arguments: '-y --oauth-setup',
     envVars: [{ value: 'some-value' }], // Missing name
   }
-  const result = formSchemaRunMcpCommand.safeParse(invalidInput)
+  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
@@ -305,7 +336,7 @@ it('fails when envVars is missing value', () => {
     envVars: [{ name: 'SOME_KEY' }], // Missing value
     secrets: [],
   }
-  const result = formSchemaRunMcpCommand.safeParse(invalidInput)
+  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
@@ -324,7 +355,7 @@ it('fails when secrets is missing', () => {
     cmd_arguments: '-y --oauth-setup',
     envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
   }
-  const result = formSchemaRunMcpCommand.safeParse(invalidInput)
+  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
@@ -344,7 +375,7 @@ it('fails when secrets is missing key', () => {
     envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
     secrets: [{ value: { secret: 'foo-bar', isFromStore: false } }],
   }
-  const result = formSchemaRunMcpCommand.safeParse(invalidInput)
+  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
@@ -364,7 +395,7 @@ it('fails when secrets is missing value', () => {
     envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
     secrets: [{ name: 'GITHUB_PERSONAL_ACCESS_TOKEN' }], // Missing value
   }
-  const result = formSchemaRunMcpCommand.safeParse(invalidInput)
+  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
@@ -391,7 +422,7 @@ it('fails when secrets is missing inner secret value', () => {
       },
     ],
   }
-  const result = formSchemaRunMcpCommand.safeParse(invalidInput)
+  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
@@ -418,7 +449,7 @@ it('fails when secrets is missing `isFromStore`', () => {
       },
     ],
   }
-  const result = formSchemaRunMcpCommand.safeParse(invalidInput)
+  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
@@ -447,7 +478,7 @@ it('docker > fails when image is empty', () => {
     ],
   }
 
-  const result = formSchemaRunMcpCommand.safeParse(invalidInput)
+  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
@@ -477,7 +508,7 @@ it('package_manager > fails when protocol is empty', () => {
     ],
   }
 
-  const result = formSchemaRunMcpCommand.safeParse(invalidInput)
+  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
@@ -507,7 +538,7 @@ it('package_manager > fails when protocol is invalid', () => {
     ],
   }
 
-  const result = formSchemaRunMcpCommand.safeParse(invalidInput)
+  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
@@ -537,7 +568,7 @@ it('package_manager > fails when package_name is empty', () => {
     ],
   }
 
-  const result = formSchemaRunMcpCommand.safeParse(invalidInput)
+  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({

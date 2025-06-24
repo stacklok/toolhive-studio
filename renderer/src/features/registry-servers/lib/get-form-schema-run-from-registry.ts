@@ -1,4 +1,7 @@
-import type { RegistryEnvVar } from '@/common/api/generated/types.gen'
+import type {
+  RegistryEnvVar,
+  WorkloadsWorkload,
+} from '@/common/api/generated/types.gen'
 import z from 'zod/v4'
 import type { GroupedEnvVars } from './group-env-vars'
 
@@ -42,12 +45,20 @@ function refineEnvVar(
 export function getFormSchemaRunFromRegistry({
   envVars,
   secrets,
-}: GroupedEnvVars) {
+  workloads,
+}: GroupedEnvVars & { workloads: WorkloadsWorkload[] }) {
   return z.object({
-    serverName: z.string().min(1, 'Server name is required'),
+    serverName: z
+      .string()
+      .min(1, 'Server name is required')
+      .refine(
+        (value) => !workloads.some((w) => w.name === value),
+        'This name is already in use'
+      ),
     secrets: z
       .object({
         name: z.union(secrets.map(({ name }) => z.literal(name ?? ''))),
+
         value: z.object({
           secret: z.string().optional(), // NOTE: This is optional to allow us to pre-populate the form with empty strings, we refine based on whether it is required by the server later.
           isFromStore: z.boolean(),

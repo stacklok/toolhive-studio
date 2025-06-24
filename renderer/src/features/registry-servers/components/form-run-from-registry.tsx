@@ -38,6 +38,8 @@ import {
   type FormSchemaRunFromRegistry,
 } from '../lib/get-form-schema-run-from-registry'
 import { FormComboboxSecretStore } from '@/common/components/secrets/form-combobox-secrets-store'
+import { useQuery } from '@tanstack/react-query'
+import { getApiV1BetaWorkloadsOptions } from '@/common/api/generated/@tanstack/react-query.gen'
 
 /**
  * Renders an asterisk icon & tooltip for required fields.
@@ -218,9 +220,19 @@ export function FormRunFromRegistry({
     () => groupEnvVars(server?.env_vars || []),
     [server?.env_vars]
   )
+
+  const { data } = useQuery({
+    ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
+  })
+
   const formSchema = useMemo(
-    () => getFormSchemaRunFromRegistry(groupedEnvVars),
-    [groupedEnvVars]
+    () =>
+      getFormSchemaRunFromRegistry({
+        envVars: groupedEnvVars.envVars,
+        secrets: groupedEnvVars.secrets,
+        workloads: data?.workloads ?? [],
+      }),
+    [groupedEnvVars, data?.workloads]
   )
 
   const form = useForm<FormSchemaRunFromRegistry>({
