@@ -1,6 +1,6 @@
 import { Form } from '@/common/components/ui/form'
 import {
-  formSchemaRunMcpCommand,
+  getFormSchemaRunMcpCommand,
   type FormSchemaRunMcpCommand,
 } from '../lib/form-schema-run-mcp-server-with-command'
 import { useForm } from 'react-hook-form'
@@ -18,6 +18,8 @@ import { Button } from '@/common/components/ui/button'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { FormFieldsArrayCustomEnvVars } from './form-fields-array-custom-env-vars'
 import { FormFieldsArrayCustomSecrets } from './form-fields-array-custom-secrets'
+import { useQuery } from '@tanstack/react-query'
+import { getApiV1BetaWorkloadsOptions } from '@/common/api/generated/@tanstack/react-query.gen'
 
 export function DialogFormRunMcpServerWithCommand({
   onSubmit,
@@ -28,8 +30,14 @@ export function DialogFormRunMcpServerWithCommand({
   isOpen: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const { data } = useQuery({
+    ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
+  })
+
+  const workloads = data?.workloads ?? []
+
   const form = useForm<FormSchemaRunMcpCommand>({
-    resolver: zodV4Resolver(formSchemaRunMcpCommand),
+    resolver: zodV4Resolver(getFormSchemaRunMcpCommand(workloads)),
     defaultValues: {
       type: 'docker_image',
     },
