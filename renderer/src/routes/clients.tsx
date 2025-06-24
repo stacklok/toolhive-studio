@@ -2,8 +2,6 @@ import { getApiV1BetaDiscoveryClientsOptions } from '@/common/api/generated/@tan
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { GridCardClients } from '@/features/clients/components/grid-card-clients'
-import { Button } from '@/common/components/ui/button'
-import { Check } from 'lucide-react'
 
 export const Route = createFileRoute('/clients')({
   component: Clients,
@@ -20,10 +18,6 @@ export function Clients() {
     <>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-semibold">Clients</h1>
-        <Button>
-          <Check />
-          Enable all clients
-        </Button>
       </div>
       {clients.length === 0 ? (
         <div>No clients found</div>

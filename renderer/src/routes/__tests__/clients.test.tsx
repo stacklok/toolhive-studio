@@ -12,15 +12,9 @@ describe('Clients Route', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole('button', {
-          name: /enable all clients/i,
-        })
-      ).toBeVisible()
+        screen.getByRole('heading', { name: /clients/i })
+      ).toBeInTheDocument()
     })
-
-    expect(
-      screen.getByRole('heading', { name: /clients/i })
-    ).toBeInTheDocument()
 
     expect(screen.getByText('VS Code')).toBeInTheDocument()
     expect(screen.getByText('Cursor')).toBeInTheDocument()
