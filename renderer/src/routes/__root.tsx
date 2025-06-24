@@ -11,6 +11,28 @@ import {
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { Toaster } from '@/common/components/ui/sonner'
+import {
+  postApiV1BetaSecretsOptions,
+  getApiV1BetaSecretsDefaultOptions,
+} from '@/common/api/generated/@tanstack/react-query.gen'
+
+async function setupSecretProvider(queryClient: QueryClient) {
+  const createEncryptedProvider = () =>
+    queryClient.ensureQueryData(
+      postApiV1BetaSecretsOptions({
+        body: { provider_type: 'encrypted' },
+      })
+    )
+
+  return queryClient
+    .ensureQueryData(getApiV1BetaSecretsDefaultOptions())
+    .then(async (res) => {
+      if (res?.provider_type !== 'encrypted') {
+        await createEncryptedProvider()
+      }
+    })
+    .catch(createEncryptedProvider)
+}
 
 function RootComponent() {
   const matches = useMatches()
@@ -43,9 +65,11 @@ export const Route = createRootRouteWithContext<{
     console.error(error)
   },
   loader: async ({ context: { queryClient } }) => {
-    await queryClient.ensureQueryData({
-      queryKey: ['health'],
-      queryFn: () => getHealth({}),
-    })
+    await queryClient
+      .ensureQueryData({
+        queryKey: ['health'],
+        queryFn: () => getHealth({}),
+      })
+      .then(() => setupSecretProvider(queryClient))
   },
 })

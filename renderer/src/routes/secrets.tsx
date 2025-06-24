@@ -1,10 +1,6 @@
-import {
-  getApiV1BetaSecretsDefaultKeysOptions,
-  getApiV1BetaSecretsDefaultOptions,
-  postApiV1BetaSecretsOptions,
-} from '@/common/api/generated/@tanstack/react-query.gen'
+import { getApiV1BetaSecretsDefaultKeysOptions } from '@/common/api/generated/@tanstack/react-query.gen'
 import { SecretsTable } from '@/features/secrets/components/secrets-table'
-import { QueryClient, useSuspenseQuery } from '@tanstack/react-query'
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { DialogFormSecret } from '@/features/secrets/components/dialog-form-secret'
@@ -15,31 +11,10 @@ import { PlusIcon } from 'lucide-react'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
 import { EmptyState } from '@/common/components/empty-state'
 
-async function setupSecretProvider(queryClient: QueryClient) {
-  const createEncryptedProvider = () =>
-    queryClient.ensureQueryData(
-      postApiV1BetaSecretsOptions({
-        body: { provider_type: 'encrypted' },
-      })
-    )
-
-  return queryClient
-    .ensureQueryData(getApiV1BetaSecretsDefaultOptions())
-    .then(async (res) => {
-      if (res?.provider_type !== 'encrypted') {
-        await createEncryptedProvider()
-      }
-    })
-    .catch(createEncryptedProvider)
-}
-
 export const Route = createFileRoute('/secrets')({
   component: Secrets,
-  loader: async ({ context: { queryClient } }) => {
-    await setupSecretProvider(queryClient)
-
-    return queryClient.ensureQueryData(getApiV1BetaSecretsDefaultKeysOptions())
-  },
+  loader: async ({ context: { queryClient } }) =>
+    queryClient.ensureQueryData(getApiV1BetaSecretsDefaultKeysOptions()),
 })
 
 export function Secrets() {
