@@ -14,7 +14,7 @@ import { EmptyState } from '@/common/components/empty-state'
 export const Route = createFileRoute('/secrets')({
   component: Secrets,
   loader: async ({ context: { queryClient } }) =>
-    await queryClient.ensureQueryData(getApiV1BetaSecretsDefaultKeysOptions()),
+    queryClient.ensureQueryData(getApiV1BetaSecretsDefaultKeysOptions()),
 })
 
 export function Secrets() {
