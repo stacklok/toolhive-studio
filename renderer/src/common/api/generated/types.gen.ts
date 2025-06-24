@@ -101,60 +101,9 @@ export type RegistryEnvVar = {
 }
 
 /**
- * Metadata contains additional information about the server such as popularity metrics
- */
-export type RegistryMetadata = {
-  /**
-   * LastUpdated is the timestamp when the server was last updated, in RFC3339 format
-   */
-  last_updated?: string
-  /**
-   * Pulls indicates how many times the server image has been downloaded
-   */
-  pulls?: number
-  /**
-   * Stars represents the popularity rating or number of stars for the server
-   */
-  stars?: number
-}
-
-/**
- * Provenance contains verification and signing metadata
- */
-export type RegistryProvenance = {
-  attestation?: RegistryVerifiedAttestation
-  cert_issuer?: string
-  repository_ref?: string
-  repository_uri?: string
-  runner_environment?: string
-  signer_identity?: string
-  sigstore_url?: string
-}
-
-/**
- * Full registry data
- */
-export type RegistryRegistry = {
-  /**
-   * LastUpdated is the timestamp when the registry was last updated, in RFC3339 format
-   */
-  last_updated?: string
-  /**
-   * Servers is a map of server names to their corresponding server definitions
-   */
-  servers?: {
-    [key: string]: RegistryServer
-  }
-  /**
-   * Version is the schema version of the registry
-   */
-  version?: string
-}
-
-/**
  * Server details
  */
-export type RegistryServer = {
+export type RegistryImageMetadata = {
   /**
    * Args are the default command-line arguments to pass to the MCP server container.
    * These arguments will be prepended to any command-line arguments provided by the user.
@@ -206,6 +155,57 @@ export type RegistryServer = {
   transport?: string
 }
 
+/**
+ * Metadata contains additional information about the server such as popularity metrics
+ */
+export type RegistryMetadata = {
+  /**
+   * LastUpdated is the timestamp when the server was last updated, in RFC3339 format
+   */
+  last_updated?: string
+  /**
+   * Pulls indicates how many times the server image has been downloaded
+   */
+  pulls?: number
+  /**
+   * Stars represents the popularity rating or number of stars for the server
+   */
+  stars?: number
+}
+
+/**
+ * Provenance contains verification and signing metadata
+ */
+export type RegistryProvenance = {
+  attestation?: RegistryVerifiedAttestation
+  cert_issuer?: string
+  repository_ref?: string
+  repository_uri?: string
+  runner_environment?: string
+  signer_identity?: string
+  sigstore_url?: string
+}
+
+/**
+ * Full registry data
+ */
+export type RegistryRegistry = {
+  /**
+   * LastUpdated is the timestamp when the registry was last updated, in RFC3339 format
+   */
+  last_updated?: string
+  /**
+   * Servers is a map of server names to their corresponding server definitions
+   */
+  servers?: {
+    [key: string]: RegistryImageMetadata
+  }
+  /**
+   * Version is the schema version of the registry
+   */
+  version?: string
+}
+
 export type RegistryVerifiedAttestation = {
   predicate?: unknown
   predicate_type?: string
@@ -214,6 +214,21 @@ export type RegistryVerifiedAttestation = {
 export type SecretsSecretParameter = {
   name?: string
   target?: string
+}
+
+/**
+ * TransportType is the type of transport used for this workload.
+ */
+export type TypesTransportType = string
+
+/**
+ * Request to perform bulk operations on workloads
+ */
+export type V1BulkOperationRequest = {
+  /**
+   * Names of the workloads to operate on
+   */
+  names?: Array<string>
 }
 
 export type V1ClientStatusResponse = {
@@ -369,7 +384,7 @@ export type V1GetSecretsProviderResponse = {
  * Response containing server details
  */
 export type V1GetServerResponse = {
-  server?: RegistryServer
+  server?: RegistryImageMetadata
 }
 
 /**
@@ -389,7 +404,7 @@ export type V1ListServersResponse = {
   /**
    * List of servers in the registry
    */
-  servers?: Array<RegistryServer>
+  servers?: Array<RegistryImageMetadata>
 }
 
 /**
@@ -583,6 +598,7 @@ export type WorkloadsWorkload = {
    * For now, it will always be "mcp" - representing an MCP server.
    */
   tool_type?: string
+  transport_type?: TypesTransportType
   /**
    * URL is the URL of the workload exposed by the ToolHive proxy.
    */
@@ -849,7 +865,7 @@ export type GetApiV1BetaRegistryByNameServersByServerNameData = {
      */
     name: string
     /**
-     * Server name
+     * ImageMetadata name
      */
     serverName: string
   }
@@ -1183,19 +1199,95 @@ export type PostApiV1BetaWorkloadsResponses = {
 export type PostApiV1BetaWorkloadsResponse =
   PostApiV1BetaWorkloadsResponses[keyof PostApiV1BetaWorkloadsResponses]
 
+export type PostApiV1BetaWorkloadsDeleteData = {
+  /**
+   * Bulk delete request
+   */
+  body: V1BulkOperationRequest
+  path?: never
+  query?: never
+  url: '/api/v1beta/workloads/delete'
+}
+
+export type PostApiV1BetaWorkloadsDeleteErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+}
+
+export type PostApiV1BetaWorkloadsDeleteError =
+  PostApiV1BetaWorkloadsDeleteErrors[keyof PostApiV1BetaWorkloadsDeleteErrors]
+
+export type PostApiV1BetaWorkloadsDeleteResponses = {
+  /**
+   * Accepted
+   */
+  202: string
+}
+
+export type PostApiV1BetaWorkloadsDeleteResponse =
+  PostApiV1BetaWorkloadsDeleteResponses[keyof PostApiV1BetaWorkloadsDeleteResponses]
+
+export type PostApiV1BetaWorkloadsRestartData = {
+  /**
+   * Bulk restart request
+   */
+  body: V1BulkOperationRequest
+  path?: never
+  query?: never
+  url: '/api/v1beta/workloads/restart'
+}
+
+export type PostApiV1BetaWorkloadsRestartErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+}
+
+export type PostApiV1BetaWorkloadsRestartError =
+  PostApiV1BetaWorkloadsRestartErrors[keyof PostApiV1BetaWorkloadsRestartErrors]
+
+export type PostApiV1BetaWorkloadsRestartResponses = {
+  /**
+   * Accepted
+   */
+  202: string
+}
+
+export type PostApiV1BetaWorkloadsRestartResponse =
+  PostApiV1BetaWorkloadsRestartResponses[keyof PostApiV1BetaWorkloadsRestartResponses]
+
 export type PostApiV1BetaWorkloadsStopData = {
-  body?: never
+  /**
+   * Bulk stop request
+   */
+  body: V1BulkOperationRequest
   path?: never
   query?: never
   url: '/api/v1beta/workloads/stop'
 }
 
+export type PostApiV1BetaWorkloadsStopErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+}
+
+export type PostApiV1BetaWorkloadsStopError =
+  PostApiV1BetaWorkloadsStopErrors[keyof PostApiV1BetaWorkloadsStopErrors]
+
 export type PostApiV1BetaWorkloadsStopResponses = {
   /**
    * Accepted
    */
-  202: unknown
+  202: string
 }
+
+export type PostApiV1BetaWorkloadsStopResponse =
+  PostApiV1BetaWorkloadsStopResponses[keyof PostApiV1BetaWorkloadsStopResponses]
 
 export type DeleteApiV1BetaWorkloadsByNameData = {
   body?: never
@@ -1211,6 +1303,10 @@ export type DeleteApiV1BetaWorkloadsByNameData = {
 
 export type DeleteApiV1BetaWorkloadsByNameErrors = {
   /**
+   * Bad Request
+   */
+  400: string
+  /**
    * Not Found
    */
   404: string
@@ -1221,9 +1317,9 @@ export type DeleteApiV1BetaWorkloadsByNameError =
 
 export type DeleteApiV1BetaWorkloadsByNameResponses = {
   /**
-   * No Content
+   * Accepted
    */
-  204: string
+  202: string
 }
 
 export type DeleteApiV1BetaWorkloadsByNameResponse =
@@ -1275,6 +1371,10 @@ export type PostApiV1BetaWorkloadsByNameRestartData = {
 
 export type PostApiV1BetaWorkloadsByNameRestartErrors = {
   /**
+   * Bad Request
+   */
+  400: string
+  /**
    * Not Found
    */
   404: string
@@ -1285,9 +1385,9 @@ export type PostApiV1BetaWorkloadsByNameRestartError =
 
 export type PostApiV1BetaWorkloadsByNameRestartResponses = {
   /**
-   * No Content
+   * Accepted
    */
-  204: string
+  202: string
 }
 
 export type PostApiV1BetaWorkloadsByNameRestartResponse =
@@ -1307,6 +1407,10 @@ export type PostApiV1BetaWorkloadsByNameStopData = {
 
 export type PostApiV1BetaWorkloadsByNameStopErrors = {
   /**
+   * Bad Request
+   */
+  400: string
+  /**
    * Not Found
    */
   404: string
@@ -1320,10 +1424,6 @@ export type PostApiV1BetaWorkloadsByNameStopResponses = {
    * Accepted
    */
   202: string
-  /**
-   * No Content
-   */
-  204: string
 }
 
 export type PostApiV1BetaWorkloadsByNameStopResponse =

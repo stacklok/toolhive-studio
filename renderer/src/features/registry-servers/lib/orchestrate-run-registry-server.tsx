@@ -3,7 +3,7 @@ import {
   type Options,
   type PostApiV1BetaSecretsDefaultKeysData,
   type PostApiV1BetaWorkloadsData,
-  type RegistryServer,
+  type RegistryImageMetadata,
   type SecretsSecretParameter,
   type V1CreateRequest,
   type V1CreateSecretResponse,
@@ -136,7 +136,7 @@ async function saveSecrets(
  * created secrets from the secret store into a single request object.
  */
 function prepareCreateWorkloadData(
-  server: RegistryServer,
+  server: RegistryImageMetadata,
   data: FormSchemaRunFromRegistry,
   secrets: SecretsSecretParameter[] = []
 ): V1CreateRequest {
@@ -198,7 +198,7 @@ export async function orchestrateRunRegistryServer({
   getIsServerReady: (serverName: string) => Promise<boolean>
   queryClient: QueryClient
   saveSecret: SaveSecretFn
-  server: RegistryServer
+  server: RegistryImageMetadata
 }) {
   const toastID: string = new Date(Date.now()).toISOString()
 

@@ -22,6 +22,8 @@ import {
   getApiV1BetaVersion,
   getApiV1BetaWorkloads,
   postApiV1BetaWorkloads,
+  postApiV1BetaWorkloadsDelete,
+  postApiV1BetaWorkloadsRestart,
   postApiV1BetaWorkloadsStop,
   deleteApiV1BetaWorkloadsByName,
   getApiV1BetaWorkloadsByName,
@@ -29,11 +31,7 @@ import {
   postApiV1BetaWorkloadsByNameStop,
   getHealth,
 } from '../sdk.gen'
-import {
-  queryOptions,
-  type UseMutationOptions,
-  type DefaultError,
-} from '@tanstack/react-query'
+import { queryOptions, type UseMutationOptions } from '@tanstack/react-query'
 import type {
   GetApiOpenapiJsonData,
   GetApiV1BetaClientsData,
@@ -72,7 +70,15 @@ import type {
   PostApiV1BetaWorkloadsData,
   PostApiV1BetaWorkloadsError,
   PostApiV1BetaWorkloadsResponse,
+  PostApiV1BetaWorkloadsDeleteData,
+  PostApiV1BetaWorkloadsDeleteError,
+  PostApiV1BetaWorkloadsDeleteResponse,
+  PostApiV1BetaWorkloadsRestartData,
+  PostApiV1BetaWorkloadsRestartError,
+  PostApiV1BetaWorkloadsRestartResponse,
   PostApiV1BetaWorkloadsStopData,
+  PostApiV1BetaWorkloadsStopError,
+  PostApiV1BetaWorkloadsStopResponse,
   DeleteApiV1BetaWorkloadsByNameData,
   DeleteApiV1BetaWorkloadsByNameError,
   DeleteApiV1BetaWorkloadsByNameResponse,
@@ -773,16 +779,122 @@ export const postApiV1BetaWorkloadsMutation = (
   return mutationOptions
 }
 
+export const postApiV1BetaWorkloadsDeleteQueryKey = (
+  options: Options<PostApiV1BetaWorkloadsDeleteData>
+) => createQueryKey('postApiV1BetaWorkloadsDelete', options)
+
+/**
+ * Delete workloads in bulk
+ * Delete multiple workloads by name
+ */
+export const postApiV1BetaWorkloadsDeleteOptions = (
+  options: Options<PostApiV1BetaWorkloadsDeleteData>
+) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await postApiV1BetaWorkloadsDelete({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: postApiV1BetaWorkloadsDeleteQueryKey(options),
+  })
+}
+
+/**
+ * Delete workloads in bulk
+ * Delete multiple workloads by name
+ */
+export const postApiV1BetaWorkloadsDeleteMutation = (
+  options?: Partial<Options<PostApiV1BetaWorkloadsDeleteData>>
+): UseMutationOptions<
+  PostApiV1BetaWorkloadsDeleteResponse,
+  PostApiV1BetaWorkloadsDeleteError,
+  Options<PostApiV1BetaWorkloadsDeleteData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaWorkloadsDeleteResponse,
+    PostApiV1BetaWorkloadsDeleteError,
+    Options<PostApiV1BetaWorkloadsDeleteData>
+  > = {
+    mutationFn: async (localOptions) => {
+      const { data } = await postApiV1BetaWorkloadsDelete({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+export const postApiV1BetaWorkloadsRestartQueryKey = (
+  options: Options<PostApiV1BetaWorkloadsRestartData>
+) => createQueryKey('postApiV1BetaWorkloadsRestart', options)
+
+/**
+ * Restart workloads in bulk
+ * Restart multiple workloads by name
+ */
+export const postApiV1BetaWorkloadsRestartOptions = (
+  options: Options<PostApiV1BetaWorkloadsRestartData>
+) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await postApiV1BetaWorkloadsRestart({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: postApiV1BetaWorkloadsRestartQueryKey(options),
+  })
+}
+
+/**
+ * Restart workloads in bulk
+ * Restart multiple workloads by name
+ */
+export const postApiV1BetaWorkloadsRestartMutation = (
+  options?: Partial<Options<PostApiV1BetaWorkloadsRestartData>>
+): UseMutationOptions<
+  PostApiV1BetaWorkloadsRestartResponse,
+  PostApiV1BetaWorkloadsRestartError,
+  Options<PostApiV1BetaWorkloadsRestartData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaWorkloadsRestartResponse,
+    PostApiV1BetaWorkloadsRestartError,
+    Options<PostApiV1BetaWorkloadsRestartData>
+  > = {
+    mutationFn: async (localOptions) => {
+      const { data } = await postApiV1BetaWorkloadsRestart({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
 export const postApiV1BetaWorkloadsStopQueryKey = (
-  options?: Options<PostApiV1BetaWorkloadsStopData>
+  options: Options<PostApiV1BetaWorkloadsStopData>
 ) => createQueryKey('postApiV1BetaWorkloadsStop', options)
 
 /**
- * Stop all workloads
- * Stop all running workload
+ * Stop workloads in bulk
+ * Stop multiple workloads by name
  */
 export const postApiV1BetaWorkloadsStopOptions = (
-  options?: Options<PostApiV1BetaWorkloadsStopData>
+  options: Options<PostApiV1BetaWorkloadsStopData>
 ) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
@@ -799,19 +911,19 @@ export const postApiV1BetaWorkloadsStopOptions = (
 }
 
 /**
- * Stop all workloads
- * Stop all running workload
+ * Stop workloads in bulk
+ * Stop multiple workloads by name
  */
 export const postApiV1BetaWorkloadsStopMutation = (
   options?: Partial<Options<PostApiV1BetaWorkloadsStopData>>
 ): UseMutationOptions<
-  unknown,
-  DefaultError,
+  PostApiV1BetaWorkloadsStopResponse,
+  PostApiV1BetaWorkloadsStopError,
   Options<PostApiV1BetaWorkloadsStopData>
 > => {
   const mutationOptions: UseMutationOptions<
-    unknown,
-    DefaultError,
+    PostApiV1BetaWorkloadsStopResponse,
+    PostApiV1BetaWorkloadsStopError,
     Options<PostApiV1BetaWorkloadsStopData>
   > = {
     mutationFn: async (localOptions) => {

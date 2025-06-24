@@ -1,7 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { orchestrateRunRegistryServer } from '../orchestrate-run-registry-server'
 import type { FormSchemaRunFromRegistry } from '../get-form-schema-run-from-registry'
-import type { RegistryServer } from '@/common/api/generated'
+import type { RegistryImageMetadata } from '@/common/api/generated'
 
 test('happy path', async () => {
   const mockSaveSecret = vi.fn().mockResolvedValue({ key: 'GITHUB_API_TOKEN' })
@@ -12,7 +12,7 @@ test('happy path', async () => {
     invalidateQueries: vi.fn(),
   } as unknown as QueryClient
 
-  const server: RegistryServer = {
+  const server: RegistryImageMetadata = {
     name: 'test-server',
     image: 'test-image',
     transport: 'stdio',

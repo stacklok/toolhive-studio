@@ -1,4 +1,4 @@
-import type { RegistryServer } from '@/common/api/generated/types.gen'
+import type { RegistryImageMetadata } from '@/common/api/generated/types.gen'
 
 export const MOCK_REGISTRY_RESPONSE = [
   {
@@ -2044,4 +2044,4 @@ export const MOCK_REGISTRY_RESPONSE = [
       'search',
     ],
   },
-] as const satisfies RegistryServer[]
+] as const satisfies RegistryImageMetadata[]
