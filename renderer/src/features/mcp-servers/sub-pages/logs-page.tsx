@@ -53,8 +53,8 @@ export function LogsPage() {
           aria-label="Search log"
         />
       </div>
-      <div className="flex-1 overflow-auto rounded-md border border-gray-200">
-        <div className="p-5 font-mono text-[13px] leading-[22px] font-normal text-gray-900">
+      <div className="flex-1 overflow-auto rounded-md border">
+        <div className="text-foreground bg-card p-5 font-mono text-[13px] leading-[22px] font-normal">
           {filteredLogs.map((log, index) => (
             <div key={index}>{log}</div>
           ))}
