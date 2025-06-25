@@ -8,6 +8,7 @@ interface ErrorProps {
 
 export function Error({ error }: ErrorProps = {}) {
   if (error?.toString().includes('OS keyring is not available')) {
+    // this is handled here, because this error could be generated anywhere
     return <KeyringError />
   }
 
