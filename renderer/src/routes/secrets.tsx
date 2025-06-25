@@ -10,6 +10,7 @@ import { useMutationUpdateSecret } from '@/features/secrets/hooks/use-mutation-u
 import { PlusIcon } from 'lucide-react'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
 import { EmptyState } from '@/common/components/empty-state'
+import { PageContainer } from '@/common/components/layout/page-container'
 
 export const Route = createFileRoute('/secrets')({
   component: Secrets,
@@ -47,7 +48,7 @@ export function Secrets() {
   }
 
   return (
-    <>
+    <PageContainer>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-semibold">Secrets</h1>
         <Button
@@ -92,6 +93,6 @@ export function Secrets() {
         onOpenChange={setIsSecretDialogOpen}
         onSubmit={onSubmit}
       />
-    </>
+    </PageContainer>
   )
 }

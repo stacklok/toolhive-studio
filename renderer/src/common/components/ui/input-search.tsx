@@ -1,18 +1,21 @@
 import { SearchIcon, XIcon } from 'lucide-react'
 import { Button } from './button'
 import { Input } from './input'
+import { cn } from '@/common/lib/utils'
 
 export function InputSearch({
   onChange,
   value,
   placeholder,
+  className,
 }: {
+  className?: string
   value: string
   onChange: (value: string) => void
   placeholder: string
 }) {
   return (
-    <div className="relative max-w-60">
+    <div className={cn('relative max-w-60', className)}>
       <div
         className="pointer-events-none absolute top-1/2 left-0 flex size-9 -translate-y-1/2
           items-center justify-center"
