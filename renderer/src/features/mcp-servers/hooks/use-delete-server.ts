@@ -33,8 +33,8 @@ export function useDeleteServer({ name }: { name: string }) {
 
           const updatedData = {
             ...oldData,
-            workloads: oldData.workloads?.filter(
-              (server: WorkloadsWorkload) => server.name !== name
+            workloads: oldData.workloads?.map((server: WorkloadsWorkload) =>
+              server.name === name ? { ...server, status: 'deleting' } : server
             ),
           }
           return updatedData
