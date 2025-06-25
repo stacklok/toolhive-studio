@@ -127,7 +127,11 @@ function SecretForm({ form, isEditMode, onSubmit, onCancel }: SecretFormProps) {
                 <FormItem>
                   <FormLabel>Secret name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Name" {...field} />
+                    <Input
+                      placeholder="Name"
+                      {...field}
+                      aria-label="Secret key"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -152,6 +156,7 @@ function SecretForm({ form, isEditMode, onSubmit, onCancel }: SecretFormProps) {
                     <Button
                       type="button"
                       variant="ghost"
+                      aria-label="Secret value"
                       size="sm"
                       className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
                       onClick={() => setShowPassword(!showPassword)}

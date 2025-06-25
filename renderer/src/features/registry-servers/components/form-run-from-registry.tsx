@@ -331,9 +331,7 @@ export function FormRunFromRegistry({
                   </Label>
 
                   <p className="text-muted-foreground mb-6 text-sm">
-                    Sensitive values that should not be exposed in plain text.
-                    They are typically used for API keys, tokens, or passwords.
-                    All secrets are encrypted and stored securely by ToolHive.
+                    All secrets are encrypted and securely stored by ToolHive.
                   </p>
 
                   {groupedEnvVars.secrets.map((secret, index) => (
@@ -354,10 +352,8 @@ export function FormRunFromRegistry({
                   </Label>
 
                   <p className="text-muted-foreground mb-6 text-sm">
-                    Non-sensitive values that can be used to configure the
-                    server. These variables are not encrypted and can be exposed
-                    in plain text. They are typically used for configuration
-                    options that do not contain sensitive information.
+                    Environment variables are used to pass configuration
+                    settings to the server.
                   </p>
 
                   {groupedEnvVars.envVars.map((envVar, index) => (
