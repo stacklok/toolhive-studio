@@ -84,10 +84,15 @@ async function startToolhive() {
     }
   )
 
+  if (tray) {
+    updateTrayStatus(tray, !!toolhiveProcess)
+  }
+
   toolhiveProcess.on('error', (error) => {
     console.error('Failed to start ToolHive:', error)
     if (tray) updateTrayStatus(tray, false)
   })
+
   toolhiveProcess.on('exit', (code) => {
     console.log(`ToolHive process exited with code: ${code}`)
     toolhiveProcess = undefined
