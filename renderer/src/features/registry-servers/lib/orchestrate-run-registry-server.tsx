@@ -150,7 +150,9 @@ function prepareCreateWorkloadData(
     transport: server.transport,
     env_vars: envVars,
     secrets,
-    cmd_arguments: server.args,
+    cmd_arguments: data.cmd_arguments
+      ? data.cmd_arguments?.split(' ').filter(Boolean)
+      : [],
     target_port: server.target_port,
   }
 }
@@ -287,6 +289,7 @@ export async function orchestrateRunRegistryServer({
         body: createRequest,
       })
     } catch (error) {
+      console.debug('👉 error:', error)
       toast.error(
         [
           'An error occurred while starting the server.',
