@@ -154,11 +154,15 @@ export function CardMcpServer({
 
   const repositoryUrl = serverDetails?.server?.repository_url
 
+  // Check if the server is in deleting state
+  const isDeleting = isDeletePending || status === 'deleting'
+
   return (
     <Card
       className={twMerge(
-        'gap-3 py-5 shadow-none transition-[color,box-shadow]',
-        isNewServer ? 'ring-2' : undefined
+        'gap-3 py-5 shadow-none transition-[color,box-shadow,opacity]',
+        isNewServer ? 'ring-2' : undefined,
+        isDeleting ? 'pointer-events-none opacity-50' : undefined
       )}
     >
       <CardHeader>
@@ -172,6 +176,7 @@ export function CardMcpServer({
                 aria-label="More options"
                 className="ml-2"
                 onClick={(e) => e.stopPropagation()}
+                disabled={isDeleting}
               >
                 <MoreVertical className="h-5 w-5" />
               </Button>

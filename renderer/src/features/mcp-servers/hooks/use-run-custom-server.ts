@@ -23,12 +23,14 @@ export function useRunCustomServer() {
   const getIsServerReady: (serverName: string) => Promise<boolean> =
     useCallback(
       (serverName: string) =>
-        pollServerStatus(() =>
-          queryClient.fetchQuery(
-            getApiV1BetaWorkloadsByNameOptions({
-              path: { name: serverName },
-            })
-          )
+        pollServerStatus(
+          () =>
+            queryClient.fetchQuery(
+              getApiV1BetaWorkloadsByNameOptions({
+                path: { name: serverName },
+              })
+            ),
+          'running'
         ),
       [queryClient]
     )
