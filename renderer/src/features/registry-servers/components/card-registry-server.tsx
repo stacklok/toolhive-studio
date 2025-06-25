@@ -16,7 +16,7 @@ export function CardRegistryServer({
 }) {
   return (
     <Card
-      className="cursor-pointer gap-3 py-5 transition-colors hover:border-black
+      className="cursor-pointer gap-3 py-5 shadow-none transition-colors hover:border-black
         dark:hover:border-white"
       onClick={onClick}
     >
