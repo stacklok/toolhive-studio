@@ -176,7 +176,7 @@ export function LogsPage() {
   const logContainerRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     logContainerRef.current?.scrollIntoView({
-      behavior: 'smooth',
+      behavior: 'instant',
       block: 'end',
     })
   }, [search])

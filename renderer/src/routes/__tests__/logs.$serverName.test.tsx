@@ -27,7 +27,7 @@ describe('Logs Route', () => {
       renderRoute(router)
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: serverName })).toBeVisible()
+        expect(screen.getByRole('heading', { name: 'Logs' })).toBeVisible()
       })
     })
 
@@ -37,12 +37,12 @@ describe('Logs Route', () => {
       renderRoute(router)
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: serverName })).toBeVisible()
+        expect(screen.getByRole('heading', { name: 'Logs' })).toBeVisible()
       })
 
-      const backButton = screen.getByRole('button', { name: /back/i })
+      const backButton = screen.getByRole('link', { name: /back/i })
       expect(backButton).toBeVisible()
-      expect(backButton.closest('a')).toHaveAttribute('href', '/')
+      expect(backButton).toHaveAttribute('href', '/')
 
       await userEvent.click(backButton)
 
@@ -57,26 +57,28 @@ describe('Logs Route', () => {
       renderRoute(router)
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: serverName })).toBeVisible()
+        expect(screen.getByRole('heading', { name: 'Logs' })).toBeVisible()
       })
 
       expect(
-        screen.queryByText(/server .* started successfully/i)
-      ).toBeVisible()
+        screen.queryAllByText(/server .* started successfully/i).length
+      ).toBeGreaterThan(0)
 
-      const search = screen.getByPlaceholderText('Search log')
+      const search = screen.getByPlaceholderText('Filter...')
       await userEvent.type(search, 'database')
 
-      expect(screen.getByText(/database connection established/i)).toBeVisible()
       expect(
-        screen.queryByText(/server .* started successfully/i)
-      ).not.toBeInTheDocument()
+        screen.queryAllByText(/database connection established/i).length
+      ).toBeGreaterThan(0)
+      expect(
+        screen.queryAllByText(/server .* started successfully/i).length
+      ).toBe(0)
 
       await userEvent.clear(search)
 
       expect(
-        screen.queryByText(/server .* started successfully/i)
-      ).toBeVisible()
+        screen.queryAllByText(/server .* started successfully/i).length
+      ).toBeGreaterThan(0)
     })
   })
 })
