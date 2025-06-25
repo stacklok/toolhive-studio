@@ -3,7 +3,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/common/components/ui/dropdown-menu'
 import { Button } from '@/common/components/ui/button'
@@ -60,10 +59,6 @@ export function SettingsDropdown({ className }: { className?: string }) {
           <span>Start on login</span>
           {autoLaunchStatus && <Check className="h-4 w-4" />}
         </DropdownMenuItem>
-        <DropdownMenuItem>
-          <span>Check for updates</span>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
         <DropdownMenuItem
           variant="destructive"
           onClick={handleQuit}
