@@ -7,13 +7,7 @@ interface ErrorProps {
 }
 
 export function Error({ error }: ErrorProps = {}) {
-  // Check if this is the OS keyring error
-  const isKeyringError = error
-    ?.toString()
-    .includes('OS keyring is not available')
-
-  // Render the specific keyring error component if it's a keyring error
-  if (isKeyringError) {
+  if (error?.toString().includes('OS keyring is not available')) {
     return <KeyringError />
   }
 
