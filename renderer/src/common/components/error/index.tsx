@@ -1,5 +1,5 @@
-import { Button } from './ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
+import { Button } from '../ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { RefreshCw, AlertCircle, FolderKey } from 'lucide-react'
 import type { ReactNode } from 'react'
 
@@ -42,12 +42,16 @@ function BaseErrorScreen({ title, icon, children }: BaseErrorScreenProps) {
 function KeyringError() {
   return (
     <BaseErrorScreen
-      title="System Keyring Not Available"
+      title="System Keyring Cannot be Reached"
       icon={<FolderKey className="text-destructive size-12" />}
     >
       <p className="text-muted-foreground">
-        The encrypted provider requires a system keyring to securely store
-        passwords. Most operating systems have a system keyring out of the box.
+        ToolHive Studio needs to access your system keyring in order to securely
+        store and manage your secrets.
+      </p>
+
+      <p className="text-muted-foreground">
+        Most operating systems have a system keyring out of the box.
       </p>
 
       <p className="mb-2 font-medium">On Windows</p>
