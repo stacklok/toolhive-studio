@@ -302,6 +302,28 @@ export function FormRunFromRegistry({
                 )}
               />
 
+              <FormField
+                control={form.control}
+                name="cmd_arguments"
+                render={({ field }) => (
+                  <FormItem className="mb-10">
+                    <FormLabel>Command arguments</FormLabel>
+                    <FormDescription>
+                      Space separated arguments for the command.
+                    </FormDescription>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g. -y --oauth-setup"
+                        defaultValue={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        name={field.name}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               {groupedEnvVars.secrets[0] ? (
                 <section className="mb-10">
                   <Label className="mb-2" htmlFor="secrets.0.value">

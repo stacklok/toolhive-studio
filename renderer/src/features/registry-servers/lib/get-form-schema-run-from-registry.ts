@@ -55,6 +55,7 @@ export function getFormSchemaRunFromRegistry({
         (value) => !workloads.some((w) => w.name === value),
         'This name is already in use'
       ),
+    cmd_arguments: z.string().optional(),
     secrets: z
       .object({
         name: z.union(secrets.map(({ name }) => z.literal(name ?? ''))),
