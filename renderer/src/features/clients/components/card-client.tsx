@@ -28,7 +28,7 @@ export function CardClient({ client }: { client: ClientMcpClientStatus }) {
   )
 
   return (
-    <Card className="gap-3 py-5">
+    <Card className="gap-3 py-5 shadow-none">
       <CardHeader>
         <CardTitle className="flex items-center text-xl">
           {CLIENT_TYPE_LABEL_MAP[
