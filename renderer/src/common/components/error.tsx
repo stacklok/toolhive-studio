@@ -1,6 +1,6 @@
 import { Button } from './ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
-import { RefreshCw, AlertCircle } from 'lucide-react'
+import { RefreshCw, AlertCircle, FolderKey } from 'lucide-react'
 
 interface ErrorProps {
   error?: Error
@@ -18,7 +18,7 @@ function KeyringError({ error }: ErrorProps) {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mb-4 flex justify-center">
-            <span className="text-4xl">🔑</span>
+            <FolderKey className="text-destructive size-12" />
           </div>
           <CardTitle className="text-xl font-semibold">
             OS Keyring Not Available
