@@ -79,6 +79,7 @@ function SecretRow({
             <div className="relative">
               <FormControl>
                 <Label
+                  htmlFor={`secrets.${index}.value`}
                   className={cn(
                     'text-muted-foreground !border-input h-full items-center font-mono !ring-0',
                     secret.required ? 'pr-8' : ''
@@ -160,6 +161,7 @@ function EnvVarRow({
             <div className="relative">
               <FormControl>
                 <Label
+                  htmlFor={`envVar.${index}.value`}
                   className={cn(
                     `text-muted-foreground !border-input flex h-full items-center gap-1 font-mono
                     !ring-0`
