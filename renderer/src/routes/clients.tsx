@@ -6,6 +6,7 @@ import { Button } from '@/common/components/ui/button'
 import { ExternalLinkIcon } from 'lucide-react'
 import { EmptyState } from '@/common/components/empty-state'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
+import { PageContainer } from '@/common/components/layout/page-container'
 
 export const Route = createFileRoute('/clients')({
   component: Clients,
@@ -19,7 +20,7 @@ export function Clients() {
   } = useSuspenseQuery(getApiV1BetaDiscoveryClientsOptions())
 
   return (
-    <>
+    <PageContainer>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-semibold">Clients</h1>
       </div>
@@ -43,6 +44,6 @@ export function Clients() {
       ) : (
         <GridCardClients clients={clients} />
       )}
-    </>
+    </PageContainer>
   )
 }

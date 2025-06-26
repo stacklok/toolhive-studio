@@ -13,6 +13,7 @@ import { GridCardsMcpServers } from '@/features/mcp-servers/components/grid-card
 import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/menu-run-mcp-server'
 import { useRunCustomServer } from '@/features/mcp-servers/hooks/use-run-custom-server'
 import { useState } from 'react'
+import { PageContainer } from '@/common/components/layout/page-container'
 
 export const Route = createFileRoute('/')({
   loader: ({ context: { queryClient } }) =>
@@ -31,7 +32,7 @@ export function Index() {
   const { handleSubmit } = useRunCustomServer()
 
   return (
-    <>
+    <PageContainer>
       <div className="mb-6 flex items-center">
         <h1 className="text-3xl font-semibold">Installed</h1>
         <div className="ml-auto flex gap-2">
@@ -69,6 +70,6 @@ export function Index() {
       ) : (
         <GridCardsMcpServers mcpServers={workloads} />
       )}
-    </>
+    </PageContainer>
   )
 }

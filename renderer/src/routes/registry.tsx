@@ -7,6 +7,7 @@ import { EmptyState } from '@/common/components/empty-state'
 import { ExternalLinkIcon } from 'lucide-react'
 import { Button } from '@/common/components/ui/button'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
+import { PageContainer } from '@/common/components/layout/page-container'
 
 export const Route = createFileRoute('/registry')({
   loader: async ({ context: { queryClient } }) =>
@@ -24,7 +25,7 @@ export function Registry() {
   const { handleSubmit } = useRunFromRegistry()
 
   return (
-    <>
+    <PageContainer>
       <div className="mb-6 flex items-center">
         <h1 className="text-3xl font-semibold">Registry</h1>
       </div>
@@ -51,6 +52,6 @@ export function Registry() {
           onSubmit={handleSubmit}
         />
       )}
-    </>
+    </PageContainer>
   )
 }
