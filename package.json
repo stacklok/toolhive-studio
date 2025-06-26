@@ -67,7 +67,7 @@
     "knip": "^5.58.1",
     "lint-staged": "^16.0.0",
     "msw": "^2.8.4",
-    "prettier": "3.6.0",
+    "prettier": "3.6.1",
     "prettier-plugin-classnames": "^0.7.8",
     "prettier-plugin-merge": "^0.7.4",
     "prettier-plugin-tailwindcss": "^0.6.12",

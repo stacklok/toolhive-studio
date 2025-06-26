@@ -226,17 +226,17 @@ importers:
         specifier: ^2.8.4
         version: 2.10.2(@types/node@22.15.32)(typescript@5.8.3)
       prettier:
-        specifier: 3.6.0
-        version: 3.6.0
+        specifier: 3.6.1
+        version: 3.6.1
       prettier-plugin-classnames:
         specifier: ^0.7.8
-        version: 0.7.9(prettier@3.6.0)
+        version: 0.7.9(prettier@3.6.1)
       prettier-plugin-merge:
         specifier: ^0.7.4
-        version: 0.7.4(prettier@3.6.0)
+        version: 0.7.4(prettier@3.6.1)
       prettier-plugin-tailwindcss:
         specifier: ^0.6.12
-        version: 0.6.13(prettier@3.6.0)
+        version: 0.6.13(prettier@3.6.1)
       tar:
         specifier: ^7.4.3
         version: 7.4.3
@@ -4587,8 +4587,8 @@ packages:
       prettier-plugin-svelte:
         optional: true
 
-  prettier@3.6.0:
-    resolution: {integrity: sha512-ujSB9uXHJKzM/2GBuE0hBOUgC77CN3Bnpqa+g80bkv3T3A93wL/xlzDATHhnhkzifz/UE2SNOvmbTz5hSkDlHw==}
+  prettier@3.6.1:
+    resolution: {integrity: sha512-5xGWRa90Sp2+x1dQtNpIpeOQpTDBs9cZDmA/qs2vDNN2i18PdapqY7CmBeyLlMuGqXJRIOPaCaVZTLNQRWUH/A==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -7902,7 +7902,7 @@ snapshots:
       '@tanstack/router-core': 1.121.21
       '@tanstack/router-utils': 1.121.21
       '@tanstack/virtual-file-routes': 1.121.21
-      prettier: 3.6.0
+      prettier: 3.6.1
       recast: 0.23.11
       source-map: 0.7.4
       tsx: 4.20.3
@@ -10493,20 +10493,20 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier-plugin-classnames@0.7.9(prettier@3.6.0):
+  prettier-plugin-classnames@0.7.9(prettier@3.6.1):
     dependencies:
-      prettier: 3.6.0
+      prettier: 3.6.1
 
-  prettier-plugin-merge@0.7.4(prettier@3.6.0):
+  prettier-plugin-merge@0.7.4(prettier@3.6.1):
     dependencies:
       diff: 5.1.0
-      prettier: 3.6.0
+      prettier: 3.6.1
 
-  prettier-plugin-tailwindcss@0.6.13(prettier@3.6.0):
+  prettier-plugin-tailwindcss@0.6.13(prettier@3.6.1):
     dependencies:
-      prettier: 3.6.0
+      prettier: 3.6.1
 
-  prettier@3.6.0: {}
+  prettier@3.6.1: {}
 
   pretty-format@27.5.1:
     dependencies:
