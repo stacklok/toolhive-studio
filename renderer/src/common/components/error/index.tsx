@@ -7,8 +7,12 @@ interface ErrorProps {
 }
 
 export function Error({ error }: ErrorProps = {}) {
-  if (error?.toString().includes('OS keyring is not available')) {
+  if (
+    error?.toString().includes('OS keyring is not available') &&
+    window.electronAPI.isLinux
+  ) {
     // this is handled here, because this error could be generated anywhere
+    // but only show keyring error on Linux systems
     return <KeyringError />
   }
 
