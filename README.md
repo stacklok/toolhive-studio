@@ -123,7 +123,7 @@ The project uses ESLint with `typescript-eslint` for linting TypeScript code. Th
 ## Code of conduct
 
 This project adheres to the
-[Contributor Covenant](https://github.com/stacklok/toolhive/blob/main/CODE_OF_CONDUCT.md)
+[Contributor Covenant](./CODE_OF_CONDUCT.md)
 code of conduct. By participating, you are expected to uphold this code. Please
 report unacceptable behavior to
 [code-of-conduct@stacklok.dev](mailto:code-of-conduct@stacklok.dev).
