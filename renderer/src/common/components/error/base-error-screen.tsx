@@ -33,7 +33,7 @@ export function BaseErrorScreen({
           <div className="mb-4 flex justify-center">{icon}</div>
           <CardTitle className="text-xl font-semibold">{title}</CardTitle>
         </CardHeader>
-        <CardContent className="flex-1 space-y-4 overflow-y-auto pr-4">
+        <CardContent className="text-muted-foreground flex-1 space-y-4 overflow-y-auto pr-4">
           {children}
         </CardContent>
         <CardFooter>

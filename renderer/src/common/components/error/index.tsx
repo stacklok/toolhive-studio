@@ -21,12 +21,12 @@ export function Error({ error }: ErrorProps = {}) {
       title="Oops, something went wrong"
       icon={<AlertCircle className="text-destructive size-12" />}
     >
-      <p className="text-muted-foreground">
+      <p>
         We're sorry, but something unexpected happened. Please try reloading the
         app.
       </p>
       {error?.message && (
-        <div className="text-muted-foreground bg-muted rounded-md p-3 text-sm">
+        <div className="bg-muted rounded-md p-3 text-sm">
           <code>{error.message}</code>
         </div>
       )}
