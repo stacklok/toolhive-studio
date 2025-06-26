@@ -9,7 +9,6 @@ describe('Logs Route', () => {
   beforeEach(() => {
     // Mock console.warn and console.error to prevent test failures from expected warnings
     vi.spyOn(console, 'warn').mockImplementation(() => {})
-    vi.spyOn(console, 'error').mockImplementation(() => {})
   })
 
   const testCases = [

@@ -16,8 +16,6 @@ export function LogsPage() {
     ...getApiV1BetaWorkloadsByNameLogsOptions({ path: { name: serverName } }),
   })
 
-  console.log({ logs })
-
   // Split logs into lines and filter based on search
   const logLines =
     typeof logs === 'string' && logs.trim() !== ''
