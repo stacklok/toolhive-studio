@@ -24,18 +24,18 @@ export const IllustrationWallet = (props: SVGProps<SVGSVGElement>) => (
       clipRule="evenodd"
     />
     <path
-      fill="var(--ring)"
+      fill="var(--muted-foreground)"
       d="m25.042 38.183-2.334.897 2.334-.897zm-1.395-.78-.457-2.458.457 2.458zm1.676 1.51 2.333-.897-2.333.898zm-.198 4.279 1.812-1.723-4.312-4.536v6.259h2.5zm2.25-5.907a3.75 3.75 0 0 0-4.185-2.34l.913 4.916a1.25 1.25 0 0 1-1.395-.78l4.667-1.796zm.281.731-.281-.73-4.667 1.794.281.731 4.667-1.795zm4.9 3.366a5.25 5.25 0 0 1-4.9-3.366l-4.667 1.795a10.25 10.25 0 0 0 9.567 6.57v-5zm67.34 0h-67.34v5h67.34v-5zm12.75 12.75c0-7.042-5.708-12.75-12.75-12.75v5a7.75 7.75 0 0 1 7.75 7.75h5zm0 7.684v-7.684h-5v7.684h5zm0 2.816v-2.816h-5v2.816h5zm-3.75 3.75a3.75 3.75 0 0 0 3.75-3.75h-5c0-.69.56-1.25 1.25-1.25v5zm-3.75-3.75a3.75 3.75 0 0 0 3.75 3.75v-5c.691 0 1.25.56 1.25 1.25h-5zm0-2.816v2.816h5v-2.816h-5zm0-7.684v7.684h5v-7.684h-5zm-5.25-5.25c2.9 0 5.25 2.35 5.25 5.25h5c0-5.661-4.589-10.25-10.25-10.25v5zm-67.34 0h67.34v-5h-67.34v5zm-9.243-3.968a12.748 12.748 0 0 0 9.243 3.968v-5a7.749 7.749 0 0 1-5.619-2.413l-3.624 3.445zm4.312 52.454V43.192h-5v54.176h5zm5.25 5.25a5.25 5.25 0 0 1-5.25-5.25h-5c0 5.661 4.59 10.25 10.25 10.25v-5zm67.021 0H32.875v5h67.021v-5zm5.25-5.25c0 2.9-2.35 5.25-5.25 5.25v5c5.661 0 10.25-4.589 10.25-10.25h-5zm0-12.736v12.736h5V84.632h-5zm3.75-3.75a3.75 3.75 0 0 0-3.75 3.75h5c0 .69-.559 1.25-1.25 1.25v-5zm3.75 3.75a3.75 3.75 0 0 0-3.75-3.75v5c-.69 0-1.25-.56-1.25-1.25h5zm0 12.736V84.632h-5v12.736h5zm-12.75 12.75c7.042 0 12.75-5.708 12.75-12.75h-5a7.749 7.749 0 0 1-7.75 7.75v5zm-67.021 0h67.021v-5H32.875v5zm-12.75-12.75c0 7.042 5.708 12.75 12.75 12.75v-5a7.75 7.75 0 0 1-7.75-7.75h-5zm0-58.736v58.736h5V38.632h-5zm3.065-3.687a3.75 3.75 0 0 0-3.065 3.687h5a1.25 1.25 0 0 1-1.022 1.229l-.913-4.916z"
       mask="url(#IllustrationWallet_svg__a)"
     />
     <path
-      fill="var(--muted)"
-      stroke="var(--ring)"
+      fill="transparent"
+      stroke="var(--muted-foreground)"
       strokeWidth={2.5}
       d="M23.875 39.382a5.75 5.75 0 0 1 5.75-5.75h60.75a9 9 0 0 1 9 9v2.5h-69.75a5.75 5.75 0 0 1-5.75-5.75z"
     />
     <path
-      fill="var(--muted)"
+      fill="transparent"
       fillRule="evenodd"
       d="M50.33 50.632H33.375a4 4 0 0 0-4 4v43a4 4 0 0 0 4 4h67a4 4 0 0 0 4-4v-4.813c-10.648-.384-21.657-3.93-31.432-10.813-11.542-8.126-19.285-19.44-22.613-31.374z"
       clipRule="evenodd"
@@ -45,17 +45,17 @@ export const IllustrationWallet = (props: SVGProps<SVGSVGElement>) => (
       d="M90.375 76.632a9 9 0 0 1 9-9h11a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-11a9 9 0 0 1-9-9z"
     />
     <path
-      stroke="var(--ring)"
+      stroke="var(--muted-foreground)"
       strokeWidth={2.5}
       d="M91.625 76.632a7.75 7.75 0 0 1 7.75-7.75h11c.966 0 1.75.783 1.75 1.75v12a1.75 1.75 0 0 1-1.75 1.75h-11a7.75 7.75 0 0 1-7.75-7.75z"
     />
     <path
-      stroke="var(--border)"
+      stroke="var(--muted-foreground)"
       strokeWidth={2.5}
       d="M99.375 79.632a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"
     />
     <path
-      stroke="var(--border)"
+      stroke="var(--muted-foreground)"
       strokeDasharray="5 5"
       strokeLinecap="round"
       strokeWidth={2.5}
@@ -66,13 +66,13 @@ export const IllustrationWallet = (props: SVGProps<SVGSVGElement>) => (
       d="M79.423 27.013 34.375 43.585l55.535.347-5.352-14.546a4 4 0 0 0-5.135-2.373z"
     />
     <path
-      fill="var(--muted)"
+      fill="transparent"
       fillRule="evenodd"
       d="m89.72 43.931-2.345-4.3h-40l-10.464 3.97 52.81.33z"
       clipRule="evenodd"
     />
     <path
-      stroke="var(--ring)"
+      stroke="var(--muted-foreground)"
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth={2.5}

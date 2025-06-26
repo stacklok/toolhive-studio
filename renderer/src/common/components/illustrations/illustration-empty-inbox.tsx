@@ -20,26 +20,26 @@ export const IllustrationEmptyInbox = (props: SVGProps<SVGSVGElement>) => (
       clipRule="evenodd"
     />
     <path
-      fill="var(--muted)"
+      fill="transparent"
       fillRule="evenodd"
       d="M79.098 82.954C79.098 88.504 74.129 94 68 94c-6.129 0-11.098-5.498-11.098-11.046 0-.18.006-1.358.016-1.535H36l8.161-19.843C44.513 60.633 45.49 60 46.587 60h42.826c1.098 0 2.074.634 2.426 1.575L100 81.42H79.082c.01.177.016 1.356.016 1.535z"
       clipRule="evenodd"
     />
     <path
-      stroke="var(--ring)"
+      stroke="var(--muted-foreground)"
       strokeWidth={2.5}
       d="M28.25 81.512V108c0 .966.784 1.75 1.75 1.75h76a1.75 1.75 0 0 0 1.75-1.75V81.512L98.255 53.44a1.75 1.75 0 0 0-1.657-1.189H39.402a1.75 1.75 0 0 0-1.657 1.19l-9.495 28.07z"
       clipRule="evenodd"
     />
     <path
-      stroke="var(--ring)"
+      stroke="var(--muted-foreground)"
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth={2.5}
       d="M41 81h12.745c1.876 0 1.876 1.319 1.876 2 0 6.627 5.496 12 12.276 12 6.78 0 12.276-5.373 12.276-12 0-.681 0-2 1.877-2H107m-73.426 0H36h-2.426z"
     />
     <path
-      stroke="var(--border)"
+      stroke="var(--muted-foreground)"
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth={2.5}
