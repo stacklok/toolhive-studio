@@ -27,15 +27,17 @@ export function BaseErrorScreen({
   }
 
   return (
-    <div className="flex h-[calc(100vh-3rem)] items-center justify-center p-4">
-      <Card className="flex h-full max-h-[600px] w-full max-w-md flex-col shadow-none">
+    <div className="flex h-[calc(100vh-3rem)] items-center justify-center px-4">
+      <Card className="flex max-h-[min(600px,_100%)] w-full max-w-md flex-col shadow-none">
         <CardHeader className="text-center">
           <div className="mb-4 flex justify-center">{icon}</div>
           <CardTitle className="text-xl font-semibold">{title}</CardTitle>
         </CardHeader>
-        <CardContent className="text-muted-foreground flex-1 space-y-4 overflow-y-auto pr-4">
+
+        <CardContent className="text-muted-foreground min-h-0 flex-1 space-y-4 overflow-y-auto pr-4">
           {children}
         </CardContent>
+
         <CardFooter>
           <Button onClick={handleReload} className="w-full">
             <RefreshCw className="mr-2 size-4" />
