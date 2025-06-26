@@ -1,7 +1,7 @@
 import { RefreshCwIcon } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { Button } from './ui/button'
-import { useState, useEffect, ButtonHTMLAttributes } from 'react'
+import { useState, useEffect, type ButtonHTMLAttributes } from 'react'
 
 /**
  * A custom hook that resets a boolean value after a specified delay.
