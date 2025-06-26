@@ -28,7 +28,7 @@ export function BaseErrorScreen({
 
   return (
     <div className="flex h-[calc(100vh-3rem)] items-center justify-center p-4">
-      <Card className="flex h-full w-full max-w-md flex-col shadow-none">
+      <Card className="flex h-full max-h-[600px] w-full max-w-md flex-col shadow-none">
         <CardHeader className="text-center">
           <div className="mb-4 flex justify-center">{icon}</div>
           <CardTitle className="text-xl font-semibold">{title}</CardTitle>
