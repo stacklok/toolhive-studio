@@ -14,26 +14,26 @@ export const IllustrationCreditCard = (props: SVGProps<SVGSVGElement>) => (
       clipRule="evenodd"
     />
     <path
-      stroke="var(--ring)"
+      stroke="var(--muted-foreground)"
       strokeLinecap="round"
       strokeWidth={2.5}
       d="m30.257 100.048-3.184.525c-2.186.36-4.24-1.192-4.586-3.467l-7.525-49.442c-.346-2.275 1.145-4.412 3.332-4.773L98.47 29.677c2.187-.36 4.24 1.192 4.587 3.468l.806 5.3m.572 3.756.477 3.133"
     />
     <path
-      fill="var(--muted)"
+      fill="transparent"
       fillRule="evenodd"
       d="m20.889 45.417 75.76-11.831a3 3 0 0 1 3.425 2.488l7.36 45.82a3 3 0 0 1-2.486 3.437l-.013.002-75.76 11.831a3 3 0 0 1-3.425-2.488l-7.36-45.82a3 3 0 0 1 2.486-3.437l.013-.002z"
       clipRule="evenodd"
     />
     <path
       fill="var(--background)"
-      stroke="var(--ring)"
+      stroke="var(--muted-foreground)"
       strokeWidth={2.5}
       d="M117.662 49.875h-78.5a4 4 0 0 0-4 4v48.5a4 4 0 0 0 4 4h78.5a4 4 0 0 0 4-4v-48.5a4 4 0 0 0-4-4z"
     />
-    <path fill="var(--muted)" d="M120.412 61.625h-84v14h84v-14z" />
+    <path fill="transparent" d="M120.412 61.625h-84v14h84v-14z" />
     <path
-      stroke="var(--ring)"
+      stroke="var(--muted-foreground)"
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth={2.5}

@@ -11,13 +11,13 @@ export const IllustrationHome = (props: SVGProps<SVGSVGElement>) => (
       d="m39.936 64.32 37.5-30.445 37.5 30.445v46.555h-75V64.32z"
     />
     <path
-      fill="var(--muted)"
+      fill="transparent"
       fillRule="evenodd"
       d="M56.357 50.989c8.405 24.502 31.377 42.238 58.579 42.869v17.017h-75V64.32l16.42-13.331zm-7.421 16.886a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-16a1 1 0 0 0-1-1h-12z"
       clipRule="evenodd"
     />
     <path
-      stroke="var(--ring)"
+      stroke="var(--muted-foreground)"
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth={2.5}
@@ -28,7 +28,7 @@ export const IllustrationHome = (props: SVGProps<SVGSVGElement>) => (
       d="M57.936 105.875a1 1 0 0 1 1-1h37a1 1 0 0 1 1 1v5h-39v-5z"
     />
     <path
-      stroke="var(--ring)"
+      stroke="var(--muted-foreground)"
       strokeWidth={2.5}
       d="M57.936 105.875a1 1 0 0 1 1-1h37a1 1 0 0 1 1 1v5h-39v-5z"
     />
@@ -37,19 +37,19 @@ export const IllustrationHome = (props: SVGProps<SVGSVGElement>) => (
       d="M63.936 99.875a1 1 0 0 1 1-1h25a1 1 0 0 1 1 1v5h-27v-5z"
     />
     <path
-      stroke="var(--ring)"
+      stroke="var(--muted-foreground)"
       strokeWidth={2.5}
       d="M63.936 99.875a1 1 0 0 1 1-1h25a1 1 0 0 1 1 1v5h-27v-5z"
     />
     <path
       fill="var(--background)"
-      stroke="var(--ring)"
+      stroke="var(--muted-foreground)"
       strokeLinejoin="round"
       strokeWidth={2.5}
       d="M67.936 67.875h19v31h-19v-31z"
     />
     <path
-      fill="var(--muted)"
+      fill="transparent"
       d="M54.936 67.875h6a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-6v-16zm46 0h6a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-6v-18z"
     />
     <rect
@@ -57,7 +57,7 @@ export const IllustrationHome = (props: SVGProps<SVGSVGElement>) => (
       height={17}
       x={48.936}
       y={67.875}
-      stroke="var(--ring)"
+      stroke="var(--muted-foreground)"
       strokeLinejoin="round"
       strokeWidth={2.5}
       rx={1}
@@ -67,27 +67,27 @@ export const IllustrationHome = (props: SVGProps<SVGSVGElement>) => (
       height={17}
       x={94.936}
       y={67.875}
-      stroke="var(--ring)"
+      stroke="var(--muted-foreground)"
       strokeLinejoin="round"
       strokeWidth={2.5}
       rx={1}
     />
     <path fill="var(--background)" d="M106.936 33.875h-9v8l9 7v-15z" />
     <path
-      stroke="var(--ring)"
+      stroke="var(--muted-foreground)"
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth={2.5}
       d="M97.936 33.875v8.5m9-8.5v15"
     />
     <path
-      stroke="var(--border)"
+      stroke="var(--muted-foreground)"
       strokeLinecap="round"
       strokeWidth={2.5}
       d="M73.186 81.125v2.5"
     />
     <path
-      stroke="var(--ring)"
+      stroke="var(--muted-foreground)"
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth={2.5}

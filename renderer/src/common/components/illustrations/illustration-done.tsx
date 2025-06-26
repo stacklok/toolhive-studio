@@ -8,7 +8,7 @@ export const IllustrationDone = (props: SVGProps<SVGSVGElement>) => (
     {...props}
   >
     <path
-      stroke="var(--border)"
+      stroke="var(--muted-foreground)"
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth={2.5}
@@ -21,7 +21,7 @@ export const IllustrationDone = (props: SVGProps<SVGSVGElement>) => (
       clipRule="evenodd"
     />
     <path
-      stroke="var(--ring)"
+      stroke="var(--muted-foreground)"
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth={2.5}
@@ -34,19 +34,19 @@ export const IllustrationDone = (props: SVGProps<SVGSVGElement>) => (
       clipRule="evenodd"
     />
     <path
-      stroke="var(--ring)"
+      stroke="var(--muted-foreground)"
       strokeLinecap="round"
       strokeWidth={2.5}
       d="M87.951 103.878c2.907-1.87 5.49-4.203 7.171-6.087"
     />
     <path
-      fill="var(--muted)"
+      fill="transparent"
       d="M104.25 68.117c-.286.005-.573.008-.86.008-25.254 0-45.931-19.689-47.664-44.625-20.1 3.17-35.476 20.653-35.476 41.743 0 23.338 18.825 42.257 42.048 42.257 22.261 0 40.482-17.385 41.952-39.383z"
     />
     <path
       fill="var(--background)"
       fillRule="evenodd"
-      stroke="var(--ring)"
+      stroke="var(--muted-foreground)"
       strokeLinecap="round"
       strokeWidth={2.5}
       d="M46.273 63.873a2.977 2.977 0 0 0-4.238.194 3.056 3.056 0 0 0 .192 4.284L56.346 81.39a4.168 4.168 0 0 0 5.933-.271c.066-.074.066-.074.129-.15l20.149-24.496a3.055 3.055 0 0 0-.39-4.271 2.978 2.978 0 0 0-4.224.393L59 75.625 46.273 63.873z"
@@ -59,7 +59,7 @@ export const IllustrationDone = (props: SVGProps<SVGSVGElement>) => (
       clipRule="evenodd"
     />
     <path
-      fill="var(--border)"
+      fill="var(--muted-foreground)"
       d="M48.513 29.084a1.25 1.25 0 0 0-.878-2.341l.878 2.34zm-6.135 1.497.618 1.086-.618-1.086zm-8.038 6.024-.868-.9.868.9zm-3.811 2.251a1.25 1.25 0 0 0 1.912 1.61l-1.912-1.61zm-.752 5.172a1.25 1.25 0 1 0-2.084-1.38l2.084 1.38zm-2.993 2.59 1.104.586-1.104-.586zm-2.366 2.003a1.25 1.25 0 1 0 2.285 1.015l-2.285-1.015zm23.217-21.878a41.019 41.019 0 0 0-5.875 2.751l1.236 2.173a38.515 38.515 0 0 1 5.517-2.584l-.878-2.34zm-5.875 2.751a41.368 41.368 0 0 0-8.288 6.212l1.736 1.798a38.872 38.872 0 0 1 7.788-5.837l-1.236-2.173zm-8.288 6.212a41.754 41.754 0 0 0-2.943 3.15l1.912 1.61a39.245 39.245 0 0 1 2.767-2.962l-1.736-1.798zm-5.78 6.942a41.001 41.001 0 0 0-2.012 3.383l2.208 1.173a38.503 38.503 0 0 1 1.89-3.176l-2.085-1.38zm-2.012 3.383a40.99 40.99 0 0 0-1.262 2.59l2.285 1.015a38.47 38.47 0 0 1 1.185-2.432l-2.208-1.173z"
     />
   </svg>
