@@ -4,20 +4,20 @@ import { LogsPage } from '@/features/mcp-servers/sub-pages/logs-page'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
 import userEvent from '@testing-library/user-event'
+import { getMockLogs } from '@/common/mocks/fixtures/servers'
 
 describe('Logs Route', () => {
   beforeEach(() => {
-    // Mock console.warn to prevent test failures from expected warnings
     vi.spyOn(console, 'warn').mockImplementation(() => {})
   })
 
   const testCases = [
-    { serverName: 'test-server-1', description: 'simple server name' },
+    { serverName: 'postgres-db', description: 'simple server name' },
     {
-      serverName: 'my-awesome-server',
+      serverName: 'vscode-server',
       description: 'server name with hyphens',
     },
-    { serverName: 'server123', description: 'server name with numbers' },
+    { serverName: 'github', description: 'server name with numbers' },
   ]
 
   testCases.forEach(({ serverName, description }) => {
@@ -77,6 +77,44 @@ describe('Logs Route', () => {
       expect(
         screen.queryByText(/server .* started successfully/i)
       ).toBeVisible()
+    })
+  })
+
+  it('handles empty logs response gracefully', async () => {
+    const serverName = 'empty-logs-server'
+    const router = createTestRouter(LogsPage, '/logs/$serverName')
+    router.navigate({ to: '/logs/$serverName', params: { serverName } })
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: serverName })).toBeVisible()
+    })
+
+    expect(screen.getByText('No logs available')).toBeVisible()
+  })
+
+  it('refreshes logs when refresh button is clicked', async () => {
+    const serverName = 'postgres-db'
+    const router = createTestRouter(LogsPage, '/logs/$serverName')
+    router.navigate({ to: '/logs/$serverName', params: { serverName } })
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: serverName })).toBeVisible()
+    })
+
+    expect(screen.queryByText(/.*new log entry.*/i)).not.toBeInTheDocument()
+
+    getMockLogs.mockReturnValueOnce(
+      '[2025-06-09 15:30:00] INFO: New log entry that just appeared'
+    )
+
+    const refreshButton = screen.getByRole('button', { name: /refresh/i })
+    expect(refreshButton).toBeVisible()
+    await userEvent.click(refreshButton)
+
+    await waitFor(() => {
+      expect(screen.getByText(/.*new log entry.*/i)).toBeVisible()
     })
   })
 })

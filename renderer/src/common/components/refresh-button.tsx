@@ -1,7 +1,7 @@
 import { RefreshCwIcon } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { Button } from './ui/button'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ButtonHTMLAttributes } from 'react'
 
 /**
  * A custom hook that resets a boolean value after a specified delay.
@@ -31,10 +31,11 @@ const useDelayedReset = (initialValue = false, delayMs = 1000) => {
 export function RefreshButton({
   refresh,
   className,
+  ...buttonProps
 }: {
   refresh: () => void
   className?: string
-}) {
+} & ButtonHTMLAttributes<HTMLButtonElement>) {
   const [isAnimating, setIsAnimating] = useDelayedReset(false, 500)
 
   function handleRefresh() {
@@ -49,6 +50,7 @@ export function RefreshButton({
       size="icon"
       type="button"
       onClick={() => handleRefresh()}
+      {...buttonProps}
     >
       <RefreshCwIcon className={isAnimating ? 'animate-spin' : ''} />
     </Button>
