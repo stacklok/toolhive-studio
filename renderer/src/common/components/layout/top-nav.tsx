@@ -37,8 +37,7 @@ function TopNavContainer(props: HTMLProps<HTMLElement>) {
       {...props}
       className={twMerge(
         props.className,
-        'sticky top-0 z-50',
-        'bg-muted/50 backdrop-blur-2xl',
+        'bg-muted/50',
         'border-mid h-16 border-b',
         'px-6',
         'grid grid-cols-[auto_1fr_auto] items-center gap-7',

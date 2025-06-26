@@ -6,9 +6,14 @@ export function Main(props: { children: ReactNode; className?: string }) {
     <main
       {...props}
       className={twMerge(
-        'flex min-h-0 w-full flex-1 flex-col px-6 py-4',
+        'flex min-h-0 w-full flex-1 flex-col',
+        'max-h-[calc(100dvh-calc(var(--spacing)_*_16))] overflow-y-auto',
+        'px-3 py-4',
         props.className
       )}
+      style={{
+        scrollbarGutter: 'stable both-edges',
+      }}
     />
   )
 }
