@@ -5,6 +5,8 @@ import {
   getApiOpenapiJson,
   getApiV1BetaClients,
   postApiV1BetaClients,
+  postApiV1BetaClientsRegister,
+  postApiV1BetaClientsUnregister,
   deleteApiV1BetaClientsByName,
   getApiV1BetaDiscoveryClients,
   getApiV1BetaRegistry,
@@ -27,6 +29,7 @@ import {
   postApiV1BetaWorkloadsStop,
   deleteApiV1BetaWorkloadsByName,
   getApiV1BetaWorkloadsByName,
+  getApiV1BetaWorkloadsByNameLogs,
   postApiV1BetaWorkloadsByNameRestart,
   postApiV1BetaWorkloadsByNameStop,
   getHealth,
@@ -38,6 +41,12 @@ import type {
   PostApiV1BetaClientsData,
   PostApiV1BetaClientsError,
   PostApiV1BetaClientsResponse,
+  PostApiV1BetaClientsRegisterData,
+  PostApiV1BetaClientsRegisterError,
+  PostApiV1BetaClientsRegisterResponse,
+  PostApiV1BetaClientsUnregisterData,
+  PostApiV1BetaClientsUnregisterError,
+  PostApiV1BetaClientsUnregisterResponse,
   DeleteApiV1BetaClientsByNameData,
   DeleteApiV1BetaClientsByNameError,
   DeleteApiV1BetaClientsByNameResponse,
@@ -83,6 +92,7 @@ import type {
   DeleteApiV1BetaWorkloadsByNameError,
   DeleteApiV1BetaWorkloadsByNameResponse,
   GetApiV1BetaWorkloadsByNameData,
+  GetApiV1BetaWorkloadsByNameLogsData,
   PostApiV1BetaWorkloadsByNameRestartData,
   PostApiV1BetaWorkloadsByNameRestartError,
   PostApiV1BetaWorkloadsByNameRestartResponse,
@@ -220,6 +230,112 @@ export const postApiV1BetaClientsMutation = (
   > = {
     mutationFn: async (localOptions) => {
       const { data } = await postApiV1BetaClients({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+export const postApiV1BetaClientsRegisterQueryKey = (
+  options: Options<PostApiV1BetaClientsRegisterData>
+) => createQueryKey('postApiV1BetaClientsRegister', options)
+
+/**
+ * Register multiple clients
+ * Register multiple clients with ToolHive
+ */
+export const postApiV1BetaClientsRegisterOptions = (
+  options: Options<PostApiV1BetaClientsRegisterData>
+) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await postApiV1BetaClientsRegister({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: postApiV1BetaClientsRegisterQueryKey(options),
+  })
+}
+
+/**
+ * Register multiple clients
+ * Register multiple clients with ToolHive
+ */
+export const postApiV1BetaClientsRegisterMutation = (
+  options?: Partial<Options<PostApiV1BetaClientsRegisterData>>
+): UseMutationOptions<
+  PostApiV1BetaClientsRegisterResponse,
+  PostApiV1BetaClientsRegisterError,
+  Options<PostApiV1BetaClientsRegisterData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaClientsRegisterResponse,
+    PostApiV1BetaClientsRegisterError,
+    Options<PostApiV1BetaClientsRegisterData>
+  > = {
+    mutationFn: async (localOptions) => {
+      const { data } = await postApiV1BetaClientsRegister({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+export const postApiV1BetaClientsUnregisterQueryKey = (
+  options: Options<PostApiV1BetaClientsUnregisterData>
+) => createQueryKey('postApiV1BetaClientsUnregister', options)
+
+/**
+ * Unregister multiple clients
+ * Unregister multiple clients from ToolHive
+ */
+export const postApiV1BetaClientsUnregisterOptions = (
+  options: Options<PostApiV1BetaClientsUnregisterData>
+) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await postApiV1BetaClientsUnregister({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: postApiV1BetaClientsUnregisterQueryKey(options),
+  })
+}
+
+/**
+ * Unregister multiple clients
+ * Unregister multiple clients from ToolHive
+ */
+export const postApiV1BetaClientsUnregisterMutation = (
+  options?: Partial<Options<PostApiV1BetaClientsUnregisterData>>
+): UseMutationOptions<
+  PostApiV1BetaClientsUnregisterResponse,
+  PostApiV1BetaClientsUnregisterError,
+  Options<PostApiV1BetaClientsUnregisterData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaClientsUnregisterResponse,
+    PostApiV1BetaClientsUnregisterError,
+    Options<PostApiV1BetaClientsUnregisterData>
+  > = {
+    mutationFn: async (localOptions) => {
+      const { data } = await postApiV1BetaClientsUnregister({
         ...options,
         ...localOptions,
         throwOnError: true,
@@ -988,6 +1104,31 @@ export const getApiV1BetaWorkloadsByNameOptions = (
       return data
     },
     queryKey: getApiV1BetaWorkloadsByNameQueryKey(options),
+  })
+}
+
+export const getApiV1BetaWorkloadsByNameLogsQueryKey = (
+  options: Options<GetApiV1BetaWorkloadsByNameLogsData>
+) => createQueryKey('getApiV1BetaWorkloadsByNameLogs', options)
+
+/**
+ * Get logs for a specific workload
+ * Retrieve at most 100 lines of logs for a specific workload by name.
+ */
+export const getApiV1BetaWorkloadsByNameLogsOptions = (
+  options: Options<GetApiV1BetaWorkloadsByNameLogsData>
+) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1BetaWorkloadsByNameLogs({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: getApiV1BetaWorkloadsByNameLogsQueryKey(options),
   })
 }
 

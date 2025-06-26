@@ -13,6 +13,12 @@ import type {
   PostApiV1BetaClientsData,
   PostApiV1BetaClientsResponses,
   PostApiV1BetaClientsErrors,
+  PostApiV1BetaClientsRegisterData,
+  PostApiV1BetaClientsRegisterResponses,
+  PostApiV1BetaClientsRegisterErrors,
+  PostApiV1BetaClientsUnregisterData,
+  PostApiV1BetaClientsUnregisterResponses,
+  PostApiV1BetaClientsUnregisterErrors,
   DeleteApiV1BetaClientsByNameData,
   DeleteApiV1BetaClientsByNameResponses,
   DeleteApiV1BetaClientsByNameErrors,
@@ -74,6 +80,9 @@ import type {
   GetApiV1BetaWorkloadsByNameData,
   GetApiV1BetaWorkloadsByNameResponses,
   GetApiV1BetaWorkloadsByNameErrors,
+  GetApiV1BetaWorkloadsByNameLogsData,
+  GetApiV1BetaWorkloadsByNameLogsResponses,
+  GetApiV1BetaWorkloadsByNameLogsErrors,
   PostApiV1BetaWorkloadsByNameRestartData,
   PostApiV1BetaWorkloadsByNameRestartResponses,
   PostApiV1BetaWorkloadsByNameRestartErrors,
@@ -149,6 +158,52 @@ export const postApiV1BetaClients = <ThrowOnError extends boolean = false>(
     ThrowOnError
   >({
     url: '/api/v1beta/clients',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+}
+
+/**
+ * Register multiple clients
+ * Register multiple clients with ToolHive
+ */
+export const postApiV1BetaClientsRegister = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1BetaClientsRegisterData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostApiV1BetaClientsRegisterResponses,
+    PostApiV1BetaClientsRegisterErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/clients/register',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+}
+
+/**
+ * Unregister multiple clients
+ * Unregister multiple clients from ToolHive
+ */
+export const postApiV1BetaClientsUnregister = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1BetaClientsUnregisterData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostApiV1BetaClientsUnregisterResponses,
+    PostApiV1BetaClientsUnregisterErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/clients/unregister',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -594,6 +649,25 @@ export const getApiV1BetaWorkloadsByName = <
     ThrowOnError
   >({
     url: '/api/v1beta/workloads/{name}',
+    ...options,
+  })
+}
+
+/**
+ * Get logs for a specific workload
+ * Retrieve at most 100 lines of logs for a specific workload by name.
+ */
+export const getApiV1BetaWorkloadsByNameLogs = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<GetApiV1BetaWorkloadsByNameLogsData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).get<
+    GetApiV1BetaWorkloadsByNameLogsResponses,
+    GetApiV1BetaWorkloadsByNameLogsErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/workloads/{name}/logs',
     ...options,
   })
 }
