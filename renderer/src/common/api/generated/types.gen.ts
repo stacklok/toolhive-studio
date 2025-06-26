@@ -221,6 +221,13 @@ export type SecretsSecretParameter = {
  */
 export type TypesTransportType = string
 
+export type V1BulkClientRequest = {
+  /**
+   * Names is the list of client names to operate on.
+   */
+  names?: Array<string>
+}
+
 /**
  * Request to perform bulk operations on workloads
  */
@@ -675,6 +682,66 @@ export type PostApiV1BetaClientsResponses = {
 
 export type PostApiV1BetaClientsResponse =
   PostApiV1BetaClientsResponses[keyof PostApiV1BetaClientsResponses]
+
+export type PostApiV1BetaClientsRegisterData = {
+  /**
+   * Clients to register
+   */
+  body: V1BulkClientRequest
+  path?: never
+  query?: never
+  url: '/api/v1beta/clients/register'
+}
+
+export type PostApiV1BetaClientsRegisterErrors = {
+  /**
+   * Invalid request
+   */
+  400: string
+}
+
+export type PostApiV1BetaClientsRegisterError =
+  PostApiV1BetaClientsRegisterErrors[keyof PostApiV1BetaClientsRegisterErrors]
+
+export type PostApiV1BetaClientsRegisterResponses = {
+  /**
+   * OK
+   */
+  200: Array<V1CreateClientResponse>
+}
+
+export type PostApiV1BetaClientsRegisterResponse =
+  PostApiV1BetaClientsRegisterResponses[keyof PostApiV1BetaClientsRegisterResponses]
+
+export type PostApiV1BetaClientsUnregisterData = {
+  /**
+   * Clients to unregister
+   */
+  body: V1BulkClientRequest
+  path?: never
+  query?: never
+  url: '/api/v1beta/clients/unregister'
+}
+
+export type PostApiV1BetaClientsUnregisterErrors = {
+  /**
+   * Invalid request
+   */
+  400: string
+}
+
+export type PostApiV1BetaClientsUnregisterError =
+  PostApiV1BetaClientsUnregisterErrors[keyof PostApiV1BetaClientsUnregisterErrors]
+
+export type PostApiV1BetaClientsUnregisterResponses = {
+  /**
+   * No Content
+   */
+  204: void
+}
+
+export type PostApiV1BetaClientsUnregisterResponse =
+  PostApiV1BetaClientsUnregisterResponses[keyof PostApiV1BetaClientsUnregisterResponses]
 
 export type DeleteApiV1BetaClientsByNameData = {
   body?: never
@@ -1356,6 +1423,38 @@ export type GetApiV1BetaWorkloadsByNameResponses = {
 
 export type GetApiV1BetaWorkloadsByNameResponse =
   GetApiV1BetaWorkloadsByNameResponses[keyof GetApiV1BetaWorkloadsByNameResponses]
+
+export type GetApiV1BetaWorkloadsByNameLogsData = {
+  body?: never
+  path: {
+    /**
+     * Workload name
+     */
+    name: string
+  }
+  query?: never
+  url: '/api/v1beta/workloads/{name}/logs'
+}
+
+export type GetApiV1BetaWorkloadsByNameLogsErrors = {
+  /**
+   * Not Found
+   */
+  404: string
+}
+
+export type GetApiV1BetaWorkloadsByNameLogsError =
+  GetApiV1BetaWorkloadsByNameLogsErrors[keyof GetApiV1BetaWorkloadsByNameLogsErrors]
+
+export type GetApiV1BetaWorkloadsByNameLogsResponses = {
+  /**
+   * Logs for the specified workload
+   */
+  200: string
+}
+
+export type GetApiV1BetaWorkloadsByNameLogsResponse =
+  GetApiV1BetaWorkloadsByNameLogsResponses[keyof GetApiV1BetaWorkloadsByNameLogsResponses]
 
 export type PostApiV1BetaWorkloadsByNameRestartData = {
   body?: never
