@@ -34,7 +34,7 @@ export function BaseErrorScreen({
           <CardTitle className="text-xl font-semibold">{title}</CardTitle>
         </CardHeader>
 
-        <CardContent className="text-muted-foreground min-h-0 flex-1 space-y-4 overflow-y-auto">
+        <CardContent className="text-muted-foreground min-h-0 flex-1 space-y-4 overflow-y-auto px-8">
           {children}
         </CardContent>
 
