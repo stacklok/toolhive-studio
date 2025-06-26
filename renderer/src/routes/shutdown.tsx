@@ -14,7 +14,7 @@ export const Route = createFileRoute('/shutdown')({
 function Shutdown() {
   return (
     <div className="flex h-[calc(100vh-5rem)] items-center justify-center p-4">
-      <Card className="w-full max-w-lg border-0 shadow-none">
+      <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
           <div className="mb-4 flex justify-center">
             <Loader2 className="text-muted-foreground size-12 animate-spin" />

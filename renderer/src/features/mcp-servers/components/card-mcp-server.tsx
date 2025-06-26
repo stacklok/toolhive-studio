@@ -160,7 +160,7 @@ export function CardMcpServer({
   return (
     <Card
       className={twMerge(
-        'gap-3 py-5 shadow-none transition-[color,box-shadow,opacity]',
+        'transition-[color,box-shadow,opacity]',
         isNewServer ? 'ring-2' : undefined,
         isDeleting ? 'pointer-events-none opacity-50' : undefined
       )}

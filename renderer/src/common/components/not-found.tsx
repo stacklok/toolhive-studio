@@ -6,7 +6,7 @@ import { Link } from '@tanstack/react-router'
 export function NotFound() {
   return (
     <div className="flex h-[calc(100vh-5rem)] items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-none">
+      <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mb-4 flex justify-center">
             <FileQuestion className="text-muted-foreground size-12" />

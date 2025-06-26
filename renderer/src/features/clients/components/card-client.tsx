@@ -28,15 +28,15 @@ export function CardClient({ client }: { client: ClientMcpClientStatus }) {
   )
 
   return (
-    <Card className="gap-3 py-5 shadow-none">
-      <CardHeader>
+    <Card className="gap-3 border-none py-5 shadow-none outline-none">
+      <CardHeader className="px-4">
         <CardTitle className="flex items-center text-xl">
           {CLIENT_TYPE_LABEL_MAP[
             client.client_type as keyof typeof CLIENT_TYPE_LABEL_MAP
           ] ?? client.client_type}
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex items-center gap-2">
+      <CardContent className="flex items-center gap-2 px-4">
         <Switch
           checked={client.registered}
           onCheckedChange={() => {
