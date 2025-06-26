@@ -30,14 +30,14 @@ it('should contain the menu to run an MCP server', async () => {
   await waitFor(() => {
     expect(
       screen.getByRole('button', {
-        name: /add a tool/i,
+        name: /add a server/i,
       })
     ).toBeVisible()
   })
 
   await userEvent.click(
     screen.getByRole('button', {
-      name: /add a tool/i,
+      name: /add a server/i,
     })
   )
   await waitFor(() => {
