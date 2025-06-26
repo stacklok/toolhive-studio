@@ -120,6 +120,14 @@ CI auto-detects the certificate. Apps are signed and notarized automatically.
 
 The project uses ESLint with `typescript-eslint` for linting TypeScript code. The configuration is in the `eslint.config.mjs` file. It includes rules for React hooks and React Refresh.
 
+## Code of conduct
+
+This project adheres to the
+[Contributor Covenant](./CODE_OF_CONDUCT.md)
+code of conduct. By participating, you are expected to uphold this code. Please
+report unacceptable behavior to
+[code-of-conduct@stacklok.dev](mailto:code-of-conduct@stacklok.dev).
+
 ---
 
 ## License
