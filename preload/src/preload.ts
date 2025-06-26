@@ -18,6 +18,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ToolHive port
   getToolhivePort: () => ipcRenderer.invoke('get-toolhive-port'),
 
+  // Container engine check
+  checkContainerEngine: () => ipcRenderer.invoke('check-container-engine'),
+
+  // ToolHive restart
+  restartToolhive: () => ipcRenderer.invoke('restart-toolhive'),
+
   // Theme management
   darkMode: {
     toggle: () => ipcRenderer.invoke('dark-mode:toggle'),
@@ -56,6 +62,15 @@ export interface ElectronAPI {
   hideApp: () => Promise<void>
   quitApp: () => Promise<void>
   getToolhivePort: () => Promise<number | undefined>
+  checkContainerEngine: () => Promise<{
+    docker: boolean
+    podman: boolean
+    available: boolean
+  }>
+  restartToolhive: () => Promise<{
+    success: boolean
+    error?: string
+  }>
   darkMode: {
     toggle: () => Promise<boolean>
     system: () => Promise<boolean>

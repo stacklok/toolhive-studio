@@ -10,14 +10,21 @@ import {
 import path from 'node:path'
 import { existsSync } from 'node:fs'
 import started from 'electron-squirrel-startup'
-import { spawn } from 'node:child_process'
 import * as Sentry from '@sentry/electron/main'
 import { initTray, updateTrayStatus } from './system-tray'
 import { setAutoLaunch, getAutoLaunchStatus } from './auto-launch'
 import { createApplicationMenu } from './menu'
-import net from 'node:net'
 import { getCspString } from './csp'
 import { stopAllServers } from './graceful-exit'
+import { checkContainerEngine } from './container-engine'
+import {
+  startToolhive,
+  restartToolhive,
+  stopToolhive,
+  getToolhivePort,
+  isToolhiveRunning,
+  binPath,
+} from './toolhive-manager'
 
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
@@ -27,78 +34,11 @@ Sentry.init({
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined
 declare const MAIN_WINDOW_VITE_NAME: string
 
-const binName = process.platform === 'win32' ? 'thv.exe' : 'thv'
-const binPath = app.isPackaged
-  ? path.join(
-      process.resourcesPath,
-      'bin',
-      `${process.platform}-${process.arch}`,
-      binName
-    )
-  : path.resolve(
-      __dirname,
-      '..',
-      '..',
-      'bin',
-      `${process.platform}-${process.arch}`,
-      binName
-    )
-
 console.log(`ToolHive binary path: ${binPath}`)
 console.log(`Binary file exists: ${existsSync(binPath)}`)
 
-let toolhiveProcess: ReturnType<typeof spawn> | undefined
 let tray: Tray | null = null
-let toolhivePort: number | undefined
 let isQuitting = false
-
-function findFreePort(): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const server = net.createServer()
-    server.listen(0, () => {
-      const address = server.address()
-      if (typeof address === 'object' && address && address.port) {
-        const port = address.port
-        server.close(() => resolve(port))
-      } else {
-        reject(new Error('Failed to get port'))
-      }
-    })
-    server.on('error', reject)
-  })
-}
-
-async function startToolhive() {
-  if (!existsSync(binPath)) {
-    console.error(`ToolHive binary not found at: ${binPath}`)
-    return
-  }
-  toolhivePort = await findFreePort()
-  console.log(`Starting ToolHive from: ${binPath} on port ${toolhivePort}`)
-  toolhiveProcess = spawn(
-    binPath,
-    ['serve', '--openapi', '--host=127.0.0.1', `--port=${toolhivePort}`],
-    {
-      stdio: 'ignore',
-      detached: false,
-    }
-  )
-
-  if (tray) {
-    updateTrayStatus(tray, !!toolhiveProcess)
-  }
-
-  toolhiveProcess.on('error', (error) => {
-    console.error('Failed to start ToolHive:', error)
-    if (tray) updateTrayStatus(tray, false)
-  })
-
-  toolhiveProcess.on('exit', (code) => {
-    console.log(`ToolHive process exited with code: ${code}`)
-    toolhiveProcess = undefined
-    if (tray) updateTrayStatus(tray, false)
-  })
-}
 
 let tearingDown = false
 
@@ -116,14 +56,15 @@ export async function blockQuit(source: string, event?: Electron.Event) {
   mainWindow?.webContents.send('graceful-exit')
 
   try {
-    await stopAllServers(binPath, toolhivePort!)
+    const port = getToolhivePort()
+    if (port) {
+      await stopAllServers(binPath, port)
+    }
   } catch (err) {
     console.error('Teardown failed:', err)
   } finally {
     // Stop the embedded ToolHive server
-    if (toolhiveProcess && !toolhiveProcess.killed) {
-      toolhiveProcess.kill()
-    }
+    stopToolhive()
 
     tray?.destroy()
     app.quit()
@@ -234,7 +175,7 @@ function createWindow() {
 let mainWindow: BrowserWindow | null = null
 
 app.on('ready', async () => {
-  await startToolhive()
+  await startToolhive(tray || undefined)
   mainWindow = createWindow()
 })
 
@@ -243,21 +184,22 @@ app.whenReady().then(() => {
     if (isDevelopment) {
       return callback({ responseHeaders: details.responseHeaders })
     }
-    if (toolhivePort == null) {
+    const port = getToolhivePort()
+    if (port == null) {
       throw new Error('[content-security-policy] ToolHive port is not set')
     }
     return callback({
       responseHeaders: {
         ...details.responseHeaders,
         'Content-Security-Policy': [
-          getCspString(toolhivePort, import.meta.env.VITE_SENTRY_DSN),
+          getCspString(port, import.meta.env.VITE_SENTRY_DSN),
         ],
       },
     })
   })
 
   try {
-    tray = initTray({ toolHiveIsRunning: !!toolhiveProcess })
+    tray = initTray({ toolHiveIsRunning: isToolhiveRunning() })
     console.log('System tray initialized successfully')
     // Setup application menu
     createApplicationMenu(tray)
@@ -270,7 +212,7 @@ app.whenReady().then(() => {
     if (tray && process.platform !== 'win32') {
       try {
         tray.destroy()
-        tray = initTray({ toolHiveIsRunning: !!toolhiveProcess })
+        tray = initTray({ toolHiveIsRunning: isToolhiveRunning() })
       } catch (error) {
         console.error('Failed to update tray after theme change:', error)
       }
@@ -302,9 +244,12 @@ app.on('will-quit', (e) => blockQuit('will-quit', e))
     isQuitting = true
     console.log(`[${sig}] delaying exit for teardown…`)
     try {
-      await stopAllServers(binPath, toolhivePort!)
+      const port = getToolhivePort()
+      if (port) {
+        await stopAllServers(binPath, port)
+      }
     } finally {
-      toolhiveProcess?.kill()
+      stopToolhive()
       tray?.destroy()
       process.exit(0)
     }
@@ -340,7 +285,7 @@ ipcMain.handle('set-auto-launch', (_event, enabled: boolean) => {
   setAutoLaunch(enabled)
   // Update tray menu if exists
   if (tray) {
-    updateTrayStatus(tray, !!toolhiveProcess)
+    updateTrayStatus(tray, isToolhiveRunning())
   }
   // Update menu
   createApplicationMenu(tray)
@@ -360,7 +305,7 @@ ipcMain.handle('quit-app', () => {
   app.quit()
 })
 
-ipcMain.handle('get-toolhive-port', () => toolhivePort)
+ipcMain.handle('get-toolhive-port', () => getToolhivePort())
 
 // Window control handlers for custom title bar
 ipcMain.handle('window-minimize', () => {
@@ -381,4 +326,21 @@ ipcMain.handle('window-close', () => {
 
 ipcMain.handle('window-is-maximized', () => {
   return mainWindow?.isMaximized() ?? false
+})
+
+ipcMain.handle('check-container-engine', async () => {
+  return await checkContainerEngine()
+})
+
+ipcMain.handle('restart-toolhive', async () => {
+  try {
+    await restartToolhive(tray || undefined)
+    return { success: true }
+  } catch (error) {
+    console.error('Failed to restart ToolHive:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
 })
