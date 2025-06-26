@@ -45,7 +45,7 @@ function CardContentMcpServer({ name, status }: CardContentMcpServerProps) {
     })
 
   return (
-    <CardContent className="px-4">
+    <CardContent>
       <div className="flex flex-col gap-4">
         <div className="border-border flex items-center justify-between border-t pt-4">
           <ActionsMcpServer
@@ -160,13 +160,12 @@ export function CardMcpServer({
   return (
     <Card
       className={twMerge(
-        `gap-3 border-none py-4 shadow-none transition-[color,box-shadow,opacity]
-        outline-none`,
+        'transition-[color,box-shadow,opacity]',
         isNewServer ? 'ring-2' : undefined,
         isDeleting ? 'pointer-events-none opacity-50' : undefined
       )}
     >
-      <CardHeader className="px-4">
+      <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center text-xl">{name}</CardTitle>
           <DropdownMenu>

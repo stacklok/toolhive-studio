@@ -14,8 +14,8 @@ export const Route = createFileRoute('/shutdown')({
 function Shutdown() {
   return (
     <div className="flex h-[calc(100vh-5rem)] items-center justify-center p-4">
-      <Card className="w-full max-w-lg border-none shadow-none outline-none">
-        <CardHeader className="px-4 text-center">
+      <Card className="w-full max-w-lg">
+        <CardHeader className="text-center">
           <div className="mb-4 flex justify-center">
             <Loader2 className="text-muted-foreground size-12 animate-spin" />
           </div>
@@ -23,7 +23,7 @@ function Shutdown() {
             Shutting Down Servers
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 px-4 text-center">
+        <CardContent className="space-y-4 text-center">
           <p className="text-muted-foreground">
             Please wait while we safely shut down your MCP servers...
           </p>
