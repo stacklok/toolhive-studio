@@ -80,4 +80,18 @@ describe('Logs Route', () => {
       ).toBeVisible()
     })
   })
+
+  it('handles empty logs response gracefully', async () => {
+    const serverName = 'empty-logs-server'
+    const router = createTestRouter(LogsPage, '/logs/$serverName')
+    router.navigate({ to: '/logs/$serverName', params: { serverName } })
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: serverName })).toBeVisible()
+    })
+
+    // Should show "No logs available" message
+    expect(screen.getByText('No logs available')).toBeVisible()
+  })
 })

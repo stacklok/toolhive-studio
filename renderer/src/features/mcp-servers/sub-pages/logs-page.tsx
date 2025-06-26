@@ -16,8 +16,13 @@ export function LogsPage() {
     ...getApiV1BetaWorkloadsByNameLogsOptions({ path: { name: serverName } }),
   })
 
+  console.log({ logs })
+
   // Split logs into lines and filter based on search
-  const logLines = logs ? logs.split('\n').filter((line) => line.trim()) : []
+  const logLines =
+    typeof logs === 'string' && logs.trim() !== ''
+      ? logs.split('\n').filter((line) => line.trim())
+      : []
   const filteredLogs = search
     ? logLines.filter((line) =>
         line.toLowerCase().includes(search.toLowerCase())

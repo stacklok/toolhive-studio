@@ -102,6 +102,11 @@ export const handlers = [
   http.get(mswEndpoint('/api/v1beta/workloads/:name/logs'), ({ params }) => {
     const { name } = params
 
+    // Special test cases for edge cases
+    if (name === 'empty-logs-server') {
+      return new HttpResponse('', { status: 200 })
+    }
+
     const server = getWorkloadByName(name as string)
     if (!server) {
       return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
