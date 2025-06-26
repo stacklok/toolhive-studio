@@ -34,8 +34,15 @@ import {
 import log from './logger'
 import { getAppVersion } from './util'
 
+import Store from 'electron-store'
+
+const store = new Store<{
+  isTelemetryEnabled: boolean
+}>({ defaults: { isTelemetryEnabled: true } })
+
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
+  enabled: store.get('isTelemetryEnabled', true),
 })
 
 // Forge environment variables
@@ -444,4 +451,33 @@ ipcMain.handle('shutdown-store:clear-history', () => {
 
 ipcMain.handle('get-app-version', () => {
   return getAppVersion()
+})
+
+// ────────────────────────────────────────────────────────────────────────────
+//  Sentry IPC handlers
+// ────────────────────────────────────────────────────────────────────────────
+
+ipcMain.handle('sentry.is-enabled', () => {
+  return store.get('isTelemetryEnabled', true)
+})
+
+ipcMain.handle('sentry.opt-out', (): boolean => {
+  store.set('isTelemetryEnabled', false)
+  const client = Sentry.getClient()
+  if (!client) {
+    throw new Error('[sentry.opt-out] Sentry client is not initialized')
+  }
+  Sentry.close()
+  return client.getOptions().enabled ?? false
+})
+
+ipcMain.handle('sentry.opt-in', (): boolean => {
+  store.set('isTelemetryEnabled', true)
+  const client = Sentry.getClient()
+  if (!client) {
+    throw new Error('[sentry.opt-in] Sentry client is not initialized')
+  }
+
+  client.getOptions().enabled = true
+  return client.getOptions().enabled ?? true
 })
