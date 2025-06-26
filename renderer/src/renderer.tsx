@@ -39,6 +39,8 @@ Sentry.init({
   // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
+  beforeSend: async (event) =>
+    (await window.electronAPI.sentry.isEnabled) ? event : null,
 })
 
 // @tanstack/react-router setup

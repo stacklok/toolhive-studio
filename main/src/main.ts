@@ -42,7 +42,7 @@ const store = new Store<{
 
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
-  enabled: store.get('isTelemetryEnabled', true),
+  beforeSend: (event) => (store.get('isTelemetryEnabled', true) ? event : null),
 })
 
 // Forge environment variables
@@ -463,21 +463,10 @@ ipcMain.handle('sentry.is-enabled', () => {
 
 ipcMain.handle('sentry.opt-out', (): boolean => {
   store.set('isTelemetryEnabled', false)
-  const client = Sentry.getClient()
-  if (!client) {
-    throw new Error('[sentry.opt-out] Sentry client is not initialized')
-  }
-  Sentry.close()
-  return client.getOptions().enabled ?? false
+  return store.get('isTelemetryEnabled', false)
 })
 
 ipcMain.handle('sentry.opt-in', (): boolean => {
   store.set('isTelemetryEnabled', true)
-  const client = Sentry.getClient()
-  if (!client) {
-    throw new Error('[sentry.opt-in] Sentry client is not initialized')
-  }
-
-  client.getOptions().enabled = true
-  return client.getOptions().enabled ?? true
+  return store.get('isTelemetryEnabled', true)
 })
