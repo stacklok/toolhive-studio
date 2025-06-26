@@ -52,9 +52,7 @@ export function FormFieldsArrayCustomSecrets({
           Secrets
         </FormLabel>
         <TooltipInfoIcon>
-          Sensitive values that should not be exposed in plain text. They are
-          typically used for API keys, tokens, or passwords. All secrets are
-          encrypted and stored securely by ToolHive.
+          All secrets are encrypted and securely stored by ToolHive.
         </TooltipInfoIcon>
       </div>
       {fields.map((field, index) => (
