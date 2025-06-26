@@ -49,7 +49,7 @@ function TooltipValueRequired() {
   return (
     <Tooltip>
       <TooltipTrigger asChild autoFocus={false}>
-        <AsteriskIcon className="text-muted-foreground absolute top-2 right-2 size-5 rounded-full px-0.5" />
+        <AsteriskIcon className="text-muted-foreground size-4" />
       </TooltipTrigger>
       <TooltipContent>Required</TooltipContent>
     </Tooltip>
@@ -74,23 +74,21 @@ function SecretRow({
       <FormField
         control={form.control}
         name={`secrets.${index}.name`}
-        render={({ field }) => (
+        render={() => (
           <FormItem>
             <div className="relative">
               <FormControl>
-                <Input
-                  {...field}
-                  autoComplete="off"
-                  tabIndex={-1}
+                <Label
+                  htmlFor={`secrets.${index}.value`}
                   className={cn(
-                    'text-muted-foreground !border-input font-mono !ring-0',
+                    'text-muted-foreground !border-input h-full items-center font-mono !ring-0',
                     secret.required ? 'pr-8' : ''
                   )}
-                  aria-label={secret.name ?? ''}
-                  readOnly
-                />
+                >
+                  <span>{secret.name}</span>
+                  {secret.required && <TooltipValueRequired />}
+                </Label>
               </FormControl>
-              {secret.required && <TooltipValueRequired />}
             </div>
             <FormMessage />
           </FormItem>
@@ -158,23 +156,21 @@ function EnvVarRow({
       <FormField
         control={form.control}
         name={`envVars.${index}.name`}
-        render={({ field }) => (
+        render={() => (
           <FormItem>
             <div className="relative">
               <FormControl>
-                <Input
-                  {...field}
-                  autoComplete="off"
-                  tabIndex={-1}
+                <Label
+                  htmlFor={`envVar.${index}.value`}
                   className={cn(
-                    'text-muted-foreground !border-input font-mono !ring-0',
-                    envVar.required ? 'pr-8' : ''
+                    `text-muted-foreground !border-input flex h-full items-center gap-1 font-mono
+                    !ring-0`
                   )}
-                  aria-label={envVar.name ?? ''}
-                  readOnly
-                />
+                >
+                  <span>{envVar.name}</span>
+                  {envVar.required && <TooltipValueRequired />}
+                </Label>
               </FormControl>
-              {envVar.required && <TooltipValueRequired />}
             </div>
             <FormMessage />
           </FormItem>
@@ -331,9 +327,7 @@ export function FormRunFromRegistry({
                   </Label>
 
                   <p className="text-muted-foreground mb-6 text-sm">
-                    Sensitive values that should not be exposed in plain text.
-                    They are typically used for API keys, tokens, or passwords.
-                    All secrets are encrypted and stored securely by ToolHive.
+                    All secrets are encrypted and securely stored by ToolHive.
                   </p>
 
                   {groupedEnvVars.secrets.map((secret, index) => (
@@ -354,10 +348,8 @@ export function FormRunFromRegistry({
                   </Label>
 
                   <p className="text-muted-foreground mb-6 text-sm">
-                    Non-sensitive values that can be used to configure the
-                    server. These variables are not encrypted and can be exposed
-                    in plain text. They are typically used for configuration
-                    options that do not contain sensitive information.
+                    Environment variables are used to pass configuration
+                    settings to the server.
                   </p>
 
                   {groupedEnvVars.envVars.map((envVar, index) => (
