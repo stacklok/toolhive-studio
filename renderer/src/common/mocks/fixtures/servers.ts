@@ -112,3 +112,17 @@ export const getWorkloadByName = (
 ): WorkloadsWorkload | undefined => {
   return MOCK_MCP_SERVERS.find((workload) => workload.name === name)
 }
+
+// Mock logs fixture for testing
+export const getMockLogs = (serverName: string): string => {
+  return `[2024-03-20 10:00:00] INFO: Server ${serverName} started successfully
+[2024-03-20 10:00:01] INFO: Loading configuration...
+[2024-03-20 10:00:02] INFO: Configuration loaded successfully
+[2024-03-20 10:00:03] INFO: Initializing database connection...
+[2024-03-20 10:00:04] INFO: Database connection established
+[2024-03-20 10:00:05] INFO: Starting API server...
+[2024-03-20 10:00:06] INFO: API server started on port 8080
+[2024-03-20 10:00:07] INFO: Server ${serverName} is ready to accept connections
+[2024-03-20 10:00:08] INFO: Health check passed
+[2024-03-20 10:00:09] INFO: Monitoring system initialized`
+}

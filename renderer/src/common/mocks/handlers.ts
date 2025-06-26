@@ -3,6 +3,7 @@ import {
   createWorkloadResponseFixture,
   getWorkloadByName,
   workloadListFixture,
+  getMockLogs,
 } from './fixtures/servers'
 import { mswEndpoint } from './msw-endpoint'
 import { versionFixture } from './fixtures/version'
@@ -97,6 +98,18 @@ export const handlers = [
       return new HttpResponse(null, { status: 204 })
     }
   ),
+
+  http.get(mswEndpoint('/api/v1beta/workloads/:name/logs'), ({ params }) => {
+    const { name } = params
+
+    const server = getWorkloadByName(name as string)
+    if (!server) {
+      return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
+    }
+
+    const logs = getMockLogs(name as string)
+    return new HttpResponse(logs, { status: 200 })
+  }),
 
   http.get(mswEndpoint('/api/v1beta/discovery/clients'), () => {
     // TODO: Don't stringify after

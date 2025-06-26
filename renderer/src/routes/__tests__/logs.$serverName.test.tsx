@@ -7,17 +7,18 @@ import userEvent from '@testing-library/user-event'
 
 describe('Logs Route', () => {
   beforeEach(() => {
-    // Mock console.warn to prevent test failures from expected warnings
+    // Mock console.warn and console.error to prevent test failures from expected warnings
     vi.spyOn(console, 'warn').mockImplementation(() => {})
+    vi.spyOn(console, 'error').mockImplementation(() => {})
   })
 
   const testCases = [
-    { serverName: 'test-server-1', description: 'simple server name' },
+    { serverName: 'postgres-db', description: 'simple server name' },
     {
-      serverName: 'my-awesome-server',
+      serverName: 'vscode-server',
       description: 'server name with hyphens',
     },
-    { serverName: 'server123', description: 'server name with numbers' },
+    { serverName: 'github', description: 'server name with numbers' },
   ]
 
   testCases.forEach(({ serverName, description }) => {
