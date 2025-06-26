@@ -37,7 +37,7 @@ async function setupSecretProvider(queryClient: QueryClient) {
 function RootComponent() {
   const matches = useMatches()
   const isShutdownRoute = matches.some((match) => match.routeId === '/shutdown')
-  throw new Error('test')
+
   return (
     <>
       {!isShutdownRoute && <TopNav />}
