@@ -34,7 +34,7 @@ it('should render the table with secrets', async () => {
 
   await userEvent.click(dropdownTriggers[0]!)
 
-  expect(screen.getByText('Edit')).toBeInTheDocument()
+  expect(screen.getByText('Update secret')).toBeInTheDocument()
   expect(screen.getByText('Delete')).toBeInTheDocument()
 })
 
@@ -70,7 +70,7 @@ it('should render edit secret dialog when clicking edit from dropdown', async ()
   const dropdownTriggers = screen.getAllByLabelText('Secret options')
   await userEvent.click(dropdownTriggers[0]!)
 
-  const editButton = screen.getByText('Edit')
+  const editButton = screen.getByText('Update secret')
   await userEvent.click(editButton)
 
   expect(screen.getByText('Update the secret value below.')).toBeInTheDocument()

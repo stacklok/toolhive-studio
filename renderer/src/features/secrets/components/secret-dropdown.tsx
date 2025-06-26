@@ -37,7 +37,7 @@ export function SecretDropdown({
             onClick={onHandleClick}
           >
             <Pencil className="mr-2 size-4" />
-            Edit
+            Update secret
           </div>
         </DropdownMenuItem>
 
