@@ -44,7 +44,7 @@ export function LogsPage() {
       <div className="flex flex-col gap-5">
         <div className="flex items-center justify-between">
           <h1 className="m-0 mb-0 p-0 text-3xl font-bold">{serverName}</h1>
-          <RefreshButton refresh={refetch} />
+          <RefreshButton refresh={refetch} aria-label="Refresh" />
         </div>
         <Separator />
         <Input
