@@ -6,8 +6,8 @@ import { Link } from '@tanstack/react-router'
 export function NotFound() {
   return (
     <div className="flex h-[calc(100vh-5rem)] items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-none">
-        <CardHeader className="text-center">
+      <Card className="w-full max-w-md border-none shadow-none outline-none">
+        <CardHeader className="px-4 text-center">
           <div className="mb-4 flex justify-center">
             <FileQuestion className="text-muted-foreground size-12" />
           </div>
@@ -15,7 +15,7 @@ export function NotFound() {
             404 - Page Not Found
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 text-center">
+        <CardContent className="space-y-4 px-4 text-center">
           <p className="text-muted-foreground">
             The page you're looking for doesn't exist or has been moved.
           </p>

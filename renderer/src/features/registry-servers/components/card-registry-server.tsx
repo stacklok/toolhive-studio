@@ -16,17 +16,17 @@ export function CardRegistryServer({
 }) {
   return (
     <Card
-      className="cursor-pointer gap-3 py-5 shadow-none transition-colors hover:border-black
-        dark:hover:border-white"
+      className="cursor-pointer gap-3 border-none py-5 shadow-none transition-colors outline-none
+        hover:border-black dark:hover:border-white"
       onClick={onClick}
     >
-      <CardHeader>
+      <CardHeader className="px-4">
         <CardTitle className="flex items-center justify-between text-xl">
           <span>{server.name}</span>
           <Plus className="text-muted-foreground size-5" />
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4">
         <div className="text-muted-foreground text-sm">
           {server.description}
         </div>
