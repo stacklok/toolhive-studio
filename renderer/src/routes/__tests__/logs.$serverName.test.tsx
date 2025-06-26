@@ -7,7 +7,6 @@ import userEvent from '@testing-library/user-event'
 
 describe('Logs Route', () => {
   beforeEach(() => {
-    // Mock console.warn and console.error to prevent test failures from expected warnings
     vi.spyOn(console, 'warn').mockImplementation(() => {})
   })
 
@@ -90,7 +89,6 @@ describe('Logs Route', () => {
       expect(screen.getByRole('heading', { name: serverName })).toBeVisible()
     })
 
-    // Should show "No logs available" message
     expect(screen.getByText('No logs available')).toBeVisible()
   })
 })
