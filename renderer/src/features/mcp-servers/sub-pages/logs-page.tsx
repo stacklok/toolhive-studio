@@ -4,29 +4,25 @@ import { ChevronLeft } from 'lucide-react'
 import { Separator } from '@/common/components/ui/separator'
 import { Input } from '@/common/components/ui/input'
 import { useState } from 'react'
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { getApiV1BetaWorkloadsByNameLogsOptions } from '@/common/api/generated/@tanstack/react-query.gen'
+import { RefreshButton } from '@/common/components/refresh-button'
 
 export function LogsPage() {
   const { serverName } = useParams({ from: '/logs/$serverName' })
   const [search, setSearch] = useState('')
 
-  const mockLogs = [
-    `[2024-03-20 10:00:00] INFO: Server ${serverName} started successfully`,
-    '[2024-03-20 10:00:01] INFO: Loading configuration...',
-    '[2024-03-20 10:00:02] INFO: Configuration loaded successfully',
-    '[2024-03-20 10:00:03] INFO: Initializing database connection...',
-    '[2024-03-20 10:00:04] INFO: Database connection established',
-    '[2024-03-20 10:00:05] INFO: Starting API server...',
-    '[2024-03-20 10:00:06] INFO: API server started on port 8080',
-    `[2024-03-20 10:00:07] INFO: Server ${serverName} is ready to accept connections`,
-    '[2024-03-20 10:00:08] INFO: Health check passed',
-    '[2024-03-20 10:00:09] INFO: Monitoring system initialized',
-  ]
+  const { data: logs, refetch } = useSuspenseQuery({
+    ...getApiV1BetaWorkloadsByNameLogsOptions({ path: { name: serverName } }),
+  })
 
+  // Split logs into lines and filter based on search
+  const logLines = logs ? logs.split('\n').filter((line) => line.trim()) : []
   const filteredLogs = search
-    ? mockLogs.filter((line) =>
+    ? logLines.filter((line) =>
         line.toLowerCase().includes(search.toLowerCase())
       )
-    : mockLogs
+    : logLines
 
   return (
     <div className="container mx-auto flex flex-1 flex-col p-4">
@@ -43,7 +39,10 @@ export function LogsPage() {
         </Link>
       </div>
       <div className="flex flex-col gap-5">
-        <h1 className="m-0 mb-0 p-0 text-3xl font-bold">{serverName}</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="m-0 mb-0 p-0 text-3xl font-bold">{serverName}</h1>
+          <RefreshButton refresh={refetch} />
+        </div>
         <Separator />
         <Input
           className="mb-4 w-full max-w-[250px]"
@@ -55,9 +54,13 @@ export function LogsPage() {
       </div>
       <div className="flex-1 overflow-auto rounded-md border">
         <div className="text-foreground bg-card p-5 font-mono text-[13px] leading-[22px] font-normal">
-          {filteredLogs.map((log, index) => (
-            <div key={index}>{log}</div>
-          ))}
+          {filteredLogs.length > 0 ? (
+            filteredLogs.map((log, index) => <div key={index}>{log}</div>)
+          ) : (
+            <div className="text-muted-foreground">
+              {search ? 'No logs match your search' : 'No logs available'}
+            </div>
+          )}
         </div>
       </div>
     </div>
