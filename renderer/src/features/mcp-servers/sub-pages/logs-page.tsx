@@ -16,11 +16,11 @@ export function LogsPage() {
     ...getApiV1BetaWorkloadsByNameLogsOptions({ path: { name: serverName } }),
   })
 
-  // Split logs into lines and filter based on search
   const logLines =
-    typeof logs === 'string' && logs.trim() !== ''
+    typeof logs === 'string'
       ? logs.split('\n').filter((line) => line.trim())
       : []
+
   const filteredLogs = search
     ? logLines.filter((line) =>
         line.toLowerCase().includes(search.toLowerCase())
@@ -56,15 +56,15 @@ export function LogsPage() {
         />
       </div>
       <div className="flex-1 overflow-auto rounded-md border">
-        <div className="text-foreground bg-card p-5 font-mono text-[13px] leading-[22px] font-normal">
+        <pre className="text-foreground bg-card p-5 font-mono text-[13px] leading-[22px] font-normal">
           {filteredLogs.length > 0 ? (
-            filteredLogs.map((log, index) => <div key={index}>{log}</div>)
+            filteredLogs.join('\n')
           ) : (
             <div className="text-muted-foreground">
               {search ? 'No logs match your search' : 'No logs available'}
             </div>
           )}
-        </div>
+        </pre>
       </div>
     </div>
   )
