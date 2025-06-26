@@ -49,7 +49,7 @@ export function Index() {
       {workloads.length === 0 ? (
         <EmptyState
           title="Add your first MCP server"
-          body="Browse or search the registry for a specific tool"
+          body="You can add a server by running it with a command or by browsing the registry"
           actions={[
             <Button
               variant="outline"

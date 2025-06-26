@@ -3,7 +3,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/common/components/ui/dropdown-menu'
 import { PlusIcon } from 'lucide-react'
@@ -40,15 +39,12 @@ export function DropdownMenuRunMcpServer({
       <DropdownMenuTrigger asChild>
         <Button className={className}>
           <PlusIcon />
-          Add a tool
+          Add server
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="bottom" align="end">
         <DropdownMenuItem asChild aria-label="From the registry">
-          <Link to="/registry">
-            From the registry
-            <DropdownMenuShortcut>⌘N</DropdownMenuShortcut>
-          </Link>
+          <Link to="/registry">From the registry</Link>
         </DropdownMenuItem>
 
         <DropdownMenuItem
@@ -56,7 +52,6 @@ export function DropdownMenuRunMcpServer({
           aria-label="Custom MCP server"
         >
           Custom MCP server
-          <DropdownMenuShortcut>⌘⇧N</DropdownMenuShortcut>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

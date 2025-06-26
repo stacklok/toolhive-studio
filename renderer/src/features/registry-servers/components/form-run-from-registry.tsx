@@ -271,7 +271,7 @@ export function FormRunFromRegistry({
             <DialogHeader className="mb-4 p-6">
               <DialogTitle>Configure {server.name}</DialogTitle>
               <DialogDescription>
-                Set up the environment variables and name for this server
+                Set up the environment variables and name for this MCP server
                 installation.
               </DialogDescription>
             </DialogHeader>
