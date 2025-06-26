@@ -15,6 +15,7 @@ import {
 import { useEffect } from 'react'
 import { toast } from 'sonner'
 import { isFeatureEnabled } from '@/feature-flags'
+import { Separator } from '../ui/separator'
 
 function getPlatformSpecificHeaderClasses() {
   const platformClasses = {
@@ -37,12 +38,13 @@ function TopNavContainer(props: HTMLProps<HTMLElement>) {
       className={twMerge(
         props.className,
         'sticky top-0 z-50',
-        'bg-raised/10 backdrop-blur-2xl',
+        'bg-muted/50',
         'border-mid h-16 border-b',
         'px-6',
         'grid grid-cols-[auto_1fr_auto] items-center gap-8',
         'app-region-drag',
         'w-full min-w-full',
+        'shadow-[0px_-12px_18px_0px_rgb(0_0_0/0.6)]',
         getPlatformSpecificHeaderClasses()
       )}
     >
@@ -173,10 +175,16 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
   return (
     <TopNavContainer {...props}>
       <TopNavLogo />
-      <TopNavLinks />
+      <div className="flex h-10 items-center gap-6">
+        <TopNavLinks />
+        <Separator orientation="vertical" />
+        <div className="flex items-center gap-4">
+          <ThemeToggle className="app-region-no-drag" />
+          <SettingsDropdown className="app-region-no-drag" />
+        </div>
+      </div>
+
       <div className="flex items-center gap-2 justify-self-end">
-        <ThemeToggle className="app-region-no-drag" />
-        <SettingsDropdown className="app-region-no-drag" />
         <WindowControls />
       </div>
     </TopNavContainer>
