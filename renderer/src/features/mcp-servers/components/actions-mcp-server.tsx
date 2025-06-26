@@ -1,6 +1,5 @@
 import type { WorkloadsWorkload } from '@/common/api/generated/types.gen'
 import { Switch } from '@/common/components/ui/switch'
-import { cn } from '@/common/lib/utils'
 
 function getStatusText(status: WorkloadsWorkload['status']) {
   // There is an issue with openAPI generator in BE - https://github.com/stacklok/toolhive/issues/780
@@ -32,11 +31,6 @@ export function ActionsMcpServer({
       <div onClick={(e) => e.preventDefault()}>
         <Switch
           aria-label="Mutate server"
-          className={cn(
-            'cursor-pointer',
-            isRunning &&
-              'dark:data-[state=checked]:bg-primary data-[state=checked]:bg-green-600'
-          )}
           checked={isRunning || isPending}
           disabled={isStarting}
           onCheckedChange={() => mutate()}

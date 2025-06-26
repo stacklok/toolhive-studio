@@ -38,7 +38,6 @@ export function CardClient({ client }: { client: ClientMcpClientStatus }) {
       </CardHeader>
       <CardContent className="flex items-center gap-2">
         <Switch
-          className="cursor-pointer"
           checked={client.registered}
           onCheckedChange={() => {
             if (client.registered) {
