@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@fontsource/atkinson-hyperlegible':
+        specifier: ^5.2.6
+        version: 5.2.6
       '@fontsource/space-mono':
         specifier: ^5.2.7
         version: 5.2.7
@@ -816,6 +819,9 @@ packages:
 
   '@floating-ui/utils@0.2.9':
     resolution: {integrity: sha512-MDWhGtE+eHw5JW7lq4qhc5yRLS11ERl1c7Z6Xd0a58DozHES6EnNNwUWbMiG4J9Cgj053Bhk8zvlhFYKVhULwg==}
+
+  '@fontsource/atkinson-hyperlegible@5.2.6':
+    resolution: {integrity: sha512-Kfh6/UlHhotKuv4Oi9PXQIsmzwbtJIR442sSJnEHsO7TDZaDczK8cY0AlTNOB0XMDZj1j35nAlgbi2HZCdNg/Q==}
 
   '@fontsource/space-mono@5.2.7':
     resolution: {integrity: sha512-79X/R0W6E2OgigGohmB5F+GJtehbQ+k26BaskuJfucEuk3BqdlPFMyx63PeKvgMbLIpu1G9c/Rwng1jpZxsn/A==}
@@ -6489,6 +6495,8 @@ snapshots:
       react-dom: 19.1.0(react@19.1.0)
 
   '@floating-ui/utils@0.2.9': {}
+
+  '@fontsource/atkinson-hyperlegible@5.2.6': {}
 
   '@fontsource/space-mono@5.2.7': {}
 
