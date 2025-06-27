@@ -25,6 +25,7 @@ const binPath = app.isPackaged
 
 let toolhiveProcess: ReturnType<typeof spawn> | undefined
 let toolhivePort: number | undefined
+let isRestarting = false
 
 export function getToolhivePort(): number | undefined {
   return toolhivePort
@@ -85,21 +86,30 @@ export async function startToolhive(tray?: Tray): Promise<void> {
 }
 
 export async function restartToolhive(tray?: Tray): Promise<void> {
-  console.log('Restarting ToolHive...')
-
-  // Stop existing process if running
-  if (toolhiveProcess && !toolhiveProcess.killed) {
-    console.log('Stopping existing ToolHive process...')
-    toolhiveProcess.kill()
-    toolhiveProcess = undefined
-
-    // Wait a moment for the process to fully stop
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+  if (isRestarting) {
+    console.log('Restart already in progress, skipping...')
+    return
   }
 
-  // Start new process
-  await startToolhive(tray)
-  console.log('ToolHive restarted successfully')
+  isRestarting = true
+  console.log('Restarting ToolHive...')
+
+  try {
+    // Stop existing process if running
+    if (toolhiveProcess && !toolhiveProcess.killed) {
+      console.log('Stopping existing ToolHive process...')
+      toolhiveProcess.kill()
+    }
+
+    // Start new process
+    await startToolhive(tray)
+    console.log('ToolHive restarted successfully')
+  } finally {
+    // avoid another restart until process is stabilized
+    setTimeout(() => {
+      isRestarting = false
+    }, 5000)
+  }
 }
 
 export function stopToolhive(): void {

@@ -1,74 +1,84 @@
 import { IllustrationPackage } from '../illustrations/illustration-package'
-import { Button } from '../ui/button'
 import { ExternalLink, RefreshCw, AlertCircle } from 'lucide-react'
-import { useEffect, useState } from 'react'
 import { BaseErrorScreen } from './base-error-screen'
+import type { ReactNode } from 'react'
+import { useQuery, useMutation } from '@tanstack/react-query'
+import { useEffect } from 'react'
+import { withMinimumDelay } from './utils'
 
-// Helper function to ensure minimum display time
-const withMinimumDelay = async (
-  action: () => Promise<void>,
-  minTime: number
-) => {
-  const startTime = Date.now()
-  await action()
-  const elapsedTime = Date.now() - startTime
-  const remainingTime = Math.max(0, minTime - elapsedTime)
-  if (remainingTime > 0) {
-    await new Promise((resolve) => setTimeout(resolve, remainingTime))
-  }
+interface ExternalLinkButtonProps {
+  href: string
+  children: ReactNode
+  icon?: ReactNode
 }
 
+const ExternalLinkButton = ({ href, children }: ExternalLinkButtonProps) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="border-input bg-background ring-offset-background hover:bg-accent
+      hover:text-accent-foreground focus-visible:ring-ring inline-flex w-full
+      items-center justify-between rounded-md border px-3 py-2 text-sm
+      transition-colors focus-visible:ring-2 focus-visible:ring-offset-2
+      focus-visible:outline-none"
+  >
+    <span className="flex items-center">
+      <ExternalLink className="mr-2 size-4" />
+      {children}
+    </span>
+  </a>
+)
+
 export function ConnectionRefusedError() {
-  const [isChecking, setIsChecking] = useState(true)
-  const [showGenericError, setShowGenericError] = useState(false)
-  const [isRestarting, setIsRestarting] = useState(false)
+  const { data: containerStatus, isLoading: isChecking } = useQuery({
+    queryKey: ['container-engines'],
+    queryFn: async () => {
+      const result = await withMinimumDelay(
+        window.electronAPI.checkContainerEngine,
+        800
+      )
+      return result
+    },
+    retry: false,
+    refetchOnWindowFocus: true,
+  })
 
-  const handleRestart = async () => {
-    console.log('Container engines are now available, restarting ToolHive...')
-    setIsRestarting(true)
-
-    await withMinimumDelay(async () => {
-      try {
-        const restartResult = await window.electronAPI.restartToolhive()
-
-        if (restartResult.success) {
-          console.log('ToolHive restarted successfully')
-          window.location.reload()
-        } else {
-          console.error('Failed to restart ToolHive:', restartResult.error)
-          setIsRestarting(false)
-          setShowGenericError(true)
-        }
-      } catch (restartError) {
-        console.error('Error restarting ToolHive:', restartError)
-        setIsRestarting(false)
-        setShowGenericError(true)
+  const {
+    isPending: isRestarting,
+    mutate: restartToolhive,
+    isError: isRestartError,
+  } = useMutation({
+    mutationFn: async () => {
+      console.log('Container engines are now available, restarting ToolHive...')
+      const result = await withMinimumDelay(
+        window.electronAPI.restartToolhive,
+        1200
+      )
+      return result
+    },
+    onSuccess: (result) => {
+      if (result.success) {
+        console.log('ToolHive restarted successfully')
+        window.location.reload()
+      } else {
+        console.error('Failed to restart ToolHive:', result.error)
       }
-    }, 1200)
-  }
+    },
+    onError: (error) => {
+      console.error('Error restarting ToolHive:', error)
+    },
+  })
 
   useEffect(() => {
-    const checkEngines = async () => {
-      setIsChecking(true)
-
-      await withMinimumDelay(async () => {
-        try {
-          const status = await window.electronAPI.checkContainerEngine()
-
-          if (status.available) {
-            await handleRestart()
-          }
-        } catch (error) {
-          console.error('Failed to check container engines:', error)
-        }
-      }, 800)
-
-      setIsChecking(false)
+    if (containerStatus?.available && !isRestarting) {
+      restartToolhive()
     }
-    checkEngines()
-  }, [])
+  }, [containerStatus?.available, isRestarting, restartToolhive])
 
-  // If engines are available, show generic error
+  const showGenericError = containerStatus?.available && isRestartError
+
+  // If engine is available, show generic error
   if (showGenericError) {
     return (
       <BaseErrorScreen
@@ -79,16 +89,20 @@ export function ConnectionRefusedError() {
           We're having trouble connecting to ToolHive. This is unexpected and
           may indicate a service issue.
         </p>
+
+        <div className="bg-muted rounded-md p-3 text-sm">
+          <p className="mb-2 font-medium">Need help?</p>
+          <p className="mb-3">
+            If this issue persists, our community can help troubleshoot the
+            problem.
+          </p>
+
+          <ExternalLinkButton href="https://discord.gg/stacklok">
+            Join Discord Support
+          </ExternalLinkButton>
+        </div>
       </BaseErrorScreen>
     )
-  }
-
-  const handleOpenDockerDocs = () => {
-    window.open('https://docs.docker.com/get-docker/', '_blank')
-  }
-
-  const handleOpenPodmanDocs = () => {
-    window.open('https://podman.io/getting-started/installation', '_blank')
   }
 
   if (isChecking || isRestarting) {
@@ -130,25 +144,13 @@ export function ConnectionRefusedError() {
       </div>
 
       <div className="space-y-2 pb-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleOpenDockerDocs}
-          className="w-full justify-start"
-        >
-          <ExternalLink className="mr-2 size-4" />
+        <ExternalLinkButton href="https://docs.docker.com/get-docker/">
           Install Docker Desktop
-        </Button>
+        </ExternalLinkButton>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleOpenPodmanDocs}
-          className="w-full justify-start"
-        >
-          <ExternalLink className="mr-2 size-4" />
+        <ExternalLinkButton href="https://podman.io/getting-started/installation">
           Install Podman
-        </Button>
+        </ExternalLinkButton>
       </div>
     </BaseErrorScreen>
   )
