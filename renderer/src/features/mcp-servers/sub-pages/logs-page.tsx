@@ -42,18 +42,19 @@ export function LogsPage() {
         </Link>
       </div>
       <div className="flex flex-col gap-5">
-        <div className="flex items-center justify-between">
-          <h1 className="m-0 mb-0 p-0 text-3xl font-bold">{serverName}</h1>
+        <h1 className="m-0 mb-0 p-0 text-3xl font-bold">{serverName}</h1>
+        <Separator />
+        <div className="flex justify-between">
+          <Input
+            className="mb-4 w-full max-w-[250px]"
+            placeholder="Search log"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="Search log"
+          />
+
           <RefreshButton refresh={refetch} aria-label="Refresh" />
         </div>
-        <Separator />
-        <Input
-          className="mb-4 w-full max-w-[250px]"
-          placeholder="Search log"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          aria-label="Search log"
-        />
       </div>
       <div className="max-h-full flex-1 overflow-auto rounded-md border">
         <pre className="text-foreground min-h-full p-5 font-mono text-[13px] leading-[22px] font-normal">
