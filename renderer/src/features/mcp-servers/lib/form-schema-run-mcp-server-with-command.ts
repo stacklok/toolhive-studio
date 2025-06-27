@@ -11,8 +11,8 @@ const getCommonFields = (workloads: WorkloadsWorkload[]) =>
         'This name is already in use'
       ),
     transport: z.union(
-      [z.literal('sse'), z.literal('stdio')],
-      'Please select either SSE or stdio.'
+      [z.literal('sse'), z.literal('stdio'), z.literal('streamable-http')],
+      'Please select either SSE, stdio, or streamable-http.'
     ),
     cmd_arguments: z.string().optional(),
     envVars: z

@@ -98,6 +98,9 @@ export function FormFieldsRunMcpCommand({
                 <SelectContent>
                   <SelectItem value="sse">SSE</SelectItem>
                   <SelectItem value="stdio">stdio</SelectItem>
+                  <SelectItem value="streamable-http">
+                    Streamable HTTP
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </FormControl>
