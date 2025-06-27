@@ -174,12 +174,24 @@ function createWindow() {
 
 let mainWindow: BrowserWindow | null = null
 
-app.on('ready', async () => {
-  await startToolhive(tray || undefined)
-  mainWindow = createWindow()
-})
+app.whenReady().then(async () => {
+  // Initialize tray first
+  try {
+    tray = initTray({ toolHiveIsRunning: false }) // Start with false, will update after ToolHive starts
+    console.log('System tray initialized successfully')
+    // Setup application menu
+    createApplicationMenu(tray)
+  } catch (error) {
+    console.error('Failed to initialize system tray:', error)
+  }
 
-app.whenReady().then(() => {
+  // Start ToolHive with tray reference
+  await startToolhive(tray || undefined)
+
+  // Create main window
+  mainWindow = createWindow()
+
+  // Setup CSP headers
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     if (isDevelopment) {
       return callback({ responseHeaders: details.responseHeaders })
@@ -197,15 +209,6 @@ app.whenReady().then(() => {
       },
     })
   })
-
-  try {
-    tray = initTray({ toolHiveIsRunning: isToolhiveRunning() })
-    console.log('System tray initialized successfully')
-    // Setup application menu
-    createApplicationMenu(tray)
-  } catch (error) {
-    console.error('Failed to initialize system tray:', error)
-  }
 
   // Non-Windows platforms: refresh tray icon when theme changes
   nativeTheme.on('updated', () => {
