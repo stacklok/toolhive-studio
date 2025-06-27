@@ -49,7 +49,7 @@ export function Secrets() {
   return (
     <>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-semibold">Secrets</h1>
+        <h1 className="font-display text-3xl font-bold">Secrets</h1>
         <Button
           variant="default"
           onClick={() => {
