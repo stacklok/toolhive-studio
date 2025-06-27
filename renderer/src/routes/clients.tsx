@@ -21,7 +21,7 @@ export function Clients() {
   return (
     <>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-semibold">Clients</h1>
+        <h1 className="font-display text-3xl font-bold">Clients</h1>
       </div>
       {clients.length === 0 ? (
         <EmptyState

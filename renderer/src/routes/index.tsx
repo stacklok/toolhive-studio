@@ -33,7 +33,7 @@ export function Index() {
   return (
     <>
       <div className="mb-6 flex items-center">
-        <h1 className="text-3xl font-semibold">Installed</h1>
+        <h1 className="font-display text-3xl font-bold">Installed</h1>
         <div className="ml-auto flex gap-2">
           <RefreshButton refresh={refetch} />
           <DropdownMenuRunMcpServer
