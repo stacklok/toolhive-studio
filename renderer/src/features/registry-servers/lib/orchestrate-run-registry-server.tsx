@@ -326,6 +326,7 @@ export async function orchestrateRunRegistryServer({
               to="/"
               search={{ newServerName: data.serverName }}
               onClick={() => toast.dismiss(toastID)}
+              viewTransition={{ types: ['slide-left'] }}
               className="ml-auto"
             >
               View

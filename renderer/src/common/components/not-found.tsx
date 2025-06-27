@@ -1,7 +1,7 @@
 import { Button } from './ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Home, FileQuestion } from 'lucide-react'
-import { Link } from '@tanstack/react-router'
+import { LinkViewTransition } from './link-view-transition'
 
 export function NotFound() {
   return (
@@ -20,10 +20,10 @@ export function NotFound() {
             The page you're looking for doesn't exist or has been moved.
           </p>
           <Button asChild className="w-full">
-            <Link to="/">
+            <LinkViewTransition to="/">
               <Home className="mr-2 size-4" />
               Go to Installed
-            </Link>
+            </LinkViewTransition>
           </Button>
         </CardContent>
       </Card>

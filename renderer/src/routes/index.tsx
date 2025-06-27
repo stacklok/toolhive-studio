@@ -5,7 +5,7 @@ import { IllustrationNoConnection } from '@/common/components/illustrations/illu
 import { Button } from '@/common/components/ui/button'
 
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
 import { RefreshButton } from '@/common/components/refresh-button'
 import { DialogFormRunMcpServerWithCommand } from '@/features/mcp-servers/components/dialog-form-run-mcp-command'
@@ -13,6 +13,7 @@ import { GridCardsMcpServers } from '@/features/mcp-servers/components/grid-card
 import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/menu-run-mcp-server'
 import { useRunCustomServer } from '@/features/mcp-servers/hooks/use-run-custom-server'
 import { useState } from 'react'
+import { LinkViewTransition } from '@/common/components/link-view-transition'
 
 export const Route = createFileRoute('/')({
   loader: ({ context: { queryClient } }) =>
@@ -59,9 +60,9 @@ export function Index() {
               Add custom server
             </Button>,
             <Button asChild key="add-from-registry">
-              <Link to="/registry">
+              <LinkViewTransition to="/registry">
                 Browse registry <ChevronRight />
-              </Link>
+              </LinkViewTransition>
             </Button>,
           ]}
           illustration={IllustrationNoConnection}

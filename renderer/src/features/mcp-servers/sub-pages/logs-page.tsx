@@ -1,4 +1,4 @@
-import { useParams, Link } from '@tanstack/react-router'
+import { useParams } from '@tanstack/react-router'
 import { Button } from '@/common/components/ui/button'
 import { ChevronLeft } from 'lucide-react'
 import { Separator } from '@/common/components/ui/separator'
@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { getApiV1BetaWorkloadsByNameLogsOptions } from '@/common/api/generated/@tanstack/react-query.gen'
 import { RefreshButton } from '@/common/components/refresh-button'
+import { LinkViewTransition } from '@/common/components/link-view-transition'
 
 const highlight = (text: string, query: string) => {
   if (!query) return text
@@ -56,7 +57,7 @@ export function LogsPage() {
   return (
     <div className="container mx-auto flex max-h-full flex-1 flex-col p-4">
       <div className="mb-2">
-        <Link to="/">
+        <LinkViewTransition to="/">
           <Button
             variant="ghost"
             aria-label="Back"
@@ -65,7 +66,7 @@ export function LogsPage() {
             <ChevronLeft className="mr-1 h-5 w-5" />
             Back
           </Button>
-        </Link>
+        </LinkViewTransition>
       </div>
       <div className="flex flex-col gap-5">
         <h1 className="m-0 mb-0 p-0 text-3xl font-bold">{serverName}</h1>

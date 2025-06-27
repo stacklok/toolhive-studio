@@ -2,7 +2,6 @@ import type { HTMLProps } from 'react'
 
 import { twMerge } from 'tailwind-merge'
 import { CommandIcon } from 'lucide-react'
-import { Link } from '@tanstack/react-router'
 import { ThemeToggle } from '../theme/theme-toggle'
 import { SettingsDropdown } from '../settings/settings-dropdown'
 import { WindowControls } from './window-controls'
@@ -16,6 +15,7 @@ import { useEffect } from 'react'
 import { toast } from 'sonner'
 import { isFeatureEnabled } from '@/feature-flags'
 import { Separator } from '../ui/separator'
+import { LinkViewTransition } from '../link-view-transition'
 
 function getPlatformSpecificHeaderClasses() {
   const platformClasses = {
@@ -81,7 +81,7 @@ function TopNavLinks() {
               data-[status=active]:focus:bg-transparent data-[status=hover]:bg-transparent"
             asChild
           >
-            <Link to="/">Installed</Link>
+            <LinkViewTransition to="/">Installed</LinkViewTransition>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
@@ -100,7 +100,7 @@ function TopNavLinks() {
               data-[status=active]:focus:bg-transparent data-[status=hover]:bg-transparent"
             asChild
           >
-            <Link to="/registry">Registry</Link>
+            <LinkViewTransition to="/registry">Registry</LinkViewTransition>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
@@ -119,7 +119,7 @@ function TopNavLinks() {
               data-[status=active]:focus:bg-transparent"
             asChild
           >
-            <Link to="/clients">Clients</Link>
+            <LinkViewTransition to="/clients">Clients</LinkViewTransition>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
@@ -138,7 +138,7 @@ function TopNavLinks() {
               data-[status=active]:focus:bg-transparent"
             asChild
           >
-            <Link to="/secrets">Secrets</Link>
+            <LinkViewTransition to="/secrets">Secrets</LinkViewTransition>
           </NavigationMenuLink>
         </NavigationMenuItem>
       </NavigationMenuList>

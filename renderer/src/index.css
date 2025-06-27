@@ -1,7 +1,9 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-@custom-variant dark (&:is(.dark *));
+@import './styles/view-transitions.css';
+
+@custom-variant dark (&: is(.dark *));
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
