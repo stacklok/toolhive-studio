@@ -1,6 +1,7 @@
 import { AlertCircle } from 'lucide-react'
 import { BaseErrorScreen } from './base-error-screen'
 import { KeyringError } from './keyring-error'
+import { ConnectionRefusedError } from './connection-refused-error'
 
 interface ErrorProps {
   error?: Error
@@ -14,6 +15,18 @@ export function Error({ error }: ErrorProps = {}) {
     // this is handled here, because this error could be generated anywhere
     // but only show keyring error on Linux systems
     return <KeyringError />
+  }
+
+  // Check for connection errors that might indicate container engine issues
+  if (
+    error?.toString().includes('ECONNREFUSED') ||
+    error?.toString().includes('Connection refused') ||
+    error?.toString().includes('connect ECONNREFUSED') ||
+    error?.toString().includes('ENOTFOUND') ||
+    error?.toString().includes('Network Error') ||
+    error?.message?.includes('fetch')
+  ) {
+    return <ConnectionRefusedError />
   }
 
   return (
