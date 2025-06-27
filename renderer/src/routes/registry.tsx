@@ -26,7 +26,7 @@ export function Registry() {
   return (
     <>
       <div className="mb-6 flex items-center">
-        <h1 className="text-3xl font-semibold">Registry</h1>
+        <h1 className="font-display text-3xl font-bold">Registry</h1>
       </div>
       {serversList.length === 0 ? (
         <EmptyState
