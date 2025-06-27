@@ -7,7 +7,7 @@ export function Main(props: { children: ReactNode; className?: string }) {
       {...props}
       className={twMerge(
         'flex min-h-0 w-full flex-1 flex-col',
-        'max-h-[calc(100dvh-calc(var(--spacing)_*_16))] overflow-y-auto',
+        'h-[calc(100dvh-calc(var(--spacing)_*_16))] overflow-y-auto',
         'px-3 py-4',
         props.className
       )}
