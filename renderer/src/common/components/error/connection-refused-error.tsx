@@ -1,9 +1,10 @@
-import { IllustrationPackage } from '../illustrations/illustration-package'
 import { ExternalLink, RefreshCw, AlertCircle } from 'lucide-react'
-import { BaseErrorScreen } from './base-error-screen'
 import type { ReactNode } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { useEffect } from 'react'
+import { Button } from '@/common/components/ui/button'
+import { BaseErrorScreen } from './base-error-screen'
+import { IllustrationPackage } from '../illustrations/illustration-package'
 import { withMinimumDelay } from './utils'
 
 interface ExternalLinkButtonProps {
@@ -13,21 +14,12 @@ interface ExternalLinkButtonProps {
 }
 
 const ExternalLinkButton = ({ href, children }: ExternalLinkButtonProps) => (
-  <a
-    href={href}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="border-input bg-background ring-offset-background hover:bg-accent
-      hover:text-accent-foreground focus-visible:ring-ring inline-flex w-full
-      items-center justify-between rounded-md border px-3 py-2 text-sm
-      transition-colors focus-visible:ring-2 focus-visible:ring-offset-2
-      focus-visible:outline-none"
-  >
-    <span className="flex items-center">
-      <ExternalLink className="mr-2 size-4" />
+  <Button asChild variant="outline" className="w-full justify-start">
+    <a href={href} target="_blank" rel="noopener noreferrer">
+      <ExternalLink />
       {children}
-    </span>
-  </a>
+    </a>
+  </Button>
 )
 
 export function ConnectionRefusedError() {
