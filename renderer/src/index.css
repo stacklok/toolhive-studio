@@ -6,6 +6,10 @@
 @custom-variant dark (&: is(.dark *));
 
 @theme inline {
+  --font-sans: 'Inter', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  --font-display: 'Atkinson Hyperlegible', sans-serif;
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -171,13 +175,5 @@
 
   .app-region-no-drag {
     app-region: no-drag;
-  }
-
-  .font-display {
-    font-family: 'Atkinson Hyperlegible', sans-serif;
-  }
-
-  .font-mono {
-    font-family: 'Space Mono', monospace;
   }
 }
