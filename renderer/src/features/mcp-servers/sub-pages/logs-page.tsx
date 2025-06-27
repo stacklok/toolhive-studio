@@ -28,7 +28,7 @@ export function LogsPage() {
     : logLines
 
   return (
-    <div className="container mx-auto flex flex-1 flex-col p-4">
+    <div className="container mx-auto flex max-h-full flex-1 flex-col p-4">
       <div className="mb-2">
         <Link to="/">
           <Button
@@ -55,7 +55,7 @@ export function LogsPage() {
           aria-label="Search log"
         />
       </div>
-      <div className="flex-1 overflow-auto rounded-md border">
+      <div className="max-h-full flex-1 overflow-auto rounded-md border">
         <pre className="text-foreground min-h-full p-5 font-mono text-[13px] leading-[22px] font-normal">
           {filteredLogs.length > 0 ? (
             filteredLogs.join('\n')
