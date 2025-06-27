@@ -7,6 +7,7 @@ import {
 } from '@/common/components/ui/card'
 import type { RegistryImageMetadata } from '@/common/api/generated/types.gen'
 import { Plus, StarIcon } from 'lucide-react'
+import { cn } from '@/common/lib/utils'
 
 export function CardRegistryServer({
   server,
@@ -17,14 +18,25 @@ export function CardRegistryServer({
 }) {
   return (
     <Card
-      className="cursor-pointer outline transition-colors hover:border-black
-        dark:hover:border-white"
-      onClick={onClick}
+      className={cn(
+        'relative cursor-pointer',
+        'transition-[box-shadow,color]',
+        'group',
+        'hover:ring',
+        'has-[button:focus-visible]:ring'
+      )}
     >
       <CardHeader>
         <CardTitle className="flex items-center justify-between text-xl">
-          <span>{server.name}</span>
-          <Plus className="text-muted-foreground size-5" />
+          <button className="!outline-none" onClick={() => onClick?.()}>
+            {server.name}
+            {/** make the entire area of the card clickable */}
+            <span className="absolute inset-0 rounded-md" />{' '}
+          </button>
+          <Plus
+            className="text-muted-foreground group-has-[button:focus-visible]:text-foreground
+              group-hover:text-foreground transition-color size-5"
+          />
         </CardTitle>
       </CardHeader>
 
