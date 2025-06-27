@@ -6,9 +6,9 @@ import {
   DropdownMenuTrigger,
 } from '@/common/components/ui/dropdown-menu'
 import { PlusIcon } from 'lucide-react'
-import { Link } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import { LinkViewTransition } from '@/common/components/link-view-transition'
 
 export function DropdownMenuRunMcpServer({
   className,
@@ -44,7 +44,9 @@ export function DropdownMenuRunMcpServer({
       </DropdownMenuTrigger>
       <DropdownMenuContent side="bottom" align="end">
         <DropdownMenuItem asChild aria-label="From the registry">
-          <Link to="/registry">From the registry</Link>
+          <LinkViewTransition to="/registry">
+            From the registry
+          </LinkViewTransition>
         </DropdownMenuItem>
 
         <DropdownMenuItem

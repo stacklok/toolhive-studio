@@ -326,6 +326,7 @@ export async function orchestrateRunCustomServer({
               to="/"
               search={{ newServerName: data.name }}
               onClick={() => toast.dismiss(toastID)}
+              viewTransition={{ types: ['slide-left'] }}
               className="ml-auto"
             >
               View
