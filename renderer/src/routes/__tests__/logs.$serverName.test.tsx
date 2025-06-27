@@ -67,7 +67,10 @@ describe('Logs Route', () => {
       const search = screen.getByPlaceholderText('Search log')
       await userEvent.type(search, 'database')
 
-      expect(screen.getByText(/database connection established/i)).toBeVisible()
+      expect(screen.queryAllByRole('mark', { name: /database/i })).toHaveLength(
+        2
+      )
+      expect(screen.getByText(/connection established/i)).toBeVisible()
       expect(
         screen.queryByText(/server .* started successfully/i)
       ).not.toBeInTheDocument()
