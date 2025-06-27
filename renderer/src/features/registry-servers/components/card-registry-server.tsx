@@ -27,9 +27,9 @@ export function CardRegistryServer({
       )}
     >
       <CardHeader>
-        <CardTitle className="flex items-center justify-between text-xl">
+        <CardTitle className="grid grid-cols-[auto_calc(var(--spacing)_*_5)] items-center text-xl">
           <button
-            className="!outline-none select-none"
+            className="truncate text-left !outline-none select-none"
             onClick={() => onClick?.()}
           >
             {server.name}
