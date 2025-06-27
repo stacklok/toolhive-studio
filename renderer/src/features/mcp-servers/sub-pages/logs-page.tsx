@@ -56,10 +56,7 @@ export function LogsPage() {
         />
       </div>
       <div className="flex-1 overflow-auto rounded-md border">
-        <pre
-          className="text-foreground bg-card min-h-full p-5 font-mono text-[13px] leading-[22px]
-            font-normal"
-        >
+        <pre className="text-foreground min-h-full p-5 font-mono text-[13px] leading-[22px] font-normal">
           {filteredLogs.length > 0 ? (
             filteredLogs.join('\n')
           ) : (
