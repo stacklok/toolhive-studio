@@ -1,24 +1,27 @@
 :root {
-  --view-transition-duration: 300ms;
-  --view-transition-distance: calc(var(--spacing) * 8);
-  --view-transition-easing: cubic-bezier(0.16, 1, 0.3, 1);
+  --view-transition-duration: 150ms;
+  --view-transition-enter-delay: calc(var(--view-transition-duration) * 0.25);
+  --view-transition-distance: calc(var(--spacing) * 4);
+  --view-transition-enter-easing: ease-in;
+  --view-transition-exit-easing: ease-out;
 }
 
 /* Slide Left Transition */
 html:active-view-transition-type(slide-left) {
   &::view-transition-old(main-content) {
-    animation: var(--view-transition-duration) var(--view-transition-easing)
-      both slide-out-left;
+    animation: var(--view-transition-duration)
+      var(--view-transition-exit-easing) both slide-out-left;
   }
   &::view-transition-new(main-content) {
-    animation: var(--view-transition-duration) var(--view-transition-easing)
-      both slide-in-left;
+    animation: var(--view-transition-duration)
+      var(--view-transition-enter-easing) both slide-in-left;
   }
 }
 
 @keyframes slide-out-left {
   from {
     transform: translateX(0);
+    opacity: 1;
   }
   to {
     transform: translateX(calc(var(--view-transition-distance) * -1));
@@ -33,24 +36,26 @@ html:active-view-transition-type(slide-left) {
   }
   to {
     transform: translateX(0);
+    opacity: 1;
   }
 }
 
 /* Slide Right Transition */
 html:active-view-transition-type(slide-right) {
   &::view-transition-old(main-content) {
-    animation: var(--view-transition-duration) var(--view-transition-easing)
-      both slide-out-right;
+    animation: var(--view-transition-duration)
+      var(--view-transition-exit-easing) both slide-out-right;
   }
   &::view-transition-new(main-content) {
-    animation: var(--view-transition-duration) var(--view-transition-easing)
-      both slide-in-right;
+    animation: var(--view-transition-duration)
+      var(--view-transition-enter-easing) both slide-in-right;
   }
 }
 
 @keyframes slide-out-right {
   from {
     transform: translateX(0);
+    opacity: 1;
   }
   to {
     transform: translateX(var(--view-transition-distance));
@@ -65,5 +70,6 @@ html:active-view-transition-type(slide-right) {
   }
   to {
     transform: translateX(0);
+    opacity: 1;
   }
 }

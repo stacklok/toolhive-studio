@@ -4,55 +4,30 @@ import { forwardRef, type ComponentProps } from 'react'
 
 type Route = FileRouteTypes['fullPaths']
 
+const ORDERED_ROUTES: Route[] = ['/', '/registry', '/clients', '/secrets']
+
+type TransitionType = 'slide-left' | 'slide-right'
+
+type ViewTransitionOptions = {
+  types: TransitionType[]
+}
+
 function getViewTransition(
   from: string,
   to: string
-): ComponentProps<typeof Link>['viewTransition'] {
-  const typedFrom = from as Route
-  const typedTo = to as Route
+): ViewTransitionOptions | boolean {
+  const fromIndex = ORDERED_ROUTES.indexOf(from as Route)
+  const toIndex = ORDERED_ROUTES.indexOf(to as Route)
 
-  switch (typedFrom) {
-    case '/':
-      switch (typedTo) {
-        case '/clients':
-        case '/registry':
-        case '/secrets':
-          return { types: ['slide-left'] }
-        default:
-          return false
-      }
-    case '/registry':
-      switch (typedTo) {
-        case '/':
-          return { types: ['slide-right'] }
-        case '/clients':
-        case '/secrets':
-          return { types: ['slide-left'] }
-        default:
-          return false
-      }
-    case '/clients':
-      switch (typedTo) {
-        case '/':
-        case '/registry':
-          return { types: ['slide-right'] }
-        case '/secrets':
-          return { types: ['slide-left'] }
-        default:
-          return false
-      }
-    case '/secrets':
-      switch (typedTo) {
-        case '/':
-        case '/registry':
-        case '/clients':
-          return { types: ['slide-right'] }
-        default:
-          return false
-      }
-    default:
-      return false
+  if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) {
+    return false
   }
+
+  if (toIndex > fromIndex) {
+    return { types: ['slide-left'] }
+  }
+
+  return { types: ['slide-right'] }
 }
 
 export const LinkViewTransition = forwardRef<
