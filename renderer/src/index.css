@@ -1,42 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-@font-face {
-  font-family: 'Atkinson Hyperlegible';
-  font-style: normal;
-  font-weight: 400;
-  src:
-    local(''),
-    url('./fonts/AtkinsonHyperlegible-Regular.ttf') format('truetype');
-}
-
-@font-face {
-  font-family: 'Atkinson Hyperlegible';
-  font-style: normal;
-  font-weight: 700;
-  src:
-    local(''),
-    url('./fonts/AtkinsonHyperlegible-Bold.ttf') format('truetype');
-}
-
-@font-face {
-  font-family: 'Atkinson Hyperlegible';
-  font-style: italic;
-  font-weight: 400;
-  src:
-    local(''),
-    url('./fonts/AtkinsonHyperlegible-Italic.ttf') format('truetype');
-}
-
-@font-face {
-  font-family: 'Atkinson Hyperlegible';
-  font-style: italic;
-  font-weight: 700;
-  src:
-    local(''),
-    url('./fonts/AtkinsonHyperlegible-BoldItalic.ttf') format('truetype');
-}
-
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -153,6 +117,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -201,11 +166,16 @@
     user-select: none;
     app-region: drag;
   }
+
   .app-region-no-drag {
     app-region: no-drag;
   }
 
   .font-display {
     font-family: 'Atkinson Hyperlegible', sans-serif;
+  }
+
+  .font-mono {
+    font-family: 'Space Mono', monospace;
   }
 }
