@@ -15,6 +15,7 @@ import {
   postApiV1BetaSecretsOptions,
   getApiV1BetaSecretsDefaultOptions,
 } from '@/common/api/generated/@tanstack/react-query.gen'
+import '@fontsource/space-mono/400.css'
 
 async function setupSecretProvider(queryClient: QueryClient) {
   const createEncryptedProvider = () =>
