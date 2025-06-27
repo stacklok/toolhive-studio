@@ -175,6 +175,10 @@
     font-family: 'Atkinson Hyperlegible', sans-serif;
   }
 
+  .font-sans {
+    font-family: 'Inter', sans-serif;
+  }
+
   .font-mono {
     font-family: 'Space Mono', monospace;
   }
