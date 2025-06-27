@@ -81,6 +81,7 @@
     "vitest-fail-on-console": "^0.7.1"
   },
   "dependencies": {
+    "@fontsource/atkinson-hyperlegible": "^5.2.6",
     "@fontsource/space-mono": "^5.2.7",
     "@hey-api/client-fetch": "^0.13.0",
     "@radix-ui/react-dialog": "^1.1.14",
