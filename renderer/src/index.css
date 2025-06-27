@@ -153,6 +153,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -201,11 +202,16 @@
     user-select: none;
     app-region: drag;
   }
+
   .app-region-no-drag {
     app-region: no-drag;
   }
 
   .font-display {
     font-family: 'Atkinson Hyperlegible', sans-serif;
+  }
+
+  .font-mono {
+    font-family: 'Space Mono', monospace;
   }
 }
