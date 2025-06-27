@@ -12,7 +12,7 @@ import {
 } from '@/common/components/ui/dropdown-menu'
 import { Button } from '@/common/components/ui/button'
 import { MoreVertical, Trash2, Github, Text } from 'lucide-react'
-import { useNavigate } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 
 import type { WorkloadsWorkload } from '@/common/api/generated'
 import { ActionsMcpServer } from './actions-mcp-server'
@@ -83,7 +83,6 @@ export function CardMcpServer({
   statusContext: WorkloadsWorkload['status_context']
 }) {
   const confirm = useConfirm()
-  const navigate = useNavigate()
   const { mutateAsync: deleteServer, isPending: isDeletePending } =
     useDeleteServer({ name })
 
@@ -197,16 +196,13 @@ export function CardMcpServer({
               )}
               {isFeatureEnabled('logs') ? (
                 <DropdownMenuItem
-                  onClick={() =>
-                    navigate({
-                      to: '/logs/$serverName',
-                      params: { serverName: name },
-                    })
-                  }
+                  asChild
                   className="flex cursor-pointer items-center"
                 >
-                  <Text className="mr-2 h-4 w-4" />
-                  Logs
+                  <Link to="/logs/$serverName" params={{ serverName: name }}>
+                    <Text className="mr-2 h-4 w-4" />
+                    Logs
+                  </Link>
                 </DropdownMenuItem>
               ) : null}
               <DropdownMenuItem

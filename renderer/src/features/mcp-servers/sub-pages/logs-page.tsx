@@ -38,9 +38,9 @@ export function LogsPage() {
   const { serverName } = useParams({ from: '/logs/$serverName' })
   const [search, setSearch] = useState('')
 
-  const { data: logs, refetch } = useSuspenseQuery({
-    ...getApiV1BetaWorkloadsByNameLogsOptions({ path: { name: serverName } }),
-  })
+  const { data: logs, refetch } = useSuspenseQuery(
+    getApiV1BetaWorkloadsByNameLogsOptions({ path: { name: serverName } })
+  )
 
   const logLines =
     typeof logs === 'string'
