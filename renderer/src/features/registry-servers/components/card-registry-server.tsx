@@ -28,7 +28,10 @@ export function CardRegistryServer({
     >
       <CardHeader>
         <CardTitle className="flex items-center justify-between text-xl">
-          <button className="!outline-none" onClick={() => onClick?.()}>
+          <button
+            className="!outline-none select-none"
+            onClick={() => onClick?.()}
+          >
             {server.name}
             {/** make the entire area of the card clickable */}
             <span className="absolute inset-0 rounded-md" />{' '}
@@ -41,7 +44,7 @@ export function CardRegistryServer({
       </CardHeader>
 
       <CardContent>
-        <div className="text-muted-foreground text-sm">
+        <div className="text-muted-foreground text-sm select-none">
           {server.description}
         </div>
       </CardContent>
@@ -50,7 +53,7 @@ export function CardRegistryServer({
         <CardFooter className="mt-auto">
           <div className="flex items-center gap-2">
             <StarIcon className="text-muted-foreground size-3" />
-            <span className="text-muted-foreground text-sm">
+            <span className="text-muted-foreground text-sm select-none">
               {Intl.NumberFormat().format(server.metadata.stars)}
             </span>
           </div>
