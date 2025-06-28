@@ -37,4 +37,22 @@ describe('highlight helper', () => {
     expect(screen.queryByRole('mark')).toBeNull()
     expect(screen.getByText('Unrelated text')).toBeInTheDocument()
   })
+
+  it('escapes regular expression properly 1', () => {
+    const text = 'literal a+b vs ab vs aab'
+    const query = 'a+b'
+
+    render(<>{highlight(text, query)}</>)
+
+    const marks = screen.getAllByRole('mark')
+    expect(marks).toHaveLength(1)
+    expect(marks[0]).toHaveTextContent('a+b')
+  })
+
+  it('escapes regular expression properly 2', () => {
+    expect(() => {
+      render(<>{highlight('text with (parenthesis)', '(')}</>)
+    }).not.toThrow()
+    expect(screen.getByRole('mark')).toHaveTextContent('(')
+  })
 })
