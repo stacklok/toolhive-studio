@@ -8,32 +8,7 @@ import { getApiV1BetaWorkloadsByNameLogsOptions } from '@/common/api/generated/@
 import { RefreshButton } from '@/common/components/refresh-button'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
 import { InputSearch } from '@/common/components/ui/input-search'
-
-const highlight = (text: string, query: string) => {
-  if (!query) return text
-
-  const lowerText = text.toLowerCase()
-  const lowerQuery = query.toLowerCase()
-  const queryLen = query.length
-
-  const out: React.ReactNode[] = []
-  let start = 0
-  let idx: number
-
-  while ((idx = lowerText.indexOf(lowerQuery, start)) !== -1) {
-    if (idx > start) out.push(text.slice(start, idx))
-    const innerText = text.slice(idx, idx + queryLen)
-    out.push(
-      <mark role="mark" aria-label={innerText} key={idx}>
-        {innerText}
-      </mark>
-    )
-    start = idx + queryLen
-  }
-  if (start < text.length) out.push(text.slice(start))
-
-  return out
-}
+import { highlight } from './search'
 
 export function LogsPage() {
   const { serverName } = useParams({ from: '/logs/$serverName' })
