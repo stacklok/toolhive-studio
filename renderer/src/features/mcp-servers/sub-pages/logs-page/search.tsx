@@ -1,25 +1,20 @@
-export const highlight = (text: string, query: string) => {
+// const escapeRegExp = (str: string) =>
+//   str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const escapeRegExp = (query: string) => query
+
+export const highlight = (text: string, query: string): React.ReactNode => {
   if (!query) return text
 
-  const lowerText = text.toLowerCase()
-  const lowerQuery = query.toLowerCase()
-  const queryLen = query.length
+  const regex = new RegExp(`(${escapeRegExp(query)})`, 'gi')
 
-  const out: React.ReactNode[] = []
-  let start = 0
-  let idx: number
-
-  while ((idx = lowerText.indexOf(lowerQuery, start)) !== -1) {
-    if (idx > start) out.push(text.slice(start, idx))
-    const innerText = text.slice(idx, idx + queryLen)
-    out.push(
-      <mark role="mark" aria-label={innerText} key={idx}>
-        {innerText}
+  return text.split(regex).map((part, i) =>
+    i % 2 === 1 ? (
+      <mark role="mark" aria-label={part} key={i}>
+        {part}
       </mark>
+    ) : (
+      part
     )
-    start = idx + queryLen
-  }
-  if (start < text.length) out.push(text.slice(start))
-
-  return out
+  )
 }
