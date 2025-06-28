@@ -1,4 +1,4 @@
-// this is a polyfill for RegExp.escape. It is already
+// this is a "polyfill" for RegExp.escape. It is already
 // available in latest browsers and Node 24, but not available in
 // Node 22 yet, so we use a polyfill for it until we migrate to 24
 // see: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/escape#browser_compatibility
