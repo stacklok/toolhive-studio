@@ -12,8 +12,9 @@ import { DialogFormRunMcpServerWithCommand } from '@/features/mcp-servers/compon
 import { GridCardsMcpServers } from '@/features/mcp-servers/components/grid-cards-mcp-server'
 import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/menu-run-mcp-server'
 import { useRunCustomServer } from '@/features/mcp-servers/hooks/use-run-custom-server'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
+import { useMutationRestartServers } from '@/features/mcp-servers/hooks/use-mutation-restart-server'
 
 export const Route = createFileRoute('/')({
   loader: ({ context: { queryClient } }) =>
@@ -30,6 +31,31 @@ export function Index() {
   const workloads = data?.workloads ?? []
   const [isRunWithCommandOpen, setIsRunWithCommandOpen] = useState(false)
   const { handleSubmit } = useRunCustomServer()
+  const { mutateAsync } = useMutationRestartServers()
+  const hasProcessedShutdown = useRef(false)
+
+  useEffect(() => {
+    const handleShutdownRestart = async () => {
+      try {
+        if (hasProcessedShutdown.current) return
+        hasProcessedShutdown.current = true
+
+        const servers =
+          await window.electronAPI.shutdownStore.getLastShutdownServers()
+        if (servers.length === 0) return
+
+        await window.electronAPI.shutdownStore.clearShutdownHistory()
+
+        console.log('Restarting servers from last shutdown:', servers)
+        await mutateAsync({ body: { names: servers } })
+        console.log('Shutdown history cleared')
+      } catch (error) {
+        console.error('Error during shutdown server restart:', error)
+      }
+    }
+
+    handleShutdownRestart()
+  }, [mutateAsync])
 
   return (
     <>
