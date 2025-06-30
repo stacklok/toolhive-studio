@@ -1,12 +1,24 @@
 import { screen, waitFor, within } from '@testing-library/react'
-import { expect, it, vi, beforeEach } from 'vitest'
+import { expect, it, vi, beforeEach, describe } from 'vitest'
 import { Index } from '../index'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { MOCK_MCP_SERVERS } from '@/common/mocks/fixtures/servers'
 import userEvent from '@testing-library/user-event'
+import * as restartServerHook from '@/features/mcp-servers/hooks/use-mutation-restart-server'
 
 const router = createTestRouter(Index)
+
+// Mock electron API
+Object.defineProperty(window, 'electronAPI', {
+  value: {
+    shutdownStore: {
+      getLastShutdownServers: vi.fn().mockResolvedValue([]),
+      clearShutdownHistory: vi.fn().mockResolvedValue(undefined),
+    },
+  },
+  writable: true,
+})
 
 beforeEach(() => {
   // Reset mocks before each test
@@ -148,4 +160,57 @@ it('allows deleting a server through the dropdown menu', async () => {
   // Confirm deletion
   const confirmButton = screen.getByRole('button', { name: /remove/i })
   await userEvent.click(confirmButton)
+})
+
+describe('Shutdown server restart', () => {
+  let mockMutateAsync: ReturnType<typeof vi.fn>
+
+  beforeEach(() => {
+    mockMutateAsync = vi.fn()
+    vi.spyOn(restartServerHook, 'useMutationRestartServers').mockReturnValue({
+      mutateAsync: mockMutateAsync,
+    } as unknown as ReturnType<
+      typeof restartServerHook.useMutationRestartServers
+    >)
+  })
+
+  it('should restart servers from last shutdown when servers exist', async () => {
+    const shutdownServers = ['server1', 'server2']
+    window.electronAPI.shutdownStore.getLastShutdownServers = vi
+      .fn()
+      .mockResolvedValue(shutdownServers)
+
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(
+        window.electronAPI.shutdownStore.getLastShutdownServers
+      ).toHaveBeenCalledOnce()
+      expect(mockMutateAsync).toHaveBeenCalledWith({
+        body: { names: shutdownServers },
+      })
+      expect(
+        window.electronAPI.shutdownStore.clearShutdownHistory
+      ).toHaveBeenCalledOnce()
+    })
+  })
+
+  it('should not restart servers when no servers from last shutdown', async () => {
+    window.electronAPI.shutdownStore.getLastShutdownServers = vi
+      .fn()
+      .mockResolvedValue([])
+
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(
+        window.electronAPI.shutdownStore.getLastShutdownServers
+      ).toHaveBeenCalledOnce()
+    })
+
+    expect(mockMutateAsync).not.toHaveBeenCalled()
+    expect(
+      window.electronAPI.shutdownStore.clearShutdownHistory
+    ).not.toHaveBeenCalled()
+  })
 })

@@ -4,16 +4,16 @@ import { IllustrationNoConnection } from '@/common/components/illustrations/illu
 
 import { Button } from '@/common/components/ui/button'
 
+import { useState, useEffect, useRef } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
 import { RefreshButton } from '@/common/components/refresh-button'
+import { LinkViewTransition } from '@/common/components/link-view-transition'
 import { DialogFormRunMcpServerWithCommand } from '@/features/mcp-servers/components/dialog-form-run-mcp-command'
 import { GridCardsMcpServers } from '@/features/mcp-servers/components/grid-cards-mcp-server'
 import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/menu-run-mcp-server'
 import { useRunCustomServer } from '@/features/mcp-servers/hooks/use-run-custom-server'
-import { useState, useEffect, useRef } from 'react'
-import { LinkViewTransition } from '@/common/components/link-view-transition'
 import { useMutationRestartServers } from '@/features/mcp-servers/hooks/use-mutation-restart-server'
 
 export const Route = createFileRoute('/')({
@@ -46,9 +46,7 @@ export function Index() {
 
         await window.electronAPI.shutdownStore.clearShutdownHistory()
 
-        console.log('Restarting servers from last shutdown:', servers)
         await mutateAsync({ body: { names: servers } })
-        console.log('Shutdown history cleared')
       } catch (error) {
         console.error('Error during shutdown server restart:', error)
       }
