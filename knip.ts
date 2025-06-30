@@ -11,7 +11,7 @@ export default {
     'renderer/src/common/test/**/*.{ts,tsx}',
     'renderer/src/common/mocks/**/*.{ts,tsx}',
   ],
-  project: ['renderer/src/**'],
+  project: ['renderer/src/**', 'main/src/**', 'preload/src/**'],
   paths: {
     '@/*': ['renderer/src/*'],
   },
@@ -28,6 +28,7 @@ export default {
     'renderer/src/types/global.d.ts',
     'renderer/src/features/mcp-servers/hooks/use-mutation-restart-server.ts',
     'renderer/src/features/mcp-servers/hooks/use-mutation-stop-server.ts',
+    'main/src/vite-env.d.ts',
   ],
   ignoreDependencies: [
     '@electron-forge/maker-flatpak',
