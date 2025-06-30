@@ -2,6 +2,7 @@
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 
 import { contextBridge, ipcRenderer } from 'electron'
+import type { WorkloadsWorkload } from '../../renderer/src/common/api/generated/types.gen'
 
 // Expose auto-launch functionality to renderer
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -100,7 +101,7 @@ export interface ElectronAPI {
     isMaximized: () => Promise<boolean>
   }
   shutdownStore: {
-    getLastShutdownServers: () => Promise<string[]>
+    getLastShutdownServers: () => Promise<WorkloadsWorkload[]>
     clearShutdownHistory: () => Promise<{ success: boolean }>
   }
 }

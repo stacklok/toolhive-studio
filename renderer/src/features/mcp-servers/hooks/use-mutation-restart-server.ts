@@ -19,7 +19,7 @@ const getMutationData = (name: string) => ({
   loadingMsg: `Starting server ${name}...`,
 })
 
-export function useMutationRestartServers() {
+export function useMutationRestartServerAtStartup() {
   const queryClient = useQueryClient()
   const queryKey = getApiV1BetaWorkloadsQueryKey({ query: { all: true } })
 
@@ -37,14 +37,29 @@ export function useMutationRestartServers() {
         return { previousServersList }
       }
 
+      const shutdownServers =
+        await window.electronAPI.shutdownStore.getLastShutdownServers()
+
       queryClient.setQueryData(
         queryKey,
         (oldData: V1WorkloadListResponse | undefined) => {
           if (!oldData) return oldData
 
+          const seenNames = new Set<string>()
+          const workloads = [
+            ...(oldData.workloads ?? []),
+            ...shutdownServers,
+          ].filter((server) => {
+            if (server.name && !seenNames.has(server.name)) {
+              seenNames.add(server.name)
+              return true
+            }
+            return false
+          })
+
           const updatedData = {
             ...oldData,
-            workloads: oldData.workloads?.map((server: WorkloadsWorkload) =>
+            workloads: workloads?.map((server: WorkloadsWorkload) =>
               serverNames.includes(server.name || '')
                 ? { ...server, status: 'restarting' }
                 : server
@@ -79,6 +94,7 @@ export function useMutationRestartServers() {
         'running'
       )
 
+      await window.electronAPI.shutdownStore.clearShutdownHistory()
       queryClient.invalidateQueries({ queryKey })
     },
     onError: (_error, _variables, context) => {

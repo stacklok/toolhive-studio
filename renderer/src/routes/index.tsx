@@ -14,7 +14,7 @@ import { DialogFormRunMcpServerWithCommand } from '@/features/mcp-servers/compon
 import { GridCardsMcpServers } from '@/features/mcp-servers/components/grid-cards-mcp-server'
 import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/menu-run-mcp-server'
 import { useRunCustomServer } from '@/features/mcp-servers/hooks/use-run-custom-server'
-import { useMutationRestartServers } from '@/features/mcp-servers/hooks/use-mutation-restart-server'
+import { useMutationRestartServerAtStartup } from '@/features/mcp-servers/hooks/use-mutation-restart-server'
 
 export const Route = createFileRoute('/')({
   loader: ({ context: { queryClient } }) =>
@@ -31,7 +31,7 @@ export function Index() {
   const workloads = data?.workloads ?? []
   const [isRunWithCommandOpen, setIsRunWithCommandOpen] = useState(false)
   const { handleSubmit } = useRunCustomServer()
-  const { mutateAsync } = useMutationRestartServers()
+  const { mutateAsync, isSuccess } = useMutationRestartServerAtStartup()
   const hasProcessedShutdown = useRef(false)
 
   useEffect(() => {
@@ -40,13 +40,13 @@ export function Index() {
         if (hasProcessedShutdown.current) return
         hasProcessedShutdown.current = true
 
-        const servers =
+        const shutdownServers =
           await window.electronAPI.shutdownStore.getLastShutdownServers()
-        if (servers.length === 0) return
+        if (shutdownServers.length === 0) return
 
-        await window.electronAPI.shutdownStore.clearShutdownHistory()
-
-        await mutateAsync({ body: { names: servers } })
+        await mutateAsync({
+          body: { names: shutdownServers.map((server) => server.name!) },
+        })
       } catch (error) {
         console.error('Error during shutdown server restart:', error)
       }
@@ -71,7 +71,7 @@ export function Index() {
           onSubmit={handleSubmit}
         />
       </div>
-      {workloads.length === 0 ? (
+      {isSuccess && workloads.length === 0 ? (
         <EmptyState
           title="Add your first MCP server"
           body="You can add a server by running it with a command or by browsing the registry"

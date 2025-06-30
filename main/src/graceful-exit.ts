@@ -17,7 +17,7 @@ const shutdownStore = new Store({
 })
 
 /** Get the currently running servers from the ToolHive API. */
-async function getRunningServers(port: number): Promise<string[]> {
+async function getRunningServers(port: number): Promise<WorkloadsWorkload[]> {
   const client = createClient({ baseUrl: `http://localhost:${port}` })
   try {
     const response = await getApiV1BetaWorkloads({ client })
@@ -25,12 +25,9 @@ async function getRunningServers(port: number): Promise<string[]> {
       console.warn('No workloads data in API response')
       return []
     }
-    return response.data.workloads
-      .filter(
-        (server: WorkloadsWorkload) =>
-          server.status === 'running' && server.name
-      )
-      .map(({ name }: WorkloadsWorkload) => name as string)
+    return response.data.workloads.filter(
+      (server: WorkloadsWorkload) => server.status === 'running' && server.name
+    )
   } catch (error) {
     console.error('Failed to get running servers:', error)
     return []
@@ -70,7 +67,10 @@ export async function stopAllServers(
 ): Promise<void> {
   const client = createClient({ baseUrl: `http://localhost:${port}` })
   const servers = await getRunningServers(port)
-  console.info(`Found ${servers.length} running servers:`, servers)
+  console.info(
+    `Found ${servers.length} running servers:`,
+    servers.map((item) => item.name)
+  )
 
   if (!servers.length) {
     console.info('No running servers – teardown complete')
@@ -84,15 +84,16 @@ export async function stopAllServers(
   console.info(`Stopping ${servers.length} servers…`)
 
   // First, initiate stop for all servers
-  const stopPromises = servers.map(async (name) => {
+  const stopPromises = servers.map(async (server) => {
     try {
+      if (!server.name) return server.name
       await postApiV1BetaWorkloadsByNameStop({
         client,
-        path: { name },
+        path: { name: server.name },
       })
-      return name
+      return server.name
     } catch (error) {
-      console.error(`Failed to initiate stop for server ${name}:`, error)
+      console.error(`Failed to initiate stop for server ${server.name}:`, error)
       throw error
     }
   })

@@ -167,15 +167,21 @@ describe('Shutdown server restart', () => {
 
   beforeEach(() => {
     mockMutateAsync = vi.fn()
-    vi.spyOn(restartServerHook, 'useMutationRestartServers').mockReturnValue({
+    vi.spyOn(
+      restartServerHook,
+      'useMutationRestartServerAtStartup'
+    ).mockReturnValue({
       mutateAsync: mockMutateAsync,
     } as unknown as ReturnType<
-      typeof restartServerHook.useMutationRestartServers
+      typeof restartServerHook.useMutationRestartServerAtStartup
     >)
   })
 
-  it('should restart servers from last shutdown when servers exist', async () => {
-    const shutdownServers = ['server1', 'server2']
+  it('restart servers from last shutdown when servers exist', async () => {
+    const shutdownServers = [
+      { name: 'server1', status: 'stopped' },
+      { name: 'server2', status: 'stopped' },
+    ]
     window.electronAPI.shutdownStore.getLastShutdownServers = vi
       .fn()
       .mockResolvedValue(shutdownServers)
@@ -187,15 +193,12 @@ describe('Shutdown server restart', () => {
         window.electronAPI.shutdownStore.getLastShutdownServers
       ).toHaveBeenCalledOnce()
       expect(mockMutateAsync).toHaveBeenCalledWith({
-        body: { names: shutdownServers },
+        body: { names: ['server1', 'server2'] },
       })
-      expect(
-        window.electronAPI.shutdownStore.clearShutdownHistory
-      ).toHaveBeenCalledOnce()
     })
   })
 
-  it('should not restart servers when no servers from last shutdown', async () => {
+  it('not restart servers when no servers from last shutdown', async () => {
     window.electronAPI.shutdownStore.getLastShutdownServers = vi
       .fn()
       .mockResolvedValue([])
