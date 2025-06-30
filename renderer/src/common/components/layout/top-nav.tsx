@@ -13,7 +13,6 @@ import {
 } from '../ui/navigation-menu'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
-import { isFeatureEnabled } from '@/feature-flags'
 import { Separator } from '../ui/separator'
 import { LinkViewTransition } from '../link-view-transition'
 
@@ -148,8 +147,6 @@ function TopNavLinks() {
 
 export function TopNav(props: HTMLProps<HTMLElement>) {
   useEffect(() => {
-    if (!isFeatureEnabled('update-on-restart')) return
-
     window.electronAPI.onUpdateDownloaded(() => {
       toast.info('Update downloaded and ready to install', {
         duration: Infinity,

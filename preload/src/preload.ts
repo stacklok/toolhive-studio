@@ -54,9 +54,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     isMaximized: () => ipcRenderer.invoke('window-is-maximized'),
   },
 
-  // Auto-upDate
-  onUpdateDownloaded: (callback) =>
-    ipcRenderer.on('update-downloaded', callback),
+  onUpdateDownloaded: (
+    callback: (_event: Electron.IpcRendererEvent) => void
+  ) => {
+    ipcRenderer.on('update-downloaded', callback)
+    return () => {
+      ipcRenderer.removeListener('update-downloaded', callback)
+    }
+  },
 })
 
 export interface ElectronAPI {

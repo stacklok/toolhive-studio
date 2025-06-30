@@ -54,7 +54,7 @@ app.on('ready', () => {
 
     console.debug('Simulating a new release for testing purposes')
     mainWindow.webContents.send('update-downloaded')
-  }, 1000)
+  }, 2000)
 })
 
 autoUpdater.on('update-downloaded', () => {
