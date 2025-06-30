@@ -11,6 +11,7 @@ const router = createTestRouter(() => (
     status="running"
     statusContext={undefined}
     url=""
+    transport="http"
   />
 ))
 
