@@ -16,6 +16,7 @@ import log from 'electron-log/renderer'
 
 import './index.css'
 import { ConfirmProvider } from './common/contexts/confirm/provider'
+import { trackPageView } from './common/lib/analytics'
 
 // Sentry setup
 Sentry.init({
@@ -56,6 +57,15 @@ const router = createRouter({
   routeTree,
   context: { queryClient },
   history: memoryHistory,
+})
+
+router.subscribe('onLoad', (data) => {
+  trackPageView(data.toLocation.pathname, {
+    'route.from': data.fromLocation?.pathname ?? '/',
+    'route.pathname': data.toLocation.pathname,
+    'route.search': JSON.stringify(data.toLocation.search),
+    'route.hash': data.toLocation.hash,
+  })
 })
 
 if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
