@@ -43,16 +43,23 @@ console.log(`Binary file exists: ${existsSync(binPath)}`)
 updateElectronApp()
 
 app.on('ready', () => {
-  if (
-    !mainWindow ||
-    app.isPackaged ||
-    process.env.MOCK_UPDATE_SERVER !== 'true'
-  ) {
-    return
-  }
+  setTimeout(() => {
+    console.log('GOT HERE🍅', {
+      mainWindow,
+      a: app.isPackaged,
+      p: process.MOCK_UPDATE_SERVER,
+    })
+    if (
+      !mainWindow ||
+      app.isPackaged ||
+      process.env.MOCK_UPDATE_SERVER !== 'true'
+    ) {
+      return
+    }
 
-  console.debug('Simulating a new release for testing purposes')
-  mainWindow.webContents.send('update-downloaded')
+    console.debug('Simulating a new release for testing purposes')
+    mainWindow.webContents.send('update-downloaded')
+  }, 1000)
 })
 
 autoUpdater.on('update-downloaded', () => {
