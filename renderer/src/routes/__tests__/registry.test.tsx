@@ -16,7 +16,7 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-it('should render list of MCP servers', async () => {
+it('renders list of MCP servers', async () => {
   server.use(
     http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
       return HttpResponse.json({ servers: MOCK_REGISTRY_RESPONSE })
@@ -60,7 +60,7 @@ const REGISTRY_SERVER = {
   tags: ['foo', 'bar'],
 } as const satisfies RegistryImageMetadata
 
-it('should launch dialog with form when clicking on server', async () => {
+it('launches dialog with form when clicking on server', async () => {
   server.use(
     http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
       return HttpResponse.json({
