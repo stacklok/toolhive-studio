@@ -8,6 +8,7 @@ import {
 import { Switch } from '@/common/components/ui/switch'
 import { useMutationRegisterClient } from '../hooks/use-mutation-register-client'
 import { useMutationUnregisterClient } from '../hooks/use-mutation-unregister-client'
+import { trackEvent } from '@/common/lib/analytics'
 
 // There is an issue with openAPI generator in BE, similar issue https://github.com/stacklok/toolhive/issues/780
 const CLIENT_TYPE_LABEL_MAP = {
@@ -46,11 +47,17 @@ export function CardClient({ client }: { client: ClientMcpClientStatus }) {
                   name: client.client_type ?? '',
                 },
               })
+              trackEvent(`Client ${client.client_type} unregistered`, {
+                client: client.client_type,
+              })
             } else {
               registerClient({
                 body: {
                   name: client.client_type ?? '',
                 },
+              })
+              trackEvent(`Client ${client.client_type} registered`, {
+                client: client.client_type,
               })
             }
           }}
