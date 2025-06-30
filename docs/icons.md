@@ -40,9 +40,6 @@ Below is a table listing the required image sizes:
 
 ## System Tray Icons
 
-System tray icons are in PNG format. The exact implementation differs by
-platform:
-
 ### MacOS
 
 We use `icons/tray-icon.png` & `icons/tray-icon@2x.png`, set to be a template
