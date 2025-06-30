@@ -21,7 +21,7 @@ following folders:
 After the necessary images are updated, you can run the following command:
 
 ```shell
-pnpm run generate-icons:mac
+pnpm run generate-icons
 ```
 
 Below is a table listing the required image sizes:
