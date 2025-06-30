@@ -38,3 +38,23 @@ Below is a table listing the required image sizes:
 |  512.png |   512x512 |                              |       &#10004;       |   `/windows-linux/512.png`<br/>![512x512](../icons/source-files/app-icons/windows-linux/512.png)   |   `/mac/512.png`<br/>![512x512](../icons/source-files/app-icons/mac/512.png)   |
 | 1024.png | 1024x1024 |                              |       &#10004;       | `/windows-linux/1024.png`<br/>![1024x1024](../icons/source-files/app-icons/windows-linux/1024.png) | `/mac/1024.png`<br/>![1024x1024](../icons/source-files/app-icons/mac/1024.png) |
 
+## System Tray Icons
+
+System tray icons are in PNG format. The exact implementation differs by
+platform:
+
+### MacOS
+
+We use `icons/tray-icon.png` & `icons/tray-icon@2x.png`, set to be a template
+image with electron's
+[`setTemplateImage`](https://www.electronjs.org/docs/latest/api/native-image#imagesettemplateimageoption)
+method. This allows the OS to render the icon in a way that matches the system
+theme (light/dark mode).
+
+### Windows
+
+We use the app icon as the system tray icon, scaled down to 16x16 pixels.
+
+### Linux
+
+We use `icons/tray-icon.png` & `icons/tray-icon@2x.png`.
