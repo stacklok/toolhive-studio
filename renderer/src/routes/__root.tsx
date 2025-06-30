@@ -20,7 +20,7 @@ import '@fontsource/atkinson-hyperlegible/400.css'
 import '@fontsource/atkinson-hyperlegible/700.css'
 import '@fontsource/atkinson-hyperlegible/400-italic.css'
 import '@fontsource/atkinson-hyperlegible/700-italic.css'
-import '@fontsource-variable/inter/opsz-italic.css'
+import '@fontsource-variable/inter/wght.css'
 
 async function setupSecretProvider(queryClient: QueryClient) {
   const createEncryptedProvider = () =>
