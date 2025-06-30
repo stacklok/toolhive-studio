@@ -1,4 +1,3 @@
 {
-  "update-on-restart": false,
-  "logs": true
+  "update-on-restart": false
 }

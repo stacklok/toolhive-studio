@@ -23,7 +23,6 @@ import { useDeleteServer } from '../hooks/use-delete-server'
 import { useQuery } from '@tanstack/react-query'
 import { useSearch } from '@tanstack/react-router'
 import { getApiV1BetaRegistryByNameServersByServerName } from '@/common/api/generated/sdk.gen'
-import { isFeatureEnabled } from '@/feature-flags'
 import { useEffect, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 
@@ -194,17 +193,15 @@ export function CardMcpServer({
                   </a>
                 </DropdownMenuItem>
               )}
-              {isFeatureEnabled('logs') ? (
-                <DropdownMenuItem
-                  asChild
-                  className="flex cursor-pointer items-center"
-                >
-                  <Link to="/logs/$serverName" params={{ serverName: name }}>
-                    <Text className="mr-2 h-4 w-4" />
-                    Logs
-                  </Link>
-                </DropdownMenuItem>
-              ) : null}
+              <DropdownMenuItem
+                asChild
+                className="flex cursor-pointer items-center"
+              >
+                <Link to="/logs/$serverName" params={{ serverName: name }}>
+                  <Text className="mr-2 h-4 w-4" />
+                  Logs
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={handleRemove}
                 disabled={isDeletePending}
