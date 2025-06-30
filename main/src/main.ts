@@ -39,6 +39,7 @@ declare const MAIN_WINDOW_VITE_NAME: string
 console.log(`ToolHive binary path: ${binPath}`)
 console.log(`Binary file exists: ${existsSync(binPath)}`)
 
+// this implements auto-update
 updateElectronApp()
 
 app.on('ready', () => {
