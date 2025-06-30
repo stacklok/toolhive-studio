@@ -1,16 +1,28 @@
-# App icons (macOS)
+# Icons
 
-Icons for macOS use the `.icns` format, which is a container for multiple image
-sizes and resolutions. This allows the operating system to choose the best icon
-for different contexts, such as the Dock, Finder, and application windows.
+## App Icons
 
-The `.icns` is produced using the `iconutil` command on a macOS system. There is
-an npm script in the `package.json` file that automates this process `generate-icons:mac`.
+*e.g. The icon shown in the Windows taskbar, macOS Dock, etc*
+
+We use the following formats for application icons:
+- **macOS**: ICNS format
+- **Windows**: ICO format
+- **Linux**: PNG format
+
+These are generated from a set of source images located in `icons/source-files`
+
+### Updating app icons
 
 To update the application icons, you will need to replace the images in the
 following folders:
 - `icons/source-files/app-icons/windows-linux/`
 - `icons/source-files/app-icons/mac/`
+
+After the necessary images are updated, you can run the following command:
+
+```shell
+pnpm run generate-icons:mac
+```
 
 Below is a table listing the required image sizes:
 
@@ -26,8 +38,3 @@ Below is a table listing the required image sizes:
 |  512.png |   512x512 |                              |       &#10004;       |   `/windows-linux/512.png`<br/>![512x512](../icons/source-files/app-icons/windows-linux/512.png)   |   `/mac/512.png`<br/>![512x512](../icons/source-files/app-icons/mac/512.png)   |
 | 1024.png | 1024x1024 |                              |       &#10004;       | `/windows-linux/1024.png`<br/>![1024x1024](../icons/source-files/app-icons/windows-linux/1024.png) | `/mac/1024.png`<br/>![1024x1024](../icons/source-files/app-icons/mac/1024.png) |
 
-After the necessary images are updated, you can run the following command:
-
-```shell
-pnpm run generate-icons:mac
-```
