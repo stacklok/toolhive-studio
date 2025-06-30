@@ -148,26 +148,22 @@ function TopNavLinks() {
 
 export function TopNav(props: HTMLProps<HTMLElement>) {
   useEffect(() => {
-    // this handles notifications for update-on-restart
-    // TODO: actually implement and test that this is only
-    // shown after an update is downloaded
-    //
-    if (!isFeatureEnabled('update-on-restart')) {
-      return
-    }
+    if (!isFeatureEnabled('update-on-restart')) return
 
-    toast.info('Update installed!', {
-      duration: Infinity,
-      dismissible: true,
-      id: 'update-notification',
-      cancel: {
-        label: 'Dismiss',
-        onClick: () => toast.dismiss('update-notification'),
-      },
-      action: {
-        label: 'Restart now',
-        onClick: () => window.electronAPI.quitApp(),
-      },
+    window.electronAPI.onUpdateDownloaded(() => {
+      toast.info('Update downloaded and ready to install', {
+        duration: Infinity,
+        dismissible: true,
+        id: 'update-notification',
+        cancel: {
+          label: 'Dismiss',
+          onClick: () => toast.dismiss('update-notification'),
+        },
+        action: {
+          label: 'Restart now',
+          onClick: () => window.electronAPI.quitApp(),
+        },
+      })
     })
   }, [])
 
