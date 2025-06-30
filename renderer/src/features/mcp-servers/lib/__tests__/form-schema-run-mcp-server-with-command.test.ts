@@ -214,7 +214,7 @@ it('fails when transport is empty', () => {
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
-        transport: ['Please select either SSE or stdio.'],
+        transport: ['Please select either SSE, stdio, or streamable-http.'],
       }),
     })
   )
@@ -243,7 +243,7 @@ it('fails when transport is invalid', () => {
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       fieldErrors: expect.objectContaining({
-        transport: ['Please select either SSE or stdio.'],
+        transport: ['Please select either SSE, stdio, or streamable-http.'],
       }),
     })
   )
