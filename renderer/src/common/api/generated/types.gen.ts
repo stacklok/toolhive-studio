@@ -138,19 +138,27 @@ export type RegistryImageMetadata = {
    */
   repository_url?: string
   /**
+   * The Status indicates whether the server is currently active or deprecated
+   */
+  status?: string
+  /**
    * Tags are categorization labels for the server to aid in discovery and filtering
    */
   tags?: Array<string>
   /**
-   * TargetPort is the port for the container to expose (only applicable to SSE transport)
+   * TargetPort is the port for the container to expose (only applicable to SSE and Streamable HTTP transports)
    */
   target_port?: number
+  /**
+   * Tier represents the tier classification level of the server, e.g., "official" or "community" driven
+   */
+  tier?: string
   /**
    * Tools is a list of tool names provided by this MCP server
    */
   tools?: Array<string>
   /**
-   * Transport defines the communication protocol for the server (stdio or sse)
+   * Transport defines the communication protocol for the server (stdio, sse, or streamable-http)
    */
   transport?: string
 }
