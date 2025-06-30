@@ -132,3 +132,21 @@ export const pollServerDelete = async (
   )
   return result.success
 }
+
+export const pollBatchServerStatus = async (
+  fetchServers: (serverNames: string[]) => Promise<WorkloadsWorkload[]>,
+  serverNames: string[],
+  status: string,
+  config?: PollingConfig
+): Promise<{ success: boolean; results: WorkloadsWorkload[] }> => {
+  const result = await pollUntilTrue(
+    () => fetchServers(serverNames),
+    (servers) => servers.every((server) => server?.status === status),
+    config
+  )
+
+  return {
+    success: result.success,
+    results: result.result || [],
+  }
+}
