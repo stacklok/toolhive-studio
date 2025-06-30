@@ -1,73 +1,49 @@
-import {
-  Menu,
-  Tray,
-  app,
-  nativeImage,
-  nativeTheme,
-  BrowserWindow,
-} from 'electron'
+import { Menu, Tray, app, nativeImage, BrowserWindow } from 'electron'
 import path from 'node:path'
-import { existsSync } from 'node:fs'
 import { blockQuit } from './main'
 import { getAutoLaunchStatus, setAutoLaunch } from './auto-launch'
 import { createApplicationMenu } from './menu'
 
-const getIconBasePath = () =>
-  app.isPackaged
+///////////////////////////////////////////////////
+// Tray icon
+///////////////////////////////////////////////////
+
+function getIcon(): Electron.NativeImage {
+  const basePath: string = app.isPackaged
     ? path.join(process.resourcesPath, 'icons')
     : path.join(__dirname, '..', '..', 'icons')
 
-const getIconName = (isDarkMode: boolean) => {
-  if (process.platform === 'win32') return 'icon.ico'
-  return isDarkMode ? 'tray-icon-dark.png' : 'tray-icon.png'
+  switch (process.platform) {
+    case 'darwin': {
+      const image = nativeImage.createFromPath(
+        path.join(basePath, 'tray-icon.png')
+      )
+      // adapt between light/dark modes
+      image.setTemplateImage(true)
+      return image
+    }
+    case 'win32': {
+      const image = nativeImage.createFromPath(path.join(basePath, 'icon.ico'))
+      return image.resize({ width: 16, height: 16 })
+    }
+    default: {
+      const image = nativeImage.createFromPath(
+        path.join(basePath, 'tray-icon.png')
+      )
+      return image
+    }
+  }
 }
 
-const getFallbackIconName = () =>
-  process.platform === 'win32' ? 'icon.ico' : 'icon.png'
-
-const createIconPath = (iconName: string) =>
-  path.join(getIconBasePath(), iconName)
-
-const resolveIconPath = () => {
-  const isDarkMode = nativeTheme.shouldUseDarkColors
-  const preferredPath = createIconPath(getIconName(isDarkMode))
-
-  if (existsSync(preferredPath)) {
-    return preferredPath
-  }
-
-  console.warn(
-    `Preferred tray icon not found at: ${preferredPath}, trying fallback`
-  )
-  const fallbackPath = createIconPath(getFallbackIconName())
-
-  if (!existsSync(fallbackPath)) {
-    throw new Error(`No suitable icon found at ${fallbackPath}`)
-  }
-
-  return fallbackPath
-}
-
-const createTrayImage = (iconPath: string) => {
-  console.log(`Using tray icon: ${iconPath}`)
-  const image = nativeImage.createFromPath(iconPath)
-
-  if (image.isEmpty()) {
-    throw new Error(`Failed to create image from path: ${iconPath}`)
-  }
-
-  return process.platform === 'win32'
-    ? image.resize({ width: 16, height: 16 })
-    : image
-}
+///////////////////////////////////////////////////
+// Tray icon & menu
+///////////////////////////////////////////////////
 
 const createTrayWithSetup =
   (setupFn: (tray: Tray, toolHiveIsRunning: boolean) => void) =>
   (toolHiveIsRunning: boolean) => {
     try {
-      const iconPath = resolveIconPath()
-      const image = createTrayImage(iconPath)
-      const tray = new Tray(image)
+      const tray = new Tray(getIcon())
 
       setupFn(tray, toolHiveIsRunning)
       return tray
