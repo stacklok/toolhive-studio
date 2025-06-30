@@ -2,7 +2,7 @@ import { prepareSecretsWithoutNamingCollision } from '../prepare-secrets-without
 
 import { test, expect } from 'vitest'
 
-test('should use original names when no collisions exist', () => {
+test('uses original names when no collisions exist', () => {
   expect(
     prepareSecretsWithoutNamingCollision(
       [
@@ -33,7 +33,7 @@ test('should use original names when no collisions exist', () => {
   ])
 })
 
-test('should append number suffix on collision', () => {
+test('appends number suffix on collision', () => {
   expect(
     prepareSecretsWithoutNamingCollision(
       [
@@ -67,7 +67,7 @@ test('should append number suffix on collision', () => {
   ])
 })
 
-test('should increment number suffix when collision exists with numbered secret', () => {
+test('increments number suffix when collision exists with numbered secret', () => {
   expect(
     prepareSecretsWithoutNamingCollision(
       [
@@ -103,7 +103,7 @@ test('should increment number suffix when collision exists with numbered secret'
   ])
 })
 
-test('should throw when secret from store is passed', () => {
+test('throws when secret from store is passed', () => {
   expect(() =>
     prepareSecretsWithoutNamingCollision(
       [

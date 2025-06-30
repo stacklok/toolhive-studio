@@ -26,7 +26,7 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-it('should submit without any optional fields', async () => {
+it('submits without any optional fields', async () => {
   const mockSaveSecret = vi.fn()
   const mockCreateWorkload = vi.fn()
   const mockGetIsServerReady = vi.fn().mockResolvedValue(true)
@@ -75,7 +75,7 @@ it('should submit without any optional fields', async () => {
   )
 })
 
-it('should handle new secrets properly', async () => {
+it('handles new secrets properly', async () => {
   server.use(
     http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
       return HttpResponse.json({ keys: [] })
@@ -145,7 +145,7 @@ it('should handle new secrets properly', async () => {
   )
 })
 
-it('should handle existing secrets from the store properly', async () => {
+it('handles existing secrets from the store properly', async () => {
   server.use(
     http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
       return HttpResponse.json({
@@ -197,7 +197,7 @@ it('should handle existing secrets from the store properly', async () => {
   })
 })
 
-it('should handle naming collisions with secrets from the store', async () => {
+it('handles naming collisions with secrets from the store', async () => {
   server.use(
     http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
       return HttpResponse.json({
@@ -256,7 +256,7 @@ it('should handle naming collisions with secrets from the store', async () => {
   })
 })
 
-it('should handle both new and existing secrets', async () => {
+it('handles both new and existing secrets', async () => {
   const mockSaveSecret = vi.fn().mockResolvedValue({ key: 'new_secret_key' })
   const mockCreateWorkload = vi.fn()
   const mockGetIsServerReady = vi.fn().mockResolvedValue(true)
@@ -309,7 +309,7 @@ it('should handle both new and existing secrets', async () => {
   })
 })
 
-it('should handle error when saving a secret fails', async () => {
+it('handles error when saving a secret fails', async () => {
   const mockError = new Error('Failed to save secret')
   const mockSaveSecret = vi.fn().mockRejectedValue(mockError)
   const mockCreateWorkload = vi.fn()
@@ -352,7 +352,7 @@ it('should handle error when saving a secret fails', async () => {
   )
 })
 
-it('should handle environment variables properly', async () => {
+it('handles environment variables properly', async () => {
   const mockSaveSecret = vi.fn()
   const mockCreateWorkload = vi.fn()
   const mockGetIsServerReady = vi.fn().mockResolvedValue(true)
@@ -388,7 +388,7 @@ it('should handle environment variables properly', async () => {
   })
 })
 
-it('should handle command arguments properly', async () => {
+it('handles command arguments properly', async () => {
   const mockSaveSecret = vi.fn()
   const mockCreateWorkload = vi.fn()
   const mockGetIsServerReady = vi.fn().mockResolvedValue(true)
@@ -421,7 +421,7 @@ it('should handle command arguments properly', async () => {
   })
 })
 
-it('should show warning toast when server is not ready', async () => {
+it('shows warning toast when server is not ready', async () => {
   const mockSaveSecret = vi.fn()
   const mockCreateWorkload = vi.fn()
   const mockGetIsServerReady = vi.fn().mockResolvedValue(false)
@@ -458,7 +458,7 @@ it('should show warning toast when server is not ready', async () => {
   expect(toast.success).not.toHaveBeenCalled()
 })
 
-it('should handle package manager type properly', async () => {
+it('handles package manager type properly', async () => {
   const mockSaveSecret = vi.fn()
   const mockCreateWorkload = vi.fn()
   const mockGetIsServerReady = vi.fn().mockResolvedValue(true)

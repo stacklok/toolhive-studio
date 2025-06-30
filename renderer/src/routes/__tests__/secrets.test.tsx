@@ -11,7 +11,7 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-it('should render the table with secrets', async () => {
+it('renders the table with secrets', async () => {
   renderRoute(router)
 
   await waitFor(() => {
@@ -38,7 +38,7 @@ it('should render the table with secrets', async () => {
   expect(screen.getByText('Delete')).toBeInTheDocument()
 })
 
-it('should render add secret dialog when clicking add secret button', async () => {
+it('renders add secret dialog when clicking add secret button', async () => {
   renderRoute(router)
 
   await waitFor(() => {
@@ -59,7 +59,7 @@ it('should render add secret dialog when clicking add secret button', async () =
   expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
 })
 
-it('should render edit secret dialog when clicking edit from dropdown', async () => {
+it('renders edit secret dialog when clicking edit from dropdown', async () => {
   renderRoute(router)
 
   await waitFor(() => {
