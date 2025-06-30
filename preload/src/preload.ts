@@ -53,6 +53,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     close: () => ipcRenderer.invoke('window-close'),
     isMaximized: () => ipcRenderer.invoke('window-is-maximized'),
   },
+
+  // Shutdown store
+  shutdownStore: {
+    getLastShutdownServers: () =>
+      ipcRenderer.invoke('shutdown-store:get-last-servers'),
+    clearShutdownHistory: () =>
+      ipcRenderer.invoke('shutdown-store:clear-history'),
+  },
 })
 
 export interface ElectronAPI {
@@ -90,5 +98,9 @@ export interface ElectronAPI {
     maximize: () => Promise<void>
     close: () => Promise<void>
     isMaximized: () => Promise<boolean>
+  }
+  shutdownStore: {
+    getLastShutdownServers: () => Promise<string[]>
+    clearShutdownHistory: () => Promise<{ success: boolean }>
   }
 }

@@ -4,8 +4,17 @@ import {
   postApiV1BetaWorkloadsByNameStop,
 } from '../../renderer/src/common/api/generated/sdk.gen'
 import type { WorkloadsWorkload } from '../../renderer/src/common/api/generated/types.gen'
+import Store from 'electron-store'
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+// Create a store instance for tracking shutdown servers
+const shutdownStore = new Store({
+  name: 'server-shutdown',
+  defaults: {
+    lastShutdownServers: [],
+  },
+})
 
 /** Get the currently running servers from the ToolHive API. */
 async function getRunningServers(port: number): Promise<string[]> {
@@ -68,6 +77,10 @@ export async function stopAllServers(
     return
   }
 
+  // Store the servers that are about to be shut down
+  shutdownStore.set('lastShutdownServers', servers)
+  console.info(`Stored ${servers.length} servers for shutdown tracking`)
+
   console.info(`Stopping ${servers.length} servers…`)
 
   // First, initiate stop for all servers
@@ -97,4 +110,15 @@ export async function stopAllServers(
   }
 
   console.info('All servers stopped cleanly')
+}
+
+/** Get the list of servers that were shut down in the last shutdown */
+export function getLastShutdownServers(): string[] {
+  return shutdownStore.get('lastShutdownServers', []) as string[]
+}
+
+/** Clear the shutdown history */
+export function clearShutdownHistory(): void {
+  shutdownStore.set('lastShutdownServers', [])
+  console.info('Shutdown history cleared')
 }
