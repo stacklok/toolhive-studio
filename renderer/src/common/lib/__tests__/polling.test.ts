@@ -13,7 +13,7 @@ describe('Polling Utility', () => {
   })
 
   describe('pollServerStatus', () => {
-    it('should return true when server reaches desired status', async () => {
+    it('returns true when server reaches desired status', async () => {
       const mockFetchServer = vi
         .fn()
         .mockResolvedValueOnce({ status: 'starting' } as WorkloadsWorkload)
@@ -31,7 +31,7 @@ describe('Polling Utility', () => {
       expect(mockFetchServer).toHaveBeenCalledTimes(2)
     })
 
-    it('should return false when server never reaches desired status', async () => {
+    it('returns false when server never reaches desired status', async () => {
       const mockFetchServer = vi
         .fn()
         .mockResolvedValue({ status: 'starting' } as WorkloadsWorkload)
@@ -48,7 +48,7 @@ describe('Polling Utility', () => {
       expect(mockFetchServer).toHaveBeenCalledTimes(3)
     })
 
-    it('should handle fetch errors and continue polling', async () => {
+    it('handles fetch errors and continue polling', async () => {
       const mockFetchServer = vi
         .fn()
         .mockRejectedValueOnce(new Error('Network error'))
@@ -66,7 +66,7 @@ describe('Polling Utility', () => {
       expect(mockFetchServer).toHaveBeenCalledTimes(2)
     })
 
-    it('should return true immediately if first attempt matches', async () => {
+    it('returns true immediately if first attempt matches', async () => {
       const mockFetchServer = vi
         .fn()
         .mockResolvedValueOnce({ status: 'running' } as WorkloadsWorkload)
@@ -80,7 +80,7 @@ describe('Polling Utility', () => {
       expect(mockFetchServer).toHaveBeenCalledTimes(1)
     })
 
-    it('should work with different status values', async () => {
+    it('works with different status values', async () => {
       const mockFetchServer = vi
         .fn()
         .mockResolvedValueOnce({ status: 'starting' } as WorkloadsWorkload)
@@ -98,7 +98,7 @@ describe('Polling Utility', () => {
       expect(mockFetchServer).toHaveBeenCalledTimes(2)
     })
 
-    it('should respect custom configuration', async () => {
+    it('respects custom configuration', async () => {
       const mockFetchServer = vi
         .fn()
         .mockResolvedValue({ status: 'starting' } as WorkloadsWorkload)
@@ -117,7 +117,7 @@ describe('Polling Utility', () => {
   })
 
   describe('pollServerDelete', () => {
-    it('should return true when server fetch fails (server deleted)', async () => {
+    it('returns true when server fetch fails (server deleted)', async () => {
       const mockFetchServer = vi
         .fn()
         .mockResolvedValueOnce({ status: 'running' } as WorkloadsWorkload)
@@ -135,7 +135,7 @@ describe('Polling Utility', () => {
       expect(mockFetchServer).toHaveBeenCalledTimes(2)
     })
 
-    it('should return true immediately if first attempt fails', async () => {
+    it('returns true immediately if first attempt fails', async () => {
       const mockFetchServer = vi
         .fn()
         .mockRejectedValueOnce(new Error('Not found'))
@@ -149,7 +149,7 @@ describe('Polling Utility', () => {
       expect(mockFetchServer).toHaveBeenCalledTimes(1)
     })
 
-    it('should return false if server never gets deleted', async () => {
+    it('returns false if server never gets deleted', async () => {
       const mockFetchServer = vi
         .fn()
         .mockResolvedValue({ status: 'running' } as WorkloadsWorkload)
@@ -166,7 +166,7 @@ describe('Polling Utility', () => {
       expect(mockFetchServer).toHaveBeenCalledTimes(3)
     })
 
-    it('should handle mixed scenarios (running then deleted)', async () => {
+    it('handles mixed scenarios (running then deleted)', async () => {
       const mockFetchServer = vi
         .fn()
         .mockResolvedValueOnce({ status: 'running' } as WorkloadsWorkload)
@@ -187,7 +187,7 @@ describe('Polling Utility', () => {
   })
 
   describe('Configuration Options', () => {
-    it('should respect delayFirst option', async () => {
+    it('respects delayFirst option', async () => {
       const mockFetchServer = vi
         .fn()
         .mockResolvedValue({ status: 'running' } as WorkloadsWorkload)
@@ -204,7 +204,7 @@ describe('Polling Utility', () => {
       expect(mockFetchServer).toHaveBeenCalledTimes(1)
     })
 
-    it('should use default configuration when none provided', async () => {
+    it('uses default configuration when none provided', async () => {
       const mockFetchServer = vi
         .fn()
         .mockResolvedValue({ status: 'running' } as WorkloadsWorkload)
@@ -217,7 +217,7 @@ describe('Polling Utility', () => {
   })
 
   describe('Edge Cases', () => {
-    it('should handle undefined server data', async () => {
+    it('handles undefined server data', async () => {
       const mockFetchServer = vi
         .fn()
         .mockResolvedValueOnce(undefined as unknown as WorkloadsWorkload)
@@ -235,7 +235,7 @@ describe('Polling Utility', () => {
       expect(mockFetchServer).toHaveBeenCalledTimes(2)
     })
 
-    it('should handle null server data', async () => {
+    it('handles null server data', async () => {
       const mockFetchServer = vi
         .fn()
         .mockResolvedValueOnce(null as unknown as WorkloadsWorkload)
@@ -253,7 +253,7 @@ describe('Polling Utility', () => {
       expect(mockFetchServer).toHaveBeenCalledTimes(2)
     })
 
-    it('should handle server with missing status', async () => {
+    it('handles server with missing status', async () => {
       const mockFetchServer = vi
         .fn()
         .mockResolvedValueOnce({} as WorkloadsWorkload)
@@ -271,7 +271,7 @@ describe('Polling Utility', () => {
       expect(mockFetchServer).toHaveBeenCalledTimes(2)
     })
 
-    it('should handle zero maxAttempts', async () => {
+    it('handles zero maxAttempts', async () => {
       const mockFetchServer = vi.fn()
 
       const result = await pollServerStatus(mockFetchServer, 'running', {
@@ -285,7 +285,7 @@ describe('Polling Utility', () => {
   })
 
   describe('Performance and Timing', () => {
-    it('should not delay before first attempt by default', async () => {
+    it('does not delay before first attempt by default', async () => {
       const mockFetchServer = vi
         .fn()
         .mockResolvedValue({ status: 'running' } as WorkloadsWorkload)
@@ -301,7 +301,7 @@ describe('Polling Utility', () => {
       expect(mockFetchServer).toHaveBeenCalledTimes(1)
     })
 
-    it('should respect interval timing between attempts', async () => {
+    it('respects interval timing between attempts', async () => {
       const mockFetchServer = vi
         .fn()
         .mockResolvedValueOnce({ status: 'starting' } as WorkloadsWorkload)

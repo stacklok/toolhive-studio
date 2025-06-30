@@ -76,7 +76,7 @@ const ENV_VARS_REQUIRED = [
   },
 ] as const satisfies RegistryEnvVar[]
 
-it('should allow form submission with "inline" secret', async () => {
+it('allows form submission with "inline" secret', async () => {
   const server = REGISTRY_SERVER
   server.env_vars = ENV_VARS_OPTIONAL
 
@@ -142,7 +142,7 @@ it('should allow form submission with "inline" secret', async () => {
   expect(onOpenChange).toHaveBeenCalledWith(false)
 })
 
-it('should allow form submission with secret from store', async () => {
+it('allows form submission with secret from store', async () => {
   const mockServer = REGISTRY_SERVER
   mockServer.env_vars = ENV_VARS_OPTIONAL
 
@@ -224,7 +224,7 @@ it('should allow form submission with secret from store', async () => {
   expect(onOpenChange).toHaveBeenCalledWith(false)
 })
 
-it('should allow form submission without optional vars', async () => {
+it('allows form submission without optional vars', async () => {
   const server = REGISTRY_SERVER
   server.env_vars = ENV_VARS_OPTIONAL
 
@@ -283,7 +283,7 @@ it('should allow form submission without optional vars', async () => {
   expect(onOpenChange).toHaveBeenCalledWith(false)
 })
 
-it('should allow form submission with populated required vars', async () => {
+it('allows form submission with populated required vars', async () => {
   const server = REGISTRY_SERVER
   server.env_vars = ENV_VARS_REQUIRED
 
@@ -349,7 +349,7 @@ it('should allow form submission with populated required vars', async () => {
   expect(onOpenChange).toHaveBeenCalledWith(false)
 })
 
-it('should render validation errors when required variables missing', async () => {
+it('renders validation errors when required variables missing', async () => {
   const server = REGISTRY_SERVER
   server.env_vars = ENV_VARS_REQUIRED
 
