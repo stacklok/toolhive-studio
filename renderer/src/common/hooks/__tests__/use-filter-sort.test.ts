@@ -27,27 +27,27 @@ describe('useFilterSort', () => {
         filter: 'apple',
         expectedLength: 1,
         expectedNames: ['Apple'],
-        description: 'filter data based on name field',
+        description: 'filters data based on name field',
       },
       {
         filter: 'fruit',
         expectedLength: 3,
         expectedNames: ['Apple', 'Banana', 'Cherry'],
-        description: 'filter data based on description field',
+        description: 'filters data based on description field',
       },
       {
         filter: 'APPLE',
         expectedLength: 1,
         expectedNames: ['Apple'],
-        description: 'be case insensitive when filtering',
+        description: 'is case insensitive when filtering',
       },
       {
         filter: 'red',
         expectedLength: 2,
         expectedNames: ['Apple', 'Cherry'],
-        description: 'filter across multiple description matches',
+        description: 'filters across multiple description matches',
       },
-    ])('should $description', ({ filter, expectedLength, expectedNames }) => {
+    ])('$description', ({ filter, expectedLength, expectedNames }) => {
       const { result } = renderHook(() => useFilterSort(defaultOptions))
 
       act(() => {
@@ -66,14 +66,14 @@ describe('useFilterSort', () => {
       {
         sortOrder: 'asc' as const,
         expectedNames: ['Apple', 'Banana', 'Cherry', 'Zebra'],
-        description: 'sort data alphabetically in ascending order by default',
+        description: 'sorts data alphabetically in ascending order by default',
       },
       {
         sortOrder: 'desc' as const,
         expectedNames: ['Zebra', 'Cherry', 'Banana', 'Apple'],
-        description: 'sort data in descending order when sortOrder is desc',
+        description: 'sorts data in descending order when sortOrder is desc',
       },
-    ])('should $description', ({ sortOrder, expectedNames }) => {
+    ])('$description', ({ sortOrder, expectedNames }) => {
       const { result } = renderHook(() =>
         useFilterSort({ ...defaultOptions, sortOrder })
       )

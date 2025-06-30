@@ -32,7 +32,7 @@ const queryClient = new QueryClient({
   },
 })
 
-it('should be able to run an MCP server while omitting optional fields', async () => {
+it('is able to run an MCP server while omitting optional fields', async () => {
   render(
     <QueryClientProvider client={queryClient}>
       <Dialog open>
@@ -69,7 +69,7 @@ it('should be able to run an MCP server while omitting optional fields', async (
   })
 })
 
-it('should be able to run an MCP server with docker', async () => {
+it('is able to run an MCP server with docker', async () => {
   render(
     <QueryClientProvider client={queryClient}>
       <Dialog open>
@@ -169,7 +169,7 @@ it('should be able to run an MCP server with docker', async () => {
   ])
 })
 
-it('should be able to run an MCP server with npx', async () => {
+it('is able to run an MCP server with npx', async () => {
   render(
     <QueryClientProvider client={queryClient}>
       <Dialog open>
@@ -273,7 +273,7 @@ it('should be able to run an MCP server with npx', async () => {
   ])
 })
 
-it('should be able to run an MCP server with uvx', async () => {
+it('is able to run an MCP server with uvx', async () => {
   render(
     <QueryClientProvider client={queryClient}>
       <Dialog open>
@@ -377,7 +377,7 @@ it('should be able to run an MCP server with uvx', async () => {
   ])
 })
 
-it('should be able to run an MCP server with go', async () => {
+it('is able to run an MCP server with go', async () => {
   render(
     <QueryClientProvider client={queryClient}>
       <Dialog open>

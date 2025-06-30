@@ -13,7 +13,7 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-it('should render list of MCP servers', async () => {
+it('renders list of MCP servers', async () => {
   renderRoute(router)
   await waitFor(() => {
     for (const mcpServer of MOCK_MCP_SERVERS) {
@@ -25,7 +25,7 @@ it('should render list of MCP servers', async () => {
   })
 })
 
-it('should contain the menu to run an MCP server', async () => {
+it('contains the menu to run an MCP server', async () => {
   renderRoute(router)
   await waitFor(() => {
     expect(
@@ -51,7 +51,7 @@ it('should contain the menu to run an MCP server', async () => {
   ).toBeVisible()
 })
 
-it('should restart server', async () => {
+it('restarts server', async () => {
   renderRoute(router)
 
   await waitFor(() => {
@@ -74,7 +74,7 @@ it('should restart server', async () => {
   })
 })
 
-it('should stop server', async () => {
+it('stops server', async () => {
   renderRoute(router)
 
   await waitFor(() => {
@@ -97,7 +97,7 @@ it('should stop server', async () => {
   })
 })
 
-it('should show dropdown menu with remove option when clicking more options button', async () => {
+it('shows dropdown menu with remove option when clicking more options button', async () => {
   renderRoute(router)
 
   await waitFor(() => {
@@ -119,7 +119,7 @@ it('should show dropdown menu with remove option when clicking more options butt
   expect(screen.getByRole('menuitem', { name: /remove/i })).toBeVisible()
 })
 
-it('should allow deleting a server through the dropdown menu', async () => {
+it('allows deleting a server through the dropdown menu', async () => {
   renderRoute(router)
 
   await waitFor(() => {
