@@ -100,4 +100,7 @@ export interface ElectronAPI {
     close: () => Promise<void>
     isMaximized: () => Promise<boolean>
   }
+  onUpdateDownloaded: (
+    callback: (_event: Electron.IpcRendererEvent) => void
+  ) => void
 }
