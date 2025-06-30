@@ -44,11 +44,6 @@ updateElectronApp()
 
 app.on('ready', () => {
   setTimeout(() => {
-    console.log('GOT HERE🍅', {
-      mainWindow,
-      a: app.isPackaged,
-      p: process.MOCK_UPDATE_SERVER,
-    })
     if (
       !mainWindow ||
       app.isPackaged ||
