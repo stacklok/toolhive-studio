@@ -2,38 +2,13 @@ import { useParams } from '@tanstack/react-router'
 import { Button } from '@/common/components/ui/button'
 import { ChevronLeft } from 'lucide-react'
 import { Separator } from '@/common/components/ui/separator'
-import { Input } from '@/common/components/ui/input'
 import { useState } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { getApiV1BetaWorkloadsByNameLogsOptions } from '@/common/api/generated/@tanstack/react-query.gen'
 import { RefreshButton } from '@/common/components/refresh-button'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
-
-const highlight = (text: string, query: string) => {
-  if (!query) return text
-
-  const lowerText = text.toLowerCase()
-  const lowerQuery = query.toLowerCase()
-  const queryLen = query.length
-
-  const out: React.ReactNode[] = []
-  let start = 0
-  let idx: number
-
-  while ((idx = lowerText.indexOf(lowerQuery, start)) !== -1) {
-    if (idx > start) out.push(text.slice(start, idx))
-    const innerText = text.slice(idx, idx + queryLen)
-    out.push(
-      <mark role="mark" aria-label={innerText} key={idx}>
-        {innerText}
-      </mark>
-    )
-    start = idx + queryLen
-  }
-  if (start < text.length) out.push(text.slice(start))
-
-  return out
-}
+import { InputSearch } from '@/common/components/ui/input-search'
+import { highlight } from './search'
 
 export function LogsPage() {
   const { serverName } = useParams({ from: '/logs/$serverName' })
@@ -71,12 +46,11 @@ export function LogsPage() {
       <div className="flex flex-col gap-5">
         <h1 className="m-0 mb-0 p-0 text-3xl font-bold">{serverName}</h1>
         <Separator />
-        <div className="flex justify-between">
-          <Input
-            className="mb-4 w-full max-w-[250px]"
+        <div className="mb-4 flex justify-between">
+          <InputSearch
             placeholder="Search log"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(v) => setSearch(v)}
             aria-label="Search log"
           />
 
