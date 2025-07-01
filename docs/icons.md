@@ -2,19 +2,28 @@
 
 ## App Icons
 
-*e.g. The icon shown in the Windows taskbar, macOS Dock, etc*
+_e.g. The icon shown in the Windows taskbar, macOS Dock, etc_
 
 We use the following formats for application icons:
+
 - **macOS**: ICNS format
 - **Windows**: ICO format
 - **Linux**: PNG format
 
 These are generated from a set of source images located in `icons/source-files`
 
+We use 2 different icon styles depending on the platform:
+
+| Platform | Style |
+| -------- | :---: |
+| macOS    | "Squircle" icon with it's own background</br>![macOS icon](../icons/source-files/app-icons/mac/128.png) |
+| Windows/Linux    | "Silhouette" icon, no background</br>![Windows/Linux icon](../icons/source-files/app-icons/windows-linux/128.png) |
+
 ### Updating app icons
 
 To update the application icons, you will need to replace the images in the
 following folders:
+
 - `icons/source-files/app-icons/windows-linux/`
 - `icons/source-files/app-icons/mac/`
 
@@ -50,8 +59,12 @@ theme (light/dark mode).
 
 ### Windows
 
-We use the app icon as the system tray icon, scaled down to 16x16 pixels.
+We use `icons/icon.ico` as the system tray icon, scaled down to 16x16 pixels.
 
 ### Linux
 
-We use `icons/tray-icon.png` & `icons/tray-icon@2x.png`.
+We use `icons/tray-icon-dark.png` & `icons/tray-icon-dark@2x.png`. As most
+popular linux distributions use a dark menubar by default anyway. This is also
+what [Podman Desktop does](https://github.com/podman-desktop/podman-desktop/blob/f7e10342f58c68166450561aa8a40eb1ae57844d/packages/main/src/tray-animate-icon.ts#L84-L86), which seems to work well for them.
+
+

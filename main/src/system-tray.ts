@@ -26,6 +26,12 @@ function getIcon(): Electron.NativeImage {
       const image = nativeImage.createFromPath(path.join(basePath, 'icon.ico'))
       return image.resize({ width: 16, height: 16 })
     }
+    case 'linux': {
+      const image = nativeImage.createFromPath(
+        path.join(basePath, 'tray-icon-dark.png')
+      )
+      return image
+    }
     default: {
       const image = nativeImage.createFromPath(
         path.join(basePath, 'tray-icon.png')
