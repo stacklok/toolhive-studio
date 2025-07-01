@@ -40,8 +40,8 @@ async function main() {
   // Linux
   await copyFile(
     join(join(INPUT_PATH, 'windows-linux'), '512.png'),
-    join(OUTPUT_PATH, 'icon@1x.png'),
-    () => console.info('✅ icon@1x.png')
+    join(OUTPUT_PATH, 'icon.png'),
+    () => console.info('✅ icon.png')
   )
   await copyFile(
     join(join(INPUT_PATH, 'windows-linux'), '1024.png'),
