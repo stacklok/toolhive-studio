@@ -2,7 +2,7 @@
   "name": "toolhive-studio",
   "productName": "ToolHive Studio",
   "version": "0.0.5",
-  "description": "My Electron application description",
+  "description": "ToolHive Studio is an application that allows you to install, manage and run MCP servers and connect them to AI agents",
   "main": ".vite/build/main.js",
   "engines": {
     "node": ">=22.0.0 <23.0.0"
