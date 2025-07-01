@@ -1,21 +1,21 @@
 import type { HTMLProps } from 'react'
 
 import { twMerge } from 'tailwind-merge'
-import { ThemeToggle } from '../theme/theme-toggle'
-import { SettingsDropdown } from '../settings/settings-dropdown'
+import { ThemeToggle } from '../../theme/theme-toggle'
+import { SettingsDropdown } from '../../settings/settings-dropdown'
 import { WindowControls } from './window-controls'
 import {
   NavigationMenu,
   NavigationMenuList,
   NavigationMenuItem,
   NavigationMenuLink,
-} from '../ui/navigation-menu'
+} from '../../ui/navigation-menu'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
 import { isFeatureEnabled } from '@/feature-flags'
-import { Separator } from '../ui/separator'
-import { LinkViewTransition } from '../link-view-transition'
-import { Logo } from '../logo'
+import { Separator } from '../../ui/separator'
+import { LinkViewTransition } from '../../link-view-transition'
+import { Logo } from '../../logo'
 
 function getPlatformSpecificHeaderClasses() {
   const platformClasses = {

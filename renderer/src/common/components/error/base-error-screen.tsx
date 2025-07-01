@@ -1,5 +1,5 @@
 import { TopNavContainer, TopNavLogo } from '../layout/top-nav'
-import { WindowControls } from '../layout/window-controls'
+import { WindowControls } from '../layout/top-nav/window-controls'
 import { Button } from '../ui/button'
 import {
   Card,
