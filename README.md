@@ -131,6 +131,19 @@ report unacceptable behavior to
 
 ---
 
+## Contributing
+
+We welcome contributions and feedback from the community!
+
+- 🐛 [Report issues](https://github.com/StacklokLabs/toolhive-studio/issues)
+- 💬 [Join our Discord](https://discord.gg/stacklok)
+- 🤝 [Contributing guide](./CONTRIBUTING.md)
+
+If you have ideas, suggestions, or want to get involved, check out our
+contributing guide or open an issue. Join us in making ToolHive even better!
+
+---
+
 ## License
 
 This project is licensed under the [Apache 2.0 License](./LICENSE).
