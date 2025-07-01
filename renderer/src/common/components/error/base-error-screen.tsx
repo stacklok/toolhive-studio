@@ -30,8 +30,8 @@ export function BaseErrorScreen({
   return (
     <>
       <TopNavMinimal />
-      <div className="flex h-[calc(100vh-3rem)] items-center justify-center px-8">
-        <Card className="flex max-h-[min(600px,_100%)] w-full max-w-md flex-col">
+      <div className="mt-[64px] flex h-[calc(100vh-5rem-64px)] items-center justify-center px-8">
+        <Card className="mt-10 flex max-h-[min(600px,_100%)] w-full max-w-md flex-col">
           <CardHeader className="text-center">
             <div className="mb-4 flex justify-center">{icon}</div>
             <CardTitle className="text-xl font-semibold">{title}</CardTitle>
