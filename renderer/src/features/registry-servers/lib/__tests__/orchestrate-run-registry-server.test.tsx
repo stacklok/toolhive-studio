@@ -8,6 +8,27 @@ import {
   groupSecrets,
 } from '../orchestrate-run-registry-server'
 import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
+import * as Sentry from '@sentry/electron/renderer'
+
+vi.mock('@sentry/electron/renderer', () => ({
+  startSpan: vi.fn(),
+}))
+
+const mockStartSpan = vi.mocked(Sentry.startSpan)
+
+vi.mock('sonner', async () => {
+  const original = await vi.importActual<typeof import('sonner')>('sonner')
+  return {
+    ...original,
+    toast: {
+      loading: vi.fn(),
+      success: vi.fn(),
+      warning: vi.fn(),
+      error: vi.fn(),
+      dismiss: vi.fn(),
+    },
+  }
+})
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -211,6 +232,22 @@ describe('prepareCreateWorkloadData', () => {
       cmd_arguments: [],
       target_port: 8080,
     })
+
+    expect(mockStartSpan).toHaveBeenCalledWith(
+      {
+        name: 'Workload Test Server started',
+        op: 'user.event',
+        attributes: {
+          'analytics.source': 'tracking',
+          'analytics.type': 'event',
+          workload: 'Test Server',
+          transport: 'stdio',
+          'route.pathname': '/registry',
+          timestamp: expect.any(String),
+        },
+      },
+      expect.any(Function)
+    )
   })
 
   it('handles empty cmd_arguments', () => {

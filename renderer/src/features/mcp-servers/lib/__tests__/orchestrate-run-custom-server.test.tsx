@@ -7,6 +7,13 @@ import { toast } from 'sonner'
 import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/msw-endpoint'
+import * as Sentry from '@sentry/electron/renderer'
+
+vi.mock('@sentry/electron/renderer', () => ({
+  startSpan: vi.fn(),
+}))
+
+const mockStartSpan = vi.mocked(Sentry.startSpan)
 
 vi.mock('sonner', async () => {
   const original = await vi.importActual<typeof import('sonner')>('sonner')
@@ -72,6 +79,22 @@ it('submits without any optional fields', async () => {
   expect(toast.success).toHaveBeenCalledWith(
     '"foo-bar" started successfully.',
     expect.any(Object)
+  )
+
+  expect(mockStartSpan).toHaveBeenCalledWith(
+    {
+      name: 'Workload foo-bar started',
+      op: 'user.event',
+      attributes: {
+        'analytics.source': 'tracking',
+        'analytics.type': 'event',
+        workload: 'foo-bar',
+        transport: 'stdio',
+        'route.pathname': '/',
+        timestamp: expect.any(String),
+      },
+    },
+    expect.any(Function)
   )
 })
 
