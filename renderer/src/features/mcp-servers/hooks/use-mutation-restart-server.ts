@@ -14,8 +14,8 @@ import { useQueryClient } from '@tanstack/react-query'
 
 const getMutationData = (name: string) => ({
   ...postApiV1BetaWorkloadsByNameRestartMutation(),
-  successMsg: `Server ${name} restarted successfully`,
-  errorMsg: `Failed to restart server ${name}`,
+  successMsg: `Server ${name} started successfully`,
+  errorMsg: `Failed to start server ${name}`,
   loadingMsg: `Starting server ${name}...`,
 })
 
