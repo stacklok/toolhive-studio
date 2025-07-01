@@ -174,7 +174,7 @@ function createWindow() {
   }
 
   // Open developer tools at startup in development
-  if (isDevelopment) {
+  if (isDevelopment && import.meta.env.VITE_ENABLE_AUTO_DEVTOOLS === 'true') {
     mainWindow.webContents.openDevTools()
   }
 
