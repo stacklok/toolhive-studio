@@ -1,64 +1,20 @@
 import type { HTMLProps } from 'react'
 
-import { twMerge } from 'tailwind-merge'
-import { ThemeToggle } from '../theme/theme-toggle'
-import { SettingsDropdown } from '../settings/settings-dropdown'
+import { ThemeToggle } from '../../theme/theme-toggle'
+import { SettingsDropdown } from '../../settings/settings-dropdown'
 import { WindowControls } from './window-controls'
 import {
   NavigationMenu,
   NavigationMenuList,
   NavigationMenuItem,
   NavigationMenuLink,
-} from '../ui/navigation-menu'
+} from '../../ui/navigation-menu'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
-import { Separator } from '../ui/separator'
-import { LinkViewTransition } from '../link-view-transition'
-import { Logo } from '../logo'
-
-function getPlatformSpecificHeaderClasses() {
-  const platformClasses = {
-    darwin: 'pl-26', // Left padding for traffic light buttons
-    win32: 'pr-2', // Right padding for visual spacing with window edge
-    linux: '', // No padding needed - custom controls are part of the layout
-  }
-
-  return (
-    platformClasses[
-      window.electronAPI.platform as keyof typeof platformClasses
-    ] || ''
-  )
-}
-
-function TopNavContainer(props: HTMLProps<HTMLElement>) {
-  return (
-    <header
-      {...props}
-      className={twMerge(
-        props.className,
-        'bg-muted/50',
-        'border-mid h-16 border-b',
-        'px-6',
-        'grid grid-cols-[auto_1fr_auto] items-center gap-7',
-        'app-region-drag',
-        'w-full min-w-full',
-        'shadow-[0px_-12px_18px_0px_rgb(0_0_0/0.6)]',
-        getPlatformSpecificHeaderClasses()
-      )}
-    >
-      {props.children}
-    </header>
-  )
-}
-
-function TopNavLogo() {
-  return (
-    <div className="flex items-center gap-2">
-      <Logo className="h-[21.01px]" />
-      <span className="font-display text-2xl font-semibold">ToolHive</span>
-    </div>
-  )
-}
+import { LinkViewTransition } from '../../link-view-transition'
+import { TopNavContainer } from './container'
+import { Separator } from '../../ui/separator'
+import { TopNavLogo } from './logo'
 
 function TopNavLinks() {
   return (
