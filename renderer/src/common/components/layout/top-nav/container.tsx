@@ -1,3 +1,4 @@
+import type { HTMLProps } from 'react'
 import { twMerge } from 'tailwind-merge'
 
 function getPlatformSpecificHeaderClasses() {
@@ -20,6 +21,7 @@ export function TopNavContainer(props: HTMLProps<HTMLElement>) {
       {...props}
       className={twMerge(
         props.className,
+        'flex',
         'bg-muted/50',
         'border-mid h-16 border-b',
         'px-6',
