@@ -31,7 +31,7 @@ function getPlatformSpecificHeaderClasses() {
   )
 }
 
-function TopNavContainer(props: HTMLProps<HTMLElement>) {
+export function TopNavContainer(props: HTMLProps<HTMLElement>) {
   return (
     <header
       {...props}
@@ -52,7 +52,7 @@ function TopNavContainer(props: HTMLProps<HTMLElement>) {
   )
 }
 
-function TopNavLogo() {
+export function TopNavLogo() {
   return (
     <div className="flex items-center gap-2">
       <Logo className="h-[21.01px]" />
