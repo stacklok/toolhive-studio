@@ -55,6 +55,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
     isMaximized: () => ipcRenderer.invoke('window-is-maximized'),
   },
 
+  onUpdateDownloaded: (
+    callback: (_event: Electron.IpcRendererEvent) => void
+  ) => {
+    ipcRenderer.on('update-downloaded', callback)
+    return () => {
+      ipcRenderer.removeListener('update-downloaded', callback)
+    }
+  },
+
   // Shutdown store
   shutdownStore: {
     getLastShutdownServers: () =>
@@ -100,6 +109,9 @@ export interface ElectronAPI {
     close: () => Promise<void>
     isMaximized: () => Promise<boolean>
   }
+  onUpdateDownloaded: (
+    callback: (_event: Electron.IpcRendererEvent) => void
+  ) => void
   shutdownStore: {
     getLastShutdownServers: () => Promise<WorkloadsWorkload[]>
     clearShutdownHistory: () => Promise<{ success: boolean }>
