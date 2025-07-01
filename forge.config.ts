@@ -30,7 +30,7 @@ const config: ForgeConfig = {
      * <app>/Contents/Resources/bin/ (macOS)
      * <app>/resources/bin/       (Win/Linux)
      */
-    extraResource: ['bin/', 'icons/'],
+    extraResource: ['bin/', 'icons/', 'assets/'],
     // Windows specific options
     win32metadata: {
       CompanyName: 'Stacklok Labs',
@@ -97,7 +97,19 @@ const config: ForgeConfig = {
     }),
     new MakerDMG(
       {
-        name: 'toolhive-studio',
+        name: 'ToolHive Studio',
+        title: 'ToolHive Studio',
+        icon: './icons/icon.icns',
+        overwrite: true,
+        background: './assets/dmg-installer-background.png',
+        additionalDMGOptions: {
+          window: {
+            size: {
+              width: 658,
+              height: 498,
+            },
+          },
+        },
       },
       ['darwin']
     ),
