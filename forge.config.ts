@@ -119,7 +119,7 @@ const config: ForgeConfig = {
         productName: 'ToolHive Studio',
         genericName: 'ToolHive Studio',
         icon: './icons/icon.png',
-        depends: ['docker.io (>= 20.10)'],
+        depends: [],
         maintainer: 'Stacklok Labs',
         homepage: 'https://github.com/StacklokLabs/toolhive-studio',
         section: 'devel',

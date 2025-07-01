@@ -2,7 +2,7 @@
   "name": "toolhive-studio",
   "productName": "ToolHive Studio",
   "version": "0.0.5",
-  "description": "My Electron application description",
+  "description": "ToolHive Studio is an application that allows you to install, manage and run MCP servers and connect them to AI agents and clients",
   "main": ".vite/build/main.js",
   "repository": "https://github.com/StacklokLabs/toolhive-studio",
   "engines": {
@@ -25,6 +25,7 @@
     "update-api": "ts-node scripts/update-api.ts",
     "generate-client": "pnpm run update-api && cd renderer && openapi-ts",
     "generate-client:nofetch": "cd renderer && openapi-ts",
+    "generate-icons": "tsx scripts/generate-icons.ts",
     "knip": "knip"
   },
   "keywords": [],
@@ -76,6 +77,8 @@
     "prettier-plugin-tailwindcss": "^0.6.12",
     "tar": "^7.4.3",
     "ts-node": "^10.9.2",
+    "tsx": "^4.20.3",
+    "icon-gen": "^5.0.0",
     "typescript": "5.8.3",
     "typescript-eslint": "^8.30.1",
     "unzipper": "^0.12.3",
@@ -111,6 +114,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "electron-squirrel-startup": "^1.0.1",
+    "electron-store": "^10.1.0",
     "lucide-react": "^0.523.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

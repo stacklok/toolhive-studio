@@ -11,6 +11,7 @@ function getStatusText(status: WorkloadsWorkload['status']) {
   // add it for UI purposes, the BE cannot handle it for mvp
   if (status === 'stopping') return 'Stopping'
   if (status === 'deleting') return 'Deleting'
+  if (status === 'restarting') return 'Restarting'
   return 'Unknown'
 }
 

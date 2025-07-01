@@ -4,11 +4,20 @@ import {
   postApiV1BetaWorkloadsByNameStop,
 } from '../../renderer/src/common/api/generated/sdk.gen'
 import type { WorkloadsWorkload } from '../../renderer/src/common/api/generated/types.gen'
+import Store from 'electron-store'
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
+// Create a store instance for tracking shutdown servers
+const shutdownStore = new Store({
+  name: 'server-shutdown',
+  defaults: {
+    lastShutdownServers: [],
+  },
+})
+
 /** Get the currently running servers from the ToolHive API. */
-async function getRunningServers(port: number): Promise<string[]> {
+async function getRunningServers(port: number): Promise<WorkloadsWorkload[]> {
   const client = createClient({ baseUrl: `http://localhost:${port}` })
   try {
     const response = await getApiV1BetaWorkloads({ client })
@@ -16,12 +25,9 @@ async function getRunningServers(port: number): Promise<string[]> {
       console.warn('No workloads data in API response')
       return []
     }
-    return response.data.workloads
-      .filter(
-        (server: WorkloadsWorkload) =>
-          server.status === 'running' && server.name
-      )
-      .map(({ name }: WorkloadsWorkload) => name as string)
+    return response.data.workloads.filter(
+      (server: WorkloadsWorkload) => server.status === 'running' && server.name
+    )
   } catch (error) {
     console.error('Failed to get running servers:', error)
     return []
@@ -61,25 +67,33 @@ export async function stopAllServers(
 ): Promise<void> {
   const client = createClient({ baseUrl: `http://localhost:${port}` })
   const servers = await getRunningServers(port)
-  console.info(`Found ${servers.length} running servers:`, servers)
+  console.info(
+    `Found ${servers.length} running servers:`,
+    servers.map((item) => item.name)
+  )
 
   if (!servers.length) {
     console.info('No running servers – teardown complete')
     return
   }
 
+  // Store the servers that are about to be shut down
+  shutdownStore.set('lastShutdownServers', servers)
+  console.info(`Stored ${servers.length} servers for shutdown tracking`)
+
   console.info(`Stopping ${servers.length} servers…`)
 
   // First, initiate stop for all servers
-  const stopPromises = servers.map(async (name) => {
+  const stopPromises = servers.map(async (server) => {
     try {
+      if (!server.name) return server.name
       await postApiV1BetaWorkloadsByNameStop({
         client,
-        path: { name },
+        path: { name: server.name },
       })
-      return name
+      return server.name
     } catch (error) {
-      console.error(`Failed to initiate stop for server ${name}:`, error)
+      console.error(`Failed to initiate stop for server ${server.name}:`, error)
       throw error
     }
   })
@@ -97,4 +111,15 @@ export async function stopAllServers(
   }
 
   console.info('All servers stopped cleanly')
+}
+
+/** Get the list of servers that were shut down in the last shutdown */
+export function getLastShutdownServers(): string[] {
+  return shutdownStore.get('lastShutdownServers', []) as string[]
+}
+
+/** Clear the shutdown history */
+export function clearShutdownHistory(): void {
+  shutdownStore.set('lastShutdownServers', [])
+  console.info('Shutdown history cleared')
 }

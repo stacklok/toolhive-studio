@@ -1,7 +1,6 @@
 import type { HTMLProps } from 'react'
 
 import { twMerge } from 'tailwind-merge'
-import { CommandIcon } from 'lucide-react'
 import { ThemeToggle } from '../theme/theme-toggle'
 import { SettingsDropdown } from '../settings/settings-dropdown'
 import { WindowControls } from './window-controls'
@@ -15,6 +14,7 @@ import { useEffect } from 'react'
 import { toast } from 'sonner'
 import { Separator } from '../ui/separator'
 import { LinkViewTransition } from '../link-view-transition'
+import { Logo } from '../logo'
 
 function getPlatformSpecificHeaderClasses() {
   const platformClasses = {
@@ -54,8 +54,8 @@ function TopNavContainer(props: HTMLProps<HTMLElement>) {
 function TopNavLogo() {
   return (
     <div className="flex items-center gap-2">
-      <CommandIcon className="size-6" />
-      <span className="text-xl font-semibold">ToolHive</span>
+      <Logo className="h-[21.01px]" />
+      <span className="font-display text-2xl font-semibold">ToolHive</span>
     </div>
   )
 }
