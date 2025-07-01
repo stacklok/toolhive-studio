@@ -16,7 +16,7 @@ import { Link } from '@tanstack/react-router'
 
 import type { WorkloadsWorkload } from '@/common/api/generated'
 import { ActionsMcpServer } from './actions-mcp-server'
-import { useMutationRestartServerList } from '../hooks/use-mutation-restart-server'
+import { useMutationRestartServer } from '../hooks/use-mutation-restart-server'
 import { useMutationStopServerList } from '../hooks/use-mutation-stop-server'
 import { useConfirm } from '@/common/hooks/use-confirm'
 import { useDeleteServer } from '../hooks/use-delete-server'
@@ -35,7 +35,7 @@ type CardContentMcpServerProps = {
 function CardContentMcpServer({ name, status }: CardContentMcpServerProps) {
   const isRunning = status === 'running'
   const { mutateAsync: restartMutate, isPending: isRestartPending } =
-    useMutationRestartServerList({
+    useMutationRestartServer({
       name,
     })
   const { mutateAsync: stopMutate, isPending: isStopPending } =

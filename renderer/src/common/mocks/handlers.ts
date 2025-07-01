@@ -99,6 +99,34 @@ export const handlers = [
     }
   ),
 
+  // Batch restart endpoint
+  http.post(
+    mswEndpoint('/api/v1beta/workloads/restart'),
+    async ({ request }) => {
+      try {
+        const { names } = (await request.json()) as { names: string[] }
+
+        // Validate all servers exist
+        for (const name of names) {
+          const server = getWorkloadByName(name)
+          if (!server) {
+            return HttpResponse.json(
+              { error: `Server ${name} not found` },
+              { status: 404 }
+            )
+          }
+        }
+
+        return new HttpResponse(null, { status: 204 })
+      } catch {
+        return HttpResponse.json(
+          { error: 'Invalid request body' },
+          { status: 400 }
+        )
+      }
+    }
+  ),
+
   http.get(mswEndpoint('/api/v1beta/workloads/:name/logs'), ({ params }) => {
     const { name } = params
 

@@ -3,7 +3,7 @@ import { promisify } from 'node:util'
 
 const execAsync = promisify(exec)
 
-export interface ContainerEngineStatus {
+interface ContainerEngineStatus {
   docker: boolean
   podman: boolean
   available: boolean

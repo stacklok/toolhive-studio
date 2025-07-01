@@ -15,7 +15,11 @@ import { initTray, updateTrayStatus } from './system-tray'
 import { setAutoLaunch, getAutoLaunchStatus } from './auto-launch'
 import { createApplicationMenu } from './menu'
 import { getCspString } from './csp'
-import { stopAllServers } from './graceful-exit'
+import {
+  stopAllServers,
+  getLastShutdownServers,
+  clearShutdownHistory,
+} from './graceful-exit'
 import { checkContainerEngine } from './container-engine'
 import {
   startToolhive,
@@ -167,6 +171,11 @@ function createWindow() {
     mainWindow.loadFile(
       path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)
     )
+  }
+
+  // Open developer tools at startup in development
+  if (isDevelopment) {
+    mainWindow.webContents.openDevTools()
   }
 
   return mainWindow
@@ -346,4 +355,14 @@ ipcMain.handle('restart-toolhive', async () => {
       error: error instanceof Error ? error.message : 'Unknown error',
     }
   }
+})
+
+// Shutdown store IPC handlers
+ipcMain.handle('shutdown-store:get-last-servers', () => {
+  return getLastShutdownServers()
+})
+
+ipcMain.handle('shutdown-store:clear-history', () => {
+  clearShutdownHistory()
+  return { success: true }
 })

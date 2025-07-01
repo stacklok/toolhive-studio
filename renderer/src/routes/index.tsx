@@ -4,16 +4,17 @@ import { IllustrationNoConnection } from '@/common/components/illustrations/illu
 
 import { Button } from '@/common/components/ui/button'
 
+import { useState, useEffect, useRef } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
 import { RefreshButton } from '@/common/components/refresh-button'
+import { LinkViewTransition } from '@/common/components/link-view-transition'
 import { DialogFormRunMcpServerWithCommand } from '@/features/mcp-servers/components/dialog-form-run-mcp-command'
 import { GridCardsMcpServers } from '@/features/mcp-servers/components/grid-cards-mcp-server'
 import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/menu-run-mcp-server'
 import { useRunCustomServer } from '@/features/mcp-servers/hooks/use-run-custom-server'
-import { useState } from 'react'
-import { LinkViewTransition } from '@/common/components/link-view-transition'
+import { useMutationRestartServerAtStartup } from '@/features/mcp-servers/hooks/use-mutation-restart-server'
 
 export const Route = createFileRoute('/')({
   loader: ({ context: { queryClient } }) =>
@@ -30,6 +31,29 @@ export function Index() {
   const workloads = data?.workloads ?? []
   const [isRunWithCommandOpen, setIsRunWithCommandOpen] = useState(false)
   const { handleSubmit } = useRunCustomServer()
+  const { mutateAsync, isSuccess } = useMutationRestartServerAtStartup()
+  const hasProcessedShutdown = useRef(false)
+
+  useEffect(() => {
+    const handleShutdownRestart = async () => {
+      try {
+        if (hasProcessedShutdown.current) return
+        hasProcessedShutdown.current = true
+
+        const shutdownServers =
+          await window.electronAPI.shutdownStore.getLastShutdownServers()
+        if (shutdownServers.length === 0) return
+
+        await mutateAsync({
+          body: { names: shutdownServers.map((server) => server.name!) },
+        })
+      } catch (error) {
+        console.error('Error during shutdown server restart:', error)
+      }
+    }
+
+    handleShutdownRestart()
+  }, [mutateAsync])
 
   return (
     <>
@@ -47,7 +71,7 @@ export function Index() {
           onSubmit={handleSubmit}
         />
       </div>
-      {workloads.length === 0 ? (
+      {isSuccess && workloads.length === 0 ? (
         <EmptyState
           title="Add your first MCP server"
           body="You can add a server by running it with a command or by browsing the registry"
