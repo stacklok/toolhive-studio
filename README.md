@@ -82,12 +82,13 @@ For example, if you want to expose a variable named `API_URL`, you
 should define it as `VITE_API_URL` in the `.env` file (locally) or in the CI
 environment.
 
-| Variable            | Required | Build-time | Run-time | Description                                                                                           |
-| ------------------- | -------- | ---------- | -------- | ----------------------------------------------------------------------------------------------------- |
-| `VITE_SENTRY_DSN`   | `false`  | `true`     | `true`   | Sentry DSN. The URL that events are posted to.                                                        |
-| `SENTRY_AUTH_TOKEN` | `false`  | `true`     | `false`  | Sentry authentication token. Used for sourcemap uploads at build-time to enable readable stacktraces. |
-| `SENTRY_ORG`        | `false`  | `true`     | `false`  | Sentry organization. Used for sourcemap uploads at build-time to enable readable stacktraces.         |
-| `SENTRY_PROJECT`    | `false`  | `true`     | `false`  | Sentry project name. Used for sourcemap uploads at build-time to enable readable stacktraces.         |
+| Variable                    | Required | Build-time | Run-time | Description                                                                                           |
+| --------------------------- | -------- | ---------- | -------- | ----------------------------------------------------------------------------------------------------- |
+| `VITE_SENTRY_DSN`           | `false`  | `true`     | `true`   | Sentry DSN. The URL that events are posted to.                                                        |
+| `VITE_ENABLE_AUTO_DEVTOOLS` | `false`  | `false`    | `true`   | Enable automatic opening of DevTools in development mode. Set to `true` to enable.                    |
+| `SENTRY_AUTH_TOKEN`         | `false`  | `true`     | `false`  | Sentry authentication token. Used for sourcemap uploads at build-time to enable readable stacktraces. |
+| `SENTRY_ORG`                | `false`  | `true`     | `false`  | Sentry organization. Used for sourcemap uploads at build-time to enable readable stacktraces.         |
+| `SENTRY_PROJECT`            | `false`  | `true`     | `false`  | Sentry project name. Used for sourcemap uploads at build-time to enable readable stacktraces.         |
 
 ## Code Signing
 
