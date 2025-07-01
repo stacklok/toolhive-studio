@@ -1,5 +1,4 @@
-import { TopNavContainer, TopNavLogo } from '../layout/top-nav'
-import { WindowControls } from '../layout/top-nav/window-controls'
+import { TopNavMinimal } from '../layout/top-nav/minimal'
 import { Button } from '../ui/button'
 import {
   Card,
@@ -30,10 +29,7 @@ export function BaseErrorScreen({
 
   return (
     <>
-      <TopNavContainer className="flex justify-between">
-        <TopNavLogo />
-        <WindowControls />
-      </TopNavContainer>
+      <TopNavMinimal />
       <div className="flex h-[calc(100vh-3rem)] items-center justify-center px-8">
         <Card className="flex max-h-[min(600px,_100%)] w-full max-w-md flex-col">
           <CardHeader className="text-center">

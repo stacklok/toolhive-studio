@@ -2,14 +2,8 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { Error as ErrorComponent } from '../index'
 
-vi.mock('../../layout/top-nav/', () => ({
-  TopNav: () => {
-    return <div />
-  },
-  TopNavContainer: () => {
-    return <div />
-  },
-  TopNavLogo: () => {
+vi.mock('../../layout/top-nav/minimal', () => ({
+  TopNavMinimal: () => {
     return <div />
   },
 }))
