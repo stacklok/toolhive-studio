@@ -6,8 +6,10 @@ import {
   nativeTheme,
   session,
   shell,
+  autoUpdater,
 } from 'electron'
 import path from 'node:path'
+import { updateElectronApp } from 'update-electron-app'
 import { existsSync } from 'node:fs'
 import started from 'electron-squirrel-startup'
 import * as Sentry from '@sentry/electron/main'
@@ -40,6 +42,40 @@ declare const MAIN_WINDOW_VITE_NAME: string
 
 console.log(`ToolHive binary path: ${binPath}`)
 console.log(`Binary file exists: ${existsSync(binPath)}`)
+
+// this implements auto-update
+updateElectronApp()
+
+app.on('ready', () => {
+  setTimeout(() => {
+    if (
+      !mainWindow ||
+      app.isPackaged ||
+      process.env.MOCK_UPDATE_SERVER !== 'true'
+    ) {
+      return
+    }
+
+    console.debug('Simulating a new release for testing purposes')
+    mainWindow.webContents.send('update-downloaded')
+  }, 2000)
+})
+
+autoUpdater.on('update-downloaded', () => {
+  if (!mainWindow) {
+    return
+  }
+
+  console.log('Update downloaded — sending to renderer')
+  mainWindow.webContents.send('update-downloaded')
+})
+
+autoUpdater.on('error', (message) => {
+  console.error('There was a problem updating the application')
+  console.error(message)
+})
+
+autoUpdater.checkForUpdates()
 
 let tray: Tray | null = null
 let isQuitting = false
@@ -174,7 +210,7 @@ function createWindow() {
   }
 
   // Open developer tools at startup in development
-  if (isDevelopment) {
+  if (isDevelopment && import.meta.env.VITE_ENABLE_AUTO_DEVTOOLS === 'true') {
     mainWindow.webContents.openDevTools()
   }
 

@@ -16,6 +16,7 @@ export default {
     '@/*': ['renderer/src/*'],
   },
   ignore: [
+    'renderer/src/feature-flags/index.ts',
     'renderer/src/route-tree.gen.ts',
     'renderer/src/routes/store.tsx',
     'renderer/src/routes/clients.tsx',
