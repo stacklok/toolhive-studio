@@ -137,12 +137,12 @@ const config: ForgeConfig = {
         section: 'devel',
       },
     }),
-    // Flatpak maker - uncomment and configure when ready to use
     // Requirements: install elfutils package and add Flathub remote
     // Run: flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
     new MakerFlatpak({
       options: {
         categories: ['Development', 'Utility'],
+        id: 'com.stacklok.ToolHiveStudio',
         finishArgs: [
           '--share=network',
           '--socket=x11',
@@ -151,9 +151,9 @@ const config: ForgeConfig = {
           '--socket=system-bus',
           '--socket=session-bus',
           '--filesystem=/run/docker.sock',
-          // '--filesystem=/var/run/docker.sock',
-          // '--env=DOCKER_HOST=/run/docker.sock'
+          '--filesystem=/run/podman/podman.sock',
         ],
+        icon: './icons/icon.png',
         files: [],
       },
     }),
