@@ -31,7 +31,8 @@ export function Index() {
   const workloads = data?.workloads ?? []
   const [isRunWithCommandOpen, setIsRunWithCommandOpen] = useState(false)
   const { handleSubmit } = useRunCustomServer()
-  const { mutateAsync, isSuccess } = useMutationRestartServerAtStartup()
+  const { mutateAsync, isSuccess, isPending } =
+    useMutationRestartServerAtStartup()
   const hasProcessedShutdown = useRef(false)
 
   useEffect(() => {
@@ -71,7 +72,7 @@ export function Index() {
           onSubmit={handleSubmit}
         />
       </div>
-      {isSuccess && workloads.length === 0 ? (
+      {!isPending && !isSuccess && workloads.length === 0 ? (
         <EmptyState
           title="Add your first MCP server"
           body="You can add a server by running it with a command or by browsing the registry"
