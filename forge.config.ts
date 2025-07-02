@@ -5,7 +5,7 @@ import { MakerZIP } from '@electron-forge/maker-zip'
 import { MakerDeb } from '@electron-forge/maker-deb'
 import { MakerDMG } from '@electron-forge/maker-dmg'
 import { MakerRpm } from '@electron-forge/maker-rpm'
-// import { MakerFlatpak } from "@electron-forge/maker-flatpak";
+import { MakerFlatpak } from '@electron-forge/maker-flatpak'
 import { VitePlugin } from '@electron-forge/plugin-vite'
 import { FusesPlugin } from '@electron-forge/plugin-fuses'
 import { FuseV1Options, FuseVersion } from '@electron/fuses'
@@ -137,18 +137,26 @@ const config: ForgeConfig = {
         section: 'devel',
       },
     }),
-    // Flatpak maker - uncomment and configure when ready to use
     // Requirements: install elfutils package and add Flathub remote
     // Run: flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-    // new MakerFlatpak({
-    //   options: {
-    //     categories: ["Development", "Utility"],
-    //     license: "Apache-2.0",
-    //     files: [
-    //       // Add required files configuration here
-    //     ],
-    //   },
-    // }),
+    new MakerFlatpak({
+      options: {
+        categories: ['Development', 'Utility'],
+        id: 'com.stacklok.ToolHiveStudio',
+        finishArgs: [
+          '--share=network',
+          '--socket=x11',
+          '--socket=wayland',
+          '--device=dri',
+          '--socket=system-bus',
+          '--socket=session-bus',
+          '--filesystem=/run/docker.sock',
+          '--filesystem=/run/podman/podman.sock',
+        ],
+        icon: './icons/icon.png',
+        files: [],
+      },
+    }),
   ],
 
   plugins: [
