@@ -51,8 +51,8 @@ function RootComponent() {
         <Outlet />
         <Toaster
           duration={2_000}
-          position="top-right"
-          offset={{ top: 64 + 16 }}
+          position="bottom-right"
+          offset={{ top: 50 }}
           closeButton
         />
         <TanStackRouterDevtools />
