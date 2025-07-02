@@ -30,7 +30,7 @@ export function LogsPage() {
     : logLines
 
   return (
-    <div className="container mx-auto flex max-h-full flex-1 flex-col p-4">
+    <div className="flex max-h-full w-full flex-1 flex-col">
       <div className="mb-2">
         <LinkViewTransition to="/">
           <Button
@@ -38,7 +38,7 @@ export function LogsPage() {
             aria-label="Back"
             className="text-muted-foreground"
           >
-            <ChevronLeft className="mr-1 h-5 w-5" />
+            <ChevronLeft className="size-5" />
             Back
           </Button>
         </LinkViewTransition>
