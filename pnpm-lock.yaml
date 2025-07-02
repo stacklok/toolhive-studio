@@ -241,7 +241,7 @@ importers:
         specifier: ^26.1.0
         version: 26.1.0
       knip:
-        specifier: ^5.58.1
+        specifier: ^5.61.3
         version: 5.61.3(@types/node@22.15.34)(typescript@5.8.3)
       lint-staged:
         specifier: ^16.0.0
@@ -5395,8 +5395,8 @@ packages:
     resolution: {integrity: sha512-94hK0Hh8rPqQl2xXc3HsaBoOXKV20MToPkcXvwbISWLEs+64sBq5kFgn2kJDHb1Pry9yrP0dxrCI9RRci7RXKg==}
     engines: {node: '>= 6.0.0', npm: '>= 3.0.0'}
 
-  smol-toml@1.4.0:
-    resolution: {integrity: sha512-IMxaDA/58wBvkvX77ykQ6e9r6fjs8xbxpz8bMCyVQ/fEFWbA5uJrnaVwDuhLrrANGdd7apRyTPDBvI893Bxu9g==}
+  smol-toml@1.4.1:
+    resolution: {integrity: sha512-CxdwHXyYTONGHThDbq5XdwbFsuY4wlClRGejfE2NtwUtiHYsP1QtNsHb/hnj31jKYSchztJsaA8pSQoVzkfCFg==}
     engines: {node: '>= 18'}
 
   socks-proxy-agent@7.0.0:
@@ -10751,7 +10751,7 @@ snapshots:
       oxc-resolver: 11.3.0
       picocolors: 1.1.1
       picomatch: 4.0.2
-      smol-toml: 1.4.0
+      smol-toml: 1.4.1
       strip-json-comments: 5.0.2
       typescript: 5.8.3
       zod: 3.25.67
@@ -11937,7 +11937,7 @@ snapshots:
 
   smart-buffer@4.2.0: {}
 
-  smol-toml@1.4.0: {}
+  smol-toml@1.4.1: {}
 
   socks-proxy-agent@7.0.0:
     dependencies:
