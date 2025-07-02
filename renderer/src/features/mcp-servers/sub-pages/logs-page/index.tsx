@@ -34,7 +34,7 @@ export function LogsPage() {
       <div className="mb-2">
         <LinkViewTransition to="/">
           <Button
-            variant="secondary"
+            variant="ghost"
             aria-label="Back"
             className="text-muted-foreground"
           >
