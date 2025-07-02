@@ -36,7 +36,7 @@ type CreateWorkloadFn = UseMutateAsyncFunction<
 /**
  * A utility function to filter out secrets that are not defined.
  */
-function getDefinedSecrets(
+export function getDefinedSecrets(
   secrets: FormSchemaRunFromRegistry['secrets']
 ): DefinedSecret[] {
   return secrets.reduce<DefinedSecret[]>((acc, { name, value }) => {
@@ -60,7 +60,7 @@ function getDefinedSecrets(
  * // NOTE: We add a short, arbitrary delay to allow the `toast` message that
  * displays progress to show up-to-date progress.
  */
-async function saveSecrets(
+export async function saveSecrets(
   secrets: PreparedSecret[],
   saveSecret: SaveSecretFn,
   toastID: string
@@ -135,7 +135,7 @@ async function saveSecrets(
  * Combines the registry server definition, the form fields, and the newly
  * created secrets from the secret store into a single request object.
  */
-function prepareCreateWorkloadData(
+export function prepareCreateWorkloadData(
   server: RegistryImageMetadata,
   data: FormSchemaRunFromRegistry,
   secrets: SecretsSecretParameter[] = []
@@ -167,7 +167,7 @@ type GroupedSecrets = {
  * existing secrets (from the registry). We need this separation to know which
  * secrets need to be encrypted and stored before creating the server workload.
  */
-function groupSecrets(secrets: DefinedSecret[]): {
+export function groupSecrets(secrets: DefinedSecret[]): {
   newSecrets: DefinedSecret[]
   existingSecrets: DefinedSecret[]
 } {

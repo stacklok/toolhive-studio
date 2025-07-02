@@ -21,7 +21,7 @@ export function Registry() {
     getApiV1BetaRegistryByNameServersOptions({ path: { name: 'default' } })
   )
   const { servers: serversList = [] } = data || {}
-  const { handleSubmit } = useRunFromRegistry()
+  const { handleSubmit, checkServerStatus } = useRunFromRegistry()
 
   return (
     <>
@@ -49,6 +49,7 @@ export function Registry() {
         <GridCardsRegistryServer
           servers={serversList}
           onSubmit={handleSubmit}
+          checkServerStatus={checkServerStatus}
         />
       )}
     </>

@@ -2,19 +2,21 @@ import type { RegistryImageMetadata } from '@/common/api/generated/types.gen'
 import { CardRegistryServer } from './card-registry-server'
 import { FormRunFromRegistry } from './form-run-from-registry'
 import { useState } from 'react'
-import type { FormSchemaRunFromRegistry } from '../lib/get-form-schema-run-from-registry'
 import { useFilterSort } from '@/common/hooks/use-filter-sort'
 import { InputSearch } from '@/common/components/ui/input-search'
+import type {
+  InstallServerCheck,
+  InstallServerMutation,
+} from '../hooks/use-run-from-registry'
 
 export function GridCardsRegistryServer({
   servers,
   onSubmit,
+  checkServerStatus,
 }: {
   servers: RegistryImageMetadata[]
-  onSubmit?: (
-    server: RegistryImageMetadata,
-    data: FormSchemaRunFromRegistry
-  ) => void
+  onSubmit: InstallServerMutation
+  checkServerStatus: InstallServerCheck
 }) {
   const [selectedServer, setSelectedServer] =
     useState<RegistryImageMetadata | null>(null)
@@ -32,12 +34,6 @@ export function GridCardsRegistryServer({
   const handleCardClick = (server: RegistryImageMetadata) => {
     setSelectedServer(server)
     setIsModalOpen(true)
-  }
-
-  const handleModalSubmit = (data: FormSchemaRunFromRegistry) => {
-    if (selectedServer && onSubmit) {
-      onSubmit(selectedServer, data)
-    }
   }
 
   return (
@@ -69,7 +65,8 @@ export function GridCardsRegistryServer({
         server={selectedServer}
         isOpen={isModalOpen}
         onOpenChange={setIsModalOpen}
-        onSubmit={handleModalSubmit}
+        onSubmit={onSubmit}
+        checkServerStatus={checkServerStatus}
       />
     </div>
   )
