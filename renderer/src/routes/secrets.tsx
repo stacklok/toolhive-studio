@@ -57,7 +57,7 @@ export function Secrets() {
             setSecretKey('')
           }}
         >
-          Add Secret
+          <PlusIcon /> Add Secret
         </Button>
       </div>
 
@@ -67,13 +67,14 @@ export function Secrets() {
           body="Create secrets to store API keys for use into your MCP Server configurations"
           actions={[
             <Button
+              variant="default"
               key="add"
               onClick={() => {
                 setIsSecretDialogOpen(true)
                 setSecretKey('')
               }}
             >
-              Add a secret <PlusIcon />
+              Add your first Secret
             </Button>,
           ]}
           illustration={IllustrationNoConnection}
