@@ -140,8 +140,8 @@ realistic timeline can be communicated to users.
   version. An announcement template is available below. The announcement will be
   sent to the following channels:
 - A link to fix will be posted to the
-  [Stacklok Discord Server](https://discord.gg/stacklok) in the #toolhive
-  channel.
+  [Stacklok Discord Server](https://discord.gg/stacklok) in the
+  #toolhive-developers channel.
 
 ## Retrospective
 
