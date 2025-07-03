@@ -6,8 +6,14 @@ import {
   CardFooter,
 } from '@/common/components/ui/card'
 import type { RegistryImageMetadata } from '@/common/api/generated/types.gen'
-import { Plus, StarIcon } from 'lucide-react'
+import { Github, Plus, StarIcon } from 'lucide-react'
 import { cn } from '@/common/lib/utils'
+import { Button } from '@/common/components/ui/button'
+
+const statusMap = {
+  deprecated: 'Deprecated',
+  active: 'Active',
+} as const satisfies Record<string, RegistryImageMetadata['status']>
 
 export function CardRegistryServer({
   server,
@@ -40,6 +46,14 @@ export function CardRegistryServer({
             className="text-muted-foreground group-has-[button:focus-visible]:text-foreground
               group-hover:text-foreground transition-color size-5"
           />
+          {server.status === statusMap.deprecated && (
+            <span
+              className="border-border text-muted-foreground bg-muted/20 my-1 w-fit rounded-md border
+                px-1.5 py-0.5 text-xs"
+            >
+              {server.status}
+            </span>
+          )}
         </CardTitle>
       </CardHeader>
 
@@ -48,17 +62,32 @@ export function CardRegistryServer({
           {server.description}
         </div>
       </CardContent>
-
-      {server?.metadata?.stars ? (
-        <CardFooter className="mt-auto">
+      <CardFooter className="mt-auto flex items-center gap-2">
+        {server?.metadata?.stars ? (
           <div className="flex items-center gap-2">
             <StarIcon className="text-muted-foreground size-3" />
             <span className="text-muted-foreground text-sm select-none">
               {Intl.NumberFormat().format(server.metadata.stars)}
             </span>
           </div>
-        </CardFooter>
-      ) : null}
+        ) : null}
+        {server?.repository_url ? (
+          <Button
+            variant="ghost"
+            asChild
+            onClick={(e) => e.stopPropagation()}
+            className="relative z-10"
+          >
+            <a
+              href={server.repository_url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Github className="text-muted-foreground size-4" />
+            </a>
+          </Button>
+        ) : null}
+      </CardFooter>
     </Card>
   )
 }
