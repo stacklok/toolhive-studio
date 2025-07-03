@@ -10,6 +10,7 @@ const router = createTestRouter(() => (
     name="test-server"
     status="running"
     statusContext={undefined}
+    url=""
   />
 ))
 
