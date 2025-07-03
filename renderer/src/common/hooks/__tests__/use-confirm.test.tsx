@@ -111,4 +111,160 @@ describe('useConfirm', () => {
     // Verify dialog is closed
     expect(screen.queryByText('Save Changes')).not.toBeInTheDocument()
   })
+
+  it('shows checkbox when doNotShowAgain option is provided', async () => {
+    const TestComponent = createTestComponent('Delete this file?', {
+      title: 'Confirm Deletion',
+      buttons: { yes: 'Delete', no: 'Cancel' },
+      // @ts-expect-error - doNotShowAgain feature not implemented yet
+      doNotShowAgain: {
+        label: 'Do not warn me again',
+        id: 'test_feature_1',
+      },
+    })
+
+    render(
+      <ConfirmProvider>
+        <TestComponent />
+      </ConfirmProvider>
+    )
+
+    // Click the trigger button
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Trigger Confirm' })
+    )
+
+    // Verify dialog appears with checkbox
+    await waitFor(() => {
+      expect(screen.getByText('Confirm Deletion')).toBeVisible()
+    })
+    expect(screen.getByText('Delete this file?')).toBeVisible()
+    expect(
+      screen.getByRole('checkbox', { name: 'Do not warn me again' })
+    ).toBeVisible()
+  })
+
+  it('saves doNotShowAgain choice to localStorage when checkbox is checked', async () => {
+    // Clear localStorage before test
+    localStorage.clear()
+
+    const TestComponent = createTestComponent('Are you sure?', {
+      title: 'Confirm Action',
+      buttons: { yes: 'Yes', no: 'No' },
+      // @ts-expect-error - doNotShowAgain feature not implemented yet
+      doNotShowAgain: {
+        label: 'Remember my choice',
+        id: 'test_feature_2',
+      },
+    })
+
+    render(
+      <ConfirmProvider>
+        <TestComponent />
+      </ConfirmProvider>
+    )
+
+    // Click the trigger button
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Trigger Confirm' })
+    )
+
+    // Wait for dialog and check the checkbox
+    await waitFor(() => {
+      expect(screen.getByText('Confirm Action')).toBeVisible()
+    })
+
+    const checkbox = screen.getByRole('checkbox', {
+      name: 'Remember my choice',
+    })
+    await userEvent.click(checkbox)
+
+    // Click Yes button
+    await userEvent.click(screen.getByRole('button', { name: 'Yes' }))
+
+    // Verify result and localStorage
+    await waitFor(() => {
+      expect(screen.getByTestId('result')).toHaveTextContent('Result: true')
+    })
+
+    // Check that the choice was saved to localStorage
+    expect(localStorage.getItem('doNotShowAgain_test_feature_2')).toBe('true')
+  })
+
+  it('skips dialog and returns true when doNotShowAgain choice exists', async () => {
+    // Pre-populate localStorage with a saved "proceed" choice
+    localStorage.setItem('doNotShowAgain_test_feature_3', 'true')
+
+    const TestComponent = createTestComponent('Continue with action?', {
+      title: 'Confirm Continue',
+      buttons: { yes: 'Continue', no: 'Stop' },
+      // @ts-expect-error - doNotShowAgain feature not implemented yet
+      doNotShowAgain: {
+        label: 'Remember this choice',
+        id: 'test_feature_3',
+      },
+    })
+
+    render(
+      <ConfirmProvider>
+        <TestComponent />
+      </ConfirmProvider>
+    )
+
+    // Click the trigger button
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Trigger Confirm' })
+    )
+
+    // Dialog should not appear, result should be true immediately
+    await waitFor(() => {
+      expect(screen.getByTestId('result')).toHaveTextContent('Result: true')
+    })
+
+    // Verify dialog never appeared
+    expect(screen.queryByText('Confirm Continue')).not.toBeInTheDocument()
+    expect(screen.queryByText('Continue with action?')).not.toBeInTheDocument()
+  })
+
+  it('does not save to localStorage when checkbox is unchecked', async () => {
+    // Clear localStorage before test
+    localStorage.clear()
+
+    const TestComponent = createTestComponent('Proceed?', {
+      title: 'Confirm Proceed',
+      buttons: { yes: 'Proceed', no: 'Cancel' },
+      // @ts-expect-error - doNotShowAgain feature not implemented yet
+      doNotShowAgain: {
+        label: 'Do not ask again',
+        id: 'test_feature_4',
+      },
+    })
+
+    render(
+      <ConfirmProvider>
+        <TestComponent />
+      </ConfirmProvider>
+    )
+
+    // Click the trigger button
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Trigger Confirm' })
+    )
+
+    // Wait for dialog (checkbox should be unchecked by default)
+    await waitFor(() => {
+      expect(screen.getByText('Confirm Proceed')).toBeVisible()
+    })
+
+    // Click Yes button without checking the checkbox
+    await userEvent.click(screen.getByRole('button', { name: 'Proceed' }))
+
+    // Verify result
+    await waitFor(() => {
+      expect(screen.getByTestId('result')).toHaveTextContent('Result: true')
+    })
+
+    // Check that nothing was saved to localStorage
+    expect(localStorage.getItem('doNotShowAgain_test_feature_4')).toBeNull()
+  })
 })
