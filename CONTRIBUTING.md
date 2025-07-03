@@ -1,10 +1,10 @@
 # Contributing to ToolHive Studio <!-- omit from toc -->
 
-First off, thank you for taking the time to contribute to ToolHive Studio! :+1: :tada:
-ToolHive Studio is released under the Apache 2.0 license. If you would like to
-contribute something or want to hack on the code, this document should help you
-get started. You can find some hints for starting development in ToolHive Studio's
-[README](./README.md).
+First off, thank you for taking the time to contribute to ToolHive Studio! :+1:
+:tada: ToolHive Studio is released under the Apache 2.0 license. If you would
+like to contribute something or want to hack on the code, this document should
+help you get started. You can find some hints for starting development in
+ToolHive Studio's [developer guide](./docs/README.md).
 
 ## Table of contents <!-- omit from toc -->
 
@@ -19,17 +19,16 @@ get started. You can find some hints for starting development in ToolHive Studio
 
 ## Code of conduct
 
-This project adheres to the
-[Contributor Covenant](./CODE_OF_CONDUCT.md)
-code of conduct. By participating, you are expected to uphold this code. Please
-report unacceptable behavior to
+This project adheres to the [Contributor Covenant](./CODE_OF_CONDUCT.md) code of
+conduct. By participating, you are expected to uphold this code. Please report
+unacceptable behavior to
 [code-of-conduct@stacklok.dev](mailto:code-of-conduct@stacklok.dev).
 
 ## Reporting security vulnerabilities
 
-If you think you have found a security vulnerability in ToolHive Studio please DO NOT
-disclose it publicly until we've had a chance to fix it. Please don't report
-security vulnerabilities using GitHub issues; instead, please follow this
+If you think you have found a security vulnerability in ToolHive Studio please
+DO NOT disclose it publicly until we've had a chance to fix it. Please don't
+report security vulnerabilities using GitHub issues; instead, please follow this
 [process](./SECURITY.MD)
 
 ## How to contribute
@@ -56,7 +55,8 @@ are a great place to start!
   message to indicate that the contributor agrees to the Developer Certificate
   of Origin. For additional details, check out the [DCO instructions](./DCO.md).
 - Create an issue outlining the fix or feature.
-- Fork the ToolHive Studio repository to your own GitHub account and clone it locally.
+- Fork the ToolHive Studio repository to your own GitHub account and clone it
+  locally.
 - Hack on your changes.
 - Correctly format your commit messages, see
   [Commit message guidelines](#commit-message-guidelines) below.
@@ -83,9 +83,10 @@ documentation.
 
 ### Commit message guidelines
 
-We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification for commit messages:
+We follow the [Conventional Commits](https://www.conventionalcommits.org/)
+specification for commit messages:
 
-```
+```text
 <type>[optional scope]: <description>
 
 [optional body]
@@ -98,7 +99,8 @@ We follow the [Conventional Commits](https://www.conventionalcommits.org/) speci
 - `feat`: A new feature
 - `fix`: A bug fix
 - `docs`: Documentation only changes
-- `style`: Changes that do not affect the meaning of the code (white-space, formatting, etc.)
+- `style`: Changes that do not affect the meaning of the code (white-space,
+  formatting, etc.)
 - `refactor`: A code change that neither fixes a bug nor adds a feature
 - `perf`: A code change that improves performance
 - `test`: Adding missing tests or correcting existing tests

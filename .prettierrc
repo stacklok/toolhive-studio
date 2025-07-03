@@ -10,5 +10,14 @@
     "prettier-plugin-merge"
   ],
   "tailwindFunctions": ["tv", "twMerge", "cn"],
-  "customFunctions": ["tv", "twMerge", "cn"]
+  "customFunctions": ["tv", "twMerge", "cn"],
+  "overrides": [
+    {
+      "files": ["README.md"],
+      "options": {
+        "proseWrap": "always",
+        "printWidth": 80
+      }
+    }
+  ]
 }
