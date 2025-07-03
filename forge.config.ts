@@ -97,7 +97,7 @@ const config: ForgeConfig = {
     }),
     new MakerDMG(
       {
-        name: 'ToolHive Studio',
+        name: 'toolhive-studio',
         title: 'ToolHive Studio',
         icon: './icons/icon.icns',
         overwrite: true,
