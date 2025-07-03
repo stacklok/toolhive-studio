@@ -20,7 +20,6 @@ Object.defineProperty(window, 'electronAPI', {
   writable: true,
 })
 
-// Mock clipboard API
 const mockClipboard = {
   writeText: vi.fn(),
   readText: vi.fn(),
@@ -120,7 +119,7 @@ it('stops server', async () => {
   })
 })
 
-it('should show dropdown menu with URL and remove option when clicking more options button', async () => {
+it('shows dropdown menu with URL and remove option when clicking more options button', async () => {
   renderRoute(router)
 
   await waitFor(() => {
@@ -147,7 +146,7 @@ it('should show dropdown menu with URL and remove option when clicking more opti
   expect(screen.getByRole('menuitem', { name: /remove/i })).toBeVisible()
 })
 
-it('should copy URL to clipboard when clicking copy button', async () => {
+it('copies URL to clipboard when clicking copy button', async () => {
   renderRoute(router)
 
   await waitFor(() => {
@@ -169,7 +168,7 @@ it('should copy URL to clipboard when clicking copy button', async () => {
   expect(mockClipboard.writeText).toHaveBeenCalledWith(MOCK_MCP_SERVERS[0].url)
 })
 
-it('should allow deleting a server through the dropdown menu', async () => {
+it('allows deleting a server through the dropdown menu', async () => {
   renderRoute(router)
 
   await waitFor(() => {
