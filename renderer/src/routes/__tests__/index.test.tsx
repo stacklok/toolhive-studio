@@ -20,9 +20,20 @@ Object.defineProperty(window, 'electronAPI', {
   writable: true,
 })
 
+// Mock clipboard API
+const mockClipboard = {
+  writeText: vi.fn(),
+  readText: vi.fn(),
+}
+
 beforeEach(() => {
   // Reset mocks before each test
   vi.clearAllMocks()
+
+  // Mock clipboard API
+  Object.assign(navigator, {
+    clipboard: mockClipboard,
+  })
 })
 
 it('renders list of MCP servers', async () => {
@@ -109,7 +120,7 @@ it('stops server', async () => {
   })
 })
 
-it('shows dropdown menu with remove option when clicking more options button', async () => {
+it('should show dropdown menu with URL and remove option when clicking more options button', async () => {
   renderRoute(router)
 
   await waitFor(() => {
@@ -125,13 +136,40 @@ it('shows dropdown menu with remove option when clicking more options button', a
 
   await userEvent.click(moreOptionsButton)
 
+  const urlInput = screen.getByDisplayValue(MOCK_MCP_SERVERS[0].url)
+  expect(urlInput).toBeVisible()
+  expect(urlInput).toHaveAttribute('readonly')
+  expect(screen.getByRole('button', { name: 'Copy URL' })).toBeVisible()
+
   expect(
     screen.getByRole('menuitem', { name: /github repository/i })
   ).toBeVisible()
   expect(screen.getByRole('menuitem', { name: /remove/i })).toBeVisible()
 })
 
-it('allows deleting a server through the dropdown menu', async () => {
+it('should copy URL to clipboard when clicking copy button', async () => {
+  renderRoute(router)
+
+  await waitFor(() => {
+    expect(screen.getByText('postgres-db')).toBeVisible()
+  })
+
+  const postgresCard = screen
+    .getByText('postgres-db')
+    .closest('[data-slot="card"]') as HTMLElement
+  const moreOptionsButton = within(postgresCard).getByRole('button', {
+    name: /more options/i,
+  })
+
+  await userEvent.click(moreOptionsButton)
+
+  const copyButton = screen.getByRole('button', { name: 'Copy URL' })
+  await userEvent.click(copyButton)
+
+  expect(mockClipboard.writeText).toHaveBeenCalledWith(MOCK_MCP_SERVERS[0].url)
+})
+
+it('should allow deleting a server through the dropdown menu', async () => {
   renderRoute(router)
 
   await waitFor(() => {
