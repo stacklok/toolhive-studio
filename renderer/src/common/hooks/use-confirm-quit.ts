@@ -9,6 +9,10 @@ export function useConfirmQuit() {
         title: 'Quitting will shut MCPs down',
         isDestructive: true,
         buttons: { yes: 'Quit', no: 'Cancel' },
+        doNotShowAgain: {
+          label: "Don't ask me again when quitting",
+          id: 'confirm_quit',
+        },
       }
     )
   }
