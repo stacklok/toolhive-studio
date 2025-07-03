@@ -129,9 +129,9 @@ export function ConnectionRefusedError() {
       <div className="bg-muted rounded-md p-3 text-sm">
         <p className="mb-2 font-medium">To get started:</p>
         <ol className="list-inside list-decimal space-y-1">
-          <li>Install Docker Desktop or Podman</li>
+          <li>Install Docker Desktop or Podman Desktop</li>
           <li>Start the container engine</li>
-          <li>Click "Check Again" to continue</li>
+          <li>Click "Try Again" to continue</li>
         </ol>
       </div>
 
@@ -140,8 +140,8 @@ export function ConnectionRefusedError() {
           Install Docker Desktop
         </ExternalLinkButton>
 
-        <ExternalLinkButton href="https://podman.io/getting-started/installation">
-          Install Podman
+        <ExternalLinkButton href="https://podman-desktop.io/downloads">
+          Install Podman Desktop
         </ExternalLinkButton>
       </div>
     </BaseErrorScreen>
