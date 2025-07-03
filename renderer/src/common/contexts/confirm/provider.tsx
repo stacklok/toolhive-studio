@@ -8,30 +8,8 @@ import {
   DialogDescription,
 } from '@/common/components/ui/dialog'
 import { Button } from '@/common/components/ui/button'
+import { Checkbox } from '@/common/components/ui/checkbox'
 import { ConfirmContext, type ConfirmConfig } from '.'
-
-// Checkbox component (inline for simplicity)
-function Checkbox({
-  checked,
-  onCheckedChange,
-  children,
-}: {
-  checked: boolean
-  onCheckedChange: (checked: boolean) => void
-  children: ReactNode
-}) {
-  return (
-    <label className="flex cursor-pointer items-center space-x-2">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onCheckedChange(e.target.checked)}
-        className="h-4 w-4"
-      />
-      <span className="text-sm">{children}</span>
-    </label>
-  )
-}
 
 export function ConfirmProvider({ children }: { children: ReactNode }) {
   const [activeQuestion, setActiveQuestion] = useState<{
@@ -102,12 +80,17 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
           <div className="py-2">{activeQuestion?.message}</div>
           {activeQuestion?.config.doNotShowAgain && (
             <div className="py-2">
-              <Checkbox
-                checked={doNotShowAgainChecked}
-                onCheckedChange={setDoNotShowAgainChecked}
-              >
-                {activeQuestion.config.doNotShowAgain.label}
-              </Checkbox>
+              <label className="flex cursor-pointer items-center space-x-2">
+                <Checkbox
+                  checked={doNotShowAgainChecked}
+                  onCheckedChange={(checked) => {
+                    setDoNotShowAgainChecked(checked === true)
+                  }}
+                />
+                <span className="text-sm">
+                  {activeQuestion.config.doNotShowAgain.label}
+                </span>
+              </label>
             </div>
           )}
           <DialogFooter>
