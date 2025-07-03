@@ -11,7 +11,7 @@ import {
   useAutoLaunchStatus,
   useSetAutoLaunch,
 } from '@/common/hooks/use-auto-launch'
-import { useConfirmQuit } from '@/common/hooks/use-confirm'
+import { useConfirmQuit } from '@/common/hooks/use-confirm-quit'
 
 export function SettingsDropdown({ className }: { className?: string }) {
   const { data: autoLaunchStatus, isLoading, refetch } = useAutoLaunchStatus()

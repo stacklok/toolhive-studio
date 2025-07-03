@@ -1,7 +1,7 @@
 import { Button } from '../../ui/button'
 import { Minus, Square, X } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { useConfirmQuit } from '@/common/hooks/use-confirm'
+import { useConfirmQuit } from '@/common/hooks/use-confirm-quit'
 
 export function WindowControls() {
   const [isMaximized, setIsMaximized] = useState(false)

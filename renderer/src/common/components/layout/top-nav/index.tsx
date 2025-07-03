@@ -15,7 +15,7 @@ import { LinkViewTransition } from '../../link-view-transition'
 import { TopNavContainer } from './container'
 import { Separator } from '../../ui/separator'
 import { TopNavLogo } from './logo'
-import { useConfirmQuit } from '@/common/hooks/use-confirm'
+import { useConfirmQuit } from '@/common/hooks/use-confirm-quit'
 
 function TopNavLinks() {
   return (
