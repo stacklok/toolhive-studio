@@ -267,4 +267,51 @@ describe('useConfirm', () => {
     // Check that nothing was saved to localStorage
     expect(localStorage.getItem('doNotShowAgain_test_feature_4')).toBeNull()
   })
+
+  it('does not save to localStorage when user checks doNotShowAgain but clicks No', async () => {
+    // Clear localStorage before test
+    localStorage.clear()
+
+    const TestComponent = createTestComponent('Delete this file?', {
+      title: 'Confirm Deletion',
+      buttons: { yes: 'Delete', no: 'Cancel' },
+      // @ts-expect-error - doNotShowAgain feature not implemented yet
+      doNotShowAgain: {
+        label: 'Remember my choice',
+        id: 'test_feature_5',
+      },
+    })
+
+    render(
+      <ConfirmProvider>
+        <TestComponent />
+      </ConfirmProvider>
+    )
+
+    // Click the trigger button
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Trigger Confirm' })
+    )
+
+    // Wait for dialog and check the checkbox
+    await waitFor(() => {
+      expect(screen.getByText('Confirm Deletion')).toBeVisible()
+    })
+
+    const checkbox = screen.getByRole('checkbox', {
+      name: 'Remember my choice',
+    })
+    await userEvent.click(checkbox)
+
+    // Click Cancel (No) button
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    // Verify result is false
+    await waitFor(() => {
+      expect(screen.getByTestId('result')).toHaveTextContent('Result: false')
+    })
+
+    // Check that nothing was saved to localStorage (canceling doesn't get remembered)
+    expect(localStorage.getItem('doNotShowAgain_test_feature_5')).toBeNull()
+  })
 })
