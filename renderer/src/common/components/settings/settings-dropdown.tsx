@@ -11,11 +11,13 @@ import {
   useAutoLaunchStatus,
   useSetAutoLaunch,
 } from '@/common/hooks/use-auto-launch'
+import { useConfirmQuit } from '@/common/hooks/use-confirm'
 
 export function SettingsDropdown({ className }: { className?: string }) {
   const { data: autoLaunchStatus, isLoading, refetch } = useAutoLaunchStatus()
   const { mutateAsync: setAutoLaunch, isPending: isSetPending } =
     useSetAutoLaunch()
+  const confirmQuit = useConfirmQuit()
 
   const handleDropdownOpenChange = (open: boolean) => {
     if (open) {
@@ -29,7 +31,8 @@ export function SettingsDropdown({ className }: { className?: string }) {
   }
 
   const handleQuit = async () => {
-    if (window.electronAPI) {
+    const confirmed = await confirmQuit()
+    if (confirmed && window.electronAPI) {
       await window.electronAPI.quitApp()
     }
   }

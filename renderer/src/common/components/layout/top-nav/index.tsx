@@ -15,6 +15,7 @@ import { LinkViewTransition } from '../../link-view-transition'
 import { TopNavContainer } from './container'
 import { Separator } from '../../ui/separator'
 import { TopNavLogo } from './logo'
+import { useConfirmQuit } from '@/common/hooks/use-confirm'
 
 function TopNavLinks() {
   return (
@@ -102,6 +103,7 @@ function TopNavLinks() {
 }
 
 export function TopNav(props: HTMLProps<HTMLElement>) {
+  const confirmQuit = useConfirmQuit()
   useEffect(() => {
     window.electronAPI.onUpdateDownloaded(() => {
       toast.info('Update downloaded and ready to install', {
@@ -114,11 +116,16 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
         },
         action: {
           label: 'Restart now',
-          onClick: () => window.electronAPI.quitApp(),
+          onClick: async () => {
+            const confirmed = await confirmQuit()
+            if (confirmed) {
+              window.electronAPI.quitApp()
+            }
+          },
         },
       })
     })
-  }, [])
+  }, [confirmQuit])
 
   return (
     <TopNavContainer {...props}>

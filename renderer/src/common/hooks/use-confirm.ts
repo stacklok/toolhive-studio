@@ -13,3 +13,17 @@ export function useConfirm() {
   }
   return context.confirm
 }
+
+export function useConfirmQuit() {
+  const confirm = useConfirm()
+  return async () => {
+    return confirm(
+      'Shutting down ToolHive will also shut down all your MCP servers.',
+      {
+        title: 'Confirm Quit',
+        isDestructive: true,
+        buttons: { yes: 'Quit', no: 'Cancel' },
+      }
+    )
+  }
+}
