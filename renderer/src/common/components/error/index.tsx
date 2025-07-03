@@ -17,6 +17,8 @@ export function Error({ error }: ErrorProps = {}) {
     return <KeyringError />
   }
 
+  console.log('error', error)
+
   // Check for connection errors that might indicate container engine issues
   if (
     error?.toString().includes('ECONNREFUSED') ||

@@ -70,12 +70,24 @@ export const Route = createRootRouteWithContext<{
   onError: (error) => {
     console.error(error)
   },
-  loader: async ({ context: { queryClient } }) => {
-    await queryClient
-      .ensureQueryData({
-        queryKey: ['health'],
-        queryFn: () => getHealth({}),
-      })
-      .then(() => setupSecretProvider(queryClient))
+  beforeLoad: async ({ context: { queryClient } }) => {
+    await queryClient.ensureQueryData({
+      queryKey: ['is-toolhive-running'],
+      queryFn: async () => {
+        const res = await window.electronAPI.isToolhiveRunning()
+        if (!res) {
+          console.error('Error ToolHive is not running')
+        }
+        return res
+      },
+      retry: 3,
+      retryDelay: 300,
+    })
+    await queryClient.ensureQueryData({
+      queryKey: ['health'],
+      queryFn: () => getHealth({}),
+    })
   },
+  loader: async ({ context: { queryClient } }) =>
+    await setupSecretProvider(queryClient),
 })
