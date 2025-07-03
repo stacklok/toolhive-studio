@@ -16,6 +16,7 @@ import { TopNavContainer } from './container'
 import { Separator } from '../../ui/separator'
 import { TopNavLogo } from './logo'
 import { useConfirmQuit } from '@/common/hooks/use-confirm-quit'
+import { QuitConfirmationListener } from './quit-confirmation-listener'
 
 function TopNavLinks() {
   return (
@@ -129,6 +130,7 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
 
   return (
     <TopNavContainer {...props}>
+      <QuitConfirmationListener />
       <TopNavLogo />
       <div className="flex h-10 items-center gap-4">
         <TopNavLinks />
