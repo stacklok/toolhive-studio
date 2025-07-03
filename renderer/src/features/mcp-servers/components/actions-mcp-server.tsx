@@ -32,8 +32,8 @@ export function ActionsMcpServer({
       <div onClick={(e) => e.preventDefault()}>
         <Switch
           aria-label="Mutate server"
-          checked={isRunning || isPending}
-          disabled={isStarting}
+          checked={isRunning || isStarting}
+          disabled={isStarting || isPending}
           onCheckedChange={() => mutate()}
         />
       </div>
