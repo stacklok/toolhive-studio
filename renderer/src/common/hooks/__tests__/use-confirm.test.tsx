@@ -32,6 +32,34 @@ const createTestComponent = (
 }
 
 describe('useConfirm', () => {
+  it('does not show checkbox when doNotShowAgain is not provided', async () => {
+    const TestComponent = createTestComponent('Continue with this action?', {
+      title: 'Confirm Action',
+      buttons: { yes: 'Continue', no: 'Cancel' },
+      // No doNotShowAgain property
+    })
+
+    render(
+      <ConfirmProvider>
+        <TestComponent />
+      </ConfirmProvider>
+    )
+
+    // Click the trigger button
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Trigger Confirm' })
+    )
+
+    // Verify dialog appears without checkbox
+    await waitFor(() => {
+      expect(screen.getByText('Confirm Action')).toBeVisible()
+    })
+    expect(screen.getByText('Continue with this action?')).toBeVisible()
+
+    // Verify no checkbox is present
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+  })
+
   it('shows confirmation dialog and resolves promise when user clicks Yes', async () => {
     const TestComponent = createTestComponent(
       'Are you sure you want to delete this item?',

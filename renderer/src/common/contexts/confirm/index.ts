@@ -10,6 +10,10 @@ export type ConfirmConfig = {
   title?: ReactNode
   isDestructive?: boolean
   description?: ReactNode
+  doNotShowAgain?: {
+    label: ReactNode
+    id: string
+  }
 }
 
 type ConfirmFunction = (

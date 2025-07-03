@@ -10,6 +10,29 @@ import {
 import { Button } from '@/common/components/ui/button'
 import { ConfirmContext, type ConfirmConfig } from '.'
 
+// Checkbox component (inline for simplicity)
+function Checkbox({
+  checked,
+  onCheckedChange,
+  children,
+}: {
+  checked: boolean
+  onCheckedChange: (checked: boolean) => void
+  children: ReactNode
+}) {
+  return (
+    <label className="flex cursor-pointer items-center space-x-2">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onCheckedChange(e.target.checked)}
+        className="h-4 w-4"
+      />
+      <span className="text-sm">{children}</span>
+    </label>
+  )
+}
+
 export function ConfirmProvider({ children }: { children: ReactNode }) {
   const [activeQuestion, setActiveQuestion] = useState<{
     message: ReactNode
@@ -17,15 +40,39 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
     resolve: (value: boolean) => void
   } | null>(null)
   const [isOpen, setIsOpen] = useState(false)
+  const [doNotShowAgainChecked, setDoNotShowAgainChecked] = useState(false)
 
   const handleAnswer = (answer: boolean) => {
     if (!activeQuestion) return
+
+    // Save to localStorage if checkbox is checked and user clicked "Yes"
+    if (
+      doNotShowAgainChecked &&
+      answer &&
+      activeQuestion.config.doNotShowAgain
+    ) {
+      const key = `doNotShowAgain_${activeQuestion.config.doNotShowAgain.id}`
+      localStorage.setItem(key, 'true')
+    }
+
     activeQuestion.resolve(answer)
     setIsOpen(false)
+    setDoNotShowAgainChecked(false) // Reset for next use
   }
 
   const confirm = (message: ReactNode, config: ConfirmConfig) => {
     return new Promise<boolean>((resolve) => {
+      // Check if user has previously chosen "do not show again"
+      if (config.doNotShowAgain) {
+        const key = `doNotShowAgain_${config.doNotShowAgain.id}`
+        const savedChoice = localStorage.getItem(key)
+        if (savedChoice === 'true') {
+          // Skip dialog and return true immediately
+          resolve(true)
+          return
+        }
+      }
+
       setActiveQuestion({ message, config, resolve })
       setIsOpen(true)
     })
@@ -35,6 +82,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
     setIsOpen(open)
     if (!open) {
       setActiveQuestion(null)
+      setDoNotShowAgainChecked(false) // Reset checkbox when dialog closes
     }
   }
 
@@ -52,6 +100,16 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
             </DialogDescription>
           </DialogHeader>
           <div className="py-2">{activeQuestion?.message}</div>
+          {activeQuestion?.config.doNotShowAgain && (
+            <div className="py-2">
+              <Checkbox
+                checked={doNotShowAgainChecked}
+                onCheckedChange={setDoNotShowAgainChecked}
+              >
+                {activeQuestion.config.doNotShowAgain.label}
+              </Checkbox>
+            </div>
+          )}
           <DialogFooter>
             <Button
               variant="outline"
