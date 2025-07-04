@@ -179,14 +179,13 @@
 
   /* Ring grows from 2 px → 5 px and back */
   @keyframes pulse-ring {
-
     0%,
     100% {
       box-shadow: 0 0 0 1px var(--color-primary);
     }
 
     50% {
-      box-shadow: 0 0 0 .5px var(--color-secondary);
+      box-shadow: 0 0 0 0.5px var(--color-secondary);
     }
   }
 
