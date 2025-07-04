@@ -5,8 +5,6 @@ import path from 'node:path'
 const isDevelopment = process.env.NODE_ENV === 'development'
 
 log.transports.file.resolvePathFn = () => {
-  const appName = app.getName()
-  console.log('appName', appName)
   const logPath = app.getPath('logs')
   return path.join(logPath, 'main.log')
 }
