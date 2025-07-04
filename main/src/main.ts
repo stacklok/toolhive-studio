@@ -354,6 +354,7 @@ ipcMain.handle('quit-app', () => {
 })
 
 ipcMain.handle('get-toolhive-port', () => getToolhivePort())
+ipcMain.handle('is-toolhive-running', () => isToolhiveRunning())
 
 // Window control handlers for custom title bar
 ipcMain.handle('window-minimize', () => {
