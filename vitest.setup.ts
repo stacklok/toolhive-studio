@@ -21,6 +21,15 @@ beforeAll(() => {
     fetch,
   })
 
+  vi.mock('electron-log/renderer', () => ({
+    default: new Proxy(
+      {},
+      {
+        get: () => vi.fn(() => new Proxy({}, { get: () => vi.fn() })),
+      }
+    ),
+  }))
+
   window.HTMLElement.prototype.scrollIntoView = function () {}
 
   global.ResizeObserver = class ResizeObserver {

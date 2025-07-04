@@ -31,6 +31,7 @@ import {
   isToolhiveRunning,
   binPath,
 } from './toolhive-manager'
+import log from './logger'
 
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
@@ -40,11 +41,11 @@ Sentry.init({
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined
 declare const MAIN_WINDOW_VITE_NAME: string
 
-console.log(`ToolHive binary path: ${binPath}`)
-console.log(`Binary file exists: ${existsSync(binPath)}`)
+log.info(`ToolHive binary path: ${binPath}`)
+log.info(`Binary file exists: ${existsSync(binPath)}`)
 
 // this implements auto-update
-updateElectronApp()
+updateElectronApp({ logger: log })
 
 app.on('ready', () => {
   setTimeout(() => {
@@ -56,7 +57,7 @@ app.on('ready', () => {
       return
     }
 
-    console.debug('Simulating a new release for testing purposes')
+    log.info('Simulating a new release for testing purposes')
     mainWindow.webContents.send('update-downloaded')
   }, 2000)
 })
@@ -66,13 +67,12 @@ autoUpdater.on('update-downloaded', () => {
     return
   }
 
-  console.log('Update downloaded — sending to renderer')
+  log.info('Update downloaded — sending to renderer')
   mainWindow.webContents.send('update-downloaded')
 })
 
 autoUpdater.on('error', (message) => {
-  console.error('There was a problem updating the application')
-  console.error(message)
+  log.error('There was a problem updating the application: ', message)
 })
 
 autoUpdater.checkForUpdates()
@@ -87,7 +87,7 @@ export async function blockQuit(source: string, event?: Electron.Event) {
   if (tearingDown) return
   tearingDown = true
   isQuitting = true
-  console.info(`[${source}] initiating graceful teardown...`)
+  log.info(`[${source}] initiating graceful teardown...`)
 
   if (event) {
     event.preventDefault()
@@ -101,7 +101,7 @@ export async function blockQuit(source: string, event?: Electron.Event) {
       await stopAllServers(binPath, port)
     }
   } catch (err) {
-    console.error('Teardown failed:', err)
+    log.error('Teardown failed: ', err)
   } finally {
     // Stop the embedded ToolHive server
     stopToolhive()
@@ -117,12 +117,12 @@ export async function blockQuit(source: string, event?: Electron.Event) {
 const gotTheLock = app.requestSingleInstanceLock()
 
 if (!gotTheLock) {
-  console.log('Another instance is already running. Exiting...')
+  log.info('Another instance is already running. Exiting...')
   app.quit()
 } else {
   app.on('second-instance', () => {
     // Someone tried to run a second instance, focus our window instead
-    console.log('Second instance attempted, focusing existing window')
+    log.info('Second instance attempted, focusing existing window')
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore()
       mainWindow.focus()
@@ -223,11 +223,11 @@ app.whenReady().then(async () => {
   // Initialize tray first
   try {
     tray = initTray({ toolHiveIsRunning: false }) // Start with false, will update after ToolHive starts
-    console.log('System tray initialized successfully')
+    log.info('System tray initialized successfully')
     // Setup application menu
     createApplicationMenu(tray)
   } catch (error) {
-    console.error('Failed to initialize system tray:', error)
+    log.error('Failed to initialize system tray: ', error)
   }
 
   // Start ToolHive with tray reference
@@ -262,7 +262,7 @@ app.whenReady().then(async () => {
         tray.destroy()
         tray = initTray({ toolHiveIsRunning: isToolhiveRunning() })
       } catch (error) {
-        console.error('Failed to update tray after theme change:', error)
+        log.error('Failed to update tray after theme change: ', error)
       }
     }
   })
@@ -290,7 +290,7 @@ app.on('will-quit', (e) => blockQuit('will-quit', e))
     if (tearingDown) return
     tearingDown = true
     isQuitting = true
-    console.log(`[${sig}] delaying exit for teardown…`)
+    log.info(`[${sig}] delaying exit for teardown...`)
     try {
       const port = getToolhivePort()
       if (port) {
@@ -386,7 +386,7 @@ ipcMain.handle('restart-toolhive', async () => {
     await restartToolhive(tray || undefined)
     return { success: true }
   } catch (error) {
-    console.error('Failed to restart ToolHive:', error)
+    log.error('Failed to restart ToolHive: ', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

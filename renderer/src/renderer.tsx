@@ -12,6 +12,7 @@ import { TooltipProvider } from '@radix-ui/react-tooltip'
 import * as Sentry from '@sentry/electron/renderer'
 import { ThemeProvider } from './common/components/theme/theme-provider'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import log from 'electron-log/renderer'
 
 import './index.css'
 import { ConfirmProvider } from './common/contexts/confirm/provider'
@@ -58,7 +59,7 @@ const router = createRouter({
 })
 
 if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
-  console.error('ToolHive port API not available in renderer')
+  log.error('ToolHive port API not available in renderer')
 }
 
 ;(async () => {
@@ -67,7 +68,7 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
     const baseUrl = `http://localhost:${port}`
     client.setConfig({ baseUrl })
   } catch (e) {
-    console.error('Failed to get ToolHive port from main process', e)
+    log.error('Failed to get ToolHive port from main process: ', e)
     throw e
   }
 

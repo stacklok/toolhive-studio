@@ -37,13 +37,6 @@ export function GridCardsRegistryServer({
   const handleModalSubmit = (data: FormSchemaRunFromRegistry) => {
     if (selectedServer && onSubmit) {
       onSubmit(selectedServer, data)
-    } else {
-      // Fallback for when onSubmit is not provided
-      console.log('Installing server:', {
-        serverName: data.serverName,
-        sourceServer: selectedServer,
-        envVars: data.envVars,
-      })
     }
   }
 

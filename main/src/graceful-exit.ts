@@ -5,6 +5,7 @@ import {
 } from '../../renderer/src/common/api/generated/sdk.gen'
 import type { WorkloadsWorkload } from '../../renderer/src/common/api/generated/types.gen'
 import Store from 'electron-store'
+import log from './logger'
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -22,14 +23,14 @@ async function getRunningServers(port: number): Promise<WorkloadsWorkload[]> {
   try {
     const response = await getApiV1BetaWorkloads({ client })
     if (!response?.data?.workloads) {
-      console.warn('No workloads data in API response')
+      log.info('No workloads data in API response')
       return []
     }
     return response.data.workloads.filter(
       (server: WorkloadsWorkload) => server.status === 'running' && server.name
     )
   } catch (error) {
-    console.error('Failed to get running servers:', error)
+    log.error('Failed to get running servers: ', error)
     return []
   }
 }
@@ -50,11 +51,9 @@ async function pollUntilAllStopped(
       if (runningServers.length === 0) {
         return true
       }
-      console.info(
-        `Still waiting for ${runningServers.length} servers to stop...`
-      )
+      log.info(`Still waiting for ${runningServers.length} servers to stop...`)
     } catch (error) {
-      console.error('Error polling server status:', error)
+      log.error('Error polling server status: ', error)
     }
   }
   return false
@@ -67,21 +66,21 @@ export async function stopAllServers(
 ): Promise<void> {
   const client = createClient({ baseUrl: `http://localhost:${port}` })
   const servers = await getRunningServers(port)
-  console.info(
-    `Found ${servers.length} running servers:`,
+  log.info(
+    `Found ${servers.length} running servers: `,
     servers.map((item) => item.name)
   )
 
   if (!servers.length) {
-    console.info('No running servers – teardown complete')
+    log.info('No running servers – teardown complete')
     return
   }
 
   // Store the servers that are about to be shut down
   shutdownStore.set('lastShutdownServers', servers)
-  console.info(`Stored ${servers.length} servers for shutdown tracking`)
+  log.info(`Stored ${servers.length} servers for shutdown tracking`)
 
-  console.info(`Stopping ${servers.length} servers…`)
+  log.info(`Stopping ${servers.length} servers...`)
 
   // First, initiate stop for all servers
   const stopPromises = servers.map(async (server) => {
@@ -93,7 +92,7 @@ export async function stopAllServers(
       })
       return server.name
     } catch (error) {
-      console.error(`Failed to initiate stop for server ${server.name}:`, error)
+      log.error(`Failed to initiate stop for server ${server.name}: `, error)
       throw error
     }
   })
@@ -101,16 +100,18 @@ export async function stopAllServers(
   const results = await Promise.allSettled(stopPromises)
   const failures = results.filter((r) => r.status === 'rejected')
   if (failures.length) {
+    log.error(`${failures.length} server(s) failed to initiate stop`)
     throw new Error(`${failures.length} server(s) failed to initiate stop`)
   }
 
   // Then poll until all servers are stopped
   const allStopped = await pollUntilAllStopped(port)
   if (!allStopped) {
+    log.error('Some servers failed to stop within timeout')
     throw new Error('Some servers failed to stop within timeout')
   }
 
-  console.info('All servers stopped cleanly')
+  log.info('All servers stopped cleanly')
 }
 
 /** Get the list of servers that were shut down in the last shutdown */
@@ -121,5 +122,5 @@ export function getLastShutdownServers(): string[] {
 /** Clear the shutdown history */
 export function clearShutdownHistory(): void {
   shutdownStore.set('lastShutdownServers', [])
-  console.info('Shutdown history cleared')
+  log.info('Shutdown history cleared')
 }

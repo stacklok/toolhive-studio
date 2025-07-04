@@ -2,6 +2,7 @@ import { Menu, Tray, app, nativeImage, BrowserWindow } from 'electron'
 import path from 'node:path'
 import { getAutoLaunchStatus, setAutoLaunch } from './auto-launch'
 import { createApplicationMenu } from './menu'
+import log from './logger'
 
 ///////////////////////////////////////////////////
 // Tray icon
@@ -53,7 +54,7 @@ const createTrayWithSetup =
       setupFn(tray, toolHiveIsRunning)
       return tray
     } catch (error) {
-      console.error('Failed to create tray:', error)
+      log.error('Failed to create tray: ', error)
       throw error
     }
   }
@@ -123,7 +124,7 @@ const handleStartOnLogin = async (
     // Update the application menu to reflect the new state
     createApplicationMenu(currentTray)
   } catch (error) {
-    console.error('Failed to toggle auto-launch:', error)
+    log.error('Failed to toggle auto-launch: ', error)
   }
 }
 
@@ -239,6 +240,6 @@ export const updateTrayStatus = (tray: Tray, toolHiveIsRunning: boolean) => {
   try {
     setupTrayMenu(tray, toolHiveIsRunning)
   } catch (error) {
-    console.error('Failed to update tray status:', error)
+    log.error('Failed to update tray status: ', error)
   }
 }
