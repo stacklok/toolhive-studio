@@ -178,37 +178,44 @@
   }
 
   @keyframes diagonal-ring {
-    to {
-      background-position: 200% 200%;
+    from {
+      background-position: -150% -150%;
     }
+
+    /* start off-screen */
+    to {
+      background-position: 150% 150%;
+    }
+
+    /* end off-screen   */
   }
 
-  /* utility you’ll toggle from React */
   .animate-diagonal-ring {
     position: relative;
-    /* anchor the ::before */
   }
 
   .animate-diagonal-ring::before {
+    /* ─ ring visuals ─ */
     content: "";
     position: absolute;
     inset: 0;
-    padding: 2px;
-    /* border thickness */
+    padding: 1px;
+    /* border thickness (outer ↔ inner gap) */
     border-radius: inherit;
     pointer-events: none;
 
-    /* moving gradient */
+    /* wider 20 % highlight band */
     background: linear-gradient(120deg,
         transparent 0%,
-        transparent 35%,
-        var(--color-primary) 50%,
-        transparent 65%,
+        transparent 40%,
+        color-mix(in oklch, var(--color-primary) 30%, transparent) 50%,
+        transparent 60%,
         transparent 100%);
-    background-size: 200% 200%;
-    animation: diagonal-ring 1.6s linear infinite;
+    background-size: 300% 300%;
+    /* ensures a seamless loop */
+    animation: diagonal-ring 5s linear infinite;
 
-    /* mask so only the border shows */
+    /* mask so only the ring shows */
     -webkit-mask:
       linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0) padding-box;
