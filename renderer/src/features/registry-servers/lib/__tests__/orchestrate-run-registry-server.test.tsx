@@ -336,7 +336,7 @@ describe('saveSecrets', () => {
   })
 
   it('throws error when saveSecret returns no key', async () => {
-    const mockSaveSecret = vi.fn().mockImplementation((body, options) => {
+    const mockSaveSecret = vi.fn().mockImplementation((_, options) => {
       // Call the onSuccess callback to simulate successful save
       options.onSuccess?.()
       return Promise.resolve({ key: null })
