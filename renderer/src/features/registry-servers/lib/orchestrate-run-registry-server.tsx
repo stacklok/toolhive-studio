@@ -80,13 +80,11 @@ export async function saveSecrets(
     // The arbitrary delay a UX/UI affordance to allow the user to see the progress
     // of the operation. This is not strictly necessary, but it helps to avoid
     // confusion when many secrets are being created in quick succession.
-    // The delay is between 100 and 500ms
+    // For single secret: 2000ms, for multiple secrets: random 200-1000ms
     await new Promise((resolve) =>
       setTimeout(
         resolve,
-        process.env.NODE_ENV === 'test'
-          ? 0
-          : Math.floor(Math.random() * 401) + 100
+        secretsCount === 1 ? 2000 : Math.floor(Math.random() * 801) + 200
       )
     )
     createdSecrets.push({
