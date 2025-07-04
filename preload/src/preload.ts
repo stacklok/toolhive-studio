@@ -27,6 +27,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ToolHive restart
   restartToolhive: () => ipcRenderer.invoke('restart-toolhive'),
 
+  // External links
+  openExternal: (url: string) => ipcRenderer.invoke('open-external', url),
+
   // Theme management
   darkMode: {
     toggle: () => ipcRenderer.invoke('dark-mode:toggle'),
@@ -100,6 +103,7 @@ export interface ElectronAPI {
     success: boolean
     error?: string
   }>
+  openExternal: (url: string) => Promise<void>
   darkMode: {
     toggle: () => Promise<boolean>
     system: () => Promise<boolean>

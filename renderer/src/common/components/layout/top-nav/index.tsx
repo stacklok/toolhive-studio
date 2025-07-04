@@ -2,6 +2,7 @@ import type { HTMLProps } from 'react'
 
 import { ThemeToggle } from '../../theme/theme-toggle'
 import { SettingsDropdown } from '../../settings/settings-dropdown'
+import { HelpDropdown } from '../../help'
 import { WindowControls } from './window-controls'
 import {
   NavigationMenu,
@@ -138,6 +139,7 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
         <div className="flex items-center gap-2">
           <ThemeToggle className="app-region-no-drag" />
           <SettingsDropdown className="app-region-no-drag" />
+          <HelpDropdown className="app-region-no-drag" />
         </div>
       </div>
 
