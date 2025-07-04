@@ -115,12 +115,12 @@ describe('FormRunFromRegistry', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
     expect(screen.getByText(`Configure ${REGISTRY_SERVER.name}`)).toBeVisible()
-    expect(screen.getByLabelText('Server Name')).toBeInTheDocument()
+    expect(screen.getByLabelText('Server name')).toBeInTheDocument()
     expect(screen.getByLabelText('Command arguments')).toBeInTheDocument()
     expect(screen.getByLabelText('SECRET value')).toBeInTheDocument()
     expect(screen.getByLabelText('ENV_VAR value')).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: 'Install Server' })
+      screen.getByRole('button', { name: 'Install server' })
     ).toBeInTheDocument()
   })
 
@@ -153,7 +153,7 @@ describe('FormRunFromRegistry', () => {
 
     // Fill in the form
     await userEvent.type(
-      screen.getByLabelText('Server Name'),
+      screen.getByLabelText('Server name'),
       'my-awesome-server',
       {
         initialSelectionStart: 0,
@@ -172,7 +172,7 @@ describe('FormRunFromRegistry', () => {
     )
 
     await userEvent.click(
-      screen.getByRole('button', { name: 'Install Server' })
+      screen.getByRole('button', { name: 'Install server' })
     )
 
     await waitFor(() => {
@@ -248,7 +248,7 @@ describe('FormRunFromRegistry', () => {
 
     // Fill in server name
     await userEvent.type(
-      screen.getByLabelText('Server Name'),
+      screen.getByLabelText('Server name'),
       'my-awesome-server',
       {
         initialSelectionStart: 0,
@@ -274,7 +274,7 @@ describe('FormRunFromRegistry', () => {
     )
 
     await userEvent.click(
-      screen.getByRole('button', { name: 'Install Server' })
+      screen.getByRole('button', { name: 'Install server' })
     )
 
     await waitFor(() => {
@@ -334,7 +334,7 @@ describe('FormRunFromRegistry', () => {
 
     // Only fill in server name
     await userEvent.type(
-      screen.getByLabelText('Server Name'),
+      screen.getByLabelText('Server name'),
       'my-awesome-server',
       {
         initialSelectionStart: 0,
@@ -343,7 +343,7 @@ describe('FormRunFromRegistry', () => {
     )
 
     await userEvent.click(
-      screen.getByRole('button', { name: 'Install Server' })
+      screen.getByRole('button', { name: 'Install server' })
     )
 
     await waitFor(() => {
@@ -403,7 +403,7 @@ describe('FormRunFromRegistry', () => {
 
     // Only fill in server name, leave required fields empty
     await userEvent.type(
-      screen.getByLabelText('Server Name'),
+      screen.getByLabelText('Server name'),
       'my-awesome-server',
       {
         initialSelectionStart: 0,
@@ -412,7 +412,7 @@ describe('FormRunFromRegistry', () => {
     )
 
     await userEvent.click(
-      screen.getByRole('button', { name: 'Install Server' })
+      screen.getByRole('button', { name: 'Install server' })
     )
 
     await waitFor(() => {
@@ -461,7 +461,7 @@ describe('FormRunFromRegistry', () => {
 
     // Fill in server name
     await userEvent.type(
-      screen.getByLabelText('Server Name'),
+      screen.getByLabelText('Server name'),
       'my-awesome-server',
       {
         initialSelectionStart: 0,
@@ -471,7 +471,7 @@ describe('FormRunFromRegistry', () => {
 
     // Click submit to trigger loading state
     await userEvent.click(
-      screen.getByRole('button', { name: 'Install Server' })
+      screen.getByRole('button', { name: 'Install server' })
     )
 
     // The loading state should be shown
@@ -513,7 +513,7 @@ describe('FormRunFromRegistry', () => {
 
     // Fill in server name
     await userEvent.type(
-      screen.getByLabelText('Server Name'),
+      screen.getByLabelText('Server name'),
       'my-awesome-server',
       {
         initialSelectionStart: 0,
@@ -523,7 +523,7 @@ describe('FormRunFromRegistry', () => {
 
     // Click submit to trigger loading state
     await userEvent.click(
-      screen.getByRole('button', { name: 'Install Server' })
+      screen.getByRole('button', { name: 'Install server' })
     )
 
     // The loading state should be shown
@@ -560,7 +560,7 @@ describe('FormRunFromRegistry', () => {
 
     // Fill in server name
     await userEvent.type(
-      screen.getByLabelText('Server Name'),
+      screen.getByLabelText('Server name'),
       'my-awesome-server',
       {
         initialSelectionStart: 0,
@@ -570,7 +570,7 @@ describe('FormRunFromRegistry', () => {
 
     // Click submit to trigger the mutation
     await userEvent.click(
-      screen.getByRole('button', { name: 'Install Server' })
+      screen.getByRole('button', { name: 'Install server' })
     )
 
     // Wait for the mutation to be called
@@ -629,7 +629,7 @@ describe('FormRunFromRegistry', () => {
 
     // Fill in server name
     await userEvent.type(
-      screen.getByLabelText('Server Name'),
+      screen.getByLabelText('Server name'),
       'my-awesome-server',
       {
         initialSelectionStart: 0,
@@ -639,7 +639,7 @@ describe('FormRunFromRegistry', () => {
 
     // Click submit
     await userEvent.click(
-      screen.getByRole('button', { name: 'Install Server' })
+      screen.getByRole('button', { name: 'Install server' })
     )
 
     await waitFor(() => {
@@ -685,7 +685,7 @@ describe('FormRunFromRegistry', () => {
 
     // Fill in form fields
     await userEvent.type(
-      screen.getByLabelText('Server Name'),
+      screen.getByLabelText('Server name'),
       'my-awesome-server',
       {
         initialSelectionStart: 0,
@@ -699,7 +699,7 @@ describe('FormRunFromRegistry', () => {
     )
 
     await userEvent.click(
-      screen.getByRole('button', { name: 'Install Server' })
+      screen.getByRole('button', { name: 'Install server' })
     )
 
     await waitFor(() => {

@@ -343,7 +343,7 @@ export function FormRunFromRegistry({
                   name="serverName"
                   render={({ field }) => (
                     <FormItem className="mb-10">
-                      <FormLabel>Server Name</FormLabel>
+                      <FormLabel>Server name</FormLabel>
                       <FormDescription>
                         Choose a unique name for this server instance
                       </FormDescription>
@@ -436,7 +436,7 @@ export function FormRunFromRegistry({
                 Cancel
               </Button>
               <Button disabled={isSubmitting} type="submit">
-                Install Server
+                Install server
               </Button>
             </DialogFooter>
           </form>
