@@ -4,19 +4,11 @@ import { FormRunFromRegistry } from './form-run-from-registry'
 import { useState } from 'react'
 import { useFilterSort } from '@/common/hooks/use-filter-sort'
 import { InputSearch } from '@/common/components/ui/input-search'
-import type {
-  InstallServerCheck,
-  InstallServerMutation,
-} from '../hooks/use-run-from-registry'
 
 export function GridCardsRegistryServer({
   servers,
-  onSubmit,
-  checkServerStatus,
 }: {
   servers: RegistryImageMetadata[]
-  onSubmit: InstallServerMutation
-  checkServerStatus: InstallServerCheck
 }) {
   const [selectedServer, setSelectedServer] =
     useState<RegistryImageMetadata | null>(null)
@@ -65,8 +57,6 @@ export function GridCardsRegistryServer({
         server={selectedServer}
         isOpen={isModalOpen}
         onOpenChange={setIsModalOpen}
-        onSubmit={onSubmit}
-        checkServerStatus={checkServerStatus}
       />
     </div>
   )

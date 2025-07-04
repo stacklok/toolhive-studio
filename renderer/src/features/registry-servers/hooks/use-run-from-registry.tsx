@@ -1,5 +1,7 @@
 import {
   getApiV1BetaSecretsDefaultKeys,
+  type Options,
+  type PostApiV1BetaSecretsDefaultKeysData,
   type RegistryImageMetadata,
   type SecretsSecretParameter,
   type V1CreateRequest,
@@ -44,7 +46,16 @@ export type InstallServerCheck = (
   data: FormSchemaRunFromRegistry
 ) => Promise<unknown> | unknown
 
-export function useRunFromRegistry() {
+export function useRunFromRegistry({
+  onSecretSuccess,
+  onSecretError,
+}: {
+  onSecretSuccess: (completedCount: number, secretsCount: number) => void
+  onSecretError: (
+    error: string,
+    variables: Options<PostApiV1BetaSecretsDefaultKeysData>
+  ) => void
+}) {
   const toastIdRef = useRef(new Date(Date.now()).toISOString())
   const queryClient = useQueryClient()
 
@@ -57,8 +68,6 @@ export function useRunFromRegistry() {
 
   const handleSettled = useCallback<InstallServerCheck>(
     async (formData) => {
-      console.debug('👉 handleSettled')
-
       toast.loading(`Starting "${formData.serverName}"...`, {
         duration: 30_000,
         id: toastIdRef.current,
@@ -109,16 +118,12 @@ export function useRunFromRegistry() {
     [queryClient]
   )
 
-  const { mutate: installServer } = useMutation({
-    mutationFn: async ({
-      server,
-      data,
-    }: {
-      server: RegistryImageMetadata
-      data: FormSchemaRunFromRegistry
-    }) => {
-      console.debug('👉 server:', server)
-      console.debug('👉 data:', data)
+  const {
+    mutateAsync: handleSecrets,
+    isPending: isPendingSecrets,
+    isError: isErrorSecrets,
+  } = useMutation({
+    mutationFn: async (data: FormSchemaRunFromRegistry) => {
       let newlyCreatedSecrets: SecretsSecretParameter[] = []
 
       // NOTE: Due to how we populate the names of the secrets in the form, we may
@@ -139,18 +144,6 @@ export function useRunFromRegistry() {
       // to the secret name, e.g. `MY_API_TOKEN` -> `MY_API_TOKEN_2`
       const { data: fetchedSecrets } = await getApiV1BetaSecretsDefaultKeys({
         throwOnError: true,
-      }).catch((e) => {
-        toast.error(
-          [
-            `An error occurred while starting the server.`,
-            'Could not retrieve secrets from the secret store.',
-            e instanceof Error ? `\n${e.message}` : null,
-          ].join('\n'),
-          {
-            id: toastIdRef.current,
-          }
-        )
-        throw e
       })
       const preparedNewSecrets = prepareSecretsWithoutNamingCollision(
         newSecrets,
@@ -161,25 +154,30 @@ export function useRunFromRegistry() {
       // If there are secrets with values, create them in the secret store first.
       // We need the data returned by the API to pass along with the "run workload" request.
       if (preparedNewSecrets.length > 0) {
-        try {
-          newlyCreatedSecrets = await saveSecrets(
-            preparedNewSecrets,
-            saveSecret,
-            toastIdRef.current
-          )
-        } catch (error) {
-          toast.error(
-            [
-              'An error occurred while starting the server.',
-              error instanceof Error ? `\n${error.message}` : null,
-            ].join(''),
-            {
-              id: toastIdRef.current,
-            }
-          )
-          return
-        }
+        newlyCreatedSecrets = await saveSecrets(
+          preparedNewSecrets,
+          saveSecret,
+          onSecretSuccess,
+          onSecretError
+        )
       }
+
+      return {
+        newlyCreatedSecrets,
+        existingSecrets,
+      }
+    },
+  })
+
+  const { mutate: installServerMutation } = useMutation({
+    mutationFn: async ({
+      server,
+      data,
+    }: {
+      server: RegistryImageMetadata
+      data: FormSchemaRunFromRegistry
+    }) => {
+      const { newlyCreatedSecrets, existingSecrets } = await handleSecrets(data)
 
       // Step 4: Create the MCP server workload
       // Prepare the request data and send it to the API
@@ -203,23 +201,12 @@ export function useRunFromRegistry() {
       })
       return response
     },
-    onError: (error) => {
-      console.debug('👉 error:', error)
-      toast.error(
-        [
-          'An error occurred while starting the server.',
-          error instanceof Error ? `\n${error.message}` : null,
-        ].join(''),
-        {
-          id: toastIdRef.current,
-        }
-      )
-      return
-    },
   })
 
   return {
-    handleSubmit: installServer,
+    installServerMutation,
     checkServerStatus: handleSettled,
+    isPendingSecrets,
+    isErrorSecrets,
   }
 }
