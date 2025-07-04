@@ -2,6 +2,7 @@ import { app } from 'electron'
 import path from 'node:path'
 import { existsSync, writeFileSync, unlinkSync, mkdirSync } from 'node:fs'
 import { homedir } from 'node:os'
+import log from './logger'
 
 interface DesktopEntry {
   Type: string
@@ -59,18 +60,18 @@ export function setAutoLaunch(enabled: boolean) {
       try {
         const desktopEntry = `[Desktop Entry]\n${createDesktopEntry(process.execPath)}`
         writeFileSync(desktopFile, desktopEntry)
-        console.log(`Created autostart file: ${desktopFile}`)
+        log.info(`Created autostart file: ${desktopFile}`)
       } catch (error) {
-        console.error('Failed to create autostart file:', error)
+        log.error('Failed to create autostart file: ', error)
       }
     } else {
       try {
         if (existsSync(desktopFile)) {
           unlinkSync(desktopFile)
-          console.log(`Removed autostart file: ${desktopFile}`)
+          log.info(`Removed autostart file: ${desktopFile}`)
         }
       } catch (error) {
-        console.error('Failed to remove autostart file:', error)
+        log.error('Failed to remove autostart file: ', error)
       }
     }
   }

@@ -5,6 +5,8 @@ import net from 'node:net'
 import { app } from 'electron'
 import type { Tray } from 'electron'
 import { updateTrayStatus } from './system-tray'
+import log from './logger'
+import * as Sentry from '@sentry/electron/main'
 
 const binName = process.platform === 'win32' ? 'thv.exe' : 'thv'
 const binPath = app.isPackaged
@@ -53,12 +55,12 @@ function findFreePort(): Promise<number> {
 
 export async function startToolhive(tray?: Tray): Promise<void> {
   if (!existsSync(binPath)) {
-    console.error(`ToolHive binary not found at: ${binPath}`)
+    log.error(`ToolHive binary not found at: ${binPath}`)
     return
   }
 
   toolhivePort = await findFreePort()
-  console.log(`Starting ToolHive from: ${binPath} on port ${toolhivePort}`)
+  log.info(`Starting ToolHive from: ${binPath} on port ${toolhivePort}`)
 
   toolhiveProcess = spawn(
     binPath,
@@ -74,12 +76,20 @@ export async function startToolhive(tray?: Tray): Promise<void> {
   }
 
   toolhiveProcess.on('error', (error) => {
-    console.error('Failed to start ToolHive:', error)
+    log.error('Failed to start ToolHive: ', error)
+    Sentry.captureMessage(
+      `Failed to start ToolHive: ${JSON.stringify(error)}`,
+      'error'
+    )
     if (tray) updateTrayStatus(tray, false)
   })
 
   toolhiveProcess.on('exit', (code) => {
-    console.log(`ToolHive process exited with code: ${code}`)
+    log.warn(`ToolHive process exited with code: ${code}`)
+    Sentry.captureMessage(
+      `ToolHive process exited with code: ${code}`,
+      'warning'
+    )
     toolhiveProcess = undefined
     if (tray) updateTrayStatus(tray, false)
   })
@@ -87,23 +97,29 @@ export async function startToolhive(tray?: Tray): Promise<void> {
 
 export async function restartToolhive(tray?: Tray): Promise<void> {
   if (isRestarting) {
-    console.log('Restart already in progress, skipping...')
+    log.info('Restart already in progress, skipping...')
     return
   }
 
   isRestarting = true
-  console.log('Restarting ToolHive...')
+  log.info('Restarting ToolHive...')
 
   try {
     // Stop existing process if running
     if (toolhiveProcess && !toolhiveProcess.killed) {
-      console.log('Stopping existing ToolHive process...')
+      log.info('Stopping existing ToolHive process...')
       toolhiveProcess.kill()
     }
 
     // Start new process
     await startToolhive(tray)
-    console.log('ToolHive restarted successfully')
+    log.info('ToolHive restarted successfully')
+  } catch (error) {
+    log.error('Failed to restart ToolHive: ', error)
+    Sentry.captureMessage(
+      `Failed to restart ToolHive: ${JSON.stringify(error)}`,
+      'error'
+    )
   } finally {
     // avoid another restart until process is stabilized
     setTimeout(() => {
@@ -114,7 +130,7 @@ export async function restartToolhive(tray?: Tray): Promise<void> {
 
 export function stopToolhive(): void {
   if (toolhiveProcess && !toolhiveProcess.killed) {
-    console.log('Stopping ToolHive process...')
+    log.info('Stopping ToolHive process...')
     toolhiveProcess.kill()
     toolhiveProcess = undefined
   }

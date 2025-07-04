@@ -1,6 +1,7 @@
 import { Menu, app } from 'electron'
 import { getAutoLaunchStatus, setAutoLaunch } from './auto-launch'
 import { updateTrayStatus } from './system-tray'
+import log from './logger'
 
 function createAutoLaunchItem(
   accelerator: string,
@@ -20,7 +21,7 @@ function createAutoLaunchItem(
         }
         createApplicationMenu(trayRef)
       } catch (error) {
-        console.error('Failed to toggle auto-launch:', error)
+        log.error('Failed to toggle auto-launch: ', error)
       }
     },
   }
