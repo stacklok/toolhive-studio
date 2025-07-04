@@ -182,12 +182,9 @@
       background-position: -150% -150%;
     }
 
-    /* start off-screen */
     to {
       background-position: 150% 150%;
     }
-
-    /* end off-screen   */
   }
 
   .animate-diagonal-ring {
@@ -195,27 +192,25 @@
   }
 
   .animate-diagonal-ring::before {
-    /* ─ ring visuals ─ */
     content: "";
     position: absolute;
     inset: 0;
     padding: 1px;
-    /* border thickness (outer ↔ inner gap) */
+    /* ring thickness */
     border-radius: inherit;
     pointer-events: none;
 
-    /* wider 20 % highlight band */
+    /* subtle, not-pink red highlight (≈ 25 % opacity of a mid-red) */
     background: linear-gradient(120deg,
         transparent 0%,
         transparent 40%,
-        color-mix(in oklch, var(--color-primary) 30%, transparent) 50%,
+        color-mix(in oklch, oklch(0.55 0.25 29) 25%, transparent) 50%,
         transparent 60%,
         transparent 100%);
     background-size: 300% 300%;
-    /* ensures a seamless loop */
     animation: diagonal-ring 5s linear infinite;
 
-    /* mask so only the ring shows */
+    /* show only the ring */
     -webkit-mask:
       linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0) padding-box;
