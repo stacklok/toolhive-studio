@@ -30,6 +30,12 @@ export function SettingsDropdown({ className }: { className?: string }) {
     setAutoLaunch(!autoLaunchStatus)
   }
 
+  const handleMinimizeToTray = () => {
+    if (window.electronAPI) {
+      window.electronAPI.hideApp()
+    }
+  }
+
   const handleQuit = async () => {
     const confirmed = await confirmQuit()
     if (confirmed && window.electronAPI) {
@@ -61,6 +67,12 @@ export function SettingsDropdown({ className }: { className?: string }) {
         >
           <span>Start on login</span>
           {autoLaunchStatus && <Check className="h-4 w-4" />}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={handleMinimizeToTray}
+          className="cursor-pointer"
+        >
+          <span>Minimize to Tray</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           variant="destructive"
