@@ -21,6 +21,7 @@ import '@fontsource/atkinson-hyperlegible/700.css'
 import '@fontsource/atkinson-hyperlegible/400-italic.css'
 import '@fontsource/atkinson-hyperlegible/700-italic.css'
 import '@fontsource-variable/inter/wght.css'
+import log from 'electron-log/renderer'
 
 async function setupSecretProvider(queryClient: QueryClient) {
   const createEncryptedProvider = () =>
@@ -68,7 +69,7 @@ export const Route = createRootRouteWithContext<{
   errorComponent: ({ error }) => <Error error={error} />,
   notFoundComponent: () => <NotFound />,
   onError: (error) => {
-    console.error(error)
+    log.error(error)
   },
   beforeLoad: async ({ context: { queryClient } }) => {
     await queryClient.ensureQueryData({
@@ -76,7 +77,7 @@ export const Route = createRootRouteWithContext<{
       queryFn: async () => {
         const res = await window.electronAPI.isToolhiveRunning()
         if (!res) {
-          console.error('Error ToolHive is not running')
+          log.error('Error ToolHive is not running')
         }
         return res
       },

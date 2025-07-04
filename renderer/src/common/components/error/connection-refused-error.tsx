@@ -6,6 +6,7 @@ import { Button } from '@/common/components/ui/button'
 import { BaseErrorScreen } from './base-error-screen'
 import { IllustrationPackage } from '../illustrations/illustration-package'
 import { withMinimumDelay } from './utils'
+import log from 'electron-log/renderer'
 
 interface ExternalLinkButtonProps {
   href: string
@@ -42,7 +43,7 @@ export function ConnectionRefusedError() {
     isError: isRestartError,
   } = useMutation({
     mutationFn: async () => {
-      console.log('Container engines are now available, restarting ToolHive...')
+      log.info('Container engines are now available, restarting ToolHive...')
       const result = await withMinimumDelay(
         window.electronAPI.restartToolhive,
         1200
@@ -51,14 +52,14 @@ export function ConnectionRefusedError() {
     },
     onSuccess: (result) => {
       if (result.success) {
-        console.log('ToolHive restarted successfully')
+        log.info('ToolHive restarted successfully')
         window.location.reload()
       } else {
-        console.error('Failed to restart ToolHive:', result.error)
+        log.error('Failed to restart ToolHive: ', result.error)
       }
     },
     onError: (error) => {
-      console.error('Error restarting ToolHive:', error)
+      log.error('Error restarting ToolHive: ', error)
     },
   })
 
