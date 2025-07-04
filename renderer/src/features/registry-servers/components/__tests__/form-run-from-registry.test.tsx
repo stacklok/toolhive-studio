@@ -528,7 +528,7 @@ describe('FormRunFromRegistry', () => {
 
     // The loading state should be shown
     await waitFor(() => {
-      expect(screen.getByText('Installing server...')).toBeInTheDocument()
+      expect(screen.getByText('Creating Secrets...')).toBeInTheDocument()
     })
   })
 
@@ -591,7 +591,7 @@ describe('FormRunFromRegistry', () => {
 
     // The error state should be shown
     await waitFor(() => {
-      expect(screen.getByText('Error')).toBeInTheDocument()
+      expect(screen.getByText('Something went wrong')).toBeInTheDocument()
     })
     expect(
       screen.getByText(/We were unable to create the secrets for the server/)
