@@ -5,7 +5,6 @@ import {
   type RegistryImageMetadata,
   type SecretsSecretParameter,
   type V1CreateRequest,
-  type V1CreateWorkloadResponse,
 } from '@/common/api/generated'
 import {
   postApiV1BetaWorkloadsMutation,
@@ -14,11 +13,7 @@ import {
   getApiV1BetaWorkloadsQueryKey,
 } from '@/common/api/generated/@tanstack/react-query.gen'
 import { pollServerStatus } from '@/common/lib/polling'
-import {
-  useMutation,
-  useQueryClient,
-  type UseMutateFunction,
-} from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { FormSchemaRunFromRegistry } from '../lib/get-form-schema-run-from-registry'
 import { useCallback, useRef } from 'react'
 import {
@@ -32,17 +27,7 @@ import { Button } from '@/common/components/ui/button'
 import { prepareSecretsWithoutNamingCollision } from '@/common/lib/secrets/prepare-secrets-without-naming-collision'
 import { Link } from '@tanstack/react-router'
 
-export type InstallServerMutation = UseMutateFunction<
-  V1CreateWorkloadResponse | undefined,
-  Error,
-  {
-    server: RegistryImageMetadata
-    data: FormSchemaRunFromRegistry
-  },
-  unknown
->
-
-export type InstallServerCheck = (
+type InstallServerCheck = (
   data: FormSchemaRunFromRegistry
 ) => Promise<unknown> | unknown
 
