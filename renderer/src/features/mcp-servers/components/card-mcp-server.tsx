@@ -173,7 +173,7 @@ export function CardMcpServer({
         'transition-[color,box-shadow,opacity]',
         isNewServer ? 'ring-2' : undefined,
         isDeleting ? 'pointer-events-none opacity-50' : undefined,
-        isTransitioning && 'animate-pulse-ring'
+        isTransitioning && 'animate-diagonal-ring'
       )}
     >
       <CardHeader>
