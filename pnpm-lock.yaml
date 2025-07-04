@@ -16,7 +16,7 @@ importers:
         version: 5.2.6
       '@fontsource/space-mono':
         specifier: ^5.2.7
-        version: 5.2.7
+        version: 5.2.8
       '@hey-api/client-fetch':
         specifier: ^0.13.0
         version: 0.13.1(@hey-api/openapi-ts@0.72.0(magicast@0.3.5)(typescript@5.8.3))
@@ -847,8 +847,8 @@ packages:
   '@fontsource/atkinson-hyperlegible@5.2.6':
     resolution: {integrity: sha512-Kfh6/UlHhotKuv4Oi9PXQIsmzwbtJIR442sSJnEHsO7TDZaDczK8cY0AlTNOB0XMDZj1j35nAlgbi2HZCdNg/Q==}
 
-  '@fontsource/space-mono@5.2.7':
-    resolution: {integrity: sha512-79X/R0W6E2OgigGohmB5F+GJtehbQ+k26BaskuJfucEuk3BqdlPFMyx63PeKvgMbLIpu1G9c/Rwng1jpZxsn/A==}
+  '@fontsource/space-mono@5.2.8':
+    resolution: {integrity: sha512-25X0fg1+kxxLes9/c6AozhrrAuBW1uLaOL584IRg4DZxVxNOMzcS3mHS1UtmsyTwtU2HpiIt9Kv23Q+7xQO+hg==}
 
   '@gar/promisify@1.1.3':
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
@@ -6994,7 +6994,7 @@ snapshots:
 
   '@fontsource/atkinson-hyperlegible@5.2.6': {}
 
-  '@fontsource/space-mono@5.2.7': {}
+  '@fontsource/space-mono@5.2.8': {}
 
   '@gar/promisify@1.1.3': {}
 
