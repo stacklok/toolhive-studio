@@ -5,6 +5,7 @@ import { MakerZIP } from '@electron-forge/maker-zip'
 import { MakerDeb } from '@electron-forge/maker-deb'
 import { MakerDMG } from '@electron-forge/maker-dmg'
 import { MakerRpm } from '@electron-forge/maker-rpm'
+import { MakerSnap } from '@electron-forge/maker-snap'
 import { MakerFlatpak } from '@electron-forge/maker-flatpak'
 import { VitePlugin } from '@electron-forge/plugin-vite'
 import { FusesPlugin } from '@electron-forge/plugin-fuses'
@@ -156,6 +157,33 @@ const config: ForgeConfig = {
         icon: './icons/icon.png',
         files: [],
       },
+    }),
+    new MakerSnap({
+      /**
+       * Any key that isn’t in MakerSnap’s own option list
+       * is passed straight through to snapcraft.yaml, so you
+       * can keep everything in one place.
+       */
+      name: 'toolhive-studio', // snap name
+      summary: 'ToolHive Studio IDE', // ≤ 78 chars  :contentReference[oaicite:0]{index=0}
+      description: 'Cross-platform GUI…',
+      grade: 'stable', // or "devel"
+      confinement: 'strict', // devmode | classic  :contentReference[oaicite:1]{index=1}
+      features: { audio: true, webgl: true },
+
+      // Electron-friendly interface presets
+      // features: { audio: true, webgl: true },   // PulseAudio, OpenGL  :contentReference[oaicite:2]{index=2}
+      // extensions: ['gnome'],
+
+      /* Extra permissions beyond the basics */
+      // appPlugs: ['docker-support', 'system-observe'],
+      // plugs: {
+      //   'docker-support': { interface: 'docker-support' },
+      //   'system-observe': { interface: 'system-observe' }
+      // },
+
+      /* Snapcraft options that MakerSnap doesn’t have first-class flags for */
+      // stagePackages: ['libnotify4', 'libnss3']  // passed through to snapcraft.yaml
     }),
   ],
 
