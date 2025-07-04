@@ -1,6 +1,5 @@
 import { Menu, Tray, app, nativeImage, BrowserWindow } from 'electron'
 import path from 'node:path'
-import { blockQuit } from './main'
 import { getAutoLaunchStatus, setAutoLaunch } from './auto-launch'
 import { createApplicationMenu } from './menu'
 
@@ -166,8 +165,13 @@ const createQuitMenuItem = () => ({
   accelerator: 'CmdOrCtrl+Q',
   type: 'normal' as const,
   click: () => {
-    withWindow(showWindowWithFocus)()
-    blockQuit('system-tray')
+    // Get the main window and trigger the confirmation flow
+    const window = BrowserWindow.getAllWindows()[0]
+    if (window) {
+      window.show()
+      window.focus()
+      window.webContents.send('show-quit-confirmation')
+    }
   },
 })
 

@@ -49,6 +49,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }
   },
 
+  // Quit confirmation
+  onShowQuitConfirmation: (callback: () => void) => {
+    ipcRenderer.on('show-quit-confirmation', callback)
+    return () => {
+      ipcRenderer.removeListener('show-quit-confirmation', callback)
+    }
+  },
+
   // Window controls
   windowControls: {
     minimize: () => ipcRenderer.invoke('window-minimize'),
@@ -106,6 +114,7 @@ export interface ElectronAPI {
   isLinux: boolean
   platform: NodeJS.Platform
   onServerShutdown: (callback: () => void) => () => void
+  onShowQuitConfirmation: (callback: () => void) => () => void
   windowControls: {
     minimize: () => Promise<void>
     maximize: () => Promise<void>
