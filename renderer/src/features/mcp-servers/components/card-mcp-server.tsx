@@ -164,13 +164,16 @@ export function CardMcpServer({
 
   // Check if the server is in deleting state
   const isDeleting = isDeletePending || status === 'deleting'
+  const isTransitioning =
+    status === 'starting' || status === 'stopping' || status === 'restarting'
 
   return (
     <Card
       className={twMerge(
         'transition-[color,box-shadow,opacity]',
         isNewServer ? 'ring-2' : undefined,
-        isDeleting ? 'pointer-events-none opacity-50' : undefined
+        isDeleting ? 'pointer-events-none opacity-50' : undefined,
+        isTransitioning && 'animate-pulse-ring'
       )}
     >
       <CardHeader>

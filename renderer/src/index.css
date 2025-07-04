@@ -176,4 +176,29 @@
   .app-region-no-drag {
     app-region: no-drag;
   }
+
+  /* Ring grows from 2 px → 5 px and back */
+  @keyframes pulse-ring {
+
+    0%,
+    100% {
+      box-shadow: 0 0 0 1px var(--color-primary);
+    }
+
+    50% {
+      box-shadow: 0 0 0 .5px var(--color-secondary);
+    }
+  }
+
+  .animate-pulse-ring {
+    /* starting width must match keyframe “0%” */
+    box-shadow: 0 0 0 2px var(--color-primary);
+    animation: pulse-ring 1.4s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-pulse-ring {
+      animation: none;
+    }
+  }
 }
