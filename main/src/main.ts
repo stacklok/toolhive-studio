@@ -45,7 +45,7 @@ log.info(`ToolHive binary path: ${binPath}`)
 log.info(`Binary file exists: ${existsSync(binPath)}`)
 
 // this implements auto-update
-updateElectronApp()
+updateElectronApp({ logger: log })
 
 app.on('ready', () => {
   setTimeout(() => {
