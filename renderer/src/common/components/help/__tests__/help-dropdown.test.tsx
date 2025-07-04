@@ -2,20 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { HelpDropdown } from '../help-dropdown'
 
-// Mock the electronAPI
-const mockOpenExternal = vi.fn()
-Object.defineProperty(window, 'electronAPI', {
-  value: {
-    openExternal: mockOpenExternal,
-  },
-  writable: true,
-})
-
 describe('HelpDropdown', () => {
-  beforeEach(() => {
-    mockOpenExternal.mockClear()
-  })
-
   it('renders help icon button', () => {
     render(<HelpDropdown />)
 
@@ -36,62 +23,73 @@ describe('HelpDropdown', () => {
     expect(screen.getByText('GitHub Repository')).toBeInTheDocument()
   })
 
-  it('opens documentation link when clicked', async () => {
+  it('renders documentation link with correct href', async () => {
     const user = userEvent.setup()
     render(<HelpDropdown />)
 
     const helpButton = screen.getByRole('button', { name: /help/i })
     await user.click(helpButton)
 
-    const documentationItem = screen.getByText('Documentation')
-    await user.click(documentationItem)
-
-    expect(mockOpenExternal).toHaveBeenCalledWith(
+    const documentationLink = screen.getByRole('menuitem', {
+      name: /documentation/i,
+    })
+    expect(documentationLink).toHaveAttribute(
+      'href',
       'https://github.com/StacklokLabs/toolhive-studio?tab=readme-ov-file#getting-started'
     )
+    expect(documentationLink).toHaveAttribute('target', '_blank')
+    expect(documentationLink).toHaveAttribute('rel', 'noopener noreferrer')
   })
 
-  it('opens Discord link when clicked', async () => {
+  it('renders Discord link with correct href', async () => {
     const user = userEvent.setup()
     render(<HelpDropdown />)
 
     const helpButton = screen.getByRole('button', { name: /help/i })
     await user.click(helpButton)
 
-    const discordItem = screen.getByText('Discord Community')
-    await user.click(discordItem)
-
-    expect(mockOpenExternal).toHaveBeenCalledWith('https://discord.gg/stacklok')
+    const discordLink = screen.getByRole('menuitem', {
+      name: /discord community/i,
+    })
+    expect(discordLink).toHaveAttribute('href', 'https://discord.gg/stacklok')
+    expect(discordLink).toHaveAttribute('target', '_blank')
+    expect(discordLink).toHaveAttribute('rel', 'noopener noreferrer')
   })
 
-  it('opens feedback link when clicked', async () => {
+  it('renders feedback link with correct href', async () => {
     const user = userEvent.setup()
     render(<HelpDropdown />)
 
     const helpButton = screen.getByRole('button', { name: /help/i })
     await user.click(helpButton)
 
-    const feedbackItem = screen.getByText('Send Feedback')
-    await user.click(feedbackItem)
-
-    expect(mockOpenExternal).toHaveBeenCalledWith(
+    const feedbackLink = screen.getByRole('menuitem', {
+      name: /send feedback/i,
+    })
+    expect(feedbackLink).toHaveAttribute(
+      'href',
       'https://github.com/StacklokLabs/toolhive-studio/issues'
     )
+    expect(feedbackLink).toHaveAttribute('target', '_blank')
+    expect(feedbackLink).toHaveAttribute('rel', 'noopener noreferrer')
   })
 
-  it('opens GitHub repository link when clicked', async () => {
+  it('renders GitHub repository link with correct href', async () => {
     const user = userEvent.setup()
     render(<HelpDropdown />)
 
     const helpButton = screen.getByRole('button', { name: /help/i })
     await user.click(helpButton)
 
-    const githubItem = screen.getByText('GitHub Repository')
-    await user.click(githubItem)
-
-    expect(mockOpenExternal).toHaveBeenCalledWith(
+    const githubLink = screen.getByRole('menuitem', {
+      name: /github repository/i,
+    })
+    expect(githubLink).toHaveAttribute(
+      'href',
       'https://github.com/StacklokLabs/toolhive-studio'
     )
+    expect(githubLink).toHaveAttribute('target', '_blank')
+    expect(githubLink).toHaveAttribute('rel', 'noopener noreferrer')
   })
 
   it('applies custom className', () => {

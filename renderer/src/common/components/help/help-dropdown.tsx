@@ -9,28 +9,6 @@ import { Button } from '@/common/components/ui/button'
 import { twMerge } from 'tailwind-merge'
 
 export function HelpDropdown({ className }: { className?: string }) {
-  const handleOpenDocumentation = () => {
-    window.electronAPI.openExternal(
-      'https://github.com/StacklokLabs/toolhive-studio?tab=readme-ov-file#getting-started'
-    )
-  }
-
-  const handleOpenDiscord = () => {
-    window.electronAPI.openExternal('https://discord.gg/stacklok')
-  }
-
-  const handleOpenFeedback = () => {
-    window.electronAPI.openExternal(
-      'https://github.com/StacklokLabs/toolhive-studio/issues'
-    )
-  }
-
-  const handleOpenGitHub = () => {
-    window.electronAPI.openExternal(
-      'https://github.com/StacklokLabs/toolhive-studio'
-    )
-  }
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -44,26 +22,45 @@ export function HelpDropdown({ className }: { className?: string }) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuItem
-          onClick={handleOpenDocumentation}
-          className="cursor-pointer"
-        >
-          Documentation
+        <DropdownMenuItem asChild>
+          <a
+            href="https://github.com/StacklokLabs/toolhive-studio?tab=readme-ov-file#getting-started"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="cursor-pointer"
+          >
+            Documentation
+          </a>
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={handleOpenDiscord}
-          className="cursor-pointer"
-        >
-          Discord Community
+        <DropdownMenuItem asChild>
+          <a
+            href="https://discord.gg/stacklok"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="cursor-pointer"
+          >
+            Discord Community
+          </a>
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={handleOpenFeedback}
-          className="cursor-pointer"
-        >
-          Send Feedback
+        <DropdownMenuItem asChild>
+          <a
+            href="https://github.com/StacklokLabs/toolhive-studio/issues"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="cursor-pointer"
+          >
+            Send Feedback
+          </a>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleOpenGitHub} className="cursor-pointer">
-          GitHub Repository
+        <DropdownMenuItem asChild>
+          <a
+            href="https://github.com/StacklokLabs/toolhive-studio"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="cursor-pointer"
+          >
+            GitHub Repository
+          </a>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

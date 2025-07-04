@@ -394,10 +394,6 @@ ipcMain.handle('restart-toolhive', async () => {
   }
 })
 
-ipcMain.handle('open-external', (_event, url: string) => {
-  shell.openExternal(url)
-})
-
 // Shutdown store IPC handlers
 ipcMain.handle('shutdown-store:get-last-servers', () => {
   return getLastShutdownServers()
