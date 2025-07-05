@@ -75,7 +75,7 @@ export function DialogFormRunMcpServerWithCommand({
             </div>
 
             <DialogFooter className="p-6">
-              <Button type="submit">Submit</Button>
+              <Button type="submit">Install server</Button>
             </DialogFooter>
           </form>
         </Form>

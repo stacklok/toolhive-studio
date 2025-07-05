@@ -100,7 +100,7 @@ it('allows form submission with "inline" secret', async () => {
   })
 
   await userEvent.type(
-    screen.getByLabelText('Server Name', { selector: 'input' }),
+    screen.getByLabelText('Server name', { selector: 'input' }),
     'my-awesome-server',
     {
       initialSelectionStart: 0,
@@ -117,7 +117,7 @@ it('allows form submission with "inline" secret', async () => {
     'my-awesome-env-var'
   )
 
-  await userEvent.click(screen.getByRole('button', { name: 'Install Server' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Install server' }))
 
   await waitFor(() => {
     expect(onSubmit).toHaveBeenCalledWith({
@@ -178,7 +178,7 @@ it('allows form submission with secret from store', async () => {
   })
 
   await userEvent.type(
-    screen.getByLabelText('Server Name', { selector: 'input' }),
+    screen.getByLabelText('Server name', { selector: 'input' }),
     'my-awesome-server',
     {
       initialSelectionStart: 0,
@@ -199,7 +199,7 @@ it('allows form submission with secret from store', async () => {
     'my-awesome-env-var'
   )
 
-  await userEvent.click(screen.getByRole('button', { name: 'Install Server' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Install server' }))
 
   await waitFor(() => {
     expect(onSubmit).toHaveBeenCalledWith({
@@ -248,7 +248,7 @@ it('allows form submission without optional vars', async () => {
   })
 
   await userEvent.type(
-    screen.getByLabelText('Server Name', { selector: 'input' }),
+    screen.getByLabelText('Server name', { selector: 'input' }),
     'my-awesome-server',
     {
       initialSelectionStart: 0,
@@ -256,7 +256,7 @@ it('allows form submission without optional vars', async () => {
     }
   )
 
-  await userEvent.click(screen.getByRole('button', { name: 'Install Server' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Install server' }))
 
   await waitFor(() => {
     expect(onSubmit).toHaveBeenCalledWith({
@@ -307,7 +307,7 @@ it('allows form submission with populated required vars', async () => {
   })
 
   await userEvent.type(
-    screen.getByLabelText('Server Name', { selector: 'input' }),
+    screen.getByLabelText('Server name', { selector: 'input' }),
     'my-awesome-server',
     {
       initialSelectionStart: 0,
@@ -324,7 +324,7 @@ it('allows form submission with populated required vars', async () => {
     'my-awesome-env-var'
   )
 
-  await userEvent.click(screen.getByRole('button', { name: 'Install Server' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Install server' }))
 
   await waitFor(() => {
     expect(onSubmit).toHaveBeenCalledWith({
@@ -373,7 +373,7 @@ it('renders validation errors when required variables missing', async () => {
   })
 
   await userEvent.type(
-    screen.getByLabelText('Server Name', { selector: 'input' }),
+    screen.getByLabelText('Server name', { selector: 'input' }),
     'my-awesome-server',
     {
       initialSelectionStart: 0,
@@ -381,7 +381,7 @@ it('renders validation errors when required variables missing', async () => {
     }
   )
 
-  await userEvent.click(screen.getByRole('button', { name: 'Install Server' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Install server' }))
 
   await waitFor(() => {
     expect(onSubmit).not.toHaveBeenCalled()

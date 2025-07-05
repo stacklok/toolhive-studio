@@ -25,12 +25,12 @@ import { useState } from 'react'
 
 const createSecretSchema = z.object({
   key: z.string().min(1, 'Secret name is required'),
-  value: z.string().min(1, 'Secret contents is required'),
+  value: z.string().min(1, 'Secret value is required'),
 })
 
 const editSecretSchema = z.object({
   key: z.string().optional(),
-  value: z.string().min(1, 'Secret contents is required'),
+  value: z.string().min(1, 'Secret value is required'),
 })
 
 type SecretFormData = z.infer<typeof createSecretSchema>
@@ -106,9 +106,7 @@ export function DialogFormSecret({
 
 function SecretForm({ form, isEditMode, onSubmit, onCancel }: SecretFormProps) {
   const [showPassword, setShowPassword] = useState(false)
-  const secretContentsLabel = isEditMode
-    ? 'Replacement secret'
-    : 'Secret contents'
+  const secretContentsLabel = isEditMode ? 'New value' : 'Secret value'
   const submitButtonText = isEditMode ? 'Update' : 'Save'
 
   const handleFormSubmit = (data: SecretFormData) => {
