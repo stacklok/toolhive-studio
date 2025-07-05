@@ -80,7 +80,7 @@ setup, no security headaches, no runtime hassles.
 Download and install the latest release of ToolHive Studio for your platform:
 
 - macOS (Apple Silicon):
-  [toolhive-studio.dmg](https://github.com/StacklokLabs/toolhive-studio/releases/latest/download/toolhive-studio.dmg)
+  [ToolHive.Studio.dmg](https://github.com/StacklokLabs/toolhive-studio/releases/latest/download/ToolHive.Studio.dmg)
 - Windows:
   [ToolHive.Studio.Setup.exe](https://github.com/StacklokLabs/toolhive-studio/releases/latest/download/ToolHive.Studio.Setup.exe)
   > [!NOTE]  
