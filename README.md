@@ -15,7 +15,7 @@
 [![License: Apache 2.0][license-img]][license]
 [![Discord][discord-img]][discord]
 
-# ToolHive Studio - simplify and secure MCP servers
+# ToolHive - simplify and secure MCP servers
 
 **Run any Model Context Protocol (MCP) server — securely, instantly, anywhere.**
 
@@ -24,19 +24,19 @@ any MCP server in a locked-down container with just a few clicks. No manual
 setup, no security headaches, no runtime hassles.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./docs/images/toolhive-studio-screenshot-dark.webp">
-  <img src="./docs/images/toolhive-studio-screenshot-light.webp" alt="ToolHive Studio screenshot" width="800" style="padding: 20px 0" />
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/images/toolhive-ui-screenshot-dark.webp">
+  <img src="./docs/images/toolhive-ui-screenshot-light.webp" alt="ToolHive screenshot" width="800" style="padding: 20px 0" />
 </picture>
 
 ## Quick links
 
-- 🚀 [Quickstart](#getting-started) - install ToolHive Studio and run your first
-  MCP server
+- 🚀 [Quickstart](#getting-started) - install ToolHive and run your first MCP
+  server
   <!-- - 📚 [Documentation](https://docs.stacklok.com/toolhive/) -->
 - 💬 [Discord community](https://discord.gg/stacklok) - connect with the
   ToolHive community, ask questions, and share your experiences
-- 🛠️ [Developer guide](./docs/README.md) - build, test, and contribute to
-  ToolHive Studio
+- 🛠️ [Developer guide](./docs/README.md) - build, test, and contribute to the
+  ToolHive UI
 
 ---
 
@@ -75,14 +75,16 @@ setup, no security headaches, no runtime hassles.
 - If you are using Linux, make sure your user is in the `docker` group
   ([reference](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user)).
 
-### Install ToolHive Studio
+### Install ToolHive
 
-Download and install the latest release of ToolHive Studio for your platform:
+Download and install the latest release of the ToolHive for your platform:
 
 - macOS (Apple Silicon):
-  [ToolHive.Studio.dmg](https://github.com/StacklokLabs/toolhive-studio/releases/latest/download/ToolHive.Studio.dmg)
+  [download the DMG file](https://github.com/StacklokLabs/toolhive-studio/releases/latest/download/ToolHive.Studio.dmg),
+  open it, and drag the ToolHive app to your Applications folder.
 - Windows:
-  [ToolHive.Studio.Setup.exe](https://github.com/StacklokLabs/toolhive-studio/releases/latest/download/ToolHive.Studio.Setup.exe)
+  [download the installer](https://github.com/StacklokLabs/toolhive-studio/releases/latest/download/ToolHive.Studio.Setup.exe)
+  and run it.
   > [!NOTE]  
   > The Windows installer is not digitally signed yet, so you might need to
   > accept warnings from Windows Defender SmartScreen. We're working on getting
@@ -93,7 +95,7 @@ Download and install the latest release of ToolHive Studio for your platform:
 
 ### Run your first MCP server
 
-ToolHive Studio has four main areas:
+The ToolHive UI has four main areas:
 
 - **Installed**: View and manage your installed MCP servers.
 - **Registry**: Browse and install servers from the curated registry of official
@@ -128,8 +130,8 @@ Start by installing a simple MCP server from the registry:
 
 ## How it works
 
-Under the hood, ToolHive Studio runs each MCP server in its own secure container
-and exposes an HTTP/SSE proxy that MCP clients connect to.
+Under the hood, ToolHive runs each MCP server in its own secure container and
+exposes an HTTP/SSE proxy that MCP clients connect to.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/toolhive-diagram-dark.svg">
@@ -137,7 +139,7 @@ and exposes an HTTP/SSE proxy that MCP clients connect to.
 </picture>
 
 For more advanced use cases, ToolHive is also available as a command-line tool
-which can be used standalone or side-by-side with ToolHive Studio and as a
+which can be used standalone or side-by-side with the ToolHive UI and as a
 Kubernetes Operator. Learn more in the
 [ToolHive documentation](https://docs.stacklok.com/toolhive/).
 
@@ -163,15 +165,13 @@ This project is licensed under the [Apache 2.0 License](./LICENSE).
 
 <!-- Badge links -->
 <!-- prettier-ignore-start -->
-[release-img]: https://img.shields.io/github/v/release/StacklokLabs/toolhive-studio?label=Latest%20version
+[release-img]: https://img.shields.io/github/v/release/StacklokLabs/toolhive-studio?style=flat&label=Latest%20version
 [release]: https://github.com/StacklokLabs/toolhive-studio/releases/latest
-[ci-img]: https://img.shields.io/github/actions/workflow/status/StacklokLabs/toolhive-studio/on-main.yml?logo=github&label=Build
+[ci-img]: https://img.shields.io/github/actions/workflow/status/StacklokLabs/toolhive-studio/on-main.yml?style=flat&logo=github&label=Build
 [ci]: https://github.com/StacklokLabs/toolhive-studio/actions/workflows/on-main.yml
-[license-img]: https://img.shields.io/badge/License-Apache2.0-blue.svg
+[license-img]: https://img.shields.io/badge/License-Apache2.0-blue.svg?style=flat
 [license]: https://opensource.org/licenses/Apache-2.0
-[stars-img]: https://img.shields.io/github/stars/StacklokLabs/toolhive-studio.svg?logo=github&label=Stars
-[stars]: https://github.com/StacklokLabs/toolhive-studio
-[discord-img]: https://img.shields.io/discord/1184987096302239844?logo=discord&logoColor=white&label=Discord
+[discord-img]: https://img.shields.io/discord/1184987096302239844?style=flat&logo=discord&logoColor=white&label=Discord
 [discord]: https://discord.gg/stacklok
 <!-- prettier-ignore-end -->
 
