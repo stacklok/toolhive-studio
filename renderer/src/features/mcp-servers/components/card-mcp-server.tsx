@@ -166,19 +166,28 @@ export function CardMcpServer({
   const isDeleting = isDeletePending || status === 'deleting'
   const isTransitioning =
     status === 'starting' || status === 'stopping' || status === 'restarting'
+  const isStopped = status === 'stopped' || status === 'stopping'
 
   return (
     <Card
       className={twMerge(
-        'transition-[color,box-shadow,opacity]',
+        'transition-all duration-300 ease-in-out',
         isNewServer ? 'ring-2' : undefined,
         isDeleting ? 'pointer-events-none opacity-50' : undefined,
-        isTransitioning && 'animate-diagonal-ring'
+        isTransitioning && 'animate-diagonal-ring',
+        isStopped && 'bg-card/65'
       )}
     >
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center text-xl">{name}</CardTitle>
+          <CardTitle
+            className={twMerge(
+              'flex items-center text-xl',
+              isStopped && 'text-primary/65'
+            )}
+          >
+            {name}
+          </CardTitle>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
