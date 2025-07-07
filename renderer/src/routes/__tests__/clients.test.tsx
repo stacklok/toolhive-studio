@@ -16,7 +16,7 @@ describe('Clients Route', () => {
       ).toBeInTheDocument()
     })
 
-    expect(screen.getByText('VS Code')).toBeInTheDocument()
+    expect(screen.getByText('VS Code - Copilot')).toBeInTheDocument()
     expect(screen.getByText('Cursor')).toBeInTheDocument()
     expect(screen.getByText('Claude Code')).toBeInTheDocument()
     expect(screen.getAllByRole('switch')).toHaveLength(5)
