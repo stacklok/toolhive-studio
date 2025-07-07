@@ -167,6 +167,19 @@ export function CardMcpServer({
   const isTransitioning =
     status === 'starting' || status === 'stopping' || status === 'restarting'
   const isStopped = status === 'stopped' || status === 'stopping'
+  const [hadRecentStatusChange, setHadRecentStatusChange] = useState(false)
+  const [prevStatus, setPrevStatus] =
+    useState<WorkloadsWorkload['status']>(status)
+
+  useEffect(() => {
+    // show a brief animation for status transitions that are immediate
+    if (prevStatus !== status && ['running'].includes(status ?? '')) {
+      setHadRecentStatusChange(true)
+      const timeout = setTimeout(() => setHadRecentStatusChange(false), 2500)
+      return () => clearTimeout(timeout)
+    }
+    setPrevStatus(status)
+  }, [status, prevStatus])
 
   return (
     <Card
@@ -174,7 +187,7 @@ export function CardMcpServer({
         'transition-all duration-300 ease-in-out',
         isNewServer ? 'ring-2' : undefined,
         isDeleting ? 'pointer-events-none opacity-50' : undefined,
-        isTransitioning && 'animate-diagonal-ring',
+        (isTransitioning || hadRecentStatusChange) && 'animate-diagonal-ring',
         isStopped && 'bg-card/65'
       )}
     >
