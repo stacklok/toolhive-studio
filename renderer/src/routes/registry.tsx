@@ -1,7 +1,6 @@
 import { getApiV1BetaRegistryByNameServersOptions } from '@/common/api/generated/@tanstack/react-query.gen'
 import { createFileRoute } from '@tanstack/react-router'
 import { GridCardsRegistryServer } from '@/features/registry-servers/components/grid-cards-registry-server'
-import { useRunFromRegistry } from '@/features/registry-servers/hooks/use-run-from-registry'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { EmptyState } from '@/common/components/empty-state'
 import { ExternalLinkIcon } from 'lucide-react'
@@ -21,7 +20,6 @@ export function Registry() {
     getApiV1BetaRegistryByNameServersOptions({ path: { name: 'default' } })
   )
   const { servers: serversList = [] } = data || {}
-  const { handleSubmit } = useRunFromRegistry()
 
   return (
     <>
@@ -46,10 +44,7 @@ export function Registry() {
           illustration={IllustrationNoConnection}
         />
       ) : (
-        <GridCardsRegistryServer
-          servers={serversList}
-          onSubmit={handleSubmit}
-        />
+        <GridCardsRegistryServer servers={serversList} />
       )}
     </>
   )

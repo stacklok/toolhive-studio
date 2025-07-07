@@ -28,7 +28,7 @@ import type {
   RegistryImageMetadata,
 } from '@/common/api/generated/types.gen'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Label } from '@/common/components/ui/label'
 import { cn } from '@/common/lib/utils'
 import { AsteriskIcon } from 'lucide-react'
@@ -40,6 +40,9 @@ import {
 import { FormComboboxSecretStore } from '@/common/components/secrets/form-combobox-secrets-store'
 import { useQuery } from '@tanstack/react-query'
 import { getApiV1BetaWorkloadsOptions } from '@/common/api/generated/@tanstack/react-query.gen'
+import { useRunFromRegistry } from '../hooks/use-run-from-registry'
+import { LoadingStateAlert } from './loading-state-alert'
+import { AlertErrorFormSubmission } from './alert-error-form-submission'
 
 /**
  * Renders an asterisk icon & tooltip for required fields.
@@ -203,19 +206,42 @@ interface FormRunFromRegistryProps {
   server: RegistryImageMetadata | null
   isOpen: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (data: FormSchemaRunFromRegistry) => void
 }
 
 export function FormRunFromRegistry({
   server,
   isOpen,
   onOpenChange,
-  onSubmit,
 }: FormRunFromRegistryProps) {
+  const [error, setError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [loadingSecrets, setLoadingSecrets] = useState<{
+    text: string
+    completedCount: number
+    secretsCount: number
+  } | null>(null)
   const groupedEnvVars = useMemo(
     () => groupEnvVars(server?.env_vars || []),
     [server?.env_vars]
   )
+  const {
+    installServerMutation,
+    checkServerStatus,
+    isErrorSecrets,
+    isPendingSecrets,
+  } = useRunFromRegistry({
+    onSecretSuccess: (completedCount, secretsCount) => {
+      setLoadingSecrets((prev) => ({
+        ...prev,
+        text: `Encrypting secrets (${completedCount} of ${secretsCount})...`,
+        completedCount,
+        secretsCount,
+      }))
+    },
+    onSecretError: (error, variables) => {
+      console.debug('👉 onSecretError', error, variables)
+    },
+  })
 
   const { data } = useQuery({
     ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
@@ -246,10 +272,32 @@ export function FormRunFromRegistry({
     },
   })
 
-  const onValidate = (data: FormSchemaRunFromRegistry) => {
-    onSubmit(data)
-    onOpenChange(false)
-    form.reset()
+  const onSubmitForm = (data: FormSchemaRunFromRegistry) => {
+    if (!server) return
+
+    setIsSubmitting(true)
+    if (error) {
+      setError(null)
+    }
+
+    installServerMutation(
+      { server, data },
+      {
+        onSuccess: () => {
+          checkServerStatus(data)
+          onOpenChange(false)
+        },
+        onSettled: (_, error) => {
+          setIsSubmitting(false)
+          if (!error) {
+            form.reset()
+          }
+        },
+        onError: (error) => {
+          setError(typeof error === 'string' ? error : error.message)
+        },
+      }
+    )
   }
 
   if (!server) return null
@@ -265,7 +313,7 @@ export function FormRunFromRegistry({
       >
         <Form {...form} key={server?.name}>
           <form
-            onSubmit={form.handleSubmit(onValidate)}
+            onSubmit={form.handleSubmit(onSubmitForm)}
             className="mx-auto flex h-full w-full max-w-3xl flex-col"
           >
             <DialogHeader className="mb-4 p-6">
@@ -275,104 +323,121 @@ export function FormRunFromRegistry({
                 installation.
               </DialogDescription>
             </DialogHeader>
-
-            <div className="relative max-h-[65dvh] space-y-4 overflow-y-auto px-6">
-              <FormField
-                control={form.control}
-                name="serverName"
-                render={({ field }) => (
-                  <FormItem className="mb-10">
-                    <FormLabel>Server name</FormLabel>
-                    <FormDescription>
-                      Choose a unique name for this server instance
-                    </FormDescription>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="e.g. my-custom-server"
-                        autoFocus
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+            {isSubmitting && (
+              <LoadingStateAlert
+                isPendingSecrets={isPendingSecrets}
+                loadingSecrets={loadingSecrets}
               />
-
-              <FormField
-                control={form.control}
-                name="cmd_arguments"
-                render={({ field }) => (
-                  <FormItem className="mb-10">
-                    <FormLabel>Command arguments</FormLabel>
-                    <FormDescription>
-                      Space separated arguments for the command.
-                    </FormDescription>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g. -y --oauth-setup"
-                        defaultValue={field.value}
-                        onChange={(e) => field.onChange(e.target.value)}
-                        name={field.name}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+            )}
+            {!isSubmitting && (
+              <div className="relative max-h-[65dvh] space-y-4 overflow-y-auto px-6">
+                {error && (
+                  <AlertErrorFormSubmission
+                    error={error}
+                    isErrorSecrets={isErrorSecrets}
+                    onDismiss={() => setError(null)}
+                  />
                 )}
-              />
+                <FormField
+                  control={form.control}
+                  name="serverName"
+                  render={({ field }) => (
+                    <FormItem className="mb-10">
+                      <FormLabel>Server name</FormLabel>
+                      <FormDescription>
+                        Choose a unique name for this server instance
+                      </FormDescription>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="e.g. my-custom-server"
+                          autoFocus
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              {groupedEnvVars.secrets[0] ? (
-                <section className="mb-10">
-                  <Label className="mb-2" htmlFor="secrets.0.value">
-                    Secrets
-                  </Label>
+                <FormField
+                  control={form.control}
+                  name="cmd_arguments"
+                  render={({ field }) => (
+                    <FormItem className="mb-10">
+                      <FormLabel>Command arguments</FormLabel>
+                      <FormDescription>
+                        Space separated arguments for the command.
+                      </FormDescription>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g. -y --oauth-setup"
+                          defaultValue={field.value}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          name={field.name}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <p className="text-muted-foreground mb-6 text-sm">
-                    All secrets are encrypted and securely stored by ToolHive.
-                  </p>
+                {groupedEnvVars.secrets[0] ? (
+                  <section className="mb-10">
+                    <Label className="mb-2" htmlFor="secrets.0.value">
+                      Secrets
+                    </Label>
 
-                  {groupedEnvVars.secrets.map((secret, index) => (
-                    <SecretRow
-                      form={form}
-                      secret={secret}
-                      index={index}
-                      key={secret.name}
-                    />
-                  ))}
-                </section>
-              ) : null}
+                    <p className="text-muted-foreground mb-6 text-sm">
+                      All secrets are encrypted and securely stored by ToolHive.
+                    </p>
 
-              {groupedEnvVars.envVars[0] ? (
-                <section className="mb-10">
-                  <Label className="mb-2" htmlFor="envVars.0.value">
-                    Environment variables
-                  </Label>
+                    {groupedEnvVars.secrets.map((secret, index) => (
+                      <SecretRow
+                        form={form}
+                        secret={secret}
+                        index={index}
+                        key={secret.name}
+                      />
+                    ))}
+                  </section>
+                ) : null}
 
-                  <p className="text-muted-foreground mb-6 text-sm">
-                    Environment variables are used to pass configuration
-                    settings to the server.
-                  </p>
+                {groupedEnvVars.envVars[0] ? (
+                  <section className="mb-10">
+                    <Label className="mb-2" htmlFor="envVars.0.value">
+                      Environment variables
+                    </Label>
 
-                  {groupedEnvVars.envVars.map((envVar, index) => (
-                    <EnvVarRow
-                      form={form}
-                      envVar={envVar}
-                      index={index}
-                      key={envVar.name}
-                    />
-                  ))}
-                </section>
-              ) : null}
-            </div>
+                    <p className="text-muted-foreground mb-6 text-sm">
+                      Environment variables are used to pass configuration
+                      settings to the server.
+                    </p>
+
+                    {groupedEnvVars.envVars.map((envVar, index) => (
+                      <EnvVarRow
+                        form={form}
+                        envVar={envVar}
+                        index={index}
+                        key={envVar.name}
+                      />
+                    ))}
+                  </section>
+                ) : null}
+              </div>
+            )}
 
             <DialogFooter className="p-6">
               <Button
                 type="button"
                 variant="outline"
+                disabled={isSubmitting}
                 onClick={() => onOpenChange(false)}
               >
                 Cancel
               </Button>
-              <Button type="submit">Install server</Button>
+              <Button disabled={isSubmitting} type="submit">
+                Install server
+              </Button>
             </DialogFooter>
           </form>
         </Form>

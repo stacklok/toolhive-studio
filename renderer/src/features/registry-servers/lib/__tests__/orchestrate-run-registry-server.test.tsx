@@ -1,562 +1,386 @@
-import { it, expect, vi } from 'vitest'
-import type { QueryClient } from '@tanstack/react-query'
-
-import { getApiV1BetaWorkloadsQueryKey } from '@/common/api/generated/@tanstack/react-query.gen'
-import { toast } from 'sonner'
-import { server } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
-import { mswEndpoint } from '@/common/mocks/msw-endpoint'
+import { it, expect, vi, describe } from 'vitest'
 import type { FormSchemaRunFromRegistry } from '../get-form-schema-run-from-registry'
-import { orchestrateRunRegistryServer } from '../orchestrate-run-registry-server'
 import type { RegistryImageMetadata } from '@/common/api/generated'
-
-vi.mock('sonner', async () => {
-  const original = await vi.importActual<typeof import('sonner')>('sonner')
-  return {
-    ...original,
-    toast: {
-      loading: vi.fn(),
-      success: vi.fn(),
-      warning: vi.fn(),
-      error: vi.fn(),
-      dismiss: vi.fn(),
-    },
-  }
-})
+import {
+  getDefinedSecrets,
+  saveSecrets,
+  prepareCreateWorkloadData,
+  groupSecrets,
+} from '../orchestrate-run-registry-server'
+import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
 
 beforeEach(() => {
   vi.clearAllMocks()
 })
 
-it('submits without any optional fields', async () => {
-  const mockSaveSecret = vi.fn()
-  const mockCreateWorkload = vi.fn()
-  const mockGetIsServerReady = vi.fn().mockResolvedValue(true)
-  const mockQueryClient = {
-    invalidateQueries: vi.fn(),
-  } as unknown as QueryClient
+describe('getDefinedSecrets', () => {
+  it('filters out secrets with empty name or secret value', () => {
+    const secrets: FormSchemaRunFromRegistry['secrets'] = [
+      {
+        name: 'GITHUB_API_TOKEN',
+        value: { secret: 'foo-bar', isFromStore: false },
+      },
+      {
+        name: '',
+        value: { secret: 'some-value', isFromStore: false },
+      },
+      {
+        name: 'EMPTY_SECRET',
+        value: { secret: '', isFromStore: false },
+      },
+      {
+        name: 'VALID_SECRET',
+        value: { secret: 'valid-value', isFromStore: true },
+      },
+    ]
 
+    const result = getDefinedSecrets(secrets)
+
+    expect(result).toEqual([
+      {
+        name: 'GITHUB_API_TOKEN',
+        value: { secret: 'foo-bar', isFromStore: false },
+      },
+      {
+        name: 'VALID_SECRET',
+        value: { secret: 'valid-value', isFromStore: true },
+      },
+    ])
+  })
+
+  it('returns empty array when no valid secrets', () => {
+    const secrets: FormSchemaRunFromRegistry['secrets'] = [
+      {
+        name: '',
+        value: { secret: 'some-value', isFromStore: false },
+      },
+      {
+        name: 'EMPTY_SECRET',
+        value: { secret: '', isFromStore: false },
+      },
+    ]
+
+    const result = getDefinedSecrets(secrets)
+
+    expect(result).toEqual([])
+  })
+
+  it('handles empty secrets array', () => {
+    const result = getDefinedSecrets([])
+    expect(result).toEqual([])
+  })
+})
+
+describe('groupSecrets', () => {
+  it('groups secrets into new and existing categories', () => {
+    const secrets: DefinedSecret[] = [
+      {
+        name: 'NEW_SECRET',
+        value: { secret: 'new-value', isFromStore: false },
+      },
+      {
+        name: 'EXISTING_SECRET',
+        value: { secret: 'existing-key', isFromStore: true },
+      },
+      {
+        name: 'ANOTHER_NEW_SECRET',
+        value: { secret: 'another-new-value', isFromStore: false },
+      },
+    ]
+
+    const result = groupSecrets(secrets)
+
+    expect(result.newSecrets).toEqual([
+      {
+        name: 'NEW_SECRET',
+        value: { secret: 'new-value', isFromStore: false },
+      },
+      {
+        name: 'ANOTHER_NEW_SECRET',
+        value: { secret: 'another-new-value', isFromStore: false },
+      },
+    ])
+
+    expect(result.existingSecrets).toEqual([
+      {
+        name: 'EXISTING_SECRET',
+        value: { secret: 'existing-key', isFromStore: true },
+      },
+    ])
+  })
+
+  it('handles empty secrets array', () => {
+    const result = groupSecrets([])
+    expect(result).toEqual({
+      newSecrets: [],
+      existingSecrets: [],
+    })
+  })
+
+  it('handles all new secrets', () => {
+    const secrets: DefinedSecret[] = [
+      {
+        name: 'NEW_SECRET_1',
+        value: { secret: 'value-1', isFromStore: false },
+      },
+      {
+        name: 'NEW_SECRET_2',
+        value: { secret: 'value-2', isFromStore: false },
+      },
+    ]
+
+    const result = groupSecrets(secrets)
+
+    expect(result.newSecrets).toEqual(secrets)
+    expect(result.existingSecrets).toEqual([])
+  })
+
+  it('handles all existing secrets', () => {
+    const secrets: DefinedSecret[] = [
+      {
+        name: 'EXISTING_SECRET_1',
+        value: { secret: 'key-1', isFromStore: true },
+      },
+      {
+        name: 'EXISTING_SECRET_2',
+        value: { secret: 'key-2', isFromStore: true },
+      },
+    ]
+
+    const result = groupSecrets(secrets)
+
+    expect(result.newSecrets).toEqual([])
+    expect(result.existingSecrets).toEqual(secrets)
+  })
+})
+
+describe('prepareCreateWorkloadData', () => {
   const SERVER: RegistryImageMetadata = {
     name: 'test-server',
     image: 'test-image',
     transport: 'stdio',
+    target_port: 8080,
   }
 
-  const DATA: FormSchemaRunFromRegistry = {
-    serverName: 'Test Server',
-    envVars: [],
-    secrets: [],
-  }
+  it('prepares workload data with all fields', () => {
+    const data: FormSchemaRunFromRegistry = {
+      serverName: 'Test Server',
+      envVars: [
+        { name: 'DEBUG', value: 'true' },
+        { name: 'PORT', value: '8080' },
+      ],
+      secrets: [],
+      cmd_arguments: '--debug --port 8080',
+    }
 
-  await orchestrateRunRegistryServer({
-    createWorkload: mockCreateWorkload,
-    data: DATA,
-    getIsServerReady: mockGetIsServerReady,
-    queryClient: mockQueryClient,
-    saveSecret: mockSaveSecret,
-    server: SERVER,
-  })
+    const secrets = [
+      {
+        name: 'GITHUB_API_TOKEN',
+        target: 'GITHUB_API_TOKEN',
+      },
+    ]
 
-  expect(mockSaveSecret).toHaveBeenCalledTimes(0)
-  expect(mockGetIsServerReady).toHaveBeenCalledTimes(1)
-  expect(mockCreateWorkload).toHaveBeenCalledTimes(1)
-  expect(mockCreateWorkload).toHaveBeenCalledWith({
-    body: {
+    const result = prepareCreateWorkloadData(SERVER, data, secrets)
+
+    expect(result).toEqual({
       name: 'Test Server',
       image: 'test-image',
       transport: 'stdio',
+      env_vars: ['DEBUG=true', 'PORT=8080'],
+      secrets,
+      cmd_arguments: ['--debug', '--port', '8080'],
+      target_port: 8080,
+    })
+  })
+
+  it('handles empty env vars and secrets', () => {
+    const data: FormSchemaRunFromRegistry = {
+      serverName: 'Test Server',
+      envVars: [],
+      secrets: [],
+    }
+
+    const result = prepareCreateWorkloadData(SERVER, data)
+
+    expect(result).toEqual({
+      name: 'Test Server',
+      image: 'test-image',
+      transport: 'stdio',
+      env_vars: [],
       secrets: [],
       cmd_arguments: [],
-      env_vars: [],
-    },
-  })
-  expect(mockQueryClient.invalidateQueries).toHaveBeenCalledWith({
-    queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
-  })
-
-  expect(toast.success).toHaveBeenCalledWith(
-    '"Test Server" started successfully.',
-    expect.any(Object)
-  )
-})
-
-it('handles new secrets properly', async () => {
-  server.use(
-    http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-      return HttpResponse.json({ keys: [] })
+      target_port: 8080,
     })
-  )
-
-  const mockSaveSecret = vi.fn()
-  const mockCreateWorkload = vi.fn()
-  const mockGetIsServerReady = vi.fn().mockResolvedValue(true)
-  const mockQueryClient = {
-    invalidateQueries: vi.fn(),
-  } as unknown as QueryClient
-
-  const SERVER: RegistryImageMetadata = {
-    name: 'test-server',
-    image: 'test-image',
-    transport: 'stdio',
-  }
-
-  const DATA = {
-    serverName: 'Test Server',
-    envVars: [],
-    secrets: [
-      {
-        name: 'GITHUB_API_TOKEN',
-        value: { secret: 'foo-bar', isFromStore: false },
-      },
-      { name: '', value: { secret: '', isFromStore: false } }, // Should be ignored
-    ],
-  } as const satisfies FormSchemaRunFromRegistry
-
-  mockSaveSecret.mockResolvedValueOnce({ key: DATA.secrets[0].name })
-
-  await orchestrateRunRegistryServer({
-    createWorkload: mockCreateWorkload,
-    data: DATA,
-    getIsServerReady: mockGetIsServerReady,
-    queryClient: mockQueryClient,
-    saveSecret: mockSaveSecret,
-    server: SERVER,
   })
 
-  expect(mockSaveSecret).toHaveBeenCalledWith(
-    { body: { key: 'GITHUB_API_TOKEN', value: 'foo-bar' } },
-    expect.any(Object)
-  )
+  it('handles empty cmd_arguments', () => {
+    const data: FormSchemaRunFromRegistry = {
+      serverName: 'Test Server',
+      envVars: [],
+      secrets: [],
+      cmd_arguments: '',
+    }
 
-  expect(mockGetIsServerReady).toHaveBeenCalledTimes(1)
-  expect(mockCreateWorkload).toHaveBeenCalledTimes(1)
-  expect(mockCreateWorkload).toHaveBeenCalledWith({
-    body: {
-      name: 'Test Server',
+    const result = prepareCreateWorkloadData(SERVER, data)
+
+    expect(result.cmd_arguments).toEqual([])
+  })
+
+  it('handles undefined cmd_arguments', () => {
+    const data: FormSchemaRunFromRegistry = {
+      serverName: 'Test Server',
+      envVars: [],
+      secrets: [],
+      cmd_arguments: undefined,
+    }
+
+    const result = prepareCreateWorkloadData(SERVER, data)
+
+    expect(result.cmd_arguments).toEqual([])
+  })
+
+  it('handles server without target_port', () => {
+    const serverWithoutPort: RegistryImageMetadata = {
+      name: 'test-server',
       image: 'test-image',
       transport: 'stdio',
-      secrets: [
-        {
-          name: 'GITHUB_API_TOKEN',
-          target: 'GITHUB_API_TOKEN',
-        },
-      ],
-      cmd_arguments: [],
-      env_vars: [],
-    },
-  })
-  expect(mockQueryClient.invalidateQueries).toHaveBeenCalledWith({
-    queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
-  })
+    }
 
-  expect(toast.success).toHaveBeenCalledWith(
-    '"Test Server" started successfully.',
-    expect.any(Object)
-  )
+    const data: FormSchemaRunFromRegistry = {
+      serverName: 'Test Server',
+      envVars: [],
+      secrets: [],
+    }
+
+    const result = prepareCreateWorkloadData(serverWithoutPort, data)
+
+    expect(result.target_port).toBeUndefined()
+  })
 })
 
-it('handles existing secrets from the store properly', async () => {
-  server.use(
-    http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-      return HttpResponse.json({ keys: [{ key: 'GITHUB_API_TOKEN' }] })
+describe('saveSecrets', () => {
+  it('saves secrets serially and calls progress callbacks', async () => {
+    const mockSaveSecret = vi.fn().mockImplementation((body, options) => {
+      // Call the onSuccess callback to simulate successful save
+      options.onSuccess?.()
+      return Promise.resolve({ key: body.body.key + '_KEY' })
     })
-  )
 
-  const mockSaveSecret = vi.fn()
-  const mockCreateWorkload = vi.fn()
-  const mockGetIsServerReady = vi.fn().mockResolvedValue(true)
-  const mockQueryClient = {
-    invalidateQueries: vi.fn(),
-  } as unknown as QueryClient
+    const onSecretSuccess = vi.fn()
+    const onSecretError = vi.fn()
 
-  const SERVER: RegistryImageMetadata = {
-    name: 'test-server',
-    image: 'test-image',
-    transport: 'stdio',
-  }
-
-  const DATA = {
-    serverName: 'Test Server',
-    envVars: [],
-    secrets: [
+    const secrets: PreparedSecret[] = [
       {
-        name: 'GITHUB_API_TOKEN',
-        value: { secret: 'GITHUB_API_TOKEN', isFromStore: true },
+        secretStoreKey: 'SECRET_1',
+        target: 'SECRET_1',
+        value: 'value-1',
       },
-      { name: '', value: { secret: '', isFromStore: false } }, // Should be ignored
-    ],
-  } as const satisfies FormSchemaRunFromRegistry
+      {
+        secretStoreKey: 'SECRET_2',
+        target: 'SECRET_2',
+        value: 'value-2',
+      },
+    ]
 
-  await orchestrateRunRegistryServer({
-    createWorkload: mockCreateWorkload,
-    data: DATA,
-    getIsServerReady: mockGetIsServerReady,
-    queryClient: mockQueryClient,
-    saveSecret: mockSaveSecret,
-    server: SERVER,
+    const result = await saveSecrets(
+      secrets,
+      mockSaveSecret,
+      onSecretSuccess,
+      onSecretError
+    )
+
+    expect(mockSaveSecret).toHaveBeenCalledTimes(2)
+    expect(mockSaveSecret).toHaveBeenCalledWith(
+      { body: { key: 'SECRET_1', value: 'value-1' } },
+      expect.any(Object)
+    )
+    expect(mockSaveSecret).toHaveBeenCalledWith(
+      { body: { key: 'SECRET_2', value: 'value-2' } },
+      expect.any(Object)
+    )
+
+    expect(onSecretSuccess).toHaveBeenCalledTimes(2)
+    expect(onSecretSuccess).toHaveBeenCalledWith(1, 2)
+    expect(onSecretSuccess).toHaveBeenCalledWith(2, 2)
+
+    expect(onSecretError).not.toHaveBeenCalled()
+
+    expect(result).toEqual([
+      {
+        name: 'SECRET_1_KEY',
+        target: 'SECRET_1',
+      },
+      {
+        name: 'SECRET_2_KEY',
+        target: 'SECRET_2',
+      },
+    ])
   })
 
-  expect(mockSaveSecret).not.toHaveBeenCalled()
+  it('handles empty secrets array', async () => {
+    const mockSaveSecret = vi.fn()
+    const onSecretSuccess = vi.fn()
+    const onSecretError = vi.fn()
 
-  expect(mockGetIsServerReady).toHaveBeenCalledTimes(1)
-  expect(mockCreateWorkload).toHaveBeenCalledTimes(1)
-  expect(mockCreateWorkload).toHaveBeenCalledWith({
-    body: {
-      name: 'Test Server',
-      image: 'test-image',
-      transport: 'stdio',
-      secrets: [
-        {
-          name: 'GITHUB_API_TOKEN',
-          target: 'GITHUB_API_TOKEN',
-        },
-      ],
-      cmd_arguments: [],
-      env_vars: [],
-    },
-  })
-  expect(mockQueryClient.invalidateQueries).toHaveBeenCalledWith({
-    queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
+    const result = await saveSecrets(
+      [],
+      mockSaveSecret,
+      onSecretSuccess,
+      onSecretError
+    )
+
+    expect(mockSaveSecret).not.toHaveBeenCalled()
+    expect(onSecretSuccess).not.toHaveBeenCalled()
+    expect(onSecretError).not.toHaveBeenCalled()
+    expect(result).toEqual([])
   })
 
-  expect(toast.success).toHaveBeenCalledWith(
-    '"Test Server" started successfully.',
-    expect.any(Object)
-  )
-})
-
-it('handles naming collisions with secrets from the store', async () => {
-  server.use(
-    http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-      return HttpResponse.json({ keys: [{ key: 'GITHUB_API_TOKEN' }] })
+  it('throws error when saveSecret returns no key', async () => {
+    const mockSaveSecret = vi.fn().mockImplementation((_, options) => {
+      // Call the onSuccess callback to simulate successful save
+      options.onSuccess?.()
+      return Promise.resolve({ key: null })
     })
-  )
+    const onSecretSuccess = vi.fn()
+    const onSecretError = vi.fn()
 
-  const mockSaveSecret = vi.fn()
-  const mockCreateWorkload = vi.fn()
-  const mockGetIsServerReady = vi.fn().mockResolvedValue(true)
-  const mockQueryClient = {
-    invalidateQueries: vi.fn(),
-  } as unknown as QueryClient
-
-  const SERVER: RegistryImageMetadata = {
-    name: 'test-server',
-    image: 'test-image',
-    transport: 'stdio',
-  }
-
-  const DATA = {
-    serverName: 'Test Server',
-    envVars: [],
-    secrets: [
+    const secrets: PreparedSecret[] = [
       {
-        name: 'GITHUB_API_TOKEN',
-        value: { secret: 'foo-bar', isFromStore: false },
+        secretStoreKey: 'SECRET_1',
+        target: 'SECRET_1',
+        value: 'value-1',
       },
-      { name: '', value: { secret: '', isFromStore: false } }, // Should be ignored
-    ],
-  } as const satisfies FormSchemaRunFromRegistry
+    ]
 
-  mockSaveSecret.mockResolvedValueOnce({ key: 'GITHUB_API_TOKEN_2' })
-
-  await orchestrateRunRegistryServer({
-    createWorkload: mockCreateWorkload,
-    data: DATA,
-    getIsServerReady: mockGetIsServerReady,
-    queryClient: mockQueryClient,
-    saveSecret: mockSaveSecret,
-    server: SERVER,
+    await expect(
+      saveSecrets(secrets, mockSaveSecret, onSecretSuccess, onSecretError)
+    ).rejects.toThrow('Failed to create secret for key "SECRET_1"')
   })
 
-  expect(mockSaveSecret).toHaveBeenCalledWith(
-    { body: { key: 'GITHUB_API_TOKEN_2', value: 'foo-bar' } },
-    expect.any(Object)
-  )
-
-  expect(mockGetIsServerReady).toHaveBeenCalledTimes(1)
-  expect(mockCreateWorkload).toHaveBeenCalledTimes(1)
-  expect(mockCreateWorkload).toHaveBeenCalledWith({
-    body: {
-      name: 'Test Server',
-      image: 'test-image',
-      transport: 'stdio',
-      secrets: [
-        {
-          name: 'GITHUB_API_TOKEN_2',
-          target: 'GITHUB_API_TOKEN',
-        },
-      ],
-      cmd_arguments: [],
-      env_vars: [],
-    },
-  })
-  expect(mockQueryClient.invalidateQueries).toHaveBeenCalledWith({
-    queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
-  })
-
-  expect(toast.success).toHaveBeenCalledWith(
-    '"Test Server" started successfully.',
-    expect.any(Object)
-  )
-})
-
-it('handles both new and existing secrets', async () => {
-  server.use(
-    http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-      return HttpResponse.json({ keys: [{ key: 'ATLASSIAN_API_TOKEN' }] })
+  it('calls error callback when saveSecret fails', async () => {
+    const mockError = new Error('Save failed')
+    const mockSaveSecret = vi.fn().mockImplementation((body, options) => {
+      // Call the onError callback to simulate failed save
+      options.onError?.(mockError, body)
+      return Promise.reject(mockError)
     })
-  )
+    const onSecretSuccess = vi.fn()
+    const onSecretError = vi.fn()
 
-  const mockSaveSecret = vi.fn()
-  const mockCreateWorkload = vi.fn()
-  const mockGetIsServerReady = vi.fn().mockResolvedValue(true)
-  const mockQueryClient = {
-    invalidateQueries: vi.fn(),
-  } as unknown as QueryClient
-
-  const SERVER: RegistryImageMetadata = {
-    name: 'test-server',
-    image: 'test-image',
-    transport: 'stdio',
-  }
-
-  const DATA = {
-    serverName: 'Test Server',
-    envVars: [],
-    secrets: [
+    const secrets: PreparedSecret[] = [
       {
-        name: 'GITHUB_API_TOKEN',
-        value: { secret: 'foo-bar', isFromStore: false },
+        secretStoreKey: 'SECRET_1',
+        target: 'SECRET_1',
+        value: 'value-1',
       },
-      {
-        name: 'ATLASSIAN_API_TOKEN',
-        value: { secret: 'ATLASSIAN_API_TOKEN', isFromStore: true },
-      },
-      { name: '', value: { secret: '', isFromStore: false } }, // Should be ignored
-    ],
-  } as const satisfies FormSchemaRunFromRegistry
+    ]
 
-  mockSaveSecret.mockResolvedValueOnce({ key: DATA.secrets[0].name })
+    await expect(
+      saveSecrets(secrets, mockSaveSecret, onSecretSuccess, onSecretError)
+    ).rejects.toThrow('Save failed')
 
-  await orchestrateRunRegistryServer({
-    createWorkload: mockCreateWorkload,
-    data: DATA,
-    getIsServerReady: mockGetIsServerReady,
-    queryClient: mockQueryClient,
-    saveSecret: mockSaveSecret,
-    server: SERVER,
+    expect(onSecretError).toHaveBeenCalledWith(mockError, {
+      body: { key: 'SECRET_1', value: 'value-1' },
+    })
   })
-
-  expect(mockSaveSecret).toHaveBeenCalledWith(
-    { body: { key: 'GITHUB_API_TOKEN', value: 'foo-bar' } },
-    expect.any(Object)
-  )
-
-  expect(mockGetIsServerReady).toHaveBeenCalledTimes(1)
-  expect(mockCreateWorkload).toHaveBeenCalledTimes(1)
-  expect(mockCreateWorkload).toHaveBeenCalledWith({
-    body: {
-      name: 'Test Server',
-      image: 'test-image',
-      transport: 'stdio',
-      secrets: [
-        {
-          name: 'GITHUB_API_TOKEN',
-          target: 'GITHUB_API_TOKEN',
-        },
-        {
-          name: 'ATLASSIAN_API_TOKEN',
-          target: 'ATLASSIAN_API_TOKEN',
-        },
-      ],
-      cmd_arguments: [],
-      env_vars: [],
-    },
-  })
-  expect(mockQueryClient.invalidateQueries).toHaveBeenCalledWith({
-    queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
-  })
-
-  expect(toast.success).toHaveBeenCalledWith(
-    '"Test Server" started successfully.',
-    expect.any(Object)
-  )
-})
-
-it('handles error when saving a secret fails', async () => {
-  const mockError = new Error('Failed to save secret')
-  const mockSaveSecret = vi.fn().mockRejectedValue(mockError)
-  const mockCreateWorkload = vi.fn()
-  const mockGetIsServerReady = vi.fn()
-  const mockQueryClient = {
-    invalidateQueries: vi.fn(),
-  } as unknown as QueryClient
-
-  const SERVER: RegistryImageMetadata = {
-    name: 'test-server',
-    image: 'test-image',
-    transport: 'stdio',
-  }
-
-  const DATA = {
-    serverName: 'Test Server',
-    envVars: [],
-    secrets: [
-      {
-        name: 'GITHUB_API_TOKEN',
-        value: { secret: 'foo-bar', isFromStore: false },
-      },
-      { name: '', value: { secret: '', isFromStore: false } }, // Should be ignored
-    ],
-  } as const satisfies FormSchemaRunFromRegistry
-
-  await orchestrateRunRegistryServer({
-    createWorkload: mockCreateWorkload,
-    data: DATA,
-    getIsServerReady: mockGetIsServerReady,
-    queryClient: mockQueryClient,
-    saveSecret: mockSaveSecret,
-    server: SERVER,
-  })
-
-  // createWorkload should not be called if saving secrets fails
-  expect(mockCreateWorkload).not.toHaveBeenCalled()
-  expect(mockGetIsServerReady).not.toHaveBeenCalled()
-
-  // Error toast should be shown
-  expect(toast.error).toHaveBeenCalledWith(
-    'An error occurred while starting the server.\nFailed to save secret',
-    expect.any(Object)
-  )
-})
-
-it('handles environment variables properly', async () => {
-  const mockSaveSecret = vi.fn()
-  const mockCreateWorkload = vi.fn()
-  const mockGetIsServerReady = vi.fn().mockResolvedValue(true)
-  const mockQueryClient = {
-    invalidateQueries: vi.fn(),
-  } as unknown as QueryClient
-
-  const SERVER: RegistryImageMetadata = {
-    name: 'test-server',
-    image: 'test-image',
-    transport: 'stdio',
-  }
-
-  const DATA = {
-    serverName: 'Test Server',
-    envVars: [
-      { name: 'DEBUG', value: 'true' },
-      { name: 'PORT', value: '8080' },
-    ],
-    secrets: [
-      {
-        name: 'GITHUB_API_TOKEN',
-        value: { secret: 'foo-bar', isFromStore: true },
-      },
-      { name: '', value: { secret: '', isFromStore: false } }, // Should be ignored
-    ],
-  } as const satisfies FormSchemaRunFromRegistry
-
-  await orchestrateRunRegistryServer({
-    createWorkload: mockCreateWorkload,
-    data: DATA,
-    getIsServerReady: mockGetIsServerReady,
-    queryClient: mockQueryClient,
-    saveSecret: mockSaveSecret,
-    server: SERVER,
-  })
-
-  expect(mockCreateWorkload).toHaveBeenCalledWith({
-    body: expect.objectContaining({
-      env_vars: ['DEBUG=true', 'PORT=8080'],
-    }),
-  })
-})
-
-it('handles command arguments properly', async () => {
-  const mockSaveSecret = vi.fn()
-  const mockCreateWorkload = vi.fn()
-  const mockGetIsServerReady = vi.fn().mockResolvedValue(true)
-  const mockQueryClient = {
-    invalidateQueries: vi.fn(),
-  } as unknown as QueryClient
-
-  const SERVER: RegistryImageMetadata = {
-    name: 'test-server',
-    image: 'test-image',
-    transport: 'stdio',
-  }
-
-  const DATA = {
-    serverName: 'Test Server',
-    envVars: [
-      { name: 'DEBUG', value: 'true' },
-      { name: 'PORT', value: '8080' },
-    ],
-    secrets: [
-      {
-        name: 'GITHUB_API_TOKEN',
-        value: { secret: 'foo-bar', isFromStore: true },
-      },
-      { name: '', value: { secret: '', isFromStore: false } }, // Should be ignored
-    ],
-    cmd_arguments: '--debug --port 8080',
-  } as const satisfies FormSchemaRunFromRegistry
-
-  await orchestrateRunRegistryServer({
-    createWorkload: mockCreateWorkload,
-    data: DATA,
-    getIsServerReady: mockGetIsServerReady,
-    queryClient: mockQueryClient,
-    saveSecret: mockSaveSecret,
-    server: SERVER,
-  })
-
-  expect(mockCreateWorkload).toHaveBeenCalledWith({
-    body: expect.objectContaining({
-      cmd_arguments: ['--debug', '--port', '8080'],
-    }),
-  })
-})
-
-it('shows warning toast when server is not ready', async () => {
-  const mockSaveSecret = vi.fn()
-  const mockCreateWorkload = vi.fn()
-  const mockGetIsServerReady = vi.fn().mockResolvedValue(false)
-  const mockQueryClient = {
-    invalidateQueries: vi.fn(),
-  } as unknown as QueryClient
-
-  const SERVER: RegistryImageMetadata = {
-    name: 'test-server',
-    image: 'test-image',
-    transport: 'stdio',
-  }
-
-  const DATA: FormSchemaRunFromRegistry = {
-    serverName: 'Test Server',
-    envVars: [],
-    secrets: [],
-  }
-
-  await orchestrateRunRegistryServer({
-    createWorkload: mockCreateWorkload,
-    data: DATA,
-    getIsServerReady: mockGetIsServerReady,
-    queryClient: mockQueryClient,
-    saveSecret: mockSaveSecret,
-    server: SERVER,
-  })
-
-  expect(toast.loading).toHaveBeenCalledWith(
-    'Starting "Test Server"...',
-    expect.any(Object)
-  )
-  expect(toast.warning).toHaveBeenCalledWith(
-    'Server "Test Server" was created but may still be starting up. Check the servers list to monitor its status.',
-    expect.any(Object)
-  )
-  expect(toast.success).not.toHaveBeenCalled()
 })
