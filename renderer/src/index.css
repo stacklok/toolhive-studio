@@ -192,7 +192,7 @@
   }
 
   .animate-diagonal-ring::before {
-    content: "";
+    content: '';
     position: absolute;
     inset: 0;
     padding: 1px;
@@ -201,12 +201,14 @@
     pointer-events: none;
 
     /* using card foreground color with reduced opacity */
-    background: linear-gradient(120deg,
-        transparent 0%,
-        transparent 40%,
-        color-mix(in oklch, var(--card-foreground) 25%, transparent) 50%,
-        transparent 60%,
-        transparent 100%);
+    background: linear-gradient(
+      120deg,
+      transparent 0%,
+      transparent 40%,
+      color-mix(in oklch, var(--card-foreground) 25%, transparent) 50%,
+      transparent 60%,
+      transparent 100%
+    );
     background-size: 300% 300%;
     animation: diagonal-ring 5s linear infinite;
 
