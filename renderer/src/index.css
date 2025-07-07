@@ -200,11 +200,11 @@
     border-radius: inherit;
     pointer-events: none;
 
-    /* subtle, not-pink red highlight (≈ 25 % opacity of a mid-red) */
+    /* using card foreground color with reduced opacity */
     background: linear-gradient(120deg,
         transparent 0%,
         transparent 40%,
-        color-mix(in oklch, oklch(0.55 0.25 29) 25%, transparent) 50%,
+        color-mix(in oklch, var(--card-foreground) 25%, transparent) 50%,
         transparent 60%,
         transparent 100%);
     background-size: 300% 300%;
