@@ -123,7 +123,7 @@ export function FormFieldsRunMcpCommand({
               </div>
               <FormControl>
                 <Input
-                  placeholder="e.g. ghcr.io/acme-corp/my-awesome-server"
+                  placeholder="e.g. ghcr.io/acme-corp/my-awesome-server:latest"
                   defaultValue={field.value}
                   onChange={(e) => field.onChange(e.target.value)}
                   name={field.name}
@@ -192,7 +192,7 @@ export function FormFieldsRunMcpCommand({
                   </div>
                   <Input
                     className="rounded-l-none"
-                    placeholder="e.g. my-awesome-server"
+                    placeholder="e.g. my-awesome-server@latest"
                     defaultValue={field.value}
                     onChange={(e) => field.onChange(e.target.value)}
                     name={field.name}

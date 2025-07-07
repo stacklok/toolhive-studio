@@ -111,7 +111,7 @@ Start by installing a simple MCP server from the registry:
 
    ![ToolHive registry](docs/images/quickstart-2.webp)
 
-3. Click **Install Server** to start the server.
+3. Click **Install server** to start the server.
 
 4. Once the server is running, click **View** on the notification or open the
    **Installed** tab to see its status.

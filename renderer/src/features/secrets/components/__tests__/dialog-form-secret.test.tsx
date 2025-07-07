@@ -67,5 +67,5 @@ it('should not call onSubmit when form has validation errors', async () => {
   })
 
   expect(screen.getByText('Secret name is required')).toBeInTheDocument()
-  expect(screen.getByText('Secret contents is required')).toBeInTheDocument()
+  expect(screen.getByText('Secret value is required')).toBeInTheDocument()
 })

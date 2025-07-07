@@ -57,7 +57,7 @@ it('is able to run an MCP server while omitting optional fields', async () => {
     'ghcr.io/github/github-mcp-server'
   )
 
-  await userEvent.click(screen.getByRole('button', { name: 'Submit' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Install server' }))
   expect(onSubmitMock).toHaveBeenCalledWith({
     name: 'foo-bar',
     transport: 'stdio',
@@ -133,7 +133,7 @@ it('is able to run an MCP server with docker', async () => {
     'foo-bar'
   )
 
-  await userEvent.click(screen.getByRole('button', { name: 'Submit' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Install server' }))
 
   const payload = onSubmitMock.mock.calls[0]?.[0]
   expect(payload).toBeDefined()
@@ -236,7 +236,7 @@ it('is able to run an MCP server with npx', async () => {
     'foo-bar'
   )
 
-  await userEvent.click(screen.getByRole('button', { name: 'Submit' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Install server' }))
 
   const payload = onSubmitMock.mock.calls[0]?.[0]
   expect(payload).toBeDefined()
@@ -340,7 +340,7 @@ it('is able to run an MCP server with uvx', async () => {
     'foo-bar'
   )
 
-  await userEvent.click(screen.getByRole('button', { name: 'Submit' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Install server' }))
 
   const payload = onSubmitMock.mock.calls[0]?.[0]
   expect(payload).toBeDefined()
@@ -444,7 +444,7 @@ it('is able to run an MCP server with go', async () => {
     'foo-bar'
   )
 
-  await userEvent.click(screen.getByRole('button', { name: 'Submit' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Install server' }))
 
   const payload = onSubmitMock.mock.calls[0]?.[0]
   expect(payload).toBeDefined()

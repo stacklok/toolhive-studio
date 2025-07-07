@@ -85,7 +85,7 @@ it('launches dialog with form when clicking on server', async () => {
   })
 
   expect(
-    screen.getByLabelText('Server Name', { selector: 'input' })
+    screen.getByLabelText('Server name', { selector: 'input' })
   ).toBeVisible()
 
   expect(screen.getByLabelText('Secrets', { selector: 'input' })).toBeVisible()

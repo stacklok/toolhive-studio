@@ -57,7 +57,7 @@ export function Secrets() {
             setSecretKey('')
           }}
         >
-          <PlusIcon /> Add Secret
+          <PlusIcon /> Add secret
         </Button>
       </div>
 
