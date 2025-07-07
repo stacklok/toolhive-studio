@@ -13,8 +13,8 @@ import { useMutationUnregisterClient } from '../hooks/use-mutation-unregister-cl
 const CLIENT_TYPE_LABEL_MAP = {
   'roo-code': 'Roo Code',
   cline: 'Cline',
-  'vscode-insider': 'VS Code Insider',
-  vscode: 'VS Code',
+  'vscode-insider': 'VS Code Insider - Copilot',
+  vscode: 'VS Code - Copilot',
   cursor: 'Cursor',
   'claude-code': 'Claude Code',
 } as const
