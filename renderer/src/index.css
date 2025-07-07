@@ -176,4 +176,53 @@
   .app-region-no-drag {
     app-region: no-drag;
   }
+
+  @keyframes diagonal-ring {
+    from {
+      background-position: -150% -150%;
+    }
+
+    to {
+      background-position: 150% 150%;
+    }
+  }
+
+  .animate-diagonal-ring {
+    position: relative;
+  }
+
+  .animate-diagonal-ring::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    /* ring thickness */
+    border-radius: inherit;
+    pointer-events: none;
+
+    /* using card foreground color with reduced opacity */
+    background: linear-gradient(
+      120deg,
+      transparent 0%,
+      transparent 40%,
+      color-mix(in oklch, var(--card-foreground) 25%, transparent) 50%,
+      transparent 60%,
+      transparent 100%
+    );
+    background-size: 300% 300%;
+    animation: diagonal-ring 5s linear infinite;
+
+    /* show only the ring */
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0) padding-box;
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-diagonal-ring::before {
+      animation: none;
+    }
+  }
 }
