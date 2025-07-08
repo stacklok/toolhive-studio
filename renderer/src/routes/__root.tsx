@@ -79,6 +79,7 @@ export const Route = createRootRouteWithContext<{
         if (!res) {
           log.error('Error ToolHive is not running')
         }
+        log.info('ToolHive is running')
         return res
       },
       retry: 3,
@@ -87,6 +88,8 @@ export const Route = createRootRouteWithContext<{
     await queryClient.ensureQueryData({
       queryKey: ['health'],
       queryFn: () => getHealth({}),
+      retry: 2,
+      retryDelay: 200,
     })
   },
   loader: async ({ context: { queryClient } }) =>

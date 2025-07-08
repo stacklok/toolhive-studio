@@ -71,7 +71,7 @@ export function Index() {
           onSubmit={handleSubmit}
         />
       </div>
-      {!isPending && workloads.length === 0 ? (
+      {!isPending && !workloads.length ? (
         <EmptyState
           title="Add your first MCP server"
           body="You can add a server by running it with a command or by browsing the registry"
