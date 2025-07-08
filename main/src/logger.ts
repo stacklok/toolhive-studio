@@ -17,7 +17,7 @@ if (isDevelopment) {
   log.transports.file.level = 'info'
 } else {
   log.transports.console.level = 'info'
-  log.transports.file.level = 'warn'
+  log.transports.file.level = 'info'
 }
 
 log.eventLogger.startLogging()
