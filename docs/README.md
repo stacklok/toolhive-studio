@@ -1,7 +1,7 @@
 # ToolHive developer guide
 
-This is the front-end for ToolHive, an Electron application built with
-React, TypeScript, and Vite.
+This is the front-end for ToolHive, an Electron application built with React,
+TypeScript, and Vite.
 
 ## Getting started
 
