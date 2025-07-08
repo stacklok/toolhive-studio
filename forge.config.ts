@@ -24,7 +24,7 @@ const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     icon: './icons/icon',
-    executableName: 'toolhive-studio',
+    executableName: 'ToolHive',
     /**
      * Everything under bin/ is copied into
      * <app>/Contents/Resources/bin/ (macOS)
@@ -34,10 +34,10 @@ const config: ForgeConfig = {
     // Windows specific options
     win32metadata: {
       CompanyName: 'Stacklok',
-      FileDescription: 'ToolHive Studio',
-      OriginalFilename: 'ToolHive Studio.exe',
-      ProductName: 'ToolHive Studio',
-      InternalName: 'ToolHive Studio',
+      FileDescription: 'ToolHive',
+      OriginalFilename: 'ToolHive.exe',
+      ProductName: 'ToolHive',
+      InternalName: 'ToolHive',
     },
 
     // MacOS Code Signing Configuration
@@ -89,16 +89,16 @@ const config: ForgeConfig = {
     new MakerSquirrel({
       // Windows Squirrel installer configuration
       setupIcon: './icons/icon.ico', // Setup.exe icon
-      setupExe: 'ToolHive Studio Setup.exe',
+      setupExe: 'ToolHive Setup.exe',
       noMsi: true, // Don't create MSI installer
       authors: 'Stacklok',
-      exe: 'toolhive-studio.exe',
-      name: 'toolhive-studio',
+      exe: 'ToolHive.exe',
+      name: 'ToolHive',
     }),
     new MakerDMG(
       {
-        name: 'toolhive-studio',
-        title: 'ToolHive Studio',
+        name: 'ToolHive',
+        title: 'ToolHive',
         icon: './icons/icon.icns',
         overwrite: true,
         background: './assets/dmg-installer-background.png',
@@ -117,9 +117,9 @@ const config: ForgeConfig = {
     new MakerTarGz({}, ['linux']),
     new MakerRpm({
       options: {
-        name: 'toolhive-studio',
-        productName: 'ToolHive Studio',
-        genericName: 'ToolHive Studio',
+        name: 'ToolHive',
+        productName: 'ToolHive',
+        genericName: 'ToolHive',
         icon: './icons/icon.png',
         requires: ['docker >= 20.10'],
         license: 'Apache-2.0',
@@ -127,9 +127,9 @@ const config: ForgeConfig = {
     }),
     new MakerDeb({
       options: {
-        name: 'toolhive-studio',
-        productName: 'ToolHive Studio',
-        genericName: 'ToolHive Studio',
+        name: 'ToolHive',
+        productName: 'ToolHive',
+        genericName: 'ToolHive',
         icon: './icons/icon.png',
         depends: [],
         maintainer: 'Stacklok',

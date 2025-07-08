@@ -8,8 +8,8 @@ export function KeyringError() {
       icon={<FolderKey className="text-destructive size-12" />}
     >
       <p>
-        ToolHive Studio needs to access your system keyring in order to securely
-        store and manage your secrets.
+        ToolHive needs to access your system keyring in order to securely store
+        and manage your secrets.
       </p>
 
       <p>Most Linux distributions have a system keyring out of the box.</p>

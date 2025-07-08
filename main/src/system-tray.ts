@@ -224,7 +224,7 @@ function setupTrayMenu(tray: Tray, toolHiveIsRunning: boolean) {
   const menuTemplate = createMenuTemplate(tray, toolHiveIsRunning)
   const contextMenu = Menu.buildFromTemplate(menuTemplate)
 
-  tray.setToolTip('ToolHive Studio')
+  tray.setToolTip('ToolHive')
   tray.setContextMenu(contextMenu)
 
   // Windows-specific click handling
