@@ -123,6 +123,7 @@ const config: ForgeConfig = {
         icon: './icons/icon.png',
         requires: ['docker >= 20.10'],
         license: 'Apache-2.0',
+        bin: 'ToolHive',
       },
     }),
     new MakerDeb({
@@ -135,6 +136,7 @@ const config: ForgeConfig = {
         maintainer: 'Stacklok',
         homepage: 'https://github.com/stacklok/toolhive-studio',
         section: 'devel',
+        bin: 'ToolHive',
       },
     }),
     // Requirements: install elfutils package and add Flathub remote
