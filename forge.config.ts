@@ -33,7 +33,7 @@ const config: ForgeConfig = {
     extraResource: ['bin/', 'icons/', 'assets/'],
     // Windows specific options
     win32metadata: {
-      CompanyName: 'Stacklok Labs',
+      CompanyName: 'Stacklok',
       FileDescription: 'ToolHive Studio',
       OriginalFilename: 'ToolHive Studio.exe',
       ProductName: 'ToolHive Studio',
@@ -76,7 +76,7 @@ const config: ForgeConfig = {
       name: '@electron-forge/publisher-github',
       config: {
         repository: {
-          owner: 'StacklokLabs',
+          owner: 'stacklok',
           name: 'toolhive-studio',
         },
         draft: false,
@@ -91,7 +91,7 @@ const config: ForgeConfig = {
       setupIcon: './icons/icon.ico', // Setup.exe icon
       setupExe: 'ToolHive Studio Setup.exe',
       noMsi: true, // Don't create MSI installer
-      authors: 'Stacklok Labs',
+      authors: 'Stacklok',
       exe: 'toolhive-studio.exe',
       name: 'toolhive-studio',
     }),
@@ -132,8 +132,8 @@ const config: ForgeConfig = {
         genericName: 'ToolHive Studio',
         icon: './icons/icon.png',
         depends: [],
-        maintainer: 'Stacklok Labs',
-        homepage: 'https://github.com/StacklokLabs/toolhive-studio',
+        maintainer: 'Stacklok',
+        homepage: 'https://github.com/stacklok/toolhive-studio',
         section: 'devel',
       },
     }),

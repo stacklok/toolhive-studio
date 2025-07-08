@@ -8,7 +8,7 @@ it('passes with valid docker image', () => {
     type: 'docker_image',
     image: 'ghcr.io/github/github-mcp-server',
     cmd_arguments: '-y --oauth-setup',
-    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
     secrets: [
       {
         name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
@@ -31,7 +31,7 @@ it('passes with valid docker image', () => {
     envVars: [
       {
         name: 'GITHUB_ORG',
-        value: 'StacklokLabs',
+        value: 'stacklok',
       },
     ],
     secrets: [
@@ -54,7 +54,7 @@ it('passes with valid npx command', () => {
     protocol: 'npx',
     package_name: 'server-everything',
     cmd_arguments: '-y --oauth-setup',
-    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
     secrets: [
       {
         name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
@@ -75,7 +75,7 @@ it('passes with valid npx command', () => {
     protocol: 'npx',
     package_name: 'server-everything',
     cmd_arguments: '-y --oauth-setup',
-    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
     secrets: [
       {
         name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
@@ -96,7 +96,7 @@ it('passes with valid uvx command', () => {
     protocol: 'uvx',
     package_name: 'mcp-server-fetch',
     cmd_arguments: '-y --oauth-setup',
-    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
     secrets: [
       {
         name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
@@ -118,7 +118,7 @@ it('passes with valid uvx command', () => {
     protocol: 'uvx',
     package_name: 'mcp-server-fetch',
     cmd_arguments: '-y --oauth-setup',
-    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
     secrets: [
       {
         name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
@@ -138,7 +138,7 @@ it('fails when name is empty', () => {
     type: 'docker_image',
     image: 'ghcr.io/github/github-mcp-server',
     cmd_arguments: '-y --oauth-setup',
-    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
     secrets: [
       {
         name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
@@ -167,7 +167,7 @@ it('fails when name is not unique', () => {
     type: 'docker_image',
     image: 'ghcr.io/github/github-mcp-server',
     cmd_arguments: '-y --oauth-setup',
-    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
     secrets: [
       {
         name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
@@ -198,7 +198,7 @@ it('fails when transport is empty', () => {
     type: 'docker_image',
     image: 'ghcr.io/github/github-mcp-server',
     cmd_arguments: '-y --oauth-setup',
-    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
     secrets: [
       {
         name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
@@ -227,7 +227,7 @@ it('fails when transport is invalid', () => {
     type: 'docker_image',
     image: 'ghcr.io/github/github-mcp-server',
     cmd_arguments: '-y --oauth-setup',
-    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
     secrets: [
       {
         name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
@@ -256,7 +256,7 @@ it('fails when type is empty', () => {
     type: '',
     image: 'ghcr.io/github/github-mcp-server',
     cmd_arguments: '-y --oauth-setup',
-    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
     secrets: [
       {
         name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
@@ -285,7 +285,7 @@ it('fails when type is invalid', () => {
     type: 'foobar',
     image: 'ghcr.io/github/github-mcp-server',
     cmd_arguments: '-y --oauth-setup',
-    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
     secrets: [
       {
         name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
@@ -353,7 +353,7 @@ it('fails when secrets is missing', () => {
     type: 'docker_image',
     image: 'ghcr.io/github/github-mcp-server',
     cmd_arguments: '-y --oauth-setup',
-    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
   }
   const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
   expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
@@ -372,7 +372,7 @@ it('fails when secrets is missing key', () => {
     type: 'docker_image',
     image: 'ghcr.io/github/github-mcp-server',
     cmd_arguments: '-y --oauth-setup',
-    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
     secrets: [{ value: { secret: 'foo-bar', isFromStore: false } }],
   }
   const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
@@ -392,7 +392,7 @@ it('fails when secrets is missing value', () => {
     type: 'docker_image',
     image: 'ghcr.io/github/github-mcp-server',
     cmd_arguments: '-y --oauth-setup',
-    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
     secrets: [{ name: 'GITHUB_PERSONAL_ACCESS_TOKEN' }], // Missing value
   }
   const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
@@ -412,7 +412,7 @@ it('fails when secrets is missing inner secret value', () => {
     type: 'docker_image',
     image: 'ghcr.io/github/github-mcp-server',
     cmd_arguments: '-y --oauth-setup',
-    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
     secrets: [
       {
         name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
@@ -439,7 +439,7 @@ it('fails when secrets is missing `isFromStore`', () => {
     type: 'docker_image',
     image: 'ghcr.io/github/github-mcp-server',
     cmd_arguments: '-y --oauth-setup',
-    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
     secrets: [
       {
         name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
@@ -466,7 +466,7 @@ it('docker > fails when image is empty', () => {
     type: 'docker_image',
     image: '',
     cmd_arguments: '-y --oauth-setup',
-    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
     secrets: [
       {
         name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
@@ -496,7 +496,7 @@ it('package_manager > fails when protocol is empty', () => {
     protocol: '',
     package_name: 'mcp-server-fetch',
     cmd_arguments: '-y --oauth-setup',
-    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
     secrets: [
       {
         name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
@@ -526,7 +526,7 @@ it('package_manager > fails when protocol is invalid', () => {
     protocol: 'foobar',
     package_name: 'mcp-server-fetch',
     cmd_arguments: '-y --oauth-setup',
-    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
     secrets: [
       {
         name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
@@ -556,7 +556,7 @@ it('package_manager > fails when package_name is empty', () => {
     protocol: 'uvx',
     package_name: '',
     cmd_arguments: '-y --oauth-setup',
-    envVars: [{ name: 'GITHUB_ORG', value: 'StacklokLabs' }],
+    envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
     secrets: [
       {
         name: 'GITHUB_PERSONAL_ACCESS_TOKEN',

@@ -80,17 +80,17 @@ setup, no security headaches, no runtime hassles.
 Download and install the latest release of the ToolHive for your platform:
 
 - macOS (Apple Silicon):
-  [download the DMG file](https://github.com/StacklokLabs/toolhive-studio/releases/latest/download/ToolHive.Studio.dmg),
+  [download the DMG file](https://github.com/stacklok/toolhive-studio/releases/latest/download/ToolHive.Studio.dmg),
   open it, and drag the ToolHive app to your Applications folder.
 - Windows:
-  [download the installer](https://github.com/StacklokLabs/toolhive-studio/releases/latest/download/ToolHive.Studio.Setup.exe)
+  [download the installer](https://github.com/stacklok/toolhive-studio/releases/latest/download/ToolHive.Studio.Setup.exe)
   and run it.
   > [!NOTE]  
   > The Windows installer is not digitally signed yet, so you might need to
   > accept warnings from Windows Defender SmartScreen. We're working on getting
   > signing set up soon.
 - Linux: download the RPM or DEB package from the
-  [releases page](https://github.com/StacklokLabs/toolhive-studio/releases/latest)
+  [releases page](https://github.com/stacklok/toolhive-studio/releases/latest)
   and install it using your package manager.
 
 ### Run your first MCP server
@@ -149,7 +149,7 @@ Kubernetes Operator. Learn more in the
 
 We welcome contributions and feedback from the community!
 
-- 🐛 [Report issues](https://github.com/StacklokLabs/toolhive-studio/issues)
+- 🐛 [Report issues](https://github.com/stacklok/toolhive-studio/issues)
 - 💬 [Join our Discord](https://discord.gg/stacklok)
 - 🤝 [Contributing guide](./CONTRIBUTING.md)
 - 🛠️ [Developer guide](./docs/README.md)
@@ -165,10 +165,10 @@ This project is licensed under the [Apache 2.0 License](./LICENSE).
 
 <!-- Badge links -->
 <!-- prettier-ignore-start -->
-[release-img]: https://img.shields.io/github/v/release/StacklokLabs/toolhive-studio?style=flat&label=Latest%20version
-[release]: https://github.com/StacklokLabs/toolhive-studio/releases/latest
-[ci-img]: https://img.shields.io/github/actions/workflow/status/StacklokLabs/toolhive-studio/on-main.yml?style=flat&logo=github&label=Build
-[ci]: https://github.com/StacklokLabs/toolhive-studio/actions/workflows/on-main.yml
+[release-img]: https://img.shields.io/github/v/release/stacklok/toolhive-studio?style=flat&label=Latest%20version
+[release]: https://github.com/stacklok/toolhive-studio/releases/latest
+[ci-img]: https://img.shields.io/github/actions/workflow/status/stacklok/toolhive-studio/on-main.yml?style=flat&logo=github&label=Build
+[ci]: https://github.com/stacklok/toolhive-studio/actions/workflows/on-main.yml
 [license-img]: https://img.shields.io/badge/License-Apache2.0-blue.svg?style=flat
 [license]: https://opensource.org/licenses/Apache-2.0
 [discord-img]: https://img.shields.io/discord/1184987096302239844?style=flat&logo=discord&logoColor=white&label=Discord
