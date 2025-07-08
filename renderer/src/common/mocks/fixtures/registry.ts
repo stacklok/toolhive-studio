@@ -157,7 +157,7 @@ export const MOCK_REGISTRY_RESPONSE = [
   },
   {
     name: 'k8s',
-    image: 'ghcr.io/stackloklabs/mkp/server:latest',
+    image: 'ghcr.io/stacklok/mkp/server:latest',
     description:
       'MKP is a Model Context Protocol (MCP) server for Kubernetes that allows LLM-powered applications to interact with Kubernetes clusters.',
     transport: 'sse',
@@ -185,7 +185,7 @@ export const MOCK_REGISTRY_RESPONSE = [
       pulls: 7040,
       last_updated: '2025-06-18T00:21:32Z',
     },
-    repository_url: 'https://github.com/StacklokLabs/mkp',
+    repository_url: 'https://github.com/stacklok/mkp',
     tags: [
       'kubernetes',
       'k8s',
@@ -199,7 +199,7 @@ export const MOCK_REGISTRY_RESPONSE = [
     ],
     provenance: {
       sigstore_url: 'tuf-repo-cdn.sigstore.dev',
-      repository_uri: 'https://github.com/StacklokLabs/mkp',
+      repository_uri: 'https://github.com/stacklok/mkp',
       repository_ref: '',
       signer_identity: '/.github/workflows/release.yml',
       runner_environment: 'github-hosted',
@@ -843,7 +843,7 @@ export const MOCK_REGISTRY_RESPONSE = [
   },
   {
     name: 'osv',
-    image: 'ghcr.io/stackloklabs/osv-mcp/server:latest',
+    image: 'ghcr.io/stacklok/osv-mcp/server:latest',
     description:
       'An MCP (Model Context Protocol) server that provides access to the OSV (Open Source Vulnerabilities) database. This server allows LLM-powered applications to query the OSV database for vulnerability information about packages and commits.',
     transport: 'sse',
@@ -868,7 +868,7 @@ export const MOCK_REGISTRY_RESPONSE = [
       pulls: 5242,
       last_updated: '2025-06-18T00:21:30Z',
     },
-    repository_url: 'https://github.com/StacklokLabs/osv-mcp',
+    repository_url: 'https://github.com/stacklok/osv-mcp',
     tags: [
       'vulnerability',
       'security',
@@ -883,7 +883,7 @@ export const MOCK_REGISTRY_RESPONSE = [
     ],
     provenance: {
       sigstore_url: 'tuf-repo-cdn.sigstore.dev',
-      repository_uri: 'https://github.com/StacklokLabs/osv-mcp',
+      repository_uri: 'https://github.com/stacklok/osv-mcp',
       repository_ref: '',
       signer_identity: '/.github/workflows/release.yml',
       runner_environment: 'github-hosted',
@@ -1506,7 +1506,7 @@ export const MOCK_REGISTRY_RESPONSE = [
   },
   {
     name: 'oci-registry',
-    image: 'ghcr.io/stackloklabs/ocireg-mcp/server:latest',
+    image: 'ghcr.io/stacklok/ocireg-mcp/server:latest',
     description:
       'The OCI Registry MCP Server enables secure and seamless querying of OCI container registries, providing tools for image introspection, tag discovery, and manifest/config retrieval.',
     transport: 'sse',
@@ -1550,7 +1550,7 @@ export const MOCK_REGISTRY_RESPONSE = [
       pulls: 2683,
       last_updated: '2025-06-18T00:21:29Z',
     },
-    repository_url: 'https://github.com/StacklokLabs/ocireg-mcp',
+    repository_url: 'https://github.com/stacklok/ocireg-mcp',
     tags: [
       'oci',
       'registry',
@@ -1564,7 +1564,7 @@ export const MOCK_REGISTRY_RESPONSE = [
     ],
     provenance: {
       sigstore_url: 'tuf-repo-cdn.sigstore.dev',
-      repository_uri: 'https://github.com/StacklokLabs/ocireg-mcp',
+      repository_uri: 'https://github.com/stacklok/ocireg-mcp',
       repository_ref: '',
       signer_identity: '/.github/workflows/release.yml',
       runner_environment: 'github-hosted',

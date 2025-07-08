@@ -24,7 +24,7 @@ export function HelpDropdown({ className }: { className?: string }) {
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem asChild>
           <a
-            href="https://github.com/StacklokLabs/toolhive-studio?tab=readme-ov-file#getting-started"
+            href="https://github.com/stacklok/toolhive-studio?tab=readme-ov-file#getting-started"
             target="_blank"
             rel="noopener noreferrer"
             className="cursor-pointer"
@@ -44,7 +44,7 @@ export function HelpDropdown({ className }: { className?: string }) {
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <a
-            href="https://github.com/StacklokLabs/toolhive-studio/issues"
+            href="https://github.com/stacklok/toolhive-studio/issues"
             target="_blank"
             rel="noopener noreferrer"
             className="cursor-pointer"
@@ -54,7 +54,7 @@ export function HelpDropdown({ className }: { className?: string }) {
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <a
-            href="https://github.com/StacklokLabs/toolhive-studio"
+            href="https://github.com/stacklok/toolhive-studio"
             target="_blank"
             rel="noopener noreferrer"
             className="cursor-pointer"

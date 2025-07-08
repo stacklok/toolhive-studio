@@ -148,7 +148,7 @@ report unacceptable behavior to
 
 We welcome contributions and feedback from the community!
 
-- 🐛 [Report issues](https://github.com/StacklokLabs/toolhive-studio/issues)
+- 🐛 [Report issues](https://github.com/stacklok/toolhive-studio/issues)
 - 💬 [Join our Discord](https://discord.gg/stacklok)
 - 🤝 [Contributing guide](../CONTRIBUTING.md)
 

@@ -37,7 +37,7 @@ export const MOCK_MCP_SERVERS = [
   },
   {
     name: 'osv-2',
-    package: 'ghcr.io/stackloklabs/osv-mcp/server:latest',
+    package: 'ghcr.io/stacklok/osv-mcp/server:latest',
     url: 'http://127.0.0.1:58766/sse#osv-2',
     port: 58766,
     tool_type: 'mcp',
@@ -47,7 +47,7 @@ export const MOCK_MCP_SERVERS = [
   },
   {
     name: 'osv',
-    package: 'ghcr.io/stackloklabs/osv-mcp/server:latest',
+    package: 'ghcr.io/stacklok/osv-mcp/server:latest',
     url: 'http://127.0.0.1:41317/sse#osv',
     port: 41317,
     tool_type: 'mcp',

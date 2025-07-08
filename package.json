@@ -4,7 +4,7 @@
   "version": "0.0.5",
   "description": "ToolHive Studio is an application that allows you to install, manage and run MCP servers and connect them to AI agents and clients",
   "main": ".vite/build/main.js",
-  "repository": "https://github.com/StacklokLabs/toolhive-studio",
+  "repository": "https://github.com/stacklok/toolhive-studio",
   "engines": {
     "node": ">=22.0.0 <23.0.0"
   },
