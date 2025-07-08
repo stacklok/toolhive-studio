@@ -125,7 +125,7 @@ export function ConnectionRefusedError() {
       icon={<IllustrationPackage className="size-20" />}
     >
       <p>
-        ToolHive Studio requires either <strong>Docker</strong> or{' '}
+        ToolHive requires either <strong>Docker</strong> or{' '}
         <strong>Podman</strong> to be installed and running to manage
         containerized tools and services.
       </p>

@@ -35,7 +35,7 @@ describe('Error', () => {
 
     expect(screen.getByText('System Keyring Cannot be Reached')).toBeVisible()
     expect(
-      screen.getByText(/ToolHive Studio needs to access your system keyring/)
+      screen.getByText(/ToolHive needs to access your system keyring/)
     ).toBeVisible()
   })
 
@@ -55,7 +55,7 @@ describe('Error', () => {
       screen.queryByText('System Keyring Cannot be Reached')
     ).not.toBeInTheDocument()
     expect(
-      screen.queryByText(/ToolHive Studio needs to access your system keyring/)
+      screen.queryByText(/ToolHive needs to access your system keyring/)
     ).not.toBeInTheDocument()
   })
 

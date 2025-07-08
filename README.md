@@ -1,6 +1,6 @@
 <p float="left">
   <picture>
-    <img src="./icons/source-files/app-icons/mac/512.png" alt="ToolHive Studio logo" height="100" align="middle" />
+    <img src="./icons/source-files/app-icons/mac/512.png" alt="ToolHive logo" height="100" align="middle" />
   </picture>
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/images/toolhive-wordmark-white.png">
@@ -80,10 +80,10 @@ setup, no security headaches, no runtime hassles.
 Download and install the latest release of the ToolHive for your platform:
 
 - macOS (Apple Silicon):
-  [download the DMG file](https://github.com/stacklok/toolhive-studio/releases/latest/download/ToolHive.Studio.dmg),
+  [download the DMG file](https://github.com/stacklok/toolhive-studio/releases/latest/download/ToolHive.dmg),
   open it, and drag the ToolHive app to your Applications folder.
 - Windows:
-  [download the installer](https://github.com/stacklok/toolhive-studio/releases/latest/download/ToolHive.Studio.Setup.exe)
+  [download the installer](https://github.com/stacklok/toolhive-studio/releases/latest/download/ToolHive.Setup.exe)
   and run it.
   > [!NOTE]  
   > The Windows installer is not digitally signed yet, so you might need to

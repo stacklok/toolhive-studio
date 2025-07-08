@@ -17,12 +17,12 @@ interface DesktopEntry {
 export function createDesktopEntry(execPath: string): string {
   const entry: DesktopEntry = {
     Type: 'Application',
-    Name: 'ToolHive Studio',
+    Name: 'ToolHive',
     Exec: `"${execPath}" --hidden`,
     Hidden: 'false',
     NoDisplay: 'false',
     'X-GNOME-Autostart-enabled': 'true',
-    Comment: 'ToolHive Studio Auto-Launch',
+    Comment: 'ToolHive Auto-Launch',
   }
 
   return Object.entries(entry)
