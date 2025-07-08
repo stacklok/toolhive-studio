@@ -144,7 +144,7 @@ const config: ForgeConfig = {
     new MakerFlatpak({
       options: {
         categories: ['Development', 'Utility'],
-        id: 'com.stacklok.ToolHiveStudio',
+        id: 'io.github.stacklok.toolhive_studio',
         finishArgs: [
           '--share=network',
           '--socket=x11',
