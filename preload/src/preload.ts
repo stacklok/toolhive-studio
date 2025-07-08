@@ -27,6 +27,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ToolHive restart
   restartToolhive: () => ipcRenderer.invoke('restart-toolhive'),
 
+  // Update installation
+  installUpdateAndRestart: () =>
+    ipcRenderer.invoke('install-update-and-restart'),
+
   // Theme management
   darkMode: {
     toggle: () => ipcRenderer.invoke('dark-mode:toggle'),
@@ -100,6 +104,7 @@ export interface ElectronAPI {
     success: boolean
     error?: string
   }>
+  installUpdateAndRestart: () => Promise<{ success: boolean }>
   darkMode: {
     toggle: () => Promise<boolean>
     system: () => Promise<boolean>

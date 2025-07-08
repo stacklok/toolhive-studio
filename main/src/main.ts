@@ -93,7 +93,14 @@ export async function blockQuit(source: string, event?: Electron.Event) {
     event.preventDefault()
   }
 
-  mainWindow?.webContents.send('graceful-exit')
+  // Only send graceful-exit message if mainWindow is still valid
+  try {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('graceful-exit')
+    }
+  } catch (err) {
+    log.error('Failed to send graceful-exit message: ', err)
+  }
 
   try {
     const port = getToolhivePort()
@@ -392,6 +399,36 @@ ipcMain.handle('restart-toolhive', async () => {
       error: error instanceof Error ? error.message : 'Unknown error',
     }
   }
+})
+
+ipcMain.handle('install-update-and-restart', () => {
+  log.info('Installing update and restarting application')
+  // Set a flag to indicate we're installing an update
+  // This will prevent the graceful shutdown process
+  isQuitting = true
+  tearingDown = true
+
+  // Stop ToolHive and servers immediately without graceful shutdown
+  try {
+    const port = getToolhivePort()
+    if (port) {
+      stopAllServers(binPath, port).catch((err) => {
+        log.error('Failed to stop servers during update: ', err)
+      })
+    }
+  } catch (err) {
+    log.error('Failed to get port during update: ', err)
+  }
+
+  // Stop ToolHive
+  stopToolhive()
+
+  // Destroy tray
+  tray?.destroy()
+
+  // Install update and restart
+  autoUpdater.quitAndInstall()
+  return { success: true }
 })
 
 // Shutdown store IPC handlers

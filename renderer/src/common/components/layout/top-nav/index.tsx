@@ -121,7 +121,7 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
           onClick: async () => {
             const confirmed = await confirmQuit()
             if (confirmed) {
-              window.electronAPI.quitApp()
+              window.electronAPI.installUpdateAndRestart()
             }
           },
         },
