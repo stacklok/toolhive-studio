@@ -145,6 +145,7 @@ const config: ForgeConfig = {
       options: {
         categories: ['Development', 'Utility'],
         id: 'io.github.stacklok.toolhive_studio',
+        bin: 'ToolHive',
         finishArgs: [
           '--share=network',
           '--socket=x11',
