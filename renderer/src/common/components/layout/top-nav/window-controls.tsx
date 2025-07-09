@@ -23,6 +23,11 @@ export function WindowControls() {
   }
 
   const handleClose = async () => {
+    if (window.electronAPI.isWindows) {
+      await window.electronAPI.windowControls.close()
+      return
+    }
+
     const confirmed = await confirmQuit()
     if (confirmed) {
       await window.electronAPI.windowControls.close()
@@ -52,8 +57,8 @@ export function WindowControls() {
       >
         {isMaximized ? (
           <div className="relative size-4">
-            <div className="absolute inset-0 h-3 w-3 border border-current" />
-            <div className="bg-background absolute top-1 left-1 h-3 w-3 border border-current" />
+            <div className="absolute inset-0 size-3 border border-current" />
+            <div className="bg-background absolute top-1 left-1 size-3 border border-current" />
           </div>
         ) : (
           <Square className="size-4" />
