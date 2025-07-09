@@ -34,8 +34,15 @@ import {
 import log from './logger'
 import { getAppVersion } from './util'
 
+import Store from 'electron-store'
+
+const store = new Store<{
+  isTelemetryEnabled: boolean
+}>({ defaults: { isTelemetryEnabled: true } })
+
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
+  beforeSend: (event) => (store.get('isTelemetryEnabled', true) ? event : null),
 })
 
 // Forge environment variables
@@ -444,4 +451,22 @@ ipcMain.handle('shutdown-store:clear-history', () => {
 
 ipcMain.handle('get-app-version', () => {
   return getAppVersion()
+})
+
+// ────────────────────────────────────────────────────────────────────────────
+//  Sentry IPC handlers
+// ────────────────────────────────────────────────────────────────────────────
+
+ipcMain.handle('sentry.is-enabled', () => {
+  return store.get('isTelemetryEnabled', true)
+})
+
+ipcMain.handle('sentry.opt-out', (): boolean => {
+  store.set('isTelemetryEnabled', false)
+  return store.get('isTelemetryEnabled', false)
+})
+
+ipcMain.handle('sentry.opt-in', (): boolean => {
+  store.set('isTelemetryEnabled', true)
+  return store.get('isTelemetryEnabled', true)
 })
