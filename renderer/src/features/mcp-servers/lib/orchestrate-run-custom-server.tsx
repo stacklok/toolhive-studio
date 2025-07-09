@@ -19,6 +19,7 @@ import { Button } from '@/common/components/ui/button'
 import type { FormSchemaRunMcpCommand } from './form-schema-run-mcp-server-with-command'
 import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
 import { prepareSecretsWithoutNamingCollision } from '@/common/lib/secrets/prepare-secrets-without-naming-collision'
+import { trackEvent } from '@/common/lib/analytics'
 
 type SaveSecretFn = UseMutateAsyncFunction<
   V1CreateSecretResponse,
@@ -288,6 +289,11 @@ export async function orchestrateRunCustomServer({
     try {
       await createWorkload({
         body: createRequest,
+      })
+      trackEvent(`Workload ${data.name} started`, {
+        workload: data.name,
+        transport: data.transport,
+        'route.pathname': '/',
       })
     } catch (error) {
       toast.error(

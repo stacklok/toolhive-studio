@@ -16,6 +16,7 @@ import log from 'electron-log/renderer'
 
 import './index.css'
 import { ConfirmProvider } from './common/contexts/confirm/provider'
+import { trackPageView } from './common/lib/analytics'
 
 // Sentry setup
 Sentry.init({
@@ -58,6 +59,15 @@ const router = createRouter({
   history: memoryHistory,
 })
 
+router.subscribe('onLoad', (data) => {
+  trackPageView(data.toLocation.pathname, {
+    'route.from': data.fromLocation?.pathname ?? '/',
+    'route.pathname': data.toLocation.pathname,
+    'route.search': JSON.stringify(data.toLocation.search),
+    'route.hash': data.toLocation.hash,
+  })
+})
+
 if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
   log.error('ToolHive port API not available in renderer')
 }
@@ -65,8 +75,17 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
 ;(async () => {
   try {
     const port = await window.electronAPI.getToolhivePort()
+    const appVersion = await window.electronAPI.getAppVersion()
     const baseUrl = `http://localhost:${port}`
-    client.setConfig({ baseUrl })
+
+    client.setConfig({
+      baseUrl,
+      headers: {
+        'X-Client-Type': 'toolhive-studio',
+        'X-Client-Version': appVersion,
+        'X-Client-Platform': window.electronAPI.platform,
+      },
+    })
   } catch (e) {
     log.error('Failed to get ToolHive port from main process: ', e)
     throw e

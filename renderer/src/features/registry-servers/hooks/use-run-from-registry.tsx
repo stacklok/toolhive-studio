@@ -26,6 +26,7 @@ import { toast } from 'sonner'
 import { Button } from '@/common/components/ui/button'
 import { prepareSecretsWithoutNamingCollision } from '@/common/lib/secrets/prepare-secrets-without-naming-collision'
 import { Link } from '@tanstack/react-router'
+import { trackEvent } from '@/common/lib/analytics'
 
 type InstallServerCheck = (
   data: FormSchemaRunFromRegistry
@@ -49,6 +50,12 @@ export function useRunFromRegistry({
   })
   const { mutateAsync: createWorkload } = useMutation({
     ...postApiV1BetaWorkloadsMutation(),
+    onSuccess: (data) => {
+      trackEvent(`Workload ${data.name} started`, {
+        workload: data.name,
+        'route.pathname': '/registry',
+      })
+    },
   })
 
   const handleSettled = useCallback<InstallServerCheck>(

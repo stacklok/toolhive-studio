@@ -16,7 +16,8 @@ function getVersionFromGit(): string {
         stdio: 'pipe',
       }).trim()
 
-      return describe.replace(/^v/, '')
+      const version = describe.replace(/^v/, '').split('-')[0]
+      return version ?? app.getVersion()
     } catch {
       return app.getVersion()
     }
