@@ -76,10 +76,11 @@ export const Route = createRootRouteWithContext<{
       queryKey: ['is-toolhive-running'],
       queryFn: async () => {
         const res = await window.electronAPI.isToolhiveRunning()
+        const appVersion = await window.electronAPI.getAppVersion()
         if (!res) {
           log.error('Error ToolHive is not running')
         }
-        log.info('ToolHive is running')
+        log.info(`ToolHive version ${appVersion} is running`)
         return res
       },
       retry: 3,

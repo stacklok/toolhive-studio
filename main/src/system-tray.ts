@@ -3,6 +3,7 @@ import path from 'node:path'
 import { getAutoLaunchStatus, setAutoLaunch } from './auto-launch'
 import { createApplicationMenu } from './menu'
 import log from './logger'
+import { getAppVersion } from './util'
 
 ///////////////////////////////////////////////////
 // Tray icon
@@ -136,6 +137,15 @@ const createStatusMenuItem = (toolHiveIsRunning: boolean) => ({
   enabled: false,
 })
 
+const getCurrentAppVersion = () => {
+  const appVersion = getAppVersion()
+  return {
+    label: `Current version: v${appVersion}`,
+    type: 'normal' as const,
+    enabled: false,
+  }
+}
+
 const startOnLoginMenu = (currentTray: Tray, toolHiveIsRunning: boolean) => {
   const isStartOnLogin = getAutoLaunchStatus()
   return {
@@ -180,6 +190,7 @@ const createSeparator = () => ({ type: 'separator' as const })
 
 const createMenuTemplate = (currentTray: Tray, toolHiveIsRunning: boolean) => [
   createStatusMenuItem(toolHiveIsRunning),
+  getCurrentAppVersion(),
   createSeparator(),
   startOnLoginMenu(currentTray, toolHiveIsRunning),
   createSeparator(),

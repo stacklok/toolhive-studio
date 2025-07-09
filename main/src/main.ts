@@ -32,6 +32,7 @@ import {
   binPath,
 } from './toolhive-manager'
 import log from './logger'
+import { getAppVersion } from './util'
 
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
@@ -439,4 +440,8 @@ ipcMain.handle('shutdown-store:get-last-servers', () => {
 ipcMain.handle('shutdown-store:clear-history', () => {
   clearShutdownHistory()
   return { success: true }
+})
+
+ipcMain.handle('get-app-version', () => {
+  return getAppVersion()
 })

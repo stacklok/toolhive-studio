@@ -16,6 +16,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   hideApp: () => ipcRenderer.invoke('hide-app'),
   quitApp: () => ipcRenderer.invoke('quit-app'),
 
+  // App version
+  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+
   // ToolHive port
   getToolhivePort: () => ipcRenderer.invoke('get-toolhive-port'),
   // ToolHive is running
@@ -88,6 +91,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 })
 
 export interface ElectronAPI {
+  getAppVersion: () => Promise<string>
   getAutoLaunchStatus: () => Promise<boolean>
   setAutoLaunch: (enabled: boolean) => Promise<boolean>
   showApp: () => Promise<void>
