@@ -1,5 +1,6 @@
-import { app } from 'electron'
+import { app, BrowserWindow } from 'electron'
 import { execSync } from 'node:child_process'
+import log from './logger'
 
 function getVersionFromGit(): string {
   try {
@@ -30,4 +31,19 @@ export function getAppVersion(): string {
   }
 
   return getVersionFromGit()
+}
+
+export async function pollWindowReady(window: BrowserWindow): Promise<void> {
+  return new Promise((resolve) => {
+    const checkReady = () => {
+      if (window?.isVisible() && window.webContents.isLoading() === false) {
+        log.info('Window is ready and visible')
+        resolve(void 0)
+      } else {
+        log.info('Window not ready yet, waiting...')
+        setTimeout(checkReady, 100)
+      }
+    }
+    checkReady()
+  })
 }

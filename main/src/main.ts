@@ -32,7 +32,7 @@ import {
   binPath,
 } from './toolhive-manager'
 import log from './logger'
-import { getAppVersion } from './util'
+import { getAppVersion, pollWindowReady } from './util'
 
 import Store from 'electron-store'
 
@@ -103,8 +103,27 @@ export async function blockQuit(source: string, event?: Electron.Event) {
 
   // Only send graceful-exit message if mainWindow is still valid
   try {
-    if (mainWindow && !mainWindow.isDestroyed()) {
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      log.info('MainWindow destroyed, recreating for graceful shutdown...')
+      mainWindow = createWindow()
+    }
+
+    if (mainWindow) {
+      log.info('Showing window for graceful shutdown...')
+
+      if (mainWindow.isMinimized()) {
+        mainWindow.restore()
+      }
+
+      mainWindow.show()
+      mainWindow.focus()
+
+      await pollWindowReady(mainWindow)
+
       mainWindow.webContents.send('graceful-exit')
+
+      // Give renderer time to navigate to shutdown page
+      await new Promise((resolve) => setTimeout(resolve, 500))
     }
   } catch (err) {
     log.error('Failed to send graceful-exit message: ', err)
@@ -113,7 +132,7 @@ export async function blockQuit(source: string, event?: Electron.Event) {
   try {
     const port = getToolhivePort()
     if (port) {
-      await stopAllServers(binPath, port)
+      await stopAllServers(binPath, port) // Questo può richiedere molto tempo
     }
   } catch (err) {
     log.error('Teardown failed: ', err)
