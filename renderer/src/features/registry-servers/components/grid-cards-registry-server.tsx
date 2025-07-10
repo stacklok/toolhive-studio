@@ -1,7 +1,7 @@
 import type { RegistryImageMetadata } from '@/common/api/generated/types.gen'
 import { CardRegistryServer } from './card-registry-server'
 import { FormRunFromRegistry } from './form-run-from-registry'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useFilterSort } from '@/common/hooks/use-filter-sort'
 import { InputSearch } from '@/common/components/ui/input-search'
 
@@ -13,12 +13,18 @@ export function GridCardsRegistryServer({
   const [selectedServer, setSelectedServer] =
     useState<RegistryImageMetadata | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // Filter out filesystem servers
+  const filteredServers = useMemo(() => {
+    return servers.filter((server) => server.name !== 'filesystem')
+  }, [servers])
+
   const {
     filter,
     setFilter,
-    filteredData: filteredServers,
+    filteredData: filteredAndSortedServers,
   } = useFilterSort({
-    data: servers,
+    data: filteredServers,
     filterFields: (server) => [server.name || '', server.description || ''],
     sortBy: (server) => server.name || '',
   })
@@ -36,7 +42,7 @@ export function GridCardsRegistryServer({
         placeholder="Search..."
       />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {filteredServers.map((server) => (
+        {filteredAndSortedServers.map((server) => (
           <CardRegistryServer
             key={server.name}
             server={server}
@@ -44,7 +50,7 @@ export function GridCardsRegistryServer({
           />
         ))}
       </div>
-      {filteredServers.length === 0 && (
+      {filteredAndSortedServers.length === 0 && (
         <div className="text-muted-foreground py-12 text-center">
           <p className="text-sm">
             No registry servers found matching the current filter
