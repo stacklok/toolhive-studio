@@ -24,14 +24,12 @@ export function ThemeProvider({
     return isValidTheme(storedTheme) ? storedTheme : defaultTheme
   })
 
-  // Sync with Electron's native theme on mount (only if no stored theme)
   useEffect(() => {
     const syncWithNativeTheme = async () => {
       if (window.electronAPI?.darkMode) {
         try {
           const storedTheme = localStorage.getItem(storageKey)
 
-          // Only sync if there's no stored theme
           if (!isValidTheme(storedTheme)) {
             const nativeThemeState = await window.electronAPI.darkMode.get()
             setTheme(nativeThemeState.themeSource)
@@ -46,7 +44,6 @@ export function ThemeProvider({
     syncWithNativeTheme()
   }, [storageKey])
 
-  // Apply theme to document
   useEffect(() => {
     const root = window.document.documentElement
     root.classList.remove('light', 'dark')
@@ -63,7 +60,6 @@ export function ThemeProvider({
     root.classList.add(theme)
   }, [theme])
 
-  // Listen for system theme changes when theme is set to "system"
   useEffect(() => {
     if (theme !== 'system') return
 
@@ -85,7 +81,6 @@ export function ThemeProvider({
       localStorage.setItem(storageKey, newTheme)
       setTheme(newTheme)
 
-      // Sync with Electron's native theme
       if (window.electronAPI?.darkMode) {
         try {
           await window.electronAPI.darkMode.set(newTheme)
