@@ -19,6 +19,44 @@ Object.defineProperty(window, 'electronAPI', {
   writable: true,
 })
 
+// Mock matchMedia with event support
+const matchMediaListeners: Record<string, Set<(e: Event) => void>> = {}
+const matchMediaMatches: Record<string, boolean> = {}
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation((query: string) => {
+    matchMediaListeners[query] = matchMediaListeners[query] || new Set()
+    matchMediaMatches[query] = matchMediaMatches[query] ?? false
+    return {
+      media: query,
+      onchange: null,
+      addListener: vi.fn(), // deprecated
+      removeListener: vi.fn(), // deprecated
+      addEventListener: (event: string, cb: (e: Event) => void) => {
+        if (event === 'change') matchMediaListeners[query]?.add(cb)
+      },
+      removeEventListener: (event: string, cb: (e: Event) => void) => {
+        if (event === 'change') matchMediaListeners[query]?.delete(cb)
+      },
+      dispatchEvent: (event: Event) => {
+        if (event.type === 'change') {
+          matchMediaListeners[query]?.forEach((cb) => cb(event))
+        }
+      },
+      get matches() {
+        return matchMediaMatches[query]
+      },
+    }
+  }),
+})
+function setSystemTheme(isDark: boolean) {
+  const query = '(prefers-color-scheme: dark)'
+  matchMediaMatches[query] = isDark
+  const event = new Event('change')
+  Object.defineProperty(event, 'matches', { value: isDark })
+  window.matchMedia(query).dispatchEvent(event)
+}
+
 function TestComponent({ id = 'theme' }: { id?: string }) {
   const { theme, setTheme } = useTheme()
   return (
@@ -133,25 +171,12 @@ describe('<ThemeProvider />', () => {
     )
     expect(document.documentElement).toHaveClass('light')
 
-    // Verify that onUpdated was called
-    expect(mockElectronAPI.darkMode.onUpdated).toHaveBeenCalled()
+    // Simulate system theme change to dark
+    setSystemTheme(true)
+    await waitFor(() => expect(document.documentElement).toHaveClass('dark'))
 
-    // Simulate system theme change by calling the callback
-    const onUpdatedCallback =
-      mockElectronAPI.darkMode.onUpdated.mock.calls[0]?.[0]
-    if (onUpdatedCallback) {
-      await act(async () => {
-        onUpdatedCallback(true) // Simulate dark mode
-      })
-
-      await waitFor(() => expect(document.documentElement).toHaveClass('dark'))
-
-      // Simulate system theme change back to light
-      await act(async () => {
-        onUpdatedCallback(false) // Simulate light mode
-      })
-
-      await waitFor(() => expect(document.documentElement).toHaveClass('light'))
-    }
+    // Simulate system theme change back to light
+    setSystemTheme(false)
+    await waitFor(() => expect(document.documentElement).toHaveClass('light'))
   })
 })
