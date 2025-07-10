@@ -25,21 +25,26 @@ it('renders list of MCP servers', async () => {
 
   renderRoute(router)
   await waitFor(() => {
-    for (const mcpServer of MOCK_REGISTRY_RESPONSE) {
-      if (mcpServer.name === 'filesystem') {
-        // Should not be visible
-        expect(
-          screen.queryByText(mcpServer.name),
-          `Expected ${mcpServer.name} to NOT be in the document`
-        ).not.toBeInTheDocument()
-      } else {
-        expect(
-          screen.queryByText(mcpServer.name),
-          `Expected ${mcpServer.name} to be in the document`
-        ).toBeVisible()
-      }
-    }
+    expect(
+      screen.queryByText('atlassian'),
+      'Expected atlassian to be in the document'
+    ).toBeVisible()
   })
+
+  expect(
+    screen.queryByText('mongodb'),
+    'Expected mongodb to be in the document'
+  ).toBeVisible()
+  expect(
+    screen.queryByText('redis'),
+    'Expected redis to be in the document'
+  ).toBeVisible()
+
+  // Filesystem was temporarily hidden
+  expect(
+    screen.queryByText('filesystem'),
+    'Expected filesystem to NOT be in the document'
+  ).not.toBeInTheDocument()
 })
 
 const REGISTRY_SERVER = {
