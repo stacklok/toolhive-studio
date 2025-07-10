@@ -213,18 +213,16 @@ function createWindow() {
     ...getPlatformSpecificWindowOptions(),
   })
 
-  // Windows: minimise-to-tray instead of close
-  if (process.platform === 'win32') {
-    mainWindow.on('minimize', () => {
-      if (shouldStartHidden || tray) mainWindow.hide()
-    })
-    mainWindow.on('close', (event) => {
-      if (!isQuitting && tray) {
-        event.preventDefault()
-        mainWindow.hide()
-      }
-    })
-  }
+  // minimise-to-tray instead of close
+  mainWindow.on('minimize', () => {
+    if (shouldStartHidden || tray) mainWindow.hide()
+  })
+  mainWindow.on('close', (event) => {
+    if (!isQuitting && tray) {
+      event.preventDefault()
+      mainWindow.hide()
+    }
+  })
 
   // External links → default browser
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
