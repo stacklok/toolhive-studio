@@ -11,7 +11,7 @@ export default tseslint.config(
       'coverage',
       '.vite',
       'out',
-      'renderer/src/common/api/generated',
+      'renderer/src/common/api/generated/**',
     ],
   },
   {
