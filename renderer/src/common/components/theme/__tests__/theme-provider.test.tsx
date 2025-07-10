@@ -18,7 +18,6 @@ Object.defineProperty(window, 'electronAPI', {
   writable: true,
 })
 
-// Mock matchMedia with event support
 const matchMediaListeners: Record<string, Set<(e: Event) => void>> = {}
 const matchMediaMatches: Record<string, boolean> = {}
 Object.defineProperty(window, 'matchMedia', {
@@ -73,7 +72,6 @@ describe('<ThemeProvider />', () => {
     localStorage.clear()
     vi.clearAllMocks()
     document.documentElement.className = ''
-    // Reset mock to default state
     mockElectronAPI.darkMode.get.mockResolvedValue({
       shouldUseDarkColors: false,
       themeSource: 'system',
@@ -99,16 +97,13 @@ describe('<ThemeProvider />', () => {
       </ThemeProvider>
     )
 
-    // first paint (sync)
     expect(screen.getByTestId('stored')).toHaveTextContent('dark')
     expect(document.documentElement).toHaveClass('dark')
 
-    // wait until all effects & promises settle
     await waitFor(() =>
       expect(screen.getByTestId('stored')).toHaveTextContent('dark')
     )
 
-    // Don't expect Electron API to be called when we have a stored theme
     expect(localStorage.getItem('toolhive-ui-theme')).toBe('dark')
   })
 
@@ -133,7 +128,6 @@ describe('<ThemeProvider />', () => {
   })
 
   it('setTheme(light) updates everything consistently', async () => {
-    // Start with a non-system theme
     localStorage.setItem('toolhive-ui-theme', 'dark')
     render(
       <ThemeProvider>
@@ -155,7 +149,6 @@ describe('<ThemeProvider />', () => {
   })
 
   it('listens to system theme changes when theme is system', async () => {
-    // Start in system mode
     render(
       <ThemeProvider>
         <TestComponent id="system" />
