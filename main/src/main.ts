@@ -32,7 +32,7 @@ import {
   binPath,
 } from './toolhive-manager'
 import log from './logger'
-import { getAppVersion, pollWindowReady } from './util'
+import { delay, getAppVersion, pollWindowReady } from './util'
 
 import Store from 'electron-store'
 
@@ -123,7 +123,7 @@ export async function blockQuit(source: string, event?: Electron.Event) {
       mainWindow.webContents.send('graceful-exit')
 
       // Give renderer time to navigate to shutdown page
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      await delay(500)
     }
   } catch (err) {
     log.error('Failed to send graceful-exit message: ', err)
@@ -132,7 +132,7 @@ export async function blockQuit(source: string, event?: Electron.Event) {
   try {
     const port = getToolhivePort()
     if (port) {
-      await stopAllServers(binPath, port) // Questo può richiedere molto tempo
+      await stopAllServers(binPath, port)
     }
   } catch (err) {
     log.error('Teardown failed: ', err)

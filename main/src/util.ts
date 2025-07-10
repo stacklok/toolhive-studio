@@ -25,6 +25,10 @@ function getVersionFromGit(): string {
   }
 }
 
+export async function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 export function getAppVersion(): string {
   if (process.env.SENTRY_RELEASE) {
     return process.env.SENTRY_RELEASE
@@ -34,16 +38,12 @@ export function getAppVersion(): string {
 }
 
 export async function pollWindowReady(window: BrowserWindow): Promise<void> {
-  return new Promise((resolve) => {
-    const checkReady = () => {
-      if (window?.isVisible() && window.webContents.isLoading() === false) {
-        log.info('Window is ready and visible')
-        resolve(void 0)
-      } else {
-        log.info('Window not ready yet, waiting...')
-        setTimeout(checkReady, 100)
-      }
-    }
-    checkReady()
-  })
+  if (window?.isVisible() && !window.webContents.isLoading()) {
+    log.info('Window is ready and visible')
+    return
+  }
+
+  log.info('Window not ready yet, waiting...')
+  await delay(100)
+  return pollWindowReady(window)
 }
