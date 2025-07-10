@@ -298,6 +298,10 @@ export type V1CreateRequest = {
    */
   permission_profile?: string
   /**
+   * Proxy mode to use
+   */
+  proxy_mode?: string
+  /**
    * Secret parameters to inject
    */
   secrets?: Array<SecretsSecretParameter>
@@ -426,6 +430,10 @@ export type V1ListServersResponse = {
  * OIDC configuration options
  */
 export type V1OidcOptions = {
+  /**
+   * Allow opaque tokens (non-JWT) for OIDC validation
+   */
+  allow_opaque_tokens?: boolean
   /**
    * Expected audience
    */
