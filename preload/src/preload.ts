@@ -1,7 +1,7 @@
 // See the Electron documentation for details on how to use preload scripts:
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 
-import { contextBridge, ipcRenderer, nativeTheme } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 import type { WorkloadsWorkload } from '../../renderer/src/common/api/generated/types.gen'
 
 // Expose auto-launch functionality to renderer
@@ -41,13 +41,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     set: (theme: 'light' | 'dark' | 'system') =>
       ipcRenderer.invoke('dark-mode:set', theme),
     get: () => ipcRenderer.invoke('dark-mode:get'),
-    onUpdated: (callback: (isDark: boolean) => void) => {
-      const handler = () => callback(nativeTheme.shouldUseDarkColors)
-      // Initial call
-      handler()
-      nativeTheme.on('updated', handler)
-      return () => nativeTheme.removeListener('updated', handler)
-    },
   },
 
   isMac: process.platform === 'darwin',
@@ -130,7 +123,6 @@ export interface ElectronAPI {
       shouldUseDarkColors: boolean
       themeSource: 'system' | 'light' | 'dark'
     }>
-    onUpdated: (callback: (isDark: boolean) => void) => () => void
   }
   sentry: {
     isEnabled: () => Promise<boolean>

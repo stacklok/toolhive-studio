@@ -10,7 +10,6 @@ const mockElectronAPI = {
       themeSource: 'system',
     }),
     set: vi.fn().mockResolvedValue(true),
-    onUpdated: vi.fn().mockReturnValue(() => {}),
   },
 }
 
@@ -79,7 +78,6 @@ describe('<ThemeProvider />', () => {
       shouldUseDarkColors: false,
       themeSource: 'system',
     })
-    mockElectronAPI.darkMode.onUpdated.mockReturnValue(() => {})
   })
 
   afterEach(() => {
