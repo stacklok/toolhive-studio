@@ -14,7 +14,7 @@ import { trackEvent } from '@/common/lib/analytics'
 const CLIENT_TYPE_LABEL_MAP = {
   'roo-code': 'Roo Code',
   cline: 'Cline',
-  'vscode-insider': 'VS Code Insider - Copilot',
+  'vscode-insider': 'VS Code Insiders - Copilot',
   vscode: 'VS Code - Copilot',
   cursor: 'Cursor',
   'claude-code': 'Claude Code',
