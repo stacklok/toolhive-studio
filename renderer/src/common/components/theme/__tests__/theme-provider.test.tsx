@@ -10,6 +10,7 @@ const mockElectronAPI = {
       themeSource: 'system',
     }),
     set: vi.fn().mockResolvedValue(true),
+    onUpdated: vi.fn().mockReturnValue(() => {}),
   },
 }
 
@@ -40,6 +41,7 @@ describe('<ThemeProvider />', () => {
       shouldUseDarkColors: false,
       themeSource: 'system',
     })
+    mockElectronAPI.darkMode.onUpdated.mockReturnValue(() => {})
   })
 
   afterEach(() => {
@@ -116,8 +118,8 @@ describe('<ThemeProvider />', () => {
     expect(mockElectronAPI.darkMode.set).toHaveBeenCalledWith('light')
   })
 
-  it('tracks system preference when theme === "system"', async () => {
-    // Start in system/light
+  it('listens to system theme changes when theme is system', async () => {
+    // Start in system mode
     render(
       <ThemeProvider>
         <TestComponent id="system" />
@@ -131,21 +133,25 @@ describe('<ThemeProvider />', () => {
     )
     expect(document.documentElement).toHaveClass('light')
 
-    // Simulate Electron reporting dark mode
-    mockElectronAPI.darkMode.get.mockResolvedValue({
-      shouldUseDarkColors: true,
-      themeSource: 'system',
-    })
+    // Verify that onUpdated was called
+    expect(mockElectronAPI.darkMode.onUpdated).toHaveBeenCalled()
 
-    // Wait for the periodic sync to pick up the change
-    await waitFor(() => expect(document.documentElement).toHaveClass('dark'))
+    // Simulate system theme change by calling the callback
+    const onUpdatedCallback =
+      mockElectronAPI.darkMode.onUpdated.mock.calls[0]?.[0]
+    if (onUpdatedCallback) {
+      await act(async () => {
+        onUpdatedCallback(true) // Simulate dark mode
+      })
 
-    // Simulate Electron reporting light mode again
-    mockElectronAPI.darkMode.get.mockResolvedValue({
-      shouldUseDarkColors: false,
-      themeSource: 'system',
-    })
+      await waitFor(() => expect(document.documentElement).toHaveClass('dark'))
 
-    await waitFor(() => expect(document.documentElement).toHaveClass('light'))
+      // Simulate system theme change back to light
+      await act(async () => {
+        onUpdatedCallback(false) // Simulate light mode
+      })
+
+      await waitFor(() => expect(document.documentElement).toHaveClass('light'))
+    }
   })
 })

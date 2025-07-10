@@ -73,25 +73,15 @@ export function ThemeProvider({
     syncWithNativeTheme()
   }, [storageKey])
 
-  // Periodic sync for system theme changes
+  // Listen for system theme changes when theme is 'system'
   useEffect(() => {
-    if (theme !== 'system') return
+    if (theme !== 'system' || !window.electronAPI?.darkMode) return
 
-    const syncSystemTheme = async () => {
-      if (window.electronAPI?.darkMode) {
-        try {
-          const nativeThemeState = await window.electronAPI.darkMode.get()
-          setEffectiveTheme(
-            nativeThemeState.shouldUseDarkColors ? 'dark' : 'light'
-          )
-        } catch (error) {
-          console.warn('Failed to sync system theme:', error)
-        }
-      }
-    }
+    const cleanup = window.electronAPI.darkMode.onUpdated((isDark: boolean) => {
+      setEffectiveTheme(isDark ? 'dark' : 'light')
+    })
 
-    const interval = setInterval(syncSystemTheme, 1000)
-    return () => clearInterval(interval)
+    return cleanup
   }, [theme])
 
   // Apply theme to document element
