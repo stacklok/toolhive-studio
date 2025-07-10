@@ -101,7 +101,6 @@ export async function blockQuit(source: string, event?: Electron.Event) {
     event.preventDefault()
   }
 
-  // Only send graceful-exit message if mainWindow is still valid
   try {
     if (!mainWindow || mainWindow.isDestroyed()) {
       log.info('MainWindow destroyed, recreating for graceful shutdown...')
