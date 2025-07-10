@@ -26,10 +26,18 @@ it('renders list of MCP servers', async () => {
   renderRoute(router)
   await waitFor(() => {
     for (const mcpServer of MOCK_REGISTRY_RESPONSE) {
-      expect(
-        screen.queryByText(mcpServer.name),
-        `Expected ${mcpServer.name} to be in the document`
-      ).toBeVisible()
+      if (mcpServer.name === 'filesystem') {
+        // Should not be visible
+        expect(
+          screen.queryByText(mcpServer.name),
+          `Expected ${mcpServer.name} to NOT be in the document`
+        ).not.toBeInTheDocument()
+      } else {
+        expect(
+          screen.queryByText(mcpServer.name),
+          `Expected ${mcpServer.name} to be in the document`
+        ).toBeVisible()
+      }
     }
   })
 })
