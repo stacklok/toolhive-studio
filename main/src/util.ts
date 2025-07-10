@@ -1,5 +1,6 @@
-import { app } from 'electron'
+import { app, BrowserWindow } from 'electron'
 import { execSync } from 'node:child_process'
+import log from './logger'
 
 function getVersionFromGit(): string {
   try {
@@ -24,10 +25,25 @@ function getVersionFromGit(): string {
   }
 }
 
+export async function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 export function getAppVersion(): string {
   if (process.env.SENTRY_RELEASE) {
     return process.env.SENTRY_RELEASE
   }
 
   return getVersionFromGit()
+}
+
+export async function pollWindowReady(window: BrowserWindow): Promise<void> {
+  if (window?.isVisible() && !window.webContents.isLoading()) {
+    log.info('Window is ready and visible')
+    return
+  }
+
+  log.info('Window not ready yet, waiting...')
+  await delay(100)
+  return pollWindowReady(window)
 }
