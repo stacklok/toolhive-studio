@@ -32,7 +32,7 @@ import {
   binPath,
 } from './toolhive-manager'
 import log from './logger'
-import { getAppVersion } from './util'
+import { delay, getAppVersion, pollWindowReady } from './util'
 
 import Store from 'electron-store'
 
@@ -101,10 +101,28 @@ export async function blockQuit(source: string, event?: Electron.Event) {
     event.preventDefault()
   }
 
-  // Only send graceful-exit message if mainWindow is still valid
   try {
-    if (mainWindow && !mainWindow.isDestroyed()) {
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      log.info('MainWindow destroyed, recreating for graceful shutdown...')
+      mainWindow = createWindow()
+    }
+
+    if (mainWindow) {
+      log.info('Showing window for graceful shutdown...')
+
+      if (mainWindow.isMinimized()) {
+        mainWindow.restore()
+      }
+
+      mainWindow.show()
+      mainWindow.focus()
+
+      await pollWindowReady(mainWindow)
+
       mainWindow.webContents.send('graceful-exit')
+
+      // Give renderer time to navigate to shutdown page
+      await delay(500)
     }
   } catch (err) {
     log.error('Failed to send graceful-exit message: ', err)
@@ -194,18 +212,16 @@ function createWindow() {
     ...getPlatformSpecificWindowOptions(),
   })
 
-  // Windows: minimise-to-tray instead of close
-  if (process.platform === 'win32') {
-    mainWindow.on('minimize', () => {
-      if (shouldStartHidden || tray) mainWindow.hide()
-    })
-    mainWindow.on('close', (event) => {
-      if (!isQuitting && tray) {
-        event.preventDefault()
-        mainWindow.hide()
-      }
-    })
-  }
+  // minimise-to-tray instead of close
+  mainWindow.on('minimize', () => {
+    if (shouldStartHidden || tray) mainWindow.hide()
+  })
+  mainWindow.on('close', (event) => {
+    if (!isQuitting && tray) {
+      event.preventDefault()
+      mainWindow.hide()
+    }
+  })
 
   // External links → default browser
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {

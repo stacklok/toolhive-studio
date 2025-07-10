@@ -145,6 +145,30 @@ Kubernetes Operator. Learn more in the
 
 ---
 
+## Privacy and Telemetry
+
+ToolHive uses [Sentry](https://sentry.io/) for error tracking and performance
+monitoring to help us identify and fix issues, improve stability, and enhance
+the user experience. This telemetry is enabled by default but completely
+optional.
+
+### What data is collected?
+
+- Error reports and crash logs
+- Performance metrics
+- Usage patterns
+
+### How to opt out
+
+You can easily disable telemetry at any time:
+
+1. Open ToolHive
+2. Go to **Settings** (gear icon in the top navigation)
+3. Find the **Telemetry** section
+4. Toggle off telemetry collection
+
+---
+
 ## Contributing
 
 We welcome contributions and feedback from the community!

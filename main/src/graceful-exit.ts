@@ -6,8 +6,7 @@ import { createClient } from '../../renderer/src/common/api/generated/client'
 import type { WorkloadsWorkload } from '../../renderer/src/common/api/generated/types.gen'
 import Store from 'electron-store'
 import log from './logger'
-
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+import { delay } from './util'
 
 // Create a store instance for tracking shutdown servers
 const shutdownStore = new Store({
