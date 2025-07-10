@@ -24,19 +24,45 @@ export function ThemeProvider({
     return isValidTheme(storedTheme) ? storedTheme : defaultTheme
   })
 
-  // Sync with Electron's native theme on mount
+  const [effectiveTheme, setEffectiveTheme] = useState<'dark' | 'light'>(
+    'light'
+  )
+
+  // Initialize effective theme based on current theme
+  useEffect(() => {
+    if (theme === 'system') {
+      // For system theme, we need to check Electron's current state
+      const updateEffectiveTheme = async () => {
+        if (window.electronAPI?.darkMode) {
+          try {
+            const nativeThemeState = await window.electronAPI.darkMode.get()
+            setEffectiveTheme(
+              nativeThemeState.shouldUseDarkColors ? 'dark' : 'light'
+            )
+          } catch (error) {
+            console.warn('Failed to get native theme state:', error)
+            setEffectiveTheme('light') // fallback
+          }
+        }
+      }
+      updateEffectiveTheme()
+    } else {
+      setEffectiveTheme(theme)
+    }
+  }, [theme])
+
+  // Sync with Electron's native theme only when there's no stored theme
   useEffect(() => {
     const syncWithNativeTheme = async () => {
       if (window.electronAPI?.darkMode) {
         try {
-          const nativeThemeState = await window.electronAPI.darkMode.get()
-          const nativeThemeSource = nativeThemeState.themeSource
-
-          // Only sync if the stored theme doesn't match the native theme
           const storedTheme = localStorage.getItem(storageKey)
-          if (!isValidTheme(storedTheme) || storedTheme !== nativeThemeSource) {
-            setTheme(nativeThemeSource)
-            localStorage.setItem(storageKey, nativeThemeSource)
+
+          // Only sync if there's no stored theme
+          if (!isValidTheme(storedTheme)) {
+            const nativeThemeState = await window.electronAPI.darkMode.get()
+            setTheme(nativeThemeState.themeSource)
+            localStorage.setItem(storageKey, nativeThemeState.themeSource)
           }
         } catch (error) {
           console.warn('Failed to sync with native theme:', error)
@@ -47,50 +73,57 @@ export function ThemeProvider({
     syncWithNativeTheme()
   }, [storageKey])
 
-  useEffect(() => {
-    const root = window.document.documentElement
-
-    root.classList.remove('light', 'dark')
-
-    if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
-        .matches
-        ? 'dark'
-        : 'light'
-
-      root.classList.add(systemTheme)
-      return
-    }
-
-    root.classList.add(theme)
-  }, [theme])
-
-  // Listen for system theme changes when theme is set to "system"
+  // Periodic sync for system theme changes
   useEffect(() => {
     if (theme !== 'system') return
 
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-
-    const handleChange = (e: MediaQueryListEvent) => {
-      const root = window.document.documentElement
-      root.classList.remove('light', 'dark')
-      root.classList.add(e.matches ? 'dark' : 'light')
+    const syncSystemTheme = async () => {
+      if (window.electronAPI?.darkMode) {
+        try {
+          const nativeThemeState = await window.electronAPI.darkMode.get()
+          setEffectiveTheme(
+            nativeThemeState.shouldUseDarkColors ? 'dark' : 'light'
+          )
+        } catch (error) {
+          console.warn('Failed to sync system theme:', error)
+        }
+      }
     }
 
-    mediaQuery.addEventListener('change', handleChange)
-    return () => mediaQuery.removeEventListener('change', handleChange)
+    const interval = setInterval(syncSystemTheme, 1000)
+    return () => clearInterval(interval)
   }, [theme])
+
+  // Apply theme to document element
+  useEffect(() => {
+    const root = window.document.documentElement
+    root.classList.remove('light', 'dark')
+    root.classList.add(effectiveTheme)
+  }, [effectiveTheme])
 
   const value = {
     theme,
     setTheme: async (newTheme: Theme) => {
-      localStorage.setItem(storageKey, newTheme)
+      // Update state immediately
       setTheme(newTheme)
+      localStorage.setItem(storageKey, newTheme)
+
+      // Update effective theme immediately for non-system themes
+      if (newTheme !== 'system') {
+        setEffectiveTheme(newTheme)
+      }
 
       // Sync with Electron's native theme
       if (window.electronAPI?.darkMode) {
         try {
           await window.electronAPI.darkMode.set(newTheme)
+          // Update effective theme for system theme after getting current state
+          if (newTheme === 'system') {
+            const nativeThemeState = await window.electronAPI.darkMode.get()
+            setEffectiveTheme(
+              nativeThemeState.shouldUseDarkColors ? 'dark' : 'light'
+            )
+          }
         } catch (error) {
           console.warn(
             'Failed to sync theme with native Electron theme:',
