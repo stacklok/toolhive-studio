@@ -383,6 +383,10 @@
             "description": "Permission profile to apply",
             "type": "string"
           },
+          "proxy_mode": {
+            "description": "Proxy mode to use",
+            "type": "string"
+          },
           "secrets": {
             "description": "Secret parameters to inject",
             "items": { "$ref": "#/components/schemas/secrets.SecretParameter" },
@@ -510,6 +514,10 @@
       "v1.oidcOptions": {
         "description": "OIDC configuration options",
         "properties": {
+          "allow_opaque_tokens": {
+            "description": "Allow opaque tokens (non-JWT) for OIDC validation",
+            "type": "boolean"
+          },
           "audience": { "description": "Expected audience", "type": "string" },
           "client_id": { "description": "OAuth2 client ID", "type": "string" },
           "issuer": { "description": "OIDC issuer URL", "type": "string" },
