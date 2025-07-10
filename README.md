@@ -83,7 +83,7 @@ Download and install the latest release of the ToolHive for your platform:
   [download the DMG file](https://github.com/stacklok/toolhive-studio/releases/latest/download/ToolHive.dmg),
   open it, and drag the ToolHive app to your Applications folder.
 - Windows:
-  [download the installer](https://github.com/stacklok/toolhive-studio/releases/latest/download/ToolHive.Setup.exe)
+  [download the installer](https://github.com/stacklok/toolhive-studio/releases/latest/download/ToolHive.Setup.exe),
   and run it.
   > [!NOTE]  
   > The Windows installer is not digitally signed yet, so you might need to
