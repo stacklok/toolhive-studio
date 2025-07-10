@@ -62,6 +62,16 @@ export function HelpDropdown({ className }: { className?: string }) {
             GitHub Repository
           </a>
         </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <a
+            href="https://www.iubenda.com/privacy-policy/29074746"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="cursor-pointer"
+          >
+            Privacy Policy
+          </a>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )
