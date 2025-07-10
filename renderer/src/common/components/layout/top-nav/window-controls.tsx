@@ -1,11 +1,9 @@
 import { Button } from '../../ui/button'
 import { Minus, Square, X } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { useConfirmQuit } from '@/common/hooks/use-confirm-quit'
 
 export function WindowControls() {
   const [isMaximized, setIsMaximized] = useState(false)
-  const confirmQuit = useConfirmQuit()
 
   useEffect(() => {
     // Check initial maximized state
@@ -23,15 +21,7 @@ export function WindowControls() {
   }
 
   const handleClose = async () => {
-    if (window.electronAPI.isWindows) {
-      await window.electronAPI.windowControls.close()
-      return
-    }
-
-    const confirmed = await confirmQuit()
-    if (confirmed) {
-      await window.electronAPI.windowControls.close()
-    }
+    await window.electronAPI.windowControls.close()
   }
 
   // Only show window controls on Windows and Linux (not macOS)
