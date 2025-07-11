@@ -44,6 +44,7 @@ import { useRunFromRegistry } from '../hooks/use-run-from-registry'
 import { LoadingStateAlert } from './loading-state-alert'
 import { AlertErrorFormSubmission } from './alert-error-form-submission'
 import { Tabs, TabsList, TabsTrigger } from '@/common/components/ui/tabs'
+import { Switch } from '@/common/components/ui/switch'
 
 /**
  * Renders an asterisk icon & tooltip for required fields.
@@ -446,8 +447,16 @@ export function FormRunFromRegistry({
               </>
             )}
             {tabValue === 'network-isolation' && (
-              <div className="text-muted-foreground p-6 text-center">
-                Network isolation settings will appear here.
+              <div className="p-6">
+                <div className="flex items-center gap-4">
+                  <Switch
+                    id="network-isolation-switch"
+                    aria-label="Network isolation"
+                  />
+                  <Label htmlFor="network-isolation-switch">
+                    Network isolation
+                  </Label>
+                </div>
               </div>
             )}
 

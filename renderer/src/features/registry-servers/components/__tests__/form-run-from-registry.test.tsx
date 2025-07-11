@@ -180,14 +180,45 @@ describe('FormRunFromRegistry', () => {
     const configTab = screen.getByRole('tab', { name: /configuration/i })
     expect(configTab).toHaveAttribute('aria-selected', 'false')
 
-    // The placeholder message should be visible
-    expect(
-      screen.getByText(/network isolation settings will appear here/i)
-    ).toBeInTheDocument()
+    // The Network isolation switch should be visible
+    expect(screen.getByLabelText('Network isolation')).toBeInTheDocument()
 
     // The form fields should not be visible
     expect(screen.queryByLabelText('Server name')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Command arguments')).not.toBeInTheDocument()
+  })
+
+  it('renders a Network isolation switch in the Network Isolation tab and toggles it', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    // Switch to the Network Isolation tab
+    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    await userEvent.click(networkTab)
+
+    // Check for the switch and its label
+    const switchLabel = screen.getByLabelText('Network isolation')
+    expect(switchLabel).toBeInTheDocument()
+    expect(switchLabel).toHaveAttribute('role', 'switch')
+    // Default state should be unchecked
+    expect(switchLabel).toHaveAttribute('aria-checked', 'false')
+
+    // Toggle the switch
+    await userEvent.click(switchLabel)
+    expect(switchLabel).toHaveAttribute('aria-checked', 'true')
   })
 
   it('calls installServerMutation when form is submitted with valid data', async () => {
