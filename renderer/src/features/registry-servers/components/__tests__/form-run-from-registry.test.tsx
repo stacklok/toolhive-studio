@@ -114,6 +114,7 @@ describe('FormRunFromRegistry', () => {
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
+    // The form fields should be visible
     expect(screen.getByText(`Configure ${REGISTRY_SERVER.name}`)).toBeVisible()
     expect(screen.getByLabelText('Server name')).toBeInTheDocument()
     expect(screen.getByLabelText('Command arguments')).toBeInTheDocument()
@@ -122,6 +123,31 @@ describe('FormRunFromRegistry', () => {
     expect(
       screen.getByRole('button', { name: 'Install server' })
     ).toBeInTheDocument()
+  })
+
+  it('renders a tablist with a Configuration tab', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    // Check for the tab list and the Configuration tab
+    const tabList = screen.getByRole('tablist')
+    expect(tabList).toBeInTheDocument()
+    const configTab = screen.getByRole('tab', { name: /configuration/i })
+    expect(configTab).toBeInTheDocument()
+    expect(configTab).toHaveAttribute('aria-selected', 'true')
   })
 
   it('calls installServerMutation when form is submitted with valid data', async () => {

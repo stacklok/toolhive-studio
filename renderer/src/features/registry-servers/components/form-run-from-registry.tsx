@@ -43,6 +43,7 @@ import { getApiV1BetaWorkloadsOptions } from '@/common/api/generated/@tanstack/r
 import { useRunFromRegistry } from '../hooks/use-run-from-registry'
 import { LoadingStateAlert } from './loading-state-alert'
 import { AlertErrorFormSubmission } from './alert-error-form-submission'
+import { Tabs, TabsList, TabsTrigger } from '@/common/components/ui/tabs'
 
 /**
  * Renders an asterisk icon & tooltip for required fields.
@@ -323,6 +324,11 @@ export function FormRunFromRegistry({
                 installation.
               </DialogDescription>
             </DialogHeader>
+            <Tabs className="w-full" value="configuration">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="configuration">Configuration</TabsTrigger>
+              </TabsList>
+            </Tabs>
             {isSubmitting && (
               <LoadingStateAlert
                 isPendingSecrets={isPendingSecrets}
