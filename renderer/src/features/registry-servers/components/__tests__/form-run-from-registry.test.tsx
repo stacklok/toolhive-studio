@@ -125,7 +125,7 @@ describe('FormRunFromRegistry', () => {
     ).toBeInTheDocument()
   })
 
-  it('renders a tablist with a Configuration tab', async () => {
+  it('renders tabs, allows switching to Network Isolation, and toggles the switch', async () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
@@ -142,53 +142,43 @@ describe('FormRunFromRegistry', () => {
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
-    // Check for the tab list and the Configuration tab
+    // Tablist and both tabs present
     const tabList = screen.getByRole('tablist')
     expect(tabList).toBeInTheDocument()
     const configTab = screen.getByRole('tab', { name: /configuration/i })
-    expect(configTab).toBeInTheDocument()
-    expect(configTab).toHaveAttribute('aria-selected', 'true')
-  })
-
-  it('renders a Network Isolation tab and shows its content when selected', async () => {
-    const server = { ...REGISTRY_SERVER }
-    server.env_vars = ENV_VARS_OPTIONAL
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
-    )
-
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeVisible()
-    })
-    // Check for the Network Isolation tab
     const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    expect(configTab).toBeInTheDocument()
     expect(networkTab).toBeInTheDocument()
+    expect(configTab).toHaveAttribute('aria-selected', 'true')
     expect(networkTab).toHaveAttribute('aria-selected', 'false')
 
-    // Click the Network Isolation tab
+    // Switch to the Network Isolation tab
     await userEvent.click(networkTab)
     expect(networkTab).toHaveAttribute('aria-selected', 'true')
-
-    // The Configuration tab should now be unselected
-    const configTab = screen.getByRole('tab', { name: /configuration/i })
     expect(configTab).toHaveAttribute('aria-selected', 'false')
 
-    // The Network isolation switch should be visible
-    expect(screen.getByLabelText('Network isolation')).toBeInTheDocument()
+    // The Network isolation switch should be visible and toggleable
+    const switchLabel = screen.getByLabelText('Network isolation')
+    expect(switchLabel).toBeInTheDocument()
+    expect(switchLabel).toHaveAttribute('role', 'switch')
+    expect(switchLabel).toHaveAttribute('aria-checked', 'false')
+    await userEvent.click(switchLabel)
+    expect(switchLabel).toHaveAttribute('aria-checked', 'true')
 
     // The form fields should not be visible
     expect(screen.queryByLabelText('Server name')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Command arguments')).not.toBeInTheDocument()
   })
 
-  it('renders a Network isolation switch in the Network Isolation tab and toggles it', async () => {
+  it('shows loading state and hides tabs when submitting', async () => {
+    const mockInstallServerMutation = vi.fn()
+    mockUseRunFromRegistry.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      checkServerStatus: vi.fn(),
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
@@ -205,20 +195,22 @@ describe('FormRunFromRegistry', () => {
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
-    // Switch to the Network Isolation tab
-    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
-    await userEvent.click(networkTab)
+    await userEvent.type(screen.getByLabelText('Server name'), 'my-server', {
+      initialSelectionStart: 0,
+      initialSelectionEnd: REGISTRY_SERVER.name?.length,
+    })
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
 
-    // Check for the switch and its label
-    const switchLabel = screen.getByLabelText('Network isolation')
-    expect(switchLabel).toBeInTheDocument()
-    expect(switchLabel).toHaveAttribute('role', 'switch')
-    // Default state should be unchecked
-    expect(switchLabel).toHaveAttribute('aria-checked', 'false')
-
-    // Toggle the switch
-    await userEvent.click(switchLabel)
-    expect(switchLabel).toHaveAttribute('aria-checked', 'true')
+    // The loading/progress state should be visible
+    await waitFor(() => {
+      expect(
+        screen.getByText(/installing server|creating secrets/i)
+      ).toBeInTheDocument()
+    })
+    // The tabs should not be visible
+    expect(screen.queryByRole('tablist')).not.toBeInTheDocument()
   })
 
   it('calls installServerMutation when form is submitted with valid data', async () => {
@@ -810,49 +802,5 @@ describe('FormRunFromRegistry', () => {
         expect.any(Object)
       )
     })
-  })
-
-  it('hides tabs and shows loading state when submitting', async () => {
-    const server = { ...REGISTRY_SERVER }
-    server.env_vars = ENV_VARS_OPTIONAL
-
-    // Patch the mock to simulate isSubmitting true
-    mockUseRunFromRegistry.mockReturnValue({
-      installServerMutation: vi.fn(),
-      checkServerStatus: vi.fn(),
-      isErrorSecrets: false,
-      isPendingSecrets: false,
-    })
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
-    )
-
-    // Simulate submitting by filling in the form and clicking submit
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeVisible()
-    })
-    await userEvent.type(screen.getByLabelText('Server name'), 'my-server', {
-      initialSelectionStart: 0,
-      initialSelectionEnd: REGISTRY_SERVER.name?.length,
-    })
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Install server' })
-    )
-
-    // The loading/progress state should be visible
-    await waitFor(() => {
-      expect(
-        screen.getByText(/installing server|creating secrets/i)
-      ).toBeInTheDocument()
-    })
-    // The tabs should not be visible
-    expect(screen.queryByRole('tablist')).not.toBeInTheDocument()
   })
 })
