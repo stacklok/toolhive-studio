@@ -1041,4 +1041,154 @@ describe('FormRunFromRegistry', () => {
     expect(tcpCheckbox).not.toBeChecked()
     expect(udpCheckbox).toBeChecked()
   })
+
+  it('includes selected Allowed Protocols in the API payload when network isolation is enabled', async () => {
+    const mockInstallServerMutation = vi.fn()
+    mockUseRunFromRegistry.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      checkServerStatus: vi.fn(),
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Fill in required fields
+    await userEvent.type(
+      screen.getByLabelText('Server name'),
+      'my-network-server',
+      {
+        initialSelectionStart: 0,
+        initialSelectionEnd: REGISTRY_SERVER.name?.length,
+      }
+    )
+
+    // Switch to the Network Isolation tab
+    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    await userEvent.click(networkTab)
+
+    // Enable network isolation
+    const switchLabel = screen.getByLabelText('Network isolation')
+    await userEvent.click(switchLabel)
+
+    // Select TCP only
+    const tcpCheckbox = screen.getByLabelText('TCP')
+    await userEvent.click(tcpCheckbox)
+
+    // Switch back to configuration tab to submit
+    const configTab = screen.getByRole('tab', { name: /configuration/i })
+    await userEvent.click(configTab)
+
+    // Submit the form
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+
+    // Check payload for TCP only
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            permission_profile: expect.objectContaining({
+              network: expect.objectContaining({
+                outbound: expect.objectContaining({
+                  allow_transport: ['TCP'],
+                }),
+              }),
+            }),
+          }),
+        }),
+        expect.any(Object)
+      )
+    })
+
+    // Now select both TCP and UDP
+    vi.clearAllMocks()
+    mockUseRunFromRegistry.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      checkServerStatus: vi.fn(),
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Fill in required fields again
+    await userEvent.type(
+      screen.getByLabelText('Server name'),
+      'my-network-server',
+      {
+        initialSelectionStart: 0,
+        initialSelectionEnd: REGISTRY_SERVER.name?.length,
+      }
+    )
+
+    // Switch to the Network Isolation tab
+    const networkTab2 = screen.getByRole('tab', { name: /network isolation/i })
+    await userEvent.click(networkTab2)
+
+    // Enable network isolation
+    const switchLabel2 = screen.getByLabelText('Network isolation')
+    await userEvent.click(switchLabel2)
+
+    // Select TCP and UDP
+    const tcpCheckbox2 = screen.getByLabelText('TCP')
+    const udpCheckbox2 = screen.getByLabelText('UDP')
+    await userEvent.click(tcpCheckbox2)
+    await userEvent.click(udpCheckbox2)
+
+    // Switch back to configuration tab to submit
+    const configTab2 = screen.getByRole('tab', { name: /configuration/i })
+    await userEvent.click(configTab2)
+
+    // Submit the form
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+
+    // Check payload for both TCP and UDP
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            permission_profile: expect.objectContaining({
+              network: expect.objectContaining({
+                outbound: expect.objectContaining({
+                  allow_transport: expect.arrayContaining(['TCP', 'UDP']),
+                }),
+              }),
+            }),
+          }),
+        }),
+        expect.any(Object)
+      )
+    })
+  })
 })
