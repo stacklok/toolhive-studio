@@ -211,7 +211,7 @@ export function CardMcpServer({
         <div className="flex items-center justify-between">
           <CardTitle
             className={twMerge(
-              'flex items-center text-xl',
+              'flex items-center text-xl break-all',
               isStopped && 'text-primary/65'
             )}
           >
