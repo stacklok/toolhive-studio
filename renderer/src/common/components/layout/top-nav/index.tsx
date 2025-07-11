@@ -105,8 +105,9 @@ function TopNavLinks() {
 
 export function TopNav(props: HTMLProps<HTMLElement>) {
   const confirmQuit = useConfirmQuit()
+
   useEffect(() => {
-    window.electronAPI.onUpdateDownloaded(() => {
+    const cleanup = window.electronAPI.onUpdateDownloaded(() => {
       toast.info('Update downloaded and ready to install', {
         duration: Infinity,
         dismissible: true,
@@ -126,6 +127,9 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
         },
       })
     })
+
+    // Cleanup function to remove the event listener
+    return cleanup
   }, [confirmQuit])
 
   return (

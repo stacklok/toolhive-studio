@@ -11,10 +11,11 @@
 import { Route as rootRouteImport } from "./routes/__root"
 import { Route as ShutdownRouteImport } from "./routes/shutdown"
 import { Route as SecretsRouteImport } from "./routes/secrets"
-import { Route as RegistryRouteImport } from "./routes/registry"
 import { Route as ClientsRouteImport } from "./routes/clients"
 import { Route as IndexRouteImport } from "./routes/index"
 import { Route as LogsServerNameRouteImport } from "./routes/logs.$serverName"
+import { Route as registryRegistryRouteImport } from "./routes/(registry)/registry"
+import { Route as registryRegistryNameRouteImport } from "./routes/(registry)/registry_.$name"
 
 const ShutdownRoute = ShutdownRouteImport.update({
   id: "/shutdown",
@@ -24,11 +25,6 @@ const ShutdownRoute = ShutdownRouteImport.update({
 const SecretsRoute = SecretsRouteImport.update({
   id: "/secrets",
   path: "/secrets",
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegistryRoute = RegistryRouteImport.update({
-  id: "/registry",
-  path: "/registry",
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientsRoute = ClientsRouteImport.update({
@@ -46,66 +42,83 @@ const LogsServerNameRoute = LogsServerNameRouteImport.update({
   path: "/logs/$serverName",
   getParentRoute: () => rootRouteImport,
 } as any)
+const registryRegistryRoute = registryRegistryRouteImport.update({
+  id: "/(registry)/registry",
+  path: "/registry",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const registryRegistryNameRoute = registryRegistryNameRouteImport.update({
+  id: "/(registry)/registry_/$name",
+  path: "/registry/$name",
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
   "/clients": typeof ClientsRoute
-  "/registry": typeof RegistryRoute
   "/secrets": typeof SecretsRoute
   "/shutdown": typeof ShutdownRoute
+  "/registry": typeof registryRegistryRoute
   "/logs/$serverName": typeof LogsServerNameRoute
+  "/registry/$name": typeof registryRegistryNameRoute
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
   "/clients": typeof ClientsRoute
-  "/registry": typeof RegistryRoute
   "/secrets": typeof SecretsRoute
   "/shutdown": typeof ShutdownRoute
+  "/registry": typeof registryRegistryRoute
   "/logs/$serverName": typeof LogsServerNameRoute
+  "/registry/$name": typeof registryRegistryNameRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   "/": typeof IndexRoute
   "/clients": typeof ClientsRoute
-  "/registry": typeof RegistryRoute
   "/secrets": typeof SecretsRoute
   "/shutdown": typeof ShutdownRoute
+  "/(registry)/registry": typeof registryRegistryRoute
   "/logs/$serverName": typeof LogsServerNameRoute
+  "/(registry)/registry_/$name": typeof registryRegistryNameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | "/"
     | "/clients"
-    | "/registry"
     | "/secrets"
     | "/shutdown"
+    | "/registry"
     | "/logs/$serverName"
+    | "/registry/$name"
   fileRoutesByTo: FileRoutesByTo
   to:
     | "/"
     | "/clients"
-    | "/registry"
     | "/secrets"
     | "/shutdown"
+    | "/registry"
     | "/logs/$serverName"
+    | "/registry/$name"
   id:
     | "__root__"
     | "/"
     | "/clients"
-    | "/registry"
     | "/secrets"
     | "/shutdown"
+    | "/(registry)/registry"
     | "/logs/$serverName"
+    | "/(registry)/registry_/$name"
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ClientsRoute: typeof ClientsRoute
-  RegistryRoute: typeof RegistryRoute
   SecretsRoute: typeof SecretsRoute
   ShutdownRoute: typeof ShutdownRoute
+  registryRegistryRoute: typeof registryRegistryRoute
   LogsServerNameRoute: typeof LogsServerNameRoute
+  registryRegistryNameRoute: typeof registryRegistryNameRoute
 }
 
 declare module "@tanstack/react-router" {
@@ -122,13 +135,6 @@ declare module "@tanstack/react-router" {
       path: "/secrets"
       fullPath: "/secrets"
       preLoaderRoute: typeof SecretsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/registry": {
-      id: "/registry"
-      path: "/registry"
-      fullPath: "/registry"
-      preLoaderRoute: typeof RegistryRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/clients": {
@@ -152,16 +158,31 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof LogsServerNameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    "/(registry)/registry": {
+      id: "/(registry)/registry"
+      path: "/registry"
+      fullPath: "/registry"
+      preLoaderRoute: typeof registryRegistryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/(registry)/registry_/$name": {
+      id: "/(registry)/registry_/$name"
+      path: "/registry/$name"
+      fullPath: "/registry/$name"
+      preLoaderRoute: typeof registryRegistryNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ClientsRoute: ClientsRoute,
-  RegistryRoute: RegistryRoute,
   SecretsRoute: SecretsRoute,
   ShutdownRoute: ShutdownRoute,
+  registryRegistryRoute: registryRegistryRoute,
   LogsServerNameRoute: LogsServerNameRoute,
+  registryRegistryNameRoute: registryRegistryNameRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

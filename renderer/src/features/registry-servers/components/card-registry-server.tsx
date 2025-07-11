@@ -6,9 +6,10 @@ import {
   CardFooter,
 } from '@/common/components/ui/card'
 import type { RegistryImageMetadata } from '@/common/api/generated/types.gen'
-import { Github, Plus, StarIcon } from 'lucide-react'
+import { Github, Plus } from 'lucide-react'
 import { cn } from '@/common/lib/utils'
 import { Button } from '@/common/components/ui/button'
+import { Stars } from './Stars'
 
 const statusMap = {
   deprecated: 'Deprecated',
@@ -65,10 +66,7 @@ export function CardRegistryServer({
       <CardFooter className="mt-auto flex items-center gap-2">
         {server?.metadata?.stars ? (
           <div className="flex items-center gap-2">
-            <StarIcon className="text-muted-foreground size-3" />
-            <span className="text-muted-foreground text-sm select-none">
-              {Intl.NumberFormat().format(server.metadata.stars)}
-            </span>
+            <Stars stars={server.metadata.stars} />
           </div>
         ) : null}
         {server?.repository_url ? (

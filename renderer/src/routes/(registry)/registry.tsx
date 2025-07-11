@@ -7,7 +7,7 @@ import { ExternalLinkIcon } from 'lucide-react'
 import { Button } from '@/common/components/ui/button'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
 
-export const Route = createFileRoute('/registry')({
+export const Route = createFileRoute('/(registry)/registry')({
   loader: async ({ context: { queryClient } }) =>
     queryClient.ensureQueryData(
       getApiV1BetaRegistryByNameServersOptions({ path: { name: 'default' } })
