@@ -81,7 +81,7 @@
         "type": "object"
       },
       "permissions.Profile": {
-        "description": "Permissions defines the security profile and access permissions for the server",
+        "description": "Permission profile to apply",
         "properties": {
           "name": {
             "description": "Name is the name of the profile",
@@ -378,10 +378,13 @@
           "host": { "description": "Host to bind to", "type": "string" },
           "image": { "description": "Docker image to use", "type": "string" },
           "name": { "description": "Name of the workload", "type": "string" },
+          "network_isolation": {
+            "description": "Whether network isolation is turned on. This applies the rules in the permission profile.",
+            "type": "boolean"
+          },
           "oidc": { "$ref": "#/components/schemas/v1.oidcOptions" },
           "permission_profile": {
-            "description": "Permission profile to apply",
-            "type": "string"
+            "$ref": "#/components/schemas/permissions.Profile"
           },
           "proxy_mode": {
             "description": "Proxy mode to use",

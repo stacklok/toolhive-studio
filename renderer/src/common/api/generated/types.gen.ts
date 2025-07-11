@@ -51,7 +51,7 @@ export type PermissionsOutboundNetworkPermissions = {
 }
 
 /**
- * Permissions defines the security profile and access permissions for the server
+ * Permission profile to apply
  */
 export type PermissionsProfile = {
   /**
@@ -292,11 +292,12 @@ export type V1CreateRequest = {
    * Name of the workload
    */
   name?: string
-  oidc?: V1OidcOptions
   /**
-   * Permission profile to apply
+   * Whether network isolation is turned on. This applies the rules in the permission profile.
    */
-  permission_profile?: string
+  network_isolation?: boolean
+  oidc?: V1OidcOptions
+  permission_profile?: PermissionsProfile
   /**
    * Proxy mode to use
    */
