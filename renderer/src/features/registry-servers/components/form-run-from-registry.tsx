@@ -372,12 +372,16 @@ export function FormRunFromRegistry({
         workloads: data?.workloads ?? [],
       }).extend({
         networkIsolation: z.boolean().optional(),
+        allowedProtocols: z.array(z.string()).optional(),
       }),
     [groupedEnvVars, data?.workloads]
   )
 
   const form = useForm<
-    FormSchemaRunFromRegistry & { networkIsolation?: boolean }
+    FormSchemaRunFromRegistry & {
+      networkIsolation?: boolean
+      allowedProtocols?: string[]
+    }
   >({
     resolver: zodV4Resolver(formSchema),
     defaultValues: {
@@ -391,11 +395,15 @@ export function FormRunFromRegistry({
         value: e.default || '',
       })),
       networkIsolation: false,
+      allowedProtocols: [],
     },
   })
 
   const onSubmitForm = (
-    data: FormSchemaRunFromRegistry & { networkIsolation?: boolean }
+    data: FormSchemaRunFromRegistry & {
+      networkIsolation?: boolean
+      allowedProtocols?: string[]
+    }
   ) => {
     if (!server) return
 
@@ -413,15 +421,15 @@ export function FormRunFromRegistry({
             insecure_allow_all: false,
             allow_host: [],
             allow_port: [],
-            allow_transport: [],
+            allow_transport: data.allowedProtocols ?? [],
           },
         },
       }
     }
 
-    // Omit networkIsolation from the payload
+    // Omit networkIsolation and allowedProtocols from the payload
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { networkIsolation, ...restData } = data
+    const { networkIsolation, allowedProtocols, ...restData } = data
 
     installServerMutation(
       {
@@ -509,27 +517,108 @@ export function FormRunFromRegistry({
                   <Controller
                     control={form.control}
                     name="networkIsolation"
-                    render={({ field }) => (
+                    render={({ field: networkField }) => (
                       <div className="p-6">
                         <div className="mb-4 flex items-center gap-4">
                           <Switch
                             id="network-isolation-switch"
                             aria-label="Network isolation"
-                            checked={!!field.value}
-                            onCheckedChange={field.onChange}
+                            checked={!!networkField.value}
+                            onCheckedChange={networkField.onChange}
                           />
                           <Label htmlFor="network-isolation-switch">
                             Network isolation
                           </Label>
                         </div>
-                        {field.value && (
-                          <Alert className="mt-2">
-                            <AlertTriangle className="mt-0.5" />
-                            <AlertDescription>
-                              This configuration blocks all outbound network
-                              traffic from the MCP server.
-                            </AlertDescription>
-                          </Alert>
+                        {networkField.value && (
+                          <>
+                            <Alert className="mt-2">
+                              <AlertTriangle className="mt-0.5" />
+                              <AlertDescription>
+                                This configuration blocks all outbound network
+                                traffic from the MCP server.
+                              </AlertDescription>
+                            </Alert>
+                            <Controller
+                              control={form.control}
+                              name="allowedProtocols"
+                              render={({ field: protocolsField }) => (
+                                <div className="mt-6">
+                                  <Label htmlFor="allowed-protocols-group">
+                                    Allowed Protocols
+                                  </Label>
+                                  <div
+                                    id="allowed-protocols-group"
+                                    role="group"
+                                    aria-label="Allowed Protocols"
+                                  >
+                                    <div className="mt-2 flex items-center gap-4">
+                                      <label>
+                                        <input
+                                          type="checkbox"
+                                          aria-label="TCP"
+                                          checked={
+                                            protocolsField.value?.includes(
+                                              'TCP'
+                                            ) || false
+                                          }
+                                          onChange={() => {
+                                            if (
+                                              protocolsField.value?.includes(
+                                                'TCP'
+                                              )
+                                            ) {
+                                              protocolsField.onChange(
+                                                protocolsField.value.filter(
+                                                  (v: string) => v !== 'TCP'
+                                                )
+                                              )
+                                            } else {
+                                              protocolsField.onChange([
+                                                ...(protocolsField.value || []),
+                                                'TCP',
+                                              ])
+                                            }
+                                          }}
+                                        />{' '}
+                                        TCP
+                                      </label>
+                                      <label>
+                                        <input
+                                          type="checkbox"
+                                          aria-label="UDP"
+                                          checked={
+                                            protocolsField.value?.includes(
+                                              'UDP'
+                                            ) || false
+                                          }
+                                          onChange={() => {
+                                            if (
+                                              protocolsField.value?.includes(
+                                                'UDP'
+                                              )
+                                            ) {
+                                              protocolsField.onChange(
+                                                protocolsField.value.filter(
+                                                  (v: string) => v !== 'UDP'
+                                                )
+                                              )
+                                            } else {
+                                              protocolsField.onChange([
+                                                ...(protocolsField.value || []),
+                                                'UDP',
+                                              ])
+                                            }
+                                          }}
+                                        />{' '}
+                                        UDP
+                                      </label>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            />
+                          </>
                         )}
                       </div>
                     )}

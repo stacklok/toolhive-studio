@@ -983,4 +983,62 @@ describe('FormRunFromRegistry', () => {
       )
     })
   })
+
+  it('shows Allowed Protocols checkbox group only when network isolation is enabled', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Switch to the Network Isolation tab
+    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    await userEvent.click(networkTab)
+
+    // Initially, the Allowed Protocols group should not be visible
+    expect(screen.queryByLabelText('Allowed Protocols')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('TCP')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('UDP')).not.toBeInTheDocument()
+
+    // Enable network isolation
+    const switchLabel = screen.getByLabelText('Network isolation')
+    await userEvent.click(switchLabel)
+
+    // Now the Allowed Protocols group should be visible
+    expect(screen.getByLabelText('Allowed Protocols')).toBeInTheDocument()
+    const tcpCheckbox = screen.getByLabelText('TCP')
+    const udpCheckbox = screen.getByLabelText('UDP')
+    expect(tcpCheckbox).toBeInTheDocument()
+    expect(udpCheckbox).toBeInTheDocument()
+
+    // Both should be unchecked by default
+    expect(tcpCheckbox).not.toBeChecked()
+    expect(udpCheckbox).not.toBeChecked()
+
+    // Check TCP
+    await userEvent.click(tcpCheckbox)
+    expect(tcpCheckbox).toBeChecked()
+    expect(udpCheckbox).not.toBeChecked()
+
+    // Check UDP
+    await userEvent.click(udpCheckbox)
+    expect(tcpCheckbox).toBeChecked()
+    expect(udpCheckbox).toBeChecked()
+
+    // Uncheck TCP
+    await userEvent.click(tcpCheckbox)
+    expect(tcpCheckbox).not.toBeChecked()
+    expect(udpCheckbox).toBeChecked()
+  })
 })
