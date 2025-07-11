@@ -51,7 +51,7 @@ import { Alert, AlertDescription } from '@/common/components/ui/alert'
 import { AlertTriangle } from 'lucide-react'
 import { Controller } from 'react-hook-form'
 import z from 'zod/v4'
-import { DynamicArrayField } from './DynamicNumberArrayField'
+import { DynamicArrayField } from './DynamicArrayField'
 
 /**
  * Renders an asterisk icon & tooltip for required fields.
