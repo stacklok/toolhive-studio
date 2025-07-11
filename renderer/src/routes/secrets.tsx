@@ -10,6 +10,7 @@ import { useMutationUpdateSecret } from '@/features/secrets/hooks/use-mutation-u
 import { PlusIcon } from 'lucide-react'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
 import { EmptyState } from '@/common/components/empty-state'
+import { TitlePage } from '@/common/components/title-page'
 
 export const Route = createFileRoute('/secrets')({
   component: Secrets,
@@ -48,8 +49,7 @@ export function Secrets() {
 
   return (
     <>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-display text-3xl font-bold">Secrets</h1>
+      <TitlePage title="Secrets">
         {keys.length > 0 && (
           <Button
             variant="default"
@@ -61,7 +61,7 @@ export function Secrets() {
             <PlusIcon /> Add secret
           </Button>
         )}
-      </div>
+      </TitlePage>
 
       {keys.length === 0 ? (
         <EmptyState

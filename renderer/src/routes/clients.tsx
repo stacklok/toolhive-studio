@@ -6,6 +6,7 @@ import { Button } from '@/common/components/ui/button'
 import { ExternalLinkIcon } from 'lucide-react'
 import { EmptyState } from '@/common/components/empty-state'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
+import { TitlePage } from '@/common/components/title-page'
 
 export const Route = createFileRoute('/clients')({
   component: Clients,
@@ -20,9 +21,7 @@ export function Clients() {
 
   return (
     <>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-display text-3xl font-bold">Clients</h1>
-      </div>
+      <TitlePage title="Clients" />
       {clients.length === 0 ? (
         <EmptyState
           title="No clients detected"
