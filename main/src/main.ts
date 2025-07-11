@@ -119,7 +119,7 @@ export async function blockQuit(source: string, event?: Electron.Event) {
 
       await pollWindowReady(mainWindow)
 
-      mainWindow.webContents.send('graceful-exit')
+      mainWindow?.webContents.send('graceful-exit')
 
       // Give renderer time to navigate to shutdown page
       await delay(500)
@@ -425,7 +425,7 @@ ipcMain.handle('restart-toolhive', async () => {
   }
 })
 
-ipcMain.handle('install-update-and-restart', () => {
+ipcMain.handle('install-update-and-restart', async () => {
   log.info('Installing update and restarting application')
   // Set a flag to indicate we're installing an update
   // This will prevent the graceful shutdown process
@@ -436,7 +436,7 @@ ipcMain.handle('install-update-and-restart', () => {
   try {
     const port = getToolhivePort()
     if (port) {
-      stopAllServers(binPath, port).catch((err) => {
+      await stopAllServers(binPath, port).catch((err) => {
         log.error('Failed to stop servers during update: ', err)
       })
     }
