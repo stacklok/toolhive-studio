@@ -83,7 +83,6 @@ it('renders edit secret dialog when clicking edit from dropdown', async () => {
   await userEvent.click(editButton)
 
   expect(screen.getByText('Update the secret value below.')).toBeInTheDocument()
-  expect(screen.queryByPlaceholderText('Name')).not.toBeInTheDocument()
   expect(screen.getByPlaceholderText('Secret')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: /update/i })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()

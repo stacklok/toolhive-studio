@@ -125,29 +125,25 @@ function SecretForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)}>
         <div className="space-y-4 pt-4 pb-8">
-          {isEditMode && (
-            <FormItem>
-              <FormLabel readOnly>Secret name</FormLabel>
-              <FormControl>
-                <Input value={secretKey} readOnly disabled />
-              </FormControl>
-            </FormItem>
-          )}
-          {!isEditMode && (
-            <FormField
-              control={form.control}
-              name="key"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Secret name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
+          <FormField
+            control={form.control}
+            name="key"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel readOnly={isEditMode}>Secret name</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Name"
+                    {...field}
+                    value={isEditMode ? secretKey : field.value}
+                    readOnly={isEditMode}
+                    disabled={isEditMode}
+                  />
+                </FormControl>
+                {!isEditMode && <FormMessage />}
+              </FormItem>
+            )}
+          />
 
           <FormField
             control={form.control}
