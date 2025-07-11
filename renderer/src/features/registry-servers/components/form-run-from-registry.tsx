@@ -469,31 +469,45 @@ export function FormRunFromRegistry({
                 installation.
               </DialogDescription>
             </DialogHeader>
-            <Tabs
-              className="w-full"
-              value={tabValue}
-              onValueChange={setTabValue}
-            >
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="configuration">Configuration</TabsTrigger>
-                <TabsTrigger value="network-isolation">
-                  Network Isolation
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-            {tabValue === 'configuration' && (
-              <ConfigurationTabContent
-                isSubmitting={isSubmitting}
+            {isSubmitting && (
+              <LoadingStateAlert
                 isPendingSecrets={isPendingSecrets}
                 loadingSecrets={loadingSecrets}
-                error={error}
-                isErrorSecrets={isErrorSecrets}
-                setError={setError}
-                form={form}
-                groupedEnvVars={groupedEnvVars}
               />
             )}
-            {tabValue === 'network-isolation' && <NetworkIsolationTabContent />}
+            {!isSubmitting && (
+              <>
+                <Tabs
+                  className="w-full"
+                  value={tabValue}
+                  onValueChange={setTabValue}
+                >
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="configuration">
+                      Configuration
+                    </TabsTrigger>
+                    <TabsTrigger value="network-isolation">
+                      Network Isolation
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                {tabValue === 'configuration' && (
+                  <ConfigurationTabContent
+                    isSubmitting={isSubmitting}
+                    isPendingSecrets={isPendingSecrets}
+                    loadingSecrets={loadingSecrets}
+                    error={error}
+                    isErrorSecrets={isErrorSecrets}
+                    setError={setError}
+                    form={form}
+                    groupedEnvVars={groupedEnvVars}
+                  />
+                )}
+                {tabValue === 'network-isolation' && (
+                  <NetworkIsolationTabContent />
+                )}
+              </>
+            )}
 
             <DialogFooter className="p-6">
               <Button

@@ -811,4 +811,48 @@ describe('FormRunFromRegistry', () => {
       )
     })
   })
+
+  it('hides tabs and shows loading state when submitting', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    // Patch the mock to simulate isSubmitting true
+    mockUseRunFromRegistry.mockReturnValue({
+      installServerMutation: vi.fn(),
+      checkServerStatus: vi.fn(),
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+
+    // Simulate submitting by filling in the form and clicking submit
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    await userEvent.type(screen.getByLabelText('Server name'), 'my-server', {
+      initialSelectionStart: 0,
+      initialSelectionEnd: REGISTRY_SERVER.name?.length,
+    })
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+
+    // The loading/progress state should be visible
+    await waitFor(() => {
+      expect(
+        screen.getByText(/installing server|creating secrets/i)
+      ).toBeInTheDocument()
+    })
+    // The tabs should not be visible
+    expect(screen.queryByRole('tablist')).not.toBeInTheDocument()
+  })
 })
