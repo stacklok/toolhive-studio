@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron'
 import { execSync } from 'node:child_process'
 import log from './logger'
+import { delay } from '../../utils/delay'
 
 function getVersionFromGit(): string {
   try {
@@ -23,10 +24,6 @@ function getVersionFromGit(): string {
       return app.getVersion()
     }
   }
-}
-
-export async function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 export function getAppVersion(): string {
