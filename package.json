@@ -21,6 +21,7 @@
     "prepare": "husky install",
     "thv": "ts-node ./utils/fetch-thv.ts --run",
     "test": "vitest",
+    "test:nonInteractive": "vitest run",
     "test:coverage": "vitest run --coverage",
     "update-api": "ts-node scripts/update-api.ts",
     "generate-client": "pnpm run update-api && cd renderer && openapi-ts",

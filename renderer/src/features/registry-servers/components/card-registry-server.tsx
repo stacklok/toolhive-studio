@@ -9,7 +9,7 @@ import type { RegistryImageMetadata } from '@/common/api/generated/types.gen'
 import { Github, Plus } from 'lucide-react'
 import { cn } from '@/common/lib/utils'
 import { Button } from '@/common/components/ui/button'
-import { Stars } from './Stars'
+import { Stars } from './stars'
 
 const statusMap = {
   deprecated: 'Deprecated',

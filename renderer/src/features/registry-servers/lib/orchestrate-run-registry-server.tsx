@@ -5,6 +5,7 @@ import {
   type SecretsSecretParameter,
   type V1CreateRequest,
   type V1CreateSecretResponse,
+  type PermissionsProfile,
 } from '@/common/api/generated'
 import type { FormSchemaRunFromRegistry } from './get-form-schema-run-from-registry'
 import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
@@ -104,7 +105,7 @@ export async function saveSecrets(
  */
 export function prepareCreateWorkloadData(
   server: RegistryImageMetadata,
-  data: FormSchemaRunFromRegistry,
+  data: FormSchemaRunFromRegistry & { permission_profile?: PermissionsProfile },
   secrets: SecretsSecretParameter[] = []
 ): V1CreateRequest {
   const envVars: Array<string> = data.envVars.map(
@@ -121,6 +122,9 @@ export function prepareCreateWorkloadData(
       ? data.cmd_arguments?.split(' ').filter(Boolean)
       : [],
     target_port: server.target_port,
+    ...(data.permission_profile
+      ? { permission_profile: data.permission_profile }
+      : {}),
   }
 }
 

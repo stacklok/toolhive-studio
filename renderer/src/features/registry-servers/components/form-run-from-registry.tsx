@@ -22,7 +22,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/common/components/ui/tooltip'
-import { useForm, type UseFormReturn } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
+import type { UseFormReturn } from 'react-hook-form'
 import type {
   RegistryEnvVar,
   RegistryImageMetadata,
@@ -43,6 +44,14 @@ import { getApiV1BetaWorkloadsOptions } from '@/common/api/generated/@tanstack/r
 import { useRunFromRegistry } from '../hooks/use-run-from-registry'
 import { LoadingStateAlert } from './loading-state-alert'
 import { AlertErrorFormSubmission } from './alert-error-form-submission'
+import { Tabs, TabsList, TabsTrigger } from '@/common/components/ui/tabs'
+import { Switch } from '@/common/components/ui/switch'
+import type { GroupedEnvVars } from '../lib/group-env-vars'
+import { Alert, AlertDescription } from '@/common/components/ui/alert'
+import { AlertTriangle } from 'lucide-react'
+import { Controller } from 'react-hook-form'
+import z from 'zod/v4'
+import { DynamicArrayField } from './dynamic-array-field'
 
 /**
  * Renders an asterisk icon & tooltip for required fields.
@@ -202,10 +211,136 @@ function EnvVarRow({
   )
 }
 
+interface ConfigurationTabContentProps {
+  error: string | null
+  isErrorSecrets: boolean
+  setError: (err: string | null) => void
+  form: UseFormReturn<FormSchemaRunFromRegistry>
+  groupedEnvVars: GroupedEnvVars
+}
+
+function ConfigurationTabContent({
+  error,
+  isErrorSecrets,
+  setError,
+  form,
+  groupedEnvVars,
+}: ConfigurationTabContentProps) {
+  return (
+    <div className="relative max-h-[65dvh] space-y-4 overflow-y-auto px-6">
+      {error && (
+        <AlertErrorFormSubmission
+          error={error}
+          isErrorSecrets={isErrorSecrets}
+          onDismiss={() => setError(null)}
+        />
+      )}
+      <FormField
+        control={form.control}
+        name="serverName"
+        render={({ field }) => (
+          <FormItem className="mb-10">
+            <FormLabel>Server name</FormLabel>
+            <FormDescription>
+              Choose a unique name for this server instance
+            </FormDescription>
+            <FormControl>
+              <Input {...field} placeholder="e.g. my-custom-server" autoFocus />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="cmd_arguments"
+        render={({ field }) => (
+          <FormItem className="mb-10">
+            <FormLabel>Command arguments</FormLabel>
+            <FormDescription>
+              Space separated arguments for the command.
+            </FormDescription>
+            <FormControl>
+              <Input
+                placeholder="e.g. -y --oauth-setup"
+                defaultValue={field.value}
+                onChange={(e) => field.onChange(e.target.value)}
+                name={field.name}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {groupedEnvVars.secrets[0] ? (
+        <section className="mb-10">
+          <Label className="mb-2" htmlFor="secrets.0.value">
+            Secrets
+          </Label>
+
+          <p className="text-muted-foreground mb-6 text-sm">
+            All secrets are encrypted and securely stored by ToolHive.
+          </p>
+
+          {groupedEnvVars.secrets.map((secret, index) => (
+            <SecretRow
+              form={form}
+              secret={secret}
+              index={index}
+              key={secret.name}
+            />
+          ))}
+        </section>
+      ) : null}
+
+      {groupedEnvVars.envVars[0] ? (
+        <section className="mb-10">
+          <Label className="mb-2" htmlFor="envVars.0.value">
+            Environment variables
+          </Label>
+
+          <p className="text-muted-foreground mb-6 text-sm">
+            Environment variables are used to pass configuration settings to the
+            server.
+          </p>
+
+          {groupedEnvVars.envVars.map((envVar, index) => (
+            <EnvVarRow
+              form={form}
+              envVar={envVar}
+              index={index}
+              key={envVar.name}
+            />
+          ))}
+        </section>
+      ) : null}
+    </div>
+  )
+}
+
 interface FormRunFromRegistryProps {
   server: RegistryImageMetadata | null
   isOpen: boolean
   onOpenChange: (open: boolean) => void
+}
+
+// Validation function for port numbers
+const validatePort = (val: string) => {
+  if (!val.trim()) return 'Port is required'
+  if (!/^[0-9]+$/.test(val)) return 'Port must be a number'
+  const num = Number(val)
+  if (isNaN(num) || num < 1 || num > 65535) return 'Port must be 1-65535'
+  return null
+}
+
+// Add validateHost function
+const validateHost = (val: string) => {
+  if (!val.trim()) return 'Host is required'
+  // Allow leading dot, then domain pattern
+  if (!/^\.?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(val)) return 'Invalid host'
+  return null
 }
 
 export function FormRunFromRegistry({
@@ -253,11 +388,23 @@ export function FormRunFromRegistry({
         envVars: groupedEnvVars.envVars,
         secrets: groupedEnvVars.secrets,
         workloads: data?.workloads ?? [],
+      }).extend({
+        networkIsolation: z.boolean().optional(),
+        allowedProtocols: z.array(z.string()).optional(),
+        allowedPorts: z.array(z.number().int().min(1).max(65535)).optional(),
+        allowedHosts: z.array(z.string()).optional(),
       }),
     [groupedEnvVars, data?.workloads]
   )
 
-  const form = useForm<FormSchemaRunFromRegistry>({
+  const form = useForm<
+    FormSchemaRunFromRegistry & {
+      networkIsolation?: boolean
+      allowedProtocols?: string[]
+      allowedPorts?: string[]
+      allowedHosts?: string[]
+    }
+  >({
     resolver: zodV4Resolver(formSchema),
     defaultValues: {
       serverName: server?.name || '',
@@ -269,10 +416,21 @@ export function FormRunFromRegistry({
         name: e.name || '',
         value: e.default || '',
       })),
+      networkIsolation: false,
+      allowedProtocols: [],
+      allowedPorts: [],
+      allowedHosts: [],
     },
   })
 
-  const onSubmitForm = (data: FormSchemaRunFromRegistry) => {
+  const onSubmitForm = (
+    data: FormSchemaRunFromRegistry & {
+      networkIsolation?: boolean
+      allowedProtocols?: string[]
+      allowedPorts?: string[]
+      allowedHosts?: string[]
+    }
+  ) => {
     if (!server) return
 
     setIsSubmitting(true)
@@ -280,8 +438,41 @@ export function FormRunFromRegistry({
       setError(null)
     }
 
+    let permission_profile
+    if (data.networkIsolation) {
+      permission_profile = {
+        network: {
+          outbound: {
+            insecure_allow_all: false,
+            allow_host:
+              Array.isArray(data.allowedHosts) && data.allowedHosts.length > 0
+                ? data.allowedHosts.filter((h) => !!h)
+                : [],
+            allow_port:
+              Array.isArray(data.allowedPorts) && data.allowedPorts.length > 0
+                ? data.allowedPorts
+                    .map((p) => Number(p))
+                    .filter((n) => !isNaN(n))
+                : [],
+            allow_transport: data.allowedProtocols ?? [],
+          },
+        },
+      }
+    }
+
+    // Omit networkIsolation, allowedProtocols, allowedPorts from the payload
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { networkIsolation, allowedProtocols, allowedPorts, ...restData } =
+      data
+
     installServerMutation(
-      { server, data },
+      {
+        server,
+        data: {
+          ...restData,
+          ...(permission_profile ? { permission_profile } : {}),
+        },
+      },
       {
         onSuccess: () => {
           checkServerStatus(data)
@@ -299,6 +490,8 @@ export function FormRunFromRegistry({
       }
     )
   }
+
+  const [tabValue, setTabValue] = useState('configuration')
 
   if (!server) return null
 
@@ -330,100 +523,173 @@ export function FormRunFromRegistry({
               />
             )}
             {!isSubmitting && (
-              <div className="relative max-h-[65dvh] space-y-4 overflow-y-auto px-6">
-                {error && (
-                  <AlertErrorFormSubmission
+              <>
+                <Tabs
+                  className="w-full"
+                  value={tabValue}
+                  onValueChange={setTabValue}
+                >
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="configuration">
+                      Configuration
+                    </TabsTrigger>
+                    <TabsTrigger value="network-isolation">
+                      Network Isolation
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                {tabValue === 'configuration' && (
+                  <ConfigurationTabContent
                     error={error}
                     isErrorSecrets={isErrorSecrets}
-                    onDismiss={() => setError(null)}
+                    setError={setError}
+                    form={form}
+                    groupedEnvVars={groupedEnvVars}
                   />
                 )}
-                <FormField
-                  control={form.control}
-                  name="serverName"
-                  render={({ field }) => (
-                    <FormItem className="mb-10">
-                      <FormLabel>Server name</FormLabel>
-                      <FormDescription>
-                        Choose a unique name for this server instance
-                      </FormDescription>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="e.g. my-custom-server"
-                          autoFocus
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="cmd_arguments"
-                  render={({ field }) => (
-                    <FormItem className="mb-10">
-                      <FormLabel>Command arguments</FormLabel>
-                      <FormDescription>
-                        Space separated arguments for the command.
-                      </FormDescription>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g. -y --oauth-setup"
-                          defaultValue={field.value}
-                          onChange={(e) => field.onChange(e.target.value)}
-                          name={field.name}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {groupedEnvVars.secrets[0] ? (
-                  <section className="mb-10">
-                    <Label className="mb-2" htmlFor="secrets.0.value">
-                      Secrets
-                    </Label>
-
-                    <p className="text-muted-foreground mb-6 text-sm">
-                      All secrets are encrypted and securely stored by ToolHive.
-                    </p>
-
-                    {groupedEnvVars.secrets.map((secret, index) => (
-                      <SecretRow
-                        form={form}
-                        secret={secret}
-                        index={index}
-                        key={secret.name}
-                      />
-                    ))}
-                  </section>
-                ) : null}
-
-                {groupedEnvVars.envVars[0] ? (
-                  <section className="mb-10">
-                    <Label className="mb-2" htmlFor="envVars.0.value">
-                      Environment variables
-                    </Label>
-
-                    <p className="text-muted-foreground mb-6 text-sm">
-                      Environment variables are used to pass configuration
-                      settings to the server.
-                    </p>
-
-                    {groupedEnvVars.envVars.map((envVar, index) => (
-                      <EnvVarRow
-                        form={form}
-                        envVar={envVar}
-                        index={index}
-                        key={envVar.name}
-                      />
-                    ))}
-                  </section>
-                ) : null}
-              </div>
+                {tabValue === 'network-isolation' && (
+                  <Controller
+                    control={form.control}
+                    name="networkIsolation"
+                    render={({ field: networkField }) => (
+                      <div className="p-6">
+                        <div className="mb-4 flex items-center gap-4">
+                          <Switch
+                            id="network-isolation-switch"
+                            aria-label="Network isolation"
+                            checked={!!networkField.value}
+                            onCheckedChange={networkField.onChange}
+                          />
+                          <Label htmlFor="network-isolation-switch">
+                            Network isolation
+                          </Label>
+                        </div>
+                        {networkField.value && (
+                          <>
+                            <Alert className="mt-2">
+                              <AlertTriangle className="mt-0.5" />
+                              <AlertDescription>
+                                This configuration blocks all outbound network
+                                traffic from the MCP server.
+                              </AlertDescription>
+                            </Alert>
+                            {/* Allowed Protocols */}
+                            <Controller
+                              control={form.control}
+                              name="allowedProtocols"
+                              render={({ field: protocolsField }) => (
+                                <div className="mt-6">
+                                  <Label htmlFor="allowed-protocols-group">
+                                    Allowed Protocols
+                                  </Label>
+                                  <div
+                                    id="allowed-protocols-group"
+                                    role="group"
+                                    aria-label="Allowed Protocols"
+                                  >
+                                    <div className="mt-2 flex items-center gap-4">
+                                      <label>
+                                        <input
+                                          type="checkbox"
+                                          aria-label="TCP"
+                                          checked={
+                                            protocolsField.value?.includes(
+                                              'TCP'
+                                            ) || false
+                                          }
+                                          onChange={() => {
+                                            if (
+                                              protocolsField.value?.includes(
+                                                'TCP'
+                                              )
+                                            ) {
+                                              protocolsField.onChange(
+                                                protocolsField.value.filter(
+                                                  (v: string) => v !== 'TCP'
+                                                )
+                                              )
+                                            } else {
+                                              protocolsField.onChange([
+                                                ...(protocolsField.value || []),
+                                                'TCP',
+                                              ])
+                                            }
+                                          }}
+                                        />{' '}
+                                        TCP
+                                      </label>
+                                      <label>
+                                        <input
+                                          type="checkbox"
+                                          aria-label="UDP"
+                                          checked={
+                                            protocolsField.value?.includes(
+                                              'UDP'
+                                            ) || false
+                                          }
+                                          onChange={() => {
+                                            if (
+                                              protocolsField.value?.includes(
+                                                'UDP'
+                                              )
+                                            ) {
+                                              protocolsField.onChange(
+                                                protocolsField.value.filter(
+                                                  (v: string) => v !== 'UDP'
+                                                )
+                                              )
+                                            } else {
+                                              protocolsField.onChange([
+                                                ...(protocolsField.value || []),
+                                                'UDP',
+                                              ])
+                                            }
+                                          }}
+                                        />{' '}
+                                        UDP
+                                      </label>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            />
+                            {/* Allowed Ports */}
+                            <Controller
+                              control={form.control}
+                              name="allowedPorts"
+                              render={({ field: portsField }) => (
+                                <DynamicArrayField
+                                  label="Allowed Ports"
+                                  value={portsField.value || []}
+                                  onChange={portsField.onChange}
+                                  inputLabelPrefix="Port"
+                                  addButtonText="Add a port"
+                                  validate={validatePort}
+                                />
+                              )}
+                            />
+                            {/* Allowed Hosts */}
+                            <Controller
+                              control={form.control}
+                              name="allowedHosts"
+                              render={({ field: hostsField }) => (
+                                <DynamicArrayField
+                                  label="Allowed Hosts"
+                                  value={hostsField.value || []}
+                                  onChange={hostsField.onChange}
+                                  inputLabelPrefix="Host"
+                                  addButtonText="Add a host"
+                                  validate={validateHost}
+                                />
+                              )}
+                            />
+                          </>
+                        )}
+                      </div>
+                    )}
+                  />
+                )}
+              </>
             )}
 
             <DialogFooter className="p-6">
