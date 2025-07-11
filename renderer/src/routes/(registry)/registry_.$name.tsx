@@ -15,6 +15,7 @@ import {
   TooltipTrigger,
 } from '@/common/components/ui/tooltip'
 import { FormRunFromRegistry } from '@/features/registry-servers/components/form-run-from-registry'
+import { trackEvent } from '@/common/lib/analytics'
 
 const statusMap = {
   deprecated: 'Deprecated',
@@ -124,7 +125,14 @@ export function RegistryServerDetail() {
                 <Badge
                   variant="default"
                   className="hover:bg-primary/80 cursor-pointer transition-colors"
-                  onClick={() => setShowAllTools(!showAllTools)}
+                  onClick={() => {
+                    setShowAllTools(!showAllTools)
+                    if (!showAllTools) {
+                      trackEvent(`Registry ${name} tools more`, {
+                        name,
+                      })
+                    }
+                  }}
                 >
                   {!showAllTools ? 'Show more' : 'Show less'}
                 </Badge>
