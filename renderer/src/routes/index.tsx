@@ -59,12 +59,14 @@ export function Index() {
     <>
       <div className="mb-6 flex items-center">
         <h1 className="font-display text-3xl font-bold">Installed</h1>
-        <div className="ml-auto flex gap-2">
-          <RefreshButton refresh={refetch} />
-          <DropdownMenuRunMcpServer
-            openRunCommandDialog={() => setIsRunWithCommandOpen(true)}
-          />
-        </div>
+        {workloads.length > 0 && (
+          <div className="ml-auto flex gap-2">
+            <RefreshButton refresh={refetch} />
+            <DropdownMenuRunMcpServer
+              openRunCommandDialog={() => setIsRunWithCommandOpen(true)}
+            />
+          </div>
+        )}
         <DialogFormRunMcpServerWithCommand
           isOpen={isRunWithCommandOpen}
           onOpenChange={setIsRunWithCommandOpen}

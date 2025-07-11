@@ -50,15 +50,17 @@ export function Secrets() {
     <>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-3xl font-bold">Secrets</h1>
-        <Button
-          variant="default"
-          onClick={() => {
-            setIsSecretDialogOpen(true)
-            setSecretKey('')
-          }}
-        >
-          <PlusIcon /> Add secret
-        </Button>
+        {keys.length > 0 && (
+          <Button
+            variant="default"
+            onClick={() => {
+              setIsSecretDialogOpen(true)
+              setSecretKey('')
+            }}
+          >
+            <PlusIcon /> Add secret
+          </Button>
+        )}
       </div>
 
       {keys.length === 0 ? (
