@@ -803,4 +803,37 @@ describe('FormRunFromRegistry', () => {
       )
     })
   })
+
+  it('shows an alert when network isolation is enabled', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    // Switch to the Network Isolation tab
+    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    await userEvent.click(networkTab)
+
+    // Enable the switch
+    const switchLabel = screen.getByLabelText('Network isolation')
+    await userEvent.click(switchLabel)
+
+    // The alert should appear
+    expect(
+      screen.getByText(
+        /this configuration blocks all outbound network traffic from the mcp server/i
+      )
+    ).toBeInTheDocument()
+  })
 })

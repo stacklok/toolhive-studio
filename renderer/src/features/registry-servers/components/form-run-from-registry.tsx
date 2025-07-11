@@ -47,6 +47,8 @@ import { AlertErrorFormSubmission } from './alert-error-form-submission'
 import { Tabs, TabsList, TabsTrigger } from '@/common/components/ui/tabs'
 import { Switch } from '@/common/components/ui/switch'
 import type { GroupedEnvVars } from '../lib/group-env-vars'
+import { Alert, AlertDescription } from '@/common/components/ui/alert'
+import { AlertTriangle } from 'lucide-react'
 
 /**
  * Renders an asterisk icon & tooltip for required fields.
@@ -316,12 +318,27 @@ function ConfigurationTabContent({
 }
 
 function NetworkIsolationTabContent() {
+  const [enabled, setEnabled] = useState(false)
   return (
     <div className="p-6">
-      <div className="flex items-center gap-4">
-        <Switch id="network-isolation-switch" aria-label="Network isolation" />
+      <div className="mb-4 flex items-center gap-4">
+        <Switch
+          id="network-isolation-switch"
+          aria-label="Network isolation"
+          checked={enabled}
+          onCheckedChange={setEnabled}
+        />
         <Label htmlFor="network-isolation-switch">Network isolation</Label>
       </div>
+      {enabled && (
+        <Alert className="mt-2">
+          <AlertTriangle className="mt-0.5" />
+          <AlertDescription>
+            This configuration blocks all outbound network traffic from the MCP
+            server.
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   )
 }
