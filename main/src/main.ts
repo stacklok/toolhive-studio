@@ -32,7 +32,8 @@ import {
   binPath,
 } from './toolhive-manager'
 import log from './logger'
-import { delay, getAppVersion, pollWindowReady } from './util'
+import { getAppVersion, pollWindowReady } from './util'
+import { delay } from '../../utils/delay'
 
 import Store from 'electron-store'
 

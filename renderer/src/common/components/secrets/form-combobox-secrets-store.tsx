@@ -1,4 +1,5 @@
 import { Check, ChevronDown } from 'lucide-react'
+import { useState } from 'react'
 import { Button } from '../ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import type { FieldValues, Path, UseFormReturn } from 'react-hook-form'
@@ -15,6 +16,7 @@ import { cn } from '@/common/lib/utils'
 import { useQuery } from '@tanstack/react-query'
 import { getApiV1BetaSecretsDefaultKeysOptions } from '@/common/api/generated/@tanstack/react-query.gen'
 import { RefreshButton } from '../refresh-button'
+import { delay } from '../../../../../utils/delay'
 
 type ConstrainedFieldValues = FieldValues & {
   secrets: {
@@ -35,6 +37,7 @@ export function FormComboboxSecretStore<
   T extends ConstrainedFieldValues = ConstrainedFieldValues,
 >({ form, name }: { form: UseFormReturn<T>; name: Path<T> }) {
   const { data, refetch } = useQuery(getApiV1BetaSecretsDefaultKeysOptions())
+  const [isOpen, setIsOpen] = useState(false)
 
   return (
     <FormField
@@ -42,7 +45,7 @@ export function FormComboboxSecretStore<
       name={name}
       render={({ field }) => (
         <FormItem>
-          <Popover>
+          <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
               <FormControl>
                 <Button
@@ -89,11 +92,13 @@ export function FormComboboxSecretStore<
                               key={secret.key}
                               value={secret.key}
                               className="font-mono"
-                              onSelect={(value) => {
+                              onSelect={async (value) => {
                                 field.onChange({
                                   secret: value,
                                   isFromStore: true,
                                 })
+                                await delay(150)
+                                setIsOpen(false)
                               }}
                             >
                               {secret.key}

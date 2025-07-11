@@ -6,7 +6,7 @@ import { createClient } from '../../renderer/src/common/api/generated/client'
 import type { WorkloadsWorkload } from '../../renderer/src/common/api/generated/types.gen'
 import Store from 'electron-store'
 import log from './logger'
-import { delay } from './util'
+import { delay } from '../../utils/delay'
 
 // Create a store instance for tracking shutdown servers
 const shutdownStore = new Store({
