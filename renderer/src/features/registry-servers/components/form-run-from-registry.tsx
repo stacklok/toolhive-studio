@@ -51,6 +51,7 @@ import { Alert, AlertDescription } from '@/common/components/ui/alert'
 import { AlertTriangle } from 'lucide-react'
 import { Controller } from 'react-hook-form'
 import z from 'zod/v4'
+import { DynamicArrayField } from './DynamicNumberArrayField'
 
 /**
  * Renders an asterisk icon & tooltip for required fields.
@@ -325,6 +326,15 @@ interface FormRunFromRegistryProps {
   onOpenChange: (open: boolean) => void
 }
 
+// Validation function for port numbers
+const validatePort = (val: string) => {
+  if (!val.trim()) return 'Port is required'
+  if (!/^[0-9]+$/.test(val)) return 'Port must be a number'
+  const num = Number(val)
+  if (isNaN(num) || num < 1 || num > 65535) return 'Port must be 1-65535'
+  return null
+}
+
 export function FormRunFromRegistry({
   server,
   isOpen,
@@ -382,7 +392,7 @@ export function FormRunFromRegistry({
     FormSchemaRunFromRegistry & {
       networkIsolation?: boolean
       allowedProtocols?: string[]
-      allowedPorts?: number[]
+      allowedPorts?: string[]
     }
   >({
     resolver: zodV4Resolver(formSchema),
@@ -398,7 +408,7 @@ export function FormRunFromRegistry({
       })),
       networkIsolation: false,
       allowedProtocols: [],
-      allowedPorts: [],
+      allowedPorts: [], // string[]
     },
   })
 
@@ -406,7 +416,7 @@ export function FormRunFromRegistry({
     data: FormSchemaRunFromRegistry & {
       networkIsolation?: boolean
       allowedProtocols?: string[]
-      allowedPorts?: number[]
+      allowedPorts?: string[]
     }
   ) => {
     if (!server) return
@@ -424,8 +434,10 @@ export function FormRunFromRegistry({
             insecure_allow_all: false,
             allow_host: [],
             allow_port:
-              data.allowedPorts && data.allowedPorts.length > 0
+              Array.isArray(data.allowedPorts) && data.allowedPorts.length > 0
                 ? data.allowedPorts
+                    .map((p) => Number(p))
+                    .filter((n) => !isNaN(n))
                 : [],
             allow_transport: data.allowedProtocols ?? [],
           },
@@ -631,86 +643,14 @@ export function FormRunFromRegistry({
                               control={form.control}
                               name="allowedPorts"
                               render={({ field: portsField }) => (
-                                <div className="mt-6">
-                                  <Label htmlFor="allowed-ports-group">
-                                    Allowed Ports
-                                  </Label>
-                                  <div
-                                    id="allowed-ports-group"
-                                    role="group"
-                                    aria-label="Allowed Ports"
-                                  >
-                                    {Array.isArray(portsField.value) &&
-                                      portsField.value.length > 0 && (
-                                        <div className="mt-2 flex flex-col gap-2">
-                                          {(portsField.value || []).map(
-                                            (port: number, idx: number) => (
-                                              <div
-                                                key={idx}
-                                                className="flex items-center gap-2"
-                                              >
-                                                <Input
-                                                  type="number"
-                                                  min={1}
-                                                  max={65535}
-                                                  aria-label={`Port ${idx + 1}`}
-                                                  value={port === 0 ? '' : port}
-                                                  onChange={(e) => {
-                                                    const val = parseInt(
-                                                      e.target.value,
-                                                      10
-                                                    )
-                                                    const newPorts = [
-                                                      ...(portsField.value ||
-                                                        []),
-                                                    ]
-                                                    newPorts[idx] = isNaN(val)
-                                                      ? 0
-                                                      : val
-                                                    portsField.onChange(
-                                                      newPorts
-                                                    )
-                                                  }}
-                                                  className="w-32"
-                                                />
-                                                <Button
-                                                  type="button"
-                                                  size="icon"
-                                                  variant="ghost"
-                                                  aria-label={`Remove Port ${idx + 1}`}
-                                                  onClick={() => {
-                                                    const newPorts = (
-                                                      portsField.value || []
-                                                    ).filter(
-                                                      (_, i) => i !== idx
-                                                    )
-                                                    portsField.onChange(
-                                                      newPorts
-                                                    )
-                                                  }}
-                                                >
-                                                  ×
-                                                </Button>
-                                              </div>
-                                            )
-                                          )}
-                                        </div>
-                                      )}
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      className="mt-2"
-                                      onClick={() => {
-                                        portsField.onChange([
-                                          ...(portsField.value || []),
-                                          0,
-                                        ])
-                                      }}
-                                    >
-                                      Add a port
-                                    </Button>
-                                  </div>
-                                </div>
+                                <DynamicArrayField
+                                  label="Allowed Ports"
+                                  value={portsField.value || []}
+                                  onChange={portsField.onChange}
+                                  inputLabelPrefix="Port"
+                                  addButtonText="Add a port"
+                                  validate={validatePort}
+                                />
                               )}
                             />
                           </>

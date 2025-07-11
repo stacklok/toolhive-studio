@@ -3,17 +3,17 @@ import type {
   RegistryImageMetadata,
 } from '@/common/api/generated'
 import { render, screen, waitFor, act } from '@testing-library/react'
-import { it, expect, vi, describe, beforeEach } from 'vitest'
+import { it, expect, describe, beforeEach, vi } from 'vitest'
 import { FormRunFromRegistry } from '../form-run-from-registry'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { server as mswServer } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/msw-endpoint'
-import { useRunFromRegistry } from '../../hooks/use-run-from-registry'
+import * as useRunFromRegistryModule from '../../hooks/use-run-from-registry'
 
 // Mock the hook
-vi.mock('../../hooks/use-run-from-registry.tsx', () => ({
+vi.mock('../../hooks/use-run-from-registry', () => ({
   useRunFromRegistry: vi.fn(),
 }))
 
@@ -82,13 +82,10 @@ const ENV_VARS_REQUIRED = [
   },
 ] as const satisfies RegistryEnvVar[]
 
-const mockUseRunFromRegistry = vi.mocked(useRunFromRegistry)
-
 beforeEach(() => {
-  vi.clearAllMocks()
-
-  // Default mock implementation
-  mockUseRunFromRegistry.mockReturnValue({
+  vi.clearAllMocks()(
+    useRunFromRegistryModule.useRunFromRegistry as unknown as vi.Mock
+  ).mockReturnValue({
     installServerMutation: vi.fn(),
     checkServerStatus: vi.fn(),
     isErrorSecrets: false,
@@ -185,8 +182,10 @@ describe('FormRunFromRegistry', () => {
   })
 
   it('shows loading state and hides tabs when submitting', async () => {
-    const mockInstallServerMutation = vi.fn()
-    mockUseRunFromRegistry.mockReturnValue({
+    const mockInstallServerMutation: ReturnType<typeof vi.fn> = vi.fn()
+    ;(
+      useRunFromRegistryModule.useRunFromRegistry as unknown as vi.Mock
+    ).mockReturnValue({
       installServerMutation: mockInstallServerMutation,
       checkServerStatus: vi.fn(),
       isErrorSecrets: false,
@@ -228,8 +227,10 @@ describe('FormRunFromRegistry', () => {
   })
 
   it('submits correct payload for various form states', async () => {
-    const mockInstallServerMutation = vi.fn()
-    mockUseRunFromRegistry.mockReturnValue({
+    const mockInstallServerMutation: ReturnType<typeof vi.fn> = vi.fn()
+    ;(
+      useRunFromRegistryModule.useRunFromRegistry as unknown as vi.Mock
+    ).mockReturnValue({
       installServerMutation: mockInstallServerMutation,
       checkServerStatus: vi.fn(),
       isErrorSecrets: false,
@@ -301,19 +302,20 @@ describe('FormRunFromRegistry', () => {
     // --- Scenario 2: Secret from store ---
     vi.clearAllMocks()
     // Restore MSW mock for secrets endpoint
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({
-          keys: [{ key: 'MY_AWESOME_SECRET' }],
+    mswServer
+      .use(
+        http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
+          return HttpResponse.json({
+            keys: [{ key: 'MY_AWESOME_SECRET' }],
+          })
         })
+      )(useRunFromRegistryModule.useRunFromRegistry as unknown as vi.Mock)
+      .mockReturnValue({
+        installServerMutation: mockInstallServerMutation,
+        checkServerStatus: vi.fn(),
+        isErrorSecrets: false,
+        isPendingSecrets: false,
       })
-    )
-    mockUseRunFromRegistry.mockReturnValue({
-      installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
-      isErrorSecrets: false,
-      isPendingSecrets: false,
-    })
     server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
     render(
@@ -377,8 +379,9 @@ describe('FormRunFromRegistry', () => {
     })
 
     // --- Scenario 3: Empty optional fields ---
-    vi.clearAllMocks()
-    mockUseRunFromRegistry.mockReturnValue({
+    vi.clearAllMocks()(
+      useRunFromRegistryModule.useRunFromRegistry as unknown as vi.Mock
+    ).mockReturnValue({
       installServerMutation: mockInstallServerMutation,
       checkServerStatus: vi.fn(),
       isErrorSecrets: false,
@@ -433,8 +436,9 @@ describe('FormRunFromRegistry', () => {
     })
 
     // --- Scenario 4: Command arguments ---
-    vi.clearAllMocks()
-    mockUseRunFromRegistry.mockReturnValue({
+    vi.clearAllMocks()(
+      useRunFromRegistryModule.useRunFromRegistry as unknown as vi.Mock
+    ).mockReturnValue({
       installServerMutation: mockInstallServerMutation,
       checkServerStatus: vi.fn(),
       isErrorSecrets: false,
@@ -483,8 +487,10 @@ describe('FormRunFromRegistry', () => {
   })
 
   it('validates required fields and shows errors', async () => {
-    const mockInstallServerMutation = vi.fn()
-    mockUseRunFromRegistry.mockReturnValue({
+    const mockInstallServerMutation: ReturnType<typeof vi.fn> = vi.fn()
+    ;(
+      useRunFromRegistryModule.useRunFromRegistry as unknown as vi.Mock
+    ).mockReturnValue({
       installServerMutation: mockInstallServerMutation,
       checkServerStatus: vi.fn(),
       isErrorSecrets: false,
@@ -541,8 +547,10 @@ describe('FormRunFromRegistry', () => {
   })
 
   it('shows loading state when submitting', async () => {
-    const mockInstallServerMutation = vi.fn()
-    mockUseRunFromRegistry.mockReturnValue({
+    const mockInstallServerMutation: ReturnType<typeof vi.fn> = vi.fn()
+    ;(
+      useRunFromRegistryModule.useRunFromRegistry as unknown as vi.Mock
+    ).mockReturnValue({
       installServerMutation: mockInstallServerMutation,
       checkServerStatus: vi.fn(),
       isErrorSecrets: false,
@@ -593,8 +601,10 @@ describe('FormRunFromRegistry', () => {
   })
 
   it('shows secrets loading state when isPendingSecrets is true', async () => {
-    const mockInstallServerMutation = vi.fn()
-    mockUseRunFromRegistry.mockReturnValue({
+    const mockInstallServerMutation: ReturnType<typeof vi.fn> = vi.fn()
+    ;(
+      useRunFromRegistryModule.useRunFromRegistry as unknown as vi.Mock
+    ).mockReturnValue({
       installServerMutation: mockInstallServerMutation,
       checkServerStatus: vi.fn(),
       isErrorSecrets: false,
@@ -640,8 +650,10 @@ describe('FormRunFromRegistry', () => {
   })
 
   it('shows error state when isErrorSecrets is true', async () => {
-    const mockInstallServerMutation = vi.fn()
-    mockUseRunFromRegistry.mockReturnValue({
+    const mockInstallServerMutation: ReturnType<typeof vi.fn> = vi.fn()
+    ;(
+      useRunFromRegistryModule.useRunFromRegistry as unknown as vi.Mock
+    ).mockReturnValue({
       installServerMutation: mockInstallServerMutation,
       checkServerStatus: vi.fn(),
       isErrorSecrets: true,
@@ -706,16 +718,16 @@ describe('FormRunFromRegistry', () => {
   })
 
   it('closes dialog on successful submission', async () => {
-    const mockInstallServerMutation = vi.fn()
+    const mockInstallServerMutation: ReturnType<typeof vi.fn> = vi.fn()
     const mockCheckServerStatus = vi.fn()
-    const mockOnOpenChange = vi.fn()
-
-    mockUseRunFromRegistry.mockReturnValue({
-      installServerMutation: mockInstallServerMutation,
-      checkServerStatus: mockCheckServerStatus,
-      isErrorSecrets: false,
-      isPendingSecrets: false,
-    })
+    const mockOnOpenChange = vi
+      .fn()(useRunFromRegistryModule.useRunFromRegistry as unknown as vi.Mock)
+      .mockReturnValue({
+        installServerMutation: mockInstallServerMutation,
+        checkServerStatus: mockCheckServerStatus,
+        isErrorSecrets: false,
+        isPendingSecrets: false,
+      })
 
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
@@ -765,8 +777,10 @@ describe('FormRunFromRegistry', () => {
   })
 
   it('includes command arguments in form data', async () => {
-    const mockInstallServerMutation = vi.fn()
-    mockUseRunFromRegistry.mockReturnValue({
+    const mockInstallServerMutation: ReturnType<typeof vi.fn> = vi.fn()
+    ;(
+      useRunFromRegistryModule.useRunFromRegistry as unknown as vi.Mock
+    ).mockReturnValue({
       installServerMutation: mockInstallServerMutation,
       checkServerStatus: vi.fn(),
       isErrorSecrets: false,
@@ -856,8 +870,10 @@ describe('FormRunFromRegistry', () => {
   })
 
   it('submits correct network isolation policy and allowed protocols', async () => {
-    const mockInstallServerMutation = vi.fn()
-    mockUseRunFromRegistry.mockReturnValue({
+    const mockInstallServerMutation: ReturnType<typeof vi.fn> = vi.fn()
+    ;(
+      useRunFromRegistryModule.useRunFromRegistry as unknown as vi.Mock
+    ).mockReturnValue({
       installServerMutation: mockInstallServerMutation,
       checkServerStatus: vi.fn(),
       isErrorSecrets: false,
@@ -922,8 +938,9 @@ describe('FormRunFromRegistry', () => {
     })
 
     // --- Scenario 2: Network isolation disabled ---
-    vi.clearAllMocks()
-    mockUseRunFromRegistry.mockReturnValue({
+    vi.clearAllMocks()(
+      useRunFromRegistryModule.useRunFromRegistry as unknown as vi.Mock
+    ).mockReturnValue({
       installServerMutation: mockInstallServerMutation,
       checkServerStatus: vi.fn(),
       isErrorSecrets: false,
@@ -972,8 +989,9 @@ describe('FormRunFromRegistry', () => {
     })
 
     // --- Scenario 3: Network isolation enabled, TCP only ---
-    vi.clearAllMocks()
-    mockUseRunFromRegistry.mockReturnValue({
+    vi.clearAllMocks()(
+      useRunFromRegistryModule.useRunFromRegistry as unknown as vi.Mock
+    ).mockReturnValue({
       installServerMutation: mockInstallServerMutation,
       checkServerStatus: vi.fn(),
       isErrorSecrets: false,
@@ -1028,8 +1046,9 @@ describe('FormRunFromRegistry', () => {
     })
 
     // --- Scenario 4: Network isolation enabled, TCP and UDP ---
-    vi.clearAllMocks()
-    mockUseRunFromRegistry.mockReturnValue({
+    vi.clearAllMocks()(
+      useRunFromRegistryModule.useRunFromRegistry as unknown as vi.Mock
+    ).mockReturnValue({
       installServerMutation: mockInstallServerMutation,
       checkServerStatus: vi.fn(),
       isErrorSecrets: false,
@@ -1145,8 +1164,10 @@ describe('FormRunFromRegistry', () => {
   })
 
   it('includes selected Allowed Protocols in the API payload when network isolation is enabled', async () => {
-    const mockInstallServerMutation = vi.fn()
-    mockUseRunFromRegistry.mockReturnValue({
+    const mockInstallServerMutation: ReturnType<typeof vi.fn> = vi.fn()
+    ;(
+      useRunFromRegistryModule.useRunFromRegistry as unknown as vi.Mock
+    ).mockReturnValue({
       installServerMutation: mockInstallServerMutation,
       checkServerStatus: vi.fn(),
       isErrorSecrets: false,
@@ -1220,8 +1241,9 @@ describe('FormRunFromRegistry', () => {
     })
 
     // Now select both TCP and UDP
-    vi.clearAllMocks()
-    mockUseRunFromRegistry.mockReturnValue({
+    vi.clearAllMocks()(
+      useRunFromRegistryModule.useRunFromRegistry as unknown as vi.Mock
+    ).mockReturnValue({
       installServerMutation: mockInstallServerMutation,
       checkServerStatus: vi.fn(),
       isErrorSecrets: false,
@@ -1297,8 +1319,10 @@ describe('FormRunFromRegistry', () => {
   it('shows Allowed Ports section and submits correct payload when ports are added', async () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
-    const mockInstallServerMutation = vi.fn()
-    mockUseRunFromRegistry.mockReturnValue({
+    const mockInstallServerMutation: ReturnType<typeof vi.fn> = vi.fn()
+    ;(
+      useRunFromRegistryModule.useRunFromRegistry as unknown as vi.Mock
+    ).mockReturnValue({
       installServerMutation: mockInstallServerMutation,
       checkServerStatus: vi.fn(),
       isErrorSecrets: false,
@@ -1326,14 +1350,36 @@ describe('FormRunFromRegistry', () => {
     const addPortButton = screen.getByRole('button', { name: 'Add a port' })
     await userEvent.click(addPortButton)
     await userEvent.type(screen.getByLabelText('Port 1'), '8080')
+    await userEvent.tab() // trigger blur
     await userEvent.click(addPortButton)
     await userEvent.type(screen.getByLabelText('Port 2'), '443')
-    // Submit
+    await userEvent.tab() // trigger blur
+    // Switch back to Configuration tab before submitting
     const configTab = screen.getByRole('tab', { name: /configuration/i })
     await userEvent.click(configTab)
+    await waitFor(() => {
+      expect(configTab).toHaveAttribute('aria-selected', 'true')
+    })
+    // Fill required fields after switching back
+    await userEvent.type(screen.getByLabelText('ENV_VAR value'), 'foo')
+    await userEvent.type(screen.getByLabelText('SECRET value'), 'bar')
+    // Debug: print the current DOM before submitting
+    screen.debug()
     await userEvent.click(
       screen.getByRole('button', { name: 'Install server' })
     )
+    // Debug: log any visible validation errors and the DOM
+
+    console.log(
+      'Validation errors:',
+      Array.from(
+        document.querySelectorAll(
+          '[role="alert"], .text-destructive, .text-red-500'
+        )
+      ).map((e) => e.textContent)
+    )
+
+    console.log('Current DOM:', document.body.innerHTML)
     await waitFor(() => {
       expect(mockInstallServerMutation).toHaveBeenCalled()
       const call = mockInstallServerMutation.mock.calls[0]?.[0] ?? {}
@@ -1350,8 +1396,10 @@ describe('FormRunFromRegistry', () => {
   it('shows Allowed Ports section and submits correct payload when no ports are added', async () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
-    const mockInstallServerMutation = vi.fn()
-    mockUseRunFromRegistry.mockReturnValue({
+    const mockInstallServerMutation: ReturnType<typeof vi.fn> = vi.fn()
+    ;(
+      useRunFromRegistryModule.useRunFromRegistry as unknown as vi.Mock
+    ).mockReturnValue({
       installServerMutation: mockInstallServerMutation,
       checkServerStatus: vi.fn(),
       isErrorSecrets: false,
