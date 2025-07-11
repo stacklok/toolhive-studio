@@ -87,8 +87,10 @@ function FormItem({ className, ...props }: React.ComponentProps<'div'>) {
 
 function FormLabel({
   className,
+  readOnly,
+  children,
   ...props
-}: React.ComponentProps<typeof LabelPrimitive.Root>) {
+}: React.ComponentProps<typeof LabelPrimitive.Root> & { readOnly?: boolean }) {
   const { error, formItemId } = useFormField()
 
   return (
@@ -98,7 +100,12 @@ function FormLabel({
       className={cn('data-[error=true]:text-destructive', className)}
       htmlFor={formItemId}
       {...props}
-    />
+    >
+      {children}
+      {readOnly && (
+        <span className="text-muted-foreground text-xs">(read-only)</span>
+      )}
+    </Label>
   )
 }
 

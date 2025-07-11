@@ -127,7 +127,7 @@ function SecretForm({
         <div className="space-y-4 pt-4 pb-8">
           {isEditMode && (
             <FormItem>
-              <FormLabel>Secret name</FormLabel>
+              <FormLabel readOnly>Secret name</FormLabel>
               <FormControl>
                 <Input value={secretKey} readOnly disabled />
               </FormControl>
