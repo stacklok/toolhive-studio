@@ -89,6 +89,8 @@ it('is able to run an MCP server with docker', async () => {
   await userEvent.click(screen.getByLabelText('Transport'))
   await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
 
+  await userEvent.type(screen.getByLabelText('Target port'), '8000')
+
   await userEvent.type(
     screen.getByLabelText('Docker image'),
     'ghcr.io/github/github-mcp-server'
@@ -139,6 +141,7 @@ it('is able to run an MCP server with docker', async () => {
   expect(payload).toBeDefined()
   expect(payload['name'], 'Should have name').toBe('foo-bar')
   expect(payload['transport'], 'Should have transport').toBe('stdio')
+  expect(payload['target_port']).toBe(8000)
   expect(payload['image'], 'Should have image').toBe(
     'ghcr.io/github/github-mcp-server'
   )
@@ -188,6 +191,8 @@ it('is able to run an MCP server with npx', async () => {
 
   await userEvent.click(screen.getByLabelText('Transport'))
   await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
+
+  await userEvent.type(screen.getByLabelText('Target port'), '8800')
 
   await userEvent.click(screen.getByLabelText('Protocol'))
   await userEvent.click(screen.getByRole('option', { name: 'npx' }))
@@ -243,6 +248,7 @@ it('is able to run an MCP server with npx', async () => {
   expect(payload['name'], 'Should have name').toBe('foo-bar')
   expect(payload['transport'], 'Should have transport').toBe('stdio')
   expect(payload['protocol'], 'Should have protocol').toBe('npx')
+  expect(payload['target_port']).toBe(8800)
   expect(payload['package_name'], 'Should have package name').toBe(
     '@modelcontextprotocol/server-everything'
   )
@@ -292,6 +298,8 @@ it('is able to run an MCP server with uvx', async () => {
 
   await userEvent.click(screen.getByLabelText('Transport'))
   await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
+
+  await userEvent.type(screen.getByLabelText('Target port'), '8000')
 
   await userEvent.click(screen.getByLabelText('Protocol'))
   await userEvent.click(screen.getByRole('option', { name: 'uvx' }))
@@ -347,6 +355,7 @@ it('is able to run an MCP server with uvx', async () => {
   expect(payload['name'], 'Should have name').toBe('foo-bar')
   expect(payload['transport'], 'Should have transport').toBe('stdio')
   expect(payload['protocol'], 'Should have protocol').toBe('uvx')
+  expect(payload['target_port']).toBe(8000)
   expect(payload['package_name'], 'Should have package name').toBe(
     'mcp-server-fetch'
   )
@@ -396,6 +405,8 @@ it('is able to run an MCP server with go', async () => {
 
   await userEvent.click(screen.getByLabelText('Transport'))
   await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
+
+  await userEvent.type(screen.getByLabelText('Target port'), '8000')
 
   await userEvent.click(screen.getByLabelText('Protocol'))
   await userEvent.click(screen.getByRole('option', { name: 'go' }))
@@ -451,6 +462,7 @@ it('is able to run an MCP server with go', async () => {
   expect(payload['name'], 'Should have name').toBe('foo-bar')
   expect(payload['transport'], 'Should have transport').toBe('stdio')
   expect(payload['protocol'], 'Should have protocol').toBe('go')
+  expect(payload['target_port']).toBe(8000)
   expect(payload['package_name'], 'Should have package name').toBe(
     'github.com/example/go-mcp-server'
   )
