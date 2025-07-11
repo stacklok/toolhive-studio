@@ -24,19 +24,16 @@ export function ThemeProvider({
     return isValidTheme(storedTheme) ? storedTheme : defaultTheme
   })
 
-  // Sync with Electron's native theme on mount
   useEffect(() => {
     const syncWithNativeTheme = async () => {
       if (window.electronAPI?.darkMode) {
         try {
-          const nativeThemeState = await window.electronAPI.darkMode.get()
-          const nativeThemeSource = nativeThemeState.themeSource
-
-          // Only sync if the stored theme doesn't match the native theme
           const storedTheme = localStorage.getItem(storageKey)
-          if (!isValidTheme(storedTheme) || storedTheme !== nativeThemeSource) {
-            setTheme(nativeThemeSource)
-            localStorage.setItem(storageKey, nativeThemeSource)
+
+          if (!isValidTheme(storedTheme)) {
+            const nativeThemeState = await window.electronAPI.darkMode.get()
+            setTheme(nativeThemeState.themeSource)
+            localStorage.setItem(storageKey, nativeThemeState.themeSource)
           }
         } catch (error) {
           console.warn('Failed to sync with native theme:', error)
@@ -49,7 +46,6 @@ export function ThemeProvider({
 
   useEffect(() => {
     const root = window.document.documentElement
-
     root.classList.remove('light', 'dark')
 
     if (theme === 'system') {
@@ -57,7 +53,6 @@ export function ThemeProvider({
         .matches
         ? 'dark'
         : 'light'
-
       root.classList.add(systemTheme)
       return
     }
@@ -65,7 +60,6 @@ export function ThemeProvider({
     root.classList.add(theme)
   }, [theme])
 
-  // Listen for system theme changes when theme is set to "system"
   useEffect(() => {
     if (theme !== 'system') return
 
@@ -87,15 +81,11 @@ export function ThemeProvider({
       localStorage.setItem(storageKey, newTheme)
       setTheme(newTheme)
 
-      // Sync with Electron's native theme
       if (window.electronAPI?.darkMode) {
         try {
           await window.electronAPI.darkMode.set(newTheme)
         } catch (error) {
-          console.warn(
-            'Failed to sync theme with native Electron theme:',
-            error
-          )
+          console.warn('Failed to sync theme with Electron:', error)
         }
       }
     },
