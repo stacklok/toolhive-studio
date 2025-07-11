@@ -50,13 +50,22 @@ it('renders add secret dialog when clicking add secret button', async () => {
   const addSecretButton = screen.getByRole('button', { name: /add secret/i })
   await userEvent.click(addSecretButton)
 
-  expect(
-    screen.getByText('Enter a name and value for your new secret.')
-  ).toBeInTheDocument()
   expect(screen.getByPlaceholderText('Name')).toBeInTheDocument()
   expect(screen.getByPlaceholderText('Secret')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
+
+  // Accessibility: check sr-only description and aria-describedby
+  const dialog = screen.getByRole('dialog')
+  const srDescription = Array.from(dialog.querySelectorAll('p,div,span')).find(
+    (el) =>
+      el.className.includes('sr-only') &&
+      el.textContent?.includes('Enter a name and value for your new secret.')
+  )
+  expect(srDescription).toBeTruthy()
+  const ariaDescribedBy = dialog.getAttribute('aria-describedby')
+  expect(ariaDescribedBy).toBeTruthy()
+  expect(srDescription?.id).toBe(ariaDescribedBy)
 })
 
 it('renders edit secret dialog when clicking edit from dropdown', async () => {
@@ -78,4 +87,16 @@ it('renders edit secret dialog when clicking edit from dropdown', async () => {
   expect(screen.getByPlaceholderText('Secret')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: /update/i })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
+
+  // Accessibility: check sr-only and aria-describedby
+  const dialog = screen.getByRole('dialog')
+  const srDescription = Array.from(dialog.querySelectorAll('p,div,span')).find(
+    (el) =>
+      el.className.includes('sr-only') &&
+      el.textContent?.includes('Update the secret value below.')
+  )
+  expect(srDescription).toBeTruthy()
+  const ariaDescribedBy = dialog.getAttribute('aria-describedby')
+  expect(ariaDescribedBy).toBeTruthy()
+  expect(srDescription?.id).toBe(ariaDescribedBy)
 })

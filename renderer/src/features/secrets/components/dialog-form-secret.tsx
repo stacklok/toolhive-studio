@@ -86,7 +86,7 @@ export function DialogFormSecret({
       >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="sr-only">
             {secretKey
               ? 'Update the secret value below.'
               : 'Enter a name and value for your new secret.'}
@@ -116,7 +116,7 @@ function SecretForm({ form, isEditMode, onSubmit, onCancel }: SecretFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)}>
-        <div className="space-y-4 py-8">
+        <div className="space-y-4 pt-4 pb-8">
           {!isEditMode && (
             <FormField
               control={form.control}
