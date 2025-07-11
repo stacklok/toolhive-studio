@@ -1,4 +1,3 @@
-import { Button } from '@/common/components/ui/button'
 import {
   Table,
   TableBody,
@@ -9,7 +8,6 @@ import {
 } from '@/common/components/ui/table'
 import { SecretDropdown } from './secret-dropdown'
 import { useFilterSort } from '@/common/hooks/use-filter-sort'
-import { ArrowUpDown } from 'lucide-react'
 import type { V1SecretKeyResponse } from '@/common/api/generated'
 import { InputSearch } from '@/common/components/ui/input-search'
 interface SecretsTableProps {
@@ -27,7 +25,6 @@ export function SecretsTable({
     filter,
     setFilter,
     filteredData: filteredSecrets,
-    toggleSortOrder,
   } = useFilterSort({
     data: secrets,
     filterFields: (secret) => [secret.key ?? ''],
@@ -47,14 +44,6 @@ export function SecretsTable({
             <TableRow>
               <TableHead className="text-muted-foreground flex items-center px-5 text-xs">
                 Secrets
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="ml-2 h-auto cursor-pointer p-1"
-                  onClick={toggleSortOrder}
-                >
-                  <ArrowUpDown className="size-4" />
-                </Button>
               </TableHead>
               <TableHead className="px-5 text-right"></TableHead>
             </TableRow>
