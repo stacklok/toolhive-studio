@@ -83,7 +83,6 @@ it('renders edit secret dialog when clicking edit from dropdown', async () => {
   await userEvent.click(editButton)
 
   expect(screen.getByText('Update the secret value below.')).toBeInTheDocument()
-  expect(screen.queryByPlaceholderText('Name')).not.toBeInTheDocument()
   expect(screen.getByPlaceholderText('Secret')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: /update/i })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
@@ -99,4 +98,23 @@ it('renders edit secret dialog when clicking edit from dropdown', async () => {
   const ariaDescribedBy = dialog.getAttribute('aria-describedby')
   expect(ariaDescribedBy).toBeTruthy()
   expect(srDescription?.id).toBe(ariaDescribedBy)
+})
+
+it('displays the secret name in a read-only input when editing a secret', async () => {
+  renderRoute(router)
+
+  await waitFor(() => {
+    expect(
+      screen.getByRole('heading', { name: /secrets/i })
+    ).toBeInTheDocument()
+  })
+  const dropdownTriggers = screen.getAllByLabelText('Secret options')
+  await userEvent.click(dropdownTriggers[0]!)
+  const editButton = screen.getByText('Update secret')
+  await userEvent.click(editButton)
+
+  const secretNameInput = screen.getByDisplayValue('Github')
+  expect(secretNameInput).toBeInTheDocument()
+  expect(secretNameInput).toHaveAttribute('readonly')
+  expect(secretNameInput).toBeDisabled()
 })
