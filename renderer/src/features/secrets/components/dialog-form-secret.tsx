@@ -40,6 +40,7 @@ interface SecretFormProps {
   isEditMode: boolean
   onSubmit: (data: SecretFormData) => void
   onCancel: () => void
+  secretKey?: string
 }
 
 interface SecretDialogProps {
@@ -98,13 +99,20 @@ export function DialogFormSecret({
           isEditMode={isEditMode}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
+          secretKey={secretKey}
         />
       </DialogContent>
     </Dialog>
   )
 }
 
-function SecretForm({ form, isEditMode, onSubmit, onCancel }: SecretFormProps) {
+function SecretForm({
+  form,
+  isEditMode,
+  onSubmit,
+  onCancel,
+  secretKey,
+}: SecretFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const secretContentsLabel = isEditMode ? 'New value' : 'Secret value'
   const submitButtonText = isEditMode ? 'Update' : 'Save'
@@ -117,6 +125,14 @@ function SecretForm({ form, isEditMode, onSubmit, onCancel }: SecretFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)}>
         <div className="space-y-4 pt-4 pb-8">
+          {isEditMode && (
+            <FormItem>
+              <FormLabel>Secret name</FormLabel>
+              <FormControl>
+                <Input value={secretKey} readOnly disabled />
+              </FormControl>
+            </FormItem>
+          )}
           {!isEditMode && (
             <FormField
               control={form.control}
