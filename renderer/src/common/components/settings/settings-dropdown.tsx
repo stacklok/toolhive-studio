@@ -90,7 +90,7 @@ export function SettingsDropdown({ className }: { className?: string }) {
           onClick={() => (isTelemetryEnabled ? sentryOptOut() : sentryOptIn())}
           disabled={isSentryPending}
         >
-          <span>Telemetry</span>
+          <span>Error reporting</span>
           {isSentryPending ? (
             <Loader className="ml-auto h-4 w-4 animate-spin" />
           ) : isTelemetryEnabled ? (
