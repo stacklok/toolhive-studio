@@ -50,13 +50,35 @@ it('renders add secret dialog when clicking add secret button', async () => {
   const addSecretButton = screen.getByRole('button', { name: /add secret/i })
   await userEvent.click(addSecretButton)
 
-  expect(
-    screen.getByText('Enter a name and value for your new secret.')
-  ).toBeInTheDocument()
   expect(screen.getByPlaceholderText('Name')).toBeInTheDocument()
   expect(screen.getByPlaceholderText('Secret')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
+})
+
+it('add secret dialog includes a screen-reader-only description and is linked via aria-describedby', async () => {
+  renderRoute(router)
+
+  await waitFor(() => {
+    expect(
+      screen.getByRole('heading', { name: /secrets/i })
+    ).toBeInTheDocument()
+  })
+
+  const addSecretButton = screen.getByRole('button', { name: /add secret/i })
+  await userEvent.click(addSecretButton)
+
+  const dialog = screen.getByRole('dialog')
+  const description = Array.from(dialog.querySelectorAll('p,div,span')).find(
+    (el) =>
+      el.className.includes('sr-only') &&
+      el.textContent?.includes('Add a secret dialog')
+  )
+  expect(description).toBeTruthy()
+
+  const ariaDescribedBy = dialog.getAttribute('aria-describedby')
+  expect(ariaDescribedBy).toBeTruthy()
+  expect(description?.id).toBe(ariaDescribedBy)
 })
 
 it('renders edit secret dialog when clicking edit from dropdown', async () => {

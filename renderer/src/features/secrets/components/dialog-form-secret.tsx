@@ -86,11 +86,15 @@ export function DialogFormSecret({
       >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>
-            {secretKey
-              ? 'Update the secret value below.'
-              : 'Enter a name and value for your new secret.'}
-          </DialogDescription>
+          {secretKey ? (
+            <DialogDescription>
+              Update the secret value below.
+            </DialogDescription>
+          ) : (
+            <DialogDescription className="sr-only">
+              Add a secret dialog
+            </DialogDescription>
+          )}
         </DialogHeader>
 
         <SecretForm
