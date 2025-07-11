@@ -1,19 +1,16 @@
 import type { RegistryImageMetadata } from '@/common/api/generated/types.gen'
 import { CardRegistryServer } from './card-registry-server'
-import { FormRunFromRegistry } from './form-run-from-registry'
-import { useState, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useFilterSort } from '@/common/hooks/use-filter-sort'
 import { InputSearch } from '@/common/components/ui/input-search'
+import { useNavigate } from '@tanstack/react-router'
 
 export function GridCardsRegistryServer({
   servers,
 }: {
   servers: RegistryImageMetadata[]
 }) {
-  const [selectedServer, setSelectedServer] =
-    useState<RegistryImageMetadata | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-
+  const navigate = useNavigate()
   // Filter out filesystem servers
   const filteredServers = useMemo(() => {
     return servers.filter((server) => server.name !== 'filesystem')
@@ -29,11 +26,6 @@ export function GridCardsRegistryServer({
     sortBy: (server) => server.name || '',
   })
 
-  const handleCardClick = (server: RegistryImageMetadata) => {
-    setSelectedServer(server)
-    setIsModalOpen(true)
-  }
-
   return (
     <div className="space-y-6">
       <InputSearch
@@ -46,7 +38,12 @@ export function GridCardsRegistryServer({
           <CardRegistryServer
             key={server.name}
             server={server}
-            onClick={() => handleCardClick(server)}
+            onClick={() => {
+              navigate({
+                to: '/registry/$name',
+                params: { name: server.name! },
+              })
+            }}
           />
         ))}
       </div>
@@ -57,13 +54,6 @@ export function GridCardsRegistryServer({
           </p>
         </div>
       )}
-
-      <FormRunFromRegistry
-        key={selectedServer?.name}
-        server={selectedServer}
-        isOpen={isModalOpen}
-        onOpenChange={setIsModalOpen}
-      />
     </div>
   )
 }
