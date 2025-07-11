@@ -7,7 +7,7 @@ import { it, expect, vi, describe, beforeEach } from 'vitest'
 import { FormRunFromRegistry } from '../form-run-from-registry'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { server } from '@/common/mocks/node'
+import { server as mswServer } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/msw-endpoint'
 import { useRunFromRegistry } from '../../hooks/use-run-from-registry'
@@ -125,10 +125,9 @@ describe('FormRunFromRegistry', () => {
     ).toBeInTheDocument()
   })
 
-  it('renders tabs, allows switching to Network Isolation, and toggles the switch', async () => {
+  it('renders and toggles network isolation UI elements', async () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
-
     render(
       <QueryClientProvider client={queryClient}>
         <FormRunFromRegistry
@@ -138,11 +137,10 @@ describe('FormRunFromRegistry', () => {
         />
       </QueryClientProvider>
     )
-
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
-    // Tablist and both tabs present
+    // --- Tab switching and toggle ---
     const tabList = screen.getByRole('tablist')
     expect(tabList).toBeInTheDocument()
     const configTab = screen.getByRole('tab', { name: /configuration/i })
@@ -151,23 +149,39 @@ describe('FormRunFromRegistry', () => {
     expect(networkTab).toBeInTheDocument()
     expect(configTab).toHaveAttribute('aria-selected', 'true')
     expect(networkTab).toHaveAttribute('aria-selected', 'false')
-
-    // Switch to the Network Isolation tab
     await userEvent.click(networkTab)
     expect(networkTab).toHaveAttribute('aria-selected', 'true')
     expect(configTab).toHaveAttribute('aria-selected', 'false')
-
-    // The Network isolation switch should be visible and toggleable
     const switchLabel = screen.getByLabelText('Network isolation')
     expect(switchLabel).toBeInTheDocument()
     expect(switchLabel).toHaveAttribute('role', 'switch')
     expect(switchLabel).toHaveAttribute('aria-checked', 'false')
     await userEvent.click(switchLabel)
     expect(switchLabel).toHaveAttribute('aria-checked', 'true')
-
-    // The form fields should not be visible
-    expect(screen.queryByLabelText('Server name')).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('Command arguments')).not.toBeInTheDocument()
+    // --- Allowed Protocols group visibility ---
+    // Should be visible only when enabled
+    expect(screen.getByLabelText('Allowed Protocols')).toBeInTheDocument()
+    const tcpCheckbox = screen.getByLabelText('TCP')
+    const udpCheckbox = screen.getByLabelText('UDP')
+    expect(tcpCheckbox).toBeInTheDocument()
+    expect(udpCheckbox).toBeInTheDocument()
+    expect(tcpCheckbox).not.toBeChecked()
+    expect(udpCheckbox).not.toBeChecked()
+    await userEvent.click(tcpCheckbox)
+    expect(tcpCheckbox).toBeChecked()
+    expect(udpCheckbox).not.toBeChecked()
+    await userEvent.click(udpCheckbox)
+    expect(tcpCheckbox).toBeChecked()
+    expect(udpCheckbox).toBeChecked()
+    await userEvent.click(tcpCheckbox)
+    expect(tcpCheckbox).not.toBeChecked()
+    expect(udpCheckbox).toBeChecked()
+    // --- Alert when enabled ---
+    expect(
+      screen.getByText(
+        /this configuration blocks all outbound network traffic from the mcp server/i
+      )
+    ).toBeInTheDocument()
   })
 
   it('shows loading state and hides tabs when submitting', async () => {
@@ -213,7 +227,7 @@ describe('FormRunFromRegistry', () => {
     expect(screen.queryByRole('tablist')).not.toBeInTheDocument()
   })
 
-  it('calls installServerMutation when form is submitted with valid data', async () => {
+  it('submits correct payload for various form states', async () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
@@ -222,10 +236,10 @@ describe('FormRunFromRegistry', () => {
       isPendingSecrets: false,
     })
 
-    const server = { ...REGISTRY_SERVER }
+    // --- Scenario 1: Valid data ---
+    let server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
     const mockOnOpenChange = vi.fn()
-
     render(
       <QueryClientProvider client={queryClient}>
         <FormRunFromRegistry
@@ -235,12 +249,9 @@ describe('FormRunFromRegistry', () => {
         />
       </QueryClientProvider>
     )
-
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
-
-    // Fill in the form
     await userEvent.type(
       screen.getByLabelText('Server name'),
       'my-awesome-server',
@@ -249,40 +260,28 @@ describe('FormRunFromRegistry', () => {
         initialSelectionEnd: REGISTRY_SERVER.name?.length,
       }
     )
-
     await userEvent.type(
       screen.getByLabelText('SECRET value'),
       'my-awesome-secret'
     )
-
     await userEvent.type(
       screen.getByLabelText('ENV_VAR value'),
       'my-awesome-env-var'
     )
-
     await userEvent.click(
       screen.getByRole('button', { name: 'Install server' })
     )
-
     await waitFor(() => {
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
         {
           server,
           data: expect.objectContaining({
             serverName: 'my-awesome-server',
-            envVars: [
-              {
-                name: 'ENV_VAR',
-                value: 'my-awesome-env-var',
-              },
-            ],
+            envVars: [{ name: 'ENV_VAR', value: 'my-awesome-env-var' }],
             secrets: [
               {
                 name: 'SECRET',
-                value: {
-                  isFromStore: false,
-                  secret: 'my-awesome-secret',
-                },
+                value: { isFromStore: false, secret: 'my-awesome-secret' },
               },
             ],
             cmd_arguments: undefined,
@@ -294,127 +293,29 @@ describe('FormRunFromRegistry', () => {
           onError: expect.any(Function),
         })
       )
-      // Ensure networkIsolation is not present in the payload
       expect(
         mockInstallServerMutation.mock.calls[0]?.[0]?.data?.networkIsolation
       ).toBeUndefined()
     })
-  })
 
-  it('handles form submission with secret from store', async () => {
-    const mockInstallServerMutation = vi.fn()
-    mockUseRunFromRegistry.mockReturnValue({
-      installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
-      isErrorSecrets: false,
-      isPendingSecrets: false,
-    })
-
-    server.use(
+    // --- Scenario 2: Secret from store ---
+    vi.clearAllMocks()
+    // Restore MSW mock for secrets endpoint
+    mswServer.use(
       http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
         return HttpResponse.json({
-          keys: [
-            {
-              key: 'MY_AWESOME_SECRET',
-            },
-          ],
+          keys: [{ key: 'MY_AWESOME_SECRET' }],
         })
       })
     )
-
-    const mockServer = { ...REGISTRY_SERVER }
-    mockServer.env_vars = ENV_VARS_OPTIONAL
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={mockServer}
-        />
-      </QueryClientProvider>
-    )
-
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeVisible()
-    })
-
-    // Fill in server name
-    await userEvent.type(
-      screen.getByLabelText('Server name'),
-      'my-awesome-server',
-      {
-        initialSelectionStart: 0,
-        initialSelectionEnd: REGISTRY_SERVER.name?.length,
-      }
-    )
-
-    // Select secret from store
-    await userEvent.click(screen.getByLabelText('Use a secret from the store'))
-    await waitFor(() => {
-      expect(
-        screen.getByRole('dialog', { name: 'Secrets store' })
-      ).toBeVisible()
-    })
-    await userEvent.click(
-      screen.getByRole('option', { name: 'MY_AWESOME_SECRET' })
-    )
-
-    // Fill in environment variable
-    await userEvent.type(
-      screen.getByLabelText('ENV_VAR value'),
-      'my-awesome-env-var'
-    )
-
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Install server' })
-    )
-
-    await waitFor(() => {
-      expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        {
-          server: mockServer,
-          data: expect.objectContaining({
-            serverName: 'my-awesome-server',
-            envVars: [
-              {
-                name: 'ENV_VAR',
-                value: 'my-awesome-env-var',
-              },
-            ],
-            secrets: [
-              {
-                name: 'SECRET',
-                value: {
-                  isFromStore: true,
-                  secret: 'MY_AWESOME_SECRET',
-                },
-              },
-            ],
-            cmd_arguments: undefined,
-          }),
-        },
-        expect.any(Object)
-      )
-      // Ensure networkIsolation is not present in the payload
-      expect(
-        mockInstallServerMutation.mock.calls[0]?.[0]?.data?.networkIsolation
-      ).toBeUndefined()
-    })
-  })
-
-  it('submits form with empty optional fields', async () => {
-    const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
       checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
-
-    const server = { ...REGISTRY_SERVER }
+    server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
-
     render(
       <QueryClientProvider client={queryClient}>
         <FormRunFromRegistry
@@ -424,12 +325,9 @@ describe('FormRunFromRegistry', () => {
         />
       </QueryClientProvider>
     )
-
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
-
-    // Only fill in server name
     await userEvent.type(
       screen.getByLabelText('Server name'),
       'my-awesome-server',
@@ -438,30 +336,34 @@ describe('FormRunFromRegistry', () => {
         initialSelectionEnd: REGISTRY_SERVER.name?.length,
       }
     )
-
+    // Simulate secret store selection
+    await userEvent.click(screen.getByLabelText('Use a secret from the store'))
+    await waitFor(() => {
+      expect(
+        screen.getByRole('dialog', { name: 'Secrets store' })
+      ).toBeVisible()
+    })
+    await userEvent.click(
+      screen.getByRole('option', { name: 'MY_AWESOME_SECRET' })
+    )
+    await userEvent.type(
+      screen.getByLabelText('ENV_VAR value'),
+      'my-awesome-env-var'
+    )
     await userEvent.click(
       screen.getByRole('button', { name: 'Install server' })
     )
-
     await waitFor(() => {
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
         {
           server,
           data: expect.objectContaining({
             serverName: 'my-awesome-server',
-            envVars: [
-              {
-                name: 'ENV_VAR',
-                value: '',
-              },
-            ],
+            envVars: [{ name: 'ENV_VAR', value: 'my-awesome-env-var' }],
             secrets: [
               {
                 name: 'SECRET',
-                value: {
-                  isFromStore: false,
-                  secret: '',
-                },
+                value: { isFromStore: true, secret: 'MY_AWESOME_SECRET' },
               },
             ],
             cmd_arguments: undefined,
@@ -469,10 +371,114 @@ describe('FormRunFromRegistry', () => {
         },
         expect.any(Object)
       )
-      // Ensure networkIsolation is not present in the payload
       expect(
         mockInstallServerMutation.mock.calls[0]?.[0]?.data?.networkIsolation
       ).toBeUndefined()
+    })
+
+    // --- Scenario 3: Empty optional fields ---
+    vi.clearAllMocks()
+    mockUseRunFromRegistry.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      checkServerStatus: vi.fn(),
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+    server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    await userEvent.type(
+      screen.getByLabelText('Server name'),
+      'my-awesome-server',
+      {
+        initialSelectionStart: 0,
+        initialSelectionEnd: REGISTRY_SERVER.name?.length,
+      }
+    )
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalledWith(
+        {
+          server,
+          data: expect.objectContaining({
+            serverName: 'my-awesome-server',
+            envVars: [{ name: 'ENV_VAR', value: '' }],
+            secrets: [
+              {
+                name: 'SECRET',
+                value: { isFromStore: false, secret: '' },
+              },
+            ],
+            cmd_arguments: undefined,
+          }),
+        },
+        expect.any(Object)
+      )
+      expect(
+        mockInstallServerMutation.mock.calls[0]?.[0]?.data?.networkIsolation
+      ).toBeUndefined()
+    })
+
+    // --- Scenario 4: Command arguments ---
+    vi.clearAllMocks()
+    mockUseRunFromRegistry.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      checkServerStatus: vi.fn(),
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+    server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    await userEvent.type(
+      screen.getByLabelText('Server name'),
+      'my-awesome-server',
+      {
+        initialSelectionStart: 0,
+        initialSelectionEnd: REGISTRY_SERVER.name?.length,
+      }
+    )
+    await userEvent.type(
+      screen.getByLabelText('Command arguments'),
+      '--debug --verbose'
+    )
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalledWith(
+        {
+          server,
+          data: expect.objectContaining({
+            cmd_arguments: '--debug --verbose',
+          }),
+        },
+        expect.any(Object)
+      )
     })
   })
 
@@ -849,7 +855,7 @@ describe('FormRunFromRegistry', () => {
     ).toBeInTheDocument()
   })
 
-  it('submits correct network isolation policy when enabled or disabled', async () => {
+  it('submits correct network isolation policy and allowed protocols', async () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
@@ -857,10 +863,10 @@ describe('FormRunFromRegistry', () => {
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
-
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
+    // --- Scenario 1: Network isolation enabled, no protocols selected ---
     render(
       <QueryClientProvider client={queryClient}>
         <FormRunFromRegistry
@@ -870,12 +876,9 @@ describe('FormRunFromRegistry', () => {
         />
       </QueryClientProvider>
     )
-
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
-
-    // Fill in required fields
     await userEvent.type(
       screen.getByLabelText('Server name'),
       'my-network-server',
@@ -884,30 +887,24 @@ describe('FormRunFromRegistry', () => {
         initialSelectionEnd: REGISTRY_SERVER.name?.length,
       }
     )
-
-    // --- Test with network isolation enabled ---
     // Switch to the Network Isolation tab
     const networkTab = screen.getByRole('tab', { name: /network isolation/i })
     await userEvent.click(networkTab)
     // Enable the switch
     const switchLabel = screen.getByLabelText('Network isolation')
     await userEvent.click(switchLabel)
-
     // Switch back to configuration tab to submit
     const configTab = screen.getByRole('tab', { name: /configuration/i })
     await userEvent.click(configTab)
-
     // Submit the form
     await userEvent.click(
       screen.getByRole('button', { name: 'Install server' })
     )
-
     // Check payload for network isolation enabled
     await waitFor(() => {
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            // This is the expected policy when network isolation is enabled
             permission_profile: expect.objectContaining({
               network: expect.objectContaining({
                 outbound: expect.objectContaining({
@@ -924,8 +921,7 @@ describe('FormRunFromRegistry', () => {
       )
     })
 
-    // --- Test with network isolation disabled ---
-    // Reset mocks and re-open dialog
+    // --- Scenario 2: Network isolation disabled ---
     vi.clearAllMocks()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
@@ -933,8 +929,6 @@ describe('FormRunFromRegistry', () => {
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
-
-    // Re-render the form
     render(
       <QueryClientProvider client={queryClient}>
         <FormRunFromRegistry
@@ -944,12 +938,9 @@ describe('FormRunFromRegistry', () => {
         />
       </QueryClientProvider>
     )
-
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
-
-    // Fill in required fields again
     await userEvent.type(
       screen.getByLabelText('Server name'),
       'my-network-server',
@@ -958,13 +949,10 @@ describe('FormRunFromRegistry', () => {
         initialSelectionEnd: REGISTRY_SERVER.name?.length,
       }
     )
-
     // Ensure network isolation is not enabled (default is off)
-    // Submit the form
     await userEvent.click(
       screen.getByRole('button', { name: 'Install server' })
     )
-
     // Check payload for network isolation disabled (should not include restrictive policy)
     await waitFor(() => {
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
@@ -974,6 +962,120 @@ describe('FormRunFromRegistry', () => {
               network: expect.objectContaining({
                 outbound: expect.objectContaining({
                   insecure_allow_all: false,
+                }),
+              }),
+            }),
+          }),
+        }),
+        expect.any(Object)
+      )
+    })
+
+    // --- Scenario 3: Network isolation enabled, TCP only ---
+    vi.clearAllMocks()
+    mockUseRunFromRegistry.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      checkServerStatus: vi.fn(),
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    await userEvent.type(
+      screen.getByLabelText('Server name'),
+      'my-network-server',
+      {
+        initialSelectionStart: 0,
+        initialSelectionEnd: REGISTRY_SERVER.name?.length,
+      }
+    )
+    const networkTab2 = screen.getByRole('tab', { name: /network isolation/i })
+    await userEvent.click(networkTab2)
+    const switchLabel2 = screen.getByLabelText('Network isolation')
+    await userEvent.click(switchLabel2)
+    const tcpCheckbox = screen.getByLabelText('TCP')
+    await userEvent.click(tcpCheckbox)
+    const configTab2 = screen.getByRole('tab', { name: /configuration/i })
+    await userEvent.click(configTab2)
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            permission_profile: expect.objectContaining({
+              network: expect.objectContaining({
+                outbound: expect.objectContaining({
+                  allow_transport: ['TCP'],
+                }),
+              }),
+            }),
+          }),
+        }),
+        expect.any(Object)
+      )
+    })
+
+    // --- Scenario 4: Network isolation enabled, TCP and UDP ---
+    vi.clearAllMocks()
+    mockUseRunFromRegistry.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      checkServerStatus: vi.fn(),
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    await userEvent.type(
+      screen.getByLabelText('Server name'),
+      'my-network-server',
+      {
+        initialSelectionStart: 0,
+        initialSelectionEnd: REGISTRY_SERVER.name?.length,
+      }
+    )
+    const networkTab3 = screen.getByRole('tab', { name: /network isolation/i })
+    await userEvent.click(networkTab3)
+    const switchLabel3 = screen.getByLabelText('Network isolation')
+    await userEvent.click(switchLabel3)
+    const tcpCheckbox2 = screen.getByLabelText('TCP')
+    const udpCheckbox2 = screen.getByLabelText('UDP')
+    await userEvent.click(tcpCheckbox2)
+    await userEvent.click(udpCheckbox2)
+    const configTab3 = screen.getByRole('tab', { name: /configuration/i })
+    await userEvent.click(configTab3)
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            permission_profile: expect.objectContaining({
+              network: expect.objectContaining({
+                outbound: expect.objectContaining({
+                  allow_transport: expect.arrayContaining(['TCP', 'UDP']),
                 }),
               }),
             }),
