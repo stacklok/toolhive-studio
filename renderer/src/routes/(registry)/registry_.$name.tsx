@@ -71,7 +71,7 @@ export function RegistryServerDetail() {
   return (
     <div className="flex max-h-full w-full flex-1 flex-col">
       <div className="mb-2">
-        <LinkViewTransition to="/">
+        <LinkViewTransition to="/registry">
           <Button
             variant="ghost"
             aria-label="Back"
