@@ -86,10 +86,6 @@ export async function startToolhive(tray?: Tray): Promise<void> {
 
   toolhiveProcess.on('exit', (code) => {
     log.warn(`ToolHive process exited with code: ${code}`)
-    Sentry.captureMessage(
-      `ToolHive process exited with code: ${code}`,
-      'warning'
-    )
     toolhiveProcess = undefined
     if (tray) updateTrayStatus(tray, false)
   })
