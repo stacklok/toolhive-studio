@@ -373,6 +373,7 @@ export function FormRunFromRegistry({
       }).extend({
         networkIsolation: z.boolean().optional(),
         allowedProtocols: z.array(z.string()).optional(),
+        allowedPorts: z.array(z.number().int().min(1).max(65535)).optional(),
       }),
     [groupedEnvVars, data?.workloads]
   )
@@ -381,6 +382,7 @@ export function FormRunFromRegistry({
     FormSchemaRunFromRegistry & {
       networkIsolation?: boolean
       allowedProtocols?: string[]
+      allowedPorts?: number[]
     }
   >({
     resolver: zodV4Resolver(formSchema),
@@ -396,6 +398,7 @@ export function FormRunFromRegistry({
       })),
       networkIsolation: false,
       allowedProtocols: [],
+      allowedPorts: [],
     },
   })
 
@@ -403,6 +406,7 @@ export function FormRunFromRegistry({
     data: FormSchemaRunFromRegistry & {
       networkIsolation?: boolean
       allowedProtocols?: string[]
+      allowedPorts?: number[]
     }
   ) => {
     if (!server) return
@@ -412,7 +416,6 @@ export function FormRunFromRegistry({
       setError(null)
     }
 
-    // Prepare permission_profile if network isolation is enabled
     let permission_profile
     if (data.networkIsolation) {
       permission_profile = {
@@ -420,16 +423,20 @@ export function FormRunFromRegistry({
           outbound: {
             insecure_allow_all: false,
             allow_host: [],
-            allow_port: [],
+            allow_port:
+              data.allowedPorts && data.allowedPorts.length > 0
+                ? data.allowedPorts
+                : [],
             allow_transport: data.allowedProtocols ?? [],
           },
         },
       }
     }
 
-    // Omit networkIsolation and allowedProtocols from the payload
+    // Omit networkIsolation, allowedProtocols, allowedPorts from the payload
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { networkIsolation, allowedProtocols, ...restData } = data
+    const { networkIsolation, allowedProtocols, allowedPorts, ...restData } =
+      data
 
     installServerMutation(
       {
@@ -539,6 +546,7 @@ export function FormRunFromRegistry({
                                 traffic from the MCP server.
                               </AlertDescription>
                             </Alert>
+                            {/* Allowed Protocols */}
                             <Controller
                               control={form.control}
                               name="allowedProtocols"
@@ -614,6 +622,93 @@ export function FormRunFromRegistry({
                                         UDP
                                       </label>
                                     </div>
+                                  </div>
+                                </div>
+                              )}
+                            />
+                            {/* Allowed Ports */}
+                            <Controller
+                              control={form.control}
+                              name="allowedPorts"
+                              render={({ field: portsField }) => (
+                                <div className="mt-6">
+                                  <Label htmlFor="allowed-ports-group">
+                                    Allowed Ports
+                                  </Label>
+                                  <div
+                                    id="allowed-ports-group"
+                                    role="group"
+                                    aria-label="Allowed Ports"
+                                  >
+                                    {Array.isArray(portsField.value) &&
+                                      portsField.value.length > 0 && (
+                                        <div className="mt-2 flex flex-col gap-2">
+                                          {(portsField.value || []).map(
+                                            (port: number, idx: number) => (
+                                              <div
+                                                key={idx}
+                                                className="flex items-center gap-2"
+                                              >
+                                                <Input
+                                                  type="number"
+                                                  min={1}
+                                                  max={65535}
+                                                  aria-label={`Port ${idx + 1}`}
+                                                  value={port === 0 ? '' : port}
+                                                  onChange={(e) => {
+                                                    const val = parseInt(
+                                                      e.target.value,
+                                                      10
+                                                    )
+                                                    const newPorts = [
+                                                      ...(portsField.value ||
+                                                        []),
+                                                    ]
+                                                    newPorts[idx] = isNaN(val)
+                                                      ? 0
+                                                      : val
+                                                    portsField.onChange(
+                                                      newPorts
+                                                    )
+                                                  }}
+                                                  className="w-32"
+                                                />
+                                                <Button
+                                                  type="button"
+                                                  size="icon"
+                                                  variant="ghost"
+                                                  aria-label={`Remove Port ${idx + 1}`}
+                                                  onClick={() => {
+                                                    const newPorts = (
+                                                      portsField.value || []
+                                                    ).filter(
+                                                      (_, i) => i !== idx
+                                                    )
+                                                    portsField.onChange(
+                                                      newPorts
+                                                    )
+                                                  }}
+                                                >
+                                                  ×
+                                                </Button>
+                                              </div>
+                                            )
+                                          )}
+                                        </div>
+                                      )}
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      className="mt-2"
+                                      onClick={() => {
+                                        portsField.onChange([
+                                          ...(portsField.value || []),
+                                          0,
+                                        ])
+                                      }}
+                                    >
+                                      Add a port
+                                    </Button>
                                   </div>
                                 </div>
                               )}

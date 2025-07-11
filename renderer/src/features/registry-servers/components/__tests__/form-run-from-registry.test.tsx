@@ -1293,4 +1293,105 @@ describe('FormRunFromRegistry', () => {
       )
     })
   })
+
+  it('shows Allowed Ports section and submits correct payload when ports are added', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+    const mockInstallServerMutation = vi.fn()
+    mockUseRunFromRegistry.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      checkServerStatus: vi.fn(),
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    // Switch to Network Isolation tab
+    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    await userEvent.click(networkTab)
+    // Enable network isolation
+    const switchLabel = screen.getByLabelText('Network isolation')
+    await userEvent.click(switchLabel)
+    // Add ports
+    const addPortButton = screen.getByRole('button', { name: 'Add a port' })
+    await userEvent.click(addPortButton)
+    await userEvent.type(screen.getByLabelText('Port 1'), '8080')
+    await userEvent.click(addPortButton)
+    await userEvent.type(screen.getByLabelText('Port 2'), '443')
+    // Submit
+    const configTab = screen.getByRole('tab', { name: /configuration/i })
+    await userEvent.click(configTab)
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalled()
+      const call = mockInstallServerMutation.mock.calls[0]?.[0] ?? {}
+      expect(call.data.permission_profile).toMatchObject({
+        network: {
+          outbound: {
+            allow_port: [8080, 443],
+          },
+        },
+      })
+    })
+  })
+
+  it('shows Allowed Ports section and submits correct payload when no ports are added', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+    const mockInstallServerMutation = vi.fn()
+    mockUseRunFromRegistry.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      checkServerStatus: vi.fn(),
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    // Switch to Network Isolation tab
+    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    await userEvent.click(networkTab)
+    // Enable network isolation
+    const switchLabel = screen.getByLabelText('Network isolation')
+    await userEvent.click(switchLabel)
+    // Do not add any ports
+    // Submit
+    const configTab = screen.getByRole('tab', { name: /configuration/i })
+    await userEvent.click(configTab)
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalled()
+      const call = mockInstallServerMutation.mock.calls[0]?.[0] ?? {}
+      expect(call.data.permission_profile).toMatchObject({
+        network: {
+          outbound: {
+            allow_port: [],
+          },
+        },
+      })
+    })
+  })
 })
