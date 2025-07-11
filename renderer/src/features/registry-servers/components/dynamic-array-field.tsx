@@ -35,16 +35,16 @@ export const DynamicArrayField: React.FC<DynamicArrayFieldProps> = ({
   }, [value.length])
 
   return (
-    <div className="mt-6">
+    <div className="mt-6 w-full">
       <Label>{label}</Label>
-      <div role="group" aria-label={label}>
+      <div role="group" aria-label={label} className="w-full">
         {Array.isArray(value) && value.length > 0 && (
-          <div className="mt-2 flex flex-col gap-2">
+          <div className="mt-2 flex w-full flex-col gap-2">
             {value.map((item, idx) => {
               const error = validate ? validate(item) : null
               return (
-                <div key={idx} className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
+                <div key={idx} className="flex w-full flex-col gap-1">
+                  <div className="flex w-full items-center gap-2">
                     <Input
                       type="text"
                       aria-label={`${inputLabelPrefix} ${idx + 1}`}
@@ -61,7 +61,7 @@ export const DynamicArrayField: React.FC<DynamicArrayFieldProps> = ({
                           return arr
                         })
                       }}
-                      className="w-32"
+                      className="w-32 grow"
                       {...inputProps}
                     />
                     <Button
