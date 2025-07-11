@@ -268,7 +268,7 @@ describe('FormRunFromRegistry', () => {
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
         {
           server,
-          data: {
+          data: expect.objectContaining({
             serverName: 'my-awesome-server',
             envVars: [
               {
@@ -286,7 +286,7 @@ describe('FormRunFromRegistry', () => {
               },
             ],
             cmd_arguments: undefined,
-          },
+          }),
         },
         expect.objectContaining({
           onSuccess: expect.any(Function),
@@ -294,6 +294,10 @@ describe('FormRunFromRegistry', () => {
           onError: expect.any(Function),
         })
       )
+      // Ensure networkIsolation is not present in the payload
+      expect(
+        mockInstallServerMutation.mock.calls[0]?.[0]?.data?.networkIsolation
+      ).toBeUndefined()
     })
   })
 
@@ -370,7 +374,7 @@ describe('FormRunFromRegistry', () => {
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
         {
           server: mockServer,
-          data: {
+          data: expect.objectContaining({
             serverName: 'my-awesome-server',
             envVars: [
               {
@@ -388,10 +392,14 @@ describe('FormRunFromRegistry', () => {
               },
             ],
             cmd_arguments: undefined,
-          },
+          }),
         },
         expect.any(Object)
       )
+      // Ensure networkIsolation is not present in the payload
+      expect(
+        mockInstallServerMutation.mock.calls[0]?.[0]?.data?.networkIsolation
+      ).toBeUndefined()
     })
   })
 
@@ -439,7 +447,7 @@ describe('FormRunFromRegistry', () => {
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
         {
           server,
-          data: {
+          data: expect.objectContaining({
             serverName: 'my-awesome-server',
             envVars: [
               {
@@ -457,10 +465,14 @@ describe('FormRunFromRegistry', () => {
               },
             ],
             cmd_arguments: undefined,
-          },
+          }),
         },
         expect.any(Object)
       )
+      // Ensure networkIsolation is not present in the payload
+      expect(
+        mockInstallServerMutation.mock.calls[0]?.[0]?.data?.networkIsolation
+      ).toBeUndefined()
     })
   })
 
@@ -835,5 +847,140 @@ describe('FormRunFromRegistry', () => {
         /this configuration blocks all outbound network traffic from the mcp server/i
       )
     ).toBeInTheDocument()
+  })
+
+  it('submits correct network isolation policy when enabled or disabled', async () => {
+    const mockInstallServerMutation = vi.fn()
+    mockUseRunFromRegistry.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      checkServerStatus: vi.fn(),
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Fill in required fields
+    await userEvent.type(
+      screen.getByLabelText('Server name'),
+      'my-network-server',
+      {
+        initialSelectionStart: 0,
+        initialSelectionEnd: REGISTRY_SERVER.name?.length,
+      }
+    )
+
+    // --- Test with network isolation enabled ---
+    // Switch to the Network Isolation tab
+    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    await userEvent.click(networkTab)
+    // Enable the switch
+    const switchLabel = screen.getByLabelText('Network isolation')
+    await userEvent.click(switchLabel)
+
+    // Switch back to configuration tab to submit
+    const configTab = screen.getByRole('tab', { name: /configuration/i })
+    await userEvent.click(configTab)
+
+    // Submit the form
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+
+    // Check payload for network isolation enabled
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            // This is the expected policy when network isolation is enabled
+            permission_profile: expect.objectContaining({
+              network: expect.objectContaining({
+                outbound: expect.objectContaining({
+                  insecure_allow_all: false,
+                  allow_host: [],
+                  allow_port: [],
+                  allow_transport: [],
+                }),
+              }),
+            }),
+          }),
+        }),
+        expect.any(Object)
+      )
+    })
+
+    // --- Test with network isolation disabled ---
+    // Reset mocks and re-open dialog
+    vi.clearAllMocks()
+    mockUseRunFromRegistry.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      checkServerStatus: vi.fn(),
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+
+    // Re-render the form
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Fill in required fields again
+    await userEvent.type(
+      screen.getByLabelText('Server name'),
+      'my-network-server',
+      {
+        initialSelectionStart: 0,
+        initialSelectionEnd: REGISTRY_SERVER.name?.length,
+      }
+    )
+
+    // Ensure network isolation is not enabled (default is off)
+    // Submit the form
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+
+    // Check payload for network isolation disabled (should not include restrictive policy)
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.not.objectContaining({
+            permission_profile: expect.objectContaining({
+              network: expect.objectContaining({
+                outbound: expect.objectContaining({
+                  insecure_allow_all: false,
+                }),
+              }),
+            }),
+          }),
+        }),
+        expect.any(Object)
+      )
+    })
   })
 })

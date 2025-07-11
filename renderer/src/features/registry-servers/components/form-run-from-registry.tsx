@@ -49,6 +49,8 @@ import { Switch } from '@/common/components/ui/switch'
 import type { GroupedEnvVars } from '../lib/group-env-vars'
 import { Alert, AlertDescription } from '@/common/components/ui/alert'
 import { AlertTriangle } from 'lucide-react'
+import { Controller } from 'react-hook-form'
+import z from 'zod/v4'
 
 /**
  * Renders an asterisk icon & tooltip for required fields.
@@ -317,32 +319,6 @@ function ConfigurationTabContent({
   )
 }
 
-function NetworkIsolationTabContent() {
-  const [enabled, setEnabled] = useState(false)
-  return (
-    <div className="p-6">
-      <div className="mb-4 flex items-center gap-4">
-        <Switch
-          id="network-isolation-switch"
-          aria-label="Network isolation"
-          checked={enabled}
-          onCheckedChange={setEnabled}
-        />
-        <Label htmlFor="network-isolation-switch">Network isolation</Label>
-      </div>
-      {enabled && (
-        <Alert className="mt-2">
-          <AlertTriangle className="mt-0.5" />
-          <AlertDescription>
-            This configuration blocks all outbound network traffic from the MCP
-            server.
-          </AlertDescription>
-        </Alert>
-      )}
-    </div>
-  )
-}
-
 interface FormRunFromRegistryProps {
   server: RegistryImageMetadata | null
   isOpen: boolean
@@ -394,11 +370,15 @@ export function FormRunFromRegistry({
         envVars: groupedEnvVars.envVars,
         secrets: groupedEnvVars.secrets,
         workloads: data?.workloads ?? [],
+      }).extend({
+        networkIsolation: z.boolean().optional(),
       }),
     [groupedEnvVars, data?.workloads]
   )
 
-  const form = useForm<FormSchemaRunFromRegistry>({
+  const form = useForm<
+    FormSchemaRunFromRegistry & { networkIsolation?: boolean }
+  >({
     resolver: zodV4Resolver(formSchema),
     defaultValues: {
       serverName: server?.name || '',
@@ -410,10 +390,13 @@ export function FormRunFromRegistry({
         name: e.name || '',
         value: e.default || '',
       })),
+      networkIsolation: false,
     },
   })
 
-  const onSubmitForm = (data: FormSchemaRunFromRegistry) => {
+  const onSubmitForm = (
+    data: FormSchemaRunFromRegistry & { networkIsolation?: boolean }
+  ) => {
     if (!server) return
 
     setIsSubmitting(true)
@@ -421,8 +404,33 @@ export function FormRunFromRegistry({
       setError(null)
     }
 
+    // Prepare permission_profile if network isolation is enabled
+    let permission_profile
+    if (data.networkIsolation) {
+      permission_profile = {
+        network: {
+          outbound: {
+            insecure_allow_all: false,
+            allow_host: [],
+            allow_port: [],
+            allow_transport: [],
+          },
+        },
+      }
+    }
+
+    // Omit networkIsolation from the payload
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { networkIsolation, ...restData } = data
+
     installServerMutation(
-      { server, data },
+      {
+        server,
+        data: {
+          ...restData,
+          ...(permission_profile ? { permission_profile } : {}),
+        },
+      },
       {
         onSuccess: () => {
           checkServerStatus(data)
@@ -498,7 +506,34 @@ export function FormRunFromRegistry({
                   />
                 )}
                 {tabValue === 'network-isolation' && (
-                  <NetworkIsolationTabContent />
+                  <Controller
+                    control={form.control}
+                    name="networkIsolation"
+                    render={({ field }) => (
+                      <div className="p-6">
+                        <div className="mb-4 flex items-center gap-4">
+                          <Switch
+                            id="network-isolation-switch"
+                            aria-label="Network isolation"
+                            checked={!!field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                          <Label htmlFor="network-isolation-switch">
+                            Network isolation
+                          </Label>
+                        </div>
+                        {field.value && (
+                          <Alert className="mt-2">
+                            <AlertTriangle className="mt-0.5" />
+                            <AlertDescription>
+                              This configuration blocks all outbound network
+                              traffic from the MCP server.
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                      </div>
+                    )}
+                  />
                 )}
               </>
             )}
