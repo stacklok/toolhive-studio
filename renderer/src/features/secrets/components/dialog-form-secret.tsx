@@ -87,9 +87,14 @@ export function DialogFormSecret({
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {secretKey ? (
-            <DialogDescription>
-              Update the secret value below.
-            </DialogDescription>
+            <>
+              <DialogDescription className="sr-only">
+                Update secret dialog
+              </DialogDescription>
+              <DialogDescription>
+                Update the secret value below.
+              </DialogDescription>
+            </>
           ) : (
             <DialogDescription className="sr-only">
               Add a secret dialog

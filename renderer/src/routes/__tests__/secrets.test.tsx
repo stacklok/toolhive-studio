@@ -101,3 +101,38 @@ it('renders edit secret dialog when clicking edit from dropdown', async () => {
   expect(screen.getByRole('button', { name: /update/i })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
 })
+
+it('edit secret dialog includes a screen-reader-only description and is linked via aria-describedby', async () => {
+  renderRoute(router)
+
+  await waitFor(() => {
+    expect(
+      screen.getByRole('heading', { name: /secrets/i })
+    ).toBeInTheDocument()
+  })
+  const dropdownTriggers = screen.getAllByLabelText('Secret options')
+  await userEvent.click(dropdownTriggers[0]!)
+  const editButton = screen.getByText('Update secret')
+  await userEvent.click(editButton)
+
+  const dialog = screen.getByRole('dialog')
+  const srDescription = Array.from(dialog.querySelectorAll('p,div,span')).find(
+    (el) =>
+      el.className.includes('sr-only') &&
+      el.textContent?.includes('Update secret dialog')
+  )
+  expect(srDescription).toBeTruthy()
+
+  const visibleDescription = Array.from(
+    dialog.querySelectorAll('p,div,span')
+  ).find(
+    (el) =>
+      !el.className.includes('sr-only') &&
+      el.textContent?.includes('Update the secret value below.')
+  )
+  expect(visibleDescription).toBeTruthy()
+
+  const ariaDescribedBy = dialog.getAttribute('aria-describedby')
+  expect(ariaDescribedBy).toBeTruthy()
+  expect(srDescription?.id).toBe(ariaDescribedBy)
+})
