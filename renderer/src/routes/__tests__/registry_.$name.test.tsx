@@ -58,12 +58,12 @@ describe('Registry Server Detail Route', () => {
 
     const backButton = screen.getByRole('button', { name: /back/i })
     expect(backButton).toBeVisible()
-    expect(backButton.closest('a')).toHaveAttribute('href', '/')
+    expect(backButton.closest('a')).toHaveAttribute('href', '/registry')
 
     await userEvent.click(backButton)
 
     await waitFor(() => {
-      expect(router.state.location.pathname).toBe('/')
+      expect(router.state.location.pathname).toBe('/registry')
     })
   })
 
