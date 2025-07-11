@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Button } from '@/common/components/ui/button'
 import { Input } from '@/common/components/ui/input'
 import { Label } from '@/common/components/ui/label'
+import { Trash2 } from 'lucide-react'
 
 interface DynamicArrayFieldProps {
   label: string
@@ -66,14 +67,14 @@ export const DynamicArrayField: React.FC<DynamicArrayFieldProps> = ({
                     />
                     <Button
                       type="button"
-                      variant="ghost"
+                      variant="outline"
                       aria-label={`Remove ${inputLabelPrefix} ${idx + 1}`}
                       onClick={() => {
                         const newArr = value.filter((_, i) => i !== idx)
                         onChange(newArr)
                       }}
                     >
-                      ×
+                      <Trash2 />
                     </Button>
                   </div>
                   {touched[idx] && error && (
