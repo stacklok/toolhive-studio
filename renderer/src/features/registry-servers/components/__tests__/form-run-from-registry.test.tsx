@@ -150,6 +150,46 @@ describe('FormRunFromRegistry', () => {
     expect(configTab).toHaveAttribute('aria-selected', 'true')
   })
 
+  it('renders a Network Isolation tab and shows its content when selected', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    // Check for the Network Isolation tab
+    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    expect(networkTab).toBeInTheDocument()
+    expect(networkTab).toHaveAttribute('aria-selected', 'false')
+
+    // Click the Network Isolation tab
+    await userEvent.click(networkTab)
+    expect(networkTab).toHaveAttribute('aria-selected', 'true')
+
+    // The Configuration tab should now be unselected
+    const configTab = screen.getByRole('tab', { name: /configuration/i })
+    expect(configTab).toHaveAttribute('aria-selected', 'false')
+
+    // The placeholder message should be visible
+    expect(
+      screen.getByText(/network isolation settings will appear here/i)
+    ).toBeInTheDocument()
+
+    // The form fields should not be visible
+    expect(screen.queryByLabelText('Server name')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Command arguments')).not.toBeInTheDocument()
+  })
+
   it('calls installServerMutation when form is submitted with valid data', async () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({

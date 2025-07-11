@@ -301,6 +301,8 @@ export function FormRunFromRegistry({
     )
   }
 
+  const [tabValue, setTabValue] = useState('configuration')
+
   if (!server) return null
 
   return (
@@ -324,111 +326,128 @@ export function FormRunFromRegistry({
                 installation.
               </DialogDescription>
             </DialogHeader>
-            <Tabs className="w-full" value="configuration">
+            <Tabs
+              className="w-full"
+              value={tabValue}
+              onValueChange={setTabValue}
+            >
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="configuration">Configuration</TabsTrigger>
+                <TabsTrigger value="network-isolation">
+                  Network Isolation
+                </TabsTrigger>
               </TabsList>
             </Tabs>
-            {isSubmitting && (
-              <LoadingStateAlert
-                isPendingSecrets={isPendingSecrets}
-                loadingSecrets={loadingSecrets}
-              />
-            )}
-            {!isSubmitting && (
-              <div className="relative max-h-[65dvh] space-y-4 overflow-y-auto px-6">
-                {error && (
-                  <AlertErrorFormSubmission
-                    error={error}
-                    isErrorSecrets={isErrorSecrets}
-                    onDismiss={() => setError(null)}
+            {tabValue === 'configuration' && (
+              <>
+                {isSubmitting && (
+                  <LoadingStateAlert
+                    isPendingSecrets={isPendingSecrets}
+                    loadingSecrets={loadingSecrets}
                   />
                 )}
-                <FormField
-                  control={form.control}
-                  name="serverName"
-                  render={({ field }) => (
-                    <FormItem className="mb-10">
-                      <FormLabel>Server name</FormLabel>
-                      <FormDescription>
-                        Choose a unique name for this server instance
-                      </FormDescription>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="e.g. my-custom-server"
-                          autoFocus
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="cmd_arguments"
-                  render={({ field }) => (
-                    <FormItem className="mb-10">
-                      <FormLabel>Command arguments</FormLabel>
-                      <FormDescription>
-                        Space separated arguments for the command.
-                      </FormDescription>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g. -y --oauth-setup"
-                          defaultValue={field.value}
-                          onChange={(e) => field.onChange(e.target.value)}
-                          name={field.name}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {groupedEnvVars.secrets[0] ? (
-                  <section className="mb-10">
-                    <Label className="mb-2" htmlFor="secrets.0.value">
-                      Secrets
-                    </Label>
-
-                    <p className="text-muted-foreground mb-6 text-sm">
-                      All secrets are encrypted and securely stored by ToolHive.
-                    </p>
-
-                    {groupedEnvVars.secrets.map((secret, index) => (
-                      <SecretRow
-                        form={form}
-                        secret={secret}
-                        index={index}
-                        key={secret.name}
+                {!isSubmitting && (
+                  <div className="relative max-h-[65dvh] space-y-4 overflow-y-auto px-6">
+                    {error && (
+                      <AlertErrorFormSubmission
+                        error={error}
+                        isErrorSecrets={isErrorSecrets}
+                        onDismiss={() => setError(null)}
                       />
-                    ))}
-                  </section>
-                ) : null}
+                    )}
+                    <FormField
+                      control={form.control}
+                      name="serverName"
+                      render={({ field }) => (
+                        <FormItem className="mb-10">
+                          <FormLabel>Server name</FormLabel>
+                          <FormDescription>
+                            Choose a unique name for this server instance
+                          </FormDescription>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="e.g. my-custom-server"
+                              autoFocus
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                {groupedEnvVars.envVars[0] ? (
-                  <section className="mb-10">
-                    <Label className="mb-2" htmlFor="envVars.0.value">
-                      Environment variables
-                    </Label>
+                    <FormField
+                      control={form.control}
+                      name="cmd_arguments"
+                      render={({ field }) => (
+                        <FormItem className="mb-10">
+                          <FormLabel>Command arguments</FormLabel>
+                          <FormDescription>
+                            Space separated arguments for the command.
+                          </FormDescription>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g. -y --oauth-setup"
+                              defaultValue={field.value}
+                              onChange={(e) => field.onChange(e.target.value)}
+                              name={field.name}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                    <p className="text-muted-foreground mb-6 text-sm">
-                      Environment variables are used to pass configuration
-                      settings to the server.
-                    </p>
+                    {groupedEnvVars.secrets[0] ? (
+                      <section className="mb-10">
+                        <Label className="mb-2" htmlFor="secrets.0.value">
+                          Secrets
+                        </Label>
 
-                    {groupedEnvVars.envVars.map((envVar, index) => (
-                      <EnvVarRow
-                        form={form}
-                        envVar={envVar}
-                        index={index}
-                        key={envVar.name}
-                      />
-                    ))}
-                  </section>
-                ) : null}
+                        <p className="text-muted-foreground mb-6 text-sm">
+                          All secrets are encrypted and securely stored by
+                          ToolHive.
+                        </p>
+
+                        {groupedEnvVars.secrets.map((secret, index) => (
+                          <SecretRow
+                            form={form}
+                            secret={secret}
+                            index={index}
+                            key={secret.name}
+                          />
+                        ))}
+                      </section>
+                    ) : null}
+
+                    {groupedEnvVars.envVars[0] ? (
+                      <section className="mb-10">
+                        <Label className="mb-2" htmlFor="envVars.0.value">
+                          Environment variables
+                        </Label>
+
+                        <p className="text-muted-foreground mb-6 text-sm">
+                          Environment variables are used to pass configuration
+                          settings to the server.
+                        </p>
+
+                        {groupedEnvVars.envVars.map((envVar, index) => (
+                          <EnvVarRow
+                            form={form}
+                            envVar={envVar}
+                            index={index}
+                            key={envVar.name}
+                          />
+                        ))}
+                      </section>
+                    ) : null}
+                  </div>
+                )}
+              </>
+            )}
+            {tabValue === 'network-isolation' && (
+              <div className="text-muted-foreground p-6 text-center">
+                Network isolation settings will appear here.
               </div>
             )}
 
