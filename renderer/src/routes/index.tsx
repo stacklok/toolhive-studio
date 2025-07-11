@@ -58,7 +58,7 @@ export function Index() {
 
   return (
     <>
-      <TitlePage title="Installed">
+      <TitlePage title="MCP Servers">
         {workloads.length > 0 && (
           <div className="ml-auto flex gap-2">
             <RefreshButton refresh={refetch} />
