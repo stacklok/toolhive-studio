@@ -134,6 +134,7 @@ function transformTypeSpecificData(
         name: values.name,
         transport: values.transport,
         image: values.image,
+        target_port: values.target_port,
       }
     }
     case 'package_manager': {
@@ -141,6 +142,7 @@ function transformTypeSpecificData(
         name: values.name,
         transport: values.transport,
         image: `${values.protocol}://${values.package_name}`,
+        target_port: values.target_port,
       }
     }
     default:
