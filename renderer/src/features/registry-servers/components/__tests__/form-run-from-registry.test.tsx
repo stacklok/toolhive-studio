@@ -1395,3 +1395,204 @@ describe('FormRunFromRegistry', () => {
     })
   })
 })
+
+describe('Allowed Hosts field', () => {
+  it('renders Allowed Hosts field in the network isolation tab when enabled', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    // Switch to the Network Isolation tab
+    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    await userEvent.click(networkTab)
+    // Enable network isolation
+    const switchLabel = screen.getByLabelText('Network isolation')
+    await userEvent.click(switchLabel)
+    // Allowed Hosts field should be present
+    expect(screen.getByLabelText('Allowed Hosts')).toBeInTheDocument()
+    // Add host button should be present
+    expect(
+      screen.getByRole('button', { name: /add a host/i })
+    ).toBeInTheDocument()
+  })
+
+  it('allows adding, editing, and removing host entries', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    await userEvent.click(networkTab)
+    const switchLabel = screen.getByLabelText('Network isolation')
+    await userEvent.click(switchLabel)
+    // Add a host
+    const addHostButton = screen.getByRole('button', { name: /add a host/i })
+    await userEvent.click(addHostButton)
+    const hostInput1 = screen.getByLabelText('Host 1')
+    await userEvent.type(hostInput1, 'foo.bar.com')
+    // Add another host
+    await userEvent.click(addHostButton)
+    const hostInput2 = screen.getByLabelText('Host 2')
+    await userEvent.type(hostInput2, '.example.com')
+    // Remove the first host
+    const removeHost1 = screen.getByLabelText('Remove Host 1')
+    await userEvent.click(removeHost1)
+    // Only one host should remain, labeled 'Host 1' and value '.example.com'
+    const remainingHost = screen.getByLabelText('Host 1')
+    expect(remainingHost).toBeInTheDocument()
+    expect(remainingHost).toHaveValue('.example.com')
+    expect(screen.queryByLabelText('Host 2')).not.toBeInTheDocument()
+  })
+
+  it('validates host format (valid domain or subdomain, can start with a dot)', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    await userEvent.click(networkTab)
+    const switchLabel = screen.getByLabelText('Network isolation')
+    await userEvent.click(switchLabel)
+    const addHostButton = screen.getByRole('button', { name: /add a host/i })
+    await userEvent.click(addHostButton)
+    const hostInput = screen.getByLabelText('Host 1')
+    // Invalid host
+    await userEvent.type(hostInput, 'not a host')
+    await userEvent.tab()
+    expect(screen.getByText(/invalid host/i)).toBeInTheDocument()
+    // Valid host
+    await userEvent.clear(hostInput)
+    await userEvent.type(hostInput, 'google.com')
+    await userEvent.tab()
+    expect(screen.queryByText(/invalid host/i)).not.toBeInTheDocument()
+    // Valid host with dot
+    await userEvent.clear(hostInput)
+    await userEvent.type(hostInput, '.example.com')
+    await userEvent.tab()
+    expect(screen.queryByText(/invalid host/i)).not.toBeInTheDocument()
+  })
+
+  it('includes allowedHosts in the API payload when submitting the form', async () => {
+    const mockInstallServerMutation = vi.fn()
+    mockUseRunFromRegistry.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      checkServerStatus: vi.fn(),
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    await userEvent.type(
+      screen.getByLabelText('Server name'),
+      'my-network-server',
+      {
+        initialSelectionStart: 0,
+        initialSelectionEnd: REGISTRY_SERVER.name?.length,
+      }
+    )
+    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    await userEvent.click(networkTab)
+    const switchLabel = screen.getByLabelText('Network isolation')
+    await userEvent.click(switchLabel)
+    const addHostButton = screen.getByRole('button', { name: /add a host/i })
+    await userEvent.click(addHostButton)
+    const hostInput = screen.getByLabelText('Host 1')
+    await userEvent.type(hostInput, 'foo.bar.com')
+    // Switch back to configuration tab to submit
+    const configTab = screen.getByRole('tab', { name: /configuration/i })
+    await userEvent.click(configTab)
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            permission_profile: expect.objectContaining({
+              network: expect.objectContaining({
+                outbound: expect.objectContaining({
+                  allow_host: ['foo.bar.com'],
+                }),
+              }),
+            }),
+          }),
+        }),
+        expect.any(Object)
+      )
+    })
+  })
+
+  it('is empty by default and can handle multiple hosts', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    await userEvent.click(networkTab)
+    const switchLabel = screen.getByLabelText('Network isolation')
+    await userEvent.click(switchLabel)
+    // Should be empty by default
+    expect(screen.queryByLabelText('Host 1')).not.toBeInTheDocument()
+    // Add two hosts
+    const addHostButton = screen.getByRole('button', { name: /add a host/i })
+    await userEvent.click(addHostButton)
+    await userEvent.type(screen.getByLabelText('Host 1'), 'foo.bar.com')
+    await userEvent.click(addHostButton)
+    await userEvent.type(screen.getByLabelText('Host 2'), 'google.com')
+    // Both should be present
+    expect(screen.getByLabelText('Host 1')).toBeInTheDocument()
+    expect(screen.getByLabelText('Host 2')).toBeInTheDocument()
+  })
+})

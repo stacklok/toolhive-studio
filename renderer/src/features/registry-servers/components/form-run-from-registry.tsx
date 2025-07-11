@@ -335,6 +335,14 @@ const validatePort = (val: string) => {
   return null
 }
 
+// Add validateHost function
+const validateHost = (val: string) => {
+  if (!val.trim()) return 'Host is required'
+  // Allow leading dot, then domain pattern
+  if (!/^\.?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(val)) return 'Invalid host'
+  return null
+}
+
 export function FormRunFromRegistry({
   server,
   isOpen,
@@ -384,6 +392,7 @@ export function FormRunFromRegistry({
         networkIsolation: z.boolean().optional(),
         allowedProtocols: z.array(z.string()).optional(),
         allowedPorts: z.array(z.number().int().min(1).max(65535)).optional(),
+        allowedHosts: z.array(z.string()).optional(),
       }),
     [groupedEnvVars, data?.workloads]
   )
@@ -393,6 +402,7 @@ export function FormRunFromRegistry({
       networkIsolation?: boolean
       allowedProtocols?: string[]
       allowedPorts?: string[]
+      allowedHosts?: string[]
     }
   >({
     resolver: zodV4Resolver(formSchema),
@@ -408,7 +418,8 @@ export function FormRunFromRegistry({
       })),
       networkIsolation: false,
       allowedProtocols: [],
-      allowedPorts: [], // string[]
+      allowedPorts: [],
+      allowedHosts: [],
     },
   })
 
@@ -417,6 +428,7 @@ export function FormRunFromRegistry({
       networkIsolation?: boolean
       allowedProtocols?: string[]
       allowedPorts?: string[]
+      allowedHosts?: string[]
     }
   ) => {
     if (!server) return
@@ -432,7 +444,10 @@ export function FormRunFromRegistry({
         network: {
           outbound: {
             insecure_allow_all: false,
-            allow_host: [],
+            allow_host:
+              Array.isArray(data.allowedHosts) && data.allowedHosts.length > 0
+                ? data.allowedHosts.filter((h) => !!h)
+                : [],
             allow_port:
               Array.isArray(data.allowedPorts) && data.allowedPorts.length > 0
                 ? data.allowedPorts
@@ -650,6 +665,21 @@ export function FormRunFromRegistry({
                                   inputLabelPrefix="Port"
                                   addButtonText="Add a port"
                                   validate={validatePort}
+                                />
+                              )}
+                            />
+                            {/* Allowed Hosts */}
+                            <Controller
+                              control={form.control}
+                              name="allowedHosts"
+                              render={({ field: hostsField }) => (
+                                <DynamicArrayField
+                                  label="Allowed Hosts"
+                                  value={hostsField.value || []}
+                                  onChange={hostsField.onChange}
+                                  inputLabelPrefix="Host"
+                                  addButtonText="Add a host"
+                                  validate={validateHost}
                                 />
                               )}
                             />
