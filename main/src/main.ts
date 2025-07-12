@@ -213,7 +213,7 @@ function createWindow() {
     ...getPlatformSpecificWindowOptions(),
   })
 
-  // minimise-to-tray instead of close
+  // Minimize-to-tray instead of close
   mainWindow.on('minimize', () => {
     if (shouldStartHidden || tray) mainWindow.hide()
   })
@@ -307,8 +307,10 @@ app.on('window-all-closed', () => {
 
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
+    log.info('No main window found, creating new one')
     mainWindow = createWindow()
   } else {
+    log.info('Main window found, showing it')
     mainWindow?.show()
   }
 })
