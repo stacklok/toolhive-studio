@@ -202,14 +202,26 @@ const createMenuTemplate = (currentTray: Tray, toolHiveIsRunning: boolean) => [
 
 const createClickHandler = () => {
   let lastClickTime = 0
+  let lastWindowState = false
 
   const isRapidClick = (now: number) => now - lastClickTime < 300
 
   const toggleWindow = (window: BrowserWindow) => {
-    if (window.isVisible() && !window.isMinimized()) {
+    setTimeout(() => {
+      log.info('TOGGLE WIN: ', {
+        winIsVisible: window.isVisible(),
+        winIsMinimized: window.isMinimized(),
+        check: window.isVisible() && !window.isMinimized(),
+        lastWindowState,
+      })
+    }, 100)
+
+    if (lastWindowState) {
       hideWindow(window)
+      lastWindowState = false
     } else {
       showWindowWithFocus(window)
+      lastWindowState = true
     }
   }
 
