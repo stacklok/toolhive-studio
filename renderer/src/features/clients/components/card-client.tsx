@@ -9,12 +9,6 @@ import { Switch } from '@/common/components/ui/switch'
 import { useMutationRegisterClient } from '../hooks/use-mutation-register-client'
 import { useMutationUnregisterClient } from '../hooks/use-mutation-unregister-client'
 import { trackEvent } from '@/common/lib/analytics'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/common/components/ui/tooltip'
-import { InfoIcon } from 'lucide-react'
 
 // There is an issue with openAPI generator in BE, similar issue https://github.com/stacklok/toolhive/issues/780
 const CLIENT_TYPE_LABEL_MAP = {
@@ -73,17 +67,6 @@ export function CardClient({ client }: { client: ClientMcpClientStatus }) {
             {client.registered ? 'Connected' : 'Disconnected'}
           </div>
         </div>
-
-        {client.client_type === 'claude-code' && (
-          <Tooltip>
-            <TooltipTrigger className="text-muted-foreground flex items-center gap-2">
-              <InfoIcon className="size-4" />
-            </TooltipTrigger>
-            <TooltipContent className="w-96">
-              <p>Restart Claude Code to activate new MCP servers</p>
-            </TooltipContent>
-          </Tooltip>
-        )}
       </CardContent>
     </Card>
   )
