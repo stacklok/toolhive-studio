@@ -116,6 +116,8 @@ autoUpdater.on('update-downloaded', (_, releaseNotes, releaseName) => {
       if (returnValue.response === 0) {
         log.info('🔄 Starting restart process...')
 
+        isInstallingUpdate = true
+
         try {
           log.info('📤 Sending graceful-exit to renderer')
           mainWindow?.webContents.send('graceful-exit')
@@ -134,17 +136,9 @@ autoUpdater.on('update-downloaded', (_, releaseNotes, releaseName) => {
           autoUpdater.quitAndInstall()
 
           log.error('❌ quitAndInstall() did not restart the app')
-
-          setTimeout(() => {
-            log.info('🔄 Fallback: Manual restart')
-            app.relaunch()
-            app.quit()
-          }, 2000)
         } catch (error) {
           log.error('❌ Error during restart process:', error)
-          log.info('🔄 Emergency fallback restart')
-          app.relaunch()
-          app.quit()
+          isInstallingUpdate = false
         }
       } else {
         log.info('⏰ User chose Later - showing toast notification')
@@ -169,8 +163,17 @@ let isQuitting = false
 
 let tearingDown = false
 
+let isInstallingUpdate = false
+
 /** Hold the quit, run teardown, then really exit. */
 export async function blockQuit(source: string, event?: Electron.Event) {
+  if (isInstallingUpdate) {
+    log.info(
+      `[${source}] Skipping graceful teardown during update installation`
+    )
+    return
+  }
+
   if (tearingDown) return
   tearingDown = true
   isQuitting = true
@@ -514,6 +517,7 @@ ipcMain.handle('install-update-and-restart', async () => {
   // This will prevent the graceful shutdown process
   isQuitting = true
   tearingDown = true
+  isInstallingUpdate = true // Set the flag for update installation
 
   // Stop ToolHive and servers immediately without graceful shutdown
   try {
