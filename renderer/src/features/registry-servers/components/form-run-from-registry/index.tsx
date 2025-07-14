@@ -33,25 +33,25 @@ import { useMemo, useState } from 'react'
 import { Label } from '@/common/components/ui/label'
 import { cn } from '@/common/lib/utils'
 import { AsteriskIcon } from 'lucide-react'
-import { groupEnvVars } from '../lib/group-env-vars'
+import { groupEnvVars } from '../../lib/group-env-vars'
 import {
   getFormSchemaRunFromRegistry,
   type FormSchemaRunFromRegistry,
-} from '../lib/get-form-schema-run-from-registry'
+} from '../../lib/get-form-schema-run-from-registry'
 import { FormComboboxSecretStore } from '@/common/components/secrets/form-combobox-secrets-store'
 import { useQuery } from '@tanstack/react-query'
 import { getApiV1BetaWorkloadsOptions } from '@/common/api/generated/@tanstack/react-query.gen'
-import { useRunFromRegistry } from '../hooks/use-run-from-registry'
-import { LoadingStateAlert } from './loading-state-alert'
-import { AlertErrorFormSubmission } from './alert-error-form-submission'
+import { useRunFromRegistry } from '../../hooks/use-run-from-registry'
+import { LoadingStateAlert } from '../loading-state-alert'
+import { AlertErrorFormSubmission } from '../alert-error-form-submission'
 import { Tabs, TabsList, TabsTrigger } from '@/common/components/ui/tabs'
-import type { GroupedEnvVars } from '../lib/group-env-vars'
+import type { GroupedEnvVars } from '../../lib/group-env-vars'
 import { NetworkIsolationTabContent } from './network-isolation-tab-content'
 import z from 'zod/v4'
 
 /**
  * Renders an asterisk icon & tooltip for required fields.
- * NOTE: USes absolute positioning & assumes that it is being rendered inside a container with `position: relative`.
+ * NOTE: uses absolute positioning & assumes that it is being rendered inside a container with `position: relative`.
  */
 function TooltipValueRequired() {
   return (
@@ -64,11 +64,7 @@ function TooltipValueRequired() {
   )
 }
 
-/**
- * A row containing the key/value pair for a SECRET.
- * Also composes the UI to load in a previously saved secret.
- */
-function SecretRow({
+export function SecretRow({
   secret,
   form,
   index,
@@ -147,10 +143,7 @@ function SecretRow({
   )
 }
 
-/**
- * A row containing the key/value pair for an ENV VAR.
- */
-function EnvVarRow({
+export function EnvVarRow({
   envVar,
   form,
   index,
