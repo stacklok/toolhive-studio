@@ -72,51 +72,90 @@ app.on('ready', () => {
   }, 2000)
 })
 
-autoUpdater.on('update-downloaded', () => {
-  if (!mainWindow) {
-    return
-  }
-
-  log.info('Update downloaded — sending to renderer')
-  mainWindow.webContents.send('update-downloaded')
+autoUpdater.on('before-quit-for-update', () => {
+  log.info('🔄 before-quit-for-update event fired')
 })
 
 autoUpdater.on('update-downloaded', (_, releaseNotes, releaseName) => {
-  if (!mainWindow?.isFocused()) {
+  log.info('🔄 Update downloaded - showing dialog')
+  log.info(
+    `📦 Release info: ${releaseName}, Notes: ${releaseNotes?.substring(0, 50)}...`
+  )
+
+  if (!mainWindow) {
+    log.error('❌ MainWindow not available for update dialog')
     return
   }
+
+  if (mainWindow.isMinimized()) {
+    mainWindow.restore()
+  }
+  mainWindow.focus()
+  mainWindow.show()
+
+  const newVersion = releaseName || 'Unknown version'
 
   const dialogOpts = {
     type: 'info' as const,
     buttons: ['Restart', 'Later'],
-    title: 'Application Update',
-    message: process.platform === 'win32' ? releaseNotes : releaseName,
-    detail:
-      'A new version has been downloaded. Restart the application to apply the updates.',
+    title: `Release alpha ${newVersion}`,
+    message:
+      'A new version has been downloaded.\nRestart the application to apply the updates.',
+    detail: `Ready to install ${newVersion}`,
   }
 
-  dialog.showMessageBox(mainWindow!, dialogOpts).then(async (returnValue) => {
-    if (returnValue.response === 0) {
-      log.info(`User clicked Restart for version ${releaseNotes}`)
+  log.info('📱 Showing update dialog...')
 
-      mainWindow?.webContents.send('graceful-exit')
+  dialog
+    .showMessageBox(mainWindow, dialogOpts)
+    .then(async (returnValue) => {
+      log.info(
+        `🎯 User clicked: ${returnValue.response === 0 ? 'Restart' : 'Later'}`
+      )
 
-      // Give renderer time to navigate to shutdown page
-      await delay(500)
+      if (returnValue.response === 0) {
+        log.info('🔄 Starting restart process...')
 
-      const port = getToolhivePort()
-      if (port) {
-        await stopAllServers(binPath, port)
+        try {
+          log.info('📤 Sending graceful-exit to renderer')
+          mainWindow?.webContents.send('graceful-exit')
+
+          log.info('⏳ Waiting 500ms for renderer...')
+          await delay(500)
+
+          const port = getToolhivePort()
+          if (port) {
+            log.info('🛑 Stopping servers before update')
+            await stopAllServers(binPath, port)
+            log.info('✅ Servers stopped successfully')
+          }
+
+          log.info('🚀 Calling autoUpdater.quitAndInstall()...')
+          autoUpdater.quitAndInstall()
+
+          log.error('❌ quitAndInstall() did not restart the app')
+
+          setTimeout(() => {
+            log.info('🔄 Fallback: Manual restart')
+            app.relaunch()
+            app.quit()
+          }, 2000)
+        } catch (error) {
+          log.error('❌ Error during restart process:', error)
+          log.info('🔄 Emergency fallback restart')
+          app.relaunch()
+          app.quit()
+        }
+      } else {
+        log.info('⏰ User chose Later - showing toast notification')
+        if (mainWindow) {
+          mainWindow.webContents.send('update-downloaded')
+        }
       }
-
-      autoUpdater.quitAndInstall()
-    } else {
-      log.info(`User clicked Later for version ${releaseName}`)
-      if (mainWindow) {
-        mainWindow.webContents.send('update-downloaded')
-      }
-    }
-  })
+    })
+    .catch((error) => {
+      log.error('❌ Error showing dialog:', error)
+    })
 })
 
 autoUpdater.on('error', (message) => {
