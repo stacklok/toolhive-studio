@@ -7,6 +7,7 @@ import {
   session,
   shell,
   autoUpdater,
+  dialog,
 } from 'electron'
 import path from 'node:path'
 import { updateElectronApp } from 'update-electron-app'
@@ -78,6 +79,44 @@ autoUpdater.on('update-downloaded', () => {
 
   log.info('Update downloaded — sending to renderer')
   mainWindow.webContents.send('update-downloaded')
+})
+
+autoUpdater.on('update-downloaded', (_, releaseNotes, releaseName) => {
+  if (!mainWindow?.isFocused()) {
+    return
+  }
+
+  const dialogOpts = {
+    type: 'info' as const,
+    buttons: ['Restart', 'Later'],
+    title: 'Application Update',
+    message: process.platform === 'win32' ? releaseNotes : releaseName,
+    detail:
+      'A new version has been downloaded. Restart the application to apply the updates.',
+  }
+
+  dialog.showMessageBox(mainWindow!, dialogOpts).then(async (returnValue) => {
+    if (returnValue.response === 0) {
+      log.info(`User clicked Restart for version ${releaseNotes}`)
+
+      mainWindow?.webContents.send('graceful-exit')
+
+      // Give renderer time to navigate to shutdown page
+      await delay(500)
+
+      const port = getToolhivePort()
+      if (port) {
+        await stopAllServers(binPath, port)
+      }
+
+      autoUpdater.quitAndInstall()
+    } else {
+      log.info(`User clicked Later for version ${releaseName}`)
+      if (mainWindow) {
+        mainWindow.webContents.send('update-downloaded')
+      }
+    }
+  })
 })
 
 autoUpdater.on('error', (message) => {
@@ -311,6 +350,12 @@ app.on('activate', () => {
   } else {
     mainWindow?.show()
   }
+})
+
+app.on('will-finish-launching', () => {
+  // Questo evento viene chiamato quando l'app sta per terminare il lancio
+  // Utile per preparare la gestione del restart
+  log.info('App will finish launching - preparing for potential restart')
 })
 
 app.on('before-quit', (e) => blockQuit('before-quit', e))

@@ -79,7 +79,7 @@ const config: ForgeConfig = {
           owner: 'stacklok',
           name: 'toolhive-studio',
         },
-        draft: false,
+        draft: true,
         prerelease: false,
       },
     },
