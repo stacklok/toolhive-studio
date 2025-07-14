@@ -1,7 +1,7 @@
 import { getHealth } from '@/common/api/generated'
 import { Main } from '@/common/components/layout/main'
 import { TopNav } from '@/common/components/layout/top-nav'
-import { Error } from '@/common/components/error'
+import { Error as ErrorComponent } from '@/common/components/error'
 import { NotFound } from '@/common/components/not-found'
 import type { QueryClient } from '@tanstack/react-query'
 import {
@@ -66,7 +66,9 @@ export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
 }>()({
   component: RootComponent,
-  errorComponent: ({ error }) => <Error error={error} />,
+  errorComponent: ({ error }) => {
+    return <ErrorComponent error={error} />
+  },
   notFoundComponent: () => <NotFound />,
   onError: (error) => {
     log.error(error)
@@ -86,12 +88,18 @@ export const Route = createRootRouteWithContext<{
       retry: 3,
       retryDelay: 300,
     })
-    await queryClient.ensureQueryData({
-      queryKey: ['health'],
-      queryFn: () => getHealth({}),
-      retry: 2,
-      retryDelay: 200,
-    })
+    try {
+      await queryClient.ensureQueryData({
+        queryKey: ['health'],
+        queryFn: () => getHealth({ throwOnError: true }),
+        retry: 2,
+        retryDelay: 200,
+        staleTime: 0,
+        gcTime: 0,
+      })
+    } catch (error) {
+      throw new Error(`${error}`)
+    }
   },
   loader: async ({ context: { queryClient } }) =>
     await setupSecretProvider(queryClient),
