@@ -62,8 +62,17 @@ export function NetworkIsolationTabContent({
               {/* Allowed Protocols */}
               <Controller
                 control={form.control}
-                name="allowedProtocols"
-                render={({ field }) => <AllowedProtocolsField field={field} />}
+                name="allowedHosts"
+                render={({ field: hostsField }) => (
+                  <DynamicArrayField
+                    label="Allowed Hosts"
+                    value={hostsField.value || []}
+                    onChange={hostsField.onChange}
+                    inputLabelPrefix="Host"
+                    addButtonText="Add a host"
+                    validate={validateHost}
+                  />
+                )}
               />
               <Controller
                 control={form.control}
@@ -85,17 +94,8 @@ export function NetworkIsolationTabContent({
               />
               <Controller
                 control={form.control}
-                name="allowedHosts"
-                render={({ field: hostsField }) => (
-                  <DynamicArrayField
-                    label="Allowed Hosts"
-                    value={hostsField.value || []}
-                    onChange={hostsField.onChange}
-                    inputLabelPrefix="Host"
-                    addButtonText="Add a host"
-                    validate={validateHost}
-                  />
-                )}
+                name="allowedProtocols"
+                render={({ field }) => <AllowedProtocolsField field={field} />}
               />
             </>
           )}
