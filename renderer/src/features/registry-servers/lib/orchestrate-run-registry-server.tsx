@@ -122,9 +122,7 @@ export function prepareCreateWorkloadData(
       ? data.cmd_arguments?.split(' ').filter(Boolean)
       : [],
     target_port: server.target_port,
-    ...(data.permission_profile
-      ? { permission_profile: data.permission_profile }
-      : {}),
+    permission_profile: data.permission_profile,
   }
 }
 

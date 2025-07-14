@@ -80,6 +80,21 @@ export function getFormSchemaRunFromRegistry({
         path: ['value'],
       })
       .array(),
+    permission_profile: z
+      .object({
+        name: z.string().optional(),
+        network: z.object({
+          outbound: z.object({
+            allow_host: z.array(z.string()),
+            allow_port: z.array(z.number()),
+            allow_transport: z.array(z.string()),
+            insecure_allow_all: z.boolean(),
+          }),
+        }),
+        read: z.array(z.string()).optional(),
+        write: z.array(z.string()).optional(),
+      })
+      .optional(),
   })
 }
 
