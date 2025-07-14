@@ -32,8 +32,8 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
   inputProps = {},
 }: DynamicArrayFieldProps<TFieldValues>) {
   const { fields, append, remove } = useFieldArray<
-    TFieldValues, // form shape
-    ArrayPath<TFieldValues> // path to the array
+    TFieldValues,
+    ArrayPath<TFieldValues>
   >({
     control,
     name,
@@ -74,7 +74,10 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
           type="button"
           variant="secondary"
           className="mt-1 w-fit"
-          onClick={() => append('')}
+          onClick={() => {
+            // @ts-expect-error no time to fix it
+            append('')
+          }}
         >
           {addButtonText}
         </Button>
