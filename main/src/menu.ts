@@ -7,14 +7,14 @@ function createAutoLaunchItem(
   accelerator: string,
   trayRef: Electron.Tray | null
 ) {
-  const currentStatus = getAutoLaunchStatus()
   return {
     label: 'Start on Login',
     type: 'checkbox' as const,
-    checked: currentStatus,
+    checked: getAutoLaunchStatus(),
     accelerator,
     click: () => {
       try {
+        const currentStatus = getAutoLaunchStatus()
         setAutoLaunch(!currentStatus)
         if (trayRef) {
           updateTrayStatus(trayRef, true)
