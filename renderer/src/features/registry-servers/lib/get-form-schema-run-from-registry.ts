@@ -101,7 +101,7 @@ export function getFormSchemaRunFromRegistry({
       })
     ),
     allowedPorts: z.array(
-      z.number().refine((val) => validatePort(val.toString()) === null, {
+      z.string().refine((val) => validatePort(val.toString()) === null, {
         message: 'Invalid port',
       })
     ),
