@@ -38,7 +38,7 @@ function refineEnvVar(
   return true
 }
 
-export const validatePort = (val: string) => {
+const validatePort = (val: string) => {
   if (!val.trim()) return 'Port is required'
   if (!/^[0-9]+$/.test(val)) return 'Port must be a number'
   const num = Number(val)
@@ -46,7 +46,7 @@ export const validatePort = (val: string) => {
   return null
 }
 
-export const validateHost = (val: string) => {
+const validateHost = (val: string) => {
   if (!val.trim()) return 'Host is required'
   if (!/^\.?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(val)) return 'Invalid host'
   return null
