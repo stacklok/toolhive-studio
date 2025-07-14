@@ -71,8 +71,12 @@ export function NetworkIsolationTabContent({
                 render={({ field: portsField }) => (
                   <DynamicArrayField
                     label="Allowed Ports"
-                    value={portsField.value || []}
-                    onChange={portsField.onChange}
+                    value={portsField.value?.map(String) || []}
+                    onChange={(arr) =>
+                      portsField.onChange(
+                        arr.map((v) => (v === '' ? '' : Number(v)))
+                      )
+                    }
                     inputLabelPrefix="Port"
                     addButtonText="Add a port"
                     validate={validatePort}
