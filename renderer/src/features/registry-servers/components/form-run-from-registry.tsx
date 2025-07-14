@@ -326,7 +326,6 @@ interface FormRunFromRegistryProps {
   onOpenChange: (open: boolean) => void
 }
 
-// Validation function for port numbers
 const validatePort = (val: string) => {
   if (!val.trim()) return 'Port is required'
   if (!/^[0-9]+$/.test(val)) return 'Port must be a number'
@@ -335,10 +334,8 @@ const validatePort = (val: string) => {
   return null
 }
 
-// Add validateHost function
 const validateHost = (val: string) => {
   if (!val.trim()) return 'Host is required'
-  // Allow leading dot, then domain pattern
   if (!/^\.?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(val)) return 'Invalid host'
   return null
 }
@@ -653,7 +650,6 @@ export function FormRunFromRegistry({
                                 </div>
                               )}
                             />
-                            {/* Allowed Ports */}
                             <Controller
                               control={form.control}
                               name="allowedPorts"
@@ -668,7 +664,6 @@ export function FormRunFromRegistry({
                                 />
                               )}
                             />
-                            {/* Allowed Hosts */}
                             <Controller
                               control={form.control}
                               name="allowedHosts"
