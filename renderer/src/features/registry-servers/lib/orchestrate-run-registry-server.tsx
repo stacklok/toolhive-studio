@@ -5,7 +5,6 @@ import {
   type SecretsSecretParameter,
   type V1CreateRequest,
   type V1CreateSecretResponse,
-  type PermissionsProfile,
 } from '@/common/api/generated'
 import type { FormSchemaRunFromRegistry } from './get-form-schema-run-from-registry'
 import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
@@ -105,12 +104,28 @@ export async function saveSecrets(
  */
 export function prepareCreateWorkloadData(
   server: RegistryImageMetadata,
-  data: FormSchemaRunFromRegistry & { permission_profile?: PermissionsProfile },
+  data: FormSchemaRunFromRegistry,
   secrets: SecretsSecretParameter[] = []
 ): V1CreateRequest {
   const envVars: Array<string> = data.envVars.map(
     (envVar) => `${envVar.name}=${envVar.value}`
   )
+
+  // Extract and transform network isolation fields
+  const { allowedHosts, allowedPorts, allowedProtocols, networkIsolation } =
+    data
+  const permission_profile = networkIsolation
+    ? {
+        network: {
+          outbound: {
+            allow_host: allowedHosts,
+            allow_port: allowedPorts,
+            allow_transport: allowedProtocols ?? [],
+            insecure_allow_all: false,
+          },
+        },
+      }
+    : undefined
 
   return {
     name: data.serverName,
@@ -122,7 +137,8 @@ export function prepareCreateWorkloadData(
       ? data.cmd_arguments?.split(' ').filter(Boolean)
       : [],
     target_port: server.target_port,
-    permission_profile: data.permission_profile,
+    permission_profile,
+    // ...rest does not include the omitted fields
   }
 }
 
