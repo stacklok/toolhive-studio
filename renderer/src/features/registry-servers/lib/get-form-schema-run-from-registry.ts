@@ -95,17 +95,19 @@ export function getFormSchemaRunFromRegistry({
       })
       .array(),
     networkIsolation: z.boolean(),
-    allowedHosts: z.array(
-      z.string().refine((val) => validateHost(val) === null, {
+    allowedHosts: z
+      .string()
+      .refine((val) => validateHost(val) === null, {
         message: 'Invalid host',
       })
-    ),
-    allowedPorts: z.array(
-      z.string().refine((val) => validatePort(val.toString()) === null, {
+      .array(),
+    allowedPorts: z
+      .string()
+      .refine((val) => validatePort(val.toString()) === null, {
         message: 'Invalid port',
       })
-    ),
-    allowedProtocols: z.array(z.string()).optional(),
+      .array(),
+    allowedProtocols: z.string().array(),
   })
 }
 

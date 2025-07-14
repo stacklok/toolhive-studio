@@ -1,4 +1,4 @@
-import React  from 'react'
+import React from 'react'
 import { Button } from '@/common/components/ui/button'
 import { Input } from '@/common/components/ui/input'
 import { Label } from '@/common/components/ui/label'
@@ -8,37 +8,42 @@ import {
   type Control,
   type FieldValues,
   Controller,
+  type ArrayPath,
   type Path,
-} from "react-hook-form";
+} from 'react-hook-form'
 
-interface DynamicArrayFieldProps<TFieldValues extends FieldValues = FieldValues> {
-  control: Control<TFieldValues>;
-  name: Path<TFieldValues>;            
-  label: string;
-  inputLabelPrefix?: string;
-  addButtonText?: string;
-  inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
+interface DynamicArrayFieldProps<
+  TFieldValues extends FieldValues = FieldValues,
+> {
+  control: Control<TFieldValues>
+  name: ArrayPath<TFieldValues>
+  label: string
+  inputLabelPrefix?: string
+  addButtonText?: string
+  inputProps?: React.InputHTMLAttributes<HTMLInputElement>
 }
-
 
 export function DynamicArrayField<TFieldValues extends FieldValues>({
   control,
   name,
   label,
-  inputLabelPrefix = "Item",
-  addButtonText = "Add",
+  inputLabelPrefix = 'Item',
+  addButtonText = 'Add',
   inputProps = {},
 }: DynamicArrayFieldProps<TFieldValues>) {
-  const { fields, append, remove } = useFieldArray<TFieldValues>({
+  const { fields, append, remove } = useFieldArray<
+    TFieldValues, // form shape
+    ArrayPath<TFieldValues> // path to the array
+  >({
     control,
     name,
-  });
+  })
 
   return (
     <div className="mt-6 w-full">
       <Label>{label}</Label>
 
-      <div className="flex flex-col gap-2 mt-2">
+      <div className="mt-2 flex flex-col gap-2">
         {fields.map((field, idx) => (
           <div key={field.id} className="flex items-start gap-2">
             <Controller
@@ -69,11 +74,11 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
           type="button"
           variant="secondary"
           className="mt-1 w-fit"
-          onClick={() => append("")}          // append an empty string
+          onClick={() => append('')}
         >
           {addButtonText}
         </Button>
       </div>
     </div>
-  );
+  )
 }

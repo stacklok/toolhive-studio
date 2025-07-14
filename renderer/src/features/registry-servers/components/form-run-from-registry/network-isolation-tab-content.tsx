@@ -50,7 +50,7 @@ export function NetworkIsolationTabContent({
                   control={form.control}
                   name="allowedHosts"
                   render={() => (
-                    <DynamicArrayField
+                    <DynamicArrayField<FormSchemaRunFromRegistry>
                       name="allowedHosts"
                       label="Allowed Hosts"
                       inputLabelPrefix="Host"
@@ -63,7 +63,7 @@ export function NetworkIsolationTabContent({
                   control={form.control}
                   name="allowedPorts"
                   render={() => (
-                    <DynamicArrayField
+                    <DynamicArrayField<FormSchemaRunFromRegistry>
                       name="allowedPorts"
                       label="Allowed Ports"
                       control={form.control}
