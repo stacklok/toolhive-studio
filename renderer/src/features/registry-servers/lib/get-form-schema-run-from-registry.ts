@@ -1,6 +1,7 @@
 import type {
   RegistryEnvVar,
   WorkloadsWorkload,
+  PermissionsProfile,
 } from '@/common/api/generated/types.gen'
 import z from 'zod/v4'
 import type { GroupedEnvVars } from './group-env-vars'
@@ -111,4 +112,6 @@ export function getFormSchemaRunFromRegistry({
 
 export type FormSchemaRunFromRegistry = z.infer<
   ReturnType<typeof getFormSchemaRunFromRegistry>
->
+> & {
+  permission_profile?: PermissionsProfile
+}

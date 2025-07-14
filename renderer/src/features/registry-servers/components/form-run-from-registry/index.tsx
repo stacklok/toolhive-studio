@@ -101,35 +101,53 @@ export function FormRunFromRegistry({
   })
 
   const onSubmitForm = (data: FormSchemaRunFromRegistry) => {
-    if (!server) return
+    if (!server) return;
 
-    setIsSubmitting(true)
-    if (error) {
-      setError(null)
-    }
+    setIsSubmitting(true);
+    if (error) setError(null);
 
+    // Transform network isolation fields into permission_profile
+    const permission_profile = data.networkIsolation
+      ? {
+          network: {
+            outbound: {
+              allow_host: data.allowedHosts,
+              allow_port: data.allowedPorts,
+              allow_transport: data.allowedProtocols ?? [],
+              insecure_allow_all: false,
+            },
+          },
+        }
+      : undefined;
+
+    // Omit allowedHosts, allowedPorts, allowedProtocols from the payload
+    const { allowedHosts, allowedPorts, allowedProtocols, networkIsolation, ...rest } = data;
+    // The payload shape differs from the form schema, so we cast to 'any' to satisfy the API
     installServerMutation(
       {
         server,
-        data,
+        data: {
+          ...rest,
+          permission_profile,
+        } as any,
       },
       {
         onSuccess: () => {
-          checkServerStatus(data)
-          onOpenChange(false)
+          checkServerStatus(data);
+          onOpenChange(false);
         },
         onSettled: (_, error) => {
-          setIsSubmitting(false)
+          setIsSubmitting(false);
           if (!error) {
-            form.reset()
+            form.reset();
           }
         },
         onError: (error) => {
-          setError(typeof error === 'string' ? error : error.message)
+          setError(typeof error === 'string' ? error : error.message);
         },
       }
-    )
-  }
+    );
+  };
 
   const [tabValue, setTabValue] = useState('configuration')
 
