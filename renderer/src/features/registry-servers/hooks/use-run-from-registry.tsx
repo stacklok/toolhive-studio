@@ -27,6 +27,7 @@ import { Button } from '@/common/components/ui/button'
 import { prepareSecretsWithoutNamingCollision } from '@/common/lib/secrets/prepare-secrets-without-naming-collision'
 import { Link } from '@tanstack/react-router'
 import { trackEvent } from '@/common/lib/analytics'
+import { restartClientNotification } from '@/features/mcp-servers/lib/restart-client-notification'
 
 type InstallServerCheck = (
   data: FormSchemaRunFromRegistry
@@ -50,7 +51,10 @@ export function useRunFromRegistry({
   })
   const { mutateAsync: createWorkload } = useMutation({
     ...postApiV1BetaWorkloadsMutation(),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      await restartClientNotification({
+        queryClient,
+      })
       trackEvent(`Workload ${data.name} started`, {
         workload: data.name,
         'route.pathname': '/registry',

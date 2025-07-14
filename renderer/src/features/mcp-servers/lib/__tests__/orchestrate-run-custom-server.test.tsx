@@ -13,6 +13,10 @@ vi.mock('@sentry/electron/renderer', () => ({
   startSpan: vi.fn(),
 }))
 
+vi.mock('../restart-client-notification', () => ({
+  restartClientNotification: vi.fn(),
+}))
+
 const mockStartSpan = vi.mocked(Sentry.startSpan)
 
 vi.mock('sonner', async () => {

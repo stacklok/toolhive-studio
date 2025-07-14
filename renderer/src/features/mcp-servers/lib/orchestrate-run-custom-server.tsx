@@ -20,6 +20,7 @@ import type { FormSchemaRunMcpCommand } from './form-schema-run-mcp-server-with-
 import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
 import { prepareSecretsWithoutNamingCollision } from '@/common/lib/secrets/prepare-secrets-without-naming-collision'
 import { trackEvent } from '@/common/lib/analytics'
+import { restartClientNotification } from './restart-client-notification'
 
 type SaveSecretFn = UseMutateAsyncFunction<
   V1CreateSecretResponse,
@@ -134,7 +135,6 @@ function transformTypeSpecificData(
         name: values.name,
         transport: values.transport,
         image: values.image,
-        target_port: values.target_port,
       }
     }
     case 'package_manager': {
@@ -142,7 +142,6 @@ function transformTypeSpecificData(
         name: values.name,
         transport: values.transport,
         image: `${values.protocol}://${values.package_name}`,
-        target_port: values.target_port,
       }
     }
     default:
@@ -291,6 +290,9 @@ export async function orchestrateRunCustomServer({
     try {
       await createWorkload({
         body: createRequest,
+      })
+      await restartClientNotification({
+        queryClient,
       })
       trackEvent(`Workload ${data.name} started`, {
         workload: data.name,

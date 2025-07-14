@@ -37,33 +37,35 @@ export function CardClient({ client }: { client: ClientMcpClientStatus }) {
           ] ?? client.client_type}
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex items-center gap-2 px-4">
-        <Switch
-          checked={client.registered}
-          onCheckedChange={() => {
-            if (client.registered) {
-              unregisterClient({
-                path: {
-                  name: client.client_type ?? '',
-                },
-              })
-              trackEvent(`Client ${client.client_type} unregistered`, {
-                client: client.client_type,
-              })
-            } else {
-              registerClient({
-                body: {
-                  name: client.client_type ?? '',
-                },
-              })
-              trackEvent(`Client ${client.client_type} registered`, {
-                client: client.client_type,
-              })
-            }
-          }}
-        />
-        <div className="text-muted-foreground text-sm">
-          {client.registered ? 'Connected' : 'Disconnected'}
+      <CardContent className="flex items-center justify-between gap-2 px-4">
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={client.registered}
+            onCheckedChange={() => {
+              if (client.registered) {
+                unregisterClient({
+                  path: {
+                    name: client.client_type ?? '',
+                  },
+                })
+                trackEvent(`Client ${client.client_type} unregistered`, {
+                  client: client.client_type,
+                })
+              } else {
+                registerClient({
+                  body: {
+                    name: client.client_type ?? '',
+                  },
+                })
+                trackEvent(`Client ${client.client_type} registered`, {
+                  client: client.client_type,
+                })
+              }
+            }}
+          />
+          <div className="text-muted-foreground text-sm">
+            {client.registered ? 'Connected' : 'Disconnected'}
+          </div>
         </div>
       </CardContent>
     </Card>
