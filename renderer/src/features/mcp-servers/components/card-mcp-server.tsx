@@ -230,7 +230,12 @@ export function CardMcpServer({
                 <MoreVertical className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" role="menu" className="w-80">
+            <DropdownMenuContent
+              collisionPadding={10}
+              align="end"
+              role="menu"
+              className="w-80"
+            >
               <div className="flex items-center gap-2 p-2">
                 <Input value={url} readOnly className="font-mono text-sm" />
                 <Button

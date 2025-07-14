@@ -116,7 +116,7 @@ export function FormFieldsRunMcpCommand({
           <FormItem>
             <div className="flex items-center gap-1">
               <FormLabel htmlFor={field.name}>Target port</FormLabel>
-              <TooltipInfoIcon>
+              <TooltipInfoIcon className="max-w-72">
                 Target port to expose from the container. If not specified,
                 ToolHive will automatically assign a random port.
               </TooltipInfoIcon>
