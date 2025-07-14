@@ -6,8 +6,6 @@ import { AlertTriangle } from 'lucide-react'
 import { DynamicArrayField } from '../dynamic-array-field'
 import type { UseFormReturn } from 'react-hook-form'
 import {
-  validateHost,
-  validatePort,
   type FormSchemaRunFromRegistry,
 } from '../../lib/get-form-schema-run-from-registry'
 import { AllowedProtocolsField } from './allowed-protocols-field'
@@ -55,12 +53,11 @@ export function NetworkIsolationTabContent({
                   name="allowedHosts"
                   render={({ field: hostsField }) => (
                     <DynamicArrayField
+                      name="allowedHosts"
                       label="Allowed Hosts"
-                      value={hostsField.value || []}
-                      onChange={hostsField.onChange}
                       inputLabelPrefix="Host"
                       addButtonText="Add a host"
-                      validate={validateHost}
+                      control={form.control}
                     />
                   )}
                 />
@@ -69,16 +66,11 @@ export function NetworkIsolationTabContent({
                   name="allowedPorts"
                   render={({ field: portsField }) => (
                     <DynamicArrayField
+                      name="allowedPorts"
                       label="Allowed Ports"
-                      value={portsField.value?.map(String) || []}
-                      onChange={(arr) =>
-                        portsField.onChange(
-                          arr.map((v) => (v === '' ? '' : Number(v)))
-                        )
-                      }
+                      control={form.control}
                       inputLabelPrefix="Port"
                       addButtonText="Add a port"
-                      validate={validatePort}
                     />
                   )}
                 />
