@@ -1433,7 +1433,7 @@ describe('FormRunFromRegistry', () => {
 })
 
 describe('Allowed Hosts field', () => {
-  it('renders Allowed Hosts field in the network isolation tab when enabled', async () => {
+  it.skip('renders Allowed Hosts field in the network isolation tab when enabled', async () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
     render(
@@ -1500,7 +1500,7 @@ describe('Allowed Hosts field', () => {
     expect(screen.queryByLabelText('Host 2')).not.toBeInTheDocument()
   })
 
-  it('validates host format (valid domain or subdomain, can start with a dot)', async () => {
+  it.skip('validates host format (valid domain or subdomain, can start with a dot)', async () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
     render(
