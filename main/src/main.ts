@@ -307,10 +307,8 @@ app.on('window-all-closed', () => {
 
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
-    log.info('No main window found, creating new one')
     mainWindow = createWindow()
   } else {
-    log.info('Main window found, showing it')
     mainWindow?.show()
   }
 })
