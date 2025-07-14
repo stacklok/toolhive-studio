@@ -171,6 +171,10 @@ describe('prepareCreateWorkloadData', () => {
       ],
       secrets: [],
       cmd_arguments: '--debug --port 8080',
+      networkIsolation: false,
+      allowedHosts: [],
+      allowedPorts: [],
+      allowedProtocols: [],
     }
 
     const secrets = [
@@ -198,6 +202,10 @@ describe('prepareCreateWorkloadData', () => {
       serverName: 'Test Server',
       envVars: [],
       secrets: [],
+      networkIsolation: false,
+      allowedHosts: [],
+      allowedPorts: [],
+      allowedProtocols: [],
     }
 
     const result = prepareCreateWorkloadData(SERVER, data)
@@ -219,6 +227,10 @@ describe('prepareCreateWorkloadData', () => {
       envVars: [],
       secrets: [],
       cmd_arguments: '',
+      networkIsolation: false,
+      allowedHosts: [],
+      allowedPorts: [],
+      allowedProtocols: [],
     }
 
     const result = prepareCreateWorkloadData(SERVER, data)
@@ -232,6 +244,10 @@ describe('prepareCreateWorkloadData', () => {
       envVars: [],
       secrets: [],
       cmd_arguments: undefined,
+      networkIsolation: false,
+      allowedHosts: [],
+      allowedPorts: [],
+      allowedProtocols: [],
     }
 
     const result = prepareCreateWorkloadData(SERVER, data)
@@ -250,6 +266,10 @@ describe('prepareCreateWorkloadData', () => {
       serverName: 'Test Server',
       envVars: [],
       secrets: [],
+      networkIsolation: false,
+      allowedHosts: [],
+      allowedPorts: [],
+      allowedProtocols: [],
     }
 
     const result = prepareCreateWorkloadData(serverWithoutPort, data)

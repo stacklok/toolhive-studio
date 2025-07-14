@@ -38,6 +38,20 @@ function refineEnvVar(
   return true
 }
 
+const validatePort = (val: string) => {
+  if (!val.trim()) return 'Port is required'
+  if (!/^[0-9]+$/.test(val)) return 'Port must be a number'
+  const num = Number(val)
+  if (isNaN(num) || num < 1 || num > 65535) return 'Port must be 1-65535'
+  return null
+}
+
+const validateHost = (val: string) => {
+  if (!val.trim()) return 'Host is required'
+  if (!/^\.?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(val)) return 'Invalid host'
+  return null
+}
+
 /**
  * Returns the form schema used to validate the "run from registry" form.
  * The schema is dynamically generated based on the server's environment variables.
@@ -80,6 +94,20 @@ export function getFormSchemaRunFromRegistry({
         path: ['value'],
       })
       .array(),
+    networkIsolation: z.boolean(),
+    allowedHosts: z
+      .string()
+      .refine((val) => validateHost(val) === null, {
+        message: 'Invalid host',
+      })
+      .array(),
+    allowedPorts: z
+      .string()
+      .refine((val) => validatePort(val.toString()) === null, {
+        message: 'Invalid port',
+      })
+      .array(),
+    allowedProtocols: z.string().array(),
   })
 }
 

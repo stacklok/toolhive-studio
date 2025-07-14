@@ -111,6 +111,22 @@ export function prepareCreateWorkloadData(
     (envVar) => `${envVar.name}=${envVar.value}`
   )
 
+  // Extract and transform network isolation fields
+  const { allowedHosts, allowedPorts, allowedProtocols, networkIsolation } =
+    data
+  const permission_profile = networkIsolation
+    ? {
+        network: {
+          outbound: {
+            allow_host: allowedHosts,
+            allow_port: allowedPorts.map(parseInt),
+            allow_transport: allowedProtocols ?? [],
+            insecure_allow_all: false,
+          },
+        },
+      }
+    : undefined
+
   return {
     name: data.serverName,
     image: server.image,
@@ -121,6 +137,8 @@ export function prepareCreateWorkloadData(
       ? data.cmd_arguments?.split(' ').filter(Boolean)
       : [],
     target_port: server.target_port,
+    permission_profile,
+    // ...rest does not include the omitted fields
   }
 }
 
