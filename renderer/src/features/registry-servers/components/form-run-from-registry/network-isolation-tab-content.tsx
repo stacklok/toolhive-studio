@@ -41,7 +41,7 @@ export function NetworkIsolationTabContent({
       name="networkIsolation"
       render={({ field: networkField }) => (
         <div className="p-6">
-          <div className="mb-4 flex items-center gap-4">
+          <div className="mb-4 flex items-center gap-4 rounded-md border px-3 py-4">
             <Switch
               id="network-isolation-switch"
               aria-label="Network isolation"
