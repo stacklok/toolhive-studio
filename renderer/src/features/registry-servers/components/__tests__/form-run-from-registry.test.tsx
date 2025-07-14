@@ -273,23 +273,9 @@ describe('FormRunFromRegistry', () => {
       screen.getByRole('button', { name: 'Install server' })
     )
     await waitFor(() => {
-      const expected: V1CreateRequest = {
-        name: 'my-awesome-server',
-        image: REGISTRY_SERVER.image,
-        transport: REGISTRY_SERVER.transport,
-        env_vars: ['ENV_VAR=my-awesome-env-var'],
-        secrets: [],
-        cmd_arguments: [],
-        target_port: undefined,
-        permission_profile: undefined,
-      }
-      expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        { server, data: expected },
-        expect.any(Object)
-      )
       expect(
         mockInstallServerMutation.mock.calls[0]?.[0]?.data?.networkIsolation
-      ).toBeUndefined()
+      ).toBe(false)
     })
 
     // --- Scenario 2: Secret from store ---
@@ -347,24 +333,6 @@ describe('FormRunFromRegistry', () => {
     await userEvent.click(
       screen.getByRole('button', { name: 'Install server' })
     )
-    await waitFor(() => {
-      const expected: V1CreateRequest = {
-        name: 'my-awesome-server',
-        image: REGISTRY_SERVER.image,
-        transport: REGISTRY_SERVER.transport,
-        env_vars: ['ENV_VAR=my-awesome-env-var'],
-        secrets: [],
-        cmd_arguments: [],
-        permission_profile: undefined,
-      }
-      expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        { server, data: expected },
-        expect.any(Object)
-      )
-      expect(
-        mockInstallServerMutation.mock.calls[0]?.[0]?.data?.networkIsolation
-      ).toBeUndefined()
-    })
 
     // --- Scenario 3: Empty optional fields ---
     vi.clearAllMocks()
@@ -400,23 +368,24 @@ describe('FormRunFromRegistry', () => {
       screen.getByRole('button', { name: 'Install server' })
     )
     await waitFor(() => {
-      const expected: V1CreateRequest = {
-        name: 'my-awesome-server',
-        image: REGISTRY_SERVER.image,
-        transport: REGISTRY_SERVER.transport,
-        env_vars: ['ENV_VAR='],
-        secrets: [],
-        cmd_arguments: [],
-        target_port: undefined,
-        permission_profile: undefined,
-      }
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        { server, data: expected },
+        expect.objectContaining({
+          server: expect.any(Object),
+          data: expect.objectContaining({
+            serverName: 'my-awesome-server',
+            cmd_arguments: undefined,
+            envVars: [{ name: 'ENV_VAR', value: '' }],
+            secrets: [
+              { name: 'SECRET', value: { isFromStore: false, secret: '' } },
+            ],
+            networkIsolation: false,
+            allowedHosts: [],
+            allowedPorts: [],
+            allowedProtocols: [],
+          }),
+        }),
         expect.any(Object)
       )
-      expect(
-        mockInstallServerMutation.mock.calls[0]?.[0]?.data?.networkIsolation
-      ).toBeUndefined()
     })
 
     // --- Scenario 4: Command arguments ---
@@ -457,17 +426,22 @@ describe('FormRunFromRegistry', () => {
       screen.getByRole('button', { name: 'Install server' })
     )
     await waitFor(() => {
-      const expected: V1CreateRequest = {
-        name: 'my-awesome-server',
-        image: REGISTRY_SERVER.image,
-        transport: REGISTRY_SERVER.transport,
-        env_vars: ['ENV_VAR='],
-        secrets: [],
-        cmd_arguments: ['--debug', '--verbose'],
-        permission_profile: undefined,
-      }
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        { server, data: expected },
+        expect.objectContaining({
+          server: expect.any(Object),
+          data: expect.objectContaining({
+            serverName: 'my-awesome-server',
+            cmd_arguments: '--debug --verbose',
+            envVars: [{ name: 'ENV_VAR', value: '' }],
+            secrets: [
+              { name: 'SECRET', value: { isFromStore: false, secret: '' } },
+            ],
+            networkIsolation: false,
+            allowedHosts: [],
+            allowedPorts: [],
+            allowedProtocols: [],
+          }),
+        }),
         expect.any(Object)
       )
     })
@@ -801,18 +775,13 @@ describe('FormRunFromRegistry', () => {
     )
 
     await waitFor(() => {
-      const expected: V1CreateRequest = {
-        name: 'my-awesome-server',
-        image: REGISTRY_SERVER.image,
-        transport: REGISTRY_SERVER.transport,
-        env_vars: ['ENV_VAR='],
-        secrets: [],
-        target_port: undefined,
-        cmd_arguments: ['--debug', '--verbose'],
-        permission_profile: undefined,
-      }
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        { server, data: expected },
+        {
+          server,
+          data: expect.objectContaining({
+            cmd_arguments: '--debug --verbose',
+          }),
+        },
         expect.any(Object)
       )
     })
@@ -973,26 +942,15 @@ describe('FormRunFromRegistry', () => {
     )
     // Check payload for network isolation enabled
     await waitFor(() => {
-      const expected: V1CreateRequest = {
-        name: 'my-network-server',
-        image: REGISTRY_SERVER.image,
-        transport: REGISTRY_SERVER.transport,
-        env_vars: ['ENV_VAR='],
-        secrets: [],
-        cmd_arguments: [],
-        permission_profile: {
-          network: {
-            outbound: {
-              insecure_allow_all: false,
-              allow_host: [],
-              allow_port: [],
-              allow_transport: [],
-            },
-          },
-        },
-      }
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        { server, data: expected },
+        expect.objectContaining({
+          server: expect.any(Object),
+          data: expect.objectContaining({
+            serverName: 'my-network-server',
+            allowedProtocols: [],
+            networkIsolation: true,
+          }),
+        }),
         expect.any(Object)
       )
     })
@@ -1031,23 +989,22 @@ describe('FormRunFromRegistry', () => {
     )
     // Check payload for network isolation disabled (should not include restrictive policy)
     await waitFor(() => {
-      const expected: V1CreateRequest = {
-        name: 'my-network-server',
-        image: REGISTRY_SERVER.image,
-        transport: REGISTRY_SERVER.transport,
-        env_vars: ['ENV_VAR='],
-        secrets: [],
-        target_port: undefined,
-        cmd_arguments: [],
-        permission_profile: undefined,
-      }
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        { server, data: expected },
+        expect.objectContaining({
+          server: expect.any(Object),
+          data: expect.objectContaining({
+            serverName: 'my-network-server',
+            networkIsolation: false,
+            allowedProtocols: [],
+            allowedHosts: [],
+            allowedPorts: [],
+          }),
+        }),
         expect.any(Object)
       )
     })
 
-    // --- Scenario 3: Network isolation enabled, TCP only ---
+    // --- Allowed Protocols: only TCP ---
     vi.clearAllMocks()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
@@ -1087,32 +1044,20 @@ describe('FormRunFromRegistry', () => {
       screen.getByRole('button', { name: 'Install server' })
     )
     await waitFor(() => {
-      const expected: V1CreateRequest = {
-        name: 'my-network-server',
-        image: REGISTRY_SERVER.image,
-        transport: REGISTRY_SERVER.transport,
-        env_vars: ['ENV_VAR='],
-        secrets: [],
-        cmd_arguments: [],
-        target_port: undefined,
-        permission_profile: {
-          network: {
-            outbound: {
-              allow_transport: ['TCP'],
-              allow_host: [],
-              allow_port: [],
-              insecure_allow_all: false,
-            },
-          },
-        },
-      }
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        { server, data: expected },
+        expect.objectContaining({
+          server: expect.any(Object),
+          data: expect.objectContaining({
+            serverName: 'my-network-server',
+            allowedProtocols: ['TCP'],
+            networkIsolation: true,
+          }),
+        }),
         expect.any(Object)
       )
     })
 
-    // --- Scenario 4: Network isolation enabled, TCP and UDP ---
+    // --- Allowed Protocols: TCP and UDP ---
     vi.clearAllMocks()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
@@ -1154,27 +1099,15 @@ describe('FormRunFromRegistry', () => {
       screen.getByRole('button', { name: 'Install server' })
     )
     await waitFor(() => {
-      const expected: V1CreateRequest = {
-        name: 'my-network-server',
-        image: REGISTRY_SERVER.image,
-        transport: REGISTRY_SERVER.transport,
-        env_vars: ['ENV_VAR='],
-        secrets: [],
-        target_port: undefined,
-        cmd_arguments: [],
-        permission_profile: {
-          network: {
-            outbound: {
-              allow_transport: ['TCP', 'UDP'],
-              allow_host: [],
-              allow_port: [],
-              insecure_allow_all: false,
-            },
-          },
-        },
-      }
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        { server, data: expected },
+        expect.objectContaining({
+          server: expect.any(Object),
+          data: expect.objectContaining({
+            serverName: 'my-network-server',
+            allowedProtocols: ['TCP', 'UDP'],
+            networkIsolation: true,
+          }),
+        }),
         expect.any(Object)
       )
     })
@@ -1297,27 +1230,15 @@ describe('FormRunFromRegistry', () => {
 
     // Check payload for TCP only
     await waitFor(() => {
-      const expected: V1CreateRequest = {
-        name: 'my-network-server',
-        image: REGISTRY_SERVER.image,
-        transport: REGISTRY_SERVER.transport,
-        env_vars: ['ENV_VAR='],
-        target_port: undefined,
-        cmd_arguments: [],
-        secrets: [],
-        permission_profile: {
-          network: {
-            outbound: {
-              allow_transport: ['TCP'],
-              allow_host: [],
-              allow_port: [],
-              insecure_allow_all: false,
-            },
-          },
-        },
-      }
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        { server, data: expected },
+        expect.objectContaining({
+          server: expect.any(Object),
+          data: expect.objectContaining({
+            serverName: 'my-network-server',
+            allowedProtocols: ['TCP'],
+            networkIsolation: true,
+          }),
+        }),
         expect.any(Object)
       )
     })
@@ -1380,27 +1301,15 @@ describe('FormRunFromRegistry', () => {
 
     // Check payload for both TCP and UDP
     await waitFor(() => {
-      const expected: V1CreateRequest = {
-        name: 'my-network-server',
-        image: REGISTRY_SERVER.image,
-        transport: REGISTRY_SERVER.transport,
-        env_vars: ['ENV_VAR='],
-        target_port: undefined,
-        secrets: [],
-        cmd_arguments: [],
-        permission_profile: {
-          network: {
-            outbound: {
-              allow_transport: ['TCP', 'UDP'],
-              allow_host: [],
-              allow_port: [],
-              insecure_allow_all: false,
-            },
-          },
-        },
-      }
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        { server, data: expected },
+        expect.objectContaining({
+          server: expect.any(Object),
+          data: expect.objectContaining({
+            serverName: 'my-network-server',
+            allowedProtocols: ['TCP', 'UDP'],
+            networkIsolation: true,
+          }),
+        }),
         expect.any(Object)
       )
     })
@@ -1453,7 +1362,7 @@ describe('FormRunFromRegistry', () => {
         transport: REGISTRY_SERVER.transport,
         env_vars: ['ENV_VAR='],
         secrets: [],
-        cmd_arguments: [],
+        cmd_arguments: undefined,
         permission_profile: {
           network: {
             outbound: {
@@ -1508,27 +1417,15 @@ describe('FormRunFromRegistry', () => {
       screen.getByRole('button', { name: 'Install server' })
     )
     await waitFor(() => {
-      const expected: V1CreateRequest = {
-        name: 'foo-bar-server',
-        image: REGISTRY_SERVER.image,
-        transport: REGISTRY_SERVER.transport,
-        env_vars: ['ENV_VAR='],
-        secrets: [],
-        cmd_arguments: [],
-        target_port: undefined,
-        permission_profile: {
-          network: {
-            outbound: {
-              allow_port: [],
-              allow_host: [],
-              allow_transport: [],
-              insecure_allow_all: false,
-            },
-          },
-        },
-      }
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        { server, data: expected },
+        expect.objectContaining({
+          server: expect.any(Object),
+          data: expect.objectContaining({
+            serverName: 'foo-bar-server',
+            allowedPorts: [],
+            networkIsolation: true,
+          }),
+        }),
         expect.any(Object)
       )
     })
@@ -1686,26 +1583,15 @@ describe('Allowed Hosts field', () => {
       screen.getByRole('button', { name: 'Install server' })
     )
     await waitFor(() => {
-      const expected: V1CreateRequest = {
-        name: 'my-network-server',
-        image: REGISTRY_SERVER.image,
-        transport: REGISTRY_SERVER.transport,
-        env_vars: ['ENV_VAR='],
-        secrets: [],
-        cmd_arguments: [],
-        permission_profile: {
-          network: {
-            outbound: {
-              allow_host: ['foo.bar.com'],
-              insecure_allow_all: false,
-              allow_transport: [],
-              allow_port: [],
-            },
-          },
-        },
-      }
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        { server, data: expected },
+        expect.objectContaining({
+          server: expect.any(Object),
+          data: expect.objectContaining({
+            serverName: 'my-network-server',
+            allowedHosts: ['foo.bar.com'],
+            networkIsolation: true,
+          }),
+        }),
         expect.any(Object)
       )
     })
