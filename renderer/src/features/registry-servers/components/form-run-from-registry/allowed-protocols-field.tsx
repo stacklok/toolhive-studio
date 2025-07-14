@@ -1,4 +1,5 @@
 import { Label } from '@/common/components/ui/label'
+import { Checkbox } from '@/common/components/ui/checkbox'
 
 interface AllowedProtocolsFieldProps {
   field: {
@@ -17,34 +18,36 @@ export function AllowedProtocolsField({ field }: AllowedProtocolsFieldProps) {
         aria-label="Allowed Protocols"
       >
         <div className="mt-2 flex items-center gap-4">
-          <label>
-            <input
-              type="checkbox"
+          <label className="flex items-center gap-2">
+            <Checkbox
               aria-label="TCP"
               checked={field.value?.includes('TCP') || false}
-              onChange={() => {
-                if (field.value?.includes('TCP')) {
-                  field.onChange(field.value.filter((v: string) => v !== 'TCP'))
-                } else {
+              onCheckedChange={(checked) => {
+                if (checked) {
                   field.onChange([...(field.value || []), 'TCP'])
+                } else {
+                  field.onChange(
+                    field.value?.filter((v: string) => v !== 'TCP') || []
+                  )
                 }
               }}
-            />{' '}
+            />
             TCP
           </label>
-          <label>
-            <input
-              type="checkbox"
+          <label className="flex items-center gap-2">
+            <Checkbox
               aria-label="UDP"
               checked={field.value?.includes('UDP') || false}
-              onChange={() => {
-                if (field.value?.includes('UDP')) {
-                  field.onChange(field.value.filter((v: string) => v !== 'UDP'))
-                } else {
+              onCheckedChange={(checked) => {
+                if (checked) {
                   field.onChange([...(field.value || []), 'UDP'])
+                } else {
+                  field.onChange(
+                    field.value?.filter((v: string) => v !== 'UDP') || []
+                  )
                 }
               }}
-            />{' '}
+            />
             UDP
           </label>
         </div>
