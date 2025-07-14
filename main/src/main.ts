@@ -353,8 +353,6 @@ app.on('activate', () => {
 })
 
 app.on('will-finish-launching', () => {
-  // Questo evento viene chiamato quando l'app sta per terminare il lancio
-  // Utile per preparare la gestione del restart
   log.info('App will finish launching - preparing for potential restart')
 })
 
