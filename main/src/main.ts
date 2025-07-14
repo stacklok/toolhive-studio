@@ -114,31 +114,51 @@ autoUpdater.on('update-downloaded', (_, releaseNotes, releaseName) => {
       )
 
       if (returnValue.response === 0) {
+        log.info('🎯 User clicked: Restart')
+
+        log.info('🛑 Removing quit listeners to avoid interference')
+        app.removeAllListeners('before-quit')
+        app.removeAllListeners('will-quit')
+
+        isQuitting = true
+        tearingDown = true
+
         log.info('🔄 Starting restart process...')
 
-        isInstallingUpdate = true
-
         try {
+          log.info('🛑 Starting graceful shutdown before update...')
           log.info('📤 Sending graceful-exit to renderer')
           mainWindow?.webContents.send('graceful-exit')
 
-          log.info('⏳ Waiting 500ms for renderer...')
-          await delay(500)
+          log.info('⏳ Waiting for renderer...')
+          await delay(1000)
 
           const port = getToolhivePort()
           if (port) {
-            log.info('🛑 Stopping servers before update')
+            log.info('🛑 Stopping servers with graceful shutdown...')
             await stopAllServers(binPath, port)
             log.info('✅ Servers stopped successfully')
           }
 
-          log.info('🚀 Calling autoUpdater.quitAndInstall()...')
+          log.info('🛑 Stopping ToolHive process...')
+          stopToolhive()
+
+          log.info('🗑️ Destroying tray')
+          tray?.destroy()
+
+          log.info('🚀 All cleaned up, calling autoUpdater.quitAndInstall()...')
           autoUpdater.quitAndInstall()
 
-          log.error('❌ quitAndInstall() did not restart the app')
+          setTimeout(() => {
+            log.info('🔄 Manual restart fallback')
+            app.relaunch()
+            app.quit()
+          }, 2000)
         } catch (error) {
-          log.error('❌ Error during restart process:', error)
-          isInstallingUpdate = false
+          log.error('❌ Error during graceful shutdown:', error)
+          tray?.destroy()
+          app.relaunch()
+          app.quit()
         }
       } else {
         log.info('⏰ User chose Later - showing toast notification')
