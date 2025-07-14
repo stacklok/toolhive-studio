@@ -85,4 +85,4 @@ export function getFormSchemaRunFromRegistry({
 
 export type FormSchemaRunFromRegistry = z.infer<
   ReturnType<typeof getFormSchemaRunFromRegistry>
-> & { networkIsolation?: boolean }
+>
