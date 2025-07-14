@@ -497,7 +497,7 @@ export function FormRunFromRegistry({
             {!isSubmitting && (
               <>
                 <Tabs
-                  className="w-full px-6"
+                  className="mb-6 w-full px-6"
                   value={tabValue}
                   onValueChange={setTabValue}
                 >
