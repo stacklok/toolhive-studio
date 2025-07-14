@@ -9,11 +9,11 @@ function refineSecret(
   value: {
     name: string
     value?:
-      | {
-          secret?: string | undefined
-          isFromStore: boolean
-        }
-      | undefined
+    | {
+      secret?: string | undefined
+      isFromStore: boolean
+    }
+    | undefined
   },
   vars: RegistryEnvVar[]
 ): boolean {
@@ -36,6 +36,20 @@ function refineEnvVar(
     return false
   }
   return true
+}
+
+export const validatePort = (val: string) => {
+  if (!val.trim()) return 'Port is required'
+  if (!/^[0-9]+$/.test(val)) return 'Port must be a number'
+  const num = Number(val)
+  if (isNaN(num) || num < 1 || num > 65535) return 'Port must be 1-65535'
+  return null
+}
+
+export const validateHost = (val: string) => {
+  if (!val.trim()) return 'Host is required'
+  if (!/^\.?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(val)) return 'Invalid host'
+  return null
 }
 
 /**
@@ -80,21 +94,18 @@ export function getFormSchemaRunFromRegistry({
         path: ['value'],
       })
       .array(),
-    permission_profile: z
-      .object({
-        name: z.string().optional(),
-        network: z.object({
-          outbound: z.object({
-            allow_host: z.array(z.string()),
-            allow_port: z.array(z.number()),
-            allow_transport: z.array(z.string()),
-            insecure_allow_all: z.boolean(),
-          }),
-        }),
-        read: z.array(z.string()).optional(),
-        write: z.array(z.string()).optional(),
+    networkIsolation: z.boolean(),
+    allowedHosts: z.array(
+      z.string().refine((val) => validateHost(val) === null, {
+        message: 'Invalid host',
       })
-      .optional(),
+    ),
+    allowedPorts: z.array(
+      z.number().refine((val) => validatePort(val.toString()) === null, {
+        message: 'Invalid port',
+      })
+    ),
+    AllowedProtocols: z.array(z.string()).optional(),
   })
 }
 

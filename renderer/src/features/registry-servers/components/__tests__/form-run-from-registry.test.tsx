@@ -1671,3 +1671,75 @@ describe('Allowed Hosts field', () => {
     expect(screen.getByLabelText('Host 2')).toBeInTheDocument()
   })
 })
+
+describe('Network Isolation Tab Activation', () => {
+  it('activates the network isolation tab if a validation error occurs there while on the configuration tab', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    // Ensure we are on the configuration tab
+    const configTab = screen.getByRole('tab', { name: /configuration/i })
+    expect(configTab).toHaveAttribute('aria-selected', 'true')
+    // Enable network isolation and add an invalid host
+    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    await userEvent.click(networkTab)
+    const switchLabel = screen.getByLabelText('Network isolation')
+    await userEvent.click(switchLabel)
+    // Add a host and enter an invalid value
+    const addHostBtn = screen.getByRole('button', { name: /add a host/i })
+    await userEvent.click(addHostBtn)
+    const hostInput = screen.getByLabelText('Host 1')
+    await userEvent.type(hostInput, 'not a host')
+    await userEvent.tab()
+    // Switch back to configuration tab
+    await userEvent.click(configTab)
+    expect(configTab).toHaveAttribute('aria-selected', 'true')
+    // Try to submit the form (should trigger validation error on network isolation tab)
+    await userEvent.click(screen.getByRole('button', { name: 'Install server' }))
+    // The network isolation tab should now be active
+    await waitFor(() => {
+      expect(networkTab).toHaveAttribute('aria-selected', 'true')
+    })
+  })
+
+  it('activates the configuration tab if a validation error occurs there while on the network isolation tab', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_REQUIRED // Make configuration tab fields required
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    // Switch to the network isolation tab
+    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    await userEvent.click(networkTab)
+    expect(networkTab).toHaveAttribute('aria-selected', 'true')
+    // Try to submit the form (should trigger validation error on configuration tab)
+    await userEvent.click(screen.getByRole('button', { name: 'Install server' }))
+    // The configuration tab should now be active
+    const configTab = screen.getByRole('tab', { name: /configuration/i })
+    expect(configTab).toHaveAttribute('aria-selected', 'true')
+  })
+})

@@ -78,22 +78,12 @@ export function FormRunFromRegistry({
         envVars: groupedEnvVars.envVars,
         secrets: groupedEnvVars.secrets,
         workloads: data?.workloads ?? [],
-      }).extend({
-        networkIsolation: z.boolean().optional(),
-        allowedProtocols: z.array(z.string()).optional(),
-        allowedPorts: z.array(z.number().int().min(1).max(65535)).optional(),
-        allowedHosts: z.array(z.string()).optional(),
       }),
     [groupedEnvVars, data?.workloads]
   )
 
   const form = useForm<
-    FormSchemaRunFromRegistry & {
-      networkIsolation?: boolean
-      allowedProtocols?: string[]
-      allowedPorts?: string[]
-      allowedHosts?: string[]
-    }
+    FormSchemaRunFromRegistry
   >({
     resolver: zodV4Resolver(formSchema),
     defaultValues: {
@@ -114,12 +104,7 @@ export function FormRunFromRegistry({
   })
 
   const onSubmitForm = (
-    data: FormSchemaRunFromRegistry & {
-      networkIsolation?: boolean
-      allowedProtocols?: string[]
-      allowedPorts?: string[]
-      allowedHosts?: string[]
-    }
+    data: FormSchemaRunFromRegistry
   ) => {
     if (!server) return
 
@@ -128,40 +113,10 @@ export function FormRunFromRegistry({
       setError(null)
     }
 
-    let permission_profile
-    if (data.networkIsolation) {
-      permission_profile = {
-        network: {
-          outbound: {
-            insecure_allow_all: false,
-            allow_host:
-              Array.isArray(data.allowedHosts) && data.allowedHosts.length > 0
-                ? data.allowedHosts.filter((h) => !!h)
-                : [],
-            allow_port:
-              Array.isArray(data.allowedPorts) && data.allowedPorts.length > 0
-                ? data.allowedPorts
-                    .map((p) => Number(p))
-                    .filter((n) => !isNaN(n))
-                : [],
-            allow_transport: data.allowedProtocols ?? [],
-          },
-        },
-      }
-    }
-
-    // Omit networkIsolation, allowedProtocols, allowedPorts from the payload
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { networkIsolation, allowedProtocols, allowedPorts, ...restData } =
-      data
-
     installServerMutation(
       {
         server,
-        data: {
-          ...restData,
-          ...(permission_profile ? { permission_profile } : {}),
-        },
+        data,
       },
       {
         onSuccess: () => {
@@ -183,6 +138,34 @@ export function FormRunFromRegistry({
 
   const [tabValue, setTabValue] = useState('configuration')
 
+  // Map each field to its tab
+  const FIELD_TAB_MAP = [
+    { field: 'serverName', tab: 'configuration' },
+    { field: 'cmd_arguments', tab: 'configuration' },
+    { field: 'secrets', tab: 'configuration' },
+    { field: 'envVars', tab: 'configuration' },
+    { field: 'allowedHosts', tab: 'network-isolation' },
+    { field: 'allowedPorts', tab: 'network-isolation' },
+    { field: 'allowedProtocols', tab: 'network-isolation' },
+    { field: 'networkIsolation', tab: 'network-isolation' },
+  ]
+
+  function activateTabWithError(errors: Record<string, unknown>) {
+    const errorKeys = Object.keys(errors)
+    // Extract root field name from error key (handles dot and bracket notation)
+    const getRootField = (key: string) => key.split(/[.[]/)[0]
+    // Find the first tab that has an error
+    const tabWithError = FIELD_TAB_MAP.find(({ field, tab }) =>
+      errorKeys.some((key) => getRootField(key) === field)
+    )?.tab
+    if (tabWithError) {
+      setTabValue(tabWithError)
+    }
+    // Debug output
+
+    console.log('[activateTabWithError] errorKeys:', errorKeys, 'activatedTab:', tabWithError)
+  }
+
   if (!server) return null
 
   return (
@@ -196,7 +179,7 @@ export function FormRunFromRegistry({
       >
         <Form {...form} key={server?.name}>
           <form
-            onSubmit={form.handleSubmit(onSubmitForm)}
+            onSubmit={form.handleSubmit(onSubmitForm, activateTabWithError)}
             className="mx-auto flex h-full w-full max-w-3xl flex-col"
           >
             <DialogHeader className="mb-4 p-6">

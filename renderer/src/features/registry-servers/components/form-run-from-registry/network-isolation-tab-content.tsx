@@ -5,22 +5,10 @@ import { Alert, AlertDescription } from '@/common/components/ui/alert'
 import { AlertTriangle } from 'lucide-react'
 import { DynamicArrayField } from '../dynamic-array-field'
 import type { UseFormReturn } from 'react-hook-form'
-import type { FormSchemaRunFromRegistry } from '../../lib/get-form-schema-run-from-registry'
+import { validateHost, validatePort, type FormSchemaRunFromRegistry } from '../../lib/get-form-schema-run-from-registry'
 import { AllowedProtocolsField } from './allowed-protocols-field'
 
-const validatePort = (val: string) => {
-  if (!val.trim()) return 'Port is required'
-  if (!/^[0-9]+$/.test(val)) return 'Port must be a number'
-  const num = Number(val)
-  if (isNaN(num) || num < 1 || num > 65535) return 'Port must be 1-65535'
-  return null
-}
 
-const validateHost = (val: string) => {
-  if (!val.trim()) return 'Host is required'
-  if (!/^\.?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(val)) return 'Invalid host'
-  return null
-}
 
 export function NetworkIsolationTabContent({
   form,
