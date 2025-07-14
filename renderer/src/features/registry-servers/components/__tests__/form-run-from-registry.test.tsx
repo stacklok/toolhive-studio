@@ -1708,7 +1708,9 @@ describe('Network Isolation Tab Activation', () => {
     await userEvent.click(configTab)
     expect(configTab).toHaveAttribute('aria-selected', 'true')
     // Try to submit the form (should trigger validation error on network isolation tab)
-    await userEvent.click(screen.getByRole('button', { name: 'Install server' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
     // The network isolation tab should now be active
     await waitFor(() => {
       expect(networkTab).toHaveAttribute('aria-selected', 'true')
@@ -1737,7 +1739,9 @@ describe('Network Isolation Tab Activation', () => {
     await userEvent.click(networkTab)
     expect(networkTab).toHaveAttribute('aria-selected', 'true')
     // Try to submit the form (should trigger validation error on configuration tab)
-    await userEvent.click(screen.getByRole('button', { name: 'Install server' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
     // The configuration tab should now be active
     const configTab = screen.getByRole('tab', { name: /configuration/i })
     expect(configTab).toHaveAttribute('aria-selected', 'true')

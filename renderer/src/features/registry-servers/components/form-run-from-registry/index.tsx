@@ -21,7 +21,6 @@ import { getApiV1BetaWorkloadsOptions } from '@/common/api/generated/@tanstack/r
 import { useRunFromRegistry } from '../../hooks/use-run-from-registry'
 import { LoadingStateAlert } from '../loading-state-alert'
 import { NetworkIsolationTabContent } from './network-isolation-tab-content'
-import z from 'zod/v4'
 import { ConfigurationTabContent } from './configuration-tab-content'
 import { Tabs, TabsList, TabsTrigger } from '@/common/components/ui/tabs'
 import { Form } from '@/common/components/ui/form'
@@ -82,9 +81,7 @@ export function FormRunFromRegistry({
     [groupedEnvVars, data?.workloads]
   )
 
-  const form = useForm<
-    FormSchemaRunFromRegistry
-  >({
+  const form = useForm<FormSchemaRunFromRegistry>({
     resolver: zodV4Resolver(formSchema),
     defaultValues: {
       serverName: server?.name || '',
@@ -103,9 +100,7 @@ export function FormRunFromRegistry({
     },
   })
 
-  const onSubmitForm = (
-    data: FormSchemaRunFromRegistry
-  ) => {
+  const onSubmitForm = (data: FormSchemaRunFromRegistry) => {
     if (!server) return
 
     setIsSubmitting(true)
@@ -155,7 +150,7 @@ export function FormRunFromRegistry({
     // Extract root field name from error key (handles dot and bracket notation)
     const getRootField = (key: string) => key.split(/[.[]/)[0]
     // Find the first tab that has an error
-    const tabWithError = FIELD_TAB_MAP.find(({ field, tab }) =>
+    const tabWithError = FIELD_TAB_MAP.find(({ field }) =>
       errorKeys.some((key) => getRootField(key) === field)
     )?.tab
     if (tabWithError) {
@@ -163,7 +158,12 @@ export function FormRunFromRegistry({
     }
     // Debug output
 
-    console.log('[activateTabWithError] errorKeys:', errorKeys, 'activatedTab:', tabWithError)
+    console.log(
+      '[activateTabWithError] errorKeys:',
+      errorKeys,
+      'activatedTab:',
+      tabWithError
+    )
   }
 
   if (!server) return null

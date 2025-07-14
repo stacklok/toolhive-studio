@@ -9,11 +9,11 @@ function refineSecret(
   value: {
     name: string
     value?:
-    | {
-      secret?: string | undefined
-      isFromStore: boolean
-    }
-    | undefined
+      | {
+          secret?: string | undefined
+          isFromStore: boolean
+        }
+      | undefined
   },
   vars: RegistryEnvVar[]
 ): boolean {
@@ -105,7 +105,7 @@ export function getFormSchemaRunFromRegistry({
         message: 'Invalid port',
       })
     ),
-    AllowedProtocols: z.array(z.string()).optional(),
+    allowedProtocols: z.array(z.string()).optional(),
   })
 }
 
