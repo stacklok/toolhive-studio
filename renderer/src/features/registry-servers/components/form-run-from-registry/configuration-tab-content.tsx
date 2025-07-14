@@ -12,7 +12,15 @@ import { AlertErrorFormSubmission } from '../alert-error-form-submission'
 import type { UseFormReturn } from 'react-hook-form'
 import type { FormSchemaRunFromRegistry } from '../../lib/get-form-schema-run-from-registry'
 import type { GroupedEnvVars } from '../../lib/group-env-vars'
-import { SecretRow, EnvVarRow } from './index'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/common/components/ui/tooltip'
+import type { RegistryEnvVar } from '@/common/api/generated/types.gen'
+import { cn } from '@/common/lib/utils'
+import { AsteriskIcon } from 'lucide-react'
+import { FormComboboxSecretStore } from '@/common/components/secrets/form-combobox-secrets-store'
 
 export interface ConfigurationTabContentProps {
   error: string | null
@@ -20,6 +28,157 @@ export interface ConfigurationTabContentProps {
   setError: (err: string | null) => void
   form: UseFormReturn<FormSchemaRunFromRegistry>
   groupedEnvVars: GroupedEnvVars
+}
+
+/**
+ * Renders an asterisk icon & tooltip for required fields.
+ * NOTE: uses absolute positioning & assumes that it is being rendered inside a container with `position: relative`.
+ */
+function TooltipValueRequired() {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild autoFocus={false}>
+        <AsteriskIcon className="text-muted-foreground size-4" />
+      </TooltipTrigger>
+      <TooltipContent>Required</TooltipContent>
+    </Tooltip>
+  )
+}
+
+export function SecretRow({
+  secret,
+  form,
+  index,
+}: {
+  secret: RegistryEnvVar
+  form: UseFormReturn<FormSchemaRunFromRegistry>
+  index: number
+}) {
+  return (
+    <div className="mb-2 grid grid-cols-2 gap-4">
+      <FormField
+        control={form.control}
+        name={`secrets.${index}.name`}
+        render={() => (
+          <FormItem>
+            <div className="relative">
+              <FormControl>
+                <Label
+                  htmlFor={`secrets.${index}.value`}
+                  className={cn(
+                    'text-muted-foreground !border-input h-full items-center font-mono !ring-0',
+                    secret.required ? 'pr-8' : ''
+                  )}
+                >
+                  <span>{secret.name}</span>
+                  {secret.required && <TooltipValueRequired />}
+                </Label>
+              </FormControl>
+            </div>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <div className="grid grid-cols-[auto_calc(var(--spacing)_*_9)]">
+        <FormField
+          control={form.control}
+          name={`secrets.${index}.value`}
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <Input
+                  id={`secrets.${index}.value`}
+                  onBlur={field.onBlur}
+                  value={
+                    field.value.isFromStore
+                      ? 'foo-bar-123-xzy'
+                      : field.value.secret
+                  }
+                  disabled={field.disabled}
+                  name={field.name}
+                  ref={field.ref}
+                  onChange={(e) =>
+                    field.onChange({
+                      secret: e.target.value,
+                      isFromStore: false,
+                    })
+                  }
+                  className="rounded-tr-none rounded-br-none border-r-0 font-mono focus-visible:z-10"
+                  autoComplete="off"
+                  data-1p-ignore
+                  type="password"
+                  aria-label={`${secret.name ?? ''} value`}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormComboboxSecretStore<FormSchemaRunFromRegistry>
+          form={form}
+          name={`secrets.${index}.value`}
+        />
+      </div>
+    </div>
+  )
+}
+
+export function EnvVarRow({
+  envVar,
+  form,
+  index,
+}: {
+  envVar: RegistryEnvVar
+  form: UseFormReturn<FormSchemaRunFromRegistry>
+  index: number
+}) {
+  return (
+    <div className="mb-2 grid grid-cols-2 gap-4">
+      <FormField
+        control={form.control}
+        name={`envVars.${index}.name`}
+        render={() => (
+          <FormItem>
+            <div className="relative">
+              <FormControl>
+                <Label
+                  htmlFor={`envVar.${index}.value`}
+                  className={cn(
+                    `text-muted-foreground !border-input flex h-full items-center gap-1 font-mono
+                    !ring-0`
+                  )}
+                >
+                  <span>{envVar.name}</span>
+                  {envVar.required && <TooltipValueRequired />}
+                </Label>
+              </FormControl>
+            </div>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name={`envVars.${index}.value`}
+        render={({ field }) => (
+          <FormItem>
+            <FormControl>
+              <Input
+                {...field}
+                className="font-mono"
+                autoComplete="off"
+                data-1p-ignore
+                id={`envVars.${index}.value`}
+                aria-label={`${envVar.name ?? ''} value`}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </div>
+  )
 }
 
 export function ConfigurationTabContent({
