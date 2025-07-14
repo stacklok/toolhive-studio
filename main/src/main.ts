@@ -213,7 +213,7 @@ function createWindow() {
     ...getPlatformSpecificWindowOptions(),
   })
 
-  // minimise-to-tray instead of close
+  // Minimize-to-tray instead of close
   mainWindow.on('minimize', () => {
     if (shouldStartHidden || tray) mainWindow.hide()
   })

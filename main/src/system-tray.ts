@@ -206,11 +206,14 @@ const createClickHandler = () => {
   const isRapidClick = (now: number) => now - lastClickTime < 300
 
   const toggleWindow = (window: BrowserWindow) => {
-    if (window.isVisible() && !window.isMinimized()) {
-      hideWindow(window)
-    } else {
+    setTimeout(() => {
+      log.info('TOGGLE WIN: ', {
+        winIsVisible: window.isVisible(),
+        winIsMinimized: window.isMinimized(),
+        check: window.isVisible() && !window.isMinimized(),
+      })
       showWindowWithFocus(window)
-    }
+    }, 50)
   }
 
   return () => {
