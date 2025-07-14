@@ -194,6 +194,7 @@ describe('prepareCreateWorkloadData', () => {
       secrets,
       cmd_arguments: ['--debug', '--port', '8080'],
       target_port: 8080,
+      network_isolation: false,
     })
   })
 
@@ -218,6 +219,7 @@ describe('prepareCreateWorkloadData', () => {
       secrets: [],
       cmd_arguments: [],
       target_port: 8080,
+      network_isolation: false,
     })
   })
 

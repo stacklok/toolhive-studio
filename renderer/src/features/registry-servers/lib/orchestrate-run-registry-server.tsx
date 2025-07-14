@@ -137,6 +137,7 @@ export function prepareCreateWorkloadData(
       ? data.cmd_arguments?.split(' ').filter(Boolean)
       : [],
     target_port: server.target_port,
+    network_isolation: networkIsolation,
     permission_profile,
     // ...rest does not include the omitted fields
   }
