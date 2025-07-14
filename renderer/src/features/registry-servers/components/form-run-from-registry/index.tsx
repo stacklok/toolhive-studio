@@ -483,7 +483,7 @@ export function FormRunFromRegistry({
           >
             <DialogHeader className="mb-4 p-6">
               <DialogTitle>Configure {server.name}</DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="sr-only">
                 Set up the environment variables and name for this MCP server
                 installation.
               </DialogDescription>
@@ -497,7 +497,7 @@ export function FormRunFromRegistry({
             {!isSubmitting && (
               <>
                 <Tabs
-                  className="w-full"
+                  className="w-full px-6"
                   value={tabValue}
                   onValueChange={setTabValue}
                 >
