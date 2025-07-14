@@ -22,7 +22,7 @@ import { cn } from '@/common/lib/utils'
 import { AsteriskIcon } from 'lucide-react'
 import { FormComboboxSecretStore } from '@/common/components/secrets/form-combobox-secrets-store'
 
-export interface ConfigurationTabContentProps {
+interface ConfigurationTabContentProps {
   error: string | null
   isErrorSecrets: boolean
   setError: (err: string | null) => void
@@ -45,7 +45,7 @@ function TooltipValueRequired() {
   )
 }
 
-export function SecretRow({
+function SecretRow({
   secret,
   form,
   index,
@@ -124,7 +124,7 @@ export function SecretRow({
   )
 }
 
-export function EnvVarRow({
+function EnvVarRow({
   envVar,
   form,
   index,
