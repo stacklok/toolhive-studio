@@ -17,6 +17,8 @@ export function Error({ error }: ErrorProps = {}) {
     return <KeyringError />
   }
 
+  console.log('ERROR COMPONENT: ', error)
+
   // Check for connection errors that might indicate container engine issues
   if (
     error?.toString().includes('ECONNREFUSED') ||
@@ -24,7 +26,8 @@ export function Error({ error }: ErrorProps = {}) {
     error?.toString().includes('connect ECONNREFUSED') ||
     error?.toString().includes('ENOTFOUND') ||
     error?.toString().includes('Network Error') ||
-    error?.message?.includes('fetch')
+    error?.message?.includes('fetch') ||
+    error?.message?.includes('failed to ping Docker server')
   ) {
     return <ConnectionRefusedError />
   }
