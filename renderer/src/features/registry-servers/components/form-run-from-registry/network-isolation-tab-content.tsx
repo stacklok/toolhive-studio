@@ -5,9 +5,7 @@ import { Alert, AlertDescription } from '@/common/components/ui/alert'
 import { AlertTriangle } from 'lucide-react'
 import { DynamicArrayField } from '../dynamic-array-field'
 import type { UseFormReturn } from 'react-hook-form'
-import {
-  type FormSchemaRunFromRegistry,
-} from '../../lib/get-form-schema-run-from-registry'
+import { type FormSchemaRunFromRegistry } from '../../lib/get-form-schema-run-from-registry'
 import { AllowedProtocolsField } from './allowed-protocols-field'
 
 export function NetworkIsolationTabContent({
@@ -51,7 +49,7 @@ export function NetworkIsolationTabContent({
                 <Controller
                   control={form.control}
                   name="allowedHosts"
-                  render={({ field: hostsField }) => (
+                  render={() => (
                     <DynamicArrayField
                       name="allowedHosts"
                       label="Allowed Hosts"
@@ -64,7 +62,7 @@ export function NetworkIsolationTabContent({
                 <Controller
                   control={form.control}
                   name="allowedPorts"
-                  render={({ field: portsField }) => (
+                  render={() => (
                     <DynamicArrayField
                       name="allowedPorts"
                       label="Allowed Ports"
