@@ -15,6 +15,7 @@ import { GridCardsMcpServers } from '@/features/mcp-servers/components/grid-card
 import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/menu-run-mcp-server'
 import { useRunCustomServer } from '@/features/mcp-servers/hooks/use-run-custom-server'
 import { useMutationRestartServerAtStartup } from '@/features/mcp-servers/hooks/use-mutation-restart-server'
+import { TitlePage } from '@/common/components/title-page'
 
 export const Route = createFileRoute('/')({
   loader: ({ context: { queryClient } }) =>
@@ -57,8 +58,7 @@ export function Index() {
 
   return (
     <>
-      <div className="mb-6 flex items-center">
-        <h1 className="font-display text-3xl font-bold">Installed</h1>
+      <TitlePage title="MCP Servers">
         {workloads.length > 0 && (
           <div className="ml-auto flex gap-2">
             <RefreshButton refresh={refetch} />
@@ -72,7 +72,7 @@ export function Index() {
           onOpenChange={setIsRunWithCommandOpen}
           onSubmit={handleSubmit}
         />
-      </div>
+      </TitlePage>
       {!isPending && !workloads.length ? (
         <EmptyState
           title="Add your first MCP server"

@@ -109,6 +109,37 @@ export function FormFieldsRunMcpCommand({
         )}
       />
 
+      <FormField
+        control={form.control}
+        name="target_port"
+        render={({ field }) => (
+          <FormItem>
+            <div className="flex items-center gap-1">
+              <FormLabel htmlFor={field.name}>Target port</FormLabel>
+              <TooltipInfoIcon>
+                Target port to expose from the container. If not specified,
+                ToolHive will automatically assign a random port.
+              </TooltipInfoIcon>
+            </div>
+            <FormControl>
+              <Input
+                id={field.name}
+                autoCorrect="off"
+                autoComplete="off"
+                autoFocus
+                type="number"
+                data-1p-ignore
+                placeholder="e.g. 50051"
+                defaultValue={field.value}
+                onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                name={field.name}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
       {typeValue === 'docker_image' ? (
         <FormField
           control={form.control}
