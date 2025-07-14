@@ -7,6 +7,7 @@ import { DynamicArrayField } from '../dynamic-array-field'
 import React from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 import type { FormSchemaRunFromRegistry } from '../../lib/get-form-schema-run-from-registry'
+import { AllowedProtocolsField } from './allowed-protocols-field'
 
 const validatePort = (val: string) => {
   if (!val.trim()) return 'Port is required'
@@ -62,69 +63,7 @@ export function NetworkIsolationTabContent({
               <Controller
                 control={form.control}
                 name="allowedProtocols"
-                render={({ field: protocolsField }) => (
-                  <div className="mt-6">
-                    <Label htmlFor="allowed-protocols-group">
-                      Allowed Protocols
-                    </Label>
-                    <div
-                      id="allowed-protocols-group"
-                      role="group"
-                      aria-label="Allowed Protocols"
-                    >
-                      <div className="mt-2 flex items-center gap-4">
-                        <label>
-                          <input
-                            type="checkbox"
-                            aria-label="TCP"
-                            checked={
-                              protocolsField.value?.includes('TCP') || false
-                            }
-                            onChange={() => {
-                              if (protocolsField.value?.includes('TCP')) {
-                                protocolsField.onChange(
-                                  protocolsField.value.filter(
-                                    (v: string) => v !== 'TCP'
-                                  )
-                                )
-                              } else {
-                                protocolsField.onChange([
-                                  ...(protocolsField.value || []),
-                                  'TCP',
-                                ])
-                              }
-                            }}
-                          />{' '}
-                          TCP
-                        </label>
-                        <label>
-                          <input
-                            type="checkbox"
-                            aria-label="UDP"
-                            checked={
-                              protocolsField.value?.includes('UDP') || false
-                            }
-                            onChange={() => {
-                              if (protocolsField.value?.includes('UDP')) {
-                                protocolsField.onChange(
-                                  protocolsField.value.filter(
-                                    (v: string) => v !== 'UDP'
-                                  )
-                                )
-                              } else {
-                                protocolsField.onChange([
-                                  ...(protocolsField.value || []),
-                                  'UDP',
-                                ])
-                              }
-                            }}
-                          />{' '}
-                          UDP
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                render={({ field }) => <AllowedProtocolsField field={field} />}
               />
               <Controller
                 control={form.control}
