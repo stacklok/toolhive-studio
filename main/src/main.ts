@@ -76,14 +76,12 @@ autoUpdater.on('before-quit-for-update', () => {
   log.info('🔄 before-quit-for-update event fired')
 })
 
-autoUpdater.on('update-downloaded', (_, releaseNotes, releaseName) => {
+autoUpdater.on('update-downloaded', (_, __, releaseName) => {
   log.info('🔄 Update downloaded - showing dialog')
-  log.info(
-    `📦 Release info: ${releaseName}, Notes: ${releaseNotes?.substring(0, 50)}...`
-  )
+  log.info(`📦 Release info: ${releaseName}`)
 
   if (!mainWindow) {
-    log.error('❌ MainWindow not available for update dialog')
+    log.error('MainWindow not available for update dialog')
     return
   }
 
@@ -93,18 +91,20 @@ autoUpdater.on('update-downloaded', (_, releaseNotes, releaseName) => {
   mainWindow.focus()
   mainWindow.show()
 
-  const newVersion = releaseName || 'Unknown version'
-
   const dialogOpts = {
     type: 'info' as const,
     buttons: ['Restart', 'Later'],
-    title: `Release alpha ${newVersion}`,
+    title: `Release alpha ${releaseName}`,
     message:
-      'A new version has been downloaded.\nRestart the application to apply the updates.',
-    detail: `Ready to install ${newVersion}`,
+      process.platform === 'darwin'
+        ? `Release ${releaseName}`
+        : 'A new version has been downloaded.\nRestart the application to apply the updates.',
+    detail:
+      process.platform === 'darwin'
+        ? 'A new version has been downloaded.\nRestart the application to apply the updates.'
+        : `Ready to install ${releaseName}`,
+    icon: undefined,
   }
-
-  log.info('📱 Showing update dialog...')
 
   dialog
     .showMessageBox(mainWindow, dialogOpts)
@@ -127,33 +127,22 @@ autoUpdater.on('update-downloaded', (_, releaseNotes, releaseName) => {
 
         try {
           log.info('🛑 Starting graceful shutdown before update...')
-          log.info('📤 Sending graceful-exit to renderer')
           mainWindow?.webContents.send('graceful-exit')
 
           log.info('⏳ Waiting for renderer...')
-          await delay(1000)
+          await delay(500)
 
           const port = getToolhivePort()
           if (port) {
-            log.info('🛑 Stopping servers with graceful shutdown...')
             await stopAllServers(binPath, port)
-            log.info('✅ Servers stopped successfully')
           }
 
-          log.info('🛑 Stopping ToolHive process...')
           stopToolhive()
 
-          log.info('🗑️ Destroying tray')
           tray?.destroy()
 
           log.info('🚀 All cleaned up, calling autoUpdater.quitAndInstall()...')
           autoUpdater.quitAndInstall()
-
-          setTimeout(() => {
-            log.info('🔄 Manual restart fallback')
-            app.relaunch()
-            app.quit()
-          }, 2000)
         } catch (error) {
           log.error('❌ Error during graceful shutdown:', error)
           tray?.destroy()
@@ -183,17 +172,8 @@ let isQuitting = false
 
 let tearingDown = false
 
-let isInstallingUpdate = false
-
 /** Hold the quit, run teardown, then really exit. */
 export async function blockQuit(source: string, event?: Electron.Event) {
-  if (isInstallingUpdate) {
-    log.info(
-      `[${source}] Skipping graceful teardown during update installation`
-    )
-    return
-  }
-
   if (tearingDown) return
   tearingDown = true
   isQuitting = true
@@ -537,7 +517,6 @@ ipcMain.handle('install-update-and-restart', async () => {
   // This will prevent the graceful shutdown process
   isQuitting = true
   tearingDown = true
-  isInstallingUpdate = true // Set the flag for update installation
 
   // Stop ToolHive and servers immediately without graceful shutdown
   try {
