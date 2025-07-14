@@ -13,7 +13,6 @@ import type { UseFormReturn } from 'react-hook-form'
 import type { FormSchemaRunFromRegistry } from '../../lib/get-form-schema-run-from-registry'
 import type { GroupedEnvVars } from '../../lib/group-env-vars'
 import { SecretRow, EnvVarRow } from './index'
-import React from 'react'
 
 export interface ConfigurationTabContentProps {
   error: string | null

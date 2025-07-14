@@ -855,6 +855,81 @@ describe('FormRunFromRegistry', () => {
     ).toBeInTheDocument()
   })
 
+  it('shows the alert only when at least one of hosts, ports, or protocols is empty', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    // Switch to the Network Isolation tab
+    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    await userEvent.click(networkTab)
+    // Enable the switch
+    const switchLabel = screen.getByLabelText('Network isolation')
+    await userEvent.click(switchLabel)
+
+    // By default, all are empty, so alert should show
+    expect(
+      screen.getByText(
+        /this configuration blocks all outbound network traffic from the mcp server/i
+      )
+    ).toBeInTheDocument()
+
+    // Add a host
+    const addHostBtn = screen.getByRole('button', { name: /add a host/i })
+    await userEvent.click(addHostBtn)
+    const hostInput = screen.getByLabelText('Host 1')
+    await userEvent.type(hostInput, 'example.com')
+    // Still missing ports and protocols, so alert should show
+    expect(
+      screen.getByText(
+        /this configuration blocks all outbound network traffic from the mcp server/i
+      )
+    ).toBeInTheDocument()
+
+    // Add a port
+    const addPortBtn = screen.getByRole('button', { name: /add a port/i })
+    await userEvent.click(addPortBtn)
+    const portInput = screen.getByLabelText('Port 1')
+    await userEvent.type(portInput, '8080')
+    // Still missing protocols, so alert should show
+    expect(
+      screen.getByText(
+        /this configuration blocks all outbound network traffic from the mcp server/i
+      )
+    ).toBeInTheDocument()
+
+    // Add a protocol
+    const tcpCheckbox = screen.getByLabelText('TCP')
+    await userEvent.click(tcpCheckbox)
+    // Now all three have at least one value, so alert should NOT show
+    expect(
+      screen.queryByText(
+        /this configuration blocks all outbound network traffic from the mcp server/i
+      )
+    ).not.toBeInTheDocument()
+
+    // Remove the host, alert should show again
+    const removeHostBtn = screen.getByLabelText('Remove Host 1')
+    await userEvent.click(removeHostBtn)
+    expect(
+      screen.getByText(
+        /this configuration blocks all outbound network traffic from the mcp server/i
+      )
+    ).toBeInTheDocument()
+  })
+
   it('submits correct network isolation policy and allowed protocols', async () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({

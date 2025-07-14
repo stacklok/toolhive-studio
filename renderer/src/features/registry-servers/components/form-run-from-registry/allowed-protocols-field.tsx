@@ -1,5 +1,4 @@
 import { Label } from '@/common/components/ui/label'
-import React from 'react'
 
 interface AllowedProtocolsFieldProps {
   field: {

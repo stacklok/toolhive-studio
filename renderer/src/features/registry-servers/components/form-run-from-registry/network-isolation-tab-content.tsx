@@ -4,7 +4,6 @@ import { Label } from '@/common/components/ui/label'
 import { Alert, AlertDescription } from '@/common/components/ui/alert'
 import { AlertTriangle } from 'lucide-react'
 import { DynamicArrayField } from '../dynamic-array-field'
-import React from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 import type { FormSchemaRunFromRegistry } from '../../lib/get-form-schema-run-from-registry'
 import { AllowedProtocolsField } from './allowed-protocols-field'
@@ -39,68 +38,79 @@ export function NetworkIsolationTabContent({
     <Controller
       control={form.control}
       name="networkIsolation"
-      render={({ field: networkField }) => (
-        <div className="p-6">
-          <div className="mb-4 flex items-center gap-4 rounded-md border px-3 py-4">
-            <Switch
-              id="network-isolation-switch"
-              aria-label="Network isolation"
-              checked={!!networkField.value}
-              onCheckedChange={networkField.onChange}
-            />
-            <Label htmlFor="network-isolation-switch">Network isolation</Label>
+      render={({ field: networkField }) => {
+        const hosts = form.watch('allowedHosts') || []
+        const ports = form.watch('allowedPorts') || []
+        const protocols = form.watch('allowedProtocols') || []
+        return (
+          <div className="p-6">
+            <div className="mb-4 flex items-center gap-4 rounded-md border px-3 py-4">
+              <Switch
+                id="network-isolation-switch"
+                aria-label="Network isolation"
+                checked={!!networkField.value}
+                onCheckedChange={networkField.onChange}
+              />
+              <Label htmlFor="network-isolation-switch">
+                Network isolation
+              </Label>
+            </div>
+            {networkField.value && (
+              <>
+                {/* Show alert only if any of the three are empty, and place it below the switch */}
+                {(!hosts.length || !ports.length || !protocols.length) && (
+                  <Alert className="mt-2">
+                    <AlertTriangle className="mt-0.5" />
+                    <AlertDescription>
+                      This configuration blocks all outbound network traffic
+                      from the MCP server.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                <Controller
+                  control={form.control}
+                  name="allowedHosts"
+                  render={({ field: hostsField }) => (
+                    <DynamicArrayField
+                      label="Allowed Hosts"
+                      value={hostsField.value || []}
+                      onChange={hostsField.onChange}
+                      inputLabelPrefix="Host"
+                      addButtonText="Add a host"
+                      validate={validateHost}
+                    />
+                  )}
+                />
+                <Controller
+                  control={form.control}
+                  name="allowedPorts"
+                  render={({ field: portsField }) => (
+                    <DynamicArrayField
+                      label="Allowed Ports"
+                      value={portsField.value?.map(String) || []}
+                      onChange={(arr) =>
+                        portsField.onChange(
+                          arr.map((v) => (v === '' ? '' : Number(v)))
+                        )
+                      }
+                      inputLabelPrefix="Port"
+                      addButtonText="Add a port"
+                      validate={validatePort}
+                    />
+                  )}
+                />
+                <Controller
+                  control={form.control}
+                  name="allowedProtocols"
+                  render={({ field }) => (
+                    <AllowedProtocolsField field={field} />
+                  )}
+                />
+              </>
+            )}
           </div>
-          {networkField.value && (
-            <>
-              <Alert className="mt-2">
-                <AlertTriangle className="mt-0.5" />
-                <AlertDescription>
-                  This configuration blocks all outbound network traffic from
-                  the MCP server.
-                </AlertDescription>
-              </Alert>
-              {/* Allowed Protocols */}
-              <Controller
-                control={form.control}
-                name="allowedHosts"
-                render={({ field: hostsField }) => (
-                  <DynamicArrayField
-                    label="Allowed Hosts"
-                    value={hostsField.value || []}
-                    onChange={hostsField.onChange}
-                    inputLabelPrefix="Host"
-                    addButtonText="Add a host"
-                    validate={validateHost}
-                  />
-                )}
-              />
-              <Controller
-                control={form.control}
-                name="allowedPorts"
-                render={({ field: portsField }) => (
-                  <DynamicArrayField
-                    label="Allowed Ports"
-                    value={portsField.value?.map(String) || []}
-                    onChange={(arr) =>
-                      portsField.onChange(
-                        arr.map((v) => (v === '' ? '' : Number(v)))
-                      )
-                    }
-                    inputLabelPrefix="Port"
-                    addButtonText="Add a port"
-                    validate={validatePort}
-                  />
-                )}
-              />
-              <Controller
-                control={form.control}
-                name="allowedProtocols"
-                render={({ field }) => <AllowedProtocolsField field={field} />}
-              />
-            </>
-          )}
-        </div>
-      )}
+        )
+      }}
     />
   )
 }
