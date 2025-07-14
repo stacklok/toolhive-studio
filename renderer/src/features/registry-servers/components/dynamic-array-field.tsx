@@ -14,7 +14,7 @@ interface DynamicArrayFieldProps {
   validate?: (value: string) => string | null
 }
 
-export const DynamicArrayField: React.FC<DynamicArrayFieldProps> = ({
+export const DynamicArrayField = ({
   label,
   value,
   onChange,
@@ -22,11 +22,11 @@ export const DynamicArrayField: React.FC<DynamicArrayFieldProps> = ({
   inputProps = {},
   addButtonText = 'Add',
   validate,
-}) => {
+}: DynamicArrayFieldProps) => {
   const [touched, setTouched] = useState<boolean[]>(value.map(() => false))
 
-  // Update touched state if value length changes
   React.useEffect(() => {
+    // Adjusts "touched" array to the correct length
     setTouched((t) => {
       if (value.length > t.length)
         return [...t, ...Array(value.length - t.length).fill(false)]
@@ -39,52 +39,50 @@ export const DynamicArrayField: React.FC<DynamicArrayFieldProps> = ({
     <div className="mt-6 w-full">
       <Label>{label}</Label>
       <div role="group" aria-label={label} className="w-full">
-        {Array.isArray(value) && value.length > 0 && (
-          <div className="mt-2 flex w-full flex-col gap-2">
-            {value.map((item, idx) => {
-              const error = validate ? validate(item) : null
-              return (
-                <div key={idx} className="flex w-full flex-col gap-1">
-                  <div className="flex w-full items-center gap-2">
-                    <Input
-                      type="text"
-                      aria-label={`${inputLabelPrefix} ${idx + 1}`}
-                      value={item}
-                      onChange={(e) => {
-                        const newArr = [...value]
-                        newArr[idx] = e.target.value
-                        onChange(newArr)
-                      }}
-                      onBlur={() => {
-                        setTouched((t) => {
-                          const arr = [...t]
-                          arr[idx] = true
-                          return arr
-                        })
-                      }}
-                      className="w-32 grow"
-                      {...inputProps}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      aria-label={`Remove ${inputLabelPrefix} ${idx + 1}`}
-                      onClick={() => {
-                        const newArr = value.filter((_, i) => i !== idx)
-                        onChange(newArr)
-                      }}
-                    >
-                      <Trash2 />
-                    </Button>
-                  </div>
-                  {touched[idx] && error && (
-                    <span className="text-xs text-red-500">{error}</span>
-                  )}
+        <div className="mt-2 flex w-full flex-col gap-2">
+          {value.map((item, idx) => {
+            const error = validate ? validate(item) : null
+            return (
+              <div key={idx} className="flex w-full flex-col gap-1">
+                <div className="flex w-full items-center gap-2">
+                  <Input
+                    type="text"
+                    aria-label={`${inputLabelPrefix} ${idx + 1}`}
+                    value={item}
+                    onChange={(e) => {
+                      const newArr = [...value]
+                      newArr[idx] = e.target.value
+                      onChange(newArr)
+                    }}
+                    onBlur={() => {
+                      setTouched((t) => {
+                        const arr = [...t]
+                        arr[idx] = true
+                        return arr
+                      })
+                    }}
+                    className="w-32 grow"
+                    {...inputProps}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    aria-label={`Remove ${inputLabelPrefix} ${idx + 1}`}
+                    onClick={() => {
+                      const newArr = value.filter((_, i) => i !== idx)
+                      onChange(newArr)
+                    }}
+                  >
+                    <Trash2 />
+                  </Button>
                 </div>
-              )
-            })}
-          </div>
-        )}
+                {touched[idx] && error && (
+                  <span className="text-xs text-red-500">{error}</span>
+                )}
+              </div>
+            )
+          })}
+        </div>
         <Button
           type="button"
           variant="secondary"
