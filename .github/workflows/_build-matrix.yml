@@ -55,7 +55,7 @@ jobs:
         env:
           npm_config_target_platform: ${{ runner.os == 'Linux' && 'linux' || (runner.os == 'macOS' && 'darwin' || 'win32') }}
           npm_config_target_arch: ${{ matrix.arch }}
-          ELECTRON_FORGE_ARCH: ${{ matrix.arch }} 
+          ELECTRON_FORGE_ARCH: ${{ matrix.arch }}
           # Apple API Key method for notarization (set by composite action)
           APPLE_API_KEY: ${{ env.APPLE_API_KEY_PATH }}
           APPLE_ISSUER_ID: ${{ env.APPLE_ISSUER_ID }}
