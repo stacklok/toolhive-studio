@@ -41,10 +41,6 @@ export type PermissionsOutboundNetworkPermissions = {
    */
   allow_port?: Array<number>
   /**
-   * AllowTransport is a list of allowed transport protocols (tcp, udp)
-   */
-  allow_transport?: Array<string>
-  /**
    * InsecureAllowAll allows all outbound network connections
    */
   insecure_allow_all?: boolean
