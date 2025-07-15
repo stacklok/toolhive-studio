@@ -12,10 +12,12 @@ export async function restartClientNotification({
   const { clients = [] } = await queryClient.ensureQueryData(
     getApiV1BetaDiscoveryClientsOptions()
   )
-  const matchedClient = clients.find(
-    (client) =>
-      client.client_type && CLIENTS_TO_RESTART.includes(client.client_type)
-  )!
+  const matchedClient = clients
+    .filter((client) => client.installed && client.registered)
+    .find(
+      (client) =>
+        client.client_type && CLIENTS_TO_RESTART.includes(client.client_type)
+    )!
 
   if (!matchedClient) return
 
