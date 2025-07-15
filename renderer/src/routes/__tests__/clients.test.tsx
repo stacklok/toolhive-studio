@@ -25,43 +25,44 @@ describe('Clients Route', () => {
     expect(screen.getByText('Claude Code')).toBeInTheDocument()
     expect(screen.getAllByRole('switch')).toHaveLength(5)
   })
-})
 
-describe.each([
-  {
-    name: 'no clients',
-    mockResponse: { clients: [] } as V1ClientStatusResponse,
-  },
-  {
-    name: 'clients present but not installed',
-    mockResponse: {
-      clients: [
-        { client_type: 'foo', installed: false, registered: false },
-        { client_type: 'bar', installed: false, registered: false },
-      ],
-    } as V1ClientStatusResponse,
-  },
-])('Clients Route empty state: $name', ({ mockResponse }) => {
-  it('shows empty state when there are no installed clients', async () => {
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/discovery/clients'), () => {
-        return HttpResponse.json(mockResponse)
-      })
-    )
-
-    renderRoute(router)
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole('heading', { name: 'No clients detected' })
-      ).toBeInTheDocument()
-    })
-
-    expect(screen.getByText('No clients detected')).toBeInTheDocument()
-    expect(
-      screen.getByText(
-        'Clients are tools that can connect to ToolHive. If your client is not detected, consult our documentation.'
+  it.each([
+    {
+      name: 'no clients',
+      mockResponse: { clients: [] } as V1ClientStatusResponse,
+    },
+    {
+      name: 'clients present but not installed',
+      mockResponse: {
+        clients: [
+          { client_type: 'foo', installed: false, registered: false },
+          { client_type: 'bar', installed: false, registered: false },
+        ],
+      } as V1ClientStatusResponse,
+    },
+  ])(
+    'shows empty state when there are no installed clients ($name)',
+    async ({ mockResponse }) => {
+      server.use(
+        http.get(mswEndpoint('/api/v1beta/discovery/clients'), () => {
+          return HttpResponse.json(mockResponse)
+        })
       )
-    ).toBeInTheDocument()
-  })
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('heading', { name: 'No clients detected' })
+        ).toBeInTheDocument()
+      })
+
+      expect(screen.getByText('No clients detected')).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          'Clients are tools that can connect to ToolHive. If your client is not detected, consult our documentation.'
+        )
+      ).toBeInTheDocument()
+    }
+  )
 })
