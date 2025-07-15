@@ -32,7 +32,7 @@ export default class MakerTarGz extends MakerBase<Record<string, never>> {
     targetArch,
     targetPlatform,
   }: MakerOptions): Promise<string[]> {
-    const baseName = `${packageJSON.name}-${packageJSON.version}-${targetPlatform}-${targetArch}`
+    const baseName = `${packageJSON.name}-${targetPlatform}-${targetArch}`
     const fileName = `${baseName}.tar.gz`
     const outPath = path.join(makeDir, fileName)
 
