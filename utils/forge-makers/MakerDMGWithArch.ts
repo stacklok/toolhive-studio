@@ -33,8 +33,6 @@ export default class MakerDMGWithArch extends MakerDMG {
 
         await fs.rename(filePath, newFilePath)
         renamedResults.push(newFilePath)
-
-        console.log(`Created DMG: ${newFileName}`)
       }
 
       return renamedResults
