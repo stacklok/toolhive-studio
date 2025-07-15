@@ -33,9 +33,7 @@ jobs:
           - os: windows-latest
             arch: x64
           - os: macos-latest
-            arch: x64
-          - os: macos-latest
-            arch: arm64
+            arch: 'x64,arm64'
     env:
       NODE_OPTIONS: '--max_old_space_size=4096'
     steps:
@@ -76,7 +74,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          # flatpak itself isn’t strictly required to *build*, but it’s good to have.
+          # flatpak itself isn't strictly required to *build*, but it's good to have.
           sudo apt-get install -y --no-install-recommends \
                flatpak flatpak-builder elfutils
           flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
