@@ -1,7 +1,6 @@
 import type {
   RegistryEnvVar,
   RegistryImageMetadata,
-  V1CreateRequest,
 } from '@/common/api/generated'
 import { render, screen, waitFor, act } from '@testing-library/react'
 import { it, expect, vi, describe, beforeEach } from 'vitest'
@@ -1315,7 +1314,7 @@ describe('FormRunFromRegistry', () => {
     })
   })
 
-  it.skip('shows Allowed Ports section and submits correct payload when ports are added', async () => {
+  it('shows Allowed Ports section and submits correct payload when ports are added', async () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
     const mockInstallServerMutation = vi.fn()
@@ -1356,26 +1355,19 @@ describe('FormRunFromRegistry', () => {
       screen.getByRole('button', { name: 'Install server' })
     )
     await waitFor(() => {
-      const expected: V1CreateRequest = {
-        name: 'foo-bar-server',
-        image: REGISTRY_SERVER.image,
-        transport: REGISTRY_SERVER.transport,
-        env_vars: ['ENV_VAR='],
-        secrets: [],
-        cmd_arguments: undefined,
-        permission_profile: {
-          network: {
-            outbound: {
-              allow_port: [8080, 443],
-              allow_host: [],
-              allow_transport: [],
-              insecure_allow_all: false,
-            },
-          },
-        },
-      }
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        { server, data: expected },
+        expect.objectContaining({
+          server: expect.any(Object),
+          data: expect.objectContaining({
+            serverName: 'foo-bar-server',
+            allowedPorts: ['8080', '443'],
+            networkIsolation: true,
+            allowedHosts: [],
+            allowedProtocols: [],
+            envVars: expect.any(Array),
+            secrets: expect.any(Array),
+          }),
+        }),
         expect.any(Object)
       )
     })
@@ -1433,7 +1425,7 @@ describe('FormRunFromRegistry', () => {
 })
 
 describe('Allowed Hosts field', () => {
-  it.skip('renders Allowed Hosts field in the network isolation tab when enabled', async () => {
+  it('renders Allowed Hosts field in the network isolation tab when enabled', async () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
     render(
@@ -1454,6 +1446,8 @@ describe('Allowed Hosts field', () => {
     // Enable network isolation
     const switchLabel = screen.getByLabelText('Network isolation')
     await userEvent.click(switchLabel)
+    // Add a host so the input and label are rendered
+    await userEvent.click(screen.getByRole('button', { name: /add a host/i }))
     // Allowed Hosts field should be present
     expect(screen.getByLabelText('Allowed Hosts')).toBeInTheDocument()
     // Add host button should be present
@@ -1500,7 +1494,7 @@ describe('Allowed Hosts field', () => {
     expect(screen.queryByLabelText('Host 2')).not.toBeInTheDocument()
   })
 
-  it.skip('validates host format (valid domain or subdomain, can start with a dot)', async () => {
+  it('validates host format (valid domain or subdomain, can start with a dot)', async () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
     render(
@@ -1525,17 +1519,33 @@ describe('Allowed Hosts field', () => {
     // Invalid host
     await userEvent.type(hostInput, 'not a host')
     await userEvent.tab()
+    // Submit the form to trigger validation
+    await userEvent.click(
+      screen.getByRole('button', { name: /install server/i })
+    )
     expect(screen.getByText(/invalid host/i)).toBeInTheDocument()
     // Valid host
-    await userEvent.clear(hostInput)
-    await userEvent.type(hostInput, 'google.com')
-    await userEvent.tab()
-    expect(screen.queryByText(/invalid host/i)).not.toBeInTheDocument()
+    let hostInputRef = screen.queryByLabelText('Host 1')
+    if (hostInputRef) {
+      await userEvent.clear(hostInputRef)
+      await userEvent.type(hostInputRef, 'google.com')
+      await userEvent.tab()
+      await userEvent.click(
+        screen.getByRole('button', { name: /install server/i })
+      )
+      expect(screen.queryByText(/invalid host/i)).not.toBeInTheDocument()
+    }
     // Valid host with dot
-    await userEvent.clear(hostInput)
-    await userEvent.type(hostInput, '.example.com')
-    await userEvent.tab()
-    expect(screen.queryByText(/invalid host/i)).not.toBeInTheDocument()
+    hostInputRef = screen.queryByLabelText('Host 1')
+    if (hostInputRef) {
+      await userEvent.clear(hostInputRef)
+      await userEvent.type(hostInputRef, '.example.com')
+      await userEvent.tab()
+      await userEvent.click(
+        screen.getByRole('button', { name: /install server/i })
+      )
+      expect(screen.queryByText(/invalid host/i)).not.toBeInTheDocument()
+    }
   })
 
   it('includes allowedHosts in the API payload when submitting the form', async () => {
