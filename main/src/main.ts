@@ -541,6 +541,12 @@ ipcMain.handle('install-update-and-restart', async () => {
   return { success: true }
 })
 
+ipcMain.handle('is-release-build', () => {
+  console.log('isReleaseBuild', !!process.env.SENTRY_RELEASE)
+  log.info('isReleaseBuild', !!process.env.SENTRY_RELEASE)
+  return !!process.env.SENTRY_RELEASE
+})
+
 // Shutdown store IPC handlers
 ipcMain.handle('shutdown-store:get-last-servers', () => {
   return getLastShutdownServers()
