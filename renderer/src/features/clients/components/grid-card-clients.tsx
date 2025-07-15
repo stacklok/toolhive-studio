@@ -10,7 +10,6 @@ export function GridCardClients({
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {clients
-          .filter((client) => client.installed && client.client_type)
           .sort((a, b) => a.client_type!.localeCompare(b.client_type!))
           .map((client) => (
             <CardClient key={client.client_type} client={client} />
