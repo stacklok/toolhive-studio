@@ -37,7 +37,19 @@ export default class MakerDMGWithArch extends MakerDMG {
   }
 
   async make(opts: MakerOptions): Promise<string[]> {
-    const targetArch = this.getTargetArch(opts)
+    const { targetArch } = opts
+
+    // Try to get architecture from multiple sources
+    const envArch =
+      process.env.ELECTRON_FORGE_ARCH ||
+      process.env.TARGET_ARCH ||
+      process.env.npm_config_target_arch
+    const actualArch = envArch || targetArch
+
+    console.log(`🔍 Debug: targetArch received = ${targetArch}`)
+    console.log(`🔍 Debug: envArch = ${envArch}`)
+    console.log(`🔍 Debug: actualArch (final) = ${actualArch}`)
+    console.log(`🔍 Debug: process.arch = ${process.arch}`)
 
     try {
       const originalResults = await super.make(opts)
@@ -48,7 +60,7 @@ export default class MakerDMGWithArch extends MakerDMG {
         const ext = path.extname(filePath)
         const baseName = path.basename(filePath, ext)
 
-        const newFileName = `${baseName}-${targetArch}${ext}`
+        const newFileName = `${baseName}-${actualArch}${ext}`
         const newFilePath = path.join(dir, newFileName)
 
         await fs.rename(filePath, newFilePath)
@@ -59,7 +71,7 @@ export default class MakerDMGWithArch extends MakerDMG {
 
       return renamedResults
     } catch (error) {
-      console.error(`Error building DMG for ${targetArch}:`, error)
+      console.error(`Error building DMG for ${actualArch}:`, error)
       throw error
     }
   }
