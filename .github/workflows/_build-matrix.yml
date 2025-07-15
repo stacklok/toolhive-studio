@@ -51,25 +51,10 @@ jobs:
           flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
       - name: Build App
-        run: |
-          echo "🔍 Debug: matrix.arch = ${{ matrix.arch }}"
-          echo "🔍 Debug: runner.arch = ${{ runner.arch }}"
-          echo "🔍 Debug: RUNNER_ARCH = $RUNNER_ARCH"
-          pnpm run make -- --arch=${{ matrix.arch }}
+        run: pnpm run make -- --arch=${{ matrix.arch }}
         env:
           npm_config_target_platform: ${{ runner.os == 'Linux' && 'linux' || (runner.os == 'macOS' && 'darwin' || 'win32') }}
-          npm_config_target_arch: ${{ matrix.arch }}
-          npm_config_arch: ${{ matrix.arch }}
-          TARGET_ARCH: ${{ matrix.arch }}
-          ELECTRON_FORGE_ARCH: ${{ matrix.arch }}
           # Apple API Key method for notarization (set by composite action)
           APPLE_API_KEY: ${{ env.APPLE_API_KEY_PATH }}
           APPLE_ISSUER_ID: ${{ env.APPLE_ISSUER_ID }}
           APPLE_KEY_ID: ${{ env.APPLE_KEY_ID }}
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-${{ matrix.os }}-${{ matrix.arch }}
-          path: out/make/**/*
-          retention-days: 1
