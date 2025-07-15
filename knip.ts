@@ -32,7 +32,7 @@ export default {
     'main/src/vite-env.d.ts',
   ],
   ignoreDependencies: [
-    '@electron-forge/maker-flatpak',
+    '@electron-forge/maker-dmg', // Used indirectly in MakerDMGWithArch
     '@electron-forge/publisher-github',
     '@electron-forge/maker-base',
     '@tailwindcss/vite',

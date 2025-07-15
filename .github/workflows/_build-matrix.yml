@@ -7,11 +7,19 @@ permissions:
 
 jobs:
   build:
-    name: Build App on ${{ matrix.os }}
+    name: Build App on ${{ matrix.os }}${{ matrix.arch && format(' ({0})', matrix.arch) || '' }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            arch: x64
+          - os: windows-latest
+            arch: x64
+          - os: macos-13
+            arch: x64
+          - os: macos-latest
+            arch: arm64
     env:
       NODE_OPTIONS: '--max_old_space_size=4096'
     steps:
@@ -37,13 +45,13 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          # flatpak itself isn’t strictly required to *build*, but it’s good to have.
+          # flatpak itself isn't strictly required to *build*, but it's good to have.
           sudo apt-get install -y --no-install-recommends \
                flatpak flatpak-builder elfutils
           flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
       - name: Build App
-        run: pnpm run make
+        run: pnpm run make -- --arch=${{ matrix.arch }}
         env:
           npm_config_target_platform: ${{ runner.os == 'Linux' && 'linux' || (runner.os == 'macOS' && 'darwin' || 'win32') }}
           # Apple API Key method for notarization (set by composite action)
