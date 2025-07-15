@@ -22,12 +22,20 @@ jobs:
     secrets: inherit
 
   build-and-release:
-    name: Build and Release on ${{ matrix.os }}
+    name: Build and Release on ${{ matrix.os }}${{ matrix.arch && format(' ({0})', matrix.arch) || '' }}
     runs-on: ${{ matrix.os }}
     needs: [security, static-checks, unit-tests]
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            arch: x64
+          - os: windows-latest
+            arch: x64
+          - os: macos-latest
+            arch: x64
+          - os: macos-latest
+            arch: arm64
     env:
       NODE_OPTIONS: '--max_old_space_size=4096'
     steps:
@@ -74,7 +82,7 @@ jobs:
           flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
       - name: Build and Publish to GitHub Release
-        run: pnpm run publish
+        run: pnpm run publish -- --arch=${{ matrix.arch }}
         env:
           # Ensure the correct Node.js version is used for native modules
           npm_config_target_platform: ${{ runner.os == 'Linux' && 'linux' || (runner.os == 'macOS' && 'darwin' || 'win32') }}
