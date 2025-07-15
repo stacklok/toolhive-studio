@@ -47,7 +47,7 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
 
   return (
     <div className="mt-6 w-full">
-      <Label>{label}</Label>
+      <Label htmlFor={`${name}-0`}>{label}</Label>
 
       <div className="mt-2 flex flex-col gap-2">
         {fields.map((field, idx) => (
@@ -64,6 +64,7 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
                   <FormControl className="w-full">
                     <Input
                       {...field}
+                      id={`${name}-${idx}`}
                       aria-label={`${inputLabelPrefix} ${idx + 1}`}
                       className="min-w-0 grow"
                       {...inputProps}
