@@ -33,7 +33,7 @@ import {
   binPath,
 } from './toolhive-manager'
 import log from './logger'
-import { getAppVersion, pollWindowReady } from './util'
+import { getAppVersion, isOfficialReleaseBuild, pollWindowReady } from './util'
 import { delay } from '../../utils/delay'
 
 import Store from 'electron-store'
@@ -542,9 +542,7 @@ ipcMain.handle('install-update-and-restart', async () => {
 })
 
 ipcMain.handle('is-release-build', () => {
-  console.log('isReleaseBuild', !!process.env.SENTRY_RELEASE)
-  log.info('isReleaseBuild', !!process.env.SENTRY_RELEASE)
-  return !!process.env.SENTRY_RELEASE
+  return isOfficialReleaseBuild()
 })
 
 // Shutdown store IPC handlers
