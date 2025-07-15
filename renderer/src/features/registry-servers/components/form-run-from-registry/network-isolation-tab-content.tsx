@@ -6,7 +6,6 @@ import { AlertTriangle } from 'lucide-react'
 import { DynamicArrayField } from '../dynamic-array-field'
 import type { UseFormReturn } from 'react-hook-form'
 import { type FormSchemaRunFromRegistry } from '../../lib/get-form-schema-run-from-registry'
-import { AllowedProtocolsField } from './allowed-protocols-field'
 
 export function NetworkIsolationTabContent({
   form,
@@ -20,7 +19,6 @@ export function NetworkIsolationTabContent({
       render={({ field: networkField }) => {
         const hosts = form.watch('allowedHosts') || []
         const ports = form.watch('allowedPorts') || []
-        const protocols = form.watch('allowedProtocols') || []
         return (
           <div className="p-6">
             <div className="mb-4 flex items-center gap-4 rounded-md border px-3 py-4">
@@ -37,7 +35,7 @@ export function NetworkIsolationTabContent({
             {networkField.value && (
               <>
                 {/* Show alert only if any of the three are empty, and place it below the switch */}
-                {(!hosts.length || !ports.length || !protocols.length) && (
+                {(!hosts.length || !ports.length) && (
                   <Alert className="mt-2">
                     <AlertTriangle className="mt-0.5" />
                     <AlertDescription>
@@ -73,20 +71,6 @@ export function NetworkIsolationTabContent({
                       control={form.control}
                       inputLabelPrefix="Port"
                       addButtonText="Add a port"
-                    />
-                  )}
-                />
-                <Controller
-                  control={form.control}
-                  name="allowedProtocols"
-                  render={({ field }) => (
-                    <AllowedProtocolsField
-                      field={
-                        field as {
-                          value?: string[]
-                          onChange: (value: string[]) => void
-                        }
-                      }
                     />
                   )}
                 />

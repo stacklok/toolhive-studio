@@ -107,7 +107,6 @@ export function getFormSchemaRunFromRegistry({
         message: 'Invalid port',
       })
       .array(),
-    allowedProtocols: z.string().array(),
   })
 }
 

@@ -174,7 +174,6 @@ describe('prepareCreateWorkloadData', () => {
       networkIsolation: false,
       allowedHosts: [],
       allowedPorts: [],
-      allowedProtocols: [],
     }
 
     const secrets = [
@@ -206,7 +205,6 @@ describe('prepareCreateWorkloadData', () => {
       networkIsolation: false,
       allowedHosts: [],
       allowedPorts: [],
-      allowedProtocols: [],
     }
 
     const result = prepareCreateWorkloadData(SERVER, data)
@@ -232,7 +230,6 @@ describe('prepareCreateWorkloadData', () => {
       networkIsolation: false,
       allowedHosts: [],
       allowedPorts: [],
-      allowedProtocols: [],
     }
 
     const result = prepareCreateWorkloadData(SERVER, data)
@@ -249,7 +246,6 @@ describe('prepareCreateWorkloadData', () => {
       networkIsolation: false,
       allowedHosts: [],
       allowedPorts: [],
-      allowedProtocols: [],
     }
 
     const result = prepareCreateWorkloadData(SERVER, data)
@@ -271,7 +267,6 @@ describe('prepareCreateWorkloadData', () => {
       networkIsolation: false,
       allowedHosts: [],
       allowedPorts: [],
-      allowedProtocols: [],
     }
 
     const result = prepareCreateWorkloadData(serverWithoutPort, data)
