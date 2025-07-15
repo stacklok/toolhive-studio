@@ -7,10 +7,16 @@ import {
   useFieldArray,
   type Control,
   type FieldValues,
-  Controller,
   type ArrayPath,
   type Path,
+  type ControllerRenderProps,
 } from 'react-hook-form'
+import {
+  FormField,
+  FormItem,
+  FormControl,
+  FormMessage,
+} from '@/common/components/ui/form'
 
 interface DynamicArrayFieldProps<
   TFieldValues extends FieldValues = FieldValues,
@@ -46,19 +52,27 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
       <div className="mt-2 flex flex-col gap-2">
         {fields.map((field, idx) => (
           <div key={field.id} className="flex items-start gap-2">
-            <Controller
+            <FormField
               control={control}
               name={`${name}.${idx}` as Path<TFieldValues>}
-              render={({ field }) => (
-                <Input
-                  {...field}
-                  aria-label={`${inputLabelPrefix} ${idx + 1}`}
-                  className="w-32 grow"
-                  {...inputProps}
-                />
+              render={({
+                field,
+              }: {
+                field: ControllerRenderProps<TFieldValues, Path<TFieldValues>>
+              }) => (
+                <FormItem className="w-full">
+                  <FormControl>
+                    <Input
+                      {...field}
+                      aria-label={`${inputLabelPrefix} ${idx + 1}`}
+                      className="w-32 grow"
+                      {...inputProps}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
             />
-
             <Button
               type="button"
               variant="outline"
