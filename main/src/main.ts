@@ -33,7 +33,7 @@ import {
   binPath,
 } from './toolhive-manager'
 import log from './logger'
-import { getAppVersion, pollWindowReady } from './util'
+import { getAppVersion, isOfficialReleaseBuild, pollWindowReady } from './util'
 import { delay } from '../../utils/delay'
 
 import Store from 'electron-store'
@@ -539,6 +539,10 @@ ipcMain.handle('install-update-and-restart', async () => {
   // Install update and restart
   autoUpdater.quitAndInstall()
   return { success: true }
+})
+
+ipcMain.handle('is-release-build', () => {
+  return isOfficialReleaseBuild()
 })
 
 // Shutdown store IPC handlers
