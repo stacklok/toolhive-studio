@@ -1,3 +1,6 @@
+
+## Note: This is an experimental project that is actively being developed and tested - features may change without notice.
+
 <p float="left">
   <picture>
     <img src="./icons/source-files/app-icons/mac/512.png" alt="ToolHive logo" height="100" align="middle" />
