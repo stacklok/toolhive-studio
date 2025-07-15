@@ -9,7 +9,6 @@ function getVersionFromGit(): string {
       encoding: 'utf8',
       stdio: 'pipe',
     }).trim()
-
     return exactTag.replace(/^v/, '')
   } catch {
     try {
@@ -30,7 +29,6 @@ export function getAppVersion(): string {
   if (process.env.SENTRY_RELEASE) {
     return process.env.SENTRY_RELEASE
   }
-
   return getVersionFromGit()
 }
 

@@ -542,9 +542,8 @@ ipcMain.handle('install-update-and-restart', async () => {
 })
 
 ipcMain.handle('is-release-build', () => {
-  console.log('isReleaseBuild', !!process.env.SENTRY_RELEASE)
-  log.info('isReleaseBuild', !!process.env.SENTRY_RELEASE)
-  return !!process.env.SENTRY_RELEASE
+  const version = getAppVersion()
+  return /^\d+\.\d+\.\d+$/.test(version)
 })
 
 // Shutdown store IPC handlers
