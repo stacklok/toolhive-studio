@@ -44,6 +44,11 @@ export async function pollWindowReady(window: BrowserWindow): Promise<void> {
 }
 
 export function isOfficialReleaseBuild(): boolean {
-  const version = getAppVersion()
-  return /^\d+\.\d+\.\d+$/.test(version)
+  try {
+    const version = getAppVersion()
+    return /^\d+\.\d+\.\d+$/.test(version)
+  } catch {
+    log.error('Failed to get app version')
+    return false
+  }
 }
