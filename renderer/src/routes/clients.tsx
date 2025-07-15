@@ -18,11 +18,14 @@ export function Clients() {
   const {
     data: { clients = [] },
   } = useSuspenseQuery(getApiV1BetaDiscoveryClientsOptions())
+  const installedClients = clients.filter(
+    (client) => client.installed && client.client_type
+  )
 
   return (
     <>
       <TitlePage title="Clients" />
-      {clients.length === 0 ? (
+      {installedClients.length === 0 ? (
         <EmptyState
           title="No clients detected"
           body="Clients are tools that can connect to ToolHive. If your client is not detected, consult our documentation."
@@ -40,7 +43,7 @@ export function Clients() {
           illustration={IllustrationNoConnection}
         />
       ) : (
-        <GridCardClients clients={clients} />
+        <GridCardClients clients={installedClients} />
       )}
     </>
   )
