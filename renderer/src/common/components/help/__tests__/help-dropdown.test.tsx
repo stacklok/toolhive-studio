@@ -15,7 +15,7 @@ describe('HelpDropdown', () => {
     })
     expect(documentationLink).toHaveAttribute(
       'href',
-      'https://github.com/stacklok/toolhive-studio?tab=readme-ov-file#getting-started'
+      'https://docs.stacklok.com/toolhive'
     )
     expect(documentationLink).toHaveAttribute('target', '_blank')
     expect(documentationLink).toHaveAttribute('rel', 'noopener noreferrer')
