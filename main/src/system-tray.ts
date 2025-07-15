@@ -119,6 +119,12 @@ const handleStartOnLogin = async (
   try {
     setAutoLaunch(!currentStatus)
 
+    // On Windows, there might be a small delay before the settings are reflected
+    // Wait a bit before updating the UI to ensure we get the correct state
+    if (process.platform === 'win32') {
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    }
+
     // Update the tray menu to reflect the new state
     setupTrayMenu(currentTray, toolHiveIsRunning)
 

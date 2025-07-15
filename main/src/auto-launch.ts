@@ -88,6 +88,17 @@ export function getAutoLaunchStatus(): boolean {
     return existsSync(desktopFile)
   }
 
+  // For Windows, we need to pass the same path and args that were used in setAutoLaunch
+  // to get the correct status
+  if (process.platform === 'win32') {
+    const settings = app.getLoginItemSettings({
+      path: process.execPath,
+      args: ['--hidden'],
+    })
+    return settings.openAtLogin
+  }
+
+  // For macOS, no parameters needed
   const settings = app.getLoginItemSettings()
   return settings.openAtLogin
 }
