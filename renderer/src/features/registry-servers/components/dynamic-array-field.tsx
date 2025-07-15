@@ -60,12 +60,12 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
               }: {
                 field: ControllerRenderProps<TFieldValues, Path<TFieldValues>>
               }) => (
-                <FormItem className="w-full">
-                  <FormControl>
+                <FormItem className="flex-grow">
+                  <FormControl className="w-full">
                     <Input
                       {...field}
                       aria-label={`${inputLabelPrefix} ${idx + 1}`}
-                      className="w-32 grow"
+                      className="min-w-0 grow"
                       {...inputProps}
                     />
                   </FormControl>
