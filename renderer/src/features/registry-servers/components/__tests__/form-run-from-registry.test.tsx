@@ -158,24 +158,6 @@ describe('FormRunFromRegistry', () => {
     expect(switchLabel).toHaveAttribute('aria-checked', 'false')
     await userEvent.click(switchLabel)
     expect(switchLabel).toHaveAttribute('aria-checked', 'true')
-    // --- Allowed Protocols group visibility ---
-    // Should be visible only when enabled
-    expect(screen.getByLabelText('Allowed Protocols')).toBeInTheDocument()
-    const tcpCheckbox = screen.getByLabelText('TCP')
-    const udpCheckbox = screen.getByLabelText('UDP')
-    expect(tcpCheckbox).toBeInTheDocument()
-    expect(udpCheckbox).toBeInTheDocument()
-    expect(tcpCheckbox).not.toBeChecked()
-    expect(udpCheckbox).not.toBeChecked()
-    await userEvent.click(tcpCheckbox)
-    expect(tcpCheckbox).toBeChecked()
-    expect(udpCheckbox).not.toBeChecked()
-    await userEvent.click(udpCheckbox)
-    expect(tcpCheckbox).toBeChecked()
-    expect(udpCheckbox).toBeChecked()
-    await userEvent.click(tcpCheckbox)
-    expect(tcpCheckbox).not.toBeChecked()
-    expect(udpCheckbox).toBeChecked()
     // --- Alert when enabled ---
     expect(
       screen.getByText(
@@ -380,7 +362,6 @@ describe('FormRunFromRegistry', () => {
             networkIsolation: false,
             allowedHosts: [],
             allowedPorts: [],
-            allowedProtocols: [],
           }),
         }),
         expect.any(Object)
@@ -438,7 +419,6 @@ describe('FormRunFromRegistry', () => {
             networkIsolation: false,
             allowedHosts: [],
             allowedPorts: [],
-            allowedProtocols: [],
           }),
         }),
         expect.any(Object)
@@ -819,7 +799,7 @@ describe('FormRunFromRegistry', () => {
     ).toBeInTheDocument()
   })
 
-  it('shows the alert only when at least one of hosts, ports, or protocols is empty', async () => {
+  it('shows the alert only when at least one of hosts or ports is empty', async () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
@@ -855,7 +835,7 @@ describe('FormRunFromRegistry', () => {
     await userEvent.click(addHostBtn)
     const hostInput = screen.getByLabelText('Host 1')
     await userEvent.type(hostInput, 'example.com')
-    // Still missing ports and protocols, so alert should show
+    // Still missing ports, so alert should show
     expect(
       screen.getByText(
         /this configuration blocks all outbound network traffic from the mcp server/i
@@ -867,23 +847,12 @@ describe('FormRunFromRegistry', () => {
     await userEvent.click(addPortBtn)
     const portInput = screen.getByLabelText('Port 1')
     await userEvent.type(portInput, '8080')
-    // Still missing protocols, so alert should show
-    expect(
-      screen.getByText(
-        /this configuration blocks all outbound network traffic from the mcp server/i
-      )
-    ).toBeInTheDocument()
-
-    // Add a protocol
-    const tcpCheckbox = screen.getByLabelText('TCP')
-    await userEvent.click(tcpCheckbox)
-    // Now all three have at least one value, so alert should NOT show
+    // Now both have at least one value, so alert should NOT show
     expect(
       screen.queryByText(
         /this configuration blocks all outbound network traffic from the mcp server/i
       )
     ).not.toBeInTheDocument()
-
     // Remove the host, alert should show again
     const removeHostBtn = screen.getByLabelText('Remove Host 1')
     await userEvent.click(removeHostBtn)
@@ -892,426 +861,6 @@ describe('FormRunFromRegistry', () => {
         /this configuration blocks all outbound network traffic from the mcp server/i
       )
     ).toBeInTheDocument()
-  })
-
-  it('submits correct network isolation policy and allowed protocols', async () => {
-    const mockInstallServerMutation = vi.fn()
-    mockUseRunFromRegistry.mockReturnValue({
-      installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
-      isErrorSecrets: false,
-      isPendingSecrets: false,
-    })
-    const server = { ...REGISTRY_SERVER }
-    server.env_vars = ENV_VARS_OPTIONAL
-
-    // --- Scenario 1: Network isolation enabled, no protocols selected ---
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
-    )
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeVisible()
-    })
-    await userEvent.type(
-      screen.getByLabelText('Server name'),
-      'my-network-server',
-      {
-        initialSelectionStart: 0,
-        initialSelectionEnd: REGISTRY_SERVER.name?.length,
-      }
-    )
-    // Switch to the Network Isolation tab
-    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
-    await userEvent.click(networkTab)
-    // Enable the switch
-    const switchLabel = screen.getByLabelText('Network isolation')
-    await userEvent.click(switchLabel)
-    // Switch back to configuration tab to submit
-    const configTab = screen.getByRole('tab', { name: /configuration/i })
-    await userEvent.click(configTab)
-    // Submit the form
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Install server' })
-    )
-    // Check payload for network isolation enabled
-    await waitFor(() => {
-      expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        expect.objectContaining({
-          server: expect.any(Object),
-          data: expect.objectContaining({
-            serverName: 'my-network-server',
-            allowedProtocols: [],
-            networkIsolation: true,
-          }),
-        }),
-        expect.any(Object)
-      )
-    })
-
-    // --- Scenario 2: Network isolation disabled ---
-    vi.clearAllMocks()
-    mockUseRunFromRegistry.mockReturnValue({
-      installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
-      isErrorSecrets: false,
-      isPendingSecrets: false,
-    })
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
-    )
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeVisible()
-    })
-    await userEvent.type(
-      screen.getByLabelText('Server name'),
-      'my-network-server',
-      {
-        initialSelectionStart: 0,
-        initialSelectionEnd: REGISTRY_SERVER.name?.length,
-      }
-    )
-    // Ensure network isolation is not enabled (default is off)
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Install server' })
-    )
-    // Check payload for network isolation disabled (should not include restrictive policy)
-    await waitFor(() => {
-      expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        expect.objectContaining({
-          server: expect.any(Object),
-          data: expect.objectContaining({
-            serverName: 'my-network-server',
-            networkIsolation: false,
-            allowedProtocols: [],
-            allowedHosts: [],
-            allowedPorts: [],
-          }),
-        }),
-        expect.any(Object)
-      )
-    })
-
-    // --- Allowed Protocols: only TCP ---
-    vi.clearAllMocks()
-    mockUseRunFromRegistry.mockReturnValue({
-      installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
-      isErrorSecrets: false,
-      isPendingSecrets: false,
-    })
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
-    )
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeVisible()
-    })
-    await userEvent.type(
-      screen.getByLabelText('Server name'),
-      'my-network-server',
-      {
-        initialSelectionStart: 0,
-        initialSelectionEnd: REGISTRY_SERVER.name?.length,
-      }
-    )
-    const networkTab2 = screen.getByRole('tab', { name: /network isolation/i })
-    await userEvent.click(networkTab2)
-    const switchLabel2 = screen.getByLabelText('Network isolation')
-    await userEvent.click(switchLabel2)
-    const tcpCheckbox = screen.getByLabelText('TCP')
-    await userEvent.click(tcpCheckbox)
-    const configTab2 = screen.getByRole('tab', { name: /configuration/i })
-    await userEvent.click(configTab2)
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Install server' })
-    )
-    await waitFor(() => {
-      expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        expect.objectContaining({
-          server: expect.any(Object),
-          data: expect.objectContaining({
-            serverName: 'my-network-server',
-            allowedProtocols: ['TCP'],
-            networkIsolation: true,
-          }),
-        }),
-        expect.any(Object)
-      )
-    })
-
-    // --- Allowed Protocols: TCP and UDP ---
-    vi.clearAllMocks()
-    mockUseRunFromRegistry.mockReturnValue({
-      installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
-      isErrorSecrets: false,
-      isPendingSecrets: false,
-    })
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
-    )
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeVisible()
-    })
-    await userEvent.type(
-      screen.getByLabelText('Server name'),
-      'my-network-server',
-      {
-        initialSelectionStart: 0,
-        initialSelectionEnd: REGISTRY_SERVER.name?.length,
-      }
-    )
-    const networkTab3 = screen.getByRole('tab', { name: /network isolation/i })
-    await userEvent.click(networkTab3)
-    const switchLabel3 = screen.getByLabelText('Network isolation')
-    await userEvent.click(switchLabel3)
-    const tcpCheckbox2 = screen.getByLabelText('TCP')
-    const udpCheckbox2 = screen.getByLabelText('UDP')
-    await userEvent.click(tcpCheckbox2)
-    await userEvent.click(udpCheckbox2)
-    const configTab3 = screen.getByRole('tab', { name: /configuration/i })
-    await userEvent.click(configTab3)
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Install server' })
-    )
-    await waitFor(() => {
-      expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        expect.objectContaining({
-          server: expect.any(Object),
-          data: expect.objectContaining({
-            serverName: 'my-network-server',
-            allowedProtocols: ['TCP', 'UDP'],
-            networkIsolation: true,
-          }),
-        }),
-        expect.any(Object)
-      )
-    })
-  })
-
-  it('shows Allowed Protocols checkbox group only when network isolation is enabled', async () => {
-    const server = { ...REGISTRY_SERVER }
-    server.env_vars = ENV_VARS_OPTIONAL
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
-    )
-
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeVisible()
-    })
-
-    // Switch to the Network Isolation tab
-    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
-    await userEvent.click(networkTab)
-
-    // Initially, the Allowed Protocols group should not be visible
-    expect(screen.queryByLabelText('Allowed Protocols')).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('TCP')).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('UDP')).not.toBeInTheDocument()
-
-    // Enable network isolation
-    const switchLabel = screen.getByLabelText('Network isolation')
-    await userEvent.click(switchLabel)
-
-    // Now the Allowed Protocols group should be visible
-    expect(screen.getByLabelText('Allowed Protocols')).toBeInTheDocument()
-    const tcpCheckbox = screen.getByLabelText('TCP')
-    const udpCheckbox = screen.getByLabelText('UDP')
-    expect(tcpCheckbox).toBeInTheDocument()
-    expect(udpCheckbox).toBeInTheDocument()
-
-    // Both should be unchecked by default
-    expect(tcpCheckbox).not.toBeChecked()
-    expect(udpCheckbox).not.toBeChecked()
-
-    // Check TCP
-    await userEvent.click(tcpCheckbox)
-    expect(tcpCheckbox).toBeChecked()
-    expect(udpCheckbox).not.toBeChecked()
-
-    // Check UDP
-    await userEvent.click(udpCheckbox)
-    expect(tcpCheckbox).toBeChecked()
-    expect(udpCheckbox).toBeChecked()
-
-    // Uncheck TCP
-    await userEvent.click(tcpCheckbox)
-    expect(tcpCheckbox).not.toBeChecked()
-    expect(udpCheckbox).toBeChecked()
-  })
-
-  it('includes selected Allowed Protocols in the API payload when network isolation is enabled', async () => {
-    const mockInstallServerMutation = vi.fn()
-    mockUseRunFromRegistry.mockReturnValue({
-      installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
-      isErrorSecrets: false,
-      isPendingSecrets: false,
-    })
-
-    const server = { ...REGISTRY_SERVER }
-    server.env_vars = ENV_VARS_OPTIONAL
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
-    )
-
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeVisible()
-    })
-
-    // Fill in required fields
-    await userEvent.type(
-      screen.getByLabelText('Server name'),
-      'my-network-server',
-      {
-        initialSelectionStart: 0,
-        initialSelectionEnd: REGISTRY_SERVER.name?.length,
-      }
-    )
-
-    // Switch to the Network Isolation tab
-    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
-    await userEvent.click(networkTab)
-
-    // Enable network isolation
-    const switchLabel = screen.getByLabelText('Network isolation')
-    await userEvent.click(switchLabel)
-
-    // Select TCP only
-    const tcpCheckbox = screen.getByLabelText('TCP')
-    await userEvent.click(tcpCheckbox)
-
-    // Switch back to configuration tab to submit
-    const configTab = screen.getByRole('tab', { name: /configuration/i })
-    await userEvent.click(configTab)
-
-    // Submit the form
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Install server' })
-    )
-
-    // Check payload for TCP only
-    await waitFor(() => {
-      expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        expect.objectContaining({
-          server: expect.any(Object),
-          data: expect.objectContaining({
-            serverName: 'my-network-server',
-            allowedProtocols: ['TCP'],
-            networkIsolation: true,
-          }),
-        }),
-        expect.any(Object)
-      )
-    })
-
-    // Now select both TCP and UDP
-    vi.clearAllMocks()
-    mockUseRunFromRegistry.mockReturnValue({
-      installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
-      isErrorSecrets: false,
-      isPendingSecrets: false,
-    })
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
-    )
-
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeVisible()
-    })
-
-    // Fill in required fields again
-    await userEvent.type(
-      screen.getByLabelText('Server name'),
-      'my-network-server',
-      {
-        initialSelectionStart: 0,
-        initialSelectionEnd: REGISTRY_SERVER.name?.length,
-      }
-    )
-
-    // Switch to the Network Isolation tab
-    const networkTab2 = screen.getByRole('tab', { name: /network isolation/i })
-    await userEvent.click(networkTab2)
-
-    // Enable network isolation
-    const switchLabel2 = screen.getByLabelText('Network isolation')
-    await userEvent.click(switchLabel2)
-
-    // Select TCP and UDP
-    const tcpCheckbox2 = screen.getByLabelText('TCP')
-    const udpCheckbox2 = screen.getByLabelText('UDP')
-    await userEvent.click(tcpCheckbox2)
-    await userEvent.click(udpCheckbox2)
-
-    // Switch back to configuration tab to submit
-    const configTab2 = screen.getByRole('tab', { name: /configuration/i })
-    await userEvent.click(configTab2)
-
-    // Submit the form
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Install server' })
-    )
-
-    // Check payload for both TCP and UDP
-    await waitFor(() => {
-      expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        expect.objectContaining({
-          server: expect.any(Object),
-          data: expect.objectContaining({
-            serverName: 'my-network-server',
-            allowedProtocols: ['TCP', 'UDP'],
-            networkIsolation: true,
-          }),
-        }),
-        expect.any(Object)
-      )
-    })
   })
 
   it('shows Allowed Ports section and submits correct payload when ports are added', async () => {
@@ -1363,9 +912,6 @@ describe('FormRunFromRegistry', () => {
             allowedPorts: ['8080', '443'],
             networkIsolation: true,
             allowedHosts: [],
-            allowedProtocols: [],
-            envVars: expect.any(Array),
-            secrets: expect.any(Array),
           }),
         }),
         expect.any(Object)

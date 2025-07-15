@@ -162,7 +162,6 @@ export const MOCK_REGISTRY_RESPONSE = [
       network: {
         outbound: {
           insecure_allow_all: true,
-
           allow_port: [443],
         },
       },
@@ -488,7 +487,6 @@ export const MOCK_REGISTRY_RESPONSE = [
       network: {
         outbound: {
           insecure_allow_all: true,
-
           allow_port: [443],
         },
       },
@@ -720,7 +718,6 @@ export const MOCK_REGISTRY_RESPONSE = [
       network: {
         outbound: {
           insecure_allow_all: true,
-
           allow_port: [443, 27017, 27018, 27019, 27020],
         },
       },
@@ -890,7 +887,6 @@ export const MOCK_REGISTRY_RESPONSE = [
       network: {
         outbound: {
           insecure_allow_all: true,
-
           allow_port: [443],
         },
       },
@@ -1265,7 +1261,6 @@ export const MOCK_REGISTRY_RESPONSE = [
       network: {
         outbound: {
           insecure_allow_all: true,
-
           allow_port: [443],
         },
       },
@@ -1310,7 +1305,6 @@ export const MOCK_REGISTRY_RESPONSE = [
       network: {
         outbound: {
           insecure_allow_all: true,
-
           allow_port: [443],
         },
       },
@@ -1402,7 +1396,6 @@ export const MOCK_REGISTRY_RESPONSE = [
       network: {
         outbound: {
           insecure_allow_all: true,
-
           allow_port: [443],
         },
       },
@@ -1800,7 +1793,6 @@ export const MOCK_REGISTRY_RESPONSE = [
       network: {
         outbound: {
           insecure_allow_all: true,
-
           allow_port: [443],
         },
       },
@@ -1856,7 +1848,6 @@ export const MOCK_REGISTRY_RESPONSE = [
       network: {
         outbound: {
           insecure_allow_all: true,
-
           allow_host: ['github.com'],
           allow_port: [443],
         },

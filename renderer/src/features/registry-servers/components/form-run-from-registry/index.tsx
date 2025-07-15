@@ -94,7 +94,6 @@ export function FormRunFromRegistry({
         value: e.default || '',
       })),
       networkIsolation: false,
-      allowedProtocols: [],
       allowedPorts: [],
       allowedHosts: [],
     },
@@ -140,7 +139,6 @@ export function FormRunFromRegistry({
     { field: 'envVars', tab: 'configuration' },
     { field: 'allowedHosts', tab: 'network-isolation' },
     { field: 'allowedPorts', tab: 'network-isolation' },
-    { field: 'allowedProtocols', tab: 'network-isolation' },
     { field: 'networkIsolation', tab: 'network-isolation' },
   ]
 
