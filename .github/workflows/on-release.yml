@@ -33,7 +33,9 @@ jobs:
           - os: windows-latest
             arch: x64
           - os: macos-latest
-            arch: 'x64,arm64'
+            arch: x64
+          - os: macos-latest
+            arch: arm64
     env:
       NODE_OPTIONS: '--max_old_space_size=4096'
     steps:
@@ -80,7 +82,7 @@ jobs:
           flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
       - name: Build and Publish to GitHub Release
-        run: pnpm run publish -- --arch=${{ matrix.arch }}
+        run: pnpm run publish
         env:
           # Ensure the correct Node.js version is used for native modules
           npm_config_target_platform: ${{ runner.os == 'Linux' && 'linux' || (runner.os == 'macOS' && 'darwin' || 'win32') }}
