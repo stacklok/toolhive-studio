@@ -19,6 +19,8 @@ function getVersionFromGit(): string {
       }).trim()
 
       const version = describe.replace(/^v/, '').split('-')[0]
+      log.info('version', version)
+      log.info('app.getVersion', app.getVersion())
       return version ?? app.getVersion()
     } catch {
       return app.getVersion()
@@ -30,7 +32,7 @@ export function getAppVersion(): string {
   if (process.env.SENTRY_RELEASE) {
     return process.env.SENTRY_RELEASE
   }
-
+  log.info('isReleaseBuild', !!process.env.SENTRY_RELEASE)
   return getVersionFromGit()
 }
 
