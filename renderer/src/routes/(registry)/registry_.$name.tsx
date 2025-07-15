@@ -91,19 +91,21 @@ export function RegistryServerDetail() {
           )}
           <Badge variant="secondary">{server.transport}</Badge>
           <Stars stars={server.metadata?.stars} className="size-4" />
-          <Tooltip>
-            <TooltipTrigger className="text-muted-foreground flex items-center gap-2">
-              <ShieldCheck className="size-4" />
-              <span className="text-sm">Provenance signed by Sigstore</span>
-            </TooltipTrigger>
-            <TooltipContent className="w-96">
-              <p>
-                The {name} MCP server has been cryptographically signed and its
-                build provenance verified through Sigstore, confirming its
-                authenticity and integrity
-              </p>
-            </TooltipContent>
-          </Tooltip>
+          {server.provenance && (
+            <Tooltip>
+              <TooltipTrigger className="text-muted-foreground flex items-center gap-2">
+                <ShieldCheck className="size-4" />
+                <span className="text-sm">Provenance signed by Sigstore</span>
+              </TooltipTrigger>
+              <TooltipContent className="w-96">
+                <p>
+                  The {name} MCP server has been cryptographically signed and
+                  its build provenance verified through Sigstore, confirming its
+                  authenticity and integrity
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
       </div>
       <div className="my-8 flex w-3/5 flex-col gap-8">
