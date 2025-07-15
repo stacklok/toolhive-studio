@@ -16,8 +16,28 @@ export default class MakerDMGWithArch extends MakerDMG {
     super(config, platforms)
   }
 
+  private getTargetArch(opts: MakerOptions): string {
+    const envArch =
+      process.env.ELECTRON_FORGE_ARCH || process.env.npm_config_target_arch
+    const cliArch = process.argv
+      .find((arg) => arg.includes('--arch='))
+      ?.split('=')[1]
+    const optsArch = opts.targetArch
+
+    const targetArch = envArch || cliArch || optsArch || process.arch
+
+    console.log(`🔍 Architecture sources:`)
+    console.log(`  - Environment: ${envArch}`)
+    console.log(`  - CLI: ${cliArch}`)
+    console.log(`  - Options: ${optsArch}`)
+    console.log(`  - Process: ${process.arch}`)
+    console.log(`  - Selected: ${targetArch}`)
+
+    return targetArch
+  }
+
   async make(opts: MakerOptions): Promise<string[]> {
-    const { targetArch } = opts
+    const targetArch = this.getTargetArch(opts)
 
     try {
       const originalResults = await super.make(opts)
