@@ -78,6 +78,7 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
   try {
     const port = await window.electronAPI.getToolhivePort()
     const appVersion = await window.electronAPI.getAppVersion()
+    const isReleaseBuild = await window.electronAPI.isReleaseBuild()
     const baseUrl = `http://localhost:${port}`
 
     client.setConfig({
@@ -86,6 +87,7 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
         'X-Client-Type': 'toolhive-studio',
         'X-Client-Version': appVersion,
         'X-Client-Platform': window.electronAPI.platform,
+        'X-Client-Release-Build': isReleaseBuild,
       },
     })
   } catch (e) {

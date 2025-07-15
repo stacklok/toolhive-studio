@@ -9,7 +9,6 @@ function getVersionFromGit(): string {
       encoding: 'utf8',
       stdio: 'pipe',
     }).trim()
-
     return exactTag.replace(/^v/, '')
   } catch {
     try {
@@ -30,7 +29,6 @@ export function getAppVersion(): string {
   if (process.env.SENTRY_RELEASE) {
     return process.env.SENTRY_RELEASE
   }
-
   return getVersionFromGit()
 }
 
@@ -43,4 +41,14 @@ export async function pollWindowReady(window: BrowserWindow): Promise<void> {
   log.info('Window not ready yet, waiting...')
   await delay(100)
   return pollWindowReady(window)
+}
+
+export function isOfficialReleaseBuild(): boolean {
+  try {
+    const version = getAppVersion()
+    return /^\d+\.\d+\.\d+$/.test(version)
+  } catch {
+    log.error('Failed to get app version')
+    return false
+  }
 }

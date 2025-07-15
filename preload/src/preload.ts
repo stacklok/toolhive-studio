@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // App version
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+  isReleaseBuild: () => ipcRenderer.invoke('is-release-build'),
 
   // ToolHive port
   getToolhivePort: () => ipcRenderer.invoke('get-toolhive-port'),
@@ -98,6 +99,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
 export interface ElectronAPI {
   getAppVersion: () => Promise<string>
+  isReleaseBuild: () => Promise<boolean>
   getAutoLaunchStatus: () => Promise<boolean>
   setAutoLaunch: (enabled: boolean) => Promise<boolean>
   showApp: () => Promise<void>
