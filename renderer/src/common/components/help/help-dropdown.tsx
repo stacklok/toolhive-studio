@@ -24,7 +24,7 @@ export function HelpDropdown({ className }: { className?: string }) {
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem asChild>
           <a
-            href="https://github.com/stacklok/toolhive-studio?tab=readme-ov-file#getting-started"
+            href="https://docs.stacklok.com/toolhive"
             target="_blank"
             rel="noopener noreferrer"
             className="cursor-pointer"
