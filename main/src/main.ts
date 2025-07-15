@@ -7,6 +7,7 @@ import {
   session,
   shell,
   autoUpdater,
+  dialog,
 } from 'electron'
 import path from 'node:path'
 import { updateElectronApp } from 'update-electron-app'
@@ -54,7 +55,7 @@ log.info(`ToolHive binary path: ${binPath}`)
 log.info(`Binary file exists: ${existsSync(binPath)}`)
 
 // this implements auto-update
-updateElectronApp({ logger: log })
+updateElectronApp({ logger: log, notifyUser: false })
 
 app.on('ready', () => {
   setTimeout(() => {
@@ -71,13 +72,93 @@ app.on('ready', () => {
   }, 2000)
 })
 
-autoUpdater.on('update-downloaded', () => {
+autoUpdater.on('before-quit-for-update', () => {
+  log.info('🔄 before-quit-for-update event fired')
+})
+
+autoUpdater.on('update-downloaded', (_, __, releaseName) => {
+  log.info('🔄 Update downloaded - showing dialog')
+  log.info(`📦 Release info: ${releaseName}`)
+
   if (!mainWindow) {
+    log.error('MainWindow not available for update dialog')
     return
   }
 
-  log.info('Update downloaded — sending to renderer')
-  mainWindow.webContents.send('update-downloaded')
+  if (mainWindow.isMinimized()) {
+    mainWindow.restore()
+  }
+  mainWindow.focus()
+  mainWindow.show()
+
+  const dialogOpts = {
+    type: 'info' as const,
+    buttons: ['Restart', 'Later'],
+    title: `Release alpha ${releaseName}`,
+    message:
+      process.platform === 'darwin'
+        ? `Release ${releaseName}`
+        : 'A new version has been downloaded.\nRestart the application to apply the updates.',
+    detail:
+      process.platform === 'darwin'
+        ? 'A new version has been downloaded.\nRestart the application to apply the updates.'
+        : `Ready to install ${releaseName}`,
+    icon: undefined,
+  }
+
+  dialog
+    .showMessageBox(mainWindow, dialogOpts)
+    .then(async (returnValue) => {
+      log.info(
+        `🎯 User clicked: ${returnValue.response === 0 ? 'Restart' : 'Later'}`
+      )
+
+      if (returnValue.response === 0) {
+        log.info('🎯 User clicked: Restart')
+
+        log.info('🛑 Removing quit listeners to avoid interference')
+        app.removeAllListeners('before-quit')
+        app.removeAllListeners('will-quit')
+
+        isQuitting = true
+        tearingDown = true
+
+        log.info('🔄 Starting restart process...')
+
+        try {
+          log.info('🛑 Starting graceful shutdown before update...')
+          mainWindow?.webContents.send('graceful-exit')
+
+          log.info('⏳ Waiting for renderer...')
+          await delay(500)
+
+          const port = getToolhivePort()
+          if (port) {
+            await stopAllServers(binPath, port)
+          }
+
+          stopToolhive()
+
+          tray?.destroy()
+
+          log.info('🚀 All cleaned up, calling autoUpdater.quitAndInstall()...')
+          autoUpdater.quitAndInstall()
+        } catch (error) {
+          log.error('❌ Error during graceful shutdown:', error)
+          tray?.destroy()
+          app.relaunch()
+          app.quit()
+        }
+      } else {
+        log.info('⏰ User chose Later - showing toast notification')
+        if (mainWindow) {
+          mainWindow.webContents.send('update-downloaded')
+        }
+      }
+    })
+    .catch((error) => {
+      log.error('❌ Error showing dialog:', error)
+    })
 })
 
 autoUpdater.on('error', (message) => {
@@ -311,6 +392,10 @@ app.on('activate', () => {
   } else {
     mainWindow?.show()
   }
+})
+
+app.on('will-finish-launching', () => {
+  log.info('App will finish launching - preparing for potential restart')
 })
 
 app.on('before-quit', (e) => blockQuit('before-quit', e))
