@@ -2,7 +2,7 @@ import React from 'react'
 import { Button } from '@/common/components/ui/button'
 import { Input } from '@/common/components/ui/input'
 import { Label } from '@/common/components/ui/label'
-import { Trash2 } from 'lucide-react'
+import { InfoIcon, Trash2 } from 'lucide-react'
 import {
   useFieldArray,
   type Control,
@@ -17,6 +17,11 @@ import {
   FormControl,
   FormMessage,
 } from '@/common/components/ui/form'
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/common/components/ui/tooltip'
 
 interface DynamicArrayFieldProps<
   TFieldValues extends FieldValues = FieldValues,
@@ -25,6 +30,7 @@ interface DynamicArrayFieldProps<
   name: ArrayPath<TFieldValues>
   label: string
   inputLabelPrefix?: string
+  tooltipContent?: string
   addButtonText?: string
   inputProps?: React.InputHTMLAttributes<HTMLInputElement>
 }
@@ -33,6 +39,7 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
   control,
   name,
   label,
+  tooltipContent,
   inputLabelPrefix = 'Item',
   addButtonText = 'Add',
   inputProps = {},
@@ -47,7 +54,17 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
 
   return (
     <div className="mt-6 w-full">
-      <Label htmlFor={`${name}-0`}>{label}</Label>
+      <div className="flex items-center gap-2">
+        <Label htmlFor={`${name}-0`}>{label}</Label>
+        {tooltipContent && (
+          <Tooltip>
+            <TooltipTrigger asChild autoFocus={false}>
+              <InfoIcon className="text-muted-foreground size-4 rounded-full" />
+            </TooltipTrigger>
+            <TooltipContent>{tooltipContent}</TooltipContent>
+          </Tooltip>
+        )}
+      </div>
 
       <div className="mt-2 flex flex-col gap-2">
         {fields.map((field, idx) => (

@@ -58,6 +58,7 @@ export function NetworkIsolationTabContent({
                       inputLabelPrefix="Host"
                       addButtonText="Add a host"
                       control={form.control}
+                      tooltipContent="Specify domain names or IP addresses. To include subdomains, use a leading period (“.”)"
                     />
                   )}
                 />
