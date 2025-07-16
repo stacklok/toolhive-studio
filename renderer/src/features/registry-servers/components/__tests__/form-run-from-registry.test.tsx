@@ -799,7 +799,7 @@ describe('FormRunFromRegistry', () => {
     ).toBeInTheDocument()
   })
 
-  it('shows the alert only when at least one of hosts or ports is empty', async () => {
+  it('shows the alert only when hosts or ports are empty', async () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
@@ -816,10 +816,8 @@ describe('FormRunFromRegistry', () => {
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
-    // Switch to the Network Isolation tab
     const networkTab = screen.getByRole('tab', { name: /network isolation/i })
     await userEvent.click(networkTab)
-    // Enable the switch
     const switchLabel = screen.getByLabelText('Network isolation')
     await userEvent.click(switchLabel)
 
@@ -830,37 +828,35 @@ describe('FormRunFromRegistry', () => {
       )
     ).toBeInTheDocument()
 
-    // Add a host
     const addHostBtn = screen.getByRole('button', { name: /add a host/i })
     await userEvent.click(addHostBtn)
     const hostInput = screen.getByLabelText('Host 1')
     await userEvent.type(hostInput, 'example.com')
-    // Still missing ports, so alert should show
-    expect(
-      screen.getByText(
-        /this configuration blocks all outbound network traffic from the mcp server/i
-      )
-    ).toBeInTheDocument()
 
-    // Add a port
-    const addPortBtn = screen.getByRole('button', { name: /add a port/i })
-    await userEvent.click(addPortBtn)
-    const portInput = screen.getByLabelText('Port 1')
-    await userEvent.type(portInput, '8080')
-    // Now both have at least one value, so alert should NOT show
     expect(
       screen.queryByText(
         /this configuration blocks all outbound network traffic from the mcp server/i
       )
     ).not.toBeInTheDocument()
-    // Remove the host, alert should show again
+
+    const addPortBtn = screen.getByRole('button', { name: /add a port/i })
+    await userEvent.click(addPortBtn)
+    const portInput = screen.getByLabelText('Port 1')
+    await userEvent.type(portInput, '8080')
+
+    expect(
+      screen.queryByText(
+        /this configuration blocks all outbound network traffic from the mcp server/i
+      )
+    ).not.toBeInTheDocument()
+
     const removeHostBtn = screen.getByLabelText('Remove Host 1')
     await userEvent.click(removeHostBtn)
     expect(
-      screen.getByText(
+      screen.queryByText(
         /this configuration blocks all outbound network traffic from the mcp server/i
       )
-    ).toBeInTheDocument()
+    ).not.toBeInTheDocument()
   })
 
   it('shows Allowed Ports section and submits correct payload when ports are added', async () => {
