@@ -19,6 +19,9 @@ export function NetworkIsolationTabContent({
       render={({ field: networkField }) => {
         const hosts = form.watch('allowedHosts') || []
         const ports = form.watch('allowedPorts') || []
+        const showAlert =
+          !hosts.some((host) => host.trim() !== '') &&
+          !ports.some((port) => port.trim() !== '')
         return (
           <div className="p-6">
             <div className="mb-4 flex items-center gap-4 rounded-md border px-3 py-4">
@@ -34,8 +37,7 @@ export function NetworkIsolationTabContent({
             </div>
             {networkField.value && (
               <>
-                {/* Show alert only if any of the three are empty, and place it below the switch */}
-                {(!hosts.length || !ports.length) && (
+                {showAlert && (
                   <Alert className="mt-2">
                     <AlertTriangle className="mt-0.5" />
                     <AlertDescription>
