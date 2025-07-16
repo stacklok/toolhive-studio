@@ -1,4 +1,4 @@
-## Note: This is an experimental project that is actively being developed and tested - features may change without notice.
+## Note: This is an experimental project that is actively being developed and tested - features may change without notice
 
 <p float="left">
   <picture>
