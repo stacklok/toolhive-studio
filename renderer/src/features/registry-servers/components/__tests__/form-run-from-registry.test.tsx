@@ -152,7 +152,9 @@ describe('FormRunFromRegistry', () => {
     await userEvent.click(networkTab)
     expect(networkTab).toHaveAttribute('aria-selected', 'true')
     expect(configTab).toHaveAttribute('aria-selected', 'false')
-    const switchLabel = screen.getByLabelText('Network isolation')
+    const switchLabel = screen.getByLabelText(
+      'Enable outbound network filtering'
+    )
     expect(switchLabel).toBeInTheDocument()
     expect(switchLabel).toHaveAttribute('role', 'switch')
     expect(switchLabel).toHaveAttribute('aria-checked', 'false')
@@ -788,7 +790,9 @@ describe('FormRunFromRegistry', () => {
     await userEvent.click(networkTab)
 
     // Enable the switch
-    const switchLabel = screen.getByLabelText('Network isolation')
+    const switchLabel = screen.getByLabelText(
+      'Enable outbound network filtering'
+    )
     await userEvent.click(switchLabel)
 
     // The alert should appear
@@ -818,7 +822,9 @@ describe('FormRunFromRegistry', () => {
     })
     const networkTab = screen.getByRole('tab', { name: /network isolation/i })
     await userEvent.click(networkTab)
-    const switchLabel = screen.getByLabelText('Network isolation')
+    const switchLabel = screen.getByLabelText(
+      'Enable outbound network filtering'
+    )
     await userEvent.click(switchLabel)
 
     // By default, all are empty, so alert should show
@@ -885,7 +891,9 @@ describe('FormRunFromRegistry', () => {
     const networkTab = screen.getByRole('tab', { name: /network isolation/i })
     await userEvent.click(networkTab)
     // Enable network isolation
-    const switchLabel = screen.getByLabelText('Network isolation')
+    const switchLabel = screen.getByLabelText(
+      'Enable outbound network filtering'
+    )
     await userEvent.click(switchLabel)
     // Add ports
     const addPortButton = screen.getByRole('button', { name: 'Add a port' })
@@ -941,7 +949,9 @@ describe('FormRunFromRegistry', () => {
     const networkTab = screen.getByRole('tab', { name: /network isolation/i })
     await userEvent.click(networkTab)
     // Enable network isolation
-    const switchLabel = screen.getByLabelText('Network isolation')
+    const switchLabel = screen.getByLabelText(
+      'Enable outbound network filtering'
+    )
     await userEvent.click(switchLabel)
     // Do not add any ports
     // Submit
@@ -986,12 +996,14 @@ describe('Allowed Hosts field', () => {
     const networkTab = screen.getByRole('tab', { name: /network isolation/i })
     await userEvent.click(networkTab)
     // Enable network isolation
-    const switchLabel = screen.getByLabelText('Network isolation')
+    const switchLabel = screen.getByLabelText(
+      'Enable outbound network filtering'
+    )
     await userEvent.click(switchLabel)
     // Add a host so the input and label are rendered
     await userEvent.click(screen.getByRole('button', { name: /add a host/i }))
     // Allowed Hosts field should be present
-    expect(screen.getByLabelText('Allowed Hosts')).toBeInTheDocument()
+    expect(screen.getByLabelText('Allowed hosts')).toBeInTheDocument()
     // Add host button should be present
     expect(
       screen.getByRole('button', { name: /add a host/i })
@@ -1015,7 +1027,9 @@ describe('Allowed Hosts field', () => {
     })
     const networkTab = screen.getByRole('tab', { name: /network isolation/i })
     await userEvent.click(networkTab)
-    const switchLabel = screen.getByLabelText('Network isolation')
+    const switchLabel = screen.getByLabelText(
+      'Enable outbound network filtering'
+    )
     await userEvent.click(switchLabel)
     // Add a host
     const addHostButton = screen.getByRole('button', { name: /add a host/i })
@@ -1053,7 +1067,9 @@ describe('Allowed Hosts field', () => {
     })
     const networkTab = screen.getByRole('tab', { name: /network isolation/i })
     await userEvent.click(networkTab)
-    const switchLabel = screen.getByLabelText('Network isolation')
+    const switchLabel = screen.getByLabelText(
+      'Enable outbound network filtering'
+    )
     await userEvent.click(switchLabel)
     const addHostButton = screen.getByRole('button', { name: /add a host/i })
     await userEvent.click(addHostButton)
@@ -1122,7 +1138,9 @@ describe('Allowed Hosts field', () => {
     )
     const networkTab = screen.getByRole('tab', { name: /network isolation/i })
     await userEvent.click(networkTab)
-    const switchLabel = screen.getByLabelText('Network isolation')
+    const switchLabel = screen.getByLabelText(
+      'Enable outbound network filtering'
+    )
     await userEvent.click(switchLabel)
     const addHostButton = screen.getByRole('button', { name: /add a host/i })
     await userEvent.click(addHostButton)
@@ -1166,7 +1184,9 @@ describe('Allowed Hosts field', () => {
     })
     const networkTab = screen.getByRole('tab', { name: /network isolation/i })
     await userEvent.click(networkTab)
-    const switchLabel = screen.getByLabelText('Network isolation')
+    const switchLabel = screen.getByLabelText(
+      'Enable outbound network filtering'
+    )
     await userEvent.click(switchLabel)
     // Should be empty by default
     expect(screen.queryByLabelText('Host 1')).not.toBeInTheDocument()
@@ -1206,7 +1226,9 @@ describe('Network Isolation Tab Activation', () => {
     // Enable network isolation and add an invalid host
     const networkTab = screen.getByRole('tab', { name: /network isolation/i })
     await userEvent.click(networkTab)
-    const switchLabel = screen.getByLabelText('Network isolation')
+    const switchLabel = screen.getByLabelText(
+      'Enable outbound network filtering'
+    )
     await userEvent.click(switchLabel)
     // Add a host and enter an invalid value
     const addHostBtn = screen.getByRole('button', { name: /add a host/i })
