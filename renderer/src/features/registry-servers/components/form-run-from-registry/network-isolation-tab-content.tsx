@@ -27,12 +27,12 @@ export function NetworkIsolationTabContent({
             <div className="mb-4 flex items-center gap-4 rounded-md border px-3 py-4">
               <Switch
                 id="network-isolation-switch"
-                aria-label="Network isolation"
+                aria-label="Enable outbound network filtering"
                 checked={!!networkField.value}
                 onCheckedChange={networkField.onChange}
               />
               <Label htmlFor="network-isolation-switch">
-                Network isolation
+                Enable outbound network filtering
               </Label>
             </div>
             {networkField.value && (
@@ -54,7 +54,7 @@ export function NetworkIsolationTabContent({
                       /*
                          // @ts-expect-error no time to fix this */
                       name="allowedHosts"
-                      label="Allowed Hosts"
+                      label="Allowed hosts"
                       inputLabelPrefix="Host"
                       addButtonText="Add a host"
                       control={form.control}
@@ -70,7 +70,7 @@ export function NetworkIsolationTabContent({
                       /*
                          // @ts-expect-error no time to fix this */
                       name={'allowedPorts'}
-                      label="Allowed Ports"
+                      label="Allowed ports"
                       control={form.control}
                       inputLabelPrefix="Port"
                       addButtonText="Add a port"
