@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   showApp: () => ipcRenderer.invoke('show-app'),
   hideApp: () => ipcRenderer.invoke('hide-app'),
   quitApp: () => ipcRenderer.invoke('quit-app'),
+  isUpdateInProgress: () => ipcRenderer.invoke('is-update-in-progress'),
 
   // App version
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
@@ -100,6 +101,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 export interface ElectronAPI {
   getAppVersion: () => Promise<string>
   isReleaseBuild: () => Promise<boolean>
+  isUpdateInProgress: () => Promise<boolean>
   getAutoLaunchStatus: () => Promise<boolean>
   setAutoLaunch: (enabled: boolean) => Promise<boolean>
   showApp: () => Promise<void>

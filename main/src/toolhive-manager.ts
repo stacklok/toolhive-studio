@@ -34,7 +34,11 @@ export function getToolhivePort(): number | undefined {
 }
 
 export function isToolhiveRunning(): boolean {
-  return !!toolhiveProcess && !toolhiveProcess.killed
+  const isRunning = !!toolhiveProcess && !toolhiveProcess.killed
+  log.debug(
+    `[isToolhiveRunning] Process exists: ${!!toolhiveProcess}, Killed: ${toolhiveProcess?.killed}, Port: ${toolhivePort}, Result: ${isRunning}`
+  )
+  return isRunning
 }
 
 function findFreePort(): Promise<number> {
@@ -54,6 +58,10 @@ function findFreePort(): Promise<number> {
 }
 
 export async function startToolhive(tray?: Tray): Promise<void> {
+  log.info(
+    `[startToolhive] Starting - Current state: isRunning=${isToolhiveRunning()}, isRestarting=${isRestarting}`
+  )
+
   if (!existsSync(binPath)) {
     log.error(`ToolHive binary not found at: ${binPath}`)
     return
@@ -70,6 +78,8 @@ export async function startToolhive(tray?: Tray): Promise<void> {
       detached: false,
     }
   )
+
+  log.info(`[startToolhive] Process spawned with PID: ${toolhiveProcess.pid}`)
 
   if (tray) {
     updateTrayStatus(tray, !!toolhiveProcess)
@@ -125,10 +135,16 @@ export async function restartToolhive(tray?: Tray): Promise<void> {
 }
 
 export function stopToolhive(): void {
+  log.info(
+    `[stopToolhive] Current state: isRunning=${isToolhiveRunning()}, PID: ${toolhiveProcess?.pid}`
+  )
   if (toolhiveProcess && !toolhiveProcess.killed) {
     log.info('Stopping ToolHive process...')
     toolhiveProcess.kill()
     toolhiveProcess = undefined
+    log.info(`[stopToolhive] Process stopped and reset`)
+  } else {
+    log.info(`[stopToolhive] No process to stop`)
   }
 }
 
