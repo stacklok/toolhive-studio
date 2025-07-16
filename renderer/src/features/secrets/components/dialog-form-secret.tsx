@@ -90,7 +90,7 @@ export function DialogFormSecret({
           <DialogDescription className="sr-only">
             {secretKey
               ? 'Update the secret value below.'
-              : 'Enter a name and value for your new secret.'}
+              : 'Enter a name and value for the new secret.'}
           </DialogDescription>
         </DialogHeader>
 

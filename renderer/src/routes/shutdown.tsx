@@ -20,12 +20,12 @@ function Shutdown() {
             <Loader2 className="text-muted-foreground size-12 animate-spin" />
           </div>
           <CardTitle className="text-2xl font-semibold">
-            Shutting Down Servers
+            Stopping MCP Servers
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-center">
           <p className="text-muted-foreground">
-            Please wait while we safely shut down your MCP servers...
+            Please wait while ToolHive safely shuts down your MCP servers...
           </p>
         </CardContent>
       </Card>

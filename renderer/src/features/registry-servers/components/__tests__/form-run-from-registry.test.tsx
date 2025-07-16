@@ -531,7 +531,7 @@ describe('FormRunFromRegistry', () => {
     })
     expect(
       screen.getByText(
-        'We are pulling the server image from the registry and installing it.'
+        'Downloading server image from the registry and installing.'
       )
     ).toBeInTheDocument()
   })
@@ -645,7 +645,7 @@ describe('FormRunFromRegistry', () => {
       expect(screen.getByText('Something went wrong')).toBeInTheDocument()
     })
     expect(
-      screen.getByText(/We were unable to create the secrets for the server/)
+      screen.getByText(/Failed to create secrets for the server/)
     ).toBeInTheDocument()
   })
 

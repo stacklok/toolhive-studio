@@ -28,11 +28,11 @@ export function Clients() {
       {installedClients.length === 0 ? (
         <EmptyState
           title="No clients detected"
-          body="Clients are tools that can connect to ToolHive. If your client is not detected, consult our documentation."
+          body="Clients are tools that can connect to ToolHive. If your client is not detected, consult the documentation."
           actions={[
             <Button asChild key="docs">
               <a
-                href="https://docs.stacklok.com/toolhive/guides-cli/client-configuration"
+                href="https://docs.stacklok.com/toolhive/guides-ui/client-configuration"
                 target="_blank"
                 rel="noreferrer"
               >
