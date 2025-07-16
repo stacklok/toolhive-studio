@@ -26,6 +26,17 @@ import { Tabs, TabsList, TabsTrigger } from '@/common/components/ui/tabs'
 import { Form } from '@/common/components/ui/form'
 import { isFeatureEnabled } from '@/feature-flags'
 
+// Map each field to its tab
+const FIELD_TAB_MAP = [
+  { field: 'serverName', tab: 'configuration' },
+  { field: 'cmd_arguments', tab: 'configuration' },
+  { field: 'secrets', tab: 'configuration' },
+  { field: 'envVars', tab: 'configuration' },
+  { field: 'allowedHosts', tab: 'network-isolation' },
+  { field: 'allowedPorts', tab: 'network-isolation' },
+  { field: 'networkIsolation', tab: 'network-isolation' },
+]
+
 interface FormRunFromRegistryProps {
   server: RegistryImageMetadata | null
   isOpen: boolean
@@ -66,7 +77,7 @@ export function FormRunFromRegistry({
       console.debug('👉 onSecretError', error, variables)
     },
   })
-
+  const [tabValue, setTabValue] = useState('configuration')
   const { data } = useQuery({
     ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
   })
@@ -94,8 +105,11 @@ export function FormRunFromRegistry({
         value: e.default || '',
       })),
       networkIsolation: false,
-      allowedPorts: [],
-      allowedHosts: [],
+      allowedPorts:
+        server?.permissions?.network?.outbound?.allow_port?.map((port) =>
+          port.toString()
+        ) || [],
+      allowedHosts: server?.permissions?.network?.outbound?.allow_host || [],
     },
   })
 
@@ -115,6 +129,7 @@ export function FormRunFromRegistry({
         onSuccess: () => {
           checkServerStatus(data)
           onOpenChange(false)
+          setTabValue('configuration')
         },
         onSettled: (_, error) => {
           setIsSubmitting(false)
@@ -129,19 +144,6 @@ export function FormRunFromRegistry({
     )
   }
 
-  const [tabValue, setTabValue] = useState('configuration')
-
-  // Map each field to its tab
-  const FIELD_TAB_MAP = [
-    { field: 'serverName', tab: 'configuration' },
-    { field: 'cmd_arguments', tab: 'configuration' },
-    { field: 'secrets', tab: 'configuration' },
-    { field: 'envVars', tab: 'configuration' },
-    { field: 'allowedHosts', tab: 'network-isolation' },
-    { field: 'allowedPorts', tab: 'network-isolation' },
-    { field: 'networkIsolation', tab: 'network-isolation' },
-  ]
-
   function activateTabWithError(errors: Record<string, unknown>) {
     const errorKeys = Object.keys(errors)
     // Extract root field name from error key (handles dot and bracket notation)
@@ -153,14 +155,6 @@ export function FormRunFromRegistry({
     if (tabWithError) {
       setTabValue(tabWithError)
     }
-    // Debug output
-
-    console.log(
-      '[activateTabWithError] errorKeys:',
-      errorKeys,
-      'activatedTab:',
-      tabWithError
-    )
   }
 
   if (!server) return null
@@ -230,7 +224,10 @@ export function FormRunFromRegistry({
                 type="button"
                 variant="outline"
                 disabled={isSubmitting}
-                onClick={() => onOpenChange(false)}
+                onClick={() => {
+                  onOpenChange(false)
+                  setTabValue('configuration')
+                }}
               >
                 Cancel
               </Button>
