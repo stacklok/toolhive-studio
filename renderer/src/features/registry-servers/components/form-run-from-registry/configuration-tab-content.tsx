@@ -12,14 +12,8 @@ import { AlertErrorFormSubmission } from '../alert-error-form-submission'
 import type { UseFormReturn } from 'react-hook-form'
 import type { FormSchemaRunFromRegistry } from '../../lib/get-form-schema-run-from-registry'
 import type { GroupedEnvVars } from '../../lib/group-env-vars'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/common/components/ui/tooltip'
 import type { RegistryEnvVar } from '@/common/api/generated/types.gen'
 import { cn } from '@/common/lib/utils'
-import { AsteriskIcon } from 'lucide-react'
 import { FormComboboxSecretStore } from '@/common/components/secrets/form-combobox-secrets-store'
 
 interface ConfigurationTabContentProps {
@@ -28,21 +22,6 @@ interface ConfigurationTabContentProps {
   setError: (err: string | null) => void
   form: UseFormReturn<FormSchemaRunFromRegistry>
   groupedEnvVars: GroupedEnvVars
-}
-
-/**
- * Renders an asterisk icon & tooltip for required fields.
- * NOTE: uses absolute positioning & assumes that it is being rendered inside a container with `position: relative`.
- */
-function TooltipValueRequired() {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild autoFocus={false}>
-        <AsteriskIcon className="text-muted-foreground size-4" />
-      </TooltipTrigger>
-      <TooltipContent>Required</TooltipContent>
-    </Tooltip>
-  )
 }
 
 function SecretRow({
@@ -63,16 +42,15 @@ function SecretRow({
           <FormItem>
             <div className="relative">
               <FormControl>
-                <Label
+                <FormLabel
+                  required={secret.required}
                   htmlFor={`secrets.${index}.value`}
                   className={cn(
-                    'text-muted-foreground !border-input h-full items-center font-mono !ring-0',
-                    secret.required ? 'pr-8' : ''
+                    'text-muted-foreground !border-input h-full items-center font-mono !ring-0'
                   )}
                 >
-                  <span>{secret.name}</span>
-                  {secret.required && <TooltipValueRequired />}
-                </Label>
+                  {secret.name}
+                </FormLabel>
               </FormControl>
             </div>
             <FormMessage />
@@ -142,16 +120,16 @@ function EnvVarRow({
           <FormItem>
             <div className="relative">
               <FormControl>
-                <Label
+                <FormLabel
+                  required={envVar.required}
                   htmlFor={`envVar.${index}.value`}
                   className={cn(
                     `text-muted-foreground !border-input flex h-full items-center gap-1 font-mono
                     !ring-0`
                   )}
                 >
-                  <span>{envVar.name}</span>
-                  {envVar.required && <TooltipValueRequired />}
-                </Label>
+                  {envVar.name}
+                </FormLabel>
               </FormControl>
             </div>
             <FormMessage />
