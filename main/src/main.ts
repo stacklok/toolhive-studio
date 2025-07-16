@@ -115,6 +115,7 @@ autoUpdater.on('update-downloaded', (_, __, releaseName) => {
 
       if (returnValue.response === 0) {
         log.info('🎯 User clicked: Restart')
+        isUpdateInProgress = true
 
         log.info('🛑 Removing quit listeners to avoid interference')
         app.removeAllListeners('before-quit')
@@ -144,12 +145,14 @@ autoUpdater.on('update-downloaded', (_, __, releaseName) => {
           log.info('🚀 All cleaned up, calling autoUpdater.quitAndInstall()...')
           autoUpdater.quitAndInstall()
         } catch (error) {
+          isUpdateInProgress = false
           log.error('❌ Error during graceful shutdown:', error)
           tray?.destroy()
           app.relaunch()
           app.quit()
         }
       } else {
+        isUpdateInProgress = false
         log.info('⏰ User chose Later - showing toast notification')
         if (mainWindow) {
           mainWindow.webContents.send('update-downloaded')
@@ -169,7 +172,7 @@ autoUpdater.checkForUpdates()
 
 let tray: Tray | null = null
 let isQuitting = false
-
+let isUpdateInProgress = false
 let tearingDown = false
 
 /** Hold the quit, run teardown, then really exit. */
@@ -333,6 +336,7 @@ function createWindow() {
 let mainWindow: BrowserWindow | null = null
 
 app.whenReady().then(async () => {
+  isUpdateInProgress = false
   // Initialize tray first
   try {
     tray = initTray({ toolHiveIsRunning: false }) // Start with false, will update after ToolHive starts
@@ -517,6 +521,7 @@ ipcMain.handle('install-update-and-restart', async () => {
   // This will prevent the graceful shutdown process
   isQuitting = true
   tearingDown = true
+  isUpdateInProgress = true
 
   // Stop ToolHive and servers immediately without graceful shutdown
   try {
@@ -539,6 +544,11 @@ ipcMain.handle('install-update-and-restart', async () => {
   // Install update and restart
   autoUpdater.quitAndInstall()
   return { success: true }
+})
+
+ipcMain.handle('is-update-in-progress', () => {
+  log.debug(`[is-update-in-progress]: ${isUpdateInProgress}`)
+  return isUpdateInProgress
 })
 
 ipcMain.handle('is-release-build', () => {
