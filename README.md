@@ -32,9 +32,10 @@ setup, no security headaches, no runtime hassles.
 
 ## Quick links
 
-- 🚀 [Quickstart](#getting-started) - install ToolHive and run your first MCP
-  server
-  <!-- - 📚 [Documentation](https://docs.stacklok.com/toolhive/) -->
+- 🚀 [Quickstart](https://docs.stacklok.com/toolhive/tutorials/quickstart-ui) -
+  install ToolHive and run your first MCP server
+- 📚 [Documentation](https://docs.stacklok.com/toolhive/) - learn more about
+  ToolHive's features
 - 💬 [Discord community](https://discord.gg/stacklok) - connect with the
   ToolHive community, ask questions, and share your experiences
 - 🛠️ [Developer guide](./docs/README.md) - build, test, and contribute to the
@@ -70,63 +71,9 @@ setup, no security headaches, no runtime hassles.
 
 ## Getting started
 
-### Prerequisites
-
-- [Docker](https://www.docker.com/) or [Podman](https://podman.io/) installed
-  and running (Docker Desktop / Podman Desktop are recommended)
-- If you are using Linux, make sure your user is in the `docker` group
-  ([reference](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user)).
-
-### Install ToolHive
-
-Download and install the latest release of the ToolHive for your platform:
-
-- macOS (Apple Silicon):
-  [download the DMG file](https://github.com/stacklok/toolhive-studio/releases/latest/download/ToolHive.dmg),
-  open it, and drag the ToolHive app to your Applications folder.
-- Windows:
-  [download the installer](https://github.com/stacklok/toolhive-studio/releases/latest/download/ToolHive.Setup.exe)
-  and run it.
-  > [!NOTE]  
-  > The Windows installer is not digitally signed yet, so you might need to
-  > accept warnings from Windows Defender SmartScreen. We're working on getting
-  > signing set up soon.
-- Linux: download the RPM or DEB package from the
-  [releases page](https://github.com/stacklok/toolhive-studio/releases/latest)
-  and install it using your package manager.
-
-### Run your first MCP server
-
-The ToolHive UI has four main areas:
-
-- **Installed**: View and manage your installed MCP servers.
-- **Registry**: Browse and install servers from the curated registry of official
-  and community servers.
-- **Clients**: Automatically connect your favorite clients to MCP servers.
-- **Secrets**: Securely manage sensitive data required by many MCP servers.
-
-Start by installing a simple MCP server from the registry:
-
-1. On the **Installed** tab, click **Add server** and choose **From the
-   registry**. Or, open the **Registry** tab to browse available servers.
-
-2. Select the "fetch" server from the list. Fetch is a simple MCP server that
-   fetches data from the web.
-
-   ![ToolHive registry](docs/images/quickstart-2.webp)
-
-3. Click **Install server** to start the server.
-
-4. Once the server is running, click **View** on the notification or open the
-   **Installed** tab to see its status.
-
-5. Open the **Clients** tab to connect your favorite client (e.g., GitHub
-   Copilot, Cursor, Claude Code). For a list of supported clients, see the
-   [ToolHive documentation](https://docs.stacklok.com/toolhive/reference/client-compatibility).
-
-6. Open your client and start using the MCP server!
-
-   ![Cursor MCP servers](docs/images/quickstart-7.webp)
+To get started with ToolHive, download the latest release from
+[the website](https://toolhive.dev/download.html) and follow the
+[quickstart guide](https://docs.stacklok.com/toolhive/tutorials/quickstart-ui).
 
 ---
 
