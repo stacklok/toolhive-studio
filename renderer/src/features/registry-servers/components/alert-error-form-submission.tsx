@@ -15,7 +15,7 @@ interface AlertErrorFormSubmissionProps {
 
 function getErrorTitle(error: string): string {
   if (error.includes('Failed to retrieve MCP server image')) {
-    return 'We were unable to download the server image'
+    return 'ToolHive could not download the server image'
   }
   return 'Something went wrong'
 }
@@ -42,10 +42,9 @@ export function AlertErrorFormSubmission({
       </AlertTitle>
       <AlertDescription>
         <p className="text-red-300">
-          {isErrorSecrets &&
-            'We were unable to create the secrets for the server. '}
-          Check the configuration and try to install again. <br />
-          If you continue to have issues, reach out to our team for help via{' '}
+          {isErrorSecrets && 'Failed to create secrets for the server. '}
+          Check the configuration and try again. <br />
+          If issues persist, contact the ToolHive team via{' '}
           <Button asChild variant="link" size="xs" className="text-sm">
             <a
               href="https://discord.gg/stacklok"

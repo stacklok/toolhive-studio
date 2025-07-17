@@ -29,7 +29,7 @@ export function LoadingStateAlert({
         <AlertDescription>
           {isPendingSecrets && loadingSecrets
             ? loadingSecrets?.text
-            : 'We are pulling the server image from the registry and installing it.'}
+            : 'Downloading server image from the registry and installing.'}
           {isPendingSecrets && loadingSecrets && (
             <Progress
               value={

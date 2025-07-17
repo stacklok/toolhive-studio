@@ -60,7 +60,7 @@ describe('Clients Route', () => {
       expect(screen.getByText('No clients detected')).toBeInTheDocument()
       expect(
         screen.getByText(
-          'Clients are tools that can connect to ToolHive. If your client is not detected, consult our documentation.'
+          'Clients are tools that can connect to ToolHive. If your client is not detected, consult the documentation.'
         )
       ).toBeInTheDocument()
     }
