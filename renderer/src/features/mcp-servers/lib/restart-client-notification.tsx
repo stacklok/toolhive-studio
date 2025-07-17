@@ -25,6 +25,7 @@ export async function restartClientNotification({
     `Restart ${matchedClient.client_type} to activate new MCP servers.`,
     {
       duration: Infinity,
+      id: `restart-${matchedClient.client_type}`,
     }
   )
 }
