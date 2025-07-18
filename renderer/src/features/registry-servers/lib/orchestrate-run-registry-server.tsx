@@ -10,6 +10,7 @@ import {
 import type { FormSchemaRunFromRegistry } from './get-form-schema-run-from-registry'
 import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
 import type { UseMutateAsyncFunction } from '@tanstack/react-query'
+import { isEmptyEnvVar } from '@/common/lib/utils'
 
 type SaveSecretFn = UseMutateAsyncFunction<
   V1CreateSecretResponse,
@@ -109,7 +110,7 @@ export function prepareCreateWorkloadData(
   secrets: SecretsSecretParameter[] = []
 ): V1CreateRequest {
   const envVars: Array<string> = data.envVars
-    .filter((envVar) => envVar.value && envVar.value.trim() !== '')
+    .filter((envVar) => !isEmptyEnvVar(envVar.value))
     .map((envVar) => `${envVar.name}=${envVar.value}`)
 
   // Extract and transform network isolation fields

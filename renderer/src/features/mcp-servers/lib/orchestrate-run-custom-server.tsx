@@ -21,6 +21,7 @@ import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
 import { prepareSecretsWithoutNamingCollision } from '@/common/lib/secrets/prepare-secrets-without-naming-collision'
 import { trackEvent } from '@/common/lib/analytics'
 import { restartClientNotification } from './restart-client-notification'
+import { isEmptyEnvVar } from '@/common/lib/utils'
 
 type SaveSecretFn = UseMutateAsyncFunction<
   V1CreateSecretResponse,
@@ -120,7 +121,7 @@ async function saveSecrets(
  */
 function mapEnvVars(envVars: { name: string; value: string }[]) {
   return envVars
-    .filter((envVar) => envVar.value && envVar.value.trim() !== '')
+    .filter((envVar) => !isEmptyEnvVar(envVar.value))
     .map((envVar) => `${envVar.name}=${envVar.value}`)
 }
 
