@@ -7,12 +7,10 @@ import type { Tray } from 'electron'
 import { updateTrayStatus } from './system-tray'
 import log from './logger'
 import * as Sentry from '@sentry/electron/main'
-import { GenericContainer } from 'testcontainers'
 
-// Use a simpler type for the container
-type ToolhiveContainer = Awaited<
-  ReturnType<typeof GenericContainer.prototype.start>
->
+// Use CommonJS require for testcontainers to avoid esModuleInterop issues
+const { GenericContainer } = require('testcontainers')
+type StartedTestContainer = any // We'll use any for now since the type is complex
 
 const binName = process.platform === 'win32' ? 'thv.exe' : 'thv'
 const binPath = app.isPackaged
@@ -32,7 +30,7 @@ const binPath = app.isPackaged
     )
 
 let toolhiveProcess: ReturnType<typeof spawn> | undefined
-let toolhiveContainer: ToolhiveContainer | undefined
+let toolhiveContainer: StartedTestContainer | undefined
 let toolhivePort: number | undefined
 let isRestarting = false
 
@@ -116,9 +114,23 @@ export async function startToolhive(
 
       if (tray) updateTrayStatus(tray, true)
 
-      // Note: Container logs and exit handling would need more complex setup
-      // For now, we'll just log that the container started successfully
-      log.info('[startToolhive] Container started successfully')
+      /* Optional: stream container logs to our logger */
+      toolhiveContainer.logs().then((stream: any) => {
+        stream
+          .on('data', (line: string) => log.debug(`[ToolHive ⍟] ${line}`))
+          .on('err', (line: string) => log.error(`[ToolHive ⍟] ${line}`))
+      })
+
+      /* Handle container exit so we can reflect it in UI */
+      // Note: testcontainers doesn't provide waitForExit, so we'll handle this differently
+      // We can monitor the container status or use the logs to detect when it stops
+      toolhiveContainer.logs().then((stream: any) => {
+        stream.on('end', () => {
+          log.warn(`[startToolhive] Container logs ended`)
+          toolhiveContainer = undefined
+          if (tray) updateTrayStatus(tray, false)
+        })
+      })
 
       return // Nothing else to do in container mode
     } catch (err) {
