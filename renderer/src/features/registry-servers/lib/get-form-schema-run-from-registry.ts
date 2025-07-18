@@ -4,6 +4,7 @@ import type {
 } from '@/common/api/generated/types.gen'
 import z from 'zod/v4'
 import type { GroupedEnvVars } from './group-env-vars'
+import { isEmptyEnvVar } from '@/common/lib/utils'
 
 function refineSecret(
   value: {
@@ -18,7 +19,7 @@ function refineSecret(
   vars: RegistryEnvVar[]
 ): boolean {
   const isRequired = vars.find((s) => s.name === value.name)?.required
-  if (isRequired && !value.value?.secret) {
+  if (isRequired && isEmptyEnvVar(value.value?.secret)) {
     return false
   }
   return true
@@ -32,7 +33,7 @@ function refineEnvVar(
   vars: RegistryEnvVar[]
 ): boolean {
   const isRequired = vars.find((s) => s.name === value.name)?.required
-  if (isRequired && !value.value) {
+  if (isRequired && isEmptyEnvVar(value.value)) {
     return false
   }
   return true

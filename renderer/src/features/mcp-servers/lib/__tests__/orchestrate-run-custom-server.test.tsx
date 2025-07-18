@@ -33,17 +33,43 @@ vi.mock('sonner', async () => {
   }
 })
 
+/**
+ * Creates reusable mocks for testing the orchestrateRunCustomServer function
+ */
+function createTestMocks(options?: {
+  saveSecretImplementation?: () => Promise<{ key: string }>
+  getIsServerReadyImplementation?: () => Promise<boolean>
+}) {
+  return {
+    mockSaveSecret: vi
+      .fn()
+      .mockImplementation(
+        options?.saveSecretImplementation ||
+          (() => Promise.resolve({ key: 'test-key' }))
+      ),
+    mockCreateWorkload: vi.fn(),
+    mockGetIsServerReady: vi
+      .fn()
+      .mockImplementation(
+        options?.getIsServerReadyImplementation || (() => Promise.resolve(true))
+      ),
+    mockQueryClient: {
+      invalidateQueries: vi.fn(),
+    } as unknown as QueryClient,
+  }
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
 })
 
 it('submits without any optional fields', async () => {
-  const mockSaveSecret = vi.fn()
-  const mockCreateWorkload = vi.fn()
-  const mockGetIsServerReady = vi.fn().mockResolvedValue(true)
-  const mockQueryClient = {
-    invalidateQueries: vi.fn(),
-  } as unknown as QueryClient
+  const {
+    mockSaveSecret,
+    mockCreateWorkload,
+    mockGetIsServerReady,
+    mockQueryClient,
+  } = createTestMocks()
 
   const DATA: FormSchemaRunMcpCommand = {
     image: 'ghcr.io/github/github-mcp-server',
@@ -109,12 +135,12 @@ it('handles new secrets properly', async () => {
     })
   )
 
-  const mockSaveSecret = vi.fn()
-  const mockCreateWorkload = vi.fn()
-  const mockGetIsServerReady = vi.fn().mockResolvedValue(true)
-  const mockQueryClient = {
-    invalidateQueries: vi.fn(),
-  } as unknown as QueryClient
+  const {
+    mockSaveSecret,
+    mockCreateWorkload,
+    mockGetIsServerReady,
+    mockQueryClient,
+  } = createTestMocks()
 
   const DATA = {
     image: 'ghcr.io/github/github-mcp-server',
@@ -181,12 +207,12 @@ it('handles existing secrets from the store properly', async () => {
     })
   )
 
-  const mockSaveSecret = vi.fn()
-  const mockCreateWorkload = vi.fn()
-  const mockGetIsServerReady = vi.fn().mockResolvedValue(true)
-  const mockQueryClient = {
-    invalidateQueries: vi.fn(),
-  } as unknown as QueryClient
+  const {
+    mockSaveSecret,
+    mockCreateWorkload,
+    mockGetIsServerReady,
+    mockQueryClient,
+  } = createTestMocks()
 
   const DATA: FormSchemaRunMcpCommand = {
     image: 'ghcr.io/github/github-mcp-server',
@@ -233,12 +259,12 @@ it('handles naming collisions with secrets from the store', async () => {
     })
   )
 
-  const mockSaveSecret = vi.fn()
-  const mockCreateWorkload = vi.fn()
-  const mockGetIsServerReady = vi.fn().mockResolvedValue(true)
-  const mockQueryClient = {
-    invalidateQueries: vi.fn(),
-  } as unknown as QueryClient
+  const {
+    mockSaveSecret,
+    mockCreateWorkload,
+    mockGetIsServerReady,
+    mockQueryClient,
+  } = createTestMocks()
 
   const DATA: FormSchemaRunMcpCommand = {
     image: 'ghcr.io/github/github-mcp-server',
@@ -284,12 +310,14 @@ it('handles naming collisions with secrets from the store', async () => {
 })
 
 it('handles both new and existing secrets', async () => {
-  const mockSaveSecret = vi.fn().mockResolvedValue({ key: 'new_secret_key' })
-  const mockCreateWorkload = vi.fn()
-  const mockGetIsServerReady = vi.fn().mockResolvedValue(true)
-  const mockQueryClient = {
-    invalidateQueries: vi.fn(),
-  } as unknown as QueryClient
+  const {
+    mockSaveSecret,
+    mockCreateWorkload,
+    mockGetIsServerReady,
+    mockQueryClient,
+  } = createTestMocks({
+    saveSecretImplementation: () => Promise.resolve({ key: 'new_secret_key' }),
+  })
 
   const DATA: FormSchemaRunMcpCommand = {
     image: 'ghcr.io/github/github-mcp-server',
@@ -338,12 +366,14 @@ it('handles both new and existing secrets', async () => {
 
 it('handles error when saving a secret fails', async () => {
   const mockError = new Error('Failed to save secret')
-  const mockSaveSecret = vi.fn().mockRejectedValue(mockError)
-  const mockCreateWorkload = vi.fn()
-  const mockGetIsServerReady = vi.fn()
-  const mockQueryClient = {
-    invalidateQueries: vi.fn(),
-  } as unknown as QueryClient
+  const {
+    mockSaveSecret,
+    mockCreateWorkload,
+    mockGetIsServerReady,
+    mockQueryClient,
+  } = createTestMocks({
+    saveSecretImplementation: () => Promise.reject(mockError),
+  })
 
   const DATA: FormSchemaRunMcpCommand = {
     image: 'ghcr.io/github/github-mcp-server',
@@ -380,12 +410,12 @@ it('handles error when saving a secret fails', async () => {
 })
 
 it('handles environment variables properly', async () => {
-  const mockSaveSecret = vi.fn()
-  const mockCreateWorkload = vi.fn()
-  const mockGetIsServerReady = vi.fn().mockResolvedValue(true)
-  const mockQueryClient = {
-    invalidateQueries: vi.fn(),
-  } as unknown as QueryClient
+  const {
+    mockSaveSecret,
+    mockCreateWorkload,
+    mockGetIsServerReady,
+    mockQueryClient,
+  } = createTestMocks()
 
   const DATA: FormSchemaRunMcpCommand = {
     image: 'ghcr.io/github/github-mcp-server',
@@ -415,13 +445,63 @@ it('handles environment variables properly', async () => {
   })
 })
 
+it('filters out environment variables with empty values', async () => {
+  const {
+    mockSaveSecret,
+    mockCreateWorkload,
+    mockGetIsServerReady,
+    mockQueryClient,
+  } = createTestMocks()
+
+  const DATA: FormSchemaRunMcpCommand = {
+    image: 'ghcr.io/github/github-mcp-server',
+    name: 'env-var-filter-test',
+    transport: 'stdio',
+    type: 'docker_image',
+    envVars: [
+      { name: 'DEBUG', value: 'true' },
+      { name: 'PORT', value: '8080' },
+      { name: 'OPTIONAL_VAR', value: '' }, // Empty value should be omitted
+      { name: 'ANOTHER_OPTIONAL', value: '   ' }, // Whitespace-only should be omitted
+      { name: 'REQUIRED_VAR', value: 'some-value' },
+    ],
+    secrets: [],
+    cmd_arguments: '',
+  }
+
+  await orchestrateRunCustomServer({
+    createWorkload: mockCreateWorkload,
+    data: DATA,
+    getIsServerReady: mockGetIsServerReady,
+    queryClient: mockQueryClient,
+    saveSecret: mockSaveSecret,
+  })
+
+  expect(mockCreateWorkload).toHaveBeenCalledWith({
+    body: expect.objectContaining({
+      env_vars: ['DEBUG=true', 'PORT=8080', 'REQUIRED_VAR=some-value'],
+    }),
+  })
+  // OPTIONAL_VAR and ANOTHER_OPTIONAL should be omitted
+  expect(mockCreateWorkload).toHaveBeenCalledWith(
+    expect.not.objectContaining({
+      body: expect.objectContaining({
+        env_vars: expect.arrayContaining([
+          'OPTIONAL_VAR=',
+          'ANOTHER_OPTIONAL=   ',
+        ]),
+      }),
+    })
+  )
+})
+
 it('handles command arguments properly', async () => {
-  const mockSaveSecret = vi.fn()
-  const mockCreateWorkload = vi.fn()
-  const mockGetIsServerReady = vi.fn().mockResolvedValue(true)
-  const mockQueryClient = {
-    invalidateQueries: vi.fn(),
-  } as unknown as QueryClient
+  const {
+    mockSaveSecret,
+    mockCreateWorkload,
+    mockGetIsServerReady,
+    mockQueryClient,
+  } = createTestMocks()
 
   const DATA: FormSchemaRunMcpCommand = {
     image: 'ghcr.io/github/github-mcp-server',
@@ -449,12 +529,14 @@ it('handles command arguments properly', async () => {
 })
 
 it('shows warning toast when server is not ready', async () => {
-  const mockSaveSecret = vi.fn()
-  const mockCreateWorkload = vi.fn()
-  const mockGetIsServerReady = vi.fn().mockResolvedValue(false)
-  const mockQueryClient = {
-    invalidateQueries: vi.fn(),
-  } as unknown as QueryClient
+  const {
+    mockSaveSecret,
+    mockCreateWorkload,
+    mockGetIsServerReady,
+    mockQueryClient,
+  } = createTestMocks({
+    getIsServerReadyImplementation: () => Promise.resolve(false),
+  })
 
   const DATA: FormSchemaRunMcpCommand = {
     image: 'ghcr.io/github/github-mcp-server',
@@ -486,12 +568,12 @@ it('shows warning toast when server is not ready', async () => {
 })
 
 it('handles package manager type properly', async () => {
-  const mockSaveSecret = vi.fn()
-  const mockCreateWorkload = vi.fn()
-  const mockGetIsServerReady = vi.fn().mockResolvedValue(true)
-  const mockQueryClient = {
-    invalidateQueries: vi.fn(),
-  } as unknown as QueryClient
+  const {
+    mockSaveSecret,
+    mockCreateWorkload,
+    mockGetIsServerReady,
+    mockQueryClient,
+  } = createTestMocks()
 
   const DATA: FormSchemaRunMcpCommand = {
     package_name: 'my-package',
