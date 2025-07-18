@@ -46,7 +46,8 @@ function SecretRow({
                   required={secret.required}
                   htmlFor={`secrets.${index}.value`}
                   className={cn(
-                    'text-muted-foreground !border-input h-full items-center font-mono !ring-0'
+                    `text-muted-foreground !border-input h-full items-center
+                    font-mono !ring-0`
                   )}
                 >
                   {secret.name}
@@ -82,7 +83,8 @@ function SecretRow({
                       isFromStore: false,
                     })
                   }
-                  className="rounded-tr-none rounded-br-none border-r-0 font-mono focus-visible:z-10"
+                  className="rounded-tr-none rounded-br-none border-r-0
+                    font-mono focus-visible:z-10"
                   autoComplete="off"
                   data-1p-ignore
                   type="password"
@@ -124,8 +126,8 @@ function EnvVarRow({
                   required={envVar.required}
                   htmlFor={`envVar.${index}.value`}
                   className={cn(
-                    `text-muted-foreground !border-input flex h-full items-center gap-1 font-mono
-                    !ring-0`
+                    `text-muted-foreground !border-input flex h-full
+                    items-center gap-1 font-mono !ring-0`
                   )}
                 >
                   {envVar.name}

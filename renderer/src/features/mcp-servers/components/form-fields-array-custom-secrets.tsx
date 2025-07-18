@@ -90,7 +90,8 @@ export function FormFieldsArrayCustomSecrets({
                     <Input
                       type="password"
                       aria-label="Secret value"
-                      className="rounded-tr-none rounded-br-none border-r-0 font-mono focus-visible:z-10"
+                      className="rounded-tr-none rounded-br-none border-r-0
+                        font-mono focus-visible:z-10"
                       defaultValue={field.value.secret}
                       name={field.name}
                       onChange={(e) =>
