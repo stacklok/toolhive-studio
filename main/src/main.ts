@@ -261,7 +261,6 @@ if (started) {
 // ────────────────────────────────────────────────────────────────────────────
 const shouldStartHidden =
   process.argv.includes('--hidden') || process.argv.includes('--start-hidden')
-const shouldUseEphemeralContainers = process.argv.includes('--ephemeral-containers')
 const isDevelopment = process.env.NODE_ENV === 'development'
 
 function getPlatformSpecificWindowOptions() {
@@ -349,7 +348,7 @@ app.whenReady().then(async () => {
   }
 
   // Start ToolHive with tray reference
-  await startToolhive(tray || undefined, shouldUseEphemeralContainers)
+  await startToolhive(tray || undefined)
 
   // Create main window
   mainWindow = createWindow()
