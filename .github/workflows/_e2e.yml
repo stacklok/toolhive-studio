@@ -34,3 +34,17 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ failure() }}
+        with:
+          name: playwright-videos
+          path: test-results/**/*.webm
+          retention-days: 30
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ failure() }}
+        with:
+          name: playwright-screenshots
+          path: test-results/**/*.png
+          retention-days: 30
