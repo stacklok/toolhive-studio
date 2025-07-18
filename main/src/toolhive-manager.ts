@@ -1,13 +1,16 @@
 import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
-import path from 'node:path'
-import net from 'node:net'
+import * as path from 'node:path'
+import * as net from 'node:net'
 import { app } from 'electron'
 import type { Tray } from 'electron'
 import { updateTrayStatus } from './system-tray'
 import log from './logger'
-import { GenericContainer, type StartedTestContainer } from 'testcontainers'
 import * as Sentry from '@sentry/electron/main'
+
+// Use CommonJS require for testcontainers to avoid esModuleInterop issues
+const { GenericContainer } = require('testcontainers')
+type StartedTestContainer = any // We'll use any for now since the type is complex
 
 const binName = process.platform === 'win32' ? 'thv.exe' : 'thv'
 const binPath = app.isPackaged
@@ -112,7 +115,7 @@ export async function startToolhive(
       if (tray) updateTrayStatus(tray, true)
 
       /* Optional: stream container logs to our logger */
-      toolhiveContainer.logs().then((stream) => {
+      toolhiveContainer.logs().then((stream: any) => {
         stream
           .on('data', (line: string) => log.debug(`[ToolHive ⍟] ${line}`))
           .on('err', (line: string) => log.error(`[ToolHive ⍟] ${line}`))
@@ -121,7 +124,7 @@ export async function startToolhive(
       /* Handle container exit so we can reflect it in UI */
       // Note: testcontainers doesn't provide waitForExit, so we'll handle this differently
       // We can monitor the container status or use the logs to detect when it stops
-      toolhiveContainer.logs().then((stream) => {
+      toolhiveContainer.logs().then((stream: any) => {
         stream.on('end', () => {
           log.warn(`[startToolhive] Container logs ended`)
           toolhiveContainer = undefined
