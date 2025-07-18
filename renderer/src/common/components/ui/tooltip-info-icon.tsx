@@ -13,7 +13,10 @@ export function TooltipInfoIcon({
   return (
     <Tooltip>
       <TooltipTrigger asChild autoFocus={false}>
-        <InfoIcon className="text-muted-foreground size-4 rounded-full" />
+        <InfoIcon
+          className="text-muted-foreground size-4 rounded-full"
+          data-testid="tooltip-info-icon"
+        />
       </TooltipTrigger>
       <TooltipContent className={className}>{children}</TooltipContent>
     </Tooltip>

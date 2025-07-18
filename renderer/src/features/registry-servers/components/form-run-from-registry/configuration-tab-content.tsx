@@ -15,6 +15,7 @@ import type { GroupedEnvVars } from '../../lib/group-env-vars'
 import type { RegistryEnvVar } from '@/common/api/generated/types.gen'
 import { cn } from '@/common/lib/utils'
 import { FormComboboxSecretStore } from '@/common/components/secrets/form-combobox-secrets-store'
+import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
 
 interface ConfigurationTabContentProps {
   error: string | null
@@ -51,6 +52,9 @@ function SecretRow({
                   )}
                 >
                   {secret.name}
+                  <TooltipInfoIcon className="m-w-90">
+                    {secret.description}
+                  </TooltipInfoIcon>
                 </FormLabel>
               </FormControl>
             </div>
@@ -127,10 +131,13 @@ function EnvVarRow({
                   htmlFor={`envVar.${index}.value`}
                   className={cn(
                     `text-muted-foreground !border-input flex h-full
-                    items-center gap-1 font-mono !ring-0`
+                    items-center gap-2 font-mono !ring-0`
                   )}
                 >
                   {envVar.name}
+                  <TooltipInfoIcon className="w-90">
+                    {envVar.description}
+                  </TooltipInfoIcon>
                 </FormLabel>
               </FormControl>
             </div>
