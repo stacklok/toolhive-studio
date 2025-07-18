@@ -18,7 +18,10 @@ function refineSecret(
   vars: RegistryEnvVar[]
 ): boolean {
   const isRequired = vars.find((s) => s.name === value.name)?.required
-  if (isRequired && !value.value?.secret) {
+  if (
+    isRequired &&
+    (!value.value?.secret || value.value.secret.trim() === '')
+  ) {
     return false
   }
   return true
@@ -32,7 +35,7 @@ function refineEnvVar(
   vars: RegistryEnvVar[]
 ): boolean {
   const isRequired = vars.find((s) => s.name === value.name)?.required
-  if (isRequired && !value.value) {
+  if (isRequired && (!value.value || value.value.trim() === '')) {
     return false
   }
   return true

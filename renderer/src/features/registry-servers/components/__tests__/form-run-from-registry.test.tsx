@@ -486,6 +486,68 @@ describe('FormRunFromRegistry', () => {
     )
   })
 
+  it('validates that whitespace-only values are invalid for required fields', async () => {
+    const mockInstallServerMutation = vi.fn()
+    mockUseRunFromRegistry.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      checkServerStatus: vi.fn(),
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_REQUIRED
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Fill in server name
+    await userEvent.type(
+      screen.getByLabelText('Server name'),
+      'my-awesome-server',
+      {
+        initialSelectionStart: 0,
+        initialSelectionEnd: REGISTRY_SERVER.name?.length,
+      }
+    )
+
+    // Fill required fields with whitespace-only values
+    await userEvent.type(screen.getByLabelText('ENV_VAR value'), '   ')
+    await userEvent.type(screen.getByLabelText('SECRET value'), '\t\n  ')
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+
+    await waitFor(() => {
+      expect(mockInstallServerMutation).not.toHaveBeenCalled()
+    })
+
+    // Check that validation errors are shown for whitespace-only values
+    await waitFor(() => {
+      expect(screen.getByLabelText('SECRET value')).toHaveAttribute(
+        'aria-invalid',
+        'true'
+      )
+    })
+
+    expect(screen.getByLabelText('ENV_VAR value')).toHaveAttribute(
+      'aria-invalid',
+      'true'
+    )
+  })
+
   it('shows loading state when submitting', async () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
