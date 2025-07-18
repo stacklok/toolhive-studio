@@ -8,9 +8,11 @@ test('example test', async () => {
 
   expect(isPackaged).toBe(false)
 
-  // const window =
-  await electronApp.firstWindow()
+  const window = await electronApp.firstWindow()
   // await window.screenshot({ path: 'intro.png' })
+
+  const heading = window.getByRole('heading', { name: /mcp servers/i })
+  expect(heading).toBeVisible()
 
   await electronApp.close()
 })
