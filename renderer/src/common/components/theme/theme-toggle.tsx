@@ -6,14 +6,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
-import { Sun, Moon, Monitor } from 'lucide-react'
+import { Sun, Moon, Monitor, Check } from 'lucide-react'
 
 export function ThemeToggle({ className }: { className?: string }) {
-  const { setTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
 
-  const handleThemeChange = async (theme: 'light' | 'dark' | 'system') => {
+  const handleThemeChange = async (newTheme: 'light' | 'dark' | 'system') => {
     try {
-      await setTheme(theme)
+      await setTheme(newTheme)
     } catch (error) {
       console.error('Failed to change theme:', error)
     }
@@ -41,6 +41,7 @@ export function ThemeToggle({ className }: { className?: string }) {
         >
           <Sun className="mr-2 size-4" />
           Light
+          {theme === 'light' && <Check className="ml-auto size-4" />}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => handleThemeChange('dark')}
@@ -48,6 +49,7 @@ export function ThemeToggle({ className }: { className?: string }) {
         >
           <Moon className="mr-2 size-4" />
           Dark
+          {theme === 'dark' && <Check className="ml-auto size-4" />}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => handleThemeChange('system')}
@@ -55,6 +57,7 @@ export function ThemeToggle({ className }: { className?: string }) {
         >
           <Monitor className="mr-2 size-4" />
           System
+          {theme === 'system' && <Check className="ml-auto size-4" />}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
