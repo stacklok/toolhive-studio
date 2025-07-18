@@ -1,25 +1,36 @@
 import { test, expect, _electron as electron } from '@playwright/test'
+import { GenericContainer, StartedTestContainer } from 'testcontainers'
 
 test('app starts and stops properly', async () => {
-  const electronApp = await electron.launch({ args: ['.'] })
-  const isPackaged = await electronApp.evaluate(async ({ app }) => {
-    return app.isPackaged
-  })
+  // Start Redis container
+  const redisContainer = await new GenericContainer('redis:7-alpine')
+    .withExposedPorts(6379)
+    .start()
 
-  expect(isPackaged).toBe(false)
+  try {
+    const electronApp = await electron.launch({ args: ['.'] })
+    const isPackaged = await electronApp.evaluate(async ({ app }) => {
+      return app.isPackaged
+    })
 
-  const window = await electronApp.firstWindow()
+    expect(isPackaged).toBe(false)
 
-  const header = window.getByRole('heading', {
-    name: /add your first mcp server/i,
-  })
-  await header.waitFor()
-  expect(header).toBeVisible()
+    const window = await electronApp.firstWindow()
 
-  const appToClose = electronApp.close()
-  // const stoppingMessage = window.getByText('Stopping MCP Servers')
-  // await stoppingMessage.waitFor()
-  // expect(stoppingMessage).toBeVisible()
+    const header = window.getByRole('heading', {
+      name: /add your first mcp server/i,
+    })
+    await header.waitFor()
+    expect(header).toBeVisible()
 
-  await appToClose
+    const appToClose = electronApp.close()
+    // const stoppingMessage = window.getByText('Stopping MCP Servers')
+    // await stoppingMessage.waitFor()
+    // expect(stoppingMessage).toBeVisible()
+
+    await appToClose
+  } finally {
+    // Stop Redis container
+    await redisContainer.stop()
+  }
 })
