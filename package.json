@@ -81,7 +81,6 @@
     "prettier-plugin-merge": "^0.8.0",
     "prettier-plugin-tailwindcss": "^0.6.12",
     "tar": "^7.4.3",
-    "testcontainers": "^11.2.1",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.3",
     "typescript": "5.8.3",

@@ -1,9 +1,7 @@
 import { test, expect, _electron as electron } from '@playwright/test'
 
-test('app starts and stops properly with ephemeral containers', async () => {
-  const electronApp = await electron.launch({
-    args: ['.', '--ephemeral-containers'],
-  })
+test('app starts and stops properly', async () => {
+  const electronApp = await electron.launch({ args: ['.'] })
   const isPackaged = await electronApp.evaluate(async ({ app }) => {
     return app.isPackaged
   })

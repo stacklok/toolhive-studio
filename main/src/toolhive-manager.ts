@@ -6,7 +6,6 @@ import { app } from 'electron'
 import type { Tray } from 'electron'
 import { updateTrayStatus } from './system-tray'
 import log from './logger'
-import { GenericContainer, type StartedTestContainer } from 'testcontainers'
 import * as Sentry from '@sentry/electron/main'
 
 const binName = process.platform === 'win32' ? 'thv.exe' : 'thv'
@@ -27,7 +26,6 @@ const binPath = app.isPackaged
     )
 
 let toolhiveProcess: ReturnType<typeof spawn> | undefined
-let toolhiveContainer: StartedTestContainer | undefined
 let toolhivePort: number | undefined
 let isRestarting = false
 
@@ -59,13 +57,9 @@ function findFreePort(): Promise<number> {
   })
 }
 
-export async function startToolhive(
-  tray?: Tray,
-  isEphemeral = false
-): Promise<void> {
+export async function startToolhive(tray?: Tray): Promise<void> {
   log.info(
-    `[startToolhive] Starting (ephemeral=${isEphemeral}) – ` +
-      `Current state: isRunning=${isToolhiveRunning()}, isRestarting=${isRestarting}`
+    `[startToolhive] Starting - Current state: isRunning=${isToolhiveRunning()}, isRestarting=${isRestarting}`
   )
 
   if (!existsSync(binPath)) {
@@ -74,84 +68,22 @@ export async function startToolhive(
   }
 
   toolhivePort = await findFreePort()
-
-  // ──────────────────────────────
-  // Choice 1: Ephemeral container
-  // ──────────────────────────────
-  if (isEphemeral) {
-    try {
-      log.info(
-        `[startToolhive] Launching ToolHive inside container on host port ${toolhivePort}`
-      )
-
-      toolhiveContainer = await new GenericContainer('alpine:3.20')
-        .withCopyFilesToContainer([
-          {
-            source: binPath,
-            target: '/usr/local/bin/toolhive',
-            mode: 0o755,
-          },
-        ])
-        .withExposedPorts(8080)
-        .withCommand([
-          '/usr/local/bin/toolhive',
-          'serve',
-          '--openapi',
-          '--host=0.0.0.0',
-          '--port=8080',
-        ])
-        .withAutoRemove(false) // keep logs around for debugging
-        .start()
-
-      const mappedPort = toolhiveContainer.getMappedPort(8080)
-
-      log.info(
-        `[startToolhive] Container started. PID=N/A, mappedPort=${mappedPort}`
-      )
-
-      if (tray) updateTrayStatus(tray, true)
-
-      /* Optional: stream container logs to our logger */
-      toolhiveContainer.logs().then((stream) => {
-        stream
-          .on('data', (line: string) => log.debug(`[ToolHive ⍟] ${line}`))
-          .on('err', (line: string) => log.error(`[ToolHive ⍟] ${line}`))
-      })
-
-      /* Handle container exit so we can reflect it in UI */
-      // Note: testcontainers doesn't provide waitForExit, so we'll handle this differently
-      // We can monitor the container status or use the logs to detect when it stops
-      toolhiveContainer.logs().then((stream) => {
-        stream.on('end', () => {
-          log.warn(`[startToolhive] Container logs ended`)
-          toolhiveContainer = undefined
-          if (tray) updateTrayStatus(tray, false)
-        })
-      })
-
-      return // Nothing else to do in container mode
-    } catch (err) {
-      log.error('[startToolhive] Failed to start container', err)
-      Sentry.captureException(err)
-      if (tray) updateTrayStatus(tray, false)
-      return
-    }
-  }
-
-  // ──────────────────────────────
-  // Choice 2: Local process (original behaviour)
-  // ──────────────────────────────
   log.info(`Starting ToolHive from: ${binPath} on port ${toolhivePort}`)
 
   toolhiveProcess = spawn(
     binPath,
     ['serve', '--openapi', '--host=127.0.0.1', `--port=${toolhivePort}`],
-    { stdio: 'ignore', detached: false }
+    {
+      stdio: 'ignore',
+      detached: false,
+    }
   )
 
   log.info(`[startToolhive] Process spawned with PID: ${toolhiveProcess.pid}`)
 
-  if (tray) updateTrayStatus(tray, true)
+  if (tray) {
+    updateTrayStatus(tray, !!toolhiveProcess)
+  }
 
   toolhiveProcess.on('error', (error) => {
     log.error('Failed to start ToolHive: ', error)
