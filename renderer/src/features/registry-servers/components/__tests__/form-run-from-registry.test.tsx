@@ -2,7 +2,7 @@ import type {
   RegistryEnvVar,
   RegistryImageMetadata,
 } from '@/common/api/generated'
-import { render, screen, waitFor, act } from '@testing-library/react'
+import { render, screen, waitFor, act, within } from '@testing-library/react'
 import { it, expect, vi, describe, beforeEach } from 'vitest'
 import { FormRunFromRegistry } from '../form-run-from-registry'
 import userEvent from '@testing-library/user-event'
@@ -55,7 +55,7 @@ const REGISTRY_SERVER: RegistryImageMetadata = {
 const ENV_VARS_OPTIONAL = [
   {
     name: 'ENV_VAR',
-    description: 'foo bar',
+    description: 'description of env var',
     required: false,
   },
 
@@ -120,6 +120,14 @@ describe('FormRunFromRegistry', () => {
     expect(screen.getByLabelText('Command arguments')).toBeInTheDocument()
     expect(screen.getByLabelText('SECRET value')).toBeInTheDocument()
     expect(screen.getByLabelText('ENV_VAR value')).toBeInTheDocument()
+    const formLabel = screen.getByText(/env_var/i).closest('label')
+    const tooltipIcon = within(formLabel!).getByTestId('tooltip-info-icon')
+    await userEvent.hover(tooltipIcon)
+    await waitFor(() => {
+      const tooltip = screen.getByRole('tooltip')
+      expect(tooltip).toBeInTheDocument()
+      expect(tooltip).toHaveTextContent('description of env var')
+    })
     expect(
       screen.getByRole('button', { name: 'Install server' })
     ).toBeInTheDocument()
