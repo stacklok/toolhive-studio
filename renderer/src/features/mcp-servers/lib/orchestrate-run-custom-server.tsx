@@ -116,9 +116,12 @@ async function saveSecrets(
 
 /**
  * Maps environment variables from the form into the format expected by the API.
+ * Filters out environment variables with empty or whitespace-only values.
  */
 function mapEnvVars(envVars: { name: string; value: string }[]) {
-  return envVars.map((envVar) => `${envVar.name}=${envVar.value}`)
+  return envVars
+    .filter((envVar) => envVar.value && envVar.value.trim() !== '')
+    .map((envVar) => `${envVar.name}=${envVar.value}`)
 }
 
 /**

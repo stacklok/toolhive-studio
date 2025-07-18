@@ -108,9 +108,9 @@ export function prepareCreateWorkloadData(
   data: FormSchemaRunFromRegistry,
   secrets: SecretsSecretParameter[] = []
 ): V1CreateRequest {
-  const envVars: Array<string> = data.envVars.map(
-    (envVar) => `${envVar.name}=${envVar.value}`
-  )
+  const envVars: Array<string> = data.envVars
+    .filter((envVar) => envVar.value && envVar.value.trim() !== '')
+    .map((envVar) => `${envVar.name}=${envVar.value}`)
 
   // Extract and transform network isolation fields
   const { allowedHosts, allowedPorts, networkIsolation } = data

@@ -273,6 +273,34 @@ describe('prepareCreateWorkloadData', () => {
 
     expect(result.target_port).toBeUndefined()
   })
+
+  it('filters out environment variables with empty values', () => {
+    const data: FormSchemaRunFromRegistry = {
+      serverName: 'Test Server',
+      envVars: [
+        { name: 'DEBUG', value: 'true' },
+        { name: 'PORT', value: '8080' },
+        { name: 'OPTIONAL_VAR', value: '' }, // Empty value should be omitted
+        { name: 'ANOTHER_OPTIONAL', value: '   ' }, // Whitespace-only should be omitted
+        { name: 'REQUIRED_VAR', value: 'some-value' },
+      ],
+      secrets: [],
+      networkIsolation: false,
+      allowedHosts: [],
+      allowedPorts: [],
+    }
+
+    const result = prepareCreateWorkloadData(SERVER, data)
+
+    expect(result.env_vars).toEqual([
+      'DEBUG=true',
+      'PORT=8080',
+      'REQUIRED_VAR=some-value',
+    ])
+    // OPTIONAL_VAR and ANOTHER_OPTIONAL should be omitted
+    expect(result.env_vars).not.toContain('OPTIONAL_VAR=')
+    expect(result.env_vars).not.toContain('ANOTHER_OPTIONAL=')
+  })
 })
 
 describe('saveSecrets', () => {

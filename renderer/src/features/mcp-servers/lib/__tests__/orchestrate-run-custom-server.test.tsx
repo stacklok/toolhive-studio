@@ -415,6 +415,56 @@ it('handles environment variables properly', async () => {
   })
 })
 
+it('filters out environment variables with empty values', async () => {
+  const mockSaveSecret = vi.fn()
+  const mockCreateWorkload = vi.fn()
+  const mockGetIsServerReady = vi.fn().mockResolvedValue(true)
+  const mockQueryClient = {
+    invalidateQueries: vi.fn(),
+  } as unknown as QueryClient
+
+  const DATA: FormSchemaRunMcpCommand = {
+    image: 'ghcr.io/github/github-mcp-server',
+    name: 'env-var-filter-test',
+    transport: 'stdio',
+    type: 'docker_image',
+    envVars: [
+      { name: 'DEBUG', value: 'true' },
+      { name: 'PORT', value: '8080' },
+      { name: 'OPTIONAL_VAR', value: '' }, // Empty value should be omitted
+      { name: 'ANOTHER_OPTIONAL', value: '   ' }, // Whitespace-only should be omitted
+      { name: 'REQUIRED_VAR', value: 'some-value' },
+    ],
+    secrets: [],
+    cmd_arguments: '',
+  }
+
+  await orchestrateRunCustomServer({
+    createWorkload: mockCreateWorkload,
+    data: DATA,
+    getIsServerReady: mockGetIsServerReady,
+    queryClient: mockQueryClient,
+    saveSecret: mockSaveSecret,
+  })
+
+  expect(mockCreateWorkload).toHaveBeenCalledWith({
+    body: expect.objectContaining({
+      env_vars: ['DEBUG=true', 'PORT=8080', 'REQUIRED_VAR=some-value'],
+    }),
+  })
+  // OPTIONAL_VAR and ANOTHER_OPTIONAL should be omitted
+  expect(mockCreateWorkload).toHaveBeenCalledWith(
+    expect.not.objectContaining({
+      body: expect.objectContaining({
+        env_vars: expect.arrayContaining([
+          'OPTIONAL_VAR=',
+          'ANOTHER_OPTIONAL=   ',
+        ]),
+      }),
+    })
+  )
+})
+
 it('handles command arguments properly', async () => {
   const mockSaveSecret = vi.fn()
   const mockCreateWorkload = vi.fn()
