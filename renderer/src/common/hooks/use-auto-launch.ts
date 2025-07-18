@@ -19,7 +19,7 @@ export function useSetAutoLaunch() {
     },
     successMsg: (enabled) =>
       enabled
-        ? 'Auto-launch enabled - ToolHive will start with your system'
+        ? 'Auto-launch enabled - ToolHive will start when you log into your system'
         : 'Auto-launch disabled',
     errorMsg: 'Failed to update auto-launch setting',
   })

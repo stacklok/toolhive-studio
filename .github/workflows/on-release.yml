@@ -27,7 +27,15 @@ jobs:
     needs: [security, static-checks, unit-tests]
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            arch: x64
+          - os: windows-latest
+            arch: x64
+          - os: macos-13
+            arch: x64
+          - os: macos-latest
+            arch: arm64
     env:
       NODE_OPTIONS: '--max_old_space_size=4096'
     steps:

@@ -11,7 +11,6 @@ export const MOCK_REGISTRY_RESPONSE = [
       network: {
         outbound: {
           insecure_allow_all: true,
-          allow_transport: ['tcp'],
           allow_port: [443],
         },
       },
@@ -62,7 +61,6 @@ export const MOCK_REGISTRY_RESPONSE = [
     permissions: {
       network: {
         outbound: {
-          allow_transport: ['tcp'],
           allow_host: ['api.slack.com', 'slack.com'],
           allow_port: [443],
         },
@@ -120,7 +118,6 @@ export const MOCK_REGISTRY_RESPONSE = [
     permissions: {
       network: {
         outbound: {
-          allow_transport: ['tcp'],
           allow_port: [443],
         },
       },
@@ -165,7 +162,6 @@ export const MOCK_REGISTRY_RESPONSE = [
       network: {
         outbound: {
           insecure_allow_all: true,
-          allow_transport: ['tcp'],
           allow_port: [443],
         },
       },
@@ -215,7 +211,6 @@ export const MOCK_REGISTRY_RESPONSE = [
     permissions: {
       network: {
         outbound: {
-          allow_transport: ['tcp'],
           allow_port: [443, 6379],
         },
       },
@@ -353,7 +348,6 @@ export const MOCK_REGISTRY_RESPONSE = [
     permissions: {
       network: {
         outbound: {
-          allow_transport: ['tcp'],
           allow_host: ['docs.github.com', 'github.com'],
           allow_port: [443],
         },
@@ -441,7 +435,6 @@ export const MOCK_REGISTRY_RESPONSE = [
     permissions: {
       network: {
         outbound: {
-          allow_transport: ['tcp'],
           allow_host: ['developers.google.com', 'maps.com'],
           allow_port: [443],
         },
@@ -494,7 +487,6 @@ export const MOCK_REGISTRY_RESPONSE = [
       network: {
         outbound: {
           insecure_allow_all: true,
-          allow_transport: ['tcp'],
           allow_port: [443],
         },
       },
@@ -547,7 +539,6 @@ export const MOCK_REGISTRY_RESPONSE = [
     permissions: {
       network: {
         outbound: {
-          allow_transport: ['tcp'],
           allow_host: ['api.notion.com'],
           allow_port: [443],
         },
@@ -601,7 +592,6 @@ export const MOCK_REGISTRY_RESPONSE = [
     permissions: {
       network: {
         outbound: {
-          allow_transport: ['tcp'],
           allow_port: [443],
         },
       },
@@ -644,7 +634,6 @@ export const MOCK_REGISTRY_RESPONSE = [
     permissions: {
       network: {
         outbound: {
-          allow_transport: ['tcp'],
           allow_port: [443],
         },
       },
@@ -682,7 +671,6 @@ export const MOCK_REGISTRY_RESPONSE = [
       write: ['/tmp'],
       network: {
         outbound: {
-          allow_transport: ['tcp'],
           allow_port: [443],
         },
       },
@@ -730,7 +718,6 @@ export const MOCK_REGISTRY_RESPONSE = [
       network: {
         outbound: {
           insecure_allow_all: true,
-          allow_transport: ['tcp'],
           allow_port: [443, 27017, 27018, 27019, 27020],
         },
       },
@@ -850,7 +837,6 @@ export const MOCK_REGISTRY_RESPONSE = [
     permissions: {
       network: {
         outbound: {
-          allow_transport: ['tcp'],
           allow_host: ['api.osv.dev'],
           allow_port: [443],
         },
@@ -901,7 +887,6 @@ export const MOCK_REGISTRY_RESPONSE = [
       network: {
         outbound: {
           insecure_allow_all: true,
-          allow_transport: ['tcp'],
           allow_port: [443],
         },
       },
@@ -954,7 +939,6 @@ export const MOCK_REGISTRY_RESPONSE = [
       write: ['/tmp/db'],
       network: {
         outbound: {
-          allow_transport: ['tcp'],
           allow_port: [443],
         },
       },
@@ -987,7 +971,6 @@ export const MOCK_REGISTRY_RESPONSE = [
     permissions: {
       network: {
         outbound: {
-          allow_transport: ['tcp'],
           allow_host: ['brave.com', 'api.search.brave.com'],
           allow_port: [443],
         },
@@ -1032,7 +1015,6 @@ export const MOCK_REGISTRY_RESPONSE = [
     permissions: {
       network: {
         outbound: {
-          allow_transport: ['tcp'],
           allow_port: [443],
         },
       },
@@ -1082,7 +1064,6 @@ export const MOCK_REGISTRY_RESPONSE = [
       network: {
         outbound: {
           insecure_allow_all: true,
-          allow_transport: ['tcp'],
         },
       },
     },
@@ -1142,7 +1123,6 @@ export const MOCK_REGISTRY_RESPONSE = [
     permissions: {
       network: {
         outbound: {
-          allow_transport: ['tcp'],
           allow_port: [443],
         },
       },
@@ -1192,7 +1172,6 @@ export const MOCK_REGISTRY_RESPONSE = [
     permissions: {
       network: {
         outbound: {
-          allow_transport: ['tcp'],
           allow_host: ['semgrep.dev', 'semgrep.com'],
           allow_port: [443],
         },
@@ -1244,7 +1223,6 @@ export const MOCK_REGISTRY_RESPONSE = [
     permissions: {
       network: {
         outbound: {
-          allow_transport: ['tcp'],
           allow_port: [443],
         },
       },
@@ -1283,7 +1261,6 @@ export const MOCK_REGISTRY_RESPONSE = [
       network: {
         outbound: {
           insecure_allow_all: true,
-          allow_transport: ['tcp'],
           allow_port: [443],
         },
       },
@@ -1328,7 +1305,6 @@ export const MOCK_REGISTRY_RESPONSE = [
       network: {
         outbound: {
           insecure_allow_all: true,
-          allow_transport: ['tcp'],
           allow_port: [443],
         },
       },
@@ -1420,7 +1396,6 @@ export const MOCK_REGISTRY_RESPONSE = [
       network: {
         outbound: {
           insecure_allow_all: true,
-          allow_transport: ['tcp'],
           allow_port: [443],
         },
       },
@@ -1513,7 +1488,6 @@ export const MOCK_REGISTRY_RESPONSE = [
     permissions: {
       network: {
         outbound: {
-          allow_transport: ['tcp'],
           allow_host: ['*'],
           allow_port: [443],
         },
@@ -1580,7 +1554,6 @@ export const MOCK_REGISTRY_RESPONSE = [
     permissions: {
       network: {
         outbound: {
-          allow_transport: ['tcp'],
           allow_host: ['api.perplexity.ai'],
           allow_port: [443],
         },
@@ -1613,7 +1586,6 @@ export const MOCK_REGISTRY_RESPONSE = [
     permissions: {
       network: {
         outbound: {
-          allow_transport: ['tcp'],
           allow_host: ['atlassian.net', 'atlassian.com'],
           allow_port: [443],
         },
@@ -1780,7 +1752,6 @@ export const MOCK_REGISTRY_RESPONSE = [
     permissions: {
       network: {
         outbound: {
-          allow_transport: ['tcp'],
           allow_port: [443],
         },
       },
@@ -1822,7 +1793,6 @@ export const MOCK_REGISTRY_RESPONSE = [
       network: {
         outbound: {
           insecure_allow_all: true,
-          allow_transport: ['tcp'],
           allow_port: [443],
         },
       },
@@ -1878,7 +1848,6 @@ export const MOCK_REGISTRY_RESPONSE = [
       network: {
         outbound: {
           insecure_allow_all: true,
-          allow_transport: ['tcp'],
           allow_host: ['github.com'],
           allow_port: [443],
         },
@@ -1960,7 +1929,6 @@ export const MOCK_REGISTRY_RESPONSE = [
     permissions: {
       network: {
         outbound: {
-          allow_transport: ['tcp'],
           allow_port: [443],
         },
       },
@@ -1992,7 +1960,6 @@ export const MOCK_REGISTRY_RESPONSE = [
     permissions: {
       network: {
         outbound: {
-          allow_transport: ['tcp'],
           allow_host: ['docs.gitlab.com', 'gitlab.com', 'full.com'],
           allow_port: [443],
         },

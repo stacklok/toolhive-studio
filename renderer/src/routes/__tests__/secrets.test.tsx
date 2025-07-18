@@ -60,7 +60,7 @@ it('renders add secret dialog when clicking add secret button', async () => {
   const srDescription = Array.from(dialog.querySelectorAll('p,div,span')).find(
     (el) =>
       el.className.includes('sr-only') &&
-      el.textContent?.includes('Enter a name and value for your new secret.')
+      el.textContent?.includes('Enter a name and value for the new secret.')
   )
   expect(srDescription).toBeTruthy()
   const ariaDescribedBy = dialog.getAttribute('aria-describedby')

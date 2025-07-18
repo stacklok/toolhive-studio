@@ -21,6 +21,7 @@ import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
 import { prepareSecretsWithoutNamingCollision } from '@/common/lib/secrets/prepare-secrets-without-naming-collision'
 import { trackEvent } from '@/common/lib/analytics'
 import { restartClientNotification } from './restart-client-notification'
+import { isEmptyEnvVar } from '@/common/lib/utils'
 
 type SaveSecretFn = UseMutateAsyncFunction<
   V1CreateSecretResponse,
@@ -116,9 +117,12 @@ async function saveSecrets(
 
 /**
  * Maps environment variables from the form into the format expected by the API.
+ * Filters out environment variables with empty or whitespace-only values.
  */
 function mapEnvVars(envVars: { name: string; value: string }[]) {
-  return envVars.map((envVar) => `${envVar.name}=${envVar.value}`)
+  return envVars
+    .filter((envVar) => !isEmptyEnvVar(envVar.value))
+    .map((envVar) => `${envVar.name}=${envVar.value}`)
 }
 
 /**

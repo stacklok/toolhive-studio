@@ -8,7 +8,7 @@ export const registryServerFixture = {
     tier: 'official',
     status: 'active',
     permissions: {
-      network: { outbound: { allow_transport: ['tcp'], allow_port: [443] } },
+      network: { outbound: { allow_port: [443] } },
     },
     tools: ['get_current_time', 'convert_time'],
     env_vars: [

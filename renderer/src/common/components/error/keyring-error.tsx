@@ -9,7 +9,7 @@ export function KeyringError() {
     >
       <p>
         ToolHive needs to access your system keyring in order to securely store
-        and manage your secrets.
+        and manage secrets.
       </p>
 
       <p>Most Linux distributions have a system keyring out of the box.</p>
@@ -23,7 +23,7 @@ export function KeyringError() {
           (should be automatically unlocked after logging in)
         </li>
         <li>
-          You have rebooted your computer after any changes to your keyring
+          You have rebooted your computer after any changes to the keyring
           configuration
         </li>
       </ul>

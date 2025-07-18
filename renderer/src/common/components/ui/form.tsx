@@ -13,6 +13,7 @@ import {
 
 import { cn } from '@/common/lib/utils'
 import { Label } from '@/common/components/ui/label'
+import { TooltipValueRequired } from './tooltip-value-required'
 
 const Form = FormProvider
 
@@ -88,9 +89,13 @@ function FormItem({ className, ...props }: React.ComponentProps<'div'>) {
 function FormLabel({
   className,
   readOnly,
+  required,
   children,
   ...props
-}: React.ComponentProps<typeof LabelPrimitive.Root> & { readOnly?: boolean }) {
+}: React.ComponentProps<typeof LabelPrimitive.Root> & {
+  readOnly?: boolean
+  required?: boolean
+}) {
   const { error, formItemId } = useFormField()
 
   return (
@@ -102,6 +107,7 @@ function FormLabel({
       {...props}
     >
       {children}
+      {required && <TooltipValueRequired />}
       {readOnly && (
         <span className="text-muted-foreground text-xs">(read-only)</span>
       )}

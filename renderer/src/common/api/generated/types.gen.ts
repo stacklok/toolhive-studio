@@ -41,10 +41,6 @@ export type PermissionsOutboundNetworkPermissions = {
    */
   allow_port?: Array<number>
   /**
-   * AllowTransport is a list of allowed transport protocols (tcp, udp)
-   */
-  allow_transport?: Array<string>
-  /**
    * InsecureAllowAll allows all outbound network connections
    */
   insecure_allow_all?: boolean
@@ -597,6 +593,12 @@ export type WorkloadsWorkload = {
    * CreatedAt is the timestamp when the workload was created.
    */
   created_at?: string
+  /**
+   * Labels are the container labels (excluding standard ToolHive labels)
+   */
+  labels?: {
+    [key: string]: string
+  }
   /**
    * Name is the name of the workload.
    * It is used as a unique identifier.

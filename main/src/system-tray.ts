@@ -119,6 +119,12 @@ const handleStartOnLogin = async (
   try {
     setAutoLaunch(!currentStatus)
 
+    // On Windows, there might be a small delay before the settings are reflected
+    // Wait a bit before updating the UI to ensure we get the correct state
+    if (process.platform === 'win32') {
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    }
+
     // Update the tray menu to reflect the new state
     setupTrayMenu(currentTray, toolHiveIsRunning)
 
@@ -158,21 +164,21 @@ const startOnLoginMenu = (currentTray: Tray, toolHiveIsRunning: boolean) => {
 }
 
 const createShowMenuItem = () => ({
-  label: 'Show App',
+  label: 'Show Window',
   accelerator: 'CmdOrCtrl+S',
   type: 'normal' as const,
   click: withWindow(showWindowWithFocus),
 })
 
 const createHideMenuItem = () => ({
-  label: 'Hide App',
+  label: 'Hide Window',
   accelerator: 'CmdOrCtrl+H',
   type: 'normal' as const,
   click: withWindow(hideWindow),
 })
 
 const createQuitMenuItem = () => ({
-  label: 'Quit App',
+  label: 'Quit ToolHive',
   accelerator: 'CmdOrCtrl+Q',
   type: 'normal' as const,
   click: () => {

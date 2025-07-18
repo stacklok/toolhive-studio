@@ -6,7 +6,6 @@ import { AlertTriangle } from 'lucide-react'
 import { DynamicArrayField } from '../dynamic-array-field'
 import type { UseFormReturn } from 'react-hook-form'
 import { type FormSchemaRunFromRegistry } from '../../lib/get-form-schema-run-from-registry'
-import { AllowedProtocolsField } from './allowed-protocols-field'
 
 export function NetworkIsolationTabContent({
   form,
@@ -20,24 +19,25 @@ export function NetworkIsolationTabContent({
       render={({ field: networkField }) => {
         const hosts = form.watch('allowedHosts') || []
         const ports = form.watch('allowedPorts') || []
-        const protocols = form.watch('allowedProtocols') || []
+        const showAlert =
+          !hosts.some((host) => host.trim() !== '') &&
+          !ports.some((port) => port.trim() !== '')
         return (
           <div className="p-6">
             <div className="mb-4 flex items-center gap-4 rounded-md border px-3 py-4">
               <Switch
                 id="network-isolation-switch"
-                aria-label="Network isolation"
+                aria-label="Enable outbound network filtering"
                 checked={!!networkField.value}
                 onCheckedChange={networkField.onChange}
               />
               <Label htmlFor="network-isolation-switch">
-                Network isolation
+                Enable outbound network filtering
               </Label>
             </div>
             {networkField.value && (
               <>
-                {/* Show alert only if any of the three are empty, and place it below the switch */}
-                {(!hosts.length || !ports.length || !protocols.length) && (
+                {showAlert && (
                   <Alert className="mt-2">
                     <AlertTriangle className="mt-0.5" />
                     <AlertDescription>
@@ -54,10 +54,11 @@ export function NetworkIsolationTabContent({
                       /*
                          // @ts-expect-error no time to fix this */
                       name="allowedHosts"
-                      label="Allowed Hosts"
+                      label="Allowed hosts"
                       inputLabelPrefix="Host"
                       addButtonText="Add a host"
                       control={form.control}
+                      tooltipContent="Specify domain names or IP addresses. To include subdomains, use a leading period (“.”)"
                     />
                   )}
                 />
@@ -69,24 +70,10 @@ export function NetworkIsolationTabContent({
                       /*
                          // @ts-expect-error no time to fix this */
                       name={'allowedPorts'}
-                      label="Allowed Ports"
+                      label="Allowed ports"
                       control={form.control}
                       inputLabelPrefix="Port"
                       addButtonText="Add a port"
-                    />
-                  )}
-                />
-                <Controller
-                  control={form.control}
-                  name="allowedProtocols"
-                  render={({ field }) => (
-                    <AllowedProtocolsField
-                      field={
-                        field as {
-                          value?: string[]
-                          onChange: (value: string[]) => void
-                        }
-                      }
                     />
                   )}
                 />
