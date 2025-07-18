@@ -16,6 +16,8 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Run tests
+        env:
+          ELECTRON_DISABLE_SANDBOX: 'true'
         run: pnpm run e2e
 
       - uses: actions/upload-artifact@v4
