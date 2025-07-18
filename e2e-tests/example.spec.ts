@@ -20,11 +20,28 @@ test('app starts and stops properly', async () => {
 
     const window = await electronApp.firstWindow()
 
-    const header = window.getByRole('heading', {
+    // Wait for the app to load and show either the empty state or the main content
+    await window.waitForLoadState('networkidle')
+
+    // Check if we have the empty state (no servers) or the main content (has servers)
+    const emptyStateHeading = window.getByRole('heading', {
       name: /add your first mcp server/i,
     })
-    await header.waitFor()
-    expect(header).toBeVisible()
+    const mainTitle = window.getByRole('heading', {
+      name: /mcp servers/i,
+    })
+
+    // Wait for either the empty state or the main title to appear
+    await Promise.race([
+      emptyStateHeading.waitFor({ timeout: 10000 }),
+      mainTitle.waitFor({ timeout: 10000 }),
+    ])
+
+    // Verify that at least one of them is visible
+    const hasEmptyState = await emptyStateHeading.isVisible()
+    const hasMainTitle = await mainTitle.isVisible()
+
+    expect(hasEmptyState || hasMainTitle).toBe(true)
 
     const appToClose = electronApp.close()
     // const stoppingMessage = window.getByText('Stopping MCP Servers')
