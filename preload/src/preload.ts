@@ -3,6 +3,7 @@
 
 import { contextBridge, ipcRenderer } from 'electron'
 import type { WorkloadsWorkload } from '../../renderer/src/common/api/generated/types.gen'
+import { TOOLHIVE_VERSION } from '../../utils/constants'
 
 // Expose auto-launch functionality to renderer
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -23,6 +24,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // ToolHive port
   getToolhivePort: () => ipcRenderer.invoke('get-toolhive-port'),
+  getToolhiveVersion: () => TOOLHIVE_VERSION,
   // ToolHive is running
   isToolhiveRunning: () => ipcRenderer.invoke('is-toolhive-running'),
 
@@ -72,6 +74,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     optOut: () => ipcRenderer.invoke('sentry.opt-out'),
   },
 
+  // Log file operations
+  getMainLogContent: () => ipcRenderer.invoke('get-main-log-content'),
+
   // Window controls
   windowControls: {
     minimize: () => ipcRenderer.invoke('window-minimize'),
@@ -108,6 +113,7 @@ export interface ElectronAPI {
   hideApp: () => Promise<void>
   quitApp: () => Promise<void>
   getToolhivePort: () => Promise<number | undefined>
+  getToolhiveVersion: () => Promise<string>
   isToolhiveRunning: () => Promise<boolean>
   checkContainerEngine: () => Promise<{
     docker: boolean
@@ -133,6 +139,7 @@ export interface ElectronAPI {
     optIn: () => Promise<boolean>
     optOut: () => Promise<boolean>
   }
+  getMainLogContent: () => Promise<string>
   isMac: boolean
   isWindows: boolean
   isLinux: boolean
