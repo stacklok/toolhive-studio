@@ -334,6 +334,7 @@ describe('FormRunFromRegistry', () => {
       isPendingSecrets: false,
     })
     server = { ...REGISTRY_SERVER }
+    server.args = ['stdio']
     server.env_vars = ENV_VARS_OPTIONAL
     render(
       <QueryClientProvider client={queryClient}>
@@ -364,7 +365,7 @@ describe('FormRunFromRegistry', () => {
           server: expect.any(Object),
           data: expect.objectContaining({
             serverName: 'my-awesome-server',
-            cmd_arguments: undefined,
+            cmd_arguments: 'stdio',
             envVars: [{ name: 'ENV_VAR', value: '' }],
             secrets: [
               { name: 'SECRET', value: { isFromStore: false, secret: '' } },

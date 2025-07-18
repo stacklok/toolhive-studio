@@ -97,6 +97,10 @@ export function FormRunFromRegistry({
     resolver: zodV4Resolver(formSchema),
     defaultValues: {
       serverName: server?.name || '',
+      cmd_arguments:
+        server?.args && server.args.length > 0
+          ? server.args.join(' ')
+          : undefined,
       secrets: groupedEnvVars.secrets.map((s) => ({
         name: s.name || '',
         value: { secret: s.default || '', isFromStore: false },
