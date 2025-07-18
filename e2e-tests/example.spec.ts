@@ -11,8 +11,7 @@ test('example test', async () => {
   const window = await electronApp.firstWindow()
   // await window.screenshot({ path: 'intro.png' })
 
-  const heading = window.getByRole('heading', { name: /mcp servers/i })
-  expect(heading).toBeVisible()
+  expect(window.getByText('MCP Servers')).toBeVisible()
 
   await electronApp.close()
 })
