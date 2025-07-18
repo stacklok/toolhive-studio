@@ -24,7 +24,10 @@ export function NetworkIsolationTabContent({
           !ports.some((port) => port.trim() !== '')
         return (
           <div className="p-6">
-            <div className="mb-4 flex items-center gap-4 rounded-md border px-3 py-4">
+            <div
+              className="mb-4 flex items-center gap-4 rounded-md border px-3
+                py-4"
+            >
               <Switch
                 id="network-isolation-switch"
                 aria-label="Enable outbound network filtering"

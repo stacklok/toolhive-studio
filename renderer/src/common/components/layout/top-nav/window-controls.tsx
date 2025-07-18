@@ -34,7 +34,8 @@ export function WindowControls() {
       <Button
         variant="ghost"
         size="icon"
-        className="hover:bg-accent/50 hover:text-accent-foreground h-8 w-12 rounded-none"
+        className="hover:bg-accent/50 hover:text-accent-foreground h-8 w-12
+          rounded-none"
         onClick={handleMinimize}
       >
         <Minus className="size-4" />
@@ -42,13 +43,17 @@ export function WindowControls() {
       <Button
         variant="ghost"
         size="icon"
-        className="hover:bg-accent/50 hover:text-accent-foreground h-8 w-12 rounded-none"
+        className="hover:bg-accent/50 hover:text-accent-foreground h-8 w-12
+          rounded-none"
         onClick={handleMaximize}
       >
         {isMaximized ? (
           <div className="relative size-4">
             <div className="absolute inset-0 size-3 border border-current" />
-            <div className="bg-background absolute top-1 left-1 size-3 border border-current" />
+            <div
+              className="bg-background absolute top-1 left-1 size-3 border
+                border-current"
+            />
           </div>
         ) : (
           <Square className="size-4" />
@@ -57,7 +62,8 @@ export function WindowControls() {
       <Button
         variant="ghost"
         size="icon"
-        className="hover:bg-destructive hover:text-destructive-foreground h-8 w-12 rounded-none"
+        className="hover:bg-destructive hover:text-destructive-foreground h-8
+          w-12 rounded-none"
         onClick={handleClose}
       >
         <X className="size-4" />

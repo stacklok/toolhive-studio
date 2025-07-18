@@ -29,8 +29,8 @@ export function EmptyState({
 }) {
   return (
     <div
-      className="mx-auto flex max-w-[40rem] flex-col items-center justify-center py-32
-        text-center text-balance"
+      className="mx-auto flex max-w-[40rem] flex-col items-center justify-center
+        py-32 text-center text-balance"
     >
       <Illustration className="mb-4 size-32" />
       <h4 className="text-foreground mb-2 text-3xl font-bold">{title}</h4>

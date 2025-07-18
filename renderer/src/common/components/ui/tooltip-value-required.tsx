@@ -6,7 +6,8 @@ export function TooltipValueRequired() {
       <TooltipTrigger asChild autoFocus={false}>
         <span
           aria-label="required"
-          className="text-destructive ml-0.5 cursor-help align-super font-sans text-sm"
+          className="text-destructive ml-0.5 cursor-help align-super font-sans
+            text-sm"
         >
           *
         </span>

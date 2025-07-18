@@ -42,7 +42,9 @@ export function SecretsTable({
         <Table className="">
           <TableHeader>
             <TableRow>
-              <TableHead className="text-muted-foreground flex items-center px-5 text-xs">
+              <TableHead
+                className="text-muted-foreground flex items-center px-5 text-xs"
+              >
                 Secrets
               </TableHead>
               <TableHead className="px-5 text-right"></TableHead>

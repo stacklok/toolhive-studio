@@ -34,7 +34,10 @@ export function CardRegistryServer({
       )}
     >
       <CardHeader>
-        <CardTitle className="grid grid-cols-[auto_calc(var(--spacing)_*_5)] items-center text-xl">
+        <CardTitle
+          className="grid grid-cols-[auto_calc(var(--spacing)_*_5)] items-center
+            text-xl"
+        >
           <button
             className="truncate text-left !outline-none select-none"
             onClick={() => onClick?.()}
@@ -44,13 +47,14 @@ export function CardRegistryServer({
             <span className="absolute inset-0 rounded-md" />{' '}
           </button>
           <Plus
-            className="text-muted-foreground group-has-[button:focus-visible]:text-foreground
+            className="text-muted-foreground
+              group-has-[button:focus-visible]:text-foreground
               group-hover:text-foreground transition-color size-5"
           />
           {server.status === statusMap.deprecated && (
             <span
-              className="border-border text-muted-foreground bg-muted/20 my-1 w-fit rounded-md border
-                px-1.5 py-0.5 text-xs"
+              className="border-border text-muted-foreground bg-muted/20 my-1
+                w-fit rounded-md border px-1.5 py-0.5 text-xs"
             >
               {server.status}
             </span>

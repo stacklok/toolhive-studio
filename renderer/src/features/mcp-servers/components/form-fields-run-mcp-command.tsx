@@ -216,8 +216,9 @@ export function FormFieldsRunMcpCommand({
               <FormControl>
                 <div className="flex items-center">
                   <div
-                    className="bg-muted text-muted-foreground border-input flex h-9 items-center rounded-l-md
-                      border border-r-0 px-2 text-sm shadow-xs"
+                    className="bg-muted text-muted-foreground border-input flex
+                      h-9 items-center rounded-l-md border border-r-0 px-2
+                      text-sm shadow-xs"
                   >
                     {`${protocolValue}://`}
                   </div>

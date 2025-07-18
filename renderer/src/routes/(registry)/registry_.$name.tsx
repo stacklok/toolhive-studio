@@ -93,7 +93,9 @@ export function RegistryServerDetail() {
           <Stars stars={server.metadata?.stars} className="size-4" />
           {server.provenance && (
             <Tooltip>
-              <TooltipTrigger className="text-muted-foreground flex items-center gap-2">
+              <TooltipTrigger
+                className="text-muted-foreground flex items-center gap-2"
+              >
                 <ShieldCheck className="size-4" />
                 <span className="text-sm">Provenance signed by Sigstore</span>
               </TooltipTrigger>
@@ -125,7 +127,8 @@ export function RegistryServerDetail() {
               {hasMoreTools && (
                 <Badge
                   variant="default"
-                  className="hover:bg-primary/80 cursor-pointer transition-colors"
+                  className="hover:bg-primary/80 cursor-pointer
+                    transition-colors"
                   onClick={() => {
                     setShowAllTools(!showAllTools)
                     if (!showAllTools) {

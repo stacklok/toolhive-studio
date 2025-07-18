@@ -67,14 +67,17 @@ export function FormComboboxSecretStore<
               aria-label="Secrets store"
             >
               <Command>
-                <div className="grid w-full grid-cols-[auto_calc(var(--spacing)_*_9)] items-end">
+                <div
+                  className="grid w-full
+                    grid-cols-[auto_calc(var(--spacing)_*_9)] items-end"
+                >
                   <CommandInput
                     placeholder="Search secrets..."
                     className="h-9"
                   />
                   <div
-                    className="ml-auto flex size-9 shrink-0 grow-0 items-center justify-center self-end
-                      border-b"
+                    className="ml-auto flex size-9 shrink-0 grow-0 items-center
+                      justify-center self-end border-b"
                   >
                     <RefreshButton refresh={refetch} className="size-7" />
                   </div>

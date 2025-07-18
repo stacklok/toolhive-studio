@@ -69,7 +69,9 @@ export function DialogFormRunMcpServerWithCommand({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="relative max-h-[65dvh] space-y-4 overflow-y-auto px-6">
+            <div
+              className="relative max-h-[65dvh] space-y-4 overflow-y-auto px-6"
+            >
               <FormFieldsRunMcpCommand form={form} />
               <FormFieldsArrayCustomSecrets form={form} />
               <FormFieldsArrayCustomEnvVars form={form} />

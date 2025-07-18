@@ -55,7 +55,10 @@ function CardContentMcpServer({
   return (
     <CardContent>
       <div className="flex flex-col gap-4">
-        <div className="border-border flex items-center justify-between border-t pt-4">
+        <div
+          className="border-border flex items-center justify-between border-t
+            pt-4"
+        >
           <ActionsMcpServer
             status={status}
             isPending={isRestartPending || isStopPending}
