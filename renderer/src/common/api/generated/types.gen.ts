@@ -594,6 +594,12 @@ export type WorkloadsWorkload = {
    */
   created_at?: string
   /**
+   * Labels are the container labels (excluding standard ToolHive labels)
+   */
+  labels?: {
+    [key: string]: string
+  }
+  /**
    * Name is the name of the workload.
    * It is used as a unique identifier.
    */
