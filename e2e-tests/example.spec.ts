@@ -1,5 +1,5 @@
 import { test, expect, _electron as electron } from '@playwright/test'
-import { GenericContainer, StartedTestContainer } from 'testcontainers'
+import { GenericContainer } from 'testcontainers'
 
 test('app starts and stops properly', async () => {
   // Start Redis container
@@ -8,7 +8,10 @@ test('app starts and stops properly', async () => {
     .start()
 
   try {
-    const electronApp = await electron.launch({ args: ['.'] })
+    const electronApp = await electron.launch({
+      args: ['.'],
+      recordVideo: { dir: 'test-videos' },
+    })
     const isPackaged = await electronApp.evaluate(async ({ app }) => {
       return app.isPackaged
     })

@@ -36,10 +36,10 @@ jobs:
           retention-days: 30
 
       - uses: actions/upload-artifact@v4
-        if: ${{ failure() }}
+        if: ${{ always() }}
         with:
-          name: playwright-videos
-          path: test-results/**/*.webm
+          name: test-videos
+          path: test-videos/
           retention-days: 30
 
       - uses: actions/upload-artifact@v4
