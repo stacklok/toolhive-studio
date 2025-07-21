@@ -15,6 +15,12 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      - name: Install system packages for keyring (required for ToolHive)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            dbus dbus-x11 gnome-keyring libsecret-1-0 libsecret-1-dev
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -40,6 +46,11 @@ jobs:
         env:
           ELECTRON_DISABLE_SANDBOX: 'true'
         run: |
+          # dbus-run-session starts a throw-away bus and exports
+          # DBUS_SESSION_BUS_ADDRESS for everything inside the block.
+          dbus-run-session -- bash -c '
+            # start the secrets component of gnome-keyring
+            gnome-keyring-daemon --start --components=secrets;
           xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' pnpm run playwright test
 
       - uses: actions/upload-artifact@v4
