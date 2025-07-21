@@ -27,11 +27,20 @@ jobs:
         run: |
           pnpm run thv list
 
+      - name: Pre-build app
+        run: |
+          pnpm run tsc -b --clean 
+          pnpm run electron-forge package
+
+      - name: Install ffmpeg for video recording
+        run: |
+          npx playwright install ffmpeg
+
       - name: Run tests
         env:
           ELECTRON_DISABLE_SANDBOX: 'true'
         run: |
-          xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' pnpm run e2e
+          xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' pnpm run playwright test
 
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}
