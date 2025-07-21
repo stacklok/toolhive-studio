@@ -46,7 +46,7 @@ jobs:
         env:
           ELECTRON_DISABLE_SANDBOX: 'true'
         run: |
-          dbus-run-session -- bash -euo pipefail -c 'eval "$(gnome-keyring-daemon --start --components=secrets,ssh)"; xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" pnpm run playwright test'
+          dbus-run-session -- bash -euo pipefail -c 'export XDG_RUNTIME_DIR=/tmp/runtime-$(id -u); mkdir -p "$XDG_RUNTIME_DIR"; chmod 700 "$XDG_RUNTIME_DIR"; eval "$(gnome-keyring-daemon --start --components=secrets,ssh)"; echo -n | gnome-keyring-daemon --unlock; xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" pnpm run playwright test'
 
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}
