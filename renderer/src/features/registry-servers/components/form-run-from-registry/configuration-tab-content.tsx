@@ -16,6 +16,7 @@ import type { RegistryEnvVar } from '@/common/api/generated/types.gen'
 import { cn } from '@/common/lib/utils'
 import { FormComboboxSecretStore } from '@/common/components/secrets/form-combobox-secrets-store'
 import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
+import { CommandArgumentsField } from '../command-arguments-field'
 
 interface ConfigurationTabContentProps {
   error: string | null
@@ -201,27 +202,7 @@ export function ConfigurationTabContent({
         )}
       />
 
-      <FormField
-        control={form.control}
-        name="cmd_arguments"
-        render={({ field }) => (
-          <FormItem className="mb-10">
-            <FormLabel>Command arguments</FormLabel>
-            <FormDescription>
-              Space separated arguments for the command.
-            </FormDescription>
-            <FormControl>
-              <Input
-                placeholder="e.g. -y --oauth-setup"
-                defaultValue={field.value}
-                onChange={(e) => field.onChange(e.target.value)}
-                name={field.name}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <CommandArgumentsField form={form} />
 
       {groupedEnvVars.secrets[0] ? (
         <section className="mb-10">

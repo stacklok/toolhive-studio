@@ -365,7 +365,7 @@ describe('FormRunFromRegistry', () => {
           server: expect.any(Object),
           data: expect.objectContaining({
             serverName: 'my-awesome-server',
-            cmd_arguments: 'stdio',
+            cmd_arguments: ['stdio'],
             envVars: [{ name: 'ENV_VAR', value: '' }],
             secrets: [
               { name: 'SECRET', value: { isFromStore: false, secret: '' } },
@@ -409,10 +409,11 @@ describe('FormRunFromRegistry', () => {
         initialSelectionEnd: REGISTRY_SERVER.name?.length,
       }
     )
-    await userEvent.type(
-      screen.getByLabelText('Command arguments'),
-      '--debug --verbose'
-    )
+    const commandArgsInput = screen.getByLabelText('Command arguments')
+    await userEvent.type(commandArgsInput, '--debug')
+    await userEvent.keyboard('{Enter}')
+    await userEvent.type(commandArgsInput, '--verbose')
+    await userEvent.keyboard('{Enter}')
     await userEvent.click(
       screen.getByRole('button', { name: 'Install server' })
     )
@@ -422,7 +423,7 @@ describe('FormRunFromRegistry', () => {
           server: expect.any(Object),
           data: expect.objectContaining({
             serverName: 'my-awesome-server',
-            cmd_arguments: '--debug --verbose',
+            cmd_arguments: ['--debug', '--verbose'],
             envVars: [{ name: 'ENV_VAR', value: '' }],
             secrets: [
               { name: 'SECRET', value: { isFromStore: false, secret: '' } },
@@ -817,10 +818,11 @@ describe('FormRunFromRegistry', () => {
       }
     )
 
-    await userEvent.type(
-      screen.getByLabelText('Command arguments'),
-      '--debug --verbose'
-    )
+    const commandArgsInput = screen.getByLabelText('Command arguments')
+    await userEvent.type(commandArgsInput, '--debug')
+    await userEvent.keyboard('{Enter}')
+    await userEvent.type(commandArgsInput, '--verbose')
+    await userEvent.keyboard('{Enter}')
 
     await userEvent.click(
       screen.getByRole('button', { name: 'Install server' })
@@ -831,7 +833,7 @@ describe('FormRunFromRegistry', () => {
         {
           server,
           data: expect.objectContaining({
-            cmd_arguments: '--debug --verbose',
+            cmd_arguments: ['--debug', '--verbose'],
           }),
         },
         expect.any(Object)

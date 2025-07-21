@@ -133,9 +133,7 @@ export function prepareCreateWorkloadData(
     transport: server.transport,
     env_vars: envVars,
     secrets,
-    cmd_arguments: data.cmd_arguments
-      ? data.cmd_arguments?.split(' ').filter(Boolean)
-      : [],
+    cmd_arguments: data.cmd_arguments || [],
     target_port: server.target_port,
     network_isolation: networkIsolation,
     permission_profile,

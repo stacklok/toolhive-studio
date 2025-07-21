@@ -82,7 +82,8 @@ export function FormRunFromRegistry({
   const { data } = useQuery({
     ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
   })
-
+  const cmd_arguments =
+    server?.args && server.args.length > 0 ? server.args : []
   const formSchema = useMemo(
     () =>
       getFormSchemaRunFromRegistry({
@@ -97,10 +98,7 @@ export function FormRunFromRegistry({
     resolver: zodV4Resolver(formSchema),
     defaultValues: {
       serverName: server?.name || '',
-      cmd_arguments:
-        server?.args && server.args.length > 0
-          ? server.args.join(' ')
-          : undefined,
+      cmd_arguments,
       secrets: groupedEnvVars.secrets.map((s) => ({
         name: s.name || '',
         value: { secret: s.default || '', isFromStore: false },
