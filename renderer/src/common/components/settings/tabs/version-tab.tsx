@@ -1,5 +1,7 @@
+import log from 'electron-log/renderer'
 import { Badge } from '../../ui/badge'
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 
 export function VersionTab() {
   const [appInfo, setAppInfo] = useState<{
@@ -7,9 +9,9 @@ export function VersionTab() {
     isReleaseBuild: boolean
     toolhiveVersion: string
   }>({
-    appVersion: '',
+    appVersion: 'N/A',
     isReleaseBuild: false,
-    toolhiveVersion: '',
+    toolhiveVersion: 'N/A',
   })
 
   useEffect(() => {
@@ -24,7 +26,8 @@ export function VersionTab() {
           toolhiveVersion,
         })
       } catch (error) {
-        console.error('Failed to fetch version info:', error)
+        toast.error('Failed to fetch version info')
+        log.error('Failed to fetch version info:', error)
       }
     }
     fetchVersionInfo()
@@ -38,9 +41,7 @@ export function VersionTab() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Desktop UI version</span>
-            <Badge variant="secondary">
-              {appInfo.appVersion || 'Loading...'}
-            </Badge>
+            <Badge variant="secondary">{appInfo.appVersion}</Badge>
           </div>
 
           <div className="flex items-center justify-between">

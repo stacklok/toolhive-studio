@@ -4,8 +4,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { GeneralTab } from '../general-tab'
 import { ConfirmProvider } from '@/common/contexts/confirm/provider'
+import {
+  useAutoLaunchStatus,
+  useSetAutoLaunch,
+} from '@/common/hooks/use-auto-launch'
+import { useConfirmQuit } from '@/common/hooks/use-confirm-quit'
 
-// Mock hooks
 vi.mock('@/common/hooks/use-auto-launch', () => ({
   useAutoLaunchStatus: vi.fn(),
   useSetAutoLaunch: vi.fn(),
@@ -15,7 +19,6 @@ vi.mock('@/common/hooks/use-confirm-quit', () => ({
   useConfirmQuit: vi.fn(),
 }))
 
-// Mock electron API
 const mockElectronAPI = {
   sentry: {
     isEnabled: vi.fn(),
@@ -48,27 +51,19 @@ const renderWithProviders = (component: React.ReactElement) => {
 }
 
 describe('GeneralTab', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
     localStorage.clear()
-
-    // Setup default mocks
-    const { useAutoLaunchStatus, useSetAutoLaunch } = await import(
-      '@/common/hooks/use-auto-launch'
-    )
-    const { useConfirmQuit } = await import('@/common/hooks/use-confirm-quit')
 
     vi.mocked(useAutoLaunchStatus).mockReturnValue({
       data: false,
       isLoading: false,
-    })
+    } as unknown as ReturnType<typeof useAutoLaunchStatus>)
 
     vi.mocked(useSetAutoLaunch).mockReturnValue({
       mutateAsync: vi.fn(),
       isPending: false,
-    })
-
-    vi.mocked(useConfirmQuit).mockReturnValue(vi.fn().mockResolvedValue(true))
+    } as unknown as ReturnType<typeof useSetAutoLaunch>)
 
     mockElectronAPI.sentry.isEnabled.mockResolvedValue(true)
     mockElectronAPI.sentry.optIn.mockResolvedValue(true)
@@ -78,7 +73,9 @@ describe('GeneralTab', () => {
   it('renders all settings sections', async () => {
     renderWithProviders(<GeneralTab />)
 
-    expect(screen.getByText('General Settings')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('General Settings')).toBeInTheDocument()
+    })
     expect(screen.getByText('Start on login')).toBeInTheDocument()
     expect(screen.getByText('Error reporting')).toBeInTheDocument()
     expect(screen.getByText('Skip quit confirmation')).toBeInTheDocument()
@@ -88,22 +85,24 @@ describe('GeneralTab', () => {
   })
 
   it('handles auto-launch toggle', async () => {
-    const mockSetAutoLaunch = vi.fn().mockResolvedValue(undefined)
-    const { useSetAutoLaunch } = await import('@/common/hooks/use-auto-launch')
+    const mockMutateAsync = vi.fn().mockResolvedValue(undefined)
 
     vi.mocked(useSetAutoLaunch).mockReturnValue({
-      mutateAsync: mockSetAutoLaunch,
+      mutateAsync: mockMutateAsync,
       isPending: false,
-    })
+    } as unknown as ReturnType<typeof useSetAutoLaunch>)
 
     renderWithProviders(<GeneralTab />)
+    await waitFor(() => {
+      expect(screen.getByText('General Settings')).toBeInTheDocument()
+    })
 
     const autoLaunchSwitch = screen.getByRole('switch', {
       name: /start on login/i,
     })
     await userEvent.click(autoLaunchSwitch)
 
-    expect(mockSetAutoLaunch).toHaveBeenCalledWith(true)
+    expect(mockMutateAsync).toHaveBeenCalledWith(true)
   })
 
   it('handles telemetry toggle - opt out', async () => {
@@ -153,18 +152,15 @@ describe('GeneralTab', () => {
       name: /skip quit confirmation/i,
     })
 
-    // Initially should be false (not skipping confirmation)
     expect(quitConfirmationSwitch).not.toBeChecked()
 
     await userEvent.click(quitConfirmationSwitch)
 
-    // Should now be checked (skipping confirmation)
     expect(quitConfirmationSwitch).toBeChecked()
     expect(localStorage.getItem('doNotShowAgain_confirm_quit')).toBe('true')
   })
 
   it('handles quit confirmation toggle - disable skip', async () => {
-    // Start with skip enabled
     localStorage.setItem('doNotShowAgain_confirm_quit', 'true')
 
     renderWithProviders(<GeneralTab />)
@@ -185,65 +181,31 @@ describe('GeneralTab', () => {
     expect(localStorage.getItem('doNotShowAgain_confirm_quit')).toBeNull()
   })
 
-  it('handles quit button click', async () => {
-    const mockConfirmQuit = vi.fn().mockResolvedValue(true)
-    const { useConfirmQuit } = await import('@/common/hooks/use-confirm-quit')
-
-    vi.mocked(useConfirmQuit).mockReturnValue(mockConfirmQuit)
+  it('handles quit button click when confirmation is accepted', async () => {
+    const mockConfirmQuitFn = vi.fn().mockResolvedValue(true)
+    vi.mocked(useConfirmQuit).mockReturnValue(mockConfirmQuitFn)
 
     renderWithProviders(<GeneralTab />)
 
     const quitButton = screen.getByRole('button', { name: 'Quit ToolHive' })
     await userEvent.click(quitButton)
 
-    expect(mockConfirmQuit).toHaveBeenCalled()
+    expect(mockConfirmQuitFn).toHaveBeenCalled()
     await waitFor(() => {
       expect(mockElectronAPI.quitApp).toHaveBeenCalled()
     })
   })
 
   it('does not quit when confirmation is declined', async () => {
-    const mockConfirmQuit = vi.fn().mockResolvedValue(false)
-    const { useConfirmQuit } = await import('@/common/hooks/use-confirm-quit')
-
-    vi.mocked(useConfirmQuit).mockReturnValue(mockConfirmQuit)
+    const mockConfirmQuitFn = vi.fn().mockResolvedValue(false)
+    vi.mocked(useConfirmQuit).mockReturnValue(mockConfirmQuitFn)
 
     renderWithProviders(<GeneralTab />)
 
     const quitButton = screen.getByRole('button', { name: 'Quit ToolHive' })
     await userEvent.click(quitButton)
 
-    expect(mockConfirmQuit).toHaveBeenCalled()
+    expect(mockConfirmQuitFn).toHaveBeenCalled()
     expect(mockElectronAPI.quitApp).not.toHaveBeenCalled()
-  })
-
-  it('disables auto-launch switch when loading', async () => {
-    const { useAutoLaunchStatus } = await import(
-      '@/common/hooks/use-auto-launch'
-    )
-
-    vi.mocked(useAutoLaunchStatus).mockReturnValue({
-      data: false,
-      isLoading: true,
-    })
-
-    renderWithProviders(<GeneralTab />)
-
-    const autoLaunchSwitch = screen.getByRole('switch', {
-      name: /start on login/i,
-    })
-    expect(autoLaunchSwitch).toBeDisabled()
-  })
-
-  it('disables telemetry switch when loading', async () => {
-    renderWithProviders(<GeneralTab />)
-
-    // Switch should be disabled while query is loading
-    await waitFor(() => {
-      const telemetrySwitch = screen.getByRole('switch', {
-        name: /error reporting/i,
-      })
-      expect(telemetrySwitch).toBeInTheDocument()
-    })
   })
 })

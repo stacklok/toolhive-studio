@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { Copy, Check, Download } from 'lucide-react'
 import { delay } from '../../../../../../utils/delay'
 import log from 'electron-log/renderer'
+import { toast } from 'sonner'
 
 const LOG_PATHS = {
   darwin: '~/Library/Logs/ToolHive/main.log',
@@ -57,6 +58,7 @@ export function LogsTab() {
       document.body.removeChild(link)
       URL.revokeObjectURL(url)
     } catch (error) {
+      toast.error('Failed to download log file')
       log.error('Failed to download log file:', error)
     } finally {
       setIsDownloading(false)
