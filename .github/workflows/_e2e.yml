@@ -23,6 +23,10 @@ jobs:
           sudo systemctl start docker
           sudo systemctl status docker
 
+      - name: Verify that `thv` binary works
+        run: |
+          pnpm run thv list
+
       - name: Run tests
         env:
           ELECTRON_DISABLE_SANDBOX: 'true'
