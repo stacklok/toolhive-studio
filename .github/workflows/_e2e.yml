@@ -46,11 +46,7 @@ jobs:
         env:
           ELECTRON_DISABLE_SANDBOX: 'true'
         run: |
-          # dbus-run-session starts a throw-away bus and exports
-          # DBUS_SESSION_BUS_ADDRESS for everything inside the block.
-          dbus-run-session -- bash -c '
-            # start the secrets component of gnome-keyring
-            gnome-keyring-daemon --start --components=secrets;
+          dbus-run-session -- bash -c 'gnome-keyring-daemon --start --components=secrets;'
           xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' pnpm run playwright test
 
       - uses: actions/upload-artifact@v4
