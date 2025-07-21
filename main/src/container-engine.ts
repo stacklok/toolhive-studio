@@ -30,8 +30,8 @@ const checkCommand = async (
   try {
     await execAsync(command, { timeout })
     return true
-  } catch {
-    log.error(`container engine command failed: ${command}`)
+  } catch (error) {
+    log.error(`container engine command failed: ${command}`, error)
     return false
   }
 }
