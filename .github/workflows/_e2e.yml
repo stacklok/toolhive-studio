@@ -26,9 +26,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /var/cache/apt/archives
-          key: ${{ runner.os }}-apt-keyring-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-apt-keyring
           restore-keys: |
-            ${{ runner.os }}-apt-keyring-
+            ${{ runner.os }}-apt-keyring
 
       - name: Install system packages for keyring (required for ToolHive)
         run: |
