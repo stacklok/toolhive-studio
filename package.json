@@ -10,6 +10,7 @@
   },
   "scripts": {
     "start": "electron-forge start",
+    "e2e": "tsc -b --clean && tsc -b && electron-forge package && playwright test",
     "start:mockUpdate": "MOCK_UPDATE_SERVER=true ELECTRON_IS_DEV=0 electron-forge start",
     "package": "tsc -b --clean && tsc -b && electron-forge package",
     "make": "tsc -b --clean && tsc -b && electron-forge make",
@@ -27,7 +28,8 @@
     "generate-client": "pnpm run update-api && cd renderer && openapi-ts",
     "generate-client:nofetch": "cd renderer && openapi-ts",
     "generate-icons": "tsx scripts/generate-icons.ts",
-    "knip": "knip"
+    "knip": "knip",
+    "playwright": "playwright"
   },
   "keywords": [],
   "license": "Apache-2.0",
@@ -47,6 +49,7 @@
     "@electron/fuses": "^1.8.0",
     "@eslint/js": "^9.25.0",
     "@hey-api/openapi-ts": "0.78.3",
+    "@playwright/test": "^1.54.1",
     "@tailwindcss/postcss": "^4.1.10",
     "@tanstack/router-plugin": "^1.120.11",
     "@testing-library/jest-dom": "^6.6.3",

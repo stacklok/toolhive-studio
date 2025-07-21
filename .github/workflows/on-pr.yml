@@ -21,3 +21,8 @@ jobs:
     name: Unit Tests
     uses: ./.github/workflows/_unit-tests.yml
     secrets: inherit
+
+  e2e-tests:
+    name: End-to-end tests
+    uses: ./.github/workflows/_e2e.yml
+    secrets: inherit
