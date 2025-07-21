@@ -33,17 +33,8 @@ jobs:
         run: |
           xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' pnpm run e2e
 
-      - name: List test artifacts
-        run: |
-          echo "=== Listing test-videos directory ==="
-          ls -la test-videos/ || echo "test-videos directory not found"
-          echo "=== Listing test-results directory ==="
-          ls -la test-results/ || echo "test-results directory not found"
-          echo "=== Listing playwright-report directory ==="
-          ls -la playwright-report/ || echo "playwright-report directory not found"
-
       - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
+        if: ${{ always() }}
         with:
           name: playwright-report
           path: playwright-report/
@@ -54,18 +45,4 @@ jobs:
         with:
           name: test-videos
           path: test-videos/
-          retention-days: 30
-
-      - uses: actions/upload-artifact@v4
-        if: ${{ always() }}
-        with:
-          name: playwright-screenshots
-          path: test-results/**/*.png
-          retention-days: 30
-
-      - uses: actions/upload-artifact@v4
-        if: ${{ always() }}
-        with:
-          name: playwright-traces
-          path: test-results/**/*.zip
           retention-days: 30
