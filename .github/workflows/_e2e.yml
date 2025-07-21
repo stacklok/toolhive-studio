@@ -29,8 +29,8 @@ jobs:
 
       - name: Pre-build app
         run: |
-          pnpm run tsc -b --clean 
-          pnpm run electron-forge package
+          pnpm tsc -b --clean 
+          pnpm electron-forge package
 
       - name: Install ffmpeg for video recording
         run: |
