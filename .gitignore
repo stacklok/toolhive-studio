@@ -98,3 +98,4 @@ bin/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+/test-videos/
