@@ -22,7 +22,12 @@ jobs:
     uses: ./.github/workflows/_unit-tests.yml
     secrets: inherit
 
-  e2e-tests:
+  e2e-tests-ubuntu:
     name: End-to-end tests
-    uses: ./.github/workflows/_e2e.yml
+    uses: ./.github/workflows/_e2e-ubuntu.yml
+    secrets: inherit
+
+  e2e-tests-mac:
+    name: End-to-end tests
+    uses: ./.github/workflows/_e2e-mac.yml
     secrets: inherit

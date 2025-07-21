@@ -1,0 +1,90 @@
+name: End-to-end tests (macOS)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    # GitHub’s Apple-silicon runner is currently “macos-14”.
+    # Use `macos-latest` if you don’t need ARM specifically.
+    runs-on: macos-14          # ← was ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      # 1 — Check out code
+      - name: Checkout repository
+        uses: actions/checkout@v4               # keep pinned tag if you prefer
+
+      # 2 — Project-specific setup (unchanged)
+      - name: Project setup
+        uses: ./.github/actions/setup
+
+      # 3 — (removed) apt/DBus/GNOME keyring
+      # macOS has its own Keychain implementation, so we don’t need the
+      # `sudo apt-get … gnome-keyring` block. Keyring calls will fall back
+      # to the native Keychain automatically.
+
+      # 4 — Set up Buildx for Docker
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 5 — (removed) systemctl start docker
+      # Docker Desktop is already running inside the macOS runner.
+
+      # 6 — Verify ToolHive CLI
+      - name: Verify that `thv` binary works
+        run: pnpm run thv list
+
+      # 7 — Pre-build the Electron app
+      - name: Pre-build app
+        run: |
+          pnpm tsc -b --clean
+          pnpm electron-forge package
+
+      # 8 — Install FFmpeg that Playwright uses for video capture
+      # Playwright’s helper works cross-platform, but FFmpeg can also be
+      # installed via Homebrew if you prefer:
+      #   brew install ffmpeg
+      - name: Install ffmpeg for video recording
+        run: npx playwright install ffmpeg
+
+      # 9 — Create & unlock a temporary macOS keychain for tests
+      # (mimics what GNOME-keyring did on Linux)
+      - name: Create and unlock test keychain
+        run: |
+          security create-keychain -p "ci-passphrase" ci-test.keychain
+          security default-keychain -s ci-test.keychain
+          security unlock-keychain -p "ci-passphrase" ci-test.keychain
+          security set-keychain-settings -t 3600 -u ci-test.keychain
+
+      # 10 — Run Playwright tests
+      # No Xvfb needed on macOS; the WindowServer is available.
+      - name: Run tests
+        env:
+          ELECTRON_DISABLE_SANDBOX: 'true'
+        run: pnpm run playwright test
+
+      # 11 — Upload artifacts
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: test-videos
+          path: test-videos/
+          retention-days: 30
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: test-results
+          path: test-results/
+          retention-days: 30
