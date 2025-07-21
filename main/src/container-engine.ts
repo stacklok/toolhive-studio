@@ -1,5 +1,6 @@
 import { exec } from 'node:child_process'
 import { promisify } from 'node:util'
+import log from './logger'
 
 const execAsync = promisify(exec)
 
@@ -29,7 +30,8 @@ const checkCommand = async (
   try {
     await execAsync(command, { timeout })
     return true
-  } catch {
+  } catch (error) {
+    log.error(`container engine command failed: ${command}`, error)
     return false
   }
 }
