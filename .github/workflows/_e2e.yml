@@ -12,6 +12,24 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      - name: Cache Playwright special dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/.npm/_cacache
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Cache keyring-related dependencies
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: ${{ runner.os }}-apt-keyring-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-keyring-
+
       - name: Install system packages for keyring (required for ToolHive)
         run: |
           sudo apt-get update
