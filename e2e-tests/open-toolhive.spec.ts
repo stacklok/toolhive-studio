@@ -7,3 +7,22 @@ test('app starts and stops properly', async ({ window }) => {
   await header.waitFor()
   expect(header).toBeVisible()
 })
+
+test('install fetch', async ({ window }) => {
+  await window.getByRole('link', { name: /browse registry/i }).click()
+  await window
+    .getByRole('button', {
+      name: /fetch/i,
+    })
+    .click()
+  await window
+    .getByRole('button', {
+      name: /install server/i,
+    })
+    .click()
+  await window
+    .getByRole('button', {
+      name: /install server/i,
+    })
+    .click()
+})
