@@ -27,9 +27,15 @@ jobs:
       # `sudo apt-get … gnome-keyring` block. Keyring calls will fall back
       # to the native Keychain automatically.
 
-      # 4 — Set up Buildx for Docker
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Install Docker engine (Colima)
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install docker colima
+          colima start --runtime docker --cpu 4 --memory 6 --disk 40
+          # expose the socket where buildx expects it
+          sudo ln -sf ~/.colima/default/docker.sock /var/run/docker.sock
+          docker info            # sanity-check
 
       # 5 — (removed) systemctl start docker
       # Docker Desktop is already running inside the macOS runner.
