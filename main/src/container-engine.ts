@@ -59,17 +59,13 @@ const createEnhancedPath = (): string => {
     .join(separator)
 }
 
-const tryCommand = async (
-  command: string,
-  timeoutMs = 8000
-): Promise<boolean> => {
+const tryCommand = async (command: string): Promise<boolean> => {
   try {
-    await execAsync(command, { timeout: timeoutMs })
+    await execAsync(command)
     return true
   } catch {
     try {
       await execAsync(command, {
-        timeout: timeoutMs,
         env: { ...process.env, PATH: createEnhancedPath() },
       })
       return true
@@ -89,7 +85,7 @@ const checkPodman = (): Promise<boolean> =>
   tryCommand(`${getCommandName('podman')} ps`)
 
 const checkRancherDesktop = (): Promise<boolean> =>
-  tryCommand(`${getCommandName('rdctl')} version`, 5000)
+  tryCommand(`${getCommandName('rdctl')} version`)
 
 const createStatus = (
   docker: boolean,
