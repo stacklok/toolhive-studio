@@ -10,14 +10,27 @@ import type { WorkloadsWorkload } from '@/common/api/generated'
 import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/msw-endpoint'
+import { toast } from 'sonner'
+
+vi.mock('sonner', () => ({
+  toast: {
+    dismiss: vi.fn(),
+    promise: vi.fn((promise) => promise.catch(() => {})),
+    success: vi.fn(),
+    error: vi.fn(),
+    loading: vi.fn(),
+  },
+}))
 
 // Mock electron API
+const mockOnServerShutdown = vi.fn()
 Object.defineProperty(window, 'electronAPI', {
   value: {
     shutdownStore: {
       getLastShutdownServers: vi.fn(),
       clearShutdownHistory: vi.fn(),
     },
+    onServerShutdown: mockOnServerShutdown,
   },
   writable: true,
 })
@@ -44,6 +57,7 @@ const createQueryClientWrapper = () => {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mockOnServerShutdown.mockClear()
   window.electronAPI.shutdownStore.getLastShutdownServers = vi
     .fn()
     .mockResolvedValue([])
@@ -126,6 +140,24 @@ describe('useMutationRestartServerAtStartup', () => {
     await waitFor(() => {
       expect(result.current.isError).toBe(true)
     })
+  })
+
+  it('dismisses toast on server shutdown', async () => {
+    const { Wrapper } = createQueryClientWrapper()
+
+    renderHook(() => useMutationRestartServerAtStartup(), {
+      wrapper: Wrapper,
+    })
+
+    expect(mockOnServerShutdown).toHaveBeenCalledTimes(1)
+    const shutdownCallback = mockOnServerShutdown.mock.calls[0]?.[0]
+    expect(shutdownCallback).toBeDefined()
+
+    shutdownCallback?.()
+
+    expect(vi.mocked(toast.dismiss)).toHaveBeenCalledWith(
+      'restart-servers-startup'
+    )
   })
 })
 

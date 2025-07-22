@@ -17,11 +17,13 @@ export function useToastMutation<
   successMsg,
   errorMsg,
   loadingMsg,
+  toastId,
   ...options
 }: UseMutationOptions<TData, TError, TVariables, TContext> & {
   successMsg?: ((variables: TVariables) => string) | string
   loadingMsg?: string
   errorMsg?: string
+  toastId?: string
 }) {
   const {
     mutateAsync: originalMutateAsync,
@@ -60,9 +62,10 @@ export function useToastMutation<
 
           return 'An error occurred'
         },
+        ...(toastId ? { id: toastId } : {}),
       })
     },
-    [errorMsg, loadingMsg, originalMutateAsync, successMsg]
+    [errorMsg, loadingMsg, originalMutateAsync, successMsg, toastId]
   )
 
   return { mutateAsync, ...rest }
