@@ -2,8 +2,8 @@ import { Button } from '../../ui/button'
 import { useState, useEffect } from 'react'
 import { Copy, Check, Download } from 'lucide-react'
 import { delay } from '../../../../../../utils/delay'
+import { useDownloadFile } from '../../../hooks/use-download-file'
 import log from 'electron-log/renderer'
-import { toast } from 'sonner'
 
 const LOG_PATHS = {
   darwin: '~/Library/Logs/ToolHive/main.log',
@@ -13,9 +13,9 @@ const LOG_PATHS = {
 
 export function LogsTab() {
   const [copied, setCopied] = useState<boolean>(false)
-  const [isDownloading, setIsDownloading] = useState<boolean>(false)
   const [logPath, setLogPath] = useState<string>('')
   const platform = window.electronAPI.platform
+  const { isDownloading, downloadFile } = useDownloadFile()
 
   useEffect(() => {
     const fetchLogContent = async () => {
@@ -41,28 +41,10 @@ export function LogsTab() {
   }
 
   const handleDownloadLog = async () => {
-    setIsDownloading(true)
-    try {
-      const logContent = await window.electronAPI.getMainLogContent()
-      if (!logContent) {
-        throw new Error('Failed to get log content')
-      }
-
-      const blob = new Blob([logContent], { type: 'text/plain' })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `toolhive-main-${new Date().toISOString().split('T')[0]}.log`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
-    } catch (error) {
-      toast.error('Failed to download log file')
-      log.error('Failed to download log file:', error)
-    } finally {
-      setIsDownloading(false)
-    }
+    await downloadFile(
+      () => window.electronAPI.getMainLogContent(),
+      `toolhive-main-${new Date().toISOString().split('T')[0]}.log`
+    )
   }
 
   return (

@@ -153,7 +153,7 @@ describe('LogsTab', () => {
     await userEvent.click(downloadButton)
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('Failed to download log file')
+      expect(toast.error).toHaveBeenCalledWith('Failed to save file')
     })
 
     expect(
