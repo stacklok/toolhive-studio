@@ -1,43 +1,73 @@
-#!/usr/bin/env -S npx tsx
-
-import { spawn, type ChildProcess } from 'node:child_process'
-import { join, dirname } from 'node:path'
+#!/usr/bin / env - S npx tsx
+/**
+ * Ephemeral `thv` runner in a throw-away Docker-in-Docker helper.
+ * • all container ports are host ports (host-network mode)
+ * • no need to call withExposedPorts / hard-wire ports
+ * • streams `serve` output live; tears down on one-shots
+ * • works unmodified on GitHub Actions & Docker Desktop
+ */
+import { GenericContainer } from 'testcontainers'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import process from 'node:process'
 
-// Get the directory of this script
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
+// Clean up any stray DOCKER_HOST (Electron, etc.)
+delete process.env.DOCKER_HOST
 
-// Get all command line arguments (excluding node and script name)
-const args: string[] = process.argv.slice(2)
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const binaryPath = join(__dirname, 'thv') // your host-built binary
+const args = process.argv.slice(2) // e.g. ['serve','--port','3333']
+const isServe = args[0] === 'serve'
 
-console.log('I am ephemeral and I was launched with these parameters:')
-console.log('Arguments:', args)
+;(async () => {
+  // 1) start DinD in host-network so container's port N === host port N
+  const container = await new GenericContainer('docker:26-dind')
+    .withPrivilegedMode() // required for DinD
+    .withNetworkMode('host') // ↪︎ container ⇄ host port 1:1
+    .withCopyFilesToContainer([
+      {
+        // inject your binary
+        source: binaryPath,
+        target: '/usr/local/bin/thv',
+        mode: 0o755,
+      },
+    ])
+    .start()
 
-// Path to the actual thv binary (in the same directory)
-const thvBinaryPath: string = join(__dirname, 'thv')
+  // 2) wait until Docker‐in‐Docker is ready
+  await container.exec([
+    'sh',
+    '-c',
+    'until docker info >/dev/null 2>&1; do sleep 0.2; done',
+  ])
 
-// Spawn the actual thv binary with all the arguments
-const thvProcess: ChildProcess = spawn(thvBinaryPath, args, {
-  stdio: 'inherit', // Pass through stdin, stdout, stderr
-  detached: false,
-})
+  if (isServe) {
+    // 3a) stream serve logs live
+    const exec = await container.exec(['/usr/local/bin/thv', ...args], {
+      stream: true,
+    })
+    exec.output.pipe(process.stdout)
 
-// Handle process events
-thvProcess.on('error', (error: Error) => {
-  console.error('Failed to start thv binary:', error)
+    // keep the container alive until you Ctrl-C
+    process.on('SIGINT', async () => {
+      await container.stop()
+      process.exit(0)
+    })
+    process.on('SIGTERM', async () => {
+      await container.stop()
+      process.exit(0)
+    })
+  } else {
+    // 3b) one-shot commands: run it, print output, then stop+exit
+    const { exitCode = 1, output } = await container.exec([
+      '/usr/local/bin/thv',
+      ...args,
+    ])
+    process.stdout.write(output)
+    await container.stop()
+    process.exit(exitCode)
+  }
+})().catch(async (err) => {
+  console.error('Failed to run thv in container:', err)
   process.exit(1)
-})
-
-thvProcess.on('exit', (code: number | null) => {
-  process.exit(code ?? 0)
-})
-
-// Handle process termination signals
-process.on('SIGINT', () => {
-  thvProcess.kill('SIGINT')
-})
-
-process.on('SIGTERM', () => {
-  thvProcess.kill('SIGTERM')
 })
