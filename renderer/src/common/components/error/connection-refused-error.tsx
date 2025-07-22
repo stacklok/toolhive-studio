@@ -125,15 +125,16 @@ export function ConnectionRefusedError() {
       icon={<IllustrationPackage className="size-20" />}
     >
       <p>
-        ToolHive requires either <strong>Docker</strong> or{' '}
-        <strong>Podman</strong> to be installed and running to manage
-        containerized tools and services.
+        ToolHive requires a container engine to be installed and running to
+        manage containerized tools and services. We support{' '}
+        <strong>Docker</strong>, <strong>Podman</strong> or{' '}
+        <strong>Rancher Desktop</strong>.
       </p>
 
       <div className="bg-muted rounded-md p-3 text-sm">
         <p className="mb-2 font-medium">To get started:</p>
         <ol className="list-inside list-decimal space-y-1">
-          <li>Install Docker Desktop or Podman Desktop</li>
+          <li>Install Docker Desktop, Podman Desktop or Rancher Desktop</li>
           <li>Start the container engine</li>
           <li>Click "Try Again" to continue</li>
         </ol>
@@ -146,6 +147,10 @@ export function ConnectionRefusedError() {
 
         <ExternalLinkButton href="https://podman-desktop.io/downloads">
           Install Podman Desktop
+        </ExternalLinkButton>
+
+        <ExternalLinkButton href="https://rancherdesktop.io/">
+          Install Rancher Desktop
         </ExternalLinkButton>
       </div>
     </BaseErrorScreen>
