@@ -8,15 +8,15 @@ import {
   useAutoLaunchStatus,
   useSetAutoLaunch,
 } from '@/common/hooks/use-auto-launch'
-import { useConfirmQuit } from '@/common/hooks/use-confirm-quit'
+import { useTheme } from '@/common/hooks/use-theme'
 
 vi.mock('@/common/hooks/use-auto-launch', () => ({
   useAutoLaunchStatus: vi.fn(),
   useSetAutoLaunch: vi.fn(),
 }))
 
-vi.mock('@/common/hooks/use-confirm-quit', () => ({
-  useConfirmQuit: vi.fn(),
+vi.mock('@/common/hooks/use-theme', () => ({
+  useTheme: vi.fn(),
 }))
 
 const mockElectronAPI = {
@@ -65,6 +65,11 @@ describe('GeneralTab', () => {
       isPending: false,
     } as unknown as ReturnType<typeof useSetAutoLaunch>)
 
+    vi.mocked(useTheme).mockReturnValue({
+      theme: 'system',
+      setTheme: vi.fn().mockResolvedValue(undefined),
+    } as unknown as ReturnType<typeof useTheme>)
+
     mockElectronAPI.sentry.isEnabled.mockResolvedValue(true)
     mockElectronAPI.sentry.optIn.mockResolvedValue(true)
     mockElectronAPI.sentry.optOut.mockResolvedValue(false)
@@ -74,14 +79,12 @@ describe('GeneralTab', () => {
     renderWithProviders(<GeneralTab />)
 
     await waitFor(() => {
-      expect(screen.getByText('General Settings')).toBeInTheDocument()
+      expect(screen.getByText('General Settings')).toBeVisible()
     })
-    expect(screen.getByText('Start on login')).toBeInTheDocument()
-    expect(screen.getByText('Error reporting')).toBeInTheDocument()
-    expect(screen.getByText('Skip quit confirmation')).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: 'Quit ToolHive' })
-    ).toBeInTheDocument()
+    expect(screen.getByText('Theme')).toBeVisible()
+    expect(screen.getByText('Start on login')).toBeVisible()
+    expect(screen.getByText('Error reporting')).toBeVisible()
+    expect(screen.getByText('Skip quit confirmation')).toBeVisible()
   })
 
   it('handles auto-launch toggle', async () => {
@@ -94,7 +97,7 @@ describe('GeneralTab', () => {
 
     renderWithProviders(<GeneralTab />)
     await waitFor(() => {
-      expect(screen.getByText('General Settings')).toBeInTheDocument()
+      expect(screen.getByText('General Settings')).toBeVisible()
     })
 
     const autoLaunchSwitch = screen.getByRole('switch', {
@@ -105,7 +108,7 @@ describe('GeneralTab', () => {
     expect(mockMutateAsync).toHaveBeenCalledWith(true)
   })
 
-  it('handles telemetry toggle - opt out', async () => {
+  it('handles telemetry toggle opt out', async () => {
     renderWithProviders(<GeneralTab />)
 
     await waitFor(() => {
@@ -124,7 +127,7 @@ describe('GeneralTab', () => {
     })
   })
 
-  it('handles telemetry toggle - opt in', async () => {
+  it('handles telemetry toggle opt in', async () => {
     mockElectronAPI.sentry.isEnabled.mockResolvedValue(false)
 
     renderWithProviders(<GeneralTab />)
@@ -160,7 +163,7 @@ describe('GeneralTab', () => {
     expect(localStorage.getItem('doNotShowAgain_confirm_quit')).toBe('true')
   })
 
-  it('handles quit confirmation toggle - disable skip', async () => {
+  it('handles quit confirmation toggle disable skip', async () => {
     localStorage.setItem('doNotShowAgain_confirm_quit', 'true')
 
     renderWithProviders(<GeneralTab />)
@@ -179,33 +182,5 @@ describe('GeneralTab', () => {
 
     expect(quitConfirmationSwitch).not.toBeChecked()
     expect(localStorage.getItem('doNotShowAgain_confirm_quit')).toBeNull()
-  })
-
-  it('handles quit button click when confirmation is accepted', async () => {
-    const mockConfirmQuitFn = vi.fn().mockResolvedValue(true)
-    vi.mocked(useConfirmQuit).mockReturnValue(mockConfirmQuitFn)
-
-    renderWithProviders(<GeneralTab />)
-
-    const quitButton = screen.getByRole('button', { name: 'Quit ToolHive' })
-    await userEvent.click(quitButton)
-
-    expect(mockConfirmQuitFn).toHaveBeenCalled()
-    await waitFor(() => {
-      expect(mockElectronAPI.quitApp).toHaveBeenCalled()
-    })
-  })
-
-  it('does not quit when confirmation is declined', async () => {
-    const mockConfirmQuitFn = vi.fn().mockResolvedValue(false)
-    vi.mocked(useConfirmQuit).mockReturnValue(mockConfirmQuitFn)
-
-    renderWithProviders(<GeneralTab />)
-
-    const quitButton = screen.getByRole('button', { name: 'Quit ToolHive' })
-    await userEvent.click(quitButton)
-
-    expect(mockConfirmQuitFn).toHaveBeenCalled()
-    expect(mockElectronAPI.quitApp).not.toHaveBeenCalled()
   })
 })

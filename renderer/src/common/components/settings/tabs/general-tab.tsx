@@ -1,13 +1,21 @@
 import { Label } from '../../ui/label'
 import { Switch } from '../../ui/switch'
-import { Button } from '../../ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../ui/select'
 import {
   useAutoLaunchStatus,
   useSetAutoLaunch,
 } from '@/common/hooks/use-auto-launch'
-import { useConfirmQuit } from '@/common/hooks/use-confirm-quit'
+import { useTheme } from '@/common/hooks/use-theme'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState, useEffect } from 'react'
+import { Sun, Moon, Monitor } from 'lucide-react'
+import log from 'electron-log/renderer'
 
 const CONFIRM_QUIT_STORAGE_KEY = 'doNotShowAgain_confirm_quit'
 
@@ -16,7 +24,7 @@ export function GeneralTab() {
     useAutoLaunchStatus()
   const { mutateAsync: setAutoLaunch, isPending: isSetPending } =
     useSetAutoLaunch()
-  const confirmQuit = useConfirmQuit()
+  const { theme, setTheme } = useTheme()
   const { mutateAsync: sentryOptIn, isPending: isOptInPending } = useMutation({
     mutationFn: window.electronAPI.sentry.optIn,
   })
@@ -63,10 +71,11 @@ export function GeneralTab() {
     }
   }
 
-  const handleQuit = async () => {
-    const confirmed = await confirmQuit()
-    if (confirmed && window.electronAPI) {
-      await window.electronAPI.quitApp()
+  const handleThemeChange = async (newTheme: 'light' | 'dark' | 'system') => {
+    try {
+      await setTheme(newTheme)
+    } catch (error) {
+      log.error('Failed to change theme:', error)
     }
   }
 
@@ -74,6 +83,40 @@ export function GeneralTab() {
     <div className="space-y-6">
       <div className="space-y-4">
         <h2 className="text-lg font-semibold">General Settings</h2>
+
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label htmlFor="theme-select">Theme</Label>
+            <p className="text-muted-foreground text-sm">
+              Choose how ToolHive looks to you
+            </p>
+          </div>
+          <Select value={theme} onValueChange={handleThemeChange}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Select theme" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="light">
+                <div className="flex items-center gap-2">
+                  <Sun className="size-4" />
+                  Light
+                </div>
+              </SelectItem>
+              <SelectItem value="dark">
+                <div className="flex items-center gap-2">
+                  <Moon className="size-4" />
+                  Dark
+                </div>
+              </SelectItem>
+              <SelectItem value="system">
+                <div className="flex items-center gap-2">
+                  <Monitor className="size-4" />
+                  System
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
@@ -117,12 +160,6 @@ export function GeneralTab() {
             checked={skipQuitConfirmation}
             onCheckedChange={handleQuitConfirmationToggle}
           />
-        </div>
-
-        <div className="border-t pt-4">
-          <Button variant="destructive" onClick={handleQuit} className="w-fit">
-            Quit ToolHive
-          </Button>
         </div>
       </div>
     </div>
