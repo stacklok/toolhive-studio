@@ -16,6 +16,7 @@ Object.defineProperty(window, 'electronAPI', {
       getLastShutdownServers: vi.fn().mockResolvedValue([]),
       clearShutdownHistory: vi.fn().mockResolvedValue(undefined),
     },
+    onServerShutdown: vi.fn().mockReturnValue(() => {}),
   },
   writable: true,
 })
