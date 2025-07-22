@@ -118,6 +118,7 @@ export interface ElectronAPI {
   checkContainerEngine: () => Promise<{
     docker: boolean
     podman: boolean
+    rancherDesktop: boolean
     available: boolean
   }>
   restartToolhive: () => Promise<{

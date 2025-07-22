@@ -1,5 +1,6 @@
 import { exec } from 'node:child_process'
 import { promisify } from 'node:util'
+import { platform } from 'node:os'
 import log from './logger'
 
 const execAsync = promisify(exec)
@@ -10,69 +11,96 @@ interface ContainerEngineStatus {
   available: boolean
 }
 
-interface EngineCheckResult {
-  name: string
-  available: boolean
+// Common installation paths by platform
+const getCommonPaths = (): string[] => {
+  const currentPlatform = platform()
+
+  switch (currentPlatform) {
+    case 'darwin':
+      return [
+        '/Applications/Docker.app/Contents/Resources/bin',
+        '/opt/homebrew/bin',
+        '/usr/local/bin',
+        '~/.rd/bin',
+      ]
+    case 'linux':
+      return ['/usr/local/bin', '/opt/homebrew/bin', '/snap/bin', '~/.rd/bin']
+    case 'win32':
+      return [
+        'C:\\Program Files\\Docker\\Docker\\resources\\bin',
+        'C:\\Program Files\\RedHat\\Podman',
+      ]
+    default:
+      return []
+  }
 }
 
-const createEngineResult = (
-  name: string,
-  available: boolean
-): EngineCheckResult => ({
-  name,
-  available,
+const expandPath = (path: string): string =>
+  path.startsWith('~')
+    ? path.replace('~', process.env.HOME || process.env.USERPROFILE || '')
+    : path
+
+const createEnhancedPath = (): string => {
+  const commonPaths = getCommonPaths().map(expandPath)
+  const currentPath = process.env.PATH || ''
+  const separator = platform() === 'win32' ? ';' : ':'
+
+  return [...commonPaths, ...currentPath.split(separator)]
+    .filter(Boolean)
+    .join(separator)
+}
+
+const tryCommand = async (command: string): Promise<boolean> => {
+  try {
+    await execAsync(command)
+    return true
+  } catch {
+    try {
+      await execAsync(command, {
+        env: { ...process.env, PATH: createEnhancedPath() },
+      })
+      return true
+    } catch {
+      return false
+    }
+  }
+}
+
+const getCommandName = (base: string): string =>
+  platform() === 'win32' ? `${base}.exe` : base
+
+const checkDocker = (): Promise<boolean> =>
+  tryCommand(`${getCommandName('docker')} ps`)
+
+const checkPodman = (): Promise<boolean> =>
+  tryCommand(`${getCommandName('podman')} ps`)
+
+const createStatus = (
+  docker: boolean,
+  podman: boolean
+): ContainerEngineStatus => ({
+  docker,
+  podman,
+  available: docker || podman,
 })
 
-const checkCommand = async (
-  command: string,
-  timeout = 5000
-): Promise<boolean> => {
-  try {
-    await execAsync(command, { timeout })
-    return true
-  } catch (error) {
-    log.error(`container engine command failed: ${command}`, error)
-    return false
-  }
-}
-
-// Individual engine checkers
-const checkDocker = async (): Promise<EngineCheckResult> => {
-  // docker ps requires daemon to be running and accessible
-  const available = await checkCommand('docker ps')
-  return createEngineResult('docker', available)
-}
-
-const checkPodman = async (): Promise<EngineCheckResult> => {
-  // podman ps checks if podman can actually manage containers
-  const available = await checkCommand('podman ps')
-  return createEngineResult('podman', available)
-}
-
-const combineEngineResults = (
-  results: EngineCheckResult[]
-): ContainerEngineStatus => {
-  const dockerResult = results.find((r) => r.name === 'docker')
-  const podmanResult = results.find((r) => r.name === 'podman')
-
-  const docker = dockerResult?.available ?? false
-  const podman = podmanResult?.available ?? false
-
-  return {
-    docker,
-    podman,
-    available: docker || podman,
-  }
-}
-
-// Main function - orchestrates the checks
 export const checkContainerEngine =
   async (): Promise<ContainerEngineStatus> => {
-    const engineCheckers = [checkDocker, checkPodman]
-
-    const results = await Promise.all(
-      engineCheckers.map((checker) => checker())
+    const [docker, podman] = await Promise.allSettled([
+      checkDocker(),
+      checkPodman(),
+    ]).then((results) =>
+      results.map((result) => {
+        if (result.status === 'rejected') return false
+        return result.value
+      })
     )
 
-    return combineEngineResults(results)
+    const status = createStatus(!!docker, !!podman)
+
+    if (!status.available) {
+      log.warn('No container engines detected')
+    }
+
+    return status
   }
