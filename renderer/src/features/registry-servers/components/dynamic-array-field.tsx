@@ -32,6 +32,7 @@ interface DynamicArrayFieldProps<
   inputLabelPrefix?: string
   tooltipContent?: string
   addButtonText?: string
+  type?: 'text' | 'number'
   inputProps?: React.InputHTMLAttributes<HTMLInputElement>
 }
 
@@ -42,6 +43,7 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
   tooltipContent,
   inputLabelPrefix = 'Item',
   addButtonText = 'Add',
+  type = 'text',
   inputProps = {},
 }: DynamicArrayFieldProps<TFieldValues>) {
   const { fields, append, remove } = useFieldArray<
@@ -81,6 +83,7 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
                   <FormControl className="w-full">
                     <Input
                       {...field}
+                      type={type}
                       id={`${name}-${idx}`}
                       aria-label={`${inputLabelPrefix} ${idx + 1}`}
                       className="min-w-0 grow"

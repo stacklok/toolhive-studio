@@ -72,11 +72,12 @@ export function NetworkIsolationTabContent({
                     <DynamicArrayField<FormSchemaRunFromRegistry>
                       /*
                          // @ts-expect-error no time to fix this */
-                      name={'allowedPorts'}
+                      name="allowedPorts"
                       label="Allowed ports"
                       control={form.control}
                       inputLabelPrefix="Port"
                       addButtonText="Add a port"
+                      type="number"
                     />
                   )}
                 />
