@@ -13,6 +13,7 @@ import {
 import { cn } from '@/common/lib/utils'
 import type { UseFormReturn } from 'react-hook-form'
 import type { FormSchemaRunFromRegistry } from '../lib/get-form-schema-run-from-registry'
+import { Input } from '@/common/components/ui/input'
 
 interface CommandArgumentsFieldProps {
   form: UseFormReturn<FormSchemaRunFromRegistry>
@@ -45,10 +46,6 @@ export function CommandArgumentsField({ form }: CommandArgumentsFieldProps) {
     }
   }
 
-  const handleContainerClick = () => {
-    inputRef.current?.focus()
-  }
-
   return (
     <FormField
       control={form.control}
@@ -58,23 +55,25 @@ export function CommandArgumentsField({ form }: CommandArgumentsFieldProps) {
           <FormLabel htmlFor={`${field.name}-input`}>
             Command arguments
           </FormLabel>
-          <FormDescription id={`${field.name}-description`}>
-            Add individual arguments for the command. Press Enter to add each
-            argument.
+          <FormDescription
+            id={`${field.name}-description`}
+            className="flex items-center gap-1"
+          >
+            Add individual arguments for the command
           </FormDescription>
           <FormControl>
             <div
               className={cn(
                 `border-input flex min-h-9 w-full cursor-text flex-wrap
                 items-center gap-1 rounded-md border bg-transparent px-3 py-1
-                text-sm shadow-xs transition-[color,box-shadow]`,
-                `focus-within:border-ring focus-within:ring-ring/50
-                focus-within:ring-[3px]`,
+                text-sm transition-[color,box-shadow]`,
                 `aria-invalid:ring-destructive/20
                 dark:aria-invalid:ring-destructive/40
                 aria-invalid:border-destructive`
               )}
-              onClick={handleContainerClick}
+              onClick={() => {
+                inputRef.current?.focus()
+              }}
             >
               {field.value && field.value.length > 0 && (
                 <>
@@ -110,19 +109,21 @@ export function CommandArgumentsField({ form }: CommandArgumentsFieldProps) {
                 </>
               )}
 
-              <input
+              <Input
                 ref={inputRef}
                 id={`${field.name}-input`}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
+                onBlur={() => addArgument()}
                 placeholder={
                   field.value && field.value.length > 0
                     ? 'Add argument...'
                     : 'e.g. --debug, --port, 8080'
                 }
                 className="placeholder:text-muted-foreground min-w-[120px]
-                  flex-1 border-0 bg-transparent text-sm outline-none"
+                  flex-1 border-0 bg-transparent text-sm shadow-none
+                  outline-none focus:ring-0 focus-visible:ring-0"
                 autoComplete="off"
               />
             </div>
