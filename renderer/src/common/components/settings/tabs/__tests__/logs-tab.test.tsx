@@ -120,7 +120,7 @@ describe('LogsTab', () => {
     await waitFor(() => {
       expect(
         screen.getByRole('button', { name: 'Save log file' })
-      ).toBeInTheDocument()
+      ).toBeVisible()
     })
 
     const downloadButton = screen.getByRole('button', {
@@ -144,7 +144,7 @@ describe('LogsTab', () => {
     await waitFor(() => {
       expect(
         screen.getByRole('button', { name: 'Save log file' })
-      ).toBeInTheDocument()
+      ).toBeVisible()
     })
 
     const downloadButton = screen.getByRole('button', {

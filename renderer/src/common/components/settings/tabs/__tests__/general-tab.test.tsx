@@ -114,7 +114,7 @@ describe('GeneralTab', () => {
     await waitFor(() => {
       expect(
         screen.getByRole('switch', { name: /error reporting/i })
-      ).toBeInTheDocument()
+      ).toBeVisible()
     })
 
     const telemetrySwitch = screen.getByRole('switch', {
@@ -135,7 +135,7 @@ describe('GeneralTab', () => {
     await waitFor(() => {
       expect(
         screen.getByRole('switch', { name: /error reporting/i })
-      ).toBeInTheDocument()
+      ).toBeVisible()
     })
 
     const telemetrySwitch = screen.getByRole('switch', {

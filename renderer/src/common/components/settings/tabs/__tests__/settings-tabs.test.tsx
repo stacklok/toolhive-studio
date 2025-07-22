@@ -69,12 +69,10 @@ describe('SettingsTabs', () => {
 
   it('renders all tab triggers', async () => {
     renderWithProviders(<SettingsTabs />)
-
-    expect(screen.getByRole('tab', { name: 'General' })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Version' })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Logs' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'General' })).toBeVisible()
+    expect(screen.getByRole('tab', { name: 'Version' })).toBeVisible()
+    expect(screen.getByRole('tab', { name: 'Logs' })).toBeVisible()
   })
-
   it('shows General tab as default active tab', async () => {
     renderWithProviders(<SettingsTabs />)
 
@@ -84,11 +82,9 @@ describe('SettingsTabs', () => {
       ).toBeVisible()
     })
   })
-
   it('shows Version tab as default active tab', async () => {
     renderWithProviders(<SettingsTabs />)
     await userEvent.click(screen.getByRole('tab', { name: 'Version' }))
-
     await waitFor(() => {
       expect(
         screen.getByRole('heading', { name: 'Version Information' })
@@ -97,7 +93,6 @@ describe('SettingsTabs', () => {
   })
   it('shows Logs tab as default active tab', async () => {
     renderWithProviders(<SettingsTabs />)
-
     await userEvent.click(screen.getByRole('tab', { name: 'Logs' }))
     await waitFor(() => {
       expect(
