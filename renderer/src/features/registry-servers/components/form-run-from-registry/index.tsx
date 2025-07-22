@@ -111,6 +111,8 @@ export function FormRunFromRegistry({
         ) || [],
       allowedHosts: server?.permissions?.network?.outbound?.allow_host || [],
     },
+    reValidateMode: 'onChange',
+    mode: 'onChange',
   })
 
   const onSubmitForm = (data: FormSchemaRunFromRegistry) => {
