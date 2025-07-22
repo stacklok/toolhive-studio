@@ -104,7 +104,7 @@ export function LogsTab() {
               className="mt-3 w-fit"
             >
               <Download className="mr-2 size-4" />
-              {isDownloading ? 'Downloading...' : 'Download log file'}
+              {isDownloading ? 'Loading...' : 'Save log file'}
             </Button>
           )}
         </div>

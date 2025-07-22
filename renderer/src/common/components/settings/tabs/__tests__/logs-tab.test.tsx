@@ -64,9 +64,7 @@ describe('LogsTab', () => {
     expect(
       screen.getByText(/Application logs are stored locally/)
     ).toBeVisible()
-    expect(
-      screen.getByRole('button', { name: 'Download log file' })
-    ).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Save log file' })).toBeVisible()
   })
 
   it('displays correct log path for macOS', async () => {
@@ -121,12 +119,12 @@ describe('LogsTab', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole('button', { name: 'Download log file' })
+        screen.getByRole('button', { name: 'Save log file' })
       ).toBeInTheDocument()
     })
 
     const downloadButton = screen.getByRole('button', {
-      name: 'Download log file',
+      name: 'Save log file',
     })
     await userEvent.click(downloadButton)
 
@@ -145,12 +143,12 @@ describe('LogsTab', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole('button', { name: 'Download log file' })
+        screen.getByRole('button', { name: 'Save log file' })
       ).toBeInTheDocument()
     })
 
     const downloadButton = screen.getByRole('button', {
-      name: 'Download log file',
+      name: 'Save log file',
     })
     await userEvent.click(downloadButton)
 
@@ -159,7 +157,7 @@ describe('LogsTab', () => {
     })
 
     expect(
-      screen.getByRole('button', { name: 'Download log file' })
+      screen.getByRole('button', { name: 'Save log file' })
     ).not.toBeDisabled()
   })
 })
