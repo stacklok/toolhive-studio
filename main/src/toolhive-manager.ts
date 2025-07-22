@@ -8,7 +8,19 @@ import { updateTrayStatus } from './system-tray'
 import log from './logger'
 import * as Sentry from '@sentry/electron/main'
 
-const binName = process.platform === 'win32' ? 'thv.exe' : 'thv'
+const binName = (() => {
+  const isEphemeral = process.argv.includes('--ephemeral-thv')
+
+  if (isEphemeral) {
+    return 'ephemeral-thv'
+  }
+
+  if (process.platform === 'win32') {
+    return 'thv.exe'
+  }
+
+  return 'thv'
+})()
 const binPath = app.isPackaged
   ? path.join(
       process.resourcesPath,

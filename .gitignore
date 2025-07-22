@@ -91,7 +91,10 @@ typings/
 # Electron-Forge
 out/
 
-bin/
+bin/*/thv
+bin/*/README.md
+bin/*/LICENSE
+bin/*/thv.exe
 
 # Playwright
 /test-results/
