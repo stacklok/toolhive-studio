@@ -8,7 +8,6 @@ const execAsync = promisify(exec)
 interface ContainerEngineStatus {
   docker: boolean
   podman: boolean
-  rancherDesktop: boolean
   available: boolean
 }
 
@@ -19,23 +18,15 @@ const getCommonPaths = (): string[] => {
   switch (currentPlatform) {
     case 'darwin':
       return [
-        '/Applications/Rancher Desktop.app/Contents/Resources/resources/darwin/bin',
         '/Applications/Docker.app/Contents/Resources/bin',
         '/opt/homebrew/bin',
         '/usr/local/bin',
         '~/.rd/bin',
       ]
     case 'linux':
-      return [
-        '/usr/local/bin',
-        '/opt/homebrew/bin',
-        '/snap/bin',
-        '~/.rd/bin',
-        '/opt/rancher-desktop/bin',
-      ]
+      return ['/usr/local/bin', '/opt/homebrew/bin', '/snap/bin', '~/.rd/bin']
     case 'win32':
       return [
-        'C:\\Program Files\\Rancher Desktop\\resources\\resources\\win32\\bin',
         'C:\\Program Files\\Docker\\Docker\\resources\\bin',
         'C:\\Program Files\\RedHat\\Podman',
       ]
@@ -84,29 +75,28 @@ const checkDocker = (): Promise<boolean> =>
 const checkPodman = (): Promise<boolean> =>
   tryCommand(`${getCommandName('podman')} ps`)
 
-const checkRancherDesktop = (): Promise<boolean> =>
-  tryCommand(`${getCommandName('rdctl')} version`)
-
 const createStatus = (
   docker: boolean,
-  podman: boolean,
-  rancherDesktop: boolean
+  podman: boolean
 ): ContainerEngineStatus => ({
   docker,
   podman,
-  rancherDesktop,
   available: docker || podman,
 })
 
 export const checkContainerEngine =
   async (): Promise<ContainerEngineStatus> => {
-    const [docker, podman, rancherDesktop] = await Promise.all([
+    const [docker, podman] = await Promise.allSettled([
       checkDocker(),
       checkPodman(),
-      checkRancherDesktop(),
-    ])
+    ]).then((results) =>
+      results.map((result) => {
+        if (result.status === 'rejected') return false
+        return result.value
+      })
+    )
 
-    const status = createStatus(docker, podman, rancherDesktop)
+    const status = createStatus(!!docker, !!podman)
 
     if (!status.available) {
       log.warn('No container engines detected')
