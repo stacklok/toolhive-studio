@@ -1,6 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { VersionTab } from '../version-tab'
+import { ConfirmProvider } from '@/common/contexts/confirm/provider'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const mockElectronAPI = {
   getAppVersion: vi.fn(),
@@ -13,6 +15,23 @@ Object.defineProperty(window, 'electronAPI', {
   writable: true,
 })
 
+const renderWithProviders = (component: React.ReactElement) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  })
+
+  return render(
+    <ConfirmProvider>
+      <QueryClientProvider client={queryClient}>
+        {component}
+      </QueryClientProvider>
+    </ConfirmProvider>
+  )
+}
+
 describe('VersionTab', () => {
   beforeEach(() => {
     mockElectronAPI.getAppVersion.mockResolvedValue('1.0.0')
@@ -21,7 +40,7 @@ describe('VersionTab', () => {
   })
 
   it('renders version information heading', async () => {
-    render(<VersionTab />)
+    renderWithProviders(<VersionTab />)
 
     await waitFor(() => {
       expect(screen.getByText('Version Information')).toBeVisible()
@@ -29,7 +48,7 @@ describe('VersionTab', () => {
   })
 
   it('displays version information when loaded', async () => {
-    render(<VersionTab />)
+    renderWithProviders(<VersionTab />)
 
     await waitFor(() => {
       expect(screen.getByText('1.0.0')).toBeVisible()
@@ -46,7 +65,7 @@ describe('VersionTab', () => {
   it('displays development build type when not a release build', async () => {
     mockElectronAPI.isReleaseBuild.mockResolvedValue(false)
 
-    render(<VersionTab />)
+    renderWithProviders(<VersionTab />)
 
     await waitFor(() => {
       expect(screen.getByText('Development')).toBeVisible()
@@ -64,7 +83,7 @@ describe('VersionTab', () => {
       new Error('Failed to fetch')
     )
 
-    render(<VersionTab />)
+    renderWithProviders(<VersionTab />)
 
     await waitFor(() => {
       expect(screen.getAllByText('N/A')).toHaveLength(2)
@@ -72,7 +91,7 @@ describe('VersionTab', () => {
   })
 
   it('calls all version APIs on mount', async () => {
-    render(<VersionTab />)
+    renderWithProviders(<VersionTab />)
 
     await waitFor(() => {
       expect(mockElectronAPI.getAppVersion).toHaveBeenCalledTimes(1)
@@ -82,7 +101,7 @@ describe('VersionTab', () => {
   })
 
   it('displays version badges with correct variants', async () => {
-    render(<VersionTab />)
+    renderWithProviders(<VersionTab />)
 
     await waitFor(() => {
       expect(screen.getByText('1.0.0')).toBeVisible()
@@ -101,7 +120,7 @@ describe('VersionTab', () => {
   it('displays empty toolhive version when not provided', async () => {
     mockElectronAPI.getToolhiveVersion.mockResolvedValue('')
 
-    render(<VersionTab />)
+    renderWithProviders(<VersionTab />)
 
     await waitFor(() => {
       expect(screen.getByText('1.0.0')).toBeVisible()
