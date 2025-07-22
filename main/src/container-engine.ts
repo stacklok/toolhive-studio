@@ -5,189 +5,115 @@ import log from './logger'
 
 const execAsync = promisify(exec)
 
-// Container engine installation paths
-const WINDOWS_CONTAINER_PATHS = [
-  // Docker Desktop
-  'C:\\Program Files\\Docker\\Docker\\resources\\bin',
-  // Podman
-  'C:\\Program Files\\RedHat\\Podman',
-  // Rancher Desktop
-  '%APPDATA%\\rancher-desktop\\bin',
-  '%USERPROFILE%\\AppData\\Roaming\\rancher-desktop\\bin',
-] as const
-
-const UNIX_CONTAINER_PATHS = [
-  // System Docker/Podman
-  '/usr/local/bin',
-  // Homebrew (Apple Silicon)
-  '/opt/homebrew/bin',
-  // MacPorts
-  '/opt/local/bin',
-  // Docker Desktop User install
-  '~/.docker/bin',
-  // Snap packages
-  '/snap/bin',
-  // Flatpak
-  '/var/lib/flatpak/exports/bin',
-  // Rancher Desktop user install
-  '~/.rd/bin',
-  // Rancher Desktop system install (Linux)
-  '/opt/rancher-desktop/bin',
-  // Rancher Desktop (macOS)
-  '/Applications/Rancher Desktop.app/Contents/Resources/resources/darwin/bin',
-] as const
-
 interface ContainerEngineStatus {
   docker: boolean
   podman: boolean
-  // Rancher Desktop (containerd)
-  nerdctl: boolean
+  rancherDesktop: boolean
   available: boolean
 }
 
-interface EngineCheckResult {
-  name: string
-  available: boolean
+// Common installation paths by platform
+const getCommonPaths = (): string[] => {
+  const currentPlatform = platform()
+
+  switch (currentPlatform) {
+    case 'darwin':
+      return [
+        '/Applications/Rancher Desktop.app/Contents/Resources/resources/darwin/bin',
+        '/Applications/Docker.app/Contents/Resources/bin',
+        '/opt/homebrew/bin',
+        '/usr/local/bin',
+        '~/.rd/bin',
+      ]
+    case 'linux':
+      return [
+        '/usr/local/bin',
+        '/opt/homebrew/bin',
+        '/snap/bin',
+        '~/.rd/bin',
+        '/opt/rancher-desktop/bin',
+      ]
+    case 'win32':
+      return [
+        'C:\\Program Files\\Rancher Desktop\\resources\\resources\\win32\\bin',
+        'C:\\Program Files\\Docker\\Docker\\resources\\bin',
+        'C:\\Program Files\\RedHat\\Podman',
+      ]
+    default:
+      return []
+  }
 }
 
-const createEngineResult = (
-  name: string,
-  available: boolean
-): EngineCheckResult => ({
-  name,
-  available,
-})
+const expandPath = (path: string): string =>
+  path.startsWith('~')
+    ? path.replace('~', process.env.HOME || process.env.USERPROFILE || '')
+    : path
 
-// Expand environment variables and home directory paths
-const expandPath = (path: string): string => {
-  const homeDir = process.env.HOME || process.env.USERPROFILE || ''
-
-  return path
-    .replace(/^~/, homeDir)
-    .replace(/%APPDATA%/g, process.env.APPDATA || '')
-    .replace(/%USERPROFILE%/g, homeDir)
-}
-
-// Find executable using which/where command with enhanced PATH
-const findExecutable = async (command: string): Promise<string | null> => {
-  const isWindows = platform() === 'win32'
-  const whichCommand = isWindows ? 'where' : 'which'
-
-  // Get platform-specific paths and expand environment variables
-  const platformPaths = isWindows
-    ? WINDOWS_CONTAINER_PATHS
-    : UNIX_CONTAINER_PATHS
-  const additionalPaths = platformPaths.map(expandPath)
-
+const createEnhancedPath = (): string => {
+  const commonPaths = getCommonPaths().map(expandPath)
   const currentPath = process.env.PATH || ''
-  const enhancedPath = [
-    ...additionalPaths,
-    ...currentPath.split(isWindows ? ';' : ':'),
-  ]
+  const separator = platform() === 'win32' ? ';' : ':'
+
+  return [...commonPaths, ...currentPath.split(separator)]
     .filter(Boolean)
-    .join(isWindows ? ';' : ':')
-
-  try {
-    const { stdout } = await execAsync(`${whichCommand} ${command}`, {
-      env: {
-        ...process.env,
-        PATH: enhancedPath,
-      },
-    })
-    const path = stdout.trim().split('\n')[0]
-
-    if (path) {
-      log.info(`Found ${command} at: ${path}`)
-      return path
-    }
-
-    return null
-  } catch {
-    return null
-  }
+    .join(separator)
 }
 
-// Execute command with found executable path
-const executeCommand = async (command: string): Promise<boolean> => {
-  const engineName = command.split(' ')[0]
-  if (!engineName) {
-    return false
-  }
-
-  // Find the executable first
-  const executablePath = await findExecutable(engineName)
-  if (!executablePath) {
-    return false
-  }
-
-  // Replace command name with full path
-  const fullCommand = command.replace(engineName, executablePath)
-
+const tryCommand = async (
+  command: string,
+  timeoutMs = 8000
+): Promise<boolean> => {
   try {
-    await execAsync(fullCommand)
+    await execAsync(command, { timeout: timeoutMs })
     return true
   } catch {
-    return false
+    try {
+      await execAsync(command, {
+        timeout: timeoutMs,
+        env: { ...process.env, PATH: createEnhancedPath() },
+      })
+      return true
+    } catch {
+      return false
+    }
   }
 }
 
-// Engine checker functions (pure)
-const checkEngine =
-  (engineName: string) => async (): Promise<EngineCheckResult> => {
-    const command = `${engineName} ps`
-    const available = await executeCommand(command)
-    return createEngineResult(engineName, available)
-  }
+const getCommandName = (base: string): string =>
+  platform() === 'win32' ? `${base}.exe` : base
 
-const checkDocker = checkEngine('docker')
-const checkPodman = checkEngine('podman')
-// Rancher Desktop containerd
-const checkNerdctl = checkEngine('nerdctl')
+const checkDocker = (): Promise<boolean> =>
+  tryCommand(`${getCommandName('docker')} ps`)
 
-const combineEngineResults = (
-  results: EngineCheckResult[]
-): ContainerEngineStatus => {
-  const getResult = (name: string) =>
-    results.find((r) => r.name === name)?.available ?? false
+const checkPodman = (): Promise<boolean> =>
+  tryCommand(`${getCommandName('podman')} ps`)
 
-  const docker = getResult('docker')
-  const podman = getResult('podman')
-  const nerdctl = getResult('nerdctl')
+const checkRancherDesktop = (): Promise<boolean> =>
+  tryCommand(`${getCommandName('rdctl')} version`, 5000)
 
-  return {
-    docker,
-    podman,
-    nerdctl,
-    available: docker || podman || nerdctl,
-  }
-}
-
-const getSuccessfulResults = (
-  results: PromiseSettledResult<EngineCheckResult>[]
-): EngineCheckResult[] =>
-  results
-    .filter(
-      (result): result is PromiseFulfilledResult<EngineCheckResult> =>
-        result.status === 'fulfilled'
-    )
-    .map((result) => result.value)
+const createStatus = (
+  docker: boolean,
+  podman: boolean,
+  rancherDesktop: boolean
+): ContainerEngineStatus => ({
+  docker,
+  podman,
+  rancherDesktop,
+  available: docker || podman,
+})
 
 export const checkContainerEngine =
   async (): Promise<ContainerEngineStatus> => {
-    const engineCheckers = [checkDocker, checkPodman, checkNerdctl]
+    const [docker, podman, rancherDesktop] = await Promise.all([
+      checkDocker(),
+      checkPodman(),
+      checkRancherDesktop(),
+    ])
 
-    const results = await Promise.allSettled(
-      engineCheckers.map((checker) => checker())
-    )
+    const status = createStatus(docker, podman, rancherDesktop)
 
-    const successfulResults = getSuccessfulResults(results)
-    const status = combineEngineResults(successfulResults)
-
-    const foundEngines = successfulResults
-      .filter((r) => r.available)
-      .map((r) => r.name)
-    if (foundEngines.length > 0) {
-      log.info(`Container engines detected: ${foundEngines.join(', ')}`)
+    if (!status.available) {
+      log.warn('No container engines detected')
     }
 
     return status
