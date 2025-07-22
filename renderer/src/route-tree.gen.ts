@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from "./routes/__root"
 import { Route as ShutdownRouteImport } from "./routes/shutdown"
+import { Route as SettingsRouteImport } from "./routes/settings"
 import { Route as SecretsRouteImport } from "./routes/secrets"
 import { Route as ClientsRouteImport } from "./routes/clients"
 import { Route as IndexRouteImport } from "./routes/index"
@@ -20,6 +21,11 @@ import { Route as registryRegistryNameRouteImport } from "./routes/(registry)/re
 const ShutdownRoute = ShutdownRouteImport.update({
   id: "/shutdown",
   path: "/shutdown",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: "/settings",
+  path: "/settings",
   getParentRoute: () => rootRouteImport,
 } as any)
 const SecretsRoute = SecretsRouteImport.update({
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
   "/clients": typeof ClientsRoute
   "/secrets": typeof SecretsRoute
+  "/settings": typeof SettingsRoute
   "/shutdown": typeof ShutdownRoute
   "/registry": typeof registryRegistryRoute
   "/logs/$serverName": typeof LogsServerNameRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   "/": typeof IndexRoute
   "/clients": typeof ClientsRoute
   "/secrets": typeof SecretsRoute
+  "/settings": typeof SettingsRoute
   "/shutdown": typeof ShutdownRoute
   "/registry": typeof registryRegistryRoute
   "/logs/$serverName": typeof LogsServerNameRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   "/": typeof IndexRoute
   "/clients": typeof ClientsRoute
   "/secrets": typeof SecretsRoute
+  "/settings": typeof SettingsRoute
   "/shutdown": typeof ShutdownRoute
   "/(registry)/registry": typeof registryRegistryRoute
   "/logs/$serverName": typeof LogsServerNameRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | "/"
     | "/clients"
     | "/secrets"
+    | "/settings"
     | "/shutdown"
     | "/registry"
     | "/logs/$serverName"
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | "/"
     | "/clients"
     | "/secrets"
+    | "/settings"
     | "/shutdown"
     | "/registry"
     | "/logs/$serverName"
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | "/"
     | "/clients"
     | "/secrets"
+    | "/settings"
     | "/shutdown"
     | "/(registry)/registry"
     | "/logs/$serverName"
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ClientsRoute: typeof ClientsRoute
   SecretsRoute: typeof SecretsRoute
+  SettingsRoute: typeof SettingsRoute
   ShutdownRoute: typeof ShutdownRoute
   registryRegistryRoute: typeof registryRegistryRoute
   LogsServerNameRoute: typeof LogsServerNameRoute
@@ -128,6 +141,13 @@ declare module "@tanstack/react-router" {
       path: "/shutdown"
       fullPath: "/shutdown"
       preLoaderRoute: typeof ShutdownRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/settings": {
+      id: "/settings"
+      path: "/settings"
+      fullPath: "/settings"
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/secrets": {
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ClientsRoute: ClientsRoute,
   SecretsRoute: SecretsRoute,
+  SettingsRoute: SettingsRoute,
   ShutdownRoute: ShutdownRoute,
   registryRegistryRoute: registryRegistryRoute,
   LogsServerNameRoute: LogsServerNameRoute,

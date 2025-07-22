@@ -11,7 +11,7 @@ import {
 } from 'electron'
 import path from 'node:path'
 import { updateElectronApp } from 'update-electron-app'
-import { existsSync } from 'node:fs'
+import { existsSync, readFile } from 'node:fs'
 import started from 'electron-squirrel-startup'
 import * as Sentry from '@sentry/electron/main'
 import { initTray, updateTrayStatus } from './system-tray'
@@ -35,7 +35,6 @@ import {
 import log from './logger'
 import { getAppVersion, isOfficialReleaseBuild, pollWindowReady } from './util'
 import { delay } from '../../utils/delay'
-
 import Store from 'electron-store'
 
 const store = new Store<{
@@ -584,5 +583,31 @@ ipcMain.handle('sentry.opt-out', (): boolean => {
 
 ipcMain.handle('sentry.opt-in', (): boolean => {
   store.set('isTelemetryEnabled', true)
-  return store.get('isTelemetryEnabled', true)
+  return true
 })
+
+// Log file operations
+ipcMain.handle(
+  'get-main-log-content',
+  async (): Promise<string | undefined> => {
+    try {
+      const logPath = path.join(app.getPath('logs'), 'main.log')
+      if (!existsSync(logPath)) {
+        log.warn(`Log file does not exist: ${logPath}`)
+        return
+      }
+
+      const content = await new Promise<string>((resolve, reject) => {
+        readFile(logPath, 'utf8', (err, data) => {
+          if (err) reject(err)
+          else resolve(data)
+        })
+      })
+
+      return content
+    } catch (error) {
+      log.error('Failed to read log file:', error)
+      return
+    }
+  }
+)

@@ -1,7 +1,4 @@
 import type { HTMLProps } from 'react'
-
-import { ThemeToggle } from '../../theme/theme-toggle'
-import { SettingsDropdown } from '../../settings/settings-dropdown'
 import { HelpDropdown } from '../../help'
 import { WindowControls } from './window-controls'
 import {
@@ -17,6 +14,7 @@ import { TopNavContainer } from './container'
 import { Separator } from '../../ui/separator'
 import { useConfirmQuit } from '@/common/hooks/use-confirm-quit'
 import { QuitConfirmationListener } from './quit-confirmation-listener'
+import { SettingsIcon } from 'lucide-react'
 
 function TopNavLinks() {
   return (
@@ -165,8 +163,9 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
         <TopNavLinks />
         <Separator orientation="vertical" />
         <div className="flex items-center gap-2">
-          <ThemeToggle className="app-region-no-drag" />
-          <SettingsDropdown className="app-region-no-drag" />
+          <LinkViewTransition to="/settings" className="app-region-no-drag">
+            <SettingsIcon className="text-muted-foreground size-4" />
+          </LinkViewTransition>
           <HelpDropdown className="app-region-no-drag" />
         </div>
       </div>
