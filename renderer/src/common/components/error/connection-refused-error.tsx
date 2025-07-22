@@ -140,17 +140,17 @@ export function ConnectionRefusedError() {
         </ol>
       </div>
 
-      <div className="space-y-2 pb-4">
+      <div className="grid grid-cols-1 gap-2 pb-4 md:grid-cols-3">
         <ExternalLinkButton href="https://docs.docker.com/get-docker/">
-          Install Docker Desktop
+          Docker
         </ExternalLinkButton>
 
         <ExternalLinkButton href="https://podman-desktop.io/downloads">
-          Install Podman Desktop
+          Podman
         </ExternalLinkButton>
 
         <ExternalLinkButton href="https://rancherdesktop.io/">
-          Install Rancher Desktop
+          Rancher
         </ExternalLinkButton>
       </div>
     </BaseErrorScreen>
