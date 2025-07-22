@@ -11,6 +11,7 @@ import {
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { pollBatchServerStatus } from '@/common/lib/polling'
 import { useQueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
 import { toast } from 'sonner'
 
 const TOAST_ID = 'restart-servers-startup'
@@ -26,9 +27,13 @@ export function useMutationRestartServerAtStartup() {
   const queryClient = useQueryClient()
   const queryKey = getApiV1BetaWorkloadsQueryKey({ query: { all: true } })
 
-  window.electronAPI.onServerShutdown(() => {
-    toast.dismiss(TOAST_ID)
-  })
+  useEffect(() => {
+    const cleanup = window.electronAPI.onServerShutdown(() => {
+      toast.dismiss(TOAST_ID)
+    })
+
+    return cleanup
+  }, [])
 
   return useToastMutation({
     successMsg: 'Servers restarted successfully',
