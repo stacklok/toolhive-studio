@@ -970,6 +970,13 @@ describe('FormRunFromRegistry', () => {
     await userEvent.click(addPortButton)
     await userEvent.type(screen.getByLabelText('Port 1'), '8080')
     await userEvent.click(addPortButton)
+    await userEvent.type(screen.getByLabelText('Port 2'), '666666666')
+    await waitFor(() => {
+      expect(
+        screen.getByText(/port must be a number between 1 and 65535/i)
+      ).toBeInTheDocument()
+    })
+    await userEvent.clear(screen.getByLabelText('Port 2'))
     await userEvent.type(screen.getByLabelText('Port 2'), '443')
     // Submit
     const configTab = screen.getByRole('tab', { name: /configuration/i })
@@ -1151,7 +1158,7 @@ describe('Allowed Hosts field', () => {
     await userEvent.click(
       screen.getByRole('button', { name: /install server/i })
     )
-    expect(screen.getByText(/invalid host/i)).toBeInTheDocument()
+    expect(screen.getByText(/invalid host format/i)).toBeInTheDocument()
     // Valid host
     let hostInputRef = screen.queryByLabelText('Host 1')
     if (hostInputRef) {
@@ -1161,7 +1168,7 @@ describe('Allowed Hosts field', () => {
       await userEvent.click(
         screen.getByRole('button', { name: /install server/i })
       )
-      expect(screen.queryByText(/invalid host/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/invalid host format/i)).not.toBeInTheDocument()
     }
     // Valid host with dot
     hostInputRef = screen.queryByLabelText('Host 1')
@@ -1172,7 +1179,7 @@ describe('Allowed Hosts field', () => {
       await userEvent.click(
         screen.getByRole('button', { name: /install server/i })
       )
-      expect(screen.queryByText(/invalid host/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/invalid host format/i)).not.toBeInTheDocument()
     }
   })
 
