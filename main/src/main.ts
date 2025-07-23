@@ -66,18 +66,12 @@ app.on('ready', () => {
       return
     }
 
-    log.info('Simulating a new release for testing purposes')
     mainWindow.webContents.send('update-downloaded')
   }, 2000)
 })
 
-autoUpdater.on('before-quit-for-update', () => {
-  log.info('🔄 before-quit-for-update event fired')
-})
-
 autoUpdater.on('update-downloaded', (_, __, releaseName) => {
   log.info('🔄 Update downloaded - showing dialog')
-  log.info(`📦 Release info: ${releaseName}`)
 
   if (!mainWindow) {
     log.error('MainWindow not available for update dialog')
@@ -108,12 +102,8 @@ autoUpdater.on('update-downloaded', (_, __, releaseName) => {
   dialog
     .showMessageBox(mainWindow, dialogOpts)
     .then(async (returnValue) => {
-      log.info(
-        `🎯 User clicked: ${returnValue.response === 0 ? 'Restart' : 'Later'}`
-      )
-
       if (returnValue.response === 0) {
-        log.info('🎯 User clicked: Restart')
+        log.debug('User clicked: Restart')
         isUpdateInProgress = true
 
         log.info('🛑 Removing quit listeners to avoid interference')
@@ -123,13 +113,10 @@ autoUpdater.on('update-downloaded', (_, __, releaseName) => {
         isQuitting = true
         tearingDown = true
 
-        log.info('🔄 Starting restart process...')
-
         try {
           log.info('🛑 Starting graceful shutdown before update...')
           mainWindow?.webContents.send('graceful-exit')
 
-          log.info('⏳ Waiting for renderer...')
           await delay(500)
 
           const port = getToolhivePort()
@@ -152,7 +139,9 @@ autoUpdater.on('update-downloaded', (_, __, releaseName) => {
         }
       } else {
         isUpdateInProgress = false
-        log.info('⏰ User chose Later - showing toast notification')
+        log.info(
+          'User deferred update installation - showing toast notification'
+        )
         if (mainWindow) {
           mainWindow.webContents.send('update-downloaded')
         }
@@ -239,7 +228,6 @@ if (!gotTheLock) {
 } else {
   app.on('second-instance', () => {
     // Someone tried to run a second instance, focus our window instead
-    log.info('Second instance attempted, focusing existing window')
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore()
       mainWindow.focus()

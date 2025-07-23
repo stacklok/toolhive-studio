@@ -58,10 +58,6 @@ function findFreePort(): Promise<number> {
 }
 
 export async function startToolhive(tray?: Tray): Promise<void> {
-  log.info(
-    `[startToolhive] Starting - Current state: isRunning=${isToolhiveRunning()}, isRestarting=${isRestarting}`
-  )
-
   if (!existsSync(binPath)) {
     log.error(`ToolHive binary not found at: ${binPath}`)
     return
@@ -135,9 +131,6 @@ export async function restartToolhive(tray?: Tray): Promise<void> {
 }
 
 export function stopToolhive(): void {
-  log.info(
-    `[stopToolhive] Current state: isRunning=${isToolhiveRunning()}, PID: ${toolhiveProcess?.pid}`
-  )
   if (toolhiveProcess && !toolhiveProcess.killed) {
     log.info('Stopping ToolHive process...')
     toolhiveProcess.kill()

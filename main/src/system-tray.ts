@@ -213,11 +213,6 @@ const createClickHandler = () => {
 
   const toggleWindow = (window: BrowserWindow) => {
     setTimeout(() => {
-      log.info('TOGGLE WIN: ', {
-        winIsVisible: window.isVisible(),
-        winIsMinimized: window.isMinimized(),
-        check: window.isVisible() && !window.isMinimized(),
-      })
       showWindowWithFocus(window)
     }, 50)
   }

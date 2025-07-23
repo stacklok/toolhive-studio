@@ -78,7 +78,6 @@ export const Route = createRootRouteWithContext<{
 
     try {
       isUpdateInProgress = await window.electronAPI.isUpdateInProgress()
-      log.info(`[beforeLoad] Update in progress: ${isUpdateInProgress}`)
     } catch (e) {
       log.debug(`[beforeLoad] Update check API not available: ${e}`)
     }
@@ -92,11 +91,9 @@ export const Route = createRootRouteWithContext<{
       queryKey: ['is-toolhive-running'],
       queryFn: async () => {
         const res = await window.electronAPI.isToolhiveRunning()
-        const appVersion = await window.electronAPI.getAppVersion()
         if (!res) {
           log.error('ToolHive is not running')
         }
-        log.info(`ToolHive version ${appVersion} is running`)
         return res
       },
       retry: 3,
