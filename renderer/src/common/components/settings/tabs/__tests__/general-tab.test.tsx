@@ -25,7 +25,6 @@ const mockElectronAPI = {
     optIn: vi.fn(),
     optOut: vi.fn(),
   },
-  quitApp: vi.fn(),
 }
 
 Object.defineProperty(window, 'electronAPI', {
