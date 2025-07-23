@@ -389,7 +389,17 @@ app.on('will-finish-launching', () => {
   log.info('App will finish launching - preparing for potential restart')
 })
 
-app.on('before-quit', (e) => blockQuit('before-quit', e))
+app.on('before-quit', (e) => {
+  if (mainWindow) {
+    mainWindow.show()
+    mainWindow.focus()
+    mainWindow.webContents.send('show-quit-confirmation')
+  }
+
+  if (!isQuitting) {
+    e.preventDefault()
+  }
+})
 app.on('will-quit', (e) => blockQuit('will-quit', e))
 
 // Docker / Ctrl-C etc.
@@ -457,8 +467,8 @@ ipcMain.handle('hide-app', () => {
   mainWindow?.hide()
 })
 
-ipcMain.handle('quit-app', () => {
-  app.quit()
+ipcMain.handle('quit-app', (e) => {
+  blockQuit('before-quit', e)
 })
 
 ipcMain.handle('get-toolhive-port', () => getToolhivePort())
