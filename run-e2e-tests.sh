@@ -7,7 +7,6 @@ docker build -f e2e.Dockerfile -t toolhive-studio-e2e .
 # Run the e2e tests without volume mounts
 echo "Running e2e tests..."
 docker run --rm \
-  -v /var/run/docker.sock:/var/run/docker.sock \
   --privileged \
   toolhive-studio-e2e
 
