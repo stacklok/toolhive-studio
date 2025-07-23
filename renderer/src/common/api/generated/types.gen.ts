@@ -106,6 +106,12 @@ export type RegistryImageMetadata = {
    */
   args?: Array<string>
   /**
+   * CustomMetadata allows for additional user-defined metadata
+   */
+  custom_metadata?: {
+    [key: string]: unknown
+  }
+  /**
    * Description is a human-readable description of the server's purpose and functionality
    */
   description?: string
