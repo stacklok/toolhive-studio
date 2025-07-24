@@ -191,6 +191,52 @@ it('fails when name is not unique', () => {
   )
 })
 
+it('fails when name contains invalid characters', () => {
+  const invalidInput = {
+    name: 'foo@bar',
+    transport: 'stdio',
+    type: 'docker_image',
+    image: 'ghcr.io/github/github-mcp-server',
+    cmd_arguments: '-y --oauth-setup',
+    envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
+    secrets: [
+      {
+        name: 'GITHUB_PERSONAL_ACCESS_TOKEN',
+        value: {
+          secret: 'foo-bar',
+          isFromStore: false,
+        },
+      },
+    ],
+  }
+
+  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
+  expect(result.error?.flatten(), `${result.error}`).toStrictEqual(
+    expect.objectContaining({
+      fieldErrors: expect.objectContaining({
+        name: [
+          'Invalid server name: it can only contain alphanumeric characters, dots, hyphens, and underscores.',
+        ],
+      }),
+    })
+  )
+})
+
+it('passes when name contains valid characters', () => {
+  const validInput = {
+    name: 'foo-bar.test_123',
+    transport: 'stdio',
+    type: 'docker_image',
+    image: 'ghcr.io/github/github-mcp-server',
+    cmd_arguments: '-y --oauth-setup',
+    envVars: [],
+    secrets: [],
+  }
+
+  const result = getFormSchemaRunMcpCommand([]).safeParse(validInput)
+  expect(result.success, `${result.error}`).toBe(true)
+})
+
 it('fails when transport is empty', () => {
   const invalidInput = {
     name: 'github',

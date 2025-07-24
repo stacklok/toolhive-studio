@@ -8,7 +8,7 @@ import {
 } from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
 import { Label } from '@/common/components/ui/label'
-import { AlertErrorFormSubmission } from '../alert-error-form-submission'
+import { AlertErrorFormSubmission } from '../../../../common/components/workloads/alert-error-form-submission'
 import type { UseFormReturn } from 'react-hook-form'
 import type { FormSchemaRunFromRegistry } from '../../lib/get-form-schema-run-from-registry'
 import type { GroupedEnvVars } from '../../lib/group-env-vars'

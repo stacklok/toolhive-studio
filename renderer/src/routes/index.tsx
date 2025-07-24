@@ -1,19 +1,16 @@
-import { getApiV1BetaWorkloadsOptions } from '@/common/api/generated/@tanstack/react-query.gen'
-import { EmptyState } from '@/common/components/empty-state'
-import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
-
-import { Button } from '@/common/components/ui/button'
-
 import { useState, useEffect, useRef } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
+import { getApiV1BetaWorkloadsOptions } from '@/common/api/generated/@tanstack/react-query.gen'
+import { EmptyState } from '@/common/components/empty-state'
+import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
+import { Button } from '@/common/components/ui/button'
 import { RefreshButton } from '@/common/components/refresh-button'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
 import { DialogFormRunMcpServerWithCommand } from '@/features/mcp-servers/components/dialog-form-run-mcp-command'
 import { GridCardsMcpServers } from '@/features/mcp-servers/components/grid-cards-mcp-server'
 import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/menu-run-mcp-server'
-import { useRunCustomServer } from '@/features/mcp-servers/hooks/use-run-custom-server'
 import { useMutationRestartServerAtStartup } from '@/features/mcp-servers/hooks/use-mutation-restart-server'
 import { TitlePage } from '@/common/components/title-page'
 
@@ -31,7 +28,6 @@ export function Index() {
   })
   const workloads = data?.workloads ?? []
   const [isRunWithCommandOpen, setIsRunWithCommandOpen] = useState(false)
-  const { handleSubmit } = useRunCustomServer()
   const { mutateAsync, isPending } = useMutationRestartServerAtStartup()
   const hasProcessedShutdown = useRef(false)
 
@@ -70,7 +66,6 @@ export function Index() {
         <DialogFormRunMcpServerWithCommand
           isOpen={isRunWithCommandOpen}
           onOpenChange={setIsRunWithCommandOpen}
-          onSubmit={handleSubmit}
         />
       </TitlePage>
       {!isPending && !workloads.length ? (
