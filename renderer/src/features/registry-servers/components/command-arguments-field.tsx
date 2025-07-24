@@ -116,6 +116,23 @@ export function CommandArgumentsField({ form }: CommandArgumentsFieldProps) {
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
                 onBlur={() => addArgument()}
+                onPaste={(e) => {
+                  e.preventDefault()
+
+                  const pastedText = e.clipboardData.getData('text').trim()
+
+                  if (!pastedText) return
+
+                  const newArguments = pastedText.split(/\s+/)
+
+                  if (newArguments.length > 0) {
+                    const currentArgs = form.getValues('cmd_arguments') || []
+                    form.setValue('cmd_arguments', [
+                      ...currentArgs,
+                      ...newArguments,
+                    ])
+                  }
+                }}
                 placeholder={
                   field.value && field.value.length > 0
                     ? 'Add argument...'

@@ -1508,4 +1508,30 @@ describe('CommandArgumentsField', () => {
     expect(screen.queryByLabelText(/Remove argument/)).not.toBeInTheDocument()
     expect(commandArgsInput).toHaveValue('')
   })
+
+  it('pastes arguments from clipboard', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    const commandArgsInput = screen.getByLabelText('Command arguments')
+    await userEvent.click(commandArgsInput)
+    await userEvent.paste('--toolsets repos,issues,pull_requests --read-only')
+    expect(screen.getByText('--toolsets')).toBeVisible()
+    expect(screen.getByText('repos,issues,pull_requests')).toBeVisible()
+    expect(screen.getByText('--read-only')).toBeVisible()
+    expect(commandArgsInput).toHaveValue('')
+  })
 })
