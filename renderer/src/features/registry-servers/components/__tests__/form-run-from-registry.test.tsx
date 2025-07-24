@@ -1509,7 +1509,7 @@ describe('CommandArgumentsField', () => {
     expect(commandArgsInput).toHaveValue('')
   })
 
-  it('pastes arguments from clipboard', async () => {
+  it('paste arg from clipboard into command arguments field', async () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
