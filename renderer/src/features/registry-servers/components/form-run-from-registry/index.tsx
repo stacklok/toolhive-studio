@@ -1,3 +1,7 @@
+import { useMemo, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { useQuery } from '@tanstack/react-query'
+import log from 'electron-log/renderer'
 import {
   Dialog,
   DialogContent,
@@ -7,19 +11,16 @@ import {
   DialogTitle,
 } from '@/common/components/ui/dialog'
 import { Button } from '@/common/components/ui/button'
-import { useForm } from 'react-hook-form'
 import type { RegistryImageMetadata } from '@/common/api/generated/types.gen'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
-import { useMemo, useState } from 'react'
 import { groupEnvVars } from '../../lib/group-env-vars'
 import {
   getFormSchemaRunFromRegistry,
   type FormSchemaRunFromRegistry,
 } from '../../lib/get-form-schema-run-from-registry'
-import { useQuery } from '@tanstack/react-query'
 import { getApiV1BetaWorkloadsOptions } from '@/common/api/generated/@tanstack/react-query.gen'
 import { useRunFromRegistry } from '../../hooks/use-run-from-registry'
-import { LoadingStateAlert } from '../loading-state-alert'
+import { LoadingStateAlert } from '../../../../common/components/secrets/loading-state-alert'
 import { NetworkIsolationTabContent } from './network-isolation-tab-content'
 import { ConfigurationTabContent } from './configuration-tab-content'
 import { Tabs, TabsList, TabsTrigger } from '@/common/components/ui/tabs'
@@ -74,7 +75,7 @@ export function FormRunFromRegistry({
       }))
     },
     onSecretError: (error, variables) => {
-      console.debug('👉 onSecretError', error, variables)
+      log.error('onSecretError', error, variables)
     },
   })
   const [tabValue, setTabValue] = useState('configuration')

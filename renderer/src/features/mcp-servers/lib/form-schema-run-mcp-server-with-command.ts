@@ -4,11 +4,20 @@ import z from 'zod/v4'
 const getCommonFields = (workloads: WorkloadsWorkload[]) =>
   z.object({
     name: z
-      .string()
-      .nonempty('Name is required')
-      .refine(
-        (value) => !workloads.some((w) => w.name === value),
-        'This name is already in use'
+      .union([z.string(), z.undefined()])
+      .transform((val) => val ?? '')
+      .pipe(
+        z
+          .string()
+          .nonempty('Name is required')
+          .refine(
+            (value) => value.length === 0 || /^[a-zA-Z0-9._-]+$/.test(value),
+            'Invalid server name: it can only contain alphanumeric characters, dots, hyphens, and underscores.'
+          )
+          .refine(
+            (value) => !workloads.some((w) => w.name === value),
+            'This name is already in use'
+          )
       ),
     transport: z.union(
       [z.literal('sse'), z.literal('stdio'), z.literal('streamable-http')],
