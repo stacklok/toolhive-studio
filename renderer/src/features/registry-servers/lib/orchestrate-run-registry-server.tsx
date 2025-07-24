@@ -120,7 +120,7 @@ export function prepareCreateWorkloadData(
         network: {
           outbound: {
             allow_host: allowedHosts,
-            allow_port: allowedPorts.map(parseInt),
+            allow_port: allowedPorts.map((port) => parseInt(port, 10)),
             insecure_allow_all: false,
           } as PermissionsOutboundNetworkPermissions,
         },

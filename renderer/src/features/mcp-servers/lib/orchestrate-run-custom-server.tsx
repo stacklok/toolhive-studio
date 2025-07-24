@@ -1,6 +1,7 @@
 import { type UseMutateAsyncFunction } from '@tanstack/react-query'
 import {
   type Options,
+  type PermissionsOutboundNetworkPermissions,
   type PostApiV1BetaSecretsDefaultKeysData,
   type SecretsSecretParameter,
   type V1CreateRequest,
@@ -132,7 +133,25 @@ export function prepareCreateWorkloadData(
   request.env_vars = mapEnvVars(data.envVars)
   request.secrets = secrets
 
-  return request
+  // Extract and transform network isolation fields
+  const { allowedHosts, allowedPorts, networkIsolation } = data
+  const permission_profile = networkIsolation
+    ? {
+        network: {
+          outbound: {
+            allow_host: allowedHosts,
+            allow_port: allowedPorts.map((port) => parseInt(port, 10)),
+            insecure_allow_all: false,
+          } as PermissionsOutboundNetworkPermissions,
+        },
+      }
+    : undefined
+
+  return {
+    ...request,
+    network_isolation: networkIsolation,
+    permission_profile,
+  }
 }
 
 type GroupedSecrets = {

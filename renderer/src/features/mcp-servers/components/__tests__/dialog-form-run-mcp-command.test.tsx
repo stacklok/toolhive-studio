@@ -711,6 +711,53 @@ describe('DialogFormRunMcpServerWithCommand', () => {
       const configTab = screen.getByRole('tab', { name: /configuration/i })
       expect(configTab).toHaveAttribute('aria-selected', 'true')
     })
+
+    it('shows alert when network isolation is enabled but no hosts or ports are configured', async () => {
+      render(
+        <QueryClientProvider client={queryClient}>
+          <Dialog open>
+            <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+          </Dialog>
+        </QueryClientProvider>
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      // Switch to Network Isolation tab
+      const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+      await userEvent.click(networkTab)
+
+      // Enable network isolation
+      const switchLabel = screen.getByLabelText(
+        'Enable outbound network filtering'
+      )
+      await userEvent.click(switchLabel)
+
+      // Alert should be visible when no hosts or ports are configured
+      await waitFor(() => {
+        expect(
+          screen.getByText(
+            'This configuration blocks all outbound network traffic from the MCP server.'
+          )
+        ).toBeInTheDocument()
+      })
+
+      // Add a host - alert should disappear
+      const addHostBtn = screen.getByRole('button', { name: /add a host/i })
+      await userEvent.click(addHostBtn)
+      const hostInput = screen.getByLabelText('Host 1')
+      await userEvent.type(hostInput, 'example.com')
+
+      await waitFor(() => {
+        expect(
+          screen.queryByText(
+            'This configuration blocks all outbound network traffic from the MCP server.'
+          )
+        ).not.toBeInTheDocument()
+      })
+    })
   })
 
   it('paste arg from clipboard into command arguments field', async () => {

@@ -146,6 +146,8 @@ describe('prepareCreateWorkloadData', () => {
       cmd_arguments: ['--debug', '--port', '8080'],
       env_vars: ['DEBUG=true', 'PORT=8080'],
       secrets: [{ name: 'secret-key', target: 'API_TOKEN' }],
+      network_isolation: false,
+      permission_profile: undefined,
     })
   })
 
@@ -173,6 +175,8 @@ describe('prepareCreateWorkloadData', () => {
       cmd_arguments: [],
       env_vars: [],
       secrets: [],
+      network_isolation: false,
+      permission_profile: undefined,
     })
   })
 
@@ -259,6 +263,54 @@ describe('prepareCreateWorkloadData', () => {
     const result = prepareCreateWorkloadData(data)
 
     expect(result.secrets).toEqual([])
+  })
+
+  it('includes network isolation data when enabled', () => {
+    const data: FormSchemaRunMcpCommand = {
+      image: 'test-image',
+      name: 'test-server',
+      transport: 'stdio',
+      type: 'docker_image',
+      envVars: [],
+      secrets: [],
+      cmd_arguments: [],
+      networkIsolation: true,
+      allowedHosts: ['example.com', '.subdomain.com'],
+      allowedPorts: ['8080', '443'],
+    }
+
+    const result = prepareCreateWorkloadData(data)
+
+    expect(result.network_isolation).toBe(true)
+    expect(result.permission_profile).toEqual({
+      network: {
+        outbound: {
+          allow_host: ['example.com', '.subdomain.com'],
+          allow_port: [8080, 443],
+          insecure_allow_all: false,
+        },
+      },
+    })
+  })
+
+  it('excludes network isolation data when disabled', () => {
+    const data: FormSchemaRunMcpCommand = {
+      image: 'test-image',
+      name: 'test-server',
+      transport: 'stdio',
+      type: 'docker_image',
+      envVars: [],
+      secrets: [],
+      cmd_arguments: [],
+      networkIsolation: false,
+      allowedHosts: ['example.com'],
+      allowedPorts: ['8080'],
+    }
+
+    const result = prepareCreateWorkloadData(data)
+
+    expect(result.network_isolation).toBe(false)
+    expect(result.permission_profile).toBeUndefined()
   })
 })
 

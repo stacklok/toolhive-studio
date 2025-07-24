@@ -25,7 +25,7 @@ import { useRunCustomServer } from '../hooks/use-run-custom-server'
 import { LoadingStateAlert } from '@/common/components/secrets/loading-state-alert'
 import { AlertErrorFormSubmission } from '@/common/components/workloads/alert-error-form-submission'
 import { Tabs, TabsList, TabsTrigger } from '@/common/components/ui/tabs'
-import { isFeatureEnabled } from '@/feature-flags'
+
 import { NetworkIsolationTabContent } from './network-isolation-tab-content'
 
 // Map each field to its tab
@@ -164,22 +164,20 @@ export function DialogFormRunMcpServerWithCommand({
             )}
             {!isSubmitting && (
               <>
-                {isFeatureEnabled('network-isolation') && (
-                  <Tabs
-                    className="mb-6 w-full px-6"
-                    value={tabValue}
-                    onValueChange={setTabValue}
-                  >
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="configuration">
-                        Configuration
-                      </TabsTrigger>
-                      <TabsTrigger value="network-isolation">
-                        Network Isolation
-                      </TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                )}
+                <Tabs
+                  className="mb-6 w-full px-6"
+                  value={tabValue}
+                  onValueChange={setTabValue}
+                >
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="configuration">
+                      Configuration
+                    </TabsTrigger>
+                    <TabsTrigger value="network-isolation">
+                      Network Isolation
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
                 {tabValue === 'configuration' && (
                   <div
                     className="relative max-h-[65dvh] space-y-4 overflow-y-auto

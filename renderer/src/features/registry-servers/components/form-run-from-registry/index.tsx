@@ -25,7 +25,6 @@ import { NetworkIsolationTabContent } from '../../../network-isolation/component
 import { ConfigurationTabContent } from './configuration-tab-content'
 import { Tabs, TabsList, TabsTrigger } from '@/common/components/ui/tabs'
 import { Form } from '@/common/components/ui/form'
-import { isFeatureEnabled } from '@/feature-flags'
 
 // Map each field to its tab
 const FIELD_TAB_MAP = [
@@ -194,22 +193,20 @@ export function FormRunFromRegistry({
             )}
             {!isSubmitting && (
               <>
-                {isFeatureEnabled('network-isolation') && (
-                  <Tabs
-                    className="mb-6 w-full px-6"
-                    value={tabValue}
-                    onValueChange={setTabValue}
-                  >
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="configuration">
-                        Configuration
-                      </TabsTrigger>
-                      <TabsTrigger value="network-isolation">
-                        Network Isolation
-                      </TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                )}
+                <Tabs
+                  className="mb-6 w-full px-6"
+                  value={tabValue}
+                  onValueChange={setTabValue}
+                >
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="configuration">
+                      Configuration
+                    </TabsTrigger>
+                    <TabsTrigger value="network-isolation">
+                      Network Isolation
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
                 {tabValue === 'configuration' && (
                   <ConfigurationTabContent
                     error={error}

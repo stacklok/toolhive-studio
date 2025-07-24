@@ -9,6 +9,20 @@ import {
 } from '../orchestrate-run-registry-server'
 import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
 
+const REGISTRY_SERVER: RegistryImageMetadata = {
+  name: 'test-server',
+  image: 'ghcr.io/test/server:latest',
+  description: 'Test server',
+  transport: 'stdio',
+  permissions: {},
+  tools: ['tool-1'],
+  env_vars: [],
+  args: [],
+  metadata: {},
+  repository_url: 'https://github.com/test/server',
+  tags: ['test'],
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
 })
@@ -427,5 +441,47 @@ describe('saveSecrets', () => {
     expect(onSecretError).toHaveBeenCalledWith(mockError, {
       body: { key: 'SECRET_1', value: 'value-1' },
     })
+  })
+
+  it('includes network isolation data when enabled', () => {
+    const data: FormSchemaRunFromRegistry = {
+      serverName: 'test-server',
+      cmd_arguments: [],
+      secrets: [],
+      envVars: [],
+      networkIsolation: true,
+      allowedHosts: ['example.com', '.subdomain.com'],
+      allowedPorts: ['8080', '443'],
+    }
+
+    const result = prepareCreateWorkloadData(REGISTRY_SERVER, data)
+
+    expect(result.network_isolation).toBe(true)
+    expect(result.permission_profile).toEqual({
+      network: {
+        outbound: {
+          allow_host: ['example.com', '.subdomain.com'],
+          allow_port: [8080, 443],
+          insecure_allow_all: false,
+        },
+      },
+    })
+  })
+
+  it('excludes network isolation data when disabled', () => {
+    const data: FormSchemaRunFromRegistry = {
+      serverName: 'test-server',
+      cmd_arguments: [],
+      secrets: [],
+      envVars: [],
+      networkIsolation: false,
+      allowedHosts: ['example.com'],
+      allowedPorts: ['8080'],
+    }
+
+    const result = prepareCreateWorkloadData(REGISTRY_SERVER, data)
+
+    expect(result.network_isolation).toBe(false)
+    expect(result.permission_profile).toBeUndefined()
   })
 })
