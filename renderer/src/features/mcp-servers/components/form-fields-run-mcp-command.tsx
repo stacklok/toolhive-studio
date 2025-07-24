@@ -244,29 +244,6 @@ export function FormFieldsRunMcpCommand({
         setValue={(name, value) => form.setValue(name, value)}
         control={form.control}
       />
-      {/* <FormField
-        control={form.control}
-        name="cmd_arguments"
-        render={({ field }) => (
-          <FormItem>
-            <div className="flex items-center gap-1">
-              <FormLabel>Command arguments</FormLabel>
-              <TooltipInfoIcon>
-                Space separated arguments for the command.
-              </TooltipInfoIcon>
-            </div>
-            <FormControl>
-              <Input
-                placeholder="e.g. -y --oauth-setup"
-                defaultValue={field.value}
-                onChange={(e) => field.onChange(e.target.value)}
-                name={field.name}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      /> */}
     </>
   )
 }
