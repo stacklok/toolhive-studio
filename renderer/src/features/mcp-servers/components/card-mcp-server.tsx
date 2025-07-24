@@ -211,10 +211,10 @@ export function CardMcpServer({
       )}
     >
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between overflow-hidden">
           <CardTitle
             className={twMerge(
-              'flex items-center text-xl break-all',
+              'min-w-0 flex-1 truncate text-xl',
               isStopped && 'text-primary/65'
             )}
           >
