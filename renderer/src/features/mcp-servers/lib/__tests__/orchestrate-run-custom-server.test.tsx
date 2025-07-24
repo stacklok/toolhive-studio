@@ -347,7 +347,7 @@ describe('saveSecrets', () => {
     ]
 
     // Mock saveSecret to return empty key and call onSuccess
-    mockSaveSecret.mockImplementation(async (request, options) => {
+    mockSaveSecret.mockImplementation(async (_, options) => {
       const result = { key: '' }
       if (options?.onSuccess) {
         options.onSuccess()
