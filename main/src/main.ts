@@ -87,7 +87,7 @@ autoUpdater.on('update-downloaded', (_, __, releaseName) => {
   const dialogOpts = {
     type: 'info' as const,
     buttons: ['Restart', 'Later'],
-    title: `Release alpha ${releaseName}`,
+    title: `Release ${releaseName}`,
     message:
       process.platform === 'darwin'
         ? `Release ${releaseName}`
