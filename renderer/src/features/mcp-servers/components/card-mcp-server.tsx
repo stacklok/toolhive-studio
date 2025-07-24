@@ -29,6 +29,11 @@ import { getApiV1BetaRegistryByNameServersByServerName } from '@/common/api/gene
 import { useEffect, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { trackEvent } from '@/common/lib/analytics'
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/common/components/ui/tooltip'
 
 type CardContentMcpServerProps = {
   status: WorkloadsWorkload['status']
@@ -214,11 +219,16 @@ export function CardMcpServer({
         <div className="flex items-center justify-between overflow-hidden">
           <CardTitle
             className={twMerge(
-              'min-w-0 flex-1 truncate text-xl',
+              'min-w-0 flex-1 text-xl',
               isStopped && 'text-primary/65'
             )}
           >
-            {name}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="block cursor-default truncate">{name}</span>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">{name}</TooltipContent>
+            </Tooltip>
           </CardTitle>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
