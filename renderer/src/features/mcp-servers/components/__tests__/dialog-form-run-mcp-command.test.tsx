@@ -192,7 +192,7 @@ describe('DialogFormRunMcpServerWithCommand', () => {
             protocol: 'npx',
             package_name: '@test/package',
             type: 'package_manager',
-            cmd_arguments: '--debug',
+            cmd_arguments: ['--debug'],
           }),
         },
         expect.any(Object)
@@ -450,5 +450,65 @@ describe('DialogFormRunMcpServerWithCommand', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
 
     expect(mockOnOpenChange).toHaveBeenCalledWith(false)
+  })
+
+  it('paste arg from clipboard into command arguments field', async () => {
+    const mockInstallServerMutation = vi.fn()
+    mockUseRunCustomServer.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      checkServerStatus: vi.fn(),
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <Dialog open>
+          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+        </Dialog>
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    await userEvent.type(screen.getByLabelText('Name'), 'npm-server')
+    await userEvent.click(screen.getByLabelText('Transport'))
+    await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
+    await userEvent.type(
+      screen.getByLabelText('Docker image'),
+      'ghcr.io/test/server'
+    )
+
+    const commandArgsInput = screen.getByLabelText('Command arguments')
+    await userEvent.click(commandArgsInput)
+
+    await userEvent.paste('--toolsets repos,issues,pull_requests --read-only')
+
+    expect(screen.getByText('--toolsets')).toBeVisible()
+    expect(screen.getByText('repos,issues,pull_requests')).toBeVisible()
+    expect(screen.getByText('--read-only')).toBeVisible()
+
+    expect(commandArgsInput).toHaveValue('')
+    expect(screen.getByText('repos,issues,pull_requests')).toBeVisible()
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            cmd_arguments: [
+              '--toolsets',
+              'repos,issues,pull_requests',
+              '--read-only',
+            ],
+          }),
+        }),
+        expect.any(Object)
+      )
+    })
   })
 })

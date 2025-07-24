@@ -24,7 +24,7 @@ const getCommonFields = (workloads: WorkloadsWorkload[]) =>
       'Please select either SSE, stdio, or streamable-http.'
     ),
     target_port: z.number().optional(),
-    cmd_arguments: z.string().optional(),
+    cmd_arguments: z.array(z.string()).optional(),
     envVars: z
       .object({
         name: z.string().nonempty('Name is required'),

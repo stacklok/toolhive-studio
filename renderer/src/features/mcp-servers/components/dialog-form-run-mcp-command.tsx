@@ -102,6 +102,7 @@ export function DialogFormRunMcpServerWithCommand({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
         className="p-0 sm:max-w-2xl"
+        onCloseAutoFocus={() => form.reset()}
         onInteractOutside={(e) => {
           // Prevent closing the dialog when clicking outside
           e.preventDefault()

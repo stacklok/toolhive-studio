@@ -82,7 +82,8 @@ export function FormRunFromRegistry({
   const { data } = useQuery({
     ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
   })
-
+  const cmd_arguments =
+    server?.args && server.args.length > 0 ? server.args : []
   const formSchema = useMemo(
     () =>
       getFormSchemaRunFromRegistry({
@@ -97,6 +98,7 @@ export function FormRunFromRegistry({
     resolver: zodV4Resolver(formSchema),
     defaultValues: {
       serverName: server?.name || '',
+      cmd_arguments,
       secrets: groupedEnvVars.secrets.map((s) => ({
         name: s.name || '',
         value: { secret: s.default || '', isFromStore: false },
@@ -166,6 +168,7 @@ export function FormRunFromRegistry({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
         className="p-0 sm:max-w-2xl"
+        onCloseAutoFocus={() => form.reset()}
         onInteractOutside={(e) => {
           // Prevent closing the dialog when clicking outside
           e.preventDefault()

@@ -334,6 +334,7 @@ describe('FormRunFromRegistry', () => {
       isPendingSecrets: false,
     })
     server = { ...REGISTRY_SERVER }
+    server.args = ['stdio']
     server.env_vars = ENV_VARS_OPTIONAL
     render(
       <QueryClientProvider client={queryClient}>
@@ -364,7 +365,7 @@ describe('FormRunFromRegistry', () => {
           server: expect.any(Object),
           data: expect.objectContaining({
             serverName: 'my-awesome-server',
-            cmd_arguments: undefined,
+            cmd_arguments: ['stdio'],
             envVars: [{ name: 'ENV_VAR', value: '' }],
             secrets: [
               { name: 'SECRET', value: { isFromStore: false, secret: '' } },
@@ -408,10 +409,11 @@ describe('FormRunFromRegistry', () => {
         initialSelectionEnd: REGISTRY_SERVER.name?.length,
       }
     )
-    await userEvent.type(
-      screen.getByLabelText('Command arguments'),
-      '--debug --verbose'
-    )
+    const commandArgsInput = screen.getByLabelText('Command arguments')
+    await userEvent.type(commandArgsInput, '--debug')
+    await userEvent.keyboard('{Enter}')
+    await userEvent.type(commandArgsInput, '--verbose')
+    await userEvent.keyboard('{Enter}')
     await userEvent.click(
       screen.getByRole('button', { name: 'Install server' })
     )
@@ -421,7 +423,7 @@ describe('FormRunFromRegistry', () => {
           server: expect.any(Object),
           data: expect.objectContaining({
             serverName: 'my-awesome-server',
-            cmd_arguments: '--debug --verbose',
+            cmd_arguments: ['--debug', '--verbose'],
             envVars: [{ name: 'ENV_VAR', value: '' }],
             secrets: [
               { name: 'SECRET', value: { isFromStore: false, secret: '' } },
@@ -816,10 +818,11 @@ describe('FormRunFromRegistry', () => {
       }
     )
 
-    await userEvent.type(
-      screen.getByLabelText('Command arguments'),
-      '--debug --verbose'
-    )
+    const commandArgsInput = screen.getByLabelText('Command arguments')
+    await userEvent.type(commandArgsInput, '--debug')
+    await userEvent.keyboard('{Enter}')
+    await userEvent.type(commandArgsInput, '--verbose')
+    await userEvent.keyboard('{Enter}')
 
     await userEvent.click(
       screen.getByRole('button', { name: 'Install server' })
@@ -830,7 +833,7 @@ describe('FormRunFromRegistry', () => {
         {
           server,
           data: expect.objectContaining({
-            cmd_arguments: '--debug --verbose',
+            cmd_arguments: ['--debug', '--verbose'],
           }),
         },
         expect.any(Object)
@@ -1354,5 +1357,181 @@ describe('Network Isolation Tab Activation', () => {
     // The configuration tab should now be active
     const configTab = screen.getByRole('tab', { name: /configuration/i })
     expect(configTab).toHaveAttribute('aria-selected', 'true')
+  })
+})
+
+describe('CommandArgumentsField', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockUseRunFromRegistry.mockReturnValue({
+      installServerMutation: vi.fn(),
+      checkServerStatus: vi.fn(),
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+  })
+
+  it('adds argument when pressing space key', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    const commandArgsInput = screen.getByLabelText('Command arguments')
+    await userEvent.type(commandArgsInput, '--verbose')
+    await userEvent.keyboard(' ')
+
+    expect(screen.getByText('--verbose')).toBeInTheDocument()
+    expect(commandArgsInput).toHaveValue('')
+  })
+
+  it('adds argument when input loses focus on blur', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    const commandArgsInput = screen.getByLabelText('Command arguments')
+    await userEvent.type(commandArgsInput, '--port')
+    await userEvent.tab()
+
+    expect(screen.getByText('--port')).toBeInTheDocument()
+    expect(commandArgsInput).toHaveValue('')
+  })
+
+  it('removes argument when clicking remove button', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    const commandArgsInput = screen.getByLabelText('Command arguments')
+    await userEvent.type(commandArgsInput, '--debug')
+    await userEvent.keyboard('{Enter}')
+    await userEvent.type(commandArgsInput, '--verbose')
+    await userEvent.keyboard('{Enter}')
+
+    expect(screen.getByText('--debug')).toBeInTheDocument()
+    expect(screen.getByText('--verbose')).toBeInTheDocument()
+
+    // Remove the first argument
+    const removeButton = screen.getByLabelText('Remove argument --debug')
+    await userEvent.click(removeButton)
+
+    expect(screen.queryByText('--debug')).not.toBeInTheDocument()
+    expect(screen.getByText('--verbose')).toBeInTheDocument()
+  })
+
+  it('disables remove button for default arguments', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+    server.args = ['--stdio']
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    expect(screen.getByText('--stdio')).toBeInTheDocument()
+
+    const removeButton = screen.getByLabelText('Remove argument --stdio')
+    expect(removeButton).toBeDisabled()
+  })
+
+  it('does not add empty arguments', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    const commandArgsInput = screen.getByLabelText('Command arguments')
+    await userEvent.type(commandArgsInput, '   ')
+    await userEvent.keyboard('{Enter}')
+
+    expect(screen.queryByLabelText(/Remove argument/)).not.toBeInTheDocument()
+    expect(commandArgsInput).toHaveValue('')
+  })
+
+  it('paste arg from clipboard into command arguments field', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+        />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    const commandArgsInput = screen.getByLabelText('Command arguments')
+    await userEvent.click(commandArgsInput)
+    await userEvent.paste('--toolsets repos,issues,pull_requests --read-only')
+    expect(screen.getByText('--toolsets')).toBeVisible()
+    expect(screen.getByText('repos,issues,pull_requests')).toBeVisible()
+    expect(screen.getByText('--read-only')).toBeVisible()
+    expect(commandArgsInput).toHaveValue('')
   })
 })

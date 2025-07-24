@@ -127,7 +127,7 @@ describe('prepareCreateWorkloadData', () => {
         { name: 'PORT', value: '8080' },
       ],
       secrets: [],
-      cmd_arguments: '--debug --port 8080',
+      cmd_arguments: ['--debug', '--port', '8080'],
     }
 
     const secrets: SecretsSecretParameter[] = [
@@ -155,7 +155,7 @@ describe('prepareCreateWorkloadData', () => {
       type: 'package_manager',
       envVars: [],
       secrets: [],
-      cmd_arguments: '',
+      cmd_arguments: [],
     }
 
     const result = prepareCreateWorkloadData(data)
@@ -183,7 +183,7 @@ describe('prepareCreateWorkloadData', () => {
         { name: 'VALID_VAR', value: 'value' },
       ],
       secrets: [],
-      cmd_arguments: '',
+      cmd_arguments: [],
     }
 
     const result = prepareCreateWorkloadData(data)
@@ -199,7 +199,7 @@ describe('prepareCreateWorkloadData', () => {
       type: 'docker_image',
       envVars: [],
       secrets: [],
-      cmd_arguments: '',
+      cmd_arguments: [],
     }
 
     const result = prepareCreateWorkloadData(data)
@@ -215,7 +215,7 @@ describe('prepareCreateWorkloadData', () => {
       type: 'docker_image',
       envVars: [],
       secrets: [],
-      cmd_arguments: '  --flag1   --flag2=value   --flag3  ',
+      cmd_arguments: ['--flag1', '--flag2=value', '--flag3'],
     }
 
     const result = prepareCreateWorkloadData(data)
@@ -235,7 +235,7 @@ describe('prepareCreateWorkloadData', () => {
       type: 'docker_image',
       envVars: [],
       secrets: [],
-      cmd_arguments: '',
+      cmd_arguments: [],
     }
 
     const result = prepareCreateWorkloadData(data)
