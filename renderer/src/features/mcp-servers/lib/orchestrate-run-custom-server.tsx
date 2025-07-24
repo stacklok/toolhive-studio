@@ -128,10 +128,8 @@ export function prepareCreateWorkloadData(
 ): V1CreateRequest {
   const request = transformTypeSpecificData(data)
 
-  request.cmd_arguments = data.cmd_arguments?.split(' ').filter(Boolean)
-
+  request.cmd_arguments = data.cmd_arguments || []
   request.env_vars = mapEnvVars(data.envVars)
-
   request.secrets = secrets
 
   return request

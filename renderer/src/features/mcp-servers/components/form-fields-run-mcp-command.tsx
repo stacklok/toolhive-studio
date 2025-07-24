@@ -18,6 +18,7 @@ import {
 } from '@/common/components/ui/select'
 import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
 import { Tabs, TabsList, TabsTrigger } from '@/common/components/ui/tabs'
+import { CommandArgumentsField } from '@/common/components/workload-cmd-arg/command-arguments-field'
 
 export function FormFieldsRunMcpCommand({
   form,
@@ -238,7 +239,12 @@ export function FormFieldsRunMcpCommand({
         />
       ) : null}
 
-      <FormField
+      <CommandArgumentsField
+        getValues={(name) => form.getValues(name)}
+        setValue={(name, value) => form.setValue(name, value)}
+        control={form.control}
+      />
+      {/* <FormField
         control={form.control}
         name="cmd_arguments"
         render={({ field }) => (
@@ -260,7 +266,7 @@ export function FormFieldsRunMcpCommand({
             <FormMessage />
           </FormItem>
         )}
-      />
+      /> */}
     </>
   )
 }

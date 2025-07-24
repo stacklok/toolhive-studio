@@ -192,7 +192,7 @@ describe('DialogFormRunMcpServerWithCommand', () => {
             protocol: 'npx',
             package_name: '@test/package',
             type: 'package_manager',
-            cmd_arguments: '--debug',
+            cmd_arguments: ['--debug'],
           }),
         },
         expect.any(Object)

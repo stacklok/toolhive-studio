@@ -16,7 +16,7 @@ import type { RegistryEnvVar } from '@/common/api/generated/types.gen'
 import { cn } from '@/common/lib/utils'
 import { FormComboboxSecretStore } from '@/common/components/secrets/form-combobox-secrets-store'
 import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
-import { CommandArgumentsField } from '../command-arguments-field'
+import { CommandArgumentsField } from '@/common/components/workload-cmd-arg/command-arguments-field'
 
 interface ConfigurationTabContentProps {
   error: string | null
@@ -202,7 +202,12 @@ export function ConfigurationTabContent({
         )}
       />
 
-      <CommandArgumentsField form={form} />
+      <CommandArgumentsField<FormSchemaRunFromRegistry>
+        getValues={(name) => form.getValues(name)}
+        setValue={(name, value) => form.setValue(name, value)}
+        cmd_arguments={form.getValues('cmd_arguments')}
+        control={form.control}
+      />
 
       {groupedEnvVars.secrets[0] ? (
         <section className="mb-10">

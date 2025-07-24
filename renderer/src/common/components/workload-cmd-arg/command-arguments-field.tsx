@@ -11,31 +11,51 @@ import {
   FormDescription,
 } from '@/common/components/ui/form'
 import { cn } from '@/common/lib/utils'
-import type { UseFormReturn } from 'react-hook-form'
-import type { FormSchemaRunFromRegistry } from '../lib/get-form-schema-run-from-registry'
+import type { Control, Path } from 'react-hook-form'
 import { Input } from '@/common/components/ui/input'
+import type { FormSchemaRunFromRegistry } from '@/features/registry-servers/lib/get-form-schema-run-from-registry'
+import type { FormSchemaRunMcpCommand } from '@/features/mcp-servers/lib/form-schema-run-mcp-server-with-command'
 
-interface CommandArgumentsFieldProps {
-  form: UseFormReturn<FormSchemaRunFromRegistry>
+type CmdArguments =
+  | FormSchemaRunFromRegistry['cmd_arguments']
+  | FormSchemaRunMcpCommand['cmd_arguments']
+
+interface CommandArgumentsFieldProps<
+  T extends {
+    cmd_arguments?: CmdArguments
+  },
+> {
+  getValues: (name: 'cmd_arguments') => string[] | undefined
+  setValue: (name: 'cmd_arguments', value: string[]) => void
+  cmd_arguments?: string[]
+  control: Control<T>
 }
 
-export function CommandArgumentsField({ form }: CommandArgumentsFieldProps) {
+export function CommandArgumentsField<
+  T extends {
+    cmd_arguments?: CmdArguments
+  },
+>({
+  getValues,
+  setValue,
+  cmd_arguments = [],
+  control,
+}: CommandArgumentsFieldProps<T>) {
   const [inputValue, setInputValue] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
-  const cmd_arguments = form.formState.defaultValues?.cmd_arguments
-
+  // console.log({ cmd_arguments }, getValues('cmd_arguments'))
   const addArgument = () => {
     if (inputValue.trim()) {
-      const currentArgs = form.getValues('cmd_arguments') || []
-      form.setValue('cmd_arguments', [...currentArgs, inputValue.trim()])
+      const currentArgs = getValues('cmd_arguments') || []
+      setValue('cmd_arguments', [...currentArgs, inputValue.trim()])
       setInputValue('')
     }
   }
 
   const removeArgument = (index: number) => {
-    const currentArgs = form.getValues('cmd_arguments') || []
+    const currentArgs = getValues('cmd_arguments') || []
     const newArgs = currentArgs.filter((_, i) => i !== index)
-    form.setValue('cmd_arguments', newArgs)
+    setValue('cmd_arguments', newArgs)
     setTimeout(() => inputRef.current?.focus(), 0)
   }
 
@@ -48,8 +68,8 @@ export function CommandArgumentsField({ form }: CommandArgumentsFieldProps) {
 
   return (
     <FormField
-      control={form.control}
-      name="cmd_arguments"
+      control={control}
+      name={'cmd_arguments' as Path<T>}
       render={({ field }) => (
         <FormItem className="mb-10">
           <FormLabel htmlFor={`${field.name}-input`}>
@@ -75,39 +95,41 @@ export function CommandArgumentsField({ form }: CommandArgumentsFieldProps) {
                 inputRef.current?.focus()
               }}
             >
-              {field.value && field.value.length > 0 && (
-                <>
-                  {field.value.map((arg, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className={cn(
-                        'flex h-6 items-center gap-1 px-2 font-mono text-xs',
-                        cmd_arguments?.includes(arg) &&
-                          'cursor-not-allowed opacity-40'
-                      )}
-                    >
-                      {arg}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        disabled={cmd_arguments?.includes(arg)}
-                        className="hover:text-muted-foreground/80 ml-1 size-3
-                          p-1 hover:cursor-pointer disabled:cursor-not-allowed
-                          disabled:opacity-40"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          removeArgument(index)
-                        }}
-                        aria-label={`Remove argument ${arg}`}
+              {field.value &&
+                Array.isArray(field.value) &&
+                field.value.length > 0 && (
+                  <>
+                    {field.value.map((arg: string, index: number) => (
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className={cn(
+                          'flex h-6 items-center gap-1 px-2 font-mono text-xs',
+                          cmd_arguments?.includes(arg) &&
+                            'cursor-not-allowed opacity-40'
+                        )}
                       >
-                        <X className="size-3" />
-                      </Button>
-                    </Badge>
-                  ))}
-                </>
-              )}
+                        {arg}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          disabled={cmd_arguments?.includes(arg)}
+                          className="hover:text-muted-foreground/80 ml-1 size-3
+                            p-1 hover:cursor-pointer disabled:cursor-not-allowed
+                            disabled:opacity-40"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            removeArgument(index)
+                          }}
+                          aria-label={`Remove argument ${arg}`}
+                        >
+                          <X className="size-3" />
+                        </Button>
+                      </Badge>
+                    ))}
+                  </>
+                )}
 
               <Input
                 ref={inputRef}
@@ -126,15 +148,14 @@ export function CommandArgumentsField({ form }: CommandArgumentsFieldProps) {
                   const newArguments = pastedText.split(/\s+/)
 
                   if (newArguments.length > 0) {
-                    const currentArgs = form.getValues('cmd_arguments') || []
-                    form.setValue('cmd_arguments', [
-                      ...currentArgs,
-                      ...newArguments,
-                    ])
+                    const currentArgs = getValues('cmd_arguments') || []
+                    setValue('cmd_arguments', [...currentArgs, ...newArguments])
                   }
                 }}
                 placeholder={
-                  field.value && field.value.length > 0
+                  field.value &&
+                  Array.isArray(field.value) &&
+                  field.value.length > 0
                     ? 'Add argument...'
                     : 'e.g. --debug, --port, 8080'
                 }
