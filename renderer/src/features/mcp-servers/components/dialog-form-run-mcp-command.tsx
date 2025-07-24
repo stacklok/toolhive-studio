@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
+import log from 'electron-log/renderer'
 import { Form } from '@/common/components/ui/form'
 import {
   getFormSchemaRunMcpCommand,
@@ -53,7 +54,7 @@ export function DialogFormRunMcpServerWithCommand({
       }))
     },
     onSecretError: (error, variables) => {
-      console.debug('👉 onSecretError', error, variables)
+      log.error('onSecretError', error, variables)
     },
   })
 
