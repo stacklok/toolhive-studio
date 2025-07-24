@@ -18,6 +18,9 @@ it('passes with valid docker image', () => {
         },
       },
     ],
+    networkIsolation: false,
+    allowedHosts: [],
+    allowedPorts: [],
   }
 
   const result = getFormSchemaRunMcpCommand([]).safeParse(validInput)
@@ -43,6 +46,9 @@ it('passes with valid docker image', () => {
         },
       },
     ],
+    networkIsolation: false,
+    allowedHosts: [],
+    allowedPorts: [],
   })
 })
 
@@ -64,6 +70,9 @@ it('passes with valid npx command', () => {
         },
       },
     ],
+    networkIsolation: false,
+    allowedHosts: [],
+    allowedPorts: [],
   }
 
   const result = getFormSchemaRunMcpCommand([]).safeParse(validInput)
@@ -85,6 +94,9 @@ it('passes with valid npx command', () => {
         },
       },
     ],
+    networkIsolation: false,
+    allowedHosts: [],
+    allowedPorts: [],
   })
 })
 
@@ -106,6 +118,9 @@ it('passes with valid uvx command', () => {
         },
       },
     ],
+    networkIsolation: false,
+    allowedHosts: [],
+    allowedPorts: [],
   }
 
   const result = getFormSchemaRunMcpCommand([]).safeParse(validInput)
@@ -128,6 +143,9 @@ it('passes with valid uvx command', () => {
         },
       },
     ],
+    networkIsolation: false,
+    allowedHosts: [],
+    allowedPorts: [],
   })
 })
 
@@ -231,6 +249,9 @@ it('passes when name contains valid characters', () => {
     cmd_arguments: ['-y', '--oauth-setup'],
     envVars: [],
     secrets: [],
+    networkIsolation: false,
+    allowedHosts: [],
+    allowedPorts: [],
   }
 
   const result = getFormSchemaRunMcpCommand([]).safeParse(validInput)

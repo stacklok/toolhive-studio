@@ -128,6 +128,9 @@ describe('prepareCreateWorkloadData', () => {
       ],
       secrets: [],
       cmd_arguments: ['--debug', '--port', '8080'],
+      networkIsolation: false,
+      allowedHosts: [],
+      allowedPorts: [],
     }
 
     const secrets: SecretsSecretParameter[] = [
@@ -156,6 +159,9 @@ describe('prepareCreateWorkloadData', () => {
       envVars: [],
       secrets: [],
       cmd_arguments: [],
+      networkIsolation: false,
+      allowedHosts: [],
+      allowedPorts: [],
     }
 
     const result = prepareCreateWorkloadData(data)
@@ -184,6 +190,9 @@ describe('prepareCreateWorkloadData', () => {
       ],
       secrets: [],
       cmd_arguments: [],
+      networkIsolation: false,
+      allowedHosts: [],
+      allowedPorts: [],
     }
 
     const result = prepareCreateWorkloadData(data)
@@ -200,6 +209,9 @@ describe('prepareCreateWorkloadData', () => {
       envVars: [],
       secrets: [],
       cmd_arguments: [],
+      networkIsolation: false,
+      allowedHosts: [],
+      allowedPorts: [],
     }
 
     const result = prepareCreateWorkloadData(data)
@@ -216,6 +228,9 @@ describe('prepareCreateWorkloadData', () => {
       envVars: [],
       secrets: [],
       cmd_arguments: ['--flag1', '--flag2=value', '--flag3'],
+      networkIsolation: false,
+      allowedHosts: [],
+      allowedPorts: [],
     }
 
     const result = prepareCreateWorkloadData(data)
@@ -236,6 +251,9 @@ describe('prepareCreateWorkloadData', () => {
       envVars: [],
       secrets: [],
       cmd_arguments: [],
+      networkIsolation: false,
+      allowedHosts: [],
+      allowedPorts: [],
     }
 
     const result = prepareCreateWorkloadData(data)

@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/common/components/ui/select'
 import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
-import { Tabs, TabsList, TabsTrigger } from '@/common/components/ui/tabs'
+import { RadioGroup, RadioGroupItem } from '@/common/components/ui/radio-group'
 import { CommandArgumentsField } from '@/common/components/workload-cmd-arg/command-arguments-field'
 
 export function FormFieldsRunMcpCommand({
@@ -34,16 +34,41 @@ export function FormFieldsRunMcpCommand({
         control={form.control}
         name="type"
         render={({ field }) => (
-          <Tabs
-            defaultValue={field.value}
-            onValueChange={field.onChange}
-            className="w-full"
-          >
-            <TabsList id={field.name} className="grid w-full grid-cols-2">
-              <TabsTrigger value="docker_image">Docker image</TabsTrigger>
-              <TabsTrigger value="package_manager">Package manager</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <FormItem className="space-y-3">
+            <div className="text-sm font-medium">Server type</div>
+            <FormControl>
+              <RadioGroup
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                className="grid grid-cols-2 gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="docker_image" id="docker_image" />
+                  <label
+                    htmlFor="docker_image"
+                    className="text-sm leading-none font-medium
+                      peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Docker image
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem
+                    value="package_manager"
+                    id="package_manager"
+                  />
+                  <label
+                    htmlFor="package_manager"
+                    className="text-sm leading-none font-medium
+                      peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Package manager
+                  </label>
+                </div>
+              </RadioGroup>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
         )}
       />
 

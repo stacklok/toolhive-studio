@@ -21,7 +21,7 @@ import {
 import { getApiV1BetaWorkloadsOptions } from '@/common/api/generated/@tanstack/react-query.gen'
 import { useRunFromRegistry } from '../../hooks/use-run-from-registry'
 import { LoadingStateAlert } from '../../../../common/components/secrets/loading-state-alert'
-import { NetworkIsolationTabContent } from './network-isolation-tab-content'
+import { NetworkIsolationTabContent } from '../../../network-isolation/components/network-isolation-tab-content'
 import { ConfigurationTabContent } from './configuration-tab-content'
 import { Tabs, TabsList, TabsTrigger } from '@/common/components/ui/tabs'
 import { Form } from '@/common/components/ui/form'
