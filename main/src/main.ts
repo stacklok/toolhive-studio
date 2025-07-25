@@ -79,12 +79,15 @@ autoUpdater.on('update-downloaded', (_, __, releaseName) => {
   }
 
   if (mainWindow.isMinimized()) {
+    log.info('MainWindow is minimized, restoring')
     mainWindow.restore()
   }
 
   const dialogOpts = {
     type: 'info' as const,
     buttons: ['Restart', 'Later'],
+    cancelId: 1,
+    defaultId: 0,
     title: `Release ${releaseName}`,
     message:
       process.platform === 'darwin'
@@ -101,7 +104,7 @@ autoUpdater.on('update-downloaded', (_, __, releaseName) => {
     .showMessageBox(mainWindow, dialogOpts)
     .then(async (returnValue) => {
       if (returnValue.response === 0) {
-        log.debug('User clicked: Restart')
+        log.info('User clicked: Restart')
         isUpdateInProgress = true
 
         log.info('🛑 Removing quit listeners to avoid interference')
@@ -136,10 +139,9 @@ autoUpdater.on('update-downloaded', (_, __, releaseName) => {
           app.quit()
         }
       } else {
+        // returnValue.response === 1 (Later button) or dialog was closed/minimized (cancelId = 1)
+        log.info('User clicked: Later or dialog was closed')
         isUpdateInProgress = false
-        log.info(
-          'User deferred update installation - showing toast notification'
-        )
         if (mainWindow) {
           mainWindow.webContents.send('update-downloaded')
         }
