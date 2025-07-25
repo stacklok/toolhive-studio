@@ -550,14 +550,11 @@ ipcMain.handle('install-update-and-restart', async () => {
   app.removeAllListeners('before-quit')
   app.removeAllListeners('will-quit')
 
-  // Show graceful exit page
   log.info('🛑 Starting graceful shutdown before update...')
   mainWindow?.webContents.send('graceful-exit')
 
-  // Give renderer time to navigate to shutdown page
   await delay(500)
 
-  // Stop ToolHive and servers
   try {
     const port = getToolhivePort()
     if (port) {
