@@ -407,9 +407,6 @@ app.on('will-finish-launching', () => {
 })
 
 app.on('before-quit', (e) => {
-  // Cleanup global shortcuts
-  globalShortcut.unregisterAll()
-
   if (mainWindow) {
     mainWindow.show()
     mainWindow.focus()
