@@ -34,6 +34,7 @@ interface DynamicArrayFieldProps<
   addButtonText?: string
   type?: 'text' | 'number'
   inputProps?: React.InputHTMLAttributes<HTMLInputElement>
+  isValid: boolean
 }
 
 export function DynamicArrayField<TFieldValues extends FieldValues>({
@@ -45,6 +46,7 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
   addButtonText = 'Add',
   type = 'text',
   inputProps = {},
+  isValid,
 }: DynamicArrayFieldProps<TFieldValues>) {
   const { fields, append, remove } = useFieldArray<
     TFieldValues,
@@ -73,7 +75,7 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
           <div key={field.id} className="flex items-start gap-2">
             <FormField
               control={control}
-              name={`${name}.${idx}` as Path<TFieldValues>}
+              name={`${name}.${idx}.value` as Path<TFieldValues>}
               render={({
                 field,
               }: {
@@ -90,7 +92,7 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
                       {...inputProps}
                     />
                   </FormControl>
-                  <FormMessage />
+                  {!isValid && <FormMessage />}
                 </FormItem>
               )}
             />
@@ -110,8 +112,9 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
           variant="secondary"
           className="mt-1 w-fit"
           onClick={() => {
-            // @ts-expect-error no time to fix it
-            append('')
+            append({
+              value: '',
+            } as TFieldValues[ArrayPath<TFieldValues>][number])
           }}
         >
           {addButtonText}
