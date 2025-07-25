@@ -177,12 +177,24 @@ const createHideMenuItem = () => ({
   click: withWindow(hideWindow),
 })
 
-const createQuitMenuItem = () => ({
-  label: 'Quit ToolHive',
+const createHideWindowMenuItem = () => ({
+  label: 'Hide Window',
   accelerator: 'CmdOrCtrl+Q',
   type: 'normal' as const,
   click: () => {
-    // Get the main window and trigger the confirmation flow
+    // Hide window instead of quitting when using Ctrl+Q
+    const window = BrowserWindow.getAllWindows()[0]
+    if (window) {
+      window.hide()
+    }
+  },
+})
+
+const createQuitMenuItem = () => ({
+  label: 'Quit ToolHive',
+  type: 'normal' as const,
+  click: () => {
+    // Trigger the quit confirmation flow
     const window = BrowserWindow.getAllWindows()[0]
     if (window) {
       window.show()
@@ -202,6 +214,7 @@ const createMenuTemplate = (currentTray: Tray, toolHiveIsRunning: boolean) => [
   createSeparator(),
   createShowMenuItem(),
   createHideMenuItem(),
+  createHideWindowMenuItem(),
   createSeparator(),
   createQuitMenuItem(),
 ]

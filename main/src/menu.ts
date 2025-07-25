@@ -1,4 +1,4 @@
-import { Menu, app } from 'electron'
+import { Menu, app, BrowserWindow } from 'electron'
 import { getAutoLaunchStatus, setAutoLaunch } from './auto-launch'
 import { updateTrayStatus } from './system-tray'
 import log from './logger'
@@ -22,6 +22,21 @@ function createAutoLaunchItem(
         createApplicationMenu(trayRef)
       } catch (error) {
         log.error('Failed to toggle auto-launch: ', error)
+      }
+    },
+  }
+}
+
+function createHideWindowItem() {
+  return {
+    label: 'Hide Window',
+    accelerator: process.platform === 'darwin' ? 'Cmd+Q' : 'Ctrl+Q',
+    click: () => {
+      // Hide window instead of quitting when using Ctrl+Q
+      log.info('Hide window triggered via keyboard shortcut')
+      const window = BrowserWindow.getAllWindows()[0]
+      if (window) {
+        window.hide()
       }
     },
   }
@@ -69,7 +84,7 @@ export function createApplicationMenu(trayRef: Electron.Tray | null) {
               { type: 'separator' as const },
             ]
           : []),
-        { role: 'quit' as const },
+        createHideWindowItem(),
       ],
     },
     ...restMenuItems,
