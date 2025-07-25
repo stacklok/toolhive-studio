@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
@@ -60,16 +60,11 @@ export function DialogFormRunMcpServerWithCommand({
     completedCount: number
     secretsCount: number
   } | null>(null)
-  const { activeTab, setActiveTab, activateTabWithError } = useFormTabState({
-    fieldTabMap: FIELD_TAB_MAP,
-    defaultTab: 'configuration',
-  })
-
-  useEffect(() => {
-    if (isOpen) {
-      setActiveTab('configuration')
-    }
-  }, [isOpen, setActiveTab])
+  const { activeTab, setActiveTab, activateTabWithError, resetTab } =
+    useFormTabState({
+      fieldTabMap: FIELD_TAB_MAP,
+      defaultTab: 'configuration',
+    })
 
   const {
     installServerMutation,
@@ -137,7 +132,10 @@ export function DialogFormRunMcpServerWithCommand({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
         className="p-0 sm:max-w-2xl"
-        onCloseAutoFocus={() => form.reset()}
+        onCloseAutoFocus={() => {
+          form.reset()
+          resetTab()
+        }}
         onInteractOutside={(e) => {
           // Prevent closing the dialog when clicking outside
           e.preventDefault()

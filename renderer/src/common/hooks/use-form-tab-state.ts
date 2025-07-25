@@ -18,6 +18,7 @@ interface UseFormTabStateReturn<TabsType extends string> {
   setActiveTab: (tab: TabsType) => void
   showFieldError: (fieldName: string) => void
   activateTabWithError: (errors: Record<string, unknown>) => void
+  resetTab: () => void
 }
 
 export function useFormTabState<
@@ -54,10 +55,15 @@ export function useFormTabState<
     }
   }
 
+  const resetTab = () => {
+    setActiveTab(defaultTab)
+  }
+
   return {
     activeTab,
     setActiveTab,
     showFieldError,
     activateTabWithError,
+    resetTab,
   }
 }
