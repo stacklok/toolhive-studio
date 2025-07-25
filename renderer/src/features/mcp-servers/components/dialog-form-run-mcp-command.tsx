@@ -62,6 +62,7 @@ export function DialogFormRunMcpServerWithCommand({
   } | null>(null)
   const { activeTab, setActiveTab, activateTabWithError } = useFormTabState({
     fieldTabMap: FIELD_TAB_MAP,
+    defaultTab: 'configuration',
   })
 
   useEffect(() => {

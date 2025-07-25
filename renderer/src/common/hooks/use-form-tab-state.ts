@@ -1,27 +1,36 @@
 import { useState } from 'react'
 
-interface FieldTabMapping {
-  field: string
-  tab: string
+interface FieldTabMapping<TabsType extends string, FieldsType extends string> {
+  field: FieldsType
+  tab: TabsType
 }
 
-interface UseFormTabStateOptions {
-  fieldTabMap: FieldTabMapping[]
-  defaultTab?: string
+interface UseFormTabStateOptions<
+  TabsType extends string,
+  FieldsType extends string,
+> {
+  fieldTabMap: FieldTabMapping<TabsType, FieldsType>[]
+  defaultTab: TabsType
 }
 
-interface UseFormTabStateReturn {
-  activeTab: string
-  setActiveTab: (tab: string) => void
+interface UseFormTabStateReturn<TabsType extends string> {
+  activeTab: TabsType
+  setActiveTab: (tab: TabsType) => void
   showFieldError: (fieldName: string) => void
   activateTabWithError: (errors: Record<string, unknown>) => void
 }
 
-export function useFormTabState({
+export function useFormTabState<
+  TabsType extends string,
+  FieldsType extends string,
+>({
   fieldTabMap,
-  defaultTab = 'configuration',
-}: UseFormTabStateOptions): UseFormTabStateReturn {
-  const [activeTab, setActiveTab] = useState(defaultTab)
+  defaultTab,
+}: UseFormTabStateOptions<
+  TabsType,
+  FieldsType
+>): UseFormTabStateReturn<TabsType> {
+  const [activeTab, setActiveTab] = useState<TabsType>(defaultTab)
 
   const showFieldError = (fieldName: string) => {
     const tabForField = fieldTabMap.find(

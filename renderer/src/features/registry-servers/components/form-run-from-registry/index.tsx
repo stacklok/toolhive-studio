@@ -80,6 +80,7 @@ export function FormRunFromRegistry({
   })
   const { activeTab, setActiveTab, activateTabWithError } = useFormTabState({
     fieldTabMap: FIELD_TAB_MAP,
+    defaultTab: 'configuration',
   })
 
   useEffect(() => {
