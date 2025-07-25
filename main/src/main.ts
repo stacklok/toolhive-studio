@@ -519,7 +519,14 @@ ipcMain.handle('install-update-and-restart', async () => {
   tearingDown = true
   isUpdateInProgress = true
 
-  // Stop ToolHive and servers immediately without graceful shutdown
+  app.removeAllListeners('before-quit')
+  app.removeAllListeners('will-quit')
+
+  log.info('🛑 Starting graceful shutdown before update...')
+  mainWindow?.webContents.send('graceful-exit')
+
+  await delay(500)
+
   try {
     const port = getToolhivePort()
     if (port) {
@@ -538,6 +545,9 @@ ipcMain.handle('install-update-and-restart', async () => {
   tray?.destroy()
 
   // Install update and restart
+  log.info(
+    '[restart from toast] all cleaned up, calling autoUpdater.quitAndInstall()...'
+  )
   autoUpdater.quitAndInstall()
   return { success: true }
 })
