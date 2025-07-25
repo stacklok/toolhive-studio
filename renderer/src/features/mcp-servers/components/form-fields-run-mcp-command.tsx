@@ -34,13 +34,13 @@ export function FormFieldsRunMcpCommand({
         control={form.control}
         name="type"
         render={({ field }) => (
-          <FormItem className="space-y-3">
-            <div className="text-sm font-medium">Server type</div>
+          <FormItem className="mb-8">
+            <FormLabel className="mb-2">Server type</FormLabel>
             <FormControl>
               <RadioGroup
                 onValueChange={field.onChange}
                 defaultValue={field.value}
-                className="grid grid-cols-2 gap-4"
+                className="flex gap-6"
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="docker_image" id="docker_image" />
