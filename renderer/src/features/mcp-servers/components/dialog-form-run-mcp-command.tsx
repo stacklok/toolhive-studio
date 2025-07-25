@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
@@ -63,6 +63,13 @@ export function DialogFormRunMcpServerWithCommand({
   const { activeTab, setActiveTab, activateTabWithError } = useFormTabState({
     fieldTabMap: FIELD_TAB_MAP,
   })
+
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab('configuration')
+    }
+  }, [isOpen, setActiveTab])
+
   const {
     installServerMutation,
     checkServerStatus,

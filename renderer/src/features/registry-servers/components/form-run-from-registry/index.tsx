@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
@@ -81,6 +81,13 @@ export function FormRunFromRegistry({
   const { activeTab, setActiveTab, activateTabWithError } = useFormTabState({
     fieldTabMap: FIELD_TAB_MAP,
   })
+
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab('configuration')
+    }
+  }, [isOpen, setActiveTab])
+
   const { data } = useQuery({
     ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
   })
