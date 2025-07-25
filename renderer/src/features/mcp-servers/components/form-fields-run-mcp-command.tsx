@@ -42,29 +42,18 @@ export function FormFieldsRunMcpCommand({
                 defaultValue={field.value}
                 className="flex gap-6"
               >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="docker_image" id="docker_image" />
-                  <label
-                    htmlFor="docker_image"
-                    className="text-sm leading-none font-medium
-                      peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Docker image
-                  </label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem
-                    value="package_manager"
-                    id="package_manager"
-                  />
-                  <label
-                    htmlFor="package_manager"
-                    className="text-sm leading-none font-medium
-                      peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Package manager
-                  </label>
-                </div>
+                <FormItem className="flex items-center space-x-2">
+                  <FormControl>
+                    <RadioGroupItem value="docker_image" />
+                  </FormControl>
+                  <FormLabel className="font-normal">Docker image</FormLabel>
+                </FormItem>
+                <FormItem className="flex items-center space-x-2">
+                  <FormControl>
+                    <RadioGroupItem value="package_manager" />
+                  </FormControl>
+                  <FormLabel className="font-normal">Package manager</FormLabel>
+                </FormItem>
               </RadioGroup>
             </FormControl>
             <FormMessage />
