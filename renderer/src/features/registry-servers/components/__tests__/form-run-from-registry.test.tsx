@@ -17,14 +17,20 @@ vi.mock('../../hooks/use-run-from-registry.tsx', () => ({
   useRunFromRegistry: vi.fn(),
 }))
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      gcTime: 0,
-      staleTime: 0,
+const renderWithProviders = (component: React.ReactElement) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        gcTime: 0,
+        staleTime: 0,
+      },
     },
-  },
-})
+  })
+
+  return render(
+    <QueryClientProvider client={queryClient}>{component}</QueryClientProvider>
+  )
+}
 
 const REGISTRY_SERVER: RegistryImageMetadata = {
   name: 'foo-bar-server',
@@ -101,14 +107,12 @@ describe('FormRunFromRegistry', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -145,14 +149,12 @@ describe('FormRunFromRegistry', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -189,14 +191,12 @@ describe('FormRunFromRegistry', () => {
     let server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
     const mockOnOpenChange = vi.fn()
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={mockOnOpenChange}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={mockOnOpenChange}
+        server={server}
+      />
     )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -244,14 +244,12 @@ describe('FormRunFromRegistry', () => {
     })
     server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -293,14 +291,12 @@ describe('FormRunFromRegistry', () => {
     server = { ...REGISTRY_SERVER }
     server.args = ['stdio']
     server.env_vars = ENV_VARS_OPTIONAL
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -346,14 +342,12 @@ describe('FormRunFromRegistry', () => {
     })
     server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -407,14 +401,12 @@ describe('FormRunFromRegistry', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_REQUIRED
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -465,14 +457,12 @@ describe('FormRunFromRegistry', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_REQUIRED
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -527,14 +517,12 @@ describe('FormRunFromRegistry', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -579,14 +567,12 @@ describe('FormRunFromRegistry', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -626,14 +612,12 @@ describe('FormRunFromRegistry', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -695,14 +679,12 @@ describe('FormRunFromRegistry', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={mockOnOpenChange}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={mockOnOpenChange}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -751,14 +733,12 @@ describe('FormRunFromRegistry', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -808,14 +788,12 @@ describe('FormRunFromRegistry', () => {
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -855,14 +833,12 @@ describe('Allowed Hosts field', () => {
   it('renders Allowed Hosts field in the network isolation tab when enabled', async () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -888,14 +864,12 @@ describe('Allowed Hosts field', () => {
   it('allows adding, editing, and removing host entries', async () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -928,14 +902,12 @@ describe('Allowed Hosts field', () => {
   it('validates host format (valid domain or subdomain, can start with a dot)', async () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -991,14 +963,12 @@ describe('Allowed Hosts field', () => {
     })
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -1045,14 +1015,12 @@ describe('Allowed Hosts field', () => {
   it('is empty by default and can handle multiple hosts', async () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -1082,14 +1050,12 @@ describe('Network Isolation Tab Activation', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -1128,14 +1094,12 @@ describe('Network Isolation Tab Activation', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_REQUIRED // Make configuration tab fields required
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -1170,14 +1134,12 @@ describe('CommandArgumentsField', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -1196,14 +1158,12 @@ describe('CommandArgumentsField', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -1222,14 +1182,12 @@ describe('CommandArgumentsField', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -1258,14 +1216,12 @@ describe('CommandArgumentsField', () => {
     server.env_vars = ENV_VARS_OPTIONAL
     server.args = ['--stdio']
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -1282,14 +1238,12 @@ describe('CommandArgumentsField', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -1308,14 +1262,12 @@ describe('CommandArgumentsField', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
