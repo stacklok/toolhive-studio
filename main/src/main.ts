@@ -81,12 +81,12 @@ autoUpdater.on('update-downloaded', (_, __, releaseName) => {
   if (mainWindow.isMinimized()) {
     mainWindow.restore()
   }
-  mainWindow.focus()
-  mainWindow.show()
 
   const dialogOpts = {
     type: 'info' as const,
     buttons: ['Restart', 'Later'],
+    cancelId: 1,
+    defaultId: 0,
     title: `Release ${releaseName}`,
     message:
       process.platform === 'darwin'
@@ -103,7 +103,6 @@ autoUpdater.on('update-downloaded', (_, __, releaseName) => {
     .showMessageBox(mainWindow, dialogOpts)
     .then(async (returnValue) => {
       if (returnValue.response === 0) {
-        log.debug('User clicked: Restart')
         isUpdateInProgress = true
 
         log.info('🛑 Removing quit listeners to avoid interference')
