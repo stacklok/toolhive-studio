@@ -30,11 +30,9 @@ import {
   type FieldTabMapping,
 } from '@/common/hooks/use-form-tab-state'
 
-// Type definitions - specific to this component
 type Tab = 'configuration' | 'network-isolation'
 type Field = keyof FormSchemaRunFromRegistry
 
-// Field to tab mapping for form validation
 const FIELD_TAB_MAP = {
   serverName: 'configuration',
   cmd_arguments: 'configuration',
@@ -43,7 +41,7 @@ const FIELD_TAB_MAP = {
   allowedHosts: 'network-isolation',
   allowedPorts: 'network-isolation',
   networkIsolation: 'network-isolation',
-} satisfies FieldTabMapping<Tab, Field>
+} as const satisfies FieldTabMapping<Tab, Field>
 
 interface FormRunFromRegistryProps {
   server: RegistryImageMetadata | null
