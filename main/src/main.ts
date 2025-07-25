@@ -8,6 +8,7 @@ import {
   shell,
   autoUpdater,
   dialog,
+  globalShortcut,
 } from 'electron'
 import path from 'node:path'
 import { updateElectronApp } from 'update-electron-app'
@@ -15,6 +16,7 @@ import { existsSync, readFile } from 'node:fs'
 import started from 'electron-squirrel-startup'
 import * as Sentry from '@sentry/electron/main'
 import { initTray, updateTrayStatus } from './system-tray'
+import { showInDock, hideWindow } from './dock-utils'
 import { setAutoLaunch, getAutoLaunchStatus } from './auto-launch'
 import { createApplicationMenu } from './menu'
 import { getCspString } from './csp'
@@ -285,12 +287,15 @@ function createWindow() {
 
   // Minimize-to-tray instead of close
   mainWindow.on('minimize', () => {
-    if (shouldStartHidden || tray) mainWindow.hide()
+    if (shouldStartHidden || tray) {
+      hideWindow(mainWindow)
+    }
   })
+
   mainWindow.on('close', (event) => {
     if (!isQuitting && tray) {
       event.preventDefault()
-      mainWindow.hide()
+      hideWindow(mainWindow)
     }
   })
 
@@ -332,12 +337,23 @@ app.whenReady().then(async () => {
   } catch (error) {
     log.error('Failed to initialize system tray: ', error)
   }
-
   // Start ToolHive with tray reference
   await startToolhive(tray || undefined)
 
   // Create main window
   mainWindow = createWindow()
+
+  // Register global shortcut for CmdOrCtrl+Q to hide window (same as CmdOrCtrl+H)
+  try {
+    globalShortcut.register('CmdOrCtrl+Q', () => {
+      if (mainWindow) {
+        hideWindow(mainWindow)
+      }
+    })
+    log.info('Global shortcut CmdOrCtrl+Q registered successfully')
+  } catch (error) {
+    log.error('Failed to register global shortcut: ', error)
+  }
 
   // Setup CSP headers
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
@@ -380,6 +396,7 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     mainWindow = createWindow()
   } else {
+    showInDock()
     mainWindow?.show()
   }
 })
@@ -458,12 +475,15 @@ ipcMain.handle('set-auto-launch', (_event, enabled: boolean) => {
 })
 
 ipcMain.handle('show-app', () => {
+  showInDock()
   mainWindow?.show()
   mainWindow?.focus()
 })
 
 ipcMain.handle('hide-app', () => {
-  mainWindow?.hide()
+  if (mainWindow) {
+    hideWindow(mainWindow)
+  }
 })
 
 ipcMain.handle('quit-app', (e) => {
