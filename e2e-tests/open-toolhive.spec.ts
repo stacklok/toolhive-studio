@@ -65,6 +65,26 @@ test('network isolation form', async ({ window }) => {
       name: /install server/i,
     })
     .click()
+
+  // Switch to Network Isolation tab
+  await window.getByRole('tab', { name: /network isolation/i }).click()
+
+  // Enable network isolation
+  await window
+    .getByRole('switch', { name: /enable outbound network filtering/i })
+    .click()
+
+  // Add wikipedia.org to allowed hosts
+  await window.getByRole('button', { name: /add a host/i }).click()
+  await window.getByRole('textbox', { name: /host 1/i }).fill('wikipedia.org')
+
+  // Add google.com to allowed hosts
+  await window.getByRole('button', { name: /add a host/i }).click()
+  await window.getByRole('textbox', { name: /host 2/i }).fill('google.com')
+
+  // Switch back to Configuration tab to submit
+  await window.getByRole('tab', { name: /configuration/i }).click()
+
   await window
     .getByRole('button', {
       name: /install server/i,
