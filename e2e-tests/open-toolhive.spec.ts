@@ -5,7 +5,7 @@ test('app starts and stops properly', async ({ window }) => {
     name: /add your first mcp server/i,
   })
   await header.waitFor()
-  expect(header).toBeVisible()
+  await expect(header).toBeVisible()
 })
 
 test('install & uninstall fetch', async ({ window }) => {
@@ -50,5 +50,5 @@ test('install & uninstall fetch', async ({ window }) => {
     name: /add your first mcp server/i,
   })
   await header.waitFor()
-  expect(header).toBeVisible()
+  await expect(header).toBeVisible()
 })

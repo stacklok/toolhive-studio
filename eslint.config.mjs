@@ -3,6 +3,7 @@ import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
+import playwright from 'eslint-plugin-playwright'
 
 export default tseslint.config(
   {
@@ -41,5 +42,12 @@ export default tseslint.config(
       ecmaVersion: 2020,
       globals: globals.node,
     },
-  }
+  },
+  {
+    ...playwright.configs['flat/recommended'],
+    files: ['./e2e-tests/**/*.spec.ts'],
+    rules: {
+      ...playwright.configs['flat/recommended'].rules,
+    },
+  },
 )
