@@ -1,15 +1,23 @@
 import { useState } from 'react'
 
-interface FieldTabMapping<TabsType extends string, FieldsType extends string> {
+interface FieldTabMappingItem<
+  TabsType extends string,
+  FieldsType extends string,
+> {
   field: FieldsType
   tab: TabsType
 }
+
+type FieldTabMapping<
+  TabsType extends string,
+  FieldsType extends string,
+> = FieldTabMappingItem<TabsType, FieldsType>[]
 
 interface UseFormTabStateOptions<
   TabsType extends string,
   FieldsType extends string,
 > {
-  fieldTabMap: FieldTabMapping<TabsType, FieldsType>[]
+  fieldTabMap: FieldTabMapping<TabsType, FieldsType>
   defaultTab: TabsType
 }
 
@@ -67,3 +75,5 @@ export function useFormTabState<
     resetTab,
   }
 }
+
+export type { FieldTabMapping, FieldTabMappingItem }

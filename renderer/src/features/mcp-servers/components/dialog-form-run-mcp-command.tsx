@@ -25,7 +25,13 @@ import { useRunCustomServer } from '../hooks/use-run-custom-server'
 import { LoadingStateAlert } from '@/common/components/secrets/loading-state-alert'
 import { AlertErrorFormSubmission } from '@/common/components/workloads/alert-error-form-submission'
 import { Tabs, TabsList, TabsTrigger } from '@/common/components/ui/tabs'
-import { useFormTabState } from '@/common/hooks/use-form-tab-state'
+import {
+  useFormTabState,
+  type FieldTabMapping,
+} from '@/common/hooks/use-form-tab-state'
+
+// Type definition for tabs - specific to this component
+type Tab = 'configuration' | 'network-isolation'
 
 import { NetworkIsolationTabContent } from './network-isolation-tab-content'
 
@@ -44,7 +50,7 @@ const FIELD_TAB_MAP = [
   { field: 'allowedHosts', tab: 'network-isolation' },
   { field: 'allowedPorts', tab: 'network-isolation' },
   { field: 'networkIsolation', tab: 'network-isolation' },
-]
+] satisfies FieldTabMapping<Tab, string>
 
 export function DialogFormRunMcpServerWithCommand({
   isOpen,
@@ -61,7 +67,7 @@ export function DialogFormRunMcpServerWithCommand({
     secretsCount: number
   } | null>(null)
   const { activeTab, setActiveTab, activateTabWithError, resetTab } =
-    useFormTabState({
+    useFormTabState<Tab, string>({
       fieldTabMap: FIELD_TAB_MAP,
       defaultTab: 'configuration',
     })
@@ -163,7 +169,7 @@ export function DialogFormRunMcpServerWithCommand({
                 <Tabs
                   className="mb-6 w-full px-6"
                   value={activeTab}
-                  onValueChange={setActiveTab}
+                  onValueChange={(value: string) => setActiveTab(value as Tab)}
                 >
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="configuration">
