@@ -1,17 +1,9 @@
 import { useState } from 'react'
 
-interface FieldTabMappingItem<
-  TabsType extends string,
-  FieldsType extends string,
-> {
-  field: FieldsType
-  tab: TabsType
-}
-
 type FieldTabMapping<
   TabsType extends string,
   FieldsType extends string,
-> = FieldTabMappingItem<TabsType, FieldsType>[]
+> = Record<FieldsType, TabsType>
 
 interface UseFormTabStateOptions<
   TabsType extends string,
@@ -42,9 +34,7 @@ export function useFormTabState<
   const [activeTab, setActiveTab] = useState<TabsType>(defaultTab)
 
   const showFieldError = (fieldName: string) => {
-    const tabForField = fieldTabMap.find(
-      ({ field }) => field === fieldName
-    )?.tab
+    const tabForField = fieldTabMap[fieldName as FieldsType]
     if (tabForField) {
       setActiveTab(tabForField)
     }
@@ -53,13 +43,18 @@ export function useFormTabState<
   const activateTabWithError = (errors: Record<string, unknown>) => {
     const errorKeys = Object.keys(errors)
     // Extract root field name from error key (handles dot and bracket notation)
-    const getRootField = (key: string) => key.split(/[.[]/)[0]
+    const getRootField = (key: string): string => key.split(/[.[]/)[0] || key
     // Find the first tab that has an error
-    const tabWithError = fieldTabMap.find(({ field }) =>
-      errorKeys.some((key) => getRootField(key) === field)
-    )?.tab
+    const tabWithError = errorKeys.find((key) => {
+      const rootField = getRootField(key)
+      return rootField in fieldTabMap
+    })
     if (tabWithError) {
-      setActiveTab(tabWithError)
+      const rootField = getRootField(tabWithError)
+      if (rootField && rootField.length > 0 && rootField in fieldTabMap) {
+        const tab = fieldTabMap[rootField as FieldsType]
+        setActiveTab(tab)
+      }
     }
   }
 
@@ -76,4 +71,4 @@ export function useFormTabState<
   }
 }
 
-export type { FieldTabMapping, FieldTabMappingItem }
+export type { FieldTabMapping }

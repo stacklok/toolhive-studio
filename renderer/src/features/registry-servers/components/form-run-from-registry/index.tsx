@@ -35,15 +35,15 @@ type Tab = 'configuration' | 'network-isolation'
 type Field = keyof FormSchemaRunFromRegistry
 
 // Field to tab mapping for form validation
-const FIELD_TAB_MAP = [
-  { field: 'serverName', tab: 'configuration' },
-  { field: 'cmd_arguments', tab: 'configuration' },
-  { field: 'secrets', tab: 'configuration' },
-  { field: 'envVars', tab: 'configuration' },
-  { field: 'allowedHosts', tab: 'network-isolation' },
-  { field: 'allowedPorts', tab: 'network-isolation' },
-  { field: 'networkIsolation', tab: 'network-isolation' },
-] satisfies FieldTabMapping<Tab, Field>
+const FIELD_TAB_MAP = {
+  serverName: 'configuration',
+  cmd_arguments: 'configuration',
+  secrets: 'configuration',
+  envVars: 'configuration',
+  allowedHosts: 'network-isolation',
+  allowedPorts: 'network-isolation',
+  networkIsolation: 'network-isolation',
+} satisfies FieldTabMapping<Tab, Field>
 
 interface FormRunFromRegistryProps {
   server: RegistryImageMetadata | null

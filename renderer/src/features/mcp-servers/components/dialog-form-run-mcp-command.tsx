@@ -37,21 +37,21 @@ type Field = CommonFields | VariantSpecificFields
 
 import { NetworkIsolationTabContent } from './network-isolation-tab-content'
 
-const FIELD_TAB_MAP = [
-  { field: 'name', tab: 'configuration' },
-  { field: 'transport', tab: 'configuration' },
-  { field: 'type', tab: 'configuration' },
-  { field: 'image', tab: 'configuration' },
-  { field: 'protocol', tab: 'configuration' },
-  { field: 'package_name', tab: 'configuration' },
-  { field: 'target_port', tab: 'configuration' },
-  { field: 'cmd_arguments', tab: 'configuration' },
-  { field: 'envVars', tab: 'configuration' },
-  { field: 'secrets', tab: 'configuration' },
-  { field: 'allowedHosts', tab: 'network-isolation' },
-  { field: 'allowedPorts', tab: 'network-isolation' },
-  { field: 'networkIsolation', tab: 'network-isolation' },
-] satisfies FieldTabMapping<Tab, Field>
+const FIELD_TAB_MAP = {
+  name: 'configuration',
+  transport: 'configuration',
+  type: 'configuration',
+  image: 'configuration',
+  protocol: 'configuration',
+  package_name: 'configuration',
+  target_port: 'configuration',
+  cmd_arguments: 'configuration',
+  envVars: 'configuration',
+  secrets: 'configuration',
+  allowedHosts: 'network-isolation',
+  allowedPorts: 'network-isolation',
+  networkIsolation: 'network-isolation',
+} satisfies FieldTabMapping<Tab, Field>
 
 export function DialogFormRunMcpServerWithCommand({
   isOpen,
