@@ -30,8 +30,16 @@ import {
   type FieldTabMapping,
 } from '@/common/hooks/use-form-tab-state'
 
-// Type definition for tabs - specific to this component
+// Type definitions - specific to this component
 type Tab = 'configuration' | 'network-isolation'
+type Field =
+  | 'serverName'
+  | 'cmd_arguments'
+  | 'secrets'
+  | 'envVars'
+  | 'allowedHosts'
+  | 'allowedPorts'
+  | 'networkIsolation'
 
 // Field to tab mapping for form validation
 const FIELD_TAB_MAP = [
@@ -42,7 +50,7 @@ const FIELD_TAB_MAP = [
   { field: 'allowedHosts', tab: 'network-isolation' },
   { field: 'allowedPorts', tab: 'network-isolation' },
   { field: 'networkIsolation', tab: 'network-isolation' },
-] satisfies FieldTabMapping<Tab, string>
+] satisfies FieldTabMapping<Tab, Field>
 
 interface FormRunFromRegistryProps {
   server: RegistryImageMetadata | null
@@ -85,7 +93,7 @@ export function FormRunFromRegistry({
     },
   })
   const { activeTab, setActiveTab, activateTabWithError, resetTab } =
-    useFormTabState<Tab, string>({
+    useFormTabState<Tab, Field>({
       fieldTabMap: FIELD_TAB_MAP,
       defaultTab: 'configuration',
     })

@@ -30,8 +30,22 @@ import {
   type FieldTabMapping,
 } from '@/common/hooks/use-form-tab-state'
 
-// Type definition for tabs - specific to this component
+// Type definitions - specific to this component
 type Tab = 'configuration' | 'network-isolation'
+type Field =
+  | 'name'
+  | 'transport'
+  | 'type'
+  | 'image'
+  | 'protocol'
+  | 'package_name'
+  | 'target_port'
+  | 'cmd_arguments'
+  | 'envVars'
+  | 'secrets'
+  | 'allowedHosts'
+  | 'allowedPorts'
+  | 'networkIsolation'
 
 import { NetworkIsolationTabContent } from './network-isolation-tab-content'
 
@@ -50,7 +64,7 @@ const FIELD_TAB_MAP = [
   { field: 'allowedHosts', tab: 'network-isolation' },
   { field: 'allowedPorts', tab: 'network-isolation' },
   { field: 'networkIsolation', tab: 'network-isolation' },
-] satisfies FieldTabMapping<Tab, string>
+] satisfies FieldTabMapping<Tab, Field>
 
 export function DialogFormRunMcpServerWithCommand({
   isOpen,
@@ -67,7 +81,7 @@ export function DialogFormRunMcpServerWithCommand({
     secretsCount: number
   } | null>(null)
   const { activeTab, setActiveTab, activateTabWithError, resetTab } =
-    useFormTabState<Tab, string>({
+    useFormTabState<Tab, Field>({
       fieldTabMap: FIELD_TAB_MAP,
       defaultTab: 'configuration',
     })
