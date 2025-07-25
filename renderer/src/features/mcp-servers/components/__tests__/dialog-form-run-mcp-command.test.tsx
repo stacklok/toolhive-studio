@@ -19,14 +19,24 @@ const mockUseRunCustomServer = vi.mocked(useRunCustomServer)
 window.HTMLElement.prototype.hasPointerCapture = vi.fn()
 window.HTMLElement.prototype.scrollIntoView = vi.fn()
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      gcTime: 0,
-      staleTime: 0,
+const renderWithProviders = (component: React.ReactElement) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        gcTime: 0,
+        staleTime: 0,
+      },
     },
-  },
-})
+  })
+
+  return render(
+    <QueryClientProvider client={queryClient}>{component}</QueryClientProvider>
+  )
+}
+
+const Wrapper = ({ children }: { children: React.ReactNode }) => (
+  <Dialog open>{children}</Dialog>
+)
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -59,12 +69,10 @@ beforeEach(() => {
 
 describe('DialogFormRunMcpServerWithCommand', () => {
   it('renders form fields correctly for docker image', async () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <Dialog open>
-          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
-        </Dialog>
-      </QueryClientProvider>
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+      </Wrapper>
     )
 
     await waitFor(() => {
@@ -103,12 +111,10 @@ describe('DialogFormRunMcpServerWithCommand', () => {
       isPendingSecrets: false,
     })
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <Dialog open>
-          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
-        </Dialog>
-      </QueryClientProvider>
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+      </Wrapper>
     )
 
     await waitFor(() => {
@@ -155,12 +161,10 @@ describe('DialogFormRunMcpServerWithCommand', () => {
       isPendingSecrets: false,
     })
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <Dialog open>
-          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
-        </Dialog>
-      </QueryClientProvider>
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+      </Wrapper>
     )
 
     await waitFor(() => {
@@ -213,12 +217,10 @@ describe('DialogFormRunMcpServerWithCommand', () => {
       isPendingSecrets: false,
     })
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <Dialog open>
-          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
-        </Dialog>
-      </QueryClientProvider>
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+      </Wrapper>
     )
 
     await waitFor(() => {
@@ -299,12 +301,10 @@ describe('DialogFormRunMcpServerWithCommand', () => {
       isPendingSecrets: false,
     })
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <Dialog open>
-          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
-        </Dialog>
-      </QueryClientProvider>
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+      </Wrapper>
     )
 
     await waitFor(() => {
@@ -341,12 +341,10 @@ describe('DialogFormRunMcpServerWithCommand', () => {
       isPendingSecrets: false,
     })
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <Dialog open>
-          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
-        </Dialog>
-      </QueryClientProvider>
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+      </Wrapper>
     )
 
     await waitFor(() => {
@@ -386,15 +384,13 @@ describe('DialogFormRunMcpServerWithCommand', () => {
       isPendingSecrets: false,
     })
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <Dialog open>
-          <DialogFormRunMcpServerWithCommand
-            isOpen
-            onOpenChange={mockOnOpenChange}
-          />
-        </Dialog>
-      </QueryClientProvider>
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRunMcpServerWithCommand
+          isOpen
+          onOpenChange={mockOnOpenChange}
+        />
+      </Wrapper>
     )
 
     await waitFor(() => {
@@ -435,15 +431,13 @@ describe('DialogFormRunMcpServerWithCommand', () => {
   it('can cancel and close dialog', async () => {
     const mockOnOpenChange = vi.fn()
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <Dialog open>
-          <DialogFormRunMcpServerWithCommand
-            isOpen
-            onOpenChange={mockOnOpenChange}
-          />
-        </Dialog>
-      </QueryClientProvider>
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRunMcpServerWithCommand
+          isOpen
+          onOpenChange={mockOnOpenChange}
+        />
+      </Wrapper>
     )
 
     await waitFor(() => {
@@ -465,12 +459,10 @@ describe('DialogFormRunMcpServerWithCommand', () => {
         isPendingSecrets: false,
       })
 
-      render(
-        <QueryClientProvider client={queryClient}>
-          <Dialog open>
-            <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
-          </Dialog>
-        </QueryClientProvider>
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+        </Wrapper>
       )
 
       await waitFor(() => {
@@ -532,12 +524,10 @@ describe('DialogFormRunMcpServerWithCommand', () => {
         isPendingSecrets: false,
       })
 
-      render(
-        <QueryClientProvider client={queryClient}>
-          <Dialog open>
-            <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
-          </Dialog>
-        </QueryClientProvider>
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+        </Wrapper>
       )
 
       await waitFor(() => {
@@ -573,15 +563,13 @@ describe('DialogFormRunMcpServerWithCommand', () => {
     it('resets tab to configuration when canceling', async () => {
       const mockOnOpenChange = vi.fn()
 
-      render(
-        <QueryClientProvider client={queryClient}>
-          <Dialog open>
-            <DialogFormRunMcpServerWithCommand
-              isOpen
-              onOpenChange={mockOnOpenChange}
-            />
-          </Dialog>
-        </QueryClientProvider>
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormRunMcpServerWithCommand
+            isOpen
+            onOpenChange={mockOnOpenChange}
+          />
+        </Wrapper>
       )
 
       await waitFor(() => {
@@ -596,15 +584,13 @@ describe('DialogFormRunMcpServerWithCommand', () => {
 
       expect(mockOnOpenChange).toHaveBeenCalledWith(false)
 
-      render(
-        <QueryClientProvider client={queryClient}>
-          <Dialog open>
-            <DialogFormRunMcpServerWithCommand
-              isOpen
-              onOpenChange={mockOnOpenChange}
-            />
-          </Dialog>
-        </QueryClientProvider>
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormRunMcpServerWithCommand
+            isOpen
+            onOpenChange={mockOnOpenChange}
+          />
+        </Wrapper>
       )
 
       await waitFor(() => {
@@ -616,12 +602,10 @@ describe('DialogFormRunMcpServerWithCommand', () => {
     })
 
     it('activates the network isolation tab if a validation error occurs there while on the configuration tab', async () => {
-      render(
-        <QueryClientProvider client={queryClient}>
-          <Dialog open>
-            <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
-          </Dialog>
-        </QueryClientProvider>
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+        </Wrapper>
       )
 
       await waitFor(() => {
@@ -665,12 +649,10 @@ describe('DialogFormRunMcpServerWithCommand', () => {
     })
 
     it('activates the configuration tab if a validation error occurs there while on the network isolation tab', async () => {
-      render(
-        <QueryClientProvider client={queryClient}>
-          <Dialog open>
-            <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
-          </Dialog>
-        </QueryClientProvider>
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+        </Wrapper>
       )
 
       await waitFor(() => {
@@ -690,12 +672,10 @@ describe('DialogFormRunMcpServerWithCommand', () => {
     })
 
     it('shows alert when network isolation is enabled but no hosts or ports are configured', async () => {
-      render(
-        <QueryClientProvider client={queryClient}>
-          <Dialog open>
-            <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
-          </Dialog>
-        </QueryClientProvider>
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+        </Wrapper>
       )
 
       await waitFor(() => {
@@ -742,12 +722,10 @@ describe('DialogFormRunMcpServerWithCommand', () => {
       isPendingSecrets: false,
     })
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <Dialog open>
-          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
-        </Dialog>
-      </QueryClientProvider>
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+      </Wrapper>
     )
 
     await waitFor(() => {
