@@ -79,12 +79,15 @@ autoUpdater.on('update-downloaded', (_, __, releaseName) => {
   }
 
   if (mainWindow.isMinimized()) {
+    log.info('MainWindow is minimized, restoring')
     mainWindow.restore()
   }
 
   const dialogOpts = {
     type: 'info' as const,
-    buttons: ['Restart', 'Later'],
+    buttons: ['Restart', 'Later', ''],
+    cancelId: 2,
+    defaultId: 1,
     title: `Release ${releaseName}`,
     message:
       process.platform === 'darwin'
@@ -101,7 +104,7 @@ autoUpdater.on('update-downloaded', (_, __, releaseName) => {
     .showMessageBox(mainWindow, dialogOpts)
     .then(async (returnValue) => {
       if (returnValue.response === 0) {
-        log.debug('User clicked: Restart')
+        log.info('User clicked: Restart')
         isUpdateInProgress = true
 
         log.info('🛑 Removing quit listeners to avoid interference')
@@ -135,14 +138,18 @@ autoUpdater.on('update-downloaded', (_, __, releaseName) => {
           app.relaunch()
           app.quit()
         }
-      } else {
+      } else if (returnValue.response === 1) {
+        log.info('User clicked: Later')
         isUpdateInProgress = false
-        log.info(
-          'User deferred update installation - showing toast notification'
-        )
         if (mainWindow) {
           mainWindow.webContents.send('update-downloaded')
         }
+      } else if (returnValue.response === 2) {
+        log.info(
+          'Dialog was closed/minimized without clicking any button - ignoring'
+        )
+        isUpdateInProgress = false
+        // Don't show toast notification - user explicitly closed the dialog
       }
     })
     .catch((error) => {
@@ -185,6 +192,7 @@ export async function blockQuit(source: string, event?: Electron.Event) {
         mainWindow.restore()
       }
 
+      log.info('Focusing window for graceful shutdown...')
       mainWindow.show()
       mainWindow.focus()
 
@@ -228,6 +236,7 @@ if (!gotTheLock) {
     // Someone tried to run a second instance, focus our window instead
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore()
+      log.info('Focusing window for second instance...')
       mainWindow.focus()
       mainWindow.show()
     }
@@ -389,6 +398,7 @@ app.on('will-finish-launching', () => {
 
 app.on('before-quit', (e) => {
   if (mainWindow) {
+    log.info('Showing window for before-quit...')
     mainWindow.show()
     mainWindow.focus()
     mainWindow.webContents.send('show-quit-confirmation')
@@ -457,6 +467,7 @@ ipcMain.handle('set-auto-launch', (_event, enabled: boolean) => {
 })
 
 ipcMain.handle('show-app', () => {
+  log.info('Showing window for show-app...')
   mainWindow?.show()
   mainWindow?.focus()
 })
