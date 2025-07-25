@@ -30,6 +30,8 @@ export default defineConfig({
   ],
   css: {
     postcss: {
+      // TODO: fix PostCSS plugin type incompatibility
+      // @ts-expect-error - PostCSS plugin type incompatibility
       plugins: [tailwindcss, autoprefixer],
     },
   },
