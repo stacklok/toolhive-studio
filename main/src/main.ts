@@ -81,8 +81,6 @@ autoUpdater.on('update-downloaded', (_, __, releaseName) => {
   if (mainWindow.isMinimized()) {
     mainWindow.restore()
   }
-  mainWindow.focus()
-  mainWindow.show()
 
   const dialogOpts = {
     type: 'info' as const,
