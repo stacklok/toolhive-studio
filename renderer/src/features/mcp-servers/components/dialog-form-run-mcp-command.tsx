@@ -30,26 +30,13 @@ import {
   type FieldTabMapping,
 } from '@/common/hooks/use-form-tab-state'
 
-// Type definitions - specific to this component
 type Tab = 'configuration' | 'network-isolation'
-type Field =
-  | 'name'
-  | 'transport'
-  | 'type'
-  | 'image'
-  | 'protocol'
-  | 'package_name'
-  | 'target_port'
-  | 'cmd_arguments'
-  | 'envVars'
-  | 'secrets'
-  | 'allowedHosts'
-  | 'allowedPorts'
-  | 'networkIsolation'
+type CommonFields = keyof FormSchemaRunMcpCommand
+type VariantSpecificFields = 'image' | 'protocol' | 'package_name'
+type Field = CommonFields | VariantSpecificFields
 
 import { NetworkIsolationTabContent } from './network-isolation-tab-content'
 
-// Field to tab mapping for form validation
 const FIELD_TAB_MAP = [
   { field: 'name', tab: 'configuration' },
   { field: 'transport', tab: 'configuration' },

@@ -32,14 +32,7 @@ import {
 
 // Type definitions - specific to this component
 type Tab = 'configuration' | 'network-isolation'
-type Field =
-  | 'serverName'
-  | 'cmd_arguments'
-  | 'secrets'
-  | 'envVars'
-  | 'allowedHosts'
-  | 'allowedPorts'
-  | 'networkIsolation'
+type Field = keyof FormSchemaRunFromRegistry
 
 // Field to tab mapping for form validation
 const FIELD_TAB_MAP = [
