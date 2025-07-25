@@ -5,7 +5,7 @@ test('app starts and stops properly', async ({ window }) => {
     name: /add your first mcp server/i,
   })
   await header.waitFor()
-  expect(header).toBeVisible()
+  await expect(header).toBeVisible()
 })
 
 test('install & uninstall server', async ({ window }) => {
@@ -34,13 +34,13 @@ test('install & uninstall server', async ({ window }) => {
   await window.getByRole('textbox', { name: /host 2/i }).fill('google.com')
 
   await window.getByRole('textbox', { name: /host 2/i }).fill('google')
-  expect(window.getByText(/invalid host format/i)).toBeVisible()
+  await expect(window.getByText(/invalid host format/i)).toBeVisible()
 
   await window.getByRole('textbox', { name: /host 2/i }).fill('google.com')
-  expect(window.getByText(/invalid host format/i)).not.toBeVisible()
+  await expect(window.getByText(/invalid host format/i)).not.toBeVisible()
 
   await window.getByRole('textbox', { name: /host 2/i }).fill('google')
-  expect(window.getByText(/invalid host format/i)).toBeVisible()
+  await expect(window.getByText(/invalid host format/i)).toBeVisible()
 
   await window.getByRole('tab', { name: /configuration/i }).click()
 
@@ -50,10 +50,16 @@ test('install & uninstall server', async ({ window }) => {
     })
     .click()
 
-  expect(window.getByText(/invalid host format/i)).toBeVisible()
+  await expect(window.getByText(/invalid host format/i)).toBeVisible()
 
   await window.getByRole('textbox', { name: /host 2/i }).fill('google.com')
-  expect(window.getByText(/invalid host format/i)).not.toBeVisible()
+  await expect(window.getByText(/invalid host format/i)).not.toBeVisible()
+
+  await window.getByRole('textbox', { name: /host 2/i }).fill('google')
+  await expect(window.getByText(/invalid host format/i)).toBeVisible()
+
+  await window.getByRole('textbox', { name: /host 2/i }).fill('google.com')
+  await expect(window.getByText(/invalid.*/i)).not.toBeVisible()
 
   await window
     .getByRole('button', {
@@ -86,5 +92,5 @@ test('install & uninstall server', async ({ window }) => {
     name: /add your first mcp server/i,
   })
   await header.waitFor()
-  expect(header).toBeVisible()
+  await expect(header).toBeVisible()
 })
