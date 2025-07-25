@@ -118,11 +118,16 @@ export function FormRunFromRegistry({
         value: e.default || '',
       })),
       networkIsolation: false,
-      allowedPorts:
-        server?.permissions?.network?.outbound?.allow_port?.map((port) =>
-          port.toString()
-        ) || [],
-      allowedHosts: server?.permissions?.network?.outbound?.allow_host || [],
+      allowedHosts: server?.permissions?.network?.outbound?.allow_host
+        ? server.permissions.network.outbound.allow_host.map((host) => ({
+            value: host,
+          }))
+        : [],
+      allowedPorts: server?.permissions?.network?.outbound?.allow_port
+        ? server.permissions.network.outbound.allow_port.map((port) => ({
+            value: port.toString(),
+          }))
+        : [],
     },
     reValidateMode: 'onChange',
     mode: 'onChange',

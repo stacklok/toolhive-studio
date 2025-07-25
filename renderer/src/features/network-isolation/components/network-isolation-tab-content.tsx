@@ -20,8 +20,8 @@ export function NetworkIsolationTabContent({
         const hosts = form.watch('allowedHosts') || []
         const ports = form.watch('allowedPorts') || []
         const showAlert =
-          !hosts.some((host) => host.trim() !== '') &&
-          !ports.some((port) => port.trim() !== '')
+          !hosts.some((host) => host.value.trim() !== '') &&
+          !ports.some((port) => port.value.trim() !== '')
         return (
           <div className="p-6">
             <div
@@ -54,13 +54,12 @@ export function NetworkIsolationTabContent({
                   name="allowedHosts"
                   render={() => (
                     <DynamicArrayField<FormSchemaRunFromRegistry>
-                      /*
-                         // @ts-expect-error no time to fix this */
                       name="allowedHosts"
                       label="Allowed hosts"
                       inputLabelPrefix="Host"
                       addButtonText="Add a host"
                       control={form.control}
+                      isValid={form.formState.isValid}
                       tooltipContent="Specify domain names or IP addresses. To include subdomains, use a leading period (“.”)"
                     />
                   )}
@@ -70,11 +69,10 @@ export function NetworkIsolationTabContent({
                   name="allowedPorts"
                   render={() => (
                     <DynamicArrayField<FormSchemaRunFromRegistry>
-                      /*
-                         // @ts-expect-error no time to fix this */
                       name="allowedPorts"
                       label="Allowed ports"
                       control={form.control}
+                      isValid={form.formState.isValid}
                       inputLabelPrefix="Port"
                       addButtonText="Add a port"
                       type="number"
