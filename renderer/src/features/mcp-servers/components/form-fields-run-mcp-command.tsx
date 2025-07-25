@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/common/components/ui/select'
 import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
-import { Tabs, TabsList, TabsTrigger } from '@/common/components/ui/tabs'
+import { RadioGroup, RadioGroupItem } from '@/common/components/ui/radio-group'
 import { CommandArgumentsField } from '@/common/components/workload-cmd-arg/command-arguments-field'
 
 export function FormFieldsRunMcpCommand({
@@ -34,16 +34,30 @@ export function FormFieldsRunMcpCommand({
         control={form.control}
         name="type"
         render={({ field }) => (
-          <Tabs
-            defaultValue={field.value}
-            onValueChange={field.onChange}
-            className="w-full"
-          >
-            <TabsList id={field.name} className="grid w-full grid-cols-2">
-              <TabsTrigger value="docker_image">Docker image</TabsTrigger>
-              <TabsTrigger value="package_manager">Package manager</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <FormItem className="mb-8">
+            <FormLabel className="mb-2">Server type</FormLabel>
+            <FormControl>
+              <RadioGroup
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                className="flex gap-6"
+              >
+                <FormItem className="flex items-center space-x-2">
+                  <FormControl>
+                    <RadioGroupItem value="docker_image" />
+                  </FormControl>
+                  <FormLabel className="font-normal">Docker image</FormLabel>
+                </FormItem>
+                <FormItem className="flex items-center space-x-2">
+                  <FormControl>
+                    <RadioGroupItem value="package_manager" />
+                  </FormControl>
+                  <FormLabel className="font-normal">Package manager</FormLabel>
+                </FormItem>
+              </RadioGroup>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
         )}
       />
 

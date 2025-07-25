@@ -24,6 +24,34 @@ import { FormFieldsArrayCustomSecrets } from './form-fields-array-custom-secrets
 import { useRunCustomServer } from '../hooks/use-run-custom-server'
 import { LoadingStateAlert } from '@/common/components/secrets/loading-state-alert'
 import { AlertErrorFormSubmission } from '@/common/components/workloads/alert-error-form-submission'
+import { Tabs, TabsList, TabsTrigger } from '@/common/components/ui/tabs'
+import {
+  useFormTabState,
+  type FieldTabMapping,
+} from '@/common/hooks/use-form-tab-state'
+
+type Tab = 'configuration' | 'network-isolation'
+type CommonFields = keyof FormSchemaRunMcpCommand
+type VariantSpecificFields = 'image' | 'protocol' | 'package_name'
+type Field = CommonFields | VariantSpecificFields
+
+import { NetworkIsolationTabContent } from './network-isolation-tab-content'
+
+const FIELD_TAB_MAP = {
+  name: 'configuration',
+  transport: 'configuration',
+  type: 'configuration',
+  image: 'configuration',
+  protocol: 'configuration',
+  package_name: 'configuration',
+  target_port: 'configuration',
+  cmd_arguments: 'configuration',
+  envVars: 'configuration',
+  secrets: 'configuration',
+  allowedHosts: 'network-isolation',
+  allowedPorts: 'network-isolation',
+  networkIsolation: 'network-isolation',
+} satisfies FieldTabMapping<Tab, Field>
 
 export function DialogFormRunMcpServerWithCommand({
   isOpen,
@@ -39,6 +67,12 @@ export function DialogFormRunMcpServerWithCommand({
     completedCount: number
     secretsCount: number
   } | null>(null)
+  const { activeTab, setActiveTab, activateTabWithError, resetTab } =
+    useFormTabState<Tab, Field>({
+      fieldTabMap: FIELD_TAB_MAP,
+      defaultTab: 'configuration',
+    })
+
   const {
     installServerMutation,
     checkServerStatus,
@@ -69,7 +103,12 @@ export function DialogFormRunMcpServerWithCommand({
     defaultValues: {
       type: 'docker_image',
       target_port: undefined,
+      networkIsolation: false,
+      allowedHosts: [],
+      allowedPorts: [],
     },
+    reValidateMode: 'onChange',
+    mode: 'onChange',
   })
 
   const onSubmitForm = (data: FormSchemaRunMcpCommand) => {
@@ -102,14 +141,19 @@ export function DialogFormRunMcpServerWithCommand({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
         className="p-0 sm:max-w-2xl"
-        onCloseAutoFocus={() => form.reset()}
+        onCloseAutoFocus={() => {
+          form.reset()
+          resetTab()
+        }}
         onInteractOutside={(e) => {
           // Prevent closing the dialog when clicking outside
           e.preventDefault()
         }}
       >
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmitForm)}>
+          <form
+            onSubmit={form.handleSubmit(onSubmitForm, activateTabWithError)}
+          >
             <DialogHeader className="mb-4 p-6">
               <DialogTitle>Custom MCP server</DialogTitle>
               <DialogDescription>
@@ -124,21 +168,42 @@ export function DialogFormRunMcpServerWithCommand({
               />
             )}
             {!isSubmitting && (
-              <div
-                className="relative max-h-[65dvh] space-y-4 overflow-y-auto
-                  px-6"
-              >
-                {error && (
-                  <AlertErrorFormSubmission
-                    error={error}
-                    isErrorSecrets={isErrorSecrets}
-                    onDismiss={() => setError(null)}
-                  />
+              <>
+                <Tabs
+                  className="mb-6 w-full px-6"
+                  value={activeTab}
+                  onValueChange={(value: string) => setActiveTab(value as Tab)}
+                >
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="configuration">
+                      Configuration
+                    </TabsTrigger>
+                    <TabsTrigger value="network-isolation">
+                      Network Isolation
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                {activeTab === 'configuration' && (
+                  <div
+                    className="relative max-h-[65dvh] space-y-4 overflow-y-auto
+                      px-6"
+                  >
+                    {error && (
+                      <AlertErrorFormSubmission
+                        error={error}
+                        isErrorSecrets={isErrorSecrets}
+                        onDismiss={() => setError(null)}
+                      />
+                    )}
+                    <FormFieldsRunMcpCommand form={form} />
+                    <FormFieldsArrayCustomSecrets form={form} />
+                    <FormFieldsArrayCustomEnvVars form={form} />
+                  </div>
                 )}
-                <FormFieldsRunMcpCommand form={form} />
-                <FormFieldsArrayCustomSecrets form={form} />
-                <FormFieldsArrayCustomEnvVars form={form} />
-              </div>
+                {activeTab === 'network-isolation' && (
+                  <NetworkIsolationTabContent form={form} />
+                )}
+              </>
             )}
 
             <DialogFooter className="p-6">
@@ -148,6 +213,7 @@ export function DialogFormRunMcpServerWithCommand({
                 disabled={isSubmitting}
                 onClick={() => {
                   onOpenChange(false)
+                  setActiveTab('configuration')
                 }}
               >
                 Cancel

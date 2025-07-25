@@ -3,9 +3,9 @@ import { Switch } from '@/common/components/ui/switch'
 import { Label } from '@/common/components/ui/label'
 import { Alert, AlertDescription } from '@/common/components/ui/alert'
 import { AlertTriangle } from 'lucide-react'
-import { DynamicArrayField } from '../dynamic-array-field'
+import { DynamicArrayField } from '../../registry-servers/components/dynamic-array-field'
 import type { UseFormReturn } from 'react-hook-form'
-import { type FormSchemaRunFromRegistry } from '../../lib/get-form-schema-run-from-registry'
+import { type FormSchemaRunFromRegistry } from '../../registry-servers/lib/get-form-schema-run-from-registry'
 
 export function NetworkIsolationTabContent({
   form,

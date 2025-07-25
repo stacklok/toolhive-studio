@@ -19,14 +19,24 @@ const mockUseRunCustomServer = vi.mocked(useRunCustomServer)
 window.HTMLElement.prototype.hasPointerCapture = vi.fn()
 window.HTMLElement.prototype.scrollIntoView = vi.fn()
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      gcTime: 0,
-      staleTime: 0,
+const renderWithProviders = (component: React.ReactElement) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        gcTime: 0,
+        staleTime: 0,
+      },
     },
-  },
-})
+  })
+
+  return render(
+    <QueryClientProvider client={queryClient}>{component}</QueryClientProvider>
+  )
+}
+
+const Wrapper = ({ children }: { children: React.ReactNode }) => (
+  <Dialog open>{children}</Dialog>
+)
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -59,12 +69,10 @@ beforeEach(() => {
 
 describe('DialogFormRunMcpServerWithCommand', () => {
   it('renders form fields correctly for docker image', async () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <Dialog open>
-          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
-        </Dialog>
-      </QueryClientProvider>
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+      </Wrapper>
     )
 
     await waitFor(() => {
@@ -82,7 +90,9 @@ describe('DialogFormRunMcpServerWithCommand', () => {
     // Check form fields
     expect(screen.getByLabelText('Name')).toBeInTheDocument()
     expect(screen.getByLabelText('Transport')).toBeInTheDocument()
-    expect(screen.getByLabelText('Docker image')).toBeInTheDocument()
+    expect(
+      screen.getByRole('textbox', { name: 'Docker image' })
+    ).toBeInTheDocument()
     expect(screen.getByLabelText('Command arguments')).toBeInTheDocument()
 
     // Check buttons
@@ -101,12 +111,10 @@ describe('DialogFormRunMcpServerWithCommand', () => {
       isPendingSecrets: false,
     })
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <Dialog open>
-          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
-        </Dialog>
-      </QueryClientProvider>
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+      </Wrapper>
     )
 
     await waitFor(() => {
@@ -118,7 +126,7 @@ describe('DialogFormRunMcpServerWithCommand', () => {
     await userEvent.click(screen.getByLabelText('Transport'))
     await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
     await userEvent.type(
-      screen.getByLabelText('Docker image'),
+      screen.getByRole('textbox', { name: 'Docker image' }),
       'ghcr.io/test/server'
     )
 
@@ -153,20 +161,20 @@ describe('DialogFormRunMcpServerWithCommand', () => {
       isPendingSecrets: false,
     })
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <Dialog open>
-          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
-        </Dialog>
-      </QueryClientProvider>
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+      </Wrapper>
     )
 
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Switch to package manager tab
-    await userEvent.click(screen.getByRole('tab', { name: 'Package manager' }))
+    // Switch to package manager radio button
+    await userEvent.click(
+      screen.getByRole('radio', { name: 'Package manager' })
+    )
 
     // Fill all fields
     await userEvent.type(screen.getByLabelText('Name'), 'npm-server')
@@ -209,12 +217,10 @@ describe('DialogFormRunMcpServerWithCommand', () => {
       isPendingSecrets: false,
     })
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <Dialog open>
-          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
-        </Dialog>
-      </QueryClientProvider>
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+      </Wrapper>
     )
 
     await waitFor(() => {
@@ -226,7 +232,7 @@ describe('DialogFormRunMcpServerWithCommand', () => {
     await userEvent.click(screen.getByLabelText('Transport'))
     await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
     await userEvent.type(
-      screen.getByLabelText('Docker image'),
+      screen.getByRole('textbox', { name: 'Docker image' }),
       'ghcr.io/test/server'
     )
 
@@ -295,12 +301,10 @@ describe('DialogFormRunMcpServerWithCommand', () => {
       isPendingSecrets: false,
     })
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <Dialog open>
-          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
-        </Dialog>
-      </QueryClientProvider>
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+      </Wrapper>
     )
 
     await waitFor(() => {
@@ -322,10 +326,9 @@ describe('DialogFormRunMcpServerWithCommand', () => {
         'aria-invalid',
         'true'
       )
-      expect(screen.getByLabelText('Docker image')).toHaveAttribute(
-        'aria-invalid',
-        'true'
-      )
+      expect(
+        screen.getByRole('textbox', { name: 'Docker image' })
+      ).toHaveAttribute('aria-invalid', 'true')
     })
   })
 
@@ -338,12 +341,10 @@ describe('DialogFormRunMcpServerWithCommand', () => {
       isPendingSecrets: false,
     })
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <Dialog open>
-          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
-        </Dialog>
-      </QueryClientProvider>
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+      </Wrapper>
     )
 
     await waitFor(() => {
@@ -355,7 +356,7 @@ describe('DialogFormRunMcpServerWithCommand', () => {
     await userEvent.click(screen.getByLabelText('Transport'))
     await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
     await userEvent.type(
-      screen.getByLabelText('Docker image'),
+      screen.getByRole('textbox', { name: 'Docker image' }),
       'ghcr.io/test/server'
     )
 
@@ -383,15 +384,13 @@ describe('DialogFormRunMcpServerWithCommand', () => {
       isPendingSecrets: false,
     })
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <Dialog open>
-          <DialogFormRunMcpServerWithCommand
-            isOpen
-            onOpenChange={mockOnOpenChange}
-          />
-        </Dialog>
-      </QueryClientProvider>
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRunMcpServerWithCommand
+          isOpen
+          onOpenChange={mockOnOpenChange}
+        />
+      </Wrapper>
     )
 
     await waitFor(() => {
@@ -403,7 +402,7 @@ describe('DialogFormRunMcpServerWithCommand', () => {
     await userEvent.click(screen.getByLabelText('Transport'))
     await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
     await userEvent.type(
-      screen.getByLabelText('Docker image'),
+      screen.getByRole('textbox', { name: 'Docker image' }),
       'ghcr.io/test/server'
     )
 
@@ -432,15 +431,13 @@ describe('DialogFormRunMcpServerWithCommand', () => {
   it('can cancel and close dialog', async () => {
     const mockOnOpenChange = vi.fn()
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <Dialog open>
-          <DialogFormRunMcpServerWithCommand
-            isOpen
-            onOpenChange={mockOnOpenChange}
-          />
-        </Dialog>
-      </QueryClientProvider>
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRunMcpServerWithCommand
+          isOpen
+          onOpenChange={mockOnOpenChange}
+        />
+      </Wrapper>
     )
 
     await waitFor(() => {
@@ -452,6 +449,270 @@ describe('DialogFormRunMcpServerWithCommand', () => {
     expect(mockOnOpenChange).toHaveBeenCalledWith(false)
   })
 
+  describe('Network Isolation', () => {
+    it('submits correct payload with network isolation enabled', async () => {
+      const mockInstallServerMutation = vi.fn()
+      mockUseRunCustomServer.mockReturnValue({
+        installServerMutation: mockInstallServerMutation,
+        checkServerStatus: vi.fn(),
+        isErrorSecrets: false,
+        isPendingSecrets: false,
+      })
+
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+        </Wrapper>
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      await userEvent.type(screen.getByLabelText('Name'), 'test-server')
+      await userEvent.click(screen.getByLabelText('Transport'))
+      await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
+      await userEvent.type(
+        screen.getByRole('textbox', { name: 'Docker image' }),
+        'ghcr.io/test/server'
+      )
+
+      const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+      await userEvent.click(networkTab)
+
+      const switchLabel = screen.getByLabelText(
+        'Enable outbound network filtering'
+      )
+      await userEvent.click(switchLabel)
+
+      const addHostBtn = screen.getByRole('button', { name: /add a host/i })
+      await userEvent.click(addHostBtn)
+      const hostInput = screen.getByLabelText('Host 1')
+      await userEvent.type(hostInput, 'example.com')
+
+      const addPortBtn = screen.getByRole('button', { name: /add a port/i })
+      await userEvent.click(addPortBtn)
+      const portInput = screen.getByLabelText('Port 1')
+      await userEvent.type(portInput, '8080')
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Install server' })
+      )
+
+      await waitFor(() => {
+        expect(mockInstallServerMutation).toHaveBeenCalled()
+      })
+
+      const submittedData = mockInstallServerMutation.mock.calls[0]?.[0]?.data
+      expect(submittedData).toMatchObject({
+        name: 'test-server',
+        type: 'docker_image',
+        transport: 'stdio',
+        image: 'ghcr.io/test/server',
+        networkIsolation: true,
+        allowedHosts: ['example.com'],
+        allowedPorts: ['8080'],
+      })
+    })
+
+    it('submits correct payload with network isolation disabled', async () => {
+      const mockInstallServerMutation = vi.fn()
+      mockUseRunCustomServer.mockReturnValue({
+        installServerMutation: mockInstallServerMutation,
+        checkServerStatus: vi.fn(),
+        isErrorSecrets: false,
+        isPendingSecrets: false,
+      })
+
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+        </Wrapper>
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      await userEvent.type(screen.getByLabelText('Name'), 'test-server')
+      await userEvent.click(screen.getByLabelText('Transport'))
+      await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
+      await userEvent.type(
+        screen.getByRole('textbox', { name: 'Docker image' }),
+        'ghcr.io/test/server'
+      )
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Install server' })
+      )
+
+      await waitFor(() => {
+        expect(mockInstallServerMutation).toHaveBeenCalled()
+      })
+
+      const submittedData = mockInstallServerMutation.mock.calls[0]?.[0]?.data
+      expect(submittedData).toMatchObject({
+        name: 'test-server',
+        type: 'docker_image',
+        transport: 'stdio',
+        image: 'ghcr.io/test/server',
+        networkIsolation: false,
+      })
+    })
+
+    it('resets tab to configuration when canceling', async () => {
+      const mockOnOpenChange = vi.fn()
+
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormRunMcpServerWithCommand
+            isOpen
+            onOpenChange={mockOnOpenChange}
+          />
+        </Wrapper>
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+      await userEvent.click(networkTab)
+      expect(networkTab).toHaveAttribute('aria-selected', 'true')
+
+      await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+      expect(mockOnOpenChange).toHaveBeenCalledWith(false)
+
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormRunMcpServerWithCommand
+            isOpen
+            onOpenChange={mockOnOpenChange}
+          />
+        </Wrapper>
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      const configTab = screen.getByRole('tab', { name: /configuration/i })
+      expect(configTab).toHaveAttribute('aria-selected', 'true')
+    })
+
+    it('activates the network isolation tab if a validation error occurs there while on the configuration tab', async () => {
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+        </Wrapper>
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      const configTab = screen.getByRole('tab', { name: /configuration/i })
+      expect(configTab).toHaveAttribute('aria-selected', 'true')
+
+      await userEvent.type(screen.getByLabelText('Name'), 'test-server')
+      await userEvent.click(screen.getByLabelText('Transport'))
+      await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
+      await userEvent.type(
+        screen.getByRole('textbox', { name: 'Docker image' }),
+        'ghcr.io/test/server'
+      )
+
+      const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+      await userEvent.click(networkTab)
+      const switchLabel = screen.getByLabelText(
+        'Enable outbound network filtering'
+      )
+      await userEvent.click(switchLabel)
+
+      const addHostBtn = screen.getByRole('button', { name: /add a host/i })
+      await userEvent.click(addHostBtn)
+      const hostInput = screen.getByLabelText('Host 1')
+      await userEvent.type(hostInput, 'not a host')
+      await userEvent.tab()
+
+      await userEvent.click(configTab)
+      expect(configTab).toHaveAttribute('aria-selected', 'true')
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Install server' })
+      )
+
+      await waitFor(() => {
+        expect(networkTab).toHaveAttribute('aria-selected', 'true')
+      })
+    })
+
+    it('activates the configuration tab if a validation error occurs there while on the network isolation tab', async () => {
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+        </Wrapper>
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+      await userEvent.click(networkTab)
+      expect(networkTab).toHaveAttribute('aria-selected', 'true')
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Install server' })
+      )
+
+      const configTab = screen.getByRole('tab', { name: /configuration/i })
+      expect(configTab).toHaveAttribute('aria-selected', 'true')
+    })
+
+    it('shows alert when network isolation is enabled but no hosts or ports are configured', async () => {
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+        </Wrapper>
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+      await userEvent.click(networkTab)
+
+      const switchLabel = screen.getByLabelText(
+        'Enable outbound network filtering'
+      )
+      await userEvent.click(switchLabel)
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(
+            'This configuration blocks all outbound network traffic from the MCP server.'
+          )
+        ).toBeInTheDocument()
+      })
+
+      const addHostBtn = screen.getByRole('button', { name: /add a host/i })
+      await userEvent.click(addHostBtn)
+      const hostInput = screen.getByLabelText('Host 1')
+      await userEvent.type(hostInput, 'example.com')
+
+      await waitFor(() => {
+        expect(
+          screen.queryByText(
+            'This configuration blocks all outbound network traffic from the MCP server.'
+          )
+        ).not.toBeInTheDocument()
+      })
+    })
+  })
+
   it('paste arg from clipboard into command arguments field', async () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunCustomServer.mockReturnValue({
@@ -461,12 +722,10 @@ describe('DialogFormRunMcpServerWithCommand', () => {
       isPendingSecrets: false,
     })
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <Dialog open>
-          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
-        </Dialog>
-      </QueryClientProvider>
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+      </Wrapper>
     )
 
     await waitFor(() => {
@@ -477,7 +736,7 @@ describe('DialogFormRunMcpServerWithCommand', () => {
     await userEvent.click(screen.getByLabelText('Transport'))
     await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
     await userEvent.type(
-      screen.getByLabelText('Docker image'),
+      screen.getByRole('textbox', { name: 'Docker image' }),
       'ghcr.io/test/server'
     )
 
