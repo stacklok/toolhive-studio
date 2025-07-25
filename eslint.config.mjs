@@ -16,12 +16,18 @@ export default tseslint.config(
     ],
   },
   {
-    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    extends: [
+      js.configs.recommended,
+      ...tseslint.configs.recommended,
+    ],
     files: ['**/*.{ts,tsx}'],
     ignores: ['e2e-tests/**/*'],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
+      parserOptions: {
+        project: ['./tsconfig.app.json', './tsconfig.node.json'], 
+      },
     },
     plugins: {
       'react-hooks': reactHooks,
@@ -36,18 +42,35 @@ export default tseslint.config(
     },
   },
   {
-    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    extends: [
+      js.configs.recommended,
+      ...tseslint.configs.recommended,
+    ],
     files: ['e2e-tests/**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.node,
+      parserOptions: {
+        project: ['./tsconfig.app.json', './tsconfig.node.json'], 
+      },
+    },
+    rules: {
+      '@typescript-eslint/await-thenable': 'error',
+      '@typescript-eslint/no-floating-promises': 'error',
     },
   },
   {
     ...playwright.configs['flat/recommended'],
     files: ['./e2e-tests/**/*.spec.ts'],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.app.json', './tsconfig.node.json'],
+      },
+    },
     rules: {
       ...playwright.configs['flat/recommended'].rules,
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/await-thenable': 'error',
     },
-  },
+  }
 )
