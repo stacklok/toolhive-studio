@@ -107,6 +107,8 @@ export function DialogFormRunMcpServerWithCommand({
       allowedHosts: [],
       allowedPorts: [],
     },
+    reValidateMode: 'onChange',
+    mode: 'onChange',
   })
 
   const onSubmitForm = (data: FormSchemaRunMcpCommand) => {
