@@ -25,8 +25,9 @@ import { NetworkIsolationTabContent } from '../../../network-isolation/component
 import { ConfigurationTabContent } from './configuration-tab-content'
 import { Tabs, TabsList, TabsTrigger } from '@/common/components/ui/tabs'
 import { Form } from '@/common/components/ui/form'
+import { useFormTabState } from '@/common/hooks/use-form-tab-state'
 
-// Map each field to its tab
+// Field to tab mapping for form validation
 const FIELD_TAB_MAP = [
   { field: 'serverName', tab: 'configuration' },
   { field: 'cmd_arguments', tab: 'configuration' },
@@ -77,7 +78,9 @@ export function FormRunFromRegistry({
       log.error('onSecretError', error, variables)
     },
   })
-  const [tabValue, setTabValue] = useState('configuration')
+  const { activeTab, setActiveTab, activateTabWithError } = useFormTabState({
+    fieldTabMap: FIELD_TAB_MAP,
+  })
   const { data } = useQuery({
     ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
   })
@@ -133,7 +136,7 @@ export function FormRunFromRegistry({
         onSuccess: () => {
           checkServerStatus(data)
           onOpenChange(false)
-          setTabValue('configuration')
+          setActiveTab('configuration')
         },
         onSettled: (_, error) => {
           setIsSubmitting(false)
@@ -146,19 +149,6 @@ export function FormRunFromRegistry({
         },
       }
     )
-  }
-
-  function activateTabWithError(errors: Record<string, unknown>) {
-    const errorKeys = Object.keys(errors)
-    // Extract root field name from error key (handles dot and bracket notation)
-    const getRootField = (key: string) => key.split(/[.[]/)[0]
-    // Find the first tab that has an error
-    const tabWithError = FIELD_TAB_MAP.find(({ field }) =>
-      errorKeys.some((key) => getRootField(key) === field)
-    )?.tab
-    if (tabWithError) {
-      setTabValue(tabWithError)
-    }
   }
 
   if (!server) return null
@@ -195,8 +185,8 @@ export function FormRunFromRegistry({
               <>
                 <Tabs
                   className="mb-6 w-full px-6"
-                  value={tabValue}
-                  onValueChange={setTabValue}
+                  value={activeTab}
+                  onValueChange={setActiveTab}
                 >
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="configuration">
@@ -207,7 +197,7 @@ export function FormRunFromRegistry({
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>
-                {tabValue === 'configuration' && (
+                {activeTab === 'configuration' && (
                   <ConfigurationTabContent
                     error={error}
                     isErrorSecrets={isErrorSecrets}
@@ -216,7 +206,7 @@ export function FormRunFromRegistry({
                     groupedEnvVars={groupedEnvVars}
                   />
                 )}
-                {tabValue === 'network-isolation' && (
+                {activeTab === 'network-isolation' && (
                   <NetworkIsolationTabContent form={form} />
                 )}
               </>
@@ -229,7 +219,7 @@ export function FormRunFromRegistry({
                 disabled={isSubmitting}
                 onClick={() => {
                   onOpenChange(false)
-                  setTabValue('configuration')
+                  setActiveTab('configuration')
                 }}
               >
                 Cancel

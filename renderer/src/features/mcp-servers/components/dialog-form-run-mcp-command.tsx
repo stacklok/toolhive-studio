@@ -25,10 +25,11 @@ import { useRunCustomServer } from '../hooks/use-run-custom-server'
 import { LoadingStateAlert } from '@/common/components/secrets/loading-state-alert'
 import { AlertErrorFormSubmission } from '@/common/components/workloads/alert-error-form-submission'
 import { Tabs, TabsList, TabsTrigger } from '@/common/components/ui/tabs'
+import { useFormTabState } from '@/common/hooks/use-form-tab-state'
 
 import { NetworkIsolationTabContent } from './network-isolation-tab-content'
 
-// Map each field to its tab
+// Field to tab mapping for form validation
 const FIELD_TAB_MAP = [
   { field: 'name', tab: 'configuration' },
   { field: 'transport', tab: 'configuration' },
@@ -59,7 +60,9 @@ export function DialogFormRunMcpServerWithCommand({
     completedCount: number
     secretsCount: number
   } | null>(null)
-  const [tabValue, setTabValue] = useState('configuration')
+  const { activeTab, setActiveTab, activateTabWithError } = useFormTabState({
+    fieldTabMap: FIELD_TAB_MAP,
+  })
   const {
     installServerMutation,
     checkServerStatus,
@@ -95,19 +98,6 @@ export function DialogFormRunMcpServerWithCommand({
       allowedPorts: [],
     },
   })
-
-  function activateTabWithError(errors: Record<string, unknown>) {
-    const errorKeys = Object.keys(errors)
-    // Extract root field name from error key (handles dot and bracket notation)
-    const getRootField = (key: string) => key.split(/[.[]/)[0]
-    // Find the first tab that has an error
-    const tabWithError = FIELD_TAB_MAP.find(({ field }) =>
-      errorKeys.some((key) => getRootField(key) === field)
-    )?.tab
-    if (tabWithError) {
-      setTabValue(tabWithError)
-    }
-  }
 
   const onSubmitForm = (data: FormSchemaRunMcpCommand) => {
     setIsSubmitting(true)
@@ -166,8 +156,8 @@ export function DialogFormRunMcpServerWithCommand({
               <>
                 <Tabs
                   className="mb-6 w-full px-6"
-                  value={tabValue}
-                  onValueChange={setTabValue}
+                  value={activeTab}
+                  onValueChange={setActiveTab}
                 >
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="configuration">
@@ -178,7 +168,7 @@ export function DialogFormRunMcpServerWithCommand({
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>
-                {tabValue === 'configuration' && (
+                {activeTab === 'configuration' && (
                   <div
                     className="relative max-h-[65dvh] space-y-4 overflow-y-auto
                       px-6"
@@ -195,7 +185,7 @@ export function DialogFormRunMcpServerWithCommand({
                     <FormFieldsArrayCustomEnvVars form={form} />
                   </div>
                 )}
-                {tabValue === 'network-isolation' && (
+                {activeTab === 'network-isolation' && (
                   <NetworkIsolationTabContent form={form} />
                 )}
               </>
@@ -208,7 +198,7 @@ export function DialogFormRunMcpServerWithCommand({
                 disabled={isSubmitting}
                 onClick={() => {
                   onOpenChange(false)
-                  setTabValue('configuration')
+                  setActiveTab('configuration')
                 }}
               >
                 Cancel
