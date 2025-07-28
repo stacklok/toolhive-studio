@@ -32,6 +32,8 @@
     "preload/src",
     "scripts/**/*",
     "utils/**/*",
+    "vitest.config.ts",
+    "vitest.setup.ts",
     "renderer/vite.renderer.config.ts",
     "e2e-tests/**/*",
     "forge.config.ts",
