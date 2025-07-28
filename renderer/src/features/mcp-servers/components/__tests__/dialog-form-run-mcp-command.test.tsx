@@ -510,8 +510,8 @@ describe('DialogFormRunMcpServerWithCommand', () => {
         transport: 'stdio',
         image: 'ghcr.io/test/server',
         networkIsolation: true,
-        allowedHosts: ['example.com'],
-        allowedPorts: ['8080'],
+        allowedHosts: [{ value: 'example.com' }],
+        allowedPorts: [{ value: '8080' }],
       })
     })
 

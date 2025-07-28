@@ -114,7 +114,7 @@ describe('NetworkIsolationTabContent', () => {
         <TestWrapper
           initialValues={{
             networkIsolation: true,
-            allowedHosts: ['example.com'],
+            allowedHosts: [{ value: 'example.com' }],
             allowedPorts: [],
           }}
         />
@@ -141,7 +141,7 @@ describe('NetworkIsolationTabContent', () => {
           initialValues={{
             networkIsolation: true,
             allowedHosts: [],
-            allowedPorts: ['8080'],
+            allowedPorts: [{ value: '8080' }],
           }}
         />
       ))
@@ -166,8 +166,8 @@ describe('NetworkIsolationTabContent', () => {
         <TestWrapper
           initialValues={{
             networkIsolation: true,
-            allowedHosts: ['example.com'],
-            allowedPorts: ['8080'],
+            allowedHosts: [{ value: 'example.com' }],
+            allowedPorts: [{ value: '8080' }],
           }}
         />
       ))

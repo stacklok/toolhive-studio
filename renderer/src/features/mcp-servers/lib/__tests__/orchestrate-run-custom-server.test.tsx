@@ -275,8 +275,8 @@ describe('prepareCreateWorkloadData', () => {
       secrets: [],
       cmd_arguments: [],
       networkIsolation: true,
-      allowedHosts: ['example.com', '.subdomain.com'],
-      allowedPorts: ['8080', '443'],
+      allowedHosts: [{ value: 'example.com' }, { value: '.subdomain.com' }],
+      allowedPorts: [{ value: '8080' }, { value: '443' }],
     }
 
     const result = prepareCreateWorkloadData(data)
@@ -303,8 +303,8 @@ describe('prepareCreateWorkloadData', () => {
       secrets: [],
       cmd_arguments: [],
       networkIsolation: false,
-      allowedHosts: ['example.com'],
-      allowedPorts: ['8080'],
+      allowedHosts: [{ value: 'example.com' }],
+      allowedPorts: [{ value: '8080' }],
     }
 
     const result = prepareCreateWorkloadData(data)

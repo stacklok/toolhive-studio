@@ -79,25 +79,32 @@ export function getFormSchemaRunFromRegistry({
       })
       .array(),
     networkIsolation: z.boolean(),
-    allowedHosts: z
-      .string()
-      .refine((val) => /^\.?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(val), {
-        message: 'Invalid host format',
+    allowedHosts: z.array(
+      z.object({
+        value: z.string().refine(
+          (val) => {
+            if (val.trim() === '') return true
+            return /^\.?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(val)
+          },
+          {
+            message: 'Invalid host format',
+          }
+        ),
       })
-      .array(),
-    allowedPorts: z
-      .string()
-
-      .refine(
-        (val) => {
-          const num = parseInt(val, 10)
-          return !isNaN(num) && num >= 1 && num <= 65535
-        },
-        {
-          message: 'Port must be a number between 1 and 65535',
-        }
-      )
-      .array(),
+    ),
+    allowedPorts: z.array(
+      z.object({
+        value: z.string().refine(
+          (val) => {
+            const num = parseInt(val, 10)
+            return !isNaN(num) && num >= 1 && num <= 65535
+          },
+          {
+            message: 'Port must be a number between 1 and 65535',
+          }
+        ),
+      })
+    ),
   })
 }
 

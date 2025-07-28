@@ -1000,7 +1000,7 @@ describe('Allowed Hosts field', () => {
           server: expect.any(Object),
           data: expect.objectContaining({
             serverName: 'my-network-server',
-            allowedHosts: ['foo.bar.com'],
+            allowedHosts: [{ value: 'foo.bar.com' }],
             networkIsolation: true,
           }),
         }),
