@@ -69,7 +69,6 @@ export function createApplicationMenu(trayRef: Electron.Tray | null) {
               { type: 'separator' as const },
             ]
           : []),
-        { role: 'quit' as const },
       ],
     },
     ...restMenuItems,
