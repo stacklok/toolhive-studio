@@ -51,7 +51,7 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
     ArrayPath<TFieldValues>
   >({
     control,
-    name,
+    name: name as ArrayPath<TFieldValues>,
   })
 
   return (

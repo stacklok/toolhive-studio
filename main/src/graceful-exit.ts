@@ -77,8 +77,6 @@ export async function stopAllServers(
 
   // Store the servers that are about to be shut down
   shutdownStore.set('lastShutdownServers', servers)
-  log.info(`Stored ${servers.length} servers for shutdown tracking`)
-
   log.info(`Stopping ${servers.length} servers...`)
 
   // First, initiate stop for all servers

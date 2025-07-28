@@ -64,9 +64,6 @@ export function ConnectionRefusedError() {
   })
 
   useEffect(() => {
-    if (!containerStatus?.available) {
-      log.info('Container engines are not available')
-    }
     if (containerStatus?.available && !isRestarting) {
       restartToolhive()
     }

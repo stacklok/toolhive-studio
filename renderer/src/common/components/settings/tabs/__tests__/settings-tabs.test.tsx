@@ -16,7 +16,6 @@ const mockElectronAPI = {
     optIn: vi.fn(),
     optOut: vi.fn(),
   },
-  quitApp: vi.fn(),
 }
 
 Object.defineProperty(window, 'electronAPI', {
@@ -33,10 +32,6 @@ vi.mock('@/common/hooks/use-auto-launch', () => ({
     mutateAsync: vi.fn(),
     isPending: false,
   }),
-}))
-
-vi.mock('@/common/hooks/use-confirm-quit', () => ({
-  useConfirmQuit: vi.fn().mockReturnValue(vi.fn().mockResolvedValue(true)),
 }))
 
 const renderWithProviders = (component: React.ReactElement) => {

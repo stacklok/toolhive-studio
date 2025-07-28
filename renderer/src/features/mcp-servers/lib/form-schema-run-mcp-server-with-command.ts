@@ -4,18 +4,27 @@ import z from 'zod/v4'
 const getCommonFields = (workloads: WorkloadsWorkload[]) =>
   z.object({
     name: z
-      .string()
-      .nonempty('Name is required')
-      .refine(
-        (value) => !workloads.some((w) => w.name === value),
-        'This name is already in use'
+      .union([z.string(), z.undefined()])
+      .transform((val) => val ?? '')
+      .pipe(
+        z
+          .string()
+          .nonempty('Name is required')
+          .refine(
+            (value) => value.length === 0 || /^[a-zA-Z0-9._-]+$/.test(value),
+            'Invalid server name: it can only contain alphanumeric characters, dots, hyphens, and underscores.'
+          )
+          .refine(
+            (value) => !workloads.some((w) => w.name === value),
+            'This name is already in use'
+          )
       ),
     transport: z.union(
       [z.literal('sse'), z.literal('stdio'), z.literal('streamable-http')],
       'Please select either SSE, stdio, or streamable-http.'
     ),
     target_port: z.number().optional(),
-    cmd_arguments: z.string().optional(),
+    cmd_arguments: z.array(z.string()).optional(),
     envVars: z
       .object({
         name: z.string().nonempty('Name is required'),
@@ -30,6 +39,25 @@ const getCommonFields = (workloads: WorkloadsWorkload[]) =>
           isFromStore: z.boolean(),
         }),
       })
+      .array(),
+    networkIsolation: z.boolean(),
+    allowedHosts: z
+      .string()
+      .refine((val) => /^\.?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(val), {
+        message: 'Invalid host format',
+      })
+      .array(),
+    allowedPorts: z
+      .string()
+      .refine(
+        (val) => {
+          const num = parseInt(val, 10)
+          return !isNaN(num) && num >= 1 && num <= 65535
+        },
+        {
+          message: 'Port must be a number between 1 and 65535',
+        }
+      )
       .array(),
   })
 

@@ -20,6 +20,12 @@ export const test = base.extend<ElectronFixtures>({
 
     await use(app)
 
+    const window = await app.firstWindow()
+    await window.evaluate(() => {
+      // mock confirm quit
+      localStorage.setItem('doNotShowAgain_confirm_quit', 'true')
+    })
+
     // Ensure app is closed and video is recorded
     const appToClose = app.close()
     await appToClose

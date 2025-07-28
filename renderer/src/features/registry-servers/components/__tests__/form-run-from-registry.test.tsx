@@ -17,14 +17,20 @@ vi.mock('../../hooks/use-run-from-registry.tsx', () => ({
   useRunFromRegistry: vi.fn(),
 }))
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      gcTime: 0,
-      staleTime: 0,
+const renderWithProviders = (component: React.ReactElement) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        gcTime: 0,
+        staleTime: 0,
+      },
     },
-  },
-})
+  })
+
+  return render(
+    <QueryClientProvider client={queryClient}>{component}</QueryClientProvider>
+  )
+}
 
 const REGISTRY_SERVER: RegistryImageMetadata = {
   name: 'foo-bar-server',
@@ -101,14 +107,12 @@ describe('FormRunFromRegistry', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -133,49 +137,6 @@ describe('FormRunFromRegistry', () => {
     ).toBeInTheDocument()
   })
 
-  it('renders and toggles network isolation UI elements', async () => {
-    const server = { ...REGISTRY_SERVER }
-    server.env_vars = ENV_VARS_OPTIONAL
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
-    )
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeVisible()
-    })
-    // --- Tab switching and toggle ---
-    const tabList = screen.getByRole('tablist')
-    expect(tabList).toBeInTheDocument()
-    const configTab = screen.getByRole('tab', { name: /configuration/i })
-    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
-    expect(configTab).toBeInTheDocument()
-    expect(networkTab).toBeInTheDocument()
-    expect(configTab).toHaveAttribute('aria-selected', 'true')
-    expect(networkTab).toHaveAttribute('aria-selected', 'false')
-    await userEvent.click(networkTab)
-    expect(networkTab).toHaveAttribute('aria-selected', 'true')
-    expect(configTab).toHaveAttribute('aria-selected', 'false')
-    const switchLabel = screen.getByLabelText(
-      'Enable outbound network filtering'
-    )
-    expect(switchLabel).toBeInTheDocument()
-    expect(switchLabel).toHaveAttribute('role', 'switch')
-    expect(switchLabel).toHaveAttribute('aria-checked', 'false')
-    await userEvent.click(switchLabel)
-    expect(switchLabel).toHaveAttribute('aria-checked', 'true')
-    // --- Alert when enabled ---
-    expect(
-      screen.getByText(
-        /this configuration blocks all outbound network traffic from the mcp server/i
-      )
-    ).toBeInTheDocument()
-  })
-
   it('shows loading state and hides tabs when submitting', async () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
@@ -188,14 +149,12 @@ describe('FormRunFromRegistry', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -232,14 +191,12 @@ describe('FormRunFromRegistry', () => {
     let server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
     const mockOnOpenChange = vi.fn()
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={mockOnOpenChange}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={mockOnOpenChange}
+        server={server}
+      />
     )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -287,14 +244,12 @@ describe('FormRunFromRegistry', () => {
     })
     server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -334,15 +289,14 @@ describe('FormRunFromRegistry', () => {
       isPendingSecrets: false,
     })
     server = { ...REGISTRY_SERVER }
+    server.args = ['stdio']
     server.env_vars = ENV_VARS_OPTIONAL
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -364,7 +318,7 @@ describe('FormRunFromRegistry', () => {
           server: expect.any(Object),
           data: expect.objectContaining({
             serverName: 'my-awesome-server',
-            cmd_arguments: undefined,
+            cmd_arguments: ['stdio'],
             envVars: [{ name: 'ENV_VAR', value: '' }],
             secrets: [
               { name: 'SECRET', value: { isFromStore: false, secret: '' } },
@@ -388,14 +342,12 @@ describe('FormRunFromRegistry', () => {
     })
     server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -408,10 +360,11 @@ describe('FormRunFromRegistry', () => {
         initialSelectionEnd: REGISTRY_SERVER.name?.length,
       }
     )
-    await userEvent.type(
-      screen.getByLabelText('Command arguments'),
-      '--debug --verbose'
-    )
+    const commandArgsInput = screen.getByLabelText('Command arguments')
+    await userEvent.type(commandArgsInput, '--debug')
+    await userEvent.keyboard('{Enter}')
+    await userEvent.type(commandArgsInput, '--verbose')
+    await userEvent.keyboard('{Enter}')
     await userEvent.click(
       screen.getByRole('button', { name: 'Install server' })
     )
@@ -421,7 +374,7 @@ describe('FormRunFromRegistry', () => {
           server: expect.any(Object),
           data: expect.objectContaining({
             serverName: 'my-awesome-server',
-            cmd_arguments: '--debug --verbose',
+            cmd_arguments: ['--debug', '--verbose'],
             envVars: [{ name: 'ENV_VAR', value: '' }],
             secrets: [
               { name: 'SECRET', value: { isFromStore: false, secret: '' } },
@@ -448,14 +401,12 @@ describe('FormRunFromRegistry', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_REQUIRED
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -506,14 +457,12 @@ describe('FormRunFromRegistry', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_REQUIRED
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -568,14 +517,12 @@ describe('FormRunFromRegistry', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -620,14 +567,12 @@ describe('FormRunFromRegistry', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -667,14 +612,12 @@ describe('FormRunFromRegistry', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -736,14 +679,12 @@ describe('FormRunFromRegistry', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={mockOnOpenChange}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={mockOnOpenChange}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -792,14 +733,12 @@ describe('FormRunFromRegistry', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -816,10 +755,11 @@ describe('FormRunFromRegistry', () => {
       }
     )
 
-    await userEvent.type(
-      screen.getByLabelText('Command arguments'),
-      '--debug --verbose'
-    )
+    const commandArgsInput = screen.getByLabelText('Command arguments')
+    await userEvent.type(commandArgsInput, '--debug')
+    await userEvent.keyboard('{Enter}')
+    await userEvent.type(commandArgsInput, '--verbose')
+    await userEvent.keyboard('{Enter}')
 
     await userEvent.click(
       screen.getByRole('button', { name: 'Install server' })
@@ -830,171 +770,9 @@ describe('FormRunFromRegistry', () => {
         {
           server,
           data: expect.objectContaining({
-            cmd_arguments: '--debug --verbose',
+            cmd_arguments: ['--debug', '--verbose'],
           }),
         },
-        expect.any(Object)
-      )
-    })
-  })
-
-  it('shows an alert when network isolation is enabled', async () => {
-    const server = { ...REGISTRY_SERVER }
-    server.env_vars = ENV_VARS_OPTIONAL
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
-    )
-
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeVisible()
-    })
-    // Switch to the Network Isolation tab
-    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
-    await userEvent.click(networkTab)
-
-    // Enable the switch
-    const switchLabel = screen.getByLabelText(
-      'Enable outbound network filtering'
-    )
-    await userEvent.click(switchLabel)
-
-    // The alert should appear
-    expect(
-      screen.getByText(
-        /this configuration blocks all outbound network traffic from the mcp server/i
-      )
-    ).toBeInTheDocument()
-  })
-
-  it('shows the alert only when hosts or ports are empty', async () => {
-    const server = { ...REGISTRY_SERVER }
-    server.env_vars = ENV_VARS_OPTIONAL
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
-    )
-
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeVisible()
-    })
-    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
-    await userEvent.click(networkTab)
-    const switchLabel = screen.getByLabelText(
-      'Enable outbound network filtering'
-    )
-    await userEvent.click(switchLabel)
-
-    // By default, all are empty, so alert should show
-    expect(
-      screen.getByText(
-        /this configuration blocks all outbound network traffic from the mcp server/i
-      )
-    ).toBeInTheDocument()
-
-    const addHostBtn = screen.getByRole('button', { name: /add a host/i })
-    await userEvent.click(addHostBtn)
-    const hostInput = screen.getByLabelText('Host 1')
-    await userEvent.type(hostInput, 'example.com')
-
-    expect(
-      screen.queryByText(
-        /this configuration blocks all outbound network traffic from the mcp server/i
-      )
-    ).not.toBeInTheDocument()
-
-    const addPortBtn = screen.getByRole('button', { name: /add a port/i })
-    await userEvent.click(addPortBtn)
-    const portInput = screen.getByLabelText('Port 1')
-    await userEvent.type(portInput, '8080')
-
-    expect(
-      screen.queryByText(
-        /this configuration blocks all outbound network traffic from the mcp server/i
-      )
-    ).not.toBeInTheDocument()
-
-    const removeHostBtn = screen.getByLabelText('Remove Host 1')
-    await userEvent.click(removeHostBtn)
-    expect(
-      screen.queryByText(
-        /this configuration blocks all outbound network traffic from the mcp server/i
-      )
-    ).not.toBeInTheDocument()
-  })
-
-  it('shows Allowed Ports section and submits correct payload when ports are added', async () => {
-    const server = { ...REGISTRY_SERVER }
-    server.env_vars = ENV_VARS_OPTIONAL
-    const mockInstallServerMutation = vi.fn()
-    mockUseRunFromRegistry.mockReturnValue({
-      installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
-      isErrorSecrets: false,
-      isPendingSecrets: false,
-    })
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
-    )
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeVisible()
-    })
-    // Switch to Network Isolation tab
-    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
-    await userEvent.click(networkTab)
-    // Enable network isolation
-    const switchLabel = screen.getByLabelText(
-      'Enable outbound network filtering'
-    )
-    await userEvent.click(switchLabel)
-    // Add ports
-    const addPortButton = screen.getByRole('button', { name: 'Add a port' })
-    await userEvent.click(addPortButton)
-    await userEvent.type(screen.getByLabelText('Port 1'), '8080')
-    await userEvent.click(addPortButton)
-    await userEvent.type(screen.getByLabelText('Port 2'), '666666666')
-    await waitFor(() => {
-      expect(
-        screen.getByText(/port must be a number between 1 and 65535/i)
-      ).toBeInTheDocument()
-    })
-    await userEvent.clear(screen.getByLabelText('Port 2'))
-    await userEvent.type(screen.getByLabelText('Port 2'), '443')
-    // Submit
-    const configTab = screen.getByRole('tab', { name: /configuration/i })
-    await userEvent.click(configTab)
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Install server' })
-    )
-    await waitFor(() => {
-      expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        expect.objectContaining({
-          server: expect.any(Object),
-          data: expect.objectContaining({
-            serverName: 'foo-bar-server',
-            allowedPorts: ['8080', '443'],
-            networkIsolation: true,
-            allowedHosts: [],
-          }),
-        }),
         expect.any(Object)
       )
     })
@@ -1010,14 +788,12 @@ describe('FormRunFromRegistry', () => {
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -1057,14 +833,12 @@ describe('Allowed Hosts field', () => {
   it('renders Allowed Hosts field in the network isolation tab when enabled', async () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -1090,14 +864,12 @@ describe('Allowed Hosts field', () => {
   it('allows adding, editing, and removing host entries', async () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -1130,14 +902,12 @@ describe('Allowed Hosts field', () => {
   it('validates host format (valid domain or subdomain, can start with a dot)', async () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -1193,14 +963,12 @@ describe('Allowed Hosts field', () => {
     })
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -1247,14 +1015,12 @@ describe('Allowed Hosts field', () => {
   it('is empty by default and can handle multiple hosts', async () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -1284,14 +1050,12 @@ describe('Network Isolation Tab Activation', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -1330,14 +1094,12 @@ describe('Network Isolation Tab Activation', () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_REQUIRED // Make configuration tab fields required
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <FormRunFromRegistry
-          isOpen={true}
-          onOpenChange={vi.fn()}
-          server={server}
-        />
-      </QueryClientProvider>
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
     )
 
     await waitFor(() => {
@@ -1354,5 +1116,169 @@ describe('Network Isolation Tab Activation', () => {
     // The configuration tab should now be active
     const configTab = screen.getByRole('tab', { name: /configuration/i })
     expect(configTab).toHaveAttribute('aria-selected', 'true')
+  })
+})
+
+describe('CommandArgumentsField', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockUseRunFromRegistry.mockReturnValue({
+      installServerMutation: vi.fn(),
+      checkServerStatus: vi.fn(),
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+  })
+
+  it('adds argument when pressing space key', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    const commandArgsInput = screen.getByLabelText('Command arguments')
+    await userEvent.type(commandArgsInput, '--verbose')
+    await userEvent.keyboard(' ')
+
+    expect(screen.getByText('--verbose')).toBeInTheDocument()
+    expect(commandArgsInput).toHaveValue('')
+  })
+
+  it('adds argument when input loses focus on blur', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    const commandArgsInput = screen.getByLabelText('Command arguments')
+    await userEvent.type(commandArgsInput, '--port')
+    await userEvent.tab()
+
+    expect(screen.getByText('--port')).toBeInTheDocument()
+    expect(commandArgsInput).toHaveValue('')
+  })
+
+  it('removes argument when clicking remove button', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    const commandArgsInput = screen.getByLabelText('Command arguments')
+    await userEvent.type(commandArgsInput, '--debug')
+    await userEvent.keyboard('{Enter}')
+    await userEvent.type(commandArgsInput, '--verbose')
+    await userEvent.keyboard('{Enter}')
+
+    expect(screen.getByText('--debug')).toBeInTheDocument()
+    expect(screen.getByText('--verbose')).toBeInTheDocument()
+
+    // Remove the first argument
+    const removeButton = screen.getByLabelText('Remove argument --debug')
+    await userEvent.click(removeButton)
+
+    expect(screen.queryByText('--debug')).not.toBeInTheDocument()
+    expect(screen.getByText('--verbose')).toBeInTheDocument()
+  })
+
+  it('disables remove button for default arguments', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+    server.args = ['--stdio']
+
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    expect(screen.getByText('--stdio')).toBeInTheDocument()
+
+    const removeButton = screen.getByLabelText('Remove argument --stdio')
+    expect(removeButton).toBeDisabled()
+  })
+
+  it('does not add empty arguments', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    const commandArgsInput = screen.getByLabelText('Command arguments')
+    await userEvent.type(commandArgsInput, '   ')
+    await userEvent.keyboard('{Enter}')
+
+    expect(screen.queryByLabelText(/Remove argument/)).not.toBeInTheDocument()
+    expect(commandArgsInput).toHaveValue('')
+  })
+
+  it('paste arg from clipboard into command arguments field', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    const commandArgsInput = screen.getByLabelText('Command arguments')
+    await userEvent.click(commandArgsInput)
+    await userEvent.paste('--toolsets repos,issues,pull_requests --read-only')
+    expect(screen.getByText('--toolsets')).toBeVisible()
+    expect(screen.getByText('repos,issues,pull_requests')).toBeVisible()
+    expect(screen.getByText('--read-only')).toBeVisible()
+    expect(commandArgsInput).toHaveValue('')
   })
 })

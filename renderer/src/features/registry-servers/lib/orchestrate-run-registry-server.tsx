@@ -120,7 +120,7 @@ export function prepareCreateWorkloadData(
         network: {
           outbound: {
             allow_host: allowedHosts,
-            allow_port: allowedPorts.map(parseInt),
+            allow_port: allowedPorts.map((port) => parseInt(port, 10)),
             insecure_allow_all: false,
           } as PermissionsOutboundNetworkPermissions,
         },
@@ -133,9 +133,7 @@ export function prepareCreateWorkloadData(
     transport: server.transport,
     env_vars: envVars,
     secrets,
-    cmd_arguments: data.cmd_arguments
-      ? data.cmd_arguments?.split(' ').filter(Boolean)
-      : [],
+    cmd_arguments: data.cmd_arguments || [],
     target_port: server.target_port,
     network_isolation: networkIsolation,
     permission_profile,
