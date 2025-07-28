@@ -56,6 +56,16 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
     name: name as ArrayPath<TFieldValues>,
   })
 
+  const isInvalid = useCallback(
+    (idx: number) => {
+      return (
+        formState.errors[`${name}.${idx}.value`] ||
+        formState.errors[name as Path<TFieldValues>]
+      )
+    },
+    [formState.errors, name]
+  )
+
   const setInputRef = useCallback(
     (idx: number) => {
       return (el: HTMLInputElement | null) => {
@@ -132,7 +142,7 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
                       }}
                     />
                   </FormControl>
-                  {!formState.isValid && <FormMessage />}
+                  {isInvalid(idx) && <FormMessage />}
                 </FormItem>
               )}
             />
