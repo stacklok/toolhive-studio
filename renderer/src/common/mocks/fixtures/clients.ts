@@ -10,6 +10,7 @@ const MOCK_CLIENTS = [
   { client_type: 'vscode', installed: true, registered: false },
   { client_type: 'cursor', installed: true, registered: false },
   { client_type: 'claude-code', installed: true, registered: false },
+  { client_type: 'claude-desktop', installed: true, registered: false },
 ] as const satisfies ClientMcpClientStatus[]
 
 export const clientsFixture: V1ClientStatusResponse = {

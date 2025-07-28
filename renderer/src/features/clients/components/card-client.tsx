@@ -18,6 +18,7 @@ const CLIENT_TYPE_LABEL_MAP = {
   vscode: 'VS Code - Copilot',
   cursor: 'Cursor',
   'claude-code': 'Claude Code',
+  'claude-desktop': 'Claude Desktop',
 } as const
 
 export function CardClient({ client }: { client: ClientMcpClientStatus }) {

@@ -2,7 +2,7 @@ import { getApiV1BetaDiscoveryClientsOptions } from '@/common/api/generated/@tan
 import { toast } from 'sonner'
 import type { QueryClient } from '@tanstack/react-query'
 
-const CLIENTS_TO_RESTART = ['claude-code']
+const CLIENTS_TO_RESTART = ['claude-code', 'claude-desktop']
 
 export async function restartClientNotification({
   queryClient,
