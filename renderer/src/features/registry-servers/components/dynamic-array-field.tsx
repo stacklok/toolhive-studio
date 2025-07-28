@@ -138,6 +138,8 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
                       {...inputProps}
                       onChange={async (e) => {
                         field.onChange(e)
+                        // There is an issue with react-hook-form about error validation for array fields
+                        // take a look to the PR for detail https://github.com/stacklok/toolhive-studio/pull/664
                         await resetValidation(idx)
                       }}
                     />
