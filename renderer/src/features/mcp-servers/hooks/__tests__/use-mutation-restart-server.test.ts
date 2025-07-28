@@ -95,9 +95,7 @@ describe('useMutationRestartServerAtStartup', () => {
     })
 
     // Note: useToastMutation doesn't return the promise, so we can't await it
-    await result.current.mutateAsync({
-      body: { names: ['postgres-db', 'github'] },
-    })
+    result.current.mutateAsync({ body: { names: ['postgres-db', 'github'] } })
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true)
@@ -118,7 +116,7 @@ describe('useMutationRestartServerAtStartup', () => {
       wrapper: Wrapper,
     })
 
-    await result.current.mutateAsync({ body: { names: [] } })
+    result.current.mutateAsync({ body: { names: [] } })
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true)
@@ -137,9 +135,7 @@ describe('useMutationRestartServerAtStartup', () => {
     })
 
     // Execute mutation with non-existent server name (will return 404 from MSW handler)
-    await result.current.mutateAsync({
-      body: { names: ['non-existent-server'] },
-    })
+    result.current.mutateAsync({ body: { names: ['non-existent-server'] } })
 
     await waitFor(() => {
       expect(result.current.isError).toBe(true)
@@ -175,7 +171,7 @@ describe('useMutationRestartServer', () => {
       { wrapper: Wrapper }
     )
 
-    await result.current.mutateAsync({ path: { name: serverName } })
+    result.current.mutateAsync({ path: { name: serverName } })
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true)
@@ -192,7 +188,7 @@ describe('useMutationRestartServer', () => {
     )
 
     // Execute mutation with non-existent server (will return 404 from MSW handler)
-    await result.current.mutateAsync({ path: { name: serverName } })
+    result.current.mutateAsync({ path: { name: serverName } })
 
     await waitFor(() => {
       expect(result.current.isError).toBe(true)
