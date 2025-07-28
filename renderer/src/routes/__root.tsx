@@ -1,4 +1,4 @@
-import { getHealth } from '@/common/api/generated'
+import { getHealth } from '@api/sdk.gen'
 import { Main } from '@/common/components/layout/main'
 import { TopNav } from '@/common/components/layout/top-nav'
 import { Error as ErrorComponent } from '@/common/components/error'
@@ -14,7 +14,7 @@ import { Toaster } from '@/common/components/ui/sonner'
 import {
   postApiV1BetaSecretsOptions,
   getApiV1BetaSecretsDefaultOptions,
-} from '@/common/api/generated/@tanstack/react-query.gen'
+} from '@api/@tanstack/react-query.gen'
 import '@fontsource/space-mono/400.css'
 import '@fontsource/atkinson-hyperlegible/400.css'
 import '@fontsource/atkinson-hyperlegible/700.css'

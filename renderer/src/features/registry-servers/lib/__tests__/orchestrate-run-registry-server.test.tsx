@@ -1,6 +1,6 @@
 import { it, expect, vi, describe } from 'vitest'
 import type { FormSchemaRunFromRegistry } from '../get-form-schema-run-from-registry'
-import type { RegistryImageMetadata } from '@/common/api/generated'
+import type { RegistryImageMetadata } from '@api/types.gen'
 import {
   getDefinedSecrets,
   saveSecrets,

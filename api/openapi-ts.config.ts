@@ -1,10 +1,10 @@
 import { defineConfig, defaultPlugins } from '@hey-api/openapi-ts'
 
 export default defineConfig({
-  input: 'src/common/api/openapi.json',
+  input: './openapi.json',
   output: {
     case: undefined,
-    path: 'src/common/api/generated',
+    path: './generated',
     format: 'prettier',
     lint: 'eslint',
   },

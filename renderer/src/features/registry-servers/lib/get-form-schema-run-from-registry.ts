@@ -1,7 +1,4 @@
-import type {
-  RegistryEnvVar,
-  WorkloadsWorkload,
-} from '@/common/api/generated/types.gen'
+import type { RegistryEnvVar, WorkloadsWorkload } from '@api/types.gen'
 import z from 'zod/v4'
 import type { GroupedEnvVars } from './group-env-vars'
 import { isEmptyEnvVar } from '@/common/lib/utils'

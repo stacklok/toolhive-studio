@@ -1,7 +1,7 @@
 import type {
   ClientMcpClientStatus,
   V1ClientStatusResponse,
-} from '@/common/api/generated'
+} from '@api/types.gen'
 
 const MOCK_CLIENTS = [
   { client_type: 'roo-code', installed: false, registered: false },

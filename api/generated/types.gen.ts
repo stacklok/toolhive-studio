@@ -1570,5 +1570,5 @@ export type GetHealthResponses = {
 export type GetHealthResponse = GetHealthResponses[keyof GetHealthResponses]
 
 export type ClientOptions = {
-  baseUrl: `${string}://src` | (string & {})
+  baseUrl: `${string}://${string}` | (string & {})
 }

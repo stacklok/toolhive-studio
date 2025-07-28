@@ -1,12 +1,12 @@
 import { type UseMutateAsyncFunction } from '@tanstack/react-query'
 import {
-  type Options,
   type PermissionsOutboundNetworkPermissions,
   type PostApiV1BetaSecretsDefaultKeysData,
   type SecretsSecretParameter,
   type V1CreateRequest,
   type V1CreateSecretResponse,
-} from '@/common/api/generated'
+} from '@api/types.gen'
+import type { Options } from '@api/client'
 import type { FormSchemaRunMcpCommand } from './form-schema-run-mcp-server-with-command'
 import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
 import { isEmptyEnvVar } from '@/common/lib/utils'

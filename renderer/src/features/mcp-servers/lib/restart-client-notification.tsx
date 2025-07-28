@@ -1,4 +1,4 @@
-import { getApiV1BetaDiscoveryClientsOptions } from '@/common/api/generated/@tanstack/react-query.gen'
+import { getApiV1BetaDiscoveryClientsOptions } from '@api/@tanstack/react-query.gen'
 import { toast } from 'sonner'
 import type { QueryClient } from '@tanstack/react-query'
 

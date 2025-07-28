@@ -11,14 +11,14 @@ import {
   DialogTitle,
 } from '@/common/components/ui/dialog'
 import { Button } from '@/common/components/ui/button'
-import type { RegistryImageMetadata } from '@/common/api/generated/types.gen'
+import type { RegistryImageMetadata } from '@api/types.gen'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { groupEnvVars } from '../../lib/group-env-vars'
 import {
   getFormSchemaRunFromRegistry,
   type FormSchemaRunFromRegistry,
 } from '../../lib/get-form-schema-run-from-registry'
-import { getApiV1BetaWorkloadsOptions } from '@/common/api/generated/@tanstack/react-query.gen'
+import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
 import { useRunFromRegistry } from '../../hooks/use-run-from-registry'
 import { LoadingStateAlert } from '../../../../common/components/secrets/loading-state-alert'
 import { NetworkIsolationTabContent } from '../../../network-isolation/components/network-isolation-tab-content'

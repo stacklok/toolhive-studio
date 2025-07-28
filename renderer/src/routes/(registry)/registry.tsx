@@ -1,4 +1,4 @@
-import { getApiV1BetaRegistryByNameServersOptions } from '@/common/api/generated/@tanstack/react-query.gen'
+import { getApiV1BetaRegistryByNameServersOptions } from '@api/@tanstack/react-query.gen'
 import { createFileRoute } from '@tanstack/react-router'
 import { GridCardsRegistryServer } from '@/features/registry-servers/components/grid-cards-registry-server'
 import { useSuspenseQuery } from '@tanstack/react-query'

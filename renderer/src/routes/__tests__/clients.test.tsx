@@ -6,7 +6,7 @@ import { renderRoute } from '@/common/test/render-route'
 import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/msw-endpoint'
-import type { V1ClientStatusResponse } from '@/common/api/generated'
+import type { V1ClientStatusResponse } from '@api/types.gen'
 
 const router = createTestRouter(Clients)
 

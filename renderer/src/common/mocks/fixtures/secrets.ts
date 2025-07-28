@@ -1,7 +1,4 @@
-import type {
-  V1SecretKeyResponse,
-  V1ListSecretsResponse,
-} from '@/common/api/generated'
+import type { V1SecretKeyResponse, V1ListSecretsResponse } from '@api/types.gen'
 
 const MOCK_SECRETS = [
   { key: 'Github' },

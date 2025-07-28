@@ -1,10 +1,16 @@
 import { defineConfig } from 'vite'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
+import path from 'path'
 
 // https://vitejs.dev/config
 export default defineConfig({
   build: {
     sourcemap: true, // Required for Sentry sourcemaps
+  },
+  resolve: {
+    alias: {
+      '@api': path.resolve(__dirname, '../api/generated'),
+    },
   },
   plugins: [
     sentryVitePlugin({

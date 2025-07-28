@@ -1,17 +1,16 @@
 import {
-  getApiV1BetaSecretsDefaultKeys,
-  type Options,
   type PostApiV1BetaSecretsDefaultKeysData,
   type RegistryImageMetadata,
   type SecretsSecretParameter,
   type V1CreateRequest,
-} from '@/common/api/generated'
+} from '@api/types.gen'
+import { getApiV1BetaSecretsDefaultKeys, type Options } from '@api/sdk.gen'
 import {
   postApiV1BetaWorkloadsMutation,
   getApiV1BetaWorkloadsByNameOptions,
   postApiV1BetaSecretsDefaultKeysMutation,
   getApiV1BetaWorkloadsQueryKey,
-} from '@/common/api/generated/@tanstack/react-query.gen'
+} from '@api/@tanstack/react-query.gen'
 import { pollServerStatus } from '@/common/lib/polling'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { FormSchemaRunFromRegistry } from '../lib/get-form-schema-run-from-registry'

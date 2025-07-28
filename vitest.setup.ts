@@ -3,7 +3,7 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
 import { afterEach, expect, beforeAll, vi, afterAll } from 'vitest'
 import failOnConsole from 'vitest-fail-on-console'
-import { client } from './renderer/src/common/api/generated/client.gen'
+import { client } from './api/generated/client.gen'
 import { server } from './renderer/src/common/mocks/node'
 
 expect.extend(testingLibraryMatchers)

@@ -1,4 +1,4 @@
-import type { ClientMcpClientStatus } from '@/common/api/generated'
+import type { ClientMcpClientStatus } from '@api/types.gen'
 import {
   Card,
   CardHeader,

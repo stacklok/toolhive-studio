@@ -1,4 +1,4 @@
-import type { RegistryImageMetadata } from '@/common/api/generated/types.gen'
+import type { RegistryImageMetadata } from '@api/types.gen'
 
 export const MOCK_REGISTRY_RESPONSE = [
   {

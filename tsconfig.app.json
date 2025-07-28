@@ -22,10 +22,11 @@
     "noUncheckedIndexedAccess": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./renderer/src/*"]
+      "@/*": ["./renderer/src/*"],
+      "@api/*": ["./api/generated/*"]
     },
     "types": ["vitest/globals", "@testing-library/jest-dom/vitest"]
   },
-  "include": ["forge.env.d.ts", "renderer/src", "preload/src"],
+  "include": ["forge.env.d.ts", "renderer/src", "preload/src", "api/generated"],
   "exclude": ["node_modules"]
 }

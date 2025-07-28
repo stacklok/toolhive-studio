@@ -3,7 +3,7 @@ import {
   getApiV1BetaWorkloadsByNameOptions,
   postApiV1BetaSecretsDefaultKeysMutation,
   getApiV1BetaWorkloadsQueryKey,
-} from '@/common/api/generated/@tanstack/react-query.gen'
+} from '@api/@tanstack/react-query.gen'
 import { pollServerStatus } from '@/common/lib/polling'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useRef } from 'react'
@@ -15,12 +15,12 @@ import {
   saveSecrets,
 } from '../lib/orchestrate-run-custom-server'
 import {
-  getApiV1BetaSecretsDefaultKeys,
-  type Options,
   type PostApiV1BetaSecretsDefaultKeysData,
   type SecretsSecretParameter,
   type V1CreateRequest,
-} from '@/common/api/generated'
+} from '@api/types.gen'
+import type { Options } from '@api/client'
+import { getApiV1BetaSecretsDefaultKeys } from '@api/sdk.gen'
 import { prepareSecretsWithoutNamingCollision } from '@/common/lib/secrets/prepare-secrets-without-naming-collision'
 import { toast } from 'sonner'
 import { Button } from '@/common/components/ui/button'

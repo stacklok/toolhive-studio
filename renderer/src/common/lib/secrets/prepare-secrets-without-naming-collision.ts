@@ -1,5 +1,4 @@
-import type { V1ListSecretsResponse } from '@/common/api/generated'
-
+import type { V1ListSecretsResponse } from '@api/types.gen'
 import { SECRET_NAME_REGEX } from '../../../features/registry-servers/lib/secret-name-regex'
 import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
 
