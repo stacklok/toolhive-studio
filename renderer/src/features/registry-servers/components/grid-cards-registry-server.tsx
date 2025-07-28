@@ -1,4 +1,4 @@
-import type { RegistryImageMetadata } from '@/common/api/generated/types.gen'
+import type { RegistryImageMetadata } from '@api/types.gen'
 import { CardRegistryServer } from './card-registry-server'
 import { useMemo } from 'react'
 import { useFilterSort } from '@/common/hooks/use-filter-sort'

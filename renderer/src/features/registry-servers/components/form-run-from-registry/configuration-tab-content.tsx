@@ -12,7 +12,7 @@ import { AlertErrorFormSubmission } from '../../../../common/components/workload
 import type { UseFormReturn } from 'react-hook-form'
 import type { FormSchemaRunFromRegistry } from '../../lib/get-form-schema-run-from-registry'
 import type { GroupedEnvVars } from '../../lib/group-env-vars'
-import type { RegistryEnvVar } from '@/common/api/generated/types.gen'
+import type { RegistryEnvVar } from '@api/types.gen'
 import { cn } from '@/common/lib/utils'
 import { FormComboboxSecretStore } from '@/common/components/secrets/form-combobox-secrets-store'
 import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'

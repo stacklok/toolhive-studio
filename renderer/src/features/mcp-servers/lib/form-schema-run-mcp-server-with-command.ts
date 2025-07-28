@@ -1,4 +1,4 @@
-import type { WorkloadsWorkload } from '@/common/api/generated'
+import type { WorkloadsWorkload } from '@api/types.gen'
 import z from 'zod/v4'
 
 const getCommonFields = (workloads: WorkloadsWorkload[]) =>

@@ -11,7 +11,7 @@ import { clientsFixture } from './fixtures/clients'
 import type {
   V1CreateRequest,
   V1CreateSecretRequest,
-} from '../api/generated/types.gen'
+} from '../../../../api/generated/types.gen'
 import { registryServerFixture } from './fixtures/registry_server'
 import { MOCK_REGISTRY_RESPONSE } from './fixtures/registry'
 import { secretsListFixture } from './fixtures/secrets'

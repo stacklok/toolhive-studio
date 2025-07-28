@@ -8,7 +8,7 @@ import {
   type FormSchemaRunMcpCommand,
 } from '../lib/form-schema-run-mcp-server-with-command'
 import { FormFieldsRunMcpCommand } from './form-fields-run-mcp-command'
-import { getApiV1BetaWorkloadsOptions } from '@/common/api/generated/@tanstack/react-query.gen'
+import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
 import {
   Dialog,
   DialogContent,

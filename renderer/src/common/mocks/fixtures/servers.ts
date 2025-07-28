@@ -2,7 +2,7 @@ import type {
   WorkloadsWorkload,
   V1WorkloadListResponse,
   V1CreateWorkloadResponse,
-} from '@/common/api/generated'
+} from '@api/types.gen'
 
 export const MOCK_MCP_SERVERS = [
   {

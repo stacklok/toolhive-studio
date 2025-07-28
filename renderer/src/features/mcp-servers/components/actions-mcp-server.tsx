@@ -1,4 +1,4 @@
-import type { WorkloadsWorkload } from '@/common/api/generated/types.gen'
+import type { WorkloadsWorkload } from '@api/types.gen'
 import { Switch } from '@/common/components/ui/switch'
 
 function getStatusText(status: WorkloadsWorkload['status']) {

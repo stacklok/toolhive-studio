@@ -14,7 +14,7 @@ import {
 } from '../ui/command'
 import { cn } from '@/common/lib/utils'
 import { useQuery } from '@tanstack/react-query'
-import { getApiV1BetaSecretsDefaultKeysOptions } from '@/common/api/generated/@tanstack/react-query.gen'
+import { getApiV1BetaSecretsDefaultKeysOptions } from '@api/@tanstack/react-query.gen'
 import { RefreshButton } from '../refresh-button'
 import { delay } from '../../../../../utils/delay'
 

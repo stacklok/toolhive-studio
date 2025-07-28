@@ -3,11 +3,11 @@ import { Button } from '@/common/components/ui/button'
 import { Separator } from '@/common/components/ui/separator'
 import { createFileRoute, Link, useParams } from '@tanstack/react-router'
 import { ChevronLeft, GithubIcon, ShieldCheck, Wrench } from 'lucide-react'
-import { getApiV1BetaRegistryByNameServersByServerNameOptions } from '@/common/api/generated/@tanstack/react-query.gen'
+import { getApiV1BetaRegistryByNameServersByServerNameOptions } from '@api/@tanstack/react-query.gen'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { Stars } from '@/features/registry-servers/components/stars'
 import { Badge } from '@/common/components/ui/badge'
-import type { RegistryImageMetadata } from '@/common/api/generated/types.gen'
+import type { RegistryImageMetadata } from '@api/types.gen'
 import { useState } from 'react'
 import {
   Tooltip,

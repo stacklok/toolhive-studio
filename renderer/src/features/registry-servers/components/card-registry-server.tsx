@@ -5,7 +5,7 @@ import {
   CardContent,
   CardFooter,
 } from '@/common/components/ui/card'
-import type { RegistryImageMetadata } from '@/common/api/generated/types.gen'
+import type { RegistryImageMetadata } from '@api/types.gen'
 import { Github, Plus } from 'lucide-react'
 import { cn } from '@/common/lib/utils'
 import { Button } from '@/common/components/ui/button'

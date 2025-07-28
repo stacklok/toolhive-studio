@@ -1,7 +1,4 @@
-import type {
-  RegistryEnvVar,
-  RegistryImageMetadata,
-} from '@/common/api/generated'
+import type { RegistryEnvVar, RegistryImageMetadata } from '@api/types.gen'
 import { render, screen, waitFor, act, within } from '@testing-library/react'
 import { it, expect, vi, describe, beforeEach } from 'vitest'
 import { FormRunFromRegistry } from '../form-run-from-registry'

@@ -4,7 +4,7 @@ import * as path from 'node:path'
 import { TOOLHIVE_VERSION } from '../utils/constants'
 ;(async () => {
   const url = `https://raw.githubusercontent.com/stacklok/toolhive/refs/tags/${TOOLHIVE_VERSION}/docs/server/swagger.json`
-  const dest = path.resolve('./renderer/src/common/api/openapi.json')
+  const dest = path.resolve('./api/openapi.json')
 
   console.log(`Fetching OpenAPI spec from: ${url}`)
   const res = await fetch(url)

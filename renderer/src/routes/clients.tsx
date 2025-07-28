@@ -1,4 +1,4 @@
-import { getApiV1BetaDiscoveryClientsOptions } from '@/common/api/generated/@tanstack/react-query.gen'
+import { getApiV1BetaDiscoveryClientsOptions } from '@api/@tanstack/react-query.gen'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { GridCardClients } from '@/features/clients/components/grid-card-clients'

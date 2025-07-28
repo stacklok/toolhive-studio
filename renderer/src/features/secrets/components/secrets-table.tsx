@@ -8,7 +8,7 @@ import {
 } from '@/common/components/ui/table'
 import { SecretDropdown } from './secret-dropdown'
 import { useFilterSort } from '@/common/hooks/use-filter-sort'
-import type { V1SecretKeyResponse } from '@/common/api/generated'
+import type { V1SecretKeyResponse } from '@api/types.gen'
 import { InputSearch } from '@/common/components/ui/input-search'
 interface SecretsTableProps {
   secrets: V1SecretKeyResponse[]

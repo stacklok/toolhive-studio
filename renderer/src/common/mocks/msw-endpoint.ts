@@ -1,4 +1,4 @@
-import type json from '../api/openapi.json'
+import type json from '../../../../api/openapi.json'
 
 /**
  * OpenAPI spec uses curly braces to denote path parameters

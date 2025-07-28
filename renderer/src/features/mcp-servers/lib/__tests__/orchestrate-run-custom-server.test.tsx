@@ -6,7 +6,7 @@ import {
   groupSecrets,
 } from '../orchestrate-run-custom-server'
 import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
-import type { SecretsSecretParameter } from '@/common/api/generated'
+import type { SecretsSecretParameter } from '@api/types.gen'
 
 vi.mock('sonner', async () => {
   const original = await vi.importActual<typeof import('sonner')>('sonner')

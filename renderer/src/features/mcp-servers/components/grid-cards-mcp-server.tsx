@@ -1,4 +1,4 @@
-import type { WorkloadsWorkload } from '@/common/api/generated'
+import type { WorkloadsWorkload } from '@api/types.gen'
 import { CardMcpServer } from './card-mcp-server'
 import { useState, useMemo } from 'react'
 import { InputSearch } from '@/common/components/ui/input-search'

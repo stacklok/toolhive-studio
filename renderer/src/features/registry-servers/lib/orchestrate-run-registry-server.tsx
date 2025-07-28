@@ -1,12 +1,12 @@
 import {
-  type Options,
   type PermissionsOutboundNetworkPermissions,
   type PostApiV1BetaSecretsDefaultKeysData,
   type RegistryImageMetadata,
   type SecretsSecretParameter,
   type V1CreateRequest,
   type V1CreateSecretResponse,
-} from '@/common/api/generated'
+} from '@api/types.gen'
+import type { Options } from '@api/client'
 import type { FormSchemaRunFromRegistry } from './get-form-schema-run-from-registry'
 import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
 import type { UseMutateAsyncFunction } from '@tanstack/react-query'

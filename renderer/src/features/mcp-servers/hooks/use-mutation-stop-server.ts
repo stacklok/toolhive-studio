@@ -1,12 +1,9 @@
-import type {
-  WorkloadsWorkload,
-  V1WorkloadListResponse,
-} from '@/common/api/generated'
+import type { WorkloadsWorkload, V1WorkloadListResponse } from '@api/types.gen'
 import {
   postApiV1BetaWorkloadsByNameStopMutation,
   getApiV1BetaWorkloadsQueryKey,
   getApiV1BetaWorkloadsByNameOptions,
-} from '@/common/api/generated/@tanstack/react-query.gen'
+} from '@api/@tanstack/react-query.gen'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { pollBatchServerStatus } from '@/common/lib/polling'
 import { useQueryClient } from '@tanstack/react-query'
