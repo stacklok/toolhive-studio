@@ -9,6 +9,6 @@
     }
   ],
   "compilerOptions": {
-    "baseUrl": ".",
+    "baseUrl": "."
   }
 }

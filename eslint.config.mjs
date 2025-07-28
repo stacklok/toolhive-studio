@@ -6,13 +6,7 @@ import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
   {
-    ignores: [
-      'dist',
-      'coverage',
-      '.vite',
-      'out',
-      './api/generated/**',
-    ],
+    ignores: ['dist', 'coverage', '.vite', 'out', './api/generated/**'],
   },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
