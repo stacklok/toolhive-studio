@@ -4,6 +4,7 @@ import { getAutoLaunchStatus, setAutoLaunch } from './auto-launch'
 import { createApplicationMenu } from './menu'
 import log from './logger'
 import { getAppVersion } from './util'
+import { hideWindow, showWindow, showInDock } from './dock-utils'
 
 ///////////////////////////////////////////////////
 // Tray icon
@@ -71,20 +72,6 @@ const getMainWindow = () => BrowserWindow.getAllWindows()[0]
 const withWindow = (operation: (window: BrowserWindow) => void) => () => {
   const window = getMainWindow()
   if (window) operation(window)
-}
-
-const restoreWindow = (window: BrowserWindow) => {
-  if (window.isMinimized()) window.restore()
-}
-
-const showWindow = (window: BrowserWindow) => {
-  restoreWindow(window)
-  window.show()
-  window.focus()
-}
-
-const hideWindow = (window: BrowserWindow) => {
-  window.hide()
 }
 
 // Windows-specific bring-to-front behavior
@@ -179,12 +166,12 @@ const createHideMenuItem = () => ({
 
 const createQuitMenuItem = () => ({
   label: 'Quit ToolHive',
-  accelerator: 'CmdOrCtrl+Q',
   type: 'normal' as const,
   click: () => {
-    // Get the main window and trigger the confirmation flow
+    // Trigger the quit confirmation flow
     const window = BrowserWindow.getAllWindows()[0]
     if (window) {
+      showInDock() // Ensure app is visible in dock
       window.show()
       window.focus()
       window.webContents.send('show-quit-confirmation')
