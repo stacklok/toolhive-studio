@@ -26,22 +26,6 @@
     },
     "types": ["vitest/globals", "@testing-library/jest-dom/vitest"]
   },
-  "include": [
-    "forge.env.d.ts",
-    "renderer/src",
-    "preload/src",
-    "scripts/**/*",
-    "utils/**/*",
-    "vitest.config.ts",
-    "vitest.setup.ts",
-    "renderer/vite.renderer.config.ts",
-    "e2e-tests/**/*",
-    "forge.config.ts",
-    "knip.ts",
-    "main/vite.main.config.ts",
-    "playwright.config.ts",
-    "preload/vite.preload.config.ts",
-    "renderer/openapi-ts.config.ts"
-  ],
+  "include": ["forge.env.d.ts", "renderer/src", "preload/src"],
   "exclude": ["node_modules"]
 }
