@@ -1,15 +1,15 @@
-import React from 'react'
+import React, { useRef, useCallback } from 'react'
 import { Button } from '@/common/components/ui/button'
 import { Input } from '@/common/components/ui/input'
 import { Label } from '@/common/components/ui/label'
 import { InfoIcon, Trash2 } from 'lucide-react'
 import {
   useFieldArray,
-  type Control,
   type FieldValues,
   type ArrayPath,
   type Path,
   type ControllerRenderProps,
+  type UseFormReturn,
 } from 'react-hook-form'
 import {
   FormField,
@@ -26,7 +26,6 @@ import {
 interface DynamicArrayFieldProps<
   TFieldValues extends FieldValues = FieldValues,
 > {
-  control: Control<TFieldValues>
   name: ArrayPath<TFieldValues>
   label: string
   inputLabelPrefix?: string
@@ -34,11 +33,10 @@ interface DynamicArrayFieldProps<
   addButtonText?: string
   type?: 'text' | 'number'
   inputProps?: React.InputHTMLAttributes<HTMLInputElement>
-  isValid: boolean
+  form: UseFormReturn<TFieldValues>
 }
 
 export function DynamicArrayField<TFieldValues extends FieldValues>({
-  control,
   name,
   label,
   tooltipContent,
@@ -46,8 +44,10 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
   addButtonText = 'Add',
   type = 'text',
   inputProps = {},
-  isValid,
+  form,
 }: DynamicArrayFieldProps<TFieldValues>) {
+  const { control, formState } = form
+  const inputRefs = useRef<Record<string, HTMLInputElement | null>>({})
   const { fields, append, remove } = useFieldArray<
     TFieldValues,
     ArrayPath<TFieldValues>
@@ -55,6 +55,41 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
     control,
     name: name as ArrayPath<TFieldValues>,
   })
+
+  const setInputRef = useCallback(
+    (idx: number) => {
+      return (el: HTMLInputElement | null) => {
+        inputRefs.current[`${name}-${idx}`] = el
+      }
+    },
+    [name]
+  )
+
+  const focusInput = useCallback(
+    (idx: number) => {
+      requestAnimationFrame(() => {
+        const input = inputRefs.current[`${name}-${idx}`]
+        if (input) {
+          input.focus()
+        }
+      })
+    },
+    [name]
+  )
+
+  const resetValidation = useCallback(
+    async (idx: number) => {
+      const fieldName = `${name}.${idx}.value`
+      const isValid = await form.trigger(fieldName as Path<TFieldValues>)
+      if (isValid && form.formState.errors[fieldName]) {
+        form.clearErrors(fieldName as Path<TFieldValues>)
+        form.reset(form.getValues())
+        await form.trigger()
+        focusInput(idx)
+      }
+    },
+    [focusInput, form, name]
+  )
 
   return (
     <div className="mt-6 w-full">
@@ -86,13 +121,18 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
                     <Input
                       {...field}
                       type={type}
+                      ref={setInputRef(idx)}
                       id={`${name}-${idx}`}
                       aria-label={`${inputLabelPrefix} ${idx + 1}`}
                       className="min-w-0 grow"
                       {...inputProps}
+                      onChange={async (e) => {
+                        field.onChange(e)
+                        await resetValidation(idx)
+                      }}
                     />
                   </FormControl>
-                  {!isValid && <FormMessage />}
+                  {!formState.isValid && <FormMessage />}
                 </FormItem>
               )}
             />

@@ -58,9 +58,8 @@ export function NetworkIsolationTabContent({
                       label="Allowed hosts"
                       inputLabelPrefix="Host"
                       addButtonText="Add a host"
-                      control={form.control}
-                      isValid={form.formState.isValid}
                       tooltipContent={`Specify domain names or IP addresses. To include subdomains, use a leading period (".")`}
+                      form={form}
                     />
                   )}
                 />
@@ -71,11 +70,10 @@ export function NetworkIsolationTabContent({
                     <DynamicArrayField<FormSchemaRunMcpCommand>
                       name="allowedPorts"
                       label="Allowed ports"
-                      control={form.control}
-                      isValid={form.formState.isValid}
                       inputLabelPrefix="Port"
                       addButtonText="Add a port"
                       type="number"
+                      form={form}
                     />
                   )}
                 />
