@@ -23,7 +23,7 @@ describe('Logs Route', () => {
   testCases.forEach(({ serverName, description }) => {
     it(`displays server name as header for ${description}`, async () => {
       const router = createTestRouter(LogsPage, '/logs/$serverName')
-      router.navigate({ to: '/logs/$serverName', params: { serverName } })
+      await router.navigate({ to: '/logs/$serverName', params: { serverName } })
       renderRoute(router)
 
       await waitFor(() => {
@@ -33,7 +33,7 @@ describe('Logs Route', () => {
 
     it(`has a back button that navigates to root route for ${description}`, async () => {
       const router = createTestRouter(LogsPage, '/logs/$serverName')
-      router.navigate({ to: '/logs/$serverName', params: { serverName } })
+      await router.navigate({ to: '/logs/$serverName', params: { serverName } })
       renderRoute(router)
 
       await waitFor(() => {
@@ -53,7 +53,7 @@ describe('Logs Route', () => {
 
     it(`filters logs when searching for ${description}`, async () => {
       const router = createTestRouter(LogsPage, '/logs/$serverName')
-      router.navigate({ to: '/logs/$serverName', params: { serverName } })
+      await router.navigate({ to: '/logs/$serverName', params: { serverName } })
       renderRoute(router)
 
       await waitFor(() => {
@@ -86,7 +86,7 @@ describe('Logs Route', () => {
   it('handles empty logs response gracefully', async () => {
     const serverName = 'empty-logs-server'
     const router = createTestRouter(LogsPage, '/logs/$serverName')
-    router.navigate({ to: '/logs/$serverName', params: { serverName } })
+    await router.navigate({ to: '/logs/$serverName', params: { serverName } })
     renderRoute(router)
 
     await waitFor(() => {
@@ -99,7 +99,7 @@ describe('Logs Route', () => {
   it('refreshes logs when refresh button is clicked', async () => {
     const serverName = 'postgres-db'
     const router = createTestRouter(LogsPage, '/logs/$serverName')
-    router.navigate({ to: '/logs/$serverName', params: { serverName } })
+    await router.navigate({ to: '/logs/$serverName', params: { serverName } })
     renderRoute(router)
 
     await waitFor(() => {
