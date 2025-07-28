@@ -450,8 +450,8 @@ describe('saveSecrets', () => {
       secrets: [],
       envVars: [],
       networkIsolation: true,
-      allowedHosts: ['example.com', '.subdomain.com'],
-      allowedPorts: ['8080', '443'],
+      allowedHosts: [{ value: 'example.com' }, { value: '.subdomain.com' }],
+      allowedPorts: [{ value: '8080' }, { value: '443' }],
     }
 
     const result = prepareCreateWorkloadData(REGISTRY_SERVER, data)
@@ -475,8 +475,8 @@ describe('saveSecrets', () => {
       secrets: [],
       envVars: [],
       networkIsolation: false,
-      allowedHosts: ['example.com'],
-      allowedPorts: ['8080'],
+      allowedHosts: [{ value: 'example.com' }],
+      allowedPorts: [{ value: '8080' }],
     }
 
     const result = prepareCreateWorkloadData(REGISTRY_SERVER, data)
