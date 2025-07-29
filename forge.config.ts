@@ -47,18 +47,27 @@ const config: ForgeConfig = {
 
     // Windows Code Signing Configuration - DigiCert KeyLocker
     windowsSign: (() => {
-      // DigiCert KeyLocker integration using @electron/windows-sign
+      // DigiCert KeyLocker integration using smctl
       if (process.env.SM_HOST && process.env.SM_API_KEY) {
         return {
-          // Use DigiCert KeyLocker with signtool.exe and KSP
-          signWithParams: [
-            '/csp "DigiCert Signing Manager KSP"',
-            `/kc ${process.env.SM_CODE_SIGNING_CERT_SHA1_HASH || ''}`,
-            `/f ${process.env.SM_CLIENT_CERT_FILE || ''}`,
-            '/tr http://timestamp.digicert.com',
-            '/td SHA256',
-            '/fd SHA256',
-          ].join(' '),
+          hookFunction: async (filePath: string) => {
+            const { execSync } = await import('child_process')
+            console.log(`Signing ${filePath} using DigiCert KeyLocker...`)
+
+            // Use smctl for signing with DigiCert KeyLocker
+            const signCommand = [
+              '"C:\\Program Files\\DigiCert\\DigiCert Keylocker Tools\\smctl.exe"',
+              'sign',
+              '--fingerprint',
+              process.env.SM_CODE_SIGNING_CERT_SHA1_HASH || '',
+              '--input',
+              `"${filePath}"`,
+            ].join(' ')
+
+            console.log(`Executing: ${signCommand}`)
+            execSync(signCommand, { stdio: 'inherit' })
+            console.log(`Successfully signed ${filePath}`)
+          },
         }
       }
 
