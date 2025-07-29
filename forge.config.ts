@@ -20,6 +20,49 @@ function isValidArchitecture(arch: string): arch is NodeJS.Architecture {
   return ['x64', 'arm64'].includes(arch)
 }
 
+// Shared DigiCert KeyLocker signing function
+const createDigiCertSigner = () => {
+  if (!process.env.SM_HOST || !process.env.SM_API_KEY) {
+    return undefined
+  }
+
+  return {
+    hookFunction: async (filePath: string) => {
+      const { execSync } = await import('child_process')
+      const path = await import('path')
+      console.log(`Signing ${filePath} using DigiCert KeyLocker...`)
+
+      // Add signtool to PATH so smctl can find it
+      const originalPath = process.env.PATH
+      const signtoolPath = path.resolve(
+        'node_modules',
+        '@electron',
+        'windows-sign',
+        'vendor'
+      )
+      process.env.PATH = `${originalPath};${signtoolPath}`
+
+      const signCommand = [
+        '"C:\\Program Files\\DigiCert\\DigiCert Keylocker Tools\\smctl.exe"',
+        'sign',
+        '--fingerprint',
+        process.env.SM_CODE_SIGNING_CERT_SHA1_HASH || '',
+        '--input',
+        `"${filePath}"`,
+      ].join(' ')
+      console.log(`Executing: ${signCommand}`)
+
+      try {
+        execSync(signCommand, { stdio: 'inherit' })
+        console.log(`Successfully signed ${filePath}`)
+      } finally {
+        // Restore original PATH
+        process.env.PATH = originalPath
+      }
+    },
+  }
+}
+
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
@@ -46,33 +89,7 @@ const config: ForgeConfig = {
       : {}, // Auto-detect certificates
 
     // Windows Code Signing Configuration - DigiCert KeyLocker
-    windowsSign: (() => {
-      // DigiCert KeyLocker integration using smctl
-      if (process.env.SM_HOST && process.env.SM_API_KEY) {
-        return {
-          hookFunction: async (filePath: string) => {
-            const { execSync } = await import('child_process')
-            console.log(`Signing ${filePath} using DigiCert KeyLocker...`)
-
-            // Use smctl for signing with DigiCert KeyLocker
-            const signCommand = [
-              '"C:\\Program Files\\DigiCert\\DigiCert Keylocker Tools\\smctl.exe"',
-              'sign',
-              '--fingerprint',
-              process.env.SM_CODE_SIGNING_CERT_SHA1_HASH || '',
-              '--input',
-              `"${filePath}"`,
-            ].join(' ')
-
-            console.log(`Executing: ${signCommand}`)
-            execSync(signCommand, { stdio: 'inherit' })
-            console.log(`Successfully signed ${filePath}`)
-          },
-        }
-      }
-
-      return undefined
-    })(),
+    windowsSign: createDigiCertSigner(),
 
     // MacOS Notarization Configuration
     osxNotarize: (() => {
@@ -123,6 +140,8 @@ const config: ForgeConfig = {
       authors: 'Stacklok',
       exe: 'ToolHive.exe',
       name: 'ToolHive',
+      // DigiCert KeyLocker installer signing
+      windowsSign: createDigiCertSigner(),
     }),
     new MakerDMGWithArch(
       {

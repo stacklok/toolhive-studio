@@ -46,10 +46,21 @@ runs:
         echo "SM_CLIENT_CERT_PASSWORD=$env:SM_CLIENT_CERT_PASSWORD" >> $env:GITHUB_ENV
         echo "SM_CODE_SIGNING_CERT_SHA1_HASH=$env:SM_CODE_SIGNING_CERT_SHA1_HASH" >> $env:GITHUB_ENV
 
-        # Add Windows SDK tools to PATH
+        # Add Windows SDK tools to PATH (fallback if they exist)
         Write-Host "Adding tools to PATH..."
-        echo "C:\Program Files (x86)\Windows Kits\10\App Certification Kit" >> $env:GITHUB_PATH
-        echo "C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools" >> $env:GITHUB_PATH
+        if (Test-Path "C:\Program Files (x86)\Windows Kits\10\App Certification Kit") {
+          echo "C:\Program Files (x86)\Windows Kits\10\App Certification Kit" >> $env:GITHUB_PATH
+        }
+        if (Test-Path "C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools") {
+          echo "C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools" >> $env:GITHUB_PATH
+        }
+        
+        # Add bundled signtool from @electron/windows-sign if it exists (after npm install)
+        $bundledSigntool = "node_modules\@electron\windows-sign\vendor"
+        if (Test-Path $bundledSigntool) {
+          Write-Host "Adding bundled signtool to PATH..."
+          echo (Resolve-Path $bundledSigntool).Path >> $env:GITHUB_PATH
+        }
 
         # Download DigiCert KeyLocker tools
         Write-Host "Downloading DigiCert KeyLocker tools..."
