@@ -38,7 +38,7 @@ runs:
         $certBytes = [Convert]::FromBase64String($env:SM_CLIENT_CERT_FILE_B64)
         $tempCertPath = Join-Path $env:TEMP "Certificate_pkcs12.p12"
         [IO.File]::WriteAllBytes($tempCertPath, $certBytes)
-        
+
         # Set environment variables
         Write-Host "Setting environment variables..."
         echo "SM_HOST=$env:SM_HOST" >> $env:GITHUB_ENV
