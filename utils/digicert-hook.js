@@ -15,7 +15,9 @@ async function signWithDigiCert(filePath) {
 
   const fingerprint = process.env.SM_CODE_SIGNING_CERT_SHA1_HASH
   if (!fingerprint) {
-    throw new Error('SM_CODE_SIGNING_CERT_SHA1_HASH environment variable is required')
+    throw new Error(
+      'SM_CODE_SIGNING_CERT_SHA1_HASH environment variable is required'
+    )
   }
 
   const signCommand = [
@@ -24,7 +26,7 @@ async function signWithDigiCert(filePath) {
     '--fingerprint',
     fingerprint,
     '--input',
-    `"${filePath}"`
+    `"${filePath}"`,
   ].join(' ')
 
   console.log(`Executing: ${signCommand}`)
