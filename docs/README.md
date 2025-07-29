@@ -104,23 +104,17 @@ it as `VITE_API_URL` in the `.env` file (locally) or in the CI environment.
 
 ## Code signing
 
-Supports both macOS and Windows code signing. macOS uses Apple certificates, Windows uses DigiCert KeyLocker for EV certificates.
+Supports both macOS and Windows code signing. macOS uses Apple certificates,
+Windows uses DigiCert KeyLocker for EV certificates.
 
 ### Local development
 
 #### macOS
+
 Optional: Set `MAC_DEVELOPER_IDENTITY` in `.env` to use a specific certificate:
 
 ```text
 MAC_DEVELOPER_IDENTITY="Developer ID Application: Your Name (TEAM123)"
-```
-
-#### Windows
-For local Windows development, you can use traditional certificates by setting these environment variables:
-
-```text
-WINDOWS_CERTIFICATE_FILE="C:\path\to\certificate.pfx"
-WINDOWS_CERTIFICATE_PASSWORD="your_certificate_password"
 ```
 
 Local signing is not required for development.
@@ -128,6 +122,7 @@ Local signing is not required for development.
 ### CI/CD
 
 #### macOS Signing
+
 Requires these GitHub secrets:
 
 - `APPLE_CERTIFICATE` - Base64 encoded .p12 certificate
@@ -138,15 +133,18 @@ Requires these GitHub secrets:
 - `APPLE_KEY_ID` - Apple API Key ID
 
 #### Windows Signing (DigiCert KeyLocker)
+
 Requires these GitHub secrets for EV certificate signing:
 
-- `SM_HOST` - DigiCert KeyLocker host URL  
+- `SM_HOST` - DigiCert KeyLocker host URL
 - `SM_API_KEY` - DigiCert KeyLocker API key
 - `SM_CLIENT_CERT_FILE_B64` - Base64 encoded client certificate (.p12)
 - `SM_CLIENT_CERT_PASSWORD` - Client certificate password
-- `SM_CODE_SIGNING_CERT_SHA1_HASH` - SHA1 fingerprint of the code signing certificate
+- `SM_CODE_SIGNING_CERT_SHA1_HASH` - SHA1 fingerprint of the code signing
+  certificate
 
-CI auto-detects the certificates. Apps are signed automatically during the build process.
+CI auto-detects the certificates. Apps are signed automatically during the build
+process.
 
 ## ESLint configuration
 
