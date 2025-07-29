@@ -21,45 +21,41 @@ function isValidArchitecture(arch: string): arch is NodeJS.Architecture {
 }
 
 // Shared DigiCert KeyLocker signing function
-const createDigiCertSigner = () => {
+const signWithDigiCert = async (
+  filePath: string,
+  description?: string
+): Promise<void> => {
+  const { execSync } = await import('child_process')
+  console.log(`Signing ${filePath} using DigiCert KeyLocker...`)
+
+  const signCommand = [
+    '"C:\\Program Files\\DigiCert\\DigiCert Keylocker Tools\\smctl.exe"',
+    'sign',
+    '--fingerprint',
+    process.env.SM_CODE_SIGNING_CERT_SHA1_HASH || '',
+    '--input',
+    `"${filePath}"`,
+  ].join(' ')
+  console.log(`Executing: ${signCommand}`)
+
+  try {
+    execSync(signCommand, { stdio: 'inherit' })
+    console.log(`Successfully signed ${description || filePath}`)
+  } catch (error) {
+    console.error(`Failed to sign ${description || filePath}`, error)
+    throw error
+  }
+}
+
+// DigiCert KeyLocker signing configuration for app executables
+const createAppSigner = () => {
   if (!process.env.SM_HOST || !process.env.SM_API_KEY) {
     return undefined
   }
 
   return {
-    hookFunction: async (filePath: string) => {
-      const { execSync } = await import('child_process')
-      const path = await import('path')
-      console.log(`Signing ${filePath} using DigiCert KeyLocker...`)
-
-      // Add signtool to PATH so smctl can find it
-      const originalPath = process.env.PATH
-      const signtoolPath = path.resolve(
-        'node_modules',
-        '@electron',
-        'windows-sign',
-        'vendor'
-      )
-      process.env.PATH = `${originalPath};${signtoolPath}`
-
-      const signCommand = [
-        '"C:\\Program Files\\DigiCert\\DigiCert Keylocker Tools\\smctl.exe"',
-        'sign',
-        '--fingerprint',
-        process.env.SM_CODE_SIGNING_CERT_SHA1_HASH || '',
-        '--input',
-        `"${filePath}"`,
-      ].join(' ')
-      console.log(`Executing: ${signCommand}`)
-
-      try {
-        execSync(signCommand, { stdio: 'inherit' })
-        console.log(`Successfully signed ${filePath}`)
-      } finally {
-        // Restore original PATH
-        process.env.PATH = originalPath
-      }
-    },
+    hookFunction: (filePath: string) =>
+      signWithDigiCert(filePath, 'app executable'),
   }
 }
 
@@ -89,7 +85,7 @@ const config: ForgeConfig = {
       : {}, // Auto-detect certificates
 
     // Windows Code Signing Configuration - DigiCert KeyLocker
-    windowsSign: createDigiCertSigner(),
+    windowsSign: createAppSigner(),
 
     // MacOS Notarization Configuration
     osxNotarize: (() => {
@@ -140,8 +136,6 @@ const config: ForgeConfig = {
       authors: 'Stacklok',
       exe: 'ToolHive.exe',
       name: 'ToolHive',
-      // DigiCert KeyLocker installer signing
-      windowsSign: createDigiCertSigner(),
     }),
     new MakerDMGWithArch(
       {
@@ -257,6 +251,28 @@ const config: ForgeConfig = {
 
       // Download/cached the exact binary needed for this build target
       await ensureThv(platform, arch)
+    },
+
+    postMake: async (_forgeConfig, results) => {
+      // Sign Windows installers after creation
+      if (!process.env.SM_HOST || !process.env.SM_API_KEY) {
+        console.log(
+          'Skipping installer signing: DigiCert credentials not available'
+        )
+        return results
+      }
+
+      for (const result of results) {
+        if (result.platform === 'win32') {
+          for (const artifact of result.artifacts) {
+            if (artifact.endsWith('.exe') && artifact.includes('Setup')) {
+              await signWithDigiCert(artifact, 'installer')
+            }
+          }
+        }
+      }
+
+      return results
     },
   },
 }
