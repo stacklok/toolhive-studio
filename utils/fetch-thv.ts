@@ -92,7 +92,7 @@ async function checkBinaryVersion(binPath: string): Promise<boolean> {
         `A new version of ToolHive is available: ${latestTag} (current binary: ${currentBinVersion})`
       )
       console.log(
-        'Visit https://github.com/stacklok/toolhive/releases/latest for details'
+        'Visit https://github.com/LiamStorkey/toolhive/releases/latest for details'
       )
     }
     const shouldDownload =
@@ -180,7 +180,7 @@ function createBinaryPath(
   const versionNum = normalizeVersion(TOOLHIVE_VERSION)
 
   const assetName = `toolhive_${versionNum}_${os}_${cpu}.${extension}`
-  const downloadUrl = `https://github.com/stacklok/toolhive/releases/download/${tag}/${assetName}`
+  const downloadUrl = `https://github.com/LiamStorkey/toolhive/releases/download/${tag}/${assetName}`
 
   const binDir = path.resolve(__dirname, '..', 'bin', `${platform}-${arch}`)
   const binPath = path.join(binDir, isWindows ? 'thv.exe' : 'thv')
