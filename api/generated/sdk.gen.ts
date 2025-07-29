@@ -76,6 +76,9 @@ import type {
   GetApiV1BetaWorkloadsByNameData,
   GetApiV1BetaWorkloadsByNameResponses,
   GetApiV1BetaWorkloadsByNameErrors,
+  GetApiV1BetaWorkloadsByNameExportData,
+  GetApiV1BetaWorkloadsByNameExportResponses,
+  GetApiV1BetaWorkloadsByNameExportErrors,
   GetApiV1BetaWorkloadsByNameLogsData,
   GetApiV1BetaWorkloadsByNameLogsResponses,
   GetApiV1BetaWorkloadsByNameLogsErrors,
@@ -645,6 +648,25 @@ export const getApiV1BetaWorkloadsByName = <
     ThrowOnError
   >({
     url: '/api/v1beta/workloads/{name}',
+    ...options,
+  })
+}
+
+/**
+ * Export workload configuration
+ * Export a workload's run configuration as JSON
+ */
+export const getApiV1BetaWorkloadsByNameExport = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<GetApiV1BetaWorkloadsByNameExportData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).get<
+    GetApiV1BetaWorkloadsByNameExportResponses,
+    GetApiV1BetaWorkloadsByNameExportErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/workloads/{name}/export',
     ...options,
   })
 }
