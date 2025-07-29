@@ -553,8 +553,6 @@ ipcMain.handle('install-update-and-restart', async () => {
   log.info('🛑 Starting graceful shutdown before update...')
   mainWindow?.webContents.send('graceful-exit')
 
-  await delay(500)
-
   try {
     const port = getToolhivePort()
     if (port) {
