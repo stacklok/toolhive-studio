@@ -171,6 +171,9 @@ importers:
       '@electron/fuses':
         specifier: ^1.8.0
         version: 1.8.0
+      '@electron/windows-sign':
+        specifier: ^1.2.2
+        version: 1.2.2
       '@eslint/js':
         specifier: ^9.25.0
         version: 9.31.0

@@ -41,6 +41,34 @@ jobs:
           apple-issuer-id: ${{ secrets.APPLE_ISSUER_ID }}
           apple-key-id: ${{ secrets.APPLE_KEY_ID }}
 
+      - name: Setup DigiCert KeyLocker
+        if: runner.os == 'Windows'
+        run: |
+          # Setup certificate
+          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > /d/Certificate_pkcs12.p12
+          
+          # Set environment variables
+          echo "SM_HOST=${{ secrets.SM_HOST }}" >> "$GITHUB_ENV"
+          echo "SM_API_KEY=${{ secrets.SM_API_KEY }}" >> "$GITHUB_ENV"
+          echo "SM_CLIENT_CERT_FILE=D:\\Certificate_pkcs12.p12" >> "$GITHUB_ENV"
+          echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.SM_CLIENT_CERT_PASSWORD }}" >> "$GITHUB_ENV"
+          echo "SM_CODE_SIGNING_CERT_SHA1_HASH=${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}" >> "$GITHUB_ENV"
+          
+          # Add Windows SDK tools to PATH for signtool
+          echo "C:\Program Files (x86)\Windows Kits\10\App Certification Kit" >> $GITHUB_PATH
+          echo "C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools" >> $GITHUB_PATH
+          
+          # Download and install DigiCert KeyLocker tools
+          curl -X GET https://one.digicert.com/signingmanager/api-ui/v1/releases/Keylockertools-windows-x64.msi/download -H "x-api-key:${{ secrets.SM_API_KEY }}" -o Keylockertools-windows-x64.msi
+          msiexec /i Keylockertools-windows-x64.msi /quiet /qn
+          
+          # Register the KSP
+          smksp_registrar.exe register
+          
+          # Synchronize certificates
+          smksp_cert_sync.exe
+        shell: bash
+
       - name: Install Flatpak tool-chain (Linux only)
         if: runner.os == 'Linux'
         run: |

@@ -45,6 +45,35 @@ const config: ForgeConfig = {
       ? { identity: process.env.MAC_DEVELOPER_IDENTITY }
       : {}, // Auto-detect certificates
 
+    // Windows Code Signing Configuration - DigiCert KeyLocker
+    windowsSign: (() => {
+      // DigiCert KeyLocker integration using KSP
+      if (process.env.SM_HOST && process.env.SM_API_KEY) {
+        return {
+          hookFunction: async (filePath: string) => {
+            const { execSync } = await import('child_process')
+            console.log(`Signing ${filePath} using DigiCert KeyLocker...`)
+
+            // Use smctl for signing with DigiCert KeyLocker
+            const signCommand = [
+              '"C:\\Program Files\\DigiCert\\DigiCert Keylocker Tools\\smctl.exe"',
+              'sign',
+              '--fingerprint',
+              process.env.SM_CODE_SIGNING_CERT_SHA1_HASH || '',
+              '--input',
+              `"${filePath}"`,
+            ].join(' ')
+
+            console.log(`Executing: ${signCommand}`)
+            execSync(signCommand, { stdio: 'inherit' })
+            console.log(`Successfully signed ${filePath}`)
+          },
+        }
+      }
+
+      return undefined
+    })(),
+
     // MacOS Notarization Configuration
     osxNotarize: (() => {
       // Prefer Apple API Key method
@@ -94,6 +123,35 @@ const config: ForgeConfig = {
       authors: 'Stacklok',
       exe: 'ToolHive.exe',
       name: 'ToolHive',
+      // Windows code signing for the installer - DigiCert KeyLocker
+      ...(() => {
+        // DigiCert KeyLocker integration using KSP
+        if (process.env.SM_HOST && process.env.SM_API_KEY) {
+          return {
+            hookFunction: async (filePath: string) => {
+              const { execSync } = await import('child_process')
+              console.log(
+                `Signing installer ${filePath} using DigiCert KeyLocker...`
+              )
+
+              // Use smctl for signing installers
+              const signCommand = [
+                '"C:\\Program Files\\DigiCert\\DigiCert Keylocker Tools\\smctl.exe"',
+                'sign',
+                '--fingerprint',
+                process.env.SM_CODE_SIGNING_CERT_SHA1_HASH || '',
+                '--input',
+                `"${filePath}"`,
+              ].join(' ')
+
+              console.log(`Executing: ${signCommand}`)
+              execSync(signCommand, { stdio: 'inherit' })
+              console.log(`Successfully signed installer ${filePath}`)
+            },
+          }
+        }
+        return {}
+      })(),
     }),
     new MakerDMGWithArch(
       {

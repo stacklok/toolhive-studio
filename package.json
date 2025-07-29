@@ -47,6 +47,7 @@
     "@electron-forge/publisher-github": "^7.8.1",
     "@electron-forge/shared-types": "^7.8.1",
     "@electron/fuses": "^1.8.0",
+    "@electron/windows-sign": "^1.2.2",
     "@eslint/js": "^9.25.0",
     "@hey-api/openapi-ts": "0.80.1",
     "@playwright/test": "^1.54.1",
