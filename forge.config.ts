@@ -20,45 +20,6 @@ function isValidArchitecture(arch: string): arch is NodeJS.Architecture {
   return ['x64', 'arm64'].includes(arch)
 }
 
-// Shared DigiCert KeyLocker signing function
-const signWithDigiCert = async (
-  filePath: string,
-  description?: string
-): Promise<void> => {
-  const { execSync } = await import('child_process')
-  console.log(`Signing ${filePath} using DigiCert KeyLocker...`)
-
-  const signCommand = [
-    '"C:\\Program Files\\DigiCert\\DigiCert Keylocker Tools\\smctl.exe"',
-    'sign',
-    '--fingerprint',
-    process.env.SM_CODE_SIGNING_CERT_SHA1_HASH || '',
-    '--input',
-    `"${filePath}"`,
-  ].join(' ')
-  console.log(`Executing: ${signCommand}`)
-
-  try {
-    execSync(signCommand, { stdio: 'inherit' })
-    console.log(`Successfully signed ${description || filePath}`)
-  } catch (error) {
-    console.error(`Failed to sign ${description || filePath}`, error)
-    throw error
-  }
-}
-
-// DigiCert KeyLocker signing configuration for app executables
-const createAppSigner = () => {
-  if (!process.env.SM_HOST || !process.env.SM_API_KEY) {
-    return undefined
-  }
-
-  return {
-    hookFunction: (filePath: string) =>
-      signWithDigiCert(filePath, 'app executable'),
-  }
-}
-
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
@@ -85,7 +46,12 @@ const config: ForgeConfig = {
       : {}, // Auto-detect certificates
 
     // Windows Code Signing Configuration - DigiCert KeyLocker
-    windowsSign: createAppSigner(),
+    windowsSign:
+      process.env.SM_HOST && process.env.SM_API_KEY
+        ? {
+            hookModulePath: './utils/digicert-hook.js',
+          }
+        : undefined,
 
     // MacOS Notarization Configuration
     osxNotarize: (() => {
@@ -136,6 +102,13 @@ const config: ForgeConfig = {
       authors: 'Stacklok',
       exe: 'ToolHive.exe',
       name: 'ToolHive',
+      // Use DigiCert KeyLocker for signing the installer
+      windowsSign:
+        process.env.SM_HOST && process.env.SM_API_KEY
+          ? {
+              hookModulePath: './utils/digicert-hook.js',
+            }
+          : undefined,
     }),
     new MakerDMGWithArch(
       {
@@ -251,28 +224,6 @@ const config: ForgeConfig = {
 
       // Download/cached the exact binary needed for this build target
       await ensureThv(platform, arch)
-    },
-
-    postMake: async (_forgeConfig, results) => {
-      // Sign Windows installers after creation
-      if (!process.env.SM_HOST || !process.env.SM_API_KEY) {
-        console.log(
-          'Skipping installer signing: DigiCert credentials not available'
-        )
-        return results
-      }
-
-      for (const result of results) {
-        if (result.platform === 'win32') {
-          for (const artifact of result.artifacts) {
-            if (artifact.endsWith('.exe') && artifact.includes('Setup')) {
-              await signWithDigiCert(artifact, 'installer')
-            }
-          }
-        }
-      }
-
-      return results
     },
   },
 }
