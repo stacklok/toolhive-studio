@@ -342,21 +342,25 @@ app.whenReady().then(async () => {
   // Create main window
   mainWindow = createWindow()
 
-  mainWindow.webContents.on('before-input-event', (event, input) => {
-    const isCmdQ =
-      process.platform === 'darwin' &&
-      input.meta &&
-      input.key.toLowerCase() === 'q'
-    const isCtrlQ =
-      process.platform !== 'darwin' &&
-      input.control &&
-      input.key.toLowerCase() === 'q'
+  mainWindow.webContents.once('did-finish-load', () => {
+    if (!mainWindow) return
 
-    if (mainWindow && (isCmdQ || isCtrlQ)) {
-      event.preventDefault()
-      log.info('CmdOrCtrl+Q pressed, hiding window')
-      hideWindow(mainWindow)
-    }
+    mainWindow.webContents.on('before-input-event', (event, input) => {
+      const isCmdQ =
+        process.platform === 'darwin' &&
+        input.meta &&
+        input.key.toLowerCase() === 'q'
+      const isCtrlQ =
+        process.platform !== 'darwin' &&
+        input.control &&
+        input.key.toLowerCase() === 'q'
+
+      if (isCmdQ || isCtrlQ) {
+        event.preventDefault()
+        log.info('CmdOrCtrl+Q pressed, hiding window')
+        hideWindow(mainWindow!)
+      }
+    })
   })
 
   // Setup CSP headers
