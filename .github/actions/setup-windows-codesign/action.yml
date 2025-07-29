@@ -32,7 +32,7 @@ runs:
         SM_CODE_SIGNING_CERT_SHA1_HASH: ${{ inputs.sm-code-signing-cert-sha1-hash }}
       run: |
         Write-Host "Setting up DigiCert KeyLocker..."
-        
+
         # Setup certificate
         Write-Host "Decoding certificate..."
         $certBytes = [Convert]::FromBase64String($env:SM_CLIENT_CERT_FILE_B64)
