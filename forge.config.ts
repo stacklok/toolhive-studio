@@ -109,7 +109,7 @@ const config: ForgeConfig = {
           name: 'toolhive-studio',
         },
         draft: false,
-        prerelease: false,
+        prerelease: true,
       },
     },
   ],
