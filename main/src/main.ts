@@ -8,7 +8,6 @@ import {
   shell,
   autoUpdater,
   dialog,
-  globalShortcut,
 } from 'electron'
 import path from 'node:path'
 import { updateElectronApp } from 'update-electron-app'
@@ -343,17 +342,22 @@ app.whenReady().then(async () => {
   // Create main window
   mainWindow = createWindow()
 
-  // Register global shortcut for CmdOrCtrl+Q to hide window (same as CmdOrCtrl+H)
-  try {
-    globalShortcut.register('CmdOrCtrl+Q', () => {
-      if (mainWindow) {
-        hideWindow(mainWindow)
-      }
-    })
-    log.info('Global shortcut CmdOrCtrl+Q registered successfully')
-  } catch (error) {
-    log.error('Failed to register global shortcut: ', error)
-  }
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    const isCmdQ =
+      process.platform === 'darwin' &&
+      input.meta &&
+      input.key.toLowerCase() === 'q'
+    const isCtrlQ =
+      process.platform !== 'darwin' &&
+      input.control &&
+      input.key.toLowerCase() === 'q'
+
+    if (mainWindow && (isCmdQ || isCtrlQ)) {
+      event.preventDefault()
+      log.info('CmdOrCtrl+Q pressed, hiding window')
+      hideWindow(mainWindow)
+    }
+  })
 
   // Setup CSP headers
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
