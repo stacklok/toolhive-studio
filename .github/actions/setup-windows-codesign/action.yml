@@ -36,13 +36,14 @@ runs:
         # Setup certificate
         Write-Host "Decoding certificate..."
         $certBytes = [Convert]::FromBase64String($env:SM_CLIENT_CERT_FILE_B64)
-        [IO.File]::WriteAllBytes("D:\Certificate_pkcs12.p12", $certBytes)
-
+        $tempCertPath = Join-Path $env:TEMP "Certificate_pkcs12.p12"
+        [IO.File]::WriteAllBytes($tempCertPath, $certBytes)
+        
         # Set environment variables
         Write-Host "Setting environment variables..."
         echo "SM_HOST=$env:SM_HOST" >> $env:GITHUB_ENV
         echo "SM_API_KEY=$env:SM_API_KEY" >> $env:GITHUB_ENV
-        echo "SM_CLIENT_CERT_FILE=D:\Certificate_pkcs12.p12" >> $env:GITHUB_ENV
+        echo "SM_CLIENT_CERT_FILE=$tempCertPath" >> $env:GITHUB_ENV
         echo "SM_CLIENT_CERT_PASSWORD=$env:SM_CLIENT_CERT_PASSWORD" >> $env:GITHUB_ENV
         echo "SM_CODE_SIGNING_CERT_SHA1_HASH=$env:SM_CODE_SIGNING_CERT_SHA1_HASH" >> $env:GITHUB_ENV
 
@@ -62,8 +63,9 @@ runs:
 
         # Install with timeout
         Write-Host "Installing DigiCert KeyLocker tools..."
+        $installTimeoutMs = 300000 # 5 minute timeout
         $process = Start-Process -FilePath "msiexec.exe" -ArgumentList "/i", "Keylockertools-windows-x64.msi", "/quiet", "/qn", "/L*v", "install.log" -PassThru
-        if (-not $process.WaitForExit(300000)) { # 5 minute timeout
+        if (-not $process.WaitForExit($installTimeoutMs)) {
           $process.Kill()
           throw "Installation timed out"
         }
@@ -79,7 +81,8 @@ runs:
         # Register KSP with timeout
         Write-Host "Registering KSP..."
         $process = Start-Process -FilePath "C:\Program Files\DigiCert\DigiCert Keylocker Tools\smksp_registrar.exe" -ArgumentList "register" -PassThru -NoNewWindow
-        if (-not $process.WaitForExit(60000)) { # 1 minute timeout
+        $installTimeoutMs = 60000 # 1 minute timeout
+        if (-not $process.WaitForExit($installTimeoutMs)) {
           $process.Kill()
           throw "KSP registration timed out"
         }
@@ -87,7 +90,8 @@ runs:
         # Sync certificates with timeout
         Write-Host "Synchronizing certificates..."
         $process = Start-Process -FilePath "C:\Program Files\DigiCert\DigiCert Keylocker Tools\smksp_cert_sync.exe" -PassThru -NoNewWindow
-        if (-not $process.WaitForExit(120000)) { # 2 minute timeout
+        $installTimeoutMs = 60000 # 2 minute timeout
+        if (-not $process.WaitForExit($installTimeoutMs)) {
           $process.Kill()
           throw "Certificate sync timed out"
         }
