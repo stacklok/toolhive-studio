@@ -11,9 +11,10 @@ export function GridCardsRegistryServer({
   servers: RegistryImageMetadata[]
 }) {
   const navigate = useNavigate()
-  // Filter out filesystem servers
   const filteredServers = useMemo(() => {
-    return servers.filter((server) => server.name !== 'filesystem')
+    return servers.filter(
+      (server) => server.name && !['filesystem', 'sqlite'].includes(server.name)
+    )
   }, [servers])
 
   const {
