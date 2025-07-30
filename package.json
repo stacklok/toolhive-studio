@@ -88,7 +88,7 @@
     "unzipper": "^0.12.3",
     "vite": "^6.3.5",
     "vitest": "^3.1.4",
-    "vitest-fail-on-console": "^0.7.1"
+    "vitest-fail-on-console": "^0.8.0"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.6",
