@@ -446,7 +446,7 @@ app.on('activate', () => {
 })
 
 app.on('will-finish-launching', () => {
-  log.info('App will finish launching - preparing for potential restart')
+  log.info('App will finish launching')
 })
 
 app.on('before-quit', (e) => {
