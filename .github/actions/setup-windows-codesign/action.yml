@@ -1,0 +1,99 @@
+name: 'Setup Windows Code Signing'
+description: 'Sets up DigiCert KeyLocker for Windows code signing'
+
+inputs:
+  sm-host:
+    description: 'DigiCert SigningManager host'
+    required: true
+  sm-api-key:
+    description: 'DigiCert SigningManager API key'
+    required: true
+  sm-client-cert-file-b64:
+    description: 'Base64 encoded client certificate file'
+    required: true
+  sm-client-cert-password:
+    description: 'Client certificate password'
+    required: true
+  sm-code-signing-cert-sha1-hash:
+    description: 'SHA1 hash of the code signing certificate'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup DigiCert KeyLocker
+      if: runner.os == 'Windows'
+      shell: powershell
+      env:
+        SM_HOST: ${{ inputs.sm-host }}
+        SM_API_KEY: ${{ inputs.sm-api-key }}
+        SM_CLIENT_CERT_FILE_B64: ${{ inputs.sm-client-cert-file-b64 }}
+        SM_CLIENT_CERT_PASSWORD: ${{ inputs.sm-client-cert-password }}
+        SM_CODE_SIGNING_CERT_SHA1_HASH: ${{ inputs.sm-code-signing-cert-sha1-hash }}
+      run: |
+        Write-Host "Setting up DigiCert KeyLocker..."
+
+        # Setup certificate
+        Write-Host "Decoding certificate..."
+        $certBytes = [Convert]::FromBase64String($env:SM_CLIENT_CERT_FILE_B64)
+        $tempCertPath = Join-Path $env:TEMP "Certificate_pkcs12.p12"
+        [IO.File]::WriteAllBytes($tempCertPath, $certBytes)
+
+        # Set environment variables
+        Write-Host "Setting environment variables..."
+        echo "SM_HOST=$env:SM_HOST" >> $env:GITHUB_ENV
+        echo "SM_API_KEY=$env:SM_API_KEY" >> $env:GITHUB_ENV
+        echo "SM_CLIENT_CERT_FILE=$tempCertPath" >> $env:GITHUB_ENV
+        echo "SM_CLIENT_CERT_PASSWORD=$env:SM_CLIENT_CERT_PASSWORD" >> $env:GITHUB_ENV
+        echo "SM_CODE_SIGNING_CERT_SHA1_HASH=$env:SM_CODE_SIGNING_CERT_SHA1_HASH" >> $env:GITHUB_ENV
+
+        # Add Windows SDK tools to PATH (for signtool)
+        Write-Host "Adding Windows SDK tools to PATH..."
+        if (Test-Path "C:\Program Files (x86)\Windows Kits\10\App Certification Kit") {
+          echo "C:\Program Files (x86)\Windows Kits\10\App Certification Kit" >> $env:GITHUB_PATH
+        }
+        if (Test-Path "C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools") {
+          echo "C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools" >> $env:GITHUB_PATH
+        }
+
+        # Download DigiCert KeyLocker tools
+        Write-Host "Downloading DigiCert KeyLocker tools..."
+        $headers = @{"x-api-key" = $env:SM_API_KEY}
+        Invoke-WebRequest -Uri "https://one.digicert.com/signingmanager/api-ui/v1/releases/Keylockertools-windows-x64.msi/download" -Headers $headers -OutFile "Keylockertools-windows-x64.msi"
+
+        # Install with timeout
+        Write-Host "Installing DigiCert KeyLocker tools..."
+        $installTimeoutMs = 300000 # 5 minute timeout
+        $process = Start-Process -FilePath "msiexec.exe" -ArgumentList "/i", "Keylockertools-windows-x64.msi", "/quiet", "/qn", "/L*v", "install.log" -PassThru
+        if (-not $process.WaitForExit($installTimeoutMs)) {
+          $process.Kill()
+          throw "Installation timed out"
+        }
+        if ($process.ExitCode -ne 0) {
+          Get-Content "install.log" -ErrorAction SilentlyContinue
+          throw "Installation failed with exit code $($process.ExitCode)"
+        }
+
+        # Add DigiCert tools to PATH
+        Write-Host "Adding DigiCert tools to PATH..."
+        echo "C:\Program Files\DigiCert\DigiCert Keylocker Tools" >> $env:GITHUB_PATH
+
+        # Register KSP with timeout
+        Write-Host "Registering KSP..."
+        $process = Start-Process -FilePath "C:\Program Files\DigiCert\DigiCert Keylocker Tools\smksp_registrar.exe" -ArgumentList "register" -PassThru -NoNewWindow
+        $installTimeoutMs = 60000 # 1 minute timeout
+        if (-not $process.WaitForExit($installTimeoutMs)) {
+          $process.Kill()
+          throw "KSP registration timed out"
+        }
+
+        # Sync certificates with timeout
+        Write-Host "Synchronizing certificates..."
+        $process = Start-Process -FilePath "C:\Program Files\DigiCert\DigiCert Keylocker Tools\smksp_cert_sync.exe" -PassThru -NoNewWindow
+        $installTimeoutMs = 60000 # 2 minute timeout
+        if (-not $process.WaitForExit($installTimeoutMs)) {
+          $process.Kill()
+          throw "Certificate sync timed out"
+        }
+
+        Write-Host "DigiCert KeyLocker setup completed successfully!"
