@@ -91,7 +91,9 @@ typings/
 # Electron-Forge
 out/
 
-bin/
+bin/*/thv
+bin/*/README.md
+bin/*/LICENSE
 
 # Playwright
 /test-results/
@@ -99,3 +101,5 @@ bin/
 /blob-report/
 /playwright/.cache/
 /test-videos/
+
+
