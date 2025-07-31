@@ -37,6 +37,7 @@ import log from './logger'
 import { getAppVersion, isOfficialReleaseBuild, pollWindowReady } from './util'
 import { delay } from '../../utils/delay'
 import Store from 'electron-store'
+import { getHeaders } from './headers'
 
 let tray: Tray | null = null
 let isQuitting = false
@@ -619,7 +620,11 @@ ipcMain.handle('is-update-in-progress', () => {
   return updateState === 'installing'
 })
 
-ipcMain.handle('is-release-build', () => {
+ipcMain.handle('telemetry-headers', () => {
+  return getHeaders()
+})
+
+ipcMain.handle('is-official-release-build', () => {
   return isOfficialReleaseBuild()
 })
 
