@@ -15,7 +15,7 @@ export function useAppVersion() {
       try {
         const [version, release, toolhiveVersion] = await Promise.allSettled([
           window.electronAPI.getAppVersion(),
-          window.electronAPI.isReleaseBuild(),
+          window.electronAPI.isOfficialReleaseBuild(),
           window.electronAPI.getToolhiveVersion(),
         ])
 
