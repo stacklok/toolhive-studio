@@ -38,6 +38,17 @@ import { getAppVersion, isOfficialReleaseBuild, pollWindowReady } from './util'
 import { delay } from '../../utils/delay'
 import Store from 'electron-store'
 
+let tray: Tray | null = null
+let isQuitting = false
+let tearingDown = false
+let pendingUpdateVersion: string | null = null
+let updateState:
+  | 'checking'
+  | 'downloading'
+  | 'downloaded'
+  | 'installing'
+  | 'none' = 'none'
+
 const store = new Store<{
   isTelemetryEnabled: boolean
 }>({ defaults: { isTelemetryEnabled: true } })
@@ -71,9 +82,13 @@ app.on('ready', () => {
   }, 2000)
 })
 
+// ────────────────────────────────────────────────────────────────────────────
+//  Auto-updater event handlers
+// ────────────────────────────────────────────────────────────────────────────
 autoUpdater.on('update-downloaded', (_, __, releaseName) => {
-  log.info('🔄 Update downloaded - showing dialog')
-
+  log.info('[update] downloaded - showing dialog')
+  pendingUpdateVersion = releaseName
+  updateState = 'downloaded'
   if (!mainWindow) {
     log.error('MainWindow not available for update dialog')
     return
@@ -104,9 +119,12 @@ autoUpdater.on('update-downloaded', (_, __, releaseName) => {
     .showMessageBox(mainWindow, dialogOpts)
     .then(async (returnValue) => {
       if (returnValue.response === 0) {
-        isUpdateInProgress = true
+        log.info(
+          `[update] installing update to version: ${releaseName || 'unknown'}`
+        )
+        updateState = 'installing'
 
-        log.info('🛑 Removing quit listeners to avoid interference')
+        log.info('[update] removing quit listeners to avoid interference')
         app.removeAllListeners('before-quit')
         app.removeAllListeners('will-quit')
 
@@ -114,10 +132,9 @@ autoUpdater.on('update-downloaded', (_, __, releaseName) => {
         tearingDown = true
 
         try {
-          log.info('🛑 Starting graceful shutdown before update...')
-          mainWindow?.webContents.send('graceful-exit')
+          log.info('[update] starting graceful shutdown before update...')
 
-          await delay(500)
+          mainWindow?.webContents.send('graceful-exit')
 
           const port = getToolhivePort()
           if (port) {
@@ -128,19 +145,21 @@ autoUpdater.on('update-downloaded', (_, __, releaseName) => {
 
           tray?.destroy()
 
-          log.info('🚀 All cleaned up, calling autoUpdater.quitAndInstall()...')
+          log.info(
+            '[update] all cleaned up, calling autoUpdater.quitAndInstall()...'
+          )
           autoUpdater.quitAndInstall()
         } catch (error) {
-          isUpdateInProgress = false
-          log.error('❌ Error during graceful shutdown:', error)
+          updateState = 'none'
+          log.error('[update] error during graceful shutdown:', error)
           tray?.destroy()
           app.relaunch()
           app.quit()
         }
       } else {
-        isUpdateInProgress = false
+        updateState = 'none'
         log.info(
-          'User deferred update installation - showing toast notification'
+          '[update] user deferred update installation - showing toast notification'
         )
         if (mainWindow) {
           mainWindow.webContents.send('update-downloaded')
@@ -148,20 +167,33 @@ autoUpdater.on('update-downloaded', (_, __, releaseName) => {
       }
     })
     .catch((error) => {
-      log.error('❌ Error showing dialog:', error)
+      log.error('[update] error showing dialog:', error)
     })
 })
 
-autoUpdater.on('error', (message) => {
-  log.error('There was a problem updating the application: ', message)
+autoUpdater.on('checking-for-update', () => {
+  log.info('[update] checking for updates...')
+  updateState = 'checking'
 })
 
-autoUpdater.checkForUpdates()
+autoUpdater.on('update-available', () => {
+  updateState = 'downloading'
+})
 
-let tray: Tray | null = null
-let isQuitting = false
-let isUpdateInProgress = false
-let tearingDown = false
+autoUpdater.on('update-not-available', () => {
+  if (updateState === 'downloading') {
+    log.warn('[update] update became unavailable during download - ignoring')
+    return
+  }
+  updateState = 'none'
+})
+
+autoUpdater.on('error', (message) => {
+  log.error('[update] there was a problem updating the application: ', message)
+  log.info('[update] update state: ', updateState)
+  log.info('[update] toolhive binary is running: ', isToolhiveRunning())
+  updateState = 'none'
+})
 
 /** Hold the quit, run teardown, then really exit. */
 export async function blockQuit(source: string, event?: Electron.Event) {
@@ -326,7 +358,7 @@ function createWindow() {
 let mainWindow: BrowserWindow | null = null
 
 app.whenReady().then(async () => {
-  isUpdateInProgress = false
+  updateState = 'none'
   // Initialize tray first
   try {
     tray = initTray({ toolHiveIsRunning: false }) // Start with false, will update after ToolHive starts
@@ -344,6 +376,10 @@ app.whenReady().then(async () => {
 
   mainWindow.webContents.once('did-finish-load', () => {
     if (!mainWindow) return
+
+    if (updateState === 'none') {
+      autoUpdater.checkForUpdates()
+    }
 
     mainWindow.webContents.on('before-input-event', (event, input) => {
       const isCmdQ =
@@ -410,7 +446,7 @@ app.on('activate', () => {
 })
 
 app.on('will-finish-launching', () => {
-  log.info('App will finish launching - preparing for potential restart')
+  log.info('App will finish launching')
 })
 
 app.on('before-quit', (e) => {
@@ -540,28 +576,30 @@ ipcMain.handle('restart-toolhive', async () => {
 })
 
 ipcMain.handle('install-update-and-restart', async () => {
-  log.info('Installing update and restarting application')
+  log.info(
+    `[update] installing update and restarting application ${pendingUpdateVersion || 'unknown'}`
+  )
   // Set a flag to indicate we're installing an update
   // This will prevent the graceful shutdown process
   isQuitting = true
   tearingDown = true
-  isUpdateInProgress = true
+  updateState = 'installing'
 
   app.removeAllListeners('before-quit')
   app.removeAllListeners('will-quit')
 
-  log.info('🛑 Starting graceful shutdown before update...')
+  log.info('[update] starting graceful shutdown before update...')
   mainWindow?.webContents.send('graceful-exit')
 
   try {
     const port = getToolhivePort()
     if (port) {
       await stopAllServers(binPath, port).catch((err) => {
-        log.error('Failed to stop servers during update: ', err)
+        log.error('[update] failed to stop servers during update: ', err)
       })
     }
   } catch (err) {
-    log.error('Failed to get port during update: ', err)
+    log.error('[update] failed to get port during update: ', err)
   }
 
   // Stop ToolHive
@@ -571,16 +609,14 @@ ipcMain.handle('install-update-and-restart', async () => {
   tray?.destroy()
 
   // Install update and restart
-  log.info(
-    '[restart from toast] all cleaned up, calling autoUpdater.quitAndInstall()...'
-  )
+  log.info('[update] all cleaned up, calling autoUpdater.quitAndInstall()...')
   autoUpdater.quitAndInstall()
   return { success: true }
 })
 
 ipcMain.handle('is-update-in-progress', () => {
-  log.debug(`[is-update-in-progress]: ${isUpdateInProgress}`)
-  return isUpdateInProgress
+  log.debug(`[is-update-in-progress]: ${updateState}`)
+  return updateState === 'installing'
 })
 
 ipcMain.handle('is-release-build', () => {

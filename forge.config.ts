@@ -45,6 +45,14 @@ const config: ForgeConfig = {
       ? { identity: process.env.MAC_DEVELOPER_IDENTITY }
       : {}, // Auto-detect certificates
 
+    // Windows Code Signing Configuration - DigiCert KeyLocker
+    windowsSign:
+      process.env.SM_HOST && process.env.SM_API_KEY
+        ? {
+            hookModulePath: './utils/digicert-hook.js',
+          }
+        : undefined,
+
     // MacOS Notarization Configuration
     osxNotarize: (() => {
       // Prefer Apple API Key method
@@ -94,6 +102,13 @@ const config: ForgeConfig = {
       authors: 'Stacklok',
       exe: 'ToolHive.exe',
       name: 'ToolHive',
+      // Use DigiCert KeyLocker for signing the installer
+      windowsSign:
+        process.env.SM_HOST && process.env.SM_API_KEY
+          ? {
+              hookModulePath: './utils/digicert-hook.js',
+            }
+          : undefined,
     }),
     new MakerDMGWithArch(
       {
