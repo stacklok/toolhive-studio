@@ -13,7 +13,9 @@ export function GridCardsRegistryServer({
   const navigate = useNavigate()
   const filteredServers = useMemo(() => {
     return servers.filter(
-      (server) => server.name && !['filesystem', 'sqlite'].includes(server.name)
+      (server) =>
+        typeof server.name === 'string' &&
+        !['filesystem', 'sqlite'].includes(server.name)
     )
   }, [servers])
 
