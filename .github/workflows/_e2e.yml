@@ -43,7 +43,7 @@ jobs:
         run: |
           sudo systemctl start docker
           sudo systemctl status docker
-          
+
       - name: Pre-build app
         run: |
           pnpm tsc -b --clean 
