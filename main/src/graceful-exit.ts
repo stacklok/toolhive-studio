@@ -7,6 +7,7 @@ import type { WorkloadsWorkload } from '@api/types.gen'
 import Store from 'electron-store'
 import log from './logger'
 import { delay } from '../../utils/delay'
+import { getAppVersion, isOfficialReleaseBuild } from './util'
 
 // Create a store instance for tracking shutdown servers
 const shutdownStore = new Store({
@@ -16,9 +17,23 @@ const shutdownStore = new Store({
   },
 })
 
+function getHeaders() {
+  const appVersion = getAppVersion()
+  const isReleaseBuild = isOfficialReleaseBuild()
+  return {
+    'X-Client-Type': 'toolhive-studio',
+    'X-Client-Version': appVersion,
+    'X-Client-Platform': process.platform,
+    'X-Client-Release-Build': isReleaseBuild,
+  }
+}
+
 /** Get the currently running servers from the ToolHive API. */
 async function getRunningServers(port: number): Promise<WorkloadsWorkload[]> {
-  const client = createClient({ baseUrl: `http://localhost:${port}` })
+  const client = createClient({
+    baseUrl: `http://localhost:${port}`,
+    headers: getHeaders(),
+  })
   try {
     const response = await getApiV1BetaWorkloads({ client })
     if (!response?.data?.workloads) {
@@ -63,7 +78,10 @@ export async function stopAllServers(
   _binPath: string, // Kept for backward compatibility
   port: number
 ): Promise<void> {
-  const client = createClient({ baseUrl: `http://localhost:${port}` })
+  const client = createClient({
+    baseUrl: `http://localhost:${port}`,
+    headers: getHeaders(),
+  })
   const servers = await getRunningServers(port)
   log.info(
     `Found ${servers.length} running servers: `,
