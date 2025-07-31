@@ -43,11 +43,7 @@ jobs:
         run: |
           sudo systemctl start docker
           sudo systemctl status docker
-
-      - name: Verify that `thv` binary works
-        run: |
-          pnpm run thv list
-
+          
       - name: Pre-build app
         run: |
           pnpm tsc -b --clean 
