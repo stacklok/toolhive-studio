@@ -50,17 +50,6 @@ function isCurrentVersionOlder(
   return false
 }
 
-async function getBinaryVersion(binPath: string): Promise<string | null> {
-  try {
-    const { stdout } = await execFileAsync(binPath, ['version'])
-    const versionMatch = stdout.trim().match(/v?\d+\.\d+\.\d+/)
-    return versionMatch?.[0] ?? null
-  } catch (error) {
-    console.log('Error getting binary version:', error)
-    return null
-  }
-}
-
 async function fetchLatestRelease(): Promise<string | null> {
   try {
     const response = await fetch(GITHUB_API_URL)
@@ -78,25 +67,22 @@ async function checkBinaryVersion(binPath: string): Promise<boolean> {
 
   try {
     await access(binPath)
-
-    const currentBinVersion = await getBinaryVersion(binPath)
-    if (!currentBinVersion) return true
     if (!latestTag) return false
-    const isBinVersionOlder = isCurrentVersionOlder(
-      currentBinVersion,
-      latestTag
-    )
+
     const constantThvVersion = normalizeVersion(TOOLHIVE_VERSION)
-    if (isBinVersionOlder) {
+    const latestVersion = normalizeVersion(latestTag)
+    const isVersionOlder = isCurrentVersionOlder(constantThvVersion, latestTag)
+
+    if (isVersionOlder) {
       console.log(
-        `A new version of ToolHive is available: ${latestTag} (current binary: ${currentBinVersion})`
+        `A new version of ToolHive is available: ${latestTag} (current: v${constantThvVersion})`
       )
       console.log(
         'Visit https://github.com/stacklok/toolhive/releases/latest for details'
       )
     }
-    const shouldDownload =
-      constantThvVersion !== normalizeVersion(currentBinVersion)
+
+    const shouldDownload = constantThvVersion !== latestVersion
     return shouldDownload
   } catch {
     return true
