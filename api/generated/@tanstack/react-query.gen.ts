@@ -9,10 +9,6 @@ import {
   postApiV1BetaClientsUnregister,
   deleteApiV1BetaClientsByName,
   getApiV1BetaDiscoveryClients,
-  getApiV1BetaGroups,
-  postApiV1BetaGroups,
-  deleteApiV1BetaGroupsByName,
-  getApiV1BetaGroupsByName,
   getApiV1BetaRegistry,
   postApiV1BetaRegistry,
   deleteApiV1BetaRegistryByName,
@@ -56,14 +52,6 @@ import type {
   DeleteApiV1BetaClientsByNameError,
   DeleteApiV1BetaClientsByNameResponse,
   GetApiV1BetaDiscoveryClientsData,
-  GetApiV1BetaGroupsData,
-  PostApiV1BetaGroupsData,
-  PostApiV1BetaGroupsError,
-  PostApiV1BetaGroupsResponse,
-  DeleteApiV1BetaGroupsByNameData,
-  DeleteApiV1BetaGroupsByNameError,
-  DeleteApiV1BetaGroupsByNameResponse,
-  GetApiV1BetaGroupsByNameData,
   GetApiV1BetaRegistryData,
   PostApiV1BetaRegistryData,
   PostApiV1BetaRegistryError,
@@ -412,137 +400,6 @@ export const getApiV1BetaDiscoveryClientsOptions = (
       return data
     },
     queryKey: getApiV1BetaDiscoveryClientsQueryKey(options),
-  })
-}
-
-export const getApiV1BetaGroupsQueryKey = (
-  options?: Options<GetApiV1BetaGroupsData>
-) => createQueryKey('getApiV1BetaGroups', options)
-
-/**
- * List all groups
- * Get a list of all groups
- */
-export const getApiV1BetaGroupsOptions = (
-  options?: Options<GetApiV1BetaGroupsData>
-) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getApiV1BetaGroups({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      })
-      return data
-    },
-    queryKey: getApiV1BetaGroupsQueryKey(options),
-  })
-}
-
-export const postApiV1BetaGroupsQueryKey = (
-  options: Options<PostApiV1BetaGroupsData>
-) => createQueryKey('postApiV1BetaGroups', options)
-
-/**
- * Create a new group
- * Create a new group with the specified name
- */
-export const postApiV1BetaGroupsOptions = (
-  options: Options<PostApiV1BetaGroupsData>
-) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await postApiV1BetaGroups({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      })
-      return data
-    },
-    queryKey: postApiV1BetaGroupsQueryKey(options),
-  })
-}
-
-/**
- * Create a new group
- * Create a new group with the specified name
- */
-export const postApiV1BetaGroupsMutation = (
-  options?: Partial<Options<PostApiV1BetaGroupsData>>
-): UseMutationOptions<
-  PostApiV1BetaGroupsResponse,
-  PostApiV1BetaGroupsError,
-  Options<PostApiV1BetaGroupsData>
-> => {
-  const mutationOptions: UseMutationOptions<
-    PostApiV1BetaGroupsResponse,
-    PostApiV1BetaGroupsError,
-    Options<PostApiV1BetaGroupsData>
-  > = {
-    mutationFn: async (localOptions) => {
-      const { data } = await postApiV1BetaGroups({
-        ...options,
-        ...localOptions,
-        throwOnError: true,
-      })
-      return data
-    },
-  }
-  return mutationOptions
-}
-
-/**
- * Delete a group
- * Delete a group by name.
- */
-export const deleteApiV1BetaGroupsByNameMutation = (
-  options?: Partial<Options<DeleteApiV1BetaGroupsByNameData>>
-): UseMutationOptions<
-  DeleteApiV1BetaGroupsByNameResponse,
-  DeleteApiV1BetaGroupsByNameError,
-  Options<DeleteApiV1BetaGroupsByNameData>
-> => {
-  const mutationOptions: UseMutationOptions<
-    DeleteApiV1BetaGroupsByNameResponse,
-    DeleteApiV1BetaGroupsByNameError,
-    Options<DeleteApiV1BetaGroupsByNameData>
-  > = {
-    mutationFn: async (localOptions) => {
-      const { data } = await deleteApiV1BetaGroupsByName({
-        ...options,
-        ...localOptions,
-        throwOnError: true,
-      })
-      return data
-    },
-  }
-  return mutationOptions
-}
-
-export const getApiV1BetaGroupsByNameQueryKey = (
-  options: Options<GetApiV1BetaGroupsByNameData>
-) => createQueryKey('getApiV1BetaGroupsByName', options)
-
-/**
- * Get group details
- * Get details of a specific group
- */
-export const getApiV1BetaGroupsByNameOptions = (
-  options: Options<GetApiV1BetaGroupsByNameData>
-) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getApiV1BetaGroupsByName({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      })
-      return data
-    },
-    queryKey: getApiV1BetaGroupsByNameQueryKey(options),
   })
 }
 
@@ -970,7 +827,7 @@ export const getApiV1BetaWorkloadsQueryKey = (
 
 /**
  * List all workloads
- * Get a list of all running workloads, optionally filtered by group
+ * Get a list of all running workloads
  */
 export const getApiV1BetaWorkloadsOptions = (
   options?: Options<GetApiV1BetaWorkloadsData>
@@ -1048,7 +905,7 @@ export const postApiV1BetaWorkloadsDeleteQueryKey = (
 
 /**
  * Delete workloads in bulk
- * Delete multiple workloads by name or by group
+ * Delete multiple workloads by name
  */
 export const postApiV1BetaWorkloadsDeleteOptions = (
   options: Options<PostApiV1BetaWorkloadsDeleteData>
@@ -1069,7 +926,7 @@ export const postApiV1BetaWorkloadsDeleteOptions = (
 
 /**
  * Delete workloads in bulk
- * Delete multiple workloads by name or by group
+ * Delete multiple workloads by name
  */
 export const postApiV1BetaWorkloadsDeleteMutation = (
   options?: Partial<Options<PostApiV1BetaWorkloadsDeleteData>>
@@ -1101,7 +958,7 @@ export const postApiV1BetaWorkloadsRestartQueryKey = (
 
 /**
  * Restart workloads in bulk
- * Restart multiple workloads by name or by group
+ * Restart multiple workloads by name
  */
 export const postApiV1BetaWorkloadsRestartOptions = (
   options: Options<PostApiV1BetaWorkloadsRestartData>
@@ -1122,7 +979,7 @@ export const postApiV1BetaWorkloadsRestartOptions = (
 
 /**
  * Restart workloads in bulk
- * Restart multiple workloads by name or by group
+ * Restart multiple workloads by name
  */
 export const postApiV1BetaWorkloadsRestartMutation = (
   options?: Partial<Options<PostApiV1BetaWorkloadsRestartData>>
@@ -1154,7 +1011,7 @@ export const postApiV1BetaWorkloadsStopQueryKey = (
 
 /**
  * Stop workloads in bulk
- * Stop multiple workloads by name or by group
+ * Stop multiple workloads by name
  */
 export const postApiV1BetaWorkloadsStopOptions = (
   options: Options<PostApiV1BetaWorkloadsStopData>
@@ -1175,7 +1032,7 @@ export const postApiV1BetaWorkloadsStopOptions = (
 
 /**
  * Stop workloads in bulk
- * Stop multiple workloads by name or by group
+ * Stop multiple workloads by name
  */
 export const postApiV1BetaWorkloadsStopMutation = (
   options?: Partial<Options<PostApiV1BetaWorkloadsStopData>>
