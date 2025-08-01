@@ -126,12 +126,7 @@
           "VSCode",
           "ClaudeCode",
           "Windsurf",
-          "WindsurfJetBrains",
-          "AmpCli",
-          "AmpVSCode",
-          "AmpCursor",
-          "AmpVSCodeInsider",
-          "AmpWindsurf"
+          "WindsurfJetBrains"
         ]
       },
       "client.MCPClientStatus": {
@@ -147,12 +142,7 @@
               "VSCode",
               "ClaudeCode",
               "Windsurf",
-              "WindsurfJetBrains",
-              "AmpCli",
-              "AmpVSCode",
-              "AmpCursor",
-              "AmpVSCodeInsider",
-              "AmpWindsurf"
+              "WindsurfJetBrains"
             ]
           },
           "installed": {
@@ -164,10 +154,6 @@
             "type": "boolean"
           }
         },
-        "type": "object"
-      },
-      "groups.Group": {
-        "properties": { "name": { "type": "string" } },
         "type": "object"
       },
       "ignore.Config": {
@@ -626,12 +612,7 @@
                 "VSCode",
                 "ClaudeCode",
                 "Windsurf",
-                "WindsurfJetBrains",
-                "AmpCli",
-                "AmpVSCode",
-                "AmpCursor",
-                "AmpVSCodeInsider",
-                "AmpWindsurf"
+                "WindsurfJetBrains"
               ]
             },
             "type": "array",
@@ -641,11 +622,8 @@
         "type": "object"
       },
       "v1.bulkOperationRequest": {
+        "description": "Request to perform bulk operations on workloads",
         "properties": {
-          "group": {
-            "description": "Group name to operate on (mutually exclusive with names)",
-            "type": "string"
-          },
           "names": {
             "description": "Names of the workloads to operate on",
             "items": { "type": "string" },
@@ -678,12 +656,7 @@
               "VSCode",
               "ClaudeCode",
               "Windsurf",
-              "WindsurfJetBrains",
-              "AmpCli",
-              "AmpVSCode",
-              "AmpCursor",
-              "AmpVSCodeInsider",
-              "AmpWindsurf"
+              "WindsurfJetBrains"
             ]
           }
         },
@@ -702,31 +675,8 @@
               "VSCode",
               "ClaudeCode",
               "Windsurf",
-              "WindsurfJetBrains",
-              "AmpCli",
-              "AmpVSCode",
-              "AmpCursor",
-              "AmpVSCodeInsider",
-              "AmpWindsurf"
+              "WindsurfJetBrains"
             ]
-          }
-        },
-        "type": "object"
-      },
-      "v1.createGroupRequest": {
-        "properties": {
-          "name": {
-            "description": "Name of the group to create",
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "v1.createGroupResponse": {
-        "properties": {
-          "name": {
-            "description": "Name of the created group",
-            "type": "string"
           }
         },
         "type": "object"
@@ -868,17 +818,6 @@
         "description": "Response containing server details",
         "properties": {
           "server": { "$ref": "#/components/schemas/registry.ImageMetadata" }
-        },
-        "type": "object"
-      },
-      "v1.groupListResponse": {
-        "properties": {
-          "groups": {
-            "description": "List of groups",
-            "items": { "$ref": "#/components/schemas/groups.Group" },
-            "type": "array",
-            "uniqueItems": false
-          }
         },
         "type": "object"
       },
@@ -1284,153 +1223,6 @@
         },
         "summary": "List all clients status",
         "tags": ["discovery"]
-      }
-    },
-    "/api/v1beta/groups": {
-      "get": {
-        "description": "Get a list of all groups",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/v1.groupListResponse"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "500": {
-            "content": {
-              "application/json": { "schema": { "type": "string" } }
-            },
-            "description": "Internal Server Error"
-          }
-        },
-        "summary": "List all groups",
-        "tags": ["groups"]
-      },
-      "post": {
-        "description": "Create a new group with the specified name",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/v1.createGroupRequest" }
-            }
-          },
-          "description": "Group creation request",
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/v1.createGroupResponse"
-                }
-              }
-            },
-            "description": "Created"
-          },
-          "400": {
-            "content": {
-              "application/json": { "schema": { "type": "string" } }
-            },
-            "description": "Bad Request"
-          },
-          "409": {
-            "content": {
-              "application/json": { "schema": { "type": "string" } }
-            },
-            "description": "Conflict"
-          },
-          "500": {
-            "content": {
-              "application/json": { "schema": { "type": "string" } }
-            },
-            "description": "Internal Server Error"
-          }
-        },
-        "summary": "Create a new group",
-        "tags": ["groups"]
-      }
-    },
-    "/api/v1beta/groups/{name}": {
-      "delete": {
-        "description": "Delete a group by name.",
-        "parameters": [
-          {
-            "description": "Group name",
-            "in": "path",
-            "name": "name",
-            "required": true,
-            "schema": { "type": "string" }
-          },
-          {
-            "description": "Delete all workloads in the group (default: false, moves workloads to default group)",
-            "in": "query",
-            "name": "with-workloads",
-            "schema": { "type": "boolean" }
-          }
-        ],
-        "responses": {
-          "204": {
-            "content": {
-              "application/json": { "schema": { "type": "string" } }
-            },
-            "description": "No Content"
-          },
-          "404": {
-            "content": {
-              "application/json": { "schema": { "type": "string" } }
-            },
-            "description": "Not Found"
-          },
-          "500": {
-            "content": {
-              "application/json": { "schema": { "type": "string" } }
-            },
-            "description": "Internal Server Error"
-          }
-        },
-        "summary": "Delete a group",
-        "tags": ["groups"]
-      },
-      "get": {
-        "description": "Get details of a specific group",
-        "parameters": [
-          {
-            "description": "Group name",
-            "in": "path",
-            "name": "name",
-            "required": true,
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/groups.Group" }
-              }
-            },
-            "description": "OK"
-          },
-          "404": {
-            "content": {
-              "application/json": { "schema": { "type": "string" } }
-            },
-            "description": "Not Found"
-          },
-          "500": {
-            "content": {
-              "application/json": { "schema": { "type": "string" } }
-            },
-            "description": "Internal Server Error"
-          }
-        },
-        "summary": "Get group details",
-        "tags": ["groups"]
       }
     },
     "/api/v1beta/registry": {
@@ -1895,19 +1687,13 @@
     },
     "/api/v1beta/workloads": {
       "get": {
-        "description": "Get a list of all running workloads, optionally filtered by group",
+        "description": "Get a list of all running workloads",
         "parameters": [
           {
             "description": "List all workloads, including stopped ones",
             "in": "query",
             "name": "all",
             "schema": { "type": "boolean" }
-          },
-          {
-            "description": "Filter workloads by group name",
-            "in": "query",
-            "name": "group",
-            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -1920,12 +1706,6 @@
               }
             },
             "description": "OK"
-          },
-          "404": {
-            "content": {
-              "application/json": { "schema": { "type": "string" } }
-            },
-            "description": "Group not found"
           }
         },
         "summary": "List all workloads",
@@ -1972,7 +1752,7 @@
     },
     "/api/v1beta/workloads/delete": {
       "post": {
-        "description": "Delete multiple workloads by name or by group",
+        "description": "Delete multiple workloads by name",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1981,7 +1761,7 @@
               }
             }
           },
-          "description": "Bulk delete request (names or group)",
+          "description": "Bulk delete request",
           "required": true
         },
         "responses": {
@@ -2004,7 +1784,7 @@
     },
     "/api/v1beta/workloads/restart": {
       "post": {
-        "description": "Restart multiple workloads by name or by group",
+        "description": "Restart multiple workloads by name",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2013,7 +1793,7 @@
               }
             }
           },
-          "description": "Bulk restart request (names or group)",
+          "description": "Bulk restart request",
           "required": true
         },
         "responses": {
@@ -2036,7 +1816,7 @@
     },
     "/api/v1beta/workloads/stop": {
       "post": {
-        "description": "Stop multiple workloads by name or by group",
+        "description": "Stop multiple workloads by name",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2045,7 +1825,7 @@
               }
             }
           },
-          "description": "Bulk stop request (names or group)",
+          "description": "Bulk stop request",
           "required": true
         },
         "responses": {

@@ -20,18 +20,6 @@ import type {
   DeleteApiV1BetaClientsByNameErrors,
   GetApiV1BetaDiscoveryClientsData,
   GetApiV1BetaDiscoveryClientsResponses,
-  GetApiV1BetaGroupsData,
-  GetApiV1BetaGroupsResponses,
-  GetApiV1BetaGroupsErrors,
-  PostApiV1BetaGroupsData,
-  PostApiV1BetaGroupsResponses,
-  PostApiV1BetaGroupsErrors,
-  DeleteApiV1BetaGroupsByNameData,
-  DeleteApiV1BetaGroupsByNameResponses,
-  DeleteApiV1BetaGroupsByNameErrors,
-  GetApiV1BetaGroupsByNameData,
-  GetApiV1BetaGroupsByNameResponses,
-  GetApiV1BetaGroupsByNameErrors,
   GetApiV1BetaRegistryData,
   GetApiV1BetaRegistryResponses,
   PostApiV1BetaRegistryData,
@@ -70,7 +58,6 @@ import type {
   GetApiV1BetaVersionResponses,
   GetApiV1BetaWorkloadsData,
   GetApiV1BetaWorkloadsResponses,
-  GetApiV1BetaWorkloadsErrors,
   PostApiV1BetaWorkloadsData,
   PostApiV1BetaWorkloadsResponses,
   PostApiV1BetaWorkloadsErrors,
@@ -258,80 +245,6 @@ export const getApiV1BetaDiscoveryClients = <
     ThrowOnError
   >({
     url: '/api/v1beta/discovery/clients',
-    ...options,
-  })
-}
-
-/**
- * List all groups
- * Get a list of all groups
- */
-export const getApiV1BetaGroups = <ThrowOnError extends boolean = false>(
-  options?: Options<GetApiV1BetaGroupsData, ThrowOnError>
-) => {
-  return (options?.client ?? _heyApiClient).get<
-    GetApiV1BetaGroupsResponses,
-    GetApiV1BetaGroupsErrors,
-    ThrowOnError
-  >({
-    url: '/api/v1beta/groups',
-    ...options,
-  })
-}
-
-/**
- * Create a new group
- * Create a new group with the specified name
- */
-export const postApiV1BetaGroups = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiV1BetaGroupsData, ThrowOnError>
-) => {
-  return (options.client ?? _heyApiClient).post<
-    PostApiV1BetaGroupsResponses,
-    PostApiV1BetaGroupsErrors,
-    ThrowOnError
-  >({
-    url: '/api/v1beta/groups',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  })
-}
-
-/**
- * Delete a group
- * Delete a group by name.
- */
-export const deleteApiV1BetaGroupsByName = <
-  ThrowOnError extends boolean = false,
->(
-  options: Options<DeleteApiV1BetaGroupsByNameData, ThrowOnError>
-) => {
-  return (options.client ?? _heyApiClient).delete<
-    DeleteApiV1BetaGroupsByNameResponses,
-    DeleteApiV1BetaGroupsByNameErrors,
-    ThrowOnError
-  >({
-    url: '/api/v1beta/groups/{name}',
-    ...options,
-  })
-}
-
-/**
- * Get group details
- * Get details of a specific group
- */
-export const getApiV1BetaGroupsByName = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiV1BetaGroupsByNameData, ThrowOnError>
-) => {
-  return (options.client ?? _heyApiClient).get<
-    GetApiV1BetaGroupsByNameResponses,
-    GetApiV1BetaGroupsByNameErrors,
-    ThrowOnError
-  >({
-    url: '/api/v1beta/groups/{name}',
     ...options,
   })
 }
@@ -596,14 +509,14 @@ export const getApiV1BetaVersion = <ThrowOnError extends boolean = false>(
 
 /**
  * List all workloads
- * Get a list of all running workloads, optionally filtered by group
+ * Get a list of all running workloads
  */
 export const getApiV1BetaWorkloads = <ThrowOnError extends boolean = false>(
   options?: Options<GetApiV1BetaWorkloadsData, ThrowOnError>
 ) => {
   return (options?.client ?? _heyApiClient).get<
     GetApiV1BetaWorkloadsResponses,
-    GetApiV1BetaWorkloadsErrors,
+    unknown,
     ThrowOnError
   >({
     url: '/api/v1beta/workloads',
@@ -634,7 +547,7 @@ export const postApiV1BetaWorkloads = <ThrowOnError extends boolean = false>(
 
 /**
  * Delete workloads in bulk
- * Delete multiple workloads by name or by group
+ * Delete multiple workloads by name
  */
 export const postApiV1BetaWorkloadsDelete = <
   ThrowOnError extends boolean = false,
@@ -657,7 +570,7 @@ export const postApiV1BetaWorkloadsDelete = <
 
 /**
  * Restart workloads in bulk
- * Restart multiple workloads by name or by group
+ * Restart multiple workloads by name
  */
 export const postApiV1BetaWorkloadsRestart = <
   ThrowOnError extends boolean = false,
@@ -680,7 +593,7 @@ export const postApiV1BetaWorkloadsRestart = <
 
 /**
  * Stop workloads in bulk
- * Stop multiple workloads by name or by group
+ * Stop multiple workloads by name
  */
 export const postApiV1BetaWorkloadsStop = <
   ThrowOnError extends boolean = false,
