@@ -7,6 +7,7 @@ import type { Tray } from 'electron'
 import { updateTrayStatus } from './system-tray'
 import log from './logger'
 import * as Sentry from '@sentry/electron/main'
+import { delay } from '../../utils/delay'
 
 // Use environment variables for binary customization with Windows fallback
 const binName =
@@ -66,6 +67,8 @@ export async function startToolhive(tray?: Tray): Promise<void> {
       detached: false,
     }
   )
+
+  await delay(4000)
 
   log.info(`[startToolhive] Process spawned with PID: ${toolhiveProcess.pid}`)
 
