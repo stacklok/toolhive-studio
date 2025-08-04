@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const mockElectronAPI = {
   getAppVersion: vi.fn(),
-  isReleaseBuild: vi.fn(),
+  isOfficialReleaseBuild: vi.fn(),
   getToolhiveVersion: vi.fn(),
 }
 
@@ -35,7 +35,7 @@ const renderWithProviders = (component: React.ReactElement) => {
 describe('VersionTab', () => {
   beforeEach(() => {
     mockElectronAPI.getAppVersion.mockResolvedValue('1.0.0')
-    mockElectronAPI.isReleaseBuild.mockResolvedValue(true)
+    mockElectronAPI.isOfficialReleaseBuild.mockResolvedValue(true)
     mockElectronAPI.getToolhiveVersion.mockResolvedValue('0.9.0')
   })
 
@@ -63,7 +63,7 @@ describe('VersionTab', () => {
   })
 
   it('displays development build type when not a release build', async () => {
-    mockElectronAPI.isReleaseBuild.mockResolvedValue(false)
+    mockElectronAPI.isOfficialReleaseBuild.mockResolvedValue(false)
 
     renderWithProviders(<VersionTab />)
 
@@ -76,7 +76,7 @@ describe('VersionTab', () => {
     mockElectronAPI.getAppVersion.mockRejectedValue(
       new Error('Failed to fetch')
     )
-    mockElectronAPI.isReleaseBuild.mockRejectedValue(
+    mockElectronAPI.isOfficialReleaseBuild.mockRejectedValue(
       new Error('Failed to fetch')
     )
     mockElectronAPI.getToolhiveVersion.mockRejectedValue(
@@ -95,7 +95,7 @@ describe('VersionTab', () => {
 
     await waitFor(() => {
       expect(mockElectronAPI.getAppVersion).toHaveBeenCalledTimes(1)
-      expect(mockElectronAPI.isReleaseBuild).toHaveBeenCalledTimes(1)
+      expect(mockElectronAPI.isOfficialReleaseBuild).toHaveBeenCalledTimes(1)
       expect(mockElectronAPI.getToolhiveVersion).toHaveBeenCalledTimes(1)
     })
   })

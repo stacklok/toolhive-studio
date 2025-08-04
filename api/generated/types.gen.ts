@@ -126,6 +126,10 @@ export type ClientMcpClientStatus = {
   registered?: boolean
 }
 
+export type GroupsGroup = {
+  name?: string
+}
+
 /**
  * IgnoreConfig contains configuration for ignore processing
  */
@@ -529,10 +533,11 @@ export type V1BulkClientRequest = {
   names?: Array<string>
 }
 
-/**
- * Request to perform bulk operations on workloads
- */
 export type V1BulkOperationRequest = {
+  /**
+   * Group name to operate on (mutually exclusive with names)
+   */
+  group?: string
   /**
    * Names of the workloads to operate on
    */
@@ -553,6 +558,20 @@ export type V1CreateClientRequest = {
 export type V1CreateClientResponse = {
   /**
    * Name is the type of the client that was registered.
+   */
+  name?: string
+}
+
+export type V1CreateGroupRequest = {
+  /**
+   * Name of the group to create
+   */
+  name?: string
+}
+
+export type V1CreateGroupResponse = {
+  /**
+   * Name of the created group
    */
   name?: string
 }
@@ -702,6 +721,13 @@ export type V1GetSecretsProviderResponse = {
  */
 export type V1GetServerResponse = {
   server?: RegistryImageMetadata
+}
+
+export type V1GroupListResponse = {
+  /**
+   * List of groups
+   */
+  groups?: Array<GroupsGroup>
 }
 
 /**
@@ -1114,6 +1140,148 @@ export type GetApiV1BetaDiscoveryClientsResponses = {
 
 export type GetApiV1BetaDiscoveryClientsResponse =
   GetApiV1BetaDiscoveryClientsResponses[keyof GetApiV1BetaDiscoveryClientsResponses]
+
+export type GetApiV1BetaGroupsData = {
+  body?: never
+  path?: never
+  query?: never
+  url: '/api/v1beta/groups'
+}
+
+export type GetApiV1BetaGroupsErrors = {
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type GetApiV1BetaGroupsError =
+  GetApiV1BetaGroupsErrors[keyof GetApiV1BetaGroupsErrors]
+
+export type GetApiV1BetaGroupsResponses = {
+  /**
+   * OK
+   */
+  200: V1GroupListResponse
+}
+
+export type GetApiV1BetaGroupsResponse =
+  GetApiV1BetaGroupsResponses[keyof GetApiV1BetaGroupsResponses]
+
+export type PostApiV1BetaGroupsData = {
+  /**
+   * Group creation request
+   */
+  body: V1CreateGroupRequest
+  path?: never
+  query?: never
+  url: '/api/v1beta/groups'
+}
+
+export type PostApiV1BetaGroupsErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+  /**
+   * Conflict
+   */
+  409: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type PostApiV1BetaGroupsError =
+  PostApiV1BetaGroupsErrors[keyof PostApiV1BetaGroupsErrors]
+
+export type PostApiV1BetaGroupsResponses = {
+  /**
+   * Created
+   */
+  201: V1CreateGroupResponse
+}
+
+export type PostApiV1BetaGroupsResponse =
+  PostApiV1BetaGroupsResponses[keyof PostApiV1BetaGroupsResponses]
+
+export type DeleteApiV1BetaGroupsByNameData = {
+  body?: never
+  path: {
+    /**
+     * Group name
+     */
+    name: string
+  }
+  query?: {
+    /**
+     * Delete all workloads in the group (default: false, moves workloads to default group)
+     */
+    'with-workloads'?: boolean
+  }
+  url: '/api/v1beta/groups/{name}'
+}
+
+export type DeleteApiV1BetaGroupsByNameErrors = {
+  /**
+   * Not Found
+   */
+  404: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type DeleteApiV1BetaGroupsByNameError =
+  DeleteApiV1BetaGroupsByNameErrors[keyof DeleteApiV1BetaGroupsByNameErrors]
+
+export type DeleteApiV1BetaGroupsByNameResponses = {
+  /**
+   * No Content
+   */
+  204: string
+}
+
+export type DeleteApiV1BetaGroupsByNameResponse =
+  DeleteApiV1BetaGroupsByNameResponses[keyof DeleteApiV1BetaGroupsByNameResponses]
+
+export type GetApiV1BetaGroupsByNameData = {
+  body?: never
+  path: {
+    /**
+     * Group name
+     */
+    name: string
+  }
+  query?: never
+  url: '/api/v1beta/groups/{name}'
+}
+
+export type GetApiV1BetaGroupsByNameErrors = {
+  /**
+   * Not Found
+   */
+  404: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type GetApiV1BetaGroupsByNameError =
+  GetApiV1BetaGroupsByNameErrors[keyof GetApiV1BetaGroupsByNameErrors]
+
+export type GetApiV1BetaGroupsByNameResponses = {
+  /**
+   * OK
+   */
+  200: GroupsGroup
+}
+
+export type GetApiV1BetaGroupsByNameResponse =
+  GetApiV1BetaGroupsByNameResponses[keyof GetApiV1BetaGroupsByNameResponses]
 
 export type GetApiV1BetaRegistryData = {
   body?: never
@@ -1541,9 +1709,23 @@ export type GetApiV1BetaWorkloadsData = {
      * List all workloads, including stopped ones
      */
     all?: boolean
+    /**
+     * Filter workloads by group name
+     */
+    group?: string
   }
   url: '/api/v1beta/workloads'
 }
+
+export type GetApiV1BetaWorkloadsErrors = {
+  /**
+   * Group not found
+   */
+  404: string
+}
+
+export type GetApiV1BetaWorkloadsError =
+  GetApiV1BetaWorkloadsErrors[keyof GetApiV1BetaWorkloadsErrors]
 
 export type GetApiV1BetaWorkloadsResponses = {
   /**
@@ -1591,7 +1773,7 @@ export type PostApiV1BetaWorkloadsResponse =
 
 export type PostApiV1BetaWorkloadsDeleteData = {
   /**
-   * Bulk delete request
+   * Bulk delete request (names or group)
    */
   body: V1BulkOperationRequest
   path?: never
@@ -1621,7 +1803,7 @@ export type PostApiV1BetaWorkloadsDeleteResponse =
 
 export type PostApiV1BetaWorkloadsRestartData = {
   /**
-   * Bulk restart request
+   * Bulk restart request (names or group)
    */
   body: V1BulkOperationRequest
   path?: never
@@ -1651,7 +1833,7 @@ export type PostApiV1BetaWorkloadsRestartResponse =
 
 export type PostApiV1BetaWorkloadsStopData = {
   /**
-   * Bulk stop request
+   * Bulk stop request (names or group)
    */
   body: V1BulkOperationRequest
   path?: never

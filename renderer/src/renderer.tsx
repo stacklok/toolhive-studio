@@ -77,18 +77,12 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
 ;(async () => {
   try {
     const port = await window.electronAPI.getToolhivePort()
-    const appVersion = await window.electronAPI.getAppVersion()
-    const isReleaseBuild = await window.electronAPI.isReleaseBuild()
+    const telemetryHeaders = await window.electronAPI.getTelemetryHeaders()
     const baseUrl = `http://localhost:${port}`
 
     client.setConfig({
       baseUrl,
-      headers: {
-        'X-Client-Type': 'toolhive-studio',
-        'X-Client-Version': appVersion,
-        'X-Client-Platform': window.electronAPI.platform,
-        'X-Client-Release-Build': isReleaseBuild,
-      },
+      headers: telemetryHeaders,
     })
   } catch (e) {
     log.error('Failed to get ToolHive port from main process: ', e)
