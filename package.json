@@ -10,6 +10,7 @@
   },
   "scripts": {
     "start": "electron-forge start",
+    "start:ephemeral": "BIN_NAME='thv.sh' BIN_ARCH='ephemeral' electron-forge start",
     "e2e": "tsc -b --clean && tsc -b && electron-forge package && BIN_NAME='thv.sh' BIN_ARCH='ephemeral' playwright test",
     "start:mockUpdate": "MOCK_UPDATE_SERVER=true ELECTRON_IS_DEV=0 electron-forge start",
     "package": "tsc -b --clean && tsc -b && electron-forge package",
