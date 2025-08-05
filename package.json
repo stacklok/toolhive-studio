@@ -10,7 +10,7 @@
   },
   "scripts": {
     "start": "electron-forge start",
-    "e2e": "tsc -b --clean && tsc -b && electron-forge package && playwright test",
+    "e2e": "CI=true tsc -b --clean && tsc -b && electron-forge package && playwright test",
     "start:mockUpdate": "MOCK_UPDATE_SERVER=true ELECTRON_IS_DEV=0 electron-forge start",
     "package": "tsc -b --clean && tsc -b && electron-forge package",
     "make": "tsc -b --clean && tsc -b && electron-forge make",
