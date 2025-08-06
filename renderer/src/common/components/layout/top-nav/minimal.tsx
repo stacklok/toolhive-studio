@@ -4,7 +4,7 @@ import { WindowControls } from './window-controls'
 
 export function TopNavMinimal() {
   return (
-    <TopNavContainer className="fixed top-0 !flex justify-between">
+    <TopNavContainer className="fixed top-0 !flex justify-end">
       <WindowControls />
       <QuitConfirmationListener />
     </TopNavContainer>
