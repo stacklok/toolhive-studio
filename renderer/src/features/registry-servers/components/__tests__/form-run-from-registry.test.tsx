@@ -134,6 +134,31 @@ describe('FormRunFromRegistry', () => {
     ).toBeInTheDocument()
   })
 
+  it('renders storage volumes field on configuration tab', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Verify the storage volumes field exists with correct title and description
+    expect(screen.getByText('Storage volumes')).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Provide the MCP server access to a local folder. Optionally specific individual files.'
+      )
+    ).toBeInTheDocument()
+  })
+
   it('shows loading state and hides tabs when submitting', async () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
