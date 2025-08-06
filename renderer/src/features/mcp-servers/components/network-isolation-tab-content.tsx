@@ -6,7 +6,6 @@ import { AlertTriangle } from 'lucide-react'
 import { DynamicArrayField } from '../../registry-servers/components/dynamic-array-field'
 import type {
   ControllerRenderProps,
-  FieldValues,
   Path,
   UseFormReturn,
 } from 'react-hook-form'
@@ -81,8 +80,8 @@ export function NetworkIsolationTabContent({
                             field,
                           }: {
                             field: ControllerRenderProps<
-                              FieldValues,
-                              Path<FieldValues>
+                              FormSchemaRunMcpCommand,
+                              Path<FormSchemaRunMcpCommand>
                             >
                           }) => (
                             <FormItem className="flex-grow">
@@ -94,6 +93,7 @@ export function NetworkIsolationTabContent({
                                   ref={setInputRef(idx)}
                                   aria-label={`Host ${idx + 1}`}
                                   className="min-w-0 grow"
+                                  value={field.value as string}
                                 />
                               </FormControl>
                               {message}
@@ -113,7 +113,6 @@ export function NetworkIsolationTabContent({
                       label="Allowed ports"
                       inputLabelPrefix="Port"
                       addButtonText="Add a port"
-                      type="number"
                       form={form}
                     >
                       {({
@@ -129,8 +128,8 @@ export function NetworkIsolationTabContent({
                             field,
                           }: {
                             field: ControllerRenderProps<
-                              FieldValues,
-                              Path<FieldValues>
+                              FormSchemaRunMcpCommand,
+                              Path<FormSchemaRunMcpCommand>
                             >
                           }) => (
                             <FormItem className="flex-grow">
@@ -142,6 +141,7 @@ export function NetworkIsolationTabContent({
                                   ref={setInputRef(idx)}
                                   aria-label={`Port ${idx + 1}`}
                                   className="min-w-0 grow"
+                                  value={field.value as string}
                                 />
                               </FormControl>
                               {message}
