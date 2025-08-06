@@ -2,6 +2,9 @@ FROM docker:dind
 
 RUN apk add --no-cache dbus dbus-x11 gnome-keyring libsecret
 
+# Remove file capabilities that trigger GLib's security hardening (GLib 2.70+)
+RUN setcap -r /usr/bin/gnome-keyring-daemon 2>/dev/null || true
+
 ENV XDG_CURRENT_DESKTOP=GNOME \
     XDG_SESSION_DESKTOP=gnome \
     DESKTOP_SESSION=gnome \

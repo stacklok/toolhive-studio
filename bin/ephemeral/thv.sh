@@ -10,6 +10,7 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
   docker run --privileged \
     --cap-drop=SETPCAP \
     --cap-add=IPC_LOCK \
+    --tmpfs /run \
     --rm -i \
     --network host \
     -v "${ROOT_DIR}:/workspace" \
