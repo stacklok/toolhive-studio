@@ -477,13 +477,14 @@ describe('DialogFormRunMcpServerWithCommand', () => {
         'ghcr.io/test/server'
       )
 
+      // Enable network isolation
       const networkTab = screen.getByRole('tab', { name: /network isolation/i })
       await userEvent.click(networkTab)
 
-      const switchLabel = screen.getByLabelText(
+      const networkSwitch = screen.getByLabelText(
         'Enable outbound network filtering'
       )
-      await userEvent.click(switchLabel)
+      await userEvent.click(networkSwitch)
 
       const addHostBtn = screen.getByRole('button', { name: /add a host/i })
       await userEvent.click(addHostBtn)
@@ -557,6 +558,251 @@ describe('DialogFormRunMcpServerWithCommand', () => {
         transport: 'stdio',
         image: 'ghcr.io/test/server',
         networkIsolation: false,
+      })
+    })
+
+    it('submits correct payload with storage volumes', async () => {
+      const mockInstallServerMutation = vi.fn()
+      mockUseRunCustomServer.mockReturnValue({
+        installServerMutation: mockInstallServerMutation,
+        checkServerStatus: vi.fn(),
+        isErrorSecrets: false,
+        isPendingSecrets: false,
+      })
+
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+        </Wrapper>
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      await userEvent.type(screen.getByLabelText('Name'), 'test-server')
+      await userEvent.click(screen.getByLabelText('Transport'))
+      await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
+      await userEvent.type(
+        screen.getByRole('textbox', { name: 'Docker image' }),
+        'ghcr.io/test/server'
+      )
+
+      // Add storage volume
+      const addButton = screen.getByText('Add storage volume')
+      await userEvent.click(addButton)
+
+      await waitFor(() => {
+        expect(screen.getByLabelText('Local path 1')).toBeInTheDocument()
+        expect(screen.getByLabelText('Container path 1')).toBeInTheDocument()
+      })
+
+      // Fill in storage volume data
+      const localPathInput = screen.getByLabelText('Local path 1')
+      const containerPathInput = screen.getByLabelText('Container path 1')
+
+      await userEvent.type(localPathInput, '/home/user/data')
+      await userEvent.type(containerPathInput, '/app/data')
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Install server' })
+      )
+
+      await waitFor(() => {
+        expect(mockInstallServerMutation).toHaveBeenCalled()
+      })
+
+      const submittedData = mockInstallServerMutation.mock.calls[0]?.[0]?.data
+      expect(submittedData).toMatchObject({
+        name: 'test-server',
+        type: 'docker_image',
+        transport: 'stdio',
+        image: 'ghcr.io/test/server',
+        storageVolumes: [
+          {
+            localPath: '/home/user/data',
+            containerPath: '/app/data',
+          },
+        ],
+      })
+    })
+
+    it('submits correct payload with multiple storage volumes', async () => {
+      const mockInstallServerMutation = vi.fn()
+      mockUseRunCustomServer.mockReturnValue({
+        installServerMutation: mockInstallServerMutation,
+        checkServerStatus: vi.fn(),
+        isErrorSecrets: false,
+        isPendingSecrets: false,
+      })
+
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+        </Wrapper>
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      await userEvent.type(screen.getByLabelText('Name'), 'test-server')
+      await userEvent.click(screen.getByLabelText('Transport'))
+      await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
+      await userEvent.type(
+        screen.getByRole('textbox', { name: 'Docker image' }),
+        'ghcr.io/test/server'
+      )
+
+      // Add first storage volume
+      const addButton = screen.getByText('Add storage volume')
+      await userEvent.click(addButton)
+
+      await waitFor(() => {
+        expect(screen.getByLabelText('Local path 1')).toBeInTheDocument()
+      })
+
+      await userEvent.type(
+        screen.getByLabelText('Local path 1'),
+        '/home/user/data'
+      )
+      await userEvent.type(
+        screen.getByLabelText('Container path 1'),
+        '/app/data'
+      )
+
+      // Add second storage volume
+      await userEvent.click(addButton)
+
+      await waitFor(() => {
+        expect(screen.getByLabelText('Local path 2')).toBeInTheDocument()
+      })
+
+      await userEvent.type(
+        screen.getByLabelText('Local path 2'),
+        '/home/user/config'
+      )
+      await userEvent.type(
+        screen.getByLabelText('Container path 2'),
+        '/app/config'
+      )
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Install server' })
+      )
+
+      await waitFor(() => {
+        expect(mockInstallServerMutation).toHaveBeenCalled()
+      })
+
+      const submittedData = mockInstallServerMutation.mock.calls[0]?.[0]?.data
+      expect(submittedData).toMatchObject({
+        name: 'test-server',
+        type: 'docker_image',
+        transport: 'stdio',
+        image: 'ghcr.io/test/server',
+        storageVolumes: [
+          {
+            localPath: '/home/user/data',
+            containerPath: '/app/data',
+          },
+          {
+            localPath: '/home/user/config',
+            containerPath: '/app/config',
+          },
+        ],
+      })
+    })
+
+    it('validates storage volume paths are not empty', async () => {
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+        </Wrapper>
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      await userEvent.type(screen.getByLabelText('Name'), 'test-server')
+      await userEvent.click(screen.getByLabelText('Transport'))
+      await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
+      await userEvent.type(
+        screen.getByRole('textbox', { name: 'Docker image' }),
+        'ghcr.io/test/server'
+      )
+
+      // Add storage volume
+      const addButton = screen.getByText('Add storage volume')
+      await userEvent.click(addButton)
+
+      await waitFor(() => {
+        expect(screen.getByLabelText('Local path 1')).toBeInTheDocument()
+      })
+
+      // Try to submit without filling in paths
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Install server' })
+      )
+
+      await waitFor(() => {
+        expect(screen.getByText('Local path is required')).toBeInTheDocument()
+        expect(
+          screen.getByText('Container path is required')
+        ).toBeInTheDocument()
+      })
+    })
+
+    it('validates storage volume paths are valid paths', async () => {
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+        </Wrapper>
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      await userEvent.type(screen.getByLabelText('Name'), 'test-server')
+      await userEvent.click(screen.getByLabelText('Transport'))
+      await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
+      await userEvent.type(
+        screen.getByRole('textbox', { name: 'Docker image' }),
+        'ghcr.io/test/server'
+      )
+
+      // Add storage volume
+      const addButton = screen.getByText('Add storage volume')
+      await userEvent.click(addButton)
+
+      await waitFor(() => {
+        expect(screen.getByLabelText('Local path 1')).toBeInTheDocument()
+      })
+
+      // Fill in invalid paths
+      await userEvent.type(
+        screen.getByLabelText('Local path 1'),
+        'invalid path'
+      )
+      await userEvent.type(
+        screen.getByLabelText('Container path 1'),
+        'invalid path'
+      )
+
+      // Submit form
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Install server' })
+      )
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('Local path must be a valid absolute path')
+        ).toBeInTheDocument()
+        expect(
+          screen.getByText('Container path must be a valid absolute path')
+        ).toBeInTheDocument()
       })
     })
 
