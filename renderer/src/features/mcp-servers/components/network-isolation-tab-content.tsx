@@ -4,8 +4,15 @@ import { Label } from '@/common/components/ui/label'
 import { Alert, AlertDescription } from '@/common/components/ui/alert'
 import { AlertTriangle } from 'lucide-react'
 import { DynamicArrayField } from '../../registry-servers/components/dynamic-array-field'
-import type { UseFormReturn } from 'react-hook-form'
+import type {
+  ControllerRenderProps,
+  FieldValues,
+  Path,
+  UseFormReturn,
+} from 'react-hook-form'
 import { type FormSchemaRunMcpCommand } from '../lib/form-schema-run-mcp-server-with-command'
+import { FormControl, FormField, FormItem } from '@/common/components/ui/form'
+import { Input } from '@/common/components/ui/input'
 
 export function NetworkIsolationTabContent({
   form,
@@ -60,7 +67,41 @@ export function NetworkIsolationTabContent({
                       addButtonText="Add a host"
                       tooltipContent={`Specify domain names or IP addresses. To include subdomains, use a leading period (".")`}
                       form={form}
-                    />
+                    >
+                      {({
+                        fieldProps,
+                        inputProps,
+                        setInputRef,
+                        idx,
+                        message,
+                      }) => (
+                        <FormField
+                          {...fieldProps}
+                          render={({
+                            field,
+                          }: {
+                            field: ControllerRenderProps<
+                              FieldValues,
+                              Path<FieldValues>
+                            >
+                          }) => (
+                            <FormItem className="flex-grow">
+                              <FormControl className="w-full">
+                                <Input
+                                  {...field}
+                                  {...inputProps}
+                                  type="string"
+                                  ref={setInputRef(idx)}
+                                  aria-label={`Host ${idx + 1}`}
+                                  className="min-w-0 grow"
+                                />
+                              </FormControl>
+                              {message}
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </DynamicArrayField>
                   )}
                 />
                 <Controller
@@ -74,7 +115,41 @@ export function NetworkIsolationTabContent({
                       addButtonText="Add a port"
                       type="number"
                       form={form}
-                    />
+                    >
+                      {({
+                        fieldProps,
+                        inputProps,
+                        setInputRef,
+                        idx,
+                        message,
+                      }) => (
+                        <FormField
+                          {...fieldProps}
+                          render={({
+                            field,
+                          }: {
+                            field: ControllerRenderProps<
+                              FieldValues,
+                              Path<FieldValues>
+                            >
+                          }) => (
+                            <FormItem className="flex-grow">
+                              <FormControl className="w-full">
+                                <Input
+                                  {...field}
+                                  {...inputProps}
+                                  type="number"
+                                  ref={setInputRef(idx)}
+                                  aria-label={`Port ${idx + 1}`}
+                                  className="min-w-0 grow"
+                                />
+                              </FormControl>
+                              {message}
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </DynamicArrayField>
                   )}
                 />
               </>

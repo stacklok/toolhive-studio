@@ -1,6 +1,10 @@
-import React, { useRef, useCallback } from 'react'
+import React, {
+  useRef,
+  useCallback,
+  type ReactNode,
+  type ChangeEventHandler,
+} from 'react'
 import { Button } from '@/common/components/ui/button'
-import { Input } from '@/common/components/ui/input'
 import { Label } from '@/common/components/ui/label'
 import { InfoIcon, Trash2 } from 'lucide-react'
 import {
@@ -10,13 +14,9 @@ import {
   type Path,
   type ControllerRenderProps,
   type UseFormReturn,
+  type Control,
 } from 'react-hook-form'
-import {
-  FormField,
-  FormItem,
-  FormControl,
-  FormMessage,
-} from '@/common/components/ui/form'
+import { FormField, FormMessage } from '@/common/components/ui/form'
 import {
   Tooltip,
   TooltipTrigger,
@@ -31,9 +31,20 @@ interface DynamicArrayFieldProps<
   inputLabelPrefix?: string
   tooltipContent?: string
   addButtonText?: string
-  type?: 'text' | 'number'
-  inputProps?: React.InputHTMLAttributes<HTMLInputElement>
   form: UseFormReturn<TFieldValues>
+  children: (args: {
+    idx: number
+    fieldProps: {
+      control: Control<TFieldValues>
+      name: Path<TFieldValues>
+    }
+    setInputRef: (idx: number) => (el: HTMLInputElement | null) => void
+    inputProps: {
+      id: string
+      onChange: ChangeEventHandler
+    }
+    message: ReactNode
+  }) => ReactNode
 }
 
 export function DynamicArrayField<TFieldValues extends FieldValues>({
@@ -42,9 +53,8 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
   tooltipContent,
   inputLabelPrefix = 'Item',
   addButtonText = 'Add',
-  type = 'text',
-  inputProps = {},
   form,
+  children,
 }: DynamicArrayFieldProps<TFieldValues>) {
   const { control, formState } = form
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({})
@@ -126,28 +136,30 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
               }: {
                 field: ControllerRenderProps<TFieldValues, Path<TFieldValues>>
               }) => (
-                <FormItem className="flex-grow">
-                  <FormControl className="w-full">
-                    <Input
-                      {...field}
-                      type={type}
-                      ref={setInputRef(idx)}
-                      id={`${name}-${idx}`}
-                      aria-label={`${inputLabelPrefix} ${idx + 1}`}
-                      className="min-w-0 grow"
-                      {...inputProps}
-                      onChange={async (e) => {
+                <>
+                  {children({
+                    fieldProps: {
+                      control,
+                      name: `${name}.${idx}.value` as Path<TFieldValues>,
+                    },
+                    idx,
+                    setInputRef,
+                    inputProps: {
+                      id: `${name}-${idx}`,
+                      onChange: async (e) => {
                         field.onChange(e)
+
                         // There is an issue with react-hook-form about error validation for array fields
                         // take a look to the PR for detail https://github.com/stacklok/toolhive-studio/pull/664
                         await resetValidation(idx)
-                      }}
-                    />
-                  </FormControl>
-                  {isInvalid(idx) && <FormMessage />}
-                </FormItem>
+                      },
+                    },
+                    message: isInvalid(idx) && <FormMessage />,
+                  })}
+                </>
               )}
             />
+
             <Button
               type="button"
               variant="outline"
