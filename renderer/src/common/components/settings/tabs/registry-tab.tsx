@@ -96,8 +96,8 @@ function RegistryTypeField({
         <FormItem className="w-full">
           <FormLabel required>Registry Type</FormLabel>
           <FormDescription>
-            Choose between no registry, a remote registry (HTTP/HTTPS URL), or a
-            local registry file.
+            Choose between ToolHive default registry, a custom remote registry
+            (HTTP/HTTPS URL), or a custom local registry file.
           </FormDescription>
           <Select onValueChange={field.onChange} defaultValue={field.value}>
             <FormControl>
