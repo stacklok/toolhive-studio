@@ -1228,7 +1228,7 @@ describe('CommandArgumentsField', () => {
     expect(screen.getByText('--stdio')).toBeInTheDocument()
 
     const removeButton = screen.getByLabelText('Remove argument --stdio')
-    expect(removeButton).toBeDisabled()
+    expect(removeButton).toBeEnabled()
   })
 
   it('does not add empty arguments', async () => {
