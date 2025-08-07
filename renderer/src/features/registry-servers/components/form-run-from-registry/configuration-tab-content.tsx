@@ -205,7 +205,6 @@ export function ConfigurationTabContent({
       <CommandArgumentsField<FormSchemaRunFromRegistry>
         getValues={(name) => form.getValues(name)}
         setValue={(name, value) => form.setValue(name, value)}
-        cmd_arguments={form.getValues('cmd_arguments')}
         control={form.control}
       />
 

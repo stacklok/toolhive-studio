@@ -27,7 +27,6 @@ interface CommandArgumentsFieldProps<
 > {
   getValues: (name: 'cmd_arguments') => string[] | undefined
   setValue: (name: 'cmd_arguments', value: string[]) => void
-  cmd_arguments?: string[]
   control: Control<T>
 }
 
@@ -35,15 +34,10 @@ export function CommandArgumentsField<
   T extends {
     cmd_arguments?: CmdArguments
   },
->({
-  getValues,
-  setValue,
-  cmd_arguments = [],
-  control,
-}: CommandArgumentsFieldProps<T>) {
+>({ getValues, setValue, control }: CommandArgumentsFieldProps<T>) {
   const [inputValue, setInputValue] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
-  // console.log({ cmd_arguments }, getValues('cmd_arguments'))
+
   const addArgument = () => {
     if (inputValue.trim()) {
       const currentArgs = getValues('cmd_arguments') || []
@@ -103,18 +97,14 @@ export function CommandArgumentsField<
                       <Badge
                         key={index}
                         variant="secondary"
-                        className={cn(
-                          'flex h-6 items-center gap-1 px-2 font-mono text-xs',
-                          cmd_arguments?.includes(arg) &&
-                            'cursor-not-allowed opacity-40'
-                        )}
+                        className="flex h-6 items-center gap-1 px-2 font-mono
+                          text-xs"
                       >
                         {arg}
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
-                          disabled={cmd_arguments?.includes(arg)}
                           className="hover:text-muted-foreground/80 ml-1 size-3
                             p-1 hover:cursor-pointer disabled:cursor-not-allowed
                             disabled:opacity-40"
