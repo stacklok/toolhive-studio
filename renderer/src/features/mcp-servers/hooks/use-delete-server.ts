@@ -1,4 +1,4 @@
-import type { V1WorkloadListResponse, WorkloadsWorkload } from '@api/types.gen'
+import type { V1WorkloadListResponse, CoreWorkload } from '@api/types.gen'
 import {
   deleteApiV1BetaWorkloadsByNameMutation,
   getApiV1BetaWorkloadsByNameOptions,
@@ -30,7 +30,7 @@ export function useDeleteServer({ name }: { name: string }) {
 
           const updatedData = {
             ...oldData,
-            workloads: oldData.workloads?.map((server: WorkloadsWorkload) =>
+            workloads: oldData.workloads?.map((server: CoreWorkload) =>
               server.name === name ? { ...server, status: 'deleting' } : server
             ),
           }

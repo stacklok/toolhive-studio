@@ -6,7 +6,7 @@ import {
   useMutationRestartServerAtStartup,
   useMutationRestartServer,
 } from '../use-mutation-restart-server'
-import type { WorkloadsWorkload } from '@api/types.gen'
+import type { CoreWorkload } from '@api/types.gen'
 import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/msw-endpoint'
@@ -39,7 +39,7 @@ Object.defineProperty(window, 'electronAPI', {
 const createWorkload = (
   name: string,
   status: string = 'running'
-): WorkloadsWorkload => ({ name, status })
+): CoreWorkload => ({ name, status })
 
 const createQueryClientWrapper = () => {
   const queryClient = new QueryClient({

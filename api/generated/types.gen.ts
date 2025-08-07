@@ -40,10 +40,6 @@ export type AuditConfig = {
  */
 export type AuthTokenValidatorConfig = {
   /**
-   * AllowOpaqueTokens indicates whether to allow opaque tokens (non-JWT)
-   */
-  allowOpaqueTokens?: boolean
-  /**
    * AllowPrivateIP allows JWKS/OIDC endpoints on private IP addresses
    */
   allowPrivateIP?: boolean
@@ -64,6 +60,14 @@ export type AuthTokenValidatorConfig = {
    */
   clientID?: string
   /**
+   * ClientSecret is the optional OIDC client secret for introspection
+   */
+  clientSecret?: string
+  /**
+   * IntrospectionURL is the optional introspection endpoint for validating tokens
+   */
+  introspectionURL?: string
+  /**
    * Issuer is the OIDC issuer URL (e.g., https://accounts.google.com)
    */
   issuer?: string
@@ -71,6 +75,10 @@ export type AuthTokenValidatorConfig = {
    * JWKSURL is the URL to fetch the JWKS from
    */
   jwksurl?: string
+  /**
+   * ResourceURL is the explicit resource URL for OAuth discovery (RFC 9728)
+   */
+  resourceURL?: string
 }
 
 /**
@@ -126,8 +134,60 @@ export type ClientMcpClientStatus = {
   registered?: boolean
 }
 
+export type CoreWorkload = {
+  /**
+   * CreatedAt is the timestamp when the workload was created.
+   */
+  created_at?: string
+  /**
+   * Group is the name of the group this workload belongs to, if any.
+   */
+  group?: string
+  /**
+   * Labels are the container labels (excluding standard ToolHive labels)
+   */
+  labels?: {
+    [key: string]: string
+  }
+  /**
+   * Name is the name of the workload.
+   * It is used as a unique identifier.
+   */
+  name?: string
+  /**
+   * Package specifies the Workload Package used to create this Workload.
+   */
+  package?: string
+  /**
+   * Port is the port on which the workload is exposed.
+   * This is embedded in the URL.
+   */
+  port?: number
+  status?: RuntimeWorkloadStatus
+  /**
+   * StatusContext provides additional context about the workload's status.
+   * The exact meaning is determined by the status and the underlying runtime.
+   */
+  status_context?: string
+  /**
+   * ToolType is the type of tool this workload represents.
+   * For now, it will always be "mcp" - representing an MCP server.
+   */
+  tool_type?: string
+  /**
+   * ToolsFilter is the filter on tools applied to the workload.
+   */
+  tools?: Array<string>
+  transport_type?: TypesTransportType
+  /**
+   * URL is the URL of the workload exposed by the ToolHive proxy.
+   */
+  url?: string
+}
+
 export type GroupsGroup = {
   name?: string
+  registered_clients?: Array<string>
 }
 
 /**
@@ -225,7 +285,8 @@ export type RegistryEnvVar = {
 export type RegistryImageMetadata = {
   /**
    * Args are the default command-line arguments to pass to the MCP server container.
-   * These arguments will be prepended to any command-line arguments provided by the user.
+   * These arguments will be used only if no command-line arguments are provided by the user.
+   * If the user provides arguments, they will override these defaults.
    */
   args?: Array<string>
   /**
@@ -414,6 +475,11 @@ export type RunnerRunConfig = {
    */
   k8s_pod_template_patch?: string
   /**
+   * MiddlewareConfigs contains the list of middleware to apply to the transport
+   * and the configuration for each middleware.
+   */
+  middleware_configs?: Array<TypesMiddlewareConfig>
+  /**
    * Name is the name of the MCP server
    */
   name?: string
@@ -516,6 +582,20 @@ export type TelemetryConfig = {
   serviceVersion?: string
 }
 
+export type TypesMiddlewareConfig = {
+  /**
+   * Parameters is a JSON object containing the middleware parameters.
+   * It is stored as a raw message to allow flexible parameter types.
+   */
+  parameters?: {
+    [key: string]: unknown
+  }
+  /**
+   * Type is a string representing the middleware type.
+   */
+  type?: string
+}
+
 /**
  * ProxyMode is the proxy mode for stdio transport ("sse" or "streamable-http")
  */
@@ -526,7 +606,43 @@ export type TypesProxyMode = string
  */
 export type TypesTransportType = string
 
+/**
+ * Request containing registry configuration updates
+ */
+export type V1UpdateRegistryRequest = {
+  /**
+   * Allow private IP addresses for registry URL
+   */
+  allow_private_ip?: boolean
+  /**
+   * Local registry file path
+   */
+  local_path?: string
+  /**
+   * Registry URL (for remote registries)
+   */
+  url?: string
+}
+
+/**
+ * Response containing update result
+ */
+export type V1UpdateRegistryResponse = {
+  /**
+   * Status message
+   */
+  message?: string
+  /**
+   * Registry type after update
+   */
+  type?: string
+}
+
 export type V1BulkClientRequest = {
+  /**
+   * Groups is the list of groups configured on the client.
+   */
+  groups?: Array<string>
   /**
    * Names is the list of client names to operate on.
    */
@@ -550,12 +666,20 @@ export type V1ClientStatusResponse = {
 
 export type V1CreateClientRequest = {
   /**
+   * Groups is the list of groups configured on the client.
+   */
+  groups?: Array<string>
+  /**
    * Name is the type of the client to register.
    */
   name?: string
 }
 
 export type V1CreateClientResponse = {
+  /**
+   * Groups is the list of groups configured on the client.
+   */
+  groups?: Array<string>
   /**
    * Name is the type of the client that was registered.
    */
@@ -755,10 +879,6 @@ export type V1ListServersResponse = {
  */
 export type V1OidcOptions = {
   /**
-   * Allow opaque tokens (non-JWT) for OIDC validation
-   */
-  allow_opaque_tokens?: boolean
-  /**
    * Expected audience
    */
   audience?: string
@@ -766,6 +886,14 @@ export type V1OidcOptions = {
    * OAuth2 client ID
    */
   client_id?: string
+  /**
+   * OAuth2 client secret
+   */
+  client_secret?: string
+  /**
+   * Token introspection URL for OIDC
+   */
+  introspection_url?: string
   /**
    * OIDC issuer URL
    */
@@ -912,58 +1040,7 @@ export type V1WorkloadListResponse = {
   /**
    * List of container information for each workload
    */
-  workloads?: Array<WorkloadsWorkload>
-}
-
-export type WorkloadsWorkload = {
-  /**
-   * CreatedAt is the timestamp when the workload was created.
-   */
-  created_at?: string
-  /**
-   * Group is the name of the group this workload belongs to, if any.
-   */
-  group?: string
-  /**
-   * Labels are the container labels (excluding standard ToolHive labels)
-   */
-  labels?: {
-    [key: string]: string
-  }
-  /**
-   * Name is the name of the workload.
-   * It is used as a unique identifier.
-   */
-  name?: string
-  /**
-   * Package specifies the Workload Package used to create this Workload.
-   */
-  package?: string
-  /**
-   * Port is the port on which the workload is exposed.
-   * This is embedded in the URL.
-   */
-  port?: number
-  status?: RuntimeWorkloadStatus
-  /**
-   * StatusContext provides additional context about the workload's status.
-   * The exact meaning is determined by the status and the underlying runtime.
-   */
-  status_context?: string
-  /**
-   * ToolType is the type of tool this workload represents.
-   * For now, it will always be "mcp" - representing an MCP server.
-   */
-  tool_type?: string
-  /**
-   * ToolsFilter is the filter on tools applied to the workload.
-   */
-  tools?: Array<string>
-  transport_type?: TypesTransportType
-  /**
-   * URL is the URL of the workload exposed by the ToolHive proxy.
-   */
-  url?: string
+  workloads?: Array<CoreWorkload>
 }
 
 export type GetApiOpenapiJsonData = {
@@ -1382,6 +1459,45 @@ export type GetApiV1BetaRegistryByNameResponses = {
 
 export type GetApiV1BetaRegistryByNameResponse =
   GetApiV1BetaRegistryByNameResponses[keyof GetApiV1BetaRegistryByNameResponses]
+
+export type PutApiV1BetaRegistryByNameData = {
+  /**
+   * Registry configuration
+   */
+  body: V1UpdateRegistryRequest
+  path: {
+    /**
+     * Registry name (must be 'default')
+     */
+    name: string
+  }
+  query?: never
+  url: '/api/v1beta/registry/{name}'
+}
+
+export type PutApiV1BetaRegistryByNameErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+  /**
+   * Not Found
+   */
+  404: string
+}
+
+export type PutApiV1BetaRegistryByNameError =
+  PutApiV1BetaRegistryByNameErrors[keyof PutApiV1BetaRegistryByNameErrors]
+
+export type PutApiV1BetaRegistryByNameResponses = {
+  /**
+   * OK
+   */
+  200: V1UpdateRegistryResponse
+}
+
+export type PutApiV1BetaRegistryByNameResponse =
+  PutApiV1BetaRegistryByNameResponses[keyof PutApiV1BetaRegistryByNameResponses]
 
 export type GetApiV1BetaRegistryByNameServersData = {
   body?: never
@@ -1923,7 +2039,7 @@ export type GetApiV1BetaWorkloadsByNameResponses = {
   /**
    * OK
    */
-  200: WorkloadsWorkload
+  200: CoreWorkload
 }
 
 export type GetApiV1BetaWorkloadsByNameResponse =

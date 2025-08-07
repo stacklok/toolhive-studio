@@ -1,4 +1,4 @@
-import type { V1WorkloadListResponse, WorkloadsWorkload } from '@api/types.gen'
+import type { V1WorkloadListResponse, CoreWorkload } from '@api/types.gen'
 import {
   postApiV1BetaWorkloadsByNameRestartMutation,
   getApiV1BetaWorkloadsQueryKey,
@@ -69,7 +69,7 @@ export function useMutationRestartServerAtStartup() {
 
           const updatedData = {
             ...oldData,
-            workloads: workloads?.map((server: WorkloadsWorkload) =>
+            workloads: workloads?.map((server: CoreWorkload) =>
               serverNames.includes(server.name || '')
                 ? { ...server, status: 'restarting' }
                 : server
@@ -133,7 +133,7 @@ export function useMutationRestartServer({ name }: { name: string }) {
 
           const updatedData = {
             ...oldData,
-            workloads: oldData.workloads?.map((server: WorkloadsWorkload) =>
+            workloads: oldData.workloads?.map((server: CoreWorkload) =>
               server.name === name ? { ...server, status: 'running' } : server
             ),
           }

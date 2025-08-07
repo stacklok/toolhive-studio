@@ -1,4 +1,4 @@
-import type { WorkloadsWorkload } from '@api/types.gen'
+import type { CoreWorkload } from '@api/types.gen'
 import { CardMcpServer } from './card-mcp-server'
 import { useState, useMemo } from 'react'
 import { InputSearch } from '@/common/components/ui/input-search'
@@ -6,7 +6,7 @@ import { InputSearch } from '@/common/components/ui/input-search'
 export function GridCardsMcpServers({
   mcpServers,
 }: {
-  mcpServers: WorkloadsWorkload[]
+  mcpServers: CoreWorkload[]
 }) {
   const [filters, setFilters] = useState({
     text: '',

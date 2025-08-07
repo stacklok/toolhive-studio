@@ -17,7 +17,7 @@ import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { Input } from '@/common/components/ui/input'
 
-import type { WorkloadsWorkload } from '@api/types.gen'
+import type { CoreWorkload } from '@api/types.gen'
 import { ActionsMcpServer } from './actions-mcp-server'
 import { useMutationRestartServer } from '../hooks/use-mutation-restart-server'
 import { useMutationStopServerList } from '../hooks/use-mutation-stop-server'
@@ -36,10 +36,10 @@ import {
 } from '@/common/components/ui/tooltip'
 
 type CardContentMcpServerProps = {
-  status: WorkloadsWorkload['status']
-  statusContext: WorkloadsWorkload['status_context']
+  status: CoreWorkload['status']
+  statusContext: CoreWorkload['status_context']
   name: string
-  transport: WorkloadsWorkload['transport_type']
+  transport: CoreWorkload['transport_type']
 }
 
 function CardContentMcpServer({
@@ -105,10 +105,10 @@ export function CardMcpServer({
   transport,
 }: {
   name: string
-  status: WorkloadsWorkload['status']
-  statusContext: WorkloadsWorkload['status_context']
+  status: CoreWorkload['status']
+  statusContext: CoreWorkload['status_context']
   url: string
-  transport: WorkloadsWorkload['transport_type']
+  transport: CoreWorkload['transport_type']
 }) {
   const confirm = useConfirm()
   const { mutateAsync: deleteServer, isPending: isDeletePending } =
@@ -192,8 +192,7 @@ export function CardMcpServer({
     status === 'starting' || status === 'stopping' || status === 'restarting'
   const isStopped = status === 'stopped' || status === 'stopping'
   const [hadRecentStatusChange, setHadRecentStatusChange] = useState(false)
-  const [prevStatus, setPrevStatus] =
-    useState<WorkloadsWorkload['status']>(status)
+  const [prevStatus, setPrevStatus] = useState<CoreWorkload['status']>(status)
 
   useEffect(() => {
     // show a brief animation for status transitions that are immediate

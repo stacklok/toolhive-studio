@@ -2,7 +2,7 @@
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 
 import { contextBridge, ipcRenderer } from 'electron'
-import type { WorkloadsWorkload } from '../../api/generated/types.gen'
+import type { CoreWorkload } from '../../api/generated/types.gen'
 import { TOOLHIVE_VERSION } from '../../utils/constants'
 
 // Expose auto-launch functionality to renderer
@@ -159,7 +159,7 @@ export interface ElectronAPI {
     callback: (_event: Electron.IpcRendererEvent) => void
   ) => void
   shutdownStore: {
-    getLastShutdownServers: () => Promise<WorkloadsWorkload[]>
+    getLastShutdownServers: () => Promise<CoreWorkload[]>
     clearShutdownHistory: () => Promise<{ success: boolean }>
   }
 }

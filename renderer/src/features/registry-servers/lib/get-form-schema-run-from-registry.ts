@@ -1,4 +1,4 @@
-import type { RegistryEnvVar, WorkloadsWorkload } from '@api/types.gen'
+import type { RegistryEnvVar, CoreWorkload } from '@api/types.gen'
 import z from 'zod/v4'
 import type { GroupedEnvVars } from './group-env-vars'
 import { isEmptyEnvVar } from '@/common/lib/utils'
@@ -44,7 +44,7 @@ export function getFormSchemaRunFromRegistry({
   envVars,
   secrets,
   workloads,
-}: GroupedEnvVars & { workloads: WorkloadsWorkload[] }) {
+}: GroupedEnvVars & { workloads: CoreWorkload[] }) {
   return z.object({
     serverName: z
       .string()
