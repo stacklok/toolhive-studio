@@ -2,11 +2,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs'
 import { GeneralTab } from './general-tab'
 import { VersionTab } from './version-tab'
 import { LogsTab } from './logs-tab'
+import { RegistryTab } from './registry-tab'
 
-const tabs = [
+type Tab = 'general' | 'registry' | 'version' | 'logs'
+type TabItem = { label: string; value: Tab }
+
+const tabs: TabItem[] = [
   {
     label: 'General',
     value: 'general',
+  },
+  {
+    label: 'Registry',
+    value: 'registry',
   },
   {
     label: 'Version',
@@ -16,7 +24,7 @@ const tabs = [
     label: 'Logs',
     value: 'logs',
   },
-]
+] as const satisfies TabItem[]
 
 export function SettingsTabs() {
   return (
@@ -45,6 +53,10 @@ export function SettingsTabs() {
 
         <TabsContent value="general" className="space-y-6">
           <GeneralTab />
+        </TabsContent>
+
+        <TabsContent value="registry" className="space-y-6">
+          <RegistryTab />
         </TabsContent>
 
         <TabsContent value="version" className="space-y-6">
