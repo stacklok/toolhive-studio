@@ -105,6 +105,13 @@ export function getFormSchemaRunFromRegistry({
         ),
       })
     ),
+    volumes: z.array(
+      z.object({
+        host: z.string(),
+        container: z.string(),
+        accessMode: z.enum(['ro', 'rw']).optional(),
+      })
+    ),
   })
 }
 

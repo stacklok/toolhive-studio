@@ -17,7 +17,7 @@ import { cn } from '@/common/lib/utils'
 import { FormComboboxSecretStore } from '@/common/components/secrets/form-combobox-secrets-store'
 import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
 import { CommandArgumentsField } from '@/common/components/workload-cmd-arg/command-arguments-field'
-import { StorageVolumesField } from '../storage-volumes-field'
+import { VolumesField } from '../volumes-field'
 
 interface ConfigurationTabContentProps {
   error: string | null
@@ -209,7 +209,7 @@ export function ConfigurationTabContent({
         control={form.control}
       />
 
-      <StorageVolumesField />
+      <VolumesField form={form} />
 
       {groupedEnvVars.secrets[0] ? (
         <section className="mb-10">

@@ -127,6 +127,10 @@ export function prepareCreateWorkloadData(
       }
     : undefined
 
+  const volumes: Array<string> = data.volumes
+    .filter((volume) => volume.host && volume.container)
+    .map((volume) => `${volume.host}:${volume.container}:${volume.accessMode}`)
+
   return {
     name: data.serverName,
     image: server.image,
@@ -137,6 +141,7 @@ export function prepareCreateWorkloadData(
     target_port: server.target_port,
     network_isolation: networkIsolation,
     permission_profile,
+    volumes,
     // ...rest does not include the omitted fields
   }
 }

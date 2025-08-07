@@ -6,7 +6,7 @@ import {
 } from 'react'
 import { Button } from '@/common/components/ui/button'
 import { Label } from '@/common/components/ui/label'
-import { InfoIcon, Trash2 } from 'lucide-react'
+import { InfoIcon, Plus, Trash2 } from 'lucide-react'
 import {
   useFieldArray,
   type FieldValues,
@@ -181,6 +181,7 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
             } as TFieldValues[ArrayPath<TFieldValues>][number])
           }}
         >
+          <Plus />
           {addButtonText}
         </Button>
       </div>
