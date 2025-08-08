@@ -26,7 +26,7 @@ import { useDeleteServer } from '../hooks/use-delete-server'
 import { useQuery } from '@tanstack/react-query'
 import { useSearch } from '@tanstack/react-router'
 import { getApiV1BetaRegistryByNameServersByServerName } from '@api/sdk.gen'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { trackEvent } from '@/common/lib/analytics'
 import {
@@ -113,6 +113,7 @@ export function CardMcpServer({
   const confirm = useConfirm()
   const { mutateAsync: deleteServer, isPending: isDeletePending } =
     useDeleteServer({ name })
+  const nameRef = useRef<HTMLElement | null>(null)
 
   const { data: serverDetails } = useQuery({
     queryKey: ['serverDetails', name],
@@ -223,9 +224,11 @@ export function CardMcpServer({
               isStopped && 'text-primary/65'
             )}
           >
-            <Tooltip>
+            <Tooltip onlyWhenTruncated>
               <TooltipTrigger asChild>
-                <span className="block cursor-default truncate">{name}</span>
+                <span ref={nameRef} className="block cursor-default truncate">
+                  {name}
+                </span>
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">{name}</TooltipContent>
             </Tooltip>

@@ -2,6 +2,7 @@ import * as React from 'react'
 import * as TooltipPrimitive from '@radix-ui/react-tooltip'
 
 import { cn } from '@/common/lib/utils'
+import { useIsTruncated } from '@/common/hooks/use-is-truncated'
 
 function TooltipProvider({
   delayDuration = 0,
@@ -16,21 +17,74 @@ function TooltipProvider({
   )
 }
 
-function Tooltip({
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Root>) {
+type TooltipProps = React.ComponentProps<typeof TooltipPrimitive.Root> & {
+  onlyWhenTruncated?: boolean
+}
+
+const TruncateContext = React.createContext<{
+  onlyWhenTruncated: boolean
+  triggerRef: React.RefObject<HTMLElement | null>
+} | null>(null)
+
+function Tooltip({ onlyWhenTruncated = false, ...props }: TooltipProps) {
+  const triggerRef = React.useRef<HTMLElement | null>(null)
+  const isTruncated = useIsTruncated(triggerRef)
+
+  const contextValue = React.useMemo(
+    () => ({ onlyWhenTruncated, triggerRef }),
+    [onlyWhenTruncated]
+  )
+
+  const effectiveOpen = onlyWhenTruncated
+    ? // if not truncated, force closed; otherwise respect consumer control
+      isTruncated
+      ? props.open
+      : false
+    : props.open
+
   return (
     <TooltipProvider>
-      <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+      <TruncateContext.Provider value={contextValue}>
+        <TooltipPrimitive.Root
+          data-slot="tooltip"
+          {...props}
+          open={effectiveOpen}
+        />
+      </TruncateContext.Provider>
     </TooltipProvider>
   )
 }
 
-function TooltipTrigger({
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
-  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
-}
+const TooltipTrigger = React.forwardRef<
+  HTMLButtonElement,
+  React.ComponentProps<typeof TooltipPrimitive.Trigger>
+>(function TooltipTrigger({ ...props }, forwardedRef) {
+  const ctx = React.useContext(TruncateContext)
+
+  const setRefs = React.useCallback(
+    (node: HTMLButtonElement | null) => {
+      // internal: keep track for truncation measurement
+      if (ctx) ctx.triggerRef.current = node
+      // forward to consumer
+      if (typeof forwardedRef === 'function') {
+        forwardedRef(node)
+      } else if (forwardedRef) {
+        ;(
+          forwardedRef as React.MutableRefObject<HTMLButtonElement | null>
+        ).current = node
+      }
+    },
+    [ctx, forwardedRef]
+  )
+
+  return (
+    <TooltipPrimitive.Trigger
+      ref={ctx?.onlyWhenTruncated ? setRefs : forwardedRef}
+      data-slot="tooltip-trigger"
+      {...props}
+    />
+  )
+})
 
 function TooltipContent({
   className,
