@@ -147,10 +147,18 @@ export function prepareCreateWorkloadData(
       }
     : undefined
 
+  const volumes: Array<string> = (data.volumes ?? [])
+    .filter((volume) => volume.host && volume.container)
+    .map(
+      (volume) =>
+        `${volume.host}:${volume.container}${volume.accessMode === 'ro' ? ':ro' : ''}`
+    )
+
   return {
     ...request,
     network_isolation: networkIsolation,
     permission_profile,
+    volumes,
   }
 }
 

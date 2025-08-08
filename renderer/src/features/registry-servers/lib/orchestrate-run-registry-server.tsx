@@ -129,7 +129,10 @@ export function prepareCreateWorkloadData(
 
   const volumes: Array<string> = (data.volumes ?? [])
     .filter((volume) => volume.host && volume.container)
-    .map((volume) => `${volume.host}:${volume.container}:${volume.accessMode}`)
+    .map(
+      (volume) =>
+        `${volume.host}:${volume.container}${volume.accessMode === 'ro' ? ':ro' : ''}`
+    )
 
   return {
     name: data.serverName,
