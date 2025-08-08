@@ -1,4 +1,4 @@
-import type { WorkloadsWorkload, V1WorkloadListResponse } from '@api/types.gen'
+import type { CoreWorkload, V1WorkloadListResponse } from '@api/types.gen'
 import {
   postApiV1BetaWorkloadsByNameStopMutation,
   getApiV1BetaWorkloadsQueryKey,
@@ -35,7 +35,7 @@ export function useMutationStopServerList({ name }: { name: string }) {
 
           const updatedData = {
             ...oldData,
-            workloads: oldData.workloads?.map((server: WorkloadsWorkload) =>
+            workloads: oldData.workloads?.map((server: CoreWorkload) =>
               server.name === name ? { ...server, status: 'stopping' } : server
             ),
           } as V1WorkloadListResponse

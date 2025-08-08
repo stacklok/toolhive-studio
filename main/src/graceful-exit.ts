@@ -3,7 +3,7 @@ import {
   postApiV1BetaWorkloadsByNameStop,
 } from '@api/sdk.gen'
 import { createClient } from '@api/client'
-import type { WorkloadsWorkload } from '@api/types.gen'
+import type { CoreWorkload } from '@api/types.gen'
 import Store from 'electron-store'
 import log from './logger'
 import { delay } from '../../utils/delay'
@@ -18,7 +18,7 @@ const shutdownStore = new Store({
 })
 
 /** Get the currently running servers from the ToolHive API. */
-async function getRunningServers(port: number): Promise<WorkloadsWorkload[]> {
+async function getRunningServers(port: number): Promise<CoreWorkload[]> {
   const client = createClient({
     baseUrl: `http://localhost:${port}`,
     headers: getHeaders(),
@@ -30,7 +30,7 @@ async function getRunningServers(port: number): Promise<WorkloadsWorkload[]> {
       return []
     }
     return response.data.workloads.filter(
-      (server: WorkloadsWorkload) => server.status === 'running' && server.name
+      (server: CoreWorkload) => server.status === 'running' && server.name
     )
   } catch (error) {
     log.error('Failed to get running servers: ', error)

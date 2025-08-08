@@ -1,7 +1,7 @@
-import type { WorkloadsWorkload } from '@api/types.gen'
+import type { CoreWorkload } from '@api/types.gen'
 import z from 'zod/v4'
 
-const getCommonFields = (workloads: WorkloadsWorkload[]) =>
+const getCommonFields = (workloads: CoreWorkload[]) =>
   z.object({
     name: z
       .union([z.string(), z.undefined()])
@@ -69,7 +69,7 @@ const getCommonFields = (workloads: WorkloadsWorkload[]) =>
     ),
   })
 
-export const getFormSchemaRunMcpCommand = (workloads: WorkloadsWorkload[]) =>
+export const getFormSchemaRunMcpCommand = (workloads: CoreWorkload[]) =>
   z.discriminatedUnion('type', [
     z.object({
       type: z.literal('docker_image'),
