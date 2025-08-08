@@ -11,10 +11,12 @@ import { clientsFixture } from './fixtures/clients'
 import type {
   V1CreateRequest,
   V1CreateSecretRequest,
+  V1UpdateRegistryRequest,
 } from '../../../../api/generated/types.gen'
 import { registryServerFixture } from './fixtures/registry_server'
 import { MOCK_REGISTRY_RESPONSE } from './fixtures/registry'
 import { secretsListFixture } from './fixtures/secrets'
+import { DEFAULT_REGISTRY } from './fixtures/default_registry'
 
 export const handlers = [
   http.get(mswEndpoint('/health'), () => {
@@ -152,6 +154,17 @@ export const handlers = [
 
   http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
     return HttpResponse.json({ servers: MOCK_REGISTRY_RESPONSE })
+  }),
+
+  http.get(mswEndpoint('/api/v1beta/registry/:name'), async () => {
+    return HttpResponse.json(DEFAULT_REGISTRY)
+  }),
+
+  http.put(mswEndpoint('/api/v1beta/registry/:name'), async ({ request }) => {
+    const { local_path, url } =
+      (await request.json()) as V1UpdateRegistryRequest
+
+    return HttpResponse.json({ local_path, url })
   }),
 
   http.get(
