@@ -223,7 +223,7 @@ export const DEFAULT_REGISTRY = {
           },
           {
             name: 'AWS_SESSION_TOKEN',
-            description: 'AWS sesison token for temporary credentials',
+            description: 'AWS session token for temporary credentials',
             required: false,
             secret: true,
           },
