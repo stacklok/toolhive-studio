@@ -60,7 +60,7 @@ export function VolumesField({
             label="Volumes"
             inputLabelPrefix="Volume"
             addButtonText="Add a volume"
-            tooltipContent={`Specify the path to the volume. To include subdirectories, use a leading period (".")`}
+            tooltipContent="Specify the path to the volume"
             form={form}
           >
             {({ inputProps, setInputRef, idx }) => (
