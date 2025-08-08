@@ -5,7 +5,6 @@
   "prConcurrentLimit": 3,
   "timezone": "Europe/London",
   "schedule": ["after 01:00 and before 07:00 on every weekday"],
-  "enabledManagers": ["custom.regex"],
   "customManagers": [
     {
       "customType": "regex",
