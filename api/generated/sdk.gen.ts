@@ -42,6 +42,9 @@ import type {
   GetApiV1BetaRegistryByNameData,
   GetApiV1BetaRegistryByNameResponses,
   GetApiV1BetaRegistryByNameErrors,
+  PutApiV1BetaRegistryByNameData,
+  PutApiV1BetaRegistryByNameResponses,
+  PutApiV1BetaRegistryByNameErrors,
   GetApiV1BetaRegistryByNameServersData,
   GetApiV1BetaRegistryByNameServersResponses,
   GetApiV1BetaRegistryByNameServersErrors,
@@ -409,6 +412,29 @@ export const getApiV1BetaRegistryByName = <
   >({
     url: '/api/v1beta/registry/{name}',
     ...options,
+  })
+}
+
+/**
+ * Update registry configuration
+ * Update registry URL or local path for the default registry
+ */
+export const putApiV1BetaRegistryByName = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PutApiV1BetaRegistryByNameData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).put<
+    PutApiV1BetaRegistryByNameResponses,
+    PutApiV1BetaRegistryByNameErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/registry/{name}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
   })
 }
 

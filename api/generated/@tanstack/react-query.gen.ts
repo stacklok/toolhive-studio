@@ -17,6 +17,7 @@ import {
   postApiV1BetaRegistry,
   deleteApiV1BetaRegistryByName,
   getApiV1BetaRegistryByName,
+  putApiV1BetaRegistryByName,
   getApiV1BetaRegistryByNameServers,
   getApiV1BetaRegistryByNameServersByServerName,
   postApiV1BetaSecrets,
@@ -71,6 +72,9 @@ import type {
   DeleteApiV1BetaRegistryByNameError,
   DeleteApiV1BetaRegistryByNameResponse,
   GetApiV1BetaRegistryByNameData,
+  PutApiV1BetaRegistryByNameData,
+  PutApiV1BetaRegistryByNameError,
+  PutApiV1BetaRegistryByNameResponse,
   GetApiV1BetaRegistryByNameServersData,
   GetApiV1BetaRegistryByNameServersByServerNameData,
   PostApiV1BetaSecretsData,
@@ -675,6 +679,34 @@ export const getApiV1BetaRegistryByNameOptions = (
     },
     queryKey: getApiV1BetaRegistryByNameQueryKey(options),
   })
+}
+
+/**
+ * Update registry configuration
+ * Update registry URL or local path for the default registry
+ */
+export const putApiV1BetaRegistryByNameMutation = (
+  options?: Partial<Options<PutApiV1BetaRegistryByNameData>>
+): UseMutationOptions<
+  PutApiV1BetaRegistryByNameResponse,
+  PutApiV1BetaRegistryByNameError,
+  Options<PutApiV1BetaRegistryByNameData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PutApiV1BetaRegistryByNameResponse,
+    PutApiV1BetaRegistryByNameError,
+    Options<PutApiV1BetaRegistryByNameData>
+  > = {
+    mutationFn: async (localOptions) => {
+      const { data } = await putApiV1BetaRegistryByName({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
 }
 
 export const getApiV1BetaRegistryByNameServersQueryKey = (

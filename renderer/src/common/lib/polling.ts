@@ -2,7 +2,7 @@
  * Functional, composable polling utilities
  */
 
-import type { WorkloadsWorkload } from '../../../../api/generated/types.gen'
+import type { CoreWorkload } from '../../../../api/generated/types.gen'
 import { delay } from '../../../../utils/delay'
 
 // Types
@@ -102,14 +102,14 @@ const pollUntilTrue = <T>(
 
 // Server utilities
 const serverPredicates = {
-  isRunning: (server: WorkloadsWorkload) => server?.status === 'running',
-  hasStatus: (status: string) => (server: WorkloadsWorkload) =>
+  isRunning: (server: CoreWorkload) => server?.status === 'running',
+  hasStatus: (status: string) => (server: CoreWorkload) =>
     server?.status === status,
 }
 
 // Public API
 export const pollServerStatus = async (
-  fetchServer: () => Promise<WorkloadsWorkload>,
+  fetchServer: () => Promise<CoreWorkload>,
   status: string,
   config?: PollingConfig
 ): Promise<boolean> => {
@@ -122,22 +122,22 @@ export const pollServerStatus = async (
 }
 
 export const pollServerDelete = async (
-  fetchServer: () => Promise<WorkloadsWorkload>,
+  fetchServer: () => Promise<CoreWorkload>,
   config?: PollingConfig
 ): Promise<boolean> => {
   const result = await createPoller(config)(
     fetchServer,
-    untilError<WorkloadsWorkload>()
+    untilError<CoreWorkload>()
   )
   return result.success
 }
 
 export const pollBatchServerStatus = async (
-  fetchServers: (serverNames: string[]) => Promise<WorkloadsWorkload[]>,
+  fetchServers: (serverNames: string[]) => Promise<CoreWorkload[]>,
   serverNames: string[],
   status: string,
   config?: PollingConfig
-): Promise<{ success: boolean; results: WorkloadsWorkload[] }> => {
+): Promise<{ success: boolean; results: CoreWorkload[] }> => {
   const result = await pollUntilTrue(
     () => fetchServers(serverNames),
     (servers) => servers.every((server) => server?.status === status),

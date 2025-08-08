@@ -1,5 +1,5 @@
 import type {
-  WorkloadsWorkload,
+  CoreWorkload,
   V1WorkloadListResponse,
   V1CreateWorkloadResponse,
 } from '@api/types.gen'
@@ -95,7 +95,7 @@ export const MOCK_MCP_SERVERS = [
     status_context: 'Exited (137) 4 days ago',
     created_at: '2025-05-23T16:38:30+02:00',
   },
-] as const satisfies WorkloadsWorkload[]
+] as const satisfies CoreWorkload[]
 
 export const workloadListFixture: V1WorkloadListResponse = {
   workloads: MOCK_MCP_SERVERS,
@@ -107,9 +107,7 @@ export const createWorkloadResponseFixture: V1CreateWorkloadResponse = {
 }
 
 // Helper function to get a workload by name
-export const getWorkloadByName = (
-  name: string
-): WorkloadsWorkload | undefined => {
+export const getWorkloadByName = (name: string): CoreWorkload | undefined => {
   return MOCK_MCP_SERVERS.find((workload) => workload.name === name)
 }
 

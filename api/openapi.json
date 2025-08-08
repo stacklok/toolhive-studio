@@ -42,10 +42,6 @@
       "auth.TokenValidatorConfig": {
         "description": "OIDCConfig contains OIDC configuration",
         "properties": {
-          "allowOpaqueTokens": {
-            "description": "AllowOpaqueTokens indicates whether to allow opaque tokens (non-JWT)",
-            "type": "boolean"
-          },
           "allowPrivateIP": {
             "description": "AllowPrivateIP allows JWKS/OIDC endpoints on private IP addresses",
             "type": "boolean"
@@ -66,12 +62,24 @@
             "description": "ClientID is the OIDC client ID",
             "type": "string"
           },
+          "clientSecret": {
+            "description": "ClientSecret is the optional OIDC client secret for introspection",
+            "type": "string"
+          },
+          "introspectionURL": {
+            "description": "IntrospectionURL is the optional introspection endpoint for validating tokens",
+            "type": "string"
+          },
           "issuer": {
             "description": "Issuer is the OIDC issuer URL (e.g., https://accounts.google.com)",
             "type": "string"
           },
           "jwksurl": {
             "description": "JWKSURL is the URL to fetch the JWKS from",
+            "type": "string"
+          },
+          "resourceURL": {
+            "description": "ResourceURL is the explicit resource URL for OAuth discovery (RFC 9728)",
             "type": "string"
           }
         },
@@ -166,8 +174,67 @@
         },
         "type": "object"
       },
+      "core.Workload": {
+        "properties": {
+          "created_at": {
+            "description": "CreatedAt is the timestamp when the workload was created.",
+            "type": "string"
+          },
+          "group": {
+            "description": "Group is the name of the group this workload belongs to, if any.",
+            "type": "string"
+          },
+          "labels": {
+            "additionalProperties": { "type": "string" },
+            "description": "Labels are the container labels (excluding standard ToolHive labels)",
+            "type": "object"
+          },
+          "name": {
+            "description": "Name is the name of the workload.\nIt is used as a unique identifier.",
+            "type": "string"
+          },
+          "package": {
+            "description": "Package specifies the Workload Package used to create this Workload.",
+            "type": "string"
+          },
+          "port": {
+            "description": "Port is the port on which the workload is exposed.\nThis is embedded in the URL.",
+            "type": "integer"
+          },
+          "status": { "$ref": "#/components/schemas/runtime.WorkloadStatus" },
+          "status_context": {
+            "description": "StatusContext provides additional context about the workload's status.\nThe exact meaning is determined by the status and the underlying runtime.",
+            "type": "string"
+          },
+          "tool_type": {
+            "description": "ToolType is the type of tool this workload represents.\nFor now, it will always be \"mcp\" - representing an MCP server.",
+            "type": "string"
+          },
+          "tools": {
+            "description": "ToolsFilter is the filter on tools applied to the workload.",
+            "items": { "type": "string" },
+            "type": "array",
+            "uniqueItems": false
+          },
+          "transport_type": {
+            "$ref": "#/components/schemas/types.TransportType"
+          },
+          "url": {
+            "description": "URL is the URL of the workload exposed by the ToolHive proxy.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "groups.Group": {
-        "properties": { "name": { "type": "string" } },
+        "properties": {
+          "name": { "type": "string" },
+          "registered_clients": {
+            "items": { "type": "string" },
+            "type": "array",
+            "uniqueItems": false
+          }
+        },
         "type": "object"
       },
       "ignore.Config": {
@@ -269,7 +336,7 @@
         "description": "Server details",
         "properties": {
           "args": {
-            "description": "Args are the default command-line arguments to pass to the MCP server container.\nThese arguments will be prepended to any command-line arguments provided by the user.",
+            "description": "Args are the default command-line arguments to pass to the MCP server container.\nThese arguments will be used only if no command-line arguments are provided by the user.\nIf the user provides arguments, they will override these defaults.",
             "items": { "type": "string" },
             "type": "array",
             "uniqueItems": false
@@ -471,6 +538,12 @@
             "description": "K8sPodTemplatePatch is a JSON string to patch the Kubernetes pod template\nOnly applicable when using Kubernetes runtime",
             "type": "string"
           },
+          "middleware_configs": {
+            "description": "MiddlewareConfigs contains the list of middleware to apply to the transport\nand the configuration for each middleware.",
+            "items": { "$ref": "#/components/schemas/types.MiddlewareConfig" },
+            "type": "array",
+            "uniqueItems": false
+          },
           "name": {
             "description": "Name is the name of the MCP server",
             "type": "string"
@@ -597,6 +670,19 @@
         },
         "type": "object"
       },
+      "types.MiddlewareConfig": {
+        "properties": {
+          "parameters": {
+            "description": "Parameters is a JSON object containing the middleware parameters.\nIt is stored as a raw message to allow flexible parameter types.",
+            "type": "object"
+          },
+          "type": {
+            "description": "Type is a string representing the middleware type.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "types.ProxyMode": {
         "description": "ProxyMode is the proxy mode for stdio transport (\"sse\" or \"streamable-http\")",
         "type": "string",
@@ -612,8 +698,52 @@
           "TransportTypeInspector"
         ]
       },
+      "v1.RegistryType": {
+        "description": "Type of registry (file, url, or default)",
+        "type": "string",
+        "x-enum-varnames": [
+          "RegistryTypeFile",
+          "RegistryTypeURL",
+          "RegistryTypeDefault"
+        ]
+      },
+      "v1.UpdateRegistryRequest": {
+        "description": "Request containing registry configuration updates",
+        "properties": {
+          "allow_private_ip": {
+            "description": "Allow private IP addresses for registry URL",
+            "type": "boolean"
+          },
+          "local_path": {
+            "description": "Local registry file path",
+            "type": "string"
+          },
+          "url": {
+            "description": "Registry URL (for remote registries)",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "v1.UpdateRegistryResponse": {
+        "description": "Response containing update result",
+        "properties": {
+          "message": { "description": "Status message", "type": "string" },
+          "type": {
+            "description": "Registry type after update",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "v1.bulkClientRequest": {
         "properties": {
+          "groups": {
+            "description": "Groups is the list of groups configured on the client.",
+            "items": { "type": "string" },
+            "type": "array",
+            "uniqueItems": false
+          },
           "names": {
             "description": "Names is the list of client names to operate on.",
             "items": {
@@ -667,6 +797,12 @@
       },
       "v1.createClientRequest": {
         "properties": {
+          "groups": {
+            "description": "Groups is the list of groups configured on the client.",
+            "items": { "type": "string" },
+            "type": "array",
+            "uniqueItems": false
+          },
           "name": {
             "description": "Name is the type of the client to register.",
             "type": "string",
@@ -691,6 +827,12 @@
       },
       "v1.createClientResponse": {
         "properties": {
+          "groups": {
+            "description": "Groups is the list of groups configured on the client.",
+            "items": { "type": "string" },
+            "type": "array",
+            "uniqueItems": false
+          },
           "name": {
             "description": "Name is the type of the client that was registered.",
             "type": "string",
@@ -840,6 +982,19 @@
             "description": "Number of servers in the registry",
             "type": "integer"
           },
+          "source": {
+            "description": "Source of the registry (URL, file path, or empty string for built-in)",
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of registry (file, url, or default)",
+            "type": "string",
+            "x-enum-varnames": [
+              "RegistryTypeFile",
+              "RegistryTypeURL",
+              "RegistryTypeDefault"
+            ]
+          },
           "version": {
             "description": "Version of the registry schema",
             "type": "string"
@@ -909,12 +1064,16 @@
       "v1.oidcOptions": {
         "description": "OIDC configuration options",
         "properties": {
-          "allow_opaque_tokens": {
-            "description": "Allow opaque tokens (non-JWT) for OIDC validation",
-            "type": "boolean"
-          },
           "audience": { "description": "Expected audience", "type": "string" },
           "client_id": { "description": "OAuth2 client ID", "type": "string" },
+          "client_secret": {
+            "description": "OAuth2 client secret",
+            "type": "string"
+          },
+          "introspection_url": {
+            "description": "Token introspection URL for OIDC",
+            "type": "string"
+          },
           "issuer": { "description": "OIDC issuer URL", "type": "string" },
           "jwks_url": {
             "description": "JWKS URL for key verification",
@@ -961,6 +1120,11 @@
             "description": "Number of servers in the registry",
             "type": "integer"
           },
+          "source": {
+            "description": "Source of the registry (URL, file path, or empty string for built-in)",
+            "type": "string"
+          },
+          "type": { "$ref": "#/components/schemas/v1.RegistryType" },
           "version": {
             "description": "Version of the registry schema",
             "type": "string"
@@ -1043,61 +1207,9 @@
         "properties": {
           "workloads": {
             "description": "List of container information for each workload",
-            "items": { "$ref": "#/components/schemas/workloads.Workload" },
+            "items": { "$ref": "#/components/schemas/core.Workload" },
             "type": "array",
             "uniqueItems": false
-          }
-        },
-        "type": "object"
-      },
-      "workloads.Workload": {
-        "properties": {
-          "created_at": {
-            "description": "CreatedAt is the timestamp when the workload was created.",
-            "type": "string"
-          },
-          "group": {
-            "description": "Group is the name of the group this workload belongs to, if any.",
-            "type": "string"
-          },
-          "labels": {
-            "additionalProperties": { "type": "string" },
-            "description": "Labels are the container labels (excluding standard ToolHive labels)",
-            "type": "object"
-          },
-          "name": {
-            "description": "Name is the name of the workload.\nIt is used as a unique identifier.",
-            "type": "string"
-          },
-          "package": {
-            "description": "Package specifies the Workload Package used to create this Workload.",
-            "type": "string"
-          },
-          "port": {
-            "description": "Port is the port on which the workload is exposed.\nThis is embedded in the URL.",
-            "type": "integer"
-          },
-          "status": { "$ref": "#/components/schemas/runtime.WorkloadStatus" },
-          "status_context": {
-            "description": "StatusContext provides additional context about the workload's status.\nThe exact meaning is determined by the status and the underlying runtime.",
-            "type": "string"
-          },
-          "tool_type": {
-            "description": "ToolType is the type of tool this workload represents.\nFor now, it will always be \"mcp\" - representing an MCP server.",
-            "type": "string"
-          },
-          "tools": {
-            "description": "ToolsFilter is the filter on tools applied to the workload.",
-            "items": { "type": "string" },
-            "type": "array",
-            "uniqueItems": false
-          },
-          "transport_type": {
-            "$ref": "#/components/schemas/types.TransportType"
-          },
-          "url": {
-            "description": "URL is the URL of the workload exposed by the ToolHive proxy.",
-            "type": "string"
           }
         },
         "type": "object"
@@ -1527,6 +1639,55 @@
           }
         },
         "summary": "Get a registry",
+        "tags": ["registry"]
+      },
+      "put": {
+        "description": "Update registry URL or local path for the default registry",
+        "parameters": [
+          {
+            "description": "Registry name (must be 'default')",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1.UpdateRegistryRequest"
+              }
+            }
+          },
+          "description": "Registry configuration",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1.UpdateRegistryResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Not Found"
+          }
+        },
+        "summary": "Update registry configuration",
         "tags": ["registry"]
       }
     },
@@ -2116,7 +2277,7 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/workloads.Workload" }
+                "schema": { "$ref": "#/components/schemas/core.Workload" }
               }
             },
             "description": "OK"
