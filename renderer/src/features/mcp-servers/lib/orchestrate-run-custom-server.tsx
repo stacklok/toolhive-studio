@@ -9,7 +9,7 @@ import {
 import type { Options } from '@api/client'
 import type { FormSchemaRunMcpCommand } from './form-schema-run-mcp-server-with-command'
 import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
-import { isEmptyEnvVar } from '@/common/lib/utils'
+import { getVolumes, isEmptyEnvVar } from '@/common/lib/utils'
 
 type SaveSecretFn = UseMutateAsyncFunction<
   V1CreateSecretResponse,
@@ -147,12 +147,7 @@ export function prepareCreateWorkloadData(
       }
     : undefined
 
-  const volumes: Array<string> = (data.volumes ?? [])
-    .filter((volume) => volume.host && volume.container)
-    .map(
-      (volume) =>
-        `${volume.host}:${volume.container}${volume.accessMode === 'ro' ? ':ro' : ''}`
-    )
+  const volumes = getVolumes(data.volumes ?? [])
 
   return {
     ...request,

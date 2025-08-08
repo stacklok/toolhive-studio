@@ -10,7 +10,7 @@ import type { Options } from '@api/client'
 import type { FormSchemaRunFromRegistry } from './get-form-schema-run-from-registry'
 import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
 import type { UseMutateAsyncFunction } from '@tanstack/react-query'
-import { isEmptyEnvVar } from '@/common/lib/utils'
+import { getVolumes, isEmptyEnvVar } from '@/common/lib/utils'
 
 type SaveSecretFn = UseMutateAsyncFunction<
   V1CreateSecretResponse,
@@ -127,12 +127,7 @@ export function prepareCreateWorkloadData(
       }
     : undefined
 
-  const volumes: Array<string> = (data.volumes ?? [])
-    .filter((volume) => volume.host && volume.container)
-    .map(
-      (volume) =>
-        `${volume.host}:${volume.container}${volume.accessMode === 'ro' ? ':ro' : ''}`
-    )
+  const volumes = getVolumes(data.volumes ?? [])
 
   return {
     name: data.serverName,

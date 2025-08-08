@@ -12,3 +12,18 @@ export function cn(...inputs: ClassValue[]) {
 export function isEmptyEnvVar(value: string | undefined | null): boolean {
   return !value || value.trim() === ''
 }
+
+export function getVolumes(
+  volumes: Array<{
+    host: string
+    container: string
+    accessMode?: 'ro' | 'rw'
+  }>
+): Array<string> {
+  return volumes
+    .filter((volume) => volume.host && volume.container)
+    .map(
+      (volume) =>
+        `${volume.host}:${volume.container}${volume.accessMode === 'ro' ? ':ro' : ''}`
+    )
+}
