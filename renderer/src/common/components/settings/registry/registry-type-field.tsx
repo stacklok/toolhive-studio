@@ -37,7 +37,7 @@ export function RegistryTypeField({
           <FormLabel required>Registry Type</FormLabel>
           <FormDescription>
             Choose between ToolHive default registry, a custom remote registry
-            (HTTP/HTTPS URL), or a custom local registry file.
+            HTTPS url, or a custom local registry file.
           </FormDescription>
           <Select
             onValueChange={(value) => {
