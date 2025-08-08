@@ -127,7 +127,7 @@ export function prepareCreateWorkloadData(
       }
     : undefined
 
-  const volumes: Array<string> = data.volumes
+  const volumes: Array<string> = (data.volumes ?? [])
     .filter((volume) => volume.host && volume.container)
     .map((volume) => `${volume.host}:${volume.container}:${volume.accessMode}`)
 
