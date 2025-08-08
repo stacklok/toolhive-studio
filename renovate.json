@@ -9,14 +9,13 @@
     {
       "customType": "regex",
       "description": "Update ToolHive version in constants.ts",
-      "managerFilePatterns": ["^utils/constants\\.ts$"],
+      "managerFilePatterns": ["utils/constants\\.ts"],
       "matchStrings": [
-        "export\\s+const\\s+TOOLHIVE_VERSION\\s*=\\s*process\\.env\\.THV_VERSION\\s*\\?\\?\\s*'(?<currentValue>v\\d+\\.\\d+\\.\\d+)'"
+        "export\\s+const\\s+TOOLHIVE_VERSION\\s*=\\s*process\\.env\\.THV_VERSION\\s*\\?\\?\\s*'v?(?<currentValue>\\d+\\.\\d+\\.\\d+)'"
       ],
-      "depNameTemplate": "toolhive",
-      "packageNameTemplate": "stacklok/toolhive",
-      "datasourceTemplate": "github-releases",
-      "versioningTemplate": "semver"
+      "depNameTemplate": "ghcr.io/stacklok/toolhive",
+      "datasourceTemplate": "docker",
+      "extractVersionTemplate": "^v?(?<version>.*)$"
     }
   ]
 }
