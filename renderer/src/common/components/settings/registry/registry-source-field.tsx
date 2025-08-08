@@ -39,7 +39,7 @@ export function RegistrySourceField({
             <FormDescription>
               {isRemote ? (
                 <>
-                  Provide the HTTP/HTTPS URL of a remote registry (
+                  Provide the HTTPS url of a remote registry (
                   <Button
                     asChild
                     variant="link"

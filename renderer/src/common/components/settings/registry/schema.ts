@@ -32,10 +32,7 @@ export const registryFormSchema = z
   .refine(
     (data) => {
       if (data.type === 'url' && data.source) {
-        if (
-          !data.source.startsWith('http://') &&
-          !data.source.startsWith('https://')
-        ) {
+        if (!data.source.startsWith('https://')) {
           return false
         }
         try {
@@ -48,7 +45,7 @@ export const registryFormSchema = z
       return true
     },
     {
-      message: 'Remote registry must be a valid HTTP/HTTPS URL',
+      message: 'Remote registry must be a valid HTTPS URL',
       path: ['source'],
     }
   )
