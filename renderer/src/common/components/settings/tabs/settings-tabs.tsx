@@ -2,7 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs'
 import { GeneralTab } from './general-tab'
 import { VersionTab } from './version-tab'
 import { LogsTab } from './logs-tab'
-import { RegistryTab } from './registry-tab'
+import { RegistryTab } from '../registry/registry-tab'
 
 type Tab = 'general' | 'registry' | 'version' | 'logs'
 type TabItem = { label: string; value: Tab }

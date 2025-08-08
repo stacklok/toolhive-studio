@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { RegistryTab } from '../registry-tab'
+import { RegistryTab } from '../../registry/registry-tab'
 import { ConfirmProvider } from '@/common/contexts/confirm/provider'
 import { putApiV1BetaRegistryByName } from '@api/sdk.gen'
 
@@ -57,10 +57,6 @@ describe('RegistryTab', () => {
       expect(screen.getByRole('button', { name: 'Save' })).toBeVisible()
     })
     expect(screen.getByText('Registry Type')).toBeVisible()
-
-    expect(
-      screen.getByRole('button', { name: 'Reset to default' })
-    ).toBeVisible()
   })
 
   it('handles remote registry configuration', async () => {
@@ -83,23 +79,22 @@ describe('RegistryTab', () => {
       expect(screen.getByText('Registry URL')).toBeVisible()
     })
 
-    expect(
-      screen.getByRole('button', { name: 'Reset to default' })
-    ).not.toBeDisabled()
     const urlInput = screen.getByLabelText(/Registry URL/i)
     await userEvent.type(urlInput, 'https://domain.com/registry.json')
 
     const saveButton = screen.getByText('Save')
     await userEvent.click(saveButton)
 
-    expect(putApiV1BetaRegistryByName).toHaveBeenCalledWith({
-      path: {
-        name: 'default',
-      },
-      body: {
-        url: 'https://domain.com/registry.json',
-      },
-    })
+    await waitFor(() =>
+      expect(putApiV1BetaRegistryByName).toHaveBeenCalledWith({
+        path: {
+          name: 'default',
+        },
+        body: {
+          url: 'https://domain.com/registry.json',
+        },
+      })
+    )
   })
 
   it('handles local registry configuration', async () => {
@@ -132,25 +127,34 @@ describe('RegistryTab', () => {
     const saveButton = screen.getByText('Save')
     await userEvent.click(saveButton)
 
-    expect(putApiV1BetaRegistryByName).toHaveBeenCalledWith({
-      path: {
-        name: 'default',
-      },
-      body: {
-        local_path: '/path/to/local/registry.json',
-      },
-    })
+    await waitFor(() =>
+      expect(putApiV1BetaRegistryByName).toHaveBeenCalledWith({
+        path: {
+          name: 'default',
+        },
+        body: {
+          local_path: '/path/to/local/registry.json',
+        },
+      })
+    )
 
-    const resetButton = screen.getByText('Reset to default')
-    await userEvent.click(resetButton)
-
-    expect(putApiV1BetaRegistryByName).toHaveBeenCalledWith({
-      path: {
-        name: 'default',
-      },
-      body: {
-        local_path: undefined,
-      },
+    // reset to default registry
+    await userEvent.click(screen.getByRole('combobox'))
+    const defaultOptions = screen.getByRole('option', {
+      name: 'Default Registry',
     })
+    expect(defaultOptions).toBeVisible()
+    await userEvent.click(defaultOptions)
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() =>
+      expect(putApiV1BetaRegistryByName).toHaveBeenCalledWith({
+        path: {
+          name: 'default',
+        },
+        body: {
+          local_path: undefined,
+        },
+      })
+    )
   })
 })
