@@ -1,25 +1,16 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    "helpers:pinGitHubActionDigests"
-  ],
-  "labels": [
-    "dependencies"
-  ],
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "labels": ["dependencies"],
   "prConcurrentLimit": 3,
   "timezone": "Europe/London",
-  "schedule": [
-    "after 01:00 and before 07:00 on every weekday"
-  ],
+  "schedule": ["after 01:00 and before 07:00 on every weekday"],
   "enabledManagers": ["custom.regex"],
   "customManagers": [
     {
       "customType": "regex",
       "description": "Update ToolHive version in constants.ts",
-      "managerFilePatterns": [
-        "^utils/constants\\.ts$"
-      ],
+      "managerFilePatterns": ["^utils/constants\\.ts$"],
       "matchStrings": [
         "export\\s+const\\s+TOOLHIVE_VERSION\\s*=\\s*process\\.env\\.THV_VERSION\\s*\\?\\?\\s*'(?<currentValue>v\\d+\\.\\d+\\.\\d+)'"
       ],
