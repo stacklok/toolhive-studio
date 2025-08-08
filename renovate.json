@@ -4,5 +4,18 @@
   "labels": ["dependencies"],
   "prConcurrentLimit": 3,
   "timezone": "Europe/London",
-  "schedule": ["after 01:00 and before 07:00 on every weekday"]
+  "schedule": ["after 01:00 and before 07:00 on every weekday"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update ToolHive version in constants.ts",
+      "managerFilePatterns": ["^utils/constants\\.ts$"],
+      "matchStrings": [
+        "export const TOOLHIVE_VERSION = process\\.env\\.THV_VERSION \\?\\? '(?<currentValue>v[0-9]+\\.[0-9]+\\.[0-9]+)'"
+      ],
+      "depNameTemplate": "stacklok/toolhive",
+      "datasourceTemplate": "github-releases",
+      "versioningTemplate": "semver"
+    }
+  ]
 }
