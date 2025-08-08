@@ -5,7 +5,6 @@ import {
   type ChangeEventHandler,
 } from 'react'
 import { Button } from '@/common/components/ui/button'
-import { Label } from '@/common/components/ui/label'
 import { InfoIcon, Plus, Trash2 } from 'lucide-react'
 import {
   useFieldArray,
@@ -16,7 +15,12 @@ import {
   type UseFormReturn,
   type Control,
 } from 'react-hook-form'
-import { FormField, FormMessage } from '@/common/components/ui/form'
+import {
+  FormDescription,
+  FormField,
+  FormLabel,
+  FormMessage,
+} from '@/common/components/ui/form'
 import {
   Tooltip,
   TooltipTrigger,
@@ -29,6 +33,7 @@ interface DynamicArrayFieldProps<
   name: ArrayPath<TFieldValues>
   label: string
   inputLabelPrefix?: string
+  description?: string
   tooltipContent?: string
   addButtonText?: string
   form: UseFormReturn<TFieldValues>
@@ -50,6 +55,7 @@ interface DynamicArrayFieldProps<
 export function DynamicArrayField<TFieldValues extends FieldValues>({
   name,
   label,
+  description,
   tooltipContent,
   inputLabelPrefix = 'Item',
   addButtonText = 'Add',
@@ -113,19 +119,22 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
 
   return (
     <div className="mt-6 w-full">
-      <div className="flex items-center gap-2">
-        <Label htmlFor={`${name}-0`}>{label}</Label>
-        {tooltipContent && (
-          <Tooltip>
-            <TooltipTrigger asChild autoFocus={false}>
-              <InfoIcon className="text-muted-foreground size-4 rounded-full" />
-            </TooltipTrigger>
-            <TooltipContent>{tooltipContent}</TooltipContent>
-          </Tooltip>
-        )}
+      <div className="flex flex-col items-start gap-2">
+        <div className="flex items-center gap-2">
+          <FormLabel htmlFor={`${name}-0`}>{label}</FormLabel>
+          {tooltipContent && (
+            <Tooltip>
+              <TooltipTrigger asChild autoFocus={false}>
+                <InfoIcon className="text-muted-foreground size-4 rounded-full" />
+              </TooltipTrigger>
+              <TooltipContent>{tooltipContent}</TooltipContent>
+            </Tooltip>
+          )}
+        </div>
+        {description && <FormDescription>{description}</FormDescription>}
       </div>
 
-      <div className="mt-2 flex flex-col gap-2">
+      <div className="mt-3 flex flex-col gap-2">
         {fields.map((field, idx) => (
           <div key={field.id} className="flex items-start gap-2">
             <FormField

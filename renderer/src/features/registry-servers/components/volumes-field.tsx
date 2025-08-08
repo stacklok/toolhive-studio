@@ -1,10 +1,4 @@
-import {
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-} from '@/common/components/ui/form'
+import { FormControl, FormField, FormItem } from '@/common/components/ui/form'
 import {
   Controller,
   type ControllerRenderProps,
@@ -46,21 +40,16 @@ export function VolumesField({
 }) {
   return (
     <FormItem className="mb-10">
-      <FormLabel>Storage volumes</FormLabel>
-      <FormDescription>
-        Provide the MCP server access to a local folder. Optionally specific
-        individual files.
-      </FormDescription>
       <Controller
         control={form.control}
         name="volumes"
         render={() => (
           <DynamicArrayField<FormSchemaRunFromRegistry>
             name="volumes"
-            label="Volumes"
-            inputLabelPrefix="Volume"
+            label="Storage volumes"
+            inputLabelPrefix="Storage volume"
             addButtonText="Add a volume"
-            tooltipContent="Specify the path to the volume"
+            description="Provide the MCP server access to a local folder. Optionally specific individual files."
             form={form}
           >
             {({ inputProps, setInputRef, idx }) => (
@@ -86,14 +75,13 @@ export function VolumesField({
                               {...inputProps}
                               type="string"
                               ref={setInputRef(idx)}
-                              aria-label={`Volume ${idx + 1} - Host path`}
+                              aria-label={`Host path ${idx + 1}`}
                               name={`volumes.${idx}.host`}
                               value={volumeValue?.host || ''}
                               onChange={(e) =>
                                 field.onChange({
+                                  ...volumeValue,
                                   host: e.target.value,
-                                  container: volumeValue.container || '',
-                                  accessMode: volumeValue.accessMode,
                                 })
                               }
                               placeholder="Host path"
@@ -104,14 +92,13 @@ export function VolumesField({
                               {...inputProps}
                               type="string"
                               ref={setInputRef(idx)}
-                              aria-label={`Volume ${idx + 1} - Container path`}
+                              aria-label={`Container path ${idx + 1}`}
                               name={`volumes.${idx}.container`}
                               value={volumeValue?.container || ''}
                               onChange={(e) =>
                                 field.onChange({
-                                  host: volumeValue.host || '',
+                                  ...volumeValue,
                                   container: e.target.value,
-                                  accessMode: volumeValue.accessMode,
                                 })
                               }
                               placeholder="Container path"
@@ -121,8 +108,7 @@ export function VolumesField({
                             <Select
                               onValueChange={(value) =>
                                 field.onChange({
-                                  host: volumeValue.host || '',
-                                  container: volumeValue.container || '',
+                                  ...volumeValue,
                                   accessMode: value as AccessMode,
                                 })
                               }
