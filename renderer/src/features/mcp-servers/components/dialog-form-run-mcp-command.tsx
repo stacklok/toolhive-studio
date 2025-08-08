@@ -29,13 +29,13 @@ import {
   useFormTabState,
   type FieldTabMapping,
 } from '@/common/hooks/use-form-tab-state'
+import { NetworkIsolationTabContent } from './network-isolation-tab-content'
+import { FormFieldsArrayCustomVolumes } from './form-fields-array-custom-volumes'
 
 type Tab = 'configuration' | 'network-isolation'
 type CommonFields = keyof FormSchemaRunMcpCommand
 type VariantSpecificFields = 'image' | 'protocol' | 'package_name'
 type Field = CommonFields | VariantSpecificFields
-
-import { NetworkIsolationTabContent } from './network-isolation-tab-content'
 
 const FIELD_TAB_MAP = {
   name: 'configuration',
@@ -51,6 +51,7 @@ const FIELD_TAB_MAP = {
   allowedHosts: 'network-isolation',
   allowedPorts: 'network-isolation',
   networkIsolation: 'network-isolation',
+  volumes: 'configuration',
 } satisfies FieldTabMapping<Tab, Field>
 
 export function DialogFormRunMcpServerWithCommand({
@@ -106,6 +107,7 @@ export function DialogFormRunMcpServerWithCommand({
       networkIsolation: false,
       allowedHosts: [],
       allowedPorts: [],
+      volumes: [{ host: '', container: '', accessMode: 'rw' }],
     },
     reValidateMode: 'onChange',
     mode: 'onChange',
@@ -198,6 +200,7 @@ export function DialogFormRunMcpServerWithCommand({
                     <FormFieldsRunMcpCommand form={form} />
                     <FormFieldsArrayCustomSecrets form={form} />
                     <FormFieldsArrayCustomEnvVars form={form} />
+                    <FormFieldsArrayCustomVolumes form={form} />
                   </div>
                 )}
                 {activeTab === 'network-isolation' && (

@@ -12,7 +12,7 @@ test('install & uninstall server', async ({ window }) => {
   await window.getByRole('link', { name: /browse registry/i }).click()
   await window
     .getByRole('button', {
-      name: /fetch/i,
+      name: /everything/i,
     })
     .click()
   await window
