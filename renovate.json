@@ -5,17 +5,19 @@
   "prConcurrentLimit": 3,
   "timezone": "Europe/London",
   "schedule": ["after 01:00 and before 07:00 on every weekday"],
+  "enabledManagers": ["custom.regex"],
   "customManagers": [
     {
       "customType": "regex",
       "description": "Update ToolHive version in constants.ts",
       "managerFilePatterns": ["^utils/constants\\.ts$"],
       "matchStrings": [
-        "export const TOOLHIVE_VERSION = process\\.env\\.THV_VERSION \\?\\? '(?<currentValue>v[0-9]+\\.[0-9]+\\.[0-9]+)'"
+        "export\\s+const\\s+TOOLHIVE_VERSION\\s*=\\s*process\\.env\\.THV_VERSION\\s*\\?\\?\\s*'(?<currentValue>v\\d+\\.\\d+\\.\\d+)'"
       ],
       "depNameTemplate": "toolhive",
       "packageNameTemplate": "stacklok/toolhive",
-      "datasourceTemplate": "github-releases"
+      "datasourceTemplate": "github-releases",
+      "versioningTemplate": "semver"
     }
   ]
 }
