@@ -91,7 +91,7 @@ importers:
         version: 1.1.1(@types/react-dom@19.1.7(@types/react@19.1.9))(@types/react@19.1.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       electron-log:
         specifier: ^5.4.1
-        version: 5.4.1
+        version: 5.4.2
       electron-squirrel-startup:
         specifier: ^1.0.1
         version: 1.0.1
@@ -3311,8 +3311,8 @@ packages:
     os: [darwin, linux]
     hasBin: true
 
-  electron-log@5.4.1:
-    resolution: {integrity: sha512-QvisA18Z++8E3Th0zmhUelys9dEv7aIeXJlbFw3UrxCc8H9qSRW0j8/ooTef/EtHui8tVmbKSL+EIQzP9GoRLg==}
+  electron-log@5.4.2:
+    resolution: {integrity: sha512-L55kJzbVVoBY6kyJ3A+cjPchL1aXLdV2/Q8SvIj4sE5VmOcwZa6KXaFICZE+Z+RMXhAIFta79kSaXBqn+0XXMA==}
     engines: {node: '>= 14'}
 
   electron-squirrel-startup@1.0.1:
@@ -9525,7 +9525,7 @@ snapshots:
       - supports-color
     optional: true
 
-  electron-log@5.4.1: {}
+  electron-log@5.4.2: {}
 
   electron-squirrel-startup@1.0.1:
     dependencies:
