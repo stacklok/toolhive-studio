@@ -131,6 +131,7 @@ describe('prepareCreateWorkloadData', () => {
       networkIsolation: false,
       allowedHosts: [],
       allowedPorts: [],
+      volumes: [],
     }
 
     const secrets: SecretsSecretParameter[] = [
@@ -148,6 +149,7 @@ describe('prepareCreateWorkloadData', () => {
       secrets: [{ name: 'secret-key', target: 'API_TOKEN' }],
       network_isolation: false,
       permission_profile: undefined,
+      volumes: [],
     })
   })
 
@@ -164,6 +166,7 @@ describe('prepareCreateWorkloadData', () => {
       networkIsolation: false,
       allowedHosts: [],
       allowedPorts: [],
+      volumes: [],
     }
 
     const result = prepareCreateWorkloadData(data)
@@ -177,6 +180,7 @@ describe('prepareCreateWorkloadData', () => {
       secrets: [],
       network_isolation: false,
       permission_profile: undefined,
+      volumes: [],
     })
   })
 
@@ -197,11 +201,50 @@ describe('prepareCreateWorkloadData', () => {
       networkIsolation: false,
       allowedHosts: [],
       allowedPorts: [],
+      volumes: [],
     }
 
     const result = prepareCreateWorkloadData(data)
 
     expect(result.env_vars).toEqual(['DEBUG=true', 'VALID_VAR=value'])
+  })
+
+  it('configure volumes', () => {
+    const data: FormSchemaRunMcpCommand = {
+      image: 'test-image',
+      name: 'test-server',
+      transport: 'stdio',
+      type: 'docker_image',
+      envVars: [
+        { name: 'DEBUG', value: 'true' },
+        { name: 'EMPTY_VAR', value: '' },
+        { name: 'WHITESPACE_VAR', value: '   ' },
+        { name: 'VALID_VAR', value: 'value' },
+      ],
+      secrets: [],
+      cmd_arguments: [],
+      networkIsolation: false,
+      allowedHosts: [],
+      allowedPorts: [],
+      volumes: [
+        {
+          host: '/path/to/host',
+          container: '/path/to/container',
+        },
+        {
+          host: '/path/to/host',
+          container: '/path/to/container',
+          accessMode: 'ro',
+        },
+      ],
+    }
+
+    const result = prepareCreateWorkloadData(data)
+
+    expect(result.volumes).toEqual([
+      '/path/to/host:/path/to/container',
+      '/path/to/host:/path/to/container:ro',
+    ])
   })
 
   it('handles empty command arguments', () => {
@@ -216,6 +259,7 @@ describe('prepareCreateWorkloadData', () => {
       networkIsolation: false,
       allowedHosts: [],
       allowedPorts: [],
+      volumes: [],
     }
 
     const result = prepareCreateWorkloadData(data)
@@ -235,6 +279,7 @@ describe('prepareCreateWorkloadData', () => {
       networkIsolation: false,
       allowedHosts: [],
       allowedPorts: [],
+      volumes: [],
     }
 
     const result = prepareCreateWorkloadData(data)
@@ -258,6 +303,7 @@ describe('prepareCreateWorkloadData', () => {
       networkIsolation: false,
       allowedHosts: [],
       allowedPorts: [],
+      volumes: [],
     }
 
     const result = prepareCreateWorkloadData(data)
@@ -277,6 +323,7 @@ describe('prepareCreateWorkloadData', () => {
       networkIsolation: true,
       allowedHosts: [{ value: 'example.com' }, { value: '.subdomain.com' }],
       allowedPorts: [{ value: '8080' }, { value: '443' }],
+      volumes: [],
     }
 
     const result = prepareCreateWorkloadData(data)
@@ -305,6 +352,7 @@ describe('prepareCreateWorkloadData', () => {
       networkIsolation: false,
       allowedHosts: [{ value: 'example.com' }],
       allowedPorts: [{ value: '8080' }],
+      volumes: [],
     }
 
     const result = prepareCreateWorkloadData(data)

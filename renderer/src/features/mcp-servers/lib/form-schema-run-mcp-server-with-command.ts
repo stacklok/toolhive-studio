@@ -67,6 +67,15 @@ const getCommonFields = (workloads: CoreWorkload[]) =>
         ),
       })
     ),
+    volumes: z
+      .array(
+        z.object({
+          host: z.string(),
+          container: z.string(),
+          accessMode: z.enum(['ro', 'rw']).optional(),
+        })
+      )
+      .optional(),
   })
 
 export const getFormSchemaRunMcpCommand = (workloads: CoreWorkload[]) =>

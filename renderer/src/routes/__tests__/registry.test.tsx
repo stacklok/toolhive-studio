@@ -37,10 +37,4 @@ it('renders list of MCP servers', async () => {
     screen.queryByText('redis'),
     'Expected redis to be in the document'
   ).toBeVisible()
-
-  // Filesystem was temporarily hidden
-  expect(
-    screen.queryByText('filesystem'),
-    'Expected filesystem to NOT be in the document'
-  ).not.toBeInTheDocument()
 })

@@ -41,6 +41,7 @@ const FIELD_TAB_MAP = {
   allowedHosts: 'network-isolation',
   allowedPorts: 'network-isolation',
   networkIsolation: 'network-isolation',
+  volumes: 'configuration',
 } as const satisfies FieldTabMapping<Tab, Field>
 
 interface FormRunFromRegistryProps {
@@ -109,6 +110,7 @@ export function FormRunFromRegistry({
     defaultValues: {
       serverName: server?.name || '',
       cmd_arguments,
+      volumes: [{ host: '', container: '', accessMode: 'rw' }],
       secrets: groupedEnvVars.secrets.map((s) => ({
         name: s.name || '',
         value: { secret: s.default || '', isFromStore: false },
