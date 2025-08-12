@@ -1,16 +1,13 @@
 name: Mirror latest release to GitHub Pages with LFS
 
 on:
-  # Test trigger only - RESTORE BEFORE MERGING:
-  # release:
-  #   types: [published]
-  # workflow_dispatch:
-  #   inputs:
-  #     tag:
-  #       description: 'Release tag to mirror (e.g., v0.4.0)'
-  #       required: false
-  push:
-    branches: [gh-page-assets]
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to mirror (e.g., v0.4.0)'
+        required: false
 
 permissions:
   contents: write
@@ -22,11 +19,9 @@ jobs:
       - name: Get release info
         id: release
         run: |
-          # TESTING: Use fixed tag - RESTORE BEFORE MERGING:
-          # TAG="${{ github.event.inputs.tag || github.event.release.tag_name }}"
-          TAG="v0.4.0"
+          TAG="${{ github.event.inputs.tag || github.event.release.tag_name }}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          
+
           # Get release metadata
           RELEASE_DATA=$(gh api "repos/${{ github.repository }}/releases/tags/$TAG")
           echo "prerelease=$(echo "$RELEASE_DATA" | jq -r '.prerelease')" >> "$GITHUB_OUTPUT"
@@ -40,16 +35,16 @@ jobs:
           BASE_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
           TIMESTAMP=$(date +%s)
 
-                    # TESTING: Skip prerelease check - RESTORE BEFORE MERGING:
-          # if [[ "${{ steps.release.outputs.prerelease }}" == "true" ]]; then
-          #   echo "Skipping prerelease $TAG"
-          #   exit 0
-          # fi
-          
+          # Skip prereleases to only mirror stable releases
+          if [[ "${{ steps.release.outputs.prerelease }}" == "true" ]]; then
+            echo "Skipping prerelease $TAG"
+            exit 0
+          fi
+
           # Download assets for latest release only
           mkdir -p "latest"
           gh release download "$TAG" -R "${{ github.repository }}" --dir "latest"
-          
+
           cd "latest"
 
           # Generate checksums
