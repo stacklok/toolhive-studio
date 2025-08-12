@@ -1,0 +1,110 @@
+name: Mirror release assets to GitHub Pages
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to mirror (e.g., v0.4.0)"
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get release info
+        id: release
+        run: |
+          TAG="${{ github.event.inputs.tag || github.event.release.tag_name }}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          
+          # Get release metadata
+          RELEASE_DATA=$(gh api "repos/${{ github.repository }}/releases/tags/$TAG")
+          echo "prerelease=$(echo "$RELEASE_DATA" | jq -r '.prerelease')" >> "$GITHUB_OUTPUT"
+          echo "published_at=$(echo "$RELEASE_DATA" | jq -r '.published_at // .created_at')" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download and process release assets
+        run: |
+          TAG="${{ steps.release.outputs.tag }}"
+          BASE_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          TIMESTAMP=$(date +%s)
+          
+          # Download assets
+          mkdir -p "releases/$TAG"
+          gh release download "$TAG" -R "${{ github.repository }}" --dir "releases/$TAG"
+          
+          cd "releases/$TAG"
+          
+          # Generate checksums
+          sha256sum * > SHA256SUMS.txt
+          for file in *; do
+            [ -f "$file" ] && sha256sum "$file" | cut -d' ' -f1 > "$file.sha256"
+          done
+          
+          # Create manifest
+          jq -n \
+            --arg tag "$TAG" \
+            --arg published_at "${{ steps.release.outputs.published_at }}" \
+            --argjson prerelease ${{ steps.release.outputs.prerelease }} \
+            --arg base_url "$BASE_URL" \
+            --arg timestamp "$TIMESTAMP" \
+            '
+            {
+              tag: $tag,
+              prerelease: $prerelease,
+              published_at: $published_at,
+              base_url: $base_url,
+              assets: []
+            }
+            ' > index.json
+          
+          # Add asset info to manifest
+          for file in *; do
+            [ -f "$file" ] && [ "$file" != "index.json" ] && [ "$file" != "SHA256SUMS.txt" ] && [[ ! "$file" =~ \.sha256$ ]] && {
+              SIZE=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file")
+              SHA=$(cat "$file.sha256")
+              jq --arg name "$file" \
+                 --arg url "$BASE_URL/releases/$TAG/$file" \
+                 --arg sha256 "$SHA" \
+                 --argjson size "$SIZE" \
+                 '.assets += [{name: $name, url: $url, size: $size, sha256: $sha256}]' \
+                 index.json > tmp.json && mv tmp.json index.json
+            }
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update latest (stable releases only)
+        if: steps.release.outputs.prerelease == 'false'
+        run: |
+          TAG="${{ steps.release.outputs.tag }}"
+          TIMESTAMP=$(date +%s)
+          
+          # Copy to latest
+          rm -rf releases/latest
+          cp -r "releases/$TAG" "releases/latest"
+          
+          # Update latest manifest with cache-busting URLs
+          jq --arg timestamp "$TIMESTAMP" \
+             --arg source_tag "$TAG" \
+             '
+             .latest = true 
+             | .source_tag = $source_tag
+             | .cache_buster = $timestamp
+             | .assets = (.assets | map(.url |= sub("/releases/[^/]+/"; "/releases/latest/") + "?v=" + $timestamp))
+             ' "releases/$TAG/index.json" > "releases/latest/index.json"
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./releases
+          destination_dir: releases
+          keep_files: true
+          commit_message: "Mirror ${{ steps.release.outputs.tag }} (prerelease=${{ steps.release.outputs.prerelease }})"
