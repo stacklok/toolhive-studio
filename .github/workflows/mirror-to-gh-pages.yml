@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag to mirror (e.g., v0.4.0)"
+        description: 'Release tag to mirror (e.g., v0.4.0)'
         required: false
 
 permissions:
@@ -21,7 +21,7 @@ jobs:
         run: |
           TAG="${{ github.event.inputs.tag || github.event.release.tag_name }}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          
+
           # Get release metadata
           RELEASE_DATA=$(gh api "repos/${{ github.repository }}/releases/tags/$TAG")
           echo "prerelease=$(echo "$RELEASE_DATA" | jq -r '.prerelease')" >> "$GITHUB_OUTPUT"
@@ -34,19 +34,19 @@ jobs:
           TAG="${{ steps.release.outputs.tag }}"
           BASE_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
           TIMESTAMP=$(date +%s)
-          
+
           # Download assets
           mkdir -p "releases/$TAG"
           gh release download "$TAG" -R "${{ github.repository }}" --dir "releases/$TAG"
-          
+
           cd "releases/$TAG"
-          
+
           # Generate checksums
           sha256sum * > SHA256SUMS.txt
           for file in *; do
             [ -f "$file" ] && sha256sum "$file" | cut -d' ' -f1 > "$file.sha256"
           done
-          
+
           # Create manifest
           jq -n \
             --arg tag "$TAG" \
@@ -63,7 +63,7 @@ jobs:
               assets: []
             }
             ' > index.json
-          
+
           # Add asset info to manifest
           for file in *; do
             [ -f "$file" ] && [ "$file" != "index.json" ] && [ "$file" != "SHA256SUMS.txt" ] && [[ ! "$file" =~ \.sha256$ ]] && {
@@ -85,11 +85,11 @@ jobs:
         run: |
           TAG="${{ steps.release.outputs.tag }}"
           TIMESTAMP=$(date +%s)
-          
+
           # Copy to latest
           rm -rf releases/latest
           cp -r "releases/$TAG" "releases/latest"
-          
+
           # Update latest manifest with cache-busting URLs
           jq --arg timestamp "$TIMESTAMP" \
              --arg source_tag "$TAG" \
@@ -107,4 +107,4 @@ jobs:
           publish_dir: ./releases
           destination_dir: releases
           keep_files: true
-          commit_message: "Mirror ${{ steps.release.outputs.tag }} (prerelease=${{ steps.release.outputs.prerelease }})"
+          commit_message: 'Mirror ${{ steps.release.outputs.tag }} (prerelease=${{ steps.release.outputs.prerelease }})'
