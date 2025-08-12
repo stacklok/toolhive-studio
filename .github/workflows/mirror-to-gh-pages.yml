@@ -66,16 +66,24 @@ jobs:
 
           # Add asset info to manifest
           for file in *; do
-            [ -f "$file" ] && [ "$file" != "index.json" ] && [ "$file" != "SHA256SUMS.txt" ] && [[ ! "$file" =~ \.sha256$ ]] && {
-              SIZE=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file")
-              SHA=$(cat "$file.sha256")
-              jq --arg name "$file" \
-                 --arg url "$BASE_URL/releases/$TAG/$file" \
-                 --arg sha256 "$SHA" \
-                 --argjson size "$SIZE" \
-                 '.assets += [{name: $name, url: $url, size: $size, sha256: $sha256}]' \
-                 index.json > tmp.json && mv tmp.json index.json
-            }
+            # Skip non-files and excluded files
+            [ -f "$file" ] || continue
+            [[ "$file" == "index.json" || "$file" == "SHA256SUMS.txt" || "$file" == *.sha256 ]] && continue
+            
+            # Get file size portably
+            SIZE=$(wc -c < "$file" | tr -d '[:space:]')
+            if ! [[ "$SIZE" =~ ^[0-9]+$ ]]; then
+              echo "Error: Could not determine size of $file" >&2
+              exit 1
+            fi
+            
+            SHA=$(cat "$file.sha256")
+            jq --arg name "$file" \
+               --arg url "$BASE_URL/releases/$TAG/$file" \
+               --arg sha256 "$SHA" \
+               --argjson size "$SIZE" \
+               '.assets += [{name: $name, url: $url, size: $size, sha256: $sha256}]' \
+               index.json > tmp.json && mv tmp.json index.json
           done
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
