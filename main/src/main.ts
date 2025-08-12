@@ -38,6 +38,15 @@ import { getAppVersion, isOfficialReleaseBuild, pollWindowReady } from './util'
 import { delay } from '../../utils/delay'
 import Store from 'electron-store'
 import { getHeaders } from './headers'
+import {
+  handleChatRequest,
+  CHAT_PROVIDER_INFO,
+  getChatSettings,
+  saveChatSettings,
+  clearChatSettings,
+  discoverToolSupportedModels,
+  type ChatRequest,
+} from './chat-handler'
 
 let tray: Tray | null = null
 let isQuitting = false
@@ -704,3 +713,40 @@ ipcMain.handle('dialog:select-folder', async () => {
   if (result.canceled || result.filePaths.length === 0) return null
   return result.filePaths[0]
 })
+
+// ────────────────────────────────────────────────────────────────────────────
+//  Chat IPC handlers
+// ────────────────────────────────────────────────────────────────────────────
+
+ipcMain.handle('chat:get-providers', () => {
+  return CHAT_PROVIDER_INFO
+})
+
+ipcMain.handle('chat:stream', async (_event, request: ChatRequest) => {
+  try {
+    // handleChatRequest now returns the final message as JSON string
+    const finalMessage = await handleChatRequest(request)
+
+    return finalMessage
+  } catch (error) {
+    log.error('Chat request failed:', error)
+    throw error
+  }
+})
+
+// Chat settings store handlers
+ipcMain.handle('chat:get-settings', (_, providerId: string) =>
+  getChatSettings(providerId)
+)
+ipcMain.handle(
+  'chat:save-settings',
+  (
+    _,
+    providerId: string,
+    settings: { apiKey: string; enabledTools: string[] }
+  ) => saveChatSettings(providerId, settings)
+)
+ipcMain.handle('chat:clear-settings', (_, providerId?: string) =>
+  clearChatSettings(providerId)
+)
+ipcMain.handle('chat:discover-models', () => discoverToolSupportedModels())
