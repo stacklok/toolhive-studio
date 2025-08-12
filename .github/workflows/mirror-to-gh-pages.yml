@@ -1,6 +1,12 @@
 name: Mirror release assets to GitHub Pages
 
 on:
+  # Temporary test triggers - remove before merging
+  push:
+    branches: [gh-page-assets]
+  pull_request:
+    branches: [main]
+  # Original triggers
   release:
     types: [published]
   workflow_dispatch:
@@ -19,7 +25,8 @@ jobs:
       - name: Get release info
         id: release
         run: |
-          TAG="${{ github.event.inputs.tag || github.event.release.tag_name }}"
+          # For testing: use fixed tag if no input provided
+          TAG="${{ github.event.inputs.tag || github.event.release.tag_name || 'v0.4.0' }}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
           # Get release metadata
