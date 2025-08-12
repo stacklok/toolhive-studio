@@ -1,19 +1,16 @@
-name: Mirror release assets to GitHub Pages
+name: Mirror latest release to GitHub Pages with LFS
 
 on:
-  # Temporary test triggers - remove before merging
+  # Test trigger only - RESTORE BEFORE MERGING:
+  # release:
+  #   types: [published]
+  # workflow_dispatch:
+  #   inputs:
+  #     tag:
+  #       description: 'Release tag to mirror (e.g., v0.4.0)'
+  #       required: false
   push:
     branches: [gh-page-assets]
-  pull_request:
-    branches: [main]
-  # Original triggers
-  release:
-    types: [published]
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Release tag to mirror (e.g., v0.4.0)'
-        required: false
 
 permissions:
   contents: write
@@ -25,10 +22,11 @@ jobs:
       - name: Get release info
         id: release
         run: |
-          # For testing: use fixed tag if no input provided
-          TAG="${{ github.event.inputs.tag || github.event.release.tag_name || 'v0.4.0' }}"
+          # TESTING: Use fixed tag - RESTORE BEFORE MERGING:
+          # TAG="${{ github.event.inputs.tag || github.event.release.tag_name }}"
+          TAG="v0.4.0"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-
+          
           # Get release metadata
           RELEASE_DATA=$(gh api "repos/${{ github.repository }}/releases/tags/$TAG")
           echo "prerelease=$(echo "$RELEASE_DATA" | jq -r '.prerelease')" >> "$GITHUB_OUTPUT"
@@ -42,11 +40,17 @@ jobs:
           BASE_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
           TIMESTAMP=$(date +%s)
 
-          # Download assets
-          mkdir -p "releases/$TAG"
-          gh release download "$TAG" -R "${{ github.repository }}" --dir "releases/$TAG"
-
-          cd "releases/$TAG"
+                    # TESTING: Skip prerelease check - RESTORE BEFORE MERGING:
+          # if [[ "${{ steps.release.outputs.prerelease }}" == "true" ]]; then
+          #   echo "Skipping prerelease $TAG"
+          #   exit 0
+          # fi
+          
+          # Download assets for latest release only
+          mkdir -p "latest"
+          gh release download "$TAG" -R "${{ github.repository }}" --dir "latest"
+          
+          cd "latest"
 
           # Generate checksums
           sha256sum * > SHA256SUMS.txt
@@ -84,9 +88,11 @@ jobs:
               exit 1
             fi
             
+            # Include all files (Git LFS will handle large ones automatically)
+            echo "Including file: $file (${SIZE} bytes)"
             SHA=$(cat "$file.sha256")
             jq --arg name "$file" \
-               --arg url "$BASE_URL/releases/$TAG/$file" \
+               --arg url "$BASE_URL/latest/$file" \
                --arg sha256 "$SHA" \
                --argjson size "$SIZE" \
                '.assets += [{name: $name, url: $url, size: $size, sha256: $sha256}]' \
@@ -95,31 +101,25 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update latest (stable releases only)
-        if: steps.release.outputs.prerelease == 'false'
+      - name: Setup Git LFS attributes
         run: |
-          TAG="${{ steps.release.outputs.tag }}"
-          TIMESTAMP=$(date +%s)
+          # Create .gitattributes for LFS tracking of large files
+          cat > .gitattributes << 'EOF'
+          # Track large binary files with Git LFS
+          latest/*.dmg filter=lfs diff=lfs merge=lfs -text
+          latest/*.exe filter=lfs diff=lfs merge=lfs -text
+          latest/*.zip filter=lfs diff=lfs merge=lfs -text
+          latest/*.deb filter=lfs diff=lfs merge=lfs -text
+          latest/*.rpm filter=lfs diff=lfs merge=lfs -text
+          latest/*.nupkg filter=lfs diff=lfs merge=lfs -text
+          latest/*.flatpak filter=lfs diff=lfs merge=lfs -text
+          latest/*.tar.gz filter=lfs diff=lfs merge=lfs -text
+          EOF
 
-          # Copy to latest
-          rm -rf releases/latest
-          cp -r "releases/$TAG" "releases/latest"
-
-          # Update latest manifest with cache-busting URLs
-          jq --arg timestamp "$TIMESTAMP" \
-             --arg source_tag "$TAG" \
-             '
-             .latest = true 
-             | .source_tag = $source_tag
-             | .cache_buster = $timestamp
-             | .assets = (.assets | map(.url |= sub("/releases/[^/]+/"; "/releases/latest/") + "?v=" + $timestamp))
-             ' "releases/$TAG/index.json" > "releases/latest/index.json"
-
-      - name: Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages with LFS
         uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./releases
-          destination_dir: releases
-          keep_files: true
-          commit_message: 'Mirror ${{ steps.release.outputs.tag }} (prerelease=${{ steps.release.outputs.prerelease }})'
+          publish_dir: ./
+          keep_files: false
+          commit_message: 'Update latest release to ${{ steps.release.outputs.tag }}'
