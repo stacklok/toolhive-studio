@@ -1,0 +1,300 @@
+import { useState, useEffect } from 'react'
+import { Button } from '@/common/components/ui/button'
+import { Input } from '@/common/components/ui/input'
+import { Label } from '@/common/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/common/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/common/components/ui/dialog'
+import { Eye, EyeOff } from 'lucide-react'
+import type { ChatProvider, ChatSettings } from '../types'
+
+interface DialogProviderSettingsProps {
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
+  settings: ChatSettings
+  onSettingsChange: (settings: ChatSettings) => void
+}
+
+export function DialogProviderSettings({
+  isOpen,
+  onOpenChange,
+  settings,
+  onSettingsChange,
+}: DialogProviderSettingsProps) {
+  const [providers, setProviders] = useState<ChatProvider[]>([])
+  const [showApiKey, setShowApiKey] = useState(false)
+  const [localSettings, setLocalSettings] = useState(settings)
+
+  useEffect(() => {
+    // Fetch available providers from the main process
+    window.electronAPI.chat
+      .getProviders()
+      .then(setProviders)
+      .catch(console.error)
+  }, [isOpen])
+
+  // Load persisted settings when provider changes
+  useEffect(() => {
+    if (localSettings.provider && isOpen) {
+      window.electronAPI.chat
+        .getSettings(localSettings.provider)
+        .then((savedSettings) => {
+          setLocalSettings((prev) => ({
+            ...prev,
+            apiKey: savedSettings.apiKey || prev.apiKey,
+          }))
+        })
+        .catch(console.error)
+    }
+  }, [localSettings.provider, isOpen])
+
+  useEffect(() => {
+    setLocalSettings(settings)
+  }, [settings])
+
+  const selectedProvider = providers.find(
+    (p) => p.id === localSettings.provider
+  )
+
+  // Format OpenRouter model names for better display
+  const formatModelName = (model: string, providerId: string): string => {
+    if (providerId !== 'openrouter') return model
+
+    // For OpenRouter models, format them nicely
+    const modelMap: Record<string, string> = {
+      'anthropic/claude-3.5-sonnet': 'Claude 3.5 Sonnet (Anthropic)',
+      'meta-llama/llama-3.1-405b-instruct': 'Llama 3.1 405B Instruct (Meta)',
+      'google/gemini-pro-1.5': 'Gemini Pro 1.5 (Google)',
+      'openai/gpt-4o': 'GPT-4o (OpenAI)',
+      'mistralai/mixtral-8x7b-instruct': 'Mixtral 8x7B Instruct (Mistral)',
+    }
+
+    return modelMap[model] || model.replace(/^[\w-]+\//, '').replace(/-/g, ' ')
+  }
+
+  const handleProviderChange = (providerId: string) => {
+    const provider = providers.find((p) => p.id === providerId)
+    setLocalSettings({
+      ...localSettings,
+      provider: providerId,
+      model: provider?.models[0] || '',
+    })
+  }
+
+  const handleModelChange = (model: string) => {
+    setLocalSettings({
+      ...localSettings,
+      model,
+    })
+  }
+
+  const handleApiKeyChange = (apiKey: string) => {
+    setLocalSettings({
+      ...localSettings,
+      apiKey,
+    })
+  }
+
+  const handleSave = async () => {
+    if (localSettings.provider) {
+      // Save settings to the store
+      try {
+        await window.electronAPI.chat.saveSettings(localSettings.provider, {
+          apiKey: localSettings.apiKey,
+          enabledTools: [],
+        })
+      } catch (error) {
+        console.error('Failed to save chat settings:', error)
+      }
+    }
+
+    onSettingsChange(localSettings)
+    onOpenChange(false)
+  }
+
+  const handleCancel = () => {
+    setLocalSettings(settings) // Reset to original settings
+    onOpenChange(false)
+  }
+
+  const handleClearSettings = async () => {
+    if (localSettings.provider) {
+      try {
+        await window.electronAPI.chat.clearSettings(localSettings.provider)
+        setLocalSettings((prev) => ({
+          ...prev,
+          apiKey: '',
+        }))
+      } catch (error) {
+        console.error('Failed to clear settings:', error)
+      }
+    }
+  }
+
+  const isComplete =
+    localSettings.provider && localSettings.model && localSettings.apiKey
+  const hasChanges = JSON.stringify(localSettings) !== JSON.stringify(settings)
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent
+        className="max-w-md"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
+        <DialogHeader>
+          <DialogTitle>AI Provider Settings</DialogTitle>
+          <DialogDescription>
+            Configure your AI provider and API key to start chatting
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          {/* Provider Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="provider">Provider</Label>
+            <Select
+              value={localSettings.provider}
+              onValueChange={handleProviderChange}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select provider" />
+              </SelectTrigger>
+              <SelectContent>
+                {providers.map((provider) => (
+                  <SelectItem key={provider.id} value={provider.id}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{provider.name}</span>
+                      {provider.id === 'openrouter' && (
+                        <span className="text-muted-foreground text-xs">
+                          Gateway to 100+ models from multiple providers
+                        </span>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Model Selection */}
+          {selectedProvider && (
+            <div className="space-y-2">
+              <Label htmlFor="model">Model</Label>
+              <Select
+                value={localSettings.model}
+                onValueChange={handleModelChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select model" />
+                </SelectTrigger>
+                <SelectContent>
+                  {selectedProvider.models.map((model) => (
+                    <SelectItem key={model} value={model}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">
+                          {formatModelName(model, selectedProvider.id)}
+                        </span>
+                        {selectedProvider.id === 'openrouter' && (
+                          <span className="text-muted-foreground text-xs">
+                            {model}
+                          </span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* API Key Input */}
+          <div className="space-y-2">
+            <Label htmlFor="apiKey">API Key</Label>
+            <div className="relative">
+              <Input
+                id="apiKey"
+                type={showApiKey ? 'text' : 'password'}
+                value={localSettings.apiKey}
+                onChange={(e) => handleApiKeyChange(e.target.value)}
+                placeholder={
+                  localSettings.provider === 'openrouter'
+                    ? 'Enter your OpenRouter API key'
+                    : 'Enter your API key'
+                }
+                className="pr-10"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute top-0 right-0 h-full w-10 p-0"
+                onClick={() => setShowApiKey(!showApiKey)}
+              >
+                {showApiKey ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            {localSettings.provider === 'openrouter' && (
+              <p className="text-muted-foreground text-xs">
+                Get your API key from{' '}
+                <a
+                  href="https://openrouter.ai/keys"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  OpenRouter Dashboard
+                </a>
+              </p>
+            )}
+          </div>
+
+          {/* Status */}
+          <div className="text-sm">
+            {isComplete ? (
+              <span className="text-green-600">✓ Configuration complete</span>
+            ) : (
+              <span className="text-muted-foreground">
+                Please complete all settings
+              </span>
+            )}
+          </div>
+        </div>
+
+        <DialogFooter className="flex justify-between">
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleClearSettings}
+            disabled={!localSettings.provider || !localSettings.apiKey}
+          >
+            Clear Settings
+          </Button>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={handleCancel}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={!hasChanges}>
+              Save Settings
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}

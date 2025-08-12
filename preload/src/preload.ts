@@ -116,6 +116,31 @@ contextBridge.exposeInMainWorld('electronAPI', {
     disable: (key: string) => ipcRenderer.invoke('feature-flags:disable', key),
     getAll: () => ipcRenderer.invoke('feature-flags:get-all'),
   },
+
+  // Chat functionality
+  chat: {
+    getProviders: () => ipcRenderer.invoke('chat:get-providers'),
+    stream: (request: {
+      messages: Array<{
+        id: string
+        role: string
+        parts: Array<{ type: string; text: string }>
+      }>
+      provider: string
+      model: string
+      apiKey: string
+      enabledTools?: string[]
+    }) => ipcRenderer.invoke('chat:stream', request),
+    getSettings: (providerId: string) =>
+      ipcRenderer.invoke('chat:get-settings', providerId),
+    saveSettings: (
+      providerId: string,
+      settings: { apiKey: string; enabledTools: string[] }
+    ) => ipcRenderer.invoke('chat:save-settings', providerId, settings),
+    clearSettings: (providerId?: string) =>
+      ipcRenderer.invoke('chat:clear-settings', providerId),
+    discoverModels: () => ipcRenderer.invoke('chat:discover-models'),
+  },
 })
 
 export interface ElectronAPI {
@@ -185,4 +210,44 @@ export interface ElectronAPI {
   // File/folder pickers
   selectFile: () => Promise<string | null>
   selectFolder: () => Promise<string | null>
+  // chat
+  chat: {
+    getProviders: () => Promise<
+      Array<{ id: string; name: string; models: string[] }>
+    >
+    stream: (request: {
+      messages: Array<{
+        id: string
+        role: string
+        parts: Array<{ type: string; text: string }>
+      }>
+      provider: string
+      model: string
+      apiKey: string
+      enabledTools?: string[]
+    }) => Promise<string>
+    getSettings: (
+      providerId: string
+    ) => Promise<{ apiKey: string; enabledTools: string[] }>
+    saveSettings: (
+      providerId: string,
+      settings: { apiKey: string; enabledTools: string[] }
+    ) => Promise<{ success: boolean; error?: string }>
+    clearSettings: (
+      providerId?: string
+    ) => Promise<{ success: boolean; error?: string }>
+    discoverModels: () => Promise<{
+      providers: Array<{
+        id: string
+        name: string
+        models: Array<{
+          id: string
+          supportsTools: boolean
+          category?: string
+          experimental?: boolean
+        }>
+      }>
+      discoveredAt: string
+    }>
+  }
 }
