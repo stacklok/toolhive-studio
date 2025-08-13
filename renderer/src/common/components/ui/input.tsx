@@ -36,7 +36,9 @@ function Input({
 }: React.ComponentProps<'input'> & {
   adornment?: React.ReactNode
 }) {
-  if (adornment) {
+  const hasAdornment = Boolean(adornment)
+
+  if (hasAdornment) {
     return (
       <div className="relative">
         <BaseInput className={className} type={type} {...props} />
