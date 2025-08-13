@@ -77,69 +77,72 @@ export function VolumesField({
                     <>
                       <FormItem className="flex-grow">
                         <div className="flex w-full gap-2">
-                          <FormControl className="w-56 flex-shrink-0">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  aria-label="Select path"
-                                >
-                                  <FolderOpen className="size-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="start" role="menu">
-                                <DropdownMenuItem
-                                  onClick={async () => {
-                                    try {
-                                      const filePath =
-                                        await window.electronAPI.selectFile()
-                                      if (filePath) {
-                                        field.onChange({
-                                          ...volumeValue,
-                                          host: filePath,
-                                        })
-                                      }
-                                    } catch (err) {
-                                      // Fallback/error handling if IPC is not available yet
-                                      console.error(
-                                        'Failed to open file picker',
-                                        err
-                                      )
-                                    }
-                                  }}
-                                  className="cursor-pointer"
-                                >
-                                  Mount a single file
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={async () => {
-                                    try {
-                                      const folderPath =
-                                        await window.electronAPI.selectFolder()
-                                      if (folderPath) {
-                                        field.onChange({
-                                          ...volumeValue,
-                                          host: folderPath,
-                                        })
-                                      }
-                                    } catch (err) {
-                                      console.error(
-                                        'Failed to open folder picker',
-                                        err
-                                      )
-                                    }
-                                  }}
-                                  className="cursor-pointer"
-                                >
-                                  Mount an entire folder
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </FormControl>
                           <FormControl className="flex-1">
                             <Input
                               {...inputProps}
                               type="string"
+                              adornment={
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      aria-label="Select path"
+                                    >
+                                      <FolderOpen className="size-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent
+                                    align="start"
+                                    role="menu"
+                                  >
+                                    <DropdownMenuItem
+                                      onClick={async () => {
+                                        try {
+                                          const filePath =
+                                            await window.electronAPI.selectFile()
+                                          if (filePath) {
+                                            field.onChange({
+                                              ...volumeValue,
+                                              host: filePath,
+                                            })
+                                          }
+                                        } catch (err) {
+                                          // Fallback/error handling if IPC is not available yet
+                                          console.error(
+                                            'Failed to open file picker',
+                                            err
+                                          )
+                                        }
+                                      }}
+                                      className="cursor-pointer"
+                                    >
+                                      Mount a single file
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={async () => {
+                                        try {
+                                          const folderPath =
+                                            await window.electronAPI.selectFolder()
+                                          if (folderPath) {
+                                            field.onChange({
+                                              ...volumeValue,
+                                              host: folderPath,
+                                            })
+                                          }
+                                        } catch (err) {
+                                          console.error(
+                                            'Failed to open folder picker',
+                                            err
+                                          )
+                                        }
+                                      }}
+                                      className="cursor-pointer"
+                                    >
+                                      Mount an entire folder
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              }
                               ref={setInputRef(idx)}
                               aria-label={`Host path ${idx + 1}`}
                               name={`volumes.${idx}.host`}
