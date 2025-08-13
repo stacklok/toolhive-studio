@@ -85,7 +85,7 @@ export function VolumesField({
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
                                     <Button
-                                      variant="ghost"
+                                      variant="adornment"
                                       aria-label="Select path"
                                     >
                                       <FolderOpen className="size-4" />
