@@ -1406,7 +1406,7 @@ describe('Storage Volumes', () => {
     })
   })
 
-  it('shows a Select path dropdown with file and folder options (not implemented yet)', async () => {
+  it('shows a Select path menu with file and folder options', async () => {
     renderWithProviders(
       <FormRunFromRegistry
         isOpen={true}
@@ -1419,17 +1419,14 @@ describe('Storage Volumes', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // This is intentionally expected to fail until the UI is implemented.
-    // Once implemented, the select should be labeled "Select path" and contain
-    // the two options below.
     const selectPath = screen.getByLabelText('Select path')
     await userEvent.click(selectPath)
 
     expect(
-      screen.getByRole('option', { name: 'Mount a single file' })
+      screen.getByRole('menuitem', { name: /mount a single file/i })
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('option', { name: 'Mount an entire folder' })
+      screen.getByRole('menuitem', { name: /mount an entire folder/i })
     ).toBeInTheDocument()
   })
 })

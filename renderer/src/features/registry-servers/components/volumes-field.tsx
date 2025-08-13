@@ -14,6 +14,13 @@ import {
   SelectContent,
   SelectItem,
 } from '@/common/components/ui/select'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/common/components/ui/dropdown-menu'
+import { Button } from '@/common/components/ui/button'
 import { FolderCheck, FolderLock } from 'lucide-react'
 
 type AccessMode = 'ro' | 'rw'
@@ -70,6 +77,65 @@ export function VolumesField({
                     <>
                       <FormItem className="flex-grow">
                         <div className="flex w-full gap-2">
+                          <FormControl className="w-56 flex-shrink-0">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  aria-label="Select path"
+                                >
+                                  Select path
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="start" role="menu">
+                                <DropdownMenuItem
+                                  onClick={async () => {
+                                    try {
+                                      const filePath =
+                                        await window.electronAPI.selectFile()
+                                      if (filePath) {
+                                        field.onChange({
+                                          ...volumeValue,
+                                          host: filePath,
+                                        })
+                                      }
+                                    } catch (err) {
+                                      // Fallback/error handling if IPC is not available yet
+                                      console.error(
+                                        'Failed to open file picker',
+                                        err
+                                      )
+                                    }
+                                  }}
+                                  className="cursor-pointer"
+                                >
+                                  Mount a single file
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={async () => {
+                                    try {
+                                      const folderPath =
+                                        await window.electronAPI.selectFolder()
+                                      if (folderPath) {
+                                        field.onChange({
+                                          ...volumeValue,
+                                          host: folderPath,
+                                        })
+                                      }
+                                    } catch (err) {
+                                      console.error(
+                                        'Failed to open folder picker',
+                                        err
+                                      )
+                                    }
+                                  }}
+                                  className="cursor-pointer"
+                                >
+                                  Mount an entire folder
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </FormControl>
                           <FormControl className="flex-1">
                             <Input
                               {...inputProps}
