@@ -1405,4 +1405,31 @@ describe('Storage Volumes', () => {
       )
     })
   })
+
+  it('shows a Select path dropdown with file and folder options (not implemented yet)', async () => {
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={{ ...REGISTRY_SERVER }}
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // This is intentionally expected to fail until the UI is implemented.
+    // Once implemented, the select should be labeled "Select path" and contain
+    // the two options below.
+    const selectPath = screen.getByLabelText('Select path')
+    await userEvent.click(selectPath)
+
+    expect(
+      screen.getByRole('option', { name: 'Mount a single file' })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('option', { name: 'Mount an entire folder' })
+    ).toBeInTheDocument()
+  })
 })
