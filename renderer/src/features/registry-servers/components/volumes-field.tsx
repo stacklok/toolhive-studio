@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from '@/common/components/ui/dropdown-menu'
 import { Button } from '@/common/components/ui/button'
-import { FolderCheck, FolderLock } from 'lucide-react'
+import { FolderCheck, FolderLock, FolderOpen } from 'lucide-react'
 
 type AccessMode = 'ro' | 'rw'
 type Volume = {
@@ -84,7 +84,7 @@ export function VolumesField({
                                   variant="outline"
                                   aria-label="Select path"
                                 >
-                                  Select path
+                                  <FolderOpen className="size-4" />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="start" role="menu">
