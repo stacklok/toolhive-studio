@@ -239,6 +239,12 @@ export type PermissionsProfile = {
   name?: string
   network?: PermissionsNetworkPermissions
   /**
+   * Privileged indicates whether the container should run in privileged mode
+   * When true, the container has access to all host devices and capabilities
+   * Use with extreme caution as this removes most security isolation
+   */
+  privileged?: boolean
+  /**
    * Read is a list of mount declarations that the container can read from
    * These can be in the following formats:
    * - A single path: The same path will be mounted from host to container
@@ -279,8 +285,38 @@ export type RegistryEnvVar = {
   secret?: boolean
 }
 
+export type RegistryHeader = {
+  /**
+   * Choices provides a list of valid values for the header (optional)
+   */
+  choices?: Array<string>
+  /**
+   * Default is the value to use if the header is not explicitly provided
+   * Only used for non-required headers
+   */
+  default?: string
+  /**
+   * Description is a human-readable explanation of the header's purpose
+   */
+  description?: string
+  /**
+   * Name is the header name (e.g., X-API-Key, Authorization)
+   */
+  name?: string
+  /**
+   * Required indicates whether this header must be provided
+   * If true and not provided via command line or secrets, the user will be prompted for a value
+   */
+  required?: boolean
+  /**
+   * Secret indicates whether this header contains sensitive information
+   * If true, the value will be stored as a secret rather than as plain text
+   */
+  secret?: boolean
+}
+
 /**
- * Server details
+ * Container server details (if it's a container server)
  */
 export type RegistryImageMetadata = {
   /**
@@ -314,7 +350,7 @@ export type RegistryImageMetadata = {
   metadata?: RegistryMetadata
   /**
    * Name is the identifier for the MCP server, used when referencing the server in commands
-   * If not provided, it will be auto-generated from the image name
+   * If not provided, it will be auto-generated from the registry key
    */
   name?: string
   permissions?: PermissionsProfile
@@ -324,7 +360,7 @@ export type RegistryImageMetadata = {
    */
   repository_url?: string
   /**
-   * The Status indicates whether the server is currently active or deprecated
+   * Status indicates whether the server is currently active or deprecated
    */
   status?: string
   /**
@@ -336,7 +372,7 @@ export type RegistryImageMetadata = {
    */
   target_port?: number
   /**
-   * Tier represents the tier classification level of the server, e.g., "official" or "community" driven
+   * Tier represents the tier classification level of the server, e.g., "Official" or "Community"
    */
   tier?: string
   /**
@@ -344,7 +380,9 @@ export type RegistryImageMetadata = {
    */
   tools?: Array<string>
   /**
-   * Transport defines the communication protocol for the server (stdio, sse, or streamable-http)
+   * Transport defines the communication protocol for the server
+   * For containers: stdio, sse, or streamable-http
+   * For remote servers: sse or streamable-http (stdio not supported)
    */
   transport?: string
 }
@@ -365,6 +403,42 @@ export type RegistryMetadata = {
    * Stars represents the popularity rating or number of stars for the server
    */
   stars?: number
+}
+
+/**
+ * OAuthConfig provides OAuth/OIDC configuration for authentication to the remote server
+ * Used with the thv proxy command's --remote-auth flags
+ */
+export type RegistryOAuthConfig = {
+  /**
+   * AuthorizeURL is the OAuth authorization endpoint URL
+   * Used for non-OIDC OAuth flows when issuer is not provided
+   */
+  authorize_url?: string
+  /**
+   * ClientID is the OAuth client ID for authentication
+   */
+  client_id?: string
+  /**
+   * Issuer is the OAuth/OIDC issuer URL (e.g., https://accounts.google.com)
+   * Used for OIDC discovery to find authorization and token endpoints
+   */
+  issuer?: string
+  /**
+   * Scopes are the OAuth scopes to request
+   * If not specified, defaults to ["openid", "profile", "email"] for OIDC
+   */
+  scopes?: Array<string>
+  /**
+   * TokenURL is the OAuth token endpoint URL
+   * Used for non-OIDC OAuth flows when issuer is not provided
+   */
+  token_url?: string
+  /**
+   * UsePKCE indicates whether to use PKCE for the OAuth flow
+   * Defaults to true for enhanced security
+   */
+  use_pkce?: boolean
 }
 
 /**
@@ -389,6 +463,13 @@ export type RegistryRegistry = {
    */
   last_updated?: string
   /**
+   * RemoteServers is a map of server names to their corresponding remote server definitions
+   * These are MCP servers accessed via HTTP/HTTPS using the thv proxy command
+   */
+  remote_servers?: {
+    [key: string]: RegistryRemoteServerMetadata
+  }
+  /**
    * Servers is a map of server names to their corresponding server definitions
    */
   servers?: {
@@ -398,6 +479,69 @@ export type RegistryRegistry = {
    * Version is the schema version of the registry
    */
   version?: string
+}
+
+/**
+ * Remote server details (if it's a remote server)
+ */
+export type RegistryRemoteServerMetadata = {
+  /**
+   * CustomMetadata allows for additional user-defined metadata
+   */
+  custom_metadata?: {
+    [key: string]: unknown
+  }
+  /**
+   * Description is a human-readable description of the server's purpose and functionality
+   */
+  description?: string
+  /**
+   * EnvVars defines environment variables that can be passed to configure the client
+   * These might be needed for client-side configuration when connecting to the remote server
+   */
+  env_vars?: Array<RegistryEnvVar>
+  /**
+   * Headers defines HTTP headers that can be passed to the remote server for authentication
+   * These are used with the thv proxy command's authentication features
+   */
+  headers?: Array<RegistryHeader>
+  metadata?: RegistryMetadata
+  /**
+   * Name is the identifier for the MCP server, used when referencing the server in commands
+   * If not provided, it will be auto-generated from the registry key
+   */
+  name?: string
+  oauth_config?: RegistryOAuthConfig
+  /**
+   * RepositoryURL is the URL to the source code repository for the server
+   */
+  repository_url?: string
+  /**
+   * Status indicates whether the server is currently active or deprecated
+   */
+  status?: string
+  /**
+   * Tags are categorization labels for the server to aid in discovery and filtering
+   */
+  tags?: Array<string>
+  /**
+   * Tier represents the tier classification level of the server, e.g., "Official" or "Community"
+   */
+  tier?: string
+  /**
+   * Tools is a list of tool names provided by this MCP server
+   */
+  tools?: Array<string>
+  /**
+   * Transport defines the communication protocol for the server
+   * For containers: stdio, sse, or streamable-http
+   * For remote servers: sse or streamable-http (stdio not supported)
+   */
+  transport?: string
+  /**
+   * URL is the endpoint URL for the remote MCP server (e.g., https://api.example.com/mcp)
+   */
+  url?: string
 }
 
 export type RegistryVerifiedAttestation = {
@@ -857,6 +1001,11 @@ export type V1GetSecretsProviderResponse = {
  * Response containing server details
  */
 export type V1GetServerResponse = {
+  /**
+   * Indicates if this is a remote server
+   */
+  is_remote?: boolean
+  remote_server?: RegistryRemoteServerMetadata
   server?: RegistryImageMetadata
 }
 
@@ -882,7 +1031,11 @@ export type V1ListSecretsResponse = {
  */
 export type V1ListServersResponse = {
   /**
-   * List of servers in the registry
+   * List of remote servers in the registry (if any)
+   */
+  remote_servers?: Array<RegistryRemoteServerMetadata>
+  /**
+   * List of container servers in the registry
    */
   servers?: Array<RegistryImageMetadata>
 }
@@ -1218,6 +1371,46 @@ export type DeleteApiV1BetaClientsByNameResponses = {
 
 export type DeleteApiV1BetaClientsByNameResponse =
   DeleteApiV1BetaClientsByNameResponses[keyof DeleteApiV1BetaClientsByNameResponses]
+
+export type DeleteApiV1BetaClientsByNameGroupsByGroupData = {
+  body?: never
+  path: {
+    /**
+     * Client name to unregister
+     */
+    name: string
+    /**
+     * Group name to remove client from
+     */
+    group: string
+  }
+  query?: never
+  url: '/api/v1beta/clients/{name}/groups/{group}'
+}
+
+export type DeleteApiV1BetaClientsByNameGroupsByGroupErrors = {
+  /**
+   * Invalid request
+   */
+  400: string
+  /**
+   * Client or group not found
+   */
+  404: string
+}
+
+export type DeleteApiV1BetaClientsByNameGroupsByGroupError =
+  DeleteApiV1BetaClientsByNameGroupsByGroupErrors[keyof DeleteApiV1BetaClientsByNameGroupsByGroupErrors]
+
+export type DeleteApiV1BetaClientsByNameGroupsByGroupResponses = {
+  /**
+   * No Content
+   */
+  204: void
+}
+
+export type DeleteApiV1BetaClientsByNameGroupsByGroupResponse =
+  DeleteApiV1BetaClientsByNameGroupsByGroupResponses[keyof DeleteApiV1BetaClientsByNameGroupsByGroupResponses]
 
 export type GetApiV1BetaDiscoveryClientsData = {
   body?: never
