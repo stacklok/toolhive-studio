@@ -31,7 +31,7 @@ const BaseInput = ({
 function Input({
   className,
   type,
-  adornment,
+  adornment = null,
   ...props
 }: React.ComponentProps<'input'> & {
   adornment?: React.ReactNode
@@ -41,7 +41,7 @@ function Input({
   if (hasAdornment) {
     return (
       <div className="relative">
-        <BaseInput className={className} type={type} {...props} />
+        <BaseInput className={cn(className, 'pr-12')} type={type} {...props} />
         <div className="absolute top-0 right-0 border-l">{adornment}</div>
       </div>
     )
