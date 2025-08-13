@@ -1405,4 +1405,28 @@ describe('Storage Volumes', () => {
       )
     })
   })
+
+  it('shows a Select path menu with file and folder options', async () => {
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={{ ...REGISTRY_SERVER }}
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    const selectPath = screen.getByLabelText('Select path')
+    await userEvent.click(selectPath)
+
+    expect(
+      screen.getByRole('menuitem', { name: /mount a single file/i })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('menuitem', { name: /mount an entire folder/i })
+    ).toBeInTheDocument()
+  })
 })
