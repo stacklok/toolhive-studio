@@ -1,5 +1,12 @@
 import { FormControl, FormField, FormItem } from '@/common/components/ui/form'
-import { Controller, type UseFormReturn } from 'react-hook-form'
+import {
+  Controller,
+  type UseFormReturn,
+  type FieldValues,
+  type Path,
+  type ArrayPath,
+  type ControllerRenderProps,
+} from 'react-hook-form'
 import { Input } from '@/common/components/ui/input'
 import {
   Select,
@@ -8,8 +15,8 @@ import {
   SelectItem,
 } from '@/common/components/ui/select'
 import { FolderCheck, FolderLock } from 'lucide-react'
-import type { FormSchemaRunMcpCommand } from '../lib/form-schema-run-mcp-server-with-command'
 import { DynamicArrayField } from '@/features/registry-servers/components/dynamic-array-field'
+import { FilePickerInput } from '@/common/components/ui/file-picker-input'
 
 type AccessMode = 'ro' | 'rw'
 type Volume = {
@@ -28,19 +35,19 @@ const getAccessModeDisplay = (value: Volume['accessMode'] | undefined) => {
   }
 }
 
-export function FormFieldsArrayCustomVolumes({
+export function FormFieldsArrayVolumes<TForm extends FieldValues>({
   form,
 }: {
-  form: UseFormReturn<FormSchemaRunMcpCommand>
+  form: UseFormReturn<TForm>
 }) {
   return (
     <FormItem className="mb-10">
       <Controller
         control={form.control}
-        name="volumes"
+        name={'volumes' as Path<TForm>}
         render={() => (
-          <DynamicArrayField<FormSchemaRunMcpCommand>
-            name="volumes"
+          <DynamicArrayField<TForm>
+            name={'volumes' as ArrayPath<TForm>}
             label="Storage volumes"
             inputLabelPrefix="Storage volume"
             addButtonText="Add a volume"
@@ -50,8 +57,12 @@ export function FormFieldsArrayCustomVolumes({
             {({ inputProps, setInputRef, idx }) => (
               <FormField
                 control={form.control}
-                name={`volumes.${idx}`}
-                render={({ field }) => {
+                name={`volumes.${idx}` as Path<TForm>}
+                render={({
+                  field,
+                }: {
+                  field: ControllerRenderProps<TForm, Path<TForm>>
+                }) => {
                   const volumeValue = field.value as Volume
 
                   return (
@@ -59,20 +70,18 @@ export function FormFieldsArrayCustomVolumes({
                       <FormItem className="flex-grow">
                         <div className="flex w-full gap-2">
                           <FormControl className="flex-1">
-                            <Input
-                              {...inputProps}
-                              type="string"
+                            <FilePickerInput
                               ref={setInputRef(idx)}
                               aria-label={`Host path ${idx + 1}`}
-                              name={`volumes.${idx}.host`}
+                              name={`volumes.${idx}.host` as Path<TForm>}
                               value={volumeValue?.host || ''}
-                              onChange={(e) =>
+                              placeholder="Host path"
+                              onChange={({ newValue }) => {
                                 field.onChange({
                                   ...volumeValue,
-                                  host: e.target.value,
+                                  host: newValue,
                                 })
-                              }
-                              placeholder="Host path"
+                              }}
                             />
                           </FormControl>
                           <FormControl className="flex-1">
@@ -81,7 +90,7 @@ export function FormFieldsArrayCustomVolumes({
                               type="string"
                               ref={setInputRef(idx)}
                               aria-label={`Container path ${idx + 1}`}
-                              name={`volumes.${idx}.container`}
+                              name={`volumes.${idx}.container` as Path<TForm>}
                               value={volumeValue?.container || ''}
                               onChange={(e) =>
                                 field.onChange({

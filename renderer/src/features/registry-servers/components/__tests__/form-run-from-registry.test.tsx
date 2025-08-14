@@ -1405,4 +1405,94 @@ describe('Storage Volumes', () => {
       )
     })
   })
+
+  it('shows a Select path menu with file and folder options', async () => {
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={{ ...REGISTRY_SERVER }}
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    const selectPath = screen.getByLabelText('Select path')
+    await userEvent.click(selectPath)
+
+    expect(
+      screen.getByRole('menuitem', { name: /mount a single file/i })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('menuitem', { name: /mount an entire folder/i })
+    ).toBeInTheDocument()
+  })
+
+  it('fills Host path when selecting a single file from the picker', async () => {
+    const originalElectronAPI = window.electronAPI
+    const mockElectronAPI: typeof window.electronAPI = {
+      ...originalElectronAPI,
+      selectFile: vi.fn().mockResolvedValue('/tmp/example.txt'),
+      selectFolder: vi.fn().mockResolvedValue(null),
+    }
+    window.electronAPI = mockElectronAPI
+
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={{ ...REGISTRY_SERVER }}
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    await userEvent.click(screen.getByLabelText('Select path'))
+    await userEvent.click(
+      screen.getByRole('menuitem', { name: /mount a single file/i })
+    )
+
+    expect(screen.getByRole('textbox', { name: /host path 1/i })).toHaveValue(
+      '/tmp/example.txt'
+    )
+    expect(mockElectronAPI.selectFile).toHaveBeenCalled()
+    window.electronAPI = originalElectronAPI
+  })
+
+  it('fills Host path when selecting a folder from the picker', async () => {
+    const originalElectronAPI = window.electronAPI
+    const mockElectronAPI: typeof window.electronAPI = {
+      ...originalElectronAPI,
+      selectFile: vi.fn().mockResolvedValue(null),
+      selectFolder: vi.fn().mockResolvedValue('/home/user/my-folder'),
+    }
+    window.electronAPI = mockElectronAPI
+
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={{ ...REGISTRY_SERVER }}
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    await userEvent.click(screen.getByLabelText('Select path'))
+    await userEvent.click(
+      screen.getByRole('menuitem', { name: /mount an entire folder/i })
+    )
+
+    expect(screen.getByRole('textbox', { name: /host path 1/i })).toHaveValue(
+      '/home/user/my-folder'
+    )
+    expect(mockElectronAPI.selectFolder).toHaveBeenCalled()
+    window.electronAPI = originalElectronAPI
+  })
 })
