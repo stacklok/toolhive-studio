@@ -14,15 +14,9 @@ import {
   SelectContent,
   SelectItem,
 } from '@/common/components/ui/select'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/common/components/ui/dropdown-menu'
-import { Button } from '@/common/components/ui/button'
-import { FolderCheck, FolderLock, FolderOpen, File } from 'lucide-react'
+import { FolderCheck, FolderLock } from 'lucide-react'
 import { DynamicArrayField } from '@/features/registry-servers/components/dynamic-array-field'
+import { FilePickerInput } from '@/common/components/ui/file-picker-input'
 
 type AccessMode = 'ro' | 'rw'
 type Volume = {
@@ -39,56 +33,6 @@ const getAccessModeDisplay = (value: Volume['accessMode'] | undefined) => {
     default:
       return <FolderCheck className="size-4" />
   }
-}
-
-function FilePicker({
-  onPick,
-}: {
-  onPick: (args: { pickedPath: string | null }) => void
-}) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="adornment" aria-label="Select path">
-          <FolderOpen className="size-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" role="menu">
-        <DropdownMenuItem
-          onClick={async () => {
-            try {
-              const filePath = await window.electronAPI.selectFile()
-              onPick({ pickedPath: filePath })
-            } catch (err) {
-              console.error('Failed to open file picker', err)
-            }
-          }}
-          className="cursor-pointer"
-        >
-          <div className="flex items-center gap-2">
-            <File className="size-4" />
-            <span>Mount a single file</span>
-          </div>
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={async () => {
-            try {
-              const folderPath = await window.electronAPI.selectFolder()
-              onPick({ pickedPath: folderPath })
-            } catch (err) {
-              console.error('Failed to open folder picker', err)
-            }
-          }}
-          className="cursor-pointer"
-        >
-          <div className="flex items-center gap-2">
-            <FolderOpen className="size-4" />
-            <span>Mount an entire folder</span>
-          </div>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
 }
 
 export function FormFieldsArrayVolumes<TForm extends FieldValues>({
@@ -126,32 +70,18 @@ export function FormFieldsArrayVolumes<TForm extends FieldValues>({
                       <FormItem className="flex-grow">
                         <div className="flex w-full gap-2">
                           <FormControl className="flex-1">
-                            <Input
-                              {...inputProps}
-                              type="string"
-                              adornment={
-                                <FilePicker
-                                  onPick={({ pickedPath }) => {
-                                    if (pickedPath) {
-                                      field.onChange({
-                                        ...volumeValue,
-                                        host: pickedPath,
-                                      })
-                                    }
-                                  }}
-                                />
-                              }
+                            <FilePickerInput
                               ref={setInputRef(idx)}
                               aria-label={`Host path ${idx + 1}`}
                               name={`volumes.${idx}.host` as Path<TForm>}
                               value={volumeValue?.host || ''}
-                              onChange={(e) =>
+                              placeholder="Host path"
+                              onChange={({ newValue }) => {
                                 field.onChange({
                                   ...volumeValue,
-                                  host: e.target.value,
+                                  host: newValue,
                                 })
-                              }
-                              placeholder="Host path"
+                              }}
                             />
                           </FormControl>
                           <FormControl className="flex-1">
