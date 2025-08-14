@@ -4,7 +4,7 @@ import log from '../logger'
 /**
  * Send an async iterable stream over IPC as real-time events
  */
-export function sendAsyncIterable<T>(
+function sendAsyncIterable<T>(
   sender: WebContents,
   channel: string,
   streamId: string,

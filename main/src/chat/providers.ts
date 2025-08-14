@@ -33,14 +33,14 @@ interface OpenRouterModelsResponse {
 }
 
 // Provider configuration for IPC (serializable)
-export interface ChatProviderInfo {
+interface ChatProviderInfo {
   id: string
   name: string
   models: string[]
 }
 
 // Internal provider configuration with functions
-export interface ChatProvider extends ChatProviderInfo {
+interface ChatProvider extends ChatProviderInfo {
   createModel: (modelId: string, apiKey: string) => LanguageModel
 }
 

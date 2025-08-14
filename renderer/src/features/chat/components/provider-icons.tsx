@@ -1,7 +1,7 @@
 import React from 'react'
 
 // Provider SVG icons for the UI
-export const PROVIDER_ICONS: Record<string, React.ReactElement> = {
+const PROVIDER_ICONS: Record<string, React.ReactElement> = {
   openai: (
     <svg
       xmlns="http://www.w3.org/2000/svg"

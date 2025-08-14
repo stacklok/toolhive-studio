@@ -1,7 +1,7 @@
 import type { ChatTransport, UIMessageChunk, ChatRequestOptions } from 'ai'
 import type { ChatUIMessage } from '../types'
 
-export interface ElectronIPCChatTransportConfig {
+interface ElectronIPCChatTransportConfig {
   getSettings: () => Promise<{
     provider: string
     model: string

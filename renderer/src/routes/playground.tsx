@@ -6,7 +6,7 @@ export const Route = createFileRoute('/playground')({
   component: Playground,
 })
 
-export function Playground() {
+function Playground() {
   return (
     <>
       <TitlePage title="Chat Playground">
