@@ -1,17 +1,22 @@
-export interface ChatProviderInfo {
+import type { UIMessage } from 'ai'
+import type { LanguageModelV2Usage } from '@ai-sdk/provider'
+
+// Define message metadata schema for type safety
+export interface MessageMetadata {
+  createdAt?: number
+  model?: string
+  totalUsage?: LanguageModelV2Usage
+  responseTime?: number
+  finishReason?: string
+}
+
+// Create a typed UIMessage with our metadata
+export type ChatUIMessage = UIMessage<MessageMetadata>
+
+export interface ChatProvider {
   id: string
   name: string
   models: string[]
-}
-
-// For backward compatibility
-export type ChatProvider = ChatProviderInfo
-
-export interface ChatMessage {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  timestamp: Date
 }
 
 export interface ChatSettings {

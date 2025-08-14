@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/common/components/ui/button'
 import { Input } from '@/common/components/ui/input'
 import { Label } from '@/common/components/ui/label'
@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/common/components/ui/dialog'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Loader2, Search } from 'lucide-react'
 import type { ChatProvider, ChatSettings } from '../types'
 
 interface DialogProviderSettingsProps {
@@ -36,13 +36,30 @@ export function DialogProviderSettings({
   const [providers, setProviders] = useState<ChatProvider[]>([])
   const [showApiKey, setShowApiKey] = useState(false)
   const [localSettings, setLocalSettings] = useState(settings)
+  const [isLoadingProviders, setIsLoadingProviders] = useState(false)
+  const [providersError, setProvidersError] = useState<string | null>(null)
+  const [modelSearchQuery, setModelSearchQuery] = useState('')
 
   useEffect(() => {
+    if (!isOpen) return
+
     // Fetch available providers from the main process
+    setIsLoadingProviders(true)
+    setProvidersError(null)
+
     window.electronAPI.chat
       .getProviders()
-      .then(setProviders)
-      .catch(console.error)
+      .then((fetchedProviders) => {
+        setProviders(fetchedProviders)
+        setProvidersError(null)
+      })
+      .catch((error) => {
+        console.error('Failed to fetch providers:', error)
+        setProvidersError('Failed to load providers. Please try again.')
+      })
+      .finally(() => {
+        setIsLoadingProviders(false)
+      })
   }, [isOpen])
 
   // Load persisted settings when provider changes
@@ -72,17 +89,46 @@ export function DialogProviderSettings({
   const formatModelName = (model: string, providerId: string): string => {
     if (providerId !== 'openrouter') return model
 
-    // For OpenRouter models, format them nicely
-    const modelMap: Record<string, string> = {
-      'anthropic/claude-3.5-sonnet': 'Claude 3.5 Sonnet (Anthropic)',
-      'meta-llama/llama-3.1-405b-instruct': 'Llama 3.1 405B Instruct (Meta)',
-      'google/gemini-pro-1.5': 'Gemini Pro 1.5 (Google)',
-      'openai/gpt-4o': 'GPT-4o (OpenAI)',
-      'mistralai/mixtral-8x7b-instruct': 'Mixtral 8x7B Instruct (Mistral)',
+    // For OpenRouter models, extract provider and model name
+    const parts = model.split('/')
+    if (parts.length >= 2) {
+      const provider = parts[0]
+      const modelName = parts.slice(1).join('/')
+
+      // Capitalize provider name
+      const providerName =
+        provider
+          ?.split('-')
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ') || provider
+
+      // Format model name
+      const formattedModelName = modelName
+        .replace(/-/g, ' ')
+        .replace(/\b\w/g, (l) => l.toUpperCase())
+
+      return `${formattedModelName} (${providerName})`
     }
 
-    return modelMap[model] || model.replace(/^[\w-]+\//, '').replace(/-/g, ' ')
+    // Fallback for models without provider prefix
+    return model.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
   }
+
+  // Filter models based on search query
+  const filteredModels = useMemo(() => {
+    if (!selectedProvider) return []
+    if (!modelSearchQuery.trim()) return selectedProvider.models
+
+    const query = modelSearchQuery.toLowerCase()
+    return selectedProvider.models.filter((model: string) => {
+      const formattedName = formatModelName(
+        model,
+        selectedProvider.id
+      ).toLowerCase()
+      const originalName = model.toLowerCase()
+      return formattedName.includes(query) || originalName.includes(query)
+    })
+  }, [selectedProvider, modelSearchQuery])
 
   const handleProviderChange = (providerId: string) => {
     const provider = providers.find((p) => p.id === providerId)
@@ -91,6 +137,8 @@ export function DialogProviderSettings({
       provider: providerId,
       model: provider?.models[0] || '',
     })
+    // Clear search when provider changes
+    setModelSearchQuery('')
   }
 
   const handleModelChange = (model: string) => {
@@ -115,6 +163,26 @@ export function DialogProviderSettings({
           apiKey: localSettings.apiKey,
           enabledTools: [],
         })
+
+        // If this is OpenRouter and we just saved an API key, refetch providers to get the latest models
+        if (
+          localSettings.provider === 'openrouter' &&
+          localSettings.apiKey.trim() !== ''
+        ) {
+          setIsLoadingProviders(true)
+          try {
+            const updatedProviders =
+              await window.electronAPI.chat.getProviders()
+            setProviders(updatedProviders)
+          } catch (error) {
+            console.error(
+              'Failed to refetch providers after saving API key:',
+              error
+            )
+          } finally {
+            setIsLoadingProviders(false)
+          }
+        }
       } catch (error) {
         console.error('Failed to save chat settings:', error)
       }
@@ -164,28 +232,47 @@ export function DialogProviderSettings({
           {/* Provider Selection */}
           <div className="space-y-2">
             <Label htmlFor="provider">Provider</Label>
-            <Select
-              value={localSettings.provider}
-              onValueChange={handleProviderChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select provider" />
-              </SelectTrigger>
-              <SelectContent>
-                {providers.map((provider) => (
-                  <SelectItem key={provider.id} value={provider.id}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{provider.name}</span>
-                      {provider.id === 'openrouter' && (
-                        <span className="text-muted-foreground text-xs">
-                          Gateway to 100+ models from multiple providers
-                        </span>
-                      )}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {providersError ? (
+              <div className="rounded bg-red-50 p-2 text-sm text-red-600">
+                {providersError}
+              </div>
+            ) : (
+              <Select
+                value={localSettings.provider}
+                onValueChange={handleProviderChange}
+                disabled={isLoadingProviders}
+              >
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={
+                      isLoadingProviders ? (
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Loading providers...
+                        </div>
+                      ) : (
+                        'Select provider'
+                      )
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {providers.map((provider) => (
+                    <SelectItem key={provider.id} value={provider.id}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{provider.name}</span>
+                        {provider.id === 'openrouter' && (
+                          <span className="text-muted-foreground text-xs">
+                            Gateway to {provider.models.length}+ tool-compatible
+                            models from all providers
+                          </span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           {/* Model Selection */}
@@ -199,23 +286,65 @@ export function DialogProviderSettings({
                 <SelectTrigger>
                   <SelectValue placeholder="Select model" />
                 </SelectTrigger>
-                <SelectContent>
-                  {selectedProvider.models.map((model) => (
-                    <SelectItem key={model} value={model}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">
-                          {formatModelName(model, selectedProvider.id)}
-                        </span>
-                        {selectedProvider.id === 'openrouter' && (
-                          <span className="text-muted-foreground text-xs">
-                            {model}
-                          </span>
-                        )}
+                <SelectContent className="max-h-[300px]">
+                  {/* Search input for models (especially useful for OpenRouter) */}
+                  {selectedProvider.models.length > 10 && (
+                    <div
+                      className="bg-background sticky top-0 z-10 border-b p-2"
+                    >
+                      <div className="relative">
+                        <Search
+                          className="text-muted-foreground absolute top-2.5
+                            left-2 h-4 w-4"
+                        />
+                        <Input
+                          placeholder="Search models..."
+                          value={modelSearchQuery}
+                          onChange={(e) => setModelSearchQuery(e.target.value)}
+                          className="h-8 pl-8"
+                          onClick={(e) => e.stopPropagation()}
+                        />
                       </div>
-                    </SelectItem>
-                  ))}
+                    </div>
+                  )}
+
+                  {/* Models list */}
+                  <div className="max-h-[250px] overflow-y-auto">
+                    {filteredModels.length > 0 ? (
+                      filteredModels.map((model: string) => (
+                        <SelectItem key={model} value={model}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">
+                              {formatModelName(model, selectedProvider.id)}
+                            </span>
+                            {selectedProvider.id === 'openrouter' && (
+                              <span className="text-muted-foreground text-xs">
+                                {model}
+                              </span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <div
+                        className="text-muted-foreground p-2 text-center
+                          text-sm"
+                      >
+                        No models found matching "{modelSearchQuery}"
+                      </div>
+                    )}
+                  </div>
                 </SelectContent>
               </Select>
+
+              {/* Show model count for OpenRouter */}
+              {selectedProvider.id === 'openrouter' && (
+                <p className="text-muted-foreground text-xs">
+                  {modelSearchQuery
+                    ? `${filteredModels.length} of ${selectedProvider.models.length} models`
+                    : `${selectedProvider.models.length} models available`}
+                </p>
+              )}
             </div>
           )}
 
@@ -231,7 +360,7 @@ export function DialogProviderSettings({
                 placeholder={
                   localSettings.provider === 'openrouter'
                     ? 'Enter your OpenRouter API key'
-                    : 'Enter your API key'
+                    : `Enter your ${localSettings.provider?.toUpperCase()} API key`
                 }
                 className="pr-10"
               />
