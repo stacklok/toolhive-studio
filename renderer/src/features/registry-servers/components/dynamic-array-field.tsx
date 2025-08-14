@@ -1,6 +1,7 @@
 import {
   useRef,
   useCallback,
+  Fragment,
   type ReactNode,
   type ChangeEventHandler,
 } from 'react'
@@ -38,6 +39,7 @@ interface DynamicArrayFieldProps<
   addButtonText?: string
   form: UseFormReturn<TFieldValues>
   columnsHeader?: ReactNode
+  gridTemplate?: string
   children: (args: {
     idx: number
     fieldProps: {
@@ -62,6 +64,7 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
   addButtonText = 'Add',
   form,
   columnsHeader,
+  gridTemplate,
   children,
 }: DynamicArrayFieldProps<TFieldValues>) {
   const { control, formState } = form
@@ -136,25 +139,18 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
         {description && <FormDescription>{description}</FormDescription>}
       </div>
 
-      <div className="mt-3 flex flex-col gap-2">
+      <div
+        className="mt-3 grid w-full items-start gap-2"
+        style={{ gridTemplateColumns: gridTemplate ?? '1fr auto' }}
+      >
         {columnsHeader && (
-          <div className="grid w-full grid-cols-[1fr_auto] items-center gap-2">
-            <div>{columnsHeader}</div>
-            <div className="justify-self-end">
-              <Button
-                type="button"
-                variant="outline"
-                aria-hidden="true"
-                tabIndex={-1}
-                className="pointer-events-none invisible"
-              >
-                <Trash2 />
-              </Button>
-            </div>
-          </div>
+          <>
+            {columnsHeader}
+            <div />
+          </>
         )}
         {fields.map((field, idx) => (
-          <div key={field.id} className="flex w-full items-start gap-2">
+          <Fragment key={field.id}>
             <FormField
               control={control}
               name={`${name}.${idx}.value` as Path<TFieldValues>}
@@ -195,7 +191,7 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
             >
               <Trash2 />
             </Button>
-          </div>
+          </Fragment>
         ))}
 
         <Button

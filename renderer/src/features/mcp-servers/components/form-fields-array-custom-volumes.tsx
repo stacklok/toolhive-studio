@@ -53,6 +53,7 @@ export function FormFieldsArrayVolumes<TForm extends FieldValues>({
             addButtonText="Add a volume"
             description="Provide the MCP server access to a local folder. Optionally specific individual files."
             form={form}
+            gridTemplate="1fr auto"
             columnsHeader={
               <div
                 className="text-muted-foreground grid w-full
@@ -79,7 +80,7 @@ export function FormFieldsArrayVolumes<TForm extends FieldValues>({
                     <>
                       <FormItem className="flex-grow">
                         <div
-                          className="grid grow grid-cols-[1fr_1fr_auto] gap-2"
+                          className="grid w-full grid-cols-[1fr_1fr_auto] gap-2"
                         >
                           <FormControl className="flex-1">
                             <FilePickerInput
