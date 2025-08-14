@@ -45,6 +45,25 @@ export function getFormSchemaRunFromRegistry({
   secrets,
   workloads,
 }: GroupedEnvVars & { workloads: CoreWorkload[] }) {
+  const isNonEmptyString = (v: unknown): v is string =>
+    typeof v === 'string' && v.length > 0
+
+  const secretNames = Array.from(
+    new Set(secrets.map(({ name }) => name).filter(isNonEmptyString))
+  )
+  const secretNameSchema =
+    secretNames.length === 0
+      ? z.string()
+      : z.union(secretNames.map((v) => z.literal(v)))
+
+  const envVarNames = Array.from(
+    new Set(envVars.map(({ name }) => name).filter(isNonEmptyString))
+  )
+  const envVarNameSchema =
+    envVarNames.length === 0
+      ? z.string()
+      : z.union(envVarNames.map((v) => z.literal(v)))
+
   return z.object({
     serverName: z
       .string()
@@ -56,7 +75,7 @@ export function getFormSchemaRunFromRegistry({
     cmd_arguments: z.array(z.string()).optional(),
     secrets: z
       .object({
-        name: z.union(secrets.map(({ name }) => z.literal(name ?? ''))),
+        name: secretNameSchema,
 
         value: z.object({
           secret: z.string().optional(), // NOTE: This is optional to allow us to pre-populate the form with empty strings, we refine based on whether it is required by the server later.
@@ -70,7 +89,7 @@ export function getFormSchemaRunFromRegistry({
       .array(),
     envVars: z
       .object({
-        name: z.union(envVars.map(({ name }) => z.literal(name ?? ''))),
+        name: envVarNameSchema,
         value: z.string().optional(),
       })
       .refine((d) => refineEnvVar(d, envVars), {
