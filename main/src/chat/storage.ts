@@ -59,7 +59,7 @@ const chatStore = new Store({
 })
 
 // Chat settings interface
-export interface ChatSettings {
+interface ChatSettings {
   apiKey: string
   enabledTools: string[]
 }
@@ -152,18 +152,18 @@ export function saveSelectedModel(
 }
 
 // Get enabled MCP tools for a specific server
-export function getEnabledMcpToolsForServer(serverName: string): string[] {
-  try {
-    const enabledMcpTools = chatStore.get('enabledMcpTools')
-    if (isToolsRecord(enabledMcpTools)) {
-      return enabledMcpTools[serverName] || []
-    }
-    return []
-  } catch (error) {
-    log.error('Failed to get enabled MCP tools:', error)
-    return []
-  }
-}
+// function getEnabledMcpToolsForServer(serverName: string): string[] {
+//   try {
+//     const enabledMcpTools = chatStore.get('enabledMcpTools')
+//     if (isToolsRecord(enabledMcpTools)) {
+//       return enabledMcpTools[serverName] || []
+//     }
+//     return []
+//   } catch (error) {
+//     log.error('Failed to get enabled MCP tools:', error)
+//     return []
+//   }
+// }
 
 // Save enabled MCP tools for a server
 export function saveEnabledMcpTools(

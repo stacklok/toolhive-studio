@@ -2,7 +2,7 @@ import type { UIMessage } from 'ai'
 import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 
 // Define message metadata schema for type safety
-export interface MessageMetadata {
+interface MessageMetadata {
   createdAt?: number
   model?: string
   totalUsage?: LanguageModelV2Usage

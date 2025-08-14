@@ -21,14 +21,3 @@ export interface McpToolInfo {
   inputSchema: Record<string, unknown>
   serverName: string
 }
-
-// Selected model interface
-export interface SelectedModel {
-  provider: string
-  model: string
-}
-
-// MCP Server tool mapping
-export interface McpServerTools {
-  [serverName: string]: string[] // serverName -> [toolName1, toolName2]
-}
