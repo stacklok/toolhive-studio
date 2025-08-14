@@ -41,6 +41,56 @@ const getAccessModeDisplay = (value: Volume['accessMode'] | undefined) => {
   }
 }
 
+function FilePicker({
+  onPick,
+}: {
+  onPick: (args: { pickedPath: string | null }) => void
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="adornment" aria-label="Select path">
+          <FolderOpen className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" role="menu">
+        <DropdownMenuItem
+          onClick={async () => {
+            try {
+              const filePath = await window.electronAPI.selectFile()
+              onPick({ pickedPath: filePath })
+            } catch (err) {
+              console.error('Failed to open file picker', err)
+            }
+          }}
+          className="cursor-pointer"
+        >
+          <div className="flex items-center gap-2">
+            <File className="size-4" />
+            <span>Mount a single file</span>
+          </div>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={async () => {
+            try {
+              const folderPath = await window.electronAPI.selectFolder()
+              onPick({ pickedPath: folderPath })
+            } catch (err) {
+              console.error('Failed to open folder picker', err)
+            }
+          }}
+          className="cursor-pointer"
+        >
+          <div className="flex items-center gap-2">
+            <FolderOpen className="size-4" />
+            <span>Mount an entire folder</span>
+          </div>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
 export function FormFieldsArrayVolumes<TForm extends FieldValues>({
   form,
 }: {
@@ -80,71 +130,16 @@ export function FormFieldsArrayVolumes<TForm extends FieldValues>({
                               {...inputProps}
                               type="string"
                               adornment={
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button
-                                      variant="adornment"
-                                      aria-label="Select path"
-                                    >
-                                      <FolderOpen className="size-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent
-                                    align="start"
-                                    role="menu"
-                                  >
-                                    <DropdownMenuItem
-                                      onClick={async () => {
-                                        try {
-                                          const filePath =
-                                            await window.electronAPI.selectFile()
-                                          if (filePath) {
-                                            field.onChange({
-                                              ...volumeValue,
-                                              host: filePath,
-                                            })
-                                          }
-                                        } catch (err) {
-                                          console.error(
-                                            'Failed to open file picker',
-                                            err
-                                          )
-                                        }
-                                      }}
-                                      className="cursor-pointer"
-                                    >
-                                      <div className="flex items-center gap-2">
-                                        <File className="size-4" />
-                                        <span>Mount a single file</span>
-                                      </div>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={async () => {
-                                        try {
-                                          const folderPath =
-                                            await window.electronAPI.selectFolder()
-                                          if (folderPath) {
-                                            field.onChange({
-                                              ...volumeValue,
-                                              host: folderPath,
-                                            })
-                                          }
-                                        } catch (err) {
-                                          console.error(
-                                            'Failed to open folder picker',
-                                            err
-                                          )
-                                        }
-                                      }}
-                                      className="cursor-pointer"
-                                    >
-                                      <div className="flex items-center gap-2">
-                                        <FolderOpen className="size-4" />
-                                        <span>Mount an entire folder</span>
-                                      </div>
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
+                                <FilePicker
+                                  onPick={({ pickedPath }) => {
+                                    if (pickedPath) {
+                                      field.onChange({
+                                        ...volumeValue,
+                                        host: pickedPath,
+                                      })
+                                    }
+                                  }}
+                                />
                               }
                               ref={setInputRef(idx)}
                               aria-label={`Host path ${idx + 1}`}
