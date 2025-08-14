@@ -30,7 +30,7 @@ import {
   type FieldTabMapping,
 } from '@/common/hooks/use-form-tab-state'
 import { NetworkIsolationTabContent } from './network-isolation-tab-content'
-import { FormFieldsArrayCustomVolumes } from './form-fields-array-custom-volumes'
+import { FormFieldsArrayVolumes } from './form-fields-array-custom-volumes'
 
 type Tab = 'configuration' | 'network-isolation'
 type CommonFields = keyof FormSchemaRunMcpCommand
@@ -200,7 +200,9 @@ export function DialogFormRunMcpServerWithCommand({
                     <FormFieldsRunMcpCommand form={form} />
                     <FormFieldsArrayCustomSecrets form={form} />
                     <FormFieldsArrayCustomEnvVars form={form} />
-                    <FormFieldsArrayCustomVolumes form={form} />
+                    <FormFieldsArrayVolumes<FormSchemaRunMcpCommand>
+                      form={form}
+                    />
                   </div>
                 )}
                 {activeTab === 'network-isolation' && (

@@ -61,6 +61,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }
   },
 
+  // File/folder pickers
+  selectFile: (): Promise<string | null> =>
+    ipcRenderer.invoke('dialog:select-file'),
+  selectFolder: (): Promise<string | null> =>
+    ipcRenderer.invoke('dialog:select-folder'),
+
   // Quit confirmation
   onShowQuitConfirmation: (callback: () => void) => {
     ipcRenderer.on('show-quit-confirmation', callback)
@@ -162,4 +168,7 @@ export interface ElectronAPI {
     getLastShutdownServers: () => Promise<CoreWorkload[]>
     clearShutdownHistory: () => Promise<{ success: boolean }>
   }
+  // File/folder pickers
+  selectFile: () => Promise<string | null>
+  selectFolder: () => Promise<string | null>
 }
