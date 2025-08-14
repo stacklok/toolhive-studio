@@ -36,7 +36,7 @@ function Input({
 }: React.ComponentProps<'input'> & {
   adornment?: React.ReactNode
 }) {
-  const hasAdornment = Boolean(adornment)
+  const hasAdornment = adornment !== null
 
   if (hasAdornment) {
     return (
@@ -47,7 +47,7 @@ function Input({
     )
   }
 
-  return <BaseInput />
+  return <BaseInput className={className} type={type} {...props} />
 }
 
 export { Input }
