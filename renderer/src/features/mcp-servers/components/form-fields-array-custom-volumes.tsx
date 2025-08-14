@@ -53,6 +53,16 @@ export function FormFieldsArrayVolumes<TForm extends FieldValues>({
             addButtonText="Add a volume"
             description="Provide the MCP server access to a local folder. Optionally specific individual files."
             form={form}
+            columnsHeader={
+              <div
+                className="text-muted-foreground grid w-full
+                  grid-cols-[1fr_1fr_auto] gap-2 text-xs"
+              >
+                <span aria-hidden="true">Host path</span>
+                <span aria-hidden="true">Container path</span>
+                <span aria-hidden="true"></span>
+              </div>
+            }
           >
             {({ inputProps, setInputRef, idx }) => (
               <FormField
@@ -68,7 +78,9 @@ export function FormFieldsArrayVolumes<TForm extends FieldValues>({
                   return (
                     <>
                       <FormItem className="flex-grow">
-                        <div className="flex w-full gap-2">
+                        <div
+                          className="grid grow grid-cols-[1fr_1fr_auto] gap-2"
+                        >
                           <FormControl className="flex-1">
                             <FilePickerInput
                               ref={setInputRef(idx)}
@@ -101,7 +113,7 @@ export function FormFieldsArrayVolumes<TForm extends FieldValues>({
                               placeholder="Container path"
                             />
                           </FormControl>
-                          <FormControl className="w-48 flex-shrink-0">
+                          <FormControl className="w-auto flex-shrink-0">
                             <Select
                               onValueChange={(value) =>
                                 field.onChange({

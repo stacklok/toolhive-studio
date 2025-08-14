@@ -37,6 +37,7 @@ interface DynamicArrayFieldProps<
   tooltipContent?: string
   addButtonText?: string
   form: UseFormReturn<TFieldValues>
+  columnsHeader?: ReactNode
   children: (args: {
     idx: number
     fieldProps: {
@@ -60,6 +61,7 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
   inputLabelPrefix = 'Item',
   addButtonText = 'Add',
   form,
+  columnsHeader,
   children,
 }: DynamicArrayFieldProps<TFieldValues>) {
   const { control, formState } = form
@@ -135,8 +137,24 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
       </div>
 
       <div className="mt-3 flex flex-col gap-2">
+        {columnsHeader && (
+          <div className="grid w-full grid-cols-[1fr_auto] items-center gap-2">
+            <div>{columnsHeader}</div>
+            <div className="justify-self-end">
+              <Button
+                type="button"
+                variant="outline"
+                aria-hidden="true"
+                tabIndex={-1}
+                className="pointer-events-none invisible"
+              >
+                <Trash2 />
+              </Button>
+            </div>
+          </div>
+        )}
         {fields.map((field, idx) => (
-          <div key={field.id} className="flex items-start gap-2">
+          <div key={field.id} className="flex w-full items-start gap-2">
             <FormField
               control={control}
               name={`${name}.${idx}.value` as Path<TFieldValues>}
