@@ -9,6 +9,7 @@ interface ChatInputProps {
   isLoading: boolean
   disabled: boolean
   placeholder?: string
+  selectedModel?: string
 }
 
 export function ChatInput({
@@ -17,6 +18,7 @@ export function ChatInput({
   isLoading,
   disabled,
   placeholder = 'Type your message...',
+  selectedModel,
 }: ChatInputProps) {
   const [input, setInput] = useState('')
 
@@ -38,32 +40,46 @@ export function ChatInput({
     onStopGeneration()
   }
 
+  const getPlaceholder = () => {
+    if (disabled) return 'Select an AI model to get started'
+    if (selectedModel) {
+      const modelName = selectedModel.includes('claude')
+        ? 'Claude'
+        : selectedModel.includes('gpt')
+          ? 'ChatGPT'
+          : selectedModel.includes('gemini')
+            ? 'Gemini'
+            : selectedModel.includes('grok')
+              ? 'Grok'
+              : 'AI'
+      return `Message ${modelName}...`
+    }
+    return placeholder
+  }
+
   return (
     <div className="relative">
       <div
-        className="border-border bg-background flex items-center gap-2
-          rounded-lg border p-3"
+        className="border-border bg-card relative rounded-2xl border shadow-sm"
       >
-        <div className="flex-1">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={
-              disabled ? 'Select an AI model to get started' : placeholder
-            }
-            disabled={disabled}
-            className="placeholder:text-muted-foreground border-0 bg-transparent
-              text-base focus-visible:ring-0 focus-visible:ring-offset-0"
-          />
-        </div>
+        <Input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={getPlaceholder()}
+          disabled={disabled}
+          className="placeholder:text-muted-foreground min-h-[60px] resize-none
+            border-0 bg-transparent px-4 py-4 pr-12 text-base
+            focus-visible:ring-0 focus-visible:ring-offset-0"
+        />
 
         {isLoading ? (
           <Button
             onClick={handleStop}
             variant="ghost"
             size="sm"
-            className="hover:bg-muted h-8 w-8 p-0"
+            className="hover:bg-muted absolute right-3 bottom-3 h-8 w-8
+              rounded-lg p-0"
           >
             <Square className="h-4 w-4" />
           </Button>
@@ -71,9 +87,9 @@ export function ChatInput({
           <Button
             onClick={handleSend}
             disabled={!input.trim() || disabled}
-            variant="ghost"
             size="sm"
-            className="hover:bg-muted h-8 w-8 p-0 disabled:opacity-50"
+            className="absolute right-3 bottom-3 h-8 w-8 rounded-lg p-0
+              disabled:opacity-50"
           >
             <Send className="h-4 w-4" />
           </Button>
@@ -81,9 +97,9 @@ export function ChatInput({
       </div>
 
       {/* Helper text */}
-      <div className="text-muted-foreground mt-2 text-center text-xs">
+      <div className="text-muted-foreground mt-3 text-center text-xs">
         {disabled
-          ? 'Configure AI settings to start chatting'
+          ? 'Select an AI model to start chatting'
           : 'Press Enter to send'}
       </div>
     </div>

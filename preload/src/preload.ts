@@ -130,7 +130,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
       model: string
       apiKey: string
       enabledTools?: string[]
-    }) => ipcRenderer.invoke('chat:stream', request),
+    }) =>
+      ipcRenderer.invoke('chat:stream', request) as Promise<{
+        streamId: string
+      }>,
     getSettings: (providerId: string) =>
       ipcRenderer.invoke('chat:get-settings', providerId),
     saveSettings: (
@@ -140,6 +143,28 @@ contextBridge.exposeInMainWorld('electronAPI', {
     clearSettings: (providerId?: string) =>
       ipcRenderer.invoke('chat:clear-settings', providerId),
     discoverModels: () => ipcRenderer.invoke('chat:discover-models'),
+    getSelectedModel: () => ipcRenderer.invoke('chat:get-selected-model'),
+    saveSelectedModel: (provider: string, model: string) =>
+      ipcRenderer.invoke('chat:save-selected-model', provider, model),
+    getMcpServerTools: (serverName: string) =>
+      ipcRenderer.invoke('chat:get-mcp-server-tools', serverName),
+    getEnabledMcpTools: () => ipcRenderer.invoke('chat:get-enabled-mcp-tools'),
+    getEnabledMcpServersFromTools: () =>
+      ipcRenderer.invoke('chat:get-enabled-mcp-servers-from-tools'),
+    saveEnabledMcpTools: (serverName: string, enabledTools: string[]) =>
+      ipcRenderer.invoke(
+        'chat:save-enabled-mcp-tools',
+        serverName,
+        enabledTools
+      ),
+  },
+
+  // IPC event listeners for streaming
+  on: (channel: string, listener: (...args: unknown[]) => void) => {
+    ipcRenderer.on(channel, (_, ...args) => listener(...args))
+  },
+  removeListener: (channel: string, listener: (...args: unknown[]) => void) => {
+    ipcRenderer.removeListener(channel, listener)
   },
 })
 
@@ -225,7 +250,7 @@ export interface ElectronAPI {
       model: string
       apiKey: string
       enabledTools?: string[]
-    }) => Promise<string>
+    }) => Promise<{ streamId: string }>
     getSettings: (
       providerId: string
     ) => Promise<{ apiKey: string; enabledTools: string[] }>
@@ -249,5 +274,34 @@ export interface ElectronAPI {
       }>
       discoveredAt: string
     }>
+    getSelectedModel: () => Promise<{ provider: string; model: string }>
+    saveSelectedModel: (
+      provider: string,
+      model: string
+    ) => Promise<{ success: boolean; error?: string }>
+    getMcpServerTools: (serverName: string) => Promise<{
+      serverName: string
+      serverPackage?: string
+      tools: Array<{
+        name: string
+        description?: string
+        parameters?: Record<string, unknown>
+        enabled: boolean
+      }>
+      isRunning: boolean
+    } | null>
+    getEnabledMcpTools: () => Promise<Record<string, string[]>>
+    getEnabledMcpServersFromTools: () => Promise<string[]>
+    saveEnabledMcpTools: (
+      serverName: string,
+      enabledTools: string[]
+    ) => Promise<{ success: boolean; error?: string }>
   }
+
+  // IPC event listeners for streaming
+  on: (channel: string, listener: (...args: unknown[]) => void) => void
+  removeListener: (
+    channel: string,
+    listener: (...args: unknown[]) => void
+  ) => void
 }

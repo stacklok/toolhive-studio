@@ -10,10 +10,24 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/common/components/ui/dialog'
-import { Card } from '@/common/components/ui/card'
 import { Badge } from '@/common/components/ui/badge'
-import { Eye, EyeOff, Key, Check, AlertCircle } from 'lucide-react'
-import type { ChatProviderInfo } from '../types'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/common/components/ui/collapsible'
+import {
+  Eye,
+  EyeOff,
+  Key,
+  Check,
+  AlertCircle,
+  Trash2,
+  ChevronDown,
+  ChevronRight,
+} from 'lucide-react'
+import { getProviderIcon } from './provider-icons'
+import type { ChatProvider } from '../types'
 
 interface DialogApiKeysProps {
   isOpen: boolean
@@ -22,7 +36,7 @@ interface DialogApiKeysProps {
 }
 
 interface ProviderApiKey {
-  provider: ChatProviderInfo
+  provider: ChatProvider
   apiKey: string
   hasKey: boolean
 }
@@ -34,6 +48,9 @@ export function DialogApiKeys({
 }: DialogApiKeysProps) {
   const [providerKeys, setProviderKeys] = useState<ProviderApiKey[]>([])
   const [showApiKeys, setShowApiKeys] = useState<Record<string, boolean>>({})
+  const [expandedProviders, setExpandedProviders] = useState<
+    Record<string, boolean>
+  >({})
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -69,6 +86,13 @@ export function DialogApiKeys({
       )
 
       setProviderKeys(keysData)
+
+      // Start with all providers collapsed
+      const expandedState: Record<string, boolean> = {}
+      keysData.forEach((pk) => {
+        expandedState[pk.provider.id] = false
+      })
+      setExpandedProviders(expandedState)
     } catch (error) {
       console.error('Failed to load providers and keys:', error)
     }
@@ -91,17 +115,38 @@ export function DialogApiKeys({
     }))
   }
 
+  const handleRemoveApiKey = (providerId: string) => {
+    setProviderKeys((prev) =>
+      prev.map((pk) =>
+        pk.provider.id === providerId
+          ? { ...pk, apiKey: '', hasKey: false }
+          : pk
+      )
+    )
+  }
+
+  const toggleProviderExpanded = (providerId: string) => {
+    setExpandedProviders((prev) => ({
+      ...prev,
+      [providerId]: !prev[providerId],
+    }))
+  }
+
   const handleSave = async () => {
     setSaving(true)
     try {
-      // Save API keys for each provider
+      // Save or clear API keys for each provider
       await Promise.all(
         providerKeys.map(async (pk) => {
-          if (pk.apiKey) {
+          if (pk.apiKey.trim()) {
+            // Save API key
             await window.electronAPI.chat.saveSettings(pk.provider.id, {
-              apiKey: pk.apiKey,
+              apiKey: pk.apiKey.trim(),
               enabledTools: [], // Keep existing enabled tools or default to empty
             })
+          } else {
+            // Clear/remove API key
+            await window.electronAPI.chat.clearSettings(pk.provider.id)
           }
         })
       )
@@ -129,66 +174,125 @@ export function DialogApiKeys({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-2">
           {providerKeys.map((pk) => (
-            <Card key={pk.provider.id} className="p-4">
-              <div className="mb-3 flex items-start justify-between">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-medium">{pk.provider.name}</h3>
-                  {pk.hasKey ? (
-                    <Badge variant="default" className="text-xs">
-                      <Check className="mr-1 h-3 w-3" />
-                      Configured
-                    </Badge>
-                  ) : (
-                    <Badge variant="secondary" className="text-xs">
-                      <AlertCircle className="mr-1 h-3 w-3" />
-                      No API Key
-                    </Badge>
-                  )}
-                </div>
-                <Badge variant="outline" className="text-xs">
-                  {pk.provider.models.length} models
-                </Badge>
-              </div>
+            <Collapsible
+              key={pk.provider.id}
+              open={expandedProviders[pk.provider.id]}
+              onOpenChange={() => toggleProviderExpanded(pk.provider.id)}
+              className="border-border overflow-hidden rounded-lg border"
+            >
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="hover:bg-muted/50 h-auto w-full justify-between
+                    rounded-none p-4"
+                >
+                  <div className="flex w-full items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        {getProviderIcon(pk.provider.id)}
+                        <h3 className="text-left font-medium">
+                          {pk.provider.name}
+                        </h3>
+                      </div>
+                      {pk.hasKey ? (
+                        <Badge variant="default" className="text-xs">
+                          <Check className="mr-1 h-3 w-3" />
+                          Configured
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="text-xs">
+                          <AlertCircle className="mr-1 h-3 w-3" />
+                          No API Key
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        {pk.provider.models.length} models
+                      </Badge>
+                      {expandedProviders[pk.provider.id] ? (
+                        <ChevronDown className="text-muted-foreground h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="text-muted-foreground h-4 w-4" />
+                      )}
+                    </div>
+                  </div>
+                </Button>
+              </CollapsibleTrigger>
 
-              <div className="space-y-2">
-                <Label htmlFor={`apikey-${pk.provider.id}`}>API Key</Label>
-                <div className="relative">
-                  <Input
-                    id={`apikey-${pk.provider.id}`}
-                    type={showApiKeys[pk.provider.id] ? 'text' : 'password'}
-                    value={pk.apiKey}
-                    onChange={(e) =>
-                      handleApiKeyChange(pk.provider.id, e.target.value)
-                    }
-                    placeholder={`Enter your ${pk.provider.name} API key`}
-                    className="pr-10"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute top-0 right-0 h-full px-3 py-2
-                      hover:bg-transparent"
-                    onClick={() => toggleShowApiKey(pk.provider.id)}
-                  >
-                    {showApiKeys[pk.provider.id] ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
+              <CollapsibleContent>
+                <div
+                  className="border-border/30 bg-muted/10 space-y-3 border-t
+                    px-4 pb-4"
+                >
+                  <div className="space-y-3 pt-4">
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor={`apikey-${pk.provider.id}`}
+                        className="text-sm font-medium"
+                      >
+                        API Key
+                      </Label>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Input
+                            id={`apikey-${pk.provider.id}`}
+                            type={
+                              showApiKeys[pk.provider.id] ? 'text' : 'password'
+                            }
+                            value={pk.apiKey}
+                            onChange={(e) =>
+                              handleApiKeyChange(pk.provider.id, e.target.value)
+                            }
+                            placeholder={`Enter your ${pk.provider.name} API key`}
+                            className="pr-10"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute top-0 right-0 h-full px-3 py-2
+                              hover:bg-transparent"
+                            onClick={() => toggleShowApiKey(pk.provider.id)}
+                          >
+                            {showApiKeys[pk.provider.id] ? (
+                              <EyeOff className="text-muted-foreground h-4 w-4" />
+                            ) : (
+                              <Eye className="text-muted-foreground h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                        {pk.hasKey && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRemoveApiKey(pk.provider.id)}
+                            className="hover:bg-destructive
+                              hover:text-destructive-foreground px-3"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
 
-                {/* Show sample models */}
-                <div className="text-muted-foreground text-xs">
-                  Available models: {pk.provider.models.slice(0, 3).join(', ')}
-                  {pk.provider.models.length > 3 &&
-                    ` +${pk.provider.models.length - 3} more`}
+                    {/* Show sample models */}
+                    <div
+                      className="text-muted-foreground bg-background/50
+                        border-border/20 rounded border p-2 text-xs"
+                    >
+                      <span className="font-medium">Available models:</span>{' '}
+                      {pk.provider.models.slice(0, 3).join(', ')}
+                      {pk.provider.models.length > 3 &&
+                        ` +${pk.provider.models.length - 3} more`}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </Card>
+              </CollapsibleContent>
+            </Collapsible>
           ))}
         </div>
 

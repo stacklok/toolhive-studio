@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import type { ChatProviderInfo } from '../types'
+import type { ChatProvider } from '../types'
 
-interface AvailableProvider extends ChatProviderInfo {
+interface AvailableProvider extends ChatProvider {
   hasApiKey: boolean
 }
 
@@ -17,7 +17,7 @@ export function useAvailableModels() {
         setIsLoading(true)
 
         // Get all providers
-        const providers: ChatProviderInfo[] =
+        const providers: ChatProvider[] =
           await window.electronAPI.chat.getProviders()
 
         // Check which providers have API keys
@@ -50,6 +50,16 @@ export function useAvailableModels() {
     }
 
     fetchAvailableModels()
+
+    // Listen for API key changes
+    const handleApiKeysChanged = () => {
+      fetchAvailableModels()
+    }
+
+    window.addEventListener('api-keys-changed', handleApiKeysChanged)
+    return () => {
+      window.removeEventListener('api-keys-changed', handleApiKeysChanged)
+    }
   }, [])
 
   // Filter to only providers with API keys
@@ -61,10 +71,5 @@ export function useAvailableModels() {
     availableProviders,
     providersWithApiKeys,
     isLoading,
-    refetch: () => {
-      setIsLoading(true)
-      // Re-trigger the effect
-      setAvailableProviders([])
-    },
   }
 }
