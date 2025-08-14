@@ -1,5 +1,12 @@
 import { FormControl, FormField, FormItem } from '@/common/components/ui/form'
-import { Controller, type UseFormReturn } from 'react-hook-form'
+import {
+  Controller,
+  type UseFormReturn,
+  type FieldValues,
+  type Path,
+  type ArrayPath,
+  type ControllerRenderProps,
+} from 'react-hook-form'
 import { Input } from '@/common/components/ui/input'
 import {
   Select,
@@ -7,8 +14,14 @@ import {
   SelectContent,
   SelectItem,
 } from '@/common/components/ui/select'
-import { FolderCheck, FolderLock } from 'lucide-react'
-import type { FormSchemaRunMcpCommand } from '../lib/form-schema-run-mcp-server-with-command'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/common/components/ui/dropdown-menu'
+import { Button } from '@/common/components/ui/button'
+import { FolderCheck, FolderLock, FolderOpen, File } from 'lucide-react'
 import { DynamicArrayField } from '@/features/registry-servers/components/dynamic-array-field'
 
 type AccessMode = 'ro' | 'rw'
@@ -28,19 +41,19 @@ const getAccessModeDisplay = (value: Volume['accessMode'] | undefined) => {
   }
 }
 
-export function FormFieldsArrayCustomVolumes({
+export function FormFieldsArrayVolumes<TForm extends FieldValues>({
   form,
 }: {
-  form: UseFormReturn<FormSchemaRunMcpCommand>
+  form: UseFormReturn<TForm>
 }) {
   return (
     <FormItem className="mb-10">
       <Controller
         control={form.control}
-        name="volumes"
+        name={'volumes' as Path<TForm>}
         render={() => (
-          <DynamicArrayField<FormSchemaRunMcpCommand>
-            name="volumes"
+          <DynamicArrayField<TForm>
+            name={'volumes' as ArrayPath<TForm>}
             label="Storage volumes"
             inputLabelPrefix="Storage volume"
             addButtonText="Add a volume"
@@ -50,8 +63,12 @@ export function FormFieldsArrayCustomVolumes({
             {({ inputProps, setInputRef, idx }) => (
               <FormField
                 control={form.control}
-                name={`volumes.${idx}`}
-                render={({ field }) => {
+                name={`volumes.${idx}` as Path<TForm>}
+                render={({
+                  field,
+                }: {
+                  field: ControllerRenderProps<TForm, Path<TForm>>
+                }) => {
                   const volumeValue = field.value as Volume
 
                   return (
@@ -62,9 +79,76 @@ export function FormFieldsArrayCustomVolumes({
                             <Input
                               {...inputProps}
                               type="string"
+                              adornment={
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="adornment"
+                                      aria-label="Select path"
+                                    >
+                                      <FolderOpen className="size-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent
+                                    align="start"
+                                    role="menu"
+                                  >
+                                    <DropdownMenuItem
+                                      onClick={async () => {
+                                        try {
+                                          const filePath =
+                                            await window.electronAPI.selectFile()
+                                          if (filePath) {
+                                            field.onChange({
+                                              ...volumeValue,
+                                              host: filePath,
+                                            })
+                                          }
+                                        } catch (err) {
+                                          console.error(
+                                            'Failed to open file picker',
+                                            err
+                                          )
+                                        }
+                                      }}
+                                      className="cursor-pointer"
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <File className="size-4" />
+                                        <span>Mount a single file</span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={async () => {
+                                        try {
+                                          const folderPath =
+                                            await window.electronAPI.selectFolder()
+                                          if (folderPath) {
+                                            field.onChange({
+                                              ...volumeValue,
+                                              host: folderPath,
+                                            })
+                                          }
+                                        } catch (err) {
+                                          console.error(
+                                            'Failed to open folder picker',
+                                            err
+                                          )
+                                        }
+                                      }}
+                                      className="cursor-pointer"
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <FolderOpen className="size-4" />
+                                        <span>Mount an entire folder</span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              }
                               ref={setInputRef(idx)}
                               aria-label={`Host path ${idx + 1}`}
-                              name={`volumes.${idx}.host`}
+                              name={`volumes.${idx}.host` as Path<TForm>}
                               value={volumeValue?.host || ''}
                               onChange={(e) =>
                                 field.onChange({
@@ -81,7 +165,7 @@ export function FormFieldsArrayCustomVolumes({
                               type="string"
                               ref={setInputRef(idx)}
                               aria-label={`Container path ${idx + 1}`}
-                              name={`volumes.${idx}.container`}
+                              name={`volumes.${idx}.container` as Path<TForm>}
                               value={volumeValue?.container || ''}
                               onChange={(e) =>
                                 field.onChange({

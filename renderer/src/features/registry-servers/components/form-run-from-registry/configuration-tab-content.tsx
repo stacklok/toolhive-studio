@@ -17,7 +17,7 @@ import { cn } from '@/common/lib/utils'
 import { FormComboboxSecretStore } from '@/common/components/secrets/form-combobox-secrets-store'
 import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
 import { CommandArgumentsField } from '@/common/components/workload-cmd-arg/command-arguments-field'
-import { VolumesField } from '../volumes-field'
+import { FormFieldsArrayVolumes } from '@/features/mcp-servers/components/form-fields-array-custom-volumes'
 
 interface ConfigurationTabContentProps {
   error: string | null
@@ -209,7 +209,7 @@ export function ConfigurationTabContent({
         control={form.control}
       />
 
-      <VolumesField form={form} />
+      <FormFieldsArrayVolumes<FormSchemaRunFromRegistry> form={form} />
 
       {groupedEnvVars.secrets[0] ? (
         <section className="mb-10">
