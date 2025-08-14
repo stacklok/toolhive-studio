@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from '@/common/components/ui/dropdown-menu'
 import { Button } from '@/common/components/ui/button'
-import { FolderCheck, FolderLock, FolderOpen } from 'lucide-react'
+import { FolderCheck, FolderLock, FolderOpen, File } from 'lucide-react'
 
 type AccessMode = 'ro' | 'rw'
 type Volume = {
@@ -116,7 +116,10 @@ export function VolumesField({
                                       }}
                                       className="cursor-pointer"
                                     >
-                                      Mount a single file
+                                      <div className="flex items-center gap-2">
+                                        <File className="size-4" />
+                                        <span>Mount a single file</span>
+                                      </div>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                       onClick={async () => {
@@ -138,7 +141,10 @@ export function VolumesField({
                                       }}
                                       className="cursor-pointer"
                                     >
-                                      Mount an entire folder
+                                      <div className="flex items-center gap-2">
+                                        <FolderOpen className="size-4" />
+                                        <span>Mount an entire folder</span>
+                                      </div>
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>
