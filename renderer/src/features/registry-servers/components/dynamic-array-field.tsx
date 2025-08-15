@@ -1,6 +1,7 @@
 import {
   useRef,
   useCallback,
+  Fragment,
   type ReactNode,
   type ChangeEventHandler,
 } from 'react'
@@ -37,6 +38,8 @@ interface DynamicArrayFieldProps<
   tooltipContent?: string
   addButtonText?: string
   form: UseFormReturn<TFieldValues>
+  columnsHeader?: ReactNode
+  gridTemplate?: string
   children: (args: {
     idx: number
     fieldProps: {
@@ -60,6 +63,8 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
   inputLabelPrefix = 'Item',
   addButtonText = 'Add',
   form,
+  columnsHeader,
+  gridTemplate,
   children,
 }: DynamicArrayFieldProps<TFieldValues>) {
   const { control, formState } = form
@@ -134,9 +139,18 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
         {description && <FormDescription>{description}</FormDescription>}
       </div>
 
-      <div className="mt-3 flex flex-col gap-2">
+      <div
+        className="mt-3 grid w-full items-start gap-2"
+        style={{ gridTemplateColumns: gridTemplate ?? '1fr auto' }}
+      >
+        {columnsHeader && (
+          <>
+            {columnsHeader}
+            <div />
+          </>
+        )}
         {fields.map((field, idx) => (
-          <div key={field.id} className="flex items-start gap-2">
+          <Fragment key={field.id}>
             <FormField
               control={control}
               name={`${name}.${idx}.value` as Path<TFieldValues>}
@@ -177,7 +191,7 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
             >
               <Trash2 />
             </Button>
-          </div>
+          </Fragment>
         ))}
 
         <Button

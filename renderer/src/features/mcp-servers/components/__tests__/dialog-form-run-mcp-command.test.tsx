@@ -372,6 +372,30 @@ describe('DialogFormRunMcpServerWithCommand', () => {
     })
   })
 
+  it('renders aria-hidden column labels for storage volumes', async () => {
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Ensure the Storage volumes section is present
+    expect(screen.getByText('Storage volumes')).toBeInTheDocument()
+
+    // Column labels should be visible to users but aria-hidden for a11y tree
+    const hostLabel = screen.getByText('Host path')
+    const containerLabel = screen.getByText('Container path')
+
+    expect(hostLabel).toBeVisible()
+    expect(containerLabel).toBeVisible()
+    expect(hostLabel).toHaveAttribute('aria-hidden', 'true')
+    expect(containerLabel).toHaveAttribute('aria-hidden', 'true')
+  })
+
   it('closes dialog on successful submission', async () => {
     const mockInstallServerMutation = vi.fn()
     const mockCheckServerStatus = vi.fn()
