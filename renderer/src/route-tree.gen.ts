@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from "./routes/__root"
 import { Route as ShutdownRouteImport } from "./routes/shutdown"
 import { Route as SettingsRouteImport } from "./routes/settings"
 import { Route as SecretsRouteImport } from "./routes/secrets"
+import { Route as PlaygroundRouteImport } from "./routes/playground"
 import { Route as ClientsRouteImport } from "./routes/clients"
 import { Route as IndexRouteImport } from "./routes/index"
 import { Route as LogsServerNameRouteImport } from "./routes/logs.$serverName"
@@ -31,6 +32,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const SecretsRoute = SecretsRouteImport.update({
   id: "/secrets",
   path: "/secrets",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlaygroundRoute = PlaygroundRouteImport.update({
+  id: "/playground",
+  path: "/playground",
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientsRoute = ClientsRouteImport.update({
@@ -62,6 +68,7 @@ const registryRegistryNameRoute = registryRegistryNameRouteImport.update({
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
   "/clients": typeof ClientsRoute
+  "/playground": typeof PlaygroundRoute
   "/secrets": typeof SecretsRoute
   "/settings": typeof SettingsRoute
   "/shutdown": typeof ShutdownRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
   "/clients": typeof ClientsRoute
+  "/playground": typeof PlaygroundRoute
   "/secrets": typeof SecretsRoute
   "/settings": typeof SettingsRoute
   "/shutdown": typeof ShutdownRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   "/": typeof IndexRoute
   "/clients": typeof ClientsRoute
+  "/playground": typeof PlaygroundRoute
   "/secrets": typeof SecretsRoute
   "/settings": typeof SettingsRoute
   "/shutdown": typeof ShutdownRoute
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
   fullPaths:
     | "/"
     | "/clients"
+    | "/playground"
     | "/secrets"
     | "/settings"
     | "/shutdown"
@@ -105,6 +115,7 @@ export interface FileRouteTypes {
   to:
     | "/"
     | "/clients"
+    | "/playground"
     | "/secrets"
     | "/settings"
     | "/shutdown"
@@ -115,6 +126,7 @@ export interface FileRouteTypes {
     | "__root__"
     | "/"
     | "/clients"
+    | "/playground"
     | "/secrets"
     | "/settings"
     | "/shutdown"
@@ -126,6 +138,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ClientsRoute: typeof ClientsRoute
+  PlaygroundRoute: typeof PlaygroundRoute
   SecretsRoute: typeof SecretsRoute
   SettingsRoute: typeof SettingsRoute
   ShutdownRoute: typeof ShutdownRoute
@@ -155,6 +168,13 @@ declare module "@tanstack/react-router" {
       path: "/secrets"
       fullPath: "/secrets"
       preLoaderRoute: typeof SecretsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/playground": {
+      id: "/playground"
+      path: "/playground"
+      fullPath: "/playground"
+      preLoaderRoute: typeof PlaygroundRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/clients": {
@@ -198,6 +218,7 @@ declare module "@tanstack/react-router" {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ClientsRoute: ClientsRoute,
+  PlaygroundRoute: PlaygroundRoute,
   SecretsRoute: SecretsRoute,
   SettingsRoute: SettingsRoute,
   ShutdownRoute: ShutdownRoute,
