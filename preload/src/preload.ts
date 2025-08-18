@@ -108,6 +108,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     clearShutdownHistory: () =>
       ipcRenderer.invoke('shutdown-store:clear-history'),
   },
+
+  // Feature flags
+  featureFlags: {
+    get: (key: string) => ipcRenderer.invoke('feature-flags:get', key),
+    enable: (key: string) => ipcRenderer.invoke('feature-flags:enable', key),
+    disable: (key: string) => ipcRenderer.invoke('feature-flags:disable', key),
+    getAll: () => ipcRenderer.invoke('feature-flags:get-all'),
+  },
 })
 
 export interface ElectronAPI {
@@ -167,6 +175,12 @@ export interface ElectronAPI {
   shutdownStore: {
     getLastShutdownServers: () => Promise<CoreWorkload[]>
     clearShutdownHistory: () => Promise<{ success: boolean }>
+  }
+  featureFlags: {
+    get: (key: string) => Promise<boolean>
+    enable: (key: string) => Promise<void>
+    disable: (key: string) => Promise<void>
+    getAll: () => Promise<Record<string, boolean>>
   }
   // File/folder pickers
   selectFile: () => Promise<string | null>
