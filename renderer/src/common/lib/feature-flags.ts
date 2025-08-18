@@ -39,7 +39,7 @@ const keyValueFlag = Object.values(featureFlagKeys).map((key) => [
   },
 ])
 
-export const FeatureFlagClient: {
+const FeatureFlagClient: {
   [key in FeatureFlagKey]: {
     enable: () => Promise<void>
     disable: () => Promise<void>
@@ -54,7 +54,7 @@ export const FeatureFlagClient: {
 }
 
 // Additional utility function to get all feature flags at once
-export const getAllFeatureFlags = async (): Promise<
+const getAllFeatureFlags = async (): Promise<
   Record<FeatureFlagKey, boolean>
 > => {
   try {

@@ -68,4 +68,4 @@ export function getAllFeatureFlags(): Record<FeatureFlagKey, boolean> {
   return flags
 }
 
-export { featureFlagKeys, type FeatureFlagKey }
+export type { FeatureFlagKey }
