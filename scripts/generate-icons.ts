@@ -1,12 +1,14 @@
-#!/usr/bin/env node
+#!/usr/bin/env ts-node
 
 import { copyFile } from 'node:fs'
 import { join } from 'node:path'
+import * as iconGenModule from 'icon-gen'
 
 const INPUT_PATH = './icons/source-files/app-icons'
 const OUTPUT_PATH = './icons'
 
-import iconGen from 'icon-gen'
+const iconGen =
+  'default' in iconGenModule ? iconGenModule.default : iconGenModule
 
 async function main() {
   // Mac
