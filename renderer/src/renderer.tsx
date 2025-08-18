@@ -17,6 +17,8 @@ import log from 'electron-log/renderer'
 import './index.css'
 import { ConfirmProvider } from './common/contexts/confirm/provider'
 import { trackPageView } from './common/lib/analytics'
+// Import feature flags to bind them to window for developer tools access
+import './common/lib/feature-flags'
 
 // Sentry setup
 Sentry.init({
