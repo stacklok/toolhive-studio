@@ -59,7 +59,17 @@ describe('RegistryTab', () => {
     expect(screen.getByText('Registry Type')).toBeVisible()
   })
 
-  it('handles remote registry configuration', async () => {
+  it.each([
+    {
+      description: 'with .json extension',
+      url: 'https://domain.com/registry.json',
+    },
+    {
+      // reproduces bug: https://github.com/stacklok/toolhive-studio/issues/742
+      description: 'without .json extension',
+      url: 'https://domain.com/registry',
+    },
+  ])('handles remote registry configuration $description', async ({ url }) => {
     renderWithProviders(<RegistryTab />)
 
     await waitFor(() => {
@@ -80,7 +90,7 @@ describe('RegistryTab', () => {
     })
 
     const urlInput = screen.getByLabelText(/Registry URL/i)
-    await userEvent.type(urlInput, 'https://domain.com/registry.json')
+    await userEvent.type(urlInput, url)
 
     const saveButton = screen.getByText('Save')
     await userEvent.click(saveButton)
@@ -91,7 +101,7 @@ describe('RegistryTab', () => {
           name: 'default',
         },
         body: {
-          url: 'https://domain.com/registry.json',
+          url,
         },
       })
     )

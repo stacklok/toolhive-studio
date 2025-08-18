@@ -19,7 +19,7 @@ export const registryFormSchema = z
   )
   .refine(
     (data) => {
-      if (data.type === 'url' || data.type === 'file') {
+      if (data.type === 'file') {
         return data.source?.endsWith('.json')
       }
       return true
