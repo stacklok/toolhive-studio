@@ -65,6 +65,7 @@ describe('RegistryTab', () => {
       url: 'https://domain.com/registry.json',
     },
     {
+      // reproduces bug: https://github.com/stacklok/toolhive-studio/issues/742
       description: 'without .json extension',
       url: 'https://domain.com/registry',
     },
