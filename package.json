@@ -27,7 +27,7 @@
     "update-api": "ts-node scripts/update-api.ts",
     "generate-client": "pnpm run update-api && cd api && openapi-ts",
     "generate-client:nofetch": "cd api && openapi-ts",
-    "generate-icons": "tsx scripts/generate-icons.ts",
+    "generate-icons": "ts-node scripts/generate-icons.ts",
     "knip": "knip",
     "playwright": "playwright"
   },
@@ -82,7 +82,6 @@
     "prettier-plugin-tailwindcss": "^0.6.12",
     "tar": "^7.4.3",
     "ts-node": "^10.9.2",
-    "tsx": "^4.20.3",
     "typescript": "5.9.2",
     "typescript-eslint": "^8.30.1",
     "unzipper": "^0.12.3",
