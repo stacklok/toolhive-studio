@@ -321,7 +321,8 @@ describe('prepareCreateWorkloadData', () => {
     })
     // OPTIONAL_VAR and ANOTHER_OPTIONAL should be omitted
     expect(result.env_vars).not.toContain('OPTIONAL_VAR=')
-    expect(result.env_vars).not.toContain('ANOTHER_OPTIONAL=')
+    expect(result.env_vars).not.toHaveProperty('OPTIONAL_VAR')
+    expect(result.env_vars).not.toHaveProperty('ANOTHER_OPTIONAL')
   })
 })
 
