@@ -383,10 +383,8 @@ describe('DialogFormRunMcpServerWithCommand', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Ensure the Storage volumes section is present
     expect(screen.getByText('Storage volumes')).toBeInTheDocument()
 
-    // Column labels should be visible to users but aria-hidden for a11y tree
     const hostLabel = screen.getByText('Host path')
     const containerLabel = screen.getByText('Container path')
 
