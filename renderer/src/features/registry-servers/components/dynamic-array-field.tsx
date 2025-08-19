@@ -26,6 +26,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from '@/common/components/ui/tooltip'
+import { cn } from '@/common/lib/utils'
 
 interface DynamicArrayFieldProps<
   TFieldValues extends FieldValues = FieldValues,
@@ -36,6 +37,10 @@ interface DynamicArrayFieldProps<
   description?: string
   tooltipContent?: string
   addButtonText?: string
+  /**
+   * Tailwind class names to configure the grid layout
+   */
+  gridConfig: string
   form: UseFormReturn<TFieldValues>
   children: (args: {
     idx: number
@@ -59,6 +64,7 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
   tooltipContent,
   inputLabelPrefix = 'Item',
   addButtonText = 'Add',
+  gridConfig,
   form,
   children,
 }: DynamicArrayFieldProps<TFieldValues>) {
@@ -138,9 +144,7 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
         {fields.map((field, idx) => (
           <div
             key={field.id}
-            className="grid auto-rows-auto
-              grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_auto] items-start
-              gap-2"
+            className={cn('grid auto-rows-auto items-start gap-2', gridConfig)}
           >
             <FormField
               control={control}

@@ -113,6 +113,7 @@ export function NetworkIsolationTabContent({
                       label="Allowed ports"
                       inputLabelPrefix="Port"
                       addButtonText="Add a port"
+                      gridConfig="grid-cols-[minmax(0,1fr)_auto]"
                       form={form}
                     >
                       {({

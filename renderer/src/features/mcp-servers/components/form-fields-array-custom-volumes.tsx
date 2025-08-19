@@ -52,6 +52,7 @@ export function FormFieldsArrayVolumes<TForm extends FieldValues>({
             inputLabelPrefix="Storage volume"
             addButtonText="Add a volume"
             description="Provide the MCP server access to a local folder. Optionally specific individual files."
+            gridConfig="grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_auto]"
             form={form}
           >
             {({ inputProps, setInputRef, idx }) => (
