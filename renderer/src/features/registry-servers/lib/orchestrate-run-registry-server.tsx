@@ -10,7 +10,8 @@ import type { Options } from '@api/client'
 import type { FormSchemaRunFromRegistry } from './get-form-schema-run-from-registry'
 import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
 import type { UseMutateAsyncFunction } from '@tanstack/react-query'
-import { getVolumes, isEmptyEnvVar } from '@/common/lib/utils'
+import { getVolumes } from '@/common/lib/utils'
+import { mapEnvVars } from '@/features/mcp-servers/lib/orchestrate-run-custom-server'
 
 type SaveSecretFn = UseMutateAsyncFunction<
   V1CreateSecretResponse,
@@ -109,10 +110,6 @@ export function prepareCreateWorkloadData(
   data: FormSchemaRunFromRegistry,
   secrets: SecretsSecretParameter[] = []
 ): V1CreateRequest {
-  const envVars: Array<string> = data.envVars
-    .filter((envVar) => !isEmptyEnvVar(envVar.value))
-    .map((envVar) => `${envVar.name}=${envVar.value}`)
-
   // Extract and transform network isolation fields
   const { allowedHosts, allowedPorts, networkIsolation } = data
   const permission_profile = networkIsolation
@@ -133,7 +130,7 @@ export function prepareCreateWorkloadData(
     name: data.serverName,
     image: server.image,
     transport: server.transport,
-    env_vars: envVars,
+    env_vars: mapEnvVars(data.envVars),
     secrets,
     cmd_arguments: data.cmd_arguments || [],
     target_port: server.target_port,

@@ -85,10 +85,12 @@ export async function saveSecrets(
  * Maps environment variables from the form into the format expected by the API.
  * Filters out environment variables with empty or whitespace-only values.
  */
-function mapEnvVars(envVars: { name: string; value: string }[]) {
-  return envVars
-    .filter((envVar) => !isEmptyEnvVar(envVar.value))
-    .map((envVar) => `${envVar.name}=${envVar.value}`)
+export function mapEnvVars(envVars: { name: string; value?: string }[]) {
+  return Object.fromEntries(
+    envVars
+      .filter((envVar) => !isEmptyEnvVar(envVar.value))
+      .map(({ name, value }) => [name, value as string])
+  )
 }
 
 /**
