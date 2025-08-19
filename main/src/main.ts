@@ -38,6 +38,13 @@ import { getAppVersion, isOfficialReleaseBuild, pollWindowReady } from './util'
 import { delay } from '../../utils/delay'
 import Store from 'electron-store'
 import { getHeaders } from './headers'
+import {
+  getFeatureFlag,
+  enableFeatureFlag,
+  disableFeatureFlag,
+  getAllFeatureFlags,
+  type FeatureFlagKey,
+} from './feature-flags'
 
 let tray: Tray | null = null
 let isQuitting = false
@@ -703,4 +710,21 @@ ipcMain.handle('dialog:select-folder', async () => {
   })
   if (result.canceled || result.filePaths.length === 0) return null
   return result.filePaths[0]
+})
+
+// Feature flag IPC handlers
+ipcMain.handle('feature-flags:get', (_event, key: FeatureFlagKey): boolean => {
+  return getFeatureFlag(key)
+})
+
+ipcMain.handle('feature-flags:enable', (_event, key: FeatureFlagKey): void => {
+  enableFeatureFlag(key)
+})
+
+ipcMain.handle('feature-flags:disable', (_event, key: FeatureFlagKey): void => {
+  disableFeatureFlag(key)
+})
+
+ipcMain.handle('feature-flags:get-all', (): Record<FeatureFlagKey, boolean> => {
+  return getAllFeatureFlags()
 })
