@@ -113,6 +113,10 @@ export type AuthzConfig = {
  */
 export type AuthzConfigType = string
 
+export type ClientClient = {
+  name?: ClientMcpClient
+}
+
 export type ClientMcpClient = string
 
 export type ClientMcpClientStatus = {
@@ -128,11 +132,6 @@ export type ClientMcpClientStatus = {
    * Registered indicates whether the client is registered in the ToolHive configuration
    */
   registered?: boolean
-}
-
-export type ClientRegisteredClient = {
-  groups?: Array<string>
-  name?: ClientMcpClient
 }
 
 export type CoreWorkload = {
@@ -639,10 +638,6 @@ export type RunnerRunConfig = {
    */
   port?: number
   proxy_mode?: TypesProxyMode
-  /**
-   * SchemaVersion is the version of the RunConfig schema
-   */
-  schema_version?: string
   /**
    * Secrets are the secret parameters to pass to the container
    * Format: "<secret name>,target=<target environment variable>"
@@ -1251,7 +1246,7 @@ export type GetApiV1BetaClientsResponses = {
   /**
    * OK
    */
-  200: Array<ClientRegisteredClient>
+  200: Array<ClientClient>
 }
 
 export type GetApiV1BetaClientsResponse =
