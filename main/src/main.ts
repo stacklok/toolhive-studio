@@ -45,6 +45,21 @@ import {
   getAllFeatureFlags,
   type FeatureFlagKey,
 } from './feature-flags'
+import {
+  CHAT_PROVIDER_INFO,
+  getChatSettings,
+  saveChatSettings,
+  clearChatSettings,
+  getSelectedModel,
+  saveSelectedModel,
+  getMcpServerTools,
+  getEnabledMcpTools,
+  getEnabledMcpServersFromTools,
+  saveEnabledMcpTools,
+  discoverToolSupportedModels,
+  fetchOpenRouterModels,
+  type ChatRequest,
+} from './chat'
 
 let tray: Tray | null = null
 let isQuitting = false
@@ -728,3 +743,92 @@ ipcMain.handle('feature-flags:disable', (_event, key: FeatureFlagKey): void => {
 ipcMain.handle('feature-flags:get-all', (): Record<FeatureFlagKey, boolean> => {
   return getAllFeatureFlags()
 })
+
+// ────────────────────────────────────────────────────────────────────────────
+//  Chat IPC handlers
+// ────────────────────────────────────────────────────────────────────────────
+
+ipcMain.handle('chat:get-providers', async () => {
+  // Create a copy of the provider info to avoid modifying the original
+  const providers = [...CHAT_PROVIDER_INFO]
+
+  // For OpenRouter, fetch the latest models dynamically only if API key is available
+  const openRouterIndex = providers.findIndex((p) => p.id === 'openrouter')
+  if (openRouterIndex !== -1) {
+    try {
+      const openRouterSettings = getChatSettings('openrouter')
+
+      // Only fetch models if user has provided an API key
+      if (
+        openRouterSettings.apiKey &&
+        openRouterSettings.apiKey.trim() !== ''
+      ) {
+        const openRouterModels = await fetchOpenRouterModels()
+        const originalProvider = providers[openRouterIndex]
+        if (originalProvider) {
+          providers[openRouterIndex] = {
+            id: originalProvider.id,
+            name: originalProvider.name,
+            models: openRouterModels,
+          }
+        }
+      }
+      // If no API key, keep the original hardcoded models as fallback
+    } catch (error) {
+      log.error('Failed to fetch OpenRouter models, using fallback:', error)
+      // Keep the original hardcoded models as fallback
+    }
+  }
+
+  return providers
+})
+
+// Chat streaming endpoint - uses real-time IPC events
+ipcMain.handle('chat:stream', async (event, request: ChatRequest) => {
+  const streamId = `stream-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+  const { handleChatStreamRealtime } = await import('./chat')
+
+  // Start streaming (non-blocking)
+  handleChatStreamRealtime(request, streamId, event.sender)
+
+  // Return the stream ID immediately
+  return { streamId }
+})
+
+// Chat settings store handlers
+ipcMain.handle('chat:get-settings', (_, providerId: string) =>
+  getChatSettings(providerId)
+)
+ipcMain.handle(
+  'chat:save-settings',
+  (
+    _,
+    providerId: string,
+    settings: { apiKey: string; enabledTools: string[] }
+  ) => saveChatSettings(providerId, settings)
+)
+ipcMain.handle('chat:clear-settings', (_, providerId?: string) =>
+  clearChatSettings(providerId)
+)
+ipcMain.handle('chat:discover-models', () => discoverToolSupportedModels())
+
+// Model selection persistence handlers
+ipcMain.handle('chat:get-selected-model', () => getSelectedModel())
+ipcMain.handle(
+  'chat:save-selected-model',
+  (_, provider: string, model: string) => saveSelectedModel(provider, model)
+)
+
+// MCP tools management handlers (single source of truth)
+ipcMain.handle('chat:get-mcp-server-tools', (_, serverName?: string) =>
+  getMcpServerTools(serverName)
+)
+ipcMain.handle('chat:get-enabled-mcp-tools', () => getEnabledMcpTools())
+ipcMain.handle('chat:get-enabled-mcp-servers-from-tools', () =>
+  getEnabledMcpServersFromTools()
+)
+ipcMain.handle(
+  'chat:save-enabled-mcp-tools',
+  (_, serverName: string, enabledTools: string[]) =>
+    saveEnabledMcpTools(serverName, enabledTools)
+)

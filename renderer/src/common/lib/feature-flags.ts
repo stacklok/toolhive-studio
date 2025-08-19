@@ -1,6 +1,8 @@
 import { featureFlagKeys } from '../../../../utils/feature-flags'
+import { queryClient } from './query-client'
 
-type FeatureFlagKey = (typeof featureFlagKeys)[keyof typeof featureFlagKeys]
+export type FeatureFlagKey =
+  (typeof featureFlagKeys)[keyof typeof featureFlagKeys]
 
 const getFeatureFlag = (key: FeatureFlagKey) => async (): Promise<boolean> => {
   try {
@@ -16,6 +18,9 @@ const getCreateFeatureFlag =
   (key: FeatureFlagKey) => async (): Promise<void> => {
     try {
       await window.electronAPI.featureFlags.enable(key)
+      // Update React Query cache
+      queryClient.setQueryData(['featureFlag', key], true)
+      queryClient.invalidateQueries({ queryKey: ['featureFlag', key] })
     } catch (error) {
       console.error(`Failed to enable feature flag ${key}:`, error)
     }
@@ -25,6 +30,9 @@ const getDeleteFeatureFlag =
   (key: FeatureFlagKey) => async (): Promise<void> => {
     try {
       await window.electronAPI.featureFlags.disable(key)
+      // Update React Query cache
+      queryClient.setQueryData(['featureFlag', key], false)
+      queryClient.invalidateQueries({ queryKey: ['featureFlag', key] })
     } catch (error) {
       console.error(`Failed to disable feature flag ${key}:`, error)
     }
