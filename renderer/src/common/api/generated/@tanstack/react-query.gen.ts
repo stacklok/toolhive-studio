@@ -29,6 +29,7 @@ import {
   postApiV1BetaWorkloadsStop,
   deleteApiV1BetaWorkloadsByName,
   getApiV1BetaWorkloadsByName,
+  getApiV1BetaWorkloadsByNameExport,
   getApiV1BetaWorkloadsByNameLogs,
   postApiV1BetaWorkloadsByNameRestart,
   postApiV1BetaWorkloadsByNameStop,
@@ -92,6 +93,7 @@ import type {
   DeleteApiV1BetaWorkloadsByNameError,
   DeleteApiV1BetaWorkloadsByNameResponse,
   GetApiV1BetaWorkloadsByNameData,
+  GetApiV1BetaWorkloadsByNameExportData,
   GetApiV1BetaWorkloadsByNameLogsData,
   PostApiV1BetaWorkloadsByNameRestartData,
   PostApiV1BetaWorkloadsByNameRestartError,
@@ -1104,6 +1106,31 @@ export const getApiV1BetaWorkloadsByNameOptions = (
       return data
     },
     queryKey: getApiV1BetaWorkloadsByNameQueryKey(options),
+  })
+}
+
+export const getApiV1BetaWorkloadsByNameExportQueryKey = (
+  options: Options<GetApiV1BetaWorkloadsByNameExportData>
+) => createQueryKey('getApiV1BetaWorkloadsByNameExport', options)
+
+/**
+ * Export workload configuration
+ * Export a workload's run configuration as JSON
+ */
+export const getApiV1BetaWorkloadsByNameExportOptions = (
+  options: Options<GetApiV1BetaWorkloadsByNameExportData>
+) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1BetaWorkloadsByNameExport({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: getApiV1BetaWorkloadsByNameExportQueryKey(options),
   })
 }
 

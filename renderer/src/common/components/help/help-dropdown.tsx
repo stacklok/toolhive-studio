@@ -44,7 +44,7 @@ export function HelpDropdown({ className }: { className?: string }) {
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <a
-            href="https://github.com/stacklok/toolhive-studio/issues"
+            href="https://github.com/liamstorkey-elmo/toolhive-studio/issues"
             target="_blank"
             rel="noopener noreferrer"
             className="cursor-pointer"
@@ -54,7 +54,7 @@ export function HelpDropdown({ className }: { className?: string }) {
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <a
-            href="https://github.com/stacklok/toolhive-studio"
+            href="https://github.com/liamstorkey-elmo/toolhive-studio"
             target="_blank"
             rel="noopener noreferrer"
             className="cursor-pointer"

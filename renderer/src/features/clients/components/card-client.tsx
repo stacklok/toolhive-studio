@@ -10,7 +10,7 @@ import { useMutationRegisterClient } from '../hooks/use-mutation-register-client
 import { useMutationUnregisterClient } from '../hooks/use-mutation-unregister-client'
 import { trackEvent } from '@/common/lib/analytics'
 
-// There is an issue with openAPI generator in BE, similar issue https://github.com/stacklok/toolhive/issues/780
+// There is an issue with openAPI generator in BE, similar issue https://github.com/liamstorkey-elmo/toolhive/issues/780
 const CLIENT_TYPE_LABEL_MAP = {
   'roo-code': 'Roo Code',
   cline: 'Cline',

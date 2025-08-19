@@ -2,8 +2,8 @@ import type { WorkloadsWorkload } from '@/common/api/generated/types.gen'
 import { Switch } from '@/common/components/ui/switch'
 
 function getStatusText(status: WorkloadsWorkload['status']) {
-  // There is an issue with openAPI generator in BE - https://github.com/stacklok/toolhive/issues/780
-  // I am using the enum defined directly here https://github.com/stacklok/toolhive/blob/main/pkg/workloads/models.go#L15
+  // There is an issue with openAPI generator in BE - https://github.com/liamstorkey-elmo/toolhive/issues/780
+  // I am using the enum defined directly here https://github.com/liamstorkey-elmo/toolhive/blob/main/pkg/workloads/models.go#L15
   if (status === 'running') return 'Running'
   if (status === 'starting') return 'Starting'
   if (status === 'stopped') return 'Stopped'

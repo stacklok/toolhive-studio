@@ -22,7 +22,7 @@ const ARCH_MAP: Record<string, string> = {
 } as const
 
 const GITHUB_API_URL =
-  'https://api.github.com/repos/stacklok/toolhive/releases/latest'
+  'https://api.github.com/repos/liamstorkey-elmo/toolhive/releases/latest'
 
 function normalizeVersion(version: string): string {
   return version.startsWith('v') ? version.slice(1) : version
@@ -137,6 +137,38 @@ async function downloadAndExtractBinary(
     await tar.x({ file: archivePath, cwd: binDir })
   }
 
+  // Move the binary from the extracted subdirectory to the expected location
+  // Determine target platform from the asset name for cross-platform building
+  const isTargetWindows = assetName.includes('windows')
+  const binName = isTargetWindows ? 'thv.exe' : 'thv'
+  const expectedBinPath = path.join(binDir, binName)
+
+  // Find the extracted directory and move the binary
+  const extractedDirName = assetName.replace(/\.(tar\.gz|zip)$/, '')
+  // For the extracted path, use the same binary name as determined above
+  const extractedBinName = isTargetWindows ? 'thv.exe' : 'thv'
+  const extractedBinPath = path.join(binDir, extractedDirName, extractedBinName)
+
+  try {
+    // Check if binary exists in extracted subdirectory
+    await access(extractedBinPath)
+
+    // Move it to the expected location
+    const { rename } = await import('node:fs/promises')
+    await rename(extractedBinPath, expectedBinPath)
+    console.log(
+      `📦 Moved binary from ${extractedDirName}/ to expected location`
+    )
+
+    // Clean up the extracted directory
+    await rm(path.join(binDir, extractedDirName), {
+      recursive: true,
+      force: true,
+    })
+  } catch (error) {
+    console.warn(`⚠️  Binary might already be in the correct location:`, error)
+  }
+
   // Clean up the archive file after extraction
   try {
     await rm(archivePath)
@@ -177,7 +209,7 @@ function createBinaryPath(
   const tag = TOOLHIVE_VERSION.startsWith('v')
     ? TOOLHIVE_VERSION
     : `v${TOOLHIVE_VERSION}`
-  const versionNum = normalizeVersion(TOOLHIVE_VERSION)
+  const versionNum = TOOLHIVE_VERSION
 
   const assetName = `toolhive_${versionNum}_${os}_${cpu}.${extension}`
   const downloadUrl = `https://github.com/LiamStorkey/toolhive/releases/download/${tag}/${assetName}`

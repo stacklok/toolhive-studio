@@ -48,7 +48,7 @@ describe('HelpDropdown', () => {
     })
     expect(feedbackLink).toHaveAttribute(
       'href',
-      'https://github.com/stacklok/toolhive-studio/issues'
+      'https://github.com/liamstorkey-elmo/toolhive-studio/issues'
     )
     expect(feedbackLink).toHaveAttribute('target', '_blank')
     expect(feedbackLink).toHaveAttribute('rel', 'noopener noreferrer')
@@ -66,7 +66,7 @@ describe('HelpDropdown', () => {
     })
     expect(githubLink).toHaveAttribute(
       'href',
-      'https://github.com/stacklok/toolhive-studio'
+      'https://github.com/liamstorkey-elmo/toolhive-studio'
     )
     expect(githubLink).toHaveAttribute('target', '_blank')
     expect(githubLink).toHaveAttribute('rel', 'noopener noreferrer')

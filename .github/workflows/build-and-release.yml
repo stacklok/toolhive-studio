@@ -1,0 +1,203 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        default: 'v0.0.0'
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run type check
+        run: pnpm run type-check
+
+      - name: Run linter
+        run: pnpm run lint
+
+      - name: Build TypeScript
+        run: |
+          npx tsc -b --clean
+          npx tsc -b
+
+      - name: Build for Windows ${{ matrix.arch }}
+        run: pnpm run make --platform=win32 --arch=${{ matrix.arch }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-${{ matrix.arch }}-artifacts
+          path: out/make/**/*
+          retention-days: 30
+
+  build-macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run type check
+        run: pnpm run type-check
+
+      - name: Run linter
+        run: pnpm run lint
+
+      - name: Build TypeScript
+        run: |
+          npx tsc -b --clean
+          npx tsc -b
+
+      - name: Build for macOS ${{ matrix.arch }}
+        run: pnpm run make --platform=darwin --arch=${{ matrix.arch }}
+        env:
+          MAC_DEVELOPER_IDENTITY: ${{ secrets.MAC_DEVELOPER_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          TEAM_ID: ${{ secrets.TEAM_ID }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ matrix.arch }}-artifacts
+          path: out/make/**/*
+          retention-days: 30
+
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm flatpak flatpak-builder elfutils
+
+      - name: Setup Flatpak
+        run: |
+          sudo flatpak remote-add --if-not-exists --system flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run type check
+        run: pnpm run type-check
+
+      - name: Run linter
+        run: pnpm run lint
+
+      - name: Build TypeScript
+        run: |
+          npx tsc -b --clean
+          npx tsc -b
+
+      - name: Build for Linux ${{ matrix.arch }}
+        run: pnpm run make --platform=linux --arch=${{ matrix.arch }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-${{ matrix.arch }}-artifacts
+          path: out/make/**/*
+          retention-days: 30
+
+  create-release:
+    needs: [build-windows, build-macos, build-linux]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create release directory
+        run: mkdir -p release
+
+      - name: Organize artifacts
+        run: |
+          find artifacts -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.zip" -o -name "*.tar.gz" -o -name "*.deb" -o -name "*.rpm" -o -name "*.flatpak" -o -name "*.nupkg" \) -exec cp {} release/ \;
+          ls -la release/
+
+      - name: Get version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: ToolHive Studio ${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.version, 'beta') || contains(steps.version.outputs.version, 'alpha') }}
+          files: release/*
+          token: ${{ secrets.GITHUB_TOKEN }}

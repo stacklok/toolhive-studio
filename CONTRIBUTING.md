@@ -46,7 +46,7 @@ sample project that reproduces the problem.
 ### Not sure how to start contributing?
 
 PRs to resolve existing issues are greatly appreciated, and issues labeled as
-["good first issue"](https://github.com/stacklok/toolhive-studio/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
+["good first issue"](https://github.com/liamstorkey-elmo/toolhive-studio/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
 are a great place to start!
 
 ### Pull request process

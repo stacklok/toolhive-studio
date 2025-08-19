@@ -29,7 +29,7 @@ export const handlers = [
 
   http.get(mswEndpoint('/api/v1beta/workloads'), () => {
     // TODO: Don't stringify after
-    // https://github.com/stacklok/toolhive/issues/495 is resolved
+    // https://github.com/liamstorkey-elmo/toolhive/issues/495 is resolved
     return HttpResponse.json(workloadListFixture)
   }),
 
@@ -146,7 +146,7 @@ export const handlers = [
 
   http.get(mswEndpoint('/api/v1beta/discovery/clients'), () => {
     // TODO: Don't stringify after
-    // https://github.com/stacklok/toolhive/issues/495 is resolved
+    // https://github.com/liamstorkey-elmo/toolhive/issues/495 is resolved
     return HttpResponse.json(clientsFixture)
   }),
 

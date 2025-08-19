@@ -29,7 +29,15 @@
     "generate-client:nofetch": "cd renderer && openapi-ts",
     "generate-icons": "tsx scripts/generate-icons.ts",
     "knip": "knip",
-    "playwright": "playwright"
+    "playwright": "playwright",
+    "build:all": "./scripts/build-all.sh",
+    "build:win": "pnpm run make --platform=win32 --arch=x64",
+    "build:win-arm": "pnpm run make --platform=win32 --arch=arm64",
+    "build:mac": "pnpm run make --platform=darwin --arch=x64",
+    "build:mac-arm": "pnpm run make --platform=darwin --arch=arm64",
+    "build:linux": "pnpm run make --platform=linux --arch=x64",
+    "build:linux-arm": "pnpm run make --platform=linux --arch=arm64",
+    "release": "./scripts/release.sh"
   },
   "keywords": [],
   "license": "Apache-2.0",

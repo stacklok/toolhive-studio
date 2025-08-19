@@ -122,7 +122,7 @@ You can easily disable telemetry at any time:
 
 We welcome contributions and feedback from the community!
 
-- 🐛 [Report issues](https://github.com/stacklok/toolhive-studio/issues)
+- 🐛 [Report issues](https://github.com/liamstorkey-elmo/toolhive-studio/issues)
 - 💬 [Join our Discord](https://discord.gg/stacklok)
 - 🤝 [Contributing guide](./CONTRIBUTING.md)
 - 🛠️ [Developer guide](./docs/README.md)
@@ -138,10 +138,10 @@ This project is licensed under the [Apache 2.0 License](./LICENSE).
 
 <!-- Badge links -->
 <!-- prettier-ignore-start -->
-[release-img]: https://img.shields.io/github/v/release/stacklok/toolhive-studio?style=flat&label=Latest%20version
-[release]: https://github.com/stacklok/toolhive-studio/releases/latest
-[ci-img]: https://img.shields.io/github/actions/workflow/status/stacklok/toolhive-studio/on-main.yml?style=flat&logo=github&label=Build
-[ci]: https://github.com/stacklok/toolhive-studio/actions/workflows/on-main.yml
+[release-img]: https://img.shields.io/github/v/release/liamstorkey-elmo/toolhive-studio?style=flat&label=Latest%20version
+[release]: https://github.com/liamstorkey-elmo/toolhive-studio/releases/latest
+[ci-img]: https://img.shields.io/github/actions/workflow/status/liamstorkey-elmo/toolhive-studio/on-main.yml?style=flat&logo=github&label=Build
+[ci]: https://github.com/liamstorkey-elmo/toolhive-studio/actions/workflows/on-main.yml
 [license-img]: https://img.shields.io/badge/License-Apache2.0-blue.svg?style=flat
 [license]: https://opensource.org/licenses/Apache-2.0
 [discord-img]: https://img.shields.io/discord/1184987096302239844?style=flat&logo=discord&logoColor=white&label=Discord
