@@ -148,15 +148,18 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
 
       <div className={cn('mt-3 grid auto-rows-auto gap-2', gridConfig)}>
         {columnHeaders &&
-          columnHeaders.map(({ title }) => (
-            <div aria-hidden className="text-muted-foreground w-full text-xs">
+          columnHeaders.map(({ title }, headerIndex) => (
+            <div
+              key={`column-header-${headerIndex}`}
+              aria-hidden
+              className="text-muted-foreground w-full text-xs"
+            >
               {title}
             </div>
           ))}
         {fields.map((field, idx) => (
-          <>
+          <div key={field.id} className="contents">
             <FormField
-              key={field.id}
               control={control}
               name={`${name}.${idx}.value` as Path<TFieldValues>}
               render={({
@@ -196,7 +199,7 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
             >
               <Trash2 />
             </Button>
-          </>
+          </div>
         ))}
 
         <Button
