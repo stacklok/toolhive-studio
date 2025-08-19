@@ -64,6 +64,7 @@ export function NetworkIsolationTabContent({
                       label="Allowed hosts"
                       inputLabelPrefix="Host"
                       addButtonText="Add a host"
+                      gridConfig="grid-cols-[minmax(0,1fr)_auto]"
                       tooltipContent={`Specify domain names or IP addresses. To include subdomains, use a leading period (".")`}
                       form={form}
                     >
@@ -113,6 +114,7 @@ export function NetworkIsolationTabContent({
                       label="Allowed ports"
                       inputLabelPrefix="Port"
                       addButtonText="Add a port"
+                      gridConfig="grid-cols-[minmax(0,1fr)_auto]"
                       form={form}
                     >
                       {({

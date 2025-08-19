@@ -26,6 +26,11 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from '@/common/components/ui/tooltip'
+import { cn } from '@/common/lib/utils'
+
+interface ColumnHeader {
+  title: React.ReactNode
+}
 
 interface DynamicArrayFieldProps<
   TFieldValues extends FieldValues = FieldValues,
@@ -36,6 +41,11 @@ interface DynamicArrayFieldProps<
   description?: string
   tooltipContent?: string
   addButtonText?: string
+  columnHeaders?: ColumnHeader[]
+  /**
+   * Tailwind class names to configure the grid layout
+   */
+  gridConfig: string
   form: UseFormReturn<TFieldValues>
   children: (args: {
     idx: number
@@ -59,6 +69,8 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
   tooltipContent,
   inputLabelPrefix = 'Item',
   addButtonText = 'Add',
+  gridConfig,
+  columnHeaders,
   form,
   children,
 }: DynamicArrayFieldProps<TFieldValues>) {
@@ -134,9 +146,19 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
         {description && <FormDescription>{description}</FormDescription>}
       </div>
 
-      <div className="mt-3 flex flex-col gap-2">
+      <div className={cn('mt-3 grid auto-rows-auto gap-2', gridConfig)}>
+        {columnHeaders &&
+          columnHeaders.map(({ title }, headerIndex) => (
+            <div
+              key={`column-header-${headerIndex}`}
+              aria-hidden
+              className="text-muted-foreground w-full text-xs"
+            >
+              {title}
+            </div>
+          ))}
         {fields.map((field, idx) => (
-          <div key={field.id} className="flex items-start gap-2">
+          <div key={field.id} className="contents">
             <FormField
               control={control}
               name={`${name}.${idx}.value` as Path<TFieldValues>}
