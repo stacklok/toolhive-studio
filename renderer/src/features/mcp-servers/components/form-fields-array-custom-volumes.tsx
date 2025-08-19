@@ -80,7 +80,6 @@ export function FormFieldsArrayVolumes<TForm extends FieldValues>({
                           aria-label={`Host path ${idx + 1}`}
                           name={`volumes.${idx}.host` as Path<TForm>}
                           value={volumeValue?.host || ''}
-                          placeholder="Host path"
                           onChange={({ newValue }) => {
                             field.onChange({
                               ...volumeValue,
@@ -103,7 +102,6 @@ export function FormFieldsArrayVolumes<TForm extends FieldValues>({
                               container: e.target.value,
                             })
                           }
-                          placeholder="Container path"
                         />
                       </FormControl>
                       <FormControl className="w-48 flex-shrink-0">
