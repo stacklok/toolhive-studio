@@ -136,7 +136,12 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
 
       <div className="mt-3 flex flex-col gap-2">
         {fields.map((field, idx) => (
-          <div key={field.id} className="flex items-start gap-2">
+          <div
+            key={field.id}
+            className="grid auto-rows-auto
+              grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_auto] items-start
+              gap-2"
+          >
             <FormField
               control={control}
               name={`${name}.${idx}.value` as Path<TFieldValues>}
