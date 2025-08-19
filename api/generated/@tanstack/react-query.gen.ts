@@ -8,6 +8,7 @@ import {
   postApiV1BetaClientsRegister,
   postApiV1BetaClientsUnregister,
   deleteApiV1BetaClientsByName,
+  deleteApiV1BetaClientsByNameGroupsByGroup,
   getApiV1BetaDiscoveryClients,
   getApiV1BetaGroups,
   postApiV1BetaGroups,
@@ -56,6 +57,9 @@ import type {
   DeleteApiV1BetaClientsByNameData,
   DeleteApiV1BetaClientsByNameError,
   DeleteApiV1BetaClientsByNameResponse,
+  DeleteApiV1BetaClientsByNameGroupsByGroupData,
+  DeleteApiV1BetaClientsByNameGroupsByGroupError,
+  DeleteApiV1BetaClientsByNameGroupsByGroupResponse,
   GetApiV1BetaDiscoveryClientsData,
   GetApiV1BetaGroupsData,
   PostApiV1BetaGroupsData,
@@ -389,6 +393,34 @@ export const deleteApiV1BetaClientsByNameMutation = (
   > = {
     mutationFn: async (localOptions) => {
       const { data } = await deleteApiV1BetaClientsByName({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Unregister a client from a specific group
+ * Unregister a client from a specific group in ToolHive
+ */
+export const deleteApiV1BetaClientsByNameGroupsByGroupMutation = (
+  options?: Partial<Options<DeleteApiV1BetaClientsByNameGroupsByGroupData>>
+): UseMutationOptions<
+  DeleteApiV1BetaClientsByNameGroupsByGroupResponse,
+  DeleteApiV1BetaClientsByNameGroupsByGroupError,
+  Options<DeleteApiV1BetaClientsByNameGroupsByGroupData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    DeleteApiV1BetaClientsByNameGroupsByGroupResponse,
+    DeleteApiV1BetaClientsByNameGroupsByGroupError,
+    Options<DeleteApiV1BetaClientsByNameGroupsByGroupData>
+  > = {
+    mutationFn: async (localOptions) => {
+      const { data } = await deleteApiV1BetaClientsByNameGroupsByGroup({
         ...options,
         ...localOptions,
         throwOnError: true,

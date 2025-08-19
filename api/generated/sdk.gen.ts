@@ -18,6 +18,9 @@ import type {
   DeleteApiV1BetaClientsByNameData,
   DeleteApiV1BetaClientsByNameResponses,
   DeleteApiV1BetaClientsByNameErrors,
+  DeleteApiV1BetaClientsByNameGroupsByGroupData,
+  DeleteApiV1BetaClientsByNameGroupsByGroupResponses,
+  DeleteApiV1BetaClientsByNameGroupsByGroupErrors,
   GetApiV1BetaDiscoveryClientsData,
   GetApiV1BetaDiscoveryClientsResponses,
   GetApiV1BetaGroupsData,
@@ -242,6 +245,25 @@ export const deleteApiV1BetaClientsByName = <
     ThrowOnError
   >({
     url: '/api/v1beta/clients/{name}',
+    ...options,
+  })
+}
+
+/**
+ * Unregister a client from a specific group
+ * Unregister a client from a specific group in ToolHive
+ */
+export const deleteApiV1BetaClientsByNameGroupsByGroup = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<DeleteApiV1BetaClientsByNameGroupsByGroupData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).delete<
+    DeleteApiV1BetaClientsByNameGroupsByGroupResponses,
+    DeleteApiV1BetaClientsByNameGroupsByGroupErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/clients/{name}/groups/{group}',
     ...options,
   })
 }
