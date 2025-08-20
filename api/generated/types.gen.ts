@@ -113,10 +113,6 @@ export type AuthzConfig = {
  */
 export type AuthzConfigType = string
 
-export type ClientClient = {
-  name?: ClientMcpClient
-}
-
 export type ClientMcpClient = string
 
 export type ClientMcpClientStatus = {
@@ -132,6 +128,11 @@ export type ClientMcpClientStatus = {
    * Registered indicates whether the client is registered in the ToolHive configuration
    */
   registered?: boolean
+}
+
+export type ClientRegisteredClient = {
+  groups?: Array<string>
+  name?: ClientMcpClient
 }
 
 export type CoreWorkload = {
@@ -606,10 +607,6 @@ export type RunnerRunConfig = {
    */
   isolate_network?: boolean
   /**
-   * JWKSAllowPrivateIP allows JWKS/OIDC endpoints on private IP addresses
-   */
-  jwks_allow_private_ip?: boolean
-  /**
    * JWKSAuthTokenFile is the path to file containing auth token for JWKS/OIDC requests
    */
   jwks_auth_token_file?: string
@@ -638,6 +635,10 @@ export type RunnerRunConfig = {
    */
   port?: number
   proxy_mode?: TypesProxyMode
+  /**
+   * SchemaVersion is the version of the RunConfig schema
+   */
+  schema_version?: string
   /**
    * Secrets are the secret parameters to pass to the container
    * Format: "<secret name>,target=<target environment variable>"
@@ -1179,6 +1180,64 @@ export type V1SetupSecretsResponse = {
 }
 
 /**
+ * Request to update an existing workload (name cannot be changed)
+ */
+export type V1UpdateRequest = {
+  /**
+   * Authorization configuration
+   */
+  authz_config?: string
+  /**
+   * Command arguments to pass to the container
+   */
+  cmd_arguments?: Array<string>
+  /**
+   * Environment variables to set in the container
+   */
+  env_vars?: {
+    [key: string]: string
+  }
+  /**
+   * Host to bind to
+   */
+  host?: string
+  /**
+   * Docker image to use
+   */
+  image?: string
+  /**
+   * Whether network isolation is turned on. This applies the rules in the permission profile.
+   */
+  network_isolation?: boolean
+  oidc?: V1OidcOptions
+  permission_profile?: PermissionsProfile
+  /**
+   * Proxy mode to use
+   */
+  proxy_mode?: string
+  /**
+   * Secret parameters to inject
+   */
+  secrets?: Array<SecretsSecretParameter>
+  /**
+   * Port to expose from the container
+   */
+  target_port?: number
+  /**
+   * Tools filter
+   */
+  tools?: Array<string>
+  /**
+   * Transport configuration
+   */
+  transport?: string
+  /**
+   * Volume mounts
+   */
+  volumes?: Array<string>
+}
+
+/**
  * Request to update an existing secret
  */
 export type V1UpdateSecretRequest = {
@@ -1246,7 +1305,7 @@ export type GetApiV1BetaClientsResponses = {
   /**
    * OK
    */
-  200: Array<ClientClient>
+  200: Array<ClientRegisteredClient>
 }
 
 export type GetApiV1BetaClientsResponse =
@@ -2252,11 +2311,50 @@ export type GetApiV1BetaWorkloadsByNameResponses = {
   /**
    * OK
    */
-  200: CoreWorkload
+  200: V1CreateRequest
 }
 
 export type GetApiV1BetaWorkloadsByNameResponse =
   GetApiV1BetaWorkloadsByNameResponses[keyof GetApiV1BetaWorkloadsByNameResponses]
+
+export type PostApiV1BetaWorkloadsByNameEditData = {
+  /**
+   * Update workload request
+   */
+  body: V1UpdateRequest
+  path: {
+    /**
+     * Workload name
+     */
+    name: string
+  }
+  query?: never
+  url: '/api/v1beta/workloads/{name}/edit'
+}
+
+export type PostApiV1BetaWorkloadsByNameEditErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+  /**
+   * Not Found
+   */
+  404: string
+}
+
+export type PostApiV1BetaWorkloadsByNameEditError =
+  PostApiV1BetaWorkloadsByNameEditErrors[keyof PostApiV1BetaWorkloadsByNameEditErrors]
+
+export type PostApiV1BetaWorkloadsByNameEditResponses = {
+  /**
+   * OK
+   */
+  200: V1CreateWorkloadResponse
+}
+
+export type PostApiV1BetaWorkloadsByNameEditResponse =
+  PostApiV1BetaWorkloadsByNameEditResponses[keyof PostApiV1BetaWorkloadsByNameEditResponses]
 
 export type GetApiV1BetaWorkloadsByNameExportData = {
   body?: never

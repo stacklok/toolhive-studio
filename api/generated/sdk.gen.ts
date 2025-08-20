@@ -95,6 +95,9 @@ import type {
   GetApiV1BetaWorkloadsByNameData,
   GetApiV1BetaWorkloadsByNameResponses,
   GetApiV1BetaWorkloadsByNameErrors,
+  PostApiV1BetaWorkloadsByNameEditData,
+  PostApiV1BetaWorkloadsByNameEditResponses,
+  PostApiV1BetaWorkloadsByNameEditErrors,
   GetApiV1BetaWorkloadsByNameExportData,
   GetApiV1BetaWorkloadsByNameExportResponses,
   GetApiV1BetaWorkloadsByNameExportErrors,
@@ -784,6 +787,29 @@ export const getApiV1BetaWorkloadsByName = <
   >({
     url: '/api/v1beta/workloads/{name}',
     ...options,
+  })
+}
+
+/**
+ * Update workload
+ * Update an existing workload configuration
+ */
+export const postApiV1BetaWorkloadsByNameEdit = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1BetaWorkloadsByNameEditData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostApiV1BetaWorkloadsByNameEditResponses,
+    PostApiV1BetaWorkloadsByNameEditErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/workloads/{name}/edit',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
   })
 }
 
