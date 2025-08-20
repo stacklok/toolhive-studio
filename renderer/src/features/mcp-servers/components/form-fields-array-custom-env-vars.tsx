@@ -34,7 +34,7 @@ export function FormFieldsArrayCustomEnvVars({
             description="Environment variables are used to pass configuration settings to the server."
             gridConfig="grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
             columnHeaders={[
-              { title: 'Key' },
+              { title: 'Environment variable name' },
               { title: 'Value' },
               { title: null },
             ]}
