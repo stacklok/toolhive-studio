@@ -13,6 +13,7 @@ import { GridCardsMcpServers } from '@/features/mcp-servers/components/grid-card
 import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/menu-run-mcp-server'
 import { useMutationRestartServerAtStartup } from '@/features/mcp-servers/hooks/use-mutation-restart-server'
 import { TitlePage } from '@/common/components/title-page'
+import { McpServersSidebar } from '@/features/mcp-servers/components/mcp-servers-sidebar'
 
 export const Route = createFileRoute('/')({
   loader: ({ context: { queryClient } }) =>
@@ -53,44 +54,47 @@ export function Index() {
   }, [mutateAsync])
 
   return (
-    <>
-      <TitlePage title="MCP Servers">
-        {workloads.length > 0 && (
-          <div className="ml-auto flex gap-2">
-            <RefreshButton refresh={refetch} />
-            <DropdownMenuRunMcpServer
-              openRunCommandDialog={() => setIsRunWithCommandOpen(true)}
-            />
-          </div>
+    <div className="flex h-full gap-6">
+      <McpServersSidebar />
+      <div className="min-w-0 flex-1">
+        <TitlePage title="MCP Servers">
+          {workloads.length > 0 && (
+            <div className="ml-auto flex gap-2">
+              <RefreshButton refresh={refetch} />
+              <DropdownMenuRunMcpServer
+                openRunCommandDialog={() => setIsRunWithCommandOpen(true)}
+              />
+            </div>
+          )}
+          <DialogFormRunMcpServerWithCommand
+            isOpen={isRunWithCommandOpen}
+            onOpenChange={setIsRunWithCommandOpen}
+          />
+        </TitlePage>
+        {!isPending && !workloads.length ? (
+          <EmptyState
+            title="Add your first MCP server"
+            body="You can add a server by running it with a command or by browsing the registry"
+            actions={[
+              <Button
+                variant="outline"
+                key="add-custom-server"
+                onClick={() => setIsRunWithCommandOpen(true)}
+              >
+                Add custom server
+              </Button>,
+              <Button asChild key="add-from-registry">
+                <LinkViewTransition to="/registry">
+                  Browse registry <ChevronRight />
+                </LinkViewTransition>
+              </Button>,
+            ]}
+            illustration={IllustrationNoConnection}
+          />
+        ) : (
+          <GridCardsMcpServers mcpServers={workloads} />
         )}
-        <DialogFormRunMcpServerWithCommand
-          isOpen={isRunWithCommandOpen}
-          onOpenChange={setIsRunWithCommandOpen}
-        />
-      </TitlePage>
-      {!isPending && !workloads.length ? (
-        <EmptyState
-          title="Add your first MCP server"
-          body="You can add a server by running it with a command or by browsing the registry"
-          actions={[
-            <Button
-              variant="outline"
-              key="add-custom-server"
-              onClick={() => setIsRunWithCommandOpen(true)}
-            >
-              Add custom server
-            </Button>,
-            <Button asChild key="add-from-registry">
-              <LinkViewTransition to="/registry">
-                Browse registry <ChevronRight />
-              </LinkViewTransition>
-            </Button>,
-          ]}
-          illustration={IllustrationNoConnection}
-        />
-      ) : (
-        <GridCardsMcpServers mcpServers={workloads} />
-      )}
-    </>
+      </div>
+    </div>
   )
 }
