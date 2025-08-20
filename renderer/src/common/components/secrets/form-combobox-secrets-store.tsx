@@ -90,31 +90,39 @@ export function FormComboboxSecretStore<
                           .sort((a, b) =>
                             (a.key ?? '')?.localeCompare(b.key ?? '')
                           )
-                          .map((secret) => (
-                            <CommandItem
-                              key={secret.key}
-                              value={secret.key}
-                              className="font-mono"
-                              onSelect={async (value) => {
-                                field.onChange({
-                                  secret: value,
-                                  isFromStore: true,
-                                })
-                                await delay(150)
-                                setIsOpen(false)
-                              }}
-                            >
-                              {secret.key}
-                              <Check
-                                className={cn(
-                                  'ml-auto',
-                                  field.value.secret === secret.key
-                                    ? 'opacity-100'
-                                    : 'opacity-0'
-                                )}
-                              />
-                            </CommandItem>
-                          ))
+                          .map((secret) => {
+                            const currentSecretKey =
+                              typeof field.value === 'object' &&
+                              field.value !== null
+                                ? (field.value as { secret?: string }).secret
+                                : undefined
+
+                            return (
+                              <CommandItem
+                                key={secret.key}
+                                value={secret.key}
+                                className="font-mono"
+                                onSelect={async (value) => {
+                                  field.onChange({
+                                    secret: value,
+                                    isFromStore: true,
+                                  })
+                                  await delay(150)
+                                  setIsOpen(false)
+                                }}
+                              >
+                                {secret.key}
+                                <Check
+                                  className={cn(
+                                    'ml-auto',
+                                    currentSecretKey === secret.key
+                                      ? 'opacity-100'
+                                      : 'opacity-0'
+                                  )}
+                                />
+                              </CommandItem>
+                            )
+                          })
                       : null}
                   </CommandGroup>
                 </CommandList>
