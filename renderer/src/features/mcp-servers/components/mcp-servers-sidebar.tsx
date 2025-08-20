@@ -12,7 +12,6 @@ export function McpServersSidebar(): ReactElement {
         border-r px-4 pt-10 pb-4"
     >
       <div className="flex flex-col gap-3">
-        <div>Hello World</div>
         {isGroupsEnabled ? <GroupsManager /> : null}
       </div>
     </aside>
