@@ -24,7 +24,10 @@ async function getRunningServers(port: number): Promise<CoreWorkload[]> {
     headers: getHeaders(),
   })
   try {
-    const response = await getApiV1BetaWorkloads({ client })
+    const response = await getApiV1BetaWorkloads({
+      client,
+      query: { all: true },
+    })
     if (!response?.data?.workloads) {
       log.info('No workloads data in API response')
       return []
