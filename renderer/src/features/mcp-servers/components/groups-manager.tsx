@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react'
+import { Group } from './group'
 
 type Group = {
   id: string
@@ -14,8 +15,10 @@ const MOCK_GROUPS: Group[] = [
 
 export function GroupsManager(): ReactElement {
   return (
-    <pre className="text-xs whitespace-pre-wrap">
-      {JSON.stringify(MOCK_GROUPS, null, 2)}
-    </pre>
+    <div className="space-y-2">
+      {MOCK_GROUPS.map((group) => (
+        <Group key={group.id} name={group.name} isActive={group.isActive} />
+      ))}
+    </div>
   )
 }
