@@ -1,7 +1,6 @@
 import {
   Controller,
   type UseFormReturn,
-  type FieldValues,
   type Path,
   type ArrayPath,
   type ControllerRenderProps,
@@ -48,7 +47,10 @@ export function FormFieldsArrayCustomEnvVars({
                 render={({
                   field,
                 }: {
-                  field: ControllerRenderProps<FormSchemaRunMcpCommand, Path<FormSchemaRunMcpCommand>>
+                  field: ControllerRenderProps<
+                    FormSchemaRunMcpCommand,
+                    Path<FormSchemaRunMcpCommand>
+                  >
                 }) => {
                   const envVarValue = field.value as EnvVar
 
@@ -59,7 +61,9 @@ export function FormFieldsArrayCustomEnvVars({
                           ref={setInputRef(idx)}
                           aria-label={`Environment variable key ${idx + 1}`}
                           className="font-mono"
-                          name={`envVars.${idx}.name` as Path<FormSchemaRunMcpCommand>}
+                          name={
+                            `envVars.${idx}.name` as Path<FormSchemaRunMcpCommand>
+                          }
                           value={envVarValue?.name || ''}
                           onChange={(e) =>
                             field.onChange({
@@ -76,7 +80,9 @@ export function FormFieldsArrayCustomEnvVars({
                           ref={setInputRef(idx)}
                           aria-label={`Environment variable value ${idx + 1}`}
                           className="font-mono"
-                          name={`envVars.${idx}.value` as Path<FormSchemaRunMcpCommand>}
+                          name={
+                            `envVars.${idx}.value` as Path<FormSchemaRunMcpCommand>
+                          }
                           value={envVarValue?.value || ''}
                           onChange={(e) =>
                             field.onChange({
