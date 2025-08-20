@@ -1,13 +1,13 @@
 import type { ReactElement } from 'react'
 import { Group } from './group'
 
-type Group = {
+type GroupData = {
   id: string
   name: string
   isActive: boolean
 }
 
-const MOCK_GROUPS: Group[] = [
+const MOCK_GROUPS: GroupData[] = [
   { id: 'group-1', name: 'Default group', isActive: true },
   { id: 'group-2', name: 'Research team', isActive: true },
   { id: 'group-3', name: 'Archive', isActive: false },
