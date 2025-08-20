@@ -7,10 +7,11 @@ export function McpServersSidebar(): ReactElement {
   const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
   return (
     <aside
-      className="bg-sidebar text-sidebar-foreground h-full w-64 shrink-0 border
-        p-4"
+      className="border-input bg-muted/50 text-sidebar-foreground flex h-full
+        w-[247px] shrink-0 flex-col items-start gap-3 self-stretch border-r px-4
+        pt-4 pb-0"
     >
-      <div className="space-y-4">
+      <div className="flex flex-col gap-3">
         <div>Hello World</div>
         {isGroupsEnabled ? <GroupsManager /> : null}
       </div>
