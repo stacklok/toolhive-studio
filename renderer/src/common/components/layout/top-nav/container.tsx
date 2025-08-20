@@ -27,7 +27,6 @@ export function TopNavContainer(props: HTMLProps<HTMLElement>) {
         'grid grid-cols-[auto_1fr_auto] items-center gap-7',
         'app-region-drag',
         'w-full min-w-full',
-        'shadow-[0px_-12px_18px_0px_rgb(0_0_0/0.6)]',
         getPlatformSpecificHeaderClasses()
       )}
     >
