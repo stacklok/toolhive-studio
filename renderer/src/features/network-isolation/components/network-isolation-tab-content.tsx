@@ -61,6 +61,7 @@ export function NetworkIsolationTabContent({
                   render={() => (
                     <DynamicArrayField<FormSchemaRunFromRegistry>
                       name="allowedHosts"
+                      gridConfig="grid-cols-[minmax(0,1fr)_auto]"
                       label="Allowed hosts"
                       inputLabelPrefix="Host"
                       addButtonText="Add a host"
@@ -110,6 +111,7 @@ export function NetworkIsolationTabContent({
                   render={() => (
                     <DynamicArrayField<FormSchemaRunFromRegistry>
                       name="allowedPorts"
+                      gridConfig="grid-cols-[minmax(0,1fr)_auto]"
                       label="Allowed ports"
                       inputLabelPrefix="Port"
                       addButtonText="Add a port"

@@ -52,6 +52,13 @@ export function FormFieldsArrayVolumes<TForm extends FieldValues>({
             inputLabelPrefix="Storage volume"
             addButtonText="Add a volume"
             description="Provide the MCP server access to a local folder. Optionally specific individual files."
+            gridConfig="grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_auto]"
+            columnHeaders={[
+              { title: 'Host path' },
+              { title: 'Container path' },
+              { title: null },
+              { title: null },
+            ]}
             form={form}
           >
             {({ inputProps, setInputRef, idx }) => (
@@ -67,71 +74,65 @@ export function FormFieldsArrayVolumes<TForm extends FieldValues>({
 
                   return (
                     <>
-                      <FormItem className="flex-grow">
-                        <div className="flex w-full gap-2">
-                          <FormControl className="flex-1">
-                            <FilePickerInput
-                              ref={setInputRef(idx)}
-                              aria-label={`Host path ${idx + 1}`}
-                              name={`volumes.${idx}.host` as Path<TForm>}
-                              value={volumeValue?.host || ''}
-                              placeholder="Host path"
-                              onChange={({ newValue }) => {
-                                field.onChange({
-                                  ...volumeValue,
-                                  host: newValue,
-                                })
-                              }}
-                            />
-                          </FormControl>
-                          <FormControl className="flex-1">
-                            <Input
-                              {...inputProps}
-                              type="string"
-                              ref={setInputRef(idx)}
-                              aria-label={`Container path ${idx + 1}`}
-                              name={`volumes.${idx}.container` as Path<TForm>}
-                              value={volumeValue?.container || ''}
-                              onChange={(e) =>
-                                field.onChange({
-                                  ...volumeValue,
-                                  container: e.target.value,
-                                })
-                              }
-                              placeholder="Container path"
-                            />
-                          </FormControl>
-                          <FormControl className="w-48 flex-shrink-0">
-                            <Select
-                              onValueChange={(value) =>
-                                field.onChange({
-                                  ...volumeValue,
-                                  accessMode: value as AccessMode,
-                                })
-                              }
-                              value={volumeValue.accessMode}
-                            >
-                              <SelectTrigger>
-                                {getAccessModeDisplay(volumeValue.accessMode)}
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="ro">
-                                  <div className="flex items-center gap-2">
-                                    <FolderLock className="size-4" />
-                                    <span>Read only access</span>
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="rw">
-                                  <div className="flex items-center gap-2">
-                                    <FolderCheck className="size-4" />
-                                    <span>Read & write access</span>
-                                  </div>
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </FormControl>
-                        </div>
-                      </FormItem>
+                      <FormControl className="flex-1">
+                        <FilePickerInput
+                          ref={setInputRef(idx)}
+                          aria-label={`Host path ${idx + 1}`}
+                          name={`volumes.${idx}.host` as Path<TForm>}
+                          value={volumeValue?.host || ''}
+                          onChange={({ newValue }) => {
+                            field.onChange({
+                              ...volumeValue,
+                              host: newValue,
+                            })
+                          }}
+                        />
+                      </FormControl>
+                      <FormControl className="flex-1">
+                        <Input
+                          {...inputProps}
+                          type="string"
+                          ref={setInputRef(idx)}
+                          aria-label={`Container path ${idx + 1}`}
+                          name={`volumes.${idx}.container` as Path<TForm>}
+                          value={volumeValue?.container || ''}
+                          onChange={(e) =>
+                            field.onChange({
+                              ...volumeValue,
+                              container: e.target.value,
+                            })
+                          }
+                        />
+                      </FormControl>
+                      <FormControl className="w-48 flex-shrink-0">
+                        <Select
+                          onValueChange={(value) =>
+                            field.onChange({
+                              ...volumeValue,
+                              accessMode: value as AccessMode,
+                            })
+                          }
+                          value={volumeValue.accessMode}
+                        >
+                          <SelectTrigger>
+                            {getAccessModeDisplay(volumeValue.accessMode)}
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="ro">
+                              <div className="flex items-center gap-2">
+                                <FolderLock className="size-4" />
+                                <span>Read only access</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="rw">
+                              <div className="flex items-center gap-2">
+                                <FolderCheck className="size-4" />
+                                <span>Read & write access</span>
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
                     </>
                   )
                 }}
