@@ -6,9 +6,9 @@ export function useFeatureFlag(flagKey: FeatureFlagKey): boolean {
     queryKey: ['featureFlag', flagKey],
     queryFn: async () => {
       try {
+        // In non-Electron/test environments, this may throw – fall back to false
         return await window.electronAPI.featureFlags.get(flagKey)
-      } catch (error) {
-        console.error(`Failed to get feature flag ${flagKey}:`, error)
+      } catch {
         return false
       }
     },
