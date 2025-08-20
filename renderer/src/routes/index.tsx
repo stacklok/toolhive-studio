@@ -14,6 +14,8 @@ import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/menu
 import { useMutationRestartServerAtStartup } from '@/features/mcp-servers/hooks/use-mutation-restart-server'
 import { TitlePage } from '@/common/components/title-page'
 import { McpServersSidebar } from '@/features/mcp-servers/components/mcp-servers-sidebar'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { featureFlagKeys } from '../../../utils/feature-flags'
 
 export const Route = createFileRoute('/')({
   loader: ({ context: { queryClient } }) =>
@@ -55,7 +57,7 @@ export function Index() {
 
   return (
     <div className="flex h-full gap-6">
-      <McpServersSidebar />
+      {useFeatureFlag(featureFlagKeys.GROUPS) ? <McpServersSidebar /> : null}
       <div className="min-w-0 flex-1">
         <TitlePage title="MCP Servers">
           {workloads.length > 0 && (
