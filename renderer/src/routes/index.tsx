@@ -55,10 +55,14 @@ export function Index() {
     handleShutdownRestart()
   }, [mutateAsync])
 
+  const showSidebar = useFeatureFlag(featureFlagKeys.GROUPS)
+
   return (
     <div className="flex h-full gap-6">
-      {useFeatureFlag(featureFlagKeys.GROUPS) ? <McpServersSidebar /> : null}
-      <div className="min-w-0 flex-1">
+      {showSidebar ? <McpServersSidebar /> : null}
+      <div
+        className={showSidebar ? 'ml-[247px] min-w-0 flex-1' : 'min-w-0 flex-1'}
+      >
         <TitlePage title="MCP Servers">
           {workloads.length > 0 && (
             <div className="ml-auto flex gap-2">
