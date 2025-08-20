@@ -10,7 +10,7 @@ import type { FormSchemaRunMcpCommand } from '../lib/form-schema-run-mcp-server-
 import { FormControl, FormField, FormItem } from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
 import { DynamicArrayField } from '@/features/registry-servers/components/dynamic-array-field'
-import { FormComboboxSecretStore } from '@/common/components/secrets/form-combobox-secrets-store'
+import { SecretStoreCombobox } from '@/common/components/secrets/secret-store-combobox'
 
 type SecretFieldValue = {
   name?: string
@@ -120,10 +120,13 @@ export function FormFieldsArrayCustomSecrets({
                             }
                             placeholder="e.g. 123_ABC_789_XZY"
                           />
-                          <FormComboboxSecretStore<FormSchemaRunMcpCommand>
-                            form={form}
-                            name={
-                              `secrets.${idx}.value` as Path<FormSchemaRunMcpCommand>
+                          <SecretStoreCombobox
+                            value={currentValue?.secret}
+                            onChange={(secretKey) =>
+                              field.onChange({
+                                ...secretField,
+                                value: { secret: secretKey, isFromStore: true },
+                              })
                             }
                           />
                         </div>
