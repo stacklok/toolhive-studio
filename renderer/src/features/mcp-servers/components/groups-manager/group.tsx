@@ -21,9 +21,6 @@ export function Group(props: {
         />
         <span className="truncate">{name}</span>
       </div>
-      <span className="text-muted-foreground ml-auto text-xs">
-        {isEnabled ? 'Enabled' : 'Disabled'}
-      </span>
     </div>
   )
 }
