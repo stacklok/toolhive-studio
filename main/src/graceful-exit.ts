@@ -153,8 +153,9 @@ export async function stopAllServers(
   // Then poll until all servers are stopped
   const serverNames = servers
     .map((server) => server.name)
-    .filter(Boolean) as string[]
+    .filter((name): name is string => typeof name === 'string')
   const allStopped = await pollUntilAllStopped(client, serverNames)
+
   if (!allStopped) {
     log.error('Some servers failed to stop within timeout')
     throw new Error('Some servers failed to stop within timeout')
