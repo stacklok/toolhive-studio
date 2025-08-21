@@ -101,6 +101,17 @@ export const handlers = [
     }
   ),
 
+  http.get(mswEndpoint('/api/v1beta/workloads/:name/status'), ({ params }) => {
+    const { name } = params
+
+    const server = getWorkloadByName(name as string)
+    if (!server) {
+      return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
+    }
+
+    return HttpResponse.json({ status: server.status })
+  }),
+
   // Batch restart endpoint
   http.post(
     mswEndpoint('/api/v1beta/workloads/restart'),

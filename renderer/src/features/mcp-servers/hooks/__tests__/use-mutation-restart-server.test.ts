@@ -80,22 +80,30 @@ describe('useMutationRestartServerAtStartup', () => {
 
     // Use MSW to simulate servers becoming 'running' after restart for polling
     server.use(
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-        const { name } = params
-        if (name === 'postgres-db' || name === 'github') {
-          return HttpResponse.json(createWorkload(name as string, 'running'))
+      http.get(
+        mswEndpoint('/api/v1beta/workloads/:name/status'),
+        ({ params }) => {
+          const { name } = params
+          if (name === 'postgres-db' || name === 'github') {
+            return HttpResponse.json({
+              status: 'running',
+            })
+          }
+          // Fall back to default behavior for other servers
+          return HttpResponse.json({
+            status: 'stopped',
+          })
         }
-        // Fall back to default behavior for other servers
-        return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
-      })
+      )
     )
 
     const { result } = renderHook(() => useMutationRestartServerAtStartup(), {
       wrapper: Wrapper,
     })
 
-    // Note: useToastMutation doesn't return the promise, so we can't await it
-    result.current.mutateAsync({ body: { names: ['postgres-db', 'github'] } })
+    await result.current.mutateAsync({
+      body: { names: ['postgres-db', 'github'] },
+    })
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true)
@@ -135,7 +143,11 @@ describe('useMutationRestartServerAtStartup', () => {
     })
 
     // Execute mutation with non-existent server name (will return 404 from MSW handler)
-    result.current.mutateAsync({ body: { names: ['non-existent-server'] } })
+    result.current
+      .mutateAsync({ body: { names: ['non-existent-server'] } })
+      .catch(() => {
+        // Expected error, ignore
+      })
 
     await waitFor(() => {
       expect(result.current.isError).toBe(true)
@@ -188,7 +200,9 @@ describe('useMutationRestartServer', () => {
     )
 
     // Execute mutation with non-existent server (will return 404 from MSW handler)
-    result.current.mutateAsync({ path: { name: serverName } })
+    result.current.mutateAsync({ path: { name: serverName } }).catch(() => {
+      // Expected error, ignore
+    })
 
     await waitFor(() => {
       expect(result.current.isError).toBe(true)

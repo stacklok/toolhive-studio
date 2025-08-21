@@ -49,14 +49,18 @@ export function useMutationStopServerList({ name }: { name: string }) {
       // Poll until server stopped
       await pollBatchServerStatus(
         async (names) => {
-          const servers = await Promise.all(
+          const statusResponses = await Promise.all(
             names.map((name) =>
               queryClient.fetchQuery(
                 getApiV1BetaWorkloadsByNameStatusOptions({ path: { name } })
               )
             )
           )
-          return servers
+          // Convert status responses to CoreWorkload-like objects for polling
+          return statusResponses.map((response, index) => ({
+            name: names[index],
+            status: response.status || 'unknown',
+          })) as CoreWorkload[]
         },
         [name],
         'stopped'
