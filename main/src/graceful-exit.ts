@@ -166,7 +166,7 @@ export async function stopAllServers(
 
 /** Get the list of servers that were shut down in the last shutdown */
 export function getLastShutdownServers(): string[] {
-  return shutdownStore.get('lastShutdownServers', []) as string[]
+  return shutdownStore.get('lastShutdownServers', [])
 }
 
 /** Clear the shutdown history */
