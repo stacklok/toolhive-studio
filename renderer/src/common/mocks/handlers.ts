@@ -39,7 +39,7 @@ export const handlers = [
   http.get(mswEndpoint('/api/v1beta/groups'), () => {
     return HttpResponse.json({
       groups: [
-        { name: 'Default group', registered_clients: ['client-a'] },
+        { name: 'default', registered_clients: ['client-a'] },
         { name: 'Research team', registered_clients: ['client-b'] },
         { name: 'Archive', registered_clients: [] },
       ],

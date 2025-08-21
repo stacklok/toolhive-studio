@@ -31,7 +31,7 @@ describe('Groups Manager in Index route (feature flagged)', () => {
     renderRoute(router)
 
     await waitFor(() => {
-      expect(screen.getByText('Default group')).toBeVisible()
+      expect(screen.getByText('default')).toBeVisible()
       expect(screen.getByText('Research team')).toBeVisible()
       expect(screen.getByText('Archive')).toBeVisible()
     })
@@ -40,7 +40,7 @@ describe('Groups Manager in Index route (feature flagged)', () => {
   it('marks the Default group as active with correct styling', async () => {
     renderRoute(router)
 
-    const defaultGroup = await screen.findByText('Default group')
+    const defaultGroup = await screen.findByText('default')
     const groupItem = defaultGroup.closest('div')!.parentElement as HTMLElement
 
     expect(groupItem).toHaveClass('rounded-md')
@@ -54,7 +54,7 @@ describe('Groups Manager in Index route (feature flagged)', () => {
   it('shows 7px status dots with correct colors (green for enabled, gray for disabled)', async () => {
     renderRoute(router)
 
-    const defaultGroup = await screen.findByText('Default group')
+    const defaultGroup = await screen.findByText('default')
     const researchGroup = await screen.findByText('Research team')
     const archiveGroup = await screen.findByText('Archive')
 

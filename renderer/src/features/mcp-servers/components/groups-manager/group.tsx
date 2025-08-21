@@ -4,14 +4,21 @@ export function Group(props: {
   name: string
   isEnabled: boolean
   isActive: boolean
+  onClick?: () => void
 }): ReactElement {
-  const { name, isEnabled, isActive } = props
+  const { name, isEnabled, isActive, onClick } = props
 
   return (
     <div
-      className={`flex h-9 w-[215px] items-center gap-2 px-4 py-2 ${
-        isActive ? 'border-input bg-background rounded-md border shadow-sm' : ''
+      onClick={onClick}
+      className={`flex h-9 w-[215px] cursor-pointer items-center gap-2 px-4 py-2
+        ${
+          isActive
+            ? 'border-input bg-background rounded-md border shadow-sm'
+            : ''
         }`}
+      role="button"
+      tabIndex={0}
     >
       <div className="flex min-w-0 items-center gap-2">
         <span

@@ -2,6 +2,7 @@ import type { ReactElement } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getApiV1BetaGroups } from '@api/sdk.gen'
 import { Group } from './group'
+import { Link, useRouterState } from '@tanstack/react-router'
 
 type UiGroup = {
   id: string
@@ -10,6 +11,7 @@ type UiGroup = {
 }
 
 export function GroupsManager(): ReactElement {
+  const router = useRouterState({ select: (s) => s.location.search })
   const { data } = useQuery({
     queryKey: ['api', 'v1beta', 'groups'],
     queryFn: async () => {
@@ -34,19 +36,28 @@ export function GroupsManager(): ReactElement {
     isEnabled: Boolean(g.registered_clients && g.registered_clients.length > 0),
   }))
 
-  const DEFAULT_GROUP_NAME = 'Default group'
-  const activeGroupId =
-    uiGroups.find((g) => g.name === DEFAULT_GROUP_NAME)?.id || uiGroups[0]?.id
+  const currentGroupName = (router as Record<string, unknown>)['group']
+    ? String((router as Record<string, string>)['group']).toLowerCase()
+    : 'default'
 
   return (
     <div className="space-y-2">
       {uiGroups.map((group) => (
-        <Group
+        <Link
           key={group.id}
-          name={group.name}
-          isEnabled={group.isEnabled}
-          isActive={group.id === activeGroupId}
-        />
+          to="/"
+          search={(prev) => ({
+            ...prev,
+            group: (group.name ?? 'default').toLowerCase(),
+          })}
+          preload={false}
+        >
+          <Group
+            name={group.name}
+            isEnabled={group.isEnabled}
+            isActive={(group.name ?? '').toLowerCase() === currentGroupName}
+          />
+        </Link>
       ))}
     </div>
   )

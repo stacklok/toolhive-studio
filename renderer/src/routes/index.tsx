@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useRouterState } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
 import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
 import { EmptyState } from '@/common/components/empty-state'
@@ -26,6 +26,11 @@ export const Route = createFileRoute('/')({
 })
 
 export function Index() {
+  const navigate = Route.useNavigate()
+  const search = useRouterState({ select: (s) => s.location.search }) as Record<
+    string,
+    unknown
+  >
   const { data, refetch } = useSuspenseQuery({
     ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
   })
@@ -33,6 +38,16 @@ export function Index() {
   const [isRunWithCommandOpen, setIsRunWithCommandOpen] = useState(false)
   const { mutateAsync, isPending } = useMutationRestartServerAtStartup()
   const hasProcessedShutdown = useRef(false)
+
+  // Ensure a default group in the URL
+  useEffect(() => {
+    if (!search.group) {
+      navigate({
+        search: (prev) => ({ ...prev, group: 'default' }),
+        replace: true,
+      })
+    }
+  }, [navigate, search.group])
 
   useEffect(() => {
     const handleShutdownRestart = async () => {
