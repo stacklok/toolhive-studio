@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getApiV1BetaGroupsOptions } from '@api/@tanstack/react-query.gen'
+import { getApiV1BetaGroups } from '@api/sdk.gen'
 import { Group } from './group'
 
 type UiGroup = {
@@ -10,7 +10,22 @@ type UiGroup = {
 }
 
 export function GroupsManager(): ReactElement {
-  const { data } = useQuery({ ...getApiV1BetaGroupsOptions() })
+  const { data } = useQuery({
+    queryKey: ['api', 'v1beta', 'groups'],
+    queryFn: async () => {
+      const response = await getApiV1BetaGroups({
+        parseAs: 'text',
+        responseStyle: 'data',
+      })
+      const parsed =
+        typeof response === 'string' ? JSON.parse(response) : response
+      return parsed as {
+        groups?: Array<{ name?: string; registered_clients?: string[] }>
+      }
+    },
+    staleTime: 5_000,
+  })
+
   const apiGroups = data?.groups ?? []
 
   const uiGroups: UiGroup[] = apiGroups.map((g, index) => ({

@@ -14,6 +14,8 @@ beforeEach(() => {
       featureFlags: {
         get: vi.fn().mockResolvedValue(true), // enable GROUPS sidebar
       },
+      getToolhivePort: vi.fn().mockResolvedValue(3000),
+      getTelemetryHeaders: vi.fn().mockResolvedValue({}),
       shutdownStore: {
         getLastShutdownServers: vi.fn().mockResolvedValue([]),
         clearShutdownHistory: vi.fn().mockResolvedValue(undefined),
