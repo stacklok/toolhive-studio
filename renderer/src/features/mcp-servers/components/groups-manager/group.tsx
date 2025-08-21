@@ -2,22 +2,22 @@ import type { ReactElement } from 'react'
 
 export function Group(props: {
   name: string
-  isActive: boolean
+  isEnabled: boolean
 }): ReactElement {
-  const { name, isActive } = props
+  const { name, isEnabled } = props
 
   return (
     <div className="flex items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-2">
         <span
           aria-hidden
-          className={`inline-block size-2 rounded-full
-            ${isActive ? 'bg-emerald-500' : 'bg-red-500'}`}
+          className={`inline-block size-[7px] rounded-full
+            ${isEnabled ? 'bg-green-600' : 'bg-zinc-900/20'}`}
         />
         <span className="truncate">{name}</span>
       </div>
       <span className="text-muted-foreground text-xs">
-        {isActive ? 'Enabled' : 'Disabled'}
+        {isEnabled ? 'Enabled' : 'Disabled'}
       </span>
     </div>
   )
