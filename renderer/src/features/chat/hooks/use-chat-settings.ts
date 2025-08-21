@@ -9,8 +9,7 @@ const CHAT_SETTINGS_KEYS = {
   allSettings: ['chat', 'settings'] as const,
 }
 
-// Hook for selected model
-export function useSelectedModel() {
+function useSelectedModel() {
   return useQuery({
     queryKey: CHAT_SETTINGS_KEYS.selectedModel,
     queryFn: () => window.electronAPI.chat.getSelectedModel(),
@@ -20,8 +19,7 @@ export function useSelectedModel() {
   })
 }
 
-// Hook for provider settings
-export function useProviderSettings(provider: string) {
+function useProviderSettings(provider: string) {
   return useQuery({
     queryKey: CHAT_SETTINGS_KEYS.settings(provider),
     queryFn: () => window.electronAPI.chat.getSettings(provider),

@@ -3,7 +3,7 @@ import { useTheme } from '../../../common/hooks/use-theme'
 /**
  * Maps our application theme to appropriate Shiki syntax highlighting themes
  */
-export function getShikiTheme(
+function getShikiTheme(
   appTheme: 'light' | 'dark' | 'system'
 ): 'github-dark' | 'github-light' {
   // Handle system theme by checking actual applied theme
