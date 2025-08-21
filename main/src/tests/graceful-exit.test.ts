@@ -104,7 +104,7 @@ describe('graceful-exit', () => {
       { name: 'server2', status: 'stopped', port: 3002 },
     ]
 
-    it('should handle no running servers gracefully', async () => {
+    it('handles no running servers gracefully', async () => {
       mockGetApiV1BetaWorkloads.mockResolvedValue(
         createMockWorkloadsResponse([])
       )
@@ -117,7 +117,7 @@ describe('graceful-exit', () => {
       expect(mockPostApiV1BetaWorkloadsByNameStop).not.toHaveBeenCalled()
     })
 
-    it('should stop all running servers successfully', async () => {
+    it('stops all running servers successfully', async () => {
       // Mock getting running servers initially
       mockGetApiV1BetaWorkloads
         .mockResolvedValueOnce(createMockWorkloadsResponse(mockRunningServers))
@@ -148,7 +148,7 @@ describe('graceful-exit', () => {
       expect(mockLog.info).toHaveBeenCalledWith('All servers stopped cleanly')
     })
 
-    it('should handle servers with final statuses (error, unknown, unhealthy)', async () => {
+    it('handles servers with final statuses (error, unknown, unhealthy)', async () => {
       const serversWithFinalStatuses: CoreWorkload[] = [
         { name: 'server1', status: 'error', port: 3001 },
         { name: 'server2', status: 'unknown', port: 3002 },
@@ -173,7 +173,7 @@ describe('graceful-exit', () => {
       expect(mockLog.info).toHaveBeenCalledWith('All servers stopped cleanly')
     })
 
-    it('should handle stop command failures', async () => {
+    it('handles stop command failures', async () => {
       mockGetApiV1BetaWorkloads.mockResolvedValue(
         createMockWorkloadsResponse(mockRunningServers)
       )
@@ -187,7 +187,7 @@ describe('graceful-exit', () => {
       )
     })
 
-    it('should handle timeout when servers do not stop', async () => {
+    it('handles timeout when servers do not stop', async () => {
       const stuckServers: CoreWorkload[] = [
         { name: 'server1', status: 'stopping', port: 3001 },
       ]
@@ -210,7 +210,7 @@ describe('graceful-exit', () => {
       )
     })
 
-    it('should store shutdown servers in electron store', async () => {
+    it('stores shutdown servers in electron store', async () => {
       mockGetApiV1BetaWorkloads
         .mockResolvedValueOnce(createMockWorkloadsResponse(mockRunningServers))
         .mockResolvedValueOnce(createMockWorkloadsResponse(mockStoppedServers))
@@ -227,7 +227,7 @@ describe('graceful-exit', () => {
       )
     })
 
-    it('should handle servers without names', async () => {
+    it('handles servers without names', async () => {
       const serversWithoutNames: CoreWorkload[] = [
         { name: undefined, status: 'running', port: 3001 },
         { name: 'server2', status: 'running', port: 3002 },
@@ -257,7 +257,7 @@ describe('graceful-exit', () => {
   })
 
   describe('getLastShutdownServers', () => {
-    it('should return servers from electron store', () => {
+    it('returns servers from electron store', () => {
       const mockServers = ['server1', 'server2']
       mockStoreInstance.get.mockReturnValue(mockServers)
 
@@ -270,7 +270,7 @@ describe('graceful-exit', () => {
       )
     })
 
-    it('should return empty array when no servers in store', () => {
+    it('returns empty array when no servers in store', () => {
       mockStoreInstance.get.mockReturnValue([])
 
       const result = getLastShutdownServers()
@@ -280,7 +280,7 @@ describe('graceful-exit', () => {
   })
 
   describe('clearShutdownHistory', () => {
-    it('should clear shutdown history in electron store', () => {
+    it('clears shutdown history in electron store', () => {
       clearShutdownHistory()
 
       expect(mockStoreInstance.set).toHaveBeenCalledWith(
@@ -292,7 +292,7 @@ describe('graceful-exit', () => {
   })
 
   describe('polling behavior', () => {
-    it('should log server status during polling', async () => {
+    it('logs server status during polling', async () => {
       const runningServer: CoreWorkload[] = [
         { name: 'server1', status: 'running', port: 3001 },
       ]
@@ -324,7 +324,7 @@ describe('graceful-exit', () => {
       )
     })
 
-    it('should respect polling intervals', async () => {
+    it('respects polling intervals', async () => {
       const runningServer: CoreWorkload[] = [
         { name: 'server1', status: 'running', port: 3001 },
       ]
