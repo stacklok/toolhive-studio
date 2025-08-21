@@ -35,19 +35,30 @@ export function Index() {
     ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
   })
   const workloads = data?.workloads ?? []
+  const showSidebar = useFeatureFlag(featureFlagKeys.GROUPS)
+  const currentGroup = showSidebar
+    ? (search.group as string | undefined)?.toLowerCase()
+    : undefined
+  const filteredWorkloads =
+    showSidebar && currentGroup
+      ? workloads.filter(
+          (w) => (w.group ?? 'default').toLowerCase() === currentGroup
+        )
+      : workloads
   const [isRunWithCommandOpen, setIsRunWithCommandOpen] = useState(false)
   const { mutateAsync, isPending } = useMutationRestartServerAtStartup()
   const hasProcessedShutdown = useRef(false)
 
-  // Ensure a default group in the URL
+  // Ensure a default group in the URL when groups feature is enabled
   useEffect(() => {
+    if (!showSidebar) return
     if (!search.group) {
       navigate({
         search: (prev) => ({ ...prev, group: 'default' }),
         replace: true,
       })
     }
-  }, [navigate, search.group])
+  }, [navigate, search.group, showSidebar])
 
   useEffect(() => {
     const handleShutdownRestart = async () => {
@@ -70,8 +81,6 @@ export function Index() {
     handleShutdownRestart()
   }, [mutateAsync])
 
-  const showSidebar = useFeatureFlag(featureFlagKeys.GROUPS)
-
   return (
     <div className="flex h-full gap-6">
       {showSidebar ? <McpServersSidebar /> : null}
@@ -92,7 +101,7 @@ export function Index() {
             onOpenChange={setIsRunWithCommandOpen}
           />
         </TitlePage>
-        {!isPending && !workloads.length ? (
+        {!isPending && !filteredWorkloads.length ? (
           <EmptyState
             title="Add your first MCP server"
             body="You can add a server by running it with a command or by browsing the registry"
@@ -113,7 +122,7 @@ export function Index() {
             illustration={IllustrationNoConnection}
           />
         ) : (
-          <GridCardsMcpServers mcpServers={workloads} />
+          <GridCardsMcpServers mcpServers={filteredWorkloads} />
         )}
       </div>
     </div>
