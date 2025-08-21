@@ -68,12 +68,18 @@ export function McpServerBadge({
     <>
       <Badge
         variant="secondary"
-        className="hover:bg-muted-foreground/20 group max-w-48 cursor-pointer"
+        className="hover:bg-secondary/80 group h-auto max-w-48 cursor-pointer
+          px-2 py-1 text-xs transition-colors duration-200"
         onClick={handleBadgeClick}
       >
-        <span className="truncate">{serverName}</span>
-        <span className="ml-1 text-xs opacity-70">{formatBadgeCounter()}</span>
-        <Settings className="ml-1 h-3 w-3 opacity-60 group-hover:opacity-100" />
+        <span className="truncate font-medium">{serverName}</span>
+        <span className="ml-1.5 font-mono text-xs opacity-60">
+          {formatBadgeCounter()}
+        </span>
+        <Settings
+          className="ml-1.5 h-3 w-3 opacity-50 transition-opacity duration-200
+            group-hover:opacity-80"
+        />
       </Badge>
 
       {/* MCP Tools Modal */}

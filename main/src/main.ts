@@ -18,6 +18,7 @@ import { initTray, updateTrayStatus } from './system-tray'
 import { showInDock, hideWindow } from './dock-utils'
 import { setAutoLaunch, getAutoLaunchStatus } from './auto-launch'
 import { createApplicationMenu } from './menu'
+
 import { getCspString } from './csp'
 import {
   stopAllServers,
@@ -58,6 +59,7 @@ import {
   saveEnabledMcpTools,
   discoverToolSupportedModels,
   fetchOpenRouterModels,
+  getToolhiveMcpInfo,
   type ChatRequest,
 } from './chat'
 
@@ -558,6 +560,7 @@ ipcMain.handle('quit-app', (e) => {
 })
 
 ipcMain.handle('get-toolhive-port', () => getToolhivePort())
+ipcMain.handle('get-toolhive-mcp-port', () => getToolhivePort())
 ipcMain.handle('is-toolhive-running', () => isToolhiveRunning())
 
 // Window control handlers for custom title bar
@@ -832,3 +835,4 @@ ipcMain.handle(
   (_, serverName: string, enabledTools: string[]) =>
     saveEnabledMcpTools(serverName, enabledTools)
 )
+ipcMain.handle('chat:get-toolhive-mcp-info', () => getToolhiveMcpInfo())

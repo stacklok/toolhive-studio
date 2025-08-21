@@ -9,9 +9,9 @@ import { McpServerSelector } from './mcp-server-selector'
 import { ModelSelector } from './model-selector'
 import { ErrorAlert } from './error-alert'
 
-import { useChatStreaming } from '../hooks/use-chat-streaming'
+import { ChatProvider, useChatContext } from '../contexts'
 
-export function ChatInterface() {
+function ChatInterfaceContent() {
   const {
     messages,
     isLoading,
@@ -19,10 +19,10 @@ export function ChatInterface() {
     settings,
     sendMessage,
     clearMessages,
-    updateSettings,
     cancelRequest,
     loadPersistedSettings,
-  } = useChatStreaming()
+    updateSettings,
+  } = useChatContext()
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
@@ -85,7 +85,7 @@ export function ChatInterface() {
           <div className="h-full overflow-y-auto scroll-smooth">
             <div className="container mx-auto py-8">
               <div className="space-y-8 pr-2">
-                {messages.map((message, index) => (
+                {messages.map((message, index: number) => (
                   <div
                     key={message.id}
                     className="animate-in fade-in-0 slide-in-from-bottom-2
@@ -174,12 +174,7 @@ export function ChatInterface() {
           {/* MCP Tools Selection */}
           {hasProviderAndModel && (
             <div className="mb-4">
-              <McpServerSelector
-                enabledTools={settings.enabledTools || []}
-                onEnabledToolsChange={(tools) =>
-                  updateSettings({ ...settings, enabledTools: tools })
-                }
-              />
+              <McpServerSelector enabledTools={settings.enabledTools || []} />
             </div>
           )}
 
@@ -210,5 +205,13 @@ export function ChatInterface() {
         onSaved={handleApiKeysSaved}
       />
     </div>
+  )
+}
+
+export function ChatInterface() {
+  return (
+    <ChatProvider>
+      <ChatInterfaceContent />
+    </ChatProvider>
   )
 }

@@ -45,7 +45,7 @@ export async function handleChatStreamRealtime(
         messages,
         tools: Object.keys(mcpTools).length > 0 ? mcpTools : undefined,
         toolChoice: Object.keys(mcpTools).length > 0 ? 'auto' : undefined,
-        stopWhen: stepCountIs(10), // Stop after 10 steps
+        stopWhen: stepCountIs(50), // Increase step limit for complex tool chains
         system: `You are a helpful assistant with access to MCP (Model Context Protocol) servers from ToolHive.
 
 You have access to various specialized tools from enabled MCP servers. Each tool is prefixed with the server name (e.g., github-stats-mcp_get_repository_info).
@@ -71,6 +71,16 @@ FORMATTING REQUIREMENTS:
 - Extract meaningful insights from data
 - NEVER show raw JSON or unformatted technical data
 - NEVER just say "here's the result" - always interpret and format it
+
+🖼️ IMAGE HANDLING:
+- When a tool returns an image, the image will automatically display in the tool output section
+- NEVER include base64 image data in your text response
+- NEVER use <image> tags or data URIs in your text
+- DO NOT copy or paste image data from tool outputs into your response
+- Simply provide context and analysis about what the image shows
+- The tool output section will automatically render any images returned by tools
+- Focus your text response on interpreting and explaining the results
+- Example: "I've generated a bar chart showing the sales data. The chart displays the relationship between products and their sales figures, with smartphones having the highest sales."
 
 MARKDOWN FORMATTING EXAMPLES:
 
@@ -151,6 +161,43 @@ Remember: Always interpret and format tool results beautifully. Never show raw d
           )
         }
       }
+
+      // Improve error messages for common API issues
+      if (error instanceof Error) {
+        if (
+          error.message.includes('overloaded') ||
+          error.message.includes('Overloaded')
+        ) {
+          throw new Error(
+            'The AI service is currently overloaded. Please try again in a few moments.'
+          )
+        }
+        if (
+          error.message.includes('rate limit') ||
+          error.message.includes('Rate limit')
+        ) {
+          throw new Error(
+            'Rate limit exceeded. Please wait a moment before sending another message.'
+          )
+        }
+        if (
+          error.message.includes('insufficient_quota') ||
+          error.message.includes('quota')
+        ) {
+          throw new Error(
+            'API quota exceeded. Please check your API key billing status.'
+          )
+        }
+        if (
+          error.message.includes('invalid_api_key') ||
+          error.message.includes('authentication')
+        ) {
+          throw new Error(
+            'Invalid API key. Please check your API key configuration.'
+          )
+        }
+      }
+
       throw error
     }
   } catch (error) {

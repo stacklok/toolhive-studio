@@ -37,6 +37,7 @@ export function useChatStreaming() {
   // Use official AI SDK useChat with our custom transport and typed messages
   const { messages, sendMessage, status, error, stop, setMessages } =
     useChat<ChatUIMessage>({
+      id: 'toolhive-chat', // Add stable ID to prevent re-initialization
       transport: ipcTransport,
     })
 
@@ -178,15 +179,68 @@ export function useChatStreaming() {
     }
   }, [refreshSettings])
 
-  return {
-    messages,
-    isLoading,
-    error: error?.message || null,
-    settings,
-    sendMessage: handleSendMessage,
-    clearMessages,
-    cancelRequest: stop,
-    updateSettings,
-    loadPersistedSettings,
+  // Process error to handle different error formats
+  const processError = (error: unknown): string | null => {
+    if (!error) return null
+
+    // If it's already a string, return it
+    if (typeof error === 'string') return error
+
+    // If it's an Error object, return the message
+    if (error instanceof Error) return error.message
+
+    // If it's a structured error object (like {"type":"overloaded_error","message":"Overloaded"})
+    if (typeof error === 'object' && error !== null) {
+      // Try to extract message from various possible structures
+      if ('message' in error && typeof error.message === 'string') {
+        return error.message
+      }
+      if ('error' in error && typeof error.error === 'string') {
+        return error.error
+      }
+      // If it's a JSON-like object, try to stringify it nicely
+      try {
+        const errorObj = error as Record<string, unknown>
+        if (errorObj.type === 'overloaded_error') {
+          return 'The AI service is currently overloaded. Please try again in a few moments.'
+        }
+        // For other structured errors, return the JSON string as fallback
+        return JSON.stringify(error)
+      } catch {
+        return 'An unknown error occurred'
+      }
+    }
+
+    return 'An unknown error occurred'
   }
+
+  // Memoize the processed error to avoid recalculating on every render
+  const processedError = useMemo(() => processError(error), [error])
+
+  return useMemo(
+    () => ({
+      messages,
+      isLoading,
+      error: processedError,
+      settings,
+      sendMessage: handleSendMessage,
+      clearMessages,
+      cancelRequest: stop,
+      updateSettings,
+      loadPersistedSettings,
+      setMessages, // Expose setMessages for sessionStorage restoration
+    }),
+    [
+      messages,
+      isLoading,
+      processedError,
+      settings,
+      handleSendMessage,
+      clearMessages,
+      stop,
+      updateSettings,
+      loadPersistedSettings,
+      setMessages,
+    ]
+  )
 }
