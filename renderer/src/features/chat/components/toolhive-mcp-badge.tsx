@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Badge } from '@/common/components/ui/badge'
 import { Info } from 'lucide-react'
-import { ToolhiveMcpToolsModal } from './toolhive-mcp-tools-modal.tsx'
+import { ToolhiveMcpToolsModal } from './toolhive-mcp-tools-modal'
 
 export function ToolhiveMcpBadge() {
   const [modalOpen, setModalOpen] = useState(false)

@@ -3,7 +3,6 @@
 
 @import './styles/view-transitions.css';
 
-/* Streamdown styles for AI-powered streaming markdown */
 @source '../../node_modules/streamdown/dist/index.js';
 
 @custom-variant dark (&: is(.dark *));

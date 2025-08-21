@@ -46,7 +46,7 @@ export function useChatStreaming() {
     useChat<ChatUIMessage>({
       id: 'toolhive-chat',
       transport: ipcTransport,
-      experimental_throttle: 200, // Throttle UI updates to every 100ms while keeping text streaming
+      experimental_throttle: 200,
     })
 
   // Convert status to our isLoading format

@@ -40,14 +40,13 @@ export function McpServerSelector({
 
   const { data: workloadsData } = useQuery({
     ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
-    refetchInterval: 5000, // Refresh every 5 seconds to keep status updated
+    refetchInterval: 30000,
   })
 
-  // Use TanStack Query to manage enabled tools state
   const { data: backendEnabledTools = [] } = useQuery({
     queryKey: ['chat', 'enabledMcpServers'],
     queryFn: () => window.electronAPI.chat.getEnabledMcpServersFromTools(),
-    refetchInterval: 2000, // Sync with backend every 2 seconds
+    refetchInterval: 30000,
   })
 
   // Process workloads data to get running MCP servers
