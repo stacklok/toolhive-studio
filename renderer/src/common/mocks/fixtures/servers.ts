@@ -36,7 +36,7 @@ export const MOCK_MCP_SERVERS = [
     status: 'stopped' as const,
     status_context: 'Exited (0) 49 minutes ago',
     created_at: '2025-06-09T15:33:15+02:00',
-    group: 'research',
+    group: 'default',
   },
   {
     name: 'osv-2',
@@ -58,7 +58,7 @@ export const MOCK_MCP_SERVERS = [
     status: 'running' as const,
     status_context: 'Up 54 minutes',
     created_at: '2025-06-06T17:21:14+02:00',
-    group: 'archive',
+    group: 'default',
   },
   {
     name: 'fetch',
@@ -69,7 +69,7 @@ export const MOCK_MCP_SERVERS = [
     status: 'stopped' as const,
     status_context: 'Exited (137) 4 hours ago',
     created_at: '2025-06-06T14:53:43+02:00',
-    group: 'research',
+    group: 'default',
   },
   {
     name: 'fetch-registry-test',

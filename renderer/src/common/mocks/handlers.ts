@@ -29,9 +29,16 @@ export const handlers = [
     return HttpResponse.json(versionFixture)
   }),
 
-  http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-    // TODO: Don't stringify after
-    // https://github.com/stacklok/toolhive/issues/495 is resolved
+  http.get(mswEndpoint('/api/v1beta/workloads'), ({ request }) => {
+    // Simulate server-side filtering by group when query param is present
+    const url = new URL(request.url)
+    const group = url.searchParams.get('group')?.toLowerCase()
+    if (group) {
+      const filtered = (workloadListFixture.workloads ?? []).filter(
+        (w) => (w.group ?? 'default').toLowerCase() === group
+      )
+      return HttpResponse.json({ workloads: filtered })
+    }
     return HttpResponse.json(workloadListFixture)
   }),
 

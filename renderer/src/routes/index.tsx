@@ -31,20 +31,20 @@ export function Index() {
     string,
     unknown
   >
+  const showSidebar = useFeatureFlag(featureFlagKeys.GROUPS)
+  const selectedGroup = showSidebar
+    ? String((search.group as string) ?? 'default')
+    : 'default'
   const { data, refetch } = useSuspenseQuery({
-    ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
+    ...getApiV1BetaWorkloadsOptions({
+      query: {
+        all: true,
+        group: selectedGroup,
+      },
+    }),
   })
   const workloads = data?.workloads ?? []
-  const showSidebar = useFeatureFlag(featureFlagKeys.GROUPS)
-  const currentGroup = showSidebar
-    ? (search.group as string | undefined)?.toLowerCase()
-    : undefined
-  const filteredWorkloads =
-    showSidebar && currentGroup
-      ? workloads.filter(
-          (w) => (w.group ?? 'default').toLowerCase() === currentGroup
-        )
-      : workloads
+  const filteredWorkloads = workloads
   const [isRunWithCommandOpen, setIsRunWithCommandOpen] = useState(false)
   const { mutateAsync, isPending } = useMutationRestartServerAtStartup()
   const hasProcessedShutdown = useRef(false)
