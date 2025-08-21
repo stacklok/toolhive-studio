@@ -17,14 +17,23 @@ const shutdownStore = new Store({
   },
 })
 
-/** Get the currently running servers from the ToolHive API. */
-async function getRunningServers(port: number): Promise<CoreWorkload[]> {
-  const client = createClient({
+/** Create API client for the given port */
+function createApiClient(port: number) {
+  return createClient({
     baseUrl: `http://localhost:${port}`,
     headers: getHeaders(),
   })
+}
+
+/** Get the currently running servers from the ToolHive API. */
+async function getRunningServers(
+  client: ReturnType<typeof createApiClient>
+): Promise<CoreWorkload[]> {
   try {
-    const response = await getApiV1BetaWorkloads({ client })
+    const response = await getApiV1BetaWorkloads({
+      client,
+      query: { all: true },
+    })
     if (!response?.data?.workloads) {
       log.info('No workloads data in API response')
       return []
@@ -38,23 +47,59 @@ async function getRunningServers(port: number): Promise<CoreWorkload[]> {
   }
 }
 
+/** Get all servers from the ToolHive API. */
+async function getAllServers(
+  client: ReturnType<typeof createApiClient>
+): Promise<CoreWorkload[]> {
+  try {
+    const response = await getApiV1BetaWorkloads({
+      client,
+      query: { all: true },
+    })
+    if (!response?.data?.workloads) {
+      log.info('No workloads data in API response')
+      return []
+    }
+    return response.data.workloads.filter((server: CoreWorkload) => server.name)
+  } catch (error) {
+    log.error('Failed to get all servers: ', error)
+    return []
+  }
+}
+
 /** Poll until all servers are stopped or timeout is reached */
 async function pollUntilAllStopped(
-  port: number,
+  client: ReturnType<typeof createApiClient>,
+  serverNames: string[],
   maxAttempts = 20,
   intervalMs = 2000
 ): Promise<boolean> {
+  const finalStatuses = ['stopped', 'error', 'unknown', 'unhealthy']
+
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     if (attempt > 0) {
       await delay(intervalMs)
     }
 
     try {
-      const runningServers = await getRunningServers(port)
-      if (runningServers.length === 0) {
+      const allServers = await getAllServers(client)
+      const trackedServers = allServers.filter((server) =>
+        serverNames.includes(server.name || '')
+      )
+
+      const serversNotInFinalState = trackedServers.filter(
+        (server) => !finalStatuses.includes(server.status || '')
+      )
+
+      if (serversNotInFinalState.length === 0) {
+        log.info('All servers have reached final state')
         return true
       }
-      log.info(`Still waiting for ${runningServers.length} servers to stop...`)
+
+      log.info(
+        `Still waiting for ${serversNotInFinalState.length} servers to reach final state: ` +
+          serversNotInFinalState.map((s) => `${s.name}(${s.status})`).join(', ')
+      )
     } catch (error) {
       log.error('Error polling server status: ', error)
     }
@@ -67,11 +112,8 @@ export async function stopAllServers(
   _binPath: string, // Kept for backward compatibility
   port: number
 ): Promise<void> {
-  const client = createClient({
-    baseUrl: `http://localhost:${port}`,
-    headers: getHeaders(),
-  })
-  const servers = await getRunningServers(port)
+  const client = createApiClient(port)
+  const servers = await getRunningServers(client)
   log.info(
     `Found ${servers.length} running servers: `,
     servers.map((item) => item.name)
@@ -109,7 +151,10 @@ export async function stopAllServers(
   }
 
   // Then poll until all servers are stopped
-  const allStopped = await pollUntilAllStopped(port)
+  const serverNames = servers
+    .map((server) => server.name)
+    .filter(Boolean) as string[]
+  const allStopped = await pollUntilAllStopped(client, serverNames)
   if (!allStopped) {
     log.error('Some servers failed to stop within timeout')
     throw new Error('Some servers failed to stop within timeout')
