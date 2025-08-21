@@ -35,6 +35,17 @@ export const handlers = [
     return HttpResponse.json(workloadListFixture)
   }),
 
+  // Groups endpoints
+  http.get(mswEndpoint('/api/v1beta/groups'), () => {
+    return HttpResponse.json({
+      groups: [
+        { name: 'Default group', registered_clients: ['client-a'] },
+        { name: 'Research team', registered_clients: ['client-b'] },
+        { name: 'Archive', registered_clients: [] },
+      ],
+    })
+  }),
+
   http.post(mswEndpoint('/api/v1beta/workloads'), async ({ request }) => {
     try {
       const { name, target_port } = (await request.json()) as V1CreateRequest

@@ -1,27 +1,31 @@
 import type { ReactElement } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { getApiV1BetaGroupsOptions } from '@api/@tanstack/react-query.gen'
 import { Group } from './group'
 
-type GroupData = {
+type UiGroup = {
   id: string
   name: string
   isEnabled: boolean
 }
 
-const MOCK_GROUPS: GroupData[] = [
-  { id: 'group-1', name: 'Default group', isEnabled: true },
-  { id: 'group-2', name: 'Research team', isEnabled: true },
-  { id: 'group-3', name: 'Archive', isEnabled: false },
-]
-
 export function GroupsManager(): ReactElement {
+  const { data } = useQuery({ ...getApiV1BetaGroupsOptions() })
+  const apiGroups = data?.groups ?? []
+
+  const uiGroups: UiGroup[] = apiGroups.map((g, index) => ({
+    id: `group-${index + 1}`,
+    name: g.name ?? `Group ${index + 1}`,
+    isEnabled: Boolean(g.registered_clients && g.registered_clients.length > 0),
+  }))
+
   const DEFAULT_GROUP_NAME = 'Default group'
   const activeGroupId =
-    MOCK_GROUPS.find((g) => g.name === DEFAULT_GROUP_NAME)?.id ||
-    MOCK_GROUPS[0]?.id
+    uiGroups.find((g) => g.name === DEFAULT_GROUP_NAME)?.id || uiGroups[0]?.id
 
   return (
     <div className="space-y-2">
-      {MOCK_GROUPS.map((group) => (
+      {uiGroups.map((group) => (
         <Group
           key={group.id}
           name={group.name}
