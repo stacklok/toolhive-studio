@@ -33,6 +33,7 @@ import {
   getToolhivePort,
   isToolhiveRunning,
   binPath,
+  getToolhiveMcpPort,
 } from './toolhive-manager'
 import log from './logger'
 import { getAppVersion, isOfficialReleaseBuild, pollWindowReady } from './util'
@@ -560,7 +561,7 @@ ipcMain.handle('quit-app', (e) => {
 })
 
 ipcMain.handle('get-toolhive-port', () => getToolhivePort())
-ipcMain.handle('get-toolhive-mcp-port', () => getToolhivePort())
+ipcMain.handle('get-toolhive-mcp-port', () => getToolhiveMcpPort())
 ipcMain.handle('is-toolhive-running', () => isToolhiveRunning())
 
 // Window control handlers for custom title bar
