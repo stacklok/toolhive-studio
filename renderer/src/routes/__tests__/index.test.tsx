@@ -36,13 +36,14 @@ beforeEach(() => {
   })
 })
 
-it('renders list of MCP servers', async () => {
+it('renders list of MCP servers (default group)', async () => {
   renderRoute(router)
+  const expectedDefaultGroup = ['postgres-db', 'vscode-server', 'osv-2', 'osv']
   await waitFor(() => {
-    for (const mcpServer of MOCK_MCP_SERVERS) {
+    for (const name of expectedDefaultGroup) {
       expect(
-        screen.queryByText(mcpServer.name),
-        `Expected ${mcpServer.name} to be in the document`
+        screen.queryByText(name),
+        `Expected ${name} to be in the document`
       ).toBeVisible()
     }
   })

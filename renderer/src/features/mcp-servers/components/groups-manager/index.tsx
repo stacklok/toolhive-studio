@@ -4,11 +4,7 @@ import { getApiV1BetaGroups } from '@api/sdk.gen'
 import { Group } from './group'
 import { Link, useRouterState } from '@tanstack/react-router'
 
-type UiGroup = {
-  id: string
-  name: string
-  isEnabled: boolean
-}
+// Use API return type directly
 
 export function GroupsManager(): ReactElement {
   const router = useRouterState({ select: (s) => s.location.search })
@@ -30,21 +26,15 @@ export function GroupsManager(): ReactElement {
 
   const apiGroups = data?.groups ?? []
 
-  const uiGroups: UiGroup[] = apiGroups.map((g, index) => ({
-    id: `group-${index + 1}`,
-    name: g.name ?? `Group ${index + 1}`,
-    isEnabled: Boolean(g.registered_clients && g.registered_clients.length > 0),
-  }))
-
   const currentGroupName = (router as Record<string, unknown>)['group']
     ? String((router as Record<string, string>)['group']).toLowerCase()
     : 'default'
 
   return (
     <div className="space-y-2">
-      {uiGroups.map((group) => (
+      {apiGroups.map((group, index) => (
         <Link
-          key={group.id}
+          key={group.name ?? `group-${index + 1}`}
           to="/"
           search={(prev) => ({
             ...prev,
@@ -53,8 +43,10 @@ export function GroupsManager(): ReactElement {
           preload={false}
         >
           <Group
-            name={group.name}
-            isEnabled={group.isEnabled}
+            name={group.name ?? 'default'}
+            isEnabled={Boolean(
+              group.registered_clients && group.registered_clients.length > 0
+            )}
             isActive={(group.name ?? '').toLowerCase() === currentGroupName}
           />
         </Link>

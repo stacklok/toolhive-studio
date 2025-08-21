@@ -30,16 +30,19 @@ export const handlers = [
   }),
 
   http.get(mswEndpoint('/api/v1beta/workloads'), ({ request }) => {
-    // Simulate server-side filtering by group when query param is present
+    // Simplified: return fixed examples based on group param
     const url = new URL(request.url)
-    const group = url.searchParams.get('group')?.toLowerCase()
-    if (group) {
-      const filtered = (workloadListFixture.workloads ?? []).filter(
-        (w) => (w.group ?? 'default').toLowerCase() === group
-      )
-      return HttpResponse.json({ workloads: filtered })
+    const group = (url.searchParams.get('group') || 'default').toLowerCase()
+    const examples: Record<string, string[]> = {
+      default: ['postgres-db', 'vscode-server', 'osv-2', 'osv'],
+      research: ['github', 'fetch'],
+      archive: [],
     }
-    return HttpResponse.json(workloadListFixture)
+    const names = examples[group] ?? examples.default
+    const filtered = (workloadListFixture.workloads ?? []).filter((w) =>
+      (names ?? []).includes(w.name || '')
+    )
+    return HttpResponse.json({ workloads: filtered })
   }),
 
   // Groups endpoints
