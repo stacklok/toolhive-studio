@@ -2,7 +2,7 @@ import type { V1WorkloadListResponse, CoreWorkload } from '@api/types.gen'
 import {
   postApiV1BetaWorkloadsByNameRestartMutation,
   getApiV1BetaWorkloadsQueryKey,
-  getApiV1BetaWorkloadsByNameOptions,
+  getApiV1BetaWorkloadsByNameStatusOptions,
   postApiV1BetaWorkloadsRestartMutation,
 } from '@api/@tanstack/react-query.gen'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
@@ -94,7 +94,7 @@ export function useMutationRestartServerAtStartup() {
           const servers = await Promise.all(
             names.map((name) =>
               queryClient.fetchQuery(
-                getApiV1BetaWorkloadsByNameOptions({ path: { name } })
+                getApiV1BetaWorkloadsByNameStatusOptions({ path: { name } })
               )
             )
           )

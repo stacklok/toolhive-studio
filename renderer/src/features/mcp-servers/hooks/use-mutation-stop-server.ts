@@ -2,7 +2,7 @@ import type { CoreWorkload, V1WorkloadListResponse } from '@api/types.gen'
 import {
   postApiV1BetaWorkloadsByNameStopMutation,
   getApiV1BetaWorkloadsQueryKey,
-  getApiV1BetaWorkloadsByNameOptions,
+  getApiV1BetaWorkloadsByNameStatusOptions,
 } from '@api/@tanstack/react-query.gen'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { pollBatchServerStatus } from '@/common/lib/polling'
@@ -52,7 +52,7 @@ export function useMutationStopServerList({ name }: { name: string }) {
           const servers = await Promise.all(
             names.map((name) =>
               queryClient.fetchQuery(
-                getApiV1BetaWorkloadsByNameOptions({ path: { name } })
+                getApiV1BetaWorkloadsByNameStatusOptions({ path: { name } })
               )
             )
           )
