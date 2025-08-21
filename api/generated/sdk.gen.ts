@@ -18,6 +18,9 @@ import type {
   DeleteApiV1BetaClientsByNameData,
   DeleteApiV1BetaClientsByNameResponses,
   DeleteApiV1BetaClientsByNameErrors,
+  DeleteApiV1BetaClientsByNameGroupsByGroupData,
+  DeleteApiV1BetaClientsByNameGroupsByGroupResponses,
+  DeleteApiV1BetaClientsByNameGroupsByGroupErrors,
   GetApiV1BetaDiscoveryClientsData,
   GetApiV1BetaDiscoveryClientsResponses,
   GetApiV1BetaGroupsData,
@@ -92,6 +95,9 @@ import type {
   GetApiV1BetaWorkloadsByNameData,
   GetApiV1BetaWorkloadsByNameResponses,
   GetApiV1BetaWorkloadsByNameErrors,
+  PostApiV1BetaWorkloadsByNameEditData,
+  PostApiV1BetaWorkloadsByNameEditResponses,
+  PostApiV1BetaWorkloadsByNameEditErrors,
   GetApiV1BetaWorkloadsByNameExportData,
   GetApiV1BetaWorkloadsByNameExportResponses,
   GetApiV1BetaWorkloadsByNameExportErrors,
@@ -242,6 +248,25 @@ export const deleteApiV1BetaClientsByName = <
     ThrowOnError
   >({
     url: '/api/v1beta/clients/{name}',
+    ...options,
+  })
+}
+
+/**
+ * Unregister a client from a specific group
+ * Unregister a client from a specific group in ToolHive
+ */
+export const deleteApiV1BetaClientsByNameGroupsByGroup = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<DeleteApiV1BetaClientsByNameGroupsByGroupData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).delete<
+    DeleteApiV1BetaClientsByNameGroupsByGroupResponses,
+    DeleteApiV1BetaClientsByNameGroupsByGroupErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/clients/{name}/groups/{group}',
     ...options,
   })
 }
@@ -762,6 +787,29 @@ export const getApiV1BetaWorkloadsByName = <
   >({
     url: '/api/v1beta/workloads/{name}',
     ...options,
+  })
+}
+
+/**
+ * Update workload
+ * Update an existing workload configuration
+ */
+export const postApiV1BetaWorkloadsByNameEdit = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1BetaWorkloadsByNameEditData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostApiV1BetaWorkloadsByNameEditResponses,
+    PostApiV1BetaWorkloadsByNameEditErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/workloads/{name}/edit',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
   })
 }
 

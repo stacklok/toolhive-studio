@@ -145,7 +145,7 @@ describe('prepareCreateWorkloadData', () => {
       image: 'ghcr.io/github/github-mcp-server',
       transport: 'stdio',
       cmd_arguments: ['--debug', '--port', '8080'],
-      env_vars: ['DEBUG=true', 'PORT=8080'],
+      env_vars: { DEBUG: 'true', PORT: '8080' },
       secrets: [{ name: 'secret-key', target: 'API_TOKEN' }],
       network_isolation: false,
       permission_profile: undefined,
@@ -176,7 +176,7 @@ describe('prepareCreateWorkloadData', () => {
       image: 'npx://my-package',
       transport: 'stdio',
       cmd_arguments: [],
-      env_vars: [],
+      env_vars: {},
       secrets: [],
       network_isolation: false,
       permission_profile: undefined,
@@ -206,7 +206,7 @@ describe('prepareCreateWorkloadData', () => {
 
     const result = prepareCreateWorkloadData(data)
 
-    expect(result.env_vars).toEqual(['DEBUG=true', 'VALID_VAR=value'])
+    expect(result.env_vars).toEqual({ DEBUG: 'true', VALID_VAR: 'value' })
   })
 
   it('configure volumes', () => {

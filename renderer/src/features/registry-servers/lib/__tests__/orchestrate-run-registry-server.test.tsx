@@ -204,7 +204,7 @@ describe('prepareCreateWorkloadData', () => {
       name: 'Test Server',
       image: 'test-image',
       transport: 'stdio',
-      env_vars: ['DEBUG=true', 'PORT=8080'],
+      env_vars: { DEBUG: 'true', PORT: '8080' },
       secrets,
       cmd_arguments: ['--debug', '--port', '8080'],
       target_port: 8080,
@@ -230,7 +230,7 @@ describe('prepareCreateWorkloadData', () => {
       name: 'Test Server',
       image: 'test-image',
       transport: 'stdio',
-      env_vars: [],
+      env_vars: {},
       secrets: [],
       cmd_arguments: [],
       target_port: 8080,
@@ -314,11 +314,11 @@ describe('prepareCreateWorkloadData', () => {
 
     const result = prepareCreateWorkloadData(SERVER, data)
 
-    expect(result.env_vars).toEqual([
-      'DEBUG=true',
-      'PORT=8080',
-      'REQUIRED_VAR=some-value',
-    ])
+    expect(result.env_vars).toEqual({
+      DEBUG: 'true',
+      PORT: '8080',
+      REQUIRED_VAR: 'some-value',
+    })
     // OPTIONAL_VAR and ANOTHER_OPTIONAL should be omitted
     expect(result.env_vars).not.toContain('OPTIONAL_VAR=')
     expect(result.env_vars).not.toContain('ANOTHER_OPTIONAL=')

@@ -14,7 +14,7 @@ import type { FormSchemaRunFromRegistry } from '../../lib/get-form-schema-run-fr
 import type { GroupedEnvVars } from '../../lib/group-env-vars'
 import type { RegistryEnvVar } from '@api/types.gen'
 import { cn } from '@/common/lib/utils'
-import { FormComboboxSecretStore } from '@/common/components/secrets/form-combobox-secrets-store'
+import { SecretStoreCombobox } from '@/common/components/secrets/secret-store-combobox'
 import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
 import { CommandArgumentsField } from '@/common/components/workload-cmd-arg/command-arguments-field'
 import { FormFieldsArrayVolumes } from '@/features/mcp-servers/components/form-fields-array-custom-volumes'
@@ -65,12 +65,12 @@ function SecretRow({
         )}
       />
 
-      <div className="grid grid-cols-[auto_calc(var(--spacing)_*_9)]">
-        <FormField
-          control={form.control}
-          name={`secrets.${index}.value`}
-          render={({ field }) => (
-            <FormItem>
+      <FormField
+        control={form.control}
+        name={`secrets.${index}.value`}
+        render={({ field }) => (
+          <FormItem>
+            <div className="grid grid-cols-[auto_calc(var(--spacing)_*_9)]">
               <FormControl>
                 <Input
                   id={`secrets.${index}.value`}
@@ -97,15 +97,20 @@ function SecretRow({
                   aria-label={`${secret.name ?? ''} value`}
                 />
               </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormComboboxSecretStore<FormSchemaRunFromRegistry>
-          form={form}
-          name={`secrets.${index}.value`}
-        />
-      </div>
+              <SecretStoreCombobox
+                value={field.value.secret}
+                onChange={(secretKey) =>
+                  field.onChange({
+                    secret: secretKey,
+                    isFromStore: true,
+                  })
+                }
+              />
+            </div>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </div>
   )
 }
