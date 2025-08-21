@@ -50,9 +50,12 @@ afterEach(() => {
 })
 afterAll(() => server.close())
 
-vi.mock('./renderer/src/feature-flags/index.ts', () => {
+// Default mock for useFeatureFlag to avoid hitting electron in tests
+vi.mock('./renderer/src/common/hooks/use-feature-flag', async (orig) => {
+  const original = await orig()
   return {
-    isFeatureEnabled: () => true,
+    ...original,
+    useFeatureFlag: () => false, // default to disabled; individual tests can override
   }
 })
 
