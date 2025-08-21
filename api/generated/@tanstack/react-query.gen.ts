@@ -39,6 +39,7 @@ import {
   getApiV1BetaWorkloadsByNameExport,
   getApiV1BetaWorkloadsByNameLogs,
   postApiV1BetaWorkloadsByNameRestart,
+  getApiV1BetaWorkloadsByNameStatus,
   postApiV1BetaWorkloadsByNameStop,
   getHealth,
 } from '../sdk.gen'
@@ -122,6 +123,7 @@ import type {
   PostApiV1BetaWorkloadsByNameRestartData,
   PostApiV1BetaWorkloadsByNameRestartError,
   PostApiV1BetaWorkloadsByNameRestartResponse,
+  GetApiV1BetaWorkloadsByNameStatusData,
   PostApiV1BetaWorkloadsByNameStopData,
   PostApiV1BetaWorkloadsByNameStopError,
   PostApiV1BetaWorkloadsByNameStopResponse,
@@ -1481,6 +1483,31 @@ export const postApiV1BetaWorkloadsByNameRestartMutation = (
     },
   }
   return mutationOptions
+}
+
+export const getApiV1BetaWorkloadsByNameStatusQueryKey = (
+  options: Options<GetApiV1BetaWorkloadsByNameStatusData>
+) => createQueryKey('getApiV1BetaWorkloadsByNameStatus', options)
+
+/**
+ * Get workload status
+ * Get the current status of a specific workload
+ */
+export const getApiV1BetaWorkloadsByNameStatusOptions = (
+  options: Options<GetApiV1BetaWorkloadsByNameStatusData>
+) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1BetaWorkloadsByNameStatus({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: getApiV1BetaWorkloadsByNameStatusQueryKey(options),
+  })
 }
 
 export const postApiV1BetaWorkloadsByNameStopQueryKey = (

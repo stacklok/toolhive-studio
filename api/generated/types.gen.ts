@@ -417,6 +417,11 @@ export type RegistryOAuthConfig = {
    */
   authorize_url?: string
   /**
+   * CallbackPort is the specific port to use for the OAuth callback server
+   * If not specified, a random available port will be used
+   */
+  callback_port?: number
+  /**
    * ClientID is the OAuth client ID for authentication
    */
   client_id?: string
@@ -425,6 +430,13 @@ export type RegistryOAuthConfig = {
    * Used for OIDC discovery to find authorization and token endpoints
    */
   issuer?: string
+  /**
+   * OAuthParams contains additional OAuth parameters to include in the authorization request
+   * These are server-specific parameters like "prompt", "response_mode", etc.
+   */
+  oauth_params?: {
+    [key: string]: string
+  }
   /**
    * Scopes are the OAuth scopes to request
    * If not specified, defaults to ["openid", "profile", "email"] for OIDC
@@ -550,6 +562,40 @@ export type RegistryVerifiedAttestation = {
   predicate_type?: string
 }
 
+/**
+ * RemoteAuthConfig contains OAuth configuration for remote MCP servers
+ */
+export type RunnerRemoteAuthConfig = {
+  authorizeURL?: string
+  callbackPort?: number
+  clientID?: string
+  clientSecret?: string
+  clientSecretFile?: string
+  enableRemoteAuth?: boolean
+  /**
+   * Environment variables for the client
+   */
+  envVars?: Array<RegistryEnvVar>
+  /**
+   * Headers for HTTP requests
+   */
+  headers?: Array<RegistryHeader>
+  /**
+   * OAuth endpoint configuration (from registry)
+   */
+  issuer?: string
+  /**
+   * OAuth parameters for server-specific customization
+   */
+  oauthParams?: {
+    [key: string]: string
+  }
+  scopes?: Array<string>
+  skipBrowser?: boolean
+  timeout?: string
+  tokenURL?: string
+}
+
 export type RunnerRunConfig = {
   audit_config?: AuditConfig
   /**
@@ -635,6 +681,11 @@ export type RunnerRunConfig = {
    */
   port?: number
   proxy_mode?: TypesProxyMode
+  remote_auth_config?: RunnerRemoteAuthConfig
+  /**
+   * RemoteURL is the URL of the remote MCP server (if running remotely)
+   */
+  remote_url?: string
   /**
    * SchemaVersion is the version of the RunConfig schema
    */
@@ -1273,6 +1324,16 @@ export type V1WorkloadListResponse = {
    * List of container information for each workload
    */
   workloads?: Array<CoreWorkload>
+}
+
+/**
+ * Response containing workload status information
+ */
+export type V1WorkloadStatusResponse = {
+  /**
+   * Current status of the workload
+   */
+  status?: string
 }
 
 export type GetApiOpenapiJsonData = {
@@ -2455,6 +2516,38 @@ export type PostApiV1BetaWorkloadsByNameRestartResponses = {
 
 export type PostApiV1BetaWorkloadsByNameRestartResponse =
   PostApiV1BetaWorkloadsByNameRestartResponses[keyof PostApiV1BetaWorkloadsByNameRestartResponses]
+
+export type GetApiV1BetaWorkloadsByNameStatusData = {
+  body?: never
+  path: {
+    /**
+     * Workload name
+     */
+    name: string
+  }
+  query?: never
+  url: '/api/v1beta/workloads/{name}/status'
+}
+
+export type GetApiV1BetaWorkloadsByNameStatusErrors = {
+  /**
+   * Not Found
+   */
+  404: string
+}
+
+export type GetApiV1BetaWorkloadsByNameStatusError =
+  GetApiV1BetaWorkloadsByNameStatusErrors[keyof GetApiV1BetaWorkloadsByNameStatusErrors]
+
+export type GetApiV1BetaWorkloadsByNameStatusResponses = {
+  /**
+   * OK
+   */
+  200: V1WorkloadStatusResponse
+}
+
+export type GetApiV1BetaWorkloadsByNameStatusResponse =
+  GetApiV1BetaWorkloadsByNameStatusResponses[keyof GetApiV1BetaWorkloadsByNameStatusResponses]
 
 export type PostApiV1BetaWorkloadsByNameStopData = {
   body?: never
