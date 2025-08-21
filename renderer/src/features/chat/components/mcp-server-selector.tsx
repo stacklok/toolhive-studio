@@ -14,10 +14,10 @@ import {
 import { ChevronDown } from 'lucide-react'
 import { McpServerBadge } from './mcp-server-badge'
 import { ToolhiveMcpBadge } from './toolhive-mcp-badge'
-import { useChatContext } from '../contexts'
+import { useChatSettings } from '../hooks/use-chat-settings'
 
 interface McpServerSelectorProps {
-  enabledTools: string[]
+  enabledTools?: string[] // Made optional since we're not using it
   onEnabledToolsChange?: (tools: string[]) => void
 }
 
@@ -29,12 +29,12 @@ interface McpServer {
 }
 
 export function McpServerSelector({
-  enabledTools,
   onEnabledToolsChange,
 }: McpServerSelectorProps) {
-  // Use context as fallback if callback not provided
-  const { updateEnabledTools: contextUpdateEnabledTools } = useChatContext()
-  const updateEnabledTools = onEnabledToolsChange || contextUpdateEnabledTools
+  // Use TanStack Query hook for settings management
+  const { updateEnabledTools: settingsUpdateEnabledTools } = useChatSettings()
+  const updateEnabledTools = onEnabledToolsChange || settingsUpdateEnabledTools
+
   const [isOpen, setIsOpen] = useState(false)
   const queryClient = useQueryClient()
 
@@ -59,14 +59,6 @@ export function McpServerSelector({
       status: w.status as 'running' | 'stopped',
       package: w.package,
     }))
-
-  // Sync backend state with context when it changes
-  if (
-    JSON.stringify(enabledTools.sort()) !==
-    JSON.stringify(backendEnabledTools.sort())
-  ) {
-    updateEnabledTools(backendEnabledTools)
-  }
 
   const enabledMcpServers = mcpServers.filter((server) =>
     backendEnabledTools.includes(server.id)

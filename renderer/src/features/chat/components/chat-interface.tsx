@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import { Button } from '@/common/components/ui/button'
 
 import { Trash2, MessageSquare } from 'lucide-react'
@@ -9,9 +9,12 @@ import { McpServerSelector } from './mcp-server-selector'
 import { ModelSelector } from './model-selector'
 import { ErrorAlert } from './error-alert'
 
-import { ChatProvider, useChatContext } from '../contexts'
+import { useChatStreaming } from '../hooks/use-chat-streaming'
+import { useQueryClient } from '@tanstack/react-query'
 
 function ChatInterfaceContent() {
+  const queryClient = useQueryClient()
+
   const {
     messages,
     isLoading,
@@ -22,19 +25,21 @@ function ChatInterfaceContent() {
     cancelRequest,
     loadPersistedSettings,
     updateSettings,
-  } = useChatContext()
+  } = useChatStreaming()
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
   const handleApiKeysSaved = useCallback(() => {
-    // Dispatch event to notify that API keys have changed
-    window.dispatchEvent(new CustomEvent('api-keys-changed'))
-  }, [])
+    // Invalidate all chat-related queries when API keys are saved
+    queryClient.invalidateQueries({ queryKey: ['chat', 'settings'] })
+    queryClient.invalidateQueries({ queryKey: ['chat', 'selectedModel'] })
+    queryClient.invalidateQueries({ queryKey: ['chat', 'availableModels'] })
+  }, [queryClient])
 
   const handleProviderChange = useCallback(
     (providerId: string) => {
-      loadPersistedSettings(providerId, true) // Preserve enabled tools when changing provider
+      loadPersistedSettings(providerId, true)
     },
     [loadPersistedSettings]
   )
@@ -44,7 +49,7 @@ function ChatInterfaceContent() {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
     }
-  }, [messages])
+  }, [messages.length])
 
   const hasProviderAndModel = settings.provider && settings.model
   const hasMessages = messages.length > 0
@@ -174,7 +179,7 @@ function ChatInterfaceContent() {
           {/* MCP Tools Selection */}
           {hasProviderAndModel && (
             <div className="mb-4">
-              <McpServerSelector enabledTools={settings.enabledTools || []} />
+              <McpServerSelector />
             </div>
           )}
 
@@ -209,9 +214,5 @@ function ChatInterfaceContent() {
 }
 
 export function ChatInterface() {
-  return (
-    <ChatProvider>
-      <ChatInterfaceContent />
-    </ChatProvider>
-  )
+  return <ChatInterfaceContent />
 }

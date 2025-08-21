@@ -33,7 +33,13 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
       !settings.apiKey ||
       !settings.apiKey.trim()
     ) {
-      console.error('Transport validation failed:', settings)
+      // Provide more specific error messages
+      if (!settings.provider || !settings.model) {
+        throw new Error('Please select an AI model in the settings')
+      }
+      if (!settings.apiKey || !settings.apiKey.trim()) {
+        throw new Error('Please configure your API key in the settings')
+      }
       throw new Error('Please configure your AI provider settings first')
     }
 
@@ -107,7 +113,6 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
           cleanup = () => {
             if (!isClosed) {
               isClosed = true
-              clearTimeout(timeoutId)
               window.electronAPI.removeListener?.(
                 'chat:stream:chunk',
                 handleChunk
@@ -120,28 +125,10 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
             }
           }
 
-          // Add a timeout to detect stuck streams
-          const timeoutId = setTimeout(() => {
-            if (!isClosed) {
-              console.warn(
-                '[IPC Transport] Stream timeout - no activity for 5 minutes'
-              )
-              try {
-                controller.error(
-                  new Error('Stream timeout - no response from server')
-                )
-              } catch {
-                // Stream already closed, ignore
-              }
-              cleanup?.()
-            }
-          }, 300000) // 5 minute timeout
-
           // Handle abort signal
           if (options.abortSignal) {
             const handleAbort = () => {
               if (!isClosed) {
-                clearTimeout(timeoutId)
                 try {
                   controller.error(new Error('Request aborted'))
                 } catch {
