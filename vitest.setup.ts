@@ -54,7 +54,7 @@ vi.mock('./renderer/src/common/hooks/use-feature-flag', async (orig) => {
   const original = await orig()
   return {
     ...original,
-    useFeatureFlag: () => false, // default to disabled; individual tests can override
+    useFeatureFlag: () => true,
   }
 })
 
