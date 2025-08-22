@@ -1,6 +1,6 @@
 import type { CoreWorkload } from '@api/types.gen'
 import { CardMcpServer } from './card-mcp-server'
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { InputSearch } from '@/common/components/ui/input-search'
 
 export function GridCardsMcpServers({
@@ -13,32 +13,28 @@ export function GridCardsMcpServers({
     state: 'all',
   })
 
-  const filteredMcpServers = useMemo(() => {
-    return mcpServers.filter((mcpServer) => {
-      if (filters.text.trim()) {
-        const searchTerm = filters.text.toLowerCase()
-        const name = mcpServer.name?.toLowerCase() || ''
-        const image = mcpServer.package?.toLowerCase() || ''
-        if (!name.includes(searchTerm) && !image.includes(searchTerm)) {
-          return false
-        }
-      }
-
-      if (filters.state !== 'all' && mcpServer.status !== filters.state) {
+  const filteredMcpServers = mcpServers.filter((mcpServer) => {
+    if (filters.text.trim()) {
+      const searchTerm = filters.text.toLowerCase()
+      const name = mcpServer.name?.toLowerCase() || ''
+      const image = mcpServer.package?.toLowerCase() || ''
+      if (!name.includes(searchTerm) && !image.includes(searchTerm)) {
         return false
       }
+    }
 
-      return true
-    })
-  }, [mcpServers, filters])
+    if (filters.state !== 'all' && mcpServer.status !== filters.state) {
+      return false
+    }
 
-  const sortedMcpServers = useMemo(() => {
-    return [...filteredMcpServers].sort((a, b) => {
-      const aName = (a.name || '').toLowerCase()
-      const bName = (b.name || '').toLowerCase()
-      return aName.localeCompare(bName)
-    })
-  }, [filteredMcpServers])
+    return true
+  })
+
+  const sortedMcpServers = [...filteredMcpServers].sort((a, b) => {
+    const aName = (a.name || '').toLowerCase()
+    const bName = (b.name || '').toLowerCase()
+    return aName.localeCompare(bName)
+  })
 
   return (
     <div className="space-y-6">
