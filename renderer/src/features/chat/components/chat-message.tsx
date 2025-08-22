@@ -10,8 +10,10 @@ import {
   Brain,
   Zap,
 } from 'lucide-react'
-import ReactMarkdown from 'react-markdown'
+import { Streamdown } from 'streamdown'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+import { useShikiTheme } from '../lib/theme-utils'
 import { TokenUsage } from './token-usage'
 import { NoContentMessage } from './no-content-message'
 import { useState } from 'react'
@@ -24,6 +26,7 @@ interface ChatMessageProps {
 // Helper function to render reasoning steps
 function ReasoningComponent({ part }: { part: ChatUIMessage['parts'][0] }) {
   const [isOpen, setIsOpen] = useState(false)
+  const shikiTheme = useShikiTheme()
 
   if (part.type !== 'reasoning') return null
 
@@ -55,11 +58,17 @@ function ReasoningComponent({ part }: { part: ChatUIMessage['parts'][0] }) {
         {isOpen && (
           <div className="mt-2">
             <div className="bg-background rounded border p-3 text-sm">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <Streamdown
+                className="prose prose-sm max-w-none"
+                remarkPlugins={[remarkGfm, remarkMath]}
+                allowedImagePrefixes={['data:']}
+                defaultOrigin="https://localhost"
+                shikiTheme={shikiTheme}
+              >
                 {'text' in part
                   ? part.text || 'No reasoning content'
                   : 'No reasoning content'}
-              </ReactMarkdown>
+              </Streamdown>
             </div>
           </div>
         )}
@@ -99,6 +108,7 @@ function ToolCallComponent({ part }: { part: ChatUIMessage['parts'][0] }) {
   const [isInputOpen, setIsInputOpen] = useState(false)
   const [isOutputOpen, setIsOutputOpen] = useState(false)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
+  const shikiTheme = useShikiTheme()
 
   // Handle AI SDK tool call parts (type starts with 'tool-' or is 'dynamic-tool')
   if (!part.type.startsWith('tool-') && part.type !== 'dynamic-tool')
@@ -243,12 +253,97 @@ function ToolCallComponent({ part }: { part: ChatUIMessage['parts'][0] }) {
           </button>
           {isOutputOpen && (
             <div className="mt-2">
-              <pre
-                className="bg-background max-h-60 overflow-x-auto rounded border
-                  p-2 text-xs"
-              >
-                {JSON.stringify(part.output, null, 2)}
-              </pre>
+              {(() => {
+                // Try to parse and render structured tool output
+                try {
+                  const output = part.output as Record<string, unknown>
+
+                  // Handle MCP server response format
+                  if (
+                    output &&
+                    typeof output === 'object' &&
+                    'content' in output &&
+                    Array.isArray(output.content)
+                  ) {
+                    return (
+                      <div className="space-y-3">
+                        {output.content.map(
+                          (item: Record<string, unknown>, idx: number) => {
+                            if (item.type === 'text') {
+                              return (
+                                <div
+                                  key={`text-${idx}`}
+                                  className="bg-background rounded border p-2 text-sm"
+                                >
+                                  <Streamdown
+                                    className="prose prose-sm max-w-none"
+                                    remarkPlugins={[remarkGfm, remarkMath]}
+                                    allowedImagePrefixes={['data:']}
+                                    defaultOrigin="https://localhost"
+                                    shikiTheme={shikiTheme}
+                                  >
+                                    {String(item.text || '')}
+                                  </Streamdown>
+                                </div>
+                              )
+                            } else if (item.type === 'image') {
+                              return (
+                                <div
+                                  key={`image-${idx}`}
+                                  className="bg-background rounded border p-2"
+                                >
+                                  <div className="text-muted-foreground mb-2 text-xs">
+                                    Generated Image:
+                                  </div>
+                                  <img
+                                    src={
+                                      'url' in item && item.url
+                                        ? String(item.url)
+                                        : `data:${String(item.mimeType || 'image/png')};base64,${String(item.data || '')}`
+                                    }
+                                    alt={String(
+                                      item.alt || 'Tool generated image'
+                                    )}
+                                    className="h-auto max-w-full rounded border"
+                                  />
+                                </div>
+                              )
+                            } else {
+                              return (
+                                <div
+                                  key={`other-${idx}`}
+                                  className="bg-background rounded border p-2 text-xs"
+                                >
+                                  <div className="text-muted-foreground mb-1">
+                                    Type: {String(item.type)}
+                                  </div>
+                                  <pre className="whitespace-pre-wrap">
+                                    {JSON.stringify(item, null, 2)}
+                                  </pre>
+                                </div>
+                              )
+                            }
+                          }
+                        )}
+                      </div>
+                    )
+                  }
+
+                  // Fallback to JSON display
+                  return (
+                    <pre className="bg-background max-h-60 overflow-x-auto rounded border p-2 text-xs">
+                      {JSON.stringify(part.output, null, 2)}
+                    </pre>
+                  )
+                } catch {
+                  // Fallback to JSON display if parsing fails
+                  return (
+                    <pre className="bg-background max-h-60 overflow-x-auto rounded border p-2 text-xs">
+                      {JSON.stringify(part.output, null, 2)}
+                    </pre>
+                  )
+                }
+              })()}
             </div>
           )}
         </div>
@@ -307,6 +402,7 @@ function ToolCallComponent({ part }: { part: ChatUIMessage['parts'][0] }) {
 
 export function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === 'user'
+  const shikiTheme = useShikiTheme()
 
   if (isUser) {
     // User message with bubble styling
@@ -320,31 +416,19 @@ export function ChatMessage({ message }: ChatMessageProps) {
                 rounded-br-md px-4 py-3 shadow-sm"
             >
               <div className="break-words">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    p: ({ children }) => (
-                      <p className="mb-0 last:mb-0">{children}</p>
-                    ),
-                    strong: ({ children }) => (
-                      <strong className="font-bold">{children}</strong>
-                    ),
-                    em: ({ children }) => (
-                      <em className="italic">{children}</em>
-                    ),
-                    code: ({ children }) => (
-                      <code
-                        className="bg-primary-foreground/20 rounded px-1 py-0.5
-                          font-mono text-sm"
-                      >
-                        {children}
-                      </code>
-                    ),
-                  }}
+                <Streamdown
+                  className="prose prose-sm [&_code]:bg-primary-foreground/20
+                    max-w-none [&_code]:rounded [&_code]:px-1 [&_code]:py-0.5
+                    [&_code]:font-mono [&_code]:text-sm [&_em]:italic [&_p]:mb-0
+                    [&_p:last-child]:mb-0 [&_strong]:font-bold"
+                  remarkPlugins={[remarkGfm, remarkMath]}
+                  allowedImagePrefixes={['data:']}
+                  defaultOrigin="https://localhost"
+                  shikiTheme={shikiTheme}
                 >
                   {message.parts.find((p) => p.type === 'text' && 'text' in p)
                     ?.text || ''}
-                </ReactMarkdown>
+                </Streamdown>
               </div>
             </div>
 
@@ -389,6 +473,10 @@ export function ChatMessage({ message }: ChatMessageProps) {
           {/* Render all message parts in order */}
           {message.parts.map((part, index) => {
             switch (part.type) {
+              case 'text':
+                // Text parts are handled separately below, skip here
+                return null
+
               case 'step-start':
                 return (
                   <StepStartComponent
@@ -411,10 +499,74 @@ export function ChatMessage({ message }: ChatMessageProps) {
                   />
                 )
 
+              case 'file':
+                return (
+                  <div
+                    key={`file-${index}`}
+                    className="bg-muted/50 my-3 rounded-lg border p-3"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="text-sm font-medium">
+                        File: {'name' in part ? String(part.name) : 'Unknown'}
+                      </div>
+                      {('url' in part || 'data' in part) && (
+                        <a
+                          href={
+                            'url' in part
+                              ? String(part.url)
+                              : `data:application/octet-stream;base64,${String((part as Record<string, unknown>).data || '')}`
+                          }
+                          download={'name' in part ? String(part.name) : 'file'}
+                          className="text-primary text-sm hover:underline"
+                        >
+                          Download
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )
+
               default:
+                // Handle image parts (not standard AI SDK type)
+                if ((part as Record<string, unknown>).type === 'image') {
+                  return (
+                    <div key={`image-${index}`} className="my-3">
+                      <div className="bg-card rounded-lg border p-3">
+                        <div className="mb-2 flex items-center gap-2">
+                          <span className="text-foreground text-sm font-medium">
+                            {'alt' in part
+                              ? String((part as Record<string, unknown>).alt)
+                              : 'Generated Image'}
+                          </span>
+                        </div>
+                        {'data' in part && (
+                          <img
+                            src={`data:${'mimeType' in part ? String((part as Record<string, unknown>).mimeType) : 'image/png'};base64,${String((part as Record<string, unknown>).data)}`}
+                            alt={
+                              'alt' in part
+                                ? String((part as Record<string, unknown>).alt)
+                                : 'Generated image'
+                            }
+                            className="h-auto max-w-full rounded-lg border"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  )
+                }
+
                 // Handle all tool-* parts
                 if (part.type.startsWith('tool-')) {
                   return <ToolCallComponent key={`tool-${index}`} part={part} />
+                }
+                // Only log truly unknown part types (exclude text, source-*, data-*, image)
+                if (
+                  !['text', 'source-url', 'source-document', 'image'].includes(
+                    part.type
+                  ) &&
+                  !part.type.startsWith('data-')
+                ) {
+                  // Unknown part type - silently ignore for now
                 }
                 return null
             }
@@ -436,116 +588,15 @@ export function ChatMessage({ message }: ChatMessageProps) {
             if (allTextContent.trim()) {
               return (
                 <div>
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      // Heading styles - balanced
-                      h1: ({ children }) => (
-                        <h1 className="text-foreground/85 mt-3 mb-2 text-lg font-semibold first:mt-0">
-                          {children}
-                        </h1>
-                      ),
-                      h2: ({ children }) => (
-                        <h2 className="text-foreground/80 mt-3 mb-2 text-base font-semibold first:mt-0">
-                          {children}
-                        </h2>
-                      ),
-                      h3: ({ children }) => (
-                        <h3 className="text-foreground/75 mt-2 mb-1 text-sm font-medium first:mt-0">
-                          {children}
-                        </h3>
-                      ),
-                      // List styles - balanced
-                      ul: ({ children }) => (
-                        <ul className="text-foreground/80 mb-2 list-inside list-disc space-y-0.5">
-                          {children}
-                        </ul>
-                      ),
-                      ol: ({ children }) => (
-                        <ol className="text-foreground/80 mb-2 list-inside list-decimal space-y-0.5">
-                          {children}
-                        </ol>
-                      ),
-                      li: ({ children }) => (
-                        <li className="text-foreground/80 ml-2 text-sm">
-                          {children}
-                        </li>
-                      ),
-                      // Table styles
-                      table: ({ children }) => (
-                        <div className="mb-4 overflow-x-auto">
-                          <table className="border-border min-w-full rounded-md border">
-                            {children}
-                          </table>
-                        </div>
-                      ),
-                      th: ({ children }) => (
-                        <th className="border-border bg-muted/50 text-foreground/75 border px-3 py-2 text-left text-xs font-medium">
-                          {children}
-                        </th>
-                      ),
-                      td: ({ children }) => (
-                        <td className="border-border text-foreground/80 border px-3 py-2 text-xs">
-                          {children}
-                        </td>
-                      ),
-                      // Code styles - balanced
-                      code: ({ className, children }) => {
-                        const isInline = !className
-                        if (isInline) {
-                          return (
-                            <code className="bg-muted/70 text-foreground/85 rounded px-1 py-0.5 font-mono text-xs">
-                              {children}
-                            </code>
-                          )
-                        }
-                        return (
-                          <code className="text-foreground/80 font-mono text-xs">
-                            {children}
-                          </code>
-                        )
-                      },
-                      pre: ({ children }) => (
-                        <pre className="bg-muted/50 text-foreground/80 mb-3 overflow-x-auto rounded-md p-3 text-xs">
-                          {children}
-                        </pre>
-                      ),
-                      // Link styles
-                      a: ({ href, children }) => (
-                        <a
-                          href={href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline"
-                        >
-                          {children}
-                        </a>
-                      ),
-                      // Text styles - balanced
-                      p: ({ children }) => (
-                        <p className="text-foreground/80 mb-2 leading-relaxed last:mb-0">
-                          {children}
-                        </p>
-                      ),
-                      strong: ({ children }) => (
-                        <strong className="text-foreground/90 font-medium">
-                          {children}
-                        </strong>
-                      ),
-                      em: ({ children }) => (
-                        <em className="text-foreground/75 italic">
-                          {children}
-                        </em>
-                      ),
-                      blockquote: ({ children }) => (
-                        <blockquote className="border-muted-foreground/30 mb-3 border-l-4 pl-4 italic">
-                          {children}
-                        </blockquote>
-                      ),
-                    }}
+                  <Streamdown
+                    className="prose prose-sm text-foreground/80 [&_h1]:text-foreground/85 [&_h2]:text-foreground/80 [&_h3]:text-foreground/75 [&_table]:border-border [&_th]:border-border [&_th]:bg-muted/50 [&_th]:text-foreground/75 [&_td]:border-border [&_code]:bg-muted/70 [&_code]:text-foreground/85 [&_pre]:bg-muted/50 [&_a]:text-primary [&_strong]:text-foreground/90 [&_em]:text-foreground/75 [&_blockquote]:border-muted-foreground/30 max-w-none [&_a:hover]:underline [&_blockquote]:mb-3 [&_blockquote]:border-l-4 [&_blockquote]:pl-4 [&_blockquote]:italic [&_code]:rounded [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-xs [&_em]:italic [&_h1]:mt-3 [&_h1]:mb-2 [&_h1]:text-lg [&_h1]:font-semibold [&_h1:first-child]:mt-0 [&_h2]:mt-3 [&_h2]:mb-2 [&_h2]:text-base [&_h2]:font-semibold [&_h2:first-child]:mt-0 [&_h3]:mt-2 [&_h3]:mb-1 [&_h3]:text-sm [&_h3]:font-medium [&_h3:first-child]:mt-0 [&_li]:ml-2 [&_li]:text-sm [&_ol]:mb-2 [&_ol]:list-inside [&_ol]:list-decimal [&_ol]:space-y-0.5 [&_p]:mb-2 [&_p]:leading-relaxed [&_p:last-child]:mb-0 [&_pre]:mb-3 [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:p-3 [&_pre]:text-xs [&_strong]:font-medium [&_table]:mb-4 [&_table]:min-w-full [&_table]:rounded-md [&_table]:border [&_td]:border [&_td]:px-3 [&_td]:py-2 [&_td]:text-xs [&_th]:border [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:text-xs [&_th]:font-medium [&_ul]:mb-2 [&_ul]:list-inside [&_ul]:list-disc [&_ul]:space-y-0.5"
+                    remarkPlugins={[remarkGfm, remarkMath]}
+                    allowedImagePrefixes={['data:']}
+                    defaultOrigin="https://localhost"
+                    shikiTheme={shikiTheme}
                   >
                     {allTextContent}
-                  </ReactMarkdown>
+                  </Streamdown>
                 </div>
               )
             }

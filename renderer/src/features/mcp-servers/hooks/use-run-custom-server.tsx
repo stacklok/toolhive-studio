@@ -1,6 +1,6 @@
 import {
   postApiV1BetaWorkloadsMutation,
-  getApiV1BetaWorkloadsByNameOptions,
+  getApiV1BetaWorkloadsByNameStatusOptions,
   postApiV1BetaSecretsDefaultKeysMutation,
   getApiV1BetaWorkloadsQueryKey,
 } from '@api/@tanstack/react-query.gen'
@@ -62,7 +62,7 @@ export function useRunCustomServer({
       const isServerReady = await pollServerStatus(
         () =>
           queryClient.fetchQuery(
-            getApiV1BetaWorkloadsByNameOptions({
+            getApiV1BetaWorkloadsByNameStatusOptions({
               path: { name: formData.name },
             })
           ),

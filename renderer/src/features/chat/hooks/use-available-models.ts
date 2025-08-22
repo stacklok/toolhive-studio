@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import type { ChatProvider } from '../types'
 
 interface AvailableProvider extends ChatProvider {
@@ -6,65 +7,45 @@ interface AvailableProvider extends ChatProvider {
 }
 
 export function useAvailableModels() {
-  const [availableProviders, setAvailableProviders] = useState<
+  const { data: availableProviders = [], isLoading } = useQuery<
     AvailableProvider[]
-  >([])
-  const [isLoading, setIsLoading] = useState(true)
+  >({
+    queryKey: ['chat', 'availableModels'],
+    queryFn: async () => {
+      // Get all providers
+      const providers: ChatProvider[] =
+        await window.electronAPI.chat.getProviders()
 
-  useEffect(() => {
-    async function fetchAvailableModels() {
-      try {
-        setIsLoading(true)
-
-        // Get all providers
-        const providers: ChatProvider[] =
-          await window.electronAPI.chat.getProviders()
-
-        // Check which providers have API keys
-        const providersWithApiKeys = await Promise.all(
-          providers.map(async (provider) => {
-            try {
-              const settings = await window.electronAPI.chat.getSettings(
-                provider.id
-              )
-              return {
-                ...provider,
-                hasApiKey: Boolean(settings.apiKey),
-              }
-            } catch {
-              return {
-                ...provider,
-                hasApiKey: false,
-              }
+      // Check which providers have API keys
+      const providersWithApiKeys = await Promise.all(
+        providers.map(async (provider) => {
+          try {
+            const settings = await window.electronAPI.chat.getSettings(
+              provider.id
+            )
+            return {
+              ...provider,
+              hasApiKey: Boolean(settings.apiKey),
             }
-          })
-        )
+          } catch {
+            return {
+              ...provider,
+              hasApiKey: false,
+            }
+          }
+        })
+      )
 
-        setAvailableProviders(providersWithApiKeys)
-      } catch (error) {
-        console.error('Failed to fetch available models:', error)
-        setAvailableProviders([])
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchAvailableModels()
-
-    // Listen for API key changes
-    const handleApiKeysChanged = () => {
-      fetchAvailableModels()
-    }
-
-    window.addEventListener('api-keys-changed', handleApiKeysChanged)
-    return () => {
-      window.removeEventListener('api-keys-changed', handleApiKeysChanged)
-    }
-  }, [])
+      return providersWithApiKeys
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+  })
 
   // Filter to only providers with API keys
-  const providersWithApiKeys = availableProviders.filter(
-    (provider) => provider.hasApiKey
+  const providersWithApiKeys = useMemo(
+    () => availableProviders.filter((provider) => provider.hasApiKey),
+    [availableProviders]
   )
 
   return {

@@ -1,7 +1,7 @@
 import type { V1WorkloadListResponse, CoreWorkload } from '@api/types.gen'
 import {
   deleteApiV1BetaWorkloadsByNameMutation,
-  getApiV1BetaWorkloadsByNameOptions,
+  getApiV1BetaWorkloadsByNameStatusOptions,
   getApiV1BetaWorkloadsQueryKey,
 } from '@api/@tanstack/react-query.gen'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
@@ -43,7 +43,7 @@ export function useDeleteServer({ name }: { name: string }) {
     onSuccess: async () => {
       await pollServerDelete(() =>
         queryClient.fetchQuery(
-          getApiV1BetaWorkloadsByNameOptions({
+          getApiV1BetaWorkloadsByNameStatusOptions({
             path: { name },
           })
         )

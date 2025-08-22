@@ -27,10 +27,15 @@ const binPath = app.isPackaged
 
 let toolhiveProcess: ReturnType<typeof spawn> | undefined
 let toolhivePort: number | undefined
+let toolhiveMcpPort: number | undefined
 let isRestarting = false
 
 export function getToolhivePort(): number | undefined {
   return toolhivePort
+}
+
+export function getToolhiveMcpPort(): number | undefined {
+  return toolhiveMcpPort
 }
 
 export function isToolhiveRunning(): boolean {
@@ -63,12 +68,22 @@ export async function startToolhive(tray?: Tray): Promise<void> {
     return
   }
 
+  log.info(`APP USER DATA: ${app.getPath('userData')}`)
   toolhivePort = await findFreePort()
+  toolhiveMcpPort = await findFreePort()
   log.info(`Starting ToolHive from: ${binPath} on port ${toolhivePort}`)
 
   toolhiveProcess = spawn(
     binPath,
-    ['serve', '--openapi', '--host=127.0.0.1', `--port=${toolhivePort}`],
+    [
+      'serve',
+      '--openapi',
+      '--experimental-mcp',
+      '--experimental-mcp-host=127.0.0.1',
+      `--experimental-mcp-port=${toolhiveMcpPort}`,
+      '--host=127.0.0.1',
+      `--port=${toolhivePort}`,
+    ],
     {
       stdio: 'ignore',
       detached: false,

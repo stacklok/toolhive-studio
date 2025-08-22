@@ -2,7 +2,7 @@ import type { V1WorkloadListResponse, CoreWorkload } from '@api/types.gen'
 import {
   postApiV1BetaWorkloadsByNameRestartMutation,
   getApiV1BetaWorkloadsQueryKey,
-  getApiV1BetaWorkloadsByNameOptions,
+  getApiV1BetaWorkloadsByNameStatusOptions,
   postApiV1BetaWorkloadsRestartMutation,
 } from '@api/@tanstack/react-query.gen'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
@@ -93,14 +93,18 @@ export function useMutationRestartServerAtStartup() {
       // Poll until all servers are running
       await pollBatchServerStatus(
         async (names) => {
-          const servers = await Promise.all(
+          const statusResponses = await Promise.all(
             names.map((name) =>
               queryClient.fetchQuery(
-                getApiV1BetaWorkloadsByNameOptions({ path: { name } })
+                getApiV1BetaWorkloadsByNameStatusOptions({ path: { name } })
               )
             )
           )
-          return servers
+          // Convert status responses to CoreWorkload-like objects for polling
+          return statusResponses.map((response, index) => ({
+            name: names[index],
+            status: response.status || 'unknown',
+          })) as CoreWorkload[]
         },
         serverNames,
         'running'

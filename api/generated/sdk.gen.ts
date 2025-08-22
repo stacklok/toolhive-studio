@@ -107,6 +107,9 @@ import type {
   PostApiV1BetaWorkloadsByNameRestartData,
   PostApiV1BetaWorkloadsByNameRestartResponses,
   PostApiV1BetaWorkloadsByNameRestartErrors,
+  GetApiV1BetaWorkloadsByNameStatusData,
+  GetApiV1BetaWorkloadsByNameStatusResponses,
+  GetApiV1BetaWorkloadsByNameStatusErrors,
   PostApiV1BetaWorkloadsByNameStopData,
   PostApiV1BetaWorkloadsByNameStopResponses,
   PostApiV1BetaWorkloadsByNameStopErrors,
@@ -866,6 +869,25 @@ export const postApiV1BetaWorkloadsByNameRestart = <
     ThrowOnError
   >({
     url: '/api/v1beta/workloads/{name}/restart',
+    ...options,
+  })
+}
+
+/**
+ * Get workload status
+ * Get the current status of a specific workload
+ */
+export const getApiV1BetaWorkloadsByNameStatus = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<GetApiV1BetaWorkloadsByNameStatusData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).get<
+    GetApiV1BetaWorkloadsByNameStatusResponses,
+    GetApiV1BetaWorkloadsByNameStatusErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/workloads/{name}/status',
     ...options,
   })
 }

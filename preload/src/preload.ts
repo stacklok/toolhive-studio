@@ -25,6 +25,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // ToolHive port
   getToolhivePort: () => ipcRenderer.invoke('get-toolhive-port'),
+  getToolhiveMcpPort: () => ipcRenderer.invoke('get-toolhive-mcp-port'),
   getToolhiveVersion: () => TOOLHIVE_VERSION,
   // ToolHive is running
   isToolhiveRunning: () => ipcRenderer.invoke('is-toolhive-running'),
@@ -157,6 +158,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         serverName,
         enabledTools
       ),
+    getToolhiveMcpInfo: () => ipcRenderer.invoke('chat:get-toolhive-mcp-info'),
   },
 
   // IPC event listeners for streaming
@@ -179,6 +181,7 @@ export interface ElectronAPI {
   hideApp: () => Promise<void>
   quitApp: () => Promise<void>
   getToolhivePort: () => Promise<number | undefined>
+  getToolhiveMcpPort: () => Promise<number | undefined>
   getToolhiveVersion: () => Promise<string>
   isToolhiveRunning: () => Promise<boolean>
   checkContainerEngine: () => Promise<{
@@ -296,6 +299,11 @@ export interface ElectronAPI {
       serverName: string,
       enabledTools: string[]
     ) => Promise<{ success: boolean; error?: string }>
+    getToolhiveMcpInfo: () => Promise<{
+      available: boolean
+      toolCount: number
+      tools: Array<{ name: string; description: string }>
+    } | null>
   }
 
   // IPC event listeners for streaming

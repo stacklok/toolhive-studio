@@ -4,16 +4,67 @@ import {
   type experimental_MCPClientConfig as MCPClientConfig,
 } from 'ai'
 import type { ToolSet } from 'ai'
+
 import { Experimental_StdioMCPTransport as StdioMCPTransport } from 'ai/mcp-stdio'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import { createClient } from '@api/client'
 import { getApiV1BetaWorkloads } from '@api/sdk.gen'
 import type { CoreWorkload } from '@api/types.gen'
 import { getHeaders } from '../headers'
-import { getToolhivePort } from '../toolhive-manager'
+import { getToolhivePort, getToolhiveMcpPort } from '../toolhive-manager'
 import log from '../logger'
 import type { McpToolInfo } from './types'
 import { getEnabledMcpTools } from './storage'
+
+// Check if Toolhive MCP is available and get its tools info
+export async function getToolhiveMcpInfo(): Promise<{
+  available: boolean
+  toolCount: number
+  tools: Array<{ name: string; description: string }>
+} | null> {
+  const toolhiveMcpPort = getToolhiveMcpPort()
+  if (!toolhiveMcpPort) {
+    return { available: false, toolCount: 0, tools: [] }
+  }
+
+  try {
+    const toolhiveMcpUrl = new URL(`http://localhost:${toolhiveMcpPort}/mcp`)
+    const toolhiveMcpConfig = {
+      name: 'toolhive-mcp',
+      transport: new StreamableHTTPClientTransport(toolhiveMcpUrl),
+    }
+
+    const toolhiveMcpClient = await createMCPClient(toolhiveMcpConfig)
+    const toolhiveMcpTools = await toolhiveMcpClient.tools()
+    await toolhiveMcpClient.close()
+
+    const tools = Object.keys(toolhiveMcpTools).map((toolName) => {
+      const toolDef = toolhiveMcpTools[toolName]
+      let description = ''
+
+      if (toolDef && typeof toolDef === 'object') {
+        const tool = toolDef as Record<string, unknown>
+        if (tool.description && typeof tool.description === 'string') {
+          description = tool.description
+        }
+      }
+
+      return {
+        name: toolName,
+        description,
+      }
+    })
+
+    return {
+      available: true,
+      toolCount: tools.length,
+      tools,
+    }
+  } catch (error) {
+    log.error('Failed to get Toolhive MCP info:', error)
+    return { available: false, toolCount: 0, tools: [] }
+  }
+}
 
 // Interface for MCP tool definition from client
 interface McpToolDefinition {
@@ -224,6 +275,40 @@ export async function createMcpTools(): Promise<{
 
   try {
     const port = getToolhivePort()
+    const toolhiveMcpPort = getToolhiveMcpPort()
+
+    // Add default Toolhive MCP client if toolhiveMcpPort is available
+    if (toolhiveMcpPort) {
+      try {
+        const toolhiveMcpUrl = new URL(
+          `http://localhost:${toolhiveMcpPort}/mcp`
+        )
+        const toolhiveMcpConfig = {
+          name: 'toolhive-mcp',
+          transport: new StreamableHTTPClientTransport(toolhiveMcpUrl),
+        }
+
+        const toolhiveMcpClient = await createMCPClient(toolhiveMcpConfig)
+        mcpClients.push(toolhiveMcpClient)
+
+        // Get all tools from the Toolhive MCP server
+        const toolhiveMcpTools = await toolhiveMcpClient.tools()
+
+        // Add all tools from Toolhive MCP (always enabled, cannot be disabled)
+        for (const [toolName, toolDef] of Object.entries(toolhiveMcpTools)) {
+          if (isMcpToolDefinition(toolDef)) {
+            mcpTools[toolName] = toolDef
+          }
+        }
+
+        log.info(
+          `Added ${Object.keys(toolhiveMcpTools).length} tools from Toolhive MCP server`
+        )
+      } catch (error) {
+        log.error('Failed to create Toolhive MCP client:', error)
+      }
+    }
+
     const client = createClient({
       baseUrl: `http://localhost:${port}`,
       headers: getHeaders(),
@@ -237,6 +322,7 @@ export async function createMcpTools(): Promise<{
     // Get enabled tools from storage
     const enabledTools = getEnabledMcpTools()
 
+    // Continue with regular MCP servers even if no enabled tools (since we might have Toolhive MCP)
     if (Object.keys(enabledTools).length === 0) {
       return { tools: mcpTools, clients: mcpClients }
     }
