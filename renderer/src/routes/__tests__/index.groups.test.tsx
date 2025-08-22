@@ -15,18 +15,6 @@ beforeEach(() => {
 
   Object.defineProperty(window, 'electronAPI', {
     value: {
-      darkMode: {
-        get: vi.fn().mockResolvedValue({
-          shouldUseDarkColors: false,
-          themeSource: 'system',
-        }),
-        set: vi.fn().mockResolvedValue(true),
-      },
-      featureFlags: {
-        get: vi.fn().mockResolvedValue(true), // enable GROUPS sidebar
-      },
-      getToolhivePort: vi.fn().mockResolvedValue(3000),
-      getTelemetryHeaders: vi.fn().mockResolvedValue({}),
       shutdownStore: {
         getLastShutdownServers: vi.fn().mockResolvedValue([]),
         clearShutdownHistory: vi.fn().mockResolvedValue(undefined),
