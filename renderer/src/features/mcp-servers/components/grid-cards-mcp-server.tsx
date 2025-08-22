@@ -1,6 +1,6 @@
 import type { CoreWorkload } from '@api/types.gen'
 import { CardMcpServer } from './card-mcp-server'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { InputSearch } from '@/common/components/ui/input-search'
 
 export function GridCardsMcpServers({
@@ -13,28 +13,30 @@ export function GridCardsMcpServers({
     state: 'all',
   })
 
-  const filteredMcpServers = mcpServers.filter((mcpServer) => {
-    if (filters.text.trim()) {
-      const searchTerm = filters.text.toLowerCase()
-      const name = mcpServer.name?.toLowerCase() || ''
-      const image = mcpServer.package?.toLowerCase() || ''
-      if (!name.includes(searchTerm) && !image.includes(searchTerm)) {
-        return false
-      }
-    }
+  const visibleMcpServers = useMemo(() => {
+    return mcpServers
+      .filter((mcpServer) => {
+        if (filters.text.trim()) {
+          const searchTerm = filters.text.toLowerCase()
+          const name = mcpServer.name?.toLowerCase() || ''
+          const image = mcpServer.package?.toLowerCase() || ''
+          if (!name.includes(searchTerm) && !image.includes(searchTerm)) {
+            return false
+          }
+        }
 
-    if (filters.state !== 'all' && mcpServer.status !== filters.state) {
-      return false
-    }
+        if (filters.state !== 'all' && mcpServer.status !== filters.state) {
+          return false
+        }
 
-    return true
-  })
-
-  const sortedMcpServers = [...filteredMcpServers].sort((a, b) => {
-    const aName = (a.name || '').toLowerCase()
-    const bName = (b.name || '').toLowerCase()
-    return aName.localeCompare(bName)
-  })
+        return true
+      })
+      .sort((a, b) => {
+        const aName = (a.name || '').toLowerCase()
+        const bName = (b.name || '').toLowerCase()
+        return aName.localeCompare(bName)
+      })
+  }, [mcpServers, filters])
 
   return (
     <div className="space-y-6">
@@ -45,7 +47,7 @@ export function GridCardsMcpServers({
       />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {sortedMcpServers.map((mcpServer) =>
+        {visibleMcpServers.map((mcpServer) =>
           mcpServer.name ? (
             <CardMcpServer
               key={mcpServer.name}
@@ -59,7 +61,7 @@ export function GridCardsMcpServers({
         )}
       </div>
 
-      {sortedMcpServers.length === 0 &&
+      {visibleMcpServers.length === 0 &&
         (filters.text || filters.state !== 'all') && (
           <div className="text-muted-foreground py-12 text-center">
             <p className="text-sm">
