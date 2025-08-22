@@ -8,7 +8,7 @@ export function McpServersSidebar(): ReactElement {
   return (
     <aside
       className="border-input bg-muted/50 text-sidebar-foreground fixed top-16
-        bottom-0 left-0 z-0 flex h-full w-[247px] flex-col items-start gap-3
+        bottom-0 left-0 z-0 flex h-full w-sidebar flex-col items-start gap-3
         border-r px-4 pt-10 pb-4"
     >
       <div className="flex flex-col gap-3">

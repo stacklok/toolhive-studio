@@ -85,7 +85,7 @@ export function Index() {
     <div className="flex h-full gap-6">
       {showSidebar ? <McpServersSidebar /> : null}
       <div
-        className={showSidebar ? 'ml-[247px] min-w-0 flex-1' : 'min-w-0 flex-1'}
+        className={showSidebar ? 'ml-sidebar min-w-0 flex-1' : 'min-w-0 flex-1'}
       >
         <TitlePage title="MCP Servers">
           {workloads.length > 0 && (
