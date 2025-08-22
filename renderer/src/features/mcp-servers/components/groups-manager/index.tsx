@@ -4,8 +4,6 @@ import { getApiV1BetaGroups } from '@api/sdk.gen'
 import { Group } from './group'
 import { Link, useRouterState } from '@tanstack/react-router'
 
-// Use API return type directly
-
 export function GroupsManager(): ReactElement {
   const router = useRouterState({ select: (s) => s.location.search })
   const { data } = useQuery({

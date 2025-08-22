@@ -30,7 +30,6 @@ export const handlers = [
   }),
 
   http.get(mswEndpoint('/api/v1beta/workloads'), ({ request }) => {
-    // Simplified: return fixed examples based on group param
     const url = new URL(request.url)
     const group = (url.searchParams.get('group') || 'default').toLowerCase()
     const examples: Record<string, string[]> = {
@@ -45,7 +44,6 @@ export const handlers = [
     return HttpResponse.json({ workloads: filtered })
   }),
 
-  // Groups endpoints
   http.get(mswEndpoint('/api/v1beta/groups'), () => {
     return HttpResponse.json({
       groups: [
