@@ -3,6 +3,8 @@
 
 @import './styles/view-transitions.css';
 
+@source '../../node_modules/streamdown/dist/index.js';
+
 @custom-variant dark (&: is(.dark *));
 
 @theme inline {

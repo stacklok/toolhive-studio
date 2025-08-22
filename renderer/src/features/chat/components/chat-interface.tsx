@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import { Button } from '@/common/components/ui/button'
 
 import { Trash2, MessageSquare } from 'lucide-react'
@@ -10,8 +10,11 @@ import { ModelSelector } from './model-selector'
 import { ErrorAlert } from './error-alert'
 
 import { useChatStreaming } from '../hooks/use-chat-streaming'
+import { useQueryClient } from '@tanstack/react-query'
 
-export function ChatInterface() {
+function ChatInterfaceContent() {
+  const queryClient = useQueryClient()
+
   const {
     messages,
     isLoading,
@@ -19,22 +22,24 @@ export function ChatInterface() {
     settings,
     sendMessage,
     clearMessages,
-    updateSettings,
     cancelRequest,
     loadPersistedSettings,
+    updateSettings,
   } = useChatStreaming()
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
   const handleApiKeysSaved = useCallback(() => {
-    // Dispatch event to notify that API keys have changed
-    window.dispatchEvent(new CustomEvent('api-keys-changed'))
-  }, [])
+    // Invalidate all chat-related queries when API keys are saved
+    queryClient.invalidateQueries({ queryKey: ['chat', 'settings'] })
+    queryClient.invalidateQueries({ queryKey: ['chat', 'selectedModel'] })
+    queryClient.invalidateQueries({ queryKey: ['chat', 'availableModels'] })
+  }, [queryClient])
 
   const handleProviderChange = useCallback(
     (providerId: string) => {
-      loadPersistedSettings(providerId, true) // Preserve enabled tools when changing provider
+      loadPersistedSettings(providerId, true)
     },
     [loadPersistedSettings]
   )
@@ -44,7 +49,7 @@ export function ChatInterface() {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
     }
-  }, [messages])
+  }, [messages.length])
 
   const hasProviderAndModel = settings.provider && settings.model
   const hasMessages = messages.length > 0
@@ -85,7 +90,7 @@ export function ChatInterface() {
           <div className="h-full overflow-y-auto scroll-smooth">
             <div className="container mx-auto py-8">
               <div className="space-y-8 pr-2">
-                {messages.map((message, index) => (
+                {messages.map((message, index: number) => (
                   <div
                     key={message.id}
                     className="animate-in fade-in-0 slide-in-from-bottom-2
@@ -174,12 +179,7 @@ export function ChatInterface() {
           {/* MCP Tools Selection */}
           {hasProviderAndModel && (
             <div className="mb-4">
-              <McpServerSelector
-                enabledTools={settings.enabledTools || []}
-                onEnabledToolsChange={(tools) =>
-                  updateSettings({ ...settings, enabledTools: tools })
-                }
-              />
+              <McpServerSelector />
             </div>
           )}
 
@@ -211,4 +211,8 @@ export function ChatInterface() {
       />
     </div>
   )
+}
+
+export function ChatInterface() {
+  return <ChatInterfaceContent />
 }

@@ -46,20 +46,24 @@ export function TokenUsage({ usage, responseTime }: TokenUsageProps) {
                   <strong>Output tokens:</strong>{' '}
                   {(usage.outputTokens || 0).toLocaleString()} (AI response)
                 </div>
-                {usage.reasoningTokens && usage.reasoningTokens > 0 && (
-                  <div>
-                    <strong>Reasoning tokens:</strong>{' '}
-                    {usage.reasoningTokens.toLocaleString()} (internal
-                    reasoning)
-                  </div>
-                )}
-                {usage.cachedInputTokens && usage.cachedInputTokens > 0 && (
-                  <div>
-                    <strong>Cached input tokens:</strong>{' '}
-                    {usage.cachedInputTokens.toLocaleString()} (cached from
-                    previous requests)
-                  </div>
-                )}
+                {usage.reasoningTokens &&
+                  !isNaN(usage.reasoningTokens) &&
+                  usage.reasoningTokens > 0 && (
+                    <div>
+                      <strong>Reasoning tokens:</strong>{' '}
+                      {usage.reasoningTokens.toLocaleString()} (internal
+                      reasoning)
+                    </div>
+                  )}
+                {usage.cachedInputTokens &&
+                  !isNaN(usage.cachedInputTokens) &&
+                  usage.cachedInputTokens > 0 && (
+                    <div>
+                      <strong>Cached input tokens:</strong>{' '}
+                      {usage.cachedInputTokens.toLocaleString()} (cached from
+                      previous requests)
+                    </div>
+                  )}
                 <div className="border-t pt-1">
                   <strong>Total tokens:</strong>{' '}
                   {(usage.totalTokens || 0).toLocaleString()}

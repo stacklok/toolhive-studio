@@ -90,6 +90,10 @@ export function saveChatSettings(
     chatStore.set('providers', typedProviders)
     return { success: true }
   } catch (error) {
+    log.error(
+      `[CHAT] Failed to save settings for provider ${providerId}:`,
+      error
+    )
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

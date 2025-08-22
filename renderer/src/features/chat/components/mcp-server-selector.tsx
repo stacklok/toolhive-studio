@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
 import type { CoreWorkload } from '@api/types.gen'
 import { Button } from '@/common/components/ui/button'
@@ -13,10 +13,12 @@ import {
 } from '@/common/components/ui/dropdown-menu'
 import { ChevronDown } from 'lucide-react'
 import { McpServerBadge } from './mcp-server-badge'
+import { ToolhiveMcpBadge } from './toolhive-mcp-badge'
+import { useChatSettings } from '../hooks/use-chat-settings'
 
 interface McpServerSelectorProps {
-  enabledTools: string[]
-  onEnabledToolsChange: (tools: string[]) => void
+  enabledTools?: string[] // Made optional since we're not using it
+  onEnabledToolsChange?: (tools: string[]) => void
 }
 
 interface McpServer {
@@ -27,14 +29,24 @@ interface McpServer {
 }
 
 export function McpServerSelector({
-  enabledTools,
   onEnabledToolsChange,
 }: McpServerSelectorProps) {
+  // Use TanStack Query hook for settings management
+  const { updateEnabledTools: settingsUpdateEnabledTools } = useChatSettings()
+  const updateEnabledTools = onEnabledToolsChange || settingsUpdateEnabledTools
+
   const [isOpen, setIsOpen] = useState(false)
+  const queryClient = useQueryClient()
 
   const { data: workloadsData } = useQuery({
     ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
-    refetchInterval: 5000, // Refresh every 5 seconds to keep status updated
+    refetchInterval: 30000,
+  })
+
+  const { data: backendEnabledTools = [] } = useQuery({
+    queryKey: ['chat', 'enabledMcpServers'],
+    queryFn: () => window.electronAPI.chat.getEnabledMcpServersFromTools(),
+    refetchInterval: 30000,
   })
 
   // Process workloads data to get running MCP servers
@@ -48,21 +60,21 @@ export function McpServerSelector({
     }))
 
   const enabledMcpServers = mcpServers.filter((server) =>
-    enabledTools.includes(server.id)
+    backendEnabledTools.includes(server.id)
   )
 
   const handleToggleTool = async (toolId: string) => {
     // Extract server name from toolId (remove 'mcp_' prefix)
     const serverName = toolId.replace('mcp_', '')
 
-    if (enabledTools.includes(toolId)) {
+    if (backendEnabledTools.includes(toolId)) {
       // Disable all tools for this server
       try {
         await window.electronAPI.chat.saveEnabledMcpTools(serverName, [])
-        // Refresh the enabled tools list from the single source of truth
-        const newEnabledServers =
-          await window.electronAPI.chat.getEnabledMcpServersFromTools()
-        onEnabledToolsChange(newEnabledServers)
+        // Invalidate query to refetch latest state
+        queryClient.invalidateQueries({
+          queryKey: ['chat', 'enabledMcpServers'],
+        })
       } catch (error) {
         console.error('Failed to disable server tools:', error)
       }
@@ -79,11 +91,10 @@ export function McpServerSelector({
             serverName,
             allToolNames
           )
-          // Refresh the enabled tools list from the single source of truth
-          const newEnabledServers =
-            await window.electronAPI.chat.getEnabledMcpServersFromTools()
-
-          onEnabledToolsChange(newEnabledServers)
+          // Invalidate query to refetch latest state
+          queryClient.invalidateQueries({
+            queryKey: ['chat', 'enabledMcpServers'],
+          })
         }
       } catch (error) {
         console.error('Failed to enable server tools:', error)
@@ -91,41 +102,10 @@ export function McpServerSelector({
     }
   }
 
-  // Effect to sync server list with backend state when workloads change
-  useEffect(() => {
-    const syncServerList = async () => {
-      try {
-        const backendEnabledServers =
-          await window.electronAPI.chat.getEnabledMcpServersFromTools()
-        // If the current enabledTools doesn't match the backend, update it
-        if (
-          JSON.stringify(enabledTools.sort()) !==
-          JSON.stringify(backendEnabledServers.sort())
-        ) {
-          onEnabledToolsChange(backendEnabledServers)
-        }
-      } catch (error) {
-        console.error('Failed to sync server list with backend:', error)
-      }
-    }
-
-    // Only sync if we have workload data
-    if (workloadsData?.workloads) {
-      syncServerList()
-    }
-  }, [workloadsData?.workloads, enabledTools, onEnabledToolsChange]) // Include dependencies
-
   const handleToolsChange = async () => {
     // Individual tool changes are already saved by the modal,
-    // now refresh the server list from the single source of truth
-    try {
-      // Refresh the enabled servers list from individual tool states
-      const newEnabledServers =
-        await window.electronAPI.chat.getEnabledMcpServersFromTools()
-      onEnabledToolsChange(newEnabledServers)
-    } catch (error) {
-      console.error('Failed to refresh enabled servers:', error)
-    }
+    // invalidate query to refetch latest state
+    queryClient.invalidateQueries({ queryKey: ['chat', 'enabledMcpServers'] })
   }
 
   return (
@@ -162,7 +142,7 @@ export function McpServerSelector({
               mcpServers.map((server) => (
                 <DropdownMenuCheckboxItem
                   key={server.id}
-                  checked={enabledTools.includes(server.id)}
+                  checked={backendEnabledTools.includes(server.id)}
                   onCheckedChange={() => handleToggleTool(server.id)}
                   className="flex items-center gap-3 py-3"
                 >
@@ -192,8 +172,14 @@ export function McpServerSelector({
                     variant="ghost"
                     size="sm"
                     className="w-full text-xs"
-                    onClick={() => onEnabledToolsChange([])}
-                    disabled={enabledTools.length === 0}
+                    onClick={() => {
+                      // Clear all enabled tools and invalidate query
+                      updateEnabledTools([])
+                      queryClient.invalidateQueries({
+                        queryKey: ['chat', 'enabledMcpServers'],
+                      })
+                    }}
+                    disabled={backendEnabledTools.length === 0}
                   >
                     Clear All
                   </Button>
@@ -205,17 +191,19 @@ export function McpServerSelector({
       </div>
 
       {/* Selected tools as badges */}
-      {enabledMcpServers.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
-          {enabledMcpServers.map((server) => (
-            <McpServerBadge
-              key={server.id}
-              serverName={server.name}
-              onToolsChange={handleToolsChange}
-            />
-          ))}
-        </div>
-      )}
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Toolhive MCP Badge (always shows when available) */}
+        <ToolhiveMcpBadge />
+
+        {/* Regular MCP server badges */}
+        {enabledMcpServers.map((server) => (
+          <McpServerBadge
+            key={server.id}
+            serverName={server.name}
+            onToolsChange={handleToolsChange}
+          />
+        ))}
+      </div>
     </div>
   )
 }

@@ -33,7 +33,13 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
       !settings.apiKey ||
       !settings.apiKey.trim()
     ) {
-      console.error('Transport validation failed:', settings)
+      // Provide more specific error messages
+      if (!settings.provider || !settings.model) {
+        throw new Error('Please select an AI model in the settings')
+      }
+      if (!settings.apiKey || !settings.apiKey.trim()) {
+        throw new Error('Please configure your API key in the settings')
+      }
       throw new Error('Please configure your AI provider settings first')
     }
 
@@ -58,6 +64,8 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
       const { streamId } = response as { streamId: string }
 
       // Create a readable stream that will be populated by IPC events
+      let cleanup: (() => void) | null = null
+
       return new ReadableStream<UIMessageChunk>({
         start(controller) {
           let isClosed = false
@@ -67,14 +75,10 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
             const data = args[0] as { streamId: string; chunk: UIMessageChunk }
             if (data && data.streamId === streamId && !isClosed) {
               try {
-                // Enqueue the UIMessageChunk directly
                 controller.enqueue(data.chunk)
-              } catch (error) {
-                console.warn(
-                  'Failed to enqueue chunk (stream likely closed):',
-                  error
-                )
-                isClosed = true
+              } catch {
+                // Stream is already closed, clean up silently
+                cleanup?.()
               }
             }
           }
@@ -85,20 +89,10 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
             if (data && data.streamId === streamId && !isClosed) {
               try {
                 controller.close()
-                isClosed = true
-              } catch (error) {
-                console.warn('Failed to close stream (already closed):', error)
+              } catch {
+                // Stream already closed, ignore
               }
-              // Clean up listeners
-              window.electronAPI.removeListener?.(
-                'chat:stream:chunk',
-                handleChunk
-              )
-              window.electronAPI.removeListener?.('chat:stream:end', handleEnd)
-              window.electronAPI.removeListener?.(
-                'chat:stream:error',
-                handleError
-              )
+              cleanup?.()
             }
           }
 
@@ -108,11 +102,17 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
             if (data && data.streamId === streamId && !isClosed) {
               try {
                 controller.error(new Error(data.error))
-                isClosed = true
-              } catch (error) {
-                console.warn('Failed to error stream (already closed):', error)
+              } catch {
+                // Stream already closed, ignore
               }
-              // Clean up listeners
+              cleanup?.()
+            }
+          }
+
+          // Clean up function to remove all listeners
+          cleanup = () => {
+            if (!isClosed) {
+              isClosed = true
               window.electronAPI.removeListener?.(
                 'chat:stream:chunk',
                 handleChunk
@@ -125,11 +125,37 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
             }
           }
 
-          // Set up IPC listeners
+          // Handle abort signal
+          if (options.abortSignal) {
+            const handleAbort = () => {
+              if (!isClosed) {
+                try {
+                  controller.error(new Error('Request aborted'))
+                } catch {
+                  // Stream already closed, ignore
+                }
+                cleanup?.()
+              }
+            }
 
+            if (options.abortSignal.aborted) {
+              // Already aborted
+              handleAbort()
+              return
+            }
+
+            options.abortSignal.addEventListener('abort', handleAbort)
+          }
+
+          // Set up IPC listeners
           window.electronAPI.on?.('chat:stream:chunk', handleChunk)
           window.electronAPI.on?.('chat:stream:end', handleEnd)
           window.electronAPI.on?.('chat:stream:error', handleError)
+        },
+        cancel() {
+          // This is called when the stream is cancelled (e.g., by abort signal)
+          // Clean up listeners to prevent further IPC events
+          cleanup?.()
         },
       })
     } catch (error) {
