@@ -50,7 +50,6 @@ afterEach(() => {
 })
 afterAll(() => server.close())
 
-// Default mock for useFeatureFlag to avoid hitting electron in tests
 vi.mock('./renderer/src/common/hooks/use-feature-flag', async (orig) => {
   const original = await orig()
   return {
