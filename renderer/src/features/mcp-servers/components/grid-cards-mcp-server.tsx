@@ -32,6 +32,14 @@ export function GridCardsMcpServers({
     })
   }, [mcpServers, filters])
 
+  const sortedMcpServers = useMemo(() => {
+    return [...filteredMcpServers].sort((a, b) => {
+      const aName = (a.name || '').toLowerCase()
+      const bName = (b.name || '').toLowerCase()
+      return aName.localeCompare(bName)
+    })
+  }, [filteredMcpServers])
+
   return (
     <div className="space-y-6">
       <InputSearch
@@ -41,7 +49,7 @@ export function GridCardsMcpServers({
       />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {filteredMcpServers.map((mcpServer) =>
+        {sortedMcpServers.map((mcpServer) =>
           mcpServer.name ? (
             <CardMcpServer
               key={mcpServer.name}
@@ -55,7 +63,7 @@ export function GridCardsMcpServers({
         )}
       </div>
 
-      {filteredMcpServers.length === 0 &&
+      {sortedMcpServers.length === 0 &&
         (filters.text || filters.state !== 'all') && (
           <div className="text-muted-foreground py-12 text-center">
             <p className="text-sm">
