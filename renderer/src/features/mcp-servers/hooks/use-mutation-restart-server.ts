@@ -22,7 +22,9 @@ const getMutationData = (name: string) => ({
 
 export function useMutationRestartServerAtStartup() {
   const queryClient = useQueryClient()
-  const queryKey = getApiV1BetaWorkloadsQueryKey({ query: { all: true } })
+  const queryKey = getApiV1BetaWorkloadsQueryKey({
+    query: { all: true, group: 'default' },
+  })
 
   useEffect(() => {
     const cleanup = window.electronAPI.onServerShutdown(() => {
@@ -121,7 +123,9 @@ export function useMutationRestartServerAtStartup() {
 
 export function useMutationRestartServer({ name }: { name: string }) {
   const queryClient = useQueryClient()
-  const queryKey = getApiV1BetaWorkloadsQueryKey({ query: { all: true } })
+  const queryKey = getApiV1BetaWorkloadsQueryKey({
+    query: { all: true, group: 'default' },
+  })
 
   return useToastMutation({
     ...getMutationData(name),

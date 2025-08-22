@@ -17,7 +17,9 @@ const getMutationData = (name: string) => ({
 
 export function useMutationStopServerList({ name }: { name: string }) {
   const queryClient = useQueryClient()
-  const queryKey = getApiV1BetaWorkloadsQueryKey({ query: { all: true } })
+  const queryKey = getApiV1BetaWorkloadsQueryKey({
+    query: { all: true, group: 'default' },
+  })
   return useToastMutation({
     ...getMutationData(name),
 

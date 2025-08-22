@@ -50,9 +50,11 @@ afterEach(() => {
 })
 afterAll(() => server.close())
 
-vi.mock('./renderer/src/feature-flags/index.ts', () => {
+vi.mock('./renderer/src/common/hooks/use-feature-flag', async (orig) => {
+  const original = await orig()
   return {
-    isFeatureEnabled: () => true,
+    ...original,
+    useFeatureFlag: () => true,
   }
 })
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useRouterState } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
 import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
 import { EmptyState } from '@/common/components/empty-state'
@@ -13,6 +13,9 @@ import { GridCardsMcpServers } from '@/features/mcp-servers/components/grid-card
 import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/menu-run-mcp-server'
 import { useMutationRestartServerAtStartup } from '@/features/mcp-servers/hooks/use-mutation-restart-server'
 import { TitlePage } from '@/common/components/title-page'
+import { McpServersSidebar } from '@/features/mcp-servers/components/mcp-servers-sidebar'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { featureFlagKeys } from '../../../utils/feature-flags'
 
 export const Route = createFileRoute('/')({
   loader: ({ context: { queryClient } }) =>
@@ -23,13 +26,39 @@ export const Route = createFileRoute('/')({
 })
 
 export function Index() {
+  const navigate = Route.useNavigate()
+  const search = useRouterState({ select: (s) => s.location.search }) as Record<
+    string,
+    unknown
+  >
+  const showSidebar = useFeatureFlag(featureFlagKeys.GROUPS)
+  const selectedGroup = showSidebar
+    ? String((search.group as string) ?? 'default')
+    : 'default'
   const { data, refetch } = useSuspenseQuery({
-    ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
+    ...getApiV1BetaWorkloadsOptions({
+      query: {
+        all: true,
+        group: selectedGroup,
+      },
+    }),
   })
   const workloads = data?.workloads ?? []
+  const filteredWorkloads = workloads
   const [isRunWithCommandOpen, setIsRunWithCommandOpen] = useState(false)
   const { mutateAsync, isPending } = useMutationRestartServerAtStartup()
   const hasProcessedShutdown = useRef(false)
+
+  // Ensure a default group in the URL when groups feature is enabled
+  useEffect(() => {
+    if (!showSidebar) return
+    if (!search.group) {
+      navigate({
+        search: (prev) => ({ ...prev, group: 'default' }),
+        replace: true,
+      })
+    }
+  }, [navigate, search.group, showSidebar])
 
   useEffect(() => {
     const handleShutdownRestart = async () => {
@@ -53,44 +82,49 @@ export function Index() {
   }, [mutateAsync])
 
   return (
-    <>
-      <TitlePage title="MCP Servers">
-        {workloads.length > 0 && (
-          <div className="ml-auto flex gap-2">
-            <RefreshButton refresh={refetch} />
-            <DropdownMenuRunMcpServer
-              openRunCommandDialog={() => setIsRunWithCommandOpen(true)}
-            />
-          </div>
+    <div className="flex h-full gap-6">
+      {showSidebar ? <McpServersSidebar /> : null}
+      <div
+        className={showSidebar ? 'ml-sidebar min-w-0 flex-1' : 'min-w-0 flex-1'}
+      >
+        <TitlePage title="MCP Servers">
+          {workloads.length > 0 && (
+            <div className="ml-auto flex gap-2">
+              <RefreshButton refresh={refetch} />
+              <DropdownMenuRunMcpServer
+                openRunCommandDialog={() => setIsRunWithCommandOpen(true)}
+              />
+            </div>
+          )}
+          <DialogFormRunMcpServerWithCommand
+            isOpen={isRunWithCommandOpen}
+            onOpenChange={setIsRunWithCommandOpen}
+          />
+        </TitlePage>
+        {!isPending && !filteredWorkloads.length ? (
+          <EmptyState
+            title="Add your first MCP server"
+            body="You can add a server by running it with a command or by browsing the registry"
+            actions={[
+              <Button
+                variant="outline"
+                key="add-custom-server"
+                onClick={() => setIsRunWithCommandOpen(true)}
+              >
+                Add custom server
+              </Button>,
+              <Button asChild key="add-from-registry">
+                <LinkViewTransition to="/registry">
+                  Browse registry <ChevronRight />
+                </LinkViewTransition>
+              </Button>,
+            ]}
+            illustration={IllustrationNoConnection}
+          />
+        ) : (
+          <GridCardsMcpServers mcpServers={filteredWorkloads} />
         )}
-        <DialogFormRunMcpServerWithCommand
-          isOpen={isRunWithCommandOpen}
-          onOpenChange={setIsRunWithCommandOpen}
-        />
-      </TitlePage>
-      {!isPending && !workloads.length ? (
-        <EmptyState
-          title="Add your first MCP server"
-          body="You can add a server by running it with a command or by browsing the registry"
-          actions={[
-            <Button
-              variant="outline"
-              key="add-custom-server"
-              onClick={() => setIsRunWithCommandOpen(true)}
-            >
-              Add custom server
-            </Button>,
-            <Button asChild key="add-from-registry">
-              <LinkViewTransition to="/registry">
-                Browse registry <ChevronRight />
-              </LinkViewTransition>
-            </Button>,
-          ]}
-          illustration={IllustrationNoConnection}
-        />
-      ) : (
-        <GridCardsMcpServers mcpServers={workloads} />
-      )}
-    </>
+      </div>
+    </div>
   )
 }

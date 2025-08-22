@@ -29,10 +29,29 @@ export const handlers = [
     return HttpResponse.json(versionFixture)
   }),
 
-  http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-    // TODO: Don't stringify after
-    // https://github.com/stacklok/toolhive/issues/495 is resolved
-    return HttpResponse.json(workloadListFixture)
+  http.get(mswEndpoint('/api/v1beta/workloads'), ({ request }) => {
+    const url = new URL(request.url)
+    const group = (url.searchParams.get('group') || 'default').toLowerCase()
+    const examples: Record<string, string[]> = {
+      default: ['postgres-db', 'vscode-server', 'osv-2', 'osv'],
+      research: ['github', 'fetch'],
+      archive: [],
+    }
+    const names = examples[group] ?? examples.default
+    const filtered = (workloadListFixture.workloads ?? []).filter((w) =>
+      (names ?? []).includes(w.name || '')
+    )
+    return HttpResponse.json({ workloads: filtered })
+  }),
+
+  http.get(mswEndpoint('/api/v1beta/groups'), () => {
+    return HttpResponse.json({
+      groups: [
+        { name: 'default', registered_clients: ['client-a'] },
+        { name: 'Research team', registered_clients: ['client-b'] },
+        { name: 'Archive', registered_clients: [] },
+      ],
+    })
   }),
 
   http.post(mswEndpoint('/api/v1beta/workloads'), async ({ request }) => {
