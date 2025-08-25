@@ -16,6 +16,7 @@ import { Route as PlaygroundRouteImport } from "./routes/playground"
 import { Route as ClientsRouteImport } from "./routes/clients"
 import { Route as IndexRouteImport } from "./routes/index"
 import { Route as LogsServerNameRouteImport } from "./routes/logs.$serverName"
+import { Route as CustomizeToolsServerNameRouteImport } from "./routes/customize-tools.$serverName"
 import { Route as registryRegistryRouteImport } from "./routes/(registry)/registry"
 import { Route as registryRegistryNameRouteImport } from "./routes/(registry)/registry_.$name"
 
@@ -54,6 +55,12 @@ const LogsServerNameRoute = LogsServerNameRouteImport.update({
   path: "/logs/$serverName",
   getParentRoute: () => rootRouteImport,
 } as any)
+const CustomizeToolsServerNameRoute =
+  CustomizeToolsServerNameRouteImport.update({
+    id: "/customize-tools/$serverName",
+    path: "/customize-tools/$serverName",
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const registryRegistryRoute = registryRegistryRouteImport.update({
   id: "/(registry)/registry",
   path: "/registry",
@@ -73,6 +80,7 @@ export interface FileRoutesByFullPath {
   "/settings": typeof SettingsRoute
   "/shutdown": typeof ShutdownRoute
   "/registry": typeof registryRegistryRoute
+  "/customize-tools/$serverName": typeof CustomizeToolsServerNameRoute
   "/logs/$serverName": typeof LogsServerNameRoute
   "/registry/$name": typeof registryRegistryNameRoute
 }
@@ -84,6 +92,7 @@ export interface FileRoutesByTo {
   "/settings": typeof SettingsRoute
   "/shutdown": typeof ShutdownRoute
   "/registry": typeof registryRegistryRoute
+  "/customize-tools/$serverName": typeof CustomizeToolsServerNameRoute
   "/logs/$serverName": typeof LogsServerNameRoute
   "/registry/$name": typeof registryRegistryNameRoute
 }
@@ -96,6 +105,7 @@ export interface FileRoutesById {
   "/settings": typeof SettingsRoute
   "/shutdown": typeof ShutdownRoute
   "/(registry)/registry": typeof registryRegistryRoute
+  "/customize-tools/$serverName": typeof CustomizeToolsServerNameRoute
   "/logs/$serverName": typeof LogsServerNameRoute
   "/(registry)/registry_/$name": typeof registryRegistryNameRoute
 }
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | "/settings"
     | "/shutdown"
     | "/registry"
+    | "/customize-tools/$serverName"
     | "/logs/$serverName"
     | "/registry/$name"
   fileRoutesByTo: FileRoutesByTo
@@ -120,6 +131,7 @@ export interface FileRouteTypes {
     | "/settings"
     | "/shutdown"
     | "/registry"
+    | "/customize-tools/$serverName"
     | "/logs/$serverName"
     | "/registry/$name"
   id:
@@ -131,6 +143,7 @@ export interface FileRouteTypes {
     | "/settings"
     | "/shutdown"
     | "/(registry)/registry"
+    | "/customize-tools/$serverName"
     | "/logs/$serverName"
     | "/(registry)/registry_/$name"
   fileRoutesById: FileRoutesById
@@ -143,6 +156,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   ShutdownRoute: typeof ShutdownRoute
   registryRegistryRoute: typeof registryRegistryRoute
+  CustomizeToolsServerNameRoute: typeof CustomizeToolsServerNameRoute
   LogsServerNameRoute: typeof LogsServerNameRoute
   registryRegistryNameRoute: typeof registryRegistryNameRoute
 }
@@ -198,6 +212,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof LogsServerNameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    "/customize-tools/$serverName": {
+      id: "/customize-tools/$serverName"
+      path: "/customize-tools/$serverName"
+      fullPath: "/customize-tools/$serverName"
+      preLoaderRoute: typeof CustomizeToolsServerNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     "/(registry)/registry": {
       id: "/(registry)/registry"
       path: "/registry"
@@ -223,6 +244,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   ShutdownRoute: ShutdownRoute,
   registryRegistryRoute: registryRegistryRoute,
+  CustomizeToolsServerNameRoute: CustomizeToolsServerNameRoute,
   LogsServerNameRoute: LogsServerNameRoute,
   registryRegistryNameRoute: registryRegistryNameRoute,
 }
