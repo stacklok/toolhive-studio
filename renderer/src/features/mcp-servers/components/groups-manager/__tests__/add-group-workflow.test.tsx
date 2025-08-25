@@ -36,24 +36,28 @@ beforeEach(() => {
   })
 
   // Default mock implementation for create group mutation
+  const mockMutate = vi.fn()
+  const mockMutateAsync = vi.fn()
+  const mockReset = vi.fn()
+
   mockUseMutationCreateGroup.mockReturnValue({
-    mutate: vi.fn(),
-    mutateAsync: vi.fn(),
+    mutate: mockMutate,
+    mutateAsync: mockMutateAsync,
     isLoading: false,
     isPending: false,
     isError: false,
     isSuccess: false,
     data: undefined,
     error: null,
-    reset: vi.fn(),
-    status: 'idle',
+    reset: mockReset,
+    status: 'idle' as const,
     failureCount: 0,
     failureReason: null,
     isPaused: false,
     variables: undefined,
     context: undefined,
     submittedAt: 0,
-  } as any)
+  })
 })
 
 describe('Groups Manager - Add a group workflow', () => {
@@ -105,24 +109,27 @@ describe('Groups Manager - Add a group workflow', () => {
 
   it('should call the create group mutation with the correct API payload on success path', async () => {
     const mockMutate = vi.fn()
+    const mockMutateAsync = vi.fn()
+    const mockReset = vi.fn()
+
     mockUseMutationCreateGroup.mockReturnValue({
       mutate: mockMutate,
-      mutateAsync: vi.fn(),
+      mutateAsync: mockMutateAsync,
       isLoading: false,
       isPending: false,
       isError: false,
       isSuccess: false,
       data: undefined,
       error: null,
-      reset: vi.fn(),
-      status: 'idle',
+      reset: mockReset,
+      status: 'idle' as const,
       failureCount: 0,
       failureReason: null,
       isPaused: false,
       variables: undefined,
       context: undefined,
       submittedAt: 0,
-    } as any)
+    })
 
     renderRoute(router)
 
