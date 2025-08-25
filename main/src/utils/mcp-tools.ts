@@ -8,13 +8,11 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import type { CoreWorkload } from '@api/types.gen'
 import log from '../logger'
 
-// Interface for MCP tool definition from client
 export interface McpToolDefinition {
   description?: string
   inputSchema?: Tool['inputSchema']
 }
 
-// Type guard to check if an object is a valid MCP tool definition
 export function isMcpToolDefinition(obj: Tool): obj is McpToolDefinition {
   if (!obj || typeof obj !== 'object' || obj === null) return false
 

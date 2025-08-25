@@ -9,11 +9,7 @@ import {
   TableRow,
 } from '@/common/components/ui/table'
 import { useState, useEffect } from 'react'
-
-// Simple skeleton component if not available in UI library
-function Skeleton({ className }: { className?: string }) {
-  return <div className={`bg-muted animate-pulse rounded ${className}`} />
-}
+import { Skeleton } from '@/common/components/ui/skeleton'
 
 interface Tool {
   name: string
