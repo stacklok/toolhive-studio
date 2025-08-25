@@ -5,11 +5,19 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { Index } from '@/routes/index'
+import { useMutationCreateGroup } from '@/features/mcp-servers/hooks/use-mutation-create-group'
 
 // Mock the feature flag to enable groups
 vi.mock('@/common/hooks/use-feature-flag', () => ({
   useFeatureFlag: () => true,
 }))
+
+// Mock the create group mutation hook
+vi.mock('@/features/mcp-servers/hooks/use-mutation-create-group', () => ({
+  useMutationCreateGroup: vi.fn(),
+}))
+
+const mockUseMutationCreateGroup = vi.mocked(useMutationCreateGroup)
 
 const router = createTestRouter(Index)
 
@@ -26,6 +34,26 @@ beforeEach(() => {
     },
     writable: true,
   })
+
+  // Default mock implementation for create group mutation
+  mockUseMutationCreateGroup.mockReturnValue({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(),
+    isLoading: false,
+    isPending: false,
+    isError: false,
+    isSuccess: false,
+    data: undefined,
+    error: null,
+    reset: vi.fn(),
+    status: 'idle',
+    failureCount: 0,
+    failureReason: null,
+    isPaused: false,
+    variables: undefined,
+    context: undefined,
+    submittedAt: 0,
+  } as any)
 })
 
 describe('Groups Manager - Add a group workflow', () => {
@@ -73,5 +101,64 @@ describe('Groups Manager - Add a group workflow', () => {
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     })
+  })
+
+  it('should call the create group mutation with the correct API payload on success path', async () => {
+    const mockMutate = vi.fn()
+    mockUseMutationCreateGroup.mockReturnValue({
+      mutate: mockMutate,
+      mutateAsync: vi.fn(),
+      isLoading: false,
+      isPending: false,
+      isError: false,
+      isSuccess: false,
+      data: undefined,
+      error: null,
+      reset: vi.fn(),
+      status: 'idle',
+      failureCount: 0,
+      failureReason: null,
+      isPaused: false,
+      variables: undefined,
+      context: undefined,
+      submittedAt: 0,
+    } as any)
+
+    renderRoute(router)
+
+    // Wait for the groups to load
+    await waitFor(() => {
+      expect(screen.getByText('default')).toBeVisible()
+    })
+
+    // Click the "Add a group" button
+    const addGroupButton = screen.getByRole('button', { name: /add a group/i })
+    await userEvent.click(addGroupButton)
+
+    // Wait for modal to open
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Enter a specific group name to test the payload
+    const nameInput = screen.getByLabelText(/name/i)
+    const testGroupName = 'Production Environment'
+    await userEvent.type(nameInput, testGroupName)
+
+    // Click create button
+    const createButton = screen.getByRole('button', { name: /create/i })
+    await userEvent.click(createButton)
+
+    // Verify the mutation was called with the correct API payload structure
+    await waitFor(() => {
+      expect(mockMutate).toHaveBeenCalledWith({
+        body: {
+          name: 'Production Environment',
+        },
+      })
+    })
+
+    // Verify it was called exactly once
+    expect(mockMutate).toHaveBeenCalledTimes(1)
   })
 })

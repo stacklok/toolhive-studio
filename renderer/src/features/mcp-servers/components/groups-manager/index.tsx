@@ -6,10 +6,12 @@ import { Link, useRouterState } from '@tanstack/react-router'
 import { Button } from '@/common/components/ui/button'
 import { usePrompt } from '@/common/hooks/use-prompt'
 import { Plus } from 'lucide-react'
+import { useMutationCreateGroup } from '@/features/mcp-servers/hooks/use-mutation-create-group'
 
 export function GroupsManager(): ReactElement {
   const router = useRouterState({ select: (s) => s.location.search })
   const prompt = usePrompt()
+  const createGroupMutation = useMutationCreateGroup()
 
   const { data } = useQuery({
     queryKey: ['api', 'v1beta', 'groups'],
@@ -48,8 +50,11 @@ export function GroupsManager(): ReactElement {
     })
 
     if (groupName) {
-      // TODO: Implement actual group creation API call
-      console.log('Creating group:', groupName)
+      createGroupMutation.mutate({
+        body: {
+          name: groupName,
+        },
+      })
     }
   }
 
