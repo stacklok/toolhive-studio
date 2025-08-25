@@ -63,6 +63,7 @@ import {
   getToolhiveMcpInfo,
   type ChatRequest,
 } from './chat'
+import { getWorkloadAvailableTools } from './utils/mcp-tools'
 
 let tray: Tray | null = null
 let isQuitting = false
@@ -837,3 +838,8 @@ ipcMain.handle(
     saveEnabledMcpTools(serverName, enabledTools)
 )
 ipcMain.handle('chat:get-toolhive-mcp-info', () => getToolhiveMcpInfo())
+
+// Workload tools discovery handler
+ipcMain.handle('utils:get-workload-available-tools', async (_, workload) =>
+  getWorkloadAvailableTools(workload)
+)
