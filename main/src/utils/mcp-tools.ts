@@ -46,7 +46,6 @@ export function isMcpToolDefinition(obj: Tool): obj is McpToolDefinition {
   return true
 }
 
-// Create transport configuration based on workload type
 export function createTransport(
   workload: CoreWorkload,
   serverName: string,
