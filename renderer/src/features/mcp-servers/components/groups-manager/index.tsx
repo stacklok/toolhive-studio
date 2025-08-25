@@ -4,13 +4,30 @@ import { getApiV1BetaGroups } from '@api/sdk.gen'
 import { Group } from './group'
 import { Link, useRouterState } from '@tanstack/react-router'
 import { Button } from '@/common/components/ui/button'
-import { usePrompt } from '@/common/hooks/use-prompt'
+import { usePromptForm } from '@/common/hooks/use-prompt'
 import { Plus } from 'lucide-react'
 import { useMutationCreateGroup } from '@/features/mcp-servers/hooks/use-mutation-create-group'
+import { z } from 'zod/v4'
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/common/components/ui/form'
+import { Input } from '@/common/components/ui/input'
+
+// Define the schema for group creation
+const createGroupSchema = z.object({
+  name: z
+    .string()
+    .min(1, 'Group name is required')
+    .max(50, 'Group name must be 50 characters or less'),
+})
 
 export function GroupsManager(): ReactElement {
   const router = useRouterState({ select: (s) => s.location.search })
-  const prompt = usePrompt()
+  const promptForm = usePromptForm()
   const createGroupMutation = useMutationCreateGroup()
 
   const { data } = useQuery({
@@ -36,23 +53,37 @@ export function GroupsManager(): ReactElement {
     : 'default'
 
   const handleAddGroup = async () => {
-    const groupName = await prompt('Name', {
+    const result = await promptForm({
       title: 'Create a group',
-      placeholder: 'Enter group name...',
+      schema: createGroupSchema,
+      defaultValues: {
+        name: '',
+      },
+      renderForm: (form) => (
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter group name..." {...field} autoFocus />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      ),
       buttons: {
         confirm: 'Create',
         cancel: 'Cancel',
       },
-      validation: {
-        required: true,
-        minLength: 1,
-      },
     })
 
-    if (groupName) {
+    if (result) {
       createGroupMutation.mutate({
         body: {
-          name: groupName,
+          name: result.name,
         },
       })
     }

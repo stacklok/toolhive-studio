@@ -10,3 +10,13 @@ export function usePrompt() {
   }
   return context.prompt
 }
+
+export function usePromptForm() {
+  const context = useContext(
+    PromptContext as React.Context<PromptContextType | null>
+  )
+  if (!context) {
+    throw new Error('usePromptForm must be used within a PromptProvider')
+  }
+  return context.promptForm
+}

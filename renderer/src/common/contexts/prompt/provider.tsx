@@ -10,22 +10,33 @@ import {
 import { Button } from '@/common/components/ui/button'
 import { Input } from '@/common/components/ui/input'
 import { Label } from '@/common/components/ui/label'
-import { PromptContext, type PromptConfig } from '.'
+import type { z } from 'zod/v4'
+import { PromptContext, type PromptConfig, type FormPromptConfig } from '.'
+import { FormPromptDialog } from './form-prompt-dialog'
 
 export function PromptProvider({ children }: { children: ReactNode }) {
-  const [activePrompt, setActivePrompt] = useState<{
+  // Legacy prompt state
+  const [activeLegacyPrompt, setActiveLegacyPrompt] = useState<{
     message: ReactNode
     config: PromptConfig
     resolve: (value: string | null) => void
   } | null>(null)
-  const [isOpen, setIsOpen] = useState(false)
   const [inputValue, setInputValue] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  const validateInput = (value: string): string | null => {
-    if (!activePrompt?.config.validation) return null
+  // Form prompt state
+  const [activeFormPrompt, setActiveFormPrompt] = useState<{
+    config: FormPromptConfig<z.ZodType>
+    resolve: (value: unknown) => void
+  } | null>(null)
 
-    const { validation } = activePrompt.config
+  const [isLegacyOpen, setIsLegacyOpen] = useState(false)
+  const [isFormOpen, setIsFormOpen] = useState(false)
+
+  const validateInput = (value: string): string | null => {
+    if (!activeLegacyPrompt?.config.validation) return null
+
+    const { validation } = activeLegacyPrompt.config
 
     if (validation.required && !value.trim()) {
       return 'This field is required'
@@ -50,8 +61,8 @@ export function PromptProvider({ children }: { children: ReactNode }) {
     return null
   }
 
-  const handleConfirm = () => {
-    if (!activePrompt) return
+  const handleLegacyConfirm = () => {
+    if (!activeLegacyPrompt) return
 
     const validationError = validateInput(inputValue)
     if (validationError) {
@@ -59,35 +70,69 @@ export function PromptProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    activePrompt.resolve(inputValue)
-    closeDialog()
+    activeLegacyPrompt.resolve(inputValue)
+    closeLegacyDialog()
   }
 
-  const handleCancel = () => {
-    if (!activePrompt) return
-    activePrompt.resolve(null)
-    closeDialog()
+  const handleFormSubmit = (data: unknown) => {
+    if (!activeFormPrompt) return
+    activeFormPrompt.resolve(data)
+    closeFormDialog()
   }
 
-  const closeDialog = () => {
-    setIsOpen(false)
+  const handleLegacyCancel = () => {
+    if (activeLegacyPrompt) {
+      activeLegacyPrompt.resolve(null)
+    }
+    closeLegacyDialog()
+  }
+
+  const handleFormCancel = () => {
+    if (activeFormPrompt) {
+      activeFormPrompt.resolve(null)
+    }
+    closeFormDialog()
+  }
+
+  const closeLegacyDialog = () => {
+    setIsLegacyOpen(false)
     setInputValue('')
     setError(null)
-    setActivePrompt(null)
+    setActiveLegacyPrompt(null)
+  }
+
+  const closeFormDialog = () => {
+    setIsFormOpen(false)
+    setActiveFormPrompt(null)
   }
 
   const prompt = (message: ReactNode, config: PromptConfig = {}) => {
     return new Promise<string | null>((resolve) => {
-      setActivePrompt({ message, config, resolve })
+      setActiveLegacyPrompt({ message, config, resolve })
       setInputValue(config.defaultValue || '')
       setError(null)
-      setIsOpen(true)
+      setIsLegacyOpen(true)
     })
   }
 
-  const handleOpenChange = (open: boolean) => {
+  const promptForm = <TSchema extends z.ZodType>(
+    config: FormPromptConfig<TSchema>
+  ) => {
+    return new Promise<z.infer<TSchema> | null>((resolve) => {
+      setActiveFormPrompt({ config, resolve })
+      setIsFormOpen(true)
+    })
+  }
+
+  const handleLegacyOpenChange = (open: boolean) => {
     if (!open) {
-      handleCancel()
+      handleLegacyCancel()
+    }
+  }
+
+  const handleFormOpenChange = (open: boolean) => {
+    if (!open) {
+      handleFormCancel()
     }
   }
 
@@ -104,41 +149,43 @@ export function PromptProvider({ children }: { children: ReactNode }) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault()
-      handleConfirm()
+      handleLegacyConfirm()
     } else if (e.key === 'Escape') {
       e.preventDefault()
-      handleCancel()
+      handleLegacyCancel()
     }
   }
 
   return (
-    <PromptContext.Provider value={{ prompt }}>
+    <PromptContext.Provider value={{ prompt, promptForm }}>
       {children}
-      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+
+      {/* Legacy prompt dialog */}
+      <Dialog open={isLegacyOpen} onOpenChange={handleLegacyOpenChange}>
         <DialogContent onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>
-              {activePrompt?.config.title || 'Input Required'}
+              {activeLegacyPrompt?.config.title || 'Input Required'}
             </DialogTitle>
             <DialogDescription>
-              {activePrompt?.config.description || ''}
+              {activeLegacyPrompt?.config.description || ''}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              {activePrompt?.message && (
+              {activeLegacyPrompt?.message && (
                 <Label htmlFor="prompt-input" className="text-sm font-medium">
-                  {activePrompt.message}
+                  {activeLegacyPrompt.message}
                 </Label>
               )}
               <Input
                 id="prompt-input"
-                type={activePrompt?.config.inputType || 'text'}
+                type={activeLegacyPrompt?.config.inputType || 'text'}
                 value={inputValue}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                placeholder={activePrompt?.config.placeholder}
+                placeholder={activeLegacyPrompt?.config.placeholder}
                 autoFocus
                 className={error ? 'border-destructive' : ''}
               />
@@ -147,15 +194,30 @@ export function PromptProvider({ children }: { children: ReactNode }) {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={handleCancel} type="button">
-              {activePrompt?.config.buttons?.cancel ?? 'Cancel'}
+            <Button
+              variant="outline"
+              onClick={handleLegacyCancel}
+              type="button"
+            >
+              {activeLegacyPrompt?.config.buttons?.cancel ?? 'Cancel'}
             </Button>
-            <Button onClick={handleConfirm} type="button">
-              {activePrompt?.config.buttons?.confirm ?? 'OK'}
+            <Button onClick={handleLegacyConfirm} type="button">
+              {activeLegacyPrompt?.config.buttons?.confirm ?? 'OK'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Form prompt dialog */}
+      {activeFormPrompt && (
+        <FormPromptDialog
+          isOpen={isFormOpen}
+          config={activeFormPrompt.config}
+          onSubmit={handleFormSubmit}
+          onCancel={handleFormCancel}
+          onOpenChange={handleFormOpenChange}
+        />
+      )}
     </PromptContext.Provider>
   )
 }

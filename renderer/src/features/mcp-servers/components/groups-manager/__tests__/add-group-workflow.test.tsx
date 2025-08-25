@@ -88,7 +88,8 @@ describe('Groups Manager - Add a group workflow', () => {
 
     const nameInput = screen.getByLabelText(/name/i)
     expect(nameInput).toBeVisible()
-    expect(nameInput).toHaveAttribute('type', 'text')
+    // The Input component may not have explicit type="text" attribute, but should be an input element
+    expect(nameInput.tagName).toBe('INPUT')
 
     const createButton = screen.getByRole('button', { name: /create/i })
     expect(createButton).toBeVisible()
