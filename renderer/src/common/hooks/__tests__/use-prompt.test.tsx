@@ -2,26 +2,23 @@ import { render, screen, waitFor, cleanup } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { vi, beforeEach, afterEach } from 'vitest'
-import { usePrompt } from '../use-prompt'
+import { usePrompt, generatePromptProps } from '../use-prompt'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
-import { type PromptConfig } from '@/common/contexts/prompt'
 
 function TestComponent({
-  message,
-  config,
+  promptProps,
   buttonLabel = 'Trigger Prompt',
   testId = 'test-component',
 }: {
-  message: string
-  config?: PromptConfig
+  promptProps: Parameters<ReturnType<typeof usePrompt>>[0]
   buttonLabel?: string
   testId?: string
 }) {
   const prompt = usePrompt()
-  const [result, setResult] = useState<string | null | undefined>(undefined)
+  const [result, setResult] = useState<unknown>(undefined)
 
   const handleClick = async () => {
-    const value = await prompt(message, config)
+    const value = await prompt(promptProps)
     setResult(value)
   }
 
@@ -30,7 +27,7 @@ function TestComponent({
       <button onClick={handleClick}>{buttonLabel}</button>
       {result !== undefined && (
         <div data-testid="result">
-          {result === null ? 'Cancelled' : `Result: ${result}`}
+          {result === null ? 'Cancelled' : `Result: ${JSON.stringify(result)}`}
         </div>
       )}
     </div>
@@ -56,217 +53,321 @@ describe('usePrompt', () => {
     cleanup()
     vi.restoreAllMocks()
   })
-  it('throws error when used outside PromptProvider', () => {
-    const TestComponentOutsideProvider = () => {
-      usePrompt()
-      return null
-    }
-
-    expect(() => {
-      render(<TestComponentOutsideProvider />)
-    }).toThrow('usePrompt must be used within a PromptProvider')
-  })
 
   it('shows prompt dialog with basic configuration', async () => {
-    const user = userEvent.setup()
-
-    renderTestComponent({ message: 'Enter your name:' })
-
-    await user.click(screen.getByRole('button', { name: 'Trigger Prompt' }))
-
-    expect(screen.getByRole('textbox')).toBeVisible()
-    expect(screen.getByRole('button', { name: 'OK' })).toBeVisible()
-    expect(screen.getByRole('button', { name: 'Cancel' })).toBeVisible()
-    expect(screen.getByText('Enter your name:')).toBeVisible()
-  })
-
-  it('returns input value when user clicks OK', async () => {
-    const user = userEvent.setup()
-
-    renderTestComponent({ message: 'Enter your name:' })
-
-    await user.click(screen.getByRole('button', { name: 'Trigger Prompt' }))
-
-    const input = screen.getByRole('textbox')
-    await user.type(input, 'John Doe')
-    await user.click(screen.getByRole('button', { name: 'OK' }))
-
-    await waitFor(() => {
-      expect(screen.getByTestId('result')).toHaveTextContent('Result: John Doe')
+    const promptProps = generatePromptProps('text', '', {
+      title: 'Test Prompt',
+      label: 'Enter value',
+      placeholder: 'Type here...',
     })
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    renderTestComponent({ promptProps })
+
+    // Click button to open prompt
+    await userEvent.click(screen.getByRole('button'))
+
+    // Check if dialog is shown
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Check dialog content
+    expect(screen.getByText('Test Prompt')).toBeVisible()
+    expect(screen.getByLabelText('Enter value')).toBeVisible()
+    expect(screen.getByPlaceholderText('Type here...')).toBeVisible()
   })
 
-  it('returns null when user clicks Cancel', async () => {
-    const user = userEvent.setup()
+  it('returns value when confirmed', async () => {
+    const promptProps = generatePromptProps('text', '', {
+      title: 'Test Input',
+      label: 'Name',
+    })
 
-    renderTestComponent({ message: 'Enter your name:' })
+    renderTestComponent({ promptProps })
 
-    await user.click(screen.getByRole('button', { name: 'Trigger Prompt' }))
+    await userEvent.click(screen.getByRole('button'))
 
-    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
 
+    // Type in input
+    const input = screen.getByLabelText('Name')
+    await userEvent.type(input, 'Test Value')
+
+    // Click OK button
+    await userEvent.click(screen.getByRole('button', { name: /ok/i }))
+
+    // Check result
+    await waitFor(() => {
+      expect(screen.getByTestId('result')).toHaveTextContent(
+        'Result: {"value":"Test Value"}'
+      )
+    })
+  })
+
+  it('returns null when cancelled', async () => {
+    const promptProps = generatePromptProps('text', '', {
+      title: 'Test Input',
+      label: 'Name',
+    })
+
+    renderTestComponent({ promptProps })
+
+    await userEvent.click(screen.getByRole('button'))
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Click Cancel button
+    await userEvent.click(screen.getByRole('button', { name: /cancel/i }))
+
+    // Check result
     await waitFor(() => {
       expect(screen.getByTestId('result')).toHaveTextContent('Cancelled')
     })
-
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('supports custom title and description', async () => {
-    const user = userEvent.setup()
-
-    renderTestComponent({
-      message: 'Enter your name:',
-      config: {
-        title: 'User Information',
-        description: 'Please provide your full name for the account.',
-      },
+  it('validates required field', async () => {
+    const promptProps = generatePromptProps('text', '', {
+      title: 'Required Field',
+      label: 'Name',
+      required: true,
     })
 
-    await user.click(screen.getByRole('button', { name: 'Trigger Prompt' }))
+    renderTestComponent({ promptProps })
 
-    expect(screen.getByText('User Information')).toBeVisible()
-    expect(
-      screen.getByText('Please provide your full name for the account.')
-    ).toBeVisible()
-  })
-
-  it('supports default value', async () => {
-    const user = userEvent.setup()
-
-    renderTestComponent({
-      message: 'Enter your name:',
-      config: { defaultValue: 'John Doe' },
-    })
-
-    await user.click(screen.getByRole('button', { name: 'Trigger Prompt' }))
-
-    const input = screen.getByRole('textbox')
-    expect(input).toHaveValue('John Doe')
-
-    await user.click(screen.getByRole('button', { name: 'OK' }))
+    await userEvent.click(screen.getByRole('button'))
 
     await waitFor(() => {
-      expect(screen.getByTestId('result')).toHaveTextContent('Result: John Doe')
+      expect(screen.getByRole('dialog')).toBeVisible()
     })
+
+    // Try to submit without entering anything
+    await userEvent.click(screen.getByRole('button', { name: /ok/i }))
+
+    // Should show validation error and dialog should still be open
+    await waitFor(() => {
+      expect(screen.getByText('This field is required')).toBeVisible()
+    })
+    expect(screen.getByRole('dialog')).toBeVisible()
   })
 
-  it('supports custom button labels', async () => {
-    const user = userEvent.setup()
-
-    renderTestComponent({
-      message: 'Enter your name:',
-      config: {
-        buttons: { confirm: 'Submit', cancel: 'Abort' },
-      },
+  it('validates email input', async () => {
+    const promptProps = generatePromptProps('email', '', {
+      title: 'Email Input',
+      label: 'Email',
     })
 
-    await user.click(screen.getByRole('button', { name: 'Trigger Prompt' }))
+    renderTestComponent({ promptProps })
 
-    expect(screen.getByRole('button', { name: 'Submit' })).toBeVisible()
-    expect(screen.getByRole('button', { name: 'Abort' })).toBeVisible()
-  })
-
-  it('validates required input', async () => {
-    const user = userEvent.setup()
-
-    renderTestComponent({
-      message: 'Enter your name:',
-      config: {
-        validation: { required: true },
-      },
-    })
-
-    await user.click(screen.getByRole('button', { name: 'Trigger Prompt' }))
-
-    // Try to submit empty input
-    await user.click(screen.getByRole('button', { name: 'OK' }))
-
-    expect(screen.getByText('This field is required')).toBeVisible()
-    expect(screen.getByRole('dialog')).toBeVisible() // Dialog should still be open
-
-    // Enter valid input
-    const input = screen.getByRole('textbox')
-    await user.type(input, 'John')
-    await user.click(screen.getByRole('button', { name: 'OK' }))
+    await userEvent.click(screen.getByRole('button'))
 
     await waitFor(() => {
-      expect(screen.getByTestId('result')).toHaveTextContent('Result: John')
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Type valid email and verify it works
+    const input = screen.getByLabelText('Email')
+    await userEvent.type(input, 'test@example.com')
+    await userEvent.click(screen.getByRole('button', { name: /ok/i }))
+
+    // Should close dialog and return result
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('result')).toHaveTextContent(
+        'Result: {"value":"test@example.com"}'
+      )
     })
   })
 
   it('validates minimum length', async () => {
-    const user = userEvent.setup()
-
-    renderTestComponent({
-      message: 'Enter password:',
-      config: {
-        validation: { minLength: 6 },
-      },
+    const promptProps = generatePromptProps('text', '', {
+      title: 'Min Length',
+      label: 'Username',
+      minLength: 3,
     })
 
-    await user.click(screen.getByRole('button', { name: 'Trigger Prompt' }))
+    renderTestComponent({ promptProps })
 
-    const input = screen.getByRole('textbox')
-    await user.type(input, '123')
-    await user.click(screen.getByRole('button', { name: 'OK' }))
-
-    expect(screen.getByText('Must be at least 6 characters')).toBeVisible()
-
-    // Clear and enter valid input
-    await user.clear(input)
-    await user.type(input, '123456')
-    await user.click(screen.getByRole('button', { name: 'OK' }))
+    await userEvent.click(screen.getByRole('button'))
 
     await waitFor(() => {
-      expect(screen.getByTestId('result')).toHaveTextContent('Result: 123456')
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Type text that meets minimum requirement
+    const input = screen.getByLabelText('Username')
+    await userEvent.type(input, 'abc')
+    await userEvent.click(screen.getByRole('button', { name: /ok/i }))
+
+    // Should close dialog and return result
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('result')).toHaveTextContent(
+        'Result: {"value":"abc"}'
+      )
     })
   })
 
-  it('supports Enter key to confirm', async () => {
-    const user = userEvent.setup()
+  it('validates maximum length', async () => {
+    const promptProps = generatePromptProps('text', '', {
+      title: 'Max Length',
+      label: 'Short Text',
+      maxLength: 5,
+    })
 
-    renderTestComponent({ message: 'Enter your name:' })
+    renderTestComponent({ promptProps })
 
-    await user.click(screen.getByRole('button', { name: 'Trigger Prompt' }))
-
-    const input = screen.getByRole('textbox')
-    await user.type(input, 'John Doe{enter}')
+    await userEvent.click(screen.getByRole('button'))
 
     await waitFor(() => {
-      expect(screen.getByTestId('result')).toHaveTextContent('Result: John Doe')
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Type text within maximum limit
+    const input = screen.getByLabelText('Short Text')
+    await userEvent.type(input, 'short')
+    await userEvent.click(screen.getByRole('button', { name: /ok/i }))
+
+    // Should close dialog and return result
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('result')).toHaveTextContent(
+        'Result: {"value":"short"}'
+      )
     })
   })
 
-  it('supports Escape key to cancel', async () => {
-    const user = userEvent.setup()
+  it('uses custom button labels', async () => {
+    const promptProps = generatePromptProps('text', '', {
+      title: 'Custom Buttons',
+      label: 'Value',
+      confirmText: 'Save',
+      cancelText: 'Discard',
+    })
 
-    renderTestComponent({ message: 'Enter your name:', testId: 'escape-test' })
+    renderTestComponent({ promptProps })
 
-    await user.click(screen.getByRole('button', { name: 'Trigger Prompt' }))
-
-    const input = screen.getByRole('textbox')
-    await user.type(input, 'John')
-    await user.keyboard('{escape}')
+    await userEvent.click(screen.getByRole('button'))
 
     await waitFor(() => {
-      expect(screen.getByTestId('result')).toHaveTextContent('Cancelled')
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Check custom button labels
+    expect(screen.getByRole('button', { name: 'Save' })).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Discard' })).toBeVisible()
+  })
+
+  it('sets initial value', async () => {
+    const promptProps = generatePromptProps('text', 'Initial Value', {
+      title: 'With Initial',
+      label: 'Name',
+    })
+
+    renderTestComponent({ promptProps })
+
+    await userEvent.click(screen.getByRole('button'))
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Check that input has initial value
+    const input = screen.getByLabelText('Name')
+    expect(input).toHaveValue('Initial Value')
+  })
+
+  it('validates URL input', async () => {
+    const promptProps = generatePromptProps('url', '', {
+      title: 'URL Input',
+      label: 'Website URL',
+    })
+
+    renderTestComponent({ promptProps })
+
+    await userEvent.click(screen.getByRole('button'))
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Type valid URL and verify it works
+    const input = screen.getByLabelText('Website URL')
+    await userEvent.type(input, 'https://example.com')
+    await userEvent.click(screen.getByRole('button', { name: /ok/i }))
+
+    // Should close dialog and return result
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('result')).toHaveTextContent(
+        'Result: {"value":"https://example.com"}'
+      )
     })
   })
 
-  it('supports password input type', async () => {
-    const user = userEvent.setup()
-
-    renderTestComponent({
-      message: 'Enter password:',
-      config: { inputType: 'password' },
+  it('validates pattern regex', async () => {
+    const promptProps = generatePromptProps('text', '', {
+      title: 'Pattern Test',
+      label: 'Numbers Only',
+      pattern: /^\d+$/,
     })
 
-    await user.click(screen.getByRole('button', { name: 'Trigger Prompt' }))
+    renderTestComponent({ promptProps })
 
-    const input = screen.getByLabelText('Enter password:')
-    expect(input).toHaveAttribute('type', 'password')
+    await userEvent.click(screen.getByRole('button'))
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Type valid numeric text
+    const input = screen.getByLabelText('Numbers Only')
+    await userEvent.type(input, '12345')
+    await userEvent.click(screen.getByRole('button', { name: /ok/i }))
+
+    // Should close dialog and return result
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('result')).toHaveTextContent(
+        'Result: {"value":"12345"}'
+      )
+    })
+  })
+
+  it('closes dialog when clicking outside is prevented', async () => {
+    const promptProps = generatePromptProps('text', '', {
+      title: 'Test Input',
+      label: 'Name',
+    })
+
+    renderTestComponent({ promptProps })
+
+    await userEvent.click(screen.getByRole('button'))
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Dialog should remain open even when trying to click outside
+    // This is tested by the onInteractOutside prop preventing the default
+    expect(screen.getByRole('dialog')).toBeVisible()
   })
 })

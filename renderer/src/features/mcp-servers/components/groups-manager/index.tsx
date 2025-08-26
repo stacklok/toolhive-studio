@@ -4,30 +4,13 @@ import { getApiV1BetaGroups } from '@api/sdk.gen'
 import { Group } from './group'
 import { Link, useRouterState } from '@tanstack/react-router'
 import { Button } from '@/common/components/ui/button'
-import { usePromptForm } from '@/common/hooks/use-prompt'
+import { usePrompt, generatePromptProps } from '@/common/hooks/use-prompt'
 import { Plus } from 'lucide-react'
 import { useMutationCreateGroup } from '@/features/mcp-servers/hooks/use-mutation-create-group'
-import { z } from 'zod/v4'
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/common/components/ui/form'
-import { Input } from '@/common/components/ui/input'
-
-// Define the schema for group creation
-const createGroupSchema = z.object({
-  name: z
-    .string()
-    .min(1, 'Group name is required')
-    .max(50, 'Group name must be 50 characters or less'),
-})
 
 export function GroupsManager(): ReactElement {
   const router = useRouterState({ select: (s) => s.location.search })
-  const promptForm = usePromptForm()
+  const prompt = usePrompt()
   const createGroupMutation = useMutationCreateGroup()
 
   const { data } = useQuery({
@@ -53,37 +36,23 @@ export function GroupsManager(): ReactElement {
     : 'default'
 
   const handleAddGroup = async () => {
-    const result = await promptForm({
-      title: 'Create a group',
-      schema: createGroupSchema,
-      defaultValues: {
-        name: '',
-      },
-      renderForm: (form) => (
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter group name..." {...field} autoFocus />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      ),
-      buttons: {
-        confirm: 'Create',
-        cancel: 'Cancel',
-      },
-    })
+    const result = await prompt(
+      generatePromptProps('text', '', {
+        title: 'Create a group',
+        label: 'Name',
+        placeholder: 'Enter group name...',
+        required: true,
+        minLength: 1,
+        maxLength: 50,
+        confirmText: 'Create',
+        cancelText: 'Cancel',
+      })
+    )
 
     if (result) {
       createGroupMutation.mutate({
         body: {
-          name: result.name,
+          name: result.value,
         },
       })
     }

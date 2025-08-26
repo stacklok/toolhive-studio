@@ -1,86 +1,132 @@
-# usePrompt and usePromptForm Examples
+# usePrompt Hook Examples
 
-This document demonstrates how to use both the legacy `usePrompt` hook for simple input prompts and the new `usePromptForm` hook for complex form-based prompts.
+This file demonstrates how to use the `usePrompt` hook with the `generatePromptProps` factory function for simple prompts, and the direct form-based approach for complex forms.
 
-## Legacy usePrompt (Simple Input Prompts)
+## Factory Function for Simple Prompts
 
-The legacy `usePrompt` hook is perfect for simple single-field input prompts with basic validation.
+The `generatePromptProps` factory function makes it easy to create simple text input prompts with validation.
 
-```typescript
-import { usePrompt } from '@/common/hooks/use-prompt'
+### Basic Usage
 
-function SimplePromptExample() {
+```tsx
+import { usePrompt, generatePromptProps } from '@/common/hooks/use-prompt'
+
+function MyComponent() {
   const prompt = usePrompt()
 
-  const handleCreateItem = async () => {
-    const itemName = await prompt('Item Name', {
-      title: 'Create New Item',
-      description: 'Enter a name for your new item',
-      placeholder: 'Enter item name...',
-      defaultValue: '',
-      inputType: 'text',
-      validation: {
+  const handleGetUserName = async () => {
+    const result = await prompt(
+      generatePromptProps('text', '', {
+        title: 'Enter Name',
+        label: 'Name',
+        placeholder: 'Type your name here...',
         required: true,
-        minLength: 3,
+        minLength: 2,
         maxLength: 50,
-        pattern: /^[a-zA-Z0-9\s]+$/,
-        customValidator: (value) => {
-          if (value.includes('forbidden')) {
-            return 'This word is not allowed'
-          }
-          return null
-        }
-      },
-      buttons: {
-        confirm: 'Create',
-        cancel: 'Cancel'
-      }
-    })
+        confirmText: 'Save',
+        cancelText: 'Cancel'
+      })
+    )
 
-    if (itemName) {
-      console.log('Creating item:', itemName)
-      // Handle creation logic here
+    if (result) {
+      console.log('User entered:', result.value) // result.value is a string
+    } else {
+      console.log('User cancelled')
     }
   }
 
-  return <button onClick={handleCreateItem}>Create Item</button>
+  return <button onClick={handleGetUserName}>Get Name</button>
 }
 ```
 
-## New usePromptForm (Complex Form Prompts)
+### Input Types and Validation
 
-The new `usePromptForm` hook is designed for complex forms with multiple fields, advanced validation using Zod schemas, and custom rendering.
+```tsx
+// Text input with pattern validation
+const result = await prompt(
+  generatePromptProps('text', '', {
+    title: 'Numbers Only',
+    label: 'Phone Number',
+    pattern: /^\d+$/,
+    placeholder: '1234567890'
+  })
+)
 
-### Basic Example
+// Email input with built-in validation
+const emailResult = await prompt(
+  generatePromptProps('email', '', {
+    title: 'Contact Information',
+    label: 'Email Address',
+    placeholder: 'user@example.com'
+  })
+)
 
-```typescript
-import { usePromptForm } from '@/common/hooks/use-prompt'
+// URL input
+const urlResult = await prompt(
+  generatePromptProps('url', '', {
+    title: 'Website',
+    label: 'URL',
+    placeholder: 'https://example.com'
+  })
+)
+
+// Password input
+const passwordResult = await prompt(
+  generatePromptProps('password', '', {
+    title: 'Security',
+    label: 'Password',
+    required: true,
+    minLength: 8
+  })
+)
+```
+
+### Available Options
+
+```tsx
+generatePromptProps(
+  inputType: 'text' | 'email' | 'password' | 'url',
+  initialValue: string,
+  options: {
+    required?: boolean
+    minLength?: number
+    maxLength?: number
+    pattern?: RegExp
+    title?: ReactNode
+    description?: ReactNode
+    placeholder?: string
+    label?: ReactNode
+    confirmText?: ReactNode
+    cancelText?: ReactNode
+  }
+)
+```
+
+## Direct Form-Based Approach for Complex Forms
+
+For more complex forms, use the direct form-based approach with custom schemas and rendering.
+
+### Multi-Field Form Example
+
+```tsx
+import { usePrompt } from '@/common/hooks/use-prompt'
 import { z } from 'zod/v4'
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/common/components/ui/form'
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
 
-// Define the validation schema
 const userSchema = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name too long'),
-  email: z.string().email('Please enter a valid email address'),
-  age: z.number().min(18, 'Must be at least 18').max(120, 'Age must be realistic')
+  email: z.string().email('Invalid email address'),
+  age: z.number().min(18, 'Must be 18 or older')
 })
 
-type UserFormData = z.infer<typeof userSchema>
+function MyComponent() {
+  const prompt = usePrompt()
 
-function FormPromptExample() {
-  const promptForm = usePromptForm()
-
-  const handleCreateUser = async () => {
-    const result = await promptForm({
-      title: 'Create User Account',
-      description: 'Please fill in the user details below',
+  const handleGetUserInfo = async () => {
+    const result = await prompt({
+      title: 'User Information',
+      description: 'Please fill in your details',
       schema: userSchema,
       defaultValues: {
         name: '',
@@ -94,13 +140,9 @@ function FormPromptExample() {
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Full Name</FormLabel>
+                <FormLabel>Name</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="Enter full name..."
-                    {...field}
-                    autoFocus
-                  />
+                  <Input placeholder="Enter your name..." {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -112,13 +154,9 @@ function FormPromptExample() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email Address</FormLabel>
+                <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input
-                    type="email"
-                    placeholder="Enter email address..."
-                    {...field}
-                  />
+                  <Input type="email" placeholder="Enter your email..." {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -132,9 +170,9 @@ function FormPromptExample() {
               <FormItem>
                 <FormLabel>Age</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Enter age..."
+                  <Input 
+                    type="number" 
+                    placeholder="Enter your age..." 
                     {...field}
                     onChange={(e) => field.onChange(Number(e.target.value))}
                   />
@@ -146,235 +184,62 @@ function FormPromptExample() {
         </div>
       ),
       buttons: {
-        confirm: 'Create User',
+        confirm: 'Save',
         cancel: 'Cancel'
       }
     })
 
     if (result) {
-      console.log('Creating user:', result)
-      // result is fully typed: { name: string, email: string, age: number }
+      console.log('User data:', result) // result is { name: string, email: string, age: number }
+    } else {
+      console.log('User cancelled')
     }
   }
 
-  return <button onClick={handleCreateUser}>Create User</button>
+  return <button onClick={handleGetUserInfo}>Get User Info</button>
 }
 ```
 
-### Advanced Example with Complex Validation
+## When to Use Which Approach
 
-```typescript
-import { usePromptForm } from '@/common/hooks/use-prompt'
-import { z } from 'zod/v4'
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription,
-} from '@/common/components/ui/form'
-import { Input } from '@/common/components/ui/input'
-import { Textarea } from '@/common/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/common/components/ui/select'
+### Use `generatePromptProps` for:
+- Simple single-field prompts
+- Text, email, password, or URL inputs
+- Basic validation requirements
+- Quick input gathering
 
-// Advanced schema with custom validation
-const projectSchema = z.object({
-  name: z.string()
-    .min(3, 'Project name must be at least 3 characters')
-    .max(50, 'Project name must be less than 50 characters')
-    .regex(/^[a-zA-Z0-9\s-_]+$/, 'Only letters, numbers, spaces, hyphens, and underscores allowed'),
-  description: z.string()
-    .min(10, 'Description must be at least 10 characters')
-    .max(500, 'Description must be less than 500 characters'),
-  priority: z.enum(['low', 'medium', 'high'], {
-    required_error: 'Please select a priority'
-  }),
-  budget: z.number()
-    .min(0, 'Budget cannot be negative')
-    .max(1000000, 'Budget cannot exceed $1,000,000'),
-  tags: z.string()
-    .transform(str => str.split(',').map(tag => tag.trim()).filter(Boolean))
-    .refine(tags => tags.length <= 5, 'Maximum 5 tags allowed')
-})
+### Use Direct Form-Based Approach for:
+- Multi-field forms
+- Complex validation requirements
+- Custom form layouts
+- Rich input components (selects, checkboxes, etc.)
+- Type-safe form data with custom schemas
 
-type ProjectFormData = z.infer<typeof projectSchema>
+## Real-World Example: Group Creation
 
-function AdvancedFormExample() {
-  const promptForm = usePromptForm()
+This is how the "Add a group" feature uses the factory function:
 
-  const handleCreateProject = async () => {
-    const result = await promptForm({
-      title: 'Create New Project',
-      description: 'Set up your project with the details below',
-      schema: projectSchema,
-      defaultValues: {
-        name: '',
-        description: '',
-        priority: 'medium' as const,
-        budget: 0,
-        tags: ''
-      },
-      renderForm: (form) => (
-        <div className="space-y-6">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Project Name</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="My Awesome Project"
-                    {...field}
-                    autoFocus
-                  />
-                </FormControl>
-                <FormDescription>
-                  Choose a unique name for your project
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Describe what this project is about..."
-                    className="min-h-[100px]"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="priority"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Priority</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select priority..." />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="budget"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Budget ($)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="10000"
-                    {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="tags"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tags</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="frontend, react, typescript"
-                    {...field}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Separate tags with commas (max 5 tags)
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-      ),
-      buttons: {
-        confirm: 'Create Project',
-        cancel: 'Cancel'
-      }
+```tsx
+const handleAddGroup = async () => {
+  const result = await prompt(
+    generatePromptProps('text', '', {
+      title: 'Create a group',
+      label: 'Name',
+      placeholder: 'Enter group name...',
+      required: true,
+      minLength: 1,
+      maxLength: 50,
+      confirmText: 'Create',
+      cancelText: 'Cancel',
     })
-
-    if (result) {
-      console.log('Creating project:', {
-        ...result,
-        tags: result.tags // This is now an array of strings thanks to the transform
-      })
-    }
-  }
-
-  return <button onClick={handleCreateProject}>Create Project</button>
-}
-```
-
-## When to Use Which Hook
-
-### Use `usePrompt` (legacy) when:
-- You need a simple single-field input
-- Basic validation is sufficient
-- You want minimal setup
-- The prompt is for quick user input (names, titles, etc.)
-
-### Use `usePromptForm` (new) when:
-- You need multiple form fields
-- Complex validation is required (email, phone numbers, etc.)
-- You want type-safe form data
-- You need custom field rendering (selects, checkboxes, etc.)
-- Form data has complex relationships or dependencies
-
-## Key Benefits of the New Form-based Approach
-
-1. **Type Safety**: Full TypeScript support with automatic type inference from Zod schemas
-2. **Complex Validation**: Leverage the full power of Zod for validation rules
-3. **Flexible Rendering**: Complete control over how form fields are rendered
-4. **Consistent UI**: Uses the same form components as the rest of the application
-5. **Better UX**: Proper error handling, field descriptions, and accessible form controls
-6. **Maintainable**: Schemas can be reused and shared across components
-
-## Provider Setup
-
-Both hooks require the `PromptProvider` to be available in your component tree:
-
-```typescript
-import { PromptProvider } from '@/common/contexts/prompt/provider'
-
-function App() {
-  return (
-    <PromptProvider>
-      {/* Your app components */}
-    </PromptProvider>
   )
+
+  if (result) {
+    createGroupMutation.mutate({
+      body: {
+        name: result.value, // Access the value through result.value
+      },
+    })
+  }
 }
 ```
-
-The provider is backward compatible and supports both legacy and new prompt types simultaneously.
