@@ -27,9 +27,3 @@ export function setTray(newTray: Tray | null) {
 export function getTray(): Tray | null {
   return tray
 }
-
-export function resetAppState() {
-  isQuitting = false
-  tearingDown = false
-  tray = null
-}

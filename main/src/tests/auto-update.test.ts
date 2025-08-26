@@ -96,7 +96,6 @@ vi.mock('../app-state', () => ({
   setTearingDownState: vi.fn(),
   getQuittingState: vi.fn(() => false),
   getTearingDownState: vi.fn(() => false),
-  resetAppState: vi.fn(),
 }))
 
 import { stopAllServers } from '../graceful-exit'
