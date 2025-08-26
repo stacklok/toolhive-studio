@@ -91,9 +91,9 @@ async function performUpdateInstallation(releaseName: string | null) {
     try {
       safeTrayDestroy(getTray())
       log.info('[update] attempting app relaunch after update failure')
-      // this create a new app instance
+      // this creates a new app instance
       app.relaunch()
-      // this quitting the current instance
+      //  this quits the current instance
       app.quit()
     } catch (recoveryError) {
       log.error('[update] recovery failed: ', recoveryError)
@@ -134,7 +134,7 @@ export function initAutoUpdate(
     try {
       let mainWindow = getMainWindow()
 
-      // check if destroyed is import for not crashing the app
+      // check if destroyed is important for not crashing the app
       if (!mainWindow || mainWindow.isDestroyed()) {
         log.warn(
           '[update] MainWindow not available, recreating for update dialog'
@@ -259,22 +259,10 @@ export function resetUpdateState() {
   updateState = 'none'
 }
 
-export function resetAllUpdateState() {
-  updateState = 'none'
-  setQuittingState(false)
-  setTearingDownState(false)
-  pendingUpdateVersion = null
-}
-
 export function checkForUpdates() {
   if (updateState === 'none') {
     autoUpdater.checkForUpdates()
   }
-}
-
-export function setQuittingAndTearingDown() {
-  setQuittingState(true)
-  setTearingDownState(true)
 }
 
 export function getUpdateState() {
