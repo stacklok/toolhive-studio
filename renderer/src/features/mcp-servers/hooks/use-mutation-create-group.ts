@@ -7,7 +7,7 @@ export function useMutationCreateGroup() {
   const queryClient = useQueryClient()
 
   return useToastMutation({
-    mutationFn: async (data: PostApiV1BetaGroupsData) => {
+    mutationFn: async (data: Pick<PostApiV1BetaGroupsData, 'body'>) => {
       try {
         const response = await postApiV1BetaGroups({
           body: data.body,

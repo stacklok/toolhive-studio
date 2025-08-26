@@ -135,6 +135,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hook-form": "7.62.0",
+    "formik": "^2.4.6",
     "regexp.escape": "^2.0.1",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
