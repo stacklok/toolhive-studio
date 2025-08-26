@@ -155,7 +155,7 @@ export function initAutoUpdate(
         }
       }
 
-      if (mainWindow.isMinimized()) {
+      if (mainWindow.isMinimized() && !mainWindow.isDestroyed()) {
         mainWindow.restore()
       }
 
