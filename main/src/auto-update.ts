@@ -259,6 +259,13 @@ export function resetUpdateState() {
   updateState = 'none'
 }
 
+export function resetAllUpdateState() {
+  updateState = 'none'
+  setQuittingState(false)
+  setTearingDownState(false)
+  pendingUpdateVersion = null
+}
+
 export function checkForUpdates() {
   if (updateState === 'none') {
     autoUpdater.checkForUpdates()
