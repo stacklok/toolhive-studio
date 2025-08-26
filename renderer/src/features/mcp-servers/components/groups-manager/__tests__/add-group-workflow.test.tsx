@@ -36,12 +36,10 @@ beforeEach(() => {
   })
 
   // Default mock implementation for create group mutation
-  const mockMutate = vi.fn()
-  const mockMutateAsync = vi.fn()
+  const mockMutateAsync = vi.fn().mockResolvedValue({})
   const mockReset = vi.fn()
 
   mockUseMutationCreateGroup.mockReturnValue({
-    mutate: mockMutate,
     mutateAsync: mockMutateAsync,
     isLoading: false,
     isPending: false,
@@ -109,12 +107,10 @@ describe('Groups Manager - Add a group workflow', () => {
   })
 
   it('should call the create group mutation with the correct API payload on success path', async () => {
-    const mockMutate = vi.fn()
-    const mockMutateAsync = vi.fn()
+    const mockMutateAsync = vi.fn().mockResolvedValue({})
     const mockReset = vi.fn()
 
     mockUseMutationCreateGroup.mockReturnValue({
-      mutate: mockMutate,
       mutateAsync: mockMutateAsync,
       isLoading: false,
       isPending: false,
@@ -159,7 +155,7 @@ describe('Groups Manager - Add a group workflow', () => {
 
     // Verify the mutation was called with the correct API payload structure
     await waitFor(() => {
-      expect(mockMutate).toHaveBeenCalledWith({
+      expect(mockMutateAsync).toHaveBeenCalledWith({
         body: {
           name: 'Production Environment',
         },
@@ -167,6 +163,79 @@ describe('Groups Manager - Add a group workflow', () => {
     })
 
     // Verify it was called exactly once
-    expect(mockMutate).toHaveBeenCalledTimes(1)
+    expect(mockMutateAsync).toHaveBeenCalledTimes(1)
+  })
+
+  it('should handle group name conflicts by suggesting an alternative name', async () => {
+    const mockMutateAsync = vi
+      .fn()
+      .mockRejectedValueOnce({ status: 409 }) // First call fails with conflict
+      .mockResolvedValueOnce({}) // Second call succeeds
+    const mockReset = vi.fn()
+
+    mockUseMutationCreateGroup.mockReturnValue({
+      mutateAsync: mockMutateAsync,
+      isLoading: false,
+      isPending: false,
+      isError: false,
+      isSuccess: false,
+      data: undefined,
+      error: null,
+      reset: mockReset,
+      status: 'idle' as const,
+      failureCount: 0,
+      failureReason: null,
+      isPaused: false,
+      variables: undefined,
+      context: undefined,
+      submittedAt: 0,
+    })
+
+    renderRoute(router)
+
+    // Wait for the groups to load
+    await waitFor(() => {
+      expect(screen.getByText('default')).toBeVisible()
+    })
+
+    // Click the "Add a group" button
+    const addGroupButton = screen.getByRole('button', { name: /add a group/i })
+    await userEvent.click(addGroupButton)
+
+    // Wait for modal to open
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Enter a name that will conflict (same as existing 'default' group)
+    const nameInput = screen.getByLabelText(/name/i)
+    await userEvent.type(nameInput, 'default')
+
+    // Click create button
+    const createButton = screen.getByRole('button', { name: /create/i })
+    await userEvent.click(createButton)
+
+    // The first call should fail, and then automatically retry with a suggested name
+    // Wait for the dialog to appear again with suggested name
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // The input should now have the suggested alternative name 'default-2'
+    const newNameInput = screen.getByLabelText(/name/i)
+    expect(newNameInput).toHaveValue('default-2')
+
+    // Click create button again to accept the suggested name
+    const createButton2 = screen.getByRole('button', { name: /create/i })
+    await userEvent.click(createButton2)
+
+    // Verify both calls were made
+    expect(mockMutateAsync).toHaveBeenCalledTimes(2)
+    expect(mockMutateAsync).toHaveBeenNthCalledWith(1, {
+      body: { name: 'default' },
+    })
+    expect(mockMutateAsync).toHaveBeenNthCalledWith(2, {
+      body: { name: 'default-2' },
+    })
   })
 })

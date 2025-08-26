@@ -35,9 +35,9 @@ export function GroupsManager(): ReactElement {
     ? String((router as Record<string, string>)['group']).toLowerCase()
     : 'default'
 
-  const handleAddGroup = async () => {
+  const handleAddGroup = async (suggestedName = '') => {
     const result = await prompt(
-      generatePromptProps('text', '', {
+      generatePromptProps('text', suggestedName, {
         title: 'Create a group',
         label: 'Name',
         placeholder: 'Enter group name...',
@@ -50,11 +50,64 @@ export function GroupsManager(): ReactElement {
     )
 
     if (result) {
-      createGroupMutation.mutate({
-        body: {
-          name: result.value,
-        },
-      })
+      try {
+        await createGroupMutation.mutateAsync({
+          body: {
+            name: result.value,
+          },
+        })
+      } catch (error) {
+        // Check if it's a conflict error and offer to retry - handle multiple error structures
+        const is409Error =
+          // String errors (what we actually get from the API)
+          (typeof error === 'string' &&
+            (error.includes('409') ||
+              error.toLowerCase().includes('already exists') ||
+              error.toLowerCase().includes('group_already_exists'))) ||
+          // Object errors (fallback for other possible structures)
+          (error &&
+            typeof error === 'object' &&
+            // Direct status property
+            (('status' in error &&
+              (error as { status: number }).status === 409) ||
+              // Response object with status
+              ('response' in error &&
+                (error as { response: { status?: unknown } }).response
+                  ?.status === 409) ||
+              // Check error message for 409
+              (error instanceof Error && error.message.includes('409')) ||
+              // Check plain object message for 409
+              ('message' in error &&
+                typeof (error as { message: unknown }).message === 'string' &&
+                (error as { message: string }).message.includes('409')) ||
+              // Check error message for conflict indication
+              (error instanceof Error &&
+                error.message.toLowerCase().includes('already exists')) ||
+              ('message' in error &&
+                typeof (error as { message: unknown }).message === 'string' &&
+                (error as { message: string }).message
+                  .toLowerCase()
+                  .includes('already exists'))))
+
+        if (is409Error) {
+          // Generate a suggested alternative name
+          const originalName = result.value
+          const existingGroups = apiGroups.map((g) => g.name?.toLowerCase())
+          let suggestion = originalName
+          let counter = 2
+
+          while (existingGroups.includes(suggestion.toLowerCase())) {
+            suggestion = `${originalName}-${counter}`
+            counter++
+          }
+
+          // Recursively call handleAddGroup with the suggested name
+          await handleAddGroup(suggestion)
+        } else {
+          // Other errors are handled by useToastMutation
+          console.error('Failed to create group:', error)
+        }
+      }
     }
   }
 
@@ -82,7 +135,7 @@ export function GroupsManager(): ReactElement {
 
       <Button
         variant="outline"
-        onClick={handleAddGroup}
+        onClick={() => handleAddGroup()}
         className="flex h-9 w-[215px] items-center gap-2 px-4 py-2"
       >
         <Plus className="size-4" />
