@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
 } from '@/common/components/ui/dropdown-menu'
 import { Button } from '@/common/components/ui/button'
-import { MoreVertical, Trash2, Github, Text, Copy } from 'lucide-react'
+import { MoreVertical, Trash2, Github, Text, Copy, Edit3 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { Input } from '@/common/components/ui/input'
@@ -25,6 +25,8 @@ import { useConfirm } from '@/common/hooks/use-confirm'
 import { useDeleteServer } from '../hooks/use-delete-server'
 import { useQuery } from '@tanstack/react-query'
 import { useSearch } from '@tanstack/react-router'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { featureFlagKeys } from '../../../../../utils/feature-flags'
 import { getApiV1BetaRegistryByNameServersByServerName } from '@api/sdk.gen'
 import { useEffect, useRef, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
@@ -34,6 +36,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from '@/common/components/ui/tooltip'
+import { cn } from '@/common/lib/utils'
 
 type CardContentMcpServerProps = {
   status: CoreWorkload['status']
@@ -114,6 +117,9 @@ export function CardMcpServer({
   const { mutateAsync: deleteServer, isPending: isDeletePending } =
     useDeleteServer({ name })
   const nameRef = useRef<HTMLElement | null>(null)
+  const isCustomizeToolsEnabled = useFeatureFlag(
+    featureFlagKeys.CUSTOMIZE_TOOLS
+  )
 
   const { data: serverDetails } = useQuery({
     queryKey: ['serverDetails', name],
@@ -285,6 +291,24 @@ export function CardMcpServer({
                   Logs
                 </Link>
               </DropdownMenuItem>
+              {isCustomizeToolsEnabled && (
+                <DropdownMenuItem
+                  asChild
+                  className="flex cursor-pointer items-center"
+                >
+                  <Link
+                    disabled={status !== 'running'}
+                    className={cn(
+                      status !== 'running' && 'pointer-events-none opacity-50'
+                    )}
+                    to="/customize-tools/$serverName"
+                    params={{ serverName: name }}
+                  >
+                    <Edit3 className="mr-2 h-4 w-4" />
+                    Customize Tools
+                  </Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
                 onClick={handleRemove}
                 disabled={isDeletePending}

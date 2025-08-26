@@ -161,6 +161,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getToolhiveMcpInfo: () => ipcRenderer.invoke('chat:get-toolhive-mcp-info'),
   },
 
+  // Utility functions
+  utils: {
+    getWorkloadAvailableTools: (workload: unknown) =>
+      ipcRenderer.invoke('utils:get-workload-available-tools', workload),
+  },
+
   // IPC event listeners for streaming
   on: (channel: string, listener: (...args: unknown[]) => void) => {
     ipcRenderer.on(channel, (_, ...args) => listener(...args))
@@ -304,6 +310,20 @@ export interface ElectronAPI {
       toolCount: number
       tools: Array<{ name: string; description: string }>
     } | null>
+  }
+  utils: {
+    getWorkloadAvailableTools: (workload: unknown) => Promise<
+      | Record<
+          string,
+          {
+            description?: string
+            inputSchema?: {
+              properties?: Record<string, unknown>
+            }
+          }
+        >
+      | undefined
+    >
   }
 
   // IPC event listeners for streaming
