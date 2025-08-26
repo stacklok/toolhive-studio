@@ -92,9 +92,9 @@
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.1",
     "@ai-sdk/google": "^2.0.4",
-    "@ai-sdk/openai": "^2.0.10",
+    "@ai-sdk/openai": "^2.0.21",
     "@ai-sdk/provider": "^2.0.0",
-    "@ai-sdk/react": "^2.0.13",
+    "@ai-sdk/react": "^2.0.24",
     "@ai-sdk/xai": "^2.0.5",
     "@fontsource-variable/inter": "^5.2.6",
     "@fontsource/atkinson-hyperlegible": "^5.2.6",
