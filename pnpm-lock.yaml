@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@ai-sdk/anthropic':
         specifier: ^2.0.1
-        version: 2.0.6(zod@4.0.17)
+        version: 2.0.8(zod@4.0.17)
       '@ai-sdk/google':
         specifier: ^2.0.4
         version: 2.0.8(zod@4.0.17)
@@ -342,8 +342,8 @@ packages:
   '@adobe/css-tools@4.4.3':
     resolution: {integrity: sha512-VQKMkwriZbaOgVCby1UDY/LDk5fIjhQicCvVPFqfe+69fWaPWydbWJ3wRt59/YzIwda1I81loas3oCoHxnqvdA==}
 
-  '@ai-sdk/anthropic@2.0.6':
-    resolution: {integrity: sha512-ZSAU1xUebumWF1ldgkq9nz8iT7Ew9DGTX8Z4c2mvmlexifxzOMdj9cNLld5DlRD5dr4ULjSnTZywPKyMlAEcdQ==}
+  '@ai-sdk/anthropic@2.0.8':
+    resolution: {integrity: sha512-UdkAHRJDOnRNwhr+ZUTDiHQ37VF2Et4CclWvvG2vVo0ZppLB5aE1T+NjN34XCZGaRyNp23cOTCqZvOBMpSY+6w==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4
@@ -392,6 +392,12 @@ packages:
 
   '@ai-sdk/provider-utils@3.0.6':
     resolution: {integrity: sha512-s1+9okDSqbxKvwf1mqyyqtOY27/RV9O+XTzaRKEamVKbmVBM7BiCSfui7vH7A/1EETECtTJkS2MUL5D3Pw5GFw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4
+
+  '@ai-sdk/provider-utils@3.0.7':
+    resolution: {integrity: sha512-o3BS5/t8KnBL3ubP8k3w77AByOypLm+pkIL/DCw0qKkhDbvhCy+L3hRTGPikpdb8WHcylAeKsjgwOxhj4cqTUA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4
@@ -6914,10 +6920,10 @@ snapshots:
 
   '@adobe/css-tools@4.4.3': {}
 
-  '@ai-sdk/anthropic@2.0.6(zod@4.0.17)':
+  '@ai-sdk/anthropic@2.0.8(zod@4.0.17)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.5(zod@4.0.17)
+      '@ai-sdk/provider-utils': 3.0.7(zod@4.0.17)
       zod: 4.0.17
 
   '@ai-sdk/gateway@1.0.13(zod@4.0.17)':
@@ -6967,6 +6973,13 @@ snapshots:
       zod-to-json-schema: 3.24.6(zod@4.0.17)
 
   '@ai-sdk/provider-utils@3.0.6(zod@4.0.17)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0
+      '@standard-schema/spec': 1.0.0
+      eventsource-parser: 3.0.5
+      zod: 4.0.17
+
+  '@ai-sdk/provider-utils@3.0.7(zod@4.0.17)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@standard-schema/spec': 1.0.0
