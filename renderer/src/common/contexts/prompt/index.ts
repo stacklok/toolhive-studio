@@ -1,19 +1,5 @@
 import { createContext, type ReactNode } from 'react'
-import type { UseFormReturn } from 'react-hook-form'
-import type { z } from 'zod/v4'
 import type { FormikConfig, FormikProps } from 'formik'
-
-export type FormPromptConfig<TSchema extends z.ZodType> = {
-  title?: ReactNode
-  description?: ReactNode
-  schema: TSchema
-  defaultValues: z.infer<TSchema>
-  renderForm: (form: UseFormReturn) => ReactNode
-  buttons?: {
-    confirm: ReactNode
-    cancel: ReactNode
-  }
-}
 
 export type FormikFormPromptConfig<TValues extends object> = {
   title?: ReactNode
@@ -30,12 +16,7 @@ export type FormikFormPromptConfig<TValues extends object> = {
   }
 }
 
-type PromptFunction = <TSchema extends z.ZodType>(
-  config: FormPromptConfig<TSchema>
-) => Promise<z.infer<TSchema> | null> // Returns the form values or null if cancelled
-
 export type PromptContextType = {
-  promptForm: PromptFunction
   promptFormik: <TValues extends object>(
     config: FormikFormPromptConfig<TValues>
   ) => Promise<TValues | null>
