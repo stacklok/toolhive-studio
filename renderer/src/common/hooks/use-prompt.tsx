@@ -15,13 +15,21 @@ export function usePrompt() {
 }
 
 // Factory function for simple text input prompts
-export function generateSimplePrompt(
-  inputType: 'text' | 'email' | 'password' | 'url' = 'text',
-  initialValue: string = '',
-  title?: string,
-  description?: string,
+export function generateSimplePrompt({
+  inputType = 'text',
+  initialValue = '',
+  title,
+  description,
+  placeholder,
+  label,
+}: {
+  inputType?: 'text' | 'email' | 'password' | 'url'
+  initialValue?: string
+  title?: string
+  description?: string
   placeholder?: string
-): FormikFormPromptConfig<{ value: string }> {
+  label?: string
+} = {}): FormikFormPromptConfig<{ value: string }> {
   return {
     title: title || 'Input Required',
     description: description || 'Please provide the requested information.',
@@ -30,7 +38,7 @@ export function generateSimplePrompt(
       <div className="space-y-4">
         <div>
           <label htmlFor="value" className="mb-2 block text-sm font-medium">
-            Value
+            {label || 'Value'}
           </label>
           <Input
             id="value"

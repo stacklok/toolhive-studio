@@ -55,13 +55,12 @@ describe('usePrompt', () => {
   })
 
   it('shows prompt dialog with basic configuration', async () => {
-    const promptProps = generateSimplePrompt(
-      'text',
-      '',
-      'Test Prompt',
-      undefined,
-      'Type here...'
-    )
+    const promptProps = generateSimplePrompt({
+      inputType: 'text',
+      initialValue: '',
+      title: 'Test Prompt',
+      placeholder: 'Type here...',
+    })
 
     renderTestComponent({ promptProps })
 
@@ -80,7 +79,11 @@ describe('usePrompt', () => {
   })
 
   it('returns value when confirmed', async () => {
-    const promptProps = generateSimplePrompt('text', '', 'Test Input')
+    const promptProps = generateSimplePrompt({
+      inputType: 'text',
+      initialValue: '',
+      title: 'Test Input',
+    })
 
     renderTestComponent({ promptProps })
 
@@ -106,7 +109,11 @@ describe('usePrompt', () => {
   })
 
   it('returns null when cancelled', async () => {
-    const promptProps = generateSimplePrompt('text', '', 'Test Input')
+    const promptProps = generateSimplePrompt({
+      inputType: 'text',
+      initialValue: '',
+      title: 'Test Input',
+    })
 
     renderTestComponent({ promptProps })
 
@@ -126,7 +133,11 @@ describe('usePrompt', () => {
   })
 
   it('shows prompt dialog with required field', async () => {
-    const promptProps = generateSimplePrompt('text', '', 'Required Field')
+    const promptProps = generateSimplePrompt({
+      inputType: 'text',
+      initialValue: '',
+      title: 'Required Field',
+    })
 
     renderTestComponent({ promptProps })
 
@@ -142,7 +153,11 @@ describe('usePrompt', () => {
   })
 
   it('handles email input', async () => {
-    const promptProps = generateSimplePrompt('email', '', 'Email Input')
+    const promptProps = generateSimplePrompt({
+      inputType: 'email',
+      initialValue: '',
+      title: 'Email Input',
+    })
 
     renderTestComponent({ promptProps })
 
@@ -170,7 +185,11 @@ describe('usePrompt', () => {
   })
 
   it('handles text input', async () => {
-    const promptProps = generateSimplePrompt('text', '', 'Text Input')
+    const promptProps = generateSimplePrompt({
+      inputType: 'text',
+      initialValue: '',
+      title: 'Text Input',
+    })
 
     renderTestComponent({ promptProps })
 
@@ -198,7 +217,11 @@ describe('usePrompt', () => {
   })
 
   it('handles password input', async () => {
-    const promptProps = generateSimplePrompt('password', '', 'Password Input')
+    const promptProps = generateSimplePrompt({
+      inputType: 'password',
+      initialValue: '',
+      title: 'Password Input',
+    })
 
     renderTestComponent({ promptProps })
 
@@ -226,7 +249,11 @@ describe('usePrompt', () => {
   })
 
   it('uses default button labels', async () => {
-    const promptProps = generateSimplePrompt('text', '', 'Default Buttons')
+    const promptProps = generateSimplePrompt({
+      inputType: 'text',
+      initialValue: '',
+      title: 'Default Buttons',
+    })
 
     renderTestComponent({ promptProps })
 
@@ -242,11 +269,11 @@ describe('usePrompt', () => {
   })
 
   it('sets initial value', async () => {
-    const promptProps = generateSimplePrompt(
-      'text',
-      'Initial Value',
-      'With Initial'
-    )
+    const promptProps = generateSimplePrompt({
+      inputType: 'text',
+      initialValue: 'Initial Value',
+      title: 'With Initial',
+    })
 
     renderTestComponent({ promptProps })
 
@@ -262,7 +289,11 @@ describe('usePrompt', () => {
   })
 
   it('handles URL input', async () => {
-    const promptProps = generateSimplePrompt('url', '', 'URL Input')
+    const promptProps = generateSimplePrompt({
+      inputType: 'url',
+      initialValue: '',
+      title: 'URL Input',
+    })
 
     renderTestComponent({ promptProps })
 
@@ -290,7 +321,11 @@ describe('usePrompt', () => {
   })
 
   it('handles numeric input', async () => {
-    const promptProps = generateSimplePrompt('text', '', 'Numeric Input')
+    const promptProps = generateSimplePrompt({
+      inputType: 'text',
+      initialValue: '',
+      title: 'Numeric Input',
+    })
 
     renderTestComponent({ promptProps })
 
@@ -318,7 +353,11 @@ describe('usePrompt', () => {
   })
 
   it('closes dialog when clicking outside is prevented', async () => {
-    const promptProps = generateSimplePrompt('text', '', 'Test Input')
+    const promptProps = generateSimplePrompt({
+      inputType: 'text',
+      initialValue: '',
+      title: 'Test Input',
+    })
 
     renderTestComponent({ promptProps })
 
