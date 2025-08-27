@@ -206,6 +206,10 @@
             "description": "Port is the port on which the workload is exposed.\nThis is embedded in the URL.",
             "type": "integer"
           },
+          "remote": {
+            "description": "Remote indicates whether this is a remote workload (true) or a container workload (false).",
+            "type": "boolean"
+          },
           "status": { "$ref": "#/components/schemas/runtime.WorkloadStatus" },
           "status_context": {
             "description": "StatusContext provides additional context about the workload's status.\nThe exact meaning is determined by the status and the underlying runtime.",
@@ -781,6 +785,17 @@
             "description": "ThvCABundle is the path to the CA certificate bundle for ToolHive HTTP operations",
             "type": "string"
           },
+          "tool_override": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/runner.ToolOverride"
+            },
+            "description": "ToolOverride is the map of tool names to override. Tools to override are\nspecified as ToolOverride structs.",
+            "type": "object"
+          },
+          "tool_override_file": {
+            "description": "ToolOverrideFile is the path to a file containing tool overrides.\nThe file is a JSON struct mapping actual names to ToolOverride structs.",
+            "type": "string"
+          },
           "tools_filter": {
             "description": "ToolsFilter is the list of tools to filter",
             "items": { "type": "string" },
@@ -802,6 +817,19 @@
             "items": { "type": "string" },
             "type": "array",
             "uniqueItems": false
+          }
+        },
+        "type": "object"
+      },
+      "runner.ToolOverride": {
+        "properties": {
+          "description": {
+            "description": "Description is the redefined description of the tool",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name is the redefined name of the tool",
+            "type": "string"
           }
         },
         "type": "object"
