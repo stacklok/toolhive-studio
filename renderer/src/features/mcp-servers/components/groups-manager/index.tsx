@@ -4,9 +4,12 @@ import { getApiV1BetaGroups } from '@api/sdk.gen'
 import { Group } from './group'
 import { Link, useRouterState } from '@tanstack/react-router'
 import { Button } from '@/common/components/ui/button'
-import { usePrompt, generatePromptProps } from '@/common/hooks/use-prompt'
+import { usePrompt } from '@/common/hooks/use-prompt'
 import { Plus } from 'lucide-react'
 import { useMutationCreateGroup } from '@/features/mcp-servers/hooks/use-mutation-create-group'
+import type { FormikFormPromptConfig } from '@/common/contexts/prompt'
+import type { FormikProps } from 'formik'
+import { Input } from '@/common/components/ui/input'
 
 export function GroupsManager(): ReactElement {
   const router = useRouterState({ select: (s) => s.location.search })
@@ -36,18 +39,35 @@ export function GroupsManager(): ReactElement {
     : 'default'
 
   const handleAddGroup = async (suggestedName = '') => {
-    const result = await prompt(
-      generatePromptProps('text', suggestedName, {
-        title: 'Create a group',
-        label: 'Name',
-        placeholder: 'Enter group name...',
-        required: true,
-        minLength: 1,
-        maxLength: 50,
-        confirmText: 'Create',
-        cancelText: 'Cancel',
-      })
-    )
+    const promptConfig: FormikFormPromptConfig<{ value: string }> = {
+      title: 'Create a group',
+      description: 'Enter a name for the new group.',
+      initialValues: { value: suggestedName },
+      fields: (formik: FormikProps<{ value: string }>) => (
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="value" className="mb-2 block text-sm font-medium">
+              Name
+            </label>
+            <Input
+              id="value"
+              type="text"
+              placeholder="Enter group name..."
+              {...formik.getFieldProps('value')}
+            />
+            {formik.touched.value && formik.errors.value && (
+              <p className="mt-1 text-sm text-red-500">{formik.errors.value}</p>
+            )}
+          </div>
+        </div>
+      ),
+      buttons: {
+        confirm: 'Create',
+        cancel: 'Cancel',
+      },
+    }
+
+    const result = await prompt(promptConfig)
 
     if (result) {
       try {
@@ -57,37 +77,16 @@ export function GroupsManager(): ReactElement {
           },
         })
       } catch (error) {
-        // Check if it's a conflict error and offer to retry - handle multiple error structures
         const is409Error =
           // String errors (what we actually get from the API)
           (typeof error === 'string' &&
             (error.includes('409') ||
-              error.toLowerCase().includes('already exists') ||
-              error.toLowerCase().includes('group_already_exists'))) ||
-          // Object errors (fallback for other possible structures)
+              error.toLowerCase().includes('already exists'))) ||
+          // Object errors with status property
           (error &&
             typeof error === 'object' &&
-            // Direct status property
-            (('status' in error &&
-              (error as { status: number }).status === 409) ||
-              // Response object with status
-              ('response' in error &&
-                (error as { response: { status?: unknown } }).response
-                  ?.status === 409) ||
-              // Check error message for 409
-              (error instanceof Error && error.message.includes('409')) ||
-              // Check plain object message for 409
-              ('message' in error &&
-                typeof (error as { message: unknown }).message === 'string' &&
-                (error as { message: string }).message.includes('409')) ||
-              // Check error message for conflict indication
-              (error instanceof Error &&
-                error.message.toLowerCase().includes('already exists')) ||
-              ('message' in error &&
-                typeof (error as { message: unknown }).message === 'string' &&
-                (error as { message: string }).message
-                  .toLowerCase()
-                  .includes('already exists'))))
+            'status' in error &&
+            (error as { status: number }).status === 409)
 
         if (is409Error) {
           // Generate a suggested alternative name

@@ -3,50 +3,50 @@ import { PromptContext, type FormikFormPromptConfig } from '.'
 import { FormikFormPromptDialog } from './form-prompt-dialog'
 
 export function PromptProvider({ children }: { children: ReactNode }) {
-  // Formik prompt state
-  const [activeFormikPrompt, setActiveFormikPrompt] = useState<{
+  // Prompt state
+  const [activePrompt, setActivePrompt] = useState<{
     config: FormikFormPromptConfig<Record<string, unknown>>
     resolve: (value: unknown) => void
   } | null>(null)
 
-  const [isFormikOpen, setIsFormikOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
 
   const promptFormik = <TValues extends object>(
     config: FormikFormPromptConfig<TValues>
   ) => {
     return new Promise<TValues | null>((resolve) => {
-      setActiveFormikPrompt({
+      setActivePrompt({
         // Type erasure to simplify state storage
         config: config as unknown as FormikFormPromptConfig<
           Record<string, unknown>
         >,
         resolve: (value: unknown) => resolve(value as TValues),
       })
-      setIsFormikOpen(true)
+      setIsOpen(true)
     })
   }
 
-  const handleFormikSubmit = (data: unknown) => {
-    if (!activeFormikPrompt) return
-    activeFormikPrompt.resolve(data)
-    closeFormikDialog()
+  const handleSubmit = (data: unknown) => {
+    if (!activePrompt) return
+    activePrompt.resolve(data)
+    closeDialog()
   }
 
-  const handleFormikCancel = () => {
-    if (activeFormikPrompt) {
-      activeFormikPrompt.resolve(null)
+  const handleCancel = () => {
+    if (activePrompt) {
+      activePrompt.resolve(null)
     }
-    closeFormikDialog()
+    closeDialog()
   }
 
-  const closeFormikDialog = () => {
-    setIsFormikOpen(false)
-    setActiveFormikPrompt(null)
+  const closeDialog = () => {
+    setIsOpen(false)
+    setActivePrompt(null)
   }
 
-  const handleFormikOpenChange = (open: boolean) => {
+  const handleOpenChange = (open: boolean) => {
     if (!open) {
-      handleFormikCancel()
+      handleCancel()
     }
   }
 
@@ -54,14 +54,14 @@ export function PromptProvider({ children }: { children: ReactNode }) {
     <PromptContext.Provider value={{ promptFormik }}>
       {children}
 
-      {/* Formik form prompt dialog */}
-      {activeFormikPrompt && (
+      {/* Form prompt dialog */}
+      {activePrompt && (
         <FormikFormPromptDialog
-          isOpen={isFormikOpen}
-          config={activeFormikPrompt.config}
-          onSubmit={handleFormikSubmit as (v: Record<string, unknown>) => void}
-          onCancel={handleFormikCancel}
-          onOpenChange={handleFormikOpenChange}
+          isOpen={isOpen}
+          config={activePrompt.config}
+          onSubmit={handleSubmit as (v: Record<string, unknown>) => void}
+          onCancel={handleCancel}
+          onOpenChange={handleOpenChange}
         />
       )}
     </PromptContext.Provider>

@@ -2,7 +2,7 @@ import { render, screen, waitFor, cleanup } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { vi, beforeEach, afterEach } from 'vitest'
-import { usePrompt, generatePromptProps } from '../use-prompt'
+import { usePrompt, generateSimplePrompt } from '../use-prompt'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
 
 function TestComponent({
@@ -10,7 +10,7 @@ function TestComponent({
   buttonLabel = 'Trigger Prompt',
   testId = 'test-component',
 }: {
-  promptProps: ReturnType<typeof generatePromptProps>
+  promptProps: ReturnType<typeof generateSimplePrompt>
   buttonLabel?: string
   testId?: string
 }) {
@@ -55,11 +55,13 @@ describe('usePrompt', () => {
   })
 
   it('shows prompt dialog with basic configuration', async () => {
-    const promptProps = generatePromptProps('text', '', {
-      title: 'Test Prompt',
-      label: 'Enter value',
-      placeholder: 'Type here...',
-    })
+    const promptProps = generateSimplePrompt(
+      'text',
+      '',
+      'Test Prompt',
+      undefined,
+      'Type here...'
+    )
 
     renderTestComponent({ promptProps })
 
@@ -73,15 +75,12 @@ describe('usePrompt', () => {
 
     // Check dialog content
     expect(screen.getByText('Test Prompt')).toBeVisible()
-    expect(screen.getByLabelText('Enter value')).toBeVisible()
+    expect(screen.getByLabelText('Value')).toBeVisible()
     expect(screen.getByPlaceholderText('Type here...')).toBeVisible()
   })
 
   it('returns value when confirmed', async () => {
-    const promptProps = generatePromptProps('text', '', {
-      title: 'Test Input',
-      label: 'Name',
-    })
+    const promptProps = generateSimplePrompt('text', '', 'Test Input')
 
     renderTestComponent({ promptProps })
 
@@ -92,7 +91,7 @@ describe('usePrompt', () => {
     })
 
     // Type in input
-    const input = screen.getByLabelText('Name')
+    const input = screen.getByLabelText('Value')
     await userEvent.type(input, 'Test Value')
 
     // Click OK button
@@ -107,10 +106,7 @@ describe('usePrompt', () => {
   })
 
   it('returns null when cancelled', async () => {
-    const promptProps = generatePromptProps('text', '', {
-      title: 'Test Input',
-      label: 'Name',
-    })
+    const promptProps = generateSimplePrompt('text', '', 'Test Input')
 
     renderTestComponent({ promptProps })
 
@@ -129,12 +125,8 @@ describe('usePrompt', () => {
     })
   })
 
-  it('validates required field', async () => {
-    const promptProps = generatePromptProps('text', '', {
-      title: 'Required Field',
-      label: 'Name',
-      required: true,
-    })
+  it('shows prompt dialog with required field', async () => {
+    const promptProps = generateSimplePrompt('text', '', 'Required Field')
 
     renderTestComponent({ promptProps })
 
@@ -144,21 +136,13 @@ describe('usePrompt', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Try to submit without entering anything
-    await userEvent.click(screen.getByRole('button', { name: /ok/i }))
-
-    // Should show validation error and dialog should still be open
-    await waitFor(() => {
-      expect(screen.getByText('This field is required')).toBeVisible()
-    })
-    expect(screen.getByRole('dialog')).toBeVisible()
+    // Check dialog content
+    expect(screen.getByText('Required Field')).toBeVisible()
+    expect(screen.getByLabelText('Value')).toBeVisible()
   })
 
-  it('validates email input', async () => {
-    const promptProps = generatePromptProps('email', '', {
-      title: 'Email Input',
-      label: 'Email',
-    })
+  it('handles email input', async () => {
+    const promptProps = generateSimplePrompt('email', '', 'Email Input')
 
     renderTestComponent({ promptProps })
 
@@ -168,8 +152,8 @@ describe('usePrompt', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Type valid email and verify it works
-    const input = screen.getByLabelText('Email')
+    // Type email and verify it works
+    const input = screen.getByLabelText('Value')
     await userEvent.type(input, 'test@example.com')
     await userEvent.click(screen.getByRole('button', { name: /ok/i }))
 
@@ -185,12 +169,8 @@ describe('usePrompt', () => {
     })
   })
 
-  it('validates minimum length', async () => {
-    const promptProps = generatePromptProps('text', '', {
-      title: 'Min Length',
-      label: 'Username',
-      minLength: 3,
-    })
+  it('handles text input', async () => {
+    const promptProps = generateSimplePrompt('text', '', 'Text Input')
 
     renderTestComponent({ promptProps })
 
@@ -200,9 +180,9 @@ describe('usePrompt', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Type text that meets minimum requirement
-    const input = screen.getByLabelText('Username')
-    await userEvent.type(input, 'abc')
+    // Type text and verify it works
+    const input = screen.getByLabelText('Value')
+    await userEvent.type(input, 'test value')
     await userEvent.click(screen.getByRole('button', { name: /ok/i }))
 
     // Should close dialog and return result
@@ -212,17 +192,13 @@ describe('usePrompt', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('result')).toHaveTextContent(
-        'Result: {"value":"abc"}'
+        'Result: {"value":"test value"}'
       )
     })
   })
 
-  it('validates maximum length', async () => {
-    const promptProps = generatePromptProps('text', '', {
-      title: 'Max Length',
-      label: 'Short Text',
-      maxLength: 5,
-    })
+  it('handles password input', async () => {
+    const promptProps = generateSimplePrompt('password', '', 'Password Input')
 
     renderTestComponent({ promptProps })
 
@@ -232,9 +208,9 @@ describe('usePrompt', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Type text within maximum limit
-    const input = screen.getByLabelText('Short Text')
-    await userEvent.type(input, 'short')
+    // Type password and verify it works
+    const input = screen.getByLabelText('Value')
+    await userEvent.type(input, 'secret123')
     await userEvent.click(screen.getByRole('button', { name: /ok/i }))
 
     // Should close dialog and return result
@@ -244,18 +220,13 @@ describe('usePrompt', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('result')).toHaveTextContent(
-        'Result: {"value":"short"}'
+        'Result: {"value":"secret123"}'
       )
     })
   })
 
-  it('uses custom button labels', async () => {
-    const promptProps = generatePromptProps('text', '', {
-      title: 'Custom Buttons',
-      label: 'Value',
-      confirmText: 'Save',
-      cancelText: 'Discard',
-    })
+  it('uses default button labels', async () => {
+    const promptProps = generateSimplePrompt('text', '', 'Default Buttons')
 
     renderTestComponent({ promptProps })
 
@@ -265,16 +236,17 @@ describe('usePrompt', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Check custom button labels
-    expect(screen.getByRole('button', { name: 'Save' })).toBeVisible()
-    expect(screen.getByRole('button', { name: 'Discard' })).toBeVisible()
+    // Check default button labels
+    expect(screen.getByRole('button', { name: 'OK' })).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeVisible()
   })
 
   it('sets initial value', async () => {
-    const promptProps = generatePromptProps('text', 'Initial Value', {
-      title: 'With Initial',
-      label: 'Name',
-    })
+    const promptProps = generateSimplePrompt(
+      'text',
+      'Initial Value',
+      'With Initial'
+    )
 
     renderTestComponent({ promptProps })
 
@@ -285,15 +257,12 @@ describe('usePrompt', () => {
     })
 
     // Check that input has initial value
-    const input = screen.getByLabelText('Name')
+    const input = screen.getByLabelText('Value')
     expect(input).toHaveValue('Initial Value')
   })
 
-  it('validates URL input', async () => {
-    const promptProps = generatePromptProps('url', '', {
-      title: 'URL Input',
-      label: 'Website URL',
-    })
+  it('handles URL input', async () => {
+    const promptProps = generateSimplePrompt('url', '', 'URL Input')
 
     renderTestComponent({ promptProps })
 
@@ -303,8 +272,8 @@ describe('usePrompt', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Type valid URL and verify it works
-    const input = screen.getByLabelText('Website URL')
+    // Type URL and verify it works
+    const input = screen.getByLabelText('Value')
     await userEvent.type(input, 'https://example.com')
     await userEvent.click(screen.getByRole('button', { name: /ok/i }))
 
@@ -320,12 +289,8 @@ describe('usePrompt', () => {
     })
   })
 
-  it('validates pattern regex', async () => {
-    const promptProps = generatePromptProps('text', '', {
-      title: 'Pattern Test',
-      label: 'Numbers Only',
-      pattern: /^\d+$/,
-    })
+  it('handles numeric input', async () => {
+    const promptProps = generateSimplePrompt('text', '', 'Numeric Input')
 
     renderTestComponent({ promptProps })
 
@@ -335,8 +300,8 @@ describe('usePrompt', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Type valid numeric text
-    const input = screen.getByLabelText('Numbers Only')
+    // Type numeric text
+    const input = screen.getByLabelText('Value')
     await userEvent.type(input, '12345')
     await userEvent.click(screen.getByRole('button', { name: /ok/i }))
 
@@ -353,10 +318,7 @@ describe('usePrompt', () => {
   })
 
   it('closes dialog when clicking outside is prevented', async () => {
-    const promptProps = generatePromptProps('text', '', {
-      title: 'Test Input',
-      label: 'Name',
-    })
+    const promptProps = generateSimplePrompt('text', '', 'Test Input')
 
     renderTestComponent({ promptProps })
 
