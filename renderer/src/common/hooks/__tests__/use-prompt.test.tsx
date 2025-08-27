@@ -10,7 +10,7 @@ function TestComponent({
   buttonLabel = 'Trigger Prompt',
   testId = 'test-component',
 }: {
-  promptProps: Parameters<ReturnType<typeof usePrompt>>[0]
+  promptProps: ReturnType<typeof generatePromptProps>
   buttonLabel?: string
   testId?: string
 }) {

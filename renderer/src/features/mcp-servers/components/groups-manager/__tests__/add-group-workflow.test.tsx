@@ -41,7 +41,6 @@ beforeEach(() => {
 
   mockUseMutationCreateGroup.mockReturnValue({
     mutateAsync: mockMutateAsync,
-    isLoading: false,
     isPending: false,
     isError: false,
     isSuccess: false,
@@ -175,7 +174,6 @@ describe('Groups Manager - Add a group workflow', () => {
 
     mockUseMutationCreateGroup.mockReturnValue({
       mutateAsync: mockMutateAsync,
-      isLoading: false,
       isPending: false,
       isError: false,
       isSuccess: false,
