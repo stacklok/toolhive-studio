@@ -164,6 +164,10 @@ export type CoreWorkload = {
    * This is embedded in the URL.
    */
   port?: number
+  /**
+   * Remote indicates whether this is a remote workload (true) or a container workload (false).
+   */
+  remote?: boolean
   status?: RuntimeWorkloadStatus
   /**
    * StatusContext provides additional context about the workload's status.
@@ -709,6 +713,18 @@ export type RunnerRunConfig = {
    */
   thv_ca_bundle?: string
   /**
+   * ToolOverride is the map of tool names to override. Tools to override are
+   * specified as ToolOverride structs.
+   */
+  tool_override?: {
+    [key: string]: RunnerToolOverride
+  }
+  /**
+   * ToolOverrideFile is the path to a file containing tool overrides.
+   * The file is a JSON struct mapping actual names to ToolOverride structs.
+   */
+  tool_override_file?: string
+  /**
    * ToolsFilter is the list of tools to filter
    */
   tools_filter?: Array<string>
@@ -721,6 +737,17 @@ export type RunnerRunConfig = {
    * Format: "host-path:container-path[:ro]"
    */
   volumes?: Array<string>
+}
+
+export type RunnerToolOverride = {
+  /**
+   * Description is the redefined description of the tool
+   */
+  description?: string
+  /**
+   * Name is the redefined name of the tool
+   */
+  name?: string
 }
 
 /**
