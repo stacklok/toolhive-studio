@@ -44,6 +44,7 @@ beforeEach(() => {
     isPending: false,
     isError: false,
     isSuccess: false,
+    isIdle: true,
     data: undefined,
     error: null,
     reset: mockReset,
@@ -111,10 +112,10 @@ describe('Groups Manager - Add a group workflow', () => {
 
     mockUseMutationCreateGroup.mockReturnValue({
       mutateAsync: mockMutateAsync,
-      isLoading: false,
       isPending: false,
       isError: false,
       isSuccess: false,
+      isIdle: true,
       data: undefined,
       error: null,
       reset: mockReset,
@@ -177,6 +178,7 @@ describe('Groups Manager - Add a group workflow', () => {
       isPending: false,
       isError: false,
       isSuccess: false,
+      isIdle: true,
       data: undefined,
       error: null,
       reset: mockReset,
