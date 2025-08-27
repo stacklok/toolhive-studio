@@ -10,6 +10,7 @@ import { useMutationCreateGroup } from '@/features/mcp-servers/hooks/use-mutatio
 import type { FormikFormPromptConfig } from '@/common/contexts/prompt'
 import type { FormikProps } from 'formik'
 import { Input } from '@/common/components/ui/input'
+import { doesAlreadyExist } from '@/common/lib/error-utils'
 
 export function GroupsManager(): ReactElement {
   const router = useRouterState({ select: (s) => s.location.search })
@@ -77,18 +78,7 @@ export function GroupsManager(): ReactElement {
           },
         })
       } catch (error) {
-        const is409Error =
-          // String errors (what we actually get from the API)
-          (typeof error === 'string' &&
-            (error.includes('409') ||
-              error.toLowerCase().includes('already exists'))) ||
-          // Object errors with status property
-          (error &&
-            typeof error === 'object' &&
-            'status' in error &&
-            (error as { status: number }).status === 409)
-
-        if (is409Error) {
+        if (doesAlreadyExist(error)) {
           // Generate a suggested alternative name
           const originalName = result.value
           const existingGroups = apiGroups.map((g) => g.name?.toLowerCase())
