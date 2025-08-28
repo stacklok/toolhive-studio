@@ -16,7 +16,6 @@ export function AddGroupButton({
   const createGroupMutation = useMutationCreateGroup()
 
   const handleAddGroup = async () => {
-    // Create a validation schema that rejects existing group names (case sensitive)
     const existingGroupNames = apiGroups.map((g) => g.name).filter(Boolean)
 
     const validationSchema = z

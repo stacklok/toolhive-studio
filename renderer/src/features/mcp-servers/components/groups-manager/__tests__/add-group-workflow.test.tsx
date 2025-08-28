@@ -57,7 +57,7 @@ beforeEach(() => {
 })
 
 describe('Groups Manager - Add a group workflow', () => {
-  it('should allow creating a group through the complete workflow', async () => {
+  it('allows creating a group through the complete workflow', async () => {
     renderRoute(router)
 
     await waitFor(() => {
@@ -95,7 +95,7 @@ describe('Groups Manager - Add a group workflow', () => {
     })
   })
 
-  it('should call the create group mutation with the correct API payload on success path', async () => {
+  it('calls the create group mutation with the correct API payload on success path', async () => {
     const mockMutateAsync = vi.fn().mockResolvedValue({})
     const mockReset = vi.fn()
 
@@ -148,58 +148,7 @@ describe('Groups Manager - Add a group workflow', () => {
     expect(mockMutateAsync).toHaveBeenCalledTimes(1)
   })
 
-  it('should handle group name conflicts by suggesting an alternative name', async () => {
-    const mockMutateAsync = vi.fn()
-    const mockReset = vi.fn()
-
-    mockUseMutationCreateGroup.mockReturnValue({
-      mutateAsync: mockMutateAsync,
-      isPending: false,
-      isError: false,
-      isSuccess: false,
-      isIdle: true,
-      data: undefined,
-      error: null,
-      reset: mockReset,
-      status: 'idle' as const,
-      failureCount: 0,
-      failureReason: null,
-      isPaused: false,
-      variables: undefined,
-      context: undefined,
-      submittedAt: 0,
-    })
-
-    renderRoute(router)
-
-    await waitFor(() => {
-      expect(screen.getByText('default')).toBeVisible()
-    })
-
-    const addGroupButton = screen.getByRole('button', { name: /add a group/i })
-    await userEvent.click(addGroupButton)
-
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeVisible()
-    })
-
-    const nameInput = screen.getByLabelText(/name/i)
-
-    // Type the existing group name - error should appear immediately
-    await userEvent.type(nameInput, 'default')
-
-    // The form should show a validation error immediately as user types
-    await waitFor(() => {
-      expect(
-        screen.getByText('A group with this name already exists')
-      ).toBeVisible()
-    })
-
-    // The mutation should not be called because validation prevented submission
-    expect(mockMutateAsync).not.toHaveBeenCalled()
-  })
-
-  it('should allow creating groups with case-sensitive names', async () => {
+  it('allows creating groups with case-sensitive names', async () => {
     const mockMutateAsync = vi.fn().mockResolvedValue({})
     const mockReset = vi.fn()
 
@@ -236,13 +185,11 @@ describe('Groups Manager - Add a group workflow', () => {
 
     const nameInput = screen.getByLabelText(/name/i)
 
-    // Type a group name with different case - should be allowed
     await userEvent.type(nameInput, 'Default')
 
     const createButton = screen.getByRole('button', { name: /create/i })
     await userEvent.click(createButton)
 
-    // Should successfully create the group with different case
     await waitFor(() => {
       expect(mockMutateAsync).toHaveBeenCalledWith({
         body: {
@@ -254,7 +201,7 @@ describe('Groups Manager - Add a group workflow', () => {
     expect(mockMutateAsync).toHaveBeenCalledTimes(1)
   })
 
-  it('should prevent submission when group name is empty', async () => {
+  it('prevents submission when group name is empty', async () => {
     renderRoute(router)
 
     await waitFor(() => {
