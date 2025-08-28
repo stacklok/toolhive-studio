@@ -29,7 +29,6 @@ export function useMutationCreateGroup() {
       }
     },
     onSuccess: () => {
-      // Invalidate and refetch groups list
       queryClient.invalidateQueries({ queryKey: ['api', 'v1beta', 'groups'] })
     },
     successMsg: (variables) =>
