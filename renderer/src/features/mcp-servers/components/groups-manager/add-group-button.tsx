@@ -17,6 +17,18 @@ export function AddGroupButton({
   const createGroupMutation = useMutationCreateGroup()
 
   const handleAddGroup = async (suggestedName = '') => {
+    // Create a validation schema that rejects existing group names
+    const existingGroupNames = apiGroups
+      .map((g) => g.name?.toLowerCase())
+      .filter(Boolean)
+
+    const validationSchema = z
+      .string()
+      .min(1, 'Name is required')
+      .refine((name) => !existingGroupNames.includes(name.toLowerCase()), {
+        message: 'A group with this name already exists',
+      })
+
     const result = await prompt({
       ...generateSimplePrompt({
         inputType: 'text',
@@ -24,7 +36,7 @@ export function AddGroupButton({
         title: 'Create a group',
         placeholder: 'Enter group name...',
         label: 'Name',
-        validationSchema: z.string().min(1, 'Name is required'),
+        validationSchema,
       }),
       buttons: {
         confirm: 'Create',

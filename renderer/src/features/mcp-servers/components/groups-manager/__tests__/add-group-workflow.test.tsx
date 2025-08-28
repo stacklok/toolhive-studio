@@ -192,23 +192,15 @@ describe('Groups Manager - Add a group workflow', () => {
     const createButton = screen.getByRole('button', { name: /create/i })
     await userEvent.click(createButton)
 
+    // The form should show a validation error and prevent submission
     await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeVisible()
+      expect(
+        screen.getByText('A group with this name already exists')
+      ).toBeVisible()
     })
 
-    const newNameInput = screen.getByLabelText(/name/i)
-    expect(newNameInput).toHaveValue('default-2')
-
-    const createButton2 = screen.getByRole('button', { name: /create/i })
-    await userEvent.click(createButton2)
-
-    expect(mockMutateAsync).toHaveBeenCalledTimes(2)
-    expect(mockMutateAsync).toHaveBeenNthCalledWith(1, {
-      body: { name: 'default' },
-    })
-    expect(mockMutateAsync).toHaveBeenNthCalledWith(2, {
-      body: { name: 'default-2' },
-    })
+    // The mutation should not be called because validation prevented submission
+    expect(mockMutateAsync).not.toHaveBeenCalled()
   })
 
   it('should prevent submission when group name is empty', async () => {
