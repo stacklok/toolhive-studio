@@ -15,6 +15,10 @@ export function usePrompt() {
 }
 
 // Factory function for simple text input prompts
+/**
+ * A factory function that generates simple propmt forms using formik.
+ * The generated form can be easily displayed using usePrompt()
+ */
 export function generateSimplePrompt({
   inputType = 'text',
   initialValue = '',
