@@ -1,20 +1,17 @@
 import {
   app,
   BrowserWindow,
-  Tray,
   ipcMain,
   nativeTheme,
   session,
   shell,
-  autoUpdater,
   dialog,
 } from 'electron'
 import path from 'node:path'
-import { updateElectronApp } from 'update-electron-app'
 import { existsSync, readFile } from 'node:fs'
 import started from 'electron-squirrel-startup'
 import * as Sentry from '@sentry/electron/main'
-import { initTray, updateTrayStatus } from './system-tray'
+import { initTray, updateTrayStatus, safeTrayDestroy } from './system-tray'
 import { showInDock, hideWindow } from './dock-utils'
 import { setAutoLaunch, getAutoLaunchStatus } from './auto-launch'
 import { createApplicationMenu } from './menu'
@@ -38,6 +35,11 @@ import {
 import log from './logger'
 import { getAppVersion, isOfficialReleaseBuild, pollWindowReady } from './util'
 import { delay } from '../../utils/delay'
+import {
+  initAutoUpdate,
+  resetUpdateState,
+  checkForUpdates,
+} from './auto-update'
 import Store from 'electron-store'
 import { getHeaders } from './headers'
 import {
@@ -63,17 +65,15 @@ import {
   getToolhiveMcpInfo,
   type ChatRequest,
 } from './chat'
-
-let tray: Tray | null = null
-let isQuitting = false
-let tearingDown = false
-let pendingUpdateVersion: string | null = null
-let updateState:
-  | 'checking'
-  | 'downloading'
-  | 'downloaded'
-  | 'installing'
-  | 'none' = 'none'
+import { getWorkloadAvailableTools } from './utils/mcp-tools'
+import {
+  getQuittingState,
+  setQuittingState,
+  getTearingDownState,
+  setTearingDownState,
+  setTray,
+  getTray,
+} from './app-state'
 
 const store = new Store<{
   isTelemetryEnabled: boolean
@@ -91,141 +91,11 @@ declare const MAIN_WINDOW_VITE_NAME: string
 log.info(`ToolHive binary path: ${binPath}`)
 log.info(`Binary file exists: ${existsSync(binPath)}`)
 
-// this implements auto-update
-updateElectronApp({ logger: log, notifyUser: false })
-
-app.on('ready', () => {
-  setTimeout(() => {
-    if (
-      !mainWindow ||
-      app.isPackaged ||
-      process.env.MOCK_UPDATE_SERVER !== 'true'
-    ) {
-      return
-    }
-
-    mainWindow.webContents.send('update-downloaded')
-  }, 2000)
-})
-
-// ────────────────────────────────────────────────────────────────────────────
-//  Auto-updater event handlers
-// ────────────────────────────────────────────────────────────────────────────
-autoUpdater.on('update-downloaded', (_, __, releaseName) => {
-  log.info('[update] downloaded - showing dialog')
-  pendingUpdateVersion = releaseName
-  updateState = 'downloaded'
-  if (!mainWindow) {
-    log.error('MainWindow not available for update dialog')
-    return
-  }
-
-  if (mainWindow.isMinimized()) {
-    mainWindow.restore()
-  }
-
-  const dialogOpts = {
-    type: 'info' as const,
-    buttons: ['Restart', 'Later'],
-    cancelId: 1,
-    defaultId: 0,
-    title: `Release ${releaseName}`,
-    message:
-      process.platform === 'darwin'
-        ? `Release ${releaseName}`
-        : 'A new version has been downloaded.\nRestart the application to apply the updates.',
-    detail:
-      process.platform === 'darwin'
-        ? 'A new version has been downloaded.\nRestart the application to apply the updates.'
-        : `Ready to install ${releaseName}`,
-    icon: undefined,
-  }
-
-  dialog
-    .showMessageBox(mainWindow, dialogOpts)
-    .then(async (returnValue) => {
-      if (returnValue.response === 0) {
-        log.info(
-          `[update] installing update to version: ${releaseName || 'unknown'}`
-        )
-        updateState = 'installing'
-
-        log.info('[update] removing quit listeners to avoid interference')
-        app.removeAllListeners('before-quit')
-        app.removeAllListeners('will-quit')
-
-        isQuitting = true
-        tearingDown = true
-
-        try {
-          log.info('[update] starting graceful shutdown before update...')
-
-          mainWindow?.webContents.send('graceful-exit')
-
-          const port = getToolhivePort()
-          if (port) {
-            await stopAllServers(binPath, port)
-          }
-
-          stopToolhive()
-
-          tray?.destroy()
-
-          log.info(
-            '[update] all cleaned up, calling autoUpdater.quitAndInstall()...'
-          )
-          autoUpdater.quitAndInstall()
-        } catch (error) {
-          updateState = 'none'
-          log.error('[update] error during graceful shutdown:', error)
-          tray?.destroy()
-          app.relaunch()
-          app.quit()
-        }
-      } else {
-        updateState = 'none'
-        log.info(
-          '[update] user deferred update installation - showing toast notification'
-        )
-        if (mainWindow) {
-          mainWindow.webContents.send('update-downloaded')
-        }
-      }
-    })
-    .catch((error) => {
-      log.error('[update] error showing dialog:', error)
-    })
-})
-
-autoUpdater.on('checking-for-update', () => {
-  log.info('[update] checking for updates...')
-  updateState = 'checking'
-})
-
-autoUpdater.on('update-available', () => {
-  updateState = 'downloading'
-})
-
-autoUpdater.on('update-not-available', () => {
-  if (updateState === 'downloading') {
-    log.warn('[update] update became unavailable during download - ignoring')
-    return
-  }
-  updateState = 'none'
-})
-
-autoUpdater.on('error', (message) => {
-  log.error('[update] there was a problem updating the application: ', message)
-  log.info('[update] update state: ', updateState)
-  log.info('[update] toolhive binary is running: ', isToolhiveRunning())
-  updateState = 'none'
-})
-
 /** Hold the quit, run teardown, then really exit. */
 export async function blockQuit(source: string, event?: Electron.Event) {
-  if (tearingDown) return
-  tearingDown = true
-  isQuitting = true
+  if (getTearingDownState()) return
+  setTearingDownState(true)
+  setQuittingState(true)
   log.info(`[${source}] initiating graceful teardown...`)
 
   if (event) {
@@ -270,7 +140,7 @@ export async function blockQuit(source: string, event?: Electron.Event) {
     // Stop the embedded ToolHive server
     stopToolhive()
 
-    tray?.destroy()
+    safeTrayDestroy(getTray())
     app.quit()
   }
 }
@@ -344,13 +214,13 @@ function createWindow() {
 
   // Minimize-to-tray instead of close
   mainWindow.on('minimize', () => {
-    if (shouldStartHidden || tray) {
+    if (shouldStartHidden || getTray()) {
       hideWindow(mainWindow)
     }
   })
 
   mainWindow.on('close', (event) => {
-    if (!isQuitting && tray) {
+    if (!getQuittingState() && getTray()) {
       event.preventDefault()
       hideWindow(mainWindow)
     }
@@ -384,18 +254,23 @@ function createWindow() {
 let mainWindow: BrowserWindow | null = null
 
 app.whenReady().then(async () => {
-  updateState = 'none'
+  resetUpdateState()
+
   // Initialize tray first
   try {
-    tray = initTray({ toolHiveIsRunning: false }) // Start with false, will update after ToolHive starts
+    setTray(initTray({ toolHiveIsRunning: false })) // Start with false, will update after ToolHive starts
     log.info('System tray initialized successfully')
     // Setup application menu
-    createApplicationMenu(tray)
+    createApplicationMenu(getTray())
   } catch (error) {
     log.error('Failed to initialize system tray: ', error)
   }
+
+  // Initialize auto-update system
+  initAutoUpdate(() => mainWindow, createWindow)
+
   // Start ToolHive with tray reference
-  await startToolhive(tray || undefined)
+  await startToolhive(getTray() || undefined)
 
   // Create main window
   mainWindow = createWindow()
@@ -403,9 +278,7 @@ app.whenReady().then(async () => {
   mainWindow.webContents.once('did-finish-load', () => {
     if (!mainWindow) return
 
-    if (updateState === 'none') {
-      autoUpdater.checkForUpdates()
-    }
+    checkForUpdates()
 
     mainWindow.webContents.on('before-input-event', (event, input) => {
       const isCmdQ =
@@ -446,10 +319,10 @@ app.whenReady().then(async () => {
 
   // Non-Windows platforms: refresh tray icon when theme changes
   nativeTheme.on('updated', () => {
-    if (tray && process.platform !== 'win32') {
+    if (getTray() && process.platform !== 'win32') {
       try {
-        tray.destroy()
-        tray = initTray({ toolHiveIsRunning: isToolhiveRunning() })
+        getTray()?.destroy()
+        setTray(initTray({ toolHiveIsRunning: isToolhiveRunning() }))
       } catch (error) {
         log.error('Failed to update tray after theme change: ', error)
       }
@@ -482,7 +355,7 @@ app.on('before-quit', (e) => {
     mainWindow.webContents.send('show-quit-confirmation')
   }
 
-  if (!isQuitting) {
+  if (!getQuittingState()) {
     e.preventDefault()
   }
 })
@@ -491,9 +364,9 @@ app.on('will-quit', (e) => blockQuit('will-quit', e))
 // Docker / Ctrl-C etc.
 ;['SIGTERM', 'SIGINT'].forEach((sig) =>
   process.on(sig as NodeJS.Signals, async () => {
-    if (tearingDown) return
-    tearingDown = true
-    isQuitting = true
+    if (getTearingDownState()) return
+    setTearingDownState(true)
+    setQuittingState(true)
     log.info(`[${sig}] delaying exit for teardown...`)
     try {
       const port = getToolhivePort()
@@ -502,7 +375,7 @@ app.on('will-quit', (e) => blockQuit('will-quit', e))
       }
     } finally {
       stopToolhive()
-      tray?.destroy()
+      safeTrayDestroy(getTray())
       process.exit(0)
     }
   })
@@ -536,11 +409,11 @@ ipcMain.handle('get-auto-launch-status', () => getAutoLaunchStatus())
 ipcMain.handle('set-auto-launch', (_event, enabled: boolean) => {
   setAutoLaunch(enabled)
   // Update tray menu if exists
-  if (tray) {
-    updateTrayStatus(tray, isToolhiveRunning())
+  if (getTray()) {
+    updateTrayStatus(getTray()!, isToolhiveRunning())
   }
   // Update menu
-  createApplicationMenu(tray)
+  createApplicationMenu(getTray())
   return getAutoLaunchStatus()
 })
 
@@ -591,7 +464,7 @@ ipcMain.handle('check-container-engine', async () => {
 
 ipcMain.handle('restart-toolhive', async () => {
   try {
-    await restartToolhive(tray || undefined)
+    await restartToolhive(getTray() || undefined)
     return { success: true }
   } catch (error) {
     log.error('Failed to restart ToolHive: ', error)
@@ -600,50 +473,6 @@ ipcMain.handle('restart-toolhive', async () => {
       error: error instanceof Error ? error.message : 'Unknown error',
     }
   }
-})
-
-ipcMain.handle('install-update-and-restart', async () => {
-  log.info(
-    `[update] installing update and restarting application ${pendingUpdateVersion || 'unknown'}`
-  )
-  // Set a flag to indicate we're installing an update
-  // This will prevent the graceful shutdown process
-  isQuitting = true
-  tearingDown = true
-  updateState = 'installing'
-
-  app.removeAllListeners('before-quit')
-  app.removeAllListeners('will-quit')
-
-  log.info('[update] starting graceful shutdown before update...')
-  mainWindow?.webContents.send('graceful-exit')
-
-  try {
-    const port = getToolhivePort()
-    if (port) {
-      await stopAllServers(binPath, port).catch((err) => {
-        log.error('[update] failed to stop servers during update: ', err)
-      })
-    }
-  } catch (err) {
-    log.error('[update] failed to get port during update: ', err)
-  }
-
-  // Stop ToolHive
-  stopToolhive()
-
-  // Destroy tray
-  tray?.destroy()
-
-  // Install update and restart
-  log.info('[update] all cleaned up, calling autoUpdater.quitAndInstall()...')
-  autoUpdater.quitAndInstall()
-  return { success: true }
-})
-
-ipcMain.handle('is-update-in-progress', () => {
-  log.debug(`[is-update-in-progress]: ${updateState}`)
-  return updateState === 'installing'
 })
 
 ipcMain.handle('telemetry-headers', () => {
@@ -837,3 +666,8 @@ ipcMain.handle(
     saveEnabledMcpTools(serverName, enabledTools)
 )
 ipcMain.handle('chat:get-toolhive-mcp-info', () => getToolhiveMcpInfo())
+
+// Workload tools discovery handler
+ipcMain.handle('utils:get-workload-available-tools', async (_, workload) =>
+  getWorkloadAvailableTools(workload)
+)

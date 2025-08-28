@@ -6,6 +6,19 @@ import log from './logger'
 import { getAppVersion } from './util'
 import { hideWindow, showWindow, showInDock } from './dock-utils'
 
+// Safe tray destruction with error handling
+export function safeTrayDestroy(tray: Tray | null) {
+  try {
+    if (tray && !tray.isDestroyed()) {
+      tray.destroy()
+      log.info('[tray] Tray destroyed successfully')
+    }
+  } catch (error) {
+    log.error('[tray] Failed to destroy tray: ', error)
+    // Don't throw - this shouldn't block operations
+  }
+}
+
 ///////////////////////////////////////////////////
 // Tray icon
 ///////////////////////////////////////////////////

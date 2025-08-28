@@ -1,20 +1,38 @@
 import {
   experimental_createMCPClient as createMCPClient,
   type experimental_MCPClient as MCPClient,
-  type experimental_MCPClientConfig as MCPClientConfig,
 } from 'ai'
 import type { ToolSet } from 'ai'
 
-import { Experimental_StdioMCPTransport as StdioMCPTransport } from 'ai/mcp-stdio'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import { createClient } from '@api/client'
 import { getApiV1BetaWorkloads } from '@api/sdk.gen'
-import type { CoreWorkload } from '@api/types.gen'
 import { getHeaders } from '../headers'
 import { getToolhivePort, getToolhiveMcpPort } from '../toolhive-manager'
 import log from '../logger'
 import type { McpToolInfo } from './types'
 import { getEnabledMcpTools } from './storage'
+import {
+  type McpToolDefinition,
+  createTransport,
+  getWorkloadAvailableTools,
+  isMcpToolDefinition,
+} from '../utils/mcp-tools'
+
+// Helper to safely extract properties
+function getToolParameters(inputSchema: unknown): Record<string, unknown> {
+  if (
+    inputSchema &&
+    typeof inputSchema === 'object' &&
+    'properties' in inputSchema &&
+    inputSchema['properties'] &&
+    typeof inputSchema['properties'] === 'object' &&
+    !Array.isArray(inputSchema['properties'])
+  ) {
+    return inputSchema['properties'] as Record<string, unknown>
+  }
+  return {}
+}
 
 // Check if Toolhive MCP is available and get its tools info
 export async function getToolhiveMcpInfo(): Promise<{
@@ -66,94 +84,6 @@ export async function getToolhiveMcpInfo(): Promise<{
   }
 }
 
-// Interface for MCP tool definition from client
-interface McpToolDefinition {
-  description?: string
-  inputSchema?: {
-    properties?: Record<string, unknown>
-  }
-}
-
-// Type guard to check if an object is a valid MCP tool definition
-function isMcpToolDefinition(obj: unknown): obj is McpToolDefinition {
-  if (!obj || typeof obj !== 'object') return false
-
-  const tool = obj as Record<string, unknown>
-
-  // Description should be string if present
-  if ('description' in tool && typeof tool.description !== 'string')
-    return false
-
-  // InputSchema should be object if present
-  if ('inputSchema' in tool) {
-    if (!tool.inputSchema || typeof tool.inputSchema !== 'object') return false
-
-    const inputSchema = tool.inputSchema as Record<string, unknown>
-    if (
-      'properties' in inputSchema &&
-      inputSchema.properties !== null &&
-      typeof inputSchema.properties !== 'object'
-    ) {
-      return false
-    }
-  }
-
-  return true
-}
-
-// Create transport configuration based on workload type
-function createTransport(
-  workload: CoreWorkload,
-  serverName: string,
-  port: number
-): MCPClientConfig {
-  const transportConfigs = {
-    stdio: () => ({
-      name: serverName,
-      transport: new StdioMCPTransport({
-        command: 'node',
-        args: [],
-      }),
-    }),
-    'streamable-http': () => {
-      const url = new URL(workload.url || `http://localhost:${port}/mcp`)
-      return {
-        name: serverName,
-        transport: new StreamableHTTPClientTransport(url),
-      }
-    },
-    sse: () => ({
-      name: serverName,
-      transport: {
-        type: 'sse' as const,
-        url: `${workload.url || `http://localhost:${port}/sse#${serverName}`}`,
-      },
-    }),
-    default: () => ({
-      name: serverName,
-      transport: {
-        type: 'sse' as const,
-        url: `${workload.url || `http://localhost:${port}/sse#${serverName}`}`,
-      },
-    }),
-  }
-
-  // Check if transport_type is stdio but URL suggests SSE
-  let transportType = workload.transport_type as keyof typeof transportConfigs
-
-  if (transportType === 'stdio' && workload.url) {
-    // If URL contains /sse or #, use SSE transport instead
-    if (workload.url.includes('/sse') || workload.url.includes('#')) {
-      // Override stdio to SSE based on URL pattern
-      transportType = 'sse'
-    }
-  }
-
-  const configBuilder =
-    transportConfigs[transportType] || transportConfigs.default
-  return configBuilder()
-}
-
 // Get MCP server tools information
 export async function getMcpServerTools(serverName?: string): Promise<
   | McpToolInfo[]
@@ -185,7 +115,6 @@ export async function getMcpServerTools(serverName?: string): Promise<
     // If serverName is provided, return server-specific format
     if (serverName) {
       // Get server tools for specific server
-
       const workload = (workloads || []).find(
         (w) => w.name === serverName && w.tool_type === 'mcp'
       )
@@ -200,43 +129,34 @@ export async function getMcpServerTools(serverName?: string): Promise<
 
       // If workload.tools is empty, try to discover tools by connecting to the server
       let discoveredTools: string[] = workload.tools || []
-      const serverMcpTools: Record<string, McpToolDefinition> = {}
+      let serverMcpTools: Record<string, McpToolDefinition> = {}
 
       if (discoveredTools.length === 0 && workload.status === 'running') {
-        try {
-          // Try to create an MCP client and discover tools
-          const config = createTransport(workload, serverName, port!)
-          if (config) {
-            const mcpClient = await createMCPClient(config)
-            const rawTools = await mcpClient.tools()
-
-            // Filter and validate tools using type guard
-            for (const [toolName, toolDef] of Object.entries(rawTools)) {
-              if (isMcpToolDefinition(toolDef)) {
-                serverMcpTools[toolName] = toolDef
-              }
-            }
-
-            discoveredTools = Object.keys(serverMcpTools)
-            await mcpClient.close()
-          }
-        } catch (error) {
-          log.error(`Failed to discover tools for ${serverName}:`, error)
-        }
+        serverMcpTools = (await getWorkloadAvailableTools(workload)) || {}
+        discoveredTools = Object.keys(serverMcpTools)
       }
 
       const result = {
         serverName: workload.name!,
         serverPackage: workload.package,
-        tools: discoveredTools.map((toolName) => {
-          const toolDef = serverMcpTools[toolName]
-          return {
-            name: toolName,
-            description: toolDef?.description || '',
-            parameters: toolDef?.inputSchema?.properties || {},
-            enabled: enabledToolNames.includes(toolName),
+        tools: discoveredTools.map(
+          (
+            toolName
+          ): {
+            name: string
+            description: string
+            parameters: Record<string, unknown>
+            enabled: boolean
+          } => {
+            const toolDef = serverMcpTools[toolName]
+            return {
+              name: toolName,
+              description: toolDef?.description || '',
+              parameters: getToolParameters(toolDef?.inputSchema),
+              enabled: enabledToolNames.includes(toolName),
+            }
           }
-        }),
+        ),
         isRunning: workload.status === 'running',
       }
 
