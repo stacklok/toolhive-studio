@@ -4,7 +4,7 @@ import { ReactHookFormPromptDialog } from './form-prompt-dialog'
 
 export function PromptProvider({ children }: { children: ReactNode }) {
   const [activePrompt, setActivePrompt] = useState<{
-    config: ReactHookFormPromptConfig<any>
+    config: ReactHookFormPromptConfig<Record<string, unknown>>
     resolve: (value: unknown) => void
   } | null>(null)
 
@@ -17,7 +17,7 @@ export function PromptProvider({ children }: { children: ReactNode }) {
     return new Promise<TValues | null>((resolve) => {
       console.log('Creating promise for promptForm')
       setActivePrompt({
-        config: config as ReactHookFormPromptConfig<any>,
+        config: config as ReactHookFormPromptConfig<Record<string, unknown>>,
         resolve: (value: unknown) => {
           console.log('Resolving promise with value:', value)
           resolve(value as TValues)
@@ -60,7 +60,7 @@ export function PromptProvider({ children }: { children: ReactNode }) {
         <ReactHookFormPromptDialog
           isOpen={isOpen}
           config={activePrompt.config}
-          onSubmit={handleSubmit as (v: any) => void}
+          onSubmit={handleSubmit as (v: Record<string, unknown>) => void}
           onCancel={handleCancel}
           onOpenChange={handleOpenChange}
         />

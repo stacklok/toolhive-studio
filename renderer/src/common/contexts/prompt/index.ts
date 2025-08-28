@@ -1,20 +1,20 @@
 import { createContext, type ReactNode } from 'react'
-import type { UseFormReturn, FieldValues, Path } from 'react-hook-form'
+import type { UseFormReturn, FieldValues, Resolver } from 'react-hook-form'
 
 export type ReactHookFormPromptConfig<TValues extends FieldValues> = {
-  title?: ReactNode
+  title?: string
   description?: ReactNode
   defaultValues: TValues
+  resolver?: Resolver<TValues>
   fields: (form: UseFormReturn<TValues>) => ReactNode
-  resolver?: any
   buttons?: {
-    confirm: ReactNode
-    cancel: ReactNode
+    confirm?: string
+    cancel?: string
   }
 }
 
 export type PromptContextType = {
-  promptForm: <TValues extends FieldValues>(
+  promptForm: <TValues extends Record<string, unknown>>(
     config: ReactHookFormPromptConfig<TValues>
   ) => Promise<TValues | null>
 }

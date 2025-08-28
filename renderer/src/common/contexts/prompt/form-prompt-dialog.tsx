@@ -13,8 +13,8 @@ import type { UseFormReturn } from 'react-hook-form'
 
 interface ReactHookFormPromptDialogProps {
   isOpen: boolean
-  config: ReactHookFormPromptConfig<any>
-  onSubmit: (data: any) => void
+  config: ReactHookFormPromptConfig<Record<string, unknown>>
+  onSubmit: (data: Record<string, unknown>) => void
   onCancel: () => void
   onOpenChange: (open: boolean) => void
 }
@@ -39,7 +39,7 @@ export function ReactHookFormPromptDialog({
     }
   }
 
-  const handleSubmit = (data: any) => {
+  const handleSubmit = (data: Record<string, unknown>) => {
     onSubmit(data)
   }
 
@@ -54,19 +54,15 @@ export function ReactHookFormPromptDialog({
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           <DialogHeader>
             <DialogTitle>{config.title || 'Form Input'}</DialogTitle>
-            <DialogDescription>
-              {config.description || ''}
-            </DialogDescription>
+            <DialogDescription>{config.description || ''}</DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">{config.fields(form as UseFormReturn<any>)}</div>
+          <div className="space-y-4 py-4">
+            {config.fields(form as UseFormReturn<Record<string, unknown>>)}
+          </div>
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={handleCancel}
-              type="button"
-            >
+            <Button variant="outline" onClick={handleCancel} type="button">
               {config.buttons?.cancel ?? 'Cancel'}
             </Button>
             <Button type="submit" disabled={form.formState.isSubmitting}>
