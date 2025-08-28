@@ -110,7 +110,7 @@ describe('auto-update', () => {
   describe('unit tests', () => {
     let mockMainWindow: BrowserWindow
     let mockTray: Tray
-    let mockCreateWindow: () => BrowserWindow
+    let mockCreateWindow: () => Promise<BrowserWindow>
 
     beforeEach(() => {
       vi.clearAllMocks()
@@ -141,7 +141,7 @@ describe('auto-update', () => {
       } as unknown as Tray
 
       // Create mock window creator
-      mockCreateWindow = vi.fn().mockReturnValue(mockMainWindow)
+      mockCreateWindow = vi.fn().mockResolvedValue(mockMainWindow)
 
       // Setup default mocks
       vi.mocked(stopAllServers).mockResolvedValue(undefined)
@@ -158,7 +158,10 @@ describe('auto-update', () => {
       vi.mocked(getTray).mockReturnValue(mockTray)
 
       // Initialize auto-update to register event handlers AFTER creating mocks
-      initAutoUpdate(() => mockMainWindow, mockCreateWindow)
+      initAutoUpdate(
+        () => mockMainWindow,
+        async () => mockMainWindow
+      )
     })
 
     afterEach(() => {
@@ -174,7 +177,10 @@ describe('auto-update', () => {
       it('initializes update system correctly', () => {
         // Reset and re-initialize to test
         resetAllUpdateState()
-        initAutoUpdate(() => mockMainWindow, mockCreateWindow)
+        initAutoUpdate(
+          () => mockMainWindow,
+          async () => mockMainWindow
+        )
 
         expect(vi.mocked(ipcMain.handle)).toHaveBeenCalledWith(
           'install-update-and-restart',
@@ -191,7 +197,10 @@ describe('auto-update', () => {
         process.env.NODE_ENV = 'development'
 
         resetAllUpdateState()
-        initAutoUpdate(() => mockMainWindow, mockCreateWindow)
+        initAutoUpdate(
+          () => mockMainWindow,
+          async () => mockMainWindow
+        )
 
         // Simulate mock update event
         vi.mocked(autoUpdater).emit(
@@ -278,7 +287,10 @@ describe('auto-update', () => {
           checkboxChecked: false,
         }) // "Later"
 
-        initAutoUpdate(() => destroyedWindow, mockCreateWindow)
+        initAutoUpdate(
+          () => destroyedWindow,
+          async () => mockMainWindow
+        )
 
         vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
 
@@ -299,7 +311,10 @@ describe('auto-update', () => {
           throw new Error('Window creation failed')
         })
 
-        initAutoUpdate(() => destroyedWindow, mockCreateWindow)
+        initAutoUpdate(
+          () => destroyedWindow,
+          async () => mockMainWindow
+        )
 
         vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
 
@@ -321,7 +336,10 @@ describe('auto-update', () => {
           },
         } as unknown as BrowserWindow
 
-        initAutoUpdate(() => minimizedWindow, mockCreateWindow)
+        initAutoUpdate(
+          () => minimizedWindow,
+          async () => mockMainWindow
+        )
 
         vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
 
@@ -504,7 +522,10 @@ describe('auto-update', () => {
 
     describe('error handling and recovery', () => {
       beforeEach(() => {
-        initAutoUpdate(() => mockMainWindow, mockCreateWindow)
+        initAutoUpdate(
+          () => mockMainWindow,
+          async () => mockMainWindow
+        )
       })
 
       it('handles update installation failure with recovery', async () => {
@@ -652,7 +673,7 @@ describe('auto-update', () => {
 
       initAutoUpdate(
         () => mockMainWindow,
-        () => mockMainWindow
+        async () => mockMainWindow
       )
 
       const updatePromise = new Promise<void>((resolve) => {
@@ -680,7 +701,7 @@ describe('auto-update', () => {
 
       initAutoUpdate(
         () => mockMainWindow,
-        () => mockMainWindow
+        async () => mockMainWindow
       )
 
       const updatePromise = new Promise<void>((resolve) => {
@@ -706,7 +727,7 @@ describe('auto-update', () => {
 
       initAutoUpdate(
         () => mockMainWindow,
-        () => mockMainWindow
+        async () => mockMainWindow
       )
 
       const updatePromise = new Promise<void>((resolve) => {
@@ -731,7 +752,7 @@ describe('auto-update', () => {
 
       initAutoUpdate(
         () => mockMainWindow,
-        () => mockMainWindow
+        async () => mockMainWindow
       )
 
       const updatePromise = new Promise<void>((resolve) => {
@@ -763,7 +784,7 @@ describe('auto-update', () => {
 
       initAutoUpdate(
         () => mockMainWindow,
-        () => mockMainWindow
+        async () => mockMainWindow
       )
 
       const updatePromise = new Promise<void>((resolve) => {
@@ -787,7 +808,7 @@ describe('auto-update', () => {
 
       initAutoUpdate(
         () => mockMainWindow,
-        () => mockMainWindow
+        async () => mockMainWindow
       )
 
       // Add some listeners to app
@@ -827,7 +848,10 @@ describe('auto-update', () => {
         checkboxChecked: false,
       }) // Later
 
-      initAutoUpdate(() => destroyedWindow, createWindow)
+      initAutoUpdate(
+        () => destroyedWindow,
+        async () => newWindow
+      )
 
       vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
 
@@ -850,7 +874,7 @@ describe('auto-update', () => {
 
       initAutoUpdate(
         () => mockMainWindow,
-        () => mockMainWindow
+        async () => mockMainWindow
       )
 
       let quitAndInstallCalled = false
