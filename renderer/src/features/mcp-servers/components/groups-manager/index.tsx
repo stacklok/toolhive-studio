@@ -31,26 +31,28 @@ export function GroupsManager(): ReactElement {
     : 'default'
 
   return (
-    <div className="space-y-2">
-      {apiGroups.map((group, index) => (
-        <Link
-          key={group.name ?? `group-${index + 1}`}
-          to="/"
-          search={(prev) => ({
-            ...prev,
-            group: (group.name ?? 'default').toLowerCase(),
-          })}
-          preload={false}
-        >
-          <Group
-            name={group.name ?? 'default'}
-            isEnabled={Boolean(
-              group.registered_clients && group.registered_clients.length > 0
-            )}
-            isActive={(group.name ?? '').toLowerCase() === currentGroupName}
-          />
-        </Link>
-      ))}
+    <div className="flex flex-col gap-2">
+      <div className="space-y-2">
+        {apiGroups.map((group, index) => (
+          <Link
+            key={group.name ?? `group-${index + 1}`}
+            to="/"
+            search={(prev) => ({
+              ...prev,
+              group: (group.name ?? 'default').toLowerCase(),
+            })}
+            preload={false}
+          >
+            <Group
+              name={group.name ?? 'default'}
+              isEnabled={Boolean(
+                group.registered_clients && group.registered_clients.length > 0
+              )}
+              isActive={(group.name ?? '').toLowerCase() === currentGroupName}
+            />
+          </Link>
+        ))}
+      </div>
 
       <AddGroupButton apiGroups={apiGroups} />
     </div>
