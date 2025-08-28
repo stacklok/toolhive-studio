@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { PromptContext, type ReactHookFormPromptConfig } from '.'
-import { ReactHookFormPromptDialog } from './form-prompt-dialog'
+import { FormDialog } from './form-prompt-dialog'
 
 export function PromptProvider({ children }: { children: ReactNode }) {
   const [activePrompt, setActivePrompt] = useState<{
@@ -53,7 +53,7 @@ export function PromptProvider({ children }: { children: ReactNode }) {
       {children}
 
       {activePrompt && (
-        <ReactHookFormPromptDialog
+        <FormDialog
           isOpen={isOpen}
           config={activePrompt.config}
           onSubmit={handleSubmit as (v: Record<string, unknown>) => void}

@@ -11,7 +11,7 @@ import type { ReactHookFormPromptConfig } from '.'
 import { useForm } from 'react-hook-form'
 import type { UseFormReturn } from 'react-hook-form'
 
-interface ReactHookFormPromptDialogProps {
+interface FormDialogProps {
   isOpen: boolean
   config: ReactHookFormPromptConfig<Record<string, unknown>>
   onSubmit: (data: Record<string, unknown>) => void
@@ -19,13 +19,13 @@ interface ReactHookFormPromptDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-export function ReactHookFormPromptDialog({
+export function FormDialog({
   isOpen,
   config,
   onSubmit,
   onCancel,
   onOpenChange,
-}: ReactHookFormPromptDialogProps) {
+}: FormDialogProps) {
   const form = useForm({
     defaultValues: config.defaultValues,
     resolver: config.resolver,
