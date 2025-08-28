@@ -16,14 +16,14 @@ function TestComponent({
   testId?: string
 }) {
   const prompt = usePrompt()
-  const [result, setResult] = useState<unknown>(undefined)
+  const [result, setResult] = useState<string | null>(null)
 
   const handleClick = async () => {
     try {
-      const value = await prompt(promptProps)
-      setResult(value)
+      const result = await prompt(promptProps)
+      setResult(result?.value ?? null)
     } catch (error) {
-      setResult(error)
+      setResult(`${error}`)
     }
   }
 
@@ -32,11 +32,10 @@ function TestComponent({
       <button onClick={handleClick} data-testid="trigger-button">
         {buttonLabel}
       </button>
-      {result !== undefined && (
-        <div data-testid="result">
-          {result === null ? 'Cancelled' : `Result: ${JSON.stringify(result)}`}
-        </div>
-      )}
+      <div data-testid="result">
+        {result ? `Result: ${result}` : 'Cancelled'}
+      </div>
+      )
     </div>
   )
 }
@@ -103,7 +102,7 @@ describe('usePrompt', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('result')).toHaveTextContent(
-        'Result: {"value":"Test Value"}'
+        'Result: Test Value'
       )
     })
   })
@@ -174,7 +173,7 @@ describe('usePrompt', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('result')).toHaveTextContent(
-        'Result: {"value":"test@example.com"}'
+        'Result: test@example.com'
       )
     })
   })
@@ -204,7 +203,7 @@ describe('usePrompt', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('result')).toHaveTextContent(
-        'Result: {"value":"test value"}'
+        'Result: test value'
       )
     })
   })
@@ -234,7 +233,7 @@ describe('usePrompt', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('result')).toHaveTextContent(
-        'Result: {"value":"secret123"}'
+        'Result: secret123'
       )
     })
   })
@@ -302,7 +301,7 @@ describe('usePrompt', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('result')).toHaveTextContent(
-        'Result: {"value":"https://example.com"}'
+        'Result: https://example.com'
       )
     })
   })
@@ -331,9 +330,7 @@ describe('usePrompt', () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByTestId('result')).toHaveTextContent(
-        'Result: {"value":"12345"}'
-      )
+      expect(screen.getByTestId('result')).toHaveTextContent('Result: 12345')
     })
   })
 
