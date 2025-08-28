@@ -27,7 +27,7 @@ import {
   isMainWindowMaximized,
   sendToMainWindowRenderer,
   recreateMainWindowForShutdown,
-} from './mainWindow'
+} from './main-window'
 
 import { getCspString } from './csp'
 import {

@@ -5,7 +5,7 @@ import { createApplicationMenu } from './menu'
 import log from './logger'
 import { getAppVersion } from './util'
 import { hideWindow, showWindow, showInDock } from './dock-utils'
-import { showMainWindow, sendToMainWindowRenderer } from './mainWindow'
+import { showMainWindow, sendToMainWindowRenderer } from './main-window'
 
 // Safe tray destruction with error handling
 export function safeTrayDestroy(tray: Tray | null) {
