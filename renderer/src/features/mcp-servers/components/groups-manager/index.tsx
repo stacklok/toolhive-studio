@@ -1,11 +1,16 @@
 import type { ReactElement } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getApiV1BetaGroups } from '@api/sdk.gen'
-import { Group } from './group'
-import { Link, useRouterState } from '@tanstack/react-router'
+import { useRouterState } from '@tanstack/react-router'
+import { AddGroupButton } from './add-group-button'
+import { GroupList } from './group-list'
 
 export function GroupsManager(): ReactElement {
-  const router = useRouterState({ select: (s) => s.location.search })
+  const router = useRouterState({ select: (s) => s.location.search }) as Record<
+    string,
+    unknown
+  >
+
   const { data } = useQuery({
     queryKey: ['api', 'v1beta', 'groups'],
     queryFn: async () => {
@@ -24,31 +29,12 @@ export function GroupsManager(): ReactElement {
 
   const apiGroups = data?.groups ?? []
 
-  const currentGroupName = (router as Record<string, unknown>)['group']
-    ? String((router as Record<string, string>)['group']).toLowerCase()
-    : 'default'
+  const currentGroupName = String(router.group ?? 'default')
 
   return (
-    <div className="space-y-2">
-      {apiGroups.map((group, index) => (
-        <Link
-          key={group.name ?? `group-${index + 1}`}
-          to="/"
-          search={(prev) => ({
-            ...prev,
-            group: (group.name ?? 'default').toLowerCase(),
-          })}
-          preload={false}
-        >
-          <Group
-            name={group.name ?? 'default'}
-            isEnabled={Boolean(
-              group.registered_clients && group.registered_clients.length > 0
-            )}
-            isActive={(group.name ?? '').toLowerCase() === currentGroupName}
-          />
-        </Link>
-      ))}
+    <div className="flex flex-col gap-2">
+      <GroupList apiGroups={apiGroups} currentGroupName={currentGroupName} />
+      <AddGroupButton apiGroups={apiGroups} />
     </div>
   )
 }
