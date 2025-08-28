@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { vi, beforeEach, afterEach } from 'vitest'
 import { usePrompt, generateSimplePrompt } from '../use-prompt'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
+import { z } from 'zod/v4'
 
 function TestComponent({
   promptProps,
@@ -346,5 +347,36 @@ describe('usePrompt', () => {
     })
 
     expect(screen.getByRole('dialog')).toBeVisible()
+  })
+
+  it('handles zod-based validation correctly', async () => {
+    const promptProps = generateSimplePrompt({
+      inputType: 'text',
+      initialValue: '',
+      title: 'Create a group',
+      placeholder: 'Enter group name...',
+      label: 'Name',
+      validationSchema: z.string().min(1, 'Name is required'),
+    })
+
+    renderTestComponent({ promptProps })
+
+    await userEvent.click(screen.getByRole('button'))
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    const input = screen.getByRole('textbox')
+    expect(input).toHaveValue('')
+
+    const okButton = screen.getByRole('button', { name: 'OK' })
+    await userEvent.click(okButton)
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    expect(screen.getByText('Name is required')).toBeVisible()
   })
 })

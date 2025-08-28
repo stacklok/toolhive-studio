@@ -3,6 +3,7 @@ import { PromptContext, type PromptContextType } from '@/common/contexts/prompt'
 import { Input } from '@/common/components/ui/input'
 import type { FormikFormPromptConfig } from '@/common/contexts/prompt'
 import type { FormikProps } from 'formik'
+import { z } from 'zod/v4'
 
 export function usePrompt() {
   const context = useContext(
@@ -25,18 +26,29 @@ export function generateSimplePrompt({
   description,
   placeholder,
   label,
+  validationSchema,
 }: {
   inputType?: 'text' | 'email' | 'password' | 'url'
   initialValue?: string
   title?: string
-  description?: string
+  description?: React.ReactNode
   placeholder?: string
   label?: string
+  validationSchema?: z.ZodSchema<string>
 } = {}): FormikFormPromptConfig<{ value: string }> {
   return {
     title: title || 'Input Required',
-    description: description || 'Please provide the requested information.',
+    description: description,
     initialValues: { value: initialValue },
+    validate: validationSchema
+      ? (values: { value: string }) => {
+          const result = validationSchema.safeParse(values.value)
+          if (!result.success) {
+            return { value: result.error.issues[0]?.message || 'Invalid input' }
+          }
+          return {}
+        }
+      : undefined,
     fields: (formik: FormikProps<{ value: string }>) => (
       <div className="space-y-4">
         <div>

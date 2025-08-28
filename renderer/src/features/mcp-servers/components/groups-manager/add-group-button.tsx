@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react'
 import { usePrompt, generateSimplePrompt } from '@/common/hooks/use-prompt'
 import { useMutationCreateGroup } from '@/features/mcp-servers/hooks/use-mutation-create-group'
 import { doesAlreadyExist } from '@/common/lib/error-utils'
+import { z } from 'zod/v4'
 
 interface AddGroupButtonProps {
   apiGroups: Array<{ name?: string; registered_clients?: string[] }>
@@ -21,9 +22,9 @@ export function AddGroupButton({
         inputType: 'text',
         initialValue: suggestedName,
         title: 'Create a group',
-        description: 'Enter a name for the new group.',
         placeholder: 'Enter group name...',
         label: 'Name',
+        validationSchema: z.string().min(1, 'Name is required'),
       }),
       buttons: {
         confirm: 'Create',

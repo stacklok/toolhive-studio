@@ -210,4 +210,42 @@ describe('Groups Manager - Add a group workflow', () => {
       body: { name: 'default-2' },
     })
   })
+
+  it('should prevent submission when group name is empty', async () => {
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.getByText('default')).toBeVisible()
+    })
+
+    const addGroupButton = screen.getByRole('button', { name: /add a group/i })
+    expect(addGroupButton).toBeVisible()
+
+    await userEvent.click(addGroupButton)
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    expect(
+      screen.getByRole('heading', { name: /create a group/i })
+    ).toBeVisible()
+
+    const nameInput = screen.getByLabelText(/name/i)
+    expect(nameInput).toBeVisible()
+    expect(nameInput).toHaveValue('')
+
+    const createButton = screen.getByRole('button', { name: /create/i })
+    expect(createButton).toBeVisible()
+
+    await userEvent.click(createButton)
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText('Name is required')).toBeVisible()
+    })
+  })
 })
