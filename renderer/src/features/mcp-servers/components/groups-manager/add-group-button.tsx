@@ -16,22 +16,20 @@ export function AddGroupButton({
   const createGroupMutation = useMutationCreateGroup()
 
   const handleAddGroup = async (suggestedName = '') => {
-    const promptConfig = generateSimplePrompt({
-      inputType: 'text',
-      initialValue: suggestedName,
-      title: 'Create a group',
-      description: 'Enter a name for the new group.',
-      placeholder: 'Enter group name...',
-      label: 'Name',
+    const result = await prompt({
+      ...generateSimplePrompt({
+        inputType: 'text',
+        initialValue: suggestedName,
+        title: 'Create a group',
+        description: 'Enter a name for the new group.',
+        placeholder: 'Enter group name...',
+        label: 'Name',
+      }),
+      buttons: {
+        confirm: 'Create',
+        cancel: 'Cancel',
+      },
     })
-
-    // Override the default button labels
-    promptConfig.buttons = {
-      confirm: 'Create',
-      cancel: 'Cancel',
-    }
-
-    const result = await prompt(promptConfig)
 
     if (result) {
       try {
@@ -42,7 +40,6 @@ export function AddGroupButton({
         })
       } catch (error) {
         if (doesAlreadyExist(error)) {
-          // Generate a suggested alternative name
           const originalName = result.value
           const existingGroups = apiGroups.map((g) => g.name?.toLowerCase())
           let suggestion = originalName
@@ -53,10 +50,8 @@ export function AddGroupButton({
             counter++
           }
 
-          // Recursively call handleAddGroup with the suggested name
           await handleAddGroup(suggestion)
         } else {
-          // Other errors are handled by useToastMutation
           console.error('Failed to create group:', error)
         }
       }
