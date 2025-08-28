@@ -66,7 +66,10 @@ export function FormDialog({
             <Button variant="outline" onClick={handleCancel} type="button">
               {config.buttons?.cancel ?? 'Cancel'}
             </Button>
-            <Button type="submit" disabled={form.formState.isSubmitting}>
+            <Button
+              type="submit"
+              disabled={form.formState.isSubmitting || !form.formState.isValid}
+            >
               {config.buttons?.confirm ?? 'OK'}
             </Button>
           </DialogFooter>

@@ -374,12 +374,56 @@ describe('usePrompt', () => {
     expect(input).toHaveValue('')
 
     const okButton = screen.getByRole('button', { name: 'OK' })
-    await userEvent.click(okButton)
+    expect(okButton).toBeDisabled()
+
+    await userEvent.type(input, 'test')
+
+    await waitFor(() => {
+      expect(okButton).toBeEnabled()
+    })
+
+    await userEvent.clear(input)
+
+    await waitFor(() => {
+      expect(okButton).toBeDisabled()
+    })
+  })
+
+  it('disables submit button when form is invalid', async () => {
+    const promptProps = generateSimplePrompt({
+      inputType: 'text',
+      initialValue: '',
+      title: 'Validation Test',
+      placeholder: 'Enter value...',
+      label: 'Value',
+      validationSchema: z
+        .string()
+        .min(3, 'Value must be at least 3 characters'),
+    })
+
+    renderTestComponent({ promptProps })
+
+    await userEvent.click(screen.getByRole('button'))
 
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    expect(screen.getByText('Name is required')).toBeVisible()
+    const input = screen.getByRole('textbox')
+    const okButton = screen.getByRole('button', { name: 'OK' })
+
+    expect(okButton).toBeDisabled()
+
+    await userEvent.type(input, 'valid')
+
+    await waitFor(() => {
+      expect(okButton).toBeEnabled()
+    })
+
+    await userEvent.clear(input)
+
+    await waitFor(() => {
+      expect(okButton).toBeDisabled()
+    })
   })
 })

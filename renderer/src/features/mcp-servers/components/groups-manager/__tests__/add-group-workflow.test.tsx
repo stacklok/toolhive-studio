@@ -228,11 +228,8 @@ describe('Groups Manager - Add a group workflow', () => {
     const createButton = screen.getByRole('button', { name: /create/i })
     expect(createButton).toBeVisible()
 
-    await userEvent.click(createButton)
-
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeVisible()
-    })
+    await userEvent.type(nameInput, 'test')
+    await userEvent.clear(nameInput)
 
     await waitFor(() => {
       expect(screen.getByText('Name is required')).toBeVisible()
