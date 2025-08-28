@@ -3,7 +3,6 @@ import { PromptContext, type FormikFormPromptConfig } from '.'
 import { FormikFormPromptDialog } from './form-prompt-dialog'
 
 export function PromptProvider({ children }: { children: ReactNode }) {
-  // Prompt state
   const [activePrompt, setActivePrompt] = useState<{
     config: FormikFormPromptConfig<Record<string, unknown>>
     resolve: (value: unknown) => void
@@ -16,7 +15,6 @@ export function PromptProvider({ children }: { children: ReactNode }) {
   ) => {
     return new Promise<TValues | null>((resolve) => {
       setActivePrompt({
-        // Type erasure to simplify state storage
         config: config as unknown as FormikFormPromptConfig<
           Record<string, unknown>
         >,
@@ -54,7 +52,6 @@ export function PromptProvider({ children }: { children: ReactNode }) {
     <PromptContext.Provider value={{ promptFormik }}>
       {children}
 
-      {/* Form prompt dialog */}
       {activePrompt && (
         <FormikFormPromptDialog
           isOpen={isOpen}

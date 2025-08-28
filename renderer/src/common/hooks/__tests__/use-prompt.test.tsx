@@ -44,7 +44,6 @@ function renderTestComponent(props: Parameters<typeof TestComponent>[0]) {
 
 describe('usePrompt', () => {
   beforeEach(() => {
-    // Mock console methods to avoid Radix UI warnings during tests
     vi.spyOn(console, 'warn').mockImplementation(() => {})
     vi.spyOn(console, 'error').mockImplementation(() => {})
   })
@@ -64,15 +63,12 @@ describe('usePrompt', () => {
 
     renderTestComponent({ promptProps })
 
-    // Click button to open prompt
     await userEvent.click(screen.getByRole('button'))
 
-    // Check if dialog is shown
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Check dialog content
     expect(screen.getByText('Test Prompt')).toBeVisible()
     expect(screen.getByLabelText('Value')).toBeVisible()
     expect(screen.getByPlaceholderText('Type here...')).toBeVisible()
@@ -93,14 +89,11 @@ describe('usePrompt', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Type in input
     const input = screen.getByLabelText('Value')
     await userEvent.type(input, 'Test Value')
 
-    // Click OK button
     await userEvent.click(screen.getByRole('button', { name: /ok/i }))
 
-    // Check result
     await waitFor(() => {
       expect(screen.getByTestId('result')).toHaveTextContent(
         'Result: {"value":"Test Value"}'
@@ -123,10 +116,8 @@ describe('usePrompt', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Click Cancel button
     await userEvent.click(screen.getByRole('button', { name: /cancel/i }))
 
-    // Check result
     await waitFor(() => {
       expect(screen.getByTestId('result')).toHaveTextContent('Cancelled')
     })
@@ -147,7 +138,6 @@ describe('usePrompt', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Check dialog content
     expect(screen.getByText('Required Field')).toBeVisible()
     expect(screen.getByLabelText('Value')).toBeVisible()
   })
@@ -167,12 +157,10 @@ describe('usePrompt', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Type email and verify it works
     const input = screen.getByLabelText('Value')
     await userEvent.type(input, 'test@example.com')
     await userEvent.click(screen.getByRole('button', { name: /ok/i }))
 
-    // Should close dialog and return result
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     })
@@ -199,12 +187,10 @@ describe('usePrompt', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Type text and verify it works
     const input = screen.getByLabelText('Value')
     await userEvent.type(input, 'test value')
     await userEvent.click(screen.getByRole('button', { name: /ok/i }))
 
-    // Should close dialog and return result
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     })
@@ -231,12 +217,10 @@ describe('usePrompt', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Type password and verify it works
     const input = screen.getByLabelText('Value')
     await userEvent.type(input, 'secret123')
     await userEvent.click(screen.getByRole('button', { name: /ok/i }))
 
-    // Should close dialog and return result
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     })
@@ -263,7 +247,6 @@ describe('usePrompt', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Check default button labels
     expect(screen.getByRole('button', { name: 'OK' })).toBeVisible()
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeVisible()
   })
@@ -283,7 +266,6 @@ describe('usePrompt', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Check that input has initial value
     const input = screen.getByLabelText('Value')
     expect(input).toHaveValue('Initial Value')
   })
@@ -303,12 +285,10 @@ describe('usePrompt', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Type URL and verify it works
     const input = screen.getByLabelText('Value')
     await userEvent.type(input, 'https://example.com')
     await userEvent.click(screen.getByRole('button', { name: /ok/i }))
 
-    // Should close dialog and return result
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     })
@@ -335,12 +315,10 @@ describe('usePrompt', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Type numeric text
     const input = screen.getByLabelText('Value')
     await userEvent.type(input, '12345')
     await userEvent.click(screen.getByRole('button', { name: /ok/i }))
 
-    // Should close dialog and return result
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     })
@@ -367,8 +345,6 @@ describe('usePrompt', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Dialog should remain open even when trying to click outside
-    // This is tested by the onInteractOutside prop preventing the default
     expect(screen.getByRole('dialog')).toBeVisible()
   })
 })

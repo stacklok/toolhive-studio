@@ -6,9 +6,7 @@ export type FormikFormPromptConfig<TValues extends object> = {
   description?: ReactNode
   initialValues: TValues
   fields: (formik: FormikProps<TValues>) => ReactNode
-  /** Optional Formik validate function */
   validate?: FormikConfig<TValues>['validate']
-  /** Optional Formik/Yup validation schema. Left as unknown to avoid hard dependency on Yup types */
   validationSchema?: unknown
   buttons?: {
     confirm: ReactNode

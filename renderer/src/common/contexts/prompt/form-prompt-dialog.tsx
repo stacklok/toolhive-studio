@@ -10,7 +10,6 @@ import { Button } from '@/common/components/ui/button'
 import type { FormikFormPromptConfig } from '.'
 import { Formik, type FormikProps } from 'formik'
 
-// Formik-based prompt dialog
 interface FormikFormPromptDialogProps<TValues extends object> {
   isOpen: boolean
   config: FormikFormPromptConfig<TValues>
