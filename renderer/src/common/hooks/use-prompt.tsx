@@ -39,13 +39,17 @@ export function generateSimplePrompt({
   label?: string
   validationSchema?: z.ZodSchema<string>
 } = {}): ReactHookFormPromptConfig<{ value: string }> {
-  console.log('generateSimplePrompt called with:', { inputType, initialValue, title })
-  
+  console.log('generateSimplePrompt called with:', {
+    inputType,
+    initialValue,
+    title,
+  })
+
   // Create a schema for the form values
   const formSchema = z.object({
     value: validationSchema || z.string().min(1, 'This field is required'),
   })
-  
+
   return {
     title: title || 'Input Required',
     description: description,
@@ -64,7 +68,9 @@ export function generateSimplePrompt({
             {...form.register('value')}
           />
           {form.formState.errors.value && (
-            <p className="mt-1 text-sm text-red-500">{form.formState.errors.value.message}</p>
+            <p className="mt-1 text-sm text-red-500">
+              {form.formState.errors.value.message}
+            </p>
           )}
         </div>
       </div>

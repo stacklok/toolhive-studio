@@ -149,10 +149,7 @@ describe('Groups Manager - Add a group workflow', () => {
   })
 
   it('should handle group name conflicts by suggesting an alternative name', async () => {
-    const mockMutateAsync = vi
-      .fn()
-      .mockRejectedValueOnce({ status: 409 })
-      .mockResolvedValueOnce({})
+    const mockMutateAsync = vi.fn()
     const mockReset = vi.fn()
 
     mockUseMutationCreateGroup.mockReturnValue({
@@ -187,12 +184,11 @@ describe('Groups Manager - Add a group workflow', () => {
     })
 
     const nameInput = screen.getByLabelText(/name/i)
+
+    // Type the existing group name - error should appear immediately
     await userEvent.type(nameInput, 'default')
 
-    const createButton = screen.getByRole('button', { name: /create/i })
-    await userEvent.click(createButton)
-
-    // The form should show a validation error and prevent submission
+    // The form should show a validation error immediately as user types
     await waitFor(() => {
       expect(
         screen.getByText('A group with this name already exists')

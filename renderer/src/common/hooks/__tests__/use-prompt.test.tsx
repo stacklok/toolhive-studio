@@ -34,7 +34,9 @@ function TestComponent({
 
   return (
     <div data-testid={testId}>
-      <button onClick={handleClick} data-testid="trigger-button">{buttonLabel}</button>
+      <button onClick={handleClick} data-testid="trigger-button">
+        {buttonLabel}
+      </button>
       {result !== undefined && (
         <div data-testid="result">
           {result === null ? 'Cancelled' : `Result: ${JSON.stringify(result)}`}
