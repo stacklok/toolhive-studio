@@ -6,7 +6,10 @@ import { AddGroupButton } from './add-group-button'
 import { GroupList } from './group-list'
 
 export function GroupsManager(): ReactElement {
-  const router = useRouterState({ select: (s) => s.location.search })
+  const router = useRouterState({ select: (s) => s.location.search }) as Record<
+    string,
+    unknown
+  >
 
   const { data } = useQuery({
     queryKey: ['api', 'v1beta', 'groups'],
@@ -26,9 +29,7 @@ export function GroupsManager(): ReactElement {
 
   const apiGroups = data?.groups ?? []
 
-  const currentGroupName = (router as Record<string, unknown>)['group']
-    ? String((router as Record<string, string>)['group']).toLowerCase()
-    : 'default'
+  const currentGroupName = String(router.group ?? 'default')
 
   return (
     <div className="flex flex-col gap-2">
