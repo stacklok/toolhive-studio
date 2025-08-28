@@ -338,7 +338,7 @@ export function sendToMainWindowRenderer(
 /**
  * Wait for the window to be ready
  */
-export async function waitForMainWindowReady(): Promise<void> {
+async function waitForMainWindowReady(): Promise<void> {
   try {
     if (!isMainWindowValid()) {
       logError(
@@ -379,20 +379,5 @@ export async function recreateMainWindowForShutdown(): Promise<BrowserWindow> {
   } catch (error) {
     logError('Failed to recreate window for shutdown', error)
     throw error
-  }
-}
-
-/**
- * Destroy the window and clean up resources
- */
-export function destroyMainWindow(): void {
-  try {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.destroy()
-      log.info('Main window destroyed')
-    }
-    mainWindow = null
-  } catch (error) {
-    log.error('Failed to destroy window:', error)
   }
 }
