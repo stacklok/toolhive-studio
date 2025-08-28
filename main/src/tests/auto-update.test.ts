@@ -287,10 +287,7 @@ describe('auto-update', () => {
           checkboxChecked: false,
         }) // "Later"
 
-        initAutoUpdate(
-          () => destroyedWindow,
-          async () => mockMainWindow
-        )
+        initAutoUpdate(() => destroyedWindow, mockCreateWindow)
 
         vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
 
@@ -311,10 +308,7 @@ describe('auto-update', () => {
           throw new Error('Window creation failed')
         })
 
-        initAutoUpdate(
-          () => destroyedWindow,
-          async () => mockMainWindow
-        )
+        initAutoUpdate(() => destroyedWindow, mockCreateWindow)
 
         vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
 
@@ -842,16 +836,13 @@ describe('auto-update', () => {
         webContents: { send: vi.fn() },
       } as unknown as BrowserWindow
 
-      const createWindow = vi.fn(() => newWindow)
+      const createWindow = vi.fn(async () => newWindow)
       vi.mocked(dialog.showMessageBox).mockResolvedValue({
         response: 1,
         checkboxChecked: false,
       }) // Later
 
-      initAutoUpdate(
-        () => destroyedWindow,
-        async () => newWindow
-      )
+      initAutoUpdate(() => destroyedWindow, createWindow)
 
       vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
 
