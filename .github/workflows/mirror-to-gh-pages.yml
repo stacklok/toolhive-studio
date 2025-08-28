@@ -23,12 +23,7 @@ jobs:
       - name: Get release info
         id: release
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            TAG="${{ github.event.inputs.tag }}"
-          else
-            # Get the latest release tag when triggered by workflow_run
-            TAG=$(gh api "repos/${{ github.repository }}/releases/latest" | jq -r '.tag_name')
-          fi
+          TAG="${{ github.event.inputs.tag || github.event.release.tag_name }}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
           # Get release metadata
