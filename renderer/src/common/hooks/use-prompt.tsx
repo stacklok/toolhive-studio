@@ -1,22 +1,25 @@
 import React, { useContext } from 'react'
 import { PromptContext, type PromptContextType } from '@/common/contexts/prompt'
 import { Input } from '@/common/components/ui/input'
-import type { FormikFormPromptConfig } from '@/common/contexts/prompt'
-import type { FormikProps } from 'formik'
+import type { ReactHookFormPromptConfig } from '@/common/contexts/prompt'
+import type { UseFormReturn } from 'react-hook-form'
 import { z } from 'zod/v4'
+import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 
 export function usePrompt() {
+  console.log('usePrompt called')
   const context = useContext(
     PromptContext as React.Context<PromptContextType | null>
   )
+  console.log('usePrompt context:', context)
   if (!context) {
     throw new Error('usePrompt must be used within a PromptProvider')
   }
-  return context.promptFormik
+  return context.promptForm
 }
 
 /**
- * A factory function that generates simple propmt forms using formik.
+ * A factory function that generates simple prompt forms using react-hook-form.
  * The generated form can be easily displayed using usePrompt()
  */
 export function generateSimplePrompt({
@@ -35,21 +38,20 @@ export function generateSimplePrompt({
   placeholder?: string
   label?: string
   validationSchema?: z.ZodSchema<string>
-} = {}): FormikFormPromptConfig<{ value: string }> {
+} = {}): ReactHookFormPromptConfig<{ value: string }> {
+  console.log('generateSimplePrompt called with:', { inputType, initialValue, title })
+  
+  // Create a schema for the form values
+  const formSchema = z.object({
+    value: validationSchema || z.string().min(1, 'This field is required'),
+  })
+  
   return {
     title: title || 'Input Required',
     description: description,
-    initialValues: { value: initialValue },
-    validate: validationSchema
-      ? (values: { value: string }) => {
-          const result = validationSchema.safeParse(values.value)
-          if (!result.success) {
-            return { value: result.error.issues[0]?.message || 'Invalid input' }
-          }
-          return {}
-        }
-      : undefined,
-    fields: (formik: FormikProps<{ value: string }>) => (
+    defaultValues: { value: initialValue },
+    resolver: zodV4Resolver(formSchema),
+    fields: (form: UseFormReturn<{ value: string }>) => (
       <div className="space-y-4">
         <div>
           <label htmlFor="value" className="mb-2 block text-sm font-medium">
@@ -59,10 +61,10 @@ export function generateSimplePrompt({
             id="value"
             type={inputType}
             placeholder={placeholder}
-            {...formik.getFieldProps('value')}
+            {...form.register('value')}
           />
-          {formik.touched.value && formik.errors.value && (
-            <p className="mt-1 text-sm text-red-500">{formik.errors.value}</p>
+          {form.formState.errors.value && (
+            <p className="mt-1 text-sm text-red-500">{form.formState.errors.value.message}</p>
           )}
         </div>
       </div>

@@ -32,7 +32,7 @@ export function AddGroupButton({
       },
     })
 
-    if (result) {
+    if (result && result.value) {
       try {
         await createGroupMutation.mutateAsync({
           body: {

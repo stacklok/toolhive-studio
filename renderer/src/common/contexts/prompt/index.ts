@@ -1,13 +1,12 @@
 import { createContext, type ReactNode } from 'react'
-import type { FormikConfig, FormikProps } from 'formik'
+import type { UseFormReturn, FieldValues, Path } from 'react-hook-form'
 
-export type FormikFormPromptConfig<TValues extends object> = {
+export type ReactHookFormPromptConfig<TValues extends FieldValues> = {
   title?: ReactNode
   description?: ReactNode
-  initialValues: TValues
-  fields: (formik: FormikProps<TValues>) => ReactNode
-  validate?: FormikConfig<TValues>['validate']
-  validationSchema?: unknown
+  defaultValues: TValues
+  fields: (form: UseFormReturn<TValues>) => ReactNode
+  resolver?: any
   buttons?: {
     confirm: ReactNode
     cancel: ReactNode
@@ -15,8 +14,8 @@ export type FormikFormPromptConfig<TValues extends object> = {
 }
 
 export type PromptContextType = {
-  promptFormik: <TValues extends object>(
-    config: FormikFormPromptConfig<TValues>
+  promptForm: <TValues extends FieldValues>(
+    config: ReactHookFormPromptConfig<TValues>
   ) => Promise<TValues | null>
 }
 

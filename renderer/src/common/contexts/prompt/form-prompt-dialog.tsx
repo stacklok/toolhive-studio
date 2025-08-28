@@ -7,24 +7,30 @@ import {
   DialogDescription,
 } from '@/common/components/ui/dialog'
 import { Button } from '@/common/components/ui/button'
-import type { FormikFormPromptConfig } from '.'
-import { Formik, type FormikProps } from 'formik'
+import type { ReactHookFormPromptConfig } from '.'
+import { useForm } from 'react-hook-form'
+import type { UseFormReturn } from 'react-hook-form'
 
-interface FormikFormPromptDialogProps<TValues extends object> {
+interface ReactHookFormPromptDialogProps {
   isOpen: boolean
-  config: FormikFormPromptConfig<TValues>
-  onSubmit: (data: TValues) => void
+  config: ReactHookFormPromptConfig<any>
+  onSubmit: (data: any) => void
   onCancel: () => void
   onOpenChange: (open: boolean) => void
 }
 
-export function FormikFormPromptDialog<TValues extends object>({
+export function ReactHookFormPromptDialog({
   isOpen,
   config,
   onSubmit,
   onCancel,
   onOpenChange,
-}: FormikFormPromptDialogProps<TValues>) {
+}: ReactHookFormPromptDialogProps) {
+  const form = useForm({
+    defaultValues: config.defaultValues,
+    resolver: config.resolver,
+  })
+
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       onCancel()
@@ -33,51 +39,41 @@ export function FormikFormPromptDialog<TValues extends object>({
     }
   }
 
+  const handleSubmit = (data: any) => {
+    onSubmit(data)
+  }
+
+  const handleCancel = () => {
+    form.reset()
+    onCancel()
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent onInteractOutside={(e) => e.preventDefault()}>
-        <Formik
-          initialValues={config.initialValues}
-          validate={
-            config.validate as
-              | ((
-                  values: TValues
-                ) => Record<string, string> | Promise<Record<string, string>>)
-              | undefined
-          }
-          validationSchema={config.validationSchema as unknown}
-          onSubmit={(values) => onSubmit(values)}
-          enableReinitialize
-        >
-          {(formik: FormikProps<TValues>) => (
-            <form onSubmit={formik.handleSubmit}>
-              <DialogHeader>
-                <DialogTitle>{config.title || 'Form Input'}</DialogTitle>
-                <DialogDescription>
-                  {config.description || ''}
-                </DialogDescription>
-              </DialogHeader>
+      <DialogContent>
+        <form onSubmit={form.handleSubmit(handleSubmit)}>
+          <DialogHeader>
+            <DialogTitle>{config.title || 'Form Input'}</DialogTitle>
+            <DialogDescription>
+              {config.description || ''}
+            </DialogDescription>
+          </DialogHeader>
 
-              <div className="space-y-4 py-4">{config.fields(formik)}</div>
+          <div className="space-y-4 py-4">{config.fields(form as UseFormReturn<any>)}</div>
 
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    formik.handleReset()
-                    onCancel()
-                  }}
-                  type="button"
-                >
-                  {config.buttons?.cancel ?? 'Cancel'}
-                </Button>
-                <Button type="submit" disabled={formik.isSubmitting}>
-                  {config.buttons?.confirm ?? 'OK'}
-                </Button>
-              </DialogFooter>
-            </form>
-          )}
-        </Formik>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={handleCancel}
+              type="button"
+            >
+              {config.buttons?.cancel ?? 'Cancel'}
+            </Button>
+            <Button type="submit" disabled={form.formState.isSubmitting}>
+              {config.buttons?.confirm ?? 'OK'}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )
