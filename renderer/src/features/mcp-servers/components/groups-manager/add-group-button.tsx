@@ -16,15 +16,13 @@ export function AddGroupButton({
   const createGroupMutation = useMutationCreateGroup()
 
   const handleAddGroup = async () => {
-    // Create a validation schema that rejects existing group names
-    const existingGroupNames = apiGroups
-      .map((g) => g.name?.toLowerCase())
-      .filter(Boolean)
+    // Create a validation schema that rejects existing group names (case sensitive)
+    const existingGroupNames = apiGroups.map((g) => g.name).filter(Boolean)
 
     const validationSchema = z
       .string()
       .min(1, 'Name is required')
-      .refine((name) => !existingGroupNames.includes(name.toLowerCase()), {
+      .refine((name) => !existingGroupNames.includes(name), {
         message: 'A group with this name already exists',
       })
 

@@ -199,6 +199,61 @@ describe('Groups Manager - Add a group workflow', () => {
     expect(mockMutateAsync).not.toHaveBeenCalled()
   })
 
+  it('should allow creating groups with case-sensitive names', async () => {
+    const mockMutateAsync = vi.fn().mockResolvedValue({})
+    const mockReset = vi.fn()
+
+    mockUseMutationCreateGroup.mockReturnValue({
+      mutateAsync: mockMutateAsync,
+      isPending: false,
+      isError: false,
+      isSuccess: false,
+      isIdle: true,
+      data: undefined,
+      error: null,
+      reset: mockReset,
+      status: 'idle' as const,
+      failureCount: 0,
+      failureReason: null,
+      isPaused: false,
+      variables: undefined,
+      context: undefined,
+      submittedAt: 0,
+    })
+
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.getByText('default')).toBeVisible()
+    })
+
+    const addGroupButton = screen.getByRole('button', { name: /add a group/i })
+    await userEvent.click(addGroupButton)
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    const nameInput = screen.getByLabelText(/name/i)
+
+    // Type a group name with different case - should be allowed
+    await userEvent.type(nameInput, 'Default')
+
+    const createButton = screen.getByRole('button', { name: /create/i })
+    await userEvent.click(createButton)
+
+    // Should successfully create the group with different case
+    await waitFor(() => {
+      expect(mockMutateAsync).toHaveBeenCalledWith({
+        body: {
+          name: 'Default',
+        },
+      })
+    })
+
+    expect(mockMutateAsync).toHaveBeenCalledTimes(1)
+  })
+
   it('should prevent submission when group name is empty', async () => {
     renderRoute(router)
 

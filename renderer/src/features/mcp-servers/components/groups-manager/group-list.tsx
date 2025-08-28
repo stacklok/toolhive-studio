@@ -15,7 +15,7 @@ export function GroupList({ apiGroups, currentGroupName }: GroupListProps) {
           to="/"
           search={(prev) => ({
             ...prev,
-            group: (group.name ?? 'default').toLowerCase(),
+            group: group.name ?? 'default',
           })}
           preload={false}
         >
@@ -24,7 +24,7 @@ export function GroupList({ apiGroups, currentGroupName }: GroupListProps) {
             isEnabled={Boolean(
               group.registered_clients && group.registered_clients.length > 0
             )}
-            isActive={(group.name ?? '').toLowerCase() === currentGroupName}
+            isActive={(group.name ?? '') === currentGroupName}
           />
         </Link>
       ))}
