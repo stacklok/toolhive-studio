@@ -29,7 +29,7 @@ export function ReactHookFormPromptDialog({
   const form = useForm({
     defaultValues: config.defaultValues,
     resolver: config.resolver,
-    mode: 'onChange', // Show validation errors as user types
+    mode: 'onChange',
   })
 
   const handleOpenChange = (open: boolean) => {

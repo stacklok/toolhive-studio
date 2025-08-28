@@ -3,7 +3,6 @@ import { Button } from '@/common/components/ui/button'
 import { Plus } from 'lucide-react'
 import { usePrompt, generateSimplePrompt } from '@/common/hooks/use-prompt'
 import { useMutationCreateGroup } from '@/features/mcp-servers/hooks/use-mutation-create-group'
-import { doesAlreadyExist } from '@/common/lib/error-utils'
 import { z } from 'zod/v4'
 
 interface AddGroupButtonProps {
@@ -16,7 +15,7 @@ export function AddGroupButton({
   const prompt = usePrompt()
   const createGroupMutation = useMutationCreateGroup()
 
-  const handleAddGroup = async (suggestedName = '') => {
+  const handleAddGroup = async () => {
     // Create a validation schema that rejects existing group names
     const existingGroupNames = apiGroups
       .map((g) => g.name?.toLowerCase())
@@ -32,7 +31,7 @@ export function AddGroupButton({
     const result = await prompt({
       ...generateSimplePrompt({
         inputType: 'text',
-        initialValue: suggestedName,
+        initialValue: '',
         title: 'Create a group',
         placeholder: 'Enter group name...',
         label: 'Name',
@@ -52,21 +51,7 @@ export function AddGroupButton({
           },
         })
       } catch (error) {
-        if (doesAlreadyExist(error)) {
-          const originalName = result.value
-          const existingGroups = apiGroups.map((g) => g.name?.toLowerCase())
-          let suggestion = originalName
-          let counter = 2
-
-          while (existingGroups.includes(suggestion.toLowerCase())) {
-            suggestion = `${originalName}-${counter}`
-            counter++
-          }
-
-          await handleAddGroup(suggestion)
-        } else {
-          console.error('Failed to create group:', error)
-        }
+        console.error('Failed to create group:', error)
       }
     }
   }
@@ -74,7 +59,7 @@ export function AddGroupButton({
   return (
     <Button
       variant="outline"
-      onClick={() => handleAddGroup()}
+      onClick={handleAddGroup}
       className="flex h-9 w-[215px] items-center gap-2 px-4 py-2"
     >
       <Plus className="size-4" />
