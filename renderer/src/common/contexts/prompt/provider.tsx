@@ -13,18 +13,14 @@ export function PromptProvider({ children }: { children: ReactNode }) {
   const promptForm = <TValues extends Record<string, unknown>>(
     config: ReactHookFormPromptConfig<TValues>
   ) => {
-    console.log('promptForm called with config:', config)
     return new Promise<TValues | null>((resolve) => {
-      console.log('Creating promise for promptForm')
       setActivePrompt({
         config: config as ReactHookFormPromptConfig<Record<string, unknown>>,
         resolve: (value: unknown) => {
-          console.log('Resolving promise with value:', value)
           resolve(value as TValues)
         },
       })
       setIsOpen(true)
-      console.log('Set activePrompt and isOpen to true')
     })
   }
 

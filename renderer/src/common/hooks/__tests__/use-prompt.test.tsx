@@ -19,18 +19,13 @@ function TestComponent({
   const [result, setResult] = useState<unknown>(undefined)
 
   const handleClick = async () => {
-    console.log('TestComponent handleClick called')
     try {
       const value = await prompt(promptProps)
-      console.log('TestComponent prompt returned:', value)
       setResult(value)
     } catch (error) {
-      console.log('TestComponent prompt error:', error)
       setResult(error)
     }
   }
-
-  console.log('TestComponent render - result:', result)
 
   return (
     <div data-testid={testId}>

@@ -7,11 +7,9 @@ import { z } from 'zod/v4'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 
 export function usePrompt() {
-  console.log('usePrompt called')
   const context = useContext(
     PromptContext as React.Context<PromptContextType | null>
   )
-  console.log('usePrompt context:', context)
   if (!context) {
     throw new Error('usePrompt must be used within a PromptProvider')
   }
@@ -39,12 +37,6 @@ export function generateSimplePrompt({
   label?: string
   validationSchema?: z.ZodSchema<string>
 } = {}): ReactHookFormPromptConfig<{ value: string }> {
-  console.log('generateSimplePrompt called with:', {
-    inputType,
-    initialValue,
-    title,
-  })
-
   // Create a schema for the form values
   const formSchema = z.object({
     value: validationSchema || z.string().min(1, 'This field is required'),
