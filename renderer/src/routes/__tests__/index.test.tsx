@@ -1,3 +1,7 @@
+import { vi } from 'vitest'
+vi.mock('@/common/hooks/use-feature-flag', () => ({
+  useFeatureFlag: () => false,
+}))
 import { screen, waitFor, within } from '@testing-library/react'
 import { expect, it, vi, beforeEach, describe } from 'vitest'
 import { Index } from '../index'

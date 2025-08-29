@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, it, expect, beforeEach } from 'vitest'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
-import { Index } from '@/routes/index'
+import { GroupRoute } from '@/routes/group.$groupName'
 import { useMutationCreateGroup } from '@/features/mcp-servers/hooks/use-mutation-create-group'
 
 vi.mock('@/common/hooks/use-feature-flag', () => ({
@@ -17,7 +17,7 @@ vi.mock('@/features/mcp-servers/hooks/use-mutation-create-group', () => ({
 
 const mockUseMutationCreateGroup = vi.mocked(useMutationCreateGroup)
 
-const router = createTestRouter(Index)
+const router = createTestRouter(GroupRoute, '/group/default')
 
 beforeEach(() => {
   vi.clearAllMocks()

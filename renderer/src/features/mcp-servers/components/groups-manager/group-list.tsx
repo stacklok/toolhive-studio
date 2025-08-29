@@ -12,12 +12,9 @@ export function GroupList({ apiGroups, currentGroupName }: GroupListProps) {
       {apiGroups.map((group, index) => (
         <Link
           key={group.name ?? `group-${index + 1}`}
-          to="/"
-          search={(prev) => ({
-            ...prev,
-            group: group.name ?? 'default',
-          })}
-          preload={false}
+          to="/group/$groupName"
+          params={{ groupName: group.name ?? 'default' }}
+          preload="intent"
         >
           <Group
             name={group.name ?? 'default'}

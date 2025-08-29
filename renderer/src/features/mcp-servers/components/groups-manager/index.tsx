@@ -1,15 +1,13 @@
 import type { ReactElement } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getApiV1BetaGroups } from '@api/sdk.gen'
-import { useRouterState } from '@tanstack/react-router'
+import { useParams } from '@tanstack/react-router'
 import { AddGroupButton } from './add-group-button'
 import { GroupList } from './group-list'
 
 export function GroupsManager(): ReactElement {
-  const router = useRouterState({ select: (s) => s.location.search }) as Record<
-    string,
-    unknown
-  >
+  const params = useParams({ from: '/group/$groupName' })
+  const currentGroupName = params.groupName
 
   const { data } = useQuery({
     queryKey: ['api', 'v1beta', 'groups'],
@@ -28,8 +26,6 @@ export function GroupsManager(): ReactElement {
   })
 
   const apiGroups = data?.groups ?? []
-
-  const currentGroupName = String(router.group ?? 'default')
 
   return (
     <div className="flex flex-col gap-2">

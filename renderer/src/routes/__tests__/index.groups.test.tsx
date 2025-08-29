@@ -4,11 +4,11 @@ vi.mock('@/common/hooks/use-feature-flag', () => ({
 }))
 import { screen, waitFor } from '@testing-library/react'
 import { describe, it, expect, beforeEach } from 'vitest'
-import { Index } from '../index'
+import { GroupRoute } from '../group.$groupName'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
 
-const router = createTestRouter(Index)
+const router = createTestRouter(GroupRoute, '/group/default')
 
 beforeEach(() => {
   vi.clearAllMocks()
