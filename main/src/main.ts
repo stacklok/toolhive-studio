@@ -192,33 +192,33 @@ app.whenReady().then(async () => {
 
   // Create main window
   try {
-    await createMainWindow()
+    const mainWindow = await createMainWindow()
 
-    const mainWindow = getMainWindow()
     if (mainWindow) {
-      mainWindow.webContents.once('did-finish-load', () => {
-        checkForUpdates()
+      mainWindow.webContents.on('before-input-event', (event, input) => {
+        const isCmdQ =
+          process.platform === 'darwin' &&
+          input.meta &&
+          input.key.toLowerCase() === 'q'
+        const isCtrlQ =
+          process.platform !== 'darwin' &&
+          input.control &&
+          input.key.toLowerCase() === 'q'
 
-        mainWindow.webContents.on('before-input-event', (event, input) => {
-          const isCmdQ =
-            process.platform === 'darwin' &&
-            input.meta &&
-            input.key.toLowerCase() === 'q'
-          const isCtrlQ =
-            process.platform !== 'darwin' &&
-            input.control &&
-            input.key.toLowerCase() === 'q'
-
-          if (isCmdQ || isCtrlQ) {
-            event.preventDefault()
-            log.info('CmdOrCtrl+Q pressed, hiding window')
-            try {
-              hideMainWindow()
-            } catch (error) {
-              log.error('Failed to hide window on keyboard shortcut:', error)
-            }
+        if (isCmdQ || isCtrlQ) {
+          event.preventDefault()
+          log.info('CmdOrCtrl+Q pressed, hiding window')
+          try {
+            hideMainWindow()
+          } catch (error) {
+            log.error('Failed to hide window on keyboard shortcut:', error)
           }
-        })
+        }
+      })
+
+      mainWindow.webContents.once('did-finish-load', () => {
+        log.info('Main window did-finish-load event triggered')
+        checkForUpdates()
       })
     }
   } catch (error) {
