@@ -6,15 +6,8 @@ import { AddGroupButton } from './add-group-button'
 import { GroupList } from './group-list'
 
 export function GroupsManager(): ReactElement {
-  let currentGroupName = 'default'
-
-  try {
-    const params = useParams({ from: '/group/$groupName' })
-    currentGroupName = params.groupName
-  } catch {
-    // Fallback for testing or when not in a group route context
-    currentGroupName = 'default'
-  }
+  const params = useParams({ from: '/group/$groupName' })
+  const currentGroupName = params.groupName
 
   const { data } = useQuery({
     queryKey: ['api', 'v1beta', 'groups'],
