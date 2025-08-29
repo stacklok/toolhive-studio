@@ -26,27 +26,13 @@ export const Route = createFileRoute('/')({
 })
 
 export function Index() {
-  const navigate = Route.useNavigate()
   const showSidebar = useFeatureFlag(featureFlagKeys.GROUPS)
 
-  // Redirect to path-based group routing when groups feature is enabled
-  useEffect(() => {
-    if (showSidebar) {
-      navigate({
-        to: '/group/$groupName',
-        params: { groupName: 'default' },
-        replace: true,
-      })
-      return
-    }
-  }, [navigate, showSidebar])
-
-  // If groups feature is disabled, show all workloads without group filtering
   const { data, refetch } = useSuspenseQuery({
     ...getApiV1BetaWorkloadsOptions({
       query: {
         all: true,
-        group: 'default', // Default group when feature is disabled
+        group: 'default',
       },
     }),
   })
