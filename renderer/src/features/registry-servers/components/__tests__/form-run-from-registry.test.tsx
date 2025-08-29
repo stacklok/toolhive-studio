@@ -1079,6 +1079,99 @@ describe('Allowed Hosts field', () => {
     expect(screen.getByLabelText('Host 1')).toBeInTheDocument()
     expect(screen.getByLabelText('Host 2')).toBeInTheDocument()
   })
+  it('skip allowedHosts and allowedPorts validation when network isolation is disabled', async () => {
+    const mockInstallServerMutation = vi.fn()
+    vi.mocked(useRunFromRegistry).mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      checkServerStatus: vi.fn(),
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
+    )
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    await userEvent.type(
+      screen.getByLabelText('Server name'),
+      'my-test-server',
+      {
+        initialSelectionStart: 0,
+        initialSelectionEnd: REGISTRY_SERVER.name?.length,
+      }
+    )
+
+    // Go to network isolation tab
+    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    await userEvent.click(networkTab)
+
+    const switchLabel = screen.getByLabelText(
+      'Enable outbound network filtering'
+    )
+    await userEvent.click(switchLabel)
+
+    const addHostButton = screen.getByRole('button', { name: /add a host/i })
+    await userEvent.click(addHostButton)
+    const hostInput = screen.getByLabelText('Host 1')
+    await userEvent.type(hostInput, 'fake-invalid-host-format')
+
+    const addPortButton = screen.getByRole('button', { name: /add a port/i })
+    await userEvent.click(addPortButton)
+    const portInput = screen.getByLabelText('Port 1')
+    await userEvent.type(portInput, '99999')
+
+    // Verify validation errors appear when network isolation is enabled
+    await waitFor(() => {
+      expect(screen.getByText('Invalid host format')).toBeInTheDocument()
+      expect(
+        screen.getByText('Port must be a number between 1 and 65535')
+      ).toBeInTheDocument()
+    })
+
+    // Disable network isolation
+    await userEvent.click(switchLabel)
+
+    // Verify validation errors disappear when network isolation is disabled
+    await waitFor(() => {
+      expect(screen.queryByText('Invalid host format')).not.toBeInTheDocument()
+      expect(
+        screen.queryByText('Port must be a number between 1 and 65535')
+      ).not.toBeInTheDocument()
+    })
+
+    // Go back to configuration tab and submit form
+    const configTab = screen.getByRole('tab', { name: /configuration/i })
+    await userEvent.click(configTab)
+
+    // Form should submit successfully even with invalid host and port when network isolation is disabled
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          server: expect.any(Object),
+          data: expect.objectContaining({
+            serverName: 'my-test-server',
+            allowedHosts: [{ value: 'fake-invalid-host-format' }],
+            allowedPorts: [{ value: '99999' }],
+            networkIsolation: false,
+          }),
+        }),
+        expect.any(Object)
+      )
+    })
+  })
 })
 
 describe('Network Isolation Tab Activation', () => {
