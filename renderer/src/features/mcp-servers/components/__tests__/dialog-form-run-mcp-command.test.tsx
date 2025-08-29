@@ -733,6 +733,96 @@ describe('DialogFormRunMcpServerWithCommand', () => {
         ).not.toBeInTheDocument()
       })
     })
+
+    it('skip allowedHosts and allowedPorts validation when network isolation is disabled', async () => {
+      const mockInstallServerMutation = vi.fn()
+      mockUseRunCustomServer.mockReturnValue({
+        installServerMutation: mockInstallServerMutation,
+        checkServerStatus: vi.fn(),
+        isErrorSecrets: false,
+        isPendingSecrets: false,
+      })
+
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
+        </Wrapper>
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      await userEvent.type(screen.getByLabelText('Name'), 'test-server')
+      await userEvent.click(screen.getByLabelText('Transport'))
+      await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
+      await userEvent.type(
+        screen.getByRole('textbox', { name: 'Docker image' }),
+        'ghcr.io/test/server'
+      )
+
+      const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+      await userEvent.click(networkTab)
+
+      // Enable network isolation first
+      const switchLabel = screen.getByLabelText(
+        'Enable outbound network filtering'
+      )
+      await userEvent.click(switchLabel)
+
+      const addHostBtn = screen.getByRole('button', { name: /add a host/i })
+      await userEvent.click(addHostBtn)
+      const hostInput = screen.getByLabelText('Host 1')
+      await userEvent.type(hostInput, '232342') // Invalid host format
+
+      const addPortBtn = screen.getByRole('button', { name: /add a port/i })
+      await userEvent.click(addPortBtn)
+      const portInput = screen.getByLabelText('Port 1')
+      await userEvent.type(portInput, '99999') // Invalid port (out of range)
+
+      await waitFor(() => {
+        expect(screen.getByText('Invalid host format')).toBeInTheDocument()
+        expect(
+          screen.getByText('Port must be a number between 1 and 65535')
+        ).toBeInTheDocument()
+      })
+
+      // Disable network isolation
+      await userEvent.click(switchLabel)
+
+      await waitFor(() => {
+        expect(
+          screen.queryByText('Invalid host format')
+        ).not.toBeInTheDocument()
+        expect(
+          screen.queryByText('Port must be a number between 1 and 65535')
+        ).not.toBeInTheDocument()
+      })
+
+      const configTab = screen.getByRole('tab', { name: /configuration/i })
+      await userEvent.click(configTab)
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Install server' })
+      )
+
+      await waitFor(() => {
+        expect(mockInstallServerMutation).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({
+              name: 'test-server',
+              type: 'docker_image',
+              image: 'ghcr.io/test/server',
+              transport: 'stdio',
+              networkIsolation: false,
+              allowedHosts: [{ value: '232342' }],
+              allowedPorts: [{ value: '99999' }],
+            }),
+          }),
+          expect.any(Object)
+        )
+      })
+    })
   })
 
   it('paste arg from clipboard into command arguments field', async () => {

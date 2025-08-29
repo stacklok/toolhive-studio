@@ -1,8 +1,8 @@
 import type { CoreWorkload } from '@api/types.gen'
 import z from 'zod/v4'
 
-const getCommonFields = (workloads: CoreWorkload[]) =>
-  z.object({
+export const getFormSchemaRunMcpCommand = (workloads: CoreWorkload[]) => {
+  const baseFields = z.object({
     name: z
       .union([z.string(), z.undefined()])
       .transform((val) => val ?? '')
@@ -41,32 +41,20 @@ const getCommonFields = (workloads: CoreWorkload[]) =>
       })
       .array(),
     networkIsolation: z.boolean(),
-    allowedHosts: z.array(
-      z.object({
-        value: z.string().refine(
-          (val) => {
-            if (val.trim() === '') return true
-            return /^\.?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(val)
-          },
-          {
-            message: 'Invalid host format',
-          }
-        ),
-      })
-    ),
-    allowedPorts: z.array(
-      z.object({
-        value: z.string().refine(
-          (val) => {
-            const num = parseInt(val, 10)
-            return !isNaN(num) && num >= 1 && num <= 65535
-          },
-          {
-            message: 'Port must be a number between 1 and 65535',
-          }
-        ),
-      })
-    ),
+    allowedHosts: z
+      .array(
+        z.object({
+          value: z.string(),
+        })
+      )
+      .optional(),
+    allowedPorts: z
+      .array(
+        z.object({
+          value: z.string(),
+        })
+      )
+      .optional(),
     volumes: z
       .array(
         z.object({
@@ -78,23 +66,56 @@ const getCommonFields = (workloads: CoreWorkload[]) =>
       .optional(),
   })
 
-export const getFormSchemaRunMcpCommand = (workloads: CoreWorkload[]) =>
-  z.discriminatedUnion('type', [
-    z.object({
-      type: z.literal('docker_image'),
-      image: z.string().nonempty('Docker image is required'),
-      ...getCommonFields(workloads).shape,
-    }),
-    z.object({
-      type: z.literal('package_manager'),
-      protocol: z.union(
-        [z.literal('npx'), z.literal('uvx'), z.literal('go')],
-        'Please select either npx, uvx, or go.'
-      ),
-      package_name: z.string().nonempty('Package name is required'),
-      ...getCommonFields(workloads).shape,
-    }),
-  ])
+  return z
+    .discriminatedUnion('type', [
+      baseFields.extend({
+        type: z.literal('docker_image'),
+        image: z.string().nonempty('Docker image is required'),
+      }),
+      baseFields.extend({
+        type: z.literal('package_manager'),
+        protocol: z.union(
+          [z.literal('npx'), z.literal('uvx'), z.literal('go')],
+          'Please select either npx, uvx, or go.'
+        ),
+        package_name: z.string().nonempty('Package name is required'),
+      }),
+    ])
+    .superRefine((data, ctx) => {
+      // Skip validation if network isolation is disabled
+      if (!data.networkIsolation) {
+        return
+      }
+
+      // Validate allowedHosts only when network isolation is enabled
+      data.allowedHosts?.forEach((host, index) => {
+        if (
+          host.value.trim() !== '' &&
+          !/^\.?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(host.value)
+        ) {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'Invalid host format',
+            path: ['allowedHosts', index, 'value'],
+          })
+        }
+      })
+
+      // Validate allowedPorts only when network isolation is enabled
+      data.allowedPorts?.forEach((port, index) => {
+        if (port.value.trim() !== '') {
+          const num = parseInt(port.value, 10)
+          if (isNaN(num) || num < 1 || num > 65535) {
+            ctx.addIssue({
+              code: 'custom',
+              message: 'Port must be a number between 1 and 65535',
+              path: ['allowedPorts', index, 'value'],
+            })
+          }
+        }
+      })
+    })
+}
 
 export type FormSchemaRunMcpCommand = z.infer<
   ReturnType<typeof getFormSchemaRunMcpCommand>
