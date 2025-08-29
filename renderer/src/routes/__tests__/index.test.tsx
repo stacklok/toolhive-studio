@@ -3,7 +3,7 @@ vi.mock('@/common/hooks/use-feature-flag', () => ({
   useFeatureFlag: () => false,
 }))
 import { screen, waitFor, within } from '@testing-library/react'
-import { expect, it, vi, beforeEach, describe } from 'vitest'
+import { expect, it, beforeEach, describe } from 'vitest'
 import { Index } from '../index'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
