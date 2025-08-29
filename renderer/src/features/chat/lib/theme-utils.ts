@@ -1,11 +1,13 @@
 import { useTheme } from '../../../common/hooks/use-theme'
-import type { BundledTheme } from 'shiki'
 
 /**
  * Hook to get Shiki theme tuple for Streamdown component
  * Returns [light, dark] themes based on current app theme
  */
-export function useShikiTheme(): [BundledTheme, BundledTheme] {
+export function useShikiTheme(): [
+  'github-dark' | 'github-light',
+  'github-dark' | 'github-light',
+] {
   const { theme } = useTheme()
 
   // Handle system theme by checking actual applied theme
