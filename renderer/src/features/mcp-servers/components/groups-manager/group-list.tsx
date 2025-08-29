@@ -9,18 +9,15 @@ interface GroupListProps {
 export function GroupList({ apiGroups, currentGroupName }: GroupListProps) {
   return (
     <div className="space-y-2">
-      {apiGroups.map((group, index) => (
+      {apiGroups.map((group) => (
         <Link
-          key={group.name ?? `group-${index + 1}`}
-          to="/"
-          search={(prev) => ({
-            ...prev,
-            group: group.name ?? 'default',
-          })}
-          preload={false}
+          key={group.name}
+          to="/group/$groupName"
+          params={{ groupName: group.name ?? '' }}
+          preload="intent"
         >
           <Group
-            name={group.name ?? 'default'}
+            name={group.name ?? ''}
             isEnabled={Boolean(
               group.registered_clients && group.registered_clients.length > 0
             )}
