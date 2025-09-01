@@ -1,9 +1,21 @@
 import { screen, waitFor } from '@testing-library/react'
-import { expect, it } from 'vitest'
+import { expect, it, vi, beforeEach } from 'vitest'
 import { CardMcpServer } from '../card-mcp-server'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
 import userEvent from '@testing-library/user-event'
+import { useConfirm } from '@/common/hooks/use-confirm'
+import { getApiV1BetaRegistryByNameServersByServerName } from '@api/sdk.gen'
+
+// Mock the hooks
+vi.mock('@/common/hooks/use-confirm')
+vi.mock('@api/sdk.gen')
+
+// Create mock functions
+const mockUseConfirm = vi.mocked(useConfirm)
+const mockGetApiV1BetaRegistryByNameServersByServerName = vi.mocked(
+  getApiV1BetaRegistryByNameServersByServerName
+)
 
 const router = createTestRouter(() => (
   <CardMcpServer
@@ -15,6 +27,27 @@ const router = createTestRouter(() => (
   />
 ))
 
+beforeEach(() => {
+  vi.clearAllMocks()
+
+  // Mock the confirm hook
+  mockUseConfirm.mockReturnValue(vi.fn().mockResolvedValue(true))
+
+  // Mock the API query
+  mockGetApiV1BetaRegistryByNameServersByServerName.mockResolvedValue({
+    data: {
+      server: {
+        name: 'test-server',
+        status: 'running',
+        transport: 'http',
+        repository_url: 'https://github.com/test/repo',
+      },
+    },
+    request: {} as Request,
+    response: {} as Response,
+  })
+})
+
 it('navigates to logs page when logs menu item is clicked', async () => {
   renderRoute(router)
 
@@ -22,16 +55,43 @@ it('navigates to logs page when logs menu item is clicked', async () => {
     expect(screen.getByText('test-server')).toBeVisible()
   })
 
-  const moreOptionsButton = screen.getByRole('button', {
-    name: /more options/i,
-  })
-
-  await userEvent.click(moreOptionsButton)
+  const user = userEvent.setup()
+  const menuButton = screen.getByRole('button', { name: /more/i })
+  await user.click(menuButton)
 
   const logsMenuItem = screen.getByRole('menuitem', { name: /logs/i })
-  await userEvent.click(logsMenuItem)
+  await user.click(logsMenuItem)
+
+  expect(router.state.location.pathname).toBe('/logs/test-server')
+})
+
+it('allows adding server to a group through the complete workflow', async () => {
+  renderRoute(router)
 
   await waitFor(() => {
-    expect(router.state.location.pathname).toBe('/logs/test-server')
+    expect(screen.getByText('test-server')).toBeVisible()
   })
+
+  const user = userEvent.setup()
+
+  // Open the dropdown menu
+  const menuButton = screen.getByRole('button', { name: /more/i })
+  await user.click(menuButton)
+
+  // Click "Add server to a group" menu item
+  const addToGroupMenuItem = screen.getByRole('menuitem', {
+    name: /add server to a group/i,
+  })
+  await user.click(addToGroupMenuItem)
+
+  // Verify the form opens with correct title
+  expect(screen.getByText('Add server to a group')).toBeVisible()
+
+  // Verify the form has the required field
+  const groupDropdown = screen.getByLabelText('Select destination group')
+  expect(groupDropdown).toBeVisible()
+  expect(groupDropdown.tagName).toBe('SELECT')
+
+  // Verify the submit button
+  expect(screen.getByRole('button', { name: /copy/i })).toBeVisible()
 })
