@@ -2,12 +2,26 @@ import {
   postApiV1BetaWorkloadsByNameEditMutation,
   getApiV1BetaWorkloadsByNameStatusOptions,
   getApiV1BetaWorkloadsQueryKey,
+  postApiV1BetaSecretsDefaultKeysMutation,
 } from '@api/@tanstack/react-query.gen'
+import { getApiV1BetaSecretsDefaultKeys } from '@api/sdk.gen'
 import { pollServerStatus } from '@/common/lib/polling'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useRef } from 'react'
 
-import { type V1UpdateRequest } from '@api/types.gen'
+import {
+  type PostApiV1BetaSecretsDefaultKeysData,
+  type SecretsSecretParameter,
+} from '@api/types.gen'
+import type { Options } from '@api/client'
+import type { FormSchemaRunMcpCommand } from '../lib/form-schema-run-mcp-server-with-command'
+import {
+  prepareUpdateWorkloadData,
+  saveSecrets,
+  groupSecrets,
+  getDefinedSecrets,
+} from '../lib/orchestrate-run-custom-server'
+import { prepareSecretsWithoutNamingCollision } from '@/common/lib/secrets/prepare-secrets-without-naming-collision'
 import { toast } from 'sonner'
 import { Button } from '@/common/components/ui/button'
 import { Link } from '@tanstack/react-router'
@@ -16,12 +30,25 @@ import { trackEvent } from '@/common/lib/analytics'
 
 type UpdateServerCheck = () => Promise<unknown> | unknown
 
-export function useUpdateServer(serverName: string) {
+export function useUpdateServer(
+  serverName: string,
+  options?: {
+    onSecretSuccess?: (completedCount: number, secretsCount: number) => void
+    onSecretError?: (
+      error: string,
+      variables: Options<PostApiV1BetaSecretsDefaultKeysData>
+    ) => void
+  }
+) {
   const toastIdRef = useRef(new Date(Date.now()).toISOString())
   const queryClient = useQueryClient()
 
   const { mutateAsync: updateWorkload } = useMutation({
     ...postApiV1BetaWorkloadsByNameEditMutation(),
+  })
+
+  const { mutateAsync: saveSecret } = useMutation({
+    ...postApiV1BetaSecretsDefaultKeysMutation(),
   })
 
   const handleSettled = useCallback<UpdateServerCheck>(async () => {
@@ -74,11 +101,36 @@ export function useUpdateServer(serverName: string) {
   }, [queryClient, serverName])
 
   const { mutate: updateServerMutation } = useMutation({
-    mutationFn: async ({
-      updateRequest,
-    }: {
-      updateRequest: V1UpdateRequest
-    }) => {
+    mutationFn: async ({ data }: { data: FormSchemaRunMcpCommand }) => {
+      let newlyCreatedSecrets: SecretsSecretParameter[] = []
+
+      // Step 1: Group secrets into new and existing
+      const definedSecrets = getDefinedSecrets(data.secrets)
+      const { existingSecrets, newSecrets } = groupSecrets(definedSecrets)
+
+      // Step 2: Fetch existing secrets & handle naming collisions
+      const { data: fetchedSecrets } = await getApiV1BetaSecretsDefaultKeys({
+        throwOnError: true,
+      })
+      const preparedNewSecrets = prepareSecretsWithoutNamingCollision(
+        newSecrets,
+        fetchedSecrets
+      )
+
+      // Step 3: Encrypt secrets
+      if (preparedNewSecrets.length > 0) {
+        newlyCreatedSecrets = await saveSecrets(
+          preparedNewSecrets,
+          saveSecret,
+          options?.onSecretSuccess || (() => {}),
+          options?.onSecretError || (() => {})
+        )
+      }
+
+      // Step 4: Update the workload with all secrets
+      const allSecrets = [...newlyCreatedSecrets, ...existingSecrets]
+      const updateRequest = prepareUpdateWorkloadData(data, allSecrets)
+
       await updateWorkload({
         path: { name: serverName },
         body: updateRequest,
