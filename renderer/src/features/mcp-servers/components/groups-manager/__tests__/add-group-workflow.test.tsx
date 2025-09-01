@@ -4,8 +4,15 @@ import userEvent from '@testing-library/user-event'
 import { describe, it, expect, beforeEach } from 'vitest'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
-import { Index } from '@/routes/index'
+import { GroupsManager } from '@/features/mcp-servers/components/groups-manager'
 import { useMutationCreateGroup } from '@/features/mcp-servers/hooks/use-mutation-create-group'
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  Outlet,
+  Router,
+} from '@tanstack/react-router'
 
 vi.mock('@/common/hooks/use-feature-flag', () => ({
   useFeatureFlag: () => true,
@@ -17,7 +24,29 @@ vi.mock('@/features/mcp-servers/hooks/use-mutation-create-group', () => ({
 
 const mockUseMutationCreateGroup = vi.mocked(useMutationCreateGroup)
 
-const router = createTestRouter(Index)
+function createGroupsTestRouter() {
+  const rootRoute = createRootRoute({
+    component: Outlet,
+    errorComponent: ({ error }) => <div>{error.message}</div>,
+  })
+
+  const groupRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/group/$groupName',
+    component: () => <GroupsManager />,
+  })
+
+  const router = new Router({
+    routeTree: rootRoute.addChildren([groupRoute]),
+    history: createMemoryHistory({ initialEntries: ['/group/default'] }),
+  })
+
+  return router
+}
+
+const router = createGroupsTestRouter() as unknown as ReturnType<
+  typeof createTestRouter
+>
 
 beforeEach(() => {
   vi.clearAllMocks()
