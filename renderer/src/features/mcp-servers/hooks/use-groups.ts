@@ -1,14 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { getApiV1BetaGroups } from '@api/sdk.gen'
-
-export interface Group {
-  name?: string
-  registered_clients?: string[]
-}
-
-export interface GroupsResponse {
-  groups?: Group[]
-}
+import type { V1GroupListResponse } from '@api/types.gen'
 
 export function useGroups() {
   return useQuery({
@@ -20,7 +12,7 @@ export function useGroups() {
       })
       const parsed =
         typeof response === 'string' ? JSON.parse(response) : response
-      return parsed as GroupsResponse
+      return parsed as V1GroupListResponse
     },
     staleTime: 5_000,
   })
