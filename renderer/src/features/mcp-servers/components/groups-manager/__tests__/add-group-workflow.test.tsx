@@ -24,7 +24,6 @@ vi.mock('@/features/mcp-servers/hooks/use-mutation-create-group', () => ({
 
 const mockUseMutationCreateGroup = vi.mocked(useMutationCreateGroup)
 
-// Create a proper route structure that matches what GroupsManager expects
 function createGroupsTestRouter() {
   const rootRoute = createRootRoute({
     component: Outlet,

@@ -15,7 +15,6 @@ import {
   Router,
 } from '@tanstack/react-router'
 
-// Create a proper route structure that matches what GroupsManager expects
 function createGroupsTestRouter() {
   const rootRoute = createRootRoute({
     component: Outlet,
