@@ -25,6 +25,10 @@ const featureFlagOptions: Record<FeatureFlagKey, FeatureFlagOptions> = {
     isDisabled: false,
     defaultValue: false,
   },
+  [featureFlagKeys.EDIT_WORKLOAD]: {
+    isDisabled: false,
+    defaultValue: false,
+  },
 }
 
 // Create a dedicated store for feature flags
