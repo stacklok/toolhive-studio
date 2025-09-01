@@ -1,7 +1,10 @@
 import type { CoreWorkload } from '@api/types.gen'
 import z from 'zod/v4'
 
-export const getFormSchemaRunMcpCommand = (workloads: CoreWorkload[]) => {
+export const getFormSchemaRunMcpCommand = (
+  workloads: CoreWorkload[],
+  editingServerName?: string
+) => {
   const baseFields = z.object({
     name: z
       .union([z.string(), z.undefined()])
@@ -15,7 +18,10 @@ export const getFormSchemaRunMcpCommand = (workloads: CoreWorkload[]) => {
             'Invalid server name: it can only contain alphanumeric characters, dots, hyphens, and underscores.'
           )
           .refine(
-            (value) => !workloads.some((w) => w.name === value),
+            (value) =>
+              !workloads.some(
+                (w) => w.name === value && value !== editingServerName
+              ),
             'This name is already in use'
           )
       ),

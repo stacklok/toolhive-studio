@@ -1,10 +1,13 @@
 import { type UseMutateAsyncFunction } from '@tanstack/react-query'
 import {
+  type CoreWorkload,
   type PermissionsOutboundNetworkPermissions,
   type PostApiV1BetaSecretsDefaultKeysData,
   type SecretsSecretParameter,
   type V1CreateRequest,
   type V1CreateSecretResponse,
+  type V1UpdateRequest,
+  type V1ListSecretsResponse,
 } from '@api/types.gen'
 import type { Options } from '@api/client'
 import type { FormSchemaRunMcpCommand } from './form-schema-run-mcp-server-with-command'
@@ -165,9 +168,199 @@ export function prepareCreateWorkloadData(
   }
 }
 
-type GroupedSecrets = {
-  newSecrets: DefinedSecret[]
-  existingSecrets: DefinedSecret[]
+/**
+ * Converts a CoreWorkload back to form data for editing
+ */
+export function convertWorkloadToFormData(
+  workload: CoreWorkload
+): FormSchemaRunMcpCommand {
+  const image = workload.package || ''
+
+  // Determine type based on image format
+  const isPackageManager =
+    image.includes('://') &&
+    ['npx://', 'uvx://', 'go://'].some((protocol) => image.startsWith(protocol))
+
+  const baseFormData = {
+    name: workload.name || '',
+    transport: (workload.transport_type || 'stdio') as
+      | 'sse'
+      | 'stdio'
+      | 'streamable-http',
+    target_port: workload.port,
+    cmd_arguments: [],
+    envVars: [],
+    secrets: [],
+    networkIsolation: false,
+    allowedHosts: [],
+    allowedPorts: [],
+    volumes: [],
+  }
+
+  if (isPackageManager) {
+    const [protocol, packageName] = image.split('://')
+    return {
+      ...baseFormData,
+      type: 'package_manager',
+      protocol: (protocol || 'npx') as 'npx' | 'uvx' | 'go',
+      package_name: packageName || '',
+    }
+  } else {
+    return {
+      ...baseFormData,
+      type: 'docker_image',
+      image: image || '',
+    }
+  }
+}
+
+/**
+ * A utility function to filter out secrets that are not defined.
+ */
+export function getDefinedSecrets(
+  secrets: FormSchemaRunMcpCommand['secrets']
+): DefinedSecret[] {
+  return secrets.reduce<DefinedSecret[]>((acc, { name, value }) => {
+    if (name && value.secret) {
+      acc.push({
+        name,
+        value: {
+          secret: value.secret,
+          isFromStore: value.isFromStore ?? false,
+        },
+      })
+    }
+    return acc
+  }, [])
+}
+
+/**
+ * Converts a V1CreateRequest (from individual workload endpoint) back to form data for editing
+ */
+export function convertCreateRequestToFormData(
+  createRequest: V1CreateRequest,
+  availableSecrets?: V1ListSecretsResponse
+): FormSchemaRunMcpCommand {
+  const image = createRequest.image || ''
+
+  // Determine type based on image format
+  const isPackageManager =
+    image.includes('://') &&
+    ['npx://', 'uvx://', 'go://'].some((protocol) => image.startsWith(protocol))
+
+  // Validate and safely cast transport value
+  const validTransports = ['sse', 'stdio', 'streamable-http'] as const
+  type ValidTransport = (typeof validTransports)[number]
+  const isValidTransport = (
+    value: string | undefined
+  ): value is ValidTransport =>
+    Boolean(value && validTransports.includes(value as ValidTransport))
+
+  const transport = isValidTransport(createRequest.transport)
+    ? createRequest.transport
+    : 'stdio'
+
+  // Convert secrets from API format to form format
+  const availableSecretKeys = new Set(
+    availableSecrets?.keys?.map((key) => key.key).filter(Boolean) || []
+  )
+
+  const secrets = (createRequest.secrets || []).map((secret) => {
+    const secretKey = secret.name || ''
+    const isFromStore = availableSecretKeys.has(secretKey)
+
+    return {
+      name: secret.target || '',
+      value: {
+        secret: secretKey,
+        isFromStore,
+      },
+    }
+  })
+
+  const baseFormData = {
+    name: createRequest.name || '',
+    transport,
+    target_port: transport === 'stdio' ? 0 : createRequest.target_port,
+    cmd_arguments: createRequest.cmd_arguments || [],
+    envVars: Object.entries(createRequest.env_vars || {}).map(
+      ([name, value]) => ({ name, value })
+    ),
+    secrets,
+    networkIsolation: createRequest.network_isolation || false,
+    allowedHosts:
+      createRequest.permission_profile?.network?.outbound?.allow_host?.map(
+        (value) => ({ value })
+      ) || [],
+    allowedPorts:
+      createRequest.permission_profile?.network?.outbound?.allow_port?.map(
+        (port) => ({ value: port.toString() })
+      ) || [],
+    volumes:
+      createRequest.volumes?.map((vol) => {
+        // Parse volume string format "host:container:mode"
+        const parts = vol.split(':')
+        return {
+          host: parts[0] || '',
+          container: parts[1] || '',
+          accessMode: (parts[2] as 'ro' | 'rw') || 'rw',
+        }
+      }) || [],
+  }
+
+  if (isPackageManager) {
+    const [protocol, packageName] = image.split('://')
+    return {
+      ...baseFormData,
+      type: 'package_manager',
+      protocol: (protocol || 'npx') as 'npx' | 'uvx' | 'go',
+      package_name: packageName || '',
+    }
+  } else {
+    return {
+      ...baseFormData,
+      type: 'docker_image',
+      image: image || '',
+    }
+  }
+}
+
+/**
+ * Transforms form data into an update request object
+ */
+export function prepareUpdateWorkloadData(
+  data: FormSchemaRunMcpCommand,
+  secrets: SecretsSecretParameter[] = []
+): V1UpdateRequest {
+  // V1UpdateRequest has a flatter structure than V1CreateRequest
+  const image =
+    data.type === 'docker_image'
+      ? data.image
+      : `${data.protocol}://${data.package_name}`
+
+  return {
+    image,
+    transport: data.transport,
+    target_port: data.target_port,
+    cmd_arguments: data.cmd_arguments || [],
+    env_vars: mapEnvVars(data.envVars),
+    secrets,
+    network_isolation: data.networkIsolation,
+    permission_profile: data.networkIsolation
+      ? {
+          network: {
+            outbound: {
+              allow_host: data.allowedHosts?.map((host) => host.value),
+              allow_port: data.allowedPorts?.map((port) =>
+                parseInt(port.value, 10)
+              ),
+              insecure_allow_all: false,
+            } as PermissionsOutboundNetworkPermissions,
+          },
+        }
+      : undefined,
+    volumes: getVolumes(data.volumes ?? []),
+  }
 }
 
 /**
@@ -177,12 +370,19 @@ type GroupedSecrets = {
  */
 export function groupSecrets(secrets: DefinedSecret[]): {
   newSecrets: DefinedSecret[]
-  existingSecrets: DefinedSecret[]
+  existingSecrets: SecretsSecretParameter[]
 } {
-  return secrets.reduce<GroupedSecrets>(
+  return secrets.reduce<{
+    newSecrets: DefinedSecret[]
+    existingSecrets: SecretsSecretParameter[]
+  }>(
     (acc, secret) => {
       if (secret.value.isFromStore) {
-        acc.existingSecrets.push(secret)
+        // Convert existing secrets to API format
+        acc.existingSecrets.push({
+          name: secret.value.secret, // secret key name from store
+          target: secret.name, // environment variable name
+        })
       } else {
         acc.newSecrets.push(secret)
       }
