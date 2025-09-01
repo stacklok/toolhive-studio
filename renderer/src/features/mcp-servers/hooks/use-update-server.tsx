@@ -128,7 +128,13 @@ export function useUpdateServer(
       }
 
       // Step 4: Update the workload with all secrets
-      const allSecrets = [...newlyCreatedSecrets, ...existingSecrets]
+      const allSecrets = [
+        ...newlyCreatedSecrets,
+        ...existingSecrets.map((secret) => ({
+          name: secret.value.secret,
+          target: secret.name,
+        })),
+      ]
       const updateRequest = prepareUpdateWorkloadData(data, allSecrets)
 
       await updateWorkload({

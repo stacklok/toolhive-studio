@@ -77,8 +77,9 @@ describe('groupSecrets', () => {
 
     expect(result.newSecrets[0]?.name).toBe('NEW_SECRET')
     expect(result.newSecrets[1]?.name).toBe('ANOTHER_NEW_SECRET')
-    expect(result.existingSecrets[0]?.name).toBe('existing-key')
-    expect(result.existingSecrets[0]?.target).toBe('EXISTING_SECRET')
+    expect(result.existingSecrets[0]?.name).toBe('EXISTING_SECRET')
+    expect(result.existingSecrets[0]?.value.secret).toBe('existing-key')
+    expect(result.existingSecrets[0]?.value.isFromStore).toBe(true)
   })
 
   it('handles empty secrets array', () => {
@@ -122,10 +123,12 @@ describe('groupSecrets', () => {
 
     expect(result.newSecrets).toHaveLength(0)
     expect(result.existingSecrets).toHaveLength(2)
-    expect(result.existingSecrets[0]?.name).toBe('key1')
-    expect(result.existingSecrets[0]?.target).toBe('SECRET1')
-    expect(result.existingSecrets[1]?.name).toBe('key2')
-    expect(result.existingSecrets[1]?.target).toBe('SECRET2')
+    expect(result.existingSecrets[0]?.name).toBe('SECRET1')
+    expect(result.existingSecrets[0]?.value.secret).toBe('key1')
+    expect(result.existingSecrets[0]?.value.isFromStore).toBe(true)
+    expect(result.existingSecrets[1]?.name).toBe('SECRET2')
+    expect(result.existingSecrets[1]?.value.secret).toBe('key2')
+    expect(result.existingSecrets[1]?.value.isFromStore).toBe(true)
   })
 })
 

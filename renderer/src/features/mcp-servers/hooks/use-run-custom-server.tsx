@@ -159,7 +159,10 @@ export function useRunCustomServer({
       // We pass the encrypted secrets along with the request.
       const secretsForRequest: SecretsSecretParameter[] = [
         ...newlyCreatedSecrets,
-        ...existingSecrets,
+        ...existingSecrets.map((secret) => ({
+          name: secret.value.secret,
+          target: secret.name,
+        })),
       ]
 
       const createRequest: V1CreateRequest = prepareCreateWorkloadData(

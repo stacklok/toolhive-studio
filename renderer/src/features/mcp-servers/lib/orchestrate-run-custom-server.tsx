@@ -234,9 +234,7 @@ export function getDefinedSecrets(
   }, [])
 }
 
-/**
- * Converts a V1CreateRequest (from individual workload endpoint) back to form data for editing
- */
+// The type of the GET is V1CreateRequest
 export function convertCreateRequestToFormData(
   createRequest: V1CreateRequest,
   availableSecrets?: V1ListSecretsResponse
@@ -370,19 +368,15 @@ export function prepareUpdateWorkloadData(
  */
 export function groupSecrets(secrets: DefinedSecret[]): {
   newSecrets: DefinedSecret[]
-  existingSecrets: SecretsSecretParameter[]
+  existingSecrets: DefinedSecret[]
 } {
   return secrets.reduce<{
     newSecrets: DefinedSecret[]
-    existingSecrets: SecretsSecretParameter[]
+    existingSecrets: DefinedSecret[]
   }>(
     (acc, secret) => {
       if (secret.value.isFromStore) {
-        // Convert existing secrets to API format
-        acc.existingSecrets.push({
-          name: secret.value.secret, // secret key name from store
-          target: secret.name, // environment variable name
-        })
+        acc.existingSecrets.push(secret)
       } else {
         acc.newSecrets.push(secret)
       }

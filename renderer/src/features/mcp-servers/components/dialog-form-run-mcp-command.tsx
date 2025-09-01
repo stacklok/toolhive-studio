@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
@@ -125,7 +125,6 @@ export function DialogFormRunMcpServerWithCommand({
       },
     })
 
-  // Fetch all workloads for validation (to check for duplicate names)
   const { data } = useQuery({
     ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
     retry: false,
@@ -148,6 +147,9 @@ export function DialogFormRunMcpServerWithCommand({
   const workloads = data?.workloads ?? []
   const existingServer = existingServerData
   const isEditing = !!existingServer && !!serverToEdit
+  const editingFormData =
+    isEditing &&
+    convertCreateRequestToFormData(existingServer, availableSecrets)
 
   const form = useForm<FormSchemaRunMcpCommand>({
     resolver: zodV4Resolver(
@@ -156,21 +158,8 @@ export function DialogFormRunMcpServerWithCommand({
     defaultValues: DEFAULT_FORM_VALUES,
     reValidateMode: 'onChange',
     mode: 'onChange',
+    ...(editingFormData ? { values: editingFormData } : {}),
   })
-
-  // Reset form with workload data when editing
-  useEffect(() => {
-    if (isEditing && existingServer) {
-      const formData = convertCreateRequestToFormData(
-        existingServer,
-        availableSecrets
-      )
-
-      form.reset(formData)
-    } else if (!isEditing) {
-      form.reset(DEFAULT_FORM_VALUES)
-    }
-  }, [isEditing, existingServer, availableSecrets, serverToEdit, form])
 
   const onSubmitForm = (data: FormSchemaRunMcpCommand) => {
     setIsSubmitting(true)
@@ -199,7 +188,6 @@ export function DialogFormRunMcpServerWithCommand({
         }
       )
     } else {
-      // Handle create case
       installServerMutation(
         { data },
         {
@@ -236,6 +224,7 @@ export function DialogFormRunMcpServerWithCommand({
       >
         <Form {...form}>
           <form
+            key={serverToEdit || 'create'}
             onSubmit={form.handleSubmit(onSubmitForm, activateTabWithError)}
             className="flex min-h-0 flex-1 flex-col"
           >
