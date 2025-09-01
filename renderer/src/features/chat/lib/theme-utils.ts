@@ -1,30 +1,25 @@
 import { useTheme } from '../../../common/hooks/use-theme'
 
 /**
- * Maps our application theme to appropriate Shiki syntax highlighting themes
+ * Hook to get Shiki theme tuple for Streamdown component
+ * Returns [light, dark] themes based on current app theme
  */
-function getShikiTheme(
-  appTheme: 'light' | 'dark' | 'system'
-): 'github-dark' | 'github-light' {
+export function useShikiTheme(): [
+  'github-dark' | 'github-light',
+  'github-dark' | 'github-light',
+] {
+  const { theme } = useTheme()
+
   // Handle system theme by checking actual applied theme
-  if (appTheme === 'system') {
+  if (theme === 'system') {
     const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    return isDark ? 'github-dark' : 'github-light'
+    return isDark
+      ? ['github-dark', 'github-light']
+      : ['github-light', 'github-dark']
   }
 
-  // Map our themes to Shiki themes
-  const themeMap = {
-    light: 'github-light',
-    dark: 'github-dark',
-  } as const
-
-  return themeMap[appTheme] || 'github-light'
-}
-
-/**
- * Hook to get the current Shiki theme based on app theme
- */
-export function useShikiTheme(): 'github-dark' | 'github-light' {
-  const { theme } = useTheme()
-  return getShikiTheme(theme)
+  // Return themes with current theme first
+  return theme === 'dark'
+    ? ['github-dark', 'github-light']
+    : ['github-light', 'github-dark']
 }

@@ -103,6 +103,7 @@ export function DialogFormRunMcpServerWithCommand({
     resolver: zodV4Resolver(getFormSchemaRunMcpCommand(workloads)),
     defaultValues: {
       type: 'docker_image',
+      image: '',
       target_port: undefined,
       networkIsolation: false,
       allowedHosts: [],

@@ -360,6 +360,29 @@ describe('prepareCreateWorkloadData', () => {
     expect(result.network_isolation).toBe(false)
     expect(result.permission_profile).toBeUndefined()
   })
+
+  it('ignores invalid allowedHosts and allowedPorts when network isolation is disabled', () => {
+    const data: FormSchemaRunMcpCommand = {
+      image: 'test-image',
+      name: 'test-server',
+      transport: 'stdio',
+      type: 'docker_image',
+      envVars: [],
+      secrets: [],
+      cmd_arguments: [],
+      networkIsolation: false,
+      allowedHosts: [{ value: 'invalid-host.com' }],
+      allowedPorts: [{ value: '999999' }],
+      volumes: [],
+    }
+
+    const result = prepareCreateWorkloadData(data)
+
+    expect(result.network_isolation).toBe(false)
+    expect(result.permission_profile).toBeUndefined()
+
+    expect(() => prepareCreateWorkloadData(data)).not.toThrow()
+  })
 })
 
 describe('saveSecrets', () => {

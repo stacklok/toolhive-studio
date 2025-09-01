@@ -116,8 +116,14 @@ export function prepareCreateWorkloadData(
     ? {
         network: {
           outbound: {
-            allow_host: allowedHosts.map(({ value }) => value),
-            allow_port: allowedPorts.map(({ value }) => parseInt(value, 10)),
+            allow_host:
+              allowedHosts
+                ?.map(({ value }) => value)
+                .filter((host) => host.trim() !== '') ?? [],
+            allow_port:
+              allowedPorts
+                ?.map(({ value }) => parseInt(value, 10))
+                .filter((port) => !isNaN(port)) ?? [],
             insecure_allow_all: false,
           } as PermissionsOutboundNetworkPermissions,
         },
