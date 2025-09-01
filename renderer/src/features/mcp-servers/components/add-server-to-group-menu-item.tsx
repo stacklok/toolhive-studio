@@ -1,11 +1,10 @@
 import { DropdownMenuItem } from '@/common/components/ui/dropdown-menu'
 import { Copy } from 'lucide-react'
 import { usePrompt, generateSimplePrompt } from '@/common/hooks/use-prompt'
-import { useQuery } from '@tanstack/react-query'
-import { getApiV1BetaGroups } from '@api/sdk.gen'
 import { useMutationUpdateWorkloadGroup } from '../hooks/use-mutation-update-workload-group'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../../../utils/feature-flags'
+import { useGroups } from '../hooks/use-groups'
 
 interface AddServerToGroupMenuItemProps {
   serverName: string
@@ -19,21 +18,7 @@ export function AddServerToGroupMenuItem({
   const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
 
   // Fetch available groups
-  const { data: groupsData } = useQuery({
-    queryKey: ['api', 'v1beta', 'groups'],
-    queryFn: async () => {
-      const response = await getApiV1BetaGroups({
-        parseAs: 'text',
-        responseStyle: 'data',
-      })
-      const parsed =
-        typeof response === 'string' ? JSON.parse(response) : response
-      return parsed as {
-        groups?: Array<{ name?: string; registered_clients?: string[] }>
-      }
-    },
-    staleTime: 5_000,
-  })
+  const { data: groupsData } = useGroups()
 
   // Don't render if groups feature is disabled
   if (!isGroupsEnabled) {
@@ -43,17 +28,14 @@ export function AddServerToGroupMenuItem({
   const handleAddToGroup = async () => {
     const groups = groupsData?.groups ?? []
 
-    // Filter out the current group if the server is already in a group
-    // For now, we'll show all groups and let the backend handle duplicates
     const groupOptions = groups
-      .filter((group) => group.name) // Only include groups with names
+      .filter((group) => group.name)
       .map((group) => ({
         value: group.name!,
         label: group.name!,
       }))
 
     if (groupOptions.length === 0) {
-      // No groups available, could show a message or create a group
       return
     }
 
