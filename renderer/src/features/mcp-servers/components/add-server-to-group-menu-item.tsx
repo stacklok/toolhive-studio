@@ -1,5 +1,5 @@
 import { DropdownMenuItem } from '@/common/components/ui/dropdown-menu'
-import { FolderPlus } from 'lucide-react'
+import { Copy } from 'lucide-react'
 import { usePrompt, generateSimplePrompt } from '@/common/hooks/use-prompt'
 import { useQuery } from '@tanstack/react-query'
 import { getApiV1BetaGroups } from '@api/sdk.gen'
@@ -83,7 +83,7 @@ export function AddServerToGroupMenuItem({
       onClick={handleAddToGroup}
       className="flex cursor-pointer items-center"
     >
-      <FolderPlus className="mr-2 h-4 w-4" />
+      <Copy className="mr-2 h-4 w-4" />
       Add server to a group
     </DropdownMenuItem>
   )

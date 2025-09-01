@@ -292,7 +292,6 @@ export function CardMcpServer({
                   Logs
                 </Link>
               </DropdownMenuItem>
-              <AddServerToGroupMenuItem serverName={name} />
               {isCustomizeToolsEnabled && (
                 <DropdownMenuItem
                   asChild
@@ -319,6 +318,8 @@ export function CardMcpServer({
                 <Trash2 className="mr-2 h-4 w-4" />
                 Remove
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <AddServerToGroupMenuItem serverName={name} />
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
