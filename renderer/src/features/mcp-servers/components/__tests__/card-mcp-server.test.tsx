@@ -55,7 +55,9 @@ const mockUseFeatureFlag = vi.mocked(useFeatureFlag)
 const mockUseMutationRestartServer = vi.mocked(useMutationRestartServer)
 const mockUseMutationStopServerList = vi.mocked(useMutationStopServerList)
 const mockUseDeleteServer = vi.mocked(useDeleteServer)
-const mockUseMutationUpdateWorkloadGroup = vi.mocked(useMutationUpdateWorkloadGroup)
+const mockUseMutationUpdateWorkloadGroup = vi.mocked(
+  useMutationUpdateWorkloadGroup
+)
 const mockUseSearch = vi.mocked(useSearch)
 const mockUseQuery = vi.mocked(useQuery)
 const mockGetApiV1BetaRegistryByNameServersByServerName = vi.mocked(
@@ -90,28 +92,27 @@ beforeEach(() => {
     return false
   })
 
-
   // Mock the mutation hooks
   mockUseMutationRestartServer.mockReturnValue({
     mutateAsync: vi.fn().mockResolvedValue({}),
     isPending: false,
-  } as any)
+  } as unknown as ReturnType<typeof useMutationRestartServer>)
 
   mockUseMutationStopServerList.mockReturnValue({
     mutateAsync: vi.fn().mockResolvedValue({}),
     isPending: false,
-  } as any)
+  } as unknown as ReturnType<typeof useMutationStopServerList>)
 
   mockUseDeleteServer.mockReturnValue({
     mutateAsync: vi.fn().mockResolvedValue({}),
     isPending: false,
-  } as any)
+  } as unknown as ReturnType<typeof useDeleteServer>)
 
   mockUseMutationUpdateWorkloadGroup.mockReturnValue({
     mutate: vi.fn(),
     mutateAsync: vi.fn().mockResolvedValue({}),
     isPending: false,
-  } as any)
+  } as unknown as ReturnType<typeof useMutationUpdateWorkloadGroup>)
 
   // Mock the API query
   mockGetApiV1BetaRegistryByNameServersByServerName.mockResolvedValue({
@@ -147,15 +148,15 @@ beforeEach(() => {
   mockToast.mockImplementation(() => 'mock-toast-id')
 
   // Mock the useSearch hook
-  mockUseSearch.mockReturnValue({} as any)
-  
+  mockUseSearch.mockReturnValue({} as unknown as ReturnType<typeof useSearch>)
+
   // Reset router state
   router.navigate({ to: '/' })
 
   // Mock the useQuery hook
   mockUseQuery.mockImplementation((options) => {
     const queryKey = options.queryKey
-    
+
     // Check if this is the serverDetails query
     if (Array.isArray(queryKey) && queryKey[0] === 'serverDetails') {
       return {
@@ -169,11 +170,16 @@ beforeEach(() => {
         },
         isLoading: false,
         error: null,
-      } as any
+      } as unknown as ReturnType<typeof useQuery>
     }
-    
+
     // Check if this is the groups query
-    if (Array.isArray(queryKey) && queryKey[0] === 'api' && queryKey[1] === 'v1beta' && queryKey[2] === 'groups') {
+    if (
+      Array.isArray(queryKey) &&
+      queryKey[0] === 'api' &&
+      queryKey[1] === 'v1beta' &&
+      queryKey[2] === 'groups'
+    ) {
       return {
         data: {
           groups: [
@@ -184,15 +190,15 @@ beforeEach(() => {
         },
         isLoading: false,
         error: null,
-      } as any
+      } as unknown as ReturnType<typeof useQuery>
     }
-    
+
     // For any other queries, return empty data
     return {
       data: null,
       isLoading: false,
       error: null,
-    } as any
+    } as unknown as ReturnType<typeof useQuery>
   })
 })
 
@@ -234,7 +240,7 @@ it('should show Add server to a group menu item', async () => {
   const addToGroupMenuItem = screen.queryByRole('menuitem', {
     name: /add server to a group/i,
   })
-  
+
   // The menu item should be present since we've implemented the feature
   expect(addToGroupMenuItem).not.toBeNull()
   expect(addToGroupMenuItem).toBeVisible()
