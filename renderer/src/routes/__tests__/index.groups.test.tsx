@@ -4,11 +4,40 @@ vi.mock('@/common/hooks/use-feature-flag', () => ({
 }))
 import { screen, waitFor } from '@testing-library/react'
 import { describe, it, expect, beforeEach } from 'vitest'
-import { Index } from '../index'
+import { GroupsManager } from '@/features/mcp-servers/components/groups-manager'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  Outlet,
+  Router,
+} from '@tanstack/react-router'
 
-const router = createTestRouter(Index)
+function createGroupsTestRouter() {
+  const rootRoute = createRootRoute({
+    component: Outlet,
+    errorComponent: ({ error }) => <div>{error.message}</div>,
+  })
+
+  const groupRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/group/$groupName',
+    component: () => <GroupsManager />,
+  })
+
+  const router = new Router({
+    routeTree: rootRoute.addChildren([groupRoute]),
+    history: createMemoryHistory({ initialEntries: ['/group/default'] }),
+  })
+
+  return router
+}
+
+const router = createGroupsTestRouter() as unknown as ReturnType<
+  typeof createTestRouter
+>
 
 beforeEach(() => {
   vi.clearAllMocks()
