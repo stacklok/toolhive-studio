@@ -447,15 +447,12 @@ describe('usePrompt', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Verify dropdown is rendered instead of text input
     expect(screen.getByText('Select destination group')).toBeVisible()
     expect(screen.getByText('Choose a group...')).toBeVisible()
 
-    // Click the dropdown trigger button to open it
     const selectTrigger = screen.getByRole('combobox')
     await userEvent.click(selectTrigger)
 
-    // Verify options are displayed
     expect(screen.getByText('Group 1')).toBeVisible()
     expect(screen.getByText('Group 2')).toBeVisible()
     expect(screen.getByText('Group 3')).toBeVisible()

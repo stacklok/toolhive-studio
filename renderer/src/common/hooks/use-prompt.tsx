@@ -67,7 +67,7 @@ export function generateSimplePrompt({
               value={form.watch('value')}
               onValueChange={(value) => {
                 form.setValue('value', value)
-                form.trigger('value') // Trigger validation after setting value
+                form.trigger('value')
               }}
             >
               <SelectTrigger>
