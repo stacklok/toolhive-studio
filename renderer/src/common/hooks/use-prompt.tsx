@@ -70,7 +70,7 @@ export function generateSimplePrompt({
                 form.trigger('value')
               }}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue
                   placeholder={placeholder || 'Select an option...'}
                 />
