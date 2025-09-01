@@ -1,22 +1,9 @@
 import { screen, waitFor } from '@testing-library/react'
-import { expect, it, vi, beforeEach } from 'vitest'
+import { expect, it, beforeEach } from 'vitest'
 import { CardMcpServer } from '../card-mcp-server'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
 import userEvent from '@testing-library/user-event'
-import { useConfirm } from '@/common/hooks/use-confirm'
-import { usePrompt } from '@/common/hooks/use-prompt'
-import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
-
-// Mock the hooks
-vi.mock('@/common/hooks/use-confirm')
-vi.mock('@/common/hooks/use-prompt')
-vi.mock('@/common/hooks/use-feature-flag')
-
-// Create mock functions
-const mockUseConfirm = vi.mocked(useConfirm)
-const mockUsePrompt = vi.mocked(usePrompt)
-const mockUseFeatureFlag = vi.mocked(useFeatureFlag)
 
 const router = createTestRouter(() => (
   <CardMcpServer
@@ -29,20 +16,6 @@ const router = createTestRouter(() => (
 ))
 
 beforeEach(() => {
-  vi.clearAllMocks()
-
-  // Mock the confirm hook
-  mockUseConfirm.mockReturnValue(vi.fn().mockResolvedValue(true))
-
-  // Mock the prompt hook
-  mockUsePrompt.mockReturnValue(vi.fn().mockResolvedValue({ value: 'group1' }))
-
-  // Mock the feature flag hook - enable the groups feature
-  mockUseFeatureFlag.mockImplementation((flag) => {
-    if (flag === 'groups') return true
-    return false
-  })
-
   // Reset router state
   router.navigate({ to: '/' })
 })
