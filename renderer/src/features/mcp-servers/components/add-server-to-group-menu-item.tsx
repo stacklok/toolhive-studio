@@ -41,7 +41,7 @@ export function AddServerToGroupMenuItem({
 
     const result = await prompt(
       generateSimplePrompt({
-        title: 'Add server to a group',
+        title: 'Copy server to a group',
         label: 'Select destination group',
         placeholder: 'Choose a group...',
         options: groupOptions,
@@ -55,7 +55,7 @@ export function AddServerToGroupMenuItem({
           groupName: result.value,
         })
       } catch (error) {
-        console.error('Failed to move server to group:', error)
+        console.error('Failed to copy server to group:', error)
       }
     }
   }
@@ -66,7 +66,7 @@ export function AddServerToGroupMenuItem({
       className="flex cursor-pointer items-center"
     >
       <Copy className="mr-2 h-4 w-4" />
-      Add server to a group
+      Copy server to a group
     </DropdownMenuItem>
   )
 }
