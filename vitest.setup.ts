@@ -31,8 +31,6 @@ beforeAll(() => {
   }))
 
   window.HTMLElement.prototype.scrollIntoView = function () {}
-
-  // Mock hasPointerCapture for Radix UI components
   window.HTMLElement.prototype.hasPointerCapture = vi.fn()
   window.HTMLElement.prototype.releasePointerCapture = vi.fn()
 

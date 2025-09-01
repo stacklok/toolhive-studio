@@ -213,11 +213,9 @@ it('navigates to logs page when logs menu item is clicked', async () => {
   const menuButton = screen.getByRole('button', { name: /more/i })
   await user.click(menuButton)
 
-  // Click "Logs" menu item
   const logsMenuItem = screen.getByRole('menuitem', { name: /logs/i })
   await user.click(logsMenuItem)
 
-  // Verify navigation
   await waitFor(() => {
     expect(router.state.location.pathname).toBe('/logs/test-server')
   })
@@ -232,16 +230,13 @@ it('should show Add server to a group menu item', async () => {
 
   const user = userEvent.setup()
 
-  // Open the dropdown menu
   const menuButton = screen.getByRole('button', { name: /more/i })
   await user.click(menuButton)
 
-  // Check if the menu item exists
   const addToGroupMenuItem = screen.queryByRole('menuitem', {
     name: /add server to a group/i,
   })
 
-  // The menu item should be present since we've implemented the feature
   expect(addToGroupMenuItem).not.toBeNull()
   expect(addToGroupMenuItem).toBeVisible()
 })
