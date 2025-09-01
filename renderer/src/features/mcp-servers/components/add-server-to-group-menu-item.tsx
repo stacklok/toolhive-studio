@@ -1,8 +1,11 @@
 import { DropdownMenuItem } from '@/common/components/ui/dropdown-menu'
 import { FolderPlus } from 'lucide-react'
+import { usePrompt, generateSimplePrompt } from '@/common/hooks/use-prompt'
 import { useQuery } from '@tanstack/react-query'
 import { getApiV1BetaGroups } from '@api/sdk.gen'
-import { usePrompt, generateSimplePrompt } from '@/common/hooks/use-prompt'
+import { useMutationUpdateWorkloadGroup } from '../hooks/use-mutation-update-workload-group'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { featureFlagKeys } from '../../../../../utils/feature-flags'
 
 interface AddServerToGroupMenuItemProps {
   serverName: string
@@ -12,6 +15,8 @@ export function AddServerToGroupMenuItem({
   serverName,
 }: AddServerToGroupMenuItemProps) {
   const prompt = usePrompt()
+  const updateGroupMutation = useMutationUpdateWorkloadGroup()
+  const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
 
   // Fetch available groups
   const { data: groupsData } = useQuery({
@@ -29,6 +34,11 @@ export function AddServerToGroupMenuItem({
     },
     staleTime: 5_000,
   })
+
+  // Don't render if groups feature is disabled
+  if (!isGroupsEnabled) {
+    return null
+  }
 
   const handleAddToGroup = async () => {
     const groups = groupsData?.groups ?? []
@@ -53,18 +63,18 @@ export function AddServerToGroupMenuItem({
         label: 'Select destination group',
         placeholder: 'Choose a group...',
         options: groupOptions,
-        buttons: {
-          confirm: 'Copy',
-          cancel: 'Cancel',
-        },
       })
     )
 
     if (result) {
-      // TODO: Implement the actual API call to add server to group
-      console.log(`Adding server ${serverName} to group ${result.value}`)
-      // For now, just show a success message
-      // toast.success(`Server added to group "${result.value}"`)
+      try {
+        await updateGroupMutation.mutateAsync({
+          workloadName: serverName,
+          groupName: result.value,
+        })
+      } catch (error) {
+        console.error('Failed to move server to group:', error)
+      }
     }
   }
 
