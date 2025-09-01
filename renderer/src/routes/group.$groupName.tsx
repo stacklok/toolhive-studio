@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
 import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
 import { EmptyState } from '@/common/components/empty-state'
@@ -31,7 +31,6 @@ export const Route = createFileRoute('/group/$groupName')({
 })
 
 function GroupRoute() {
-  const navigate = useNavigate()
   const { groupName } = Route.useParams()
   const showSidebar = useFeatureFlag(featureFlagKeys.GROUPS)
 
@@ -49,13 +48,6 @@ function GroupRoute() {
   const [isRunWithCommandOpen, setIsRunWithCommandOpen] = useState(false)
   const { mutateAsync, isPending } = useMutationRestartServerAtStartup()
   const hasProcessedShutdown = useRef(false)
-
-  // Redirect to default group if groups feature is disabled
-  useEffect(() => {
-    if (!showSidebar) {
-      navigate({ to: '/' })
-    }
-  }, [navigate, showSidebar])
 
   useEffect(() => {
     const handleShutdownRestart = async () => {
