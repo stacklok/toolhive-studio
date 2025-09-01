@@ -319,6 +319,7 @@ export function CardMcpServer({
                 Remove
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+
               <AddServerToGroupMenuItem serverName={name} />
             </DropdownMenuContent>
           </DropdownMenu>
