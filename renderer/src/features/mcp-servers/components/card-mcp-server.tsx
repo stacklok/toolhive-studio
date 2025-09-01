@@ -37,6 +37,7 @@ import {
   TooltipContent,
 } from '@/common/components/ui/tooltip'
 import { cn } from '@/common/lib/utils'
+import { AddServerToGroupMenuItem } from './add-server-to-group-menu-item'
 
 type CardContentMcpServerProps = {
   status: CoreWorkload['status']
@@ -291,6 +292,7 @@ export function CardMcpServer({
                   Logs
                 </Link>
               </DropdownMenuItem>
+              <AddServerToGroupMenuItem serverName={name} />
               {isCustomizeToolsEnabled && (
                 <DropdownMenuItem
                   asChild

@@ -5,17 +5,24 @@ import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
 import userEvent from '@testing-library/user-event'
 import { useConfirm } from '@/common/hooks/use-confirm'
-import { getApiV1BetaRegistryByNameServersByServerName } from '@api/sdk.gen'
+import { usePrompt } from '@/common/hooks/use-prompt'
+import {
+  getApiV1BetaRegistryByNameServersByServerName,
+  getApiV1BetaGroups,
+} from '@api/sdk.gen'
 
 // Mock the hooks
 vi.mock('@/common/hooks/use-confirm')
+vi.mock('@/common/hooks/use-prompt')
 vi.mock('@api/sdk.gen')
 
 // Create mock functions
 const mockUseConfirm = vi.mocked(useConfirm)
+const mockUsePrompt = vi.mocked(usePrompt)
 const mockGetApiV1BetaRegistryByNameServersByServerName = vi.mocked(
   getApiV1BetaRegistryByNameServersByServerName
 )
+const mockGetApiV1BetaGroups = vi.mocked(getApiV1BetaGroups)
 
 const router = createTestRouter(() => (
   <CardMcpServer
@@ -33,6 +40,9 @@ beforeEach(() => {
   // Mock the confirm hook
   mockUseConfirm.mockReturnValue(vi.fn().mockResolvedValue(true))
 
+  // Mock the prompt hook
+  mockUsePrompt.mockReturnValue(vi.fn().mockResolvedValue(null))
+
   // Mock the API query
   mockGetApiV1BetaRegistryByNameServersByServerName.mockResolvedValue({
     data: {
@@ -42,6 +52,19 @@ beforeEach(() => {
         transport: 'http',
         repository_url: 'https://github.com/test/repo',
       },
+    },
+    request: {} as Request,
+    response: {} as Response,
+  })
+
+  // Mock the groups API query
+  mockGetApiV1BetaGroups.mockResolvedValue({
+    data: {
+      groups: [
+        { name: 'default', registered_clients: [] },
+        { name: 'group1', registered_clients: [] },
+        { name: 'group2', registered_clients: [] },
+      ],
     },
     request: {} as Request,
     response: {} as Response,
