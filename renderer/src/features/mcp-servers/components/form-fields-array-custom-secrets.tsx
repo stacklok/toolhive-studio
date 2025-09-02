@@ -17,14 +17,15 @@ type SecretFieldValue = {
   value?: { secret?: string; isFromStore: boolean } | string
 }
 
-// More flexible constraint that works with discriminated unions
-type FormWithSecretsFlexible = Record<string, unknown> & {
-  secrets?: Array<SecretFieldValue>
+type FormWithSecrets = {
+  secrets: Array<SecretFieldValue>
 }
 
-export function FormFieldsArrayCustomSecrets<
-  T extends FormWithSecretsFlexible,
->({ form }: { form: UseFormReturn<T> }) {
+export function FormFieldsArrayCustomSecrets<T extends FormWithSecrets>({
+  form,
+}: {
+  form: UseFormReturn<T>
+}) {
   return (
     <FormItem>
       <Controller

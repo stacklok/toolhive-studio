@@ -5,7 +5,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/common/components/ui/dropdown-menu'
-import { PlusIcon } from 'lucide-react'
+import { CloudIcon, DatabaseIcon, LaptopIcon, PlusIcon } from 'lucide-react'
 import { useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
@@ -15,7 +15,13 @@ export function DropdownMenuRunMcpServer({
   openRunCommandDialog,
 }: {
   className?: string
-  openRunCommandDialog: () => void
+  openRunCommandDialog: ({
+    local,
+    remote,
+  }: {
+    local: boolean
+    remote: boolean
+  }) => void
 }) {
   const navigate = useNavigate()
   useEffect(() => {
@@ -23,7 +29,7 @@ export function DropdownMenuRunMcpServer({
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n') {
         if (e.shiftKey) {
           e.preventDefault()
-          openRunCommandDialog()
+          openRunCommandDialog({ local: false, remote: false })
         } else {
           e.preventDefault()
           navigate({ to: '/registry' })
@@ -43,17 +49,25 @@ export function DropdownMenuRunMcpServer({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="bottom" align="end">
-        <DropdownMenuItem asChild aria-label="From the registry">
-          <LinkViewTransition to="/registry">
-            From the registry
-          </LinkViewTransition>
-        </DropdownMenuItem>
-
         <DropdownMenuItem
-          onSelect={() => openRunCommandDialog()}
+          onSelect={() => openRunCommandDialog({ local: true, remote: false })}
           aria-label="Custom MCP server"
         >
-          Custom MCP server
+          <LaptopIcon />
+          Add a local MCP server
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onSelect={() => openRunCommandDialog({ local: false, remote: true })}
+          aria-label="Remote MCP server"
+        >
+          <CloudIcon />
+          Add a remote MCP server
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild aria-label="From the registry">
+          <LinkViewTransition to="/registry">
+            <DatabaseIcon />
+            Add from registry
+          </LinkViewTransition>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

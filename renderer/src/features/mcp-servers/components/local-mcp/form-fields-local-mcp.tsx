@@ -3,12 +3,13 @@ import { useForm } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
 import { Form } from '@/common/components/ui/form'
-import {
-  getFormSchemaLocalMcp,
-  type FormSchemaLocalMcp,
-} from '../../lib/form-schema-local-mcp'
+
 import { FormFieldsBase } from './form-fields-base'
-import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
+import {
+  getApiV1BetaSecretsDefaultKeysOptions,
+  getApiV1BetaWorkloadsByNameOptions,
+  getApiV1BetaWorkloadsOptions,
+} from '@api/@tanstack/react-query.gen'
 import {
   DialogContent,
   DialogDescription,
@@ -30,10 +31,14 @@ import {
 } from '@/common/hooks/use-form-tab-state'
 import { NetworkIsolationTabContent } from '../network-isolation-tab-content'
 import { FormFieldsArrayVolumes } from '../form-fields-array-custom-volumes'
+import { useUpdateServer } from '../../hooks/use-update-server'
+import { convertCreateRequestToFormData } from '../../lib/orchestrate-run-custom-server'
+import { getFormSchemaLocalMcp, type FormSchemaLocalMcp } from '../../lib/form-schema-local-mcp'
 
 type Tab = 'configuration' | 'network-isolation'
-type UnionKeys<T> = T extends unknown ? keyof T : never
-type Field = UnionKeys<FormSchemaLocalMcp>
+type CommonFields = keyof FormSchemaLocalMcp
+type VariantSpecificFields = 'image' | 'protocol' | 'package_name'
+type Field = CommonFields | VariantSpecificFields
 
 const FIELD_TAB_MAP = {
   name: 'configuration',
@@ -52,10 +57,26 @@ const FIELD_TAB_MAP = {
   volumes: 'configuration',
 } satisfies FieldTabMapping<Tab, Field>
 
+const DEFAULT_FORM_VALUES: Partial<FormSchemaLocalMcp> = {
+  type: 'docker_image',
+  name: '',
+  transport: 'stdio',
+  target_port: 0,
+  networkIsolation: false,
+  allowedHosts: [],
+  allowedPorts: [],
+  volumes: [{ host: '', container: '', accessMode: 'rw' as const }],
+  envVars: [],
+  secrets: [],
+  cmd_arguments: [],
+}
+
 export function FormFieldsLocalMcp({
   onOpenChange,
+  serverToEdit,
 }: {
   onOpenChange: ({ local, remote }: { local: boolean; remote: boolean }) => void
+  serverToEdit?: string | null
 }) {
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -70,45 +91,70 @@ export function FormFieldsLocalMcp({
       defaultTab: 'configuration',
     })
 
+  const handleSecrets = (completedCount: number, secretsCount: number) => {
+    setLoadingSecrets((prev) => ({
+      ...prev,
+      text: `Encrypting secrets (${completedCount} of ${secretsCount})...`,
+      completedCount,
+      secretsCount,
+    }))
+  }
+
   const {
     installServerMutation,
     checkServerStatus,
     isErrorSecrets,
     isPendingSecrets,
   } = useRunCustomServer({
-    onSecretSuccess: (completedCount, secretsCount) => {
-      setLoadingSecrets((prev) => ({
-        ...prev,
-        text: `Encrypting secrets (${completedCount} of ${secretsCount})...`,
-        completedCount,
-        secretsCount,
-      }))
-    },
+    onSecretSuccess: handleSecrets,
     onSecretError: (error, variables) => {
       log.error('onSecretError', error, variables)
     },
   })
 
+  const { updateServerMutation, checkServerStatus: checkUpdateServerStatus } =
+    useUpdateServer(serverToEdit || '', {
+      onSecretSuccess: handleSecrets,
+      onSecretError: (error, variables) => {
+        log.error('onSecretError during update', error, variables)
+      },
+    })
+
   const { data } = useQuery({
     ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
+    retry: false,
+  })
+
+  const { data: availableSecrets } = useQuery({
+    ...getApiV1BetaSecretsDefaultKeysOptions(),
+    enabled: !!serverToEdit,
+    retry: false,
+  })
+
+  const { data: existingServerData, isLoading: isLoadingServer } = useQuery({
+    ...getApiV1BetaWorkloadsByNameOptions({
+      path: { name: serverToEdit || '' },
+    }),
+    enabled: !!serverToEdit,
+    retry: false,
   })
 
   const workloads = data?.workloads ?? []
+  const existingServer = existingServerData
+  const isEditing = !!existingServer && !!serverToEdit
+  const editingFormData =
+    isEditing &&
+    convertCreateRequestToFormData(existingServer, availableSecrets)
 
   const form = useForm<FormSchemaLocalMcp>({
-    resolver: zodV4Resolver(getFormSchemaLocalMcp(workloads)),
-    defaultValues: {
-      type: 'docker_image',
-      image: '',
-      target_port: undefined,
-      networkIsolation: false,
-      allowedHosts: [],
-      allowedPorts: [],
-      volumes: [{ host: '', container: '', accessMode: 'rw' }],
-    },
+    resolver: zodV4Resolver(
+      getFormSchemaLocalMcp(workloads, serverToEdit || undefined)
+    ),
+    defaultValues: DEFAULT_FORM_VALUES,
     reValidateMode: 'onChange',
     mode: 'onChange',
-  }) as ReturnType<typeof useForm<FormSchemaLocalMcp>>
+    ...(editingFormData ? { values: editingFormData } : {}),
+  })
 
   const onSubmitForm = (data: FormSchemaLocalMcp) => {
     setIsSubmitting(true)
@@ -116,27 +162,52 @@ export function FormFieldsLocalMcp({
       setError(null)
     }
 
-    installServerMutation(
-      { data },
-      {
-        onSuccess: () => {
-          checkServerStatus(data)
-          onOpenChange({
-            local: false,
-            remote: false,
-          })
-        },
-        onSettled: (_, error) => {
-          setIsSubmitting(false)
-          if (!error) {
-            form.reset()
-          }
-        },
-        onError: (error) => {
-          setError(typeof error === 'string' ? error : error.message)
-        },
-      }
-    )
+    if (isEditing) {
+      updateServerMutation(
+        { data },
+        {
+          onSuccess: () => {
+            checkUpdateServerStatus()
+            onOpenChange({
+              local: false,
+              remote: false,
+            })
+          },
+          onSettled: (_, error) => {
+            setIsSubmitting(false)
+            setLoadingSecrets(null)
+            if (!error) {
+              form.reset()
+            }
+          },
+          onError: (error) => {
+            setError(typeof error === 'string' ? error : error.message)
+          },
+        }
+      )
+    } else {
+      installServerMutation(
+        { data },
+        {
+          onSuccess: () => {
+            checkServerStatus(data)
+            onOpenChange({
+              local: false,
+              remote: false,
+            })
+          },
+          onSettled: (_, error) => {
+            setIsSubmitting(false)
+            if (!error) {
+              form.reset()
+            }
+          },
+          onError: (error) => {
+            setError(typeof error === 'string' ? error : error.message)
+          },
+        }
+      )
+    }
   }
 
   return (
@@ -156,24 +227,42 @@ export function FormFieldsLocalMcp({
       }}
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmitForm, activateTabWithError)}>
-          <DialogHeader className="mb-4 p-6">
-            <DialogTitle>Custom MCP server</DialogTitle>
+        <form
+          key={serverToEdit || 'create'}
+          onSubmit={form.handleSubmit(onSubmitForm, activateTabWithError)}
+          className="flex min-h-0 flex-1 flex-col"
+        >
+          <DialogHeader className="mb-4 flex-shrink-0 p-6">
+            <DialogTitle>
+              {isEditing
+                ? `Edit ${serverToEdit} MCP server`
+                : 'Custom MCP server'}
+            </DialogTitle>
             <DialogDescription>
-              ToolHive allows you to securely run a custom MCP server from a
-              Docker image or a package manager command.
+              {isEditing
+                ? 'Update the configuration for your MCP server.'
+                : 'ToolHive allows you to securely run a custom MCP server from a Docker image or a package manager command.'}
             </DialogDescription>
           </DialogHeader>
-          {isSubmitting && (
+          {(isSubmitting || (isEditing && isLoadingServer)) && (
             <LoadingStateAlert
               isPendingSecrets={isPendingSecrets}
-              loadingSecrets={loadingSecrets}
+              loadingSecrets={
+                isLoadingServer
+                  ? {
+                      text: `Loading server "${serverToEdit}"...`,
+                      completedCount: 0,
+                      secretsCount: 0,
+                    }
+                  : loadingSecrets
+              }
             />
           )}
-          {!isSubmitting && (
-            <>
+
+          {!isSubmitting && !(isEditing && isLoadingServer) && (
+            <div className="flex flex-1 flex-col overflow-hidden">
               <Tabs
-                className="mb-6 w-full px-6"
+                className="mb-6 w-full flex-shrink-0 px-6"
                 value={activeTab}
                 onValueChange={(value: string) => setActiveTab(value as Tab)}
               >
@@ -185,10 +274,7 @@ export function FormFieldsLocalMcp({
                 </TabsList>
               </Tabs>
               {activeTab === 'configuration' && (
-                <div
-                  className="relative max-h-[65dvh] space-y-4 overflow-y-auto
-                    px-6"
-                >
+                <div className="flex-1 space-y-4 overflow-y-auto px-6">
                   {error && (
                     <AlertErrorFormSubmission
                       error={error}
@@ -196,35 +282,39 @@ export function FormFieldsLocalMcp({
                       onDismiss={() => setError(null)}
                     />
                   )}
-                  <FormFieldsBase form={form} />
+                  <FormFieldsBase form={form} isEditing={isEditing} />
                   <FormFieldsArrayCustomSecrets form={form} />
                   <FormFieldsArrayCustomEnvVars form={form} />
-                  <FormFieldsArrayVolumes form={form} />
+                  <FormFieldsArrayVolumes<FormSchemaLocalMcp>
+                    form={form}
+                  />
                 </div>
               )}
               {activeTab === 'network-isolation' && (
-                <NetworkIsolationTabContent form={form} />
+                <div className="flex-1 overflow-y-auto">
+                  <NetworkIsolationTabContent form={form} />
+                </div>
               )}
-            </>
+            </div>
           )}
 
-          <DialogFooter className="p-6">
+          <DialogFooter className="flex-shrink-0 p-6">
             <Button
               type="button"
               variant="outline"
-              disabled={isSubmitting}
+              disabled={isSubmitting || (isEditing && isLoadingServer)}
               onClick={() => {
-                onOpenChange({
-                  local: false,
-                  remote: false,
-                })
+                onOpenChange({ local: false, remote: false })
                 setActiveTab('configuration')
               }}
             >
               Cancel
             </Button>
-            <Button disabled={isSubmitting} type="submit">
-              Install server
+            <Button
+              disabled={isSubmitting || (isEditing && isLoadingServer)}
+              type="submit"
+            >
+              {isEditing ? 'Update server' : 'Install server'}
             </Button>
           </DialogFooter>
         </form>
