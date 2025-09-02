@@ -121,6 +121,7 @@ export function CardMcpServer({
   const isCustomizeToolsEnabled = useFeatureFlag(
     featureFlagKeys.CUSTOMIZE_TOOLS
   )
+  const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
 
   const { data: serverDetails } = useQuery({
     queryKey: ['serverDetails', name],
@@ -318,7 +319,7 @@ export function CardMcpServer({
                 <Trash2 className="mr-2 h-4 w-4" />
                 Remove
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
+              {isGroupsEnabled && <DropdownMenuSeparator />}
 
               <AddServerToGroupMenuItem serverName={name} />
             </DropdownMenuContent>
