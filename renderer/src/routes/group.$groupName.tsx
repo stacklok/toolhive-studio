@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Code } from 'lucide-react'
 import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
 import { EmptyState } from '@/common/components/empty-state'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
@@ -85,6 +85,7 @@ function GroupRoute() {
               />
               <Button asChild variant="outline">
                 <LinkViewTransition to="/clients/default">
+                  <Code className="mr-2 h-4 w-4" />
                   Manage clients
                 </LinkViewTransition>
               </Button>
