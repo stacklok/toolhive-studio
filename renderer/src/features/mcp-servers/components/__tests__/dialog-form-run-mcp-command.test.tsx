@@ -144,7 +144,11 @@ describe('DialogFormRunMcpServerWithCommand', () => {
             type: 'docker_image',
             envVars: [],
             secrets: [],
-            cmd_arguments: undefined,
+            cmd_arguments: [],
+            networkIsolation: false,
+            allowedHosts: [],
+            allowedPorts: [],
+            target_port: 0,
           }),
         },
         expect.any(Object)
@@ -179,7 +183,7 @@ describe('DialogFormRunMcpServerWithCommand', () => {
     // Fill all fields
     await userEvent.type(screen.getByLabelText('Name'), 'npm-server')
     await userEvent.click(screen.getByLabelText('Transport'))
-    await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
+    await userEvent.click(screen.getByRole('option', { name: 'SSE' }))
     await userEvent.type(screen.getByLabelText('Target port'), '8080')
     await userEvent.click(screen.getByLabelText('Protocol'))
     await userEvent.click(screen.getByRole('option', { name: 'npx' }))
@@ -195,7 +199,7 @@ describe('DialogFormRunMcpServerWithCommand', () => {
         {
           data: expect.objectContaining({
             name: 'npm-server',
-            transport: 'stdio',
+            transport: 'sse',
             target_port: 8080,
             protocol: 'npx',
             package_name: '@test/package',
