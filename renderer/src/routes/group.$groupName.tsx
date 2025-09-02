@@ -84,7 +84,7 @@ function GroupRoute() {
                 openRunCommandDialog={() => setIsRunWithCommandOpen(true)}
               />
               <Button asChild variant="outline">
-                <LinkViewTransition to="/clients/default">
+                <LinkViewTransition to={`/clients/${groupName}`}>
                   <Code className="mr-2 h-4 w-4" />
                   Manage clients
                 </LinkViewTransition>
@@ -108,11 +108,19 @@ function GroupRoute() {
               >
                 Add custom server
               </Button>,
-              <Button asChild key="add-from-registry">
-                <LinkViewTransition to="/registry">
-                  Browse registry <ChevronRight />
-                </LinkViewTransition>
-              </Button>,
+              <div key="secondary-actions" className="flex gap-2">
+                <Button asChild variant="outline">
+                  <LinkViewTransition to="/registry">
+                    Browse registry <ChevronRight />
+                  </LinkViewTransition>
+                </Button>
+                <Button asChild variant="outline">
+                  <LinkViewTransition to={`/clients/${groupName}`}>
+                    <Code className="mr-2 h-4 w-4" />
+                    Manage clients
+                  </LinkViewTransition>
+                </Button>
+              </div>,
             ]}
             illustration={IllustrationNoConnection}
           />
