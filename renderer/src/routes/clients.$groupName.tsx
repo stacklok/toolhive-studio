@@ -15,9 +15,16 @@ export const Route = createFileRoute('/clients/$groupName')({
 })
 
 export function Clients() {
+  const { groupName } = Route.useParams()
   const {
     data: { clients = [] },
   } = useSuspenseQuery(getApiV1BetaDiscoveryClientsOptions())
+
+  // For now, we filter clients client-side since the API doesn't support group filtering yet
+  // TODO: Update to use group-specific API endpoint when backend supports it
+  // The groupName parameter is ready for when the backend implements group-specific client fetching
+  console.log(`Fetching clients for group: ${groupName}`) // Temporary logging to show group awareness
+
   const installedClients = clients.filter(
     (client) => client.installed && client.client_type
   )

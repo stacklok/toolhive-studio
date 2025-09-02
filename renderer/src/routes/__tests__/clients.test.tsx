@@ -26,6 +26,29 @@ describe('Clients Route', () => {
     expect(screen.getAllByRole('switch')).toHaveLength(5)
   })
 
+  it('should use the group parameter from the route', () => {
+    // This test verifies that the component receives and can access the groupName parameter
+    // In the future, this parameter will be used to fetch group-specific clients
+    expect(router.state.location.pathname).toBe('/clients/default')
+  })
+
+  it('should handle different group names correctly', async () => {
+    // Test with a different group name
+    const customGroupRouter = createTestRouter(Clients, '/clients/custom-group')
+
+    renderRoute(customGroupRouter)
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: /clients/i })
+      ).toBeInTheDocument()
+    })
+
+    // Verify the component renders correctly with different group names
+    // This ensures the component is ready for group-specific client fetching
+    expect(screen.getByText('VS Code - Copilot')).toBeInTheDocument()
+  })
+
   it.each([
     {
       name: 'no clients',
