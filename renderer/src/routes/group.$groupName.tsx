@@ -83,6 +83,11 @@ function GroupRoute() {
               <DropdownMenuRunMcpServer
                 openRunCommandDialog={() => setIsRunWithCommandOpen(true)}
               />
+              <Button asChild variant="outline">
+                <LinkViewTransition to="/clients/default">
+                  Manage clients
+                </LinkViewTransition>
+              </Button>
             </div>
           )}
           <DialogFormRunMcpServerWithCommand
