@@ -97,12 +97,12 @@ it('shows "Copy server to a group" menu item and handles the complete workflow',
   const selectTrigger = screen.getByRole('combobox')
   await user.click(selectTrigger)
 
-  // Select the first group option
-  const groupOption = screen.getByText('group1')
+  // Select the first group option - use the option element specifically
+  const groupOption = screen.getByRole('option', { name: 'default' })
   await user.click(groupOption)
 
   // Submit the form
-  const submitButton = screen.getByRole('button', { name: /copy/i })
+  const submitButton = screen.getByRole('button', { name: 'OK' })
   await user.click(submitButton)
 
   // The test should fail here if the API call is broken
