@@ -55,7 +55,7 @@ export function CardClient({
         <div className="flex items-center gap-2">
           <Switch
             checked={client.registered && belongsToCurrentGroup}
-            disabled={!belongsToCurrentGroup}
+            disabled={false} // Always enable the switch for installed clients
             onCheckedChange={() => {
               if (client.registered) {
                 unregisterClient({
@@ -70,6 +70,7 @@ export function CardClient({
                 registerClient({
                   body: {
                     name: client.client_type ?? '',
+                    groups: [currentGroup], // Add the current group when registering
                   },
                 })
                 trackEvent(`Client ${client.client_type} registered`, {
