@@ -97,7 +97,9 @@ function TopNavLinks() {
               data-[status=active]:focus:bg-transparent"
             asChild
           >
-            <LinkViewTransition to="/clients">Clients</LinkViewTransition>
+            <LinkViewTransition to="/clients/default">
+              Clients
+            </LinkViewTransition>
           </NavigationMenuLink>
         </NavigationMenuItem>
         {isPlaygroundEnabled && (

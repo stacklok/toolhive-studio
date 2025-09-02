@@ -1,6 +1,6 @@
 import { screen, waitFor } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
-import { Clients } from '../clients'
+import { Clients } from '../clients.$groupName'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
 import { server } from '@/common/mocks/node'
@@ -8,7 +8,7 @@ import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/msw-endpoint'
 import type { V1ClientStatusResponse } from '@api/types.gen'
 
-const router = createTestRouter(Clients)
+const router = createTestRouter(Clients, '/clients/default')
 
 describe('Clients Route', () => {
   it('should render the page', async () => {

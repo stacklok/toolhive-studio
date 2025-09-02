@@ -13,11 +13,11 @@ import { Route as ShutdownRouteImport } from "./routes/shutdown"
 import { Route as SettingsRouteImport } from "./routes/settings"
 import { Route as SecretsRouteImport } from "./routes/secrets"
 import { Route as PlaygroundRouteImport } from "./routes/playground"
-import { Route as ClientsRouteImport } from "./routes/clients"
 import { Route as IndexRouteImport } from "./routes/index"
 import { Route as LogsServerNameRouteImport } from "./routes/logs.$serverName"
 import { Route as GroupGroupNameRouteImport } from "./routes/group.$groupName"
 import { Route as CustomizeToolsServerNameRouteImport } from "./routes/customize-tools.$serverName"
+import { Route as ClientsGroupNameRouteImport } from "./routes/clients.$groupName"
 import { Route as registryRegistryRouteImport } from "./routes/(registry)/registry"
 import { Route as registryRegistryNameRouteImport } from "./routes/(registry)/registry_.$name"
 
@@ -41,11 +41,6 @@ const PlaygroundRoute = PlaygroundRouteImport.update({
   path: "/playground",
   getParentRoute: () => rootRouteImport,
 } as any)
-const ClientsRoute = ClientsRouteImport.update({
-  id: "/clients",
-  path: "/clients",
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: "/",
   path: "/",
@@ -67,6 +62,11 @@ const CustomizeToolsServerNameRoute =
     path: "/customize-tools/$serverName",
     getParentRoute: () => rootRouteImport,
   } as any)
+const ClientsGroupNameRoute = ClientsGroupNameRouteImport.update({
+  id: "/clients/$groupName",
+  path: "/clients/$groupName",
+  getParentRoute: () => rootRouteImport,
+} as any)
 const registryRegistryRoute = registryRegistryRouteImport.update({
   id: "/(registry)/registry",
   path: "/registry",
@@ -80,12 +80,12 @@ const registryRegistryNameRoute = registryRegistryNameRouteImport.update({
 
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
-  "/clients": typeof ClientsRoute
   "/playground": typeof PlaygroundRoute
   "/secrets": typeof SecretsRoute
   "/settings": typeof SettingsRoute
   "/shutdown": typeof ShutdownRoute
   "/registry": typeof registryRegistryRoute
+  "/clients/$groupName": typeof ClientsGroupNameRoute
   "/customize-tools/$serverName": typeof CustomizeToolsServerNameRoute
   "/group/$groupName": typeof GroupGroupNameRoute
   "/logs/$serverName": typeof LogsServerNameRoute
@@ -93,12 +93,12 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
-  "/clients": typeof ClientsRoute
   "/playground": typeof PlaygroundRoute
   "/secrets": typeof SecretsRoute
   "/settings": typeof SettingsRoute
   "/shutdown": typeof ShutdownRoute
   "/registry": typeof registryRegistryRoute
+  "/clients/$groupName": typeof ClientsGroupNameRoute
   "/customize-tools/$serverName": typeof CustomizeToolsServerNameRoute
   "/group/$groupName": typeof GroupGroupNameRoute
   "/logs/$serverName": typeof LogsServerNameRoute
@@ -107,12 +107,12 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   "/": typeof IndexRoute
-  "/clients": typeof ClientsRoute
   "/playground": typeof PlaygroundRoute
   "/secrets": typeof SecretsRoute
   "/settings": typeof SettingsRoute
   "/shutdown": typeof ShutdownRoute
   "/(registry)/registry": typeof registryRegistryRoute
+  "/clients/$groupName": typeof ClientsGroupNameRoute
   "/customize-tools/$serverName": typeof CustomizeToolsServerNameRoute
   "/group/$groupName": typeof GroupGroupNameRoute
   "/logs/$serverName": typeof LogsServerNameRoute
@@ -122,12 +122,12 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | "/"
-    | "/clients"
     | "/playground"
     | "/secrets"
     | "/settings"
     | "/shutdown"
     | "/registry"
+    | "/clients/$groupName"
     | "/customize-tools/$serverName"
     | "/group/$groupName"
     | "/logs/$serverName"
@@ -135,12 +135,12 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | "/"
-    | "/clients"
     | "/playground"
     | "/secrets"
     | "/settings"
     | "/shutdown"
     | "/registry"
+    | "/clients/$groupName"
     | "/customize-tools/$serverName"
     | "/group/$groupName"
     | "/logs/$serverName"
@@ -148,12 +148,12 @@ export interface FileRouteTypes {
   id:
     | "__root__"
     | "/"
-    | "/clients"
     | "/playground"
     | "/secrets"
     | "/settings"
     | "/shutdown"
     | "/(registry)/registry"
+    | "/clients/$groupName"
     | "/customize-tools/$serverName"
     | "/group/$groupName"
     | "/logs/$serverName"
@@ -162,12 +162,12 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ClientsRoute: typeof ClientsRoute
   PlaygroundRoute: typeof PlaygroundRoute
   SecretsRoute: typeof SecretsRoute
   SettingsRoute: typeof SettingsRoute
   ShutdownRoute: typeof ShutdownRoute
   registryRegistryRoute: typeof registryRegistryRoute
+  ClientsGroupNameRoute: typeof ClientsGroupNameRoute
   CustomizeToolsServerNameRoute: typeof CustomizeToolsServerNameRoute
   GroupGroupNameRoute: typeof GroupGroupNameRoute
   LogsServerNameRoute: typeof LogsServerNameRoute
@@ -204,13 +204,6 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof PlaygroundRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/clients": {
-      id: "/clients"
-      path: "/clients"
-      fullPath: "/clients"
-      preLoaderRoute: typeof ClientsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     "/": {
       id: "/"
       path: "/"
@@ -239,6 +232,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof CustomizeToolsServerNameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    "/clients/$groupName": {
+      id: "/clients/$groupName"
+      path: "/clients/$groupName"
+      fullPath: "/clients/$groupName"
+      preLoaderRoute: typeof ClientsGroupNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     "/(registry)/registry": {
       id: "/(registry)/registry"
       path: "/registry"
@@ -258,12 +258,12 @@ declare module "@tanstack/react-router" {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ClientsRoute: ClientsRoute,
   PlaygroundRoute: PlaygroundRoute,
   SecretsRoute: SecretsRoute,
   SettingsRoute: SettingsRoute,
   ShutdownRoute: ShutdownRoute,
   registryRegistryRoute: registryRegistryRoute,
+  ClientsGroupNameRoute: ClientsGroupNameRoute,
   CustomizeToolsServerNameRoute: CustomizeToolsServerNameRoute,
   GroupGroupNameRoute: GroupGroupNameRoute,
   LogsServerNameRoute: LogsServerNameRoute,

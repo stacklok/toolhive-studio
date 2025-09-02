@@ -8,7 +8,7 @@ import { EmptyState } from '@/common/components/empty-state'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
 import { TitlePage } from '@/common/components/title-page'
 
-export const Route = createFileRoute('/clients')({
+export const Route = createFileRoute('/clients/$groupName')({
   component: Clients,
   loader: ({ context: { queryClient } }) =>
     queryClient.ensureQueryData(getApiV1BetaDiscoveryClientsOptions()),

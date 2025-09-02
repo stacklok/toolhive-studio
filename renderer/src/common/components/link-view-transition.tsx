@@ -4,7 +4,12 @@ import { forwardRef, type ComponentProps } from 'react'
 
 type Route = FileRouteTypes['fullPaths']
 
-const ORDERED_ROUTES: Route[] = ['/', '/registry', '/clients', '/secrets']
+const ORDERED_ROUTES: Route[] = [
+  '/',
+  '/registry',
+  '/clients/default' as Route,
+  '/secrets',
+]
 
 type TransitionType = 'slide-left' | 'slide-right'
 
