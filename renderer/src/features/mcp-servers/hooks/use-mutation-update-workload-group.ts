@@ -20,22 +20,12 @@ export function useMutationUpdateWorkloadGroup() {
       workloadName: string
       groupName: string
     }) => {
-      // Get the current workload configuration using the export endpoint
       const { data: runConfig } = await getApiV1BetaWorkloadsByNameExport({
         path: { name: workloadName },
+        throwOnError: true,
       })
 
-      if (!runConfig) {
-        throw new Error(`Workload "${workloadName}" not found`)
-      }
-
-      // Create a new workload with the same configuration but in the specified group
-      // Generate a new name to avoid conflicts
-      const newWorkloadName = `${runConfig.name}-${groupName}`
-
-      // Convert secrets from string format to SecretsSecretParameter format
       const secrets = (runConfig.secrets || []).map((secretStr) => {
-        // Parse secret string format: "secret_name,target=env_var_name"
         const parts = secretStr.split(',')
         const secretName = parts[0] || ''
         const target =
@@ -50,7 +40,7 @@ export function useMutationUpdateWorkloadGroup() {
 
       const result = await createWorkload({
         body: {
-          name: newWorkloadName,
+          name: runConfig.name,
           image: runConfig.image,
           transport: runConfig.transport,
           cmd_arguments: runConfig.cmd_args || [],
@@ -65,17 +55,15 @@ export function useMutationUpdateWorkloadGroup() {
         },
       })
 
+      await queryClient.invalidateQueries({
+        queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
+      })
+
       return result
     },
-    onSuccess: () => {
-      // Invalidate relevant queries to refresh the UI
-      queryClient.invalidateQueries({
-        queryKey: getApiV1BetaWorkloadsQueryKey(),
-      })
-      queryClient.invalidateQueries({ queryKey: ['api', 'v1beta', 'groups'] })
-    },
     successMsg: (variables) =>
-      `Server "${variables.workloadName}" copied successfully (group assignment not yet supported)`,
-    loadingMsg: 'Copying server...',
+      `Server "${variables.workloadName}" copied to group "${variables.groupName}" successfully`,
+    errorMsg: 'Failed to copy server to group',
+    loadingMsg: 'Copying server to group...',
   })
 }
