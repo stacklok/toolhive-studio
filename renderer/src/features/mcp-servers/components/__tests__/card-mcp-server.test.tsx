@@ -106,7 +106,6 @@ it('shows "Copy server to a group" menu item and handles the complete workflow',
       "name": "test-server-default",
       "network_isolation": false,
       "secrets": [],
-      "target_port": 28137,
       "transport": "stdio",
       "volumes": [],
     }
