@@ -131,6 +131,31 @@ export const handlers = [
     return HttpResponse.json({ status: server.status })
   }),
 
+  http.get(mswEndpoint('/api/v1beta/workloads/:name/export'), ({ params }) => {
+    const { name } = params
+
+    const server = getWorkloadByName(name as string)
+    if (!server) {
+      return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
+    }
+
+    // Return a RunnerRunConfig object based on the server data
+    return HttpResponse.json({
+      name: server.name,
+      image: server.image,
+      transport: server.transport || 'stdio',
+      target_port: server.port || 0,
+      cmd_args: server.cmd_arguments || [],
+      env_vars: server.env_vars || {},
+      secrets: server.secrets || [],
+      volumes: server.volumes || [],
+      isolate_network: server.network_isolation || false,
+      permission_profile: server.permission_profile,
+      host: server.host,
+      tools_filter: server.tools || [],
+    })
+  }),
+
   // Batch restart endpoint
   http.post(
     mswEndpoint('/api/v1beta/workloads/restart'),
