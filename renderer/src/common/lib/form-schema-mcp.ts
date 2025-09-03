@@ -1,11 +1,7 @@
 import type { CoreWorkload } from '@api/types.gen'
 import { z } from 'zod/v4'
 
-// Base schemas for reuse
-export const createNameSchema = (
-  workloads: CoreWorkload[],
-  fieldName = 'name'
-) => {
+const createNameSchema = (workloads: CoreWorkload[]) => {
   const nameValidation = z
     .union([z.string(), z.undefined()])
     .transform((val) => val ?? '')
@@ -24,137 +20,194 @@ export const createNameSchema = (
     )
 
   return z.object({
-    [fieldName]: nameValidation,
+    name: nameValidation,
   })
 }
 
-export const createEnvVarsSchema = (options?: {
-  nameSchema?: z.ZodSchema
-  valueRequired?: boolean
-  customRefine?: (value: unknown) => boolean
-  refineMessage?: string
-}) => {
-  const nameSchema =
-    options?.nameSchema || z.string().nonempty('Name is required')
-  const valueSchema =
-    options?.valueRequired !== false
-      ? z.string().nonempty('Value is required')
-      : z.string().optional()
-
-  let envVarSchema = z.object({
-    name: nameSchema,
-    value: valueSchema,
+const createBasicEnvVarsSchema = () =>
+  z.object({
+    envVars: z.array(
+      z.object({
+        name: z.string().nonempty('Name is required'),
+        value: z.string().nonempty('Value is required'),
+      })
+    ),
+  })
+const createBasicSecretsSchema = () =>
+  z.object({
+    secrets: z.array(
+      z.object({
+        name: z.string().nonempty('Name is required'),
+        value: z.object({
+          secret: z.string().nonempty('Secret is required'),
+          isFromStore: z.boolean(),
+        }),
+      })
+    ),
   })
 
-  if (options?.customRefine) {
-    envVarSchema = envVarSchema.refine(options.customRefine, {
-      message: options.refineMessage || 'This environment variable is required',
-      path: ['value'],
-    })
-  }
-
-  return z.object({
-    envVars: envVarSchema.array(),
-  })
-}
-
-export const createSecretsSchema = (options?: {
-  nameSchema?: z.ZodSchema
-  valueRequired?: boolean
-  customRefine?: (value: unknown) => boolean
-  refineMessage?: string
-}) => {
-  const nameSchema =
-    options?.nameSchema || z.string().nonempty('Name is required')
-  const secretSchema =
-    options?.valueRequired !== false
-      ? z.string().nonempty('Value is required')
-      : z.string().optional()
-
-  let secretObjSchema = z.object({
-    name: nameSchema,
-    value: z.object({
-      secret: secretSchema,
-      isFromStore: z.boolean(),
-    }),
-  })
-
-  if (options?.customRefine) {
-    secretObjSchema = secretObjSchema.refine(options.customRefine, {
-      message: options.refineMessage || 'This secret is required',
-      path: ['value'],
-    })
-  }
-
-  return z.object({
-    secrets: secretObjSchema.array(),
-  })
-}
-
-// Backward compatibility
-export const createBasicEnvVarsSchema = () => createEnvVarsSchema()
-export const createBasicSecretsSchema = () => createSecretsSchema()
-
-export const createCommandArgumentsSchema = () => {
+const createCommandArgumentsSchema = () => {
   return z.object({
     cmd_arguments: z.array(z.string()).optional(),
   })
 }
 
+const createNetworkConfigSchema = () => {
+  return z.object({
+    networkIsolation: z.boolean(),
+    allowedHosts: z
+      .array(
+        z.object({
+          value: z.string(),
+        })
+      )
+      .optional(),
+    allowedPorts: z
+      .array(
+        z.object({
+          value: z.string(),
+        })
+      )
+      .optional(),
+  })
+}
+
+const createVolumesSchema = () => {
+  return z.object({
+    volumes: z
+      .array(
+        z.object({
+          host: z.string(),
+          container: z.string(),
+          accessMode: z.enum(['ro', 'rw']).optional(),
+        })
+      )
+      .optional(),
+  })
+}
+
+const createTransportConfigSchema = () => {
+  return z.object({
+    transport: z.union(
+      [z.literal('sse'), z.literal('stdio'), z.literal('streamable-http')],
+      'Please select either SSE, stdio, or streamable-http.'
+    ),
+    target_port: z.number().optional(),
+  })
+}
+
+const addNetworkValidation = (ctx: z.RefinementCtx, data: unknown) => {
+  const networkData = data as {
+    networkIsolation?: boolean
+    allowedHosts?: Array<{ value: string }>
+    allowedPorts?: Array<{ value: string }>
+  }
+  // Skip validation if network isolation is disabled
+  if (!networkData.networkIsolation) {
+    return
+  }
+
+  // Validate allowedHosts only when network isolation is enabled
+  networkData.allowedHosts?.forEach((host, index) => {
+    if (
+      host.value.trim() !== '' &&
+      !/^\.?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(host.value)
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Invalid host format',
+        path: ['allowedHosts', index, 'value'],
+      })
+    }
+  })
+
+  // Validate allowedPorts only when network isolation is enabled
+  networkData.allowedPorts?.forEach((port, index) => {
+    if (port.value.trim() !== '') {
+      const num = parseInt(port.value, 10)
+      if (isNaN(num) || num < 1 || num > 65535) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Port must be a number between 1 and 65535',
+          path: ['allowedPorts', index, 'value'],
+        })
+      }
+    }
+  })
+}
+
 // Utility functions for dynamic schema creation
-export const createDynamicNameSchema = (names: string[]) => {
+const createDynamicNameSchema = (names: string[]) => {
   return names.length === 0
     ? z.string()
     : z.union(names.map((name) => z.literal(name)))
 }
 
-export const createRegistrySecretsSchema = (
+// --------
+// REGISTRY SERVER
+
+const createRegistrySecretsSchema = (
   secretNames: string[],
   secrets: Array<{ name?: string; required?: boolean }>,
   isEmptyValueFn: (value: unknown) => boolean
 ) => {
   const secretNameSchema = createDynamicNameSchema(secretNames)
 
-  return createSecretsSchema({
-    nameSchema: secretNameSchema,
-    valueRequired: false,
-    customRefine: (d) => {
-      const data = d as {
-        name: string
-        value?: { secret?: string; isFromStore: boolean }
+  const secretObjSchema = z
+    .object({
+      name: secretNameSchema,
+      value: z.object({
+        secret: z.string().optional(),
+        isFromStore: z.boolean(),
+      }),
+    })
+    .refine(
+      (d) => {
+        const isRequired = secrets.find((s) => s.name === d.name)?.required
+        if (isRequired && isEmptyValueFn(d.value?.secret)) {
+          return false
+        }
+        return true
+      },
+      {
+        message: 'This secret is required',
+        path: ['value'],
       }
-      const isRequired = secrets.find((s) => s.name === data.name)?.required
-      if (isRequired && isEmptyValueFn(data.value?.secret)) {
-        return false
-      }
-      return true
-    },
-    refineMessage: 'This secret is required',
+    )
+
+  return z.object({
+    secrets: secretObjSchema.array(),
   })
 }
 
-export const createRegistryEnvVarsSchema = (
+const createRegistryEnvVarsSchema = (
   envVarNames: string[],
   envVars: Array<{ name?: string; required?: boolean }>,
   isEmptyValueFn: (value: unknown) => boolean
 ) => {
   const envVarNameSchema = createDynamicNameSchema(envVarNames)
 
-  return createEnvVarsSchema({
-    nameSchema: envVarNameSchema,
-    valueRequired: false,
-    customRefine: (d) => {
-      const data = d as {
-        name: string
-        value?: string
+  const envVarSchema = z
+    .object({
+      name: envVarNameSchema,
+      value: z.string().optional(),
+    })
+    .refine(
+      (d) => {
+        const isRequired = envVars.find((s) => s.name === d.name)?.required
+        if (isRequired && isEmptyValueFn(d.value)) {
+          return false
+        }
+        return true
+      },
+      {
+        message: 'This environment variable is required',
+        path: ['value'],
       }
-      const isRequired = envVars.find((s) => s.name === data.name)?.required
-      if (isRequired && isEmptyValueFn(data.value)) {
-        return false
-      }
-      return true
-    },
-    refineMessage: 'This environment variable is required',
+    )
+
+  return z.object({
+    envVars: envVarSchema.array(),
   })
 }
 
@@ -201,81 +254,32 @@ export const createRegistrySchema = (
     })
 }
 
+// --------
+
 export const createMcpBaseSchema = (workloads: CoreWorkload[]) => {
   const nameSchema = createNameSchema(workloads)
   const envVarsSchema = createBasicEnvVarsSchema()
   const secretsSchema = createBasicSecretsSchema()
+  const transportSchema = createTransportConfigSchema()
+  const commandArgsSchema = createCommandArgumentsSchema()
+  const networkSchema = createNetworkConfigSchema()
+  const volumesSchema = createVolumesSchema()
 
-  return nameSchema.extend(envVarsSchema.shape).extend(secretsSchema.shape)
-}
+  const commonSchema = nameSchema
+    .extend(transportSchema.shape)
+    .extend(commandArgsSchema.shape)
+    .extend(networkSchema.shape)
+    .extend(volumesSchema.shape)
+    .extend(envVarsSchema.shape)
+    .extend(secretsSchema.shape)
 
-// More flexible version that can be used for different naming conventions
-export const createBaseServerSchema = (
-  workloads: CoreWorkload[],
-  options?: {
-    nameField?: string
-    envVarsOptions?: Parameters<typeof createEnvVarsSchema>[0]
-    secretsOptions?: Parameters<typeof createSecretsSchema>[0]
-  }
-) => {
-  const nameField = options?.nameField || 'name'
-  const nameSchema = createNameSchema(workloads, nameField)
-
-  const envVarsSchema = options?.envVarsOptions
-    ? createEnvVarsSchema(options.envVarsOptions)
-    : createBasicEnvVarsSchema()
-
-  const secretsSchema = options?.secretsOptions
-    ? createSecretsSchema(options.secretsOptions)
-    : createBasicSecretsSchema()
-
-  return nameSchema.extend(envVarsSchema.shape).extend(secretsSchema.shape)
-}
-
-export const createNetworkConfigSchema = () => {
-  return z.object({
-    networkIsolation: z.boolean(),
-    allowedHosts: z
-      .array(
-        z.object({
-          value: z.string(),
-        })
-      )
-      .optional(),
-    allowedPorts: z
-      .array(
-        z.object({
-          value: z.string(),
-        })
-      )
-      .optional(),
+  return commonSchema.superRefine((data, ctx) => {
+    addNetworkValidation(ctx, data)
   })
 }
 
-export const createVolumesSchema = () => {
-  return z.object({
-    volumes: z
-      .array(
-        z.object({
-          host: z.string(),
-          container: z.string(),
-          accessMode: z.enum(['ro', 'rw']).optional(),
-        })
-      )
-      .optional(),
-  })
-}
-
-export const createTransportConfigSchema = () => {
-  return z.object({
-    transport: z.union(
-      [z.literal('sse'), z.literal('stdio'), z.literal('streamable-http')],
-      'Please select either SSE, stdio, or streamable-http.'
-    ),
-    target_port: z.number().optional(),
-  })
-}
-
+// --------
+//  REMOTE MCP SERVER
 export const createAuthConfigSchema = () => {
   return z.object({
     url: z.string().optional(),
@@ -289,46 +293,6 @@ export const createAuthConfigSchema = () => {
     pkce: z.boolean(),
     authorize_url: z.string().optional(),
     token_url: z.string().optional(),
-  })
-}
-
-export const addNetworkValidation = (ctx: z.RefinementCtx, data: unknown) => {
-  const networkData = data as {
-    networkIsolation?: boolean
-    allowedHosts?: Array<{ value: string }>
-    allowedPorts?: Array<{ value: string }>
-  }
-  // Skip validation if network isolation is disabled
-  if (!networkData.networkIsolation) {
-    return
-  }
-
-  // Validate allowedHosts only when network isolation is enabled
-  networkData.allowedHosts?.forEach((host, index) => {
-    if (
-      host.value.trim() !== '' &&
-      !/^\.?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(host.value)
-    ) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Invalid host format',
-        path: ['allowedHosts', index, 'value'],
-      })
-    }
-  })
-
-  // Validate allowedPorts only when network isolation is enabled
-  networkData.allowedPorts?.forEach((port, index) => {
-    if (port.value.trim() !== '') {
-      const num = parseInt(port.value, 10)
-      if (isNaN(num) || num < 1 || num > 65535) {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'Port must be a number between 1 and 65535',
-          path: ['allowedPorts', index, 'value'],
-        })
-      }
-    }
   })
 }
 
@@ -410,6 +374,8 @@ export const addAuthValidation = (ctx: z.RefinementCtx, data: unknown) => {
     }
   }
 }
+
+// --------
 
 export type McpBaseSchema = z.infer<ReturnType<typeof createMcpBaseSchema>>
 

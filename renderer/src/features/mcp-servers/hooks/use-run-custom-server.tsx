@@ -8,7 +8,7 @@ import { pollServerStatus } from '@/common/lib/polling'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useRef } from 'react'
 
-import type { FormSchemaRunMcpCommand } from '../lib/form-schema-run-mcp-server-with-command'
+import type { FormSchemaLocalMcp } from '../lib/form-schema-run-mcp-server-with-command'
 import {
   groupSecrets,
   prepareCreateWorkloadData,
@@ -29,7 +29,7 @@ import { restartClientNotification } from '../lib/restart-client-notification'
 import { trackEvent } from '@/common/lib/analytics'
 
 type InstallServerCheck = (
-  data: FormSchemaRunMcpCommand
+  data: FormSchemaLocalMcp
 ) => Promise<unknown> | unknown
 
 export function useRunCustomServer({
@@ -109,7 +109,7 @@ export function useRunCustomServer({
     isPending: isPendingSecrets,
     isError: isErrorSecrets,
   } = useMutation({
-    mutationFn: async (data: FormSchemaRunMcpCommand) => {
+    mutationFn: async (data: FormSchemaLocalMcp) => {
       let newlyCreatedSecrets: SecretsSecretParameter[] = []
 
       // Step 1: Group secrets into new and existing
@@ -152,7 +152,7 @@ export function useRunCustomServer({
   })
 
   const { mutate: installServerMutation } = useMutation({
-    mutationFn: async ({ data }: { data: FormSchemaRunMcpCommand }) => {
+    mutationFn: async ({ data }: { data: FormSchemaLocalMcp }) => {
       const { newlyCreatedSecrets, existingSecrets } = await handleSecrets(data)
       // Step 4: Create the MCP server workload
       // Prepare the request data and send it to the API

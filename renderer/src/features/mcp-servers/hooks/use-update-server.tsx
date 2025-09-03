@@ -14,7 +14,7 @@ import {
   type SecretsSecretParameter,
 } from '@api/types.gen'
 import type { Options } from '@api/client'
-import type { FormSchemaRunMcpCommand } from '../lib/form-schema-run-mcp-server-with-command'
+import type { FormSchemaLocalMcp } from '../lib/form-schema-run-mcp-server-with-command'
 import {
   prepareUpdateWorkloadData,
   saveSecrets,
@@ -101,7 +101,7 @@ export function useUpdateServer(
   }, [queryClient, serverName])
 
   const { mutate: updateServerMutation } = useMutation({
-    mutationFn: async ({ data }: { data: FormSchemaRunMcpCommand }) => {
+    mutationFn: async ({ data }: { data: FormSchemaLocalMcp }) => {
       let newlyCreatedSecrets: SecretsSecretParameter[] = []
 
       // Step 1: Group secrets into new and existing

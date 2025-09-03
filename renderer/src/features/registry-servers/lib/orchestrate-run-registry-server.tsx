@@ -10,8 +10,7 @@ import type { Options } from '@api/client'
 import type { FormSchemaRunFromRegistry } from './get-form-schema-run-from-registry'
 import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
 import type { UseMutateAsyncFunction } from '@tanstack/react-query'
-import { getVolumes } from '@/common/lib/utils'
-import { mapEnvVars } from '@/features/mcp-servers/lib/orchestrate-run-custom-server'
+import { getVolumes, mapEnvVars } from '@/common/lib/utils'
 
 type SaveSecretFn = UseMutateAsyncFunction<
   V1CreateSecretResponse,

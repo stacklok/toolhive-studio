@@ -6,14 +6,14 @@ import { NetworkIsolationTabContent } from '../network-isolation-tab-content'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { Form } from '@/common/components/ui/form'
-import type { FormSchemaRunMcpCommand } from '../../lib/form-schema-run-mcp-server-with-command'
+import type { FormSchemaLocalMcp } from '../../lib/form-schema-run-mcp-server-with-command'
 
 function TestWrapper({
   initialValues = {},
 }: {
-  initialValues?: Partial<FormSchemaRunMcpCommand>
+  initialValues?: Partial<FormSchemaLocalMcp>
 }) {
-  const form = useForm<FormSchemaRunMcpCommand>({
+  const form = useForm<FormSchemaLocalMcp>({
     defaultValues: {
       name: '',
       transport: 'stdio',
