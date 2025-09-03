@@ -45,7 +45,6 @@ export function useMutationCopyWorkloadToAnotherGroup() {
           volumes: runConfig.volumes || [],
           network_isolation: runConfig.isolate_network || false,
           permission_profile: runConfig.permission_profile,
-          host: runConfig.host,
           group: groupName,
         },
       })
