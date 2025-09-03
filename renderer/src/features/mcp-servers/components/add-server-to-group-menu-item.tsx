@@ -1,7 +1,7 @@
 import { DropdownMenuItem } from '@/common/components/ui/dropdown-menu'
 import { Copy } from 'lucide-react'
 import { usePrompt, generateSimplePrompt } from '@/common/hooks/use-prompt'
-import { useMutationUpdateWorkloadGroup } from '../hooks/use-mutation-update-workload-group'
+import { useMutationCopyWorkloadToAnotherGroup } from '../hooks/use-mutation-update-workload-group'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../../../utils/feature-flags'
 import { useGroups } from '../hooks/use-groups'
@@ -14,7 +14,7 @@ export function AddServerToGroupMenuItem({
   serverName,
 }: AddServerToGroupMenuItemProps) {
   const prompt = usePrompt()
-  const updateGroupMutation = useMutationUpdateWorkloadGroup()
+  const updateGroupMutation = useMutationCopyWorkloadToAnotherGroup()
   const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
 
   const { data: groupsData } = useGroups()

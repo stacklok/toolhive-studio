@@ -5,7 +5,7 @@ import { getApiV1BetaWorkloadsQueryKey } from '@api/@tanstack/react-query.gen'
 import { useQueryClient } from '@tanstack/react-query'
 import { useMutation } from '@tanstack/react-query'
 
-export function useMutationUpdateWorkloadGroup() {
+export function useMutationCopyWorkloadToAnotherGroup() {
   const queryClient = useQueryClient()
 
   const { mutateAsync: createWorkload } = useMutation({
