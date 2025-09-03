@@ -159,7 +159,7 @@ describe('Clients Route', () => {
       }),
       // Mock the POST endpoint to capture the registration request
       http.post(mswEndpoint('/api/v1beta/clients'), async ({ request }) => {
-        const body = await request.json() as any
+        const body = await request.json()
         // Verify that the client is being registered with group information
         // Note: In test environment, currentGroup might be null, but we verify the structure
         expect(body).toHaveProperty('name', 'VS Code - Copilot')
@@ -191,56 +191,5 @@ describe('Clients Route', () => {
 
     // The test verifies that the correct API call was made with group information
     // The MSW handler above will assert that the request body includes the current group
-  })
-
-  it('should invalidate all related queries when registering a client', async () => {
-    // Mock the API endpoints
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/clients'), () => {
-        return HttpResponse.json([
-          { name: 'VS Code - Copilot', groups: [] },
-        ])
-      }),
-      http.get(mswEndpoint('/api/v1beta/discovery/clients'), () => {
-        return HttpResponse.json({
-          clients: [
-            {
-              client_type: 'VS Code - Copilot',
-              installed: true,
-              registered: false,
-            },
-          ],
-        })
-      }),
-      http.post(mswEndpoint('/api/v1beta/clients'), () => {
-        return HttpResponse.json({ success: true })
-      })
-    )
-
-    renderRoute(router)
-
-    // Wait for the client to render
-    await waitFor(() => {
-      expect(screen.getByText('VS Code - Copilot')).toBeInTheDocument()
-    })
-
-    // Find and click the toggle switch
-    const toggleSwitch = screen.getByRole('switch')
-    toggleSwitch.click()
-
-    // Since we can't easily mock the query client in this test environment,
-    // we'll verify that the API call was made (which means the mutation executed)
-    // and trust that our hook implementation correctly invalidates the queries
-    await waitFor(() => {
-      // The test passes if the component renders without errors and the switch is clickable
-      // This indicates that the group-aware registration is working
-      expect(toggleSwitch).toBeInTheDocument()
-    })
-
-    // Note: In a real application, this would invalidate:
-    // 1. discoveryClients query
-    // 2. registeredClients query  
-    // 3. groups query
-    // The actual invalidation is tested through the hook implementation above
   })
 })
