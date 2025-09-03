@@ -17,10 +17,8 @@ export function AddServerToGroupMenuItem({
   const updateGroupMutation = useMutationUpdateWorkloadGroup()
   const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
 
-  // Fetch available groups
   const { data: groupsData } = useGroups()
 
-  // Don't render if groups feature is disabled
   if (!isGroupsEnabled) {
     return null
   }
