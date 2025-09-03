@@ -182,6 +182,47 @@ export const handlers = [
     return HttpResponse.json(clientsFixture)
   }),
 
+  // Client registration endpoint
+  http.post(mswEndpoint('/api/v1beta/clients'), async ({ request }) => {
+    try {
+      const { name, groups } = await request.json()
+
+      if (!name) {
+        return HttpResponse.json(
+          { error: 'Client name is required' },
+          { status: 400 }
+        )
+      }
+
+      return HttpResponse.json(
+        {
+          name,
+          groups: groups || ['default'],
+        },
+        { status: 200 }
+      )
+    } catch {
+      return HttpResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      )
+    }
+  }),
+
+  // Client unregistration endpoint
+  http.delete(mswEndpoint('/api/v1beta/clients/:name'), ({ params }) => {
+    const { name } = params
+
+    if (!name) {
+      return HttpResponse.json(
+        { error: 'Client name is required' },
+        { status: 400 }
+      )
+    }
+
+    return new HttpResponse(null, { status: 204 })
+  }),
+
   http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
     return HttpResponse.json({ servers: MOCK_REGISTRY_RESPONSE })
   }),
