@@ -131,6 +131,30 @@ export const handlers = [
     return HttpResponse.json({ status: server.status })
   }),
 
+  http.get(mswEndpoint('/api/v1beta/workloads/:name/export'), ({ params }) => {
+    const { name } = params
+
+    const server = getWorkloadByName(name as string)
+    if (!server) {
+      return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
+    }
+
+    return HttpResponse.json({
+      name: server.name,
+      image: server.package || 'ghcr.io/default/default:latest',
+      transport: 'stdio',
+      target_port: server.port || 0,
+      cmd_args: [],
+      env_vars: {},
+      secrets: [],
+      volumes: [],
+      isolate_network: false,
+      permission_profile: undefined,
+      host: '127.0.0.1',
+      tools_filter: server.tools || [],
+    })
+  }),
+
   // Batch restart endpoint
   http.post(
     mswEndpoint('/api/v1beta/workloads/restart'),

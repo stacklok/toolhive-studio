@@ -6,6 +6,19 @@ import type {
 
 export const MOCK_MCP_SERVERS = [
   {
+    name: 'test-server',
+    package: 'ghcr.io/test/test-mcp-server:latest',
+    url: 'http://127.0.0.1:28137/sse#test-server',
+    port: 28137,
+    tool_type: 'mcp',
+    status: 'running' as const,
+    status_context: 'Up 30 minutes',
+    created_at: '2025-06-09T15:40:15+02:00',
+    group: 'default',
+    tools: ['tool1', 'tool2'],
+    transport_type: 'sse' as const,
+  },
+  {
     name: 'postgres-db',
     package: 'ghcr.io/postgres/postgres-mcp-server:latest',
     url: 'http://127.0.0.1:28135/sse#postgres-db',
