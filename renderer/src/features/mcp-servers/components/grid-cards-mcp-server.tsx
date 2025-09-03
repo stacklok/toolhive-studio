@@ -2,7 +2,7 @@ import type { CoreWorkload } from '@api/types.gen'
 import { CardMcpServer } from './card-mcp-server'
 import { useMemo, useState } from 'react'
 import { InputSearch } from '@/common/components/ui/input-search'
-import { DialogFormRunMcpServerWithCommand } from './dialog-form-run-mcp-command'
+import { DeprecatedDialogFormRunMcpServerWithCommand } from './dialog-form-run-mcp-command'
 
 export function GridCardsMcpServers({
   mcpServers,
@@ -77,7 +77,7 @@ export function GridCardsMcpServers({
           </div>
         )}
 
-      <DialogFormRunMcpServerWithCommand
+      <DeprecatedDialogFormRunMcpServerWithCommand
         isOpen={isRunWithCommandOpen}
         onOpenChange={setIsRunWithCommandOpen}
         serverToEdit={serverToEdit}

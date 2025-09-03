@@ -371,6 +371,10 @@ export const addAuthValidation = (ctx: z.RefinementCtx, data: unknown) => {
   }
 }
 
+export type AuthConfigSchema = z.infer<
+  ReturnType<typeof createAuthConfigSchema>
+>
+
 // --------
 
 export type McpBaseSchema = z.infer<ReturnType<typeof createMcpBaseSchema>>
@@ -383,8 +387,4 @@ export type VolumesSchema = z.infer<ReturnType<typeof createVolumesSchema>>
 
 export type TransportConfigSchema = z.infer<
   ReturnType<typeof createTransportConfigSchema>
->
-
-export type AuthConfigSchema = z.infer<
-  ReturnType<typeof createAuthConfigSchema>
 >

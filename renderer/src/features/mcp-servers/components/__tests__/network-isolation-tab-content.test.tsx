@@ -6,7 +6,7 @@ import { NetworkIsolationTabContent } from '../network-isolation-tab-content'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { Form } from '@/common/components/ui/form'
-import type { FormSchemaLocalMcp } from '../../lib/form-schema-run-mcp-server-with-command'
+import type { FormSchemaLocalMcp } from '../../lib/form-schema-local-mcp'
 
 function TestWrapper({
   initialValues = {},

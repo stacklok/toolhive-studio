@@ -13,12 +13,12 @@ import {
 import { cn } from '@/common/lib/utils'
 import type { Control, Path } from 'react-hook-form'
 import { Input } from '@/common/components/ui/input'
-import type { FormSchemaRunFromRegistry } from '@/features/registry-servers/lib/get-form-schema-run-from-registry'
 import type { FormSchemaLocalMcp } from '@/features/mcp-servers/lib/form-schema-local-mcp'
 import type { UseFormReturn } from 'react-hook-form'
+import type { FormSchemaRegistryMcp } from '@/features/registry-servers/lib/form-schema-registry-mcp'
 
 type CmdArguments =
-  | FormSchemaRunFromRegistry['cmd_arguments']
+  | FormSchemaRegistryMcp['cmd_arguments']
   | FormSchemaLocalMcp['cmd_arguments']
 
 interface CommandArgumentsFieldProps<

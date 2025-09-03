@@ -6,9 +6,8 @@ import {
   FormMessage,
 } from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
-import { type FormSchemaLocalMcp } from '../lib/form-schema-run-mcp-server-with-command'
+import { type FormSchemaLocalMcp } from '../lib/form-schema-local-mcp'
 import { type UseFormReturn } from 'react-hook-form'
-
 import {
   Select,
   SelectContent,

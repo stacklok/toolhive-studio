@@ -74,7 +74,7 @@ const DEFAULT_FORM_VALUES: Partial<FormSchemaLocalMcp> = {
   cmd_arguments: [],
 }
 
-export function DialogFormRunMcpServerWithCommand({
+export function DeprecatedDialogFormRunMcpServerWithCommand({
   isOpen,
   onOpenChange,
   serverToEdit,

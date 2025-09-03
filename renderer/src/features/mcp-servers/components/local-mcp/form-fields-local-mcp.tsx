@@ -7,7 +7,6 @@ import {
   getFormSchemaLocalMcp,
   type FormSchemaLocalMcp,
 } from '../../lib/form-schema-local-mcp'
-
 import { FormFieldsBase } from './form-fields-base'
 import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
 import {
