@@ -52,8 +52,8 @@ export function AddServerToGroupMenuItem({
           workloadName: serverName,
           groupName: result.value,
         })
+      } catch (error) {
         console.error('Failed to copy server to group:', error)
-        throw error;
       }
     }
   }
