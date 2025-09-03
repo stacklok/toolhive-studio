@@ -10,11 +10,6 @@ import { useMutationRegisterClient } from '../hooks/use-mutation-register-client
 import { useMutationUnregisterClient } from '../hooks/use-mutation-unregister-client'
 import { trackEvent } from '@/common/lib/analytics'
 
-// Extended client type that includes group information
-type ClientWithGroups = ClientMcpClientStatus & {
-  groups: string[]
-}
-
 // There is an issue with openAPI generator in BE, similar issue https://github.com/stacklok/toolhive/issues/780
 const CLIENT_TYPE_LABEL_MAP = {
   'roo-code': 'Roo Code',
@@ -25,22 +20,13 @@ const CLIENT_TYPE_LABEL_MAP = {
   'claude-code': 'Claude Code',
 } as const
 
-export function CardClient({
-  client,
-  currentGroup,
-}: {
-  client: ClientWithGroups
-  currentGroup: string
-}) {
+export function CardClient({ client }: { client: ClientMcpClientStatus }) {
   const { mutateAsync: registerClient } = useMutationRegisterClient(
     client.client_type ?? ''
   )
   const { mutateAsync: unregisterClient } = useMutationUnregisterClient(
     client.client_type ?? ''
   )
-
-  // Check if this client belongs to the current group
-  const belongsToCurrentGroup = client.groups.includes(currentGroup)
 
   return (
     <Card className="gap-3 border-none py-5 shadow-none outline-none">
@@ -54,8 +40,7 @@ export function CardClient({
       <CardContent className="flex items-center justify-between gap-2 px-4">
         <div className="flex items-center gap-2">
           <Switch
-            checked={client.registered && belongsToCurrentGroup}
-            disabled={!belongsToCurrentGroup}
+            checked={client.registered}
             onCheckedChange={() => {
               if (client.registered) {
                 unregisterClient({
@@ -79,11 +64,7 @@ export function CardClient({
             }}
           />
           <div className="text-muted-foreground text-sm">
-            {!belongsToCurrentGroup
-              ? 'Disabled'
-              : client.registered
-                ? 'Connected'
-                : 'Disconnected'}
+            {client.registered ? 'Connected' : 'Disconnected'}
           </div>
         </div>
       </CardContent>

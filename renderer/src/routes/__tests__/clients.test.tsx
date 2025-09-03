@@ -12,30 +12,6 @@ const router = createTestRouter(Clients, '/clients/default')
 
 describe('Clients Route', () => {
   it('should render the page', async () => {
-    // Mock both endpoints that the component now fetches from
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/clients'), () => {
-        return HttpResponse.json([
-          { name: 'VS Code - Copilot', groups: ['default'] },
-          { name: 'Cursor', groups: ['default'] },
-          { name: 'Claude Code', groups: ['default'] },
-        ])
-      }),
-      http.get(mswEndpoint('/api/v1beta/discovery/clients'), () => {
-        return HttpResponse.json({
-          clients: [
-            {
-              client_type: 'VS Code - Copilot',
-              installed: true,
-              registered: true,
-            },
-            { client_type: 'Cursor', installed: true, registered: true },
-            { client_type: 'Claude Code', installed: true, registered: true },
-          ],
-        })
-      })
-    )
-
     renderRoute(router)
 
     await waitFor(() => {
@@ -47,8 +23,7 @@ describe('Clients Route', () => {
     expect(screen.getByText('VS Code - Copilot')).toBeInTheDocument()
     expect(screen.getByText('Cursor')).toBeInTheDocument()
     expect(screen.getByText('Claude Code')).toBeInTheDocument()
-    // Note: The exact number of switches may vary based on the GridCardClients component
-    // We're just verifying that clients are rendered, not the specific UI elements
+    expect(screen.getAllByRole('switch')).toHaveLength(5)
   })
 
   it('should use the group parameter from the route', () => {
@@ -60,17 +35,6 @@ describe('Clients Route', () => {
   it('should handle different group names correctly', async () => {
     // Test with a different group name
     const customGroupRouter = createTestRouter(Clients, '/clients/custom-group')
-
-    // Mock both endpoints for the custom group test
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/clients'), () => {
-        return HttpResponse.json([
-          { name: 'VS Code - Copilot', groups: ['custom-group'] },
-          { name: 'Cursor', groups: ['custom-group'] },
-          { name: 'Claude Code', groups: ['custom-group'] },
-        ])
-      })
-    )
 
     renderRoute(customGroupRouter)
 
@@ -100,12 +64,9 @@ describe('Clients Route', () => {
       } as V1ClientStatusResponse,
     },
   ])(
-    'shows appropriate state for different client scenarios ($name)',
-    async ({ mockResponse, name }) => {
+    'shows empty state when there are no installed clients ($name)',
+    async ({ mockResponse }) => {
       server.use(
-        http.get(mswEndpoint('/api/v1beta/clients'), () => {
-          return HttpResponse.json([])
-        }),
         http.get(mswEndpoint('/api/v1beta/discovery/clients'), () => {
           return HttpResponse.json(mockResponse)
         })
@@ -113,28 +74,18 @@ describe('Clients Route', () => {
 
       renderRoute(router)
 
-      if (name === 'no clients') {
-        // When there are no clients at all, show empty state
-        await waitFor(() => {
-          expect(
-            screen.getByRole('heading', { name: 'No clients detected' })
-          ).toBeInTheDocument()
-        })
-
-        expect(screen.getByText('No clients detected')).toBeInTheDocument()
+      await waitFor(() => {
         expect(
-          screen.getByText(
-            'Clients are tools that can connect to ToolHive. If your client is not detected, consult the documentation.'
-          )
+          screen.getByRole('heading', { name: 'No clients detected' })
         ).toBeInTheDocument()
-      } else {
-        // When there are clients but they're not installed, show empty state
-        await waitFor(() => {
-          expect(
-            screen.getByRole('heading', { name: 'No clients detected' })
-          ).toBeInTheDocument()
-        })
-      }
+      })
+
+      expect(screen.getByText('No clients detected')).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          'Clients are tools that can connect to ToolHive. If your client is not detected, consult the documentation.'
+        )
+      ).toBeInTheDocument()
     }
   )
 })

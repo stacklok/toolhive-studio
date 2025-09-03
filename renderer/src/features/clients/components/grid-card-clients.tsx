@@ -1,17 +1,10 @@
 import type { ClientMcpClientStatus } from '@api/types.gen'
 import { CardClient } from './card-client'
 
-// Extended client type that includes group information
-type ClientWithGroups = ClientMcpClientStatus & {
-  groups: string[]
-}
-
 export function GridCardClients({
   clients,
-  currentGroup,
 }: {
-  clients: ClientWithGroups[]
-  currentGroup: string
+  clients: ClientMcpClientStatus[]
 }) {
   return (
     <div className="space-y-6">
@@ -19,11 +12,7 @@ export function GridCardClients({
         {clients
           .sort((a, b) => a.client_type!.localeCompare(b.client_type!))
           .map((client) => (
-            <CardClient
-              key={client.client_type}
-              client={client}
-              currentGroup={currentGroup}
-            />
+            <CardClient key={client.client_type} client={client} />
           ))}
       </div>
     </div>

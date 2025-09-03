@@ -1,7 +1,4 @@
-import {
-  getApiV1BetaClientsOptions,
-  getApiV1BetaDiscoveryClientsOptions,
-} from '@api/@tanstack/react-query.gen'
+import { getApiV1BetaDiscoveryClientsOptions } from '@api/@tanstack/react-query.gen'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { GridCardClients } from '@/features/clients/components/grid-card-clients'
@@ -10,49 +7,26 @@ import { ExternalLinkIcon } from 'lucide-react'
 import { EmptyState } from '@/common/components/empty-state'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
 import { TitlePage } from '@/common/components/title-page'
-import type { ClientMcpClientStatus } from '@api/types.gen'
-
-// Extended client type that includes group information
-type ClientWithGroups = ClientMcpClientStatus & {
-  groups: string[]
-}
 
 export const Route = createFileRoute('/clients/$groupName')({
   component: Clients,
-  loader: ({ context: { queryClient } }) => {
-    // Load both registered clients (for group info) and discovery clients (for status info)
-    queryClient.ensureQueryData(getApiV1BetaClientsOptions())
-    queryClient.ensureQueryData(getApiV1BetaDiscoveryClientsOptions())
-  },
+  loader: ({ context: { queryClient } }) =>
+    queryClient.ensureQueryData(getApiV1BetaDiscoveryClientsOptions()),
 })
 
 export function Clients() {
   const { groupName } = Route.useParams()
   const {
-    data: { clients: discoveryClients = [] },
+    data: { clients = [] },
   } = useSuspenseQuery(getApiV1BetaDiscoveryClientsOptions())
 
-  const { data: registeredClients = [] } = useSuspenseQuery(
-    getApiV1BetaClientsOptions()
-  )
+  // For now, we filter clients client-side since the API doesn't support group filtering yet
+  // TODO: Update to use group-specific API endpoint when backend supports it
+  // The groupName parameter is ready for when the backend implements group-specific client fetching
+  console.log(`Fetching clients for group: ${groupName}`) // Temporary logging to show group awareness
 
-  // Merge discovery clients with registration info to get group information
-  const clientsWithGroups: ClientWithGroups[] = discoveryClients.map(
-    (discoveryClient) => {
-      const registeredClient = registeredClients.find(
-        (regClient) => regClient.name === discoveryClient.client_type
-      )
-
-      return {
-        ...discoveryClient,
-        groups: registeredClient?.groups || [],
-      }
-    }
-  )
-
-  // Only show installed clients, but they will be displayed as disabled if they don't belong to the current group
-  const installedClients = clientsWithGroups.filter(
-    (client) => client.client_type && client.installed
+  const installedClients = clients.filter(
+    (client) => client.installed && client.client_type
   )
 
   return (
@@ -76,7 +50,7 @@ export function Clients() {
           illustration={IllustrationNoConnection}
         />
       ) : (
-        <GridCardClients clients={installedClients} currentGroup={groupName} />
+        <GridCardClients clients={installedClients} />
       )}
     </>
   )
