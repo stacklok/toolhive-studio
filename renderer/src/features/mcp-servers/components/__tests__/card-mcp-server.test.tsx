@@ -39,26 +39,6 @@ it('navigates to logs page when logs menu item is clicked', async () => {
   })
 })
 
-it('should show Add server to a group menu item', async () => {
-  renderRoute(router)
-
-  await waitFor(() => {
-    expect(screen.getByText('test-server')).toBeVisible()
-  })
-
-  const user = userEvent.setup()
-
-  const menuButton = screen.getByRole('button', { name: /more/i })
-  await user.click(menuButton)
-
-  const addToGroupMenuItem = screen.queryByRole('menuitem', {
-    name: /copy server to a group/i,
-  })
-
-  expect(addToGroupMenuItem).not.toBeNull()
-  expect(addToGroupMenuItem).toBeVisible()
-})
-
 it('shows "Copy server to a group" menu item and handles the complete workflow', async () => {
   renderRoute(router)
 
