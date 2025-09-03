@@ -26,11 +26,7 @@ export function useMutationUpdateWorkloadGroup() {
       })
 
       const secrets = (runConfig.secrets || []).map((secretStr) => {
-        const parts = secretStr.split(',')
-        const secretName = parts[0] || ''
-        const target =
-          parts.find((part) => part.startsWith('target='))?.split('=')[1] ||
-          secretName
+        const [secretName, target] = secretStr.split(',target=')
 
         return {
           name: secretName,
@@ -40,12 +36,12 @@ export function useMutationUpdateWorkloadGroup() {
 
       const result = await createWorkload({
         body: {
-          name: runConfig.name,
+          name: `${runConfig.name}-${groupName}`,
           image: runConfig.image,
           transport: runConfig.transport,
           cmd_arguments: runConfig.cmd_args || [],
           env_vars: runConfig.env_vars || {},
-          secrets,
+          secrets: secrets,
           volumes: runConfig.volumes || [],
           network_isolation: runConfig.isolate_network || false,
           permission_profile: runConfig.permission_profile,
