@@ -23,12 +23,16 @@ describe('useMutationUnregisterClient', () => {
     const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries')
 
     const { result } = renderHook(
-      () => useMutationUnregisterClient('test-client'),
+      () => useMutationUnregisterClient({ name: 'test-client', group: 'research-team' }),
       { wrapper }
     )
 
     // Execute the mutation with the correct request format
-    await result.current.mutateAsync({ path: { name: 'test-client' } })
+    await result.current.mutateAsync({ 
+      path: { 
+        name: 'test-client'
+      } 
+    })
 
     await waitFor(() => {
       expect(invalidateQueriesSpy).toHaveBeenCalledWith({

@@ -5,7 +5,12 @@ import {
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { useQueryClient } from '@tanstack/react-query'
 
-export function useMutationUnregisterClient(clientName: string) {
+interface UnregisterClientParams {
+  name: string
+  group: string
+}
+
+export function useMutationUnregisterClient({ name, group }: UnregisterClientParams) {
   const queryClient = useQueryClient()
   return useToastMutation({
     ...deleteApiV1BetaClientsByNameMutation(),
@@ -14,6 +19,6 @@ export function useMutationUnregisterClient(clientName: string) {
         queryKey: getApiV1BetaDiscoveryClientsQueryKey(),
       })
     },
-    errorMsg: `Failed to disconnect ${clientName}`,
+    errorMsg: `Failed to disconnect ${name}`,
   })
 }

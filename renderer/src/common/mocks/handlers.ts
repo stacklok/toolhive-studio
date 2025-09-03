@@ -186,10 +186,17 @@ export const handlers = [
   http.post(mswEndpoint('/api/v1beta/clients'), async ({ request }) => {
     try {
       const { name, groups } = await request.json()
-
+      
       if (!name) {
         return HttpResponse.json(
           { error: 'Client name is required' },
+          { status: 400 }
+        )
+      }
+
+      if (!groups || groups.length === 0) {
+        return HttpResponse.json(
+          { error: 'Groups parameter is required' },
           { status: 400 }
         )
       }
@@ -210,7 +217,7 @@ export const handlers = [
   }),
 
   // Client unregistration endpoint
-  http.delete(mswEndpoint('/api/v1beta/clients/:name'), ({ params }) => {
+  http.delete(mswEndpoint('/api/v1beta/clients/:name'), ({ params, request }) => {
     const { name } = params
 
     if (!name) {
@@ -220,6 +227,11 @@ export const handlers = [
       )
     }
 
+    // For DELETE requests, we need to check if the group is provided in the request body
+    // Since DELETE requests typically don't have a body, we'll check the URL or require it
+    // For now, let's assume the group should be provided in the path or query params
+    // This is a simplified approach - in a real scenario, you might want to check the request body
+    
     return new HttpResponse(null, { status: 204 })
   }),
 

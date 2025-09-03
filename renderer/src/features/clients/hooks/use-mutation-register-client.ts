@@ -5,7 +5,12 @@ import {
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { useQueryClient } from '@tanstack/react-query'
 
-export function useMutationRegisterClient(clientName: string) {
+interface RegisterClientParams {
+  name: string
+  group: string
+}
+
+export function useMutationRegisterClient({ name, group }: RegisterClientParams) {
   const queryClient = useQueryClient()
   return useToastMutation({
     ...postApiV1BetaClientsMutation(),
@@ -14,6 +19,6 @@ export function useMutationRegisterClient(clientName: string) {
         queryKey: getApiV1BetaDiscoveryClientsQueryKey(),
       })
     },
-    errorMsg: `Failed to connect ${clientName}`,
+    errorMsg: `Failed to connect ${name}`,
   })
 }
