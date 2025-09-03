@@ -3,7 +3,10 @@ import { useForm } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
 import { Form } from '@/common/components/ui/form'
-import { FormFieldsRunMcpCommand } from './form-fields-run-mcp-command'
+import {
+  getFormSchemaRunMcpCommand,
+  type FormSchemaRunMcpCommand,
+} from '../lib/form-schema-run-mcp-server-with-command'
 import {
   getApiV1BetaWorkloadsOptions,
   getApiV1BetaWorkloadsByNameOptions,
@@ -32,11 +35,7 @@ import {
 } from '@/common/hooks/use-form-tab-state'
 import { NetworkIsolationTabContent } from './network-isolation-tab-content'
 import { FormFieldsArrayVolumes } from './form-fields-array-custom-volumes'
-import {
-  getFormSchemaLocalMcp,
-  type FormSchemaLocalMcp,
-} from '../lib/form-schema-local-mcp'
-import { convertCreateRequestToFormData } from '../lib/orchestrate-run-local-server'
+import { FormFieldsBase } from './local-mcp/form-fields-base'
 
 type Tab = 'configuration' | 'network-isolation'
 type CommonFields = keyof FormSchemaLocalMcp
@@ -279,10 +278,7 @@ export function DeprecatedDialogFormRunMcpServerWithCommand({
                         onDismiss={() => setError(null)}
                       />
                     )}
-                    <FormFieldsRunMcpCommand
-                      form={form}
-                      isEditing={isEditing}
-                    />
+                    <FormFieldsBase form={form} isEditing={isEditing} />
                     <FormFieldsArrayCustomSecrets form={form} />
                     <FormFieldsArrayCustomEnvVars form={form} />
                     <FormFieldsArrayVolumes<FormSchemaLocalMcp> form={form} />
