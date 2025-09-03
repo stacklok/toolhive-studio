@@ -139,7 +139,6 @@ export const handlers = [
       return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
     }
 
-    // Return a RunnerRunConfig object based on the server data
     return HttpResponse.json({
       name: server.name,
       image: server.image,

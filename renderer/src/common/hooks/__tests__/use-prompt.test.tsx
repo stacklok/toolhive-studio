@@ -453,7 +453,6 @@ describe('usePrompt', () => {
     const selectTrigger = screen.getByRole('combobox')
     await userEvent.click(selectTrigger)
 
-    // Check that the options exist in the DOM (there may be multiple instances due to Radix UI)
     expect(screen.getAllByText('Group 1').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Group 2').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Group 3').length).toBeGreaterThan(0)
