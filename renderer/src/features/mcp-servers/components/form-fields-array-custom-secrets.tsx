@@ -5,6 +5,7 @@ import {
   type ArrayPath,
   type ControllerRenderProps,
 } from 'react-hook-form'
+import type { ChangeEventHandler } from 'react'
 
 import type { FormSchemaRunMcpCommand } from '../lib/form-schema-run-mcp-server-with-command'
 import { FormControl, FormField, FormItem } from '@/common/components/ui/form'
@@ -42,7 +43,17 @@ export function FormFieldsArrayCustomSecrets({
             ]}
             form={form}
           >
-            {({ inputProps, setInputRef, idx }) => (
+            {({
+              inputProps,
+              setInputRef,
+              idx,
+            }: {
+              inputProps: { id: string; onChange: ChangeEventHandler }
+              setInputRef: (
+                idx: number
+              ) => (el: HTMLInputElement | null) => void
+              idx: number
+            }) => (
               <FormField
                 control={form.control}
                 name={`secrets.${idx}` as Path<FormSchemaRunMcpCommand>}

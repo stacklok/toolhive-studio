@@ -12,7 +12,15 @@ import {
   DropdownMenuSeparator,
 } from '@/common/components/ui/dropdown-menu'
 import { Button } from '@/common/components/ui/button'
-import { MoreVertical, Trash2, Github, Text, Copy, Edit3 } from 'lucide-react'
+import {
+  MoreVertical,
+  Trash2,
+  Github,
+  Text,
+  Copy,
+  Edit3,
+  Settings,
+} from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { Input } from '@/common/components/ui/input'
@@ -107,12 +115,14 @@ export function CardMcpServer({
   statusContext,
   url,
   transport,
+  onEdit,
 }: {
   name: string
   status: CoreWorkload['status']
   statusContext: CoreWorkload['status_context']
   url: string
   transport: CoreWorkload['transport_type']
+  onEdit: (serverName: string) => void
 }) {
   const confirm = useConfirm()
   const { mutateAsync: deleteServer, isPending: isDeletePending } =
@@ -122,6 +132,7 @@ export function CardMcpServer({
     featureFlagKeys.CUSTOMIZE_TOOLS
   )
   const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
+  const isEditWorkloadEnabled = useFeatureFlag(featureFlagKeys.EDIT_WORKLOAD)
 
   const { data: serverDetails } = useQuery({
     queryKey: ['serverDetails', name],
@@ -271,6 +282,17 @@ export function CardMcpServer({
                 </Button>
               </div>
               <DropdownMenuSeparator />
+              {isEditWorkloadEnabled && (
+                <DropdownMenuItem
+                  asChild
+                  className="flex cursor-pointer items-center"
+                >
+                  <a className="self-start" onClick={() => onEdit(name)}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    Edit configuration
+                  </a>
+                </DropdownMenuItem>
+              )}
               {repositoryUrl && (
                 <DropdownMenuItem asChild>
                   <a

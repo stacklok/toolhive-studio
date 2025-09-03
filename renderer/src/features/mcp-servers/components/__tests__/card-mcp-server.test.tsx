@@ -12,6 +12,7 @@ const router = createTestRouter(() => (
     statusContext={undefined}
     url=""
     transport="http"
+    onEdit={() => {}}
   />
 ))
 

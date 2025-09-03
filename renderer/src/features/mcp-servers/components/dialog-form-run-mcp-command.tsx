@@ -8,7 +8,13 @@ import {
   type FormSchemaRunMcpCommand,
 } from '../lib/form-schema-run-mcp-server-with-command'
 import { FormFieldsRunMcpCommand } from './form-fields-run-mcp-command'
-import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
+import {
+  getApiV1BetaWorkloadsOptions,
+  getApiV1BetaWorkloadsByNameOptions,
+  getApiV1BetaSecretsDefaultKeysOptions,
+} from '@api/@tanstack/react-query.gen'
+import { convertCreateRequestToFormData } from '../lib/orchestrate-run-custom-server'
+import { useUpdateServer } from '../hooks/use-update-server'
 import {
   Dialog,
   DialogContent,
@@ -54,12 +60,28 @@ const FIELD_TAB_MAP = {
   volumes: 'configuration',
 } satisfies FieldTabMapping<Tab, Field>
 
+const DEFAULT_FORM_VALUES: Partial<FormSchemaRunMcpCommand> = {
+  type: 'docker_image',
+  name: '',
+  transport: 'stdio',
+  target_port: 0,
+  networkIsolation: false,
+  allowedHosts: [],
+  allowedPorts: [],
+  volumes: [{ host: '', container: '', accessMode: 'rw' as const }],
+  envVars: [],
+  secrets: [],
+  cmd_arguments: [],
+}
+
 export function DialogFormRunMcpServerWithCommand({
   isOpen,
   onOpenChange,
+  serverToEdit,
 }: {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
+  serverToEdit?: string | null
 }) {
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -74,44 +96,69 @@ export function DialogFormRunMcpServerWithCommand({
       defaultTab: 'configuration',
     })
 
+  const handleSecrets = (completedCount: number, secretsCount: number) => {
+    setLoadingSecrets((prev) => ({
+      ...prev,
+      text: `Encrypting secrets (${completedCount} of ${secretsCount})...`,
+      completedCount,
+      secretsCount,
+    }))
+  }
+
   const {
     installServerMutation,
     checkServerStatus,
     isErrorSecrets,
     isPendingSecrets,
   } = useRunCustomServer({
-    onSecretSuccess: (completedCount, secretsCount) => {
-      setLoadingSecrets((prev) => ({
-        ...prev,
-        text: `Encrypting secrets (${completedCount} of ${secretsCount})...`,
-        completedCount,
-        secretsCount,
-      }))
-    },
+    onSecretSuccess: handleSecrets,
     onSecretError: (error, variables) => {
       log.error('onSecretError', error, variables)
     },
   })
 
+  const { updateServerMutation, checkServerStatus: checkUpdateServerStatus } =
+    useUpdateServer(serverToEdit || '', {
+      onSecretSuccess: handleSecrets,
+      onSecretError: (error, variables) => {
+        log.error('onSecretError during update', error, variables)
+      },
+    })
+
   const { data } = useQuery({
     ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
+    retry: false,
+  })
+
+  const { data: availableSecrets } = useQuery({
+    ...getApiV1BetaSecretsDefaultKeysOptions(),
+    enabled: !!serverToEdit,
+    retry: false,
+  })
+
+  const { data: existingServerData, isLoading: isLoadingServer } = useQuery({
+    ...getApiV1BetaWorkloadsByNameOptions({
+      path: { name: serverToEdit || '' },
+    }),
+    enabled: !!serverToEdit,
+    retry: false,
   })
 
   const workloads = data?.workloads ?? []
+  const existingServer = existingServerData
+  const isEditing = !!existingServer && !!serverToEdit
+  const editingFormData =
+    isEditing &&
+    convertCreateRequestToFormData(existingServer, availableSecrets)
 
   const form = useForm<FormSchemaRunMcpCommand>({
-    resolver: zodV4Resolver(getFormSchemaRunMcpCommand(workloads)),
-    defaultValues: {
-      type: 'docker_image',
-      image: '',
-      target_port: undefined,
-      networkIsolation: false,
-      allowedHosts: [],
-      allowedPorts: [],
-      volumes: [{ host: '', container: '', accessMode: 'rw' }],
-    },
+    resolver: zodV4Resolver(
+      getFormSchemaRunMcpCommand(workloads, serverToEdit || undefined)
+    ),
+    defaultValues: DEFAULT_FORM_VALUES,
     reValidateMode: 'onChange',
     mode: 'onChange',
+    ...(editingFormData ? { values: editingFormData } : {}),
   })
 
   const onSubmitForm = (data: FormSchemaRunMcpCommand) => {
@@ -120,30 +167,52 @@ export function DialogFormRunMcpServerWithCommand({
       setError(null)
     }
 
-    installServerMutation(
-      { data },
-      {
-        onSuccess: () => {
-          checkServerStatus(data)
-          onOpenChange(false)
-        },
-        onSettled: (_, error) => {
-          setIsSubmitting(false)
-          if (!error) {
-            form.reset()
-          }
-        },
-        onError: (error) => {
-          setError(typeof error === 'string' ? error : error.message)
-        },
-      }
-    )
+    if (isEditing) {
+      updateServerMutation(
+        { data },
+        {
+          onSuccess: () => {
+            checkUpdateServerStatus()
+            onOpenChange(false)
+          },
+          onSettled: (_, error) => {
+            setIsSubmitting(false)
+            setLoadingSecrets(null)
+            if (!error) {
+              form.reset()
+            }
+          },
+          onError: (error) => {
+            setError(typeof error === 'string' ? error : error.message)
+          },
+        }
+      )
+    } else {
+      installServerMutation(
+        { data },
+        {
+          onSuccess: () => {
+            checkServerStatus(data)
+            onOpenChange(false)
+          },
+          onSettled: (_, error) => {
+            setIsSubmitting(false)
+            if (!error) {
+              form.reset()
+            }
+          },
+          onError: (error) => {
+            setError(typeof error === 'string' ? error : error.message)
+          },
+        }
+      )
+    }
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
-        className="p-0 sm:max-w-2xl"
+        className="flex max-h-[95dvh] flex-col p-0 sm:max-w-2xl"
         onCloseAutoFocus={() => {
           form.reset()
           resetTab()
@@ -155,25 +224,40 @@ export function DialogFormRunMcpServerWithCommand({
       >
         <Form {...form}>
           <form
+            key={serverToEdit || 'create'}
             onSubmit={form.handleSubmit(onSubmitForm, activateTabWithError)}
+            className="flex min-h-0 flex-1 flex-col"
           >
-            <DialogHeader className="mb-4 p-6">
-              <DialogTitle>Custom MCP server</DialogTitle>
+            <DialogHeader className="mb-4 flex-shrink-0 p-6">
+              <DialogTitle>
+                {isEditing
+                  ? `Edit ${serverToEdit} MCP server`
+                  : 'Custom MCP server'}
+              </DialogTitle>
               <DialogDescription>
-                ToolHive allows you to securely run a custom MCP server from a
-                Docker image or a package manager command.
+                {isEditing
+                  ? 'Update the configuration for your MCP server.'
+                  : 'ToolHive allows you to securely run a custom MCP server from a Docker image or a package manager command.'}
               </DialogDescription>
             </DialogHeader>
-            {isSubmitting && (
+            {(isSubmitting || (isEditing && isLoadingServer)) && (
               <LoadingStateAlert
                 isPendingSecrets={isPendingSecrets}
-                loadingSecrets={loadingSecrets}
+                loadingSecrets={
+                  isLoadingServer
+                    ? {
+                        text: `Loading server "${serverToEdit}"...`,
+                        completedCount: 0,
+                        secretsCount: 0,
+                      }
+                    : loadingSecrets
+                }
               />
             )}
-            {!isSubmitting && (
-              <>
+            {!isSubmitting && !(isEditing && isLoadingServer) && (
+              <div className="flex flex-1 flex-col overflow-hidden">
                 <Tabs
-                  className="mb-6 w-full px-6"
+                  className="mb-6 w-full flex-shrink-0 px-6"
                   value={activeTab}
                   onValueChange={(value: string) => setActiveTab(value as Tab)}
                 >
@@ -187,10 +271,7 @@ export function DialogFormRunMcpServerWithCommand({
                   </TabsList>
                 </Tabs>
                 {activeTab === 'configuration' && (
-                  <div
-                    className="relative max-h-[65dvh] space-y-4 overflow-y-auto
-                      px-6"
-                  >
+                  <div className="flex-1 space-y-4 overflow-y-auto px-6">
                     {error && (
                       <AlertErrorFormSubmission
                         error={error}
@@ -198,7 +279,10 @@ export function DialogFormRunMcpServerWithCommand({
                         onDismiss={() => setError(null)}
                       />
                     )}
-                    <FormFieldsRunMcpCommand form={form} />
+                    <FormFieldsRunMcpCommand
+                      form={form}
+                      isEditing={isEditing}
+                    />
                     <FormFieldsArrayCustomSecrets form={form} />
                     <FormFieldsArrayCustomEnvVars form={form} />
                     <FormFieldsArrayVolumes<FormSchemaRunMcpCommand>
@@ -207,16 +291,18 @@ export function DialogFormRunMcpServerWithCommand({
                   </div>
                 )}
                 {activeTab === 'network-isolation' && (
-                  <NetworkIsolationTabContent form={form} />
+                  <div className="flex-1 overflow-y-auto">
+                    <NetworkIsolationTabContent form={form} />
+                  </div>
                 )}
-              </>
+              </div>
             )}
 
-            <DialogFooter className="p-6">
+            <DialogFooter className="flex-shrink-0 p-6">
               <Button
                 type="button"
                 variant="outline"
-                disabled={isSubmitting}
+                disabled={isSubmitting || (isEditing && isLoadingServer)}
                 onClick={() => {
                   onOpenChange(false)
                   setActiveTab('configuration')
@@ -224,8 +310,11 @@ export function DialogFormRunMcpServerWithCommand({
               >
                 Cancel
               </Button>
-              <Button disabled={isSubmitting} type="submit">
-                Install server
+              <Button
+                disabled={isSubmitting || (isEditing && isLoadingServer)}
+                type="submit"
+              >
+                {isEditing ? 'Update server' : 'Install server'}
               </Button>
             </DialogFooter>
           </form>
