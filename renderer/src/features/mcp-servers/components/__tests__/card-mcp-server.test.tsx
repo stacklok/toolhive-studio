@@ -4,6 +4,11 @@ import { CardMcpServer } from '../card-mcp-server'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
 import userEvent from '@testing-library/user-event'
+import { server } from '@/common/mocks/node'
+import { http, HttpResponse } from 'msw'
+import { mswEndpoint } from '@/common/mocks/msw-endpoint'
+
+let capturedCreateWorkloadPayload: unknown = null
 
 const router = createTestRouter(() => (
   <CardMcpServer
@@ -18,6 +23,18 @@ const router = createTestRouter(() => (
 
 beforeEach(() => {
   router.navigate({ to: '/' })
+
+  // Reset captured payload
+  capturedCreateWorkloadPayload = null
+
+  // Override the existing MSW handler to capture the payload
+  server.use(
+    http.post(mswEndpoint('/api/v1beta/workloads'), async ({ request }) => {
+      const payload = await request.json()
+      capturedCreateWorkloadPayload = payload
+      return HttpResponse.json({ name: 'test-server-copied' })
+    })
+  )
 })
 
 it('navigates to logs page when logs menu item is clicked', async () => {
@@ -72,4 +89,26 @@ it('shows "Copy server to a group" menu item and handles the complete workflow',
 
   const submitButton = screen.getByRole('button', { name: 'OK' })
   await user.click(submitButton)
+
+  // Wait for the mutation to complete and verify the payload
+  await waitFor(() => {
+    expect(capturedCreateWorkloadPayload).toBeTruthy()
+  })
+
+  // Verify that the createWorkload was called with the correct payload
+  expect(capturedCreateWorkloadPayload).toMatchInlineSnapshot(`
+    {
+      "cmd_arguments": [],
+      "env_vars": {},
+      "group": "default",
+      "host": "127.0.0.1",
+      "image": "ghcr.io/test/test-mcp-server:latest",
+      "name": "test-server",
+      "network_isolation": false,
+      "secrets": [],
+      "target_port": 28137,
+      "transport": "stdio",
+      "volumes": [],
+    }
+  `)
 })
