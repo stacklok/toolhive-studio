@@ -54,6 +54,7 @@ export function AddServerToGroupMenuItem({
         })
       } catch (error) {
         console.error('Failed to copy server to group:', error)
+        throw error
       }
     }
   }
