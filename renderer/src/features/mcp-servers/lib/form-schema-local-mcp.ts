@@ -1,6 +1,9 @@
 import type { CoreWorkload } from '@api/types.gen'
 import z from 'zod/v4'
-import { createMcpBaseSchema } from '@/common/lib/form-schema-mcp'
+import {
+  createMcpBaseSchema,
+  addNetworkValidation,
+} from '@/common/lib/form-schema-mcp'
 
 export const getFormSchemaLocalMcp = (
   workloads: CoreWorkload[],
@@ -23,7 +26,11 @@ export const getFormSchemaLocalMcp = (
     package_name: z.string().nonempty('Package name is required'),
   })
 
-  return z.discriminatedUnion('type', [dockerImageSchema, packageManagerSchema])
+  return z
+    .discriminatedUnion('type', [dockerImageSchema, packageManagerSchema])
+    .superRefine((data, ctx) => {
+      addNetworkValidation(ctx, data)
+    })
 }
 
 export type FormSchemaLocalMcp = z.infer<

@@ -1,5 +1,5 @@
 import { it, expect, vi, describe, beforeEach } from 'vitest'
-import type { FormSchemaLocalMcp } from '../form-schema-run-mcp-server-with-command'
+import type { FormSchemaLocalMcp } from '../form-schema-local-mcp'
 import {
   saveSecrets,
   prepareCreateWorkloadData,
@@ -8,7 +8,7 @@ import {
   getDefinedSecrets,
   convertCreateRequestToFormData,
   prepareUpdateWorkloadData,
-} from '../orchestrate-run-custom-server'
+} from '../orchestrate-run-local-server'
 import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
 import type {
   SecretsSecretParameter,

@@ -96,7 +96,7 @@ const createTransportConfigSchema = () => {
   })
 }
 
-const addNetworkValidation = (ctx: z.RefinementCtx, data: unknown) => {
+export const addNetworkValidation = (ctx: z.RefinementCtx, data: unknown) => {
   const networkData = data as {
     networkIsolation?: boolean
     allowedHosts?: Array<{ value: string }>
@@ -254,8 +254,6 @@ export const createRegistrySchema = (
     })
 }
 
-// --------
-
 export const createMcpBaseSchema = (workloads: CoreWorkload[]) => {
   const nameSchema = createNameSchema(workloads)
   const envVarsSchema = createBasicEnvVarsSchema()
@@ -273,9 +271,7 @@ export const createMcpBaseSchema = (workloads: CoreWorkload[]) => {
     .extend(envVarsSchema.shape)
     .extend(secretsSchema.shape)
 
-  return commonSchema.superRefine((data, ctx) => {
-    addNetworkValidation(ctx, data)
-  })
+  return commonSchema
 }
 
 // --------

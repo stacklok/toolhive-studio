@@ -9,7 +9,6 @@ import {
   getApiV1BetaWorkloadsByNameOptions,
   getApiV1BetaSecretsDefaultKeysOptions,
 } from '@api/@tanstack/react-query.gen'
-import { convertCreateRequestToFormData } from '../lib/orchestrate-run-custom-server'
 import { useUpdateServer } from '../hooks/use-update-server'
 import {
   Dialog,
@@ -37,6 +36,7 @@ import {
   getFormSchemaLocalMcp,
   type FormSchemaLocalMcp,
 } from '../lib/form-schema-local-mcp'
+import { convertCreateRequestToFormData } from '../lib/orchestrate-run-local-server'
 
 type Tab = 'configuration' | 'network-isolation'
 type CommonFields = keyof FormSchemaLocalMcp

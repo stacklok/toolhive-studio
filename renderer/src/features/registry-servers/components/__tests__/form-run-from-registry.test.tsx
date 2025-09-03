@@ -346,7 +346,7 @@ describe('FormRunFromRegistry', () => {
         expect.objectContaining({
           server: expect.any(Object),
           data: expect.objectContaining({
-            serverName: 'my-awesome-server',
+            name: 'my-awesome-server',
             cmd_arguments: ['stdio'],
             envVars: [{ name: 'ENV_VAR', value: '' }],
             secrets: [
@@ -409,7 +409,7 @@ describe('FormRunFromRegistry', () => {
         expect.objectContaining({
           server: expect.any(Object),
           data: expect.objectContaining({
-            serverName: 'my-awesome-server',
+            name: 'my-awesome-server',
             cmd_arguments: ['--debug', '--verbose'],
             envVars: [{ name: 'ENV_VAR', value: '' }],
             secrets: [
@@ -854,7 +854,7 @@ describe('FormRunFromRegistry', () => {
         expect.objectContaining({
           server: expect.any(Object),
           data: expect.objectContaining({
-            serverName: 'foo-bar-server',
+            name: 'foo-bar-server',
             allowedPorts: [],
             networkIsolation: true,
           }),
@@ -1038,7 +1038,7 @@ describe('Allowed Hosts field', () => {
         expect.objectContaining({
           server: expect.any(Object),
           data: expect.objectContaining({
-            serverName: 'my-network-server',
+            name: 'my-network-server',
             allowedHosts: [{ value: 'foo.bar.com' }],
             networkIsolation: true,
           }),
@@ -1162,7 +1162,7 @@ describe('Allowed Hosts field', () => {
         expect.objectContaining({
           server: expect.any(Object),
           data: expect.objectContaining({
-            serverName: 'my-test-server',
+            name: 'my-test-server',
             allowedHosts: [{ value: 'fake-invalid-host-format' }],
             allowedPorts: [{ value: '99999' }],
             networkIsolation: false,
@@ -1465,7 +1465,7 @@ describe('Storage Volumes', () => {
         expect.objectContaining({
           server: expect.any(Object),
           data: expect.objectContaining({
-            serverName: 'my-awesome-server',
+            name: 'my-awesome-server',
             cmd_arguments: [],
             envVars: [
               {

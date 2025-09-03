@@ -8,7 +8,7 @@ import { createRegistrySchema } from '@/common/lib/form-schema-mcp'
  * Returns the form schema used to validate the "run from registry" form.
  * The schema is dynamically generated based on the server's environment variables.
  */
-export function getFormSchemaRunFromRegistry({
+export function getFormSchemaRegistryMcp({
   envVars,
   secrets,
   workloads,
@@ -30,6 +30,6 @@ export function getFormSchemaRunFromRegistry({
   )
 }
 
-export type FormSchemaRunFromRegistry = z.infer<
-  ReturnType<typeof getFormSchemaRunFromRegistry>
+export type FormSchemaRegistryMcp = z.infer<
+  ReturnType<typeof getFormSchemaRegistryMcp>
 >
