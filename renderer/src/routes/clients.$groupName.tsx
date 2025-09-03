@@ -50,7 +50,7 @@ export function Clients() {
           illustration={IllustrationNoConnection}
         />
       ) : (
-        <GridCardClients clients={installedClients} />
+        <GridCardClients clients={installedClients} groupName={groupName} />
       )}
     </>
   )

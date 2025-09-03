@@ -20,13 +20,21 @@ const CLIENT_TYPE_LABEL_MAP = {
   'claude-code': 'Claude Code',
 } as const
 
-export function CardClient({ client }: { client: ClientMcpClientStatus }) {
-  const { mutateAsync: registerClient } = useMutationRegisterClient(
-    client.client_type ?? ''
-  )
-  const { mutateAsync: unregisterClient } = useMutationUnregisterClient(
-    client.client_type ?? ''
-  )
+export function CardClient({
+  client,
+  groupName,
+}: {
+  client: ClientMcpClientStatus
+  groupName: string
+}) {
+  const { mutateAsync: registerClient } = useMutationRegisterClient({
+    name: client.client_type ?? '',
+    group: groupName,
+  })
+  const { mutateAsync: unregisterClient } = useMutationUnregisterClient({
+    name: client.client_type ?? '',
+    group: groupName,
+  })
 
   return (
     <Card className="gap-3 border-none py-5 shadow-none outline-none">
