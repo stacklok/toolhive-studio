@@ -212,7 +212,7 @@ export function FormFieldsLocalMcp({
 
   return (
     <DialogContent
-      className="p-0 sm:max-w-2xl"
+      className="flex max-h-[95dvh] flex-col p-0 sm:max-w-2xl"
       onCloseAutoFocus={() => {
         form.reset()
         resetTab()

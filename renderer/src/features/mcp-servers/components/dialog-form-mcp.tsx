@@ -7,18 +7,30 @@ export function DialogFormMcp({
   serverType,
   onOpenChange,
   workloads = [],
+  serverToEdit,
 }: {
   serverType: { local: boolean; remote: boolean }
   onOpenChange: (serverType: { local: boolean; remote: boolean }) => void
   workloads?: CoreWorkload[]
+  serverToEdit?: string | null
 }) {
   return (
     <Dialog
       open={serverType.local || serverType.remote}
       onOpenChange={() => onOpenChange({ local: false, remote: false })}
     >
-      {serverType.local && <FormFieldsLocalMcp onOpenChange={onOpenChange} />}
-      {serverType.remote && <FormFieldsRemoteMcp workloads={workloads} />}
+      {serverType.local && (
+        <FormFieldsLocalMcp
+          onOpenChange={onOpenChange}
+          serverToEdit={serverToEdit}
+        />
+      )}
+      {serverType.remote && (
+        <FormFieldsRemoteMcp
+          workloads={workloads}
+          serverToEdit={serverToEdit}
+        />
+      )}
     </Dialog>
   )
 }

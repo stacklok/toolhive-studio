@@ -36,6 +36,7 @@ export function FormFieldsRemoteMcp({
   workloads,
 }: {
   workloads: CoreWorkload[]
+  serverToEdit?: string | null
 }) {
   const form = useForm<FormSchemaRemoteMcp>({
     resolver: zodV4Resolver(getFormSchemaRemoteMcp(workloads)),
