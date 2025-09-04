@@ -1,16 +1,16 @@
 import { render, waitFor, screen, act } from '@testing-library/react'
 import { it, expect, vi, describe, beforeEach } from 'vitest'
-import { DialogFormLocalMcp } from '../dialog-form-local-mcp'
+import { DialogFormLocalMcp } from '../local-mcp/dialog-form-local-mcp'
 import userEvent from '@testing-library/user-event'
 import { Dialog } from '@/common/components/ui/dialog'
 import { server as mswServer } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/msw-endpoint'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useRunCustomServer } from '../../../hooks/use-run-custom-server'
+import { useRunCustomServer } from '../../hooks/use-run-custom-server'
 
 // Mock the hook
-vi.mock('../../../hooks/use-run-custom-server', () => ({
+vi.mock('../../hooks/use-run-custom-server', () => ({
   useRunCustomServer: vi.fn(),
 }))
 
