@@ -2,21 +2,12 @@ import type { CoreWorkload } from '@api/types.gen'
 import { CardMcpServer } from './card-mcp-server'
 import { useMemo, useState } from 'react'
 import { InputSearch } from '@/common/components/ui/input-search'
-import { DialogFormMcp } from './dialog-form-mcp'
 
 export function GridCardsMcpServers({
   mcpServers,
 }: {
   mcpServers: CoreWorkload[]
 }) {
-  const [serverDialogOpen, setServerDialogOpen] = useState<{
-    local: boolean
-    remote: boolean
-  }>({
-    local: false,
-    remote: false,
-  })
-  const [serverToEdit, setServerToEdit] = useState<string | null>(null)
   const [filters, setFilters] = useState({
     text: '',
     state: 'all',
@@ -66,10 +57,6 @@ export function GridCardsMcpServers({
               statusContext={mcpServer.status_context}
               url={mcpServer.url ?? ''}
               transport={mcpServer.transport_type}
-              onEdit={(serverName) => {
-                setServerToEdit(serverName)
-                setServerDialogOpen({ local: true, remote: false })
-              }}
             />
           ) : null
         )}
@@ -83,12 +70,6 @@ export function GridCardsMcpServers({
             </p>
           </div>
         )}
-
-      <DialogFormMcp
-        serverType={serverDialogOpen}
-        onOpenChange={setServerDialogOpen}
-        serverToEdit={serverToEdit}
-      />
     </div>
   )
 }
