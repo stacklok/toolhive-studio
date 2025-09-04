@@ -3,12 +3,13 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { GridCardClients } from '@/features/clients/components/grid-card-clients'
 import { Button } from '@/common/components/ui/button'
-import { ExternalLinkIcon } from 'lucide-react'
+import { ExternalLinkIcon, ChevronLeft } from 'lucide-react'
 import { EmptyState } from '@/common/components/empty-state'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
 import { TitlePage } from '@/common/components/title-page'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
 import { useMemo } from 'react'
+import { LinkViewTransition } from '@/common/components/link-view-transition'
 
 export const Route = createFileRoute('/clients/$groupName')({
   component: Clients,
@@ -37,13 +38,15 @@ export function Clients() {
   const {
     data: { clients = [] },
   } = useSuspenseQuery(getApiV1BetaDiscoveryClientsOptions())
-  
+
   const { data: groupsData } = useGroups()
 
   // Combine discovery clients with group membership information
   const clientsWithGroupStatus = useMemo(() => {
     // Find the current group and get its registered clients
-    const currentGroup = groupsData?.groups?.find(group => group.name === groupName)
+    const currentGroup = groupsData?.groups?.find(
+      (group) => group.name === groupName
+    )
     const registeredClientsInGroup = currentGroup?.registered_clients || []
 
     return clients
@@ -59,6 +62,18 @@ export function Clients() {
 
   return (
     <>
+      <div className="mb-2">
+        <LinkViewTransition to={`/group/${groupName}`}>
+          <Button
+            variant="ghost"
+            aria-label="Back"
+            className="text-muted-foreground"
+          >
+            <ChevronLeft className="size-5" />
+            Back
+          </Button>
+        </LinkViewTransition>
+      </div>
       <TitlePage title="Clients" />
       {installedClients.length === 0 ? (
         <EmptyState

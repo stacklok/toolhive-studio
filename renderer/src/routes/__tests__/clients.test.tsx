@@ -146,4 +146,47 @@ describe('Clients Route', () => {
       ).toBeInTheDocument()
     }
   )
+
+  it.each([
+    { groupName: 'default', expectedBackPath: '/group/default' },
+    { groupName: 'research', expectedBackPath: '/group/research' },
+    { groupName: 'development', expectedBackPath: '/group/development' },
+  ])(
+    'should have a back button that navigates to MCP servers page for group $groupName',
+    async ({ groupName, expectedBackPath }) => {
+      // Mock groups data
+      server.use(
+        http.get(mswEndpoint('/api/v1beta/groups'), () => {
+          return HttpResponse.json({
+            groups: [{ name: groupName, registered_clients: [] }],
+          })
+        })
+      )
+
+      const customGroupRouter = createTestRouter(Clients, '/clients/$groupName')
+      customGroupRouter.navigate({
+        to: '/clients/$groupName',
+        params: { groupName },
+      })
+      renderRoute(customGroupRouter)
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('heading', { name: /clients/i })
+        ).toBeInTheDocument()
+      })
+
+      // Verify we're on the correct group page
+      expect(customGroupRouter.state.location.pathname).toBe(
+        `/clients/${groupName}`
+      )
+
+      // Look for the back button
+      const backButton = screen.getByRole('button', { name: /back/i })
+      expect(backButton).toBeVisible()
+
+      // Verify the back button links to the correct MCP servers page
+      expect(backButton.closest('a')).toHaveAttribute('href', expectedBackPath)
+    }
+  )
 })
