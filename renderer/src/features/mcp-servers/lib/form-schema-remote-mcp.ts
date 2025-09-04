@@ -19,7 +19,7 @@ export const getFormSchemaRemoteMcp = (workloads: CoreWorkload[]) => {
             'This name is already in use'
           )
       ),
-    url: z.string().optional(),
+    url: z.string().nonempty('URL is required'),
     auth_type: z
       .union([z.literal('none'), z.literal('oauth2'), z.literal('oidc')])
       .optional(),
