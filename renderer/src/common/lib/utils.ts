@@ -27,3 +27,15 @@ export function getVolumes(
         `${volume.host}:${volume.container}${volume.accessMode === 'ro' ? ':ro' : ''}`
     )
 }
+
+/**
+ * Maps environment variables from the form into the format expected by the API.
+ * Filters out environment variables with empty or whitespace-only values.
+ */
+export function mapEnvVars(envVars: { name: string; value?: string }[]) {
+  return Object.fromEntries(
+    envVars
+      .filter((envVar) => !isEmptyEnvVar(envVar.value))
+      .map(({ name, value }) => [name, value as string])
+  )
+}

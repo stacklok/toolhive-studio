@@ -10,9 +10,9 @@ import {
   type V1ListSecretsResponse,
 } from '@api/types.gen'
 import type { Options } from '@api/client'
-import type { FormSchemaRunMcpCommand } from './form-schema-run-mcp-server-with-command'
 import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
-import { getVolumes, isEmptyEnvVar } from '@/common/lib/utils'
+import { getVolumes, mapEnvVars } from '@/common/lib/utils'
+import type { FormSchemaLocalMcp } from './form-schema-local-mcp'
 
 type SaveSecretFn = UseMutateAsyncFunction<
   V1CreateSecretResponse,
@@ -85,23 +85,11 @@ export async function saveSecrets(
 }
 
 /**
- * Maps environment variables from the form into the format expected by the API.
- * Filters out environment variables with empty or whitespace-only values.
- */
-export function mapEnvVars(envVars: { name: string; value?: string }[]) {
-  return Object.fromEntries(
-    envVars
-      .filter((envVar) => !isEmptyEnvVar(envVar.value))
-      .map(({ name, value }) => [name, value as string])
-  )
-}
-
-/**
  * Transforms the type specific (e.g. docker vs package manager) data from the
  * form into a request object that can be sent to the API.
  */
 function transformTypeSpecificData(
-  values: FormSchemaRunMcpCommand
+  values: FormSchemaLocalMcp
 ): V1CreateRequest {
   const type = values.type
   switch (type) {
@@ -120,7 +108,7 @@ function transformTypeSpecificData(
       }
     }
     default:
-      return type satisfies never
+      throw new Error(`Unsupported type: ${type}`)
   }
 }
 
@@ -129,42 +117,49 @@ function transformTypeSpecificData(
  * created secrets from the secret store into a single request object.
  */
 export function prepareCreateWorkloadData(
-  data: FormSchemaRunMcpCommand,
+  data: FormSchemaLocalMcp,
   secrets: SecretsSecretParameter[] = []
 ): V1CreateRequest {
   const request = transformTypeSpecificData(data)
 
-  request.cmd_arguments = data.cmd_arguments || []
-  request.env_vars = mapEnvVars(data.envVars)
-  request.secrets = secrets
+  // Extract and transform fields with proper typing
+  const cmd_arguments = data.cmd_arguments as string[] | undefined
+  const envVars = data.envVars as
+    | Array<{ name: string; value?: string }>
+    | undefined
+  const allowedHosts = data.allowedHosts as Array<{ value: string }> | undefined
+  const allowedPorts = data.allowedPorts as Array<{ value: string }> | undefined
+  const networkIsolation = data.networkIsolation as boolean | undefined
+  const volumes = data.volumes as
+    | Array<{ host: string; container: string; accessMode?: 'ro' | 'rw' }>
+    | undefined
 
-  // Extract and transform network isolation fields
-  const { allowedHosts, allowedPorts, networkIsolation } = data
+  request.cmd_arguments = cmd_arguments || []
+  request.env_vars = mapEnvVars(envVars || [])
+  request.secrets = secrets
   const permission_profile = networkIsolation
     ? {
         network: {
           outbound: {
             allow_host:
               allowedHosts
-                ?.map(({ value }) => value)
-                .filter((host) => host.trim() !== '') ?? [],
+                ?.map(({ value }: { value: string }) => value)
+                .filter((host: string) => host.trim() !== '') ?? [],
             allow_port:
               allowedPorts
-                ?.map(({ value }) => parseInt(value, 10))
-                .filter((port) => !isNaN(port)) ?? [],
+                ?.map(({ value }: { value: string }) => parseInt(value, 10))
+                .filter((port: number) => !isNaN(port)) ?? [],
             insecure_allow_all: false,
           } as PermissionsOutboundNetworkPermissions,
         },
       }
     : undefined
 
-  const volumes = getVolumes(data.volumes ?? [])
-
   return {
     ...request,
     network_isolation: networkIsolation,
     permission_profile,
-    volumes,
+    volumes: getVolumes(volumes ?? []),
   }
 }
 
@@ -173,7 +168,7 @@ export function prepareCreateWorkloadData(
  */
 export function convertWorkloadToFormData(
   workload: CoreWorkload
-): FormSchemaRunMcpCommand {
+): FormSchemaLocalMcp {
   const image = workload.package || ''
 
   // Determine type based on image format
@@ -218,7 +213,7 @@ export function convertWorkloadToFormData(
  * A utility function to filter out secrets that are not defined.
  */
 export function getDefinedSecrets(
-  secrets: FormSchemaRunMcpCommand['secrets']
+  secrets: FormSchemaLocalMcp['secrets']
 ): DefinedSecret[] {
   return secrets.reduce<DefinedSecret[]>((acc, { name, value }) => {
     if (name && value.secret) {
@@ -238,7 +233,7 @@ export function getDefinedSecrets(
 export function convertCreateRequestToFormData(
   createRequest: V1CreateRequest,
   availableSecrets?: V1ListSecretsResponse
-): FormSchemaRunMcpCommand {
+): FormSchemaLocalMcp {
   const image = createRequest.image || ''
 
   // Determine type based on image format
@@ -327,7 +322,7 @@ export function convertCreateRequestToFormData(
  * Transforms form data into an update request object
  */
 export function prepareUpdateWorkloadData(
-  data: FormSchemaRunMcpCommand,
+  data: FormSchemaLocalMcp,
   secrets: SecretsSecretParameter[] = []
 ): V1UpdateRequest {
   // V1UpdateRequest has a flatter structure than V1CreateRequest

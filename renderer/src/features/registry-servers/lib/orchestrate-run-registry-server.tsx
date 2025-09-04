@@ -7,11 +7,10 @@ import {
   type V1CreateSecretResponse,
 } from '@api/types.gen'
 import type { Options } from '@api/client'
-import type { FormSchemaRunFromRegistry } from './get-form-schema-run-from-registry'
 import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
 import type { UseMutateAsyncFunction } from '@tanstack/react-query'
-import { getVolumes } from '@/common/lib/utils'
-import { mapEnvVars } from '@/features/mcp-servers/lib/orchestrate-run-custom-server'
+import { getVolumes, mapEnvVars } from '@/common/lib/utils'
+import type { FormSchemaRegistryMcp } from './form-schema-registry-mcp'
 
 type SaveSecretFn = UseMutateAsyncFunction<
   V1CreateSecretResponse,
@@ -24,7 +23,7 @@ type SaveSecretFn = UseMutateAsyncFunction<
  * A utility function to filter out secrets that are not defined.
  */
 export function getDefinedSecrets(
-  secrets: FormSchemaRunFromRegistry['secrets']
+  secrets: FormSchemaRegistryMcp['secrets']
 ): DefinedSecret[] {
   return secrets.reduce<DefinedSecret[]>((acc, { name, value }) => {
     if (name && value.secret) {
@@ -107,7 +106,7 @@ export async function saveSecrets(
  */
 export function prepareCreateWorkloadData(
   server: RegistryImageMetadata,
-  data: FormSchemaRunFromRegistry,
+  data: FormSchemaRegistryMcp,
   secrets: SecretsSecretParameter[] = []
 ): V1CreateRequest {
   // Extract and transform network isolation fields
@@ -118,12 +117,12 @@ export function prepareCreateWorkloadData(
           outbound: {
             allow_host:
               allowedHosts
-                ?.map(({ value }) => value)
-                .filter((host) => host.trim() !== '') ?? [],
+                ?.map(({ value }: { value: string }) => value)
+                .filter((host: string) => host.trim() !== '') ?? [],
             allow_port:
               allowedPorts
-                ?.map(({ value }) => parseInt(value, 10))
-                .filter((port) => !isNaN(port)) ?? [],
+                ?.map(({ value }: { value: string }) => parseInt(value, 10))
+                .filter((port: number) => !isNaN(port)) ?? [],
             insecure_allow_all: false,
           } as PermissionsOutboundNetworkPermissions,
         },
@@ -133,7 +132,7 @@ export function prepareCreateWorkloadData(
   const volumes = getVolumes(data.volumes ?? [])
 
   return {
-    name: data.serverName,
+    name: data.name,
     image: server.image,
     transport: server.transport,
     env_vars: mapEnvVars(data.envVars),
