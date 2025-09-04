@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
 } from '@/common/components/ui/dropdown-menu'
 import { Button } from '@/common/components/ui/button'
-import { MoreVertical, Github, Text, Copy, Edit3, Settings } from 'lucide-react'
+import { MoreVertical, Github, Copy, Edit3, Settings } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { Input } from '@/common/components/ui/input'
@@ -39,6 +39,7 @@ import {
 import { cn } from '@/common/lib/utils'
 import { AddServerToGroupMenuItem } from './add-server-to-group-menu-item'
 import { RemoveServerMenuItem } from './remove-server-menu-item'
+import { LogsMenuItem } from './logs-menu-item'
 
 type CardContentMcpServerProps = {
   status: CoreWorkload['status']
@@ -299,15 +300,7 @@ export function CardMcpServer({
                   </a>
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem
-                asChild
-                className="flex cursor-pointer items-center"
-              >
-                <Link to="/logs/$serverName" params={{ serverName: name }}>
-                  <Text className="mr-2 h-4 w-4" />
-                  Logs
-                </Link>
-              </DropdownMenuItem>
+              <LogsMenuItem serverName={name} />
               {isCustomizeToolsEnabled && (
                 <DropdownMenuItem
                   asChild
