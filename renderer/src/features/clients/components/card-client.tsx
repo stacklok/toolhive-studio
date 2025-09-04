@@ -6,9 +6,8 @@ import {
   CardContent,
 } from '@/common/components/ui/card'
 import { Switch } from '@/common/components/ui/switch'
-import { useMutationRegisterClient } from '../hooks/use-mutation-register-client'
-import { useMutationUnregisterClient } from '../hooks/use-mutation-unregister-client'
-import { trackEvent } from '@/common/lib/analytics'
+import { useAddClientToGroup } from '../hooks/use-add-client-to-group'
+import { useRemoveClientFromGroup } from '../hooks/use-remove-client-from-group'
 
 // There is an issue with openAPI generator in BE, similar issue https://github.com/stacklok/toolhive/issues/780
 const CLIENT_TYPE_LABEL_MAP = {
@@ -27,11 +26,11 @@ export function CardClient({
   client: ClientMcpClientStatus
   groupName: string
 }) {
-  const { mutateAsync: registerClient } = useMutationRegisterClient({
-    name: client.client_type ?? '',
+  const { addClientToGroup } = useAddClientToGroup({
+    clientType: client.client_type ?? '',
   })
-  const { mutateAsync: unregisterClient } = useMutationUnregisterClient({
-    name: client.client_type ?? '',
+  const { removeClientFromGroup } = useRemoveClientFromGroup({
+    clientType: client.client_type ?? '',
   })
 
   return (
@@ -49,23 +48,9 @@ export function CardClient({
             checked={client.registered}
             onCheckedChange={() => {
               if (client.registered) {
-                unregisterClient({
-                  path: {
-                    name: client.client_type ?? '',
-                  },
-                })
-                trackEvent(`Client ${client.client_type} unregistered`, {
-                  client: client.client_type,
-                })
+                removeClientFromGroup({ groupName: 'default' })
               } else {
-                registerClient({
-                  body: {
-                    name: client.client_type ?? '',
-                  },
-                })
-                trackEvent(`Client ${client.client_type} registered`, {
-                  client: client.client_type,
-                })
+                addClientToGroup({ groupName: 'default' })
               }
             }}
           />
