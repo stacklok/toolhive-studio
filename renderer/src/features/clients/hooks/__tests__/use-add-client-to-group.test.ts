@@ -3,9 +3,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAddClientToGroup } from '../use-add-client-to-group'
+import { server } from '@/common/mocks/node'
+import { http, HttpResponse } from 'msw'
+import { mswEndpoint } from '@/common/mocks/msw-endpoint'
 
 describe('useAddClientToGroup', () => {
   let queryClient: QueryClient
+  let capturedRequests: Array<{ name: string; groups: string[] }> = []
 
   beforeEach(() => {
     queryClient = new QueryClient({
@@ -14,12 +18,72 @@ describe('useAddClientToGroup', () => {
         mutations: { retry: false },
       },
     })
+    capturedRequests = []
   })
 
   const wrapper = ({ children }: { children: React.ReactNode }) =>
     React.createElement(QueryClientProvider, { client: queryClient }, children)
 
-  it('should add a client to a group and invalidate discovery clients query', async () => {
+  it('should send correct group name in API request', async () => {
+    // Mock the API endpoint to capture requests
+    server.use(
+      http.post(mswEndpoint('/api/v1beta/clients'), async ({ request }) => {
+        const body = await request.json()
+        capturedRequests.push(body)
+        return HttpResponse.json({ name: body.name, groups: body.groups }, { status: 200 })
+      })
+    )
+
+    const { result } = renderHook(
+      () => useAddClientToGroup({ clientType: 'test-client' }),
+      { wrapper }
+    )
+
+    // Execute the addClientToGroup function with a specific group
+    await result.current.addClientToGroup({ groupName: 'research-team' })
+
+    await waitFor(() => {
+      expect(capturedRequests).toHaveLength(1)
+      expect(capturedRequests[0]).toEqual({
+        name: 'test-client',
+        groups: ['research-team']
+      })
+    })
+  })
+
+  it('should handle different group names correctly', async () => {
+    // Mock the API endpoint to capture requests
+    server.use(
+      http.post(mswEndpoint('/api/v1beta/clients'), async ({ request }) => {
+        const body = await request.json()
+        capturedRequests.push(body)
+        return HttpResponse.json({ name: body.name, groups: body.groups }, { status: 200 })
+      })
+    )
+
+    const { result } = renderHook(
+      () => useAddClientToGroup({ clientType: 'vscode' }),
+      { wrapper }
+    )
+
+    // Test with different group names
+    await result.current.addClientToGroup({ groupName: 'default' })
+    await result.current.addClientToGroup({ groupName: 'custom-group' })
+
+    await waitFor(() => {
+      expect(capturedRequests).toHaveLength(2)
+      expect(capturedRequests[0]).toEqual({
+        name: 'vscode',
+        groups: ['default']
+      })
+      expect(capturedRequests[1]).toEqual({
+        name: 'vscode',
+        groups: ['custom-group']
+      })
+    })
+  })
+
+  it('should invalidate discovery clients query after successful registration', async () => {
     const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries')
 
     const { result } = renderHook(
@@ -27,7 +91,6 @@ describe('useAddClientToGroup', () => {
       { wrapper }
     )
 
-    // Execute the addClientToGroup function
     await result.current.addClientToGroup({ groupName: 'research-team' })
 
     await waitFor(() => {
@@ -40,21 +103,5 @@ describe('useAddClientToGroup', () => {
         ],
       })
     })
-  })
-
-  it('should handle different group names', async () => {
-    const { result } = renderHook(
-      () => useAddClientToGroup({ clientType: 'test-client' }),
-      { wrapper }
-    )
-
-    // Should work with different group names
-    await expect(
-      result.current.addClientToGroup({ groupName: 'default' })
-    ).resolves.not.toThrow()
-
-    await expect(
-      result.current.addClientToGroup({ groupName: 'custom-group' })
-    ).resolves.not.toThrow()
   })
 })

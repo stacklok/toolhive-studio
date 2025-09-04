@@ -21,7 +21,7 @@ const CLIENT_TYPE_LABEL_MAP = {
 
 export function CardClient({
   client,
-  groupName,
+  groupName: _groupName,
 }: {
   client: ClientMcpClientStatus
   groupName: string

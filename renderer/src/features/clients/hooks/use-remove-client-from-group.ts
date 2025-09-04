@@ -22,7 +22,7 @@ export function useRemoveClientFromGroup({ clientType }: RemoveClientFromGroupPa
     errorMsg: `Failed to disconnect ${clientType}`,
   })
 
-  const removeClientFromGroup = async ({ groupName }: { groupName: string }) => {
+  const removeClientFromGroup = async ({ groupName: _groupName }: { groupName: string }) => {
     await unregisterClient({
       path: {
         name: clientType,
