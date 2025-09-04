@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
 } from '@/common/components/ui/dropdown-menu'
 import { Button } from '@/common/components/ui/button'
-import { MoreVertical, Github, Copy, Edit3, Settings } from 'lucide-react'
+import { MoreVertical, Copy, Edit3, Settings } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { Input } from '@/common/components/ui/input'
@@ -40,6 +40,7 @@ import { cn } from '@/common/lib/utils'
 import { AddServerToGroupMenuItem } from './add-server-to-group-menu-item'
 import { RemoveServerMenuItem } from './remove-server-menu-item'
 import { LogsMenuItem } from './logs-menu-item'
+import { GithubRepositoryMenuItem } from './github-repository-menu-item'
 
 type CardContentMcpServerProps = {
   status: CoreWorkload['status']
@@ -288,17 +289,7 @@ export function CardMcpServer({
                 </DropdownMenuItem>
               )}
               {repositoryUrl && (
-                <DropdownMenuItem asChild>
-                  <a
-                    href={repositoryUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex cursor-pointer items-center"
-                  >
-                    <Github className="mr-2 h-4 w-4" />
-                    GitHub Repository
-                  </a>
-                </DropdownMenuItem>
+                <GithubRepositoryMenuItem repositoryUrl={repositoryUrl} />
               )}
               <LogsMenuItem serverName={name} />
               {isCustomizeToolsEnabled && (
