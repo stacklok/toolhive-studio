@@ -23,6 +23,5 @@ export function useServerDetails(serverName: string) {
         return null
       }
     },
-    enabled: Boolean(serverName),
   })
 }
