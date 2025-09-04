@@ -14,10 +14,6 @@ import { Button } from '@/common/components/ui/button'
 import type { RegistryImageMetadata } from '@api/types.gen'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { groupEnvVars } from '../../lib/group-env-vars'
-import {
-  getFormSchemaRunFromRegistry,
-  type FormSchemaRunFromRegistry,
-} from '../../lib/get-form-schema-run-from-registry'
 import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
 import { useRunFromRegistry } from '../../hooks/use-run-from-registry'
 import { LoadingStateAlert } from '../../../../common/components/secrets/loading-state-alert'
@@ -29,12 +25,16 @@ import {
   useFormTabState,
   type FieldTabMapping,
 } from '@/common/hooks/use-form-tab-state'
+import {
+  getFormSchemaRegistryMcp,
+  type FormSchemaRegistryMcp,
+} from '../../lib/form-schema-registry-mcp'
 
 type Tab = 'configuration' | 'network-isolation'
-type Field = keyof FormSchemaRunFromRegistry
+type Field = keyof FormSchemaRegistryMcp
 
 const FIELD_TAB_MAP = {
-  serverName: 'configuration',
+  name: 'configuration',
   cmd_arguments: 'configuration',
   secrets: 'configuration',
   envVars: 'configuration',
@@ -97,7 +97,7 @@ export function FormRunFromRegistry({
     server?.args && server.args.length > 0 ? server.args : []
   const formSchema = useMemo(
     () =>
-      getFormSchemaRunFromRegistry({
+      getFormSchemaRegistryMcp({
         envVars: groupedEnvVars.envVars,
         secrets: groupedEnvVars.secrets,
         workloads: data?.workloads ?? [],
@@ -105,10 +105,10 @@ export function FormRunFromRegistry({
     [groupedEnvVars, data?.workloads]
   )
 
-  const form = useForm<FormSchemaRunFromRegistry>({
+  const form = useForm<FormSchemaRegistryMcp>({
     resolver: zodV4Resolver(formSchema),
     defaultValues: {
-      serverName: server?.name || '',
+      name: server?.name || '',
       cmd_arguments,
       volumes: [{ host: '', container: '', accessMode: 'rw' }],
       secrets: groupedEnvVars.secrets.map((s) => ({
@@ -135,7 +135,7 @@ export function FormRunFromRegistry({
     mode: 'onChange',
   })
 
-  const onSubmitForm = (data: FormSchemaRunFromRegistry) => {
+  const onSubmitForm = (data: FormSchemaRegistryMcp) => {
     if (!server) return
 
     setIsSubmitting(true)

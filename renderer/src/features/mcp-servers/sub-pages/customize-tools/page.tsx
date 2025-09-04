@@ -6,7 +6,7 @@ import { useParams } from '@tanstack/react-router'
 import { ChevronLeft } from 'lucide-react'
 import { useUpdateServer } from '@/features/mcp-servers/hooks/use-update-server'
 import { toast } from 'sonner'
-import type { V1UpdateRequest } from '@api/types.gen'
+import { convertWorkloadToFormData } from '@/features/mcp-servers/lib/orchestrate-run-local-server'
 import { getApiV1BetaWorkloads } from '@api/sdk.gen'
 
 export function CustomizeToolsPage() {
@@ -65,13 +65,14 @@ export function CustomizeToolsPage() {
         throw new Error(toolsSaveResult.error || 'Failed to save tool settings')
       }
 
-      // Step 2: Update server with just the tools
-      const updateRequest: V1UpdateRequest = {
-        tools: enabledToolNames,
+      // Step 2: Update server with existing data
+      if (!workload) {
+        throw new Error('Workload data not available')
       }
 
+      const formData = convertWorkloadToFormData(workload)
       updateServerMutation(
-        { updateRequest },
+        { data: formData },
         {
           onSuccess: () => {
             checkServerStatus()

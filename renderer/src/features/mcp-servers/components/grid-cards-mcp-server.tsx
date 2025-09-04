@@ -2,12 +2,15 @@ import type { CoreWorkload } from '@api/types.gen'
 import { CardMcpServer } from './card-mcp-server'
 import { useMemo, useState } from 'react'
 import { InputSearch } from '@/common/components/ui/input-search'
+import { DeprecatedDialogFormRunMcpServerWithCommand } from './dialog-form-run-mcp-command'
 
 export function GridCardsMcpServers({
   mcpServers,
 }: {
   mcpServers: CoreWorkload[]
 }) {
+  const [isRunWithCommandOpen, setIsRunWithCommandOpen] = useState(false)
+  const [serverToEdit, setServerToEdit] = useState<string | null>(null)
   const [filters, setFilters] = useState({
     text: '',
     state: 'all',
@@ -56,6 +59,10 @@ export function GridCardsMcpServers({
               statusContext={mcpServer.status_context}
               url={mcpServer.url ?? ''}
               transport={mcpServer.transport_type}
+              onEdit={(serverName) => {
+                setServerToEdit(serverName)
+                setIsRunWithCommandOpen(true)
+              }}
             />
           ) : null
         )}
@@ -69,6 +76,12 @@ export function GridCardsMcpServers({
             </p>
           </div>
         )}
+
+      <DeprecatedDialogFormRunMcpServerWithCommand
+        isOpen={isRunWithCommandOpen}
+        onOpenChange={setIsRunWithCommandOpen}
+        serverToEdit={serverToEdit}
+      />
     </div>
   )
 }

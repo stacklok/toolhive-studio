@@ -6,9 +6,8 @@ import {
   FormMessage,
 } from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
-import { type FormSchemaRunMcpCommand } from '../lib/form-schema-run-mcp-server-with-command'
+import { type FormSchemaLocalMcp } from '../lib/form-schema-local-mcp'
 import { type UseFormReturn } from 'react-hook-form'
-
 import {
   Select,
   SelectContent,
@@ -22,11 +21,14 @@ import { CommandArgumentsField } from '@/common/components/workload-cmd-arg/comm
 
 export function FormFieldsRunMcpCommand({
   form,
+  isEditing = false,
 }: {
-  form: UseFormReturn<FormSchemaRunMcpCommand>
+  form: UseFormReturn<FormSchemaLocalMcp>
+  isEditing?: boolean
 }) {
   const typeValue = form.watch('type')
   const protocolValue = form.watch('protocol') ?? 'npx'
+  const transportValue = form.watch('transport')
 
   return (
     <>
@@ -82,6 +84,7 @@ export function FormFieldsRunMcpCommand({
                 defaultValue={field.value}
                 onChange={(e) => field.onChange(e.target.value)}
                 name={field.name}
+                disabled={isEditing}
               />
             </FormControl>
             <FormMessage />
@@ -103,8 +106,14 @@ export function FormFieldsRunMcpCommand({
             </div>
             <FormControl>
               <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
+                onValueChange={(value) => {
+                  field.onChange(value)
+                  // Automatically set target_port to 0 for stdio transport
+                  if (value === 'stdio') {
+                    form.setValue('target_port', 0)
+                  }
+                }}
+                value={field.value}
                 name={field.name}
               >
                 <SelectTrigger id={field.name} className="w-full">
@@ -124,36 +133,39 @@ export function FormFieldsRunMcpCommand({
         )}
       />
 
-      <FormField
-        control={form.control}
-        name="target_port"
-        render={({ field }) => (
-          <FormItem>
-            <div className="flex items-center gap-1">
-              <FormLabel htmlFor={field.name}>Target port</FormLabel>
-              <TooltipInfoIcon className="max-w-72">
-                Target port to expose from the container. If not specified,
-                ToolHive will automatically assign a random port.
-              </TooltipInfoIcon>
-            </div>
-            <FormControl>
-              <Input
-                id={field.name}
-                autoCorrect="off"
-                autoComplete="off"
-                autoFocus
-                type="number"
-                data-1p-ignore
-                placeholder="e.g. 50051"
-                defaultValue={field.value}
-                onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
-                name={field.name}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {/* Only show target_port for non-stdio transports */}
+      {transportValue !== 'stdio' && (
+        <FormField
+          control={form.control}
+          name="target_port"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex items-center gap-1">
+                <FormLabel htmlFor={field.name}>Target port</FormLabel>
+                <TooltipInfoIcon className="max-w-72">
+                  Target port to expose from the container. If not specified,
+                  ToolHive will automatically assign a random port.
+                </TooltipInfoIcon>
+              </div>
+              <FormControl>
+                <Input
+                  id={field.name}
+                  autoCorrect="off"
+                  autoComplete="off"
+                  autoFocus
+                  type="number"
+                  data-1p-ignore
+                  placeholder="e.g. 50051"
+                  defaultValue={field.value}
+                  onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                  name={field.name}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
       {typeValue === 'docker_image' ? (
         <FormField

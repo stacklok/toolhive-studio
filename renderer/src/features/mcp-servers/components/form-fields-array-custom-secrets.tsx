@@ -5,8 +5,8 @@ import {
   type ArrayPath,
   type ControllerRenderProps,
 } from 'react-hook-form'
+import type { ChangeEventHandler } from 'react'
 
-import type { FormSchemaRunMcpCommand } from '../lib/form-schema-run-mcp-server-with-command'
 import { FormControl, FormField, FormItem } from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
 import { DynamicArrayField } from '@/features/registry-servers/components/dynamic-array-field'
@@ -17,19 +17,22 @@ type SecretFieldValue = {
   value?: { secret?: string; isFromStore: boolean } | string
 }
 
-export function FormFieldsArrayCustomSecrets({
-  form,
-}: {
-  form: UseFormReturn<FormSchemaRunMcpCommand>
-}) {
+// More flexible constraint that works with discriminated unions
+type FormWithSecretsFlexible = Record<string, unknown> & {
+  secrets?: Array<SecretFieldValue>
+}
+
+export function FormFieldsArrayCustomSecrets<
+  T extends FormWithSecretsFlexible,
+>({ form }: { form: UseFormReturn<T> }) {
   return (
     <FormItem>
       <Controller
         control={form.control}
-        name={'secrets' as Path<FormSchemaRunMcpCommand>}
+        name={'secrets' as Path<T>}
         render={() => (
-          <DynamicArrayField<FormSchemaRunMcpCommand>
-            name={'secrets' as ArrayPath<FormSchemaRunMcpCommand>}
+          <DynamicArrayField<T>
+            name={'secrets' as ArrayPath<T>}
             label="Secrets"
             inputLabelPrefix="Secret"
             addButtonText="Add secret"
@@ -42,17 +45,24 @@ export function FormFieldsArrayCustomSecrets({
             ]}
             form={form}
           >
-            {({ inputProps, setInputRef, idx }) => (
+            {({
+              inputProps,
+              setInputRef,
+              idx,
+            }: {
+              inputProps: { id: string; onChange: ChangeEventHandler }
+              setInputRef: (
+                idx: number
+              ) => (el: HTMLInputElement | null) => void
+              idx: number
+            }) => (
               <FormField
                 control={form.control}
-                name={`secrets.${idx}` as Path<FormSchemaRunMcpCommand>}
+                name={`secrets.${idx}` as Path<T>}
                 render={({
                   field,
                 }: {
-                  field: ControllerRenderProps<
-                    FormSchemaRunMcpCommand,
-                    Path<FormSchemaRunMcpCommand>
-                  >
+                  field: ControllerRenderProps<T, Path<T>>
                 }) => {
                   const secretField = field.value as SecretFieldValue
                   const currentValue =
@@ -73,9 +83,7 @@ export function FormFieldsArrayCustomSecrets({
                           aria-label={`Secret key`}
                           aria-describedby={`secrets-${idx}-name-desc`}
                           className="font-mono"
-                          name={
-                            `secrets.${idx}.name` as Path<FormSchemaRunMcpCommand>
-                          }
+                          name={`secrets.${idx}.name` as Path<T>}
                           value={secretField?.name || ''}
                           onChange={(e) =>
                             field.onChange({
@@ -105,9 +113,7 @@ export function FormFieldsArrayCustomSecrets({
                             aria-describedby={`secrets-${idx}-value-desc`}
                             className="rounded-tr-none rounded-br-none
                               border-r-0 font-mono focus-visible:z-10"
-                            name={
-                              `secrets.${idx}.value` as Path<FormSchemaRunMcpCommand>
-                            }
+                            name={`secrets.${idx}.value` as Path<T>}
                             value={currentValue?.secret || ''}
                             onChange={(e) =>
                               field.onChange({
