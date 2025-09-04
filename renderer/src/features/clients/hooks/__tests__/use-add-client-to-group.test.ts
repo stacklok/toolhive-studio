@@ -2,9 +2,9 @@ import React from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useMutationUnregisterClient } from '../use-mutation-unregister-client'
+import { useAddClientToGroup } from '../use-add-client-to-group'
 
-describe('useMutationUnregisterClient', () => {
+describe('useAddClientToGroup', () => {
   let queryClient: QueryClient
 
   beforeEach(() => {
@@ -19,20 +19,16 @@ describe('useMutationUnregisterClient', () => {
   const wrapper = ({ children }: { children: React.ReactNode }) =>
     React.createElement(QueryClientProvider, { client: queryClient }, children)
 
-  it('should unregister a client and invalidate discovery clients query', async () => {
+  it('should add a client to a group and invalidate discovery clients query', async () => {
     const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries')
 
     const { result } = renderHook(
-      () => useMutationUnregisterClient({ name: 'test-client', group: 'research-team' }),
+      () => useAddClientToGroup({ clientType: 'test-client' }),
       { wrapper }
     )
 
-    // Execute the mutation with the correct request format
-    await result.current.mutateAsync({ 
-      path: { 
-        name: 'test-client'
-      } 
-    })
+    // Execute the addClientToGroup function
+    await result.current.addClientToGroup({ groupName: 'research-team' })
 
     await waitFor(() => {
       expect(invalidateQueriesSpy).toHaveBeenCalledWith({
@@ -44,5 +40,21 @@ describe('useMutationUnregisterClient', () => {
         ],
       })
     })
+  })
+
+  it('should handle different group names', async () => {
+    const { result } = renderHook(
+      () => useAddClientToGroup({ clientType: 'test-client' }),
+      { wrapper }
+    )
+
+    // Should work with different group names
+    await expect(
+      result.current.addClientToGroup({ groupName: 'default' })
+    ).resolves.not.toThrow()
+
+    await expect(
+      result.current.addClientToGroup({ groupName: 'custom-group' })
+    ).resolves.not.toThrow()
   })
 })

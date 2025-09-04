@@ -1,4 +1,9 @@
-import { useMutationUnregisterClient } from './use-mutation-unregister-client'
+import {
+  deleteApiV1BetaClientsByNameMutation,
+  getApiV1BetaDiscoveryClientsQueryKey,
+} from '@api/@tanstack/react-query.gen'
+import { useToastMutation } from '@/common/hooks/use-toast-mutation'
+import { useQueryClient } from '@tanstack/react-query'
 import { trackEvent } from '@/common/lib/analytics'
 
 interface RemoveClientFromGroupParams {
@@ -6,8 +11,15 @@ interface RemoveClientFromGroupParams {
 }
 
 export function useRemoveClientFromGroup({ clientType }: RemoveClientFromGroupParams) {
-  const { mutateAsync: unregisterClient } = useMutationUnregisterClient({
-    name: clientType,
+  const queryClient = useQueryClient()
+  const { mutateAsync: unregisterClient } = useToastMutation({
+    ...deleteApiV1BetaClientsByNameMutation(),
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: getApiV1BetaDiscoveryClientsQueryKey(),
+      })
+    },
+    errorMsg: `Failed to disconnect ${clientType}`,
   })
 
   const removeClientFromGroup = async ({ groupName }: { groupName: string }) => {

@@ -1,4 +1,9 @@
-import { useMutationRegisterClient } from './use-mutation-register-client'
+import {
+  getApiV1BetaDiscoveryClientsQueryKey,
+  postApiV1BetaClientsMutation,
+} from '@api/@tanstack/react-query.gen'
+import { useToastMutation } from '@/common/hooks/use-toast-mutation'
+import { useQueryClient } from '@tanstack/react-query'
 import { trackEvent } from '@/common/lib/analytics'
 
 interface AddClientToGroupParams {
@@ -6,14 +11,22 @@ interface AddClientToGroupParams {
 }
 
 export function useAddClientToGroup({ clientType }: AddClientToGroupParams) {
-  const { mutateAsync: registerClient } = useMutationRegisterClient({
-    name: clientType,
+  const queryClient = useQueryClient()
+  const { mutateAsync: registerClient } = useToastMutation({
+    ...postApiV1BetaClientsMutation(),
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: getApiV1BetaDiscoveryClientsQueryKey(),
+      })
+    },
+    errorMsg: `Failed to connect ${clientType}`,
   })
 
   const addClientToGroup = async ({ groupName }: { groupName: string }) => {
     await registerClient({
       body: {
         name: clientType,
+        groups: [groupName],
       },
     })
     trackEvent(`Client ${clientType} registered`, {

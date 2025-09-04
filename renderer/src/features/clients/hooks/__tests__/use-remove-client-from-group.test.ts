@@ -2,9 +2,9 @@ import React from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useMutationRegisterClient } from '../use-mutation-register-client'
+import { useRemoveClientFromGroup } from '../use-remove-client-from-group'
 
-describe('useMutationRegisterClient', () => {
+describe('useRemoveClientFromGroup', () => {
   let queryClient: QueryClient
 
   beforeEach(() => {
@@ -19,21 +19,16 @@ describe('useMutationRegisterClient', () => {
   const wrapper = ({ children }: { children: React.ReactNode }) =>
     React.createElement(QueryClientProvider, { client: queryClient }, children)
 
-  it('should register a client with a mandatory group and invalidate discovery clients query', async () => {
+  it('should remove a client from a group and invalidate discovery clients query', async () => {
     const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries')
 
     const { result } = renderHook(
-      () => useMutationRegisterClient({ name: 'test-client', group: 'research-team' }),
+      () => useRemoveClientFromGroup({ clientType: 'test-client' }),
       { wrapper }
     )
 
-    // Execute the mutation with the correct request body format including mandatory group
-    await result.current.mutateAsync({ 
-      body: { 
-        name: 'test-client',
-        groups: ['research-team'] // Mandatory group parameter
-      } 
-    })
+    // Execute the removeClientFromGroup function
+    await result.current.removeClientFromGroup({ groupName: 'research-team' })
 
     await waitFor(() => {
       expect(invalidateQueriesSpy).toHaveBeenCalledWith({
@@ -47,20 +42,19 @@ describe('useMutationRegisterClient', () => {
     })
   })
 
-  it('should fail when trying to register a client without a group', async () => {
+  it('should handle different group names', async () => {
     const { result } = renderHook(
-      () => useMutationRegisterClient({ name: 'test-client', group: 'research-team' }),
+      () => useRemoveClientFromGroup({ clientType: 'test-client' }),
       { wrapper }
     )
 
-    // This should fail because group is required
+    // Should work with different group names
     await expect(
-      result.current.mutateAsync({ 
-        body: { 
-          name: 'test-client'
-          // Missing groups parameter
-        } 
-      })
-    ).rejects.toThrow()
+      result.current.removeClientFromGroup({ groupName: 'default' })
+    ).resolves.not.toThrow()
+
+    await expect(
+      result.current.removeClientFromGroup({ groupName: 'custom-group' })
+    ).resolves.not.toThrow()
   })
 })
