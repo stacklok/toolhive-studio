@@ -4,14 +4,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/common/components/ui/card'
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuSeparator,
-} from '@/common/components/ui/dropdown-menu'
-import { Button } from '@/common/components/ui/button'
-import { MoreVertical } from 'lucide-react'
 
 import type { CoreWorkload } from '@api/types.gen'
 import { ActionsMcpServer } from '../actions-mcp-server'
@@ -32,13 +24,7 @@ import {
   TooltipContent,
 } from '@/common/components/ui/tooltip'
 
-import { AddServerToGroupMenuItem } from './add-server-to-group-menu-item'
-import { RemoveServerMenuItem } from './remove-server-menu-item'
-import { LogsMenuItem } from './logs-menu-item'
-import { GithubRepositoryMenuItem } from './github-repository-menu-item'
-import { CustomizeToolsMenuItem } from './customize-tools-menu-item'
-import { EditConfigurationMenuItem } from './edit-configuration-menu-item'
-import { ServerUrl } from './server-url'
+import { ServerActionsDropdown } from './server-actions-dropdown'
 
 type CardContentMcpServerProps = {
   status: CoreWorkload['status']
@@ -213,43 +199,16 @@ export function CardMcpServer({
               <TooltipContent className="max-w-xs">{name}</TooltipContent>
             </Tooltip>
           </CardTitle>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="More options"
-                className="ml-2"
-                onClick={(e) => e.stopPropagation()}
-                disabled={isDeleting}
-              >
-                <MoreVertical className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              collisionPadding={10}
-              align="end"
-              role="menu"
-              className="w-80"
-            >
-              <ServerUrl url={url} />
-              <DropdownMenuSeparator />
-              {isEditWorkloadEnabled && (
-                <EditConfigurationMenuItem serverName={name} />
-              )}
-              {repositoryUrl && (
-                <GithubRepositoryMenuItem repositoryUrl={repositoryUrl} />
-              )}
-              <LogsMenuItem serverName={name} />
-              {isCustomizeToolsEnabled && (
-                <CustomizeToolsMenuItem serverName={name} status={status} />
-              )}
-              <RemoveServerMenuItem serverName={name} />
-              {isGroupsEnabled && <DropdownMenuSeparator />}
-
-              <AddServerToGroupMenuItem serverName={name} />
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ServerActionsDropdown
+            name={name}
+            url={url}
+            status={status}
+            repositoryUrl={repositoryUrl}
+            isEditWorkloadEnabled={isEditWorkloadEnabled}
+            isCustomizeToolsEnabled={isCustomizeToolsEnabled}
+            isGroupsEnabled={isGroupsEnabled}
+            isDeleting={isDeleting}
+          />
         </div>
       </CardHeader>
       <CardContentMcpServer
