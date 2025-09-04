@@ -9,14 +9,14 @@ import type {
   Path,
   UseFormReturn,
 } from 'react-hook-form'
-import { type FormSchemaRegistryMcp } from '../../registry-servers/lib/form-schema-registry-mcp'
+import { type FormSchemaRunFromRegistry } from '../../registry-servers/lib/get-form-schema-run-from-registry'
 import { FormControl, FormField, FormItem } from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
 
 export function NetworkIsolationTabContent({
   form,
 }: {
-  form: UseFormReturn<FormSchemaRegistryMcp>
+  form: UseFormReturn<FormSchemaRunFromRegistry>
 }) {
   return (
     <Controller
@@ -59,7 +59,7 @@ export function NetworkIsolationTabContent({
                   control={form.control}
                   name="allowedHosts"
                   render={() => (
-                    <DynamicArrayField<FormSchemaRegistryMcp>
+                    <DynamicArrayField<FormSchemaRunFromRegistry>
                       name="allowedHosts"
                       gridConfig="grid-cols-[minmax(0,1fr)_auto]"
                       label="Allowed hosts"
@@ -81,8 +81,8 @@ export function NetworkIsolationTabContent({
                             field,
                           }: {
                             field: ControllerRenderProps<
-                              FormSchemaRegistryMcp,
-                              Path<FormSchemaRegistryMcp>
+                              FormSchemaRunFromRegistry,
+                              Path<FormSchemaRunFromRegistry>
                             >
                           }) => (
                             <FormItem className="flex-grow">
@@ -109,7 +109,7 @@ export function NetworkIsolationTabContent({
                   control={form.control}
                   name="allowedPorts"
                   render={() => (
-                    <DynamicArrayField<FormSchemaRegistryMcp>
+                    <DynamicArrayField<FormSchemaRunFromRegistry>
                       name="allowedPorts"
                       gridConfig="grid-cols-[minmax(0,1fr)_auto]"
                       label="Allowed ports"
@@ -130,8 +130,8 @@ export function NetworkIsolationTabContent({
                             field,
                           }: {
                             field: ControllerRenderProps<
-                              FormSchemaRegistryMcp,
-                              Path<FormSchemaRegistryMcp>
+                              FormSchemaRunFromRegistry,
+                              Path<FormSchemaRunFromRegistry>
                             >
                           }) => (
                             <FormItem className="flex-grow">

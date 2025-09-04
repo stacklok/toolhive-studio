@@ -13,13 +13,12 @@ import {
 import { cn } from '@/common/lib/utils'
 import type { Control, Path } from 'react-hook-form'
 import { Input } from '@/common/components/ui/input'
-import type { FormSchemaLocalMcp } from '@/features/mcp-servers/lib/form-schema-local-mcp'
-import type { UseFormReturn } from 'react-hook-form'
-import type { FormSchemaRegistryMcp } from '@/features/registry-servers/lib/form-schema-registry-mcp'
+import type { FormSchemaRunFromRegistry } from '@/features/registry-servers/lib/get-form-schema-run-from-registry'
+import type { FormSchemaRunMcpCommand } from '@/features/mcp-servers/lib/form-schema-run-mcp-server-with-command'
 
 type CmdArguments =
-  | FormSchemaRegistryMcp['cmd_arguments']
-  | FormSchemaLocalMcp['cmd_arguments']
+  | FormSchemaRunFromRegistry['cmd_arguments']
+  | FormSchemaRunMcpCommand['cmd_arguments']
 
 interface CommandArgumentsFieldProps<
   T extends {
@@ -31,32 +30,11 @@ interface CommandArgumentsFieldProps<
   control: Control<T>
 }
 
-interface CommandArgumentsFieldFormProps<
-  T extends {
-    cmd_arguments?: CmdArguments
-  },
-> {
-  form: UseFormReturn<T>
-}
-
 export function CommandArgumentsField<
   T extends {
     cmd_arguments?: CmdArguments
   },
->(props: CommandArgumentsFieldProps<T> | CommandArgumentsFieldFormProps<T>) {
-  const { getValues, setValue, control } =
-    'form' in props
-      ? {
-          getValues: props.form.getValues as (
-            name: 'cmd_arguments'
-          ) => string[] | undefined,
-          setValue: props.form.setValue as (
-            name: 'cmd_arguments',
-            value: string[]
-          ) => void,
-          control: props.form.control,
-        }
-      : props
+>({ getValues, setValue, control }: CommandArgumentsFieldProps<T>) {
   const [inputValue, setInputValue] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 

@@ -3,12 +3,17 @@ import { useForm } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
 import { Form } from '@/common/components/ui/form'
+import {
+  getFormSchemaRunMcpCommand,
+  type FormSchemaRunMcpCommand,
+} from '../lib/form-schema-run-mcp-server-with-command'
 import { FormFieldsRunMcpCommand } from './form-fields-run-mcp-command'
 import {
   getApiV1BetaWorkloadsOptions,
   getApiV1BetaWorkloadsByNameOptions,
   getApiV1BetaSecretsDefaultKeysOptions,
 } from '@api/@tanstack/react-query.gen'
+import { convertCreateRequestToFormData } from '../lib/orchestrate-run-custom-server'
 import { useUpdateServer } from '../hooks/use-update-server'
 import {
   Dialog,
@@ -32,14 +37,9 @@ import {
 } from '@/common/hooks/use-form-tab-state'
 import { NetworkIsolationTabContent } from './network-isolation-tab-content'
 import { FormFieldsArrayVolumes } from './form-fields-array-custom-volumes'
-import {
-  getFormSchemaLocalMcp,
-  type FormSchemaLocalMcp,
-} from '../lib/form-schema-local-mcp'
-import { convertCreateRequestToFormData } from '../lib/orchestrate-run-local-server'
 
 type Tab = 'configuration' | 'network-isolation'
-type CommonFields = keyof FormSchemaLocalMcp
+type CommonFields = keyof FormSchemaRunMcpCommand
 type VariantSpecificFields = 'image' | 'protocol' | 'package_name'
 type Field = CommonFields | VariantSpecificFields
 
@@ -60,7 +60,7 @@ const FIELD_TAB_MAP = {
   volumes: 'configuration',
 } satisfies FieldTabMapping<Tab, Field>
 
-const DEFAULT_FORM_VALUES: Partial<FormSchemaLocalMcp> = {
+const DEFAULT_FORM_VALUES: Partial<FormSchemaRunMcpCommand> = {
   type: 'docker_image',
   name: '',
   transport: 'stdio',
@@ -74,7 +74,7 @@ const DEFAULT_FORM_VALUES: Partial<FormSchemaLocalMcp> = {
   cmd_arguments: [],
 }
 
-export function DeprecatedDialogFormRunMcpServerWithCommand({
+export function DialogFormRunMcpServerWithCommand({
   isOpen,
   onOpenChange,
   serverToEdit,
@@ -151,9 +151,9 @@ export function DeprecatedDialogFormRunMcpServerWithCommand({
     isEditing &&
     convertCreateRequestToFormData(existingServer, availableSecrets)
 
-  const form = useForm<FormSchemaLocalMcp>({
+  const form = useForm<FormSchemaRunMcpCommand>({
     resolver: zodV4Resolver(
-      getFormSchemaLocalMcp(workloads, serverToEdit || undefined)
+      getFormSchemaRunMcpCommand(workloads, serverToEdit || undefined)
     ),
     defaultValues: DEFAULT_FORM_VALUES,
     reValidateMode: 'onChange',
@@ -161,7 +161,7 @@ export function DeprecatedDialogFormRunMcpServerWithCommand({
     ...(editingFormData ? { values: editingFormData } : {}),
   })
 
-  const onSubmitForm = (data: FormSchemaLocalMcp) => {
+  const onSubmitForm = (data: FormSchemaRunMcpCommand) => {
     setIsSubmitting(true)
     if (error) {
       setError(null)
@@ -285,7 +285,9 @@ export function DeprecatedDialogFormRunMcpServerWithCommand({
                     />
                     <FormFieldsArrayCustomSecrets form={form} />
                     <FormFieldsArrayCustomEnvVars form={form} />
-                    <FormFieldsArrayVolumes<FormSchemaLocalMcp> form={form} />
+                    <FormFieldsArrayVolumes<FormSchemaRunMcpCommand>
+                      form={form}
+                    />
                   </div>
                 )}
                 {activeTab === 'network-isolation' && (

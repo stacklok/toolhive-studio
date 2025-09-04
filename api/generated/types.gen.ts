@@ -575,6 +575,7 @@ export type RunnerRemoteAuthConfig = {
   clientID?: string
   clientSecret?: string
   clientSecretFile?: string
+  enableRemoteAuth?: boolean
   /**
    * Environment variables for the client
    */
@@ -946,10 +947,6 @@ export type V1CreateRequest = {
     [key: string]: string
   }
   /**
-   * Group name this workload belongs to
-   */
-  group?: string
-  /**
    * Host to bind to
    */
   host?: string
@@ -1278,10 +1275,6 @@ export type V1UpdateRequest = {
   env_vars?: {
     [key: string]: string
   }
-  /**
-   * Group name this workload belongs to
-   */
-  group?: string
   /**
    * Host to bind to
    */

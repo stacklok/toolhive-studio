@@ -14,19 +14,19 @@ import {
   type SecretsSecretParameter,
 } from '@api/types.gen'
 import type { Options } from '@api/client'
+import type { FormSchemaRunMcpCommand } from '../lib/form-schema-run-mcp-server-with-command'
+import {
+  prepareUpdateWorkloadData,
+  saveSecrets,
+  groupSecrets,
+  getDefinedSecrets,
+} from '../lib/orchestrate-run-custom-server'
 import { prepareSecretsWithoutNamingCollision } from '@/common/lib/secrets/prepare-secrets-without-naming-collision'
 import { toast } from 'sonner'
 import { Button } from '@/common/components/ui/button'
 import { Link } from '@tanstack/react-router'
 import { restartClientNotification } from '../lib/restart-client-notification'
 import { trackEvent } from '@/common/lib/analytics'
-import {
-  getDefinedSecrets,
-  groupSecrets,
-  prepareUpdateWorkloadData,
-  saveSecrets,
-} from '../lib/orchestrate-run-local-server'
-import type { FormSchemaLocalMcp } from '../lib/form-schema-local-mcp'
 
 type UpdateServerCheck = () => Promise<unknown> | unknown
 
@@ -78,8 +78,7 @@ export function useUpdateServer(
         action: (
           <Button asChild>
             <Link
-              to="/group/$groupName"
-              params={{ groupName: 'default' }}
+              to="/"
               search={{ newServerName: serverName }}
               onClick={() => toast.dismiss(toastIdRef.current)}
               viewTransition={{ types: ['slide-left'] }}
@@ -102,7 +101,7 @@ export function useUpdateServer(
   }, [queryClient, serverName])
 
   const { mutate: updateServerMutation } = useMutation({
-    mutationFn: async ({ data }: { data: FormSchemaLocalMcp }) => {
+    mutationFn: async ({ data }: { data: FormSchemaRunMcpCommand }) => {
       let newlyCreatedSecrets: SecretsSecretParameter[] = []
 
       // Step 1: Group secrets into new and existing

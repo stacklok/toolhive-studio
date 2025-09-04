@@ -426,35 +426,4 @@ describe('usePrompt', () => {
       expect(okButton).toBeDisabled()
     })
   })
-
-  it('renders dropdown when options are provided', async () => {
-    const promptProps = generateSimplePrompt({
-      title: 'Select Group',
-      label: 'Select destination group',
-      placeholder: 'Choose a group...',
-      options: [
-        { value: 'group1', label: 'Group 1' },
-        { value: 'group2', label: 'Group 2' },
-        { value: 'group3', label: 'Group 3' },
-      ],
-    })
-
-    renderTestComponent({ promptProps })
-
-    await userEvent.click(screen.getByRole('button'))
-
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeVisible()
-    })
-
-    expect(screen.getByText('Select destination group')).toBeVisible()
-    expect(screen.getByText('Choose a group...')).toBeVisible()
-
-    const selectTrigger = screen.getByRole('combobox')
-    await userEvent.click(selectTrigger)
-
-    expect(screen.getAllByText('Group 1').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Group 2').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Group 3').length).toBeGreaterThan(0)
-  })
 })

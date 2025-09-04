@@ -10,6 +10,7 @@ import { Input } from '@/common/components/ui/input'
 import { Label } from '@/common/components/ui/label'
 import { AlertErrorFormSubmission } from '../../../../common/components/workloads/alert-error-form-submission'
 import type { UseFormReturn } from 'react-hook-form'
+import type { FormSchemaRunFromRegistry } from '../../lib/get-form-schema-run-from-registry'
 import type { GroupedEnvVars } from '../../lib/group-env-vars'
 import type { RegistryEnvVar } from '@api/types.gen'
 import { cn } from '@/common/lib/utils'
@@ -17,13 +18,12 @@ import { SecretStoreCombobox } from '@/common/components/secrets/secret-store-co
 import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
 import { CommandArgumentsField } from '@/common/components/workload-cmd-arg/command-arguments-field'
 import { FormFieldsArrayVolumes } from '@/features/mcp-servers/components/form-fields-array-custom-volumes'
-import type { FormSchemaRegistryMcp } from '../../lib/form-schema-registry-mcp'
 
 interface ConfigurationTabContentProps {
   error: string | null
   isErrorSecrets: boolean
   setError: (err: string | null) => void
-  form: UseFormReturn<FormSchemaRegistryMcp>
+  form: UseFormReturn<FormSchemaRunFromRegistry>
   groupedEnvVars: GroupedEnvVars
 }
 
@@ -33,7 +33,7 @@ function SecretRow({
   index,
 }: {
   secret: RegistryEnvVar
-  form: UseFormReturn<FormSchemaRegistryMcp>
+  form: UseFormReturn<FormSchemaRunFromRegistry>
   index: number
 }) {
   return (
@@ -121,7 +121,7 @@ function EnvVarRow({
   index,
 }: {
   envVar: RegistryEnvVar
-  form: UseFormReturn<FormSchemaRegistryMcp>
+  form: UseFormReturn<FormSchemaRunFromRegistry>
   index: number
 }) {
   return (
@@ -193,7 +193,7 @@ export function ConfigurationTabContent({
       )}
       <FormField
         control={form.control}
-        name="name"
+        name="serverName"
         render={({ field }) => (
           <FormItem className="mb-10">
             <FormLabel>Server name</FormLabel>
@@ -208,13 +208,13 @@ export function ConfigurationTabContent({
         )}
       />
 
-      <CommandArgumentsField<FormSchemaRegistryMcp>
+      <CommandArgumentsField<FormSchemaRunFromRegistry>
         getValues={(name) => form.getValues(name)}
         setValue={(name, value) => form.setValue(name, value)}
         control={form.control}
       />
 
-      <FormFieldsArrayVolumes<FormSchemaRegistryMcp> form={form} />
+      <FormFieldsArrayVolumes<FormSchemaRunFromRegistry> form={form} />
 
       {groupedEnvVars.secrets[0] ? (
         <section className="mb-10">

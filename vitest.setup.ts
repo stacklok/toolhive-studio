@@ -31,8 +31,6 @@ beforeAll(() => {
   }))
 
   window.HTMLElement.prototype.scrollIntoView = function () {}
-  window.HTMLElement.prototype.hasPointerCapture = vi.fn()
-  window.HTMLElement.prototype.releasePointerCapture = vi.fn()
 
   global.ResizeObserver = class ResizeObserver {
     disconnect() {

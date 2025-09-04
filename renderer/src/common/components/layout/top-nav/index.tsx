@@ -46,9 +46,7 @@ function TopNavLinks() {
               data-[status=hover]:bg-transparent"
             asChild
           >
-            <LinkViewTransition to="/group/default">
-              MCP Servers
-            </LinkViewTransition>
+            <LinkViewTransition to="/">MCP Servers</LinkViewTransition>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>

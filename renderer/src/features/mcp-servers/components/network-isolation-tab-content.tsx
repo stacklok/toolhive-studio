@@ -9,14 +9,14 @@ import type {
   Path,
   UseFormReturn,
 } from 'react-hook-form'
+import { type FormSchemaRunMcpCommand } from '../lib/form-schema-run-mcp-server-with-command'
 import { FormControl, FormField, FormItem } from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
-import type { FormSchemaLocalMcp } from '../lib/form-schema-local-mcp'
 
 export function NetworkIsolationTabContent({
   form,
 }: {
-  form: UseFormReturn<FormSchemaLocalMcp>
+  form: UseFormReturn<FormSchemaRunMcpCommand>
 }) {
   return (
     <Controller
@@ -59,7 +59,7 @@ export function NetworkIsolationTabContent({
                   control={form.control}
                   name="allowedHosts"
                   render={() => (
-                    <DynamicArrayField<FormSchemaLocalMcp>
+                    <DynamicArrayField<FormSchemaRunMcpCommand>
                       name="allowedHosts"
                       label="Allowed hosts"
                       inputLabelPrefix="Host"
@@ -81,8 +81,8 @@ export function NetworkIsolationTabContent({
                             field,
                           }: {
                             field: ControllerRenderProps<
-                              FormSchemaLocalMcp,
-                              Path<FormSchemaLocalMcp>
+                              FormSchemaRunMcpCommand,
+                              Path<FormSchemaRunMcpCommand>
                             >
                           }) => (
                             <FormItem className="flex-grow">
@@ -109,7 +109,7 @@ export function NetworkIsolationTabContent({
                   control={form.control}
                   name="allowedPorts"
                   render={() => (
-                    <DynamicArrayField<FormSchemaLocalMcp>
+                    <DynamicArrayField<FormSchemaRunMcpCommand>
                       name="allowedPorts"
                       label="Allowed ports"
                       inputLabelPrefix="Port"
@@ -130,8 +130,8 @@ export function NetworkIsolationTabContent({
                             field,
                           }: {
                             field: ControllerRenderProps<
-                              FormSchemaLocalMcp,
-                              Path<FormSchemaLocalMcp>
+                              FormSchemaRunMcpCommand,
+                              Path<FormSchemaRunMcpCommand>
                             >
                           }) => (
                             <FormItem className="flex-grow">

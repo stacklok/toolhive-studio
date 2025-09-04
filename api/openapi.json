@@ -133,8 +133,7 @@
           "AmpVSCode",
           "AmpCursor",
           "AmpVSCodeInsider",
-          "AmpWindsurf",
-          "LMStudio"
+          "AmpWindsurf"
         ]
       },
       "client.MCPClientStatus": {
@@ -155,8 +154,7 @@
               "AmpVSCode",
               "AmpCursor",
               "AmpVSCodeInsider",
-              "AmpWindsurf",
-              "LMStudio"
+              "AmpWindsurf"
             ]
           },
           "installed": {
@@ -638,6 +636,7 @@
           "clientID": { "type": "string" },
           "clientSecret": { "type": "string" },
           "clientSecretFile": { "type": "string" },
+          "enableRemoteAuth": { "type": "boolean" },
           "envVars": {
             "description": "Environment variables for the client",
             "items": { "$ref": "#/components/schemas/registry.EnvVar" },
@@ -987,8 +986,7 @@
                 "AmpVSCode",
                 "AmpCursor",
                 "AmpVSCodeInsider",
-                "AmpWindsurf",
-                "LMStudio"
+                "AmpWindsurf"
               ]
             },
             "type": "array",
@@ -1046,8 +1044,7 @@
               "AmpVSCode",
               "AmpCursor",
               "AmpVSCodeInsider",
-              "AmpWindsurf",
-              "LMStudio"
+              "AmpWindsurf"
             ]
           }
         },
@@ -1077,8 +1074,7 @@
               "AmpVSCode",
               "AmpCursor",
               "AmpVSCodeInsider",
-              "AmpWindsurf",
-              "LMStudio"
+              "AmpWindsurf"
             ]
           }
         },
@@ -1119,10 +1115,6 @@
             "additionalProperties": { "type": "string" },
             "description": "Environment variables to set in the container",
             "type": "object"
-          },
-          "group": {
-            "description": "Group name this workload belongs to",
-            "type": "string"
           },
           "host": { "description": "Host to bind to", "type": "string" },
           "image": { "description": "Docker image to use", "type": "string" },
@@ -1444,10 +1436,6 @@
             "additionalProperties": { "type": "string" },
             "description": "Environment variables to set in the container",
             "type": "object"
-          },
-          "group": {
-            "description": "Group name this workload belongs to",
-            "type": "string"
           },
           "host": { "description": "Host to bind to", "type": "string" },
           "image": { "description": "Docker image to use", "type": "string" },

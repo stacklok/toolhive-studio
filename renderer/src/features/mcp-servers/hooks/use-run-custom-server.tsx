@@ -7,6 +7,13 @@ import {
 import { pollServerStatus } from '@/common/lib/polling'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useRef } from 'react'
+
+import type { FormSchemaRunMcpCommand } from '../lib/form-schema-run-mcp-server-with-command'
+import {
+  groupSecrets,
+  prepareCreateWorkloadData,
+  saveSecrets,
+} from '../lib/orchestrate-run-custom-server'
 import {
   type PostApiV1BetaSecretsDefaultKeysData,
   type SecretsSecretParameter,
@@ -20,15 +27,9 @@ import { Button } from '@/common/components/ui/button'
 import { Link } from '@tanstack/react-router'
 import { restartClientNotification } from '../lib/restart-client-notification'
 import { trackEvent } from '@/common/lib/analytics'
-import type { FormSchemaLocalMcp } from '../lib/form-schema-local-mcp'
-import {
-  groupSecrets,
-  prepareCreateWorkloadData,
-  saveSecrets,
-} from '../lib/orchestrate-run-local-server'
 
 type InstallServerCheck = (
-  data: FormSchemaLocalMcp
+  data: FormSchemaRunMcpCommand
 ) => Promise<unknown> | unknown
 
 export function useRunCustomServer({
@@ -79,8 +80,7 @@ export function useRunCustomServer({
           action: (
             <Button asChild>
               <Link
-                to="/group/$groupName"
-                params={{ groupName: 'default' }}
+                to="/"
                 search={{ newServerName: formData.name }}
                 onClick={() => toast.dismiss(toastIdRef.current)}
                 viewTransition={{ types: ['slide-left'] }}
@@ -109,7 +109,7 @@ export function useRunCustomServer({
     isPending: isPendingSecrets,
     isError: isErrorSecrets,
   } = useMutation({
-    mutationFn: async (data: FormSchemaLocalMcp) => {
+    mutationFn: async (data: FormSchemaRunMcpCommand) => {
       let newlyCreatedSecrets: SecretsSecretParameter[] = []
 
       // Step 1: Group secrets into new and existing
@@ -152,7 +152,7 @@ export function useRunCustomServer({
   })
 
   const { mutate: installServerMutation } = useMutation({
-    mutationFn: async ({ data }: { data: FormSchemaLocalMcp }) => {
+    mutationFn: async ({ data }: { data: FormSchemaRunMcpCommand }) => {
       const { newlyCreatedSecrets, existingSecrets } = await handleSecrets(data)
       // Step 4: Create the MCP server workload
       // Prepare the request data and send it to the API

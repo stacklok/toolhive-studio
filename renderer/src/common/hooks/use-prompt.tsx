@@ -5,13 +5,6 @@ import type { ReactHookFormPromptConfig } from '@/common/contexts/prompt'
 import type { UseFormReturn } from 'react-hook-form'
 import { z } from 'zod/v4'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/common/components/ui/select'
 
 export function usePrompt() {
   const context = useContext(
@@ -35,7 +28,6 @@ export function generateSimplePrompt({
   placeholder,
   label,
   validationSchema,
-  options,
 }: {
   inputType?: 'text' | 'email' | 'password' | 'url'
   initialValue?: string
@@ -44,7 +36,6 @@ export function generateSimplePrompt({
   placeholder?: string
   label?: string
   validationSchema?: z.ZodSchema<string>
-  options?: Array<{ value: string; label: string }>
 } = {}): ReactHookFormPromptConfig<{ value: string }> {
   // Create a schema for the form values
   const formSchema = z.object({
@@ -62,35 +53,12 @@ export function generateSimplePrompt({
           <label htmlFor="value" className="mb-2 block text-sm font-medium">
             {label || 'Value'}
           </label>
-          {options ? (
-            <Select
-              value={form.watch('value')}
-              onValueChange={(value) => {
-                form.setValue('value', value)
-                form.trigger('value')
-              }}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue
-                  placeholder={placeholder || 'Select an option...'}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {options.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <Input
-              id="value"
-              type={inputType}
-              placeholder={placeholder}
-              {...form.register('value')}
-            />
-          )}
+          <Input
+            id="value"
+            type={inputType}
+            placeholder={placeholder}
+            {...form.register('value')}
+          />
           {form.formState.errors.value && (
             <p className="mt-1 text-sm text-red-500">
               {form.formState.errors.value.message}

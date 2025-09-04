@@ -1,5 +1,5 @@
 import { it, expect, vi, describe, beforeEach } from 'vitest'
-import type { FormSchemaLocalMcp } from '../form-schema-local-mcp'
+import type { FormSchemaRunMcpCommand } from '../form-schema-run-mcp-server-with-command'
 import {
   saveSecrets,
   prepareCreateWorkloadData,
@@ -8,7 +8,7 @@ import {
   getDefinedSecrets,
   convertCreateRequestToFormData,
   prepareUpdateWorkloadData,
-} from '../orchestrate-run-local-server'
+} from '../orchestrate-run-custom-server'
 import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
 import type {
   SecretsSecretParameter,
@@ -134,7 +134,7 @@ describe('groupSecrets', () => {
 
 describe('prepareCreateWorkloadData', () => {
   it('prepares data for docker image type', () => {
-    const data: FormSchemaLocalMcp = {
+    const data: FormSchemaRunMcpCommand = {
       image: 'ghcr.io/github/github-mcp-server',
       name: 'foo-bar',
       transport: 'stdio',
@@ -171,7 +171,7 @@ describe('prepareCreateWorkloadData', () => {
   })
 
   it('prepares data for package manager type', () => {
-    const data: FormSchemaLocalMcp = {
+    const data: FormSchemaRunMcpCommand = {
       package_name: 'my-package',
       protocol: 'npx',
       name: 'npm-server',
@@ -202,7 +202,7 @@ describe('prepareCreateWorkloadData', () => {
   })
 
   it('filters out environment variables with empty values', () => {
-    const data: FormSchemaLocalMcp = {
+    const data: FormSchemaRunMcpCommand = {
       image: 'test-image',
       name: 'test-server',
       transport: 'stdio',
@@ -227,7 +227,7 @@ describe('prepareCreateWorkloadData', () => {
   })
 
   it('configure volumes', () => {
-    const data: FormSchemaLocalMcp = {
+    const data: FormSchemaRunMcpCommand = {
       image: 'test-image',
       name: 'test-server',
       transport: 'stdio',
@@ -265,7 +265,7 @@ describe('prepareCreateWorkloadData', () => {
   })
 
   it('handles empty command arguments', () => {
-    const data: FormSchemaLocalMcp = {
+    const data: FormSchemaRunMcpCommand = {
       image: 'test-image',
       name: 'test-server',
       transport: 'stdio',
@@ -285,7 +285,7 @@ describe('prepareCreateWorkloadData', () => {
   })
 
   it('handles command arguments with multiple spaces', () => {
-    const data: FormSchemaLocalMcp = {
+    const data: FormSchemaRunMcpCommand = {
       image: 'test-image',
       name: 'test-server',
       transport: 'stdio',
@@ -309,7 +309,7 @@ describe('prepareCreateWorkloadData', () => {
   })
 
   it('works without secrets parameter', () => {
-    const data: FormSchemaLocalMcp = {
+    const data: FormSchemaRunMcpCommand = {
       image: 'test-image',
       name: 'test-server',
       transport: 'stdio',
@@ -329,7 +329,7 @@ describe('prepareCreateWorkloadData', () => {
   })
 
   it('includes network isolation data when enabled', () => {
-    const data: FormSchemaLocalMcp = {
+    const data: FormSchemaRunMcpCommand = {
       image: 'test-image',
       name: 'test-server',
       transport: 'stdio',
@@ -358,7 +358,7 @@ describe('prepareCreateWorkloadData', () => {
   })
 
   it('excludes network isolation data when disabled', () => {
-    const data: FormSchemaLocalMcp = {
+    const data: FormSchemaRunMcpCommand = {
       image: 'test-image',
       name: 'test-server',
       transport: 'stdio',
@@ -379,7 +379,7 @@ describe('prepareCreateWorkloadData', () => {
   })
 
   it('ignores invalid allowedHosts and allowedPorts when network isolation is disabled', () => {
-    const data: FormSchemaLocalMcp = {
+    const data: FormSchemaRunMcpCommand = {
       image: 'test-image',
       name: 'test-server',
       transport: 'stdio',
@@ -699,7 +699,7 @@ describe('convertWorkloadToFormData', () => {
 
 describe('getDefinedSecrets', () => {
   it('filters out secrets with empty names', () => {
-    const secrets: FormSchemaLocalMcp['secrets'] = [
+    const secrets: FormSchemaRunMcpCommand['secrets'] = [
       {
         name: 'VALID_SECRET',
         value: { secret: 'secret-key', isFromStore: false },
@@ -722,7 +722,7 @@ describe('getDefinedSecrets', () => {
   })
 
   it('filters out secrets with empty secret values', () => {
-    const secrets: FormSchemaLocalMcp['secrets'] = [
+    const secrets: FormSchemaRunMcpCommand['secrets'] = [
       {
         name: 'VALID_SECRET',
         value: { secret: 'secret-key', isFromStore: false },
@@ -740,7 +740,7 @@ describe('getDefinedSecrets', () => {
   })
 
   it('preserves isFromStore property', () => {
-    const secrets: FormSchemaLocalMcp['secrets'] = [
+    const secrets: FormSchemaRunMcpCommand['secrets'] = [
       {
         name: 'STORE_SECRET',
         value: { secret: 'key1', isFromStore: true },
@@ -938,7 +938,7 @@ describe('convertCreateRequestToFormData', () => {
 
 describe('prepareUpdateWorkloadData', () => {
   it('prepares update data for docker image type', () => {
-    const data: FormSchemaLocalMcp = {
+    const data: FormSchemaRunMcpCommand = {
       name: 'updated-server',
       transport: 'sse',
       target_port: 3000,
@@ -976,7 +976,7 @@ describe('prepareUpdateWorkloadData', () => {
   })
 
   it('prepares update data for package manager type', () => {
-    const data: FormSchemaLocalMcp = {
+    const data: FormSchemaRunMcpCommand = {
       name: 'npm-updated',
       transport: 'stdio',
       type: 'package_manager',
@@ -998,7 +998,7 @@ describe('prepareUpdateWorkloadData', () => {
   })
 
   it('includes network isolation settings when enabled', () => {
-    const data: FormSchemaLocalMcp = {
+    const data: FormSchemaRunMcpCommand = {
       name: 'test-server',
       transport: 'stdio',
       type: 'docker_image',
@@ -1027,7 +1027,7 @@ describe('prepareUpdateWorkloadData', () => {
   })
 
   it('filters out empty environment variables', () => {
-    const data: FormSchemaLocalMcp = {
+    const data: FormSchemaRunMcpCommand = {
       name: 'test-server',
       transport: 'stdio',
       type: 'docker_image',
@@ -1051,7 +1051,7 @@ describe('prepareUpdateWorkloadData', () => {
   })
 
   it('handles volumes correctly', () => {
-    const data: FormSchemaLocalMcp = {
+    const data: FormSchemaRunMcpCommand = {
       name: 'test-server',
       transport: 'stdio',
       type: 'docker_image',
@@ -1077,7 +1077,7 @@ describe('prepareUpdateWorkloadData', () => {
   })
 
   it('works without secrets parameter', () => {
-    const data: FormSchemaLocalMcp = {
+    const data: FormSchemaRunMcpCommand = {
       name: 'test-server',
       transport: 'stdio',
       type: 'docker_image',

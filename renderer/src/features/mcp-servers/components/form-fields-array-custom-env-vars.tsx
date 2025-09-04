@@ -5,6 +5,7 @@ import {
   type ArrayPath,
   type ControllerRenderProps,
 } from 'react-hook-form'
+import type { FormSchemaRunMcpCommand } from '../lib/form-schema-run-mcp-server-with-command'
 import { FormControl, FormField, FormItem } from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
 import { DynamicArrayField } from '@/features/registry-servers/components/dynamic-array-field'
@@ -14,26 +15,19 @@ type EnvVar = {
   value?: string
 }
 
-type FormWithEnvVars = {
-  envVars?: Array<{
-    name: string
-    value: string
-  }>
-}
-
-type FormWithEnvVarsFlexible = Record<string, unknown> & FormWithEnvVars
-
-export function FormFieldsArrayCustomEnvVars<
-  T extends FormWithEnvVarsFlexible,
->({ form }: { form: UseFormReturn<T> }) {
+export function FormFieldsArrayCustomEnvVars({
+  form,
+}: {
+  form: UseFormReturn<FormSchemaRunMcpCommand>
+}) {
   return (
     <FormItem>
       <Controller
         control={form.control}
-        name={'envVars' as Path<T>}
+        name={'envVars' as Path<FormSchemaRunMcpCommand>}
         render={() => (
-          <DynamicArrayField<T>
-            name={'envVars' as ArrayPath<T>}
+          <DynamicArrayField<FormSchemaRunMcpCommand>
+            name={'envVars' as ArrayPath<FormSchemaRunMcpCommand>}
             label="Environment variables"
             inputLabelPrefix="Environment variable"
             addButtonText="Add environment variable"
@@ -49,11 +43,14 @@ export function FormFieldsArrayCustomEnvVars<
             {({ inputProps, setInputRef, idx }) => (
               <FormField
                 control={form.control}
-                name={`envVars.${idx}` as Path<T>}
+                name={`envVars.${idx}` as Path<FormSchemaRunMcpCommand>}
                 render={({
                   field,
                 }: {
-                  field: ControllerRenderProps<T, Path<T>>
+                  field: ControllerRenderProps<
+                    FormSchemaRunMcpCommand,
+                    Path<FormSchemaRunMcpCommand>
+                  >
                 }) => {
                   const envVarValue = field.value as EnvVar
 
@@ -64,7 +61,9 @@ export function FormFieldsArrayCustomEnvVars<
                           ref={setInputRef(idx)}
                           aria-label={`Environment variable key ${idx + 1}`}
                           className="font-mono"
-                          name={`envVars.${idx}.name` as Path<T>}
+                          name={
+                            `envVars.${idx}.name` as Path<FormSchemaRunMcpCommand>
+                          }
                           value={envVarValue?.name || ''}
                           onChange={(e) =>
                             field.onChange({
@@ -81,7 +80,9 @@ export function FormFieldsArrayCustomEnvVars<
                           ref={setInputRef(idx)}
                           aria-label={`Environment variable value ${idx + 1}`}
                           className="font-mono"
-                          name={`envVars.${idx}.value` as Path<T>}
+                          name={
+                            `envVars.${idx}.value` as Path<FormSchemaRunMcpCommand>
+                          }
                           value={envVarValue?.value || ''}
                           onChange={(e) =>
                             field.onChange({

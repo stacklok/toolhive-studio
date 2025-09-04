@@ -6,7 +6,7 @@ import { useParams } from '@tanstack/react-router'
 import { ChevronLeft } from 'lucide-react'
 import { useUpdateServer } from '@/features/mcp-servers/hooks/use-update-server'
 import { toast } from 'sonner'
-import { convertWorkloadToFormData } from '@/features/mcp-servers/lib/orchestrate-run-local-server'
+import { convertWorkloadToFormData } from '@/features/mcp-servers/lib/orchestrate-run-custom-server'
 import { getApiV1BetaWorkloads } from '@api/sdk.gen'
 
 export function CustomizeToolsPage() {

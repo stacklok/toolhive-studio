@@ -13,6 +13,7 @@ import {
 } from '@api/@tanstack/react-query.gen'
 import { pollServerStatus } from '@/common/lib/polling'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import type { FormSchemaRunFromRegistry } from '../lib/get-form-schema-run-from-registry'
 import { useCallback, useRef } from 'react'
 import {
   getDefinedSecrets,
@@ -26,10 +27,9 @@ import { prepareSecretsWithoutNamingCollision } from '@/common/lib/secrets/prepa
 import { Link } from '@tanstack/react-router'
 import { trackEvent } from '@/common/lib/analytics'
 import { restartClientNotification } from '@/features/mcp-servers/lib/restart-client-notification'
-import type { FormSchemaRegistryMcp } from '../lib/form-schema-registry-mcp'
 
 type InstallServerCheck = (
-  data: FormSchemaRegistryMcp
+  data: FormSchemaRunFromRegistry
 ) => Promise<unknown> | unknown
 
 export function useRunFromRegistry({
@@ -63,7 +63,7 @@ export function useRunFromRegistry({
 
   const handleSettled = useCallback<InstallServerCheck>(
     async (formData) => {
-      toast.loading(`Starting "${formData.name}"...`, {
+      toast.loading(`Starting "${formData.serverName}"...`, {
         duration: 30_000,
         id: toastIdRef.current,
       })
@@ -72,7 +72,7 @@ export function useRunFromRegistry({
         () =>
           queryClient.fetchQuery(
             getApiV1BetaWorkloadsByNameStatusOptions({
-              path: { name: formData.name },
+              path: { name: formData.serverName },
             })
           ),
         'running'
@@ -83,15 +83,14 @@ export function useRunFromRegistry({
           queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
         })
 
-        toast.success(`"${formData.name}" started successfully.`, {
+        toast.success(`"${formData.serverName}" started successfully.`, {
           id: toastIdRef.current,
           duration: 5_000, // slightly longer than default
           action: (
             <Button asChild>
               <Link
-                to="/group/$groupName"
-                params={{ groupName: 'default' }}
-                search={{ newServerName: formData.name }}
+                to="/"
+                search={{ newServerName: formData.serverName }}
                 onClick={() => toast.dismiss(toastIdRef.current)}
                 viewTransition={{ types: ['slide-left'] }}
                 className="ml-auto"
@@ -103,7 +102,7 @@ export function useRunFromRegistry({
         })
       } else {
         toast.warning(
-          `Server "${formData.name}" was created but may still be starting up. Check the servers list to monitor its status.`,
+          `Server "${formData.serverName}" was created but may still be starting up. Check the servers list to monitor its status.`,
           {
             id: toastIdRef.current,
             duration: 2_000, // reset to default
@@ -119,7 +118,7 @@ export function useRunFromRegistry({
     isPending: isPendingSecrets,
     isError: isErrorSecrets,
   } = useMutation({
-    mutationFn: async (data: FormSchemaRegistryMcp) => {
+    mutationFn: async (data: FormSchemaRunFromRegistry) => {
       let newlyCreatedSecrets: SecretsSecretParameter[] = []
 
       // NOTE: Due to how we populate the names of the secrets in the form, we may
@@ -171,7 +170,7 @@ export function useRunFromRegistry({
       data,
     }: {
       server: RegistryImageMetadata
-      data: FormSchemaRegistryMcp
+      data: FormSchemaRunFromRegistry
     }) => {
       const { newlyCreatedSecrets, existingSecrets } = await handleSecrets(data)
 

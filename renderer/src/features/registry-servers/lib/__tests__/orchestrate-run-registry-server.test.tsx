@@ -1,4 +1,5 @@
 import { it, expect, vi, describe } from 'vitest'
+import type { FormSchemaRunFromRegistry } from '../get-form-schema-run-from-registry'
 import type { RegistryImageMetadata } from '@api/types.gen'
 import {
   getDefinedSecrets,
@@ -7,7 +8,6 @@ import {
   groupSecrets,
 } from '../orchestrate-run-registry-server'
 import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
-import type { FormSchemaRegistryMcp } from '../form-schema-registry-mcp'
 
 const REGISTRY_SERVER: RegistryImageMetadata = {
   name: 'test-server',
@@ -29,7 +29,7 @@ beforeEach(() => {
 
 describe('getDefinedSecrets', () => {
   it('filters out secrets with empty name or secret value', () => {
-    const secrets: FormSchemaRegistryMcp['secrets'] = [
+    const secrets: FormSchemaRunFromRegistry['secrets'] = [
       {
         name: 'GITHUB_API_TOKEN',
         value: { secret: 'foo-bar', isFromStore: false },
@@ -63,7 +63,7 @@ describe('getDefinedSecrets', () => {
   })
 
   it('returns empty array when no valid secrets', () => {
-    const secrets: FormSchemaRegistryMcp['secrets'] = [
+    const secrets: FormSchemaRunFromRegistry['secrets'] = [
       {
         name: '',
         value: { secret: 'some-value', isFromStore: false },
@@ -177,8 +177,8 @@ describe('prepareCreateWorkloadData', () => {
   }
 
   it('prepares workload data with all fields', () => {
-    const data: FormSchemaRegistryMcp = {
-      name: 'Test Server',
+    const data: FormSchemaRunFromRegistry = {
+      serverName: 'Test Server',
       envVars: [
         { name: 'DEBUG', value: 'true' },
         { name: 'PORT', value: '8080' },
@@ -214,8 +214,8 @@ describe('prepareCreateWorkloadData', () => {
   })
 
   it('handles empty env vars and secrets', () => {
-    const data: FormSchemaRegistryMcp = {
-      name: 'Test Server',
+    const data: FormSchemaRunFromRegistry = {
+      serverName: 'Test Server',
       envVars: [],
       secrets: [],
       networkIsolation: false,
@@ -240,8 +240,8 @@ describe('prepareCreateWorkloadData', () => {
   })
 
   it('handles empty cmd_arguments', () => {
-    const data: FormSchemaRegistryMcp = {
-      name: 'Test Server',
+    const data: FormSchemaRunFromRegistry = {
+      serverName: 'Test Server',
       envVars: [],
       secrets: [],
       cmd_arguments: [],
@@ -257,8 +257,8 @@ describe('prepareCreateWorkloadData', () => {
   })
 
   it('handles undefined cmd_arguments', () => {
-    const data: FormSchemaRegistryMcp = {
-      name: 'Test Server',
+    const data: FormSchemaRunFromRegistry = {
+      serverName: 'Test Server',
       envVars: [],
       secrets: [],
       cmd_arguments: undefined,
@@ -280,8 +280,8 @@ describe('prepareCreateWorkloadData', () => {
       transport: 'stdio',
     }
 
-    const data: FormSchemaRegistryMcp = {
-      name: 'Test Server',
+    const data: FormSchemaRunFromRegistry = {
+      serverName: 'Test Server',
       envVars: [],
       secrets: [],
       networkIsolation: false,
@@ -296,8 +296,8 @@ describe('prepareCreateWorkloadData', () => {
   })
 
   it('filters out environment variables with empty values', () => {
-    const data: FormSchemaRegistryMcp = {
-      name: 'Test Server',
+    const data: FormSchemaRunFromRegistry = {
+      serverName: 'Test Server',
       envVars: [
         { name: 'DEBUG', value: 'true' },
         { name: 'PORT', value: '8080' },
@@ -452,8 +452,8 @@ describe('saveSecrets', () => {
   })
 
   it('includes network isolation data when enabled', () => {
-    const data: FormSchemaRegistryMcp = {
-      name: 'test-server',
+    const data: FormSchemaRunFromRegistry = {
+      serverName: 'test-server',
       cmd_arguments: [],
       secrets: [],
       envVars: [],
@@ -478,8 +478,8 @@ describe('saveSecrets', () => {
   })
 
   it('excludes network isolation data when disabled', () => {
-    const data: FormSchemaRegistryMcp = {
-      name: 'test-server',
+    const data: FormSchemaRunFromRegistry = {
+      serverName: 'test-server',
       cmd_arguments: [],
       secrets: [],
       envVars: [],

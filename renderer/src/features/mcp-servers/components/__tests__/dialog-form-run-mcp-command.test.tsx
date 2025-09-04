@@ -1,6 +1,6 @@
 import { render, waitFor, screen, act } from '@testing-library/react'
 import { it, expect, vi, describe, beforeEach } from 'vitest'
-import { DeprecatedDialogFormRunMcpServerWithCommand } from '../dialog-form-run-mcp-command'
+import { DialogFormRunMcpServerWithCommand } from '../dialog-form-run-mcp-command'
 import userEvent from '@testing-library/user-event'
 import { Dialog } from '@/common/components/ui/dialog'
 import { server as mswServer } from '@/common/mocks/node'
@@ -67,14 +67,11 @@ beforeEach(() => {
   })
 })
 
-describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
+describe('DialogFormRunMcpServerWithCommand', () => {
   it('renders form fields correctly for docker image', async () => {
     renderWithProviders(
       <Wrapper>
-        <DeprecatedDialogFormRunMcpServerWithCommand
-          isOpen
-          onOpenChange={vi.fn()}
-        />
+        <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
       </Wrapper>
     )
 
@@ -116,10 +113,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DeprecatedDialogFormRunMcpServerWithCommand
-          isOpen
-          onOpenChange={vi.fn()}
-        />
+        <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
       </Wrapper>
     )
 
@@ -173,10 +167,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DeprecatedDialogFormRunMcpServerWithCommand
-          isOpen
-          onOpenChange={vi.fn()}
-        />
+        <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
       </Wrapper>
     )
 
@@ -232,10 +223,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DeprecatedDialogFormRunMcpServerWithCommand
-          isOpen
-          onOpenChange={vi.fn()}
-        />
+        <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
       </Wrapper>
     )
 
@@ -319,10 +307,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DeprecatedDialogFormRunMcpServerWithCommand
-          isOpen
-          onOpenChange={vi.fn()}
-        />
+        <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
       </Wrapper>
     )
 
@@ -362,10 +347,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DeprecatedDialogFormRunMcpServerWithCommand
-          isOpen
-          onOpenChange={vi.fn()}
-        />
+        <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
       </Wrapper>
     )
 
@@ -397,10 +379,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
   it('renders aria-hidden column labels for storage volumes', async () => {
     renderWithProviders(
       <Wrapper>
-        <DeprecatedDialogFormRunMcpServerWithCommand
-          isOpen
-          onOpenChange={vi.fn()}
-        />
+        <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
       </Wrapper>
     )
 
@@ -433,7 +412,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DeprecatedDialogFormRunMcpServerWithCommand
+        <DialogFormRunMcpServerWithCommand
           isOpen
           onOpenChange={mockOnOpenChange}
         />
@@ -480,7 +459,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DeprecatedDialogFormRunMcpServerWithCommand
+        <DialogFormRunMcpServerWithCommand
           isOpen
           onOpenChange={mockOnOpenChange}
         />
@@ -508,10 +487,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
       renderWithProviders(
         <Wrapper>
-          <DeprecatedDialogFormRunMcpServerWithCommand
-            isOpen
-            onOpenChange={vi.fn()}
-          />
+          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
         </Wrapper>
       )
 
@@ -576,10 +552,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
       renderWithProviders(
         <Wrapper>
-          <DeprecatedDialogFormRunMcpServerWithCommand
-            isOpen
-            onOpenChange={vi.fn()}
-          />
+          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
         </Wrapper>
       )
 
@@ -618,7 +591,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
       renderWithProviders(
         <Wrapper>
-          <DeprecatedDialogFormRunMcpServerWithCommand
+          <DialogFormRunMcpServerWithCommand
             isOpen
             onOpenChange={mockOnOpenChange}
           />
@@ -639,7 +612,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
       renderWithProviders(
         <Wrapper>
-          <DeprecatedDialogFormRunMcpServerWithCommand
+          <DialogFormRunMcpServerWithCommand
             isOpen
             onOpenChange={mockOnOpenChange}
           />
@@ -657,10 +630,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
     it('activates the network isolation tab if a validation error occurs there while on the configuration tab', async () => {
       renderWithProviders(
         <Wrapper>
-          <DeprecatedDialogFormRunMcpServerWithCommand
-            isOpen
-            onOpenChange={vi.fn()}
-          />
+          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
         </Wrapper>
       )
 
@@ -707,10 +677,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
     it('activates the configuration tab if a validation error occurs there while on the network isolation tab', async () => {
       renderWithProviders(
         <Wrapper>
-          <DeprecatedDialogFormRunMcpServerWithCommand
-            isOpen
-            onOpenChange={vi.fn()}
-          />
+          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
         </Wrapper>
       )
 
@@ -733,10 +700,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
     it('shows alert when network isolation is enabled but no hosts or ports are configured', async () => {
       renderWithProviders(
         <Wrapper>
-          <DeprecatedDialogFormRunMcpServerWithCommand
-            isOpen
-            onOpenChange={vi.fn()}
-          />
+          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
         </Wrapper>
       )
 
@@ -785,10 +749,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
       renderWithProviders(
         <Wrapper>
-          <DeprecatedDialogFormRunMcpServerWithCommand
-            isOpen
-            onOpenChange={vi.fn()}
-          />
+          <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
         </Wrapper>
       )
 
@@ -879,10 +840,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DeprecatedDialogFormRunMcpServerWithCommand
-          isOpen
-          onOpenChange={vi.fn()}
-        />
+        <DialogFormRunMcpServerWithCommand isOpen onOpenChange={vi.fn()} />
       </Wrapper>
     )
 
