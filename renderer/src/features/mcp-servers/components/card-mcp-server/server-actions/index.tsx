@@ -6,6 +6,9 @@ import {
   DropdownMenuContent,
   DropdownMenuSeparator,
 } from '@/common/components/ui/dropdown-menu'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { featureFlagKeys } from '../../../../../../../utils/feature-flags'
+import { useServerDetails } from '../../../hooks/use-server-details'
 import { ServerUrl } from './items/server-url'
 import { EditConfigurationMenuItem } from './items/edit-configuration-menu-item'
 import { GithubRepositoryMenuItem } from './items/github-repository-menu-item'
@@ -18,23 +21,24 @@ interface ServerActionsDropdownProps {
   name: string
   url: string
   status: string | undefined
-  repositoryUrl?: string
-  isEditWorkloadEnabled: boolean
-  isCustomizeToolsEnabled: boolean
-  isGroupsEnabled: boolean
-  isDeleting: boolean
 }
 
 export function ServerActionsDropdown({
   name,
   url,
   status,
-  repositoryUrl,
-  isEditWorkloadEnabled,
-  isCustomizeToolsEnabled,
-  isGroupsEnabled,
-  isDeleting,
 }: ServerActionsDropdownProps) {
+  const isCustomizeToolsEnabled = useFeatureFlag(
+    featureFlagKeys.CUSTOMIZE_TOOLS
+  )
+  const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
+  const isEditWorkloadEnabled = useFeatureFlag(featureFlagKeys.EDIT_WORKLOAD)
+
+  const { data: serverDetails } = useServerDetails(name)
+
+  const repositoryUrl = serverDetails?.server?.repository_url
+  const isDeleting = status === 'deleting'
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

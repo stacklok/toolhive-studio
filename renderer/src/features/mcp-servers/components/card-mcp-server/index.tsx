@@ -10,11 +10,7 @@ import { ActionsMcpServer } from '../actions-mcp-server'
 import { useMutationRestartServer } from '../../hooks/use-mutation-restart-server'
 import { useMutationStopServerList } from '../../hooks/use-mutation-stop-server'
 
-import { useQuery } from '@tanstack/react-query'
 import { useSearch } from '@tanstack/react-router'
-import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
-import { featureFlagKeys } from '../../../../../../utils/feature-flags'
-import { getApiV1BetaRegistryByNameServersByServerName } from '@api/sdk.gen'
 import { useEffect, useRef, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { trackEvent } from '@/common/lib/analytics'
@@ -102,32 +98,6 @@ export function CardMcpServer({
   transport: CoreWorkload['transport_type']
 }) {
   const nameRef = useRef<HTMLElement | null>(null)
-  const isCustomizeToolsEnabled = useFeatureFlag(
-    featureFlagKeys.CUSTOMIZE_TOOLS
-  )
-  const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
-  const isEditWorkloadEnabled = useFeatureFlag(featureFlagKeys.EDIT_WORKLOAD)
-
-  const { data: serverDetails } = useQuery({
-    queryKey: ['serverDetails', name],
-    queryFn: async () => {
-      if (!name) return null
-      try {
-        const { data } = await getApiV1BetaRegistryByNameServersByServerName({
-          path: {
-            name: 'default',
-            serverName: name,
-          },
-        })
-
-        return data ?? {}
-      } catch (error) {
-        console.error(`Failed to fetch details for server ${name}:`, error)
-        return null
-      }
-    },
-    enabled: Boolean(name),
-  })
 
   const search = useSearch({
     strict: false,
@@ -151,8 +121,6 @@ export function CardMcpServer({
       setIsNewServer(false)
     }
   }, [name, search])
-
-  const repositoryUrl = serverDetails?.server?.repository_url
 
   // Check if the server is in deleting state
   const isDeleting = status === 'deleting'
@@ -199,16 +167,7 @@ export function CardMcpServer({
               <TooltipContent className="max-w-xs">{name}</TooltipContent>
             </Tooltip>
           </CardTitle>
-          <ServerActionsDropdown
-            name={name}
-            url={url}
-            status={status}
-            repositoryUrl={repositoryUrl}
-            isEditWorkloadEnabled={isEditWorkloadEnabled}
-            isCustomizeToolsEnabled={isCustomizeToolsEnabled}
-            isGroupsEnabled={isGroupsEnabled}
-            isDeleting={isDeleting}
-          />
+          <ServerActionsDropdown name={name} url={url} status={status} />
         </div>
       </CardHeader>
       <CardContentMcpServer
