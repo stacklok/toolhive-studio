@@ -1,19 +1,29 @@
-import {
-  deleteApiV1BetaClientsByNameMutation,
-  getApiV1BetaDiscoveryClientsQueryKey,
-} from '@api/@tanstack/react-query.gen'
+import { getApiV1BetaDiscoveryClientsQueryKey } from '@api/@tanstack/react-query.gen'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { useQueryClient } from '@tanstack/react-query'
 import { trackEvent } from '@/common/lib/analytics'
+import { deleteApiV1BetaClientsByNameGroupsByGroup } from '@api/sdk.gen'
 
 interface RemoveClientFromGroupParams {
   clientType: string
 }
 
-export function useRemoveClientFromGroup({ clientType }: RemoveClientFromGroupParams) {
+export function useRemoveClientFromGroup({
+  clientType,
+}: RemoveClientFromGroupParams) {
   const queryClient = useQueryClient()
   const { mutateAsync: unregisterClient } = useToastMutation({
-    ...deleteApiV1BetaClientsByNameMutation(),
+    mutationFn: async ({ groupName }: { groupName: string }) => {
+      return await deleteApiV1BetaClientsByNameGroupsByGroup({
+        path: {
+          name: clientType,
+          group: groupName,
+        },
+        parseAs: 'text',
+        responseStyle: 'data',
+        throwOnError: true,
+      })
+    },
     onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: getApiV1BetaDiscoveryClientsQueryKey(),
@@ -25,12 +35,12 @@ export function useRemoveClientFromGroup({ clientType }: RemoveClientFromGroupPa
     errorMsg: `Failed to disconnect ${clientType}`,
   })
 
-  const removeClientFromGroup = async ({ groupName: _groupName }: { groupName: string }) => {
-    await unregisterClient({
-      path: {
-        name: clientType,
-      },
-    })
+  const removeClientFromGroup = async ({
+    groupName,
+  }: {
+    groupName: string
+  }) => {
+    await unregisterClient({ groupName })
     trackEvent(`Client ${clientType} unregistered`, {
       client: clientType,
     })

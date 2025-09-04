@@ -30,7 +30,10 @@ describe('useAddClientToGroup', () => {
       http.post(mswEndpoint('/api/v1beta/clients'), async ({ request }) => {
         const body = await request.json()
         capturedRequests.push(body)
-        return HttpResponse.json({ name: body.name, groups: body.groups }, { status: 200 })
+        return HttpResponse.json(
+          { name: body.name, groups: body.groups },
+          { status: 200 }
+        )
       })
     )
 
@@ -46,18 +49,21 @@ describe('useAddClientToGroup', () => {
       expect(capturedRequests).toHaveLength(1)
       expect(capturedRequests[0]).toEqual({
         name: 'test-client',
-        groups: ['research-team']
+        groups: ['research-team'],
       })
     })
   })
 
-  it('should handle different group names correctly', async () => {
+  it('should send different group names correctly', async () => {
     // Mock the API endpoint to capture requests
     server.use(
       http.post(mswEndpoint('/api/v1beta/clients'), async ({ request }) => {
         const body = await request.json()
         capturedRequests.push(body)
-        return HttpResponse.json({ name: body.name, groups: body.groups }, { status: 200 })
+        return HttpResponse.json(
+          { name: body.name, groups: body.groups },
+          { status: 200 }
+        )
       })
     )
 
@@ -74,11 +80,46 @@ describe('useAddClientToGroup', () => {
       expect(capturedRequests).toHaveLength(2)
       expect(capturedRequests[0]).toEqual({
         name: 'vscode',
-        groups: ['default']
+        groups: ['default'],
       })
       expect(capturedRequests[1]).toEqual({
         name: 'vscode',
-        groups: ['custom-group']
+        groups: ['custom-group'],
+      })
+    })
+  })
+
+  it('should handle different group names correctly', async () => {
+    // Mock the API endpoint to capture requests
+    server.use(
+      http.post(mswEndpoint('/api/v1beta/clients'), async ({ request }) => {
+        const body = await request.json()
+        capturedRequests.push(body)
+        return HttpResponse.json(
+          { name: body.name, groups: body.groups },
+          { status: 200 }
+        )
+      })
+    )
+
+    const { result } = renderHook(
+      () => useAddClientToGroup({ clientType: 'vscode' }),
+      { wrapper }
+    )
+
+    // Test with different group names
+    await result.current.addClientToGroup({ groupName: 'default' })
+    await result.current.addClientToGroup({ groupName: 'custom-group' })
+
+    await waitFor(() => {
+      expect(capturedRequests).toHaveLength(2)
+      expect(capturedRequests[0]).toEqual({
+        name: 'vscode',
+        groups: ['default'],
+      })
+      expect(capturedRequests[1]).toEqual({
+        name: 'vscode',
+        groups: ['custom-group'],
       })
     })
   })

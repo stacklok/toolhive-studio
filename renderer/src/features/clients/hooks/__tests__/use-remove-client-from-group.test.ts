@@ -9,7 +9,12 @@ import { mswEndpoint } from '@/common/mocks/msw-endpoint'
 
 describe('useRemoveClientFromGroup', () => {
   let queryClient: QueryClient
-  let capturedRequests: Array<{ method: string; clientName: string; url: string }> = []
+  let capturedRequests: Array<{
+    method: string
+    clientName: string
+    groupName: string
+    url: string
+  }> = []
 
   beforeEach(() => {
     queryClient = new QueryClient({
@@ -24,17 +29,21 @@ describe('useRemoveClientFromGroup', () => {
   const wrapper = ({ children }: { children: React.ReactNode }) =>
     React.createElement(QueryClientProvider, { client: queryClient }, children)
 
-  it('should send correct client name in API request', async () => {
-    // Mock the API endpoint to capture requests
+  it('should send correct client name and group in API request', async () => {
+    // Mock the group-specific API endpoint to capture requests
     server.use(
-      http.delete(mswEndpoint('/api/v1beta/clients/:name'), async ({ request, params }) => {
-        capturedRequests.push({ 
-          method: 'DELETE',
-          clientName: params.name,
-          url: request.url 
-        })
-        return new HttpResponse(null, { status: 204 })
-      })
+      http.delete(
+        mswEndpoint('/api/v1beta/clients/:name/groups/:group'),
+        async ({ request, params }) => {
+          capturedRequests.push({
+            method: 'DELETE',
+            clientName: params.name,
+            groupName: params.group,
+            url: request.url,
+          })
+          return new HttpResponse(null, { status: 204 })
+        }
+      )
     )
 
     const { result } = renderHook(
@@ -50,22 +59,29 @@ describe('useRemoveClientFromGroup', () => {
       expect(capturedRequests[0]).toEqual({
         method: 'DELETE',
         clientName: 'test-client',
-        url: expect.stringContaining('/api/v1beta/clients/test-client')
+        groupName: 'research-team',
+        url: expect.stringContaining(
+          '/api/v1beta/clients/test-client/groups/research-team'
+        ),
       })
     })
   })
 
-  it('should handle different client types correctly', async () => {
-    // Mock the API endpoint to capture requests
+  it('should handle different client types and groups correctly', async () => {
+    // Mock the group-specific API endpoint to capture requests
     server.use(
-      http.delete(mswEndpoint('/api/v1beta/clients/:name'), async ({ request, params }) => {
-        capturedRequests.push({ 
-          method: 'DELETE',
-          clientName: params.name,
-          url: request.url 
-        })
-        return new HttpResponse(null, { status: 204 })
-      })
+      http.delete(
+        mswEndpoint('/api/v1beta/clients/:name/groups/:group'),
+        async ({ request, params }) => {
+          capturedRequests.push({
+            method: 'DELETE',
+            clientName: params.name,
+            groupName: params.group,
+            url: request.url,
+          })
+          return new HttpResponse(null, { status: 204 })
+        }
+      )
     )
 
     const { result } = renderHook(
@@ -73,7 +89,7 @@ describe('useRemoveClientFromGroup', () => {
       { wrapper }
     )
 
-    // Test with different group names (should not affect the client name sent)
+    // Test with different group names
     await result.current.removeClientFromGroup({ groupName: 'default' })
     await result.current.removeClientFromGroup({ groupName: 'custom-group' })
 
@@ -82,17 +98,33 @@ describe('useRemoveClientFromGroup', () => {
       expect(capturedRequests[0]).toEqual({
         method: 'DELETE',
         clientName: 'vscode',
-        url: expect.stringContaining('/api/v1beta/clients/vscode')
+        groupName: 'default',
+        url: expect.stringContaining(
+          '/api/v1beta/clients/vscode/groups/default'
+        ),
       })
       expect(capturedRequests[1]).toEqual({
         method: 'DELETE',
         clientName: 'vscode',
-        url: expect.stringContaining('/api/v1beta/clients/vscode')
+        groupName: 'custom-group',
+        url: expect.stringContaining(
+          '/api/v1beta/clients/vscode/groups/custom-group'
+        ),
       })
     })
   })
 
   it('should invalidate discovery clients query after successful unregistration', async () => {
+    // Mock the group-specific API endpoint
+    server.use(
+      http.delete(
+        mswEndpoint('/api/v1beta/clients/:name/groups/:group'),
+        async () => {
+          return new HttpResponse(null, { status: 204 })
+        }
+      )
+    )
+
     const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries')
 
     const { result } = renderHook(

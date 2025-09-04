@@ -21,7 +21,7 @@ const CLIENT_TYPE_LABEL_MAP = {
 
 export function CardClient({
   client,
-  groupName: _groupName,
+  groupName,
 }: {
   client: ClientMcpClientStatus
   groupName: string
@@ -48,9 +48,9 @@ export function CardClient({
             checked={client.registered}
             onCheckedChange={() => {
               if (client.registered) {
-                removeClientFromGroup({ groupName: 'default' })
+                removeClientFromGroup({ groupName })
               } else {
-                addClientToGroup({ groupName: 'default' })
+                addClientToGroup({ groupName })
               }
             }}
           />

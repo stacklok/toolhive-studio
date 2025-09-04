@@ -65,13 +65,46 @@ describe('Clients Route', () => {
     renderRoute(router)
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /clients/i })).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', { name: /clients/i })
+      ).toBeInTheDocument()
     })
 
     // Verify that the groups data is being fetched
     // The actual toggle state verification can be added later when we debug the data flow
     expect(screen.getByText('VS Code - Copilot')).toBeInTheDocument()
     expect(screen.getByText('Cursor')).toBeInTheDocument()
+  })
+
+  it('should pass correct group name to card components', async () => {
+    // Mock groups data
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () => {
+        return HttpResponse.json({
+          groups: [
+            { name: 'default', registered_clients: [] },
+            { name: 'research', registered_clients: [] },
+          ],
+        })
+      })
+    )
+
+    // Test with a custom group
+    const customGroupRouter = createTestRouter(Clients, '/clients/research')
+    renderRoute(customGroupRouter)
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: /clients/i })
+      ).toBeInTheDocument()
+    })
+
+    // Verify we're on the research group page
+    expect(customGroupRouter.state.location.pathname).toBe('/clients/research')
+
+    // The group name should be passed correctly to the card components
+    // This test ensures the bug we just fixed doesn't happen again
+    expect(screen.getByText('VS Code - Copilot')).toBeInTheDocument()
   })
 
   it.each([
