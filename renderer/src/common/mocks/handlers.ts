@@ -131,6 +131,30 @@ export const handlers = [
     return HttpResponse.json({ status: server.status })
   }),
 
+  http.get(mswEndpoint('/api/v1beta/workloads/:name/export'), ({ params }) => {
+    const { name } = params
+
+    const server = getWorkloadByName(name as string)
+    if (!server) {
+      return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
+    }
+
+    return HttpResponse.json({
+      name: server.name,
+      image: server.package || 'ghcr.io/default/default:latest',
+      transport: 'stdio',
+      target_port: server.port || 0,
+      cmd_args: [],
+      env_vars: {},
+      secrets: [],
+      volumes: [],
+      isolate_network: false,
+      permission_profile: undefined,
+      host: '127.0.0.1',
+      tools_filter: server.tools || [],
+    })
+  }),
+
   // Batch restart endpoint
   http.post(
     mswEndpoint('/api/v1beta/workloads/restart'),
@@ -186,7 +210,7 @@ export const handlers = [
   http.post(mswEndpoint('/api/v1beta/clients'), async ({ request }) => {
     try {
       const { name, groups } = await request.json()
-      
+
       if (!name) {
         return HttpResponse.json(
           { error: 'Client name is required' },
@@ -217,7 +241,7 @@ export const handlers = [
   }),
 
   // Client unregistration endpoint
-  http.delete(mswEndpoint('/api/v1beta/clients/:name'), ({ params, request }) => {
+  http.delete(mswEndpoint('/api/v1beta/clients/:name'), ({ params }) => {
     const { name } = params
 
     if (!name) {
@@ -231,7 +255,7 @@ export const handlers = [
     // Since DELETE requests typically don't have a body, we'll check the URL or require it
     // For now, let's assume the group should be provided in the path or query params
     // This is a simplified approach - in a real scenario, you might want to check the request body
-    
+
     return new HttpResponse(null, { status: 204 })
   }),
 

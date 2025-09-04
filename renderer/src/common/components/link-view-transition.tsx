@@ -3,8 +3,7 @@ import { Link, useRouterState } from '@tanstack/react-router'
 import { forwardRef, type ComponentProps } from 'react'
 
 type Route = FileRouteTypes['fullPaths']
-
-const ORDERED_ROUTES: Route[] = ['/', '/registry', '/secrets']
+const ORDERED_ROUTES: Route[] = ['/group/$groupName', '/registry', '/secrets']
 
 type TransitionType = 'slide-left' | 'slide-right'
 
