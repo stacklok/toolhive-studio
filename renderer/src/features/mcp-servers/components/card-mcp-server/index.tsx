@@ -11,10 +11,7 @@ import {
   DropdownMenuSeparator,
 } from '@/common/components/ui/dropdown-menu'
 import { Button } from '@/common/components/ui/button'
-import { MoreVertical, Copy } from 'lucide-react'
-
-import { toast } from 'sonner'
-import { Input } from '@/common/components/ui/input'
+import { MoreVertical } from 'lucide-react'
 
 import type { CoreWorkload } from '@api/types.gen'
 import { ActionsMcpServer } from '../actions-mcp-server'
@@ -41,6 +38,7 @@ import { LogsMenuItem } from './logs-menu-item'
 import { GithubRepositoryMenuItem } from './github-repository-menu-item'
 import { CustomizeToolsMenuItem } from './customize-tools-menu-item'
 import { EditConfigurationMenuItem } from './edit-configuration-menu-item'
+import { ServerUrl } from './server-url'
 
 type CardContentMcpServerProps = {
   status: CoreWorkload['status']
@@ -170,11 +168,6 @@ export function CardMcpServer({
     }
   }, [name, search])
 
-  const handleCopyUrl = async () => {
-    await navigator.clipboard.writeText(url)
-    toast('MCP server URL has been copied to clipboard')
-  }
-
   const repositoryUrl = serverDetails?.server?.repository_url
 
   // Check if the server is in deleting state
@@ -241,17 +234,7 @@ export function CardMcpServer({
               role="menu"
               className="w-80"
             >
-              <div className="flex items-center gap-2 p-2">
-                <Input value={url} readOnly className="font-mono text-sm" />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleCopyUrl}
-                  aria-label="Copy URL"
-                >
-                  <Copy className="size-4" />
-                </Button>
-              </div>
+              <ServerUrl url={url} />
               <DropdownMenuSeparator />
               {isEditWorkloadEnabled && (
                 <EditConfigurationMenuItem serverName={name} onEdit={onEdit} />
