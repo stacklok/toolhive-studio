@@ -220,10 +220,6 @@ export function FormFieldsLocalMcp({
       onInteractOutside={(e) => {
         // Prevent closing the dialog when clicking outside
         e.preventDefault()
-        onOpenChange({
-          local: false,
-          remote: false,
-        })
       }}
     >
       <Form {...form}>

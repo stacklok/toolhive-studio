@@ -34,8 +34,10 @@ import {
 
 export function FormFieldsRemoteMcp({
   workloads,
+  onOpenChange,
 }: {
   workloads: CoreWorkload[]
+  onOpenChange: (serverType: { local: boolean; remote: boolean }) => void
   serverToEdit?: string | null
 }) {
   const form = useForm<FormSchemaRemoteMcp>({
@@ -68,7 +70,9 @@ export function FormFieldsRemoteMcp({
   return (
     <DialogContent
       className="p-0 sm:max-w-2xl"
-      onCloseAutoFocus={() => {}}
+      onCloseAutoFocus={() => {
+        onOpenChange({ local: false, remote: false })
+      }}
       onInteractOutside={(e) => {
         // Prevent closing the dialog when clicking outside
         e.preventDefault()
@@ -179,12 +183,12 @@ export function FormFieldsRemoteMcp({
             <Button
               type="button"
               variant="outline"
-              //   disabled={isSubmitting}
+              // disabled={isSubmitting}
               onClick={() => {
-                // onOpenChange({
-                //   local: false,
-                //   remote: false,
-                // })
+                onOpenChange({
+                  local: false,
+                  remote: false,
+                })
               }}
             >
               Cancel
