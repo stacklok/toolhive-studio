@@ -13,7 +13,7 @@ import {
   Router,
 } from '@tanstack/react-router'
 import { createMemoryHistory } from '@tanstack/react-router'
-import { CardMcpServer } from '../card-mcp-server'
+import { CardMcpServer } from '../card-mcp-server/index'
 
 let capturedCreateWorkloadPayload: unknown = null
 

@@ -12,15 +12,7 @@ import {
   DropdownMenuSeparator,
 } from '@/common/components/ui/dropdown-menu'
 import { Button } from '@/common/components/ui/button'
-import {
-  MoreVertical,
-  Trash2,
-  Github,
-  Text,
-  Copy,
-  Edit3,
-  Settings,
-} from 'lucide-react'
+import { MoreVertical, Github, Text, Copy, Edit3, Settings } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { Input } from '@/common/components/ui/input'
@@ -46,6 +38,7 @@ import {
 } from '@/common/components/ui/tooltip'
 import { cn } from '@/common/lib/utils'
 import { AddServerToGroupMenuItem } from './add-server-to-group-menu-item'
+import { RemoveServerMenuItem } from './remove-server-menu-item'
 
 type CardContentMcpServerProps = {
   status: CoreWorkload['status']
@@ -333,14 +326,10 @@ export function CardMcpServer({
                   </Link>
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem
-                onClick={handleRemove}
-                disabled={isDeletePending}
-                className="flex cursor-pointer items-center"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Remove
-              </DropdownMenuItem>
+              <RemoveServerMenuItem
+                onRemove={handleRemove}
+                isDeletePending={isDeletePending}
+              />
               {isGroupsEnabled && <DropdownMenuSeparator />}
 
               <AddServerToGroupMenuItem serverName={name} />
