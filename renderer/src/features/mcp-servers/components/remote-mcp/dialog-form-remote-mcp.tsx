@@ -33,10 +33,10 @@ import {
 } from '../../lib/form-schema-remote-mcp'
 
 export function DialogFormRemoteMcp({
-  onOpenChange,
+  closeDialog,
   isOpen,
 }: {
-  onOpenChange: () => void
+  closeDialog: () => void
   serverToEdit?: string | null
   isOpen: boolean
 }) {
@@ -68,11 +68,11 @@ export function DialogFormRemoteMcp({
   const authType = form.watch('auth_type')
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={closeDialog}>
       <DialogContent
         className="p-0 sm:max-w-2xl"
         onCloseAutoFocus={() => {
-          onOpenChange()
+          closeDialog()
         }}
         onInteractOutside={(e) => {
           // Prevent closing the dialog when clicking outside
@@ -188,7 +188,7 @@ export function DialogFormRemoteMcp({
                 variant="outline"
                 // disabled={isSubmitting}
                 onClick={() => {
-                  onOpenChange()
+                  closeDialog()
                 }}
               >
                 Cancel

@@ -76,11 +76,11 @@ const DEFAULT_FORM_VALUES: Partial<FormSchemaLocalMcp> = {
 
 export function DialogFormLocalMcp({
   isOpen,
-  onOpenChange,
+  closeDialog,
   serverToEdit,
 }: {
   isOpen: boolean
-  onOpenChange: (open: boolean) => void
+  closeDialog: () => void
   serverToEdit?: string | null
 }) {
   const [error, setError] = useState<string | null>(null)
@@ -173,7 +173,7 @@ export function DialogFormLocalMcp({
         {
           onSuccess: () => {
             checkUpdateServerStatus()
-            onOpenChange(false)
+            closeDialog()
           },
           onSettled: (_, error) => {
             setIsSubmitting(false)
@@ -193,7 +193,7 @@ export function DialogFormLocalMcp({
         {
           onSuccess: () => {
             checkServerStatus(data)
-            onOpenChange(false)
+            closeDialog()
           },
           onSettled: (_, error) => {
             setIsSubmitting(false)
@@ -210,7 +210,7 @@ export function DialogFormLocalMcp({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={closeDialog}>
       <DialogContent
         className="flex max-h-[95dvh] flex-col p-0 sm:max-w-2xl"
         onCloseAutoFocus={() => {
@@ -299,7 +299,7 @@ export function DialogFormLocalMcp({
                 variant="outline"
                 disabled={isSubmitting || (isEditing && isLoadingServer)}
                 onClick={() => {
-                  onOpenChange(false)
+                  closeDialog()
                   setActiveTab('configuration')
                 }}
               >

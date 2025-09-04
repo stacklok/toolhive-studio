@@ -13,7 +13,9 @@ import { TitlePage } from '@/common/components/title-page'
 import { McpServersSidebar } from '@/features/mcp-servers/components/mcp-servers-sidebar'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../utils/feature-flags'
-import { AddMcpServer } from '@/features/mcp-servers/components/add-mcp-server'
+import { RefreshButton } from '@/common/components/refresh-button'
+import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/dropdown-menu-run-mcp-server'
+import { WrapperDialogFormMcp } from '@/features/mcp-servers/components/wrapper-dialog-mcp'
 
 export const Route = createFileRoute('/group/$groupName')({
   loader: ({ context: { queryClient }, params: { groupName } }) =>
@@ -81,12 +83,23 @@ function GroupRoute() {
         className={showSidebar ? 'ml-sidebar min-w-0 flex-1' : 'min-w-0 flex-1'}
       >
         <TitlePage title="MCP Servers">
-          <AddMcpServer
-            workloads={workloads}
-            refetch={refetch}
-            serverType={serverDialogOpen}
-            setServerType={setServerDialogOpen}
-          />
+          <>
+            {workloads.length > 0 && (
+              <div className="ml-auto flex gap-2">
+                <RefreshButton refresh={refetch} />
+                <DropdownMenuRunMcpServer
+                  openRunCommandDialog={setServerDialogOpen}
+                />
+              </div>
+            )}
+
+            <WrapperDialogFormMcp
+              serverType={serverDialogOpen}
+              closeDialog={() =>
+                setServerDialogOpen({ local: false, remote: false })
+              }
+            />
+          </>
         </TitlePage>
         {!isPending && !filteredWorkloads.length ? (
           <EmptyState
