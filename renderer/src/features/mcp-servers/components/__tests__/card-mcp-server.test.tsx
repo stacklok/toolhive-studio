@@ -22,7 +22,7 @@ const router = createTestRouter(() => (
 ))
 
 beforeEach(() => {
-  router.navigate({ to: '/' })
+  router.navigate({ to: '/group/$groupName', params: { groupName: 'default' } })
 
   // Reset captured payload
   capturedCreateWorkloadPayload = null

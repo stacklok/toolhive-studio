@@ -80,7 +80,8 @@ export function useRunCustomServer({
           action: (
             <Button asChild>
               <Link
-                to="/"
+                to="/group/$groupName"
+                params={{ groupName: 'default' }}
                 search={{ newServerName: formData.name }}
                 onClick={() => toast.dismiss(toastIdRef.current)}
                 viewTransition={{ types: ['slide-left'] }}
