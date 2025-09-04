@@ -8,11 +8,10 @@ import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@/common/components/ui/dropdown-menu'
 import { Button } from '@/common/components/ui/button'
-import { MoreVertical, Copy, Settings } from 'lucide-react'
+import { MoreVertical, Copy } from 'lucide-react'
 
 import { toast } from 'sonner'
 import { Input } from '@/common/components/ui/input'
@@ -41,6 +40,7 @@ import { RemoveServerMenuItem } from './remove-server-menu-item'
 import { LogsMenuItem } from './logs-menu-item'
 import { GithubRepositoryMenuItem } from './github-repository-menu-item'
 import { CustomizeToolsMenuItem } from './customize-tools-menu-item'
+import { EditConfigurationMenuItem } from './edit-configuration-menu-item'
 
 type CardContentMcpServerProps = {
   status: CoreWorkload['status']
@@ -254,15 +254,7 @@ export function CardMcpServer({
               </div>
               <DropdownMenuSeparator />
               {isEditWorkloadEnabled && (
-                <DropdownMenuItem
-                  asChild
-                  className="flex cursor-pointer items-center"
-                >
-                  <a className="self-start" onClick={() => onEdit(name)}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    Edit configuration
-                  </a>
-                </DropdownMenuItem>
+                <EditConfigurationMenuItem serverName={name} onEdit={onEdit} />
               )}
               {repositoryUrl && (
                 <GithubRepositoryMenuItem repositoryUrl={repositoryUrl} />
