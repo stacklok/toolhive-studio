@@ -29,11 +29,9 @@ export function CardClient({
 }) {
   const { mutateAsync: registerClient } = useMutationRegisterClient({
     name: client.client_type ?? '',
-    group: groupName,
   })
   const { mutateAsync: unregisterClient } = useMutationUnregisterClient({
     name: client.client_type ?? '',
-    group: groupName,
   })
 
   return (

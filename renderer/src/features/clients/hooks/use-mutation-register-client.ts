@@ -7,10 +7,9 @@ import { useQueryClient } from '@tanstack/react-query'
 
 interface RegisterClientParams {
   name: string
-  group: string
 }
 
-export function useMutationRegisterClient({ name, group }: RegisterClientParams) {
+export function useMutationRegisterClient({ name }: RegisterClientParams) {
   const queryClient = useQueryClient()
   return useToastMutation({
     ...postApiV1BetaClientsMutation(),

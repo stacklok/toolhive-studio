@@ -7,10 +7,9 @@ import { useQueryClient } from '@tanstack/react-query'
 
 interface UnregisterClientParams {
   name: string
-  group: string
 }
 
-export function useMutationUnregisterClient({ name, group }: UnregisterClientParams) {
+export function useMutationUnregisterClient({ name }: UnregisterClientParams) {
   const queryClient = useQueryClient()
   return useToastMutation({
     ...deleteApiV1BetaClientsByNameMutation(),
