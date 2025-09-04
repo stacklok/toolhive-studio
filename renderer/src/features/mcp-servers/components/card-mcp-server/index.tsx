@@ -108,14 +108,12 @@ export function CardMcpServer({
   statusContext,
   url,
   transport,
-  onEdit,
 }: {
   name: string
   status: CoreWorkload['status']
   statusContext: CoreWorkload['status_context']
   url: string
   transport: CoreWorkload['transport_type']
-  onEdit: (serverName: string) => void
 }) {
   const nameRef = useRef<HTMLElement | null>(null)
   const isCustomizeToolsEnabled = useFeatureFlag(
@@ -237,7 +235,7 @@ export function CardMcpServer({
               <ServerUrl url={url} />
               <DropdownMenuSeparator />
               {isEditWorkloadEnabled && (
-                <EditConfigurationMenuItem serverName={name} onEdit={onEdit} />
+                <EditConfigurationMenuItem serverName={name} />
               )}
               {repositoryUrl && (
                 <GithubRepositoryMenuItem repositoryUrl={repositoryUrl} />
