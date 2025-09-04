@@ -1,6 +1,6 @@
 import { it, expect } from 'vitest'
-import { getFormSchemaRunMcpCommand } from '../form-schema-run-mcp-server-with-command'
 import z from 'zod/v4'
+import { getFormSchemaLocalMcp } from '../form-schema-local-mcp'
 
 it('passes with valid docker image', () => {
   const validInput = {
@@ -24,7 +24,7 @@ it('passes with valid docker image', () => {
     allowedPorts: [],
   }
 
-  const result = getFormSchemaRunMcpCommand([]).safeParse(validInput)
+  const result = getFormSchemaLocalMcp([]).safeParse(validInput)
   expect(result.success, `${result.error}`).toBe(true)
   expect(result.data).toStrictEqual({
     name: 'github',
@@ -76,7 +76,7 @@ it('passes with valid npx command', () => {
     allowedPorts: [],
   }
 
-  const result = getFormSchemaRunMcpCommand([]).safeParse(validInput)
+  const result = getFormSchemaLocalMcp([]).safeParse(validInput)
   expect(result.success, `${result.error}`).toBe(true)
   expect(result.data).toStrictEqual({
     name: 'server-everything',
@@ -124,7 +124,7 @@ it('passes with valid uvx command', () => {
     allowedPorts: [],
   }
 
-  const result = getFormSchemaRunMcpCommand([]).safeParse(validInput)
+  const result = getFormSchemaLocalMcp([]).safeParse(validInput)
   expect(result.success, `${result.error}`).toBe(true)
   // NOTE: cmd_arguments is transformed to an array
   expect(result.data).toStrictEqual({
@@ -169,7 +169,7 @@ it('fails when name is empty', () => {
     ],
   }
 
-  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
+  const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       properties: expect.objectContaining({
@@ -198,7 +198,7 @@ it('fails when name is not unique', () => {
     ],
   }
 
-  const result = getFormSchemaRunMcpCommand([{ name: 'foo-bar' }]).safeParse(
+  const result = getFormSchemaLocalMcp([{ name: 'foo-bar' }]).safeParse(
     invalidInput
   )
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
@@ -229,7 +229,7 @@ it('fails when name contains invalid characters', () => {
     ],
   }
 
-  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
+  const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       properties: expect.objectContaining({
@@ -257,7 +257,7 @@ it('passes when name contains valid characters', () => {
     allowedPorts: [],
   }
 
-  const result = getFormSchemaRunMcpCommand([]).safeParse(validInput)
+  const result = getFormSchemaLocalMcp([]).safeParse(validInput)
   expect(result.success, `${result.error}`).toBe(true)
 })
 
@@ -281,7 +281,7 @@ it('fails when transport is empty', () => {
     networkIsolation: false,
   }
 
-  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
+  const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       properties: expect.objectContaining({
@@ -317,7 +317,7 @@ it('fails when transport is invalid', () => {
     networkIsolation: false,
   }
 
-  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
+  const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       properties: expect.objectContaining({
@@ -352,7 +352,7 @@ it('fails when type is empty', () => {
     ],
   }
 
-  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
+  const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       properties: expect.objectContaining({
@@ -381,7 +381,7 @@ it('fails when type is invalid', () => {
     ],
   }
 
-  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
+  const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       properties: expect.objectContaining({
@@ -402,7 +402,7 @@ it('fails when envVars is missing name', () => {
     secrets: [],
     networkIsolation: false,
   }
-  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
+  const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       properties: expect.objectContaining({
@@ -437,7 +437,7 @@ it('fails when envVars is missing value', () => {
     secrets: [],
     networkIsolation: false,
   }
-  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
+  const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       properties: expect.objectContaining({
@@ -470,7 +470,7 @@ it('fails when secrets is missing', () => {
     cmd_arguments: ['-y', '--oauth-setup'],
     envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
   }
-  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
+  const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       properties: expect.objectContaining({
@@ -493,7 +493,7 @@ it('fails when secrets is missing key', () => {
     secrets: [{ value: { secret: 'foo-bar', isFromStore: false } }],
     networkIsolation: false,
   }
-  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
+  const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       properties: expect.objectContaining({
@@ -528,7 +528,7 @@ it('fails when secrets is missing value', () => {
     secrets: [{ name: 'GITHUB_PERSONAL_ACCESS_TOKEN' }], // Missing value
     networkIsolation: false,
   }
-  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
+  const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       properties: expect.objectContaining({
@@ -570,7 +570,7 @@ it('fails when secrets is missing inner secret value', () => {
     ],
     networkIsolation: false,
   }
-  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
+  const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       properties: expect.objectContaining({
@@ -617,7 +617,7 @@ it('fails when secrets is missing `isFromStore`', () => {
     ],
     networkIsolation: false,
   }
-  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
+  const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       properties: expect.objectContaining({
@@ -665,7 +665,7 @@ it('docker > fails when image is empty', () => {
     ],
   }
 
-  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
+  const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       properties: expect.objectContaining({
@@ -696,7 +696,7 @@ it('package_manager > fails when protocol is empty', () => {
     networkIsolation: false,
   }
 
-  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
+  const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       properties: expect.objectContaining({
@@ -733,7 +733,7 @@ it('package_manager > fails when protocol is invalid', () => {
     networkIsolation: false,
   }
 
-  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
+  const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       properties: expect.objectContaining({
@@ -769,7 +769,7 @@ it('package_manager > fails when package_name is empty', () => {
     ],
   }
 
-  const result = getFormSchemaRunMcpCommand([]).safeParse(invalidInput)
+  const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       properties: expect.objectContaining({
@@ -799,7 +799,7 @@ it('passes when name matches editingServerName even if name already exists', () 
   }
 
   // Test with editingServerName set to the same name
-  const result = getFormSchemaRunMcpCommand(
+  const result = getFormSchemaLocalMcp(
     existingWorkloads,
     'existing-server'
   ).safeParse(validInput)
@@ -829,7 +829,7 @@ it('fails when name matches different existing server name even with editingServ
   }
 
   // Test with editingServerName set to a different name
-  const result = getFormSchemaRunMcpCommand(
+  const result = getFormSchemaLocalMcp(
     existingWorkloads,
     'third-server'
   ).safeParse(invalidInput)
@@ -863,7 +863,7 @@ it('passes when name is unique even with editingServerName set', () => {
   }
 
   // Test with editingServerName set
-  const result = getFormSchemaRunMcpCommand(
+  const result = getFormSchemaLocalMcp(
     existingWorkloads,
     'existing-server'
   ).safeParse(validInput)

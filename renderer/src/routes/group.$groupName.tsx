@@ -8,7 +8,7 @@ import { IllustrationNoConnection } from '@/common/components/illustrations/illu
 import { Button } from '@/common/components/ui/button'
 import { RefreshButton } from '@/common/components/refresh-button'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
-import { DialogFormRunMcpServerWithCommand } from '@/features/mcp-servers/components/dialog-form-run-mcp-command'
+import { DeprecatedDialogFormRunMcpServerWithCommand } from '@/features/mcp-servers/components/dialog-form-run-mcp-command'
 import { GridCardsMcpServers } from '@/features/mcp-servers/components/grid-cards-mcp-server'
 import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/menu-run-mcp-server'
 import { useMutationRestartServerAtStartup } from '@/features/mcp-servers/hooks/use-mutation-restart-server'
@@ -85,7 +85,7 @@ function GroupRoute() {
               />
             </div>
           )}
-          <DialogFormRunMcpServerWithCommand
+          <DeprecatedDialogFormRunMcpServerWithCommand
             isOpen={isRunWithCommandOpen}
             onOpenChange={setIsRunWithCommandOpen}
           />
