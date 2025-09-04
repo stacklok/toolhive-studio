@@ -1,28 +1,57 @@
 import { screen, waitFor } from '@testing-library/react'
 import { expect, it, beforeEach } from 'vitest'
-import { CardMcpServer } from '../card-mcp-server'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
 import userEvent from '@testing-library/user-event'
 import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/msw-endpoint'
+import {
+  createRootRoute,
+  createRoute,
+  Outlet,
+  Router,
+} from '@tanstack/react-router'
+import { createMemoryHistory } from '@tanstack/react-router'
+import { CardMcpServer } from '../card-mcp-server'
 
 let capturedCreateWorkloadPayload: unknown = null
 
-const router = createTestRouter(() => (
-  <CardMcpServer
-    name="test-server"
-    status="running"
-    statusContext={undefined}
-    url=""
-    transport="http"
-    onEdit={() => {}}
-  />
-))
+function createCardMcpServerTestRouter() {
+  const rootRoute = createRootRoute({
+    component: Outlet,
+    errorComponent: ({ error }) => <div>{error.message}</div>,
+  })
+
+  const groupRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/group/$groupName',
+    component: () => (
+      <CardMcpServer
+        name="postgres-db"
+        status="running"
+        statusContext={undefined}
+        url="http://localhost:8080"
+        transport="http"
+        onEdit={() => {}}
+      />
+    ),
+  })
+
+  const router = new Router({
+    routeTree: rootRoute.addChildren([groupRoute]),
+    history: createMemoryHistory({ initialEntries: ['/group/default'] }),
+  })
+
+  return router
+}
+
+const router = createCardMcpServerTestRouter() as unknown as ReturnType<
+  typeof createTestRouter
+>
 
 beforeEach(() => {
-  router.navigate({ to: '/' })
+  router.navigate({ to: '/group/$groupName', params: { groupName: 'default' } })
 
   // Reset captured payload
   capturedCreateWorkloadPayload = null
@@ -41,7 +70,7 @@ it('navigates to logs page when logs menu item is clicked', async () => {
   renderRoute(router)
 
   await waitFor(() => {
-    expect(screen.getByText('test-server')).toBeVisible()
+    expect(screen.getByText('postgres-db')).toBeVisible()
   })
 
   const user = userEvent.setup()
@@ -52,7 +81,7 @@ it('navigates to logs page when logs menu item is clicked', async () => {
   await user.click(logsMenuItem)
 
   await waitFor(() => {
-    expect(router.state.location.pathname).toBe('/logs/test-server')
+    expect(router.state.location.pathname).toBe('/logs/postgres-db')
   })
 })
 
@@ -60,7 +89,7 @@ it('shows "Copy server to a group" menu item and handles the complete workflow',
   renderRoute(router)
 
   await waitFor(() => {
-    expect(screen.getByText('test-server')).toBeVisible()
+    expect(screen.getByText('postgres-db')).toBeVisible()
   })
 
   const user = userEvent.setup()
@@ -102,11 +131,11 @@ it('shows "Copy server to a group" menu item and handles the complete workflow',
       "env_vars": {},
       "group": "default",
       "host": "127.0.0.1",
-      "image": "ghcr.io/test/test-mcp-server:latest",
-      "name": "test-server-default",
+      "image": "ghcr.io/postgres/postgres-mcp-server:latest",
+      "name": "postgres-db-default",
       "network_isolation": false,
       "secrets": [],
-      "target_port": 28137,
+      "target_port": 28135,
       "transport": "stdio",
       "volumes": [],
     }

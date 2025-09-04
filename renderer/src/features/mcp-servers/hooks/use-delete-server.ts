@@ -48,7 +48,11 @@ export function useDeleteServer({ name }: { name: string }) {
           })
         )
       )
-      navigate({ to: '/', search: (prev) => prev })
+      navigate({
+        to: '/group/$groupName',
+        params: { groupName: 'default' },
+        search: (prev) => prev,
+      })
     },
     onSettled: () => {
       queryClient.invalidateQueries({

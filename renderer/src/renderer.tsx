@@ -55,7 +55,7 @@ declare module '@tanstack/react-router' {
 }
 
 const memoryHistory = createMemoryHistory({
-  initialEntries: ['/'],
+  initialEntries: ['/group/default'],
 })
 
 const router = createRouter({

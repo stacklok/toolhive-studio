@@ -78,7 +78,8 @@ export function useUpdateServer(
         action: (
           <Button asChild>
             <Link
-              to="/"
+              to="/group/$groupName"
+              params={{ groupName: 'default' }}
               search={{ newServerName: serverName }}
               onClick={() => toast.dismiss(toastIdRef.current)}
               viewTransition={{ types: ['slide-left'] }}
