@@ -27,6 +27,7 @@ export const getFormSchemaRemoteMcp = (workloads: CoreWorkload[]) => {
     client_id: z.string().optional(),
     client_secret: z.string().optional(),
     scopes: z.string().optional(),
+    callback_port: z.number().optional(),
     pkce: z.boolean(),
     authorize_url: z.string().optional(),
     token_url: z.string().optional(),

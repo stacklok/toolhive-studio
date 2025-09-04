@@ -3,14 +3,15 @@ import { useForm } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
 import { Form } from '@/common/components/ui/form'
-
-import { FormFieldsBase } from './form-fields-base'
 import {
-  getApiV1BetaSecretsDefaultKeysOptions,
-  getApiV1BetaWorkloadsByNameOptions,
   getApiV1BetaWorkloadsOptions,
+  getApiV1BetaWorkloadsByNameOptions,
+  getApiV1BetaSecretsDefaultKeysOptions,
 } from '@api/@tanstack/react-query.gen'
+import { convertCreateRequestToFormData } from '../../lib/orchestrate-run-custom-server'
+import { useUpdateServer } from '../../hooks/use-update-server'
 import {
+  Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -31,9 +32,11 @@ import {
 } from '@/common/hooks/use-form-tab-state'
 import { NetworkIsolationTabContent } from '../network-isolation-tab-content'
 import { FormFieldsArrayVolumes } from '../form-fields-array-custom-volumes'
-import { useUpdateServer } from '../../hooks/use-update-server'
-import { convertCreateRequestToFormData } from '../../lib/orchestrate-run-custom-server'
-import { getFormSchemaLocalMcp, type FormSchemaLocalMcp } from '../../lib/form-schema-local-mcp'
+import { FormFieldsBase } from './form-fields-base'
+import {
+  getFormSchemaLocalMcp,
+  type FormSchemaLocalMcp,
+} from '../../lib/form-schema-local-mcp'
 
 type Tab = 'configuration' | 'network-isolation'
 type CommonFields = keyof FormSchemaLocalMcp
@@ -71,11 +74,13 @@ const DEFAULT_FORM_VALUES: Partial<FormSchemaLocalMcp> = {
   cmd_arguments: [],
 }
 
-export function FormFieldsLocalMcp({
+export function DialogFormLocalMcp({
+  isOpen,
   onOpenChange,
   serverToEdit,
 }: {
-  onOpenChange: ({ local, remote }: { local: boolean; remote: boolean }) => void
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
   serverToEdit?: string | null
 }) {
   const [error, setError] = useState<string | null>(null)
@@ -168,10 +173,7 @@ export function FormFieldsLocalMcp({
         {
           onSuccess: () => {
             checkUpdateServerStatus()
-            onOpenChange({
-              local: false,
-              remote: false,
-            })
+            onOpenChange(false)
           },
           onSettled: (_, error) => {
             setIsSubmitting(false)
@@ -191,10 +193,7 @@ export function FormFieldsLocalMcp({
         {
           onSuccess: () => {
             checkServerStatus(data)
-            onOpenChange({
-              local: false,
-              remote: false,
-            })
+            onOpenChange(false)
           },
           onSettled: (_, error) => {
             setIsSubmitting(false)
@@ -211,110 +210,111 @@ export function FormFieldsLocalMcp({
   }
 
   return (
-    <DialogContent
-      className="flex max-h-[95dvh] flex-col p-0 sm:max-w-2xl"
-      onCloseAutoFocus={() => {
-        form.reset()
-        resetTab()
-      }}
-      onInteractOutside={(e) => {
-        // Prevent closing the dialog when clicking outside
-        e.preventDefault()
-      }}
-    >
-      <Form {...form}>
-        <form
-          key={serverToEdit || 'create'}
-          onSubmit={form.handleSubmit(onSubmitForm, activateTabWithError)}
-          className="flex min-h-0 flex-1 flex-col"
-        >
-          <DialogHeader className="mb-4 flex-shrink-0 p-6">
-            <DialogTitle>
-              {isEditing
-                ? `Edit ${serverToEdit} MCP server`
-                : 'Custom MCP server'}
-            </DialogTitle>
-            <DialogDescription>
-              {isEditing
-                ? 'Update the configuration for your MCP server.'
-                : 'ToolHive allows you to securely run a custom MCP server from a Docker image or a package manager command.'}
-            </DialogDescription>
-          </DialogHeader>
-          {(isSubmitting || (isEditing && isLoadingServer)) && (
-            <LoadingStateAlert
-              isPendingSecrets={isPendingSecrets}
-              loadingSecrets={
-                isLoadingServer
-                  ? {
-                      text: `Loading server "${serverToEdit}"...`,
-                      completedCount: 0,
-                      secretsCount: 0,
-                    }
-                  : loadingSecrets
-              }
-            />
-          )}
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent
+        className="flex max-h-[95dvh] flex-col p-0 sm:max-w-2xl"
+        onCloseAutoFocus={() => {
+          form.reset()
+          resetTab()
+        }}
+        onInteractOutside={(e) => {
+          // Prevent closing the dialog when clicking outside
+          e.preventDefault()
+        }}
+      >
+        <Form {...form}>
+          <form
+            key={serverToEdit || 'create'}
+            onSubmit={form.handleSubmit(onSubmitForm, activateTabWithError)}
+            className="flex min-h-0 flex-1 flex-col"
+          >
+            <DialogHeader className="mb-4 flex-shrink-0 p-6">
+              <DialogTitle>
+                {isEditing
+                  ? `Edit ${serverToEdit} MCP server`
+                  : 'Custom MCP server'}
+              </DialogTitle>
+              <DialogDescription>
+                {isEditing
+                  ? 'Update the configuration for your MCP server.'
+                  : 'ToolHive allows you to securely run a custom MCP server from a Docker image or a package manager command.'}
+              </DialogDescription>
+            </DialogHeader>
+            {(isSubmitting || (isEditing && isLoadingServer)) && (
+              <LoadingStateAlert
+                isPendingSecrets={isPendingSecrets}
+                loadingSecrets={
+                  isLoadingServer
+                    ? {
+                        text: `Loading server "${serverToEdit}"...`,
+                        completedCount: 0,
+                        secretsCount: 0,
+                      }
+                    : loadingSecrets
+                }
+              />
+            )}
+            {!isSubmitting && !(isEditing && isLoadingServer) && (
+              <div className="flex flex-1 flex-col overflow-hidden">
+                <Tabs
+                  className="mb-6 w-full flex-shrink-0 px-6"
+                  value={activeTab}
+                  onValueChange={(value: string) => setActiveTab(value as Tab)}
+                >
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="configuration">
+                      Configuration
+                    </TabsTrigger>
+                    <TabsTrigger value="network-isolation">
+                      Network Isolation
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                {activeTab === 'configuration' && (
+                  <div className="flex-1 space-y-4 overflow-y-auto px-6">
+                    {error && (
+                      <AlertErrorFormSubmission
+                        error={error}
+                        isErrorSecrets={isErrorSecrets}
+                        onDismiss={() => setError(null)}
+                      />
+                    )}
+                    <FormFieldsBase form={form} isEditing={isEditing} />
+                    <FormFieldsArrayCustomSecrets form={form} />
+                    <FormFieldsArrayCustomEnvVars form={form} />
+                    <FormFieldsArrayVolumes<FormSchemaLocalMcp> form={form} />
+                  </div>
+                )}
+                {activeTab === 'network-isolation' && (
+                  <div className="flex-1 overflow-y-auto">
+                    <NetworkIsolationTabContent form={form} />
+                  </div>
+                )}
+              </div>
+            )}
 
-          {!isSubmitting && !(isEditing && isLoadingServer) && (
-            <div className="flex flex-1 flex-col overflow-hidden">
-              <Tabs
-                className="mb-6 w-full flex-shrink-0 px-6"
-                value={activeTab}
-                onValueChange={(value: string) => setActiveTab(value as Tab)}
+            <DialogFooter className="flex-shrink-0 p-6">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSubmitting || (isEditing && isLoadingServer)}
+                onClick={() => {
+                  onOpenChange(false)
+                  setActiveTab('configuration')
+                }}
               >
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="configuration">Configuration</TabsTrigger>
-                  <TabsTrigger value="network-isolation">
-                    Network Isolation
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-              {activeTab === 'configuration' && (
-                <div className="flex-1 space-y-4 overflow-y-auto px-6">
-                  {error && (
-                    <AlertErrorFormSubmission
-                      error={error}
-                      isErrorSecrets={isErrorSecrets}
-                      onDismiss={() => setError(null)}
-                    />
-                  )}
-                  <FormFieldsBase form={form} isEditing={isEditing} />
-                  <FormFieldsArrayCustomSecrets form={form} />
-                  <FormFieldsArrayCustomEnvVars form={form} />
-                  <FormFieldsArrayVolumes<FormSchemaLocalMcp>
-                    form={form}
-                  />
-                </div>
-              )}
-              {activeTab === 'network-isolation' && (
-                <div className="flex-1 overflow-y-auto">
-                  <NetworkIsolationTabContent form={form} />
-                </div>
-              )}
-            </div>
-          )}
-
-          <DialogFooter className="flex-shrink-0 p-6">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isSubmitting || (isEditing && isLoadingServer)}
-              onClick={() => {
-                onOpenChange({ local: false, remote: false })
-                setActiveTab('configuration')
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              disabled={isSubmitting || (isEditing && isLoadingServer)}
-              type="submit"
-            >
-              {isEditing ? 'Update server' : 'Install server'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </Form>
-    </DialogContent>
+                Cancel
+              </Button>
+              <Button
+                disabled={isSubmitting || (isEditing && isLoadingServer)}
+                type="submit"
+              >
+                {isEditing ? 'Update server' : 'Install server'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   )
 }

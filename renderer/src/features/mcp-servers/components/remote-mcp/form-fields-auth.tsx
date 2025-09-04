@@ -28,6 +28,36 @@ export function FormFieldsAuth({
 }) {
   return (
     <>
+      <FormField
+        control={form.control}
+        name="callback_port"
+        render={({ field }) => (
+          <FormItem>
+            <div className="flex items-center gap-1">
+              <FormLabel htmlFor={field.name}>Callback port</FormLabel>
+              <TooltipInfoIcon className="max-w-72">
+                Callback port to expose from the container. If not specified,
+                ToolHive will automatically assign a random port.
+              </TooltipInfoIcon>
+            </div>
+            <FormControl>
+              <Input
+                id={field.name}
+                autoCorrect="off"
+                autoComplete="off"
+                autoFocus
+                type="number"
+                data-1p-ignore
+                placeholder="e.g. 50051"
+                defaultValue={field.value}
+                onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                name={field.name}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
       {(authType === undefined || authType === 'none') && (
         <>
           <FormFieldsArrayCustomSecrets form={form} />
