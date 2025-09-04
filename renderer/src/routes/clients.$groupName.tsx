@@ -7,11 +7,29 @@ import { ExternalLinkIcon } from 'lucide-react'
 import { EmptyState } from '@/common/components/empty-state'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
 import { TitlePage } from '@/common/components/title-page'
+import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
+import { useMemo } from 'react'
 
 export const Route = createFileRoute('/clients/$groupName')({
   component: Clients,
   loader: ({ context: { queryClient } }) =>
-    queryClient.ensureQueryData(getApiV1BetaDiscoveryClientsOptions()),
+    Promise.all([
+      queryClient.ensureQueryData(getApiV1BetaDiscoveryClientsOptions()),
+      queryClient.ensureQueryData({
+        queryKey: ['api', 'v1beta', 'groups'],
+        queryFn: async () => {
+          const { getApiV1BetaGroups } = await import('@api/sdk.gen')
+          const response = await getApiV1BetaGroups({
+            parseAs: 'text',
+            responseStyle: 'data',
+          })
+          const parsed =
+            typeof response === 'string' ? JSON.parse(response) : response
+          return parsed
+        },
+        staleTime: 5_000,
+      }),
+    ]),
 })
 
 export function Clients() {
@@ -19,10 +37,25 @@ export function Clients() {
   const {
     data: { clients = [] },
   } = useSuspenseQuery(getApiV1BetaDiscoveryClientsOptions())
+  
+  const { data: groupsData } = useGroups()
 
-  const installedClients = clients.filter(
-    (client) => client.installed && client.client_type
-  )
+  // Combine discovery clients with group membership information
+  const clientsWithGroupStatus = useMemo(() => {
+    // Find the current group and get its registered clients
+    const currentGroup = groupsData?.groups?.find(group => group.name === groupName)
+    const registeredClientsInGroup = currentGroup?.registered_clients || []
+
+    return clients
+      .filter((client) => client.installed && client.client_type)
+      .map((client) => ({
+        ...client,
+        // Override the registered status to be group-specific
+        registered: registeredClientsInGroup.includes(client.client_type || ''),
+      }))
+  }, [clients, groupsData, groupName])
+
+  const installedClients = clientsWithGroupStatus
 
   return (
     <>

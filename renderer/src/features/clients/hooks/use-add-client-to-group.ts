@@ -18,6 +18,9 @@ export function useAddClientToGroup({ clientType }: AddClientToGroupParams) {
       queryClient.invalidateQueries({
         queryKey: getApiV1BetaDiscoveryClientsQueryKey(),
       })
+      queryClient.invalidateQueries({
+        queryKey: ['api', 'v1beta', 'groups'],
+      })
     },
     errorMsg: `Failed to connect ${clientType}`,
   })
