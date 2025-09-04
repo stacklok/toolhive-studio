@@ -1,10 +1,10 @@
 import { DropdownMenuItem } from '@/common/components/ui/dropdown-menu'
 import { Copy } from 'lucide-react'
 import { usePrompt, generateSimplePrompt } from '@/common/hooks/use-prompt'
-import { useMutationUpdateWorkloadGroup } from '../hooks/use-mutation-update-workload-group'
+import { useMutationUpdateWorkloadGroup } from '../../../../hooks/use-mutation-update-workload-group'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
-import { featureFlagKeys } from '../../../../../utils/feature-flags'
-import { useGroups } from '../hooks/use-groups'
+import { featureFlagKeys } from '../../../../../../../../utils/feature-flags'
+import { useGroups } from '../../../../hooks/use-groups'
 
 interface AddServerToGroupMenuItemProps {
   serverName: string
