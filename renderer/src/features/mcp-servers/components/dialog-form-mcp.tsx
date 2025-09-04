@@ -28,6 +28,7 @@ export function DialogFormMcp({
       {serverType.remote && (
         <FormFieldsRemoteMcp
           workloads={workloads}
+          onOpenChange={onOpenChange}
           serverToEdit={serverToEdit}
         />
       )}
