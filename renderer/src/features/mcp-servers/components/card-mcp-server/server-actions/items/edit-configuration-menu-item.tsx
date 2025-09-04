@@ -12,7 +12,8 @@ export function EditConfigurationMenuItem({
 }: EditConfigurationMenuItemProps) {
   const [isRunWithCommandOpen, setIsRunWithCommandOpen] = useState(false)
 
-  const handleEdit = () => {
+  const handleEdit = (e: React.MouseEvent) => {
+    e.preventDefault()
     setIsRunWithCommandOpen(true)
   }
 
