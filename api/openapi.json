@@ -134,7 +134,8 @@
           "AmpCursor",
           "AmpVSCodeInsider",
           "AmpWindsurf",
-          "LMStudio"
+          "LMStudio",
+          "Goose"
         ]
       },
       "client.MCPClientStatus": {
@@ -156,7 +157,8 @@
               "AmpCursor",
               "AmpVSCodeInsider",
               "AmpWindsurf",
-              "LMStudio"
+              "LMStudio",
+              "Goose"
             ]
           },
           "installed": {
@@ -988,7 +990,8 @@
                 "AmpCursor",
                 "AmpVSCodeInsider",
                 "AmpWindsurf",
-                "LMStudio"
+                "LMStudio",
+                "Goose"
               ]
             },
             "type": "array",
@@ -1047,7 +1050,8 @@
               "AmpCursor",
               "AmpVSCodeInsider",
               "AmpWindsurf",
-              "LMStudio"
+              "LMStudio",
+              "Goose"
             ]
           }
         },
@@ -1078,7 +1082,8 @@
               "AmpCursor",
               "AmpVSCodeInsider",
               "AmpWindsurf",
-              "LMStudio"
+              "LMStudio",
+              "Goose"
             ]
           }
         },
