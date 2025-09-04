@@ -6,13 +6,13 @@ import {
   DropdownMenuContent,
   DropdownMenuSeparator,
 } from '@/common/components/ui/dropdown-menu'
-import { ServerUrl } from './server-url'
-import { EditConfigurationMenuItem } from './edit-configuration-menu-item'
-import { GithubRepositoryMenuItem } from './github-repository-menu-item'
-import { LogsMenuItem } from './logs-menu-item'
-import { CustomizeToolsMenuItem } from './customize-tools-menu-item'
-import { RemoveServerMenuItem } from './remove-server-menu-item'
-import { AddServerToGroupMenuItem } from './add-server-to-group-menu-item'
+import { ServerUrl } from './items/server-url'
+import { EditConfigurationMenuItem } from './items/edit-configuration-menu-item'
+import { GithubRepositoryMenuItem } from './items/github-repository-menu-item'
+import { LogsMenuItem } from './items/logs-menu-item'
+import { CustomizeToolsMenuItem } from './items/customize-tools-menu-item'
+import { RemoveServerMenuItem } from './items/remove-server-menu-item'
+import { AddServerToGroupMenuItem } from './items/add-server-to-group-menu-item'
 
 interface ServerActionsDropdownProps {
   name: string

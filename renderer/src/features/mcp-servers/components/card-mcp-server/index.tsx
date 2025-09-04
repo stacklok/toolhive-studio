@@ -24,7 +24,7 @@ import {
   TooltipContent,
 } from '@/common/components/ui/tooltip'
 
-import { ServerActionsDropdown } from './server-actions-dropdown'
+import { ServerActionsDropdown } from './server-actions'
 
 type CardContentMcpServerProps = {
   status: CoreWorkload['status']

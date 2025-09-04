@@ -1,7 +1,7 @@
 import { Trash2 } from 'lucide-react'
 import { DropdownMenuItem } from '@/common/components/ui/dropdown-menu'
 import { useConfirm } from '@/common/hooks/use-confirm'
-import { useDeleteServer } from '../../hooks/use-delete-server'
+import { useDeleteServer } from '../../../../hooks/use-delete-server'
 
 interface RemoveServerMenuItemProps {
   serverName: string
