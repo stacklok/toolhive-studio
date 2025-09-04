@@ -21,8 +21,7 @@ import type { CoreWorkload } from '@api/types.gen'
 import { ActionsMcpServer } from '../actions-mcp-server'
 import { useMutationRestartServer } from '../../hooks/use-mutation-restart-server'
 import { useMutationStopServerList } from '../../hooks/use-mutation-stop-server'
-import { useConfirm } from '@/common/hooks/use-confirm'
-import { useDeleteServer } from '../../hooks/use-delete-server'
+
 import { useQuery } from '@tanstack/react-query'
 import { useSearch } from '@tanstack/react-router'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
@@ -119,9 +118,6 @@ export function CardMcpServer({
   transport: CoreWorkload['transport_type']
   onEdit: (serverName: string) => void
 }) {
-  const confirm = useConfirm()
-  const { mutateAsync: deleteServer, isPending: isDeletePending } =
-    useDeleteServer({ name })
   const nameRef = useRef<HTMLElement | null>(null)
   const isCustomizeToolsEnabled = useFeatureFlag(
     featureFlagKeys.CUSTOMIZE_TOOLS
@@ -149,27 +145,6 @@ export function CardMcpServer({
     },
     enabled: Boolean(name),
   })
-
-  const handleRemove = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (
-      'nativeEvent' in e &&
-      typeof e.nativeEvent.stopImmediatePropagation === 'function'
-    ) {
-      e.nativeEvent.stopImmediatePropagation()
-    }
-    const result = await confirm(
-      `Are you sure you want to remove the server "${name}"?`,
-      {
-        title: 'Confirm Removal',
-        isDestructive: true,
-        buttons: { yes: 'Remove', no: 'Cancel' },
-      }
-    )
-    if (result) {
-      await deleteServer({ path: { name } })
-    }
-  }
 
   const search = useSearch({
     strict: false,
@@ -202,7 +177,7 @@ export function CardMcpServer({
   const repositoryUrl = serverDetails?.server?.repository_url
 
   // Check if the server is in deleting state
-  const isDeleting = isDeletePending || status === 'deleting'
+  const isDeleting = status === 'deleting'
   const isTransitioning =
     status === 'starting' || status === 'stopping' || status === 'restarting'
   const isStopped = status === 'stopped' || status === 'stopping'
@@ -310,10 +285,7 @@ export function CardMcpServer({
                   </Link>
                 </DropdownMenuItem>
               )}
-              <RemoveServerMenuItem
-                onRemove={handleRemove}
-                isDeletePending={isDeletePending}
-              />
+              <RemoveServerMenuItem serverName={name} />
               {isGroupsEnabled && <DropdownMenuSeparator />}
 
               <AddServerToGroupMenuItem serverName={name} />
