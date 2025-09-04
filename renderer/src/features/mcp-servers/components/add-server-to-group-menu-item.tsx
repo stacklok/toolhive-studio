@@ -47,15 +47,10 @@ export function AddServerToGroupMenuItem({
     )
 
     if (result) {
-      try {
-        await updateGroupMutation.mutateAsync({
-          workloadName: serverName,
-          groupName: result.value,
-        })
-      } catch (error) {
-        console.error('Failed to copy server to group:', error)
-        throw error
-      }
+      await updateGroupMutation.mutateAsync({
+        workloadName: serverName,
+        groupName: result.value,
+      })
     }
   }
 
