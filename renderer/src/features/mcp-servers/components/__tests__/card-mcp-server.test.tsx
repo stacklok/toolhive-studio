@@ -27,18 +27,14 @@ function createCardMcpServerTestRouter() {
     getParentRoute: () => rootRoute,
     path: '/group/$groupName',
     component: () => (
-      <div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <CardMcpServer
-            name="postgres-db"
-            status="running"
-            statusContext={undefined}
-            url="http://localhost:8080"
-            transport="http"
-            onEdit={() => {}}
-          />
-        </div>
-      </div>
+      <CardMcpServer
+        name="postgres-db"
+        status="running"
+        statusContext={undefined}
+        url="http://localhost:8080"
+        transport="http"
+        onEdit={() => {}}
+      />
     ),
   })
 
