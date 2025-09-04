@@ -45,6 +45,7 @@ import {
   TooltipContent,
 } from '@/common/components/ui/tooltip'
 import { cn } from '@/common/lib/utils'
+import { AddServerToGroupMenuItem } from './add-server-to-group-menu-item'
 
 type CardContentMcpServerProps = {
   status: CoreWorkload['status']
@@ -130,6 +131,7 @@ export function CardMcpServer({
   const isCustomizeToolsEnabled = useFeatureFlag(
     featureFlagKeys.CUSTOMIZE_TOOLS
   )
+  const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
   const isEditWorkloadEnabled = useFeatureFlag(featureFlagKeys.EDIT_WORKLOAD)
 
   const { data: serverDetails } = useQuery({
@@ -339,6 +341,9 @@ export function CardMcpServer({
                 <Trash2 className="mr-2 h-4 w-4" />
                 Remove
               </DropdownMenuItem>
+              {isGroupsEnabled && <DropdownMenuSeparator />}
+
+              <AddServerToGroupMenuItem serverName={name} />
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

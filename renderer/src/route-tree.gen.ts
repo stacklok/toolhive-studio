@@ -13,7 +13,6 @@ import { Route as ShutdownRouteImport } from "./routes/shutdown"
 import { Route as SettingsRouteImport } from "./routes/settings"
 import { Route as SecretsRouteImport } from "./routes/secrets"
 import { Route as PlaygroundRouteImport } from "./routes/playground"
-import { Route as IndexRouteImport } from "./routes/index"
 import { Route as LogsServerNameRouteImport } from "./routes/logs.$serverName"
 import { Route as GroupGroupNameRouteImport } from "./routes/group.$groupName"
 import { Route as CustomizeToolsServerNameRouteImport } from "./routes/customize-tools.$serverName"
@@ -39,11 +38,6 @@ const SecretsRoute = SecretsRouteImport.update({
 const PlaygroundRoute = PlaygroundRouteImport.update({
   id: "/playground",
   path: "/playground",
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
   getParentRoute: () => rootRouteImport,
 } as any)
 const LogsServerNameRoute = LogsServerNameRouteImport.update({
@@ -79,7 +73,6 @@ const registryRegistryNameRoute = registryRegistryNameRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute
   "/playground": typeof PlaygroundRoute
   "/secrets": typeof SecretsRoute
   "/settings": typeof SettingsRoute
@@ -92,7 +85,6 @@ export interface FileRoutesByFullPath {
   "/registry/$name": typeof registryRegistryNameRoute
 }
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute
   "/playground": typeof PlaygroundRoute
   "/secrets": typeof SecretsRoute
   "/settings": typeof SettingsRoute
@@ -106,7 +98,6 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  "/": typeof IndexRoute
   "/playground": typeof PlaygroundRoute
   "/secrets": typeof SecretsRoute
   "/settings": typeof SettingsRoute
@@ -121,7 +112,6 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | "/"
     | "/playground"
     | "/secrets"
     | "/settings"
@@ -134,7 +124,6 @@ export interface FileRouteTypes {
     | "/registry/$name"
   fileRoutesByTo: FileRoutesByTo
   to:
-    | "/"
     | "/playground"
     | "/secrets"
     | "/settings"
@@ -147,7 +136,6 @@ export interface FileRouteTypes {
     | "/registry/$name"
   id:
     | "__root__"
-    | "/"
     | "/playground"
     | "/secrets"
     | "/settings"
@@ -161,7 +149,6 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   PlaygroundRoute: typeof PlaygroundRoute
   SecretsRoute: typeof SecretsRoute
   SettingsRoute: typeof SettingsRoute
@@ -202,13 +189,6 @@ declare module "@tanstack/react-router" {
       path: "/playground"
       fullPath: "/playground"
       preLoaderRoute: typeof PlaygroundRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/": {
-      id: "/"
-      path: "/"
-      fullPath: "/"
-      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/logs/$serverName": {
@@ -257,7 +237,6 @@ declare module "@tanstack/react-router" {
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   PlaygroundRoute: PlaygroundRoute,
   SecretsRoute: SecretsRoute,
   SettingsRoute: SettingsRoute,
