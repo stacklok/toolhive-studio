@@ -12,8 +12,8 @@ import {
   DropdownMenuSeparator,
 } from '@/common/components/ui/dropdown-menu'
 import { Button } from '@/common/components/ui/button'
-import { MoreVertical, Copy, Edit3, Settings } from 'lucide-react'
-import { Link } from '@tanstack/react-router'
+import { MoreVertical, Copy, Settings } from 'lucide-react'
+
 import { toast } from 'sonner'
 import { Input } from '@/common/components/ui/input'
 
@@ -35,11 +35,12 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from '@/common/components/ui/tooltip'
-import { cn } from '@/common/lib/utils'
+
 import { AddServerToGroupMenuItem } from './add-server-to-group-menu-item'
 import { RemoveServerMenuItem } from './remove-server-menu-item'
 import { LogsMenuItem } from './logs-menu-item'
 import { GithubRepositoryMenuItem } from './github-repository-menu-item'
+import { CustomizeToolsMenuItem } from './customize-tools-menu-item'
 
 type CardContentMcpServerProps = {
   status: CoreWorkload['status']
@@ -268,22 +269,7 @@ export function CardMcpServer({
               )}
               <LogsMenuItem serverName={name} />
               {isCustomizeToolsEnabled && (
-                <DropdownMenuItem
-                  asChild
-                  className="flex cursor-pointer items-center"
-                >
-                  <Link
-                    disabled={status !== 'running'}
-                    className={cn(
-                      status !== 'running' && 'pointer-events-none opacity-50'
-                    )}
-                    to="/customize-tools/$serverName"
-                    params={{ serverName: name }}
-                  >
-                    <Edit3 className="mr-2 h-4 w-4" />
-                    Customize Tools
-                  </Link>
-                </DropdownMenuItem>
+                <CustomizeToolsMenuItem serverName={name} status={status} />
               )}
               <RemoveServerMenuItem serverName={name} />
               {isGroupsEnabled && <DropdownMenuSeparator />}
