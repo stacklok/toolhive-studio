@@ -1,5 +1,5 @@
 import React from 'react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAvailableClients } from '../use-available-clients'
@@ -44,10 +44,10 @@ describe('useAvailableClients', () => {
       expect(result.current.installedClients).toHaveLength(3)
     })
 
-    expect(result.current.installedClients.map(c => c.client_type)).toEqual([
+    expect(result.current.installedClients.map((c) => c.client_type)).toEqual([
       'vscode',
-      'cursor', 
-      'cline'
+      'cursor',
+      'cline',
     ])
   })
 
@@ -69,9 +69,13 @@ describe('useAvailableClients', () => {
       expect(result.current.installedClients).toHaveLength(2)
     })
 
-    expect(result.current.getClientDisplayName('vscode')).toBe('VS Code - Copilot')
+    expect(result.current.getClientDisplayName('vscode')).toBe(
+      'VS Code - Copilot'
+    )
     expect(result.current.getClientDisplayName('cursor')).toBe('Cursor')
-    expect(result.current.getClientDisplayName('unknown-client')).toBe('unknown-client')
+    expect(result.current.getClientDisplayName('unknown-client')).toBe(
+      'unknown-client'
+    )
   })
 
   it('provides correct field names for clients', async () => {
@@ -93,6 +97,8 @@ describe('useAvailableClients', () => {
     })
 
     expect(result.current.getClientFieldName('vscode')).toBe('enableVscode')
-    expect(result.current.getClientFieldName('claude-code')).toBe('enableClaudeCode')
+    expect(result.current.getClientFieldName('claude-code')).toBe(
+      'enableClaudeCode'
+    )
   })
 })

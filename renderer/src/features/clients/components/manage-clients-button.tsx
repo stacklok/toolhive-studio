@@ -1,4 +1,5 @@
 import { usePrompt } from '@/common/hooks/use-prompt'
+import type { UseFormReturn } from 'react-hook-form'
 import { Label } from '@/common/components/ui/label'
 import { Button } from '@/common/components/ui/button'
 import { Switch } from '@/common/components/ui/switch'
@@ -26,15 +27,15 @@ export function ManageClientsButton({
   variant = 'outline',
   className,
 }: ManageClientsButtonProps) {
-  const { promptForm } = usePrompt()
+  const promptForm = usePrompt()
 
   // Get available clients from discovery API
-  const { 
-    installedClients, 
-    addClientToGroup, 
-    removeClientFromGroup, 
-    getClientDisplayName, 
-    getClientFieldName 
+  const {
+    installedClients,
+    addClientToGroup,
+    removeClientFromGroup,
+    getClientDisplayName,
+    getClientFieldName,
   } = useManageClients()
 
   // Fetch groups data to get current client status
@@ -61,42 +62,54 @@ export function ManageClientsButton({
 
   const handleManageClients = async () => {
     // Store original values before opening the form - dynamically generated
-    const originalValues = installedClients.reduce((acc, client) => {
-      const fieldName = getClientFieldName(client.client_type!)
-      acc[fieldName] = registeredClientsInGroup.includes(client.client_type!)
-      return acc
-    }, {} as Record<string, boolean>)
+    const originalValues = installedClients.reduce(
+      (acc, client) => {
+        const fieldName = getClientFieldName(client.client_type!)
+        acc[fieldName] = registeredClientsInGroup.includes(client.client_type!)
+        return acc
+      },
+      {} as Record<string, boolean>
+    )
 
     console.log('Original client status for group:', groupName, originalValues)
 
     // Create a dynamic schema for the form with boolean toggles for each installed client
     const formSchema = z.object(
-      installedClients.reduce((acc, client) => {
-        const fieldName = getClientFieldName(client.client_type!)
-        acc[fieldName] = z.boolean()
-        return acc
-      }, {} as Record<string, z.ZodBoolean>)
+      installedClients.reduce(
+        (acc, client) => {
+          const fieldName = getClientFieldName(client.client_type!)
+          acc[fieldName] = z.boolean()
+          return acc
+        },
+        {} as Record<string, z.ZodBoolean>
+      )
     )
 
     // Set default values based on current group's registered clients - dynamically generated
-    const defaultValues = installedClients.reduce((acc, client) => {
-      const fieldName = getClientFieldName(client.client_type!)
-      acc[fieldName] = registeredClientsInGroup.includes(client.client_type!)
-      return acc
-    }, {} as Record<string, boolean>)
+    const defaultValues = installedClients.reduce(
+      (acc, client) => {
+        const fieldName = getClientFieldName(client.client_type!)
+        acc[fieldName] = registeredClientsInGroup.includes(client.client_type!)
+        return acc
+      },
+      {} as Record<string, boolean>
+    )
 
     const result = await promptForm({
       title: 'Manage Clients',
       defaultValues,
       resolver: zodV4Resolver(formSchema),
-      fields: (form) => (
+      fields: (form: UseFormReturn<Record<string, boolean>>) => (
         <div className="space-y-6">
           {installedClients.map((client) => {
             const fieldName = getClientFieldName(client.client_type!)
             const displayName = getClientDisplayName(client.client_type!)
-            
+
             return (
-              <div key={client.client_type} className="flex items-center justify-between">
+              <div
+                key={client.client_type}
+                className="flex items-center justify-between"
+              >
                 <Label htmlFor={fieldName} className="text-sm font-medium">
                   {displayName}
                 </Label>
@@ -127,11 +140,15 @@ export function ManageClientsButton({
       })
 
       // Calculate which values have changed - dynamically generated
-      const changes = installedClients.reduce((acc, client) => {
-        const fieldName = getClientFieldName(client.client_type!)
-        acc[client.client_type!] = result[fieldName] !== originalValues[fieldName]
-        return acc
-      }, {} as Record<string, boolean>)
+      const changes = installedClients.reduce(
+        (acc, client) => {
+          const fieldName = getClientFieldName(client.client_type!)
+          acc[client.client_type!] =
+            result[fieldName] !== originalValues[fieldName]
+          return acc
+        },
+        {} as Record<string, boolean>
+      )
 
       console.log('Changes detected:', changes)
 
@@ -142,12 +159,15 @@ export function ManageClientsButton({
           if (changes[clientType]) {
             const fieldName = getClientFieldName(clientType)
             const isEnabled = result[fieldName]
-            
+
             if (isEnabled) {
               console.log(`Adding ${clientType} client to group:`, groupName)
               await addClientToGroup(clientType, groupName)
             } else {
-              console.log(`Removing ${clientType} client from group:`, groupName)
+              console.log(
+                `Removing ${clientType} client from group:`,
+                groupName
+              )
               await removeClientFromGroup(clientType, groupName)
             }
           }

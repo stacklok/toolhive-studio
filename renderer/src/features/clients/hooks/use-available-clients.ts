@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { getApiV1BetaDiscoveryClientsOptions } from '@api/@tanstack/react-query.gen'
-import type { ClientMcpClientStatus } from '@api/generated/types.gen'
+import type { ClientMcpClientStatus } from '@api/types.gen'
 
 /**
  * Hook to get the list of clients that users can enable
@@ -10,7 +10,7 @@ export function useAvailableClients() {
   const {
     data: { clients = [] },
   } = useSuspenseQuery(getApiV1BetaDiscoveryClientsOptions())
-  
+
   const installedClients = clients.filter(
     (client: ClientMcpClientStatus) => client.installed && client.client_type
   )
@@ -20,13 +20,13 @@ export function useAvailableClients() {
    */
   const getClientDisplayName = (clientType: string): string => {
     const displayNames: Record<string, string> = {
-      'vscode': 'VS Code - Copilot',
-      'cursor': 'Cursor',
+      vscode: 'VS Code - Copilot',
+      cursor: 'Cursor',
       'claude-code': 'Claude Code',
       'vscode-insider': 'VS Code Insider',
-      'cline': 'Cline',
+      cline: 'Cline',
       'roo-code': 'Roo Code',
-      'windsurf': 'Windsurf',
+      windsurf: 'Windsurf',
       'windsurf-jetbrains': 'Windsurf JetBrains',
       'amp-cli': 'Amp CLI',
       'amp-vscode': 'Amp VS Code',
@@ -34,7 +34,7 @@ export function useAvailableClients() {
       'amp-vscode-insider': 'Amp VS Code Insider',
       'amp-windsurf': 'Amp Windsurf',
       'lm-studio': 'LM Studio',
-      'goose': 'Goose',
+      goose: 'Goose',
     }
     return displayNames[clientType] || clientType
   }

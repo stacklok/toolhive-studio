@@ -44,8 +44,8 @@ export function CardClient({ client }: { client: ClientMcpClientStatus }) {
             onCheckedChange={() => {
               if (client.registered) {
                 unregisterClient({
-                  path: {
-                    name: client.client_type ?? '',
+                  body: {
+                    names: [client.client_type ?? ''],
                   },
                 })
                 trackEvent(`Client ${client.client_type} unregistered`, {
@@ -54,7 +54,7 @@ export function CardClient({ client }: { client: ClientMcpClientStatus }) {
               } else {
                 registerClient({
                   body: {
-                    name: client.client_type ?? '',
+                    names: [client.client_type ?? ''],
                   },
                 })
                 trackEvent(`Client ${client.client_type} registered`, {
