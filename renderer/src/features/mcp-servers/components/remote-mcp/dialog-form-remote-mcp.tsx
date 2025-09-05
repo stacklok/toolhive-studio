@@ -31,6 +31,27 @@ import {
   getFormSchemaRemoteMcp,
   type FormSchemaRemoteMcp,
 } from '../../lib/form-schema-remote-mcp'
+import { FormFieldsArrayCustomSecrets } from '../form-fields-array-custom-secrets'
+import { FormFieldsArrayCustomEnvVars } from '../form-fields-array-custom-env-vars'
+
+const DEFAULT_FORM_VALUES = {
+  name: '',
+  url: '',
+  oauth_config: {
+    authorize_url: '',
+    callback_port: undefined,
+    client_id: '',
+    client_secret: '',
+    issuer: '',
+    oauth_params: {},
+    scopes: [],
+    skip_browser: false,
+    token_url: '',
+    use_pkce: true,
+  },
+  envVars: [],
+  secrets: [],
+}
 
 export function DialogFormRemoteMcp({
   closeDialog,
@@ -42,21 +63,7 @@ export function DialogFormRemoteMcp({
 }) {
   const form = useForm<FormSchemaRemoteMcp>({
     resolver: zodV4Resolver(getFormSchemaRemoteMcp([])),
-    defaultValues: {
-      type: 'docker_image',
-      name: '',
-      image: '',
-      url: '',
-      envVars: [],
-      secrets: [],
-      issuer_url: '',
-      client_id: '',
-      client_secret: '',
-      scopes: '',
-      pkce: true,
-      authorize_url: '',
-      token_url: '',
-    },
+    defaultValues: DEFAULT_FORM_VALUES,
     reValidateMode: 'onChange',
     mode: 'onChange',
   })
@@ -180,6 +187,12 @@ export function DialogFormRemoteMcp({
                 )}
               />
               <FormFieldsAuth authType={authType} form={form} />
+              {(authType === undefined || authType === 'none') && (
+                <>
+                  <FormFieldsArrayCustomSecrets form={form} />
+                  <FormFieldsArrayCustomEnvVars form={form} />
+                </>
+              )}
             </div>
 
             <DialogFooter className="p-6">

@@ -14,8 +14,6 @@ import {
   SelectContent,
   SelectItem,
 } from '@/common/components/ui/select'
-import { FormFieldsArrayCustomEnvVars } from '../form-fields-array-custom-env-vars'
-import { FormFieldsArrayCustomSecrets } from '../form-fields-array-custom-secrets'
 import { type FormSchemaRemoteMcp } from '../../lib/form-schema-remote-mcp'
 import { type UseFormReturn } from 'react-hook-form'
 
@@ -30,7 +28,7 @@ export function FormFieldsAuth({
     <>
       <FormField
         control={form.control}
-        name="callback_port"
+        name="oauth_config.callback_port"
         render={({ field }) => (
           <FormItem>
             <div className="flex items-center gap-1">
@@ -58,18 +56,12 @@ export function FormFieldsAuth({
           </FormItem>
         )}
       />
-      {(authType === undefined || authType === 'none') && (
-        <>
-          <FormFieldsArrayCustomSecrets form={form} />
-          <FormFieldsArrayCustomEnvVars form={form} />
-        </>
-      )}
 
       {authType === 'oidc' && (
         <>
           <FormField
             control={form.control}
-            name="issuer_url"
+            name="oauth_config.issuer"
             render={({ field }) => (
               <FormItem>
                 <div className="flex items-center gap-1">
@@ -95,7 +87,7 @@ export function FormFieldsAuth({
 
           <FormField
             control={form.control}
-            name="client_id"
+            name="oauth_config.client_id"
             render={({ field }) => (
               <FormItem>
                 <div className="flex items-center gap-1">
@@ -123,7 +115,7 @@ export function FormFieldsAuth({
 
           <FormField
             control={form.control}
-            name="client_secret"
+            name="oauth_config.client_secret"
             render={({ field }) => (
               <FormItem>
                 <div className="flex items-center gap-1">
@@ -151,35 +143,7 @@ export function FormFieldsAuth({
 
           <FormField
             control={form.control}
-            name="scopes"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex items-center gap-1">
-                  <FormLabel>Scopes</FormLabel>
-                  <TooltipInfoIcon>
-                    The scopes of the OIDC issuer.
-                  </TooltipInfoIcon>
-                </div>
-                <FormControl>
-                  <Input
-                    autoCorrect="off"
-                    autoComplete="off"
-                    autoFocus
-                    data-1p-ignore
-                    placeholder="e.g. openid, profile, email"
-                    defaultValue={field.value}
-                    onChange={(e) => field.onChange(e.target.value)}
-                    name={field.name}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="pkce"
+            name="oauth_config.use_pkce"
             render={({ field }) => (
               <FormItem>
                 <div className="flex items-center gap-1">
@@ -214,7 +178,7 @@ export function FormFieldsAuth({
         <>
           <FormField
             control={form.control}
-            name="authorize_url"
+            name="oauth_config.authorize_url"
             render={({ field }) => (
               <FormItem>
                 <div className="flex items-center gap-1">
@@ -242,7 +206,7 @@ export function FormFieldsAuth({
 
           <FormField
             control={form.control}
-            name="token_url"
+            name="oauth_config.token_url"
             render={({ field }) => (
               <FormItem>
                 <div className="flex items-center gap-1">
@@ -270,7 +234,7 @@ export function FormFieldsAuth({
 
           <FormField
             control={form.control}
-            name="client_id"
+            name="oauth_config.client_id"
             render={({ field }) => (
               <FormItem>
                 <div className="flex items-center gap-1">
@@ -298,7 +262,7 @@ export function FormFieldsAuth({
 
           <FormField
             control={form.control}
-            name="client_secret"
+            name="oauth_config.client_secret"
             render={({ field }) => (
               <FormItem>
                 <div className="flex items-center gap-1">
@@ -326,7 +290,7 @@ export function FormFieldsAuth({
 
           <FormField
             control={form.control}
-            name="scopes"
+            name="oauth_config.scopes"
             render={({ field }) => (
               <FormItem>
                 <div className="flex items-center gap-1">
