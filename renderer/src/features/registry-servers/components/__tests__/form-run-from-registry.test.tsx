@@ -974,7 +974,11 @@ describe('Allowed Hosts field', () => {
       await userEvent.click(
         screen.getByRole('button', { name: /install server/i })
       )
-      expect(screen.queryByText(/invalid host format/i)).not.toBeInTheDocument()
+      await waitFor(() => {
+        expect(
+          screen.queryByText(/invalid host format/i)
+        ).not.toBeInTheDocument()
+      })
     }
     // Valid host with dot
     hostInputRef = screen.queryByLabelText('Host 1')
@@ -985,7 +989,12 @@ describe('Allowed Hosts field', () => {
       await userEvent.click(
         screen.getByRole('button', { name: /install server/i })
       )
-      expect(screen.queryByText(/invalid host format/i)).not.toBeInTheDocument()
+
+      await waitFor(() => {
+        expect(
+          screen.queryByText(/invalid host format/i)
+        ).not.toBeInTheDocument()
+      })
     }
   })
 

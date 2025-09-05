@@ -15,17 +15,17 @@ type EnvVar = {
 }
 
 type FormWithEnvVars = {
-  envVars?: Array<{
+  envVars: Array<{
     name: string
     value: string
   }>
 }
 
-type FormWithEnvVarsFlexible = Record<string, unknown> & FormWithEnvVars
-
-export function FormFieldsArrayCustomEnvVars<
-  T extends FormWithEnvVarsFlexible,
->({ form }: { form: UseFormReturn<T> }) {
+export function FormFieldsArrayCustomEnvVars<T extends FormWithEnvVars>({
+  form,
+}: {
+  form: UseFormReturn<T>
+}) {
   return (
     <FormItem>
       <Controller

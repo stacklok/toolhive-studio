@@ -94,6 +94,7 @@ export function CardMcpServer({
   name: string
   status: CoreWorkload['status']
   statusContext: CoreWorkload['status_context']
+  remote: CoreWorkload['remote']
   url: string
   transport: CoreWorkload['transport_type']
 }) {

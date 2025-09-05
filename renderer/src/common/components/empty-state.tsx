@@ -6,11 +6,16 @@ const actionsStyle = cva('mx-auto mt-8', {
     actions: {
       1: '',
       2: 'grid grid-cols-2 gap-2',
+      3: 'grid grid-cols-3 gap-2',
     },
   },
 })
 
-function Actions({ actions }: { actions: [ReactNode, ReactNode?] }) {
+function Actions({
+  actions,
+}: {
+  actions: [ReactNode, ReactNode?, ReactNode?]
+}) {
   return (
     <div className={actionsStyle({ actions: actions.length })}>{actions}</div>
   )
@@ -25,7 +30,7 @@ export function EmptyState({
   illustration: (props: SVGProps<SVGSVGElement>) => JSX.Element
   title: string
   body: string
-  actions: [ReactNode, ReactNode?] | null
+  actions: [ReactNode, ReactNode?, ReactNode?] | null
 }) {
   return (
     <div
