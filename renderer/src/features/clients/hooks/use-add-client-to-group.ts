@@ -37,21 +37,25 @@ export function useAddClientToGroup({ clientType }: AddClientToGroupParams) {
         parseAs: 'text',
         responseStyle: 'data',
       })
-      
+
       // Parse the response
-      const parsedClients = typeof currentClients === 'string' 
-        ? JSON.parse(currentClients) 
-        : currentClients
-      
+      const parsedClients =
+        typeof currentClients === 'string'
+          ? JSON.parse(currentClients)
+          : currentClients
+
       // Find the current client and get its existing groups
-      const currentClient = parsedClients.find((client: any) => client.name?.name === clientType)
+      const currentClient = parsedClients.find(
+        (client: { name?: { name?: string }; groups?: string[] }) =>
+          client.name?.name === clientType
+      )
       const existingGroups = currentClient?.groups || []
-      
+
       // Create the new groups array by adding the new group (avoiding duplicates)
-      const newGroups = existingGroups.includes(groupName) 
-        ? existingGroups 
+      const newGroups = existingGroups.includes(groupName)
+        ? existingGroups
         : [...existingGroups, groupName]
-      
+
       // Register/update the client with all groups
       await registerClient({
         body: {
@@ -59,12 +63,12 @@ export function useAddClientToGroup({ clientType }: AddClientToGroupParams) {
           groups: newGroups,
         },
       })
-      
+
       trackEvent(`Client ${clientType} registered`, {
         client: clientType,
         groups: newGroups,
       })
-    } catch (error) {
+    } catch {
       // If we can't get current groups, fall back to just adding the new group
       // This maintains backward compatibility
       await registerClient({
@@ -73,7 +77,7 @@ export function useAddClientToGroup({ clientType }: AddClientToGroupParams) {
           groups: [groupName],
         },
       })
-      
+
       trackEvent(`Client ${clientType} registered`, {
         client: clientType,
         groups: [groupName],
