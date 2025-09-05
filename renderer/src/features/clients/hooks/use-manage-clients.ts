@@ -2,14 +2,14 @@ import { useAvailableClients } from './use-available-clients'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { useQueryClient } from '@tanstack/react-query'
 import { trackEvent } from '@/common/lib/analytics'
-import { 
+import {
   getApiV1BetaDiscoveryClientsQueryKey,
   getApiV1BetaClientsQueryKey,
   postApiV1BetaClientsMutation,
 } from '@api/@tanstack/react-query.gen'
-import { 
+import {
   getApiV1BetaClients,
-  deleteApiV1BetaClientsByNameGroupsByGroup 
+  deleteApiV1BetaClientsByNameGroupsByGroup,
 } from '@api/sdk.gen'
 
 /**
@@ -17,7 +17,8 @@ import {
  * This uses the discovery clients API to get the list of available clients
  */
 export function useManageClients() {
-  const { installedClients, getClientDisplayName, getClientFieldName } = useAvailableClients()
+  const { installedClients, getClientDisplayName, getClientFieldName } =
+    useAvailableClients()
   const queryClient = useQueryClient()
 
   // Create mutation for adding clients
@@ -38,7 +39,13 @@ export function useManageClients() {
 
   // Create mutation for removing clients
   const { mutateAsync: unregisterClient } = useToastMutation({
-    mutationFn: async ({ clientType, groupName }: { clientType: string; groupName: string }) => {
+    mutationFn: async ({
+      clientType,
+      groupName,
+    }: {
+      clientType: string
+      groupName: string
+    }) => {
       return await deleteApiV1BetaClientsByNameGroupsByGroup({
         path: {
           name: clientType,
@@ -64,7 +71,7 @@ export function useManageClients() {
    */
   const addClientToGroup = async (clientType: string, groupName: string) => {
     // Find the client in the installed clients list
-    const client = installedClients.find(c => c.client_type === clientType)
+    const client = installedClients.find((c) => c.client_type === clientType)
     if (!client) {
       throw new Error(`Client ${clientType} is not installed or available`)
     }
@@ -125,9 +132,12 @@ export function useManageClients() {
   /**
    * Remove a client from a group
    */
-  const removeClientFromGroup = async (clientType: string, groupName: string) => {
+  const removeClientFromGroup = async (
+    clientType: string,
+    groupName: string
+  ) => {
     // Find the client in the installed clients list
-    const client = installedClients.find(c => c.client_type === clientType)
+    const client = installedClients.find((c) => c.client_type === clientType)
     if (!client) {
       throw new Error(`Client ${clientType} is not installed or available`)
     }
