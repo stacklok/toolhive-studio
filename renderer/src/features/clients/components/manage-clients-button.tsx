@@ -45,14 +45,9 @@ export function ManageClientsButton({
       fields: (form) => (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="enableVSCode" className="text-sm font-medium">
-                VS Code - Copilot
-              </Label>
-              <p className="text-muted-foreground text-sm">
-                Enable VS Code client for this group
-              </p>
-            </div>
+            <Label htmlFor="enableVSCode" className="text-sm font-medium">
+              VS Code - Copilot
+            </Label>
             <Switch
               id="enableVSCode"
               checked={form.watch('enableVSCode') as boolean}
@@ -64,14 +59,9 @@ export function ManageClientsButton({
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="enableCursor" className="text-sm font-medium">
-                Cursor
-              </Label>
-              <p className="text-muted-foreground text-sm">
-                Enable Cursor client for this group
-              </p>
-            </div>
+            <Label htmlFor="enableCursor" className="text-sm font-medium">
+              Cursor
+            </Label>
             <Switch
               id="enableCursor"
               checked={form.watch('enableCursor') as boolean}
@@ -83,14 +73,9 @@ export function ManageClientsButton({
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="enableClaudeCode" className="text-sm font-medium">
-                Claude Code
-              </Label>
-              <p className="text-muted-foreground text-sm">
-                Enable Claude Code client for this group
-              </p>
-            </div>
+            <Label htmlFor="enableClaudeCode" className="text-sm font-medium">
+              Claude Code
+            </Label>
             <Switch
               id="enableClaudeCode"
               checked={form.watch('enableClaudeCode') as boolean}
