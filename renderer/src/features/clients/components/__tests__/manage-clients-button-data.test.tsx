@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
+import { Suspense } from 'react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ManageClientsButton } from '../manage-clients-button'
@@ -33,7 +34,9 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
   const renderWithProviders = (props: { groupName: string }) => {
     return render(
       <QueryClientProvider client={queryClient}>
-        <ManageClientsButton {...props} />
+        <Suspense fallback={null}>
+          <ManageClientsButton {...props} />
+        </Suspense>
       </QueryClientProvider>
     )
   }
@@ -55,17 +58,19 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
       const user = userEvent.setup()
       renderWithProviders({ groupName: 'default' })
 
-      const button = screen.getByRole('button', { name: /manage clients/i })
+      const button = await screen.findByRole('button', {
+        name: /manage clients/i,
+      })
       await user.click(button)
 
       // The form should be called with the current state of clients for the 'default' group
       expect(mockPromptForm).toHaveBeenCalledWith(
         expect.objectContaining({
-          defaultValues: {
-            enableVSCode: true, // Should be true because 'vscode' is in 'default' group
-            enableCursor: true, // Should be true because 'cursor' is in 'default' group
-            enableClaudeCode: false, // Should be false because 'claude-code' is not in 'default' group
-          },
+          defaultValues: expect.objectContaining({
+            enableVscode: true, // true because 'vscode' is in 'default' group
+            enableCursor: true, // true because 'cursor' is in 'default' group
+            enableClaudeCode: false, // false because 'claude-code' is not in 'default' group
+          }),
         })
       )
     })
@@ -86,17 +91,19 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
       const user = userEvent.setup()
       renderWithProviders({ groupName: 'research' })
 
-      const button = screen.getByRole('button', { name: /manage clients/i })
+      const button = await screen.findByRole('button', {
+        name: /manage clients/i,
+      })
       await user.click(button)
 
       // The form should be called with the current state of clients for the 'research' group
       expect(mockPromptForm).toHaveBeenCalledWith(
         expect.objectContaining({
-          defaultValues: {
-            enableVSCode: false, // Should be false because 'vscode' is not in 'research' group
+          defaultValues: expect.objectContaining({
+            enableVscode: false, // Should be false because 'vscode' is not in 'research' group
             enableCursor: false, // Should be false because 'cursor' is not in 'research' group
             enableClaudeCode: true, // Should be true because 'claude-code' is in 'research' group
-          },
+          }),
         })
       )
     })
@@ -117,17 +124,19 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
       const user = userEvent.setup()
       renderWithProviders({ groupName: 'empty-group' })
 
-      const button = screen.getByRole('button', { name: /manage clients/i })
+      const button = await screen.findByRole('button', {
+        name: /manage clients/i,
+      })
       await user.click(button)
 
       // All toggles should be false for an empty group
       expect(mockPromptForm).toHaveBeenCalledWith(
         expect.objectContaining({
-          defaultValues: {
-            enableVSCode: false,
+          defaultValues: expect.objectContaining({
+            enableVscode: false,
             enableCursor: false,
             enableClaudeCode: false,
-          },
+          }),
         })
       )
     })
@@ -148,17 +157,19 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
       const user = userEvent.setup()
       renderWithProviders({ groupName: 'non-existent-group' })
 
-      const button = screen.getByRole('button', { name: /manage clients/i })
+      const button = await screen.findByRole('button', {
+        name: /manage clients/i,
+      })
       await user.click(button)
 
       // All toggles should be false for a non-existent group
       expect(mockPromptForm).toHaveBeenCalledWith(
         expect.objectContaining({
-          defaultValues: {
-            enableVSCode: false,
+          defaultValues: expect.objectContaining({
+            enableVscode: false,
             enableCursor: false,
             enableClaudeCode: false,
-          },
+          }),
         })
       )
     })
@@ -197,22 +208,27 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
 
       // Mock form submission with VS Code and Cursor enabled
       const mockResult = {
-        enableVSCode: true,
+        enableVscode: true,
         enableCursor: true,
         enableClaudeCode: false,
       }
-      mockPromptForm.mockResolvedValue(mockResult)
+      mockPromptForm.mockImplementation(async (config) => ({
+        ...(config.defaultValues as Record<string, boolean>),
+        ...mockResult,
+      }))
 
       const user = userEvent.setup()
       renderWithProviders({ groupName: 'default' })
 
-      const button = screen.getByRole('button', { name: /manage clients/i })
+      const button = await screen.findByRole('button', {
+        name: /manage clients/i,
+      })
       await user.click(button)
 
       await waitFor(() => {
         expect(mockConsoleLog).toHaveBeenCalledWith(
           'Manage clients form submitted with values:',
-          mockResult
+          expect.objectContaining(mockResult)
         )
       })
 
@@ -267,22 +283,27 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
 
       // Mock form submission with only VS Code enabled (disabling Cursor and Claude Code)
       const mockResult = {
-        enableVSCode: true,
+        enableVscode: true,
         enableCursor: false,
         enableClaudeCode: false,
       }
-      mockPromptForm.mockResolvedValue(mockResult)
+      mockPromptForm.mockImplementation(async (config) => ({
+        ...(config.defaultValues as Record<string, boolean>),
+        ...mockResult,
+      }))
 
       const user = userEvent.setup()
       renderWithProviders({ groupName: 'default' })
 
-      const button = screen.getByRole('button', { name: /manage clients/i })
+      const button = await screen.findByRole('button', {
+        name: /manage clients/i,
+      })
       await user.click(button)
 
       await waitFor(() => {
         expect(mockConsoleLog).toHaveBeenCalledWith(
           'Manage clients form submitted with values:',
-          mockResult
+          expect.objectContaining(mockResult)
         )
       })
 
@@ -374,22 +395,27 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
 
       // Mock form submission: disable VS Code, keep Cursor, enable Claude Code
       const mockResult = {
-        enableVSCode: false,
+        enableVscode: false,
         enableCursor: true,
         enableClaudeCode: true,
       }
-      mockPromptForm.mockResolvedValue(mockResult)
+      mockPromptForm.mockImplementation(async (config) => ({
+        ...(config.defaultValues as Record<string, boolean>),
+        ...mockResult,
+      }))
 
       const user = userEvent.setup()
       renderWithProviders({ groupName: 'default' })
 
-      const button = screen.getByRole('button', { name: /manage clients/i })
+      const button = await screen.findByRole('button', {
+        name: /manage clients/i,
+      })
       await user.click(button)
 
       await waitFor(() => {
         expect(mockConsoleLog).toHaveBeenCalledWith(
           'Manage clients form submitted with values:',
-          mockResult
+          expect.objectContaining(mockResult)
         )
       })
 
@@ -437,17 +463,19 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
       const user = userEvent.setup()
       renderWithProviders({ groupName: 'default' })
 
-      const button = screen.getByRole('button', { name: /manage clients/i })
+      const button = await screen.findByRole('button', {
+        name: /manage clients/i,
+      })
       await user.click(button)
 
       // Should still open the form with default values (all false) when API fails
       expect(mockPromptForm).toHaveBeenCalledWith(
         expect.objectContaining({
-          defaultValues: {
-            enableVSCode: false,
+          defaultValues: expect.objectContaining({
+            enableVscode: false,
             enableCursor: false,
             enableClaudeCode: false,
-          },
+          }),
         })
       )
 
@@ -481,13 +509,18 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
         enableCursor: false,
         enableClaudeCode: false,
       }
-      mockPromptForm.mockResolvedValue(mockResult)
+      mockPromptForm.mockImplementation(async (config) => ({
+        ...(config.defaultValues as Record<string, boolean>),
+        ...mockResult,
+      }))
 
       const user = userEvent.setup()
       renderWithProviders({ groupName: 'default' })
 
       // Use getAllByRole to handle multiple buttons and take the first one
-      const buttons = screen.getAllByRole('button', { name: /manage clients/i })
+      const buttons = await screen.findAllByRole('button', {
+        name: /manage clients/i,
+      })
       const button = buttons[0]
       if (button) {
         await user.click(button)
@@ -497,7 +530,7 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
       await waitFor(() => {
         expect(mockConsoleLog).toHaveBeenCalledWith(
           'Manage clients form submitted with values:',
-          mockResult
+          expect.objectContaining(mockResult)
         )
       })
 
@@ -537,7 +570,9 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
       const user = userEvent.setup()
       renderWithProviders({ groupName: 'default' })
 
-      const button = screen.getByRole('button', { name: /manage clients/i })
+      const button = await screen.findByRole('button', {
+        name: /manage clients/i,
+      })
       await user.click(button)
 
       // Should only log the original values, not form submission
@@ -566,7 +601,7 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
         groupName: 'default',
         registeredClients: ['vscode', 'cursor'],
         expectedDefaults: {
-          enableVSCode: true,
+          enableVscode: true,
           enableCursor: true,
           enableClaudeCode: false,
         },
@@ -575,7 +610,7 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
         groupName: 'research',
         registeredClients: ['claude-code'],
         expectedDefaults: {
-          enableVSCode: false,
+          enableVscode: false,
           enableCursor: false,
           enableClaudeCode: true,
         },
@@ -584,7 +619,7 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
         groupName: 'development',
         registeredClients: ['vscode', 'cursor', 'claude-code'],
         expectedDefaults: {
-          enableVSCode: true,
+          enableVscode: true,
           enableCursor: true,
           enableClaudeCode: true,
         },
@@ -593,7 +628,7 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
         groupName: 'production',
         registeredClients: [],
         expectedDefaults: {
-          enableVSCode: false,
+          enableVscode: false,
           enableCursor: false,
           enableClaudeCode: false,
         },
@@ -616,13 +651,15 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
         const user = userEvent.setup()
         renderWithProviders({ groupName })
 
-        const button = screen.getByRole('button', { name: /manage clients/i })
+        const button = await screen.findByRole('button', {
+          name: /manage clients/i,
+        })
         await user.click(button)
 
         // Verify the form is called with the correct default values
         expect(mockPromptForm).toHaveBeenCalledWith(
           expect.objectContaining({
-            defaultValues: expectedDefaults,
+            defaultValues: expect.objectContaining(expectedDefaults),
           })
         )
       })

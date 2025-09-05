@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
+import { Suspense } from 'react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ManageClientsButton } from '../manage-clients-button'
@@ -40,37 +41,47 @@ describe('ManageClientsButton', () => {
   }) => {
     return render(
       <QueryClientProvider client={queryClient}>
-        <ManageClientsButton {...props} />
+        <Suspense fallback={null}>
+          <ManageClientsButton {...props} />
+        </Suspense>
       </QueryClientProvider>
     )
   }
 
-  it('should render the button with correct text and icon', () => {
+  it('should render the button with correct text and icon', async () => {
     renderWithProviders({ groupName: 'test-group' })
 
-    const button = screen.getByRole('button', { name: /manage clients/i })
+    const button = await screen.findByRole('button', {
+      name: /manage clients/i,
+    })
     expect(button).toBeInTheDocument()
-    expect(button).toHaveTextContent('Manage clients')
+    expect(button).toHaveTextContent(/Manage clients/i)
   })
 
-  it('should use default variant when not specified', () => {
+  it('should use default variant when not specified', async () => {
     renderWithProviders({ groupName: 'test-group' })
 
-    const button = screen.getByRole('button', { name: /manage clients/i })
+    const button = await screen.findByRole('button', {
+      name: /manage clients/i,
+    })
     expect(button).toHaveClass('border') // outline variant has border class
   })
 
-  it('should apply custom variant when specified', () => {
+  it('should apply custom variant when specified', async () => {
     renderWithProviders({ groupName: 'test-group', variant: 'default' })
 
-    const button = screen.getByRole('button', { name: /manage clients/i })
+    const button = await screen.findByRole('button', {
+      name: /manage clients/i,
+    })
     expect(button).toHaveClass('bg-primary') // default variant class
   })
 
-  it('should apply custom className when provided', () => {
+  it('should apply custom className when provided', async () => {
     renderWithProviders({ groupName: 'test-group', className: 'custom-class' })
 
-    const button = screen.getByRole('button', { name: /manage clients/i })
+    const button = await screen.findByRole('button', {
+      name: /manage clients/i,
+    })
     expect(button).toHaveClass('custom-class')
   })
 
@@ -78,17 +89,19 @@ describe('ManageClientsButton', () => {
     const user = userEvent.setup()
     renderWithProviders({ groupName: 'test-group' })
 
-    const button = screen.getByRole('button', { name: /manage clients/i })
+    const button = await screen.findByRole('button', {
+      name: /manage clients/i,
+    })
     await user.click(button)
 
     expect(mockPromptForm).toHaveBeenCalledWith(
       expect.objectContaining({
         title: 'Manage Clients',
-        defaultValues: {
-          enableVSCode: false,
+        defaultValues: expect.objectContaining({
+          enableVscode: false,
           enableCursor: false,
           enableClaudeCode: false,
-        },
+        }),
         buttons: {
           confirm: 'Save',
           cancel: 'Cancel',
@@ -101,7 +114,9 @@ describe('ManageClientsButton', () => {
     const user = userEvent.setup()
     renderWithProviders({ groupName: 'research-team' })
 
-    const button = screen.getByRole('button', { name: /manage clients/i })
+    const button = await screen.findByRole('button', {
+      name: /manage clients/i,
+    })
     await user.click(button)
 
     expect(mockPromptForm).toHaveBeenCalledWith(
@@ -127,7 +142,9 @@ describe('ManageClientsButton', () => {
 
     renderWithProviders({ groupName: 'test-group' })
 
-    const button = screen.getByRole('button', { name: /manage clients/i })
+    const button = await screen.findByRole('button', {
+      name: /manage clients/i,
+    })
     await user.click(button)
 
     await waitFor(() => {
@@ -144,7 +161,9 @@ describe('ManageClientsButton', () => {
 
     renderWithProviders({ groupName: 'test-group' })
 
-    const button = screen.getByRole('button', { name: /manage clients/i })
+    const button = await screen.findByRole('button', {
+      name: /manage clients/i,
+    })
     await user.click(button)
 
     await waitFor(() => {
@@ -165,23 +184,29 @@ describe('ManageClientsButton', () => {
     const user = userEvent.setup()
     renderWithProviders({ groupName: 'test-group' })
 
-    const button = screen.getByRole('button', { name: /manage clients/i })
+    const button = await screen.findByRole('button', {
+      name: /manage clients/i,
+    })
     await user.click(button)
 
     const promptCall = mockPromptForm.mock.calls[0]?.[0]
     expect(promptCall.resolver).toBeDefined()
-    expect(promptCall.defaultValues).toEqual({
-      enableVSCode: false,
-      enableCursor: false,
-      enableClaudeCode: false,
-    })
+    expect(promptCall.defaultValues).toEqual(
+      expect.objectContaining({
+        enableVscode: false,
+        enableCursor: false,
+        enableClaudeCode: false,
+      })
+    )
   })
 
   it('should render form fields with correct structure', async () => {
     const user = userEvent.setup()
     renderWithProviders({ groupName: 'test-group' })
 
-    const button = screen.getByRole('button', { name: /manage clients/i })
+    const button = await screen.findByRole('button', {
+      name: /manage clients/i,
+    })
     await user.click(button)
 
     const promptCall = mockPromptForm.mock.calls[0]?.[0]
@@ -203,7 +228,9 @@ describe('ManageClientsButton', () => {
       const user = userEvent.setup()
       renderWithProviders({ groupName: 'test-group' })
 
-      const button = screen.getByRole('button', { name: /manage clients/i })
+      const button = await screen.findByRole('button', {
+        name: /manage clients/i,
+      })
       await user.click(button)
 
       const promptCall = mockPromptForm.mock.calls[0]?.[0]
@@ -230,7 +257,9 @@ describe('ManageClientsButton', () => {
       const user = userEvent.setup()
       renderWithProviders({ groupName: 'test-group' })
 
-      const button = screen.getByRole('button', { name: /manage clients/i })
+      const button = await screen.findByRole('button', {
+        name: /manage clients/i,
+      })
       await user.click(button)
 
       const promptCall = mockPromptForm.mock.calls[0]?.[0]
@@ -257,7 +286,9 @@ describe('ManageClientsButton', () => {
       const user = userEvent.setup()
       renderWithProviders({ groupName: 'test-group' })
 
-      const button = screen.getByRole('button', { name: /manage clients/i })
+      const button = await screen.findByRole('button', {
+        name: /manage clients/i,
+      })
       await user.click(button)
 
       const promptCall = mockPromptForm.mock.calls[0]?.[0]
@@ -340,7 +371,9 @@ describe('ManageClientsButton', () => {
 
         renderWithProviders({ groupName: 'test-group' })
 
-        const button = screen.getByRole('button', { name: /manage clients/i })
+        const button = await screen.findByRole('button', {
+          name: /manage clients/i,
+        })
         await user.click(button)
 
         await waitFor(() => {

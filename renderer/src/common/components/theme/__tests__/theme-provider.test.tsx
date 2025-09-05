@@ -124,7 +124,7 @@ describe('<ThemeProvider />', () => {
     )
 
     expect(localStorage.getItem('toolhive-ui-theme')).toBe('dark')
-    expect(document.documentElement).toHaveClass('dark')
+    await waitFor(() => expect(document.documentElement).toHaveClass('dark'))
   })
 
   it('setTheme(light) updates everything consistently', async () => {
