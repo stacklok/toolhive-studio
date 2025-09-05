@@ -47,7 +47,7 @@ import { convertCreateRequestToFormData } from '../../lib/orchestrate-run-remote
 import { LoadingStateAlert } from '@/common/components/secrets/loading-state-alert'
 import { AlertErrorFormSubmission } from '@/common/components/workloads/alert-error-form-submission'
 
-const DEFAULT_FORM_VALUES = {
+const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
   name: '',
   url: '',
   oauth_config: {
@@ -64,7 +64,7 @@ const DEFAULT_FORM_VALUES = {
   },
   envVars: [],
   secrets: [],
-  transport: undefined,
+  transport: 'streamable-http',
 }
 
 export function DialogFormRemoteMcp({
@@ -214,7 +214,11 @@ export function DialogFormRemoteMcp({
           <form onSubmit={form.handleSubmit(onSubmitForm)}>
             <DialogHeader className="mb-4 p-6">
               <DialogTitle>Add a remote MCP server</DialogTitle>
-              <DialogDescription>TODO: add description</DialogDescription>
+              <DialogDescription>
+                Connect to a remote MCP server via HTTP or SSE transport.
+                Configure authentication, secrets, and environment variables as
+                needed.
+              </DialogDescription>
             </DialogHeader>
             {(isSubmitting || (isEditing && isLoadingServer)) && (
               <LoadingStateAlert
@@ -317,7 +321,7 @@ export function DialogFormRemoteMcp({
                           name={field.name}
                         >
                           <SelectTrigger id={field.name} className="w-full">
-                            <SelectValue placeholder="e.g. SSE, stdio" />
+                            <SelectValue placeholder="e.g. SSE, Streamable HTTP" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="sse">SSE</SelectItem>

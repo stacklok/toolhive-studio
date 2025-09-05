@@ -90,8 +90,7 @@ export function prepareCreateWorkloadData(
   data: FormSchemaRemoteMcp,
   secrets: SecretsSecretParameter[] = []
 ): V1CreateRequest {
-  const { oauth_config, ...rest } = data
-
+  const { oauth_config, envVars, ...rest } = data
   // Transform client_secret from string to SecretsSecretParameter if it exists
   const transformedOAuthConfig = oauth_config
     ? {
@@ -108,7 +107,7 @@ export function prepareCreateWorkloadData(
   const request = {
     ...rest,
     oauth_config: transformedOAuthConfig,
-    env_vars: mapEnvVars(data.envVars),
+    env_vars: mapEnvVars(envVars),
     secrets,
   }
 

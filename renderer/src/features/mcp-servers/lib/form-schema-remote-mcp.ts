@@ -3,7 +3,14 @@ import type { CoreWorkload } from '@api/types.gen'
 
 const oauthConfigSchema = z.object({
   authorize_url: z.string().optional(),
-  callback_port: z.number().optional(),
+  callback_port: z
+    .number()
+    .optional()
+    .refine(
+      (val) => val !== undefined && val !== null,
+      'Callback port is required'
+    ),
+
   client_id: z.string().optional(),
   client_secret: z.string().optional(),
   issuer: z.string().optional(),
@@ -37,7 +44,7 @@ export const getFormSchemaRemoteMcp = (
             'This name is already in use or is the same as the editing server name'
           )
       ),
-    url: z.string().nonempty('URL is required'),
+    url: z.string().nonempty('MCP URL is required'),
     auth_type: z
       .union([z.literal('none'), z.literal('oauth2'), z.literal('oidc')])
       .optional(),
