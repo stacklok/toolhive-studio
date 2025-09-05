@@ -87,7 +87,7 @@ function GroupRoute() {
           )}
           <DialogFormLocalMcp
             isOpen={isRunWithCommandOpen}
-            onOpenChange={setIsRunWithCommandOpen}
+            closeDialog={() => setIsRunWithCommandOpen(false)}
           />
         </TitlePage>
         {!isPending && !filteredWorkloads.length ? (

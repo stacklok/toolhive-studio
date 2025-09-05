@@ -60,10 +60,13 @@ const FIELD_TAB_MAP = {
   volumes: 'configuration',
 } satisfies FieldTabMapping<Tab, Field>
 
-const DEFAULT_FORM_VALUES: Partial<FormSchemaLocalMcp> = {
+const DEFAULT_FORM_VALUES = {
   type: 'docker_image',
   name: '',
   transport: 'stdio',
+  image: '',
+  protocol: '',
+  package_name: '',
   target_port: 0,
   networkIsolation: false,
   allowedHosts: [],
@@ -72,7 +75,7 @@ const DEFAULT_FORM_VALUES: Partial<FormSchemaLocalMcp> = {
   envVars: [],
   secrets: [],
   cmd_arguments: [],
-}
+} as Partial<FormSchemaLocalMcp>
 
 export function DialogFormLocalMcp({
   isOpen,

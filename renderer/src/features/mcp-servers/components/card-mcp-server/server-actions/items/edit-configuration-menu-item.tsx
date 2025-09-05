@@ -28,7 +28,7 @@ export function EditConfigurationMenuItem({
 
       <DialogFormLocalMcp
         isOpen={isRunWithCommandOpen}
-        onOpenChange={setIsRunWithCommandOpen}
+        closeDialog={() => setIsRunWithCommandOpen(false)}
         serverToEdit={serverName}
       />
     </>
