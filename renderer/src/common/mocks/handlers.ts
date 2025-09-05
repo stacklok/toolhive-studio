@@ -209,7 +209,8 @@ export const handlers = [
   // Client registration endpoint
   http.post(mswEndpoint('/api/v1beta/clients'), async ({ request }) => {
     try {
-      const { name, groups } = await request.json()
+      const body = (await request.json()) as { name: string; groups: string[] }
+      const { name, groups } = body
 
       if (!name) {
         return HttpResponse.json(

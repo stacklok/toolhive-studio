@@ -37,8 +37,8 @@ describe('useRemoveClientFromGroup', () => {
         async ({ request, params }) => {
           capturedRequests.push({
             method: 'DELETE',
-            clientName: params.name,
-            groupName: params.group,
+            clientName: params.name as string,
+            groupName: params.group as string,
             url: request.url,
           })
           return new HttpResponse(null, { status: 204 })
@@ -75,8 +75,8 @@ describe('useRemoveClientFromGroup', () => {
         async ({ request, params }) => {
           capturedRequests.push({
             method: 'DELETE',
-            clientName: params.name,
-            groupName: params.group,
+            clientName: params.name as string,
+            groupName: params.group as string,
             url: request.url,
           })
           return new HttpResponse(null, { status: 204 })

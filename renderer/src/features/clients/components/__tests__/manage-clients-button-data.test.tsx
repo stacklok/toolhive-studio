@@ -489,7 +489,9 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
       // Use getAllByRole to handle multiple buttons and take the first one
       const buttons = screen.getAllByRole('button', { name: /manage clients/i })
       const button = buttons[0]
-      await user.click(button)
+      if (button) {
+        await user.click(button)
+      }
 
       // Should still log the form result even if API calls fail
       await waitFor(() => {
@@ -540,8 +542,15 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
 
       // Should only log the original values, not form submission
       await waitFor(() => {
-        expect(mockConsoleLog).toHaveBeenCalledWith('Original client status for group:', 'default', expect.any(Object))
-        expect(mockConsoleLog).not.toHaveBeenCalledWith('Manage clients form submitted with values:', expect.any(Object))
+        expect(mockConsoleLog).toHaveBeenCalledWith(
+          'Original client status for group:',
+          'default',
+          expect.any(Object)
+        )
+        expect(mockConsoleLog).not.toHaveBeenCalledWith(
+          'Manage clients form submitted with values:',
+          expect.any(Object)
+        )
       })
 
       // Should not make any API calls when form is cancelled

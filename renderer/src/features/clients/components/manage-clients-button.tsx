@@ -46,7 +46,8 @@ export function ManageClientsButton({
 
   // Get the current group and its registered clients
   const currentGroup = groupsData?.groups?.find(
-    (group) => group.name === groupName
+    (group: { name: string; registered_clients?: string[] }) =>
+      group.name === groupName
   )
   const registeredClientsInGroup = currentGroup?.registered_clients || []
 
@@ -149,7 +150,7 @@ export function ManageClientsButton({
         enableVSCode: result.enableVSCode,
         enableCursor: result.enableCursor,
         enableClaudeCode: result.enableClaudeCode,
-        groupName: groupName
+        groupName: groupName,
       })
 
       // Calculate which values have changed
@@ -198,11 +199,14 @@ export function ManageClientsButton({
 
         // Log summary of changes made
         const changesMade = Object.entries(changes)
-          .filter(([_, changed]) => changed)
-          .map(([client, _]) => client)
-        
+          .filter(([, changed]) => changed)
+          .map(([client]) => client)
+
         if (changesMade.length > 0) {
-          console.log('Successfully applied changes for:', changesMade.join(', '))
+          console.log(
+            'Successfully applied changes for:',
+            changesMade.join(', ')
+          )
         } else {
           console.log('No changes detected - no API calls made')
         }

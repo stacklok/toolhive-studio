@@ -29,9 +29,10 @@ describe('useAddClientToGroup', () => {
     server.use(
       http.post(mswEndpoint('/api/v1beta/clients'), async ({ request }) => {
         const body = await request.json()
-        capturedRequests.push(body)
+        const requestBody = body as { name: string; groups: string[] }
+        capturedRequests.push(requestBody)
         return HttpResponse.json(
-          { name: body.name, groups: body.groups },
+          { name: requestBody.name, groups: requestBody.groups },
           { status: 200 }
         )
       })
@@ -59,9 +60,10 @@ describe('useAddClientToGroup', () => {
     server.use(
       http.post(mswEndpoint('/api/v1beta/clients'), async ({ request }) => {
         const body = await request.json()
-        capturedRequests.push(body)
+        const requestBody = body as { name: string; groups: string[] }
+        capturedRequests.push(requestBody)
         return HttpResponse.json(
-          { name: body.name, groups: body.groups },
+          { name: requestBody.name, groups: requestBody.groups },
           { status: 200 }
         )
       })
@@ -93,10 +95,14 @@ describe('useAddClientToGroup', () => {
     // Mock the API endpoint to capture requests
     server.use(
       http.post(mswEndpoint('/api/v1beta/clients'), async ({ request }) => {
-        const body = await request.json() as { name: string; groups: string[] }
-        capturedRequests.push(body)
+        const body = (await request.json()) as {
+          name: string
+          groups: string[]
+        }
+        const requestBody = body as { name: string; groups: string[] }
+        capturedRequests.push(requestBody)
         return HttpResponse.json(
-          { name: body.name, groups: body.groups },
+          { name: requestBody.name, groups: requestBody.groups },
           { status: 200 }
         )
       })
