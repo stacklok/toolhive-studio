@@ -259,6 +259,48 @@ export const handlers = [
     return new HttpResponse(null, { status: 204 })
   }),
 
+  // Client group-specific removal endpoint
+  http.delete(
+    mswEndpoint('/api/v1beta/clients/:name/groups/:group'),
+    ({ params }) => {
+      const { name, group } = params
+
+      if (!name) {
+        return HttpResponse.json(
+          { error: 'Client name is required' },
+          { status: 400 }
+        )
+      }
+
+      if (!group) {
+        return HttpResponse.json(
+          { error: 'Group name is required' },
+          { status: 400 }
+        )
+      }
+
+      return new HttpResponse(null, { status: 204 })
+    }
+  ),
+
+  // Get all clients endpoint
+  http.get(mswEndpoint('/api/v1beta/clients'), () => {
+    return HttpResponse.json([
+      {
+        name: { name: 'vscode' },
+        groups: ['default'],
+      },
+      {
+        name: { name: 'cursor' },
+        groups: ['default', 'research'],
+      },
+      {
+        name: { name: 'claude-code' },
+        groups: ['research'],
+      },
+    ])
+  }),
+
   http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
     return HttpResponse.json({ servers: MOCK_REGISTRY_RESPONSE })
   }),

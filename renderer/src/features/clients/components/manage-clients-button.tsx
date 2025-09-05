@@ -7,8 +7,8 @@ import { z } from 'zod/v4'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { useQuery } from '@tanstack/react-query'
 import { getApiV1BetaGroups } from '@api/sdk.gen'
-// import { useAddClientToGroup } from '../hooks/use-add-client-to-group'
-// import { useRemoveClientFromGroup } from '../hooks/use-remove-client-from-group'
+import { useAddClientToGroup } from '../hooks/use-add-client-to-group'
+import { useRemoveClientFromGroup } from '../hooks/use-remove-client-from-group'
 
 interface ManageClientsButtonProps {
   groupName: string
@@ -50,14 +50,22 @@ export function ManageClientsButton({
   )
   const registeredClientsInGroup = currentGroup?.registered_clients || []
 
-  // TODO: Initialize hooks for client management when ready
-  // const { addClientToGroup } = useAddClientToGroup({ clientType: 'vscode' })
-  // const { addClientToGroup: addCursorToGroup } = useAddClientToGroup({ clientType: 'cursor' })
-  // const { addClientToGroup: addClaudeCodeToGroup } = useAddClientToGroup({ clientType: 'claude-code' })
+  // Initialize hooks for client management
+  const { addClientToGroup } = useAddClientToGroup({ clientType: 'vscode' })
+  const { addClientToGroup: addCursorToGroup } = useAddClientToGroup({
+    clientType: 'cursor',
+  })
+  const { addClientToGroup: addClaudeCodeToGroup } = useAddClientToGroup({
+    clientType: 'claude-code',
+  })
 
-  // const { removeClientFromGroup } = useRemoveClientFromGroup({ clientType: 'vscode' })
-  // const { removeClientFromGroup: removeCursorFromGroup } = useRemoveClientFromGroup({ clientType: 'cursor' })
-  // const { removeClientFromGroup: removeClaudeCodeFromGroup } = useRemoveClientFromGroup({ clientType: 'claude-code' })
+  const { removeClientFromGroup } = useRemoveClientFromGroup({
+    clientType: 'vscode',
+  })
+  const { removeClientFromGroup: removeCursorFromGroup } =
+    useRemoveClientFromGroup({ clientType: 'cursor' })
+  const { removeClientFromGroup: removeClaudeCodeFromGroup } =
+    useRemoveClientFromGroup({ clientType: 'claude-code' })
 
   const handleManageClients = async () => {
     // Create a custom schema for the form with 3 boolean toggles
@@ -133,22 +141,50 @@ export function ManageClientsButton({
     if (result) {
       console.log('Manage clients result:', result)
 
-      // TODO: Handle client management based on form result
-      // For now, just log what would happen
-      console.log('Would manage clients:', {
-        groupName,
-        currentClients: registeredClientsInGroup,
-        newState: result,
-        changes: {
-          vscode:
-            result.enableVSCode !== registeredClientsInGroup.includes('vscode'),
-          cursor:
-            result.enableCursor !== registeredClientsInGroup.includes('cursor'),
-          claudeCode:
-            result.enableClaudeCode !==
-            registeredClientsInGroup.includes('claude-code'),
-        },
-      })
+      // Handle client management based on form result
+      try {
+        // VS Code client
+        if (
+          result.enableVSCode &&
+          !registeredClientsInGroup.includes('vscode')
+        ) {
+          await addClientToGroup({ groupName })
+        } else if (
+          !result.enableVSCode &&
+          registeredClientsInGroup.includes('vscode')
+        ) {
+          await removeClientFromGroup({ groupName })
+        }
+
+        // Cursor client
+        if (
+          result.enableCursor &&
+          !registeredClientsInGroup.includes('cursor')
+        ) {
+          await addCursorToGroup({ groupName })
+        } else if (
+          !result.enableCursor &&
+          registeredClientsInGroup.includes('cursor')
+        ) {
+          await removeCursorFromGroup({ groupName })
+        }
+
+        // Claude Code client
+        if (
+          result.enableClaudeCode &&
+          !registeredClientsInGroup.includes('claude-code')
+        ) {
+          await addClaudeCodeToGroup({ groupName })
+        } else if (
+          !result.enableClaudeCode &&
+          registeredClientsInGroup.includes('claude-code')
+        ) {
+          await removeClaudeCodeFromGroup({ groupName })
+        }
+      } catch (error) {
+        console.error('Error managing clients:', error)
+        // The hooks will handle error display via toast notifications
+      }
     }
   }
 

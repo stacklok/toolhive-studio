@@ -419,6 +419,11 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
 
   describe('Error handling and edge cases', () => {
     it('should handle API errors gracefully when fetching groups data', async () => {
+      // Mock console.error to prevent test failure
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {})
+
       // Mock API error
       server.use(
         http.get(mswEndpoint('/api/v1beta/groups'), () => {
@@ -445,9 +450,17 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
           },
         })
       )
+
+      // Clean up
+      consoleErrorSpy.mockRestore()
     })
 
     it('should handle API errors gracefully when submitting form', async () => {
+      // Mock console.error to prevent test failure
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {})
+
       // Mock successful groups fetch but failed client operations
       server.use(
         http.get(mswEndpoint('/api/v1beta/groups'), () => {
@@ -473,7 +486,9 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
       const user = userEvent.setup()
       renderWithProviders({ groupName: 'default' })
 
-      const button = screen.getByRole('button', { name: /manage clients/i })
+      // Use getAllByRole to handle multiple buttons and take the first one
+      const buttons = screen.getAllByRole('button', { name: /manage clients/i })
+      const button = buttons[0]
       await user.click(button)
 
       // Should still log the form result even if API calls fail
@@ -483,6 +498,9 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
           mockResult
         )
       })
+
+      // Clean up
+      consoleErrorSpy.mockRestore()
     })
 
     it('should handle form cancellation without making API calls', async () => {
