@@ -76,57 +76,42 @@ export function useManageClients() {
       throw new Error(`Client ${clientType} is not installed or available`)
     }
 
-    try {
-      // First, get the current client data to see what groups it's already in
-      const currentClients = await getApiV1BetaClients({
-        parseAs: 'text',
-        responseStyle: 'data',
-      })
+    // First, get the current client data to see what groups it's already in
+    const currentClients = await getApiV1BetaClients({
+      parseAs: 'text',
+      responseStyle: 'data',
+    })
 
-      // Parse the response
-      const parsedClients =
-        typeof currentClients === 'string'
-          ? JSON.parse(currentClients)
-          : currentClients
+    // Parse the response
+    const parsedClients =
+      typeof currentClients === 'string'
+        ? JSON.parse(currentClients)
+        : currentClients
 
-      // Find the current client and get its existing groups
-      const currentClient = parsedClients.find(
-        (clientItem: { name?: { name?: string }; groups?: string[] }) =>
-          clientItem.name?.name === clientType
-      )
-      const existingGroups = currentClient?.groups || []
+    // Find the current client and get its existing groups
+    const currentClient = parsedClients.find(
+      (clientItem: { name?: { name?: string }; groups?: string[] }) =>
+        clientItem.name?.name === clientType
+    )
+    const existingGroups = currentClient?.groups || []
 
-      // Create the new groups array by adding the new group (avoiding duplicates)
-      const newGroups = existingGroups.includes(groupName)
-        ? existingGroups
-        : [...existingGroups, groupName]
+    // Create the new groups array by adding the new group (avoiding duplicates)
+    const newGroups = existingGroups.includes(groupName)
+      ? existingGroups
+      : [...existingGroups, groupName]
 
-      // Register/update the client with all groups
-      await registerClient({
-        body: {
-          name: clientType,
-          groups: newGroups,
-        },
-      })
-
-      trackEvent(`Client ${clientType} registered`, {
-        client: clientType,
+    // Register/update the client with all groups
+    await registerClient({
+      body: {
+        name: clientType,
         groups: newGroups,
-      })
-    } catch {
-      // If we can't get current groups, fall back to just adding the new group
-      await registerClient({
-        body: {
-          name: clientType,
-          groups: [groupName],
-        },
-      })
+      },
+    })
 
-      trackEvent(`Client ${clientType} registered`, {
-        client: clientType,
-        groups: [groupName],
-      })
-    }
+    trackEvent(`Client ${clientType} registered`, {
+      client: clientType,
+      groups: newGroups,
+    })
   }
 
   /**
