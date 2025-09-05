@@ -8,7 +8,6 @@ import { IllustrationNoConnection } from '@/common/components/illustrations/illu
 import { Button } from '@/common/components/ui/button'
 import { RefreshButton } from '@/common/components/refresh-button'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
-import { DeprecatedDialogFormRunMcpServerWithCommand } from '@/features/mcp-servers/components/dialog-form-run-mcp-command'
 import { GridCardsMcpServers } from '@/features/mcp-servers/components/grid-cards-mcp-server'
 import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/menu-run-mcp-server'
 import { useMutationRestartServerAtStartup } from '@/features/mcp-servers/hooks/use-mutation-restart-server'
@@ -16,6 +15,7 @@ import { TitlePage } from '@/common/components/title-page'
 import { McpServersSidebar } from '@/features/mcp-servers/components/mcp-servers-sidebar'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../utils/feature-flags'
+import { DialogFormLocalMcp } from '@/features/mcp-servers/components/local-mcp/dialog-form-local-mcp'
 
 export const Route = createFileRoute('/group/$groupName')({
   loader: ({ context: { queryClient }, params: { groupName } }) =>
@@ -85,9 +85,9 @@ function GroupRoute() {
               />
             </div>
           )}
-          <DeprecatedDialogFormRunMcpServerWithCommand
+          <DialogFormLocalMcp
             isOpen={isRunWithCommandOpen}
-            onOpenChange={setIsRunWithCommandOpen}
+            closeDialog={() => setIsRunWithCommandOpen(false)}
           />
         </TitlePage>
         {!isPending && !filteredWorkloads.length ? (
