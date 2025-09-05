@@ -206,6 +206,102 @@ export const handlers = [
     return HttpResponse.json(clientsFixture)
   }),
 
+  // Client registration endpoint
+  http.post(mswEndpoint('/api/v1beta/clients'), async ({ request }) => {
+    try {
+      const body = (await request.json()) as { name: string; groups: string[] }
+      const { name, groups } = body
+
+      if (!name) {
+        return HttpResponse.json(
+          { error: 'Client name is required' },
+          { status: 400 }
+        )
+      }
+
+      if (!groups || groups.length === 0) {
+        return HttpResponse.json(
+          { error: 'Groups parameter is required' },
+          { status: 400 }
+        )
+      }
+
+      return HttpResponse.json(
+        {
+          name,
+          groups: groups || ['default'],
+        },
+        { status: 200 }
+      )
+    } catch {
+      return HttpResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      )
+    }
+  }),
+
+  // Client unregistration endpoint
+  http.delete(mswEndpoint('/api/v1beta/clients/:name'), ({ params }) => {
+    const { name } = params
+
+    if (!name) {
+      return HttpResponse.json(
+        { error: 'Client name is required' },
+        { status: 400 }
+      )
+    }
+
+    // For DELETE requests, we need to check if the group is provided in the request body
+    // Since DELETE requests typically don't have a body, we'll check the URL or require it
+    // For now, let's assume the group should be provided in the path or query params
+    // This is a simplified approach - in a real scenario, you might want to check the request body
+
+    return new HttpResponse(null, { status: 204 })
+  }),
+
+  // Client group-specific removal endpoint
+  http.delete(
+    mswEndpoint('/api/v1beta/clients/:name/groups/:group'),
+    ({ params }) => {
+      const { name, group } = params
+
+      if (!name) {
+        return HttpResponse.json(
+          { error: 'Client name is required' },
+          { status: 400 }
+        )
+      }
+
+      if (!group) {
+        return HttpResponse.json(
+          { error: 'Group name is required' },
+          { status: 400 }
+        )
+      }
+
+      return new HttpResponse(null, { status: 204 })
+    }
+  ),
+
+  // Get all clients endpoint
+  http.get(mswEndpoint('/api/v1beta/clients'), () => {
+    return HttpResponse.json([
+      {
+        name: { name: 'vscode' },
+        groups: ['default'],
+      },
+      {
+        name: { name: 'cursor' },
+        groups: ['default', 'research'],
+      },
+      {
+        name: { name: 'claude-code' },
+        groups: ['research'],
+      },
+    ])
+  }),
+
   http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
     return HttpResponse.json({ servers: MOCK_REGISTRY_RESPONSE })
   }),

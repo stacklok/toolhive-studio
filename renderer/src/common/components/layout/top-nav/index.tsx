@@ -77,31 +77,7 @@ function TopNavLinks() {
             <LinkViewTransition to="/registry">Registry</LinkViewTransition>
           </NavigationMenuLink>
         </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuLink
-            className="app-region-no-drag text-muted-foreground
-              hover:text-foreground focus:text-foreground
-              data-[status=active]:text-foreground
-              data-[status=active]:before:bg-foreground
-              focus-visible:ring-ring/50 relative px-3 py-2 text-sm
-              transition-all outline-none hover:bg-transparent
-              focus:bg-transparent focus-visible:ring-[3px]
-              focus-visible:outline-1 data-[status=active]:bg-transparent
-              data-[status=active]:before:absolute
-              data-[status=active]:before:right-3
-              data-[status=active]:before:bottom-[-14px]
-              data-[status=active]:before:left-3
-              data-[status=active]:before:h-0.5
-              data-[status=active]:before:rounded-t-[1px]
-              data-[status=active]:before:opacity-90
-              data-[status=active]:before:content-['']
-              data-[status=active]:hover:bg-transparent
-              data-[status=active]:focus:bg-transparent"
-            asChild
-          >
-            <LinkViewTransition to="/clients">Clients</LinkViewTransition>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
+
         {isPlaygroundEnabled && (
           <NavigationMenuItem>
             <NavigationMenuLink
