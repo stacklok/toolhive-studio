@@ -14,7 +14,10 @@ const oauthConfigSchema = z.object({
   use_pkce: z.boolean(),
 })
 
-export const getFormSchemaRemoteMcp = (workloads: CoreWorkload[]) => {
+export const getFormSchemaRemoteMcp = (
+  workloads: CoreWorkload[],
+  editingServerName?: string
+) => {
   const baseFields = z.object({
     name: z
       .union([z.string(), z.undefined()])
@@ -28,8 +31,10 @@ export const getFormSchemaRemoteMcp = (workloads: CoreWorkload[]) => {
             'Invalid server name: it can only contain alphanumeric characters, dots, hyphens, and underscores.'
           )
           .refine(
-            (value) => !workloads.some((w) => w.name === value),
-            'This name is already in use'
+            (value) =>
+              !workloads.some((w) => w.name === value) &&
+              value !== editingServerName,
+            'This name is already in use or is the same as the editing server name'
           )
       ),
     url: z.string().nonempty('URL is required'),
