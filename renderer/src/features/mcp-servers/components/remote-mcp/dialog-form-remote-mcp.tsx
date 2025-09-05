@@ -64,6 +64,7 @@ const DEFAULT_FORM_VALUES = {
   },
   envVars: [],
   secrets: [],
+  transport: undefined,
 }
 
 export function DialogFormRemoteMcp({
@@ -299,6 +300,40 @@ export function DialogFormRemoteMcp({
 
                 <FormField
                   control={form.control}
+                  name="transport"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center gap-1">
+                        <FormLabel htmlFor={field.name}>Transport</FormLabel>
+                        <TooltipInfoIcon>
+                          The transport mechanism the MCP server uses to
+                          communicate with clients.
+                        </TooltipInfoIcon>
+                      </div>
+                      <FormControl>
+                        <Select
+                          onValueChange={(value) => field.onChange(value)}
+                          value={field.value}
+                          name={field.name}
+                        >
+                          <SelectTrigger id={field.name} className="w-full">
+                            <SelectValue placeholder="e.g. SSE, stdio" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="sse">SSE</SelectItem>
+                            <SelectItem value="streamable-http">
+                              Streamable HTTP
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="auth_type"
                   render={({ field }) => (
                     <FormItem>
@@ -331,6 +366,7 @@ export function DialogFormRemoteMcp({
                     </FormItem>
                   )}
                 />
+
                 <FormFieldsAuth authType={authType} form={form} />
                 {(authType === undefined || authType === 'none') && (
                   <>

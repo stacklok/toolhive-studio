@@ -216,6 +216,7 @@ export function convertCreateRequestToFormData(
   const baseFormData: FormSchemaRemoteMcp = {
     name: createRequest.name || '',
     url: createRequest.url || '',
+    transport: createRequest.transport as 'sse' | 'streamable-http',
     oauth_config: {
       skip_browser: createRequest.oauth_config?.skip_browser ?? false,
       use_pkce: createRequest.oauth_config?.use_pkce ?? true,
