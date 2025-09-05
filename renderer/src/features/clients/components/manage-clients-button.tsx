@@ -7,8 +7,8 @@ import { z } from 'zod/v4'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { useQuery } from '@tanstack/react-query'
 import { getApiV1BetaGroups } from '@api/sdk.gen'
-import { useAddClientToGroup } from '../hooks/use-add-client-to-group'
-import { useRemoveClientFromGroup } from '../hooks/use-remove-client-from-group'
+import { useManageClients } from '../hooks/use-manage-clients'
+import { COMMON_CLIENTS } from '../constants'
 
 interface ManageClientsButtonProps {
   groupName: string
@@ -51,39 +51,38 @@ export function ManageClientsButton({
   )
   const registeredClientsInGroup = currentGroup?.registered_clients || []
 
-  // Initialize hooks for client management
-  const { addClientToGroup } = useAddClientToGroup({ client: 'vscode' })
-  const { addClientToGroup: addCursorToGroup } = useAddClientToGroup({
-    client: 'cursor',
-  })
-  const { addClientToGroup: addClaudeCodeToGroup } = useAddClientToGroup({
-    client: 'claude-code',
-  })
-
-  const { removeClientFromGroup } = useRemoveClientFromGroup({
-    client: 'vscode',
-  })
-  const { removeClientFromGroup: removeCursorFromGroup } =
-    useRemoveClientFromGroup({ client: 'cursor' })
-  const { removeClientFromGroup: removeClaudeCodeFromGroup } =
-    useRemoveClientFromGroup({ client: 'claude-code' })
+  // Initialize dynamic client management
+  const {
+    addClientToGroup,
+    removeClientFromGroup,
+    getClientDisplayName,
+    getClientFieldName,
+  } = useManageClients()
 
   const handleManageClients = async () => {
-    // Store original values before opening the form
-    const originalValues = {
-      enableVSCode: registeredClientsInGroup.includes('vscode'),
-      enableCursor: registeredClientsInGroup.includes('cursor'),
-      enableClaudeCode: registeredClientsInGroup.includes('claude-code'),
-    }
+    // Store original values before opening the form - dynamically generated
+    const originalValues = COMMON_CLIENTS.reduce(
+      (acc, clientName) => {
+        const fieldName = getClientFieldName(clientName)
+        acc[fieldName] = registeredClientsInGroup.includes(clientName)
+        return acc
+      },
+      {} as Record<string, boolean>
+    )
 
     console.log('Original client status for group:', groupName, originalValues)
 
-    // Create a custom schema for the form with 3 boolean toggles
-    const formSchema = z.object({
-      enableVSCode: z.boolean(),
-      enableCursor: z.boolean(),
-      enableClaudeCode: z.boolean(),
-    })
+    // Create a dynamic schema for the form with boolean toggles for each common client
+    const formSchema = z.object(
+      COMMON_CLIENTS.reduce(
+        (acc, clientName) => {
+          const fieldName = getClientFieldName(clientName)
+          acc[fieldName] = z.boolean()
+          return acc
+        },
+        {} as Record<string, z.ZodBoolean>
+      )
+    )
 
     // Use original values as default values for the form
     const defaultValues = originalValues
@@ -94,47 +93,29 @@ export function ManageClientsButton({
       resolver: zodV4Resolver(formSchema),
       fields: (form) => (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="enableVSCode" className="text-sm font-medium">
-              VS Code - Copilot
-            </Label>
-            <Switch
-              id="enableVSCode"
-              checked={form.watch('enableVSCode') as boolean}
-              onCheckedChange={(checked) => {
-                form.setValue('enableVSCode', checked)
-                form.trigger('enableVSCode')
-              }}
-            />
-          </div>
+          {COMMON_CLIENTS.map((clientName) => {
+            const fieldName = getClientFieldName(clientName)
+            const displayName = getClientDisplayName(clientName)
 
-          <div className="flex items-center justify-between">
-            <Label htmlFor="enableCursor" className="text-sm font-medium">
-              Cursor
-            </Label>
-            <Switch
-              id="enableCursor"
-              checked={form.watch('enableCursor') as boolean}
-              onCheckedChange={(checked) => {
-                form.setValue('enableCursor', checked)
-                form.trigger('enableCursor')
-              }}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <Label htmlFor="enableClaudeCode" className="text-sm font-medium">
-              Claude Code
-            </Label>
-            <Switch
-              id="enableClaudeCode"
-              checked={form.watch('enableClaudeCode') as boolean}
-              onCheckedChange={(checked) => {
-                form.setValue('enableClaudeCode', checked)
-                form.trigger('enableClaudeCode')
-              }}
-            />
-          </div>
+            return (
+              <div
+                key={clientName}
+                className="flex items-center justify-between"
+              >
+                <Label htmlFor={fieldName} className="text-sm font-medium">
+                  {displayName}
+                </Label>
+                <Switch
+                  id={fieldName}
+                  checked={form.watch(fieldName) as boolean}
+                  onCheckedChange={(checked) => {
+                    form.setValue(fieldName, checked)
+                    form.trigger(fieldName)
+                  }}
+                />
+              </div>
+            )
+          })}
         </div>
       ),
       buttons: {
@@ -146,53 +127,39 @@ export function ManageClientsButton({
     if (result) {
       console.log('Manage clients form submitted with values:', result)
       console.log('Form values breakdown:', {
-        enableVSCode: result.enableVSCode,
-        enableCursor: result.enableCursor,
-        enableClaudeCode: result.enableClaudeCode,
+        ...result,
         groupName: groupName,
       })
 
-      // Calculate which values have changed
-      const changes = {
-        vscode: result.enableVSCode !== originalValues.enableVSCode,
-        cursor: result.enableCursor !== originalValues.enableCursor,
-        claudeCode: result.enableClaudeCode !== originalValues.enableClaudeCode,
-      }
+      // Calculate which values have changed - dynamically generated
+      const changes = COMMON_CLIENTS.reduce(
+        (acc, clientName) => {
+          const fieldName = getClientFieldName(clientName)
+          acc[clientName] = result[fieldName] !== originalValues[fieldName]
+          return acc
+        },
+        {} as Record<string, boolean>
+      )
 
       console.log('Changes detected:', changes)
 
-      // Only save changes that actually changed
+      // Only save changes that actually changed - dynamically processed
       try {
-        // VS Code client - only if it changed
-        if (changes.vscode) {
-          if (result.enableVSCode) {
-            console.log('Adding VS Code client to group:', groupName)
-            await addClientToGroup({ groupName })
-          } else {
-            console.log('Removing VS Code client from group:', groupName)
-            await removeClientFromGroup({ groupName })
-          }
-        }
+        for (const clientName of COMMON_CLIENTS) {
+          if (changes[clientName]) {
+            const fieldName = getClientFieldName(clientName)
+            const isEnabled = result[fieldName]
 
-        // Cursor client - only if it changed
-        if (changes.cursor) {
-          if (result.enableCursor) {
-            console.log('Adding Cursor client to group:', groupName)
-            await addCursorToGroup({ groupName })
-          } else {
-            console.log('Removing Cursor client from group:', groupName)
-            await removeCursorFromGroup({ groupName })
-          }
-        }
-
-        // Claude Code client - only if it changed
-        if (changes.claudeCode) {
-          if (result.enableClaudeCode) {
-            console.log('Adding Claude Code client to group:', groupName)
-            await addClaudeCodeToGroup({ groupName })
-          } else {
-            console.log('Removing Claude Code client from group:', groupName)
-            await removeClaudeCodeFromGroup({ groupName })
+            if (isEnabled) {
+              console.log(`Adding ${clientName} client to group:`, groupName)
+              await addClientToGroup(clientName, groupName)
+            } else {
+              console.log(
+                `Removing ${clientName} client from group:`,
+                groupName
+              )
+              await removeClientFromGroup(clientName, groupName)
+            }
           }
         }
 

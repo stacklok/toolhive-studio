@@ -6,6 +6,7 @@ import { useAddClientToGroup } from '../use-add-client-to-group'
 import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/msw-endpoint'
+import { CLIENT_NAMES } from '../../constants'
 
 describe('useAddClientToGroup', () => {
   let queryClient: QueryClient
@@ -39,7 +40,7 @@ describe('useAddClientToGroup', () => {
     )
 
     const { result } = renderHook(
-      () => useAddClientToGroup({ client: 'test-client' }),
+      () => useAddClientToGroup({ client: CLIENT_NAMES.VSCODE }),
       { wrapper }
     )
 
@@ -49,8 +50,8 @@ describe('useAddClientToGroup', () => {
     await waitFor(() => {
       expect(capturedRequests).toHaveLength(1)
       expect(capturedRequests[0]).toEqual({
-        name: 'test-client',
-        groups: ['research-team'],
+        name: CLIENT_NAMES.VSCODE,
+        groups: ['default', 'research-team'],
       })
     })
   })
@@ -70,7 +71,7 @@ describe('useAddClientToGroup', () => {
     )
 
     const { result } = renderHook(
-      () => useAddClientToGroup({ client: 'vscode' }),
+      () => useAddClientToGroup({ client: CLIENT_NAMES.VSCODE }),
       { wrapper }
     )
 
@@ -81,11 +82,11 @@ describe('useAddClientToGroup', () => {
     await waitFor(() => {
       expect(capturedRequests).toHaveLength(2)
       expect(capturedRequests[0]).toEqual({
-        name: 'vscode',
+        name: CLIENT_NAMES.VSCODE,
         groups: ['default'],
       })
       expect(capturedRequests[1]).toEqual({
-        name: 'vscode',
+        name: CLIENT_NAMES.VSCODE,
         groups: ['default', 'custom-group'],
       })
     })
@@ -95,7 +96,7 @@ describe('useAddClientToGroup', () => {
     const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries')
 
     const { result } = renderHook(
-      () => useAddClientToGroup({ client: 'test-client' }),
+      () => useAddClientToGroup({ client: CLIENT_NAMES.VSCODE }),
       { wrapper }
     )
 

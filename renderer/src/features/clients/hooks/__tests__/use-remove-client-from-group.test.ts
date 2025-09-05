@@ -6,6 +6,7 @@ import { useRemoveClientFromGroup } from '../use-remove-client-from-group'
 import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/msw-endpoint'
+import { CLIENT_NAMES } from '../../constants'
 
 describe('useRemoveClientFromGroup', () => {
   let queryClient: QueryClient
@@ -47,7 +48,7 @@ describe('useRemoveClientFromGroup', () => {
     )
 
     const { result } = renderHook(
-      () => useRemoveClientFromGroup({ client: 'test-client' }),
+      () => useRemoveClientFromGroup({ client: CLIENT_NAMES.VSCODE }),
       { wrapper }
     )
 
@@ -58,10 +59,10 @@ describe('useRemoveClientFromGroup', () => {
       expect(capturedRequests).toHaveLength(1)
       expect(capturedRequests[0]).toEqual({
         method: 'DELETE',
-        clientName: 'test-client',
+        clientName: CLIENT_NAMES.VSCODE,
         groupName: 'research-team',
         url: expect.stringContaining(
-          '/api/v1beta/clients/test-client/groups/research-team'
+          '/api/v1beta/clients/vscode/groups/research-team'
         ),
       })
     })
@@ -85,7 +86,7 @@ describe('useRemoveClientFromGroup', () => {
     )
 
     const { result } = renderHook(
-      () => useRemoveClientFromGroup({ client: 'vscode' }),
+      () => useRemoveClientFromGroup({ client: CLIENT_NAMES.VSCODE }),
       { wrapper }
     )
 
@@ -97,7 +98,7 @@ describe('useRemoveClientFromGroup', () => {
       expect(capturedRequests).toHaveLength(2)
       expect(capturedRequests[0]).toEqual({
         method: 'DELETE',
-        clientName: 'vscode',
+        clientName: CLIENT_NAMES.VSCODE,
         groupName: 'default',
         url: expect.stringContaining(
           '/api/v1beta/clients/vscode/groups/default'
@@ -105,7 +106,7 @@ describe('useRemoveClientFromGroup', () => {
       })
       expect(capturedRequests[1]).toEqual({
         method: 'DELETE',
-        clientName: 'vscode',
+        clientName: CLIENT_NAMES.VSCODE,
         groupName: 'custom-group',
         url: expect.stringContaining(
           '/api/v1beta/clients/vscode/groups/custom-group'
@@ -128,7 +129,7 @@ describe('useRemoveClientFromGroup', () => {
     const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries')
 
     const { result } = renderHook(
-      () => useRemoveClientFromGroup({ client: 'test-client' }),
+      () => useRemoveClientFromGroup({ client: CLIENT_NAMES.VSCODE }),
       { wrapper }
     )
 
