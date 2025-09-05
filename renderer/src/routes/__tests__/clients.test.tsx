@@ -7,6 +7,7 @@ import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/msw-endpoint'
 import type { V1ClientStatusResponse } from '@api/types.gen'
+import userEvent from '@testing-library/user-event'
 
 const router = createTestRouter(Clients, '/clients/default')
 
@@ -189,4 +190,239 @@ describe('Clients Route', () => {
       expect(backButton.closest('a')).toHaveAttribute('href', expectedBackPath)
     }
   )
+
+  describe('Client group management edge cases', () => {
+    it('should extend existing groups when adding client to a new group', async () => {
+      // Mock initial state: client is already in 'default' and 'research' groups
+      server.use(
+        http.get(mswEndpoint('/api/v1beta/groups'), () => {
+          return HttpResponse.json({
+            groups: [
+              { name: 'default', registered_clients: ['vscode'] },
+              { name: 'research', registered_clients: ['vscode'] },
+              { name: 'development', registered_clients: [] },
+            ],
+          })
+        }),
+        // Mock the GET /api/v1beta/clients endpoint to return existing client data
+        http.get(mswEndpoint('/api/v1beta/clients'), () => {
+          return HttpResponse.json([
+            {
+              name: { name: 'vscode' },
+              groups: ['default', 'research']
+            }
+          ])
+        })
+      )
+
+      // Capture API calls to verify the request body
+      const capturedRequests: Array<{ name: string; groups: string[] }> = []
+      server.use(
+        http.post(mswEndpoint('/api/v1beta/clients'), async ({ request }) => {
+          const body = await request.json() as { name: string; groups: string[] }
+          capturedRequests.push(body)
+          return HttpResponse.json({ name: body.name, groups: body.groups }, { status: 200 })
+        })
+      )
+
+      const router = createTestRouter(Clients, '/clients/$groupName')
+      router.navigate({ to: '/clients/$groupName', params: { groupName: 'development' } })
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /clients/i })).toBeInTheDocument()
+      })
+
+      // Find the VS Code client card and enable it
+      const vscodeCard = screen.getByText('VS Code - Copilot').closest('[data-slot="card"]')
+      const vscodeSwitch = vscodeCard?.querySelector('[role="switch"]') as HTMLElement
+      
+      // Enable the client for the development group
+      await userEvent.click(vscodeSwitch)
+
+      // Wait for the API call to be made
+      await waitFor(() => {
+        expect(capturedRequests).toHaveLength(1)
+      })
+
+      // Verify that the API call includes ALL groups (extending, not replacing)
+      expect(capturedRequests[0]).toEqual({
+        name: 'vscode',
+        groups: ['default', 'research', 'development'] // Should include existing groups
+      })
+    })
+
+    it('should only remove from specific group when disabling client', async () => {
+      // Mock initial state: client is in 'default', 'research', and 'development' groups
+      server.use(
+        http.get(mswEndpoint('/api/v1beta/groups'), () => {
+          return HttpResponse.json({
+            groups: [
+              { name: 'default', registered_clients: ['vscode'] },
+              { name: 'research', registered_clients: ['vscode'] },
+              { name: 'development', registered_clients: ['vscode'] },
+            ],
+          })
+        })
+      )
+
+      // Capture DELETE requests to verify the correct group is targeted
+      const capturedDeletes: Array<{ method: string; clientName: string; groupName: string; url: string }> = []
+      server.use(
+        http.delete(mswEndpoint('/api/v1beta/clients/:name/groups/:group'), async ({ request, params }) => {
+          capturedDeletes.push({
+            method: 'DELETE',
+            clientName: params.name as string,
+            groupName: params.group as string,
+            url: request.url
+          })
+          return new HttpResponse(null, { status: 204 })
+        })
+      )
+
+      const router = createTestRouter(Clients, '/clients/$groupName')
+      router.navigate({ to: '/clients/$groupName', params: { groupName: 'research' } })
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /clients/i })).toBeInTheDocument()
+      })
+
+      // Find the VS Code client card and disable it
+      const vscodeCard = screen.getByText('VS Code - Copilot').closest('[data-slot="card"]')
+      const vscodeSwitch = vscodeCard?.querySelector('[role="switch"]') as HTMLElement
+      
+      // Disable the client for the research group only
+      await userEvent.click(vscodeSwitch)
+
+      // Wait for the DELETE API call to be made
+      await waitFor(() => {
+        expect(capturedDeletes).toHaveLength(1)
+      })
+
+      // Verify that only the research group is targeted for removal
+      expect(capturedDeletes[0]).toEqual({
+        method: 'DELETE',
+        clientName: 'vscode',
+        groupName: 'research',
+        url: expect.stringContaining('/api/v1beta/clients/vscode/groups/research')
+      })
+
+      // Verify that the client should still be in other groups
+      // (This would require checking the updated groups data after the operation)
+    })
+
+    it('should only register client when adding to first group', async () => {
+      // Mock initial state: client is not in any groups
+      server.use(
+        http.get(mswEndpoint('/api/v1beta/groups'), () => {
+          return HttpResponse.json({
+            groups: [
+              { name: 'default', registered_clients: [] },
+              { name: 'research', registered_clients: [] },
+            ],
+          })
+        }),
+        // Mock the GET /api/v1beta/clients endpoint to return empty client data
+        http.get(mswEndpoint('/api/v1beta/clients'), () => {
+          return HttpResponse.json([])
+        })
+      )
+
+      // Capture API calls to verify registration happens
+      const capturedRequests: Array<{ name: string; groups: string[] }> = []
+      server.use(
+        http.post(mswEndpoint('/api/v1beta/clients'), async ({ request }) => {
+          const body = await request.json() as { name: string; groups: string[] }
+          capturedRequests.push(body)
+          return HttpResponse.json({ name: body.name, groups: body.groups }, { status: 200 })
+        })
+      )
+
+      const router = createTestRouter(Clients, '/clients/$groupName')
+      router.navigate({ to: '/clients/$groupName', params: { groupName: 'default' } })
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /clients/i })).toBeInTheDocument()
+      })
+
+      // Find the VS Code client card and enable it
+      const vscodeCard = screen.getByText('VS Code - Copilot').closest('[data-slot="card"]')
+      const vscodeSwitch = vscodeCard?.querySelector('[role="switch"]') as HTMLElement
+      
+      // Enable the client for the first group (should trigger registration)
+      await userEvent.click(vscodeSwitch)
+
+      // Wait for the API call to be made
+      await waitFor(() => {
+        expect(capturedRequests).toHaveLength(1)
+      })
+
+      // Verify that the client is registered with the first group
+      expect(capturedRequests[0]).toEqual({
+        name: 'vscode',
+        groups: ['default']
+      })
+    })
+
+    it('should only unregister client when removing from last group', async () => {
+      // Mock initial state: client is only in 'default' group (last remaining group)
+      server.use(
+        http.get(mswEndpoint('/api/v1beta/groups'), () => {
+          return HttpResponse.json({
+            groups: [
+              { name: 'default', registered_clients: ['vscode'] },
+              { name: 'research', registered_clients: [] },
+            ],
+          })
+        })
+      )
+
+      // Capture DELETE requests to verify removal from specific group
+      const capturedDeletes: Array<{ method: string; clientName: string; groupName: string; url: string }> = []
+      server.use(
+        http.delete(mswEndpoint('/api/v1beta/clients/:name/groups/:group'), async ({ request, params }) => {
+          capturedDeletes.push({
+            method: 'DELETE',
+            clientName: params.name as string,
+            groupName: params.group as string,
+            url: request.url
+          })
+          return new HttpResponse(null, { status: 204 })
+        })
+      )
+
+      const router = createTestRouter(Clients, '/clients/$groupName')
+      router.navigate({ to: '/clients/$groupName', params: { groupName: 'default' } })
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /clients/i })).toBeInTheDocument()
+      })
+
+      // Find the VS Code client card and disable it
+      const vscodeCard = screen.getByText('VS Code - Copilot').closest('[data-slot="card"]')
+      const vscodeSwitch = vscodeCard?.querySelector('[role="switch"]') as HTMLElement
+      
+      // Disable the client from the last remaining group (should trigger unregistration)
+      await userEvent.click(vscodeSwitch)
+
+      // Wait for the DELETE API call to be made
+      await waitFor(() => {
+        expect(capturedDeletes).toHaveLength(1)
+      })
+
+      // Verify that the client is removed from the specific group
+      expect(capturedDeletes[0]).toEqual({
+        method: 'DELETE',
+        clientName: 'vscode',
+        groupName: 'default',
+        url: expect.stringContaining('/api/v1beta/clients/vscode/groups/default')
+      })
+
+      // Note: The backend should handle the actual unregistration when no groups remain
+      // This test verifies we're using the group-specific removal endpoint
+    })
+  })
 })

@@ -93,7 +93,7 @@ describe('useAddClientToGroup', () => {
     // Mock the API endpoint to capture requests
     server.use(
       http.post(mswEndpoint('/api/v1beta/clients'), async ({ request }) => {
-        const body = await request.json()
+        const body = await request.json() as { name: string; groups: string[] }
         capturedRequests.push(body)
         return HttpResponse.json(
           { name: body.name, groups: body.groups },
