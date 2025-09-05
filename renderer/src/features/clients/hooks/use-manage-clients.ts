@@ -1,105 +1,148 @@
-import { useAddClientToGroup } from './use-add-client-to-group'
-import { useRemoveClientFromGroup } from './use-remove-client-from-group'
-import { COMMON_CLIENTS, type CommonClientName } from '../constants'
+import { useAvailableClients } from './use-available-clients'
+import { useToastMutation } from '@/common/hooks/use-toast-mutation'
+import { useQueryClient } from '@tanstack/react-query'
+import { trackEvent } from '@/common/lib/analytics'
+import { 
+  getApiV1BetaDiscoveryClientsQueryKey,
+  getApiV1BetaClientsQueryKey,
+  postApiV1BetaClientsMutation,
+} from '@api/@tanstack/react-query.gen'
+import { 
+  getApiV1BetaClients,
+  deleteApiV1BetaClientsByNameGroupsByGroup 
+} from '@api/sdk.gen'
 
 /**
- * Hook for managing multiple clients dynamically
- * This avoids hardcoding specific client names in components
+ * Hook for managing clients dynamically based on discovery API
+ * This uses the discovery clients API to get the list of available clients
  */
 export function useManageClients() {
-  // Create individual hooks for each common client
-  const vscodeManager = useAddClientToGroup({ client: COMMON_CLIENTS[0] })
-  const cursorManager = useAddClientToGroup({ client: COMMON_CLIENTS[1] })
-  const claudeCodeManager = useAddClientToGroup({ client: COMMON_CLIENTS[2] })
+  const { installedClients, getClientDisplayName, getClientFieldName } = useAvailableClients()
+  const queryClient = useQueryClient()
 
-  const vscodeRemover = useRemoveClientFromGroup({ client: COMMON_CLIENTS[0] })
-  const cursorRemover = useRemoveClientFromGroup({ client: COMMON_CLIENTS[1] })
-  const claudeCodeRemover = useRemoveClientFromGroup({
-    client: COMMON_CLIENTS[2],
+  // Create mutation for adding clients
+  const { mutateAsync: registerClient } = useToastMutation({
+    ...postApiV1BetaClientsMutation(),
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: getApiV1BetaDiscoveryClientsQueryKey(),
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['api', 'v1beta', 'groups'],
+      })
+      queryClient.invalidateQueries({
+        queryKey: getApiV1BetaClientsQueryKey(),
+      })
+    },
   })
 
-  // Create a map of client management functions
-  const clientManagers = {
-    [COMMON_CLIENTS[0]]: {
-      addToGroup: vscodeManager.addClientToGroup,
-      removeFromGroup: vscodeRemover.removeClientFromGroup,
+  // Create mutation for removing clients
+  const { mutateAsync: unregisterClient } = useToastMutation({
+    mutationFn: async ({ clientType, groupName }: { clientType: string; groupName: string }) => {
+      return await deleteApiV1BetaClientsByNameGroupsByGroup({
+        path: {
+          name: clientType,
+          group: groupName,
+        },
+        parseAs: 'text',
+        responseStyle: 'data',
+        throwOnError: true,
+      })
     },
-    [COMMON_CLIENTS[1]]: {
-      addToGroup: cursorManager.addClientToGroup,
-      removeFromGroup: cursorRemover.removeClientFromGroup,
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: getApiV1BetaDiscoveryClientsQueryKey(),
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['api', 'v1beta', 'groups'],
+      })
     },
-    [COMMON_CLIENTS[2]]: {
-      addToGroup: claudeCodeManager.addClientToGroup,
-      removeFromGroup: claudeCodeRemover.removeClientFromGroup,
-    },
-  } as Record<
-    CommonClientName,
-    {
-      addToGroup: (params: { groupName: string }) => Promise<void>
-      removeFromGroup: (params: { groupName: string }) => Promise<void>
-    }
-  >
+  })
 
   /**
    * Add a client to a group
    */
-  const addClientToGroup = async (
-    clientName: CommonClientName,
-    groupName: string
-  ) => {
-    const manager = clientManagers[clientName]
-    if (!manager) {
-      throw new Error(`Unknown client: ${clientName}`)
+  const addClientToGroup = async (clientType: string, groupName: string) => {
+    // Find the client in the installed clients list
+    const client = installedClients.find(c => c.client_type === clientType)
+    if (!client) {
+      throw new Error(`Client ${clientType} is not installed or available`)
     }
-    await manager.addToGroup({ groupName })
+
+    try {
+      // First, get the current client data to see what groups it's already in
+      const currentClients = await getApiV1BetaClients({
+        parseAs: 'text',
+        responseStyle: 'data',
+      })
+
+      // Parse the response
+      const parsedClients =
+        typeof currentClients === 'string'
+          ? JSON.parse(currentClients)
+          : currentClients
+
+      // Find the current client and get its existing groups
+      const currentClient = parsedClients.find(
+        (clientItem: { name?: { name?: string }; groups?: string[] }) =>
+          clientItem.name?.name === clientType
+      )
+      const existingGroups = currentClient?.groups || []
+
+      // Create the new groups array by adding the new group (avoiding duplicates)
+      const newGroups = existingGroups.includes(groupName)
+        ? existingGroups
+        : [...existingGroups, groupName]
+
+      // Register/update the client with all groups
+      await registerClient({
+        body: {
+          name: clientType,
+          groups: newGroups,
+        },
+      })
+
+      trackEvent(`Client ${clientType} registered`, {
+        client: clientType,
+        groups: newGroups,
+      })
+    } catch {
+      // If we can't get current groups, fall back to just adding the new group
+      await registerClient({
+        body: {
+          name: clientType,
+          groups: [groupName],
+        },
+      })
+
+      trackEvent(`Client ${clientType} registered`, {
+        client: clientType,
+        groups: [groupName],
+      })
+    }
   }
 
   /**
    * Remove a client from a group
    */
-  const removeClientFromGroup = async (
-    clientName: CommonClientName,
-    groupName: string
-  ) => {
-    const manager = clientManagers[clientName]
-    if (!manager) {
-      throw new Error(`Unknown client: ${clientName}`)
+  const removeClientFromGroup = async (clientType: string, groupName: string) => {
+    // Find the client in the installed clients list
+    const client = installedClients.find(c => c.client_type === clientType)
+    if (!client) {
+      throw new Error(`Client ${clientType} is not installed or available`)
     }
-    await manager.removeFromGroup({ groupName })
-  }
 
-  /**
-   * Get the display name for a client
-   */
-  const getClientDisplayName = (clientName: CommonClientName): string => {
-    const displayNames: Record<CommonClientName, string> = {
-      vscode: 'VS Code - Copilot',
-      cursor: 'Cursor',
-      'claude-code': 'Claude Code',
-    }
-    return displayNames[clientName] || clientName
-  }
-
-  /**
-   * Get the form field name for a client
-   */
-  const getClientFieldName = (clientName: CommonClientName): string => {
-    const fieldNames: Record<CommonClientName, string> = {
-      vscode: 'enableVSCode',
-      cursor: 'enableCursor',
-      'claude-code': 'enableClaudeCode',
-    }
-    return (
-      fieldNames[clientName] ||
-      `enable${clientName.charAt(0).toUpperCase()}${clientName.slice(1)}`
-    )
+    await unregisterClient({ clientType, groupName })
+    trackEvent(`Client ${clientType} unregistered`, {
+      client: clientType,
+    })
   }
 
   return {
+    installedClients,
     addClientToGroup,
     removeClientFromGroup,
     getClientDisplayName,
     getClientFieldName,
-    commonClients: COMMON_CLIENTS,
   }
 }
