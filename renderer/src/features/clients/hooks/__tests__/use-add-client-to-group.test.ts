@@ -86,7 +86,7 @@ describe('useAddClientToGroup', () => {
       })
       expect(capturedRequests[1]).toEqual({
         name: 'vscode',
-        groups: ['custom-group'],
+        groups: ['default', 'custom-group'],
       })
     })
   })
@@ -125,7 +125,7 @@ describe('useAddClientToGroup', () => {
       })
       expect(capturedRequests[1]).toEqual({
         name: 'vscode',
-        groups: ['custom-group'],
+        groups: ['default', 'custom-group'],
       })
     })
   })

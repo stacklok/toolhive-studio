@@ -84,21 +84,20 @@ describe('ManageClientsButton', () => {
     expect(mockPromptForm).toHaveBeenCalledWith(
       expect.objectContaining({
         title: 'Manage Clients',
-        description: 'Configure clients for group: test-group',
         defaultValues: {
           enableVSCode: false,
           enableCursor: false,
           enableClaudeCode: false,
         },
         buttons: {
-          confirm: 'Save Configuration',
+          confirm: 'Save',
           cancel: 'Cancel',
         },
       })
     )
   })
 
-  it('should pass correct group name in form description', async () => {
+  it('should have correct modal title and button labels', async () => {
     const user = userEvent.setup()
     renderWithProviders({ groupName: 'research-team' })
 
@@ -107,7 +106,11 @@ describe('ManageClientsButton', () => {
 
     expect(mockPromptForm).toHaveBeenCalledWith(
       expect.objectContaining({
-        description: 'Configure clients for group: research-team',
+        title: 'Manage Clients',
+        buttons: {
+          confirm: 'Save',
+          cancel: 'Cancel',
+        },
       })
     )
   })
@@ -275,43 +278,6 @@ describe('ManageClientsButton', () => {
         expect(mockForm.setValue).toHaveBeenCalledWith('enableClaudeCode', true)
         expect(mockForm.trigger).toHaveBeenCalledWith('enableClaudeCode')
       }
-    })
-  })
-
-  describe('Parametric tests for different group names', () => {
-    const testCases = [
-      {
-        groupName: 'default',
-        expectedDescription: 'Configure clients for group: default',
-      },
-      {
-        groupName: 'research-team',
-        expectedDescription: 'Configure clients for group: research-team',
-      },
-      {
-        groupName: 'development',
-        expectedDescription: 'Configure clients for group: development',
-      },
-      {
-        groupName: 'production',
-        expectedDescription: 'Configure clients for group: production',
-      },
-    ]
-
-    testCases.forEach(({ groupName, expectedDescription }) => {
-      it(`should use correct description for group: ${groupName}`, async () => {
-        const user = userEvent.setup()
-        renderWithProviders({ groupName })
-
-        const button = screen.getByRole('button', { name: /manage clients/i })
-        await user.click(button)
-
-        expect(mockPromptForm).toHaveBeenCalledWith(
-          expect.objectContaining({
-            description: expectedDescription,
-          })
-        )
-      })
     })
   })
 

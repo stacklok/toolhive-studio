@@ -90,7 +90,6 @@ export function ManageClientsButton({
 
     const result = await promptForm({
       title: 'Manage Clients',
-      description: `Configure clients for group: ${groupName}`,
       defaultValues,
       resolver: zodV4Resolver(formSchema),
       fields: (form) => (
@@ -139,7 +138,7 @@ export function ManageClientsButton({
         </div>
       ),
       buttons: {
-        confirm: 'Save Configuration',
+        confirm: 'Save',
         cancel: 'Cancel',
       },
     })
