@@ -217,8 +217,8 @@ importers:
         specifier: ^9.25.0
         version: 9.33.0
       '@hey-api/openapi-ts':
-        specifier: 0.80.18
-        version: 0.80.18(magicast@0.3.5)(typescript@5.9.2)
+        specifier: 0.82.4
+        version: 0.82.4(magicast@0.3.5)(typescript@5.9.2)
       '@playwright/test':
         specifier: ^1.54.1
         version: 1.54.2
@@ -1014,16 +1014,22 @@ packages:
   '@gar/promisify@1.1.3':
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
 
-  '@hey-api/json-schema-ref-parser@1.0.6':
-    resolution: {integrity: sha512-yktiFZoWPtEW8QKS65eqKwA5MTKp88CyiL8q72WynrBs/73SAaxlSWlA2zW/DZlywZ5hX1OYzrCC0wFdvO9c2w==}
+  '@hey-api/codegen-core@0.0.1':
+    resolution: {integrity: sha512-Q7vUF7n2gYSL6Z16XFweIm6O7uh9sBGty05X6T5lYBKTMv1K31P2iSTxyhzW04M2r/s3dAE1bCpW+h9di0Ux7w==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=22.10.0}
+    peerDependencies:
+      typescript: '>=5.5.3'
+
+  '@hey-api/json-schema-ref-parser@1.1.0':
+    resolution: {integrity: sha512-+5eg9pgAAM9oSqJQuUtfTKbLz8yieFKN91myyXiLnprqFj8ROfxUKJLr9DKq/hGKyybKT1WxFSetDqCFm80pCA==}
     engines: {node: '>= 16'}
 
-  '@hey-api/openapi-ts@0.80.18':
-    resolution: {integrity: sha512-YCcRdw+OmD/WgBk5ZNaSblEb94PfqBKp4gDvfEYtEdRVS76etdgVOD0CPz72Tus+6zeSzGDVlWE8GOfcib0C6g==}
+  '@hey-api/openapi-ts@0.82.4':
+    resolution: {integrity: sha512-bckaPycF85yg3gxELADuVscA93GR9flhFziG30cRoKkGBtWpx4rwQgQFGpYZ4qFUScqRL5xsn0AGkJtwHmhtHg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=22.10.0}
     hasBin: true
     peerDependencies:
-      typescript: ^5.5.3
+      typescript: '>=5.5.3'
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -8272,16 +8278,21 @@ snapshots:
 
   '@gar/promisify@1.1.3': {}
 
-  '@hey-api/json-schema-ref-parser@1.0.6':
+  '@hey-api/codegen-core@0.0.1(typescript@5.9.2)':
+    dependencies:
+      typescript: 5.9.2
+
+  '@hey-api/json-schema-ref-parser@1.1.0':
     dependencies:
       '@jsdevtools/ono': 7.1.3
       '@types/json-schema': 7.0.15
       js-yaml: 4.1.0
       lodash: 4.17.21
 
-  '@hey-api/openapi-ts@0.80.18(magicast@0.3.5)(typescript@5.9.2)':
+  '@hey-api/openapi-ts@0.82.4(magicast@0.3.5)(typescript@5.9.2)':
     dependencies:
-      '@hey-api/json-schema-ref-parser': 1.0.6
+      '@hey-api/codegen-core': 0.0.1(typescript@5.9.2)
+      '@hey-api/json-schema-ref-parser': 1.1.0
       ansi-colors: 4.1.3
       c12: 2.0.1(magicast@0.3.5)
       color-support: 1.1.3
