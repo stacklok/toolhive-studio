@@ -39,7 +39,7 @@ describe('useAddClientToGroup', () => {
     )
 
     const { result } = renderHook(
-      () => useAddClientToGroup({ clientType: 'test-client' }),
+      () => useAddClientToGroup({ client: 'test-client' }),
       { wrapper }
     )
 
@@ -70,7 +70,7 @@ describe('useAddClientToGroup', () => {
     )
 
     const { result } = renderHook(
-      () => useAddClientToGroup({ clientType: 'vscode' }),
+      () => useAddClientToGroup({ client: 'vscode' }),
       { wrapper }
     )
 
@@ -95,7 +95,7 @@ describe('useAddClientToGroup', () => {
     const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries')
 
     const { result } = renderHook(
-      () => useAddClientToGroup({ clientType: 'test-client' }),
+      () => useAddClientToGroup({ client: 'test-client' }),
       { wrapper }
     )
 

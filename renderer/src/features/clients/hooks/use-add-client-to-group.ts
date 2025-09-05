@@ -9,10 +9,10 @@ import { trackEvent } from '@/common/lib/analytics'
 import { getApiV1BetaClients } from '@api/sdk.gen'
 
 interface AddClientToGroupParams {
-  clientType: string
+  client: string
 }
 
-export function useAddClientToGroup({ clientType }: AddClientToGroupParams) {
+export function useAddClientToGroup({ client }: AddClientToGroupParams) {
   const queryClient = useQueryClient()
   const { mutateAsync: registerClient } = useToastMutation({
     ...postApiV1BetaClientsMutation(),
@@ -27,7 +27,7 @@ export function useAddClientToGroup({ clientType }: AddClientToGroupParams) {
         queryKey: getApiV1BetaClientsQueryKey(),
       })
     },
-    errorMsg: `Failed to connect ${clientType}`,
+    errorMsg: `Failed to connect ${client}`,
   })
 
   const addClientToGroup = async ({ groupName }: { groupName: string }) => {
@@ -46,8 +46,8 @@ export function useAddClientToGroup({ clientType }: AddClientToGroupParams) {
 
       // Find the current client and get its existing groups
       const currentClient = parsedClients.find(
-        (client: { name?: { name?: string }; groups?: string[] }) =>
-          client.name?.name === clientType
+        (clientItem: { name?: { name?: string }; groups?: string[] }) =>
+          clientItem.name?.name === client
       )
       const existingGroups = currentClient?.groups || []
 
@@ -59,13 +59,13 @@ export function useAddClientToGroup({ clientType }: AddClientToGroupParams) {
       // Register/update the client with all groups
       await registerClient({
         body: {
-          name: clientType,
+          name: client,
           groups: newGroups,
         },
       })
 
-      trackEvent(`Client ${clientType} registered`, {
-        client: clientType,
+      trackEvent(`Client ${client} registered`, {
+        client: client,
         groups: newGroups,
       })
     } catch {
@@ -73,13 +73,13 @@ export function useAddClientToGroup({ clientType }: AddClientToGroupParams) {
       // This maintains backward compatibility
       await registerClient({
         body: {
-          name: clientType,
+          name: client,
           groups: [groupName],
         },
       })
 
-      trackEvent(`Client ${clientType} registered`, {
-        client: clientType,
+      trackEvent(`Client ${client} registered`, {
+        client: client,
         groups: [groupName],
       })
     }

@@ -5,18 +5,18 @@ import { trackEvent } from '@/common/lib/analytics'
 import { deleteApiV1BetaClientsByNameGroupsByGroup } from '@api/sdk.gen'
 
 interface RemoveClientFromGroupParams {
-  clientType: string
+  client: string
 }
 
 export function useRemoveClientFromGroup({
-  clientType,
+  client,
 }: RemoveClientFromGroupParams) {
   const queryClient = useQueryClient()
   const { mutateAsync: unregisterClient } = useToastMutation({
     mutationFn: async ({ groupName }: { groupName: string }) => {
       return await deleteApiV1BetaClientsByNameGroupsByGroup({
         path: {
-          name: clientType,
+          name: client,
           group: groupName,
         },
         parseAs: 'text',
@@ -32,7 +32,7 @@ export function useRemoveClientFromGroup({
         queryKey: ['api', 'v1beta', 'groups'],
       })
     },
-    errorMsg: `Failed to disconnect ${clientType}`,
+    errorMsg: `Failed to disconnect ${client}`,
   })
 
   const removeClientFromGroup = async ({
@@ -41,8 +41,8 @@ export function useRemoveClientFromGroup({
     groupName: string
   }) => {
     await unregisterClient({ groupName })
-    trackEvent(`Client ${clientType} unregistered`, {
-      client: clientType,
+    trackEvent(`Client ${client} unregistered`, {
+      client: client,
     })
   }
 

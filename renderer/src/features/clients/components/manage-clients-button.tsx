@@ -52,21 +52,21 @@ export function ManageClientsButton({
   const registeredClientsInGroup = currentGroup?.registered_clients || []
 
   // Initialize hooks for client management
-  const { addClientToGroup } = useAddClientToGroup({ clientType: 'vscode' })
+  const { addClientToGroup } = useAddClientToGroup({ client: 'vscode' })
   const { addClientToGroup: addCursorToGroup } = useAddClientToGroup({
-    clientType: 'cursor',
+    client: 'cursor',
   })
   const { addClientToGroup: addClaudeCodeToGroup } = useAddClientToGroup({
-    clientType: 'claude-code',
+    client: 'claude-code',
   })
 
   const { removeClientFromGroup } = useRemoveClientFromGroup({
-    clientType: 'vscode',
+    client: 'vscode',
   })
   const { removeClientFromGroup: removeCursorFromGroup } =
-    useRemoveClientFromGroup({ clientType: 'cursor' })
+    useRemoveClientFromGroup({ client: 'cursor' })
   const { removeClientFromGroup: removeClaudeCodeFromGroup } =
-    useRemoveClientFromGroup({ clientType: 'claude-code' })
+    useRemoveClientFromGroup({ client: 'claude-code' })
 
   const handleManageClients = async () => {
     // Store original values before opening the form

@@ -47,7 +47,7 @@ describe('useRemoveClientFromGroup', () => {
     )
 
     const { result } = renderHook(
-      () => useRemoveClientFromGroup({ clientType: 'test-client' }),
+      () => useRemoveClientFromGroup({ client: 'test-client' }),
       { wrapper }
     )
 
@@ -85,7 +85,7 @@ describe('useRemoveClientFromGroup', () => {
     )
 
     const { result } = renderHook(
-      () => useRemoveClientFromGroup({ clientType: 'vscode' }),
+      () => useRemoveClientFromGroup({ client: 'vscode' }),
       { wrapper }
     )
 
@@ -128,7 +128,7 @@ describe('useRemoveClientFromGroup', () => {
     const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries')
 
     const { result } = renderHook(
-      () => useRemoveClientFromGroup({ clientType: 'test-client' }),
+      () => useRemoveClientFromGroup({ client: 'test-client' }),
       { wrapper }
     )
 
