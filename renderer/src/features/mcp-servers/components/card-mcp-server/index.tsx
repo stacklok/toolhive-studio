@@ -21,6 +21,7 @@ import {
 } from '@/common/components/ui/tooltip'
 
 import { ServerActionsDropdown } from './server-actions'
+import { CloudIcon, LaptopIcon } from 'lucide-react'
 
 type CardContentMcpServerProps = {
   status: CoreWorkload['status']
@@ -89,11 +90,13 @@ export function CardMcpServer({
   status,
   statusContext,
   url,
+  remote,
   transport,
 }: {
   name: string
   status: CoreWorkload['status']
   statusContext: CoreWorkload['status_context']
+  remote: CoreWorkload['remote']
   url: string
   transport: CoreWorkload['transport_type']
 }) {
@@ -151,7 +154,7 @@ export function CardMcpServer({
       )}
     >
       <CardHeader>
-        <div className="flex items-center justify-between overflow-hidden">
+        <div className="flex items-center justify-between gap-6 overflow-hidden">
           <CardTitle
             className={twMerge(
               'min-w-0 flex-1 text-xl',
@@ -167,7 +170,21 @@ export function CardMcpServer({
               <TooltipContent className="max-w-xs">{name}</TooltipContent>
             </Tooltip>
           </CardTitle>
-          <ServerActionsDropdown name={name} url={url} status={status} />
+          <div className="flex items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                {remote ? (
+                  <CloudIcon className="size-5" />
+                ) : (
+                  <LaptopIcon className="size-5" />
+                )}
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                {remote ? 'Remote MCP server' : 'Local MCP server'}
+              </TooltipContent>
+            </Tooltip>
+            <ServerActionsDropdown name={name} url={url} status={status} />
+          </div>
         </div>
       </CardHeader>
       <CardContentMcpServer
