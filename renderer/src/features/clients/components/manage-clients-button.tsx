@@ -196,7 +196,6 @@ export function ManageClientsButton({
   return (
     <Button
       variant={variant}
-      size="sm"
       onClick={handleManageClients}
       className={className}
     >
