@@ -211,7 +211,7 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
 
       await waitFor(() => {
         expect(mockConsoleLog).toHaveBeenCalledWith(
-          'Manage clients result:',
+          'Manage clients form submitted with values:',
           mockResult
         )
       })
@@ -281,7 +281,7 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
 
       await waitFor(() => {
         expect(mockConsoleLog).toHaveBeenCalledWith(
-          'Manage clients result:',
+          'Manage clients form submitted with values:',
           mockResult
         )
       })
@@ -388,7 +388,7 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
 
       await waitFor(() => {
         expect(mockConsoleLog).toHaveBeenCalledWith(
-          'Manage clients result:',
+          'Manage clients form submitted with values:',
           mockResult
         )
       })
@@ -494,7 +494,7 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
       // Should still log the form result even if API calls fail
       await waitFor(() => {
         expect(mockConsoleLog).toHaveBeenCalledWith(
-          'Manage clients result:',
+          'Manage clients form submitted with values:',
           mockResult
         )
       })
@@ -538,9 +538,10 @@ describe('ManageClientsButton - Data Fetching and Group Awareness', () => {
       const button = screen.getByRole('button', { name: /manage clients/i })
       await user.click(button)
 
-      // Should not log anything when form is cancelled
+      // Should only log the original values, not form submission
       await waitFor(() => {
-        expect(mockConsoleLog).not.toHaveBeenCalled()
+        expect(mockConsoleLog).toHaveBeenCalledWith('Original client status for group:', 'default', expect.any(Object))
+        expect(mockConsoleLog).not.toHaveBeenCalledWith('Manage clients form submitted with values:', expect.any(Object))
       })
 
       // Should not make any API calls when form is cancelled

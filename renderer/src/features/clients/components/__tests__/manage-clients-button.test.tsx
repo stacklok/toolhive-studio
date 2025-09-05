@@ -118,7 +118,7 @@ describe('ManageClientsButton', () => {
     await user.click(button)
     
     await waitFor(() => {
-      expect(mockConsoleLog).toHaveBeenCalledWith('Manage clients result:', mockResult)
+      expect(mockConsoleLog).toHaveBeenCalledWith('Manage clients form submitted with values:', mockResult)
     })
   })
 
@@ -132,7 +132,9 @@ describe('ManageClientsButton', () => {
     await user.click(button)
     
     await waitFor(() => {
-      expect(mockConsoleLog).not.toHaveBeenCalled()
+      // Should only log the original values, not form submission
+      expect(mockConsoleLog).toHaveBeenCalledWith('Original client status for group:', 'test-group', expect.any(Object))
+      expect(mockConsoleLog).not.toHaveBeenCalledWith('Manage clients form submitted with values:', expect.any(Object))
     })
   })
 
@@ -320,7 +322,7 @@ describe('ManageClientsButton', () => {
         await user.click(button)
         
         await waitFor(() => {
-          expect(mockConsoleLog).toHaveBeenCalledWith('Manage clients result:', result)
+          expect(mockConsoleLog).toHaveBeenCalledWith('Manage clients form submitted with values:', result)
         })
       })
     })
