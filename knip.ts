@@ -29,6 +29,7 @@ export default {
     'renderer/src/types/global.d.ts',
     'renderer/src/features/mcp-servers/hooks/use-mutation-restart-server.ts',
     'renderer/src/features/mcp-servers/hooks/use-mutation-stop-server.ts',
+    'renderer/src/features/mcp-servers/lib/form-schema-remote-mcp.ts',
     'main/src/vite-env.d.ts',
   ],
   ignoreDependencies: [
