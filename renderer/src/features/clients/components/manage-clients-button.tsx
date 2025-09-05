@@ -68,6 +68,15 @@ export function ManageClientsButton({
     useRemoveClientFromGroup({ clientType: 'claude-code' })
 
   const handleManageClients = async () => {
+    // Store original values before opening the form
+    const originalValues = {
+      enableVSCode: registeredClientsInGroup.includes('vscode'),
+      enableCursor: registeredClientsInGroup.includes('cursor'),
+      enableClaudeCode: registeredClientsInGroup.includes('claude-code'),
+    }
+
+    console.log('Original client status for group:', groupName, originalValues)
+
     // Create a custom schema for the form with 3 boolean toggles
     const formSchema = z.object({
       enableVSCode: z.boolean(),
@@ -75,12 +84,8 @@ export function ManageClientsButton({
       enableClaudeCode: z.boolean(),
     })
 
-    // Calculate default values based on current group membership
-    const defaultValues = {
-      enableVSCode: registeredClientsInGroup.includes('vscode'),
-      enableCursor: registeredClientsInGroup.includes('cursor'),
-      enableClaudeCode: registeredClientsInGroup.includes('claude-code'),
-    }
+    // Use original values as default values for the form
+    const defaultValues = originalValues
 
     const result = await promptForm({
       title: 'Manage Clients',
@@ -139,47 +144,67 @@ export function ManageClientsButton({
     })
 
     if (result) {
-      console.log('Manage clients result:', result)
+      console.log('Manage clients form submitted with values:', result)
+      console.log('Form values breakdown:', {
+        enableVSCode: result.enableVSCode,
+        enableCursor: result.enableCursor,
+        enableClaudeCode: result.enableClaudeCode,
+        groupName: groupName
+      })
 
-      // Handle client management based on form result
+      // Calculate which values have changed
+      const changes = {
+        vscode: result.enableVSCode !== originalValues.enableVSCode,
+        cursor: result.enableCursor !== originalValues.enableCursor,
+        claudeCode: result.enableClaudeCode !== originalValues.enableClaudeCode,
+      }
+
+      console.log('Changes detected:', changes)
+
+      // Only save changes that actually changed
       try {
-        // VS Code client
-        if (
-          result.enableVSCode &&
-          !registeredClientsInGroup.includes('vscode')
-        ) {
-          await addClientToGroup({ groupName })
-        } else if (
-          !result.enableVSCode &&
-          registeredClientsInGroup.includes('vscode')
-        ) {
-          await removeClientFromGroup({ groupName })
+        // VS Code client - only if it changed
+        if (changes.vscode) {
+          if (result.enableVSCode) {
+            console.log('Adding VS Code client to group:', groupName)
+            await addClientToGroup({ groupName })
+          } else {
+            console.log('Removing VS Code client from group:', groupName)
+            await removeClientFromGroup({ groupName })
+          }
         }
 
-        // Cursor client
-        if (
-          result.enableCursor &&
-          !registeredClientsInGroup.includes('cursor')
-        ) {
-          await addCursorToGroup({ groupName })
-        } else if (
-          !result.enableCursor &&
-          registeredClientsInGroup.includes('cursor')
-        ) {
-          await removeCursorFromGroup({ groupName })
+        // Cursor client - only if it changed
+        if (changes.cursor) {
+          if (result.enableCursor) {
+            console.log('Adding Cursor client to group:', groupName)
+            await addCursorToGroup({ groupName })
+          } else {
+            console.log('Removing Cursor client from group:', groupName)
+            await removeCursorFromGroup({ groupName })
+          }
         }
 
-        // Claude Code client
-        if (
-          result.enableClaudeCode &&
-          !registeredClientsInGroup.includes('claude-code')
-        ) {
-          await addClaudeCodeToGroup({ groupName })
-        } else if (
-          !result.enableClaudeCode &&
-          registeredClientsInGroup.includes('claude-code')
-        ) {
-          await removeClaudeCodeFromGroup({ groupName })
+        // Claude Code client - only if it changed
+        if (changes.claudeCode) {
+          if (result.enableClaudeCode) {
+            console.log('Adding Claude Code client to group:', groupName)
+            await addClaudeCodeToGroup({ groupName })
+          } else {
+            console.log('Removing Claude Code client from group:', groupName)
+            await removeClaudeCodeFromGroup({ groupName })
+          }
+        }
+
+        // Log summary of changes made
+        const changesMade = Object.entries(changes)
+          .filter(([_, changed]) => changed)
+          .map(([client, _]) => client)
+        
+        if (changesMade.length > 0) {
+          console.log('Successfully applied changes for:', changesMade.join(', '))
+        } else {
+          console.log('No changes detected - no API calls made')
         }
       } catch (error) {
         console.error('Error managing clients:', error)
