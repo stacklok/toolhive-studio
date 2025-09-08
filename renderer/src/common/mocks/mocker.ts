@@ -4,7 +4,7 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 
-import openapi from '@stacklok/api-minder/dereferenced-openapi.json'
+import openapi from '../../../../api/openapi.json'
 import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
 import fs from 'fs'
@@ -51,7 +51,7 @@ function autoGenerateHandlers() {
       result.push(
         http[method](moreGenericPath, () => {
           const fixtureFileName = `${FIXTURES_PATH}/${operation.operationId}.200.json`
-          // eslint-disable-next-line no-console
+
           console.log(
             `Handling ${method.toUpperCase()} '${moreGenericPath}' using ${fixtureFileName}`
           )

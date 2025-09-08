@@ -25,7 +25,6 @@ export const recordRequests = () => {
 const arrayOrSingleString = (array: string[]): string[] | string =>
   array.length === 1 ? array[0] : array
 
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
 server.events.on('request:start', async ({ request }) => {
   // record request details to help making assertions
   const url = new URL(request.url)
