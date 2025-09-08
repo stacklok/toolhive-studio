@@ -69,7 +69,7 @@ export function FormFieldsBase({
         render={({ field }) => (
           <FormItem>
             <div className="flex items-center gap-1">
-              <FormLabel>Name</FormLabel>
+              <FormLabel>Server Name</FormLabel>
               <TooltipInfoIcon>
                 The human-readable name you will use to identify this server.
               </TooltipInfoIcon>
