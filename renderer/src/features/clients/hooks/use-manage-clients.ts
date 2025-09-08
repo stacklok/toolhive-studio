@@ -19,17 +19,14 @@ import {
 import type { ClientRegisteredClient } from '@api/types.gen'
 
 export function useManageClients(groupName: string) {
-  // Discovery clients (available clients list)
   const {
     data: { clients = [] },
   } = useSuspenseQuery(getApiV1BetaDiscoveryClientsOptions())
 
-  // Only allow installed clients with a defined client_type
-  const installedClients = (
-    clients as Array<{ client_type?: string; installed?: boolean }>
-  ).filter((client) => client.installed && client.client_type)
+  const installedClients = clients.filter(
+    (client) => client.installed && client.client_type
+  )
 
-  // Convert client_type to the form field key used in the prompt
   const getClientFieldName = (clientType: string): string =>
     `enable${clientType
       .charAt(0)
