@@ -37,12 +37,10 @@ function startRecording(filter?: (url: string, method: string) => boolean) {
     }
     records.push({ method, url, path, body })
   }
-  // @ts-expect-error runtime event exists in msw v2
   server.events.on('request:start', onStart)
   return {
     get: () => records,
     stop: () => {
-      // @ts-expect-error runtime event exists in msw v2
       server.events.removeListener('request:start', onStart)
     },
   }
