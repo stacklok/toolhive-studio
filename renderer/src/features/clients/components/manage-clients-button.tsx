@@ -7,6 +7,7 @@ import { Code } from 'lucide-react'
 import { z } from 'zod/v4'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { useManageClients } from '../hooks/use-manage-clients'
+import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 
 interface ManageClientsButtonProps {
   groupName: string
@@ -33,6 +34,13 @@ export function ManageClientsButton({
     reconcileGroupClients,
     getClientFieldName,
   } = useManageClients(groupName)
+
+  const { mutateAsync: saveClients } = useToastMutation({
+    mutationFn: reconcileGroupClients,
+    loadingMsg: 'Saving client settings...',
+    successMsg: 'Client settings saved',
+    errorMsg: 'Failed to save client settings',
+  })
 
   const handleManageClients = async () => {
     const formSchema = z.object(
@@ -85,8 +93,7 @@ export function ManageClientsButton({
     })
 
     if (result) {
-      // error handling in the hook
-      await reconcileGroupClients(result)
+      await saveClients(result)
     }
   }
 
