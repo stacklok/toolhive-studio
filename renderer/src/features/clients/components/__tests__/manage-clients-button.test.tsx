@@ -4,15 +4,56 @@ import { Suspense } from 'react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ManageClientsButton } from '../manage-clients-button'
+import { server } from '@/common/mocks/node'
+import { http, HttpResponse } from 'msw'
+import { mswEndpoint } from '@/common/mocks/msw-endpoint'
 
+// Drive flows by controlling the returned values of the prompt
 const mockPromptForm = vi.fn()
 vi.mock('@/common/hooks/use-prompt', () => ({
   usePrompt: () => mockPromptForm,
 }))
 
-const mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {})
+type Recorded = { method: string; url: string; path: string; body?: unknown }
+function startRecording(filter?: (url: string, method: string) => boolean) {
+  const records: Recorded[] = []
+  const onStart = async ({ request }: { request: Request }) => {
+    const method = request.method
+    const url = request.url
+    const path = new URL(url).pathname
+    if (filter && !filter(url, method)) return
 
-describe('ManageClientsButton', () => {
+    let body: unknown
+    try {
+      if (method !== 'GET' && method !== 'DELETE') {
+        const text = await request.clone().text()
+        body = text
+          ? (() => {
+              try {
+                return JSON.parse(text)
+              } catch {
+                return text
+              }
+            })()
+          : undefined
+      }
+    } catch {
+      // ignore
+    }
+    records.push({ method, url, path, body })
+  }
+  // @ts-expect-error runtime event exists in msw v2
+  server.events.on('request:start', onStart)
+  return {
+    get: () => records,
+    stop: () => {
+      // @ts-expect-error runtime event exists in msw v2
+      server.events.removeListener('request:start', onStart)
+    },
+  }
+}
+
+describe('ManageClientsButton – BDD flows', () => {
   let queryClient: QueryClient
 
   beforeEach(() => {
@@ -23,364 +64,252 @@ describe('ManageClientsButton', () => {
       },
     })
     vi.clearAllMocks()
-    mockConsoleLog.mockClear()
   })
 
-  const renderWithProviders = (props: {
-    groupName: string
-    variant?:
-      | 'default'
-      | 'outline'
-      | 'secondary'
-      | 'ghost'
-      | 'link'
-      | 'destructive'
-    className?: string
-  }) => {
-    return render(
+  const renderWithProviders = (props: { groupName: string }) =>
+    render(
       <QueryClientProvider client={queryClient}>
         <Suspense fallback={null}>
           <ManageClientsButton {...props} />
         </Suspense>
       </QueryClientProvider>
     )
-  }
 
-  it('should render the button with correct text and icon', async () => {
-    renderWithProviders({ groupName: 'test-group' })
-
-    const button = await screen.findByRole('button', {
-      name: /manage clients/i,
-    })
-    expect(button).toBeInTheDocument()
-    expect(button).toHaveTextContent(/Manage clients/i)
-  })
-
-  it('should use default variant when not specified', async () => {
-    renderWithProviders({ groupName: 'test-group' })
-
-    const button = await screen.findByRole('button', {
-      name: /manage clients/i,
-    })
-    expect(button).toHaveClass('border') // outline variant has border class
-  })
-
-  it('should apply custom variant when specified', async () => {
-    renderWithProviders({ groupName: 'test-group', variant: 'default' })
-
-    const button = await screen.findByRole('button', {
-      name: /manage clients/i,
-    })
-    expect(button).toHaveClass('bg-primary') // default variant class
-  })
-
-  it('should apply custom className when provided', async () => {
-    renderWithProviders({ groupName: 'test-group', className: 'custom-class' })
-
-    const button = await screen.findByRole('button', {
-      name: /manage clients/i,
-    })
-    expect(button).toHaveClass('custom-class')
-  })
-
-  it('should open prompt form when button is clicked', async () => {
-    const user = userEvent.setup()
-    renderWithProviders({ groupName: 'test-group' })
-
-    const button = await screen.findByRole('button', {
-      name: /manage clients/i,
-    })
-    await user.click(button)
-
-    expect(mockPromptForm).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: 'Manage Clients',
-        defaultValues: expect.objectContaining({
-          enableVscode: false,
-          enableCursor: false,
-          enableClaudeCode: false,
-        }),
-        buttons: {
-          confirm: 'Save',
-          cancel: 'Cancel',
-        },
-      })
+  it('enables multiple clients for a group', async () => {
+    // Given: the group has no registered clients
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [{ name: 'default', registered_clients: [] }],
+        })
+      ),
+      // And: the clients list returns no prior groups (forces POST writes)
+      http.get(mswEndpoint('/api/v1beta/clients'), () => HttpResponse.json([]))
     )
-  })
 
-  it('should have correct modal title and button labels', async () => {
-    const user = userEvent.setup()
-    renderWithProviders({ groupName: 'research-team' })
-
-    const button = await screen.findByRole('button', {
-      name: /manage clients/i,
-    })
-    await user.click(button)
-
-    expect(mockPromptForm).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: 'Manage Clients',
-        buttons: {
-          confirm: 'Save',
-          cancel: 'Cancel',
-        },
-      })
+    const rec = startRecording(
+      (url, method) =>
+        url.includes('/api/v1beta/clients') &&
+        (method === 'POST' || method === 'DELETE')
     )
+
+    // And: the user enables VS Code and Cursor
+    mockPromptForm.mockImplementation(async (config) => ({
+      ...(config.defaultValues as Record<string, boolean>),
+      enableVscode: true,
+      enableCursor: true,
+      enableClaudeCode: false,
+    }))
+
+    // When: clicking Manage Clients and saving
+    const user = userEvent.setup()
+    renderWithProviders({ groupName: 'default' })
+    await user.click(
+      await screen.findByRole('button', { name: /manage clients/i })
+    )
+
+    // Then: two POST registrations go out for the default group
+    await waitFor(() => expect(rec.get()).toHaveLength(2))
+    const snapshot = rec
+      .get()
+      .map(({ method, path, body }) => ({ method, path, body }))
+    expect(snapshot).toEqual([
+      {
+        method: 'POST',
+        path: '/api/v1beta/clients',
+        body: { name: 'vscode', groups: ['default'] },
+      },
+      {
+        method: 'POST',
+        path: '/api/v1beta/clients',
+        body: { name: 'cursor', groups: ['default'] },
+      },
+    ])
+    rec.stop()
   })
 
-  it('should log form result when form is submitted', async () => {
-    const user = userEvent.setup()
-    const mockResult = {
-      enableVSCode: true,
-      enableCursor: false,
-      enableClaudeCode: true,
-    }
-
-    mockPromptForm.mockResolvedValue(mockResult)
-
-    renderWithProviders({ groupName: 'test-group' })
-
-    const button = await screen.findByRole('button', {
-      name: /manage clients/i,
-    })
-    await user.click(button)
-
-    await waitFor(() => {
-      expect(mockConsoleLog).toHaveBeenCalledWith(
-        'Manage clients form submitted with values:',
-        mockResult
+  it('disables clients from a group', async () => {
+    // Given: vscode, cursor, claude-code are registered in the group
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [
+            {
+              name: 'default',
+              registered_clients: ['vscode', 'cursor', 'claude-code'],
+            },
+          ],
+        })
       )
-    })
+    )
+
+    const rec = startRecording(
+      (url, method) =>
+        url.includes('/api/v1beta/clients') &&
+        (method === 'POST' || method === 'DELETE')
+    )
+
+    // And: keep only VS Code
+    mockPromptForm.mockImplementation(async (config) => ({
+      ...(config.defaultValues as Record<string, boolean>),
+      enableVscode: true,
+      enableCursor: false,
+      enableClaudeCode: false,
+    }))
+
+    const user = userEvent.setup()
+    renderWithProviders({ groupName: 'default' })
+    await user.click(
+      await screen.findByRole('button', { name: /manage clients/i })
+    )
+
+    // Then: two DELETE calls for cursor and claude-code
+    await waitFor(() =>
+      expect(rec.get().filter((r) => r.method === 'DELETE')).toHaveLength(2)
+    )
+    const snapshot = rec
+      .get()
+      .filter((r) => r.method === 'DELETE')
+      .map(({ method, path }) => ({ method, path }))
+    expect(snapshot).toEqual([
+      { method: 'DELETE', path: '/api/v1beta/clients/cursor/groups/default' },
+      {
+        method: 'DELETE',
+        path: '/api/v1beta/clients/claude-code/groups/default',
+      },
+    ])
+    rec.stop()
   })
 
-  it('should not log anything when form is cancelled', async () => {
+  it('handles mixed enable and disable changes', async () => {
+    // Given: vscode and cursor are registered, claude-code is not
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [
+            { name: 'default', registered_clients: ['vscode', 'cursor'] },
+          ],
+        })
+      ),
+      http.get(mswEndpoint('/api/v1beta/clients'), () =>
+        HttpResponse.json([
+          { name: { name: 'vscode' }, groups: ['default'] },
+          { name: { name: 'cursor' }, groups: ['default'] },
+          { name: { name: 'claude-code' }, groups: [] },
+        ])
+      )
+    )
+
+    const rec = startRecording(
+      (url, method) =>
+        url.includes('/api/v1beta/clients') &&
+        (method === 'POST' || method === 'DELETE')
+    )
+
+    // And: disable vscode, keep cursor, enable claude-code
+    mockPromptForm.mockImplementation(async (config) => ({
+      ...(config.defaultValues as Record<string, boolean>),
+      enableVscode: false,
+      enableCursor: true,
+      enableClaudeCode: true,
+    }))
+
     const user = userEvent.setup()
+    renderWithProviders({ groupName: 'default' })
+    await user.click(
+      await screen.findByRole('button', { name: /manage clients/i })
+    )
+
+    // Then: one DELETE and one POST
+    await waitFor(() => {
+      const calls = rec.get()
+      expect(calls.some((c) => c.method === 'DELETE')).toBe(true)
+      expect(calls.some((c) => c.method === 'POST')).toBe(true)
+    })
+    const snapshot = rec
+      .get()
+      .map(({ method, path, body }) => ({ method, path, body }))
+    expect(snapshot).toEqual([
+      {
+        method: 'DELETE',
+        path: '/api/v1beta/clients/vscode/groups/default',
+        body: undefined,
+      },
+      {
+        method: 'POST',
+        path: '/api/v1beta/clients',
+        body: { name: 'claude-code', groups: ['default'] },
+      },
+    ])
+    rec.stop()
+  })
+
+  it('makes no calls when nothing changes', async () => {
+    // Given: vscode and cursor are already registered
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [
+            { name: 'default', registered_clients: ['vscode', 'cursor'] },
+          ],
+        })
+      ),
+      http.get(mswEndpoint('/api/v1beta/clients'), () =>
+        HttpResponse.json([
+          { name: { name: 'vscode' }, groups: ['default'] },
+          { name: { name: 'cursor' }, groups: ['default'] },
+        ])
+      )
+    )
+
+    const rec = startRecording(
+      (url, method) =>
+        url.includes('/api/v1beta/clients') &&
+        (method === 'POST' || method === 'DELETE')
+    )
+
+    // And: the user confirms unchanged values
+    mockPromptForm.mockImplementation(async (config) => ({
+      ...(config.defaultValues as Record<string, boolean>),
+    }))
+
+    const user = userEvent.setup()
+    renderWithProviders({ groupName: 'default' })
+    await user.click(
+      await screen.findByRole('button', { name: /manage clients/i })
+    )
+
+    // Then: no writes occur
+    await new Promise((r) => setTimeout(r, 10))
+    expect(rec.get()).toEqual([])
+    rec.stop()
+  })
+
+  it('cancels without issuing API calls', async () => {
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [{ name: 'default', registered_clients: [] }],
+        })
+      )
+    )
+
+    const rec = startRecording(
+      (url, method) =>
+        url.includes('/api/v1beta/clients') &&
+        (method === 'POST' || method === 'DELETE')
+    )
+
     mockPromptForm.mockResolvedValue(null)
 
-    renderWithProviders({ groupName: 'test-group' })
-
-    const button = await screen.findByRole('button', {
-      name: /manage clients/i,
-    })
-    await user.click(button)
-
-    await waitFor(() => {
-      // Should only log the original values, not form submission
-      expect(mockConsoleLog).toHaveBeenCalledWith(
-        'Original client status for group:',
-        'test-group',
-        expect.any(Object)
-      )
-      expect(mockConsoleLog).not.toHaveBeenCalledWith(
-        'Manage clients form submitted with values:',
-        expect.any(Object)
-      )
-    })
-  })
-
-  it('should have correct form schema with boolean validation', async () => {
     const user = userEvent.setup()
-    renderWithProviders({ groupName: 'test-group' })
-
-    const button = await screen.findByRole('button', {
-      name: /manage clients/i,
-    })
-    await user.click(button)
-
-    const promptCall = mockPromptForm.mock.calls[0]?.[0]
-    expect(promptCall.resolver).toBeDefined()
-    expect(promptCall.defaultValues).toEqual(
-      expect.objectContaining({
-        enableVscode: false,
-        enableCursor: false,
-        enableClaudeCode: false,
-      })
+    renderWithProviders({ groupName: 'default' })
+    await user.click(
+      await screen.findByRole('button', { name: /manage clients/i })
     )
-  })
 
-  it('should render form fields with correct structure', async () => {
-    const user = userEvent.setup()
-    renderWithProviders({ groupName: 'test-group' })
-
-    const button = await screen.findByRole('button', {
-      name: /manage clients/i,
-    })
-    await user.click(button)
-
-    const promptCall = mockPromptForm.mock.calls[0]?.[0]
-    const fieldsFunction = promptCall.fields
-
-    // Mock form object for testing
-    const mockForm = {
-      watch: vi.fn().mockReturnValue(false),
-      setValue: vi.fn(),
-      trigger: vi.fn(),
-    }
-
-    const renderedFields = fieldsFunction(mockForm)
-    expect(renderedFields).toBeDefined()
-  })
-
-  describe('Form field interactions', () => {
-    it('should handle VS Code toggle changes', async () => {
-      const user = userEvent.setup()
-      renderWithProviders({ groupName: 'test-group' })
-
-      const button = await screen.findByRole('button', {
-        name: /manage clients/i,
-      })
-      await user.click(button)
-
-      const promptCall = mockPromptForm.mock.calls[0]?.[0]
-      const fieldsFunction = promptCall.fields
-
-      const mockForm = {
-        watch: vi.fn().mockReturnValue(false),
-        setValue: vi.fn(),
-        trigger: vi.fn(),
-      }
-
-      fieldsFunction(mockForm)
-
-      // Simulate toggle change
-      const onCheckedChange = mockForm.setValue.mock.calls[0]?.[1]
-      if (onCheckedChange) {
-        onCheckedChange(true)
-        expect(mockForm.setValue).toHaveBeenCalledWith('enableVSCode', true)
-        expect(mockForm.trigger).toHaveBeenCalledWith('enableVSCode')
-      }
-    })
-
-    it('should handle Cursor toggle changes', async () => {
-      const user = userEvent.setup()
-      renderWithProviders({ groupName: 'test-group' })
-
-      const button = await screen.findByRole('button', {
-        name: /manage clients/i,
-      })
-      await user.click(button)
-
-      const promptCall = mockPromptForm.mock.calls[0]?.[0]
-      const fieldsFunction = promptCall.fields
-
-      const mockForm = {
-        watch: vi.fn().mockReturnValue(false),
-        setValue: vi.fn(),
-        trigger: vi.fn(),
-      }
-
-      fieldsFunction(mockForm)
-
-      // Simulate toggle change
-      const onCheckedChange = mockForm.setValue.mock.calls[1]?.[1]
-      if (onCheckedChange) {
-        onCheckedChange(true)
-        expect(mockForm.setValue).toHaveBeenCalledWith('enableCursor', true)
-        expect(mockForm.trigger).toHaveBeenCalledWith('enableCursor')
-      }
-    })
-
-    it('should handle Claude Code toggle changes', async () => {
-      const user = userEvent.setup()
-      renderWithProviders({ groupName: 'test-group' })
-
-      const button = await screen.findByRole('button', {
-        name: /manage clients/i,
-      })
-      await user.click(button)
-
-      const promptCall = mockPromptForm.mock.calls[0]?.[0]
-      const fieldsFunction = promptCall.fields
-
-      const mockForm = {
-        watch: vi.fn().mockReturnValue(false),
-        setValue: vi.fn(),
-        trigger: vi.fn(),
-      }
-
-      fieldsFunction(mockForm)
-
-      // Simulate toggle change
-      const onCheckedChange = mockForm.setValue.mock.calls[2]?.[1]
-      if (onCheckedChange) {
-        onCheckedChange(true)
-        expect(mockForm.setValue).toHaveBeenCalledWith('enableClaudeCode', true)
-        expect(mockForm.trigger).toHaveBeenCalledWith('enableClaudeCode')
-      }
-    })
-  })
-
-  describe('Form result handling', () => {
-    const testCases = [
-      {
-        name: 'all clients enabled',
-        result: {
-          enableVSCode: true,
-          enableCursor: true,
-          enableClaudeCode: true,
-        },
-      },
-      {
-        name: 'no clients enabled',
-        result: {
-          enableVSCode: false,
-          enableCursor: false,
-          enableClaudeCode: false,
-        },
-      },
-      {
-        name: 'only VS Code enabled',
-        result: {
-          enableVSCode: true,
-          enableCursor: false,
-          enableClaudeCode: false,
-        },
-      },
-      {
-        name: 'only Cursor enabled',
-        result: {
-          enableVSCode: false,
-          enableCursor: true,
-          enableClaudeCode: false,
-        },
-      },
-      {
-        name: 'only Claude Code enabled',
-        result: {
-          enableVSCode: false,
-          enableCursor: false,
-          enableClaudeCode: true,
-        },
-      },
-      {
-        name: 'VS Code and Claude Code enabled',
-        result: {
-          enableVSCode: true,
-          enableCursor: false,
-          enableClaudeCode: true,
-        },
-      },
-    ]
-
-    testCases.forEach(({ name, result }) => {
-      it(`should handle form result: ${name}`, async () => {
-        const user = userEvent.setup()
-        mockPromptForm.mockResolvedValue(result)
-
-        renderWithProviders({ groupName: 'test-group' })
-
-        const button = await screen.findByRole('button', {
-          name: /manage clients/i,
-        })
-        await user.click(button)
-
-        await waitFor(() => {
-          expect(mockConsoleLog).toHaveBeenCalledWith(
-            'Manage clients form submitted with values:',
-            result
-          )
-        })
-      })
-    })
+    await new Promise((r) => setTimeout(r, 10))
+    expect(rec.get()).toEqual([])
+    rec.stop()
   })
 })
