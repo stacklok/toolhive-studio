@@ -102,22 +102,16 @@ export function useManageClients(groupName: string) {
     }
 
     const currentClients = await getApiV1BetaClients({
-      parseAs: 'text',
       responseStyle: 'data',
     })
 
-    const parsed =
-      typeof currentClients === 'string'
-        ? currentClients
-          ? JSON.parse(currentClients)
-          : null
-        : currentClients
-
     const list: Array<{ name?: { name?: string }; groups?: string[] }> =
-      Array.isArray(parsed)
-        ? parsed
-        : parsed && Array.isArray((parsed as { clients?: unknown[] }).clients)
-          ? (((parsed as { clients?: unknown[] }).clients || []) as Array<{
+      Array.isArray(currentClients)
+        ? currentClients
+        : currentClients &&
+            Array.isArray((currentClients as { clients?: unknown[] }).clients)
+          ? (((currentClients as { clients?: unknown[] }).clients ||
+              []) as Array<{
               name?: { name?: string }
               groups?: string[]
             }>)
