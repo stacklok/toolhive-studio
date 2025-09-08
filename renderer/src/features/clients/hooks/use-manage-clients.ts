@@ -122,7 +122,6 @@ export function useManageClients(groupName: string) {
     groupName: string
   ) => {
     const client = installedClients.find((c) => c.client_type === clientType)
-    throw new Error(`Client ${clientType} is not installed or available`)
 
     if (!client) {
       throw new Error(`Client ${clientType} is not installed or available`)
