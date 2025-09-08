@@ -7,11 +7,7 @@ import { ManageClientsButton } from '../manage-clients-button'
 import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/msw-endpoint'
-
-const mockPromptForm = vi.fn()
-vi.mock('@/common/hooks/use-prompt', () => ({
-  usePrompt: () => mockPromptForm,
-}))
+import { PromptProvider } from '@/common/contexts/prompt/provider'
 
 type Recorded = { method: string; url: string; path: string; body?: unknown }
 function startRecording(filter?: (url: string, method: string) => boolean) {
@@ -41,10 +37,12 @@ function startRecording(filter?: (url: string, method: string) => boolean) {
     }
     records.push({ method, url, path, body })
   }
+  // @ts-expect-error runtime event exists in msw v2
   server.events.on('request:start', onStart)
   return {
     get: () => records,
     stop: () => {
+      // @ts-expect-error runtime event exists in msw v2
       server.events.removeListener('request:start', onStart)
     },
   }
@@ -66,9 +64,11 @@ describe('ManageClientsButton – BDD flows', () => {
   const renderWithProviders = (props: { groupName: string }) =>
     render(
       <QueryClientProvider client={queryClient}>
-        <Suspense fallback={null}>
-          <ManageClientsButton {...props} />
-        </Suspense>
+        <PromptProvider>
+          <Suspense fallback={null}>
+            <ManageClientsButton {...props} />
+          </Suspense>
+        </PromptProvider>
       </QueryClientProvider>
     )
 
@@ -88,18 +88,16 @@ describe('ManageClientsButton – BDD flows', () => {
         (method === 'POST' || method === 'DELETE')
     )
 
-    mockPromptForm.mockImplementation(async (config) => ({
-      ...(config.defaultValues as Record<string, boolean>),
-      enableVscode: true,
-      enableCursor: true,
-      enableClaudeCode: false,
-    }))
-
     const user = userEvent.setup()
     renderWithProviders({ groupName: 'default' })
     await user.click(
       await screen.findByRole('button', { name: /manage clients/i })
     )
+    await user.click(
+      await screen.findByRole('switch', { name: /VS Code - Copilot/i })
+    )
+    await user.click(await screen.findByRole('switch', { name: /Cursor/i }))
+    await user.click(await screen.findByRole('button', { name: /save/i }))
 
     await waitFor(() => expect(rec.get()).toHaveLength(2))
     const snapshot = rec
@@ -140,18 +138,16 @@ describe('ManageClientsButton – BDD flows', () => {
         (method === 'POST' || method === 'DELETE')
     )
 
-    mockPromptForm.mockImplementation(async (config) => ({
-      ...(config.defaultValues as Record<string, boolean>),
-      enableVscode: true,
-      enableCursor: false,
-      enableClaudeCode: false,
-    }))
-
     const user = userEvent.setup()
     renderWithProviders({ groupName: 'default' })
     await user.click(
       await screen.findByRole('button', { name: /manage clients/i })
     )
+    await user.click(await screen.findByRole('switch', { name: /Cursor/i }))
+    await user.click(
+      await screen.findByRole('switch', { name: /Claude Code/i })
+    )
+    await user.click(await screen.findByRole('button', { name: /save/i }))
 
     await waitFor(() =>
       expect(rec.get().filter((r) => r.method === 'DELETE')).toHaveLength(2)
@@ -194,18 +190,18 @@ describe('ManageClientsButton – BDD flows', () => {
         (method === 'POST' || method === 'DELETE')
     )
 
-    mockPromptForm.mockImplementation(async (config) => ({
-      ...(config.defaultValues as Record<string, boolean>),
-      enableVscode: false,
-      enableCursor: true,
-      enableClaudeCode: true,
-    }))
-
     const user = userEvent.setup()
     renderWithProviders({ groupName: 'default' })
     await user.click(
       await screen.findByRole('button', { name: /manage clients/i })
     )
+    await user.click(
+      await screen.findByRole('switch', { name: /VS Code - Copilot/i })
+    )
+    await user.click(
+      await screen.findByRole('switch', { name: /Claude Code/i })
+    )
+    await user.click(await screen.findByRole('button', { name: /save/i }))
 
     await waitFor(() => {
       const calls = rec.get()
@@ -253,15 +249,12 @@ describe('ManageClientsButton – BDD flows', () => {
         (method === 'POST' || method === 'DELETE')
     )
 
-    mockPromptForm.mockImplementation(async (config) => ({
-      ...(config.defaultValues as Record<string, boolean>),
-    }))
-
     const user = userEvent.setup()
     renderWithProviders({ groupName: 'default' })
     await user.click(
       await screen.findByRole('button', { name: /manage clients/i })
     )
+    await user.click(await screen.findByRole('button', { name: /save/i }))
 
     await new Promise((r) => setTimeout(r, 10))
     expect(rec.get()).toEqual([])
@@ -283,13 +276,12 @@ describe('ManageClientsButton – BDD flows', () => {
         (method === 'POST' || method === 'DELETE')
     )
 
-    mockPromptForm.mockResolvedValue(null)
-
     const user = userEvent.setup()
     renderWithProviders({ groupName: 'default' })
     await user.click(
       await screen.findByRole('button', { name: /manage clients/i })
     )
+    await user.click(await screen.findByRole('button', { name: /cancel/i }))
 
     await new Promise((r) => setTimeout(r, 10))
     expect(rec.get()).toEqual([])
