@@ -1,0 +1,72 @@
+{
+  "roleAssignments": [
+    {
+      "email": "johndoe100@gmail.com",
+      "displayName": "jdoe100",
+      "firstName": "John",
+      "lastName": "Doe",
+      "subject": "f3cc1836-dd98-44bd-bd61-81db259c9cc5",
+      "project": "8c75cd7d-93a3-41c5-9d7a-c7bb5bb5ab81",
+      "role": "admin"
+    },
+    {
+      "email": "johndoe1@gmail.com",
+      "displayName": "jdoe1",
+      "firstName": "John",
+      "lastName": "Doe 2",
+      "subject": "a89cb2db-536a-4d12-9d7f-18587c7b121f",
+      "project": "8c75cd7d-93a3-41c5-9d7a-c7bb5bb5ab81",
+      "role": "read-only"
+    },
+    {
+      "email": "johndoe2@gmail.com",
+      "displayName": "jdoe2",
+      "firstName": "John",
+      "lastName": "Doe 3",
+      "subject": "d88b5ab4-0bb7-4a43-927c-76f63c3c83d9",
+      "project": "8c75cd7d-93a3-41c5-9d7a-c7bb5bb5ab81",
+      "role": "admin"
+    }
+  ],
+  "invitations": [
+    {
+      "role": "admin",
+      "email": "johndoe@gmail.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "displayName": "jdoe",
+      "project": "8c75cd7d-93a3-41c5-9d7a-c7bb5bb5ab81",
+      "code": "123",
+      "createdAt": "2024-05-05T14:59:26.802Z",
+      "expiresAt": "2024-07-05T14:59:26.802Z",
+      "sponsor": "john_doe",
+      "sponsorDisplay": "John Doe"
+    },
+    {
+      "role": "read-only",
+      "email": "johndoe2@gmail.com",
+      "firstName": "John",
+      "lastName": "Doe 3",
+      "displayName": "jdoe2",
+      "project": "8c75cd7d-93a3-41c5-9d7a-c7bb5bb5ab81",
+      "code": "1234",
+      "createdAt": "2024-06-05T14:59:26.802Z",
+      "expiresAt": "2024-08-05T14:59:26.802Z",
+      "sponsor": "john_doe",
+      "sponsorDisplay": "John Doe"
+    },
+    {
+      "role": "admin",
+      "email": "johndoe2@gmail.com",
+      "firstName": "John",
+      "lastName": "Doe 3",
+      "displayName": "jdoe2",
+      "project": "8c75cd7d-93a3-41c5-9d7a-c7bb5bb5ab81",
+      "code": "1235",
+      "createdAt": "2024-05-25T14:59:26.802Z",
+      "expiresAt": "2024-07-25T14:59:26.802Z",
+      "sponsor": "john_doe",
+      "sponsorDisplay": "John Doe"
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "amet0": "et nisi",
+  "id_2e": "in et ut in",
+  "ruleType": {
+    "id": "2b418961-0e2b-465b-b738-48413e1ebaf7",
+    "name": "stacklok/pr_trusty_check",
+    "displayName": "Ensure pull requests do not add dependencies with a low Trusty score",
+    "shortFailureMessage": "PR adds dependencies with low Trusty scores",
+    "context": {
+      "provider": "",
+      "project": "11e34af0-f8b3-416d-9db0-6a04f499ca3f"
+    },
+    "def": {
+      "inEntity": "pull_request",
+      "ruleSchema": {
+        "properties": {
+          "action": {
+            "default": "review",
+            "description": "The action to take if a package with a low score is found.",
+            "enum": ["profile_only", "review", "summary"],
+            "type": "string"
+          },
+          "ecosystem_config": {
+            "description": "The configuration for the ecosystems to check. Leave empty to use the default configuration.",
+            "items": {
+              "properties": {
+                "activity": {
+                  "default": 0,
+                  "description": "Minimum level of activity to consider as healthy. Values are 0-10 where 10 represents the most active.",
+                  "type": "number"
+                },
+                "allow_malicious": {
+                  "default": false,
+                  "description": "Don't block PRs when malicious packages are found (not recommended)",
+                  "type": "boolean"
+                },
+                "name": {
+                  "description": "The name of the ecosystem to check. Currently only `go`, `npm` and `pypi` are supported.",
+                  "type": "string"
+                },
+                "provenance": {
+                  "default": 0,
+                  "description": "Minimum provenance score to consider. Values are 0-10 where 10 represents the highest confidence in the computed origin of the package.",
+                  "type": "number"
+                },
+                "score": {
+                  "default": 5,
+                  "description": "The minimum Trusty score for a dependency to be considered safe.",
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ingest": {
+        "type": "diff",
+        "diff": {
+          "ecosystems": [
+            {
+              "name": "npm",
+              "depfile": "package-lock.json"
+            },
+            {
+              "name": "pypi",
+              "depfile": "requirements.txt"
+            },
+            {
+              "name": "go",
+              "depfile": "go.mod"
+            }
+          ],
+          "type": ""
+        }
+      },
+      "eval": {
+        "type": "trusty",
+        "jq": []
+      },
+      "alert": {
+        "type": "security_advisory",
+        "securityAdvisory": {
+          "severity": ""
+        }
+      }
+    },
+    "description": "Verifies that pull requests do not add any dependencies with low Trusty scores\\n\\nFor every pull request submitted to a repository, this rule will check if the pull request\\nadds a new dependency with a low Trusty score. If a dependency with a low\\nscore is added, the PR will be commented on.\\n",
+    "guidance": "Ensure that the pull request does not add any dependencies with low Trusty scores."
+  }
+}

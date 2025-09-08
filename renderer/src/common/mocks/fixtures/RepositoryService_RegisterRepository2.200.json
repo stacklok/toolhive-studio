@@ -1,0 +1,12 @@
+{
+  "result": {
+    "repository": {
+      "id": "c2598179-5a72-4beb-8cfb-edcbc3a3c5b5",
+      "owner": "john_doe",
+      "name": "repo",
+      "isPrivate": false,
+      "isFork": false
+    },
+    "status": {}
+  }
+}

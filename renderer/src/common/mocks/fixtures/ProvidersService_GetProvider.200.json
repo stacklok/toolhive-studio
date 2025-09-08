@@ -1,0 +1,43 @@
+{
+  "aliquip_4": false,
+  "dolor6d3": "veniam in voluptate non adipisicing",
+  "officia_7a": -56050159,
+  "provider": {
+    "authFlows": [
+      "AUTHORIZATION_FLOW_USER_INPUT",
+      "AUTHORIZATION_FLOW_OAUTH2_AUTHORIZATION_CODE_FLOW",
+      "AUTHORIZATION_FLOW_GITHUB_APP_FLOW",
+      "AUTHORIZATION_FLOW_USER_INPUT",
+      "AUTHORIZATION_FLOW_GITHUB_APP_FLOW"
+    ],
+    "class": "github-app",
+    "config": {
+      "auto_registration": {
+        "entities": {
+          "repository": {
+            "enabled": true
+          }
+        }
+      }
+    },
+    "credentialsState": "set",
+    "implements": [
+      "PROVIDER_TYPE_GIT",
+      "PROVIDER_TYPE_IMAGE_LISTER",
+      "PROVIDER_TYPE_REPO_LISTER",
+      "PROVIDER_TYPE_REPO_LISTER",
+      "PROVIDER_TYPE_GIT"
+    ],
+    "name": "irure",
+    "parameters": {
+      "amet_6e": -3746935,
+      "githubApp": {
+        "organization": "consequat commodo et fugiat"
+      },
+      "tempord": -14043419.620209366,
+      "ut_148": 35030285.9914656
+    },
+    "project": "sunt dolore ad sint nisi",
+    "version": "eu dolore ad adipisicing"
+  }
+}

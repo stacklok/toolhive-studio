@@ -1,0 +1,140 @@
+{
+  "providers": [
+    {
+      "name": "do sed",
+      "class": "github-app",
+      "project": "occaecat nostrud irure Ut ad",
+      "version": "cillum officia exercitation magna aliquip",
+      "implements": [
+        "PROVIDER_TYPE_GITHUB",
+        "PROVIDER_TYPE_UNSPECIFIED",
+        "PROVIDER_TYPE_OCI",
+        "PROVIDER_TYPE_GIT",
+        "PROVIDER_TYPE_UNSPECIFIED"
+      ],
+      "config": {},
+      "authFlows": [
+        "AUTHORIZATION_FLOW_GITHUB_APP_FLOW",
+        "AUTHORIZATION_FLOW_OAUTH2_AUTHORIZATION_CODE_FLOW",
+        "AUTHORIZATION_FLOW_UNSPECIFIED",
+        "AUTHORIZATION_FLOW_GITHUB_APP_FLOW",
+        "AUTHORIZATION_FLOW_NONE"
+      ],
+      "parameters": {
+        "githubApp": {
+          "organization": "et ullamco ut laboris Excepteur"
+        }
+      },
+      "credentialsState": "set"
+    },
+    {
+      "name": "irure consequat adipisicing",
+      "class": "ea",
+      "project": "Duis ex",
+      "version": "in aliqua laboris",
+      "implements": [
+        "PROVIDER_TYPE_REST",
+        "PROVIDER_TYPE_OCI",
+        "PROVIDER_TYPE_UNSPECIFIED",
+        "PROVIDER_TYPE_REST",
+        "PROVIDER_TYPE_UNSPECIFIED"
+      ],
+      "config": {},
+      "authFlows": [
+        "AUTHORIZATION_FLOW_NONE",
+        "AUTHORIZATION_FLOW_USER_INPUT",
+        "AUTHORIZATION_FLOW_GITHUB_APP_FLOW",
+        "AUTHORIZATION_FLOW_UNSPECIFIED",
+        "AUTHORIZATION_FLOW_OAUTH2_AUTHORIZATION_CODE_FLOW"
+      ],
+      "parameters": {
+        "githubApp": {
+          "organization": "in amet minim exercitation nulla"
+        }
+      },
+      "credentialsState": "nostrud exercitation"
+    },
+    {
+      "name": "esse Duis",
+      "class": "in aliquip nostrud proident",
+      "project": "minim labore",
+      "version": "eiusmod occaecat",
+      "implements": [
+        "PROVIDER_TYPE_OCI",
+        "PROVIDER_TYPE_REST",
+        "PROVIDER_TYPE_GITHUB",
+        "PROVIDER_TYPE_REPO_LISTER",
+        "PROVIDER_TYPE_OCI"
+      ],
+      "config": {},
+      "authFlows": [
+        "AUTHORIZATION_FLOW_NONE",
+        "AUTHORIZATION_FLOW_NONE",
+        "AUTHORIZATION_FLOW_GITHUB_APP_FLOW",
+        "AUTHORIZATION_FLOW_OAUTH2_AUTHORIZATION_CODE_FLOW",
+        "AUTHORIZATION_FLOW_GITHUB_APP_FLOW"
+      ],
+      "parameters": {
+        "githubApp": {
+          "organization": "consequat velit id laboris"
+        }
+      },
+      "credentialsState": "amet consectetur"
+    },
+    {
+      "name": "sed culpa labore et tempor",
+      "class": "et",
+      "project": "culpa sint aliquip sed",
+      "version": "nostrud Duis ex",
+      "implements": [
+        "PROVIDER_TYPE_REST",
+        "PROVIDER_TYPE_OCI",
+        "PROVIDER_TYPE_REST",
+        "PROVIDER_TYPE_REST",
+        "PROVIDER_TYPE_UNSPECIFIED"
+      ],
+      "config": {},
+      "authFlows": [
+        "AUTHORIZATION_FLOW_NONE",
+        "AUTHORIZATION_FLOW_GITHUB_APP_FLOW",
+        "AUTHORIZATION_FLOW_USER_INPUT",
+        "AUTHORIZATION_FLOW_USER_INPUT",
+        "AUTHORIZATION_FLOW_OAUTH2_AUTHORIZATION_CODE_FLOW"
+      ],
+      "parameters": {
+        "githubApp": {
+          "organization": "culpa tempor consectetur ex nostrud"
+        }
+      },
+      "credentialsState": "nostrud sint sed commodo"
+    },
+    {
+      "name": "exercitation",
+      "class": "sunt amet",
+      "project": "nostrud",
+      "version": "nulla dolor",
+      "implements": [
+        "PROVIDER_TYPE_OCI",
+        "PROVIDER_TYPE_GITHUB",
+        "PROVIDER_TYPE_REPO_LISTER",
+        "PROVIDER_TYPE_UNSPECIFIED",
+        "PROVIDER_TYPE_REPO_LISTER"
+      ],
+      "config": {},
+      "authFlows": [
+        "AUTHORIZATION_FLOW_GITHUB_APP_FLOW",
+        "AUTHORIZATION_FLOW_UNSPECIFIED",
+        "AUTHORIZATION_FLOW_USER_INPUT",
+        "AUTHORIZATION_FLOW_OAUTH2_AUTHORIZATION_CODE_FLOW",
+        "AUTHORIZATION_FLOW_GITHUB_APP_FLOW"
+      ],
+      "parameters": {
+        "githubApp": {
+          "organization": "fugiat culpa"
+        }
+      },
+      "credentialsState": "aliquip"
+    }
+  ],
+  "cursor": "adipisicing non"
+}

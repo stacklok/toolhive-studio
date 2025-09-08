@@ -1,0 +1,14 @@
+{
+  "roles": [
+    {
+      "description": "culpa cupidatat",
+      "displayName": "Admin",
+      "name": "admin"
+    },
+    {
+      "description": "consectetur",
+      "displayName": "Read-only",
+      "name": "read-only"
+    }
+  ]
+}
