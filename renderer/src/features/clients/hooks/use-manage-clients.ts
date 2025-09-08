@@ -16,6 +16,7 @@ import {
   deleteApiV1BetaClientsByNameGroupsByGroup,
   getApiV1BetaGroups,
 } from '@api/sdk.gen'
+import type { ClientRegisteredClient } from '@api/types.gen'
 
 export function useManageClients(groupName: string) {
   // Discovery clients (available clients list)
@@ -101,25 +102,11 @@ export function useManageClients(groupName: string) {
       throw new Error(`Client ${clientType} is not installed or available`)
     }
 
-    const currentClients = await getApiV1BetaClients({
-      responseStyle: 'data',
-    })
+    const { data: availableClients } = await getApiV1BetaClients()
 
-    const list: Array<{ name?: { name?: string }; groups?: string[] }> =
-      Array.isArray(currentClients)
-        ? currentClients
-        : currentClients &&
-            Array.isArray((currentClients as { clients?: unknown[] }).clients)
-          ? (((currentClients as { clients?: unknown[] }).clients ||
-              []) as Array<{
-              name?: { name?: string }
-              groups?: string[]
-            }>)
-          : []
-
-    const currentClient = list.find(
-      (clientItem) => clientItem.name?.name === clientType
-    )
+    const currentClient = (
+      availableClients ?? ([] as ClientRegisteredClient[])
+    ).find((clientItem) => clientItem.name === clientType)
     const existingGroups = currentClient?.groups || []
 
     const newGroups = existingGroups.includes(groupName)
