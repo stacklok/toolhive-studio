@@ -13,16 +13,11 @@ import {
   getApiV1BetaGroups,
 } from '@api/sdk.gen'
 
-/**
- * Hook for managing clients dynamically based on discovery API
- * This uses the discovery clients API to get the list of available clients
- */
 export function useManageClients(groupName: string) {
   const { installedClients, getClientDisplayName, getClientFieldName } =
     useAvailableClients()
   const queryClient = useQueryClient()
 
-  // Fetch groups data to compute the current group's registered clients
   const { data: groupsData } = useQuery({
     queryKey: ['api', 'v1beta', 'groups'],
     queryFn: async () => {
@@ -42,7 +37,6 @@ export function useManageClients(groupName: string) {
     groupsData?.groups?.find((g) => g.name === groupName)?.registered_clients ||
     []
 
-  // Create mutation for adding clients
   const { mutateAsync: registerClient } = useToastMutation({
     ...postApiV1BetaClientsMutation(),
     onSettled: () => {
@@ -58,7 +52,6 @@ export function useManageClients(groupName: string) {
     },
   })
 
-  // Create mutation for removing clients
   const { mutateAsync: unregisterClient } = useToastMutation({
     mutationFn: async ({
       clientType,
@@ -87,23 +80,17 @@ export function useManageClients(groupName: string) {
     },
   })
 
-  /**
-   * Add a client to a group
-   */
   const addClientToGroup = async (clientType: string, groupName: string) => {
-    // Find the client in the installed clients list
     const client = installedClients.find((c) => c.client_type === clientType)
     if (!client) {
       throw new Error(`Client ${clientType} is not installed or available`)
     }
 
-    // First, get the current client data to see what groups it's already in
     const currentClients = await getApiV1BetaClients({
       parseAs: 'text',
       responseStyle: 'data',
     })
 
-    // Parse the response
     const parsed =
       typeof currentClients === 'string'
         ? currentClients
@@ -111,7 +98,6 @@ export function useManageClients(groupName: string) {
           : null
         : currentClients
 
-    // Normalize to an array shape even if backend returns null or wrapped form
     const list: Array<{ name?: { name?: string }; groups?: string[] }> =
       Array.isArray(parsed)
         ? parsed
@@ -122,18 +108,15 @@ export function useManageClients(groupName: string) {
             }>)
           : []
 
-    // Find the current client and get its existing groups
     const currentClient = list.find(
       (clientItem) => clientItem.name?.name === clientType
     )
     const existingGroups = currentClient?.groups || []
 
-    // Create the new groups array by adding the new group (avoiding duplicates)
     const newGroups = existingGroups.includes(groupName)
       ? existingGroups
       : [...existingGroups, groupName]
 
-    // Register/update the client with all groups
     await registerClient({
       body: {
         name: clientType,
@@ -147,9 +130,6 @@ export function useManageClients(groupName: string) {
     })
   }
 
-  /**
-   * Remove a client from a group
-   */
   const removeClientFromGroup = async (
     clientType: string,
     groupName: string
@@ -166,7 +146,6 @@ export function useManageClients(groupName: string) {
     })
   }
 
-  // Compute default toggle values for the prompt form based on current group membership
   const defaultValues: Record<string, boolean> = installedClients.reduce(
     (acc, client) => {
       const fieldName = getClientFieldName(client.client_type!)
@@ -176,9 +155,6 @@ export function useManageClients(groupName: string) {
     {} as Record<string, boolean>
   )
 
-  /**
-   * Reconcile the group's clients against the desired toggle state by issuing the minimal API calls.
-   */
   const reconcileGroupClients = async (
     desiredValues: Record<string, boolean>
   ) => {
