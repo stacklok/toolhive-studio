@@ -52,7 +52,7 @@ export function ManageClientsButton({
       defaultValues,
       resolver: zodV4Resolver(formSchema),
       fields: (form: UseFormReturn<Record<string, boolean>>) => (
-        <div className="space-y-6">
+        <div className="rounded-xl border">
           {installedClients.map((client) => {
             const fieldName = getClientFieldName(client.client_type!)
             const displayName = getClientDisplayName(client.client_type!)
@@ -60,11 +60,8 @@ export function ManageClientsButton({
             return (
               <div
                 key={client.client_type}
-                className="flex items-center justify-between"
+                className="flex items-start gap-2 border-b p-4 align-middle last:border-b-0"
               >
-                <Label htmlFor={fieldName} className="text-sm font-medium">
-                  {displayName}
-                </Label>
                 <Switch
                   id={fieldName}
                   checked={form.watch(fieldName) as boolean}
@@ -73,6 +70,10 @@ export function ManageClientsButton({
                     form.trigger(fieldName)
                   }}
                 />
+
+                <Label htmlFor={fieldName} className="text-sm font-medium">
+                  {displayName}
+                </Label>
               </div>
             )
           })}
