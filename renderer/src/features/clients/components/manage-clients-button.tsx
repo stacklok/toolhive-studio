@@ -27,7 +27,6 @@ export function ManageClientsButton({
 }: ManageClientsButtonProps) {
   const promptForm = usePrompt()
 
-  // Use hook to get clients, defaults, and reconciliation logic for this group
   const {
     installedClients,
     defaultValues,
@@ -37,7 +36,6 @@ export function ManageClientsButton({
   } = useManageClients(groupName)
 
   const handleManageClients = async () => {
-    // Create a dynamic schema for the form with boolean toggles for each installed client
     const formSchema = z.object(
       installedClients.reduce(
         (acc, client) => {
@@ -87,12 +85,8 @@ export function ManageClientsButton({
     })
 
     if (result) {
-      try {
-        await reconcileGroupClients(result)
-      } catch (error) {
-        console.error('Error managing clients:', error)
-        // The hooks will handle error display via toast notifications
-      }
+      // error handling in the hook
+      await reconcileGroupClients(result)
     }
   }
 
