@@ -71,8 +71,6 @@ export function ManageClientsButton({
       {} as Record<string, boolean>
     )
 
-    console.log('Original client status for group:', groupName, originalValues)
-
     // Create a dynamic schema for the form with boolean toggles for each installed client
     const formSchema = z.object(
       installedClients.reduce(
@@ -133,12 +131,6 @@ export function ManageClientsButton({
     })
 
     if (result) {
-      console.log('Manage clients form submitted with values:', result)
-      console.log('Form values breakdown:', {
-        ...result,
-        groupName: groupName,
-      })
-
       // Calculate which values have changed - dynamically generated
       const changes = installedClients.reduce(
         (acc, client) => {
@@ -150,8 +142,6 @@ export function ManageClientsButton({
         {} as Record<string, boolean>
       )
 
-      console.log('Changes detected:', changes)
-
       // Only save changes that actually changed - dynamically processed
       try {
         for (const client of installedClients) {
@@ -161,31 +151,14 @@ export function ManageClientsButton({
             const isEnabled = result[fieldName]
 
             if (isEnabled) {
-              console.log(`Adding ${clientType} client to group:`, groupName)
               await addClientToGroup(clientType, groupName)
             } else {
-              console.log(
-                `Removing ${clientType} client from group:`,
-                groupName
-              )
               await removeClientFromGroup(clientType, groupName)
             }
           }
         }
 
-        // Log summary of changes made
-        const changesMade = Object.entries(changes)
-          .filter(([, changed]) => changed)
-          .map(([client]) => client)
-
-        if (changesMade.length > 0) {
-          console.log(
-            'Successfully applied changes for:',
-            changesMade.join(', ')
-          )
-        } else {
-          console.log('No changes detected - no API calls made')
-        }
+        // Optionally, we could surface feedback via toast in hooks
       } catch (error) {
         console.error('Error managing clients:', error)
         // The hooks will handle error display via toast notifications
