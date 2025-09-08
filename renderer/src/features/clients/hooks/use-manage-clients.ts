@@ -1,8 +1,12 @@
-import { useAvailableClients } from './use-available-clients'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+} from '@tanstack/react-query'
 import { trackEvent } from '@/common/lib/analytics'
 import {
+  getApiV1BetaDiscoveryClientsOptions,
   getApiV1BetaDiscoveryClientsQueryKey,
   getApiV1BetaClientsQueryKey,
   postApiV1BetaClientsMutation,
@@ -14,8 +18,43 @@ import {
 } from '@api/sdk.gen'
 
 export function useManageClients(groupName: string) {
-  const { installedClients, getClientDisplayName, getClientFieldName } =
-    useAvailableClients()
+  // Discovery clients (available clients list)
+  const {
+    data: { clients = [] },
+  } = useSuspenseQuery(getApiV1BetaDiscoveryClientsOptions())
+
+  // Only allow installed clients with a defined client_type
+  const installedClients = (
+    clients as Array<{ client_type?: string; installed?: boolean }>
+  ).filter((client) => client.installed && client.client_type)
+
+  // Display name mapping for UI labels
+  const getClientDisplayName = (clientType: string): string => {
+    const displayNames: Record<string, string> = {
+      vscode: 'VS Code - Copilot',
+      cursor: 'Cursor',
+      'claude-code': 'Claude Code',
+      'vscode-insider': 'VS Code Insider',
+      cline: 'Cline',
+      'roo-code': 'Roo Code',
+      windsurf: 'Windsurf',
+      'windsurf-jetbrains': 'Windsurf JetBrains',
+      'amp-cli': 'Amp CLI',
+      'amp-vscode': 'Amp VS Code',
+      'amp-cursor': 'Amp Cursor',
+      'amp-vscode-insider': 'Amp VS Code Insider',
+      'amp-windsurf': 'Amp Windsurf',
+      'lm-studio': 'LM Studio',
+      goose: 'Goose',
+    }
+    return displayNames[clientType] || clientType
+  }
+
+  // Convert client_type to the form field key used in the prompt
+  const getClientFieldName = (clientType: string): string =>
+    `enable${clientType
+      .charAt(0)
+      .toUpperCase()}${clientType.slice(1).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())}`
   const queryClient = useQueryClient()
 
   const { data: groupsData } = useQuery({
