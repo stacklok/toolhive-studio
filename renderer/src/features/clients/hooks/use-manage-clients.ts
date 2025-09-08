@@ -39,12 +39,10 @@ export function useManageClients(groupName: string) {
     queryKey: ['api', 'v1beta', 'groups'],
     queryFn: async () => {
       const response = await getApiV1BetaGroups({
-        parseAs: 'text',
         responseStyle: 'data',
       })
-      const parsed =
-        typeof response === 'string' ? JSON.parse(response) : response
-      return parsed as {
+
+      return response as {
         groups?: Array<{ name: string; registered_clients?: string[] }>
       }
     },
