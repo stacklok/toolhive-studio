@@ -63,7 +63,7 @@ export function FormDialog({
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={handleCancel} type="button">
+            <Button variant="secondary" onClick={handleCancel} type="button">
               {config.buttons?.cancel ?? 'Cancel'}
             </Button>
             <Button
