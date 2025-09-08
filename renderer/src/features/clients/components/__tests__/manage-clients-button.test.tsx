@@ -5,13 +5,11 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ManageClientsButton } from '../manage-clients-button'
 
-// Mock the prompt context
 const mockPromptForm = vi.fn()
 vi.mock('@/common/hooks/use-prompt', () => ({
   usePrompt: () => mockPromptForm,
 }))
 
-// Mock console.log to capture form results
 const mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {})
 
 describe('ManageClientsButton', () => {

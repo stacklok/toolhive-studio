@@ -206,7 +206,6 @@ export const handlers = [
     return HttpResponse.json(clientsFixture)
   }),
 
-  // Client registration endpoint
   http.post(mswEndpoint('/api/v1beta/clients'), async ({ request }) => {
     try {
       const body = (await request.json()) as { name: string; groups: string[] }
@@ -241,7 +240,6 @@ export const handlers = [
     }
   }),
 
-  // Client unregistration endpoint
   http.delete(mswEndpoint('/api/v1beta/clients/:name'), ({ params }) => {
     const { name } = params
 
@@ -252,15 +250,9 @@ export const handlers = [
       )
     }
 
-    // For DELETE requests, we need to check if the group is provided in the request body
-    // Since DELETE requests typically don't have a body, we'll check the URL or require it
-    // For now, let's assume the group should be provided in the path or query params
-    // This is a simplified approach - in a real scenario, you might want to check the request body
-
     return new HttpResponse(null, { status: 204 })
   }),
 
-  // Client group-specific removal endpoint
   http.delete(
     mswEndpoint('/api/v1beta/clients/:name/groups/:group'),
     ({ params }) => {
@@ -284,7 +276,6 @@ export const handlers = [
     }
   ),
 
-  // Get all clients endpoint
   http.get(mswEndpoint('/api/v1beta/clients'), () => {
     return HttpResponse.json([
       {
