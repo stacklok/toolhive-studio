@@ -94,7 +94,7 @@ export function useManageClients(groupName: string) {
 
     const { data: availableClients = [] } = await getApiV1BetaClients()
 
-    const currentClient = availableClients.find(
+    const currentClient = [...(availableClients ?? [])].find(
       (clientItem) => clientItem.name === clientType
     )
     const existingGroups = currentClient?.groups || []
