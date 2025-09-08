@@ -7,6 +7,7 @@ import {
   DialogDescription,
 } from '@/common/components/ui/dialog'
 import { Button } from '@/common/components/ui/button'
+import { ScrollArea } from '@/common/components/ui/scroll-area'
 import type { ReactHookFormPromptConfig } from '.'
 import { useForm } from 'react-hook-form'
 import type { UseFormReturn } from 'react-hook-form'
@@ -52,15 +53,20 @@ export function FormDialog({
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent>
-        <form onSubmit={form.handleSubmit(handleSubmit)}>
+        <form
+          onSubmit={form.handleSubmit(handleSubmit)}
+          className="flex flex-col gap-4"
+        >
           <DialogHeader>
             <DialogTitle>{config.title || 'Form Input'}</DialogTitle>
             <DialogDescription>{config.description || ''}</DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            {config.fields(form as UseFormReturn<Record<string, unknown>>)}
-          </div>
+          <ScrollArea className="h-full max-h-[calc(85vh-8rem)] min-h-[240px]">
+            <div className="space-y-4 pr-4">
+              {config.fields(form as UseFormReturn<Record<string, unknown>>)}
+            </div>
+          </ScrollArea>
 
           <DialogFooter>
             <Button variant="outline" onClick={handleCancel} type="button">
