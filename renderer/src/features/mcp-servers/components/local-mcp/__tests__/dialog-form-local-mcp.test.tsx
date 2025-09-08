@@ -1,16 +1,16 @@
 import { render, waitFor, screen, act } from '@testing-library/react'
 import { it, expect, vi, describe, beforeEach } from 'vitest'
-import { DeprecatedDialogFormRunMcpServerWithCommand } from '../dialog-form-run-mcp-command'
+import { DialogFormLocalMcp } from '../dialog-form-local-mcp'
 import userEvent from '@testing-library/user-event'
 import { Dialog } from '@/common/components/ui/dialog'
 import { server as mswServer } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/msw-endpoint'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useRunCustomServer } from '../../hooks/use-run-custom-server'
+import { useRunCustomServer } from '../../../hooks/use-run-custom-server'
 
 // Mock the hook
-vi.mock('../../hooks/use-run-custom-server', () => ({
+vi.mock('../../../hooks/use-run-custom-server', () => ({
   useRunCustomServer: vi.fn(),
 }))
 
@@ -67,14 +67,11 @@ beforeEach(() => {
   })
 })
 
-describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
+describe('DialogFormLocalMcp', () => {
   it('renders form fields correctly for docker image', async () => {
     renderWithProviders(
       <Wrapper>
-        <DeprecatedDialogFormRunMcpServerWithCommand
-          isOpen
-          onOpenChange={vi.fn()}
-        />
+        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
       </Wrapper>
     )
 
@@ -91,7 +88,9 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
     ).toBeVisible()
 
     // Check form fields
-    expect(screen.getByLabelText('Name')).toBeInTheDocument()
+    expect(
+      screen.getByRole('textbox', { name: /server name/i })
+    ).toBeInTheDocument()
     expect(screen.getByLabelText('Transport')).toBeInTheDocument()
     expect(
       screen.getByRole('textbox', { name: 'Docker image' })
@@ -116,10 +115,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DeprecatedDialogFormRunMcpServerWithCommand
-          isOpen
-          onOpenChange={vi.fn()}
-        />
+        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
       </Wrapper>
     )
 
@@ -128,7 +124,10 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
     })
 
     // Fill required fields
-    await userEvent.type(screen.getByLabelText('Name'), 'test-server')
+    await userEvent.type(
+      screen.getByRole('textbox', { name: /server name/i }),
+      'test-server'
+    )
     await userEvent.click(screen.getByLabelText('Transport'))
     await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
     await userEvent.type(
@@ -173,10 +172,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DeprecatedDialogFormRunMcpServerWithCommand
-          isOpen
-          onOpenChange={vi.fn()}
-        />
+        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
       </Wrapper>
     )
 
@@ -190,11 +186,29 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
     )
 
     // Fill all fields
-    await userEvent.type(screen.getByLabelText('Name'), 'npm-server')
+    await userEvent.type(
+      screen.getByRole('textbox', { name: /server name/i }),
+      'npm-server'
+    )
     await userEvent.click(screen.getByLabelText('Transport'))
-    await userEvent.click(screen.getByRole('option', { name: 'SSE' }))
+    await userEvent.click(screen.getByRole('option', { name: /sse/i }))
     await userEvent.type(screen.getByLabelText('Target port'), '8080')
-    await userEvent.click(screen.getByLabelText('Protocol'))
+    await userEvent.click(
+      screen.getByRole('radio', {
+        name: /package manager/i,
+      })
+    )
+    await waitFor(() => {
+      expect(
+        screen.getByRole('radio', {
+          name: /package manager/i,
+        })
+      ).toBeChecked()
+    })
+    // Open the package manager dropdown and select npx
+    await userEvent.click(
+      screen.getByRole('combobox', { name: 'Package manager' })
+    )
     await userEvent.click(screen.getByRole('option', { name: 'npx' }))
     await userEvent.type(screen.getByLabelText('Package name'), '@test/package')
     await userEvent.type(screen.getByLabelText('Command arguments'), '--debug')
@@ -232,10 +246,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DeprecatedDialogFormRunMcpServerWithCommand
-          isOpen
-          onOpenChange={vi.fn()}
-        />
+        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
       </Wrapper>
     )
 
@@ -244,7 +255,10 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
     })
 
     // Fill basic fields
-    await userEvent.type(screen.getByLabelText('Name'), 'secret-server')
+    await userEvent.type(
+      screen.getByRole('textbox', { name: /server name/i }),
+      'secret-server'
+    )
     await userEvent.click(screen.getByLabelText('Transport'))
     await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
     await userEvent.type(
@@ -319,10 +333,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DeprecatedDialogFormRunMcpServerWithCommand
-          isOpen
-          onOpenChange={vi.fn()}
-        />
+        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
       </Wrapper>
     )
 
@@ -341,10 +352,9 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
     // Check that validation errors are shown
     await waitFor(() => {
-      expect(screen.getByLabelText('Name')).toHaveAttribute(
-        'aria-invalid',
-        'true'
-      )
+      expect(
+        screen.getByRole('textbox', { name: /server name/i })
+      ).toHaveAttribute('aria-invalid', 'true')
       expect(
         screen.getByRole('textbox', { name: 'Docker image' })
       ).toHaveAttribute('aria-invalid', 'true')
@@ -362,10 +372,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DeprecatedDialogFormRunMcpServerWithCommand
-          isOpen
-          onOpenChange={vi.fn()}
-        />
+        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
       </Wrapper>
     )
 
@@ -374,7 +381,10 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
     })
 
     // Fill required fields
-    await userEvent.type(screen.getByLabelText('Name'), 'test-server')
+    await userEvent.type(
+      screen.getByRole('textbox', { name: /server name/i }),
+      'test-server'
+    )
     await userEvent.click(screen.getByLabelText('Transport'))
     await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
     await userEvent.type(
@@ -397,10 +407,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
   it('renders aria-hidden column labels for storage volumes', async () => {
     renderWithProviders(
       <Wrapper>
-        <DeprecatedDialogFormRunMcpServerWithCommand
-          isOpen
-          onOpenChange={vi.fn()}
-        />
+        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
       </Wrapper>
     )
 
@@ -433,10 +440,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DeprecatedDialogFormRunMcpServerWithCommand
-          isOpen
-          onOpenChange={mockOnOpenChange}
-        />
+        <DialogFormLocalMcp isOpen closeDialog={mockOnOpenChange} />
       </Wrapper>
     )
 
@@ -445,7 +449,10 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
     })
 
     // Fill required fields
-    await userEvent.type(screen.getByLabelText('Name'), 'test-server')
+    await userEvent.type(
+      screen.getByRole('textbox', { name: /server name/i }),
+      'test-server'
+    )
     await userEvent.click(screen.getByLabelText('Transport'))
     await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
     await userEvent.type(
@@ -471,7 +478,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
     await waitFor(() => {
       expect(mockCheckServerStatus).toHaveBeenCalled()
-      expect(mockOnOpenChange).toHaveBeenCalledWith(false)
+      expect(mockOnOpenChange).toHaveBeenCalled()
     })
   })
 
@@ -480,10 +487,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DeprecatedDialogFormRunMcpServerWithCommand
-          isOpen
-          onOpenChange={mockOnOpenChange}
-        />
+        <DialogFormLocalMcp isOpen closeDialog={mockOnOpenChange} />
       </Wrapper>
     )
 
@@ -493,7 +497,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
 
-    expect(mockOnOpenChange).toHaveBeenCalledWith(false)
+    expect(mockOnOpenChange).toHaveBeenCalled()
   })
 
   describe('Network Isolation', () => {
@@ -508,10 +512,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
       renderWithProviders(
         <Wrapper>
-          <DeprecatedDialogFormRunMcpServerWithCommand
-            isOpen
-            onOpenChange={vi.fn()}
-          />
+          <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
         </Wrapper>
       )
 
@@ -519,7 +520,10 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
         expect(screen.getByRole('dialog')).toBeVisible()
       })
 
-      await userEvent.type(screen.getByLabelText('Name'), 'test-server')
+      await userEvent.type(
+        screen.getByRole('textbox', { name: /server name/i }),
+        'test-server'
+      )
       await userEvent.click(screen.getByLabelText('Transport'))
       await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
       await userEvent.type(
@@ -576,10 +580,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
       renderWithProviders(
         <Wrapper>
-          <DeprecatedDialogFormRunMcpServerWithCommand
-            isOpen
-            onOpenChange={vi.fn()}
-          />
+          <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
         </Wrapper>
       )
 
@@ -587,7 +588,10 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
         expect(screen.getByRole('dialog')).toBeVisible()
       })
 
-      await userEvent.type(screen.getByLabelText('Name'), 'test-server')
+      await userEvent.type(
+        screen.getByRole('textbox', { name: /server name/i }),
+        'test-server'
+      )
       await userEvent.click(screen.getByLabelText('Transport'))
       await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
       await userEvent.type(
@@ -618,10 +622,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
       renderWithProviders(
         <Wrapper>
-          <DeprecatedDialogFormRunMcpServerWithCommand
-            isOpen
-            onOpenChange={mockOnOpenChange}
-          />
+          <DialogFormLocalMcp isOpen closeDialog={mockOnOpenChange} />
         </Wrapper>
       )
 
@@ -635,14 +636,11 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
       await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
 
-      expect(mockOnOpenChange).toHaveBeenCalledWith(false)
+      expect(mockOnOpenChange).toHaveBeenCalled()
 
       renderWithProviders(
         <Wrapper>
-          <DeprecatedDialogFormRunMcpServerWithCommand
-            isOpen
-            onOpenChange={mockOnOpenChange}
-          />
+          <DialogFormLocalMcp isOpen closeDialog={mockOnOpenChange} />
         </Wrapper>
       )
 
@@ -657,10 +655,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
     it('activates the network isolation tab if a validation error occurs there while on the configuration tab', async () => {
       renderWithProviders(
         <Wrapper>
-          <DeprecatedDialogFormRunMcpServerWithCommand
-            isOpen
-            onOpenChange={vi.fn()}
-          />
+          <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
         </Wrapper>
       )
 
@@ -671,7 +666,10 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
       const configTab = screen.getByRole('tab', { name: /configuration/i })
       expect(configTab).toHaveAttribute('aria-selected', 'true')
 
-      await userEvent.type(screen.getByLabelText('Name'), 'test-server')
+      await userEvent.type(
+        screen.getByRole('textbox', { name: /server name/i }),
+        'test-server'
+      )
       await userEvent.click(screen.getByLabelText('Transport'))
       await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
       await userEvent.type(
@@ -707,10 +705,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
     it('activates the configuration tab if a validation error occurs there while on the network isolation tab', async () => {
       renderWithProviders(
         <Wrapper>
-          <DeprecatedDialogFormRunMcpServerWithCommand
-            isOpen
-            onOpenChange={vi.fn()}
-          />
+          <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
         </Wrapper>
       )
 
@@ -733,10 +728,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
     it('shows alert when network isolation is enabled but no hosts or ports are configured', async () => {
       renderWithProviders(
         <Wrapper>
-          <DeprecatedDialogFormRunMcpServerWithCommand
-            isOpen
-            onOpenChange={vi.fn()}
-          />
+          <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
         </Wrapper>
       )
 
@@ -785,10 +777,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
       renderWithProviders(
         <Wrapper>
-          <DeprecatedDialogFormRunMcpServerWithCommand
-            isOpen
-            onOpenChange={vi.fn()}
-          />
+          <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
         </Wrapper>
       )
 
@@ -796,7 +785,10 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
         expect(screen.getByRole('dialog')).toBeVisible()
       })
 
-      await userEvent.type(screen.getByLabelText('Name'), 'test-server')
+      await userEvent.type(
+        screen.getByRole('textbox', { name: /server name/i }),
+        'test-server'
+      )
       await userEvent.click(screen.getByLabelText('Transport'))
       await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
       await userEvent.type(
@@ -879,10 +871,7 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DeprecatedDialogFormRunMcpServerWithCommand
-          isOpen
-          onOpenChange={vi.fn()}
-        />
+        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
       </Wrapper>
     )
 
@@ -890,7 +879,10 @@ describe('DeprecatedDialogFormRunMcpServerWithCommand', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    await userEvent.type(screen.getByLabelText('Name'), 'npm-server')
+    await userEvent.type(
+      screen.getByRole('textbox', { name: /server name/i }),
+      'npm-server'
+    )
     await userEvent.click(screen.getByLabelText('Transport'))
     await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
     await userEvent.type(

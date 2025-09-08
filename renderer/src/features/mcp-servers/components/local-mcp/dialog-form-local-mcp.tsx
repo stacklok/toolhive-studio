@@ -3,13 +3,13 @@ import { useForm } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
 import { Form } from '@/common/components/ui/form'
-import { FormFieldsRunMcpCommand } from './form-fields-run-mcp-command'
 import {
   getApiV1BetaWorkloadsOptions,
   getApiV1BetaWorkloadsByNameOptions,
   getApiV1BetaSecretsDefaultKeysOptions,
 } from '@api/@tanstack/react-query.gen'
-import { useUpdateServer } from '../hooks/use-update-server'
+import { convertCreateRequestToFormData } from '../../lib/orchestrate-run-local-server'
+import { useUpdateServer } from '../../hooks/use-update-server'
 import {
   Dialog,
   DialogContent,
@@ -20,9 +20,9 @@ import {
 } from '@/common/components/ui/dialog'
 import { Button } from '@/common/components/ui/button'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
-import { FormFieldsArrayCustomEnvVars } from './form-fields-array-custom-env-vars'
-import { FormFieldsArrayCustomSecrets } from './form-fields-array-custom-secrets'
-import { useRunCustomServer } from '../hooks/use-run-custom-server'
+import { FormFieldsArrayCustomEnvVars } from '../form-fields-array-custom-env-vars'
+import { FormFieldsArrayCustomSecrets } from '../form-fields-array-custom-secrets'
+import { useRunCustomServer } from '../../hooks/use-run-custom-server'
 import { LoadingStateAlert } from '@/common/components/secrets/loading-state-alert'
 import { AlertErrorFormSubmission } from '@/common/components/workloads/alert-error-form-submission'
 import { Tabs, TabsList, TabsTrigger } from '@/common/components/ui/tabs'
@@ -30,13 +30,13 @@ import {
   useFormTabState,
   type FieldTabMapping,
 } from '@/common/hooks/use-form-tab-state'
-import { NetworkIsolationTabContent } from './network-isolation-tab-content'
-import { FormFieldsArrayVolumes } from './form-fields-array-custom-volumes'
+import { NetworkIsolationTabContent } from '../network-isolation-tab-content'
+import { FormFieldsArrayVolumes } from '../form-fields-array-custom-volumes'
+import { FormFieldsBase } from './form-fields-base'
 import {
   getFormSchemaLocalMcp,
   type FormSchemaLocalMcp,
-} from '../lib/form-schema-local-mcp'
-import { convertCreateRequestToFormData } from '../lib/orchestrate-run-local-server'
+} from '../../lib/form-schema-local-mcp'
 
 type Tab = 'configuration' | 'network-isolation'
 type CommonFields = keyof FormSchemaLocalMcp
@@ -60,10 +60,13 @@ const FIELD_TAB_MAP = {
   volumes: 'configuration',
 } satisfies FieldTabMapping<Tab, Field>
 
-const DEFAULT_FORM_VALUES: Partial<FormSchemaLocalMcp> = {
+const DEFAULT_FORM_VALUES = {
   type: 'docker_image',
   name: '',
   transport: 'stdio',
+  image: '',
+  protocol: '',
+  package_name: '',
   target_port: 0,
   networkIsolation: false,
   allowedHosts: [],
@@ -72,15 +75,15 @@ const DEFAULT_FORM_VALUES: Partial<FormSchemaLocalMcp> = {
   envVars: [],
   secrets: [],
   cmd_arguments: [],
-}
+} as Partial<FormSchemaLocalMcp>
 
-export function DeprecatedDialogFormRunMcpServerWithCommand({
+export function DialogFormLocalMcp({
   isOpen,
-  onOpenChange,
+  closeDialog,
   serverToEdit,
 }: {
   isOpen: boolean
-  onOpenChange: (open: boolean) => void
+  closeDialog: () => void
   serverToEdit?: string | null
 }) {
   const [error, setError] = useState<string | null>(null)
@@ -173,7 +176,7 @@ export function DeprecatedDialogFormRunMcpServerWithCommand({
         {
           onSuccess: () => {
             checkUpdateServerStatus()
-            onOpenChange(false)
+            closeDialog()
           },
           onSettled: (_, error) => {
             setIsSubmitting(false)
@@ -193,7 +196,7 @@ export function DeprecatedDialogFormRunMcpServerWithCommand({
         {
           onSuccess: () => {
             checkServerStatus(data)
-            onOpenChange(false)
+            closeDialog()
           },
           onSettled: (_, error) => {
             setIsSubmitting(false)
@@ -210,7 +213,7 @@ export function DeprecatedDialogFormRunMcpServerWithCommand({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={closeDialog}>
       <DialogContent
         className="flex max-h-[95dvh] flex-col p-0 sm:max-w-2xl"
         onCloseAutoFocus={() => {
@@ -279,10 +282,7 @@ export function DeprecatedDialogFormRunMcpServerWithCommand({
                         onDismiss={() => setError(null)}
                       />
                     )}
-                    <FormFieldsRunMcpCommand
-                      form={form}
-                      isEditing={isEditing}
-                    />
+                    <FormFieldsBase form={form} isEditing={isEditing} />
                     <FormFieldsArrayCustomSecrets form={form} />
                     <FormFieldsArrayCustomEnvVars form={form} />
                     <FormFieldsArrayVolumes<FormSchemaLocalMcp> form={form} />
@@ -302,7 +302,7 @@ export function DeprecatedDialogFormRunMcpServerWithCommand({
                 variant="outline"
                 disabled={isSubmitting || (isEditing && isLoadingServer)}
                 onClick={() => {
-                  onOpenChange(false)
+                  closeDialog()
                   setActiveTab('configuration')
                 }}
               >

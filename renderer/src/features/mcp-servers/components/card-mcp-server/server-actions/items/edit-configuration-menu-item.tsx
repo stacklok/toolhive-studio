@@ -1,7 +1,7 @@
 import { Settings } from 'lucide-react'
 import { useState } from 'react'
 import { DropdownMenuItem } from '@/common/components/ui/dropdown-menu'
-import { DeprecatedDialogFormRunMcpServerWithCommand } from '../../../dialog-form-run-mcp-command'
+import { DialogFormLocalMcp } from '../../../local-mcp/dialog-form-local-mcp'
 
 interface EditConfigurationMenuItemProps {
   serverName: string
@@ -12,7 +12,8 @@ export function EditConfigurationMenuItem({
 }: EditConfigurationMenuItemProps) {
   const [isRunWithCommandOpen, setIsRunWithCommandOpen] = useState(false)
 
-  const handleEdit = () => {
+  const handleEdit = (e: React.MouseEvent) => {
+    e.preventDefault()
     setIsRunWithCommandOpen(true)
   }
 
@@ -25,9 +26,9 @@ export function EditConfigurationMenuItem({
         </a>
       </DropdownMenuItem>
 
-      <DeprecatedDialogFormRunMcpServerWithCommand
+      <DialogFormLocalMcp
         isOpen={isRunWithCommandOpen}
-        onOpenChange={setIsRunWithCommandOpen}
+        closeDialog={() => setIsRunWithCommandOpen(false)}
         serverToEdit={serverName}
       />
     </>

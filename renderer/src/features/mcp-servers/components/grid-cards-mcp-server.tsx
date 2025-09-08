@@ -53,6 +53,7 @@ export function GridCardsMcpServers({
               key={mcpServer.name}
               name={mcpServer.name}
               status={mcpServer.status}
+              remote={mcpServer.remote}
               statusContext={mcpServer.status_context}
               url={mcpServer.url ?? ''}
               transport={mcpServer.transport_type}
