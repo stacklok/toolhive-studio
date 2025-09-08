@@ -15,6 +15,7 @@ import { TitlePage } from '@/common/components/title-page'
 import { McpServersSidebar } from '@/features/mcp-servers/components/mcp-servers-sidebar'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../utils/feature-flags'
+import { ManageClientsButton } from '@/features/clients/components/manage-clients-button'
 import { DialogFormLocalMcp } from '@/features/mcp-servers/components/local-mcp/dialog-form-local-mcp'
 
 export const Route = createFileRoute('/group/$groupName')({
@@ -83,6 +84,7 @@ function GroupRoute() {
               <DropdownMenuRunMcpServer
                 openRunCommandDialog={() => setIsRunWithCommandOpen(true)}
               />
+              <ManageClientsButton groupName={groupName} />
             </div>
           )}
           <DialogFormLocalMcp
@@ -102,11 +104,14 @@ function GroupRoute() {
               >
                 Add custom server
               </Button>,
-              <Button asChild key="add-from-registry">
-                <LinkViewTransition to="/registry">
-                  Browse registry <ChevronRight />
-                </LinkViewTransition>
-              </Button>,
+              <div key="secondary-actions" className="flex gap-2">
+                <Button asChild variant="outline">
+                  <LinkViewTransition to="/registry">
+                    Browse registry <ChevronRight />
+                  </LinkViewTransition>
+                </Button>
+                <ManageClientsButton groupName={groupName} />
+              </div>,
             ]}
             illustration={IllustrationNoConnection}
           />

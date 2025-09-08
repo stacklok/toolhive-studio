@@ -206,6 +206,93 @@ export const handlers = [
     return HttpResponse.json(clientsFixture)
   }),
 
+  http.post(mswEndpoint('/api/v1beta/clients'), async ({ request }) => {
+    try {
+      const body = (await request.json()) as { name: string; groups: string[] }
+      const { name, groups } = body
+
+      if (!name) {
+        return HttpResponse.json(
+          { error: 'Client name is required' },
+          { status: 400 }
+        )
+      }
+
+      if (!groups || groups.length === 0) {
+        return HttpResponse.json(
+          { error: 'Groups parameter is required' },
+          { status: 400 }
+        )
+      }
+
+      return HttpResponse.json(
+        {
+          name,
+          groups: groups || ['default'],
+        },
+        { status: 200 }
+      )
+    } catch {
+      return HttpResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      )
+    }
+  }),
+
+  http.delete(mswEndpoint('/api/v1beta/clients/:name'), ({ params }) => {
+    const { name } = params
+
+    if (!name) {
+      return HttpResponse.json(
+        { error: 'Client name is required' },
+        { status: 400 }
+      )
+    }
+
+    return new HttpResponse(null, { status: 204 })
+  }),
+
+  http.delete(
+    mswEndpoint('/api/v1beta/clients/:name/groups/:group'),
+    ({ params }) => {
+      const { name, group } = params
+
+      if (!name) {
+        return HttpResponse.json(
+          { error: 'Client name is required' },
+          { status: 400 }
+        )
+      }
+
+      if (!group) {
+        return HttpResponse.json(
+          { error: 'Group name is required' },
+          { status: 400 }
+        )
+      }
+
+      return new HttpResponse(null, { status: 204 })
+    }
+  ),
+
+  http.get(mswEndpoint('/api/v1beta/clients'), () => {
+    return HttpResponse.json([
+      {
+        name: { name: 'vscode' },
+        groups: ['default'],
+      },
+      {
+        name: { name: 'cursor' },
+        groups: ['default', 'research'],
+      },
+      {
+        name: { name: 'claude-code' },
+        groups: ['research'],
+      },
+    ])
+  }),
+
   http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
     return HttpResponse.json({ servers: MOCK_REGISTRY_RESPONSE })
   }),

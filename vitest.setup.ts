@@ -5,6 +5,7 @@ import { afterEach, expect, beforeAll, vi, afterAll } from 'vitest'
 import failOnConsole from 'vitest-fail-on-console'
 import { client } from './api/generated/client.gen'
 import { server } from './renderer/src/common/mocks/node'
+import type { ElectronAPI } from './preload/src/preload'
 
 expect.extend(testingLibraryMatchers)
 
@@ -13,6 +14,18 @@ afterEach(() => {
 })
 
 beforeAll(() => {
+  if (!(window as unknown as { electronAPI?: ElectronAPI }).electronAPI) {
+    const electronStub: Partial<ElectronAPI> = {
+      onServerShutdown: () => () => {},
+      shutdownStore: {
+        getLastShutdownServers: async () => [],
+      } as ElectronAPI['shutdownStore'],
+    }
+    Object.defineProperty(window, 'electronAPI', {
+      value: electronStub as ElectronAPI,
+      writable: true,
+    })
+  }
   server.listen({
     onUnhandledRequest: 'error',
   })
