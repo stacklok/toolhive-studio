@@ -28,9 +28,9 @@ export function EditConfigurationMenuItem({
 
   const handleEdit = (e: React.MouseEvent) => {
     e.preventDefault()
+    const isRemote = !!serverData?.url
 
-    console.log({ serverData, serverName, isLoadingServer })
-    setServerDialogOpen({ local: true, remote: false })
+    setServerDialogOpen({ local: !isRemote, remote: isRemote })
   }
 
   return (
