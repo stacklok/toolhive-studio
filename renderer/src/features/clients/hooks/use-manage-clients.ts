@@ -28,28 +28,6 @@ export function useManageClients(groupName: string) {
     clients as Array<{ client_type?: string; installed?: boolean }>
   ).filter((client) => client.installed && client.client_type)
 
-  // Display name mapping for UI labels
-  const getClientDisplayName = (clientType: string): string => {
-    const displayNames: Record<string, string> = {
-      vscode: 'VS Code - Copilot',
-      cursor: 'Cursor',
-      'claude-code': 'Claude Code',
-      'vscode-insider': 'VS Code Insider',
-      cline: 'Cline',
-      'roo-code': 'Roo Code',
-      windsurf: 'Windsurf',
-      'windsurf-jetbrains': 'Windsurf JetBrains',
-      'amp-cli': 'Amp CLI',
-      'amp-vscode': 'Amp VS Code',
-      'amp-cursor': 'Amp Cursor',
-      'amp-vscode-insider': 'Amp VS Code Insider',
-      'amp-windsurf': 'Amp Windsurf',
-      'lm-studio': 'LM Studio',
-      goose: 'Goose',
-    }
-    return displayNames[clientType] || clientType
-  }
-
   // Convert client_type to the form field key used in the prompt
   const getClientFieldName = (clientType: string): string =>
     `enable${clientType
@@ -227,7 +205,6 @@ export function useManageClients(groupName: string) {
     reconcileGroupClients,
     addClientToGroup,
     removeClientFromGroup,
-    getClientDisplayName,
     getClientFieldName,
   }
 }

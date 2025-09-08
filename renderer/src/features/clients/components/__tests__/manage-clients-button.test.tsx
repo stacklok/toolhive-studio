@@ -91,10 +91,8 @@ describe('ManageClientsButton – BDD flows', () => {
     await user.click(
       await screen.findByRole('button', { name: /manage clients/i })
     )
-    await user.click(
-      await screen.findByRole('switch', { name: /VS Code - Copilot/i })
-    )
-    await user.click(await screen.findByRole('switch', { name: /Cursor/i }))
+    await user.click(await screen.findByRole('switch', { name: 'vscode' }))
+    await user.click(await screen.findByRole('switch', { name: /cursor/i }))
     await user.click(await screen.findByRole('button', { name: /save/i }))
 
     await waitFor(() => expect(rec.get()).toHaveLength(2))
@@ -142,9 +140,7 @@ describe('ManageClientsButton – BDD flows', () => {
     await user.click(
       await screen.findByRole('button', { name: /manage clients/i })
     )
-    await user.click(
-      await screen.findByRole('switch', { name: /VS Code - Copilot/i })
-    )
+    await user.click(await screen.findByRole('switch', { name: 'vscode' }))
     await user.click(await screen.findByRole('button', { name: /save/i }))
 
     // Then: exactly one POST registration should be sent
@@ -187,10 +183,8 @@ describe('ManageClientsButton – BDD flows', () => {
     await user.click(
       await screen.findByRole('button', { name: /manage clients/i })
     )
-    await user.click(await screen.findByRole('switch', { name: /Cursor/i }))
-    await user.click(
-      await screen.findByRole('switch', { name: /Claude Code/i })
-    )
+    await user.click(await screen.findByRole('switch', { name: 'cursor' }))
+    await user.click(await screen.findByRole('switch', { name: 'claude-code' }))
     await user.click(await screen.findByRole('button', { name: /save/i }))
 
     await waitFor(() =>
@@ -239,12 +233,8 @@ describe('ManageClientsButton – BDD flows', () => {
     await user.click(
       await screen.findByRole('button', { name: /manage clients/i })
     )
-    await user.click(
-      await screen.findByRole('switch', { name: /VS Code - Copilot/i })
-    )
-    await user.click(
-      await screen.findByRole('switch', { name: /Claude Code/i })
-    )
+    await user.click(await screen.findByRole('switch', { name: 'vscode' }))
+    await user.click(await screen.findByRole('switch', { name: 'claude-code' }))
     await user.click(await screen.findByRole('button', { name: /save/i }))
 
     await waitFor(() => {

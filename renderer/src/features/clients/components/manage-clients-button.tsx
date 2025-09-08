@@ -31,7 +31,6 @@ export function ManageClientsButton({
     installedClients,
     defaultValues,
     reconcileGroupClients,
-    getClientDisplayName,
     getClientFieldName,
   } = useManageClients(groupName)
 
@@ -55,7 +54,7 @@ export function ManageClientsButton({
         <div className="rounded-xl border">
           {installedClients.map((client) => {
             const fieldName = getClientFieldName(client.client_type!)
-            const displayName = getClientDisplayName(client.client_type!)
+            const displayName = client.client_type!
 
             return (
               <div
