@@ -74,8 +74,6 @@ export function useManageClients(groupName: string) {
           name: clientType,
           group: groupName,
         },
-        parseAs: 'text',
-        responseStyle: 'data',
         throwOnError: true,
       })
     },
