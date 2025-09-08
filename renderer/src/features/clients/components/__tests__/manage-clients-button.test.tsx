@@ -116,6 +116,52 @@ describe('ManageClientsButton – BDD flows', () => {
     rec.stop()
   })
 
+  it('enables a single client when none are enabled (clients API returns null)', async () => {
+    // Given: no clients are registered in the group
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [{ name: 'default', registered_clients: [] }],
+        })
+      ),
+      // Simulate backend returning null for current clients list
+      http.get(mswEndpoint('/api/v1beta/clients'), () =>
+        HttpResponse.json(null)
+      )
+    )
+
+    const rec = startRecording(
+      (url, method) =>
+        url.includes('/api/v1beta/clients') &&
+        (method === 'POST' || method === 'DELETE')
+    )
+
+    // When: the user enables only VS Code and saves
+    const user = userEvent.setup()
+    renderWithProviders({ groupName: 'default' })
+    await user.click(
+      await screen.findByRole('button', { name: /manage clients/i })
+    )
+    await user.click(
+      await screen.findByRole('switch', { name: /VS Code - Copilot/i })
+    )
+    await user.click(await screen.findByRole('button', { name: /save/i }))
+
+    // Then: exactly one POST registration should be sent
+    await waitFor(() => expect(rec.get()).toHaveLength(1))
+    const snapshot = rec
+      .get()
+      .map(({ method, path, body }) => ({ method, path, body }))
+    expect(snapshot).toEqual([
+      {
+        method: 'POST',
+        path: '/api/v1beta/clients',
+        body: { name: 'vscode', groups: ['default'] },
+      },
+    ])
+    rec.stop()
+  })
+
   it('disables clients from a group', async () => {
     server.use(
       http.get(mswEndpoint('/api/v1beta/groups'), () =>

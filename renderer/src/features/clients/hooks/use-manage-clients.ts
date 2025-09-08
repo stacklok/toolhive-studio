@@ -1,6 +1,6 @@
 import { useAvailableClients } from './use-available-clients'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { trackEvent } from '@/common/lib/analytics'
 import {
   getApiV1BetaDiscoveryClientsQueryKey,
@@ -10,16 +10,37 @@ import {
 import {
   getApiV1BetaClients,
   deleteApiV1BetaClientsByNameGroupsByGroup,
+  getApiV1BetaGroups,
 } from '@api/sdk.gen'
 
 /**
  * Hook for managing clients dynamically based on discovery API
  * This uses the discovery clients API to get the list of available clients
  */
-export function useManageClients() {
+export function useManageClients(groupName: string) {
   const { installedClients, getClientDisplayName, getClientFieldName } =
     useAvailableClients()
   const queryClient = useQueryClient()
+
+  // Fetch groups data to compute the current group's registered clients
+  const { data: groupsData } = useQuery({
+    queryKey: ['api', 'v1beta', 'groups'],
+    queryFn: async () => {
+      const response = await getApiV1BetaGroups({
+        parseAs: 'text',
+        responseStyle: 'data',
+      })
+      const parsed =
+        typeof response === 'string' ? JSON.parse(response) : response
+      return parsed as {
+        groups?: Array<{ name: string; registered_clients?: string[] }>
+      }
+    },
+    staleTime: 5_000,
+  })
+  const registeredClientsInGroup =
+    groupsData?.groups?.find((g) => g.name === groupName)?.registered_clients ||
+    []
 
   // Create mutation for adding clients
   const { mutateAsync: registerClient } = useToastMutation({
@@ -83,15 +104,27 @@ export function useManageClients() {
     })
 
     // Parse the response
-    const parsedClients =
+    const parsed =
       typeof currentClients === 'string'
-        ? JSON.parse(currentClients)
+        ? currentClients
+          ? JSON.parse(currentClients)
+          : null
         : currentClients
 
+    // Normalize to an array shape even if backend returns null or wrapped form
+    const list: Array<{ name?: { name?: string }; groups?: string[] }> =
+      Array.isArray(parsed)
+        ? parsed
+        : parsed && Array.isArray((parsed as { clients?: unknown[] }).clients)
+          ? (((parsed as { clients?: unknown[] }).clients || []) as Array<{
+              name?: { name?: string }
+              groups?: string[]
+            }>)
+          : []
+
     // Find the current client and get its existing groups
-    const currentClient = parsedClients.find(
-      (clientItem: { name?: { name?: string }; groups?: string[] }) =>
-        clientItem.name?.name === clientType
+    const currentClient = list.find(
+      (clientItem) => clientItem.name?.name === clientType
     )
     const existingGroups = currentClient?.groups || []
 
@@ -133,8 +166,50 @@ export function useManageClients() {
     })
   }
 
+  // Compute default toggle values for the prompt form based on current group membership
+  const defaultValues: Record<string, boolean> = installedClients.reduce(
+    (acc, client) => {
+      const fieldName = getClientFieldName(client.client_type!)
+      acc[fieldName] = registeredClientsInGroup.includes(client.client_type!)
+      return acc
+    },
+    {} as Record<string, boolean>
+  )
+
+  /**
+   * Reconcile the group's clients against the desired toggle state by issuing the minimal API calls.
+   */
+  const reconcileGroupClients = async (
+    desiredValues: Record<string, boolean>
+  ) => {
+    const originalValues = defaultValues
+    const changes = installedClients.reduce(
+      (acc, client) => {
+        const fieldName = getClientFieldName(client.client_type!)
+        acc[client.client_type!] =
+          desiredValues[fieldName] !== originalValues[fieldName]
+        return acc
+      },
+      {} as Record<string, boolean>
+    )
+
+    for (const client of installedClients) {
+      const clientType = client.client_type!
+      if (!changes[clientType]) continue
+      const fieldName = getClientFieldName(clientType)
+      const isEnabled = desiredValues[fieldName]
+      if (isEnabled) {
+        await addClientToGroup(clientType, groupName)
+      } else {
+        await removeClientFromGroup(clientType, groupName)
+      }
+    }
+  }
+
   return {
     installedClients,
+    defaultValues,
+    reconcileGroupClients,
     addClientToGroup,
     removeClientFromGroup,
     getClientDisplayName,

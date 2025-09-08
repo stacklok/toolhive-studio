@@ -6,8 +6,6 @@ import { Switch } from '@/common/components/ui/switch'
 import { Code } from 'lucide-react'
 import { z } from 'zod/v4'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
-import { useQuery } from '@tanstack/react-query'
-import { getApiV1BetaGroups } from '@api/sdk.gen'
 import { useManageClients } from '../hooks/use-manage-clients'
 
 interface ManageClientsButtonProps {
@@ -29,48 +27,16 @@ export function ManageClientsButton({
 }: ManageClientsButtonProps) {
   const promptForm = usePrompt()
 
-  // Get available clients from discovery API
+  // Use hook to get clients, defaults, and reconciliation logic for this group
   const {
     installedClients,
-    addClientToGroup,
-    removeClientFromGroup,
+    defaultValues,
+    reconcileGroupClients,
     getClientDisplayName,
     getClientFieldName,
-  } = useManageClients()
-
-  // Fetch groups data to get current client status
-  const { data: groupsData } = useQuery({
-    queryKey: ['api', 'v1beta', 'groups'],
-    queryFn: async () => {
-      const response = await getApiV1BetaGroups({
-        parseAs: 'text',
-        responseStyle: 'data',
-      })
-      const parsed =
-        typeof response === 'string' ? JSON.parse(response) : response
-      return parsed
-    },
-    staleTime: 5_000,
-  })
-
-  // Get the current group and its registered clients
-  const currentGroup = groupsData?.groups?.find(
-    (group: { name: string; registered_clients?: string[] }) =>
-      group.name === groupName
-  )
-  const registeredClientsInGroup = currentGroup?.registered_clients || []
+  } = useManageClients(groupName)
 
   const handleManageClients = async () => {
-    // Store original values before opening the form - dynamically generated
-    const originalValues = installedClients.reduce(
-      (acc, client) => {
-        const fieldName = getClientFieldName(client.client_type!)
-        acc[fieldName] = registeredClientsInGroup.includes(client.client_type!)
-        return acc
-      },
-      {} as Record<string, boolean>
-    )
-
     // Create a dynamic schema for the form with boolean toggles for each installed client
     const formSchema = z.object(
       installedClients.reduce(
@@ -81,16 +47,6 @@ export function ManageClientsButton({
         },
         {} as Record<string, z.ZodBoolean>
       )
-    )
-
-    // Set default values based on current group's registered clients - dynamically generated
-    const defaultValues = installedClients.reduce(
-      (acc, client) => {
-        const fieldName = getClientFieldName(client.client_type!)
-        acc[fieldName] = registeredClientsInGroup.includes(client.client_type!)
-        return acc
-      },
-      {} as Record<string, boolean>
     )
 
     const result = await promptForm({
@@ -131,34 +87,8 @@ export function ManageClientsButton({
     })
 
     if (result) {
-      // Calculate which values have changed - dynamically generated
-      const changes = installedClients.reduce(
-        (acc, client) => {
-          const fieldName = getClientFieldName(client.client_type!)
-          acc[client.client_type!] =
-            result[fieldName] !== originalValues[fieldName]
-          return acc
-        },
-        {} as Record<string, boolean>
-      )
-
-      // Only save changes that actually changed - dynamically processed
       try {
-        for (const client of installedClients) {
-          const clientType = client.client_type!
-          if (changes[clientType]) {
-            const fieldName = getClientFieldName(clientType)
-            const isEnabled = result[fieldName]
-
-            if (isEnabled) {
-              await addClientToGroup(clientType, groupName)
-            } else {
-              await removeClientFromGroup(clientType, groupName)
-            }
-          }
-        }
-
-        // Optionally, we could surface feedback via toast in hooks
+        await reconcileGroupClients(result)
       } catch (error) {
         console.error('Error managing clients:', error)
         // The hooks will handle error display via toast notifications
