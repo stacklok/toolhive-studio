@@ -16,7 +16,6 @@ import {
   deleteApiV1BetaClientsByNameGroupsByGroup,
   getApiV1BetaGroups,
 } from '@api/sdk.gen'
-import type { ClientRegisteredClient } from '@api/types.gen'
 
 export function useManageClients(groupName: string) {
   const {
@@ -93,11 +92,11 @@ export function useManageClients(groupName: string) {
       throw new Error(`Client ${clientType} is not installed or available`)
     }
 
-    const { data: availableClients } = await getApiV1BetaClients()
+    const { data: availableClients = [] } = await getApiV1BetaClients()
 
-    const currentClient = (
-      availableClients ?? ([] as ClientRegisteredClient[])
-    ).find((clientItem) => clientItem.name === clientType)
+    const currentClient = availableClients.find(
+      (clientItem) => clientItem.name === clientType
+    )
     const existingGroups = currentClient?.groups || []
 
     const newGroups = existingGroups.includes(groupName)
@@ -121,7 +120,6 @@ export function useManageClients(groupName: string) {
     clientType: string,
     groupName: string
   ) => {
-    // Find the client in the installed clients list
     const client = installedClients.find((c) => c.client_type === clientType)
     if (!client) {
       throw new Error(`Client ${clientType} is not installed or available`)
