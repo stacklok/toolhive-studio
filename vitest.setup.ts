@@ -14,8 +14,6 @@ afterEach(() => {
 })
 
 beforeAll(() => {
-  // Provide a default Electron preload API stub for jsdom tests.
-  // Individual tests can override this as needed.
   if (!(window as unknown as { electronAPI?: ElectronAPI }).electronAPI) {
     const electronStub: Partial<ElectronAPI> = {
       onServerShutdown: () => () => {},
