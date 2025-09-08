@@ -8,7 +8,6 @@ import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/msw-endpoint'
 
-// Drive flows by controlling the returned values of the prompt
 const mockPromptForm = vi.fn()
 vi.mock('@/common/hooks/use-prompt', () => ({
   usePrompt: () => mockPromptForm,
@@ -42,12 +41,10 @@ function startRecording(filter?: (url: string, method: string) => boolean) {
     }
     records.push({ method, url, path, body })
   }
-  // @ts-expect-error runtime event exists in msw v2
   server.events.on('request:start', onStart)
   return {
     get: () => records,
     stop: () => {
-      // @ts-expect-error runtime event exists in msw v2
       server.events.removeListener('request:start', onStart)
     },
   }
@@ -76,14 +73,12 @@ describe('ManageClientsButton – BDD flows', () => {
     )
 
   it('enables multiple clients for a group', async () => {
-    // Given: the group has no registered clients
     server.use(
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({
           groups: [{ name: 'default', registered_clients: [] }],
         })
       ),
-      // And: the clients list returns no prior groups (forces POST writes)
       http.get(mswEndpoint('/api/v1beta/clients'), () => HttpResponse.json([]))
     )
 
@@ -93,7 +88,6 @@ describe('ManageClientsButton – BDD flows', () => {
         (method === 'POST' || method === 'DELETE')
     )
 
-    // And: the user enables VS Code and Cursor
     mockPromptForm.mockImplementation(async (config) => ({
       ...(config.defaultValues as Record<string, boolean>),
       enableVscode: true,
@@ -101,14 +95,12 @@ describe('ManageClientsButton – BDD flows', () => {
       enableClaudeCode: false,
     }))
 
-    // When: clicking Manage Clients and saving
     const user = userEvent.setup()
     renderWithProviders({ groupName: 'default' })
     await user.click(
       await screen.findByRole('button', { name: /manage clients/i })
     )
 
-    // Then: two POST registrations go out for the default group
     await waitFor(() => expect(rec.get()).toHaveLength(2))
     const snapshot = rec
       .get()
@@ -129,7 +121,6 @@ describe('ManageClientsButton – BDD flows', () => {
   })
 
   it('disables clients from a group', async () => {
-    // Given: vscode, cursor, claude-code are registered in the group
     server.use(
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({
@@ -149,7 +140,6 @@ describe('ManageClientsButton – BDD flows', () => {
         (method === 'POST' || method === 'DELETE')
     )
 
-    // And: keep only VS Code
     mockPromptForm.mockImplementation(async (config) => ({
       ...(config.defaultValues as Record<string, boolean>),
       enableVscode: true,
@@ -163,7 +153,6 @@ describe('ManageClientsButton – BDD flows', () => {
       await screen.findByRole('button', { name: /manage clients/i })
     )
 
-    // Then: two DELETE calls for cursor and claude-code
     await waitFor(() =>
       expect(rec.get().filter((r) => r.method === 'DELETE')).toHaveLength(2)
     )
@@ -182,7 +171,6 @@ describe('ManageClientsButton – BDD flows', () => {
   })
 
   it('handles mixed enable and disable changes', async () => {
-    // Given: vscode and cursor are registered, claude-code is not
     server.use(
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({
@@ -206,7 +194,6 @@ describe('ManageClientsButton – BDD flows', () => {
         (method === 'POST' || method === 'DELETE')
     )
 
-    // And: disable vscode, keep cursor, enable claude-code
     mockPromptForm.mockImplementation(async (config) => ({
       ...(config.defaultValues as Record<string, boolean>),
       enableVscode: false,
@@ -220,7 +207,6 @@ describe('ManageClientsButton – BDD flows', () => {
       await screen.findByRole('button', { name: /manage clients/i })
     )
 
-    // Then: one DELETE and one POST
     await waitFor(() => {
       const calls = rec.get()
       expect(calls.some((c) => c.method === 'DELETE')).toBe(true)
@@ -245,7 +231,6 @@ describe('ManageClientsButton – BDD flows', () => {
   })
 
   it('makes no calls when nothing changes', async () => {
-    // Given: vscode and cursor are already registered
     server.use(
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({
@@ -268,7 +253,6 @@ describe('ManageClientsButton – BDD flows', () => {
         (method === 'POST' || method === 'DELETE')
     )
 
-    // And: the user confirms unchanged values
     mockPromptForm.mockImplementation(async (config) => ({
       ...(config.defaultValues as Record<string, boolean>),
     }))
@@ -279,7 +263,6 @@ describe('ManageClientsButton – BDD flows', () => {
       await screen.findByRole('button', { name: /manage clients/i })
     )
 
-    // Then: no writes occur
     await new Promise((r) => setTimeout(r, 10))
     expect(rec.get()).toEqual([])
     rec.stop()
