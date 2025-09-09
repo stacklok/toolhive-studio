@@ -33,7 +33,6 @@ export function DropdownMenuRunMcpServer({
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n') {
         if (e.shiftKey) {
           e.preventDefault()
-          console.log('Cmd/Ctrl + Shift + N pressed - closing all dialogs')
           openRunCommandDialog({ local: false, remote: false })
         } else {
           e.preventDefault()
