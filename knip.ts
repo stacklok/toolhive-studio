@@ -30,6 +30,7 @@ export default {
     'renderer/src/features/mcp-servers/hooks/use-mutation-restart-server.ts',
     'renderer/src/features/mcp-servers/hooks/use-mutation-stop-server.ts',
     'renderer/src/features/mcp-servers/lib/form-schema-remote-mcp.ts',
+    'renderer/src/features/mcp-servers/components/remote-mcp/dialog-form-remote-mcp.tsx',
     'renderer/src/common/lib/utils.ts',
     'main/src/vite-env.d.ts',
   ],
