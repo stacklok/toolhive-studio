@@ -240,7 +240,7 @@ export function FormFieldsAuth({
                 <div className="flex items-center gap-1">
                   <FormLabel>Client ID</FormLabel>
                   <TooltipInfoIcon>
-                    The client ID of the OIDC issuer.
+                    The client ID of the OAuth provider
                   </TooltipInfoIcon>
                 </div>
                 <FormControl>
@@ -268,7 +268,7 @@ export function FormFieldsAuth({
                 <div className="flex items-center gap-1">
                   <FormLabel>Client Secret</FormLabel>
                   <TooltipInfoIcon>
-                    The client secret of the OIDC issuer.
+                    The client secret of the OAuth issuer.
                   </TooltipInfoIcon>
                 </div>
                 <FormControl>
