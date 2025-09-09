@@ -237,7 +237,7 @@ export function DialogFormLocalMcp({
                   ? `Edit ${serverToEdit} MCP server`
                   : 'Custom MCP server'}
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="sr-only">
                 {isEditing
                   ? 'Update the configuration for your MCP server.'
                   : 'ToolHive allows you to securely run a custom MCP server from a Docker image or a package manager command.'}

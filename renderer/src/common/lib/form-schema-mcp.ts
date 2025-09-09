@@ -276,115 +276,49 @@ export const createMcpBaseSchema = (workloads: CoreWorkload[]) => {
 
 // --------
 //  REMOTE MCP SERVER
-export const createAuthConfigSchema = () => {
-  return z.object({
-    url: z.string().optional(),
-    auth_type: z
-      .union([z.literal('none'), z.literal('oauth2'), z.literal('oidc')])
-      .optional(),
-    issuer_url: z.string().optional(),
-    client_id: z.string().optional(),
-    client_secret: z.string().optional(),
-    scopes: z.string().optional(),
-    pkce: z.boolean(),
-    authorize_url: z.string().optional(),
-    token_url: z.string().optional(),
+
+const remoteMcpOauthConfigSchema = z.object({
+  authorize_url: z.string().optional(),
+  callback_port: z
+    .number()
+    .optional()
+    .refine(
+      (val) => val !== undefined && val !== null,
+      'Callback port is required'
+    ),
+
+  client_id: z.string().optional(),
+  client_secret: z.string().optional(),
+  issuer: z.string().optional(),
+  oauth_params: z.record(z.string(), z.string()).optional(),
+  scopes: z.array(z.string()).optional(),
+  skip_browser: z.boolean(),
+  token_url: z.string().optional(),
+  use_pkce: z.boolean(),
+})
+
+export const createRemoteMcpBaseSchema = (workloads: CoreWorkload[]) => {
+  const nameSchema = createNameSchema(workloads)
+  const envVarsSchema = createBasicEnvVarsSchema()
+  const secretsSchema = createBasicSecretsSchema()
+  const transportSchema = createTransportConfigSchema()
+  const urlSchema = z.object({
+    url: z.string().nonempty('MCP URL is required'),
   })
+  const authTypeSchema = z.object({
+    auth_type: z.enum(['none', 'oauth2', 'oidc']).default('none'),
+  })
+
+  const commonSchema = nameSchema
+    .extend(urlSchema.shape)
+    .extend(transportSchema.shape)
+    .extend(envVarsSchema.shape)
+    .extend(secretsSchema.shape)
+    .extend(urlSchema.shape)
+    .extend(authTypeSchema.shape)
+    .extend({ oauth_config: remoteMcpOauthConfigSchema })
+
+  return commonSchema
 }
-
-export const addAuthValidation = (ctx: z.RefinementCtx, data: unknown) => {
-  const authData = data as {
-    auth_type?: 'none' | 'oauth2' | 'oidc'
-    issuer_url?: string
-    client_id?: string
-    client_secret?: string
-    scopes?: string
-    authorize_url?: string
-    token_url?: string
-  }
-
-  if (authData.auth_type === 'oidc') {
-    if (!authData.issuer_url || authData.issuer_url.trim() === '') {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Issuer URL is required for OIDC',
-        path: ['issuer_url'],
-      })
-    }
-    if (!authData.client_id || authData.client_id.trim() === '') {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Client ID is required for OIDC',
-        path: ['client_id'],
-      })
-    }
-    if (!authData.client_secret || authData.client_secret.trim() === '') {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Client Secret is required for OIDC',
-        path: ['client_secret'],
-      })
-    }
-    if (!authData.scopes || authData.scopes.trim() === '') {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Scopes are required for OIDC',
-        path: ['scopes'],
-      })
-    }
-  } else if (authData.auth_type === 'oauth2') {
-    if (!authData.authorize_url || authData.authorize_url.trim() === '') {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Authorize URL is required for OAuth2',
-        path: ['authorize_url'],
-      })
-    }
-    if (!authData.token_url || authData.token_url.trim() === '') {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Token URL is required for OAuth2',
-        path: ['token_url'],
-      })
-    }
-    if (!authData.client_id || authData.client_id.trim() === '') {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Client ID is required for OAuth2',
-        path: ['client_id'],
-      })
-    }
-    if (!authData.client_secret || authData.client_secret.trim() === '') {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Client Secret is required for OAuth2',
-        path: ['client_secret'],
-      })
-    }
-    if (!authData.scopes || authData.scopes.trim() === '') {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Scopes are required for OAuth2',
-        path: ['scopes'],
-      })
-    }
-  }
-}
-
-export type AuthConfigSchema = z.infer<
-  ReturnType<typeof createAuthConfigSchema>
->
 
 // --------
-
-export type McpBaseSchema = z.infer<ReturnType<typeof createMcpBaseSchema>>
-
-export type NetworkConfigSchema = z.infer<
-  ReturnType<typeof createNetworkConfigSchema>
->
-
-export type VolumesSchema = z.infer<ReturnType<typeof createVolumesSchema>>
-
-export type TransportConfigSchema = z.infer<
-  ReturnType<typeof createTransportConfigSchema>
->

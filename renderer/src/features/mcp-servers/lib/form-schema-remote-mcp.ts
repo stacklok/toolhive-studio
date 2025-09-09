@@ -1,75 +1,75 @@
 import z from 'zod/v4'
 import type { CoreWorkload } from '@api/types.gen'
+import { createRemoteMcpBaseSchema } from '@/common/lib/form-schema-mcp'
 
-const oauthConfigSchema = z.object({
-  authorize_url: z.string().optional(),
-  callback_port: z
-    .number()
-    .optional()
-    .refine(
-      (val) => val !== undefined && val !== null,
-      'Callback port is required'
-    ),
+const OAUTH_VALIDATION_RULES = {
+  oauth2: [
+    {
+      field: 'authorize_url',
+      message: 'Authorize URL is required for OAuth2',
+      path: ['authorize_url'],
+    },
+    {
+      field: 'token_url',
+      message: 'Token URL is required for OAuth2',
+      path: ['token_url'],
+    },
+    {
+      field: 'client_id',
+      message: 'Client ID is required for OAuth2',
+      path: ['client_id'],
+    },
+  ],
+  oidc: [
+    {
+      field: 'issuer',
+      message: 'Issuer URL is required for OIDC',
+      path: ['issuer'],
+    },
+    {
+      field: 'client_id',
+      message: 'Client ID is required for OIDC',
+      path: ['client_id'],
+    },
+  ],
+}
 
-  client_id: z.string().optional(),
-  client_secret: z.string().optional(),
-  issuer: z.string().optional(),
-  oauth_params: z.record(z.string(), z.string()).optional(),
-  scopes: z.array(z.string()).optional(),
-  skip_browser: z.boolean(),
-  token_url: z.string().optional(),
-  use_pkce: z.boolean(),
-})
+const validateOAuthField = (value: string | undefined): boolean =>
+  Boolean(value && value.trim() !== '')
 
 export const getFormSchemaRemoteMcp = (
   workloads: CoreWorkload[],
   editingServerName?: string
 ) => {
-  const baseFields = z.object({
-    name: z
-      .union([z.string(), z.undefined()])
-      .transform((val) => val ?? '')
-      .pipe(
-        z
-          .string()
-          .nonempty('Name is required')
-          .refine(
-            (value) => value.length === 0 || /^[a-zA-Z0-9._-]+$/.test(value),
-            'Invalid server name: it can only contain alphanumeric characters, dots, hyphens, and underscores.'
-          )
-          .refine(
-            (value) =>
-              !workloads.some((w) => w.name === value) &&
-              value !== editingServerName,
-            'This name is already in use or is the same as the editing server name'
-          )
-      ),
-    url: z.string().nonempty('MCP URL is required'),
-    auth_type: z
-      .union([z.literal('none'), z.literal('oauth2'), z.literal('oidc')])
-      .optional(),
-    oauth_config: oauthConfigSchema,
-    envVars: z
-      .object({
-        name: z.string().nonempty('Name is required'),
-        value: z.string().nonempty('Value is required'),
+  const filteredWorkloads = editingServerName
+    ? workloads.filter((w) => w.name !== editingServerName)
+    : workloads
+
+  return createRemoteMcpBaseSchema(filteredWorkloads).superRefine(
+    (data, ctx) => {
+      const { auth_type, oauth_config } = data
+
+      // Skip validation if no authentication is required
+      if (auth_type === 'none') return
+
+      const validationRules =
+        OAUTH_VALIDATION_RULES[auth_type as keyof typeof OAUTH_VALIDATION_RULES]
+
+      validationRules?.forEach(({ field, message, path }) => {
+        const fieldValue = (oauth_config as Record<string, unknown>)[field] as
+          | string
+          | undefined
+
+        if (!validateOAuthField(fieldValue)) {
+          ctx.addIssue({
+            code: 'custom',
+            message,
+            path,
+          })
+        }
       })
-      .array(),
-    secrets: z
-      .object({
-        name: z.string().nonempty('Name is required'),
-        value: z.object({
-          secret: z.string().nonempty('Value is required'),
-          isFromStore: z.boolean(),
-        }),
-      })
-      .array(),
-    transport: z.union(
-      [z.literal('sse'), z.literal('streamable-http')],
-      'Transport is required. Please select either SSE or streamable-http.'
-    ),
-  })
-  return baseFields
+    }
+  )
 }
 
 export type FormSchemaRemoteMcp = z.infer<
