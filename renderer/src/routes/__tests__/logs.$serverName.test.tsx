@@ -42,12 +42,12 @@ describe('Logs Route', () => {
 
       const backButton = screen.getByRole('button', { name: /back/i })
       expect(backButton).toBeVisible()
-      expect(backButton.closest('a')).toHaveAttribute('href', '/')
+      expect(backButton.closest('a')).toHaveAttribute('href', '/group/default')
 
       await userEvent.click(backButton)
 
       await waitFor(() => {
-        expect(router.state.location.pathname).toBe('/')
+        expect(router.state.location.pathname).toBe('/group/default')
       })
     })
 
