@@ -320,5 +320,3 @@ export const createRemoteMcpBaseSchema = (workloads: CoreWorkload[]) => {
 
   return commonSchema
 }
-
-// --------
