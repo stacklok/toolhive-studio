@@ -27,6 +27,7 @@ export function DropdownMenuRunMcpServer({
 }) {
   const isRemoteMcpEnabled = useFeatureFlag(featureFlagKeys.REMOTE_MCP)
   const navigate = useNavigate()
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n') {
