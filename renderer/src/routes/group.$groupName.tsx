@@ -6,17 +6,17 @@ import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
 import { EmptyState } from '@/common/components/empty-state'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
 import { Button } from '@/common/components/ui/button'
-import { RefreshButton } from '@/common/components/refresh-button'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
 import { GridCardsMcpServers } from '@/features/mcp-servers/components/grid-cards-mcp-server'
-import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/menu-run-mcp-server'
 import { useMutationRestartServerAtStartup } from '@/features/mcp-servers/hooks/use-mutation-restart-server'
 import { TitlePage } from '@/common/components/title-page'
 import { McpServersSidebar } from '@/features/mcp-servers/components/mcp-servers-sidebar'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../utils/feature-flags'
+import { RefreshButton } from '@/common/components/refresh-button'
+import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/dropdown-menu-run-mcp-server'
+import { WrapperDialogFormMcp } from '@/features/mcp-servers/components/wrapper-dialog-mcp'
 import { ManageClientsButton } from '@/features/clients/components/manage-clients-button'
-import { DialogFormLocalMcp } from '@/features/mcp-servers/components/local-mcp/dialog-form-local-mcp'
 
 export const Route = createFileRoute('/group/$groupName')({
   loader: ({ context: { queryClient }, params: { groupName } }) =>
@@ -46,7 +46,13 @@ function GroupRoute() {
 
   const workloads = data?.workloads ?? []
   const filteredWorkloads = workloads
-  const [isRunWithCommandOpen, setIsRunWithCommandOpen] = useState(false)
+  const [serverDialogOpen, setServerDialogOpen] = useState<{
+    local: boolean
+    remote: boolean
+  }>({
+    local: false,
+    remote: false,
+  })
   const { mutateAsync, isPending } = useMutationRestartServerAtStartup()
   const hasProcessedShutdown = useRef(false)
 
@@ -78,19 +84,24 @@ function GroupRoute() {
         className={showSidebar ? 'ml-sidebar min-w-0 flex-1' : 'min-w-0 flex-1'}
       >
         <TitlePage title="MCP Servers">
-          {workloads.length > 0 && (
-            <div className="ml-auto flex gap-2">
-              <RefreshButton refresh={refetch} />
-              <DropdownMenuRunMcpServer
-                openRunCommandDialog={() => setIsRunWithCommandOpen(true)}
-              />
-              <ManageClientsButton groupName={groupName} />
-            </div>
-          )}
-          <DialogFormLocalMcp
-            isOpen={isRunWithCommandOpen}
-            closeDialog={() => setIsRunWithCommandOpen(false)}
-          />
+          <>
+            {workloads.length > 0 && (
+              <div className="ml-auto flex gap-2">
+                <RefreshButton refresh={refetch} />
+                <DropdownMenuRunMcpServer
+                  openRunCommandDialog={setServerDialogOpen}
+                />
+                <ManageClientsButton groupName={groupName} />
+              </div>
+            )}
+
+            <WrapperDialogFormMcp
+              serverType={serverDialogOpen}
+              closeDialog={() =>
+                setServerDialogOpen({ local: false, remote: false })
+              }
+            />
+          </>
         </TitlePage>
         {!isPending && !filteredWorkloads.length ? (
           <EmptyState
@@ -100,7 +111,9 @@ function GroupRoute() {
               <Button
                 variant="outline"
                 key="add-custom-server"
-                onClick={() => setIsRunWithCommandOpen(true)}
+                onClick={() =>
+                  setServerDialogOpen({ local: true, remote: false })
+                }
               >
                 Add custom server
               </Button>,
