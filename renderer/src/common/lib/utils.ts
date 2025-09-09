@@ -39,3 +39,18 @@ export function mapEnvVars(envVars: { name: string; value?: string }[]) {
       .map(({ name, value }) => [name, value as string])
   )
 }
+
+/**
+ * Creates a new object with specified keys omitted from the original object.
+ * Type-safe utility that ensures the omitted keys exist on the source object.
+ */
+export function omit<T extends Record<string, unknown>, K extends keyof T>(
+  obj: T,
+  ...keys: K[]
+): Omit<T, K> {
+  const result = { ...obj }
+  for (const key of keys) {
+    delete result[key]
+  }
+  return result
+}
