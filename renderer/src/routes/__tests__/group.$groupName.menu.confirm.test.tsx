@@ -50,7 +50,7 @@ describe('Group route delete group confirmation', () => {
     const router = createRouter({
       routeTree: rootRoute.addChildren([GroupRoute]),
       context: { queryClient },
-      history: createMemoryHistory({ initialEntries: ['/group/default'] }),
+      history: createMemoryHistory({ initialEntries: ['/group/research'] }),
     })
 
     render(
@@ -93,14 +93,19 @@ describe('Group route delete group confirmation', () => {
       expect(screen.queryByText('Delete group')).not.toBeInTheDocument()
     })
 
-    // Assert DELETE /api/v1beta/groups/default?with-workloads=true was called
+    // Assert DELETE /api/v1beta/groups/research?with-workloads=true was called
     await waitFor(() => {
       const del = rec.recordedRequests.find(
         (r) =>
-          r.method === 'DELETE' && r.pathname === '/api/v1beta/groups/default'
+          r.method === 'DELETE' && r.pathname === '/api/v1beta/groups/research'
       )
       expect(del).toBeTruthy()
       expect(del?.search).toMatchObject({ 'with-workloads': 'true' })
+    })
+
+    // And navigated to default group
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe('/group/default')
     })
   })
 
@@ -124,7 +129,7 @@ describe('Group route delete group confirmation', () => {
     const router = createRouter({
       routeTree: rootRoute.addChildren([GroupRoute]),
       context: { queryClient },
-      history: createMemoryHistory({ initialEntries: ['/group/default'] }),
+      history: createMemoryHistory({ initialEntries: ['/group/research'] }),
     })
 
     render(
@@ -159,12 +164,13 @@ describe('Group route delete group confirmation', () => {
     // Small tick for any async side-effects
     await new Promise((r) => setTimeout(r, 10))
 
-    // Assert no DELETE request for group deletion was made
+    // Assert no DELETE request for group deletion was made and no navigation
     expect(
       rec.recordedRequests.find(
         (r) =>
           r.method === 'DELETE' && r.pathname.startsWith('/api/v1beta/groups/')
       )
     ).toBeUndefined()
+    expect(router.state.location.pathname).toBe('/group/research')
   })
 })
