@@ -1,19 +1,14 @@
 import { render, screen, within, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import {
-  RouterProvider,
-  createMemoryHistory,
-  createRouter,
-  createRootRouteWithContext,
-  Outlet,
-} from '@tanstack/react-router'
+import { RouterProvider } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { recordRequests } from '@/common/mocks/node'
 import { ConfirmProvider } from '@/common/contexts/confirm/provider'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
 import { Route as GroupGroupNameRouteImport } from '@/routes/group.$groupName'
 import { toast } from 'sonner'
+import { createFileRouteTestRouter } from '@/common/test/create-file-route-test-router'
 
 describe('Group route delete group confirmation', () => {
   beforeEach(() => {
@@ -26,22 +21,12 @@ describe('Group route delete group confirmation', () => {
     })
     recordRequests()
 
-    const rootRoute = createRootRouteWithContext<{
-      queryClient: QueryClient
-    }>()({
-      component: Outlet,
-      errorComponent: ({ error }) => <div>{String(error)}</div>,
-    })
-    const GroupRoute = GroupGroupNameRouteImport.update({
-      id: '/group/$groupName',
-      path: '/group/$groupName',
-      getParentRoute: () => rootRoute,
-    } as unknown as Parameters<typeof GroupGroupNameRouteImport.update>[0])
-    const router = createRouter({
-      routeTree: rootRoute.addChildren([GroupRoute]),
-      context: { queryClient },
-      history: createMemoryHistory({ initialEntries: ['/group/research'] }),
-    })
+    const router = createFileRouteTestRouter(
+      GroupGroupNameRouteImport,
+      '/group/$groupName',
+      '/group/research',
+      queryClient
+    )
 
     render(
       <ConfirmProvider>
@@ -103,22 +88,12 @@ describe('Group route delete group confirmation', () => {
     })
     recordRequests()
 
-    const rootRoute = createRootRouteWithContext<{
-      queryClient: QueryClient
-    }>()({
-      component: Outlet,
-      errorComponent: ({ error }) => <div>{String(error)}</div>,
-    })
-    const GroupRoute = GroupGroupNameRouteImport.update({
-      id: '/group/$groupName',
-      path: '/group/$groupName',
-      getParentRoute: () => rootRoute,
-    } as unknown as Parameters<typeof GroupGroupNameRouteImport.update>[0])
-    const router = createRouter({
-      routeTree: rootRoute.addChildren([GroupRoute]),
-      context: { queryClient },
-      history: createMemoryHistory({ initialEntries: ['/group/research'] }),
-    })
+    const router = createFileRouteTestRouter(
+      GroupGroupNameRouteImport,
+      '/group/$groupName',
+      '/group/research',
+      queryClient
+    )
 
     render(
       <ConfirmProvider>
@@ -165,22 +140,12 @@ describe('Group route delete group confirmation', () => {
     })
     recordRequests()
 
-    const rootRoute = createRootRouteWithContext<{
-      queryClient: QueryClient
-    }>()({
-      component: Outlet,
-      errorComponent: ({ error }) => <div>{String(error)}</div>,
-    })
-    const GroupRoute = GroupGroupNameRouteImport.update({
-      id: '/group/$groupName',
-      path: '/group/$groupName',
-      getParentRoute: () => rootRoute,
-    } as unknown as Parameters<typeof GroupGroupNameRouteImport.update>[0])
-    const router = createRouter({
-      routeTree: rootRoute.addChildren([GroupRoute]),
-      context: { queryClient },
-      history: createMemoryHistory({ initialEntries: ['/group/default'] }),
-    })
+    const router = createFileRouteTestRouter(
+      GroupGroupNameRouteImport,
+      '/group/$groupName',
+      '/group/default',
+      queryClient
+    )
 
     render(
       <ConfirmProvider>
