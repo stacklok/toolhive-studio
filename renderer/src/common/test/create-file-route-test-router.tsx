@@ -4,18 +4,11 @@ import {
   createRootRouteWithContext,
   Outlet,
 } from '@tanstack/react-router'
+import type { AnyRoute } from '@tanstack/react-router'
 import type { QueryClient } from '@tanstack/react-query'
 
-type FileRouteLike = {
-  update: (cfg: {
-    id: string
-    path: string
-    getParentRoute: () => unknown
-  }) => unknown
-}
-
 export function createFileRouteTestRouter(
-  fileRouteImport: FileRouteLike,
+  fileRouteImport: unknown,
   path: string,
   initialPath: string,
   queryClient: QueryClient
@@ -25,14 +18,15 @@ export function createFileRouteTestRouter(
     errorComponent: ({ error }) => <div>{String(error)}</div>,
   })
 
-  const FileRoute = fileRouteImport.update({
+  const routeObj = fileRouteImport as { update: (cfg: unknown) => unknown }
+  const FileRoute = routeObj.update({
     id: path,
     path,
     getParentRoute: () => rootRoute,
-  })
+  }) as unknown
 
   return new Router({
-    routeTree: rootRoute.addChildren([FileRoute]),
+    routeTree: rootRoute.addChildren([FileRoute as unknown as AnyRoute]),
     context: { queryClient },
     history: createMemoryHistory({ initialEntries: [initialPath] }),
   })
