@@ -791,7 +791,14 @@ export type TelemetryConfig = {
    */
   insecure?: boolean
   /**
+   * MetricsEnabled controls whether OTLP metrics are enabled
+   * When false, OTLP metrics are not sent even if an endpoint is configured
+   * This is independent of EnablePrometheusMetricsPath
+   */
+  metricsEnabled?: boolean
+  /**
    * SamplingRate is the trace sampling rate (0.0-1.0)
+   * Only used when TracingEnabled is true
    */
   samplingRate?: number
   /**
@@ -802,6 +809,11 @@ export type TelemetryConfig = {
    * ServiceVersion is the service version for telemetry
    */
   serviceVersion?: string
+  /**
+   * TracingEnabled controls whether distributed tracing is enabled
+   * When false, no tracer provider is created even if an endpoint is configured
+   */
+  tracingEnabled?: boolean
 }
 
 export type TypesMiddlewareConfig = {
@@ -949,6 +961,7 @@ export type V1CreateRequest = {
    * Group name this workload belongs to
    */
   group?: string
+  headers?: Array<RegistryHeader>
   /**
    * Host to bind to
    */
@@ -965,6 +978,7 @@ export type V1CreateRequest = {
    * Whether network isolation is turned on. This applies the rules in the permission profile.
    */
   network_isolation?: boolean
+  oauth_config?: V1RemoteOAuthConfig
   oidc?: V1OidcOptions
   permission_profile?: PermissionsProfile
   /**
@@ -987,6 +1001,10 @@ export type V1CreateRequest = {
    * Transport configuration
    */
   transport?: string
+  /**
+   * Remote server specific fields
+   */
+  url?: string
   /**
    * Volume mounts
    */
@@ -1218,6 +1236,51 @@ export type V1RegistryListResponse = {
 }
 
 /**
+ * OAuth configuration for remote server authentication
+ */
+export type V1RemoteOAuthConfig = {
+  /**
+   * OAuth authorization endpoint URL (alternative to issuer for non-OIDC OAuth)
+   */
+  authorize_url?: string
+  /**
+   * Specific port for OAuth callback server
+   */
+  callback_port?: number
+  /**
+   * OAuth client ID for authentication
+   */
+  client_id?: string
+  client_secret?: SecretsSecretParameter
+  /**
+   * OAuth/OIDC issuer URL (e.g., https://accounts.google.com)
+   */
+  issuer?: string
+  /**
+   * Additional OAuth parameters for server-specific customization
+   */
+  oauth_params?: {
+    [key: string]: string
+  }
+  /**
+   * OAuth scopes to request
+   */
+  scopes?: Array<string>
+  /**
+   * Whether to skip opening browser for OAuth flow (defaults to false)
+   */
+  skip_browser?: boolean
+  /**
+   * OAuth token endpoint URL (alternative to issuer for non-OIDC OAuth)
+   */
+  token_url?: string
+  /**
+   * Whether to use PKCE for the OAuth flow
+   */
+  use_pkce?: boolean
+}
+
+/**
  * Secret key information
  */
 export type V1SecretKeyResponse = {
@@ -1282,6 +1345,7 @@ export type V1UpdateRequest = {
    * Group name this workload belongs to
    */
   group?: string
+  headers?: Array<RegistryHeader>
   /**
    * Host to bind to
    */
@@ -1294,6 +1358,7 @@ export type V1UpdateRequest = {
    * Whether network isolation is turned on. This applies the rules in the permission profile.
    */
   network_isolation?: boolean
+  oauth_config?: V1RemoteOAuthConfig
   oidc?: V1OidcOptions
   permission_profile?: PermissionsProfile
   /**
@@ -1316,6 +1381,10 @@ export type V1UpdateRequest = {
    * Transport configuration
    */
   transport?: string
+  /**
+   * Remote server specific fields
+   */
+  url?: string
   /**
    * Volume mounts
    */

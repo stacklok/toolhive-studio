@@ -21,6 +21,9 @@ import {
 } from '@/common/components/ui/tooltip'
 
 import { ServerActionsDropdown } from './server-actions'
+import { CloudIcon, LaptopIcon } from 'lucide-react'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { featureFlagKeys } from '../../../../../../utils/feature-flags'
 
 type CardContentMcpServerProps = {
   status: CoreWorkload['status']
@@ -89,6 +92,7 @@ export function CardMcpServer({
   status,
   statusContext,
   url,
+  remote,
   transport,
 }: {
   name: string
@@ -98,6 +102,7 @@ export function CardMcpServer({
   url: string
   transport: CoreWorkload['transport_type']
 }) {
+  const isRemoteMcpEnabled = useFeatureFlag(featureFlagKeys.REMOTE_MCP)
   const nameRef = useRef<HTMLElement | null>(null)
 
   const search = useSearch({
@@ -152,7 +157,7 @@ export function CardMcpServer({
       )}
     >
       <CardHeader>
-        <div className="flex items-center justify-between overflow-hidden">
+        <div className="flex items-center justify-between gap-6 overflow-hidden">
           <CardTitle
             className={twMerge(
               'min-w-0 flex-1 text-xl',
@@ -168,7 +173,28 @@ export function CardMcpServer({
               <TooltipContent className="max-w-xs">{name}</TooltipContent>
             </Tooltip>
           </CardTitle>
-          <ServerActionsDropdown name={name} url={url} status={status} />
+          <div className="flex items-center gap-1">
+            {isRemoteMcpEnabled && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  {remote ? (
+                    <CloudIcon className="size-5" />
+                  ) : (
+                    <LaptopIcon className="size-5" />
+                  )}
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  {remote ? 'Remote MCP server' : 'Local MCP server'}
+                </TooltipContent>
+              </Tooltip>
+            )}
+            <ServerActionsDropdown
+              name={name}
+              url={url}
+              status={status}
+              remote={!!remote}
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContentMcpServer

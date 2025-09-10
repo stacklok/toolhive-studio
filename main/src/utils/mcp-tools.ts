@@ -10,7 +10,7 @@ import log from '../logger'
 
 export interface McpToolDefinition {
   description?: string
-  inputSchema?: Tool['inputSchema']
+  inputSchema: Tool['inputSchema']
 }
 
 export function isMcpToolDefinition(obj: Tool): obj is McpToolDefinition {

@@ -989,7 +989,6 @@ describe('Allowed Hosts field', () => {
       await userEvent.click(
         screen.getByRole('button', { name: /install server/i })
       )
-
       await waitFor(() => {
         expect(
           screen.queryByText(/invalid host format/i)

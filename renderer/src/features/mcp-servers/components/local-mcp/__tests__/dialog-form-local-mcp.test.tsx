@@ -88,9 +88,7 @@ describe('DialogFormLocalMcp', () => {
     ).toBeVisible()
 
     // Check form fields
-    expect(
-      screen.getByRole('textbox', { name: /server name/i })
-    ).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: /name/i })).toBeInTheDocument()
     expect(screen.getByLabelText('Transport')).toBeInTheDocument()
     expect(
       screen.getByRole('textbox', { name: 'Docker image' })
@@ -125,7 +123,7 @@ describe('DialogFormLocalMcp', () => {
 
     // Fill required fields
     await userEvent.type(
-      screen.getByRole('textbox', { name: /server name/i }),
+      screen.getByRole('textbox', { name: /name/i }),
       'test-server'
     )
     await userEvent.click(screen.getByLabelText('Transport'))
@@ -187,7 +185,9 @@ describe('DialogFormLocalMcp', () => {
 
     // Fill all fields
     await userEvent.type(
-      screen.getByRole('textbox', { name: /server name/i }),
+      screen.getByRole('textbox', {
+        name: /server name/i,
+      }),
       'npm-server'
     )
     await userEvent.click(screen.getByLabelText('Transport'))
@@ -206,9 +206,7 @@ describe('DialogFormLocalMcp', () => {
       ).toBeChecked()
     })
     // Open the package manager dropdown and select npx
-    await userEvent.click(
-      screen.getByRole('combobox', { name: 'Package manager' })
-    )
+    await userEvent.click(screen.getByRole('combobox', { name: /protocol/i }))
     await userEvent.click(screen.getByRole('option', { name: 'npx' }))
     await userEvent.type(screen.getByLabelText('Package name'), '@test/package')
     await userEvent.type(screen.getByLabelText('Command arguments'), '--debug')
@@ -256,7 +254,7 @@ describe('DialogFormLocalMcp', () => {
 
     // Fill basic fields
     await userEvent.type(
-      screen.getByRole('textbox', { name: /server name/i }),
+      screen.getByRole('textbox', { name: /name/i }),
       'secret-server'
     )
     await userEvent.click(screen.getByLabelText('Transport'))
@@ -352,9 +350,10 @@ describe('DialogFormLocalMcp', () => {
 
     // Check that validation errors are shown
     await waitFor(() => {
-      expect(
-        screen.getByRole('textbox', { name: /server name/i })
-      ).toHaveAttribute('aria-invalid', 'true')
+      expect(screen.getByRole('textbox', { name: /name/i })).toHaveAttribute(
+        'aria-invalid',
+        'true'
+      )
       expect(
         screen.getByRole('textbox', { name: 'Docker image' })
       ).toHaveAttribute('aria-invalid', 'true')
@@ -382,7 +381,7 @@ describe('DialogFormLocalMcp', () => {
 
     // Fill required fields
     await userEvent.type(
-      screen.getByRole('textbox', { name: /server name/i }),
+      screen.getByRole('textbox', { name: /name/i }),
       'test-server'
     )
     await userEvent.click(screen.getByLabelText('Transport'))
@@ -450,7 +449,7 @@ describe('DialogFormLocalMcp', () => {
 
     // Fill required fields
     await userEvent.type(
-      screen.getByRole('textbox', { name: /server name/i }),
+      screen.getByRole('textbox', { name: /name/i }),
       'test-server'
     )
     await userEvent.click(screen.getByLabelText('Transport'))
@@ -521,7 +520,7 @@ describe('DialogFormLocalMcp', () => {
       })
 
       await userEvent.type(
-        screen.getByRole('textbox', { name: /server name/i }),
+        screen.getByRole('textbox', { name: /name/i }),
         'test-server'
       )
       await userEvent.click(screen.getByLabelText('Transport'))
@@ -589,7 +588,7 @@ describe('DialogFormLocalMcp', () => {
       })
 
       await userEvent.type(
-        screen.getByRole('textbox', { name: /server name/i }),
+        screen.getByRole('textbox', { name: /name/i }),
         'test-server'
       )
       await userEvent.click(screen.getByLabelText('Transport'))
@@ -667,7 +666,7 @@ describe('DialogFormLocalMcp', () => {
       expect(configTab).toHaveAttribute('aria-selected', 'true')
 
       await userEvent.type(
-        screen.getByRole('textbox', { name: /server name/i }),
+        screen.getByRole('textbox', { name: /name/i }),
         'test-server'
       )
       await userEvent.click(screen.getByLabelText('Transport'))
@@ -786,7 +785,7 @@ describe('DialogFormLocalMcp', () => {
       })
 
       await userEvent.type(
-        screen.getByRole('textbox', { name: /server name/i }),
+        screen.getByRole('textbox', { name: /name/i }),
         'test-server'
       )
       await userEvent.click(screen.getByLabelText('Transport'))
@@ -880,7 +879,7 @@ describe('DialogFormLocalMcp', () => {
     })
 
     await userEvent.type(
-      screen.getByRole('textbox', { name: /server name/i }),
+      screen.getByRole('textbox', { name: /name/i }),
       'npm-server'
     )
     await userEvent.click(screen.getByLabelText('Transport'))

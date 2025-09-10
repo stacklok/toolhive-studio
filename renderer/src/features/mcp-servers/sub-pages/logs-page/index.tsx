@@ -32,7 +32,7 @@ export function LogsPage() {
   return (
     <div className="flex max-h-full w-full flex-1 flex-col">
       <div className="mb-2">
-        <LinkViewTransition to="/">
+        <LinkViewTransition to="/group/default">
           <Button
             variant="ghost"
             aria-label="Back"

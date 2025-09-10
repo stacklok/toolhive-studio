@@ -42,21 +42,20 @@ export function FormFieldsBase({
               <RadioGroup
                 onValueChange={field.onChange}
                 value={field.value}
-                className="flex flex-col space-y-1"
+                className="flex gap-6"
               >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="docker_image" id="docker_image" />
-                  <FormLabel htmlFor="docker_image">Docker image</FormLabel>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem
-                    value="package_manager"
-                    id="package_manager"
-                  />
-                  <FormLabel htmlFor="package_manager">
-                    Package manager
-                  </FormLabel>
-                </div>
+                <FormItem className="flex items-center space-x-2">
+                  <FormControl>
+                    <RadioGroupItem value="docker_image" />
+                  </FormControl>
+                  <FormLabel className="font-normal">Docker image</FormLabel>
+                </FormItem>
+                <FormItem className="flex items-center space-x-2">
+                  <FormControl>
+                    <RadioGroupItem value="package_manager" />
+                  </FormControl>
+                  <FormLabel className="font-normal">Package manager</FormLabel>
+                </FormItem>
               </RadioGroup>
             </FormControl>
             <FormMessage />
@@ -64,168 +63,102 @@ export function FormFieldsBase({
         )}
       />
 
-      {!isEditing && (
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                Server name
-                <TooltipInfoIcon>
-                  A unique name to identify this server in ToolHive.
-                </TooltipInfoIcon>
-              </FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="e.g. my-mcp-server"
-                  {...field}
-                  className="font-mono"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      )}
-
-      {typeValue === 'docker_image' && (
-        <FormField
-          control={form.control}
-          name="image"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                Docker image
-                <TooltipInfoIcon>
-                  The Docker image to run for this MCP server.
-                </TooltipInfoIcon>
-              </FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="e.g. mcp/server:latest"
-                  {...field}
-                  className="font-mono"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      )}
-
-      {typeValue === 'package_manager' && (
-        <>
-          <FormField
-            control={form.control}
-            name="protocol"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Package manager
-                  <TooltipInfoIcon>
-                    The package manager to use for running this MCP server.
-                  </TooltipInfoIcon>
-                </FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a package manager" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="npx">npx</SelectItem>
-                    <SelectItem value="uvx">uvx</SelectItem>
-                    <SelectItem value="go">go</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="package_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Package name
-                  <TooltipInfoIcon>
-                    The package name to run with {protocolValue}.
-                  </TooltipInfoIcon>
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder={
-                      protocolValue === 'npx'
-                        ? 'e.g. @modelcontextprotocol/server-filesystem'
-                        : protocolValue === 'uvx'
-                          ? 'e.g. mcp-server-git'
-                          : 'e.g. github.com/mark3labs/mcp-filesystem'
-                    }
-                    {...field}
-                    className="font-mono"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </>
-      )}
+      <FormField
+        control={form.control}
+        name="name"
+        render={({ field }) => (
+          <FormItem>
+            <div className="flex items-center gap-1">
+              <FormLabel>Server Name</FormLabel>
+              <TooltipInfoIcon>
+                The human-readable name you will use to identify this server.
+              </TooltipInfoIcon>
+            </div>
+            <FormControl>
+              <Input
+                autoCorrect="off"
+                autoComplete="off"
+                autoFocus
+                data-1p-ignore
+                placeholder="e.g. my-awesome-server"
+                value={field.value}
+                onChange={(e) => field.onChange(e.target.value)}
+                name={field.name}
+                disabled={isEditing}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
       <FormField
         control={form.control}
         name="transport"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>
-              Transport
+            <div className="flex items-center gap-1">
+              <FormLabel htmlFor={field.name}>Transport</FormLabel>
               <TooltipInfoIcon>
-                The transport protocol to use for communication with the MCP
-                server.
+                The transport mechanism the MCP server uses to communicate with
+                clients.
               </TooltipInfoIcon>
-            </FormLabel>
-            <Select onValueChange={field.onChange} value={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a transport" />
+            </div>
+            <FormControl>
+              <Select
+                onValueChange={(value) => {
+                  field.onChange(value)
+                  // Automatically set target_port to 0 for stdio transport
+                  if (value === 'stdio') {
+                    form.setValue('target_port', 0)
+                  }
+                }}
+                value={field.value}
+                name={field.name}
+              >
+                <SelectTrigger id={field.name} className="w-full">
+                  <SelectValue placeholder="e.g. SSE, stdio" />
                 </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="stdio">stdio</SelectItem>
-                <SelectItem value="sse">sse</SelectItem>
-                <SelectItem value="streamable-http">streamable-http</SelectItem>
-              </SelectContent>
-            </Select>
+                <SelectContent>
+                  <SelectItem value="sse">SSE</SelectItem>
+                  <SelectItem value="stdio">stdio</SelectItem>
+                  <SelectItem value="streamable-http">
+                    Streamable HTTP
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
 
-      {transportValue === 'sse' && (
+      {/* Only show target_port for non-stdio transports */}
+      {transportValue !== 'stdio' && (
         <FormField
           control={form.control}
           name="target_port"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>
-                Target port
-                <TooltipInfoIcon>
-                  The port number where the MCP server will be accessible.
+              <div className="flex items-center gap-1">
+                <FormLabel htmlFor={field.name}>Target port</FormLabel>
+                <TooltipInfoIcon className="max-w-72">
+                  Target port to expose from the container. If not specified,
+                  ToolHive will automatically assign a random port.
                 </TooltipInfoIcon>
-              </FormLabel>
+              </div>
               <FormControl>
                 <Input
+                  id={field.name}
+                  autoCorrect="off"
+                  autoComplete="off"
+                  autoFocus
                   type="number"
-                  placeholder="e.g. 3000"
-                  {...field}
-                  onChange={(e) => {
-                    const value = e.target.value
-                    field.onChange(value === '' ? undefined : Number(value))
-                  }}
-                  value={field.value ?? ''}
+                  data-1p-ignore
+                  placeholder="e.g. 50051"
+                  value={field.value}
+                  onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                  name={field.name}
                 />
               </FormControl>
               <FormMessage />
@@ -234,7 +167,109 @@ export function FormFieldsBase({
         />
       )}
 
-      <CommandArgumentsField<FormSchemaLocalMcp> form={form} />
+      {typeValue === 'docker_image' ? (
+        <FormField
+          control={form.control}
+          name="image"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex items-center gap-1">
+                <FormLabel>Docker image</FormLabel>
+                <TooltipInfoIcon>
+                  The Docker image that contains the MCP server.
+                </TooltipInfoIcon>
+              </div>
+              <FormControl>
+                <Input
+                  placeholder="e.g. ghcr.io/acme-corp/my-awesome-server:latest"
+                  value={field.value}
+                  onChange={(e) => field.onChange(e.target.value)}
+                  name={field.name}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      ) : null}
+
+      {typeValue === 'package_manager' ? (
+        <FormField
+          control={form.control}
+          name="protocol"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex items-center gap-1">
+                <FormLabel htmlFor={field.name}>Protocol</FormLabel>
+                <TooltipInfoIcon>
+                  ToolHive supports running MCP servers directly from supported
+                  package managers.
+                </TooltipInfoIcon>
+              </div>
+              <FormControl>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  name={field.name}
+                >
+                  <SelectTrigger id={field.name} className="w-full">
+                    <SelectValue placeholder="e.g. npx, uvx, go" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="npx">npx</SelectItem>
+                    <SelectItem value="uvx">uvx</SelectItem>
+                    <SelectItem value="go">go</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      ) : null}
+
+      {typeValue === 'package_manager' ? (
+        <FormField
+          control={form.control}
+          name="package_name"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex items-center gap-1">
+                <FormLabel htmlFor={field.name}>Package name</FormLabel>
+                <TooltipInfoIcon>
+                  The name of the package to run the MCP server from.
+                </TooltipInfoIcon>
+              </div>
+              <FormControl>
+                <div className="flex items-center">
+                  <div
+                    className="bg-muted text-muted-foreground border-input flex
+                      h-9 items-center rounded-l-md border border-r-0 px-2
+                      text-sm shadow-xs"
+                  >
+                    {`${protocolValue}://`}
+                  </div>
+                  <Input
+                    className="rounded-l-none"
+                    placeholder="e.g. my-awesome-server@latest"
+                    value={field.value}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    name={field.name}
+                    id={field.name}
+                  />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      ) : null}
+
+      <CommandArgumentsField
+        getValues={(name) => form.getValues(name)}
+        setValue={(name, value) => form.setValue(name, value)}
+        control={form.control}
+      />
     </>
   )
 }

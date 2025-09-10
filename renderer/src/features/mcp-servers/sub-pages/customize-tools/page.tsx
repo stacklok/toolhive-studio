@@ -100,7 +100,7 @@ export function CustomizeToolsPage() {
   return (
     <div className="">
       <div className="mb-2">
-        <LinkViewTransition to="/">
+        <LinkViewTransition to="/group/default">
           <Button
             variant="ghost"
             aria-label="Back"
