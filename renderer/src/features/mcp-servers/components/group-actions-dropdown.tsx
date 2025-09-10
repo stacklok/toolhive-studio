@@ -38,13 +38,14 @@ export function GroupActionsDropdown({
       >
         <DropdownMenuItem
           onClick={async () => {
-            const confirmed = await confirm(null, {
-              title: 'Delete group',
-              description:
-                'Deleting this group will permanently erase all it’s servers. Are you sure you want to proceed? This action cannot be undone.',
-              buttons: { yes: 'Delete', no: 'Cancel' },
-              isDestructive: true,
-            })
+            const confirmed = await confirm(
+              'Deleting this group will permanently erase all it’s servers. Are you sure you want to proceed? This action cannot be undone.',
+              {
+                title: 'Delete group',
+                buttons: { yes: 'Delete', no: 'Cancel' },
+                isDestructive: true,
+              }
+            )
             if (confirmed) {
               await deleteGroup({
                 path: { name: _groupName },
