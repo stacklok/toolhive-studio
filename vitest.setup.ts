@@ -44,6 +44,18 @@ beforeAll(() => {
     ),
   }))
 
+  vi.mock('sonner', () => ({
+    Toaster: () => null,
+    toast: {
+      dismiss: vi.fn(),
+      promise: vi.fn((p: Promise<unknown>) => p.catch(() => {})),
+      success: vi.fn(),
+      error: vi.fn(),
+      warning: vi.fn(),
+      loading: vi.fn(),
+    },
+  }))
+
   window.HTMLElement.prototype.scrollIntoView = function () {}
   window.HTMLElement.prototype.hasPointerCapture = vi.fn()
   window.HTMLElement.prototype.releasePointerCapture = vi.fn()
