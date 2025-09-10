@@ -8,6 +8,7 @@ import {
 import { MoreVertical, Trash2 } from 'lucide-react'
 import { useConfirm } from '@/common/hooks/use-confirm'
 import { useMutationDeleteGroup } from '../hooks/use-mutation-delete-group'
+import { toast } from 'sonner'
 
 export function GroupActionsDropdown({
   groupName: _groupName,
@@ -38,6 +39,10 @@ export function GroupActionsDropdown({
       >
         <DropdownMenuItem
           onClick={async () => {
+            if (_groupName === 'default') {
+              toast.error('The default group cannot be deleted')
+              return
+            }
             const confirmed = await confirm(
               'Deleting this group will permanently erase all it’s servers. Are you sure you want to proceed? This action cannot be undone.',
               {
