@@ -44,8 +44,6 @@ beforeAll(() => {
     ),
   }))
 
-  // Provide a default mock for `sonner` used across tests. Individual tests
-  // can still override this via vi.mock if needed.
   vi.mock('sonner', () => ({
     Toaster: () => null,
     toast: {
