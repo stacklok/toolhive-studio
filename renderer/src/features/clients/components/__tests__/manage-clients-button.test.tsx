@@ -6,8 +6,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ManageClientsButton } from '../manage-clients-button'
 import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
-import { mswEndpoint } from '@/common/mocks/msw-endpoint'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
+import { mswEndpoint } from '@/common/mocks/customHandlers'
 
 type Recorded = { method: string; url: string; path: string; body?: unknown }
 function startRecording(filter?: (url: string, method: string) => boolean) {

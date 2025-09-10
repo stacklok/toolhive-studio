@@ -6,8 +6,8 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { server as mswServer } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
-import { mswEndpoint } from '@/common/mocks/msw-endpoint'
 import { useRunFromRegistry } from '../../hooks/use-run-from-registry'
+import { mswEndpoint } from '@/common/mocks/customHandlers'
 
 // Mock the hook
 vi.mock('../../hooks/use-run-from-registry.tsx', () => ({
