@@ -10,11 +10,7 @@ import { useConfirm } from '@/common/hooks/use-confirm'
 import { useMutationDeleteGroup } from '../hooks/use-mutation-delete-group'
 import { toast } from 'sonner'
 
-export function GroupActionsDropdown({
-  groupName: _groupName,
-}: {
-  groupName: string
-}) {
+export function GroupActionsDropdown({ groupName }: { groupName: string }) {
   const confirm = useConfirm()
   const { mutateAsync: deleteGroup } = useMutationDeleteGroup()
   return (
@@ -33,11 +29,11 @@ export function GroupActionsDropdown({
         align="end"
         role="menu"
         className="w-56"
-        data-group-name={_groupName}
+        data-group-name={groupName}
       >
         <DropdownMenuItem
           onClick={async () => {
-            if (_groupName === 'default') {
+            if (groupName === 'default') {
               toast.error('The default group cannot be deleted')
               return
             }
@@ -51,7 +47,7 @@ export function GroupActionsDropdown({
             )
             if (confirmed) {
               await deleteGroup({
-                path: { name: _groupName },
+                path: { name: groupName },
                 query: { 'with-workloads': true },
               })
             }
