@@ -19,6 +19,7 @@ beforeAll(() => {
       onServerShutdown: () => () => {},
       shutdownStore: {
         getLastShutdownServers: async () => [],
+        clearShutdownHistory: async () => ({ success: true }),
       } as ElectronAPI['shutdownStore'],
     }
     Object.defineProperty(window, 'electronAPI', {
@@ -66,7 +67,7 @@ afterEach(() => {
 afterAll(() => server.close())
 
 vi.mock('./renderer/src/common/hooks/use-feature-flag', async (orig) => {
-  const original = await orig()
+  const original = (await orig()) as Record<string, unknown>
   return {
     ...original,
     useFeatureFlag: () => true,
