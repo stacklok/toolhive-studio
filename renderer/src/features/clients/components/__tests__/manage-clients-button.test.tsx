@@ -4,47 +4,12 @@ import { Suspense } from 'react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ManageClientsButton } from '../manage-clients-button'
-import { server } from '@/common/mocks/node'
+import { server, recordRequests } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
 
-type Recorded = { method: string; url: string; path: string; body?: unknown }
-function startRecording(filter?: (url: string, method: string) => boolean) {
-  const records: Recorded[] = []
-  const onStart = async ({ request }: { request: Request }) => {
-    const method = request.method
-    const url = request.url
-    const path = new URL(url).pathname
-    if (filter && !filter(url, method)) return
-
-    let body: unknown
-    try {
-      if (method !== 'GET' && method !== 'DELETE') {
-        const text = await request.clone().text()
-        body = text
-          ? (() => {
-              try {
-                return JSON.parse(text)
-              } catch {
-                return text
-              }
-            })()
-          : undefined
-      }
-    } catch {
-      // ignore
-    }
-    records.push({ method, url, path, body })
-  }
-  server.events.on('request:start', onStart)
-  return {
-    get: () => records,
-    stop: () => {
-      server.events.removeListener('request:start', onStart)
-    },
-  }
-}
+// Use the shared request recorder from mocks/node.ts for consistency
 
 describe('ManageClientsButton – BDD flows', () => {
   let queryClient: QueryClient
@@ -80,11 +45,7 @@ describe('ManageClientsButton – BDD flows', () => {
       http.get(mswEndpoint('/api/v1beta/clients'), () => HttpResponse.json([]))
     )
 
-    const rec = startRecording(
-      (url, method) =>
-        url.includes('/api/v1beta/clients') &&
-        (method === 'POST' || method === 'DELETE')
-    )
+    const rec = recordRequests()
 
     const user = userEvent.setup()
     renderWithProviders({ groupName: 'default' })
@@ -95,10 +56,26 @@ describe('ManageClientsButton – BDD flows', () => {
     await user.click(await screen.findByRole('switch', { name: /cursor/i }))
     await user.click(await screen.findByRole('button', { name: /save/i }))
 
-    await waitFor(() => expect(rec.get()).toHaveLength(2))
-    const snapshot = rec
-      .get()
-      .map(({ method, path, body }) => ({ method, path, body }))
+    await waitFor(() =>
+      expect(
+        rec.recordedRequests.filter(
+          (r) =>
+            r.pathname.startsWith('/api/v1beta/clients') &&
+            (r.method === 'POST' || r.method === 'DELETE')
+        )
+      ).toHaveLength(2)
+    )
+    const snapshot = rec.recordedRequests
+      .filter(
+        (r) =>
+          r.pathname.startsWith('/api/v1beta/clients') &&
+          (r.method === 'POST' || r.method === 'DELETE')
+      )
+      .map(({ method, pathname, payload }) => ({
+        method,
+        path: pathname,
+        body: payload,
+      }))
     expect(snapshot).toEqual([
       {
         method: 'POST',
@@ -111,7 +88,7 @@ describe('ManageClientsButton – BDD flows', () => {
         body: { name: 'cursor', groups: ['default'] },
       },
     ])
-    rec.stop()
+    // no-op: global recorder persists; we reset via recordRequests() per test
   })
 
   it('enables a single client when none are enabled (clients API returns null)', async () => {
@@ -128,11 +105,7 @@ describe('ManageClientsButton – BDD flows', () => {
       )
     )
 
-    const rec = startRecording(
-      (url, method) =>
-        url.includes('/api/v1beta/clients') &&
-        (method === 'POST' || method === 'DELETE')
-    )
+    const rec = recordRequests()
 
     // When: the user enables only VS Code and saves
     const user = userEvent.setup()
@@ -144,10 +117,26 @@ describe('ManageClientsButton – BDD flows', () => {
     await user.click(await screen.findByRole('button', { name: /save/i }))
 
     // Then: exactly one POST registration should be sent
-    await waitFor(() => expect(rec.get()).toHaveLength(1))
-    const snapshot = rec
-      .get()
-      .map(({ method, path, body }) => ({ method, path, body }))
+    await waitFor(() =>
+      expect(
+        rec.recordedRequests.filter(
+          (r) =>
+            r.pathname.startsWith('/api/v1beta/clients') &&
+            (r.method === 'POST' || r.method === 'DELETE')
+        )
+      ).toHaveLength(1)
+    )
+    const snapshot = rec.recordedRequests
+      .filter(
+        (r) =>
+          r.pathname.startsWith('/api/v1beta/clients') &&
+          (r.method === 'POST' || r.method === 'DELETE')
+      )
+      .map(({ method, pathname, payload }) => ({
+        method,
+        path: pathname,
+        body: payload,
+      }))
     expect(snapshot).toEqual([
       {
         method: 'POST',
@@ -155,7 +144,7 @@ describe('ManageClientsButton – BDD flows', () => {
         body: { name: 'vscode', groups: ['default'] },
       },
     ])
-    rec.stop()
+    // no-op
   })
 
   it('disables clients from a group', async () => {
@@ -172,11 +161,7 @@ describe('ManageClientsButton – BDD flows', () => {
       )
     )
 
-    const rec = startRecording(
-      (url, method) =>
-        url.includes('/api/v1beta/clients') &&
-        (method === 'POST' || method === 'DELETE')
-    )
+    const rec = recordRequests()
 
     const user = userEvent.setup()
     renderWithProviders({ groupName: 'default' })
@@ -188,12 +173,20 @@ describe('ManageClientsButton – BDD flows', () => {
     await user.click(await screen.findByRole('button', { name: /save/i }))
 
     await waitFor(() =>
-      expect(rec.get().filter((r) => r.method === 'DELETE')).toHaveLength(2)
+      expect(
+        rec.recordedRequests.filter(
+          (r) =>
+            r.method === 'DELETE' &&
+            r.pathname.startsWith('/api/v1beta/clients')
+        )
+      ).toHaveLength(2)
     )
-    const snapshot = rec
-      .get()
-      .filter((r) => r.method === 'DELETE')
-      .map(({ method, path }) => ({ method, path }))
+    const snapshot = rec.recordedRequests
+      .filter(
+        (r) =>
+          r.method === 'DELETE' && r.pathname.startsWith('/api/v1beta/clients')
+      )
+      .map(({ method, pathname }) => ({ method, path: pathname }))
     expect(snapshot).toEqual([
       { method: 'DELETE', path: '/api/v1beta/clients/cursor/groups/default' },
       {
@@ -201,7 +194,7 @@ describe('ManageClientsButton – BDD flows', () => {
         path: '/api/v1beta/clients/claude-code/groups/default',
       },
     ])
-    rec.stop()
+    // no-op
   })
 
   it('handles mixed enable and disable changes', async () => {
@@ -222,11 +215,7 @@ describe('ManageClientsButton – BDD flows', () => {
       )
     )
 
-    const rec = startRecording(
-      (url, method) =>
-        url.includes('/api/v1beta/clients') &&
-        (method === 'POST' || method === 'DELETE')
-    )
+    const rec = recordRequests()
 
     const user = userEvent.setup()
     renderWithProviders({ groupName: 'default' })
@@ -238,13 +227,23 @@ describe('ManageClientsButton – BDD flows', () => {
     await user.click(await screen.findByRole('button', { name: /save/i }))
 
     await waitFor(() => {
-      const calls = rec.get()
-      expect(calls.some((c) => c.method === 'DELETE')).toBe(true)
-      expect(calls.some((c) => c.method === 'POST')).toBe(true)
+      const calls = rec.recordedRequests
+        .filter((r) => r.pathname.startsWith('/api/v1beta/clients'))
+        .map((r) => r.method)
+      expect(calls.includes('DELETE')).toBe(true)
+      expect(calls.includes('POST')).toBe(true)
     })
-    const snapshot = rec
-      .get()
-      .map(({ method, path, body }) => ({ method, path, body }))
+    const snapshot = rec.recordedRequests
+      .filter(
+        (r) =>
+          r.pathname.startsWith('/api/v1beta/clients') &&
+          (r.method === 'POST' || r.method === 'DELETE')
+      )
+      .map(({ method, pathname, payload }) => ({
+        method,
+        path: pathname,
+        body: payload,
+      }))
     expect(snapshot).toEqual([
       {
         method: 'DELETE',
@@ -257,7 +256,7 @@ describe('ManageClientsButton – BDD flows', () => {
         body: { name: 'claude-code', groups: ['default'] },
       },
     ])
-    rec.stop()
+    // no-op
   })
 
   it('makes no calls when nothing changes', async () => {
@@ -277,11 +276,7 @@ describe('ManageClientsButton – BDD flows', () => {
       )
     )
 
-    const rec = startRecording(
-      (url, method) =>
-        url.includes('/api/v1beta/clients') &&
-        (method === 'POST' || method === 'DELETE')
-    )
+    const rec = recordRequests()
 
     const user = userEvent.setup()
     renderWithProviders({ groupName: 'default' })
@@ -291,8 +286,14 @@ describe('ManageClientsButton – BDD flows', () => {
     await user.click(await screen.findByRole('button', { name: /save/i }))
 
     await new Promise((r) => setTimeout(r, 10))
-    expect(rec.get()).toEqual([])
-    rec.stop()
+    expect(
+      rec.recordedRequests.filter(
+        (r) =>
+          r.pathname.startsWith('/api/v1beta/clients') &&
+          (r.method === 'POST' || r.method === 'DELETE')
+      )
+    ).toEqual([])
+    // no-op
   })
 
   it('cancels without issuing API calls', async () => {
@@ -304,11 +305,7 @@ describe('ManageClientsButton – BDD flows', () => {
       )
     )
 
-    const rec = startRecording(
-      (url, method) =>
-        url.includes('/api/v1beta/clients') &&
-        (method === 'POST' || method === 'DELETE')
-    )
+    const rec = recordRequests()
 
     const user = userEvent.setup()
     renderWithProviders({ groupName: 'default' })
@@ -318,7 +315,13 @@ describe('ManageClientsButton – BDD flows', () => {
     await user.click(await screen.findByRole('button', { name: /cancel/i }))
 
     await new Promise((r) => setTimeout(r, 10))
-    expect(rec.get()).toEqual([])
-    rec.stop()
+    expect(
+      rec.recordedRequests.filter(
+        (r) =>
+          r.pathname.startsWith('/api/v1beta/clients') &&
+          (r.method === 'POST' || r.method === 'DELETE')
+      )
+    ).toEqual([])
+    // no-op
   })
 })
