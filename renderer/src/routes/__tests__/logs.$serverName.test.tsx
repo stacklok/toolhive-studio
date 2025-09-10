@@ -4,7 +4,7 @@ import { LogsPage } from '@/features/mcp-servers/sub-pages/logs-page'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
 import userEvent from '@testing-library/user-event'
-import { getMockLogs } from '@/common/mocks/fixtures/servers'
+import { getMockLogs } from '@/common/mocks/customHandlers/fixtures/servers'
 
 describe('Logs Route', () => {
   beforeEach(() => {

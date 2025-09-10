@@ -4,9 +4,9 @@ import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
-import { MOCK_REGISTRY_RESPONSE } from '@/common/mocks/fixtures/registry'
-import { mswEndpoint } from '@/common/mocks/msw-endpoint'
 import { Registry } from '../(registry)/registry'
+import { MOCK_REGISTRY_RESPONSE } from '@/common/mocks/customHandlers/fixtures/registry'
+import { mswEndpoint } from '@/common/mocks/customHandlers'
 
 const router = createTestRouter(Registry)
 beforeEach(() => {
