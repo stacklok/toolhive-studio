@@ -48,7 +48,7 @@ export function mswEndpoint(endpoint: Endpoint) {
   return new URL(endpoint, import.meta.env.VITE_BASE_API_URL).toString()
 }
 
-export const handlers = [
+export const customHandlers = [
   http.get(mswEndpoint('/health'), () => {
     return new HttpResponse(null, {
       status: 204,
