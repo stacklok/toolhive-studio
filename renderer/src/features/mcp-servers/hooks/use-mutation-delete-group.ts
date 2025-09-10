@@ -1,23 +1,12 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { deleteApiV1BetaGroupsByName } from '@api/sdk.gen'
-import type { DeleteApiV1BetaGroupsByNameData } from '@api/types.gen'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
+import { deleteApiV1BetaGroupsByNameMutation } from '@api/@tanstack/react-query.gen'
 
 export function useMutationDeleteGroup() {
   const queryClient = useQueryClient()
 
   return useToastMutation({
-    mutationFn: async (
-      data: Pick<DeleteApiV1BetaGroupsByNameData, 'path' | 'query'>
-    ) => {
-      return await deleteApiV1BetaGroupsByName({
-        path: data.path,
-        query: data.query,
-        parseAs: 'text',
-        responseStyle: 'data',
-        throwOnError: true,
-      })
-    },
+    ...deleteApiV1BetaGroupsByNameMutation(),
     onSuccess: () => {
       // Refresh groups list
       queryClient.invalidateQueries({ queryKey: ['api', 'v1beta', 'groups'] })
