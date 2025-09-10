@@ -1,7 +1,7 @@
 // This file generates fallback mocks automatically to avoid
 // having to create all mocks manually. You can still manually write
 // mock handlers that override the behavior of these
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment, no-empty */
 // @ts-nocheck
 
 import openapi from '../../../../api/openapi.json'

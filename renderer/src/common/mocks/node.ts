@@ -26,11 +26,7 @@ const arrayOrSingleString = (array: string[]): string[] | string =>
   array.length === 1 ? (array[0] as string) : array
 
 server.events.on('request:start', async ({ request }) => {
-  try {
-    console.log('[msw] request:start', request.method, request.url)
-  } catch (_err) {
-    void 0
-  }
+  console.log('[msw] request:start', request.method, request.url)
   // record request details to help making assertions
   const url = new URL(request.url)
   const searchParams = new URLSearchParams(url.search)
