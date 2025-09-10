@@ -93,7 +93,9 @@ function GroupRoute() {
                   openRunCommandDialog={setServerDialogOpen}
                 />
                 <ManageClientsButton groupName={groupName} />
-                <GroupActionsDropdown groupName={groupName} />
+                {showSidebar ? (
+                  <GroupActionsDropdown groupName={groupName} />
+                ) : null}
               </div>
             )}
 
