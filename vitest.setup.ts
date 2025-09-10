@@ -44,6 +44,20 @@ beforeAll(() => {
     ),
   }))
 
+  // Provide a default mock for `sonner` used across tests. Individual tests
+  // can still override this via vi.mock if needed.
+  vi.mock('sonner', () => ({
+    Toaster: () => null,
+    toast: {
+      dismiss: vi.fn(),
+      promise: vi.fn((p: Promise<unknown>) => p.catch(() => {})),
+      success: vi.fn(),
+      error: vi.fn(),
+      warning: vi.fn(),
+      loading: vi.fn(),
+    },
+  }))
+
   window.HTMLElement.prototype.scrollIntoView = function () {}
   window.HTMLElement.prototype.hasPointerCapture = vi.fn()
   window.HTMLElement.prototype.releasePointerCapture = vi.fn()

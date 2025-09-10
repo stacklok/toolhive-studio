@@ -15,35 +15,9 @@ import { PromptProvider } from '@/common/contexts/prompt/provider'
 import { Route as GroupGroupNameRouteImport } from '@/routes/group.$groupName'
 import { toast } from 'sonner'
 
-vi.mock('sonner', async () => {
-  const original = await vi.importActual<typeof import('sonner')>('sonner')
-  return {
-    ...original,
-    toast: {
-      loading: vi.fn(),
-      success: vi.fn(),
-      warning: vi.fn(),
-      error: vi.fn(),
-      promise: vi.fn((p: Promise<unknown>) => p.catch(() => {})),
-      dismiss: vi.fn(),
-    },
-  }
-})
-
 describe('Group route delete group confirmation', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-
-    Object.defineProperty(window, 'electronAPI', {
-      value: {
-        shutdownStore: {
-          getLastShutdownServers: vi.fn().mockResolvedValue([]),
-          clearShutdownHistory: vi.fn().mockResolvedValue(undefined),
-        },
-        onServerShutdown: vi.fn().mockReturnValue(() => {}),
-      },
-      writable: true,
-    })
   })
 
   it('opens a confirmation modal with proper title and description and closes on Delete', async () => {
