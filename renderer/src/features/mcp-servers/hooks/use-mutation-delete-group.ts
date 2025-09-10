@@ -10,9 +10,7 @@ export function useMutationDeleteGroup() {
   return useToastMutation({
     ...deleteApiV1BetaGroupsByNameMutation(),
     onSuccess: () => {
-      // Refresh groups list
       queryClient.invalidateQueries({ queryKey: ['api', 'v1beta', 'groups'] })
-      // Navigate to default group
       navigate({ to: '/group/$groupName', params: { groupName: 'default' } })
     },
     successMsg: (variables) => `Group "${variables.path.name}" deleted`,

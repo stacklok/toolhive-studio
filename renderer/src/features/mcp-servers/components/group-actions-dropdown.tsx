@@ -17,8 +17,6 @@ export function GroupActionsDropdown({
 }) {
   const confirm = useConfirm()
   const { mutateAsync: deleteGroup } = useMutationDeleteGroup()
-  // For now, only render the menu with a Delete action placeholder.
-  // Actual delete logic will be implemented later.
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
