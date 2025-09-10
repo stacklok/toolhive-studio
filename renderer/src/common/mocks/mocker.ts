@@ -6,7 +6,6 @@
 
 import openapi from '../../../../api/openapi.json'
 import Ajv from 'ajv'
-// import addFormats from 'ajv-formats'
 import fs from 'fs'
 import { JSONSchemaFaker as jsf } from 'json-schema-faker'
 import { http, HttpResponse } from 'msw'
