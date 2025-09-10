@@ -17,11 +17,7 @@
       "status": "ea dolor culpa",
       "status_context": "dolor aliquip",
       "tool_type": "magna Excepteur qui",
-      "tools": [
-        "reprehenderit irure laboris",
-        "est Duis",
-        "ex"
-      ],
+      "tools": ["reprehenderit irure laboris", "est Duis", "ex"],
       "transport_type": "dolor elit",
       "url": "enim Excepteur laboris"
     },
@@ -63,11 +59,7 @@
       "status": "aute elit",
       "status_context": "consequat minim",
       "tool_type": "enim aliquip fugiat",
-      "tools": [
-        "consectetur",
-        "sint",
-        "tempor irure sunt dolor"
-      ],
+      "tools": ["consectetur", "sint", "tempor irure sunt dolor"],
       "transport_type": "adipisicing Excepteur ad sunt",
       "url": "sit dolore laboris Duis"
     }

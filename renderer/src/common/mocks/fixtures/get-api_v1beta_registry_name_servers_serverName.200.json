@@ -85,21 +85,13 @@
         "elit_c": "ex labore qui occaecat",
         "Loremae": "mollit esse dolor do"
       },
-      "scopes": [
-        "ut ut dolore",
-        "veniam",
-        "nisi sed"
-      ],
+      "scopes": ["ut ut dolore", "veniam", "nisi sed"],
       "token_url": "cupidatat culpa cillum fugiat Excepteur",
       "use_pkce": true
     },
     "repository_url": "aliqua consequat qui mollit et",
     "status": "officia labore quis cupidatat voluptate",
-    "tags": [
-      "adipisicing labore",
-      "in est irure",
-      "irure sunt sit elit"
-    ],
+    "tags": ["adipisicing labore", "in est irure", "irure sunt sit elit"],
     "tier": "voluptate deserunt aliquip non",
     "tools": [
       "sunt dolore officia",
@@ -110,11 +102,7 @@
     "url": "dolor dolore in est"
   },
   "server": {
-    "args": [
-      "veniam",
-      "eu consectetur consequat",
-      "consectetur"
-    ],
+    "args": ["veniam", "eu consectetur consequat", "consectetur"],
     "custom_metadata": {
       "dolore_7c": {},
       "id_d34": {},
@@ -123,11 +111,7 @@
       "doloree6": {}
     },
     "description": "commodo",
-    "docker_tags": [
-      "occaecat reprehenderit cillum nulla",
-      "et",
-      "quis"
-    ],
+    "docker_tags": ["occaecat reprehenderit cillum nulla", "et", "quis"],
     "env_vars": [
       {
         "default": "ipsum",
@@ -165,16 +149,8 @@
         "id_2e3": false,
         "non58e": "occaecat",
         "outbound": {
-          "allow_host": [
-            "ea nostrud",
-            "in magna ut",
-            "qui"
-          ],
-          "allow_port": [
-            34545225,
-            -15131068,
-            -93862110
-          ],
+          "allow_host": ["ea nostrud", "in magna ut", "qui"],
+          "allow_port": [34545225, -15131068, -93862110],
           "insecure_allow_all": true
         }
       },
@@ -184,11 +160,7 @@
         "sunt cupidatat sed in commodo",
         "in officia minim occaecat"
       ],
-      "write": [
-        "Lorem",
-        "ut qui",
-        "officia nostrud"
-      ]
+      "write": ["Lorem", "ut qui", "officia nostrud"]
     },
     "provenance": {
       "attestation": {
@@ -204,18 +176,10 @@
     },
     "repository_url": "veniam culpa elit",
     "status": "cillum eiusmod cupidatat esse culpa",
-    "tags": [
-      "qui",
-      "do",
-      "incididunt eu nostrud magna"
-    ],
+    "tags": ["qui", "do", "incididunt eu nostrud magna"],
     "target_port": -80637373,
     "tier": "consequat cupidatat eu",
-    "tools": [
-      "in",
-      "nisi",
-      "ipsum ex"
-    ],
+    "tools": ["in", "nisi", "ipsum ex"],
     "transport": "exercitation eu"
   }
 }

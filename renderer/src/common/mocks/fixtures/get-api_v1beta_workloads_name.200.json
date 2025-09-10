@@ -23,11 +23,7 @@
       "secret": true
     },
     {
-      "choices": [
-        "fugiat aliqua",
-        "tempor consectetur do cupidatat",
-        "amet"
-      ],
+      "choices": ["fugiat aliqua", "tempor consectetur do cupidatat", "amet"],
       "default": "et Ut",
       "description": "magna anim",
       "name": "id anim officia Lorem",
@@ -35,11 +31,7 @@
       "secret": false
     },
     {
-      "choices": [
-        "ut et dolore",
-        "qui",
-        "cupidatat"
-      ],
+      "choices": ["ut et dolore", "qui", "cupidatat"],
       "default": "exercitation velit",
       "description": "Lorem Duis",
       "name": "ut laborum amet",
@@ -66,11 +58,7 @@
       "magna_9": "occaecat pariatur Ut amet voluptate",
       "laboris_0_": "ad"
     },
-    "scopes": [
-      "sit est dolor non consequat",
-      "aute",
-      "commodo exercitation"
-    ],
+    "scopes": ["sit est dolor non consequat", "aute", "commodo exercitation"],
     "skip_browser": false,
     "token_url": "minim aliquip occaecat dolor",
     "use_pkce": false
@@ -87,25 +75,13 @@
     "name": "Duis incididunt",
     "network": {
       "outbound": {
-        "allow_host": [
-          "est",
-          "voluptate",
-          "mollit"
-        ],
-        "allow_port": [
-          18413345,
-          -99223925,
-          27945977
-        ],
+        "allow_host": ["est", "voluptate", "mollit"],
+        "allow_port": [18413345, -99223925, 27945977],
         "insecure_allow_all": true
       }
     },
     "privileged": false,
-    "read": [
-      "minim",
-      "sint voluptate",
-      "mollit quis deserunt"
-    ],
+    "read": ["minim", "sint voluptate", "mollit quis deserunt"],
     "write": [
       "Ut Lorem cillum nisi",
       "in tempor",
@@ -128,16 +104,8 @@
     }
   ],
   "target_port": 77652692,
-  "tools": [
-    "ut consectetur",
-    "consequat",
-    "et occaecat"
-  ],
+  "tools": ["ut consectetur", "consequat", "et occaecat"],
   "transport": "laborum ut eu",
   "url": "dolore",
-  "volumes": [
-    "sint quis",
-    "velit",
-    "fugiat cillum Duis"
-  ]
+  "volumes": ["sint quis", "velit", "fugiat cillum Duis"]
 }
