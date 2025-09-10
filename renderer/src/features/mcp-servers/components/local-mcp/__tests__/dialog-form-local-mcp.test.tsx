@@ -80,10 +80,10 @@ describe('DialogFormLocalMcp', () => {
     })
 
     // Check dialog title and description
-    expect(screen.getByText('Custom MCP server')).toBeVisible()
+    expect(screen.getByText('Custom local MCP server')).toBeVisible()
     expect(
       screen.getByText(
-        /ToolHive allows you to securely run a custom MCP server/
+        /ToolHive allows you to securely run a remote MCP server or a custom local MCP server from a Docker image or a package manager./
       )
     ).toBeVisible()
 

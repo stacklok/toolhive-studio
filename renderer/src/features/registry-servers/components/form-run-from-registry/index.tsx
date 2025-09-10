@@ -2,15 +2,6 @@ import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/common/components/ui/dialog'
-import { Button } from '@/common/components/ui/button'
 import type { RegistryImageMetadata } from '@api/types.gen'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { groupEnvVars } from '../../lib/group-env-vars'
@@ -20,7 +11,6 @@ import { LoadingStateAlert } from '../../../../common/components/secrets/loading
 import { NetworkIsolationTabContent } from '../../../network-isolation/components/network-isolation-tab-content'
 import { ConfigurationTabContent } from './configuration-tab-content'
 import { Tabs, TabsList, TabsTrigger } from '@/common/components/ui/tabs'
-import { Form } from '@/common/components/ui/form'
 import {
   useFormTabState,
   type FieldTabMapping,
@@ -29,6 +19,8 @@ import {
   getFormSchemaRegistryMcp,
   type FormSchemaRegistryMcp,
 } from '../../lib/form-schema-registry-mcp'
+import { AlertErrorFormSubmission } from '@/common/components/workloads/alert-error-form-submission'
+import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-workload-form-wrapper'
 
 type Tab = 'configuration' | 'network-isolation'
 type Field = keyof FormSchemaRegistryMcp
@@ -169,86 +161,64 @@ export function FormRunFromRegistry({
   if (!server) return null
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="p-0 sm:max-w-2xl"
-        onCloseAutoFocus={() => {
-          form.reset()
-          resetTab()
-        }}
-        onInteractOutside={(e) => {
-          // Prevent closing the dialog when clicking outside
-          e.preventDefault()
-        }}
-      >
-        <Form {...form} key={server?.name}>
-          <form
-            onSubmit={form.handleSubmit(onSubmitForm, activateTabWithError)}
-            className="mx-auto flex h-full w-full max-w-3xl flex-col"
-          >
-            <DialogHeader className="mb-4 p-6">
-              <DialogTitle>Configure {server.name}</DialogTitle>
-              <DialogDescription className="sr-only">
-                Set up the environment variables and name for this MCP server
-                installation.
-              </DialogDescription>
-            </DialogHeader>
-            {isSubmitting && (
-              <LoadingStateAlert
-                isPendingSecrets={isPendingSecrets}
-                loadingSecrets={loadingSecrets}
+    <DialogWorkloadFormWrapper
+      onOpenChange={onOpenChange}
+      isOpen={isOpen}
+      onCloseAutoFocus={() => {
+        form.reset()
+        resetTab()
+      }}
+      actionsOnCancel={() => {
+        onOpenChange(false)
+        setActiveTab('configuration')
+      }}
+      actionsIsDisabled={isSubmitting}
+      form={form}
+      onSubmit={form.handleSubmit(onSubmitForm, activateTabWithError)}
+      title={`Configure ${server.name}`}
+    >
+      {isSubmitting && (
+        <LoadingStateAlert
+          isPendingSecrets={isPendingSecrets}
+          loadingSecrets={loadingSecrets}
+        />
+      )}
+      {!isSubmitting && (
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <div className="px-6 pb-4">
+            {error && (
+              <AlertErrorFormSubmission
+                error={error}
+                isErrorSecrets={isErrorSecrets}
+                onDismiss={() => setError(null)}
               />
             )}
-            {!isSubmitting && (
-              <>
-                <Tabs
-                  className="mb-6 w-full px-6"
-                  value={activeTab}
-                  onValueChange={(value: string) => setActiveTab(value as Tab)}
-                >
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="configuration">
-                      Configuration
-                    </TabsTrigger>
-                    <TabsTrigger value="network-isolation">
-                      Network Isolation
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-                {activeTab === 'configuration' && (
-                  <ConfigurationTabContent
-                    error={error}
-                    isErrorSecrets={isErrorSecrets}
-                    setError={setError}
-                    form={form}
-                    groupedEnvVars={groupedEnvVars}
-                  />
-                )}
-                {activeTab === 'network-isolation' && (
-                  <NetworkIsolationTabContent form={form} />
-                )}
-              </>
-            )}
-
-            <DialogFooter className="p-6">
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isSubmitting}
-                onClick={() => {
-                  onOpenChange(false)
-                  setActiveTab('configuration')
-                }}
-              >
-                Cancel
-              </Button>
-              <Button disabled={isSubmitting} type="submit">
-                Install server
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+          </div>
+          <Tabs
+            className="mb-6 w-full flex-shrink-0 px-6"
+            value={activeTab}
+            onValueChange={(value: string) => setActiveTab(value as Tab)}
+          >
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="configuration">Configuration</TabsTrigger>
+              <TabsTrigger value="network-isolation">
+                Network Isolation
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+          {activeTab === 'configuration' && (
+            <ConfigurationTabContent
+              form={form}
+              groupedEnvVars={groupedEnvVars}
+            />
+          )}
+          {activeTab === 'network-isolation' && (
+            <div className="flex-1 overflow-y-auto">
+              <NetworkIsolationTabContent form={form} />
+            </div>
+          )}
+        </div>
+      )}
+    </DialogWorkloadFormWrapper>
   )
 }

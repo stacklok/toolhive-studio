@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
-import { Form } from '@/common/components/ui/form'
 import {
   getApiV1BetaWorkloadsOptions,
   getApiV1BetaWorkloadsByNameOptions,
@@ -10,15 +9,6 @@ import {
 } from '@api/@tanstack/react-query.gen'
 import { convertCreateRequestToFormData } from '../../lib/orchestrate-run-local-server'
 import { useUpdateServer } from '../../hooks/use-update-server'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/common/components/ui/dialog'
-import { Button } from '@/common/components/ui/button'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { FormFieldsArrayCustomEnvVars } from '../form-fields-array-custom-env-vars'
 import { FormFieldsArrayCustomSecrets } from '../form-fields-array-custom-secrets'
@@ -37,6 +27,7 @@ import {
   getFormSchemaLocalMcp,
   type FormSchemaLocalMcp,
 } from '../../lib/form-schema-local-mcp'
+import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-workload-form-wrapper'
 
 type Tab = 'configuration' | 'network-isolation'
 type CommonFields = keyof FormSchemaLocalMcp
@@ -211,113 +202,82 @@ export function DialogFormLocalMcp({
       )
     }
   }
+  const isLoading = isSubmitting || (isEditing && isLoadingServer)
 
   return (
-    <Dialog open={isOpen} onOpenChange={closeDialog}>
-      <DialogContent
-        className="flex max-h-[95dvh] flex-col p-0 sm:max-w-2xl"
-        onCloseAutoFocus={() => {
-          form.reset()
-          resetTab()
-        }}
-        onInteractOutside={(e) => {
-          // Prevent closing the dialog when clicking outside
-          e.preventDefault()
-        }}
-      >
-        <Form {...form}>
-          <form
-            key={serverToEdit || 'create'}
-            onSubmit={form.handleSubmit(onSubmitForm, activateTabWithError)}
-            className="flex min-h-0 flex-1 flex-col"
-          >
-            <DialogHeader className="mb-4 flex-shrink-0 p-6">
-              <DialogTitle>
-                {isEditing
-                  ? `Edit ${serverToEdit} MCP server`
-                  : 'Custom MCP server'}
-              </DialogTitle>
-              <DialogDescription className="sr-only">
-                {isEditing
-                  ? 'Update the configuration for your MCP server.'
-                  : 'ToolHive allows you to securely run a custom MCP server from a Docker image or a package manager command.'}
-              </DialogDescription>
-            </DialogHeader>
-            {(isSubmitting || (isEditing && isLoadingServer)) && (
-              <LoadingStateAlert
-                isPendingSecrets={isPendingSecrets}
-                loadingSecrets={
-                  isLoadingServer
-                    ? {
-                        text: `Loading server "${serverToEdit}"...`,
-                        completedCount: 0,
-                        secretsCount: 0,
-                      }
-                    : loadingSecrets
+    <DialogWorkloadFormWrapper
+      onOpenChange={closeDialog}
+      isOpen={isOpen}
+      onCloseAutoFocus={() => {
+        form.reset()
+        resetTab()
+      }}
+      actionsOnCancel={() => {
+        closeDialog()
+        setActiveTab('configuration')
+      }}
+      actionsIsDisabled={isLoading}
+      actionsIsEditing={isEditing}
+      form={form}
+      onSubmit={form.handleSubmit(onSubmitForm, activateTabWithError)}
+      title={
+        isEditing
+          ? `Edit ${serverToEdit} MCP server`
+          : 'Custom local MCP server'
+      }
+    >
+      {isLoading && (
+        <LoadingStateAlert
+          isPendingSecrets={isPendingSecrets}
+          loadingSecrets={
+            isLoadingServer
+              ? {
+                  text: `Loading server "${serverToEdit}"...`,
+                  completedCount: 0,
+                  secretsCount: 0,
                 }
+              : loadingSecrets
+          }
+        />
+      )}
+      {!isSubmitting && !(isEditing && isLoadingServer) && (
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <div className="px-6 pb-4">
+            {error && (
+              <AlertErrorFormSubmission
+                error={error}
+                isErrorSecrets={isErrorSecrets}
+                onDismiss={() => setError(null)}
               />
             )}
-            {!isSubmitting && !(isEditing && isLoadingServer) && (
-              <div className="flex flex-1 flex-col overflow-hidden">
-                <Tabs
-                  className="mb-6 w-full flex-shrink-0 px-6"
-                  value={activeTab}
-                  onValueChange={(value: string) => setActiveTab(value as Tab)}
-                >
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="configuration">
-                      Configuration
-                    </TabsTrigger>
-                    <TabsTrigger value="network-isolation">
-                      Network Isolation
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-                {activeTab === 'configuration' && (
-                  <div className="flex-1 space-y-4 overflow-y-auto px-6">
-                    {error && (
-                      <AlertErrorFormSubmission
-                        error={error}
-                        isErrorSecrets={isErrorSecrets}
-                        onDismiss={() => setError(null)}
-                      />
-                    )}
-                    <FormFieldsBase form={form} isEditing={isEditing} />
-                    <FormFieldsArrayCustomSecrets form={form} />
-                    <FormFieldsArrayCustomEnvVars form={form} />
-                    <FormFieldsArrayVolumes<FormSchemaLocalMcp> form={form} />
-                  </div>
-                )}
-                {activeTab === 'network-isolation' && (
-                  <div className="flex-1 overflow-y-auto">
-                    <NetworkIsolationTabContent form={form} />
-                  </div>
-                )}
-              </div>
-            )}
-
-            <DialogFooter className="flex-shrink-0 p-6">
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isSubmitting || (isEditing && isLoadingServer)}
-                onClick={() => {
-                  closeDialog()
-                  setActiveTab('configuration')
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                disabled={isSubmitting || (isEditing && isLoadingServer)}
-                type="submit"
-              >
-                {isEditing ? 'Update server' : 'Install server'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+          </div>
+          <Tabs
+            className="mb-6 w-full flex-shrink-0 px-6"
+            value={activeTab}
+            onValueChange={(value: string) => setActiveTab(value as Tab)}
+          >
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="configuration">Configuration</TabsTrigger>
+              <TabsTrigger value="network-isolation">
+                Network Isolation
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+          {activeTab === 'configuration' && (
+            <div className="flex-1 space-y-4 overflow-y-auto px-6">
+              <FormFieldsBase form={form} isEditing={isEditing} />
+              <FormFieldsArrayCustomSecrets form={form} />
+              <FormFieldsArrayCustomEnvVars form={form} />
+              <FormFieldsArrayVolumes<FormSchemaLocalMcp> form={form} />
+            </div>
+          )}
+          {activeTab === 'network-isolation' && (
+            <div className="flex-1 overflow-y-auto">
+              <NetworkIsolationTabContent form={form} />
+            </div>
+          )}
+        </div>
+      )}
+    </DialogWorkloadFormWrapper>
   )
 }

@@ -8,7 +8,6 @@ import {
 } from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
 import { Label } from '@/common/components/ui/label'
-import { AlertErrorFormSubmission } from '../../../../common/components/workloads/alert-error-form-submission'
 import type { UseFormReturn } from 'react-hook-form'
 import type { GroupedEnvVars } from '../../lib/group-env-vars'
 import type { RegistryEnvVar } from '@api/types.gen'
@@ -20,9 +19,6 @@ import { FormFieldsArrayVolumes } from '@/features/mcp-servers/components/form-f
 import type { FormSchemaRegistryMcp } from '../../lib/form-schema-registry-mcp'
 
 interface ConfigurationTabContentProps {
-  error: string | null
-  isErrorSecrets: boolean
-  setError: (err: string | null) => void
   form: UseFormReturn<FormSchemaRegistryMcp>
   groupedEnvVars: GroupedEnvVars
 }
@@ -176,21 +172,11 @@ function EnvVarRow({
 }
 
 export function ConfigurationTabContent({
-  error,
-  isErrorSecrets,
-  setError,
   form,
   groupedEnvVars,
 }: ConfigurationTabContentProps) {
   return (
-    <div className="relative max-h-[65dvh] space-y-4 overflow-y-auto px-6">
-      {error && (
-        <AlertErrorFormSubmission
-          error={error}
-          isErrorSecrets={isErrorSecrets}
-          onDismiss={() => setError(null)}
-        />
-      )}
+    <div className="flex-1 space-y-4 overflow-y-auto px-6">
       <FormField
         control={form.control}
         name="name"
