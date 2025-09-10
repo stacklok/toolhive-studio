@@ -5,11 +5,13 @@ import {
   RouterProvider,
   createMemoryHistory,
   createRouter,
+  createRootRouteWithContext,
+  Outlet,
 } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { routeTree } from '@/route-tree.gen'
 import { ConfirmProvider } from '@/common/contexts/confirm/provider'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
+import { Route as GroupGroupNameRouteImport } from '@/routes/group.$groupName'
 
 describe('Group route actions menu', () => {
   beforeEach(() => {
@@ -33,8 +35,21 @@ describe('Group route actions menu', () => {
       defaultOptions: { queries: { retry: false } },
     })
 
+    // Build a minimal router with only the group route to avoid
+    // importing unrelated routes that pull CSS (e.g., chat/katex)
+    const rootRoute = createRootRouteWithContext<{
+      queryClient: QueryClient
+    }>()({
+      component: Outlet,
+      errorComponent: ({ error }) => <div>{String(error)}</div>,
+    })
+    const GroupRoute = GroupGroupNameRouteImport.update({
+      id: '/group/$groupName',
+      path: '/group/$groupName',
+      getParentRoute: () => rootRoute,
+    } as unknown as Parameters<typeof GroupGroupNameRouteImport.update>[0])
     const router = createRouter({
-      routeTree,
+      routeTree: rootRoute.addChildren([GroupRoute]),
       context: { queryClient },
       history: createMemoryHistory({ initialEntries: ['/group/default'] }),
     })

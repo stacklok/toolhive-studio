@@ -17,6 +17,7 @@ import { RefreshButton } from '@/common/components/refresh-button'
 import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/dropdown-menu-run-mcp-server'
 import { WrapperDialogFormMcp } from '@/features/mcp-servers/components/wrapper-dialog-mcp'
 import { ManageClientsButton } from '@/features/clients/components/manage-clients-button'
+import { GroupActionsDropdown } from '@/features/mcp-servers/components/group-actions-dropdown'
 
 export const Route = createFileRoute('/group/$groupName')({
   loader: ({ context: { queryClient }, params: { groupName } }) =>
@@ -92,6 +93,7 @@ function GroupRoute() {
                   openRunCommandDialog={setServerDialogOpen}
                 />
                 <ManageClientsButton groupName={groupName} />
+                <GroupActionsDropdown groupName={groupName} />
               </div>
             )}
 
