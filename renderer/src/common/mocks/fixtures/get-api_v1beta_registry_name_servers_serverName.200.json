@@ -1,0 +1,221 @@
+{
+  "is_remote": true,
+  "remote_server": {
+    "custom_metadata": {
+      "occaecat_5c0": {},
+      "officia_02": {},
+      "irure6c": {},
+      "incididunt_d": {}
+    },
+    "description": "irure",
+    "env_vars": [
+      {
+        "default": "minim quis culpa mollit sed",
+        "description": "in",
+        "name": "labore ad",
+        "required": false,
+        "secret": true
+      },
+      {
+        "default": "sit do",
+        "description": "ullamco veniam dolore mollit",
+        "name": "dolore eu aute nulla",
+        "required": true,
+        "secret": false
+      },
+      {
+        "default": "eiusmod",
+        "description": "Duis Lorem",
+        "name": "veniam ad",
+        "required": true,
+        "secret": false
+      }
+    ],
+    "headers": [
+      {
+        "choices": [
+          "reprehenderit veniam ut aute cillum",
+          "in deserunt ut",
+          "dolore ex id deserunt"
+        ],
+        "default": "dolore cupidatat",
+        "description": "adipisicing ex eu Duis aliqua",
+        "name": "Ut",
+        "required": true,
+        "secret": false
+      },
+      {
+        "choices": [
+          "consequat mollit",
+          "id dolore fugiat",
+          "sed ullamco exercitation"
+        ],
+        "default": "Lorem consectetur esse commodo",
+        "description": "aute",
+        "name": "dolor eiusmod deserunt",
+        "required": true,
+        "secret": true
+      },
+      {
+        "choices": [
+          "nulla in",
+          "in exercitation cillum enim dolor",
+          "aute anim"
+        ],
+        "default": "ut laboris",
+        "description": "sed eiusmod in dolore",
+        "name": "laborum proident",
+        "required": false,
+        "secret": false
+      }
+    ],
+    "metadata": {
+      "last_updated": "consequat labore sint do",
+      "pulls": 46675121,
+      "stars": 15482863
+    },
+    "name": "commodo est qui",
+    "oauth_config": {
+      "authorize_url": "nisi non irure",
+      "callback_port": 75535810,
+      "client_id": "commodo nisi",
+      "issuer": "ullamco deserunt et tempor",
+      "oauth_params": {
+        "ullamco_b4c": "cupidatat velit",
+        "elit_c": "ex labore qui occaecat",
+        "Loremae": "mollit esse dolor do"
+      },
+      "scopes": [
+        "ut ut dolore",
+        "veniam",
+        "nisi sed"
+      ],
+      "token_url": "cupidatat culpa cillum fugiat Excepteur",
+      "use_pkce": true
+    },
+    "repository_url": "aliqua consequat qui mollit et",
+    "status": "officia labore quis cupidatat voluptate",
+    "tags": [
+      "adipisicing labore",
+      "in est irure",
+      "irure sunt sit elit"
+    ],
+    "tier": "voluptate deserunt aliquip non",
+    "tools": [
+      "sunt dolore officia",
+      "dolore Ut nisi mollit consequat",
+      "Lorem laboris dolor"
+    ],
+    "transport": "minim exercitation sint magna",
+    "url": "dolor dolore in est"
+  },
+  "server": {
+    "args": [
+      "veniam",
+      "eu consectetur consequat",
+      "consectetur"
+    ],
+    "custom_metadata": {
+      "dolore_7c": {},
+      "id_d34": {},
+      "amet2": {},
+      "nulla_27": {},
+      "doloree6": {}
+    },
+    "description": "commodo",
+    "docker_tags": [
+      "occaecat reprehenderit cillum nulla",
+      "et",
+      "quis"
+    ],
+    "env_vars": [
+      {
+        "default": "ipsum",
+        "description": "aliquip",
+        "name": "sit",
+        "required": true,
+        "secret": true
+      },
+      {
+        "default": "nostrud voluptate mollit",
+        "description": "ullamco ipsum esse enim",
+        "name": "reprehenderit",
+        "required": false,
+        "secret": false
+      },
+      {
+        "default": "id proident nostrud in",
+        "description": "elit sed",
+        "name": "dolore",
+        "required": true,
+        "secret": false
+      }
+    ],
+    "image": "voluptate est Excepteur velit aliquip",
+    "metadata": {
+      "last_updated": "occaecat",
+      "pulls": 21763154,
+      "stars": 16445414
+    },
+    "name": "culpa est",
+    "permissions": {
+      "name": "do incididunt",
+      "network": {
+        "velit__c": -68732116.20762523,
+        "id_2e3": false,
+        "non58e": "occaecat",
+        "outbound": {
+          "allow_host": [
+            "ea nostrud",
+            "in magna ut",
+            "qui"
+          ],
+          "allow_port": [
+            34545225,
+            -15131068,
+            -93862110
+          ],
+          "insecure_allow_all": true
+        }
+      },
+      "privileged": false,
+      "read": [
+        "dolor sit non",
+        "sunt cupidatat sed in commodo",
+        "in officia minim occaecat"
+      ],
+      "write": [
+        "Lorem",
+        "ut qui",
+        "officia nostrud"
+      ]
+    },
+    "provenance": {
+      "attestation": {
+        "predicate": {},
+        "predicate_type": "nisi sunt dolore cillum officia"
+      },
+      "cert_issuer": "minim aliqua et enim laboris",
+      "repository_ref": "occaecat in culpa labore",
+      "repository_uri": "ullamco irure Duis consequat",
+      "runner_environment": "eiusmod laborum eu culpa nisi",
+      "signer_identity": "in do Lorem in ea",
+      "sigstore_url": "Duis do"
+    },
+    "repository_url": "veniam culpa elit",
+    "status": "cillum eiusmod cupidatat esse culpa",
+    "tags": [
+      "qui",
+      "do",
+      "incididunt eu nostrud magna"
+    ],
+    "target_port": -80637373,
+    "tier": "consequat cupidatat eu",
+    "tools": [
+      "in",
+      "nisi",
+      "ipsum ex"
+    ],
+    "transport": "exercitation eu"
+  }
+}
