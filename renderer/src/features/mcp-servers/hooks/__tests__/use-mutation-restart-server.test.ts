@@ -9,8 +9,8 @@ import {
 import type { CoreWorkload } from '@api/types.gen'
 import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
-import { mswEndpoint } from '@/common/mocks/msw-endpoint'
 import { toast } from 'sonner'
+import { mswEndpoint } from '@/common/mocks/customHandlers'
 
 vi.mock('sonner', () => ({
   toast: {

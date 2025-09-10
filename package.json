@@ -33,6 +33,7 @@
   "keywords": [],
   "license": "Apache-2.0",
   "devDependencies": {
+    "ajv": "^8.17.1",
     "@electron-forge/cli": "^7.8.1",
     "@electron-forge/maker-base": "^7.8.1",
     "@electron-forge/maker-deb": "^7.8.1",
@@ -72,6 +73,7 @@
     "husky": "^9.1.7",
     "icon-gen": "^5.0.0",
     "jsdom": "^26.1.0",
+    "json-schema-faker": "^0.5.9",
     "knip": "^5.58.1",
     "lint-staged": "^16.0.0",
     "msw": "^2.8.4",

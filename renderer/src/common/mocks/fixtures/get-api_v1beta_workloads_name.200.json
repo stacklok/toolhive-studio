@@ -1,0 +1,111 @@
+{
+  "authz_config": "dolor exercitation sint veniam anim",
+  "cmd_arguments": [
+    "consequat",
+    "dolor in consequat exercitation",
+    "do in esse sit velit"
+  ],
+  "env_vars": {
+    "consectetur__": "officia laboris"
+  },
+  "group": "exercitation irure",
+  "headers": [
+    {
+      "choices": [
+        "fugiat qui",
+        "sit in sint sed amet",
+        "velit ex laborum officia"
+      ],
+      "default": "deserunt nulla ipsum labore",
+      "description": "dolor nisi aute",
+      "name": "dolore in sed est",
+      "required": true,
+      "secret": true
+    },
+    {
+      "choices": ["fugiat aliqua", "tempor consectetur do cupidatat", "amet"],
+      "default": "et Ut",
+      "description": "magna anim",
+      "name": "id anim officia Lorem",
+      "required": true,
+      "secret": false
+    },
+    {
+      "choices": ["ut et dolore", "qui", "cupidatat"],
+      "default": "exercitation velit",
+      "description": "Lorem Duis",
+      "name": "ut laborum amet",
+      "required": false,
+      "secret": true
+    }
+  ],
+  "host": "eiusmod incididunt est Duis",
+  "image": "nisi",
+  "name": "et Duis in veniam",
+  "network_isolation": false,
+  "oauth_config": {
+    "authorize_url": "ut commodo incididunt enim",
+    "callback_port": 37922245,
+    "client_id": "dolor labore et Lorem",
+    "client_secret": {
+      "name": "Lorem in voluptate",
+      "target": "reprehenderit adipisicing Excepteur consequat aliquip"
+    },
+    "issuer": "tempor culpa aute adipisicing eu",
+    "oauth_params": {
+      "temporc": "dolor in aliquip mollit magna",
+      "occaecat_dd": "sed in laborum in",
+      "magna_9": "occaecat pariatur Ut amet voluptate",
+      "laboris_0_": "ad"
+    },
+    "scopes": ["sit est dolor non consequat", "aute", "commodo exercitation"],
+    "skip_browser": false,
+    "token_url": "minim aliquip occaecat dolor",
+    "use_pkce": false
+  },
+  "oidc": {
+    "audience": "culpa commodo ipsum fugiat",
+    "client_id": "laborum ea ex deserunt",
+    "client_secret": "elit aute ipsum adipisicing",
+    "introspection_url": "ex cillum",
+    "issuer": "mollit proident reprehenderit eiusmod",
+    "jwks_url": "pariatur"
+  },
+  "permission_profile": {
+    "name": "Duis incididunt",
+    "network": {
+      "outbound": {
+        "allow_host": ["est", "voluptate", "mollit"],
+        "allow_port": [18413345, -99223925, 27945977],
+        "insecure_allow_all": true
+      }
+    },
+    "privileged": false,
+    "read": ["minim", "sint voluptate", "mollit quis deserunt"],
+    "write": [
+      "Ut Lorem cillum nisi",
+      "in tempor",
+      "nostrud est deserunt Excepteur velit"
+    ]
+  },
+  "proxy_mode": "sunt",
+  "secrets": [
+    {
+      "name": "do in culpa dolor",
+      "target": "reprehenderit et eu ut est"
+    },
+    {
+      "name": "consequat consectetur mollit",
+      "target": "cillum qui in nulla ad"
+    },
+    {
+      "name": "velit dolor commodo",
+      "target": "Ut veniam"
+    }
+  ],
+  "target_port": 77652692,
+  "tools": ["ut consectetur", "consequat", "et occaecat"],
+  "transport": "laborum ut eu",
+  "url": "dolore",
+  "volumes": ["sint quis", "velit", "fugiat cillum Duis"]
+}

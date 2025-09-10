@@ -5,7 +5,6 @@ import { createTestRouter } from '@/common/test/create-test-router'
 import userEvent from '@testing-library/user-event'
 import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
-import { mswEndpoint } from '@/common/mocks/msw-endpoint'
 import {
   createRootRoute,
   createRoute,
@@ -14,6 +13,7 @@ import {
 } from '@tanstack/react-router'
 import { createMemoryHistory } from '@tanstack/react-router'
 import { CardMcpServer } from '../card-mcp-server/index'
+import { mswEndpoint } from '@/common/mocks/customHandlers'
 
 let capturedCreateWorkloadPayload: unknown = null
 
