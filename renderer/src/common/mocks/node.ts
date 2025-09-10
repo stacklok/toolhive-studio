@@ -26,7 +26,6 @@ const arrayOrSingleString = (array: string[]): string[] | string =>
   array.length === 1 ? (array[0] as string) : array
 
 server.events.on('request:start', async ({ request }) => {
-  console.log('[msw] request:start', request.method, request.url)
   // record request details to help making assertions
   const url = new URL(request.url)
   const searchParams = new URLSearchParams(url.search)
@@ -55,14 +54,4 @@ server.events.on('request:start', async ({ request }) => {
   })
 })
 
-// Debug which handlers match to verify auto-generated vs custom usage
-try {
-  server.events.on('request:match', ({ request }) => {
-    console.log('[msw] matched', request.method, request.url)
-  })
-  server.events.on('request:unhandled', ({ request }) => {
-    console.warn('[msw] unhandled', request.method, request.url)
-  })
-} catch {
-  // Ignore if MSW event API changes in the environment
-}
+// Debug event listeners removed to reduce noisy console output during tests

@@ -61,13 +61,7 @@ function autoGenerateHandlers() {
   )
 
   try {
-    const specVersion = (openapi as any).openapi || (openapi as any).swagger
-    const specPathsPreview = Object.keys((openapi as any).paths || {}).slice(
-      0,
-      5
-    )
-    console.log('[auto-mocker] OpenAPI version:', specVersion)
-    console.log('[auto-mocker] Spec paths (preview):', specPathsPreview)
+    // Keep silent in normal runs; avoid noisy startup logs
   } catch {}
 
   const httpMethods = ['get', 'post', 'put', 'patch', 'delete'] as const
@@ -80,13 +74,7 @@ function autoGenerateHandlers() {
       const mswPath = `*/${rawPath.replace(/^\//, '').replace(/\{([^}]+)\}/g, ':$1')}`
 
       try {
-        console.log(
-          '[auto-mocker] registering',
-          method.toUpperCase(),
-          mswPath,
-          'from raw path',
-          rawPath
-        )
+        // Avoid per-handler registration logs in normal runs
       } catch {}
 
       result.push(
@@ -96,9 +84,7 @@ function autoGenerateHandlers() {
           const fileBase = `${method}-${toFileSafe(rawPath)}.${successStatus ?? '200'}.json`
           const fixtureFileName = `${FIXTURES_PATH}/${fileBase}`
 
-          console.log(
-            `Handling ${method.toUpperCase()} '${mswPath}' using ${fixtureFileName}`
-          )
+          // Avoid per-request "handling" logs in normal runs
 
           if (!fs.existsSync(fixtureFileName)) {
             let payload: any = {}
