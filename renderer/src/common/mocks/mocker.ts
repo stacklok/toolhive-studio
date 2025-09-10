@@ -1,7 +1,7 @@
 // This file generates fallback mocks automatically to avoid
 // having to create all mocks manually. You can still manually write
 // mock handlers that override the behavior of these
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment, no-empty */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 
 import openapi from '../../../../api/openapi.json'
@@ -16,31 +16,18 @@ import { fileURLToPath } from 'url'
 
 const ajv = new Ajv({ strict: true })
 
-// ajv.addFormat('int64', { validate: () => true })
-// addFormats(ajv)
-
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const FOLDER_PATH = __dirname
 const FIXTURES_PATH = `${FOLDER_PATH}/fixtures`
 
-// Make the generated data more usable without manual changes
 jsf.option({ alwaysFakeOptionals: true })
 jsf.option({ fillProperties: true })
 jsf.option({ minItems: 1 })
 jsf.option({ maxItems: 3 })
-// be lenient with unknown formats
-// @ts-ignore - option may not exist in types but supported at runtime
 jsf.option({ failOnInvalidTypes: false })
-// @ts-ignore
 jsf.option({ failOnInvalidFormat: false })
-
-// I think this is actually a bug in the schema
-// jsf.format('int64', () => null)
-
-// Do NOT run jsf on the entire OpenAPI document; it's not a JSON Schema.
-// We only use jsf on per-operation response schemas inside handlers.
 
 function toFileSafe(s: string): string {
   return s.replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '')
@@ -60,10 +47,6 @@ function autoGenerateHandlers() {
     ((openapi as any).paths ?? {}) as Record<string, any>
   )
 
-  try {
-    // Keep silent in normal runs; avoid noisy startup logs
-  } catch {}
-
   const httpMethods = ['get', 'post', 'put', 'patch', 'delete'] as const
 
   for (const [rawPath, pathItem] of specPaths) {
@@ -72,10 +55,6 @@ function autoGenerateHandlers() {
       if (!operation) continue
 
       const mswPath = `*/${rawPath.replace(/^\//, '').replace(/\{([^}]+)\}/g, ':$1')}`
-
-      try {
-        // Avoid per-handler registration logs in normal runs
-      } catch {}
 
       result.push(
         http[method](mswPath, () => {
@@ -135,7 +114,6 @@ function autoGenerateHandlers() {
                 fixtureFileName,
                 errors: ajv.errors,
               })
-              // fall through and still return the data to avoid undefined responses
             }
           }
 
