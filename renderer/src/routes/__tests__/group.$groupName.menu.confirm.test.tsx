@@ -24,7 +24,7 @@ describe('Group route delete group confirmation', () => {
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     })
-    const rec = recordRequests()
+    recordRequests()
 
     const rootRoute = createRootRouteWithContext<{
       queryClient: QueryClient
@@ -60,6 +60,9 @@ describe('Group route delete group confirmation', () => {
     const optionsButton = within(actionsContainer).getByRole('button', {
       name: /options/i,
     })
+
+    // Reset recorder to capture only requests triggered by the delete flow
+    const recFlow = recordRequests()
 
     await userEvent.click(optionsButton)
     await userEvent.click(
@@ -82,7 +85,7 @@ describe('Group route delete group confirmation', () => {
     })
 
     await waitFor(() => {
-      const del = rec.recordedRequests.find(
+      const del = recFlow.recordedRequests.find(
         (r) =>
           r.method === 'DELETE' && r.pathname === '/api/v1beta/groups/research'
       )
@@ -98,7 +101,7 @@ describe('Group route delete group confirmation', () => {
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     })
-    const rec = recordRequests()
+    recordRequests()
 
     const rootRoute = createRootRouteWithContext<{
       queryClient: QueryClient
@@ -135,6 +138,9 @@ describe('Group route delete group confirmation', () => {
       name: /options/i,
     })
 
+    // Reset recorder to capture only requests triggered by the delete flow
+    const recFlow = recordRequests()
+
     await userEvent.click(optionsButton)
     await userEvent.click(
       await screen.findByRole('menuitem', { name: /delete group/i })
@@ -148,12 +154,8 @@ describe('Group route delete group confirmation', () => {
 
     await new Promise((r) => setTimeout(r, 10))
 
-    expect(
-      rec.recordedRequests.find(
-        (r) =>
-          r.method === 'DELETE' && r.pathname.startsWith('/api/v1beta/groups/')
-      )
-    ).toBeUndefined()
+    // No API call should be made as part of cancel flow
+    expect(recFlow.recordedRequests).toEqual([])
     expect(router.state.location.pathname).toBe('/group/research')
   })
 
@@ -161,7 +163,7 @@ describe('Group route delete group confirmation', () => {
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     })
-    const rec = recordRequests()
+    recordRequests()
 
     const rootRoute = createRootRouteWithContext<{
       queryClient: QueryClient
@@ -198,6 +200,9 @@ describe('Group route delete group confirmation', () => {
       name: /options/i,
     })
 
+    // Reset recorder to capture only requests triggered by the delete attempt
+    const recFlow = recordRequests()
+
     await userEvent.click(optionsButton)
     await userEvent.click(
       await screen.findByRole('menuitem', { name: /delete group/i })
@@ -209,12 +214,8 @@ describe('Group route delete group confirmation', () => {
         'The default group cannot be deleted'
       )
     })
-    expect(
-      rec.recordedRequests.find(
-        (r) =>
-          r.method === 'DELETE' && r.pathname.startsWith('/api/v1beta/groups/')
-      )
-    ).toBeUndefined()
+    // No API call should be made at all
+    expect(recFlow.recordedRequests).toEqual([])
     expect(router.state.location.pathname).toBe('/group/default')
   })
 })
