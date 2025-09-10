@@ -47,8 +47,11 @@ export function FormFieldsAuth({
                 type="number"
                 data-1p-ignore
                 placeholder="e.g. 50051"
-                defaultValue={field.value}
-                onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                value={field.value || ''}
+                onChange={(e) => {
+                  const value = e.target.value
+                  field.onChange(value === '' ? '' : parseInt(value, 10))
+                }}
                 name={field.name}
               />
             </FormControl>
@@ -75,7 +78,7 @@ export function FormFieldsAuth({
                     autoFocus
                     data-1p-ignore
                     placeholder="e.g. https://auth.example.com/"
-                    defaultValue={field.value}
+                    value={field.value}
                     onChange={(e) => field.onChange(e.target.value)}
                     name={field.name}
                   />
@@ -103,7 +106,7 @@ export function FormFieldsAuth({
                     autoFocus
                     data-1p-ignore
                     placeholder="e.g. 00000000-0000-0000-0000-000000000000"
-                    defaultValue={field.value}
+                    value={field.value}
                     onChange={(e) => field.onChange(e.target.value)}
                     name={field.name}
                   />
@@ -131,7 +134,7 @@ export function FormFieldsAuth({
                     autoFocus
                     data-1p-ignore
                     placeholder="e.g. secret"
-                    defaultValue={field.value}
+                    value={field.value}
                     onChange={(e) => field.onChange(e.target.value)}
                     name={field.name}
                   />
@@ -194,7 +197,7 @@ export function FormFieldsAuth({
                     autoFocus
                     data-1p-ignore
                     placeholder="e.g. https://auth.example.com/oauth/authorize"
-                    defaultValue={field.value}
+                    value={field.value}
                     onChange={(e) => field.onChange(e.target.value)}
                     name={field.name}
                   />
@@ -222,7 +225,7 @@ export function FormFieldsAuth({
                     autoFocus
                     data-1p-ignore
                     placeholder="e.g. https://auth.example.com/oauth/token"
-                    defaultValue={field.value}
+                    value={field.value}
                     onChange={(e) => field.onChange(e.target.value)}
                     name={field.name}
                   />
@@ -250,7 +253,7 @@ export function FormFieldsAuth({
                     autoFocus
                     data-1p-ignore
                     placeholder="e.g. 00000000-0000-0000-0000-000000000000"
-                    defaultValue={field.value}
+                    value={field.value}
                     onChange={(e) => field.onChange(e.target.value)}
                     name={field.name}
                   />
@@ -278,7 +281,7 @@ export function FormFieldsAuth({
                     autoFocus
                     data-1p-ignore
                     placeholder="e.g. secret"
-                    defaultValue={field.value}
+                    value={field.value}
                     onChange={(e) => field.onChange(e.target.value)}
                     name={field.name}
                   />
@@ -306,7 +309,7 @@ export function FormFieldsAuth({
                     autoFocus
                     data-1p-ignore
                     placeholder="e.g. users, administrators"
-                    defaultValue={field.value}
+                    value={field.value}
                     onChange={(e) => field.onChange(e.target.value)}
                     name={field.name}
                   />

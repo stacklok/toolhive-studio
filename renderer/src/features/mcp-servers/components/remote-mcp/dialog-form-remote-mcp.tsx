@@ -53,7 +53,6 @@ const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
   auth_type: 'none',
   oauth_config: {
     authorize_url: '',
-    callback_port: undefined,
     client_id: '',
     client_secret: '',
     issuer: '',
@@ -265,7 +264,7 @@ export function DialogFormRemoteMcp({
                           autoFocus
                           data-1p-ignore
                           placeholder="e.g. my-awesome-server"
-                          defaultValue={field.value}
+                          value={field.value}
                           onChange={(e) => field.onChange(e.target.value)}
                           name={field.name}
                           disabled={isEditing}
@@ -293,7 +292,7 @@ export function DialogFormRemoteMcp({
                           autoFocus
                           data-1p-ignore
                           placeholder="e.g. https://example.com/mcp"
-                          defaultValue={field.value}
+                          value={field.value}
                           onChange={(e) => field.onChange(e.target.value)}
                           name={field.name}
                         />

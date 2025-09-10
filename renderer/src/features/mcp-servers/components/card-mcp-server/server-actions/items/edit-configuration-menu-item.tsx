@@ -1,7 +1,9 @@
 import { Settings } from 'lucide-react'
 import { useState } from 'react'
 import { DropdownMenuItem } from '@/common/components/ui/dropdown-menu'
-import { DialogFormLocalMcp } from '../../../local-mcp/dialog-form-local-mcp'
+import { WrapperDialogFormMcp } from '../../../wrapper-dialog-mcp'
+import { getApiV1BetaWorkloadsByNameOptions } from '@api/@tanstack/react-query.gen'
+import { useQuery } from '@tanstack/react-query'
 
 interface EditConfigurationMenuItemProps {
   serverName: string
@@ -10,11 +12,25 @@ interface EditConfigurationMenuItemProps {
 export function EditConfigurationMenuItem({
   serverName,
 }: EditConfigurationMenuItemProps) {
-  const [isRunWithCommandOpen, setIsRunWithCommandOpen] = useState(false)
+  const [serverDialogOpen, setServerDialogOpen] = useState<{
+    local: boolean
+    remote: boolean
+  }>({
+    local: false,
+    remote: false,
+  })
+
+  const { data: serverData, isLoading: isLoadingServer } = useQuery({
+    ...getApiV1BetaWorkloadsByNameOptions({
+      path: { name: serverName || '' },
+    }),
+  })
 
   const handleEdit = (e: React.MouseEvent) => {
     e.preventDefault()
-    setIsRunWithCommandOpen(true)
+    const isRemote = !!serverData?.url
+
+    setServerDialogOpen({ local: !isRemote, remote: isRemote })
   }
 
   return (
@@ -26,11 +42,15 @@ export function EditConfigurationMenuItem({
         </a>
       </DropdownMenuItem>
 
-      <DialogFormLocalMcp
-        isOpen={isRunWithCommandOpen}
-        closeDialog={() => setIsRunWithCommandOpen(false)}
-        serverToEdit={serverName}
-      />
+      {!isLoadingServer && (
+        <WrapperDialogFormMcp
+          serverType={serverDialogOpen}
+          closeDialog={() =>
+            setServerDialogOpen({ local: false, remote: false })
+          }
+          serverToEdit={serverName}
+        />
+      )}
     </>
   )
 }
