@@ -42,7 +42,7 @@ export function GroupActionsDropdown({
               return
             }
             const confirmed = await confirm(
-              'Deleting this group will permanently erase all it’s servers. Are you sure you want to proceed? This action cannot be undone.',
+              'Deleting this group will permanently erase all its servers. Are you sure you want to proceed? This action cannot be undone.',
               {
                 title: 'Delete group',
                 buttons: { yes: 'Delete', no: 'Cancel' },
