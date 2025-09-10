@@ -46,7 +46,6 @@ describe('Group route delete group confirmation', () => {
       name: /options/i,
     })
 
-    // Reset recorder to capture only requests triggered by the delete flow
     const recFlow = recordRequests()
 
     await userEvent.click(optionsButton)
@@ -113,7 +112,6 @@ describe('Group route delete group confirmation', () => {
       name: /options/i,
     })
 
-    // Reset recorder to capture only requests triggered by the delete flow
     const recFlow = recordRequests()
 
     await userEvent.click(optionsButton)
@@ -129,7 +127,6 @@ describe('Group route delete group confirmation', () => {
 
     await new Promise((r) => setTimeout(r, 10))
 
-    // No API call should be made as part of cancel flow
     expect(recFlow.recordedRequests).toEqual([])
     expect(router.state.location.pathname).toBe('/group/research')
   })
@@ -165,7 +162,6 @@ describe('Group route delete group confirmation', () => {
       name: /options/i,
     })
 
-    // Reset recorder to capture only requests triggered by the delete attempt
     const recFlow = recordRequests()
 
     await userEvent.click(optionsButton)
@@ -179,7 +175,6 @@ describe('Group route delete group confirmation', () => {
         'The default group cannot be deleted'
       )
     })
-    // No API call should be made at all
     expect(recFlow.recordedRequests).toEqual([])
     expect(router.state.location.pathname).toBe('/group/default')
   })
