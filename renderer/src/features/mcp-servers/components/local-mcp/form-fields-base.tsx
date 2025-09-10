@@ -41,7 +41,7 @@ export function FormFieldsBase({
             <FormControl>
               <RadioGroup
                 onValueChange={field.onChange}
-                defaultValue={field.value}
+                value={field.value}
                 className="flex gap-6"
               >
                 <FormItem className="flex items-center space-x-2">
@@ -81,7 +81,7 @@ export function FormFieldsBase({
                 autoFocus
                 data-1p-ignore
                 placeholder="e.g. my-awesome-server"
-                defaultValue={field.value}
+                value={field.value}
                 onChange={(e) => field.onChange(e.target.value)}
                 name={field.name}
                 disabled={isEditing}
@@ -156,7 +156,7 @@ export function FormFieldsBase({
                   type="number"
                   data-1p-ignore
                   placeholder="e.g. 50051"
-                  defaultValue={field.value}
+                  value={field.value}
                   onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
                   name={field.name}
                 />
@@ -182,7 +182,7 @@ export function FormFieldsBase({
               <FormControl>
                 <Input
                   placeholder="e.g. ghcr.io/acme-corp/my-awesome-server:latest"
-                  defaultValue={field.value}
+                  value={field.value}
                   onChange={(e) => field.onChange(e.target.value)}
                   name={field.name}
                 />
@@ -209,7 +209,7 @@ export function FormFieldsBase({
               <FormControl>
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  value={field.value}
                   name={field.name}
                 >
                   <SelectTrigger id={field.name} className="w-full">
@@ -252,7 +252,7 @@ export function FormFieldsBase({
                   <Input
                     className="rounded-l-none"
                     placeholder="e.g. my-awesome-server@latest"
-                    defaultValue={field.value}
+                    value={field.value}
                     onChange={(e) => field.onChange(e.target.value)}
                     name={field.name}
                     id={field.name}
