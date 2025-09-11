@@ -10,11 +10,8 @@ import { ModelSelector } from './model-selector'
 import { ErrorAlert } from './error-alert'
 
 import { useChatStreaming } from '../hooks/use-chat-streaming'
-import { useQueryClient } from '@tanstack/react-query'
 
 function ChatInterfaceContent() {
-  const queryClient = useQueryClient()
-
   const {
     messages,
     isLoading,
@@ -30,16 +27,9 @@ function ChatInterfaceContent() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
-  const handleApiKeysSaved = useCallback(() => {
-    // Invalidate all chat-related queries when API keys are saved
-    queryClient.invalidateQueries({ queryKey: ['chat', 'settings'] })
-    queryClient.invalidateQueries({ queryKey: ['chat', 'selectedModel'] })
-    queryClient.invalidateQueries({ queryKey: ['chat', 'availableModels'] })
-  }, [queryClient])
-
   const handleProviderChange = useCallback(
     (providerId: string) => {
-      loadPersistedSettings(providerId, true)
+      loadPersistedSettings(providerId)
     },
     [loadPersistedSettings]
   )
@@ -204,11 +194,7 @@ function ChatInterfaceContent() {
       </div>
 
       {/* API Keys Modal */}
-      <DialogApiKeys
-        isOpen={isSettingsOpen}
-        onOpenChange={setIsSettingsOpen}
-        onSaved={handleApiKeysSaved}
-      />
+      <DialogApiKeys isOpen={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
     </div>
   )
 }

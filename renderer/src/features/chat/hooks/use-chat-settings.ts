@@ -1,19 +1,26 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useMemo } from 'react'
-import type { ChatSettings } from '../types'
+import type { ChatSettings, ChatProvider } from '../types'
+
+export interface ProviderWithSettings {
+  provider: ChatProvider
+  apiKey: string
+  hasKey: boolean
+  enabledTools: string[]
+}
 
 // Query keys
 const CHAT_SETTINGS_KEYS = {
   selectedModel: ['chat', 'selectedModel'] as const,
   settings: (provider: string) => ['chat', 'settings', provider] as const,
   allSettings: ['chat', 'settings'] as const,
+  allProvidersWithSettings: ['chat', 'allProvidersWithSettings'] as const,
 }
 
 function useSelectedModel() {
   return useQuery({
     queryKey: CHAT_SETTINGS_KEYS.selectedModel,
     queryFn: () => window.electronAPI.chat.getSelectedModel(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnMount: true,
     refetchOnWindowFocus: false,
   })
@@ -24,7 +31,43 @@ function useProviderSettings(provider: string) {
     queryKey: CHAT_SETTINGS_KEYS.settings(provider),
     queryFn: () => window.electronAPI.chat.getSettings(provider),
     enabled: !!provider,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+  })
+}
+
+function useAllProvidersWithSettings() {
+  return useQuery({
+    queryKey: CHAT_SETTINGS_KEYS.allProvidersWithSettings,
+    queryFn: async (): Promise<ProviderWithSettings[]> => {
+      const allProviders = await window.electronAPI.chat.getProviders()
+
+      // Load existing API keys for each provider
+      const providersWithSettings = await Promise.all(
+        allProviders.map(async (provider) => {
+          try {
+            const settings = await window.electronAPI.chat.getSettings(
+              provider.id
+            )
+            return {
+              provider,
+              apiKey: settings.apiKey || '',
+              hasKey: Boolean(settings.apiKey),
+              enabledTools: settings.enabledTools || [],
+            }
+          } catch {
+            return {
+              provider,
+              apiKey: '',
+              hasKey: false,
+              enabledTools: [],
+            }
+          }
+        })
+      )
+
+      return providersWithSettings
+    },
     refetchOnMount: true,
     refetchOnWindowFocus: false,
   })
@@ -37,6 +80,7 @@ export function useChatSettings() {
     useSelectedModel()
   const { data: providerSettings, isLoading: isProviderSettingsLoading } =
     useProviderSettings(selectedModel?.provider || '')
+  const allProvidersWithSettingsQuery = useAllProvidersWithSettings()
 
   const isLoading =
     isSelectedModelLoading ||
@@ -77,10 +121,24 @@ export function useChatSettings() {
     }: {
       provider: string
       settings: { apiKey: string; enabledTools: string[] }
-    }) => window.electronAPI.chat.saveSettings(provider, newSettings),
+    }) => {
+      if (newSettings.apiKey.trim()) {
+        // Save API key with settings
+        return window.electronAPI.chat.saveSettings(provider, newSettings)
+      } else {
+        // Clear/remove API key when empty
+        return window.electronAPI.chat.clearSettings(provider)
+      }
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: CHAT_SETTINGS_KEYS.settings(variables.provider),
+      })
+      queryClient.invalidateQueries({
+        queryKey: CHAT_SETTINGS_KEYS.allProvidersWithSettings,
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['chat', 'availableModels'],
       })
     },
   })
@@ -99,28 +157,12 @@ export function useChatSettings() {
             model: newSettings.model,
           })
         }
-
-        // Update provider settings if changed
-        if (newSettings.provider) {
-          await updateProviderSettingsMutation.mutateAsync({
-            provider: newSettings.provider,
-            settings: {
-              apiKey: newSettings.apiKey,
-              enabledTools: newSettings.enabledTools || [],
-            },
-          })
-        }
       } catch (error) {
         console.error('Failed to update settings:', error)
         throw error
       }
     },
-    [
-      selectedModel?.provider,
-      selectedModel?.model,
-      updateSelectedModelMutation,
-      updateProviderSettingsMutation,
-    ]
+    [selectedModel?.provider, selectedModel?.model, updateSelectedModelMutation]
   )
 
   // Update only enabled tools
@@ -129,10 +171,13 @@ export function useChatSettings() {
       if (!selectedModel?.provider) return
 
       try {
+        const currentProviderSettings =
+          await window.electronAPI.chat.getSettings(selectedModel.provider)
+
         await updateProviderSettingsMutation.mutateAsync({
           provider: selectedModel.provider,
           settings: {
-            apiKey: providerSettings?.apiKey || '',
+            apiKey: currentProviderSettings.apiKey || '',
             enabledTools: tools,
           },
         })
@@ -141,16 +186,12 @@ export function useChatSettings() {
         throw error
       }
     },
-    [
-      selectedModel?.provider,
-      updateProviderSettingsMutation,
-      providerSettings?.apiKey,
-    ]
+    [selectedModel?.provider, updateProviderSettingsMutation]
   )
 
   // Load persisted settings for a provider
   const loadPersistedSettings = useCallback(
-    async (providerId: string, preserveEnabledTools = false) => {
+    async (providerId: string) => {
       if (!providerId) return
 
       try {
@@ -167,33 +208,12 @@ export function useChatSettings() {
             })
           }
         }
-
-        // If preserving enabled tools, update the provider settings
-        if (
-          preserveEnabledTools &&
-          providerSettings?.enabledTools &&
-          providerSettings.enabledTools.length > 0
-        ) {
-          const currentProviderSettings =
-            await window.electronAPI.chat.getSettings(providerId)
-          await updateProviderSettingsMutation.mutateAsync({
-            provider: providerId,
-            settings: {
-              apiKey: currentProviderSettings.apiKey || '',
-              enabledTools: providerSettings.enabledTools || [],
-            },
-          })
-        }
       } catch (error) {
         console.error('Failed to load persisted settings:', error)
         throw error
       }
     },
-    [
-      providerSettings?.enabledTools,
-      updateProviderSettingsMutation,
-      updateSelectedModelMutation,
-    ]
+    [updateSelectedModelMutation]
   )
 
   // Create a stable isLoading value
@@ -211,14 +231,20 @@ export function useChatSettings() {
       settings,
       updateSettings,
       updateEnabledTools,
+      updateProviderSettingsMutation,
       loadPersistedSettings,
+      allProvidersWithSettings: allProvidersWithSettingsQuery.data || [],
+      isLoadingProviders: allProvidersWithSettingsQuery.isLoading,
       isLoading: combinedIsLoading,
     }),
     [
       settings,
       updateSettings,
       updateEnabledTools,
+      updateProviderSettingsMutation,
       loadPersistedSettings,
+      allProvidersWithSettingsQuery.data,
+      allProvidersWithSettingsQuery.isLoading,
       combinedIsLoading,
     ]
   )

@@ -29,7 +29,6 @@ export function ModelSelector({
   settings,
   onSettingsChange,
   onOpenSettings,
-  onProviderChange,
 }: ModelSelectorProps) {
   const { providersWithApiKeys, isLoading } = useAvailableModels()
   const [searchQueries, setSearchQueries] = useState<Record<string, string>>({})
@@ -57,11 +56,6 @@ export function ModelSelector({
   )
 
   const handleModelSelect = (providerId: string, modelId: string) => {
-    // If provider changed, load its API key
-    if (providerId !== settings.provider && onProviderChange) {
-      onProviderChange(providerId)
-    }
-
     onSettingsChange({
       ...settings,
       provider: providerId,
