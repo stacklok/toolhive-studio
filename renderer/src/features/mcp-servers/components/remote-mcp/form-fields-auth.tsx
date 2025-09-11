@@ -34,8 +34,7 @@ export function FormFieldsAuth({
             <div className="flex items-center gap-1">
               <FormLabel htmlFor={field.name}>Callback port</FormLabel>
               <TooltipInfoIcon className="max-w-72">
-                Callback port to expose from the container. If not specified,
-                ToolHive will automatically assign a random port.
+                Callback port for the authentication redirect.
               </TooltipInfoIcon>
             </div>
             <FormControl>
@@ -69,7 +68,9 @@ export function FormFieldsAuth({
               <FormItem>
                 <div className="flex items-center gap-1">
                   <FormLabel>Issuer URL</FormLabel>
-                  <TooltipInfoIcon>The URL of the OIDC issuer.</TooltipInfoIcon>
+                  <TooltipInfoIcon>
+                    The base issuer URL of the OIDC provider.
+                  </TooltipInfoIcon>
                 </div>
                 <FormControl>
                   <Input
@@ -96,7 +97,8 @@ export function FormFieldsAuth({
                 <div className="flex items-center gap-1">
                   <FormLabel>Client ID</FormLabel>
                   <TooltipInfoIcon>
-                    The client ID of the OIDC issuer.
+                    The client ID for your application registered with the OIDC
+                    provider.
                   </TooltipInfoIcon>
                 </div>
                 <FormControl>
@@ -124,7 +126,8 @@ export function FormFieldsAuth({
                 <div className="flex items-center gap-1">
                   <FormLabel>Client Secret</FormLabel>
                   <TooltipInfoIcon>
-                    The client secret of the OIDC issuer.
+                    The client secret key that proves your application's
+                    identity.
                   </TooltipInfoIcon>
                 </div>
                 <FormControl>
@@ -152,7 +155,8 @@ export function FormFieldsAuth({
                 <div className="flex items-center gap-1">
                   <FormLabel htmlFor={field.name}>PKCE</FormLabel>
                   <TooltipInfoIcon>
-                    Whether to use PKCE for the OAuth flow.
+                    Proof Key for Code Exchange (RFC 7636), automatically
+                    enables PKCE flow without client_secret.
                   </TooltipInfoIcon>
                 </div>
                 <FormControl>
@@ -187,7 +191,8 @@ export function FormFieldsAuth({
                 <div className="flex items-center gap-1">
                   <FormLabel>Authorize URL</FormLabel>
                   <TooltipInfoIcon>
-                    The URL of the OAuth authorize endpoint.
+                    The authorize URL where users are redirected to authenticate
+                    and authorize your MCP server.
                   </TooltipInfoIcon>
                 </div>
                 <FormControl>
@@ -215,7 +220,8 @@ export function FormFieldsAuth({
                 <div className="flex items-center gap-1">
                   <FormLabel>Token URL</FormLabel>
                   <TooltipInfoIcon>
-                    The URL of the OAuth token endpoint.
+                    The token URL where your application exchanges the
+                    authorization code for access tokens.
                   </TooltipInfoIcon>
                 </div>
                 <FormControl>
@@ -243,7 +249,8 @@ export function FormFieldsAuth({
                 <div className="flex items-center gap-1">
                   <FormLabel>Client ID</FormLabel>
                   <TooltipInfoIcon>
-                    The client ID of the OAuth provider
+                    The client ID for your application registered with the OAuth
+                    provider.
                   </TooltipInfoIcon>
                 </div>
                 <FormControl>
@@ -271,7 +278,8 @@ export function FormFieldsAuth({
                 <div className="flex items-center gap-1">
                   <FormLabel>Client Secret</FormLabel>
                   <TooltipInfoIcon>
-                    The client secret of the OAuth issuer.
+                    The client secret key that proves your application's
+                    identity.
                   </TooltipInfoIcon>
                 </div>
                 <FormControl>
@@ -299,7 +307,7 @@ export function FormFieldsAuth({
                 <div className="flex items-center gap-1">
                   <FormLabel>Scopes</FormLabel>
                   <TooltipInfoIcon>
-                    The scopes of the OAuth flow.
+                    The list of scopes (permissions) your app is requesting.
                   </TooltipInfoIcon>
                 </div>
                 <FormControl>
