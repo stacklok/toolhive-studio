@@ -299,7 +299,7 @@ export function DialogFormRemoteMcp({
                   <div className="flex items-center gap-1">
                     <FormLabel htmlFor={field.name}>Transport</FormLabel>
                     <TooltipInfoIcon>
-                      The transport mechanism the MCP server uses to communicate
+                      The transport protocol the MCP server uses to communicate
                       with clients.
                     </TooltipInfoIcon>
                   </div>
