@@ -220,10 +220,6 @@ export async function createMcpTools(): Promise<{
             mcpTools[toolName] = toolDef
           }
         }
-
-        log.info(
-          `Added ${Object.keys(toolhiveMcpTools).length} tools from Toolhive MCP server`
-        )
       } catch (error) {
         log.error('Failed to create Toolhive MCP client:', error)
       }
