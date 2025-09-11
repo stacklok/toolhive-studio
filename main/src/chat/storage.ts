@@ -129,7 +129,11 @@ export function clearChatSettings(providerId?: string): {
 export function getSelectedModel(): { provider: string; model: string } {
   try {
     const selectedModel = chatStore.get('selectedModel')
-    if (isSelectedModel(selectedModel)) {
+    if (
+      isSelectedModel(selectedModel) &&
+      selectedModel.provider &&
+      selectedModel.model
+    ) {
       return selectedModel
     }
     return { provider: '', model: '' }

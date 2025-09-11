@@ -1,10 +1,13 @@
 import { useCallback, useMemo } from 'react'
 import { useChat } from '@ai-sdk/react'
+import { useQueryClient } from '@tanstack/react-query'
+import log from 'electron-log/renderer'
 import type { ChatUIMessage } from '../types'
 import { ElectronIPCChatTransport } from '../transport/electron-ipc-chat-transport'
 import { useChatSettings } from './use-chat-settings'
 
 export function useChatStreaming() {
+  const queryClient = useQueryClient()
   const {
     settings,
     updateSettings,
@@ -16,30 +19,9 @@ export function useChatStreaming() {
   const ipcTransport = useMemo(
     () =>
       new ElectronIPCChatTransport({
-        getSettings: async () => {
-          try {
-            // Always get the latest settings from IPC store to avoid stale data
-            const model = await window.electronAPI.chat.getSelectedModel()
-            if (!model.provider || !model.model) {
-              return { provider: '', model: '', apiKey: '', enabledTools: [] }
-            }
-
-            const providerSettings = await window.electronAPI.chat.getSettings(
-              model.provider
-            )
-            return {
-              provider: model.provider,
-              model: model.model,
-              apiKey: providerSettings.apiKey || '',
-              enabledTools: providerSettings.enabledTools || [],
-            }
-          } catch (error) {
-            console.error('Failed to get settings from IPC store:', error)
-            return { provider: '', model: '', apiKey: '', enabledTools: [] }
-          }
-        },
+        queryClient,
       }),
-    []
+    [queryClient]
   )
 
   const { messages, sendMessage, status, error, stop, setMessages } =
@@ -55,10 +37,14 @@ export function useChatStreaming() {
 
   const handleSendMessage = useCallback(
     async (content: string) => {
-      // Validation is now handled in the transport layer using TanStack Query
+      // Validate settings before sending to prevent transport errors
+      if (!settings.provider || !settings.model || !settings.apiKey?.trim()) {
+        throw new Error('Please configure your AI provider settings first')
+      }
+
       await sendMessage({ text: content })
     },
-    [sendMessage]
+    [sendMessage, settings.provider, settings.model, settings.apiKey]
   )
 
   const clearMessages = useCallback(() => {
@@ -69,7 +55,7 @@ export function useChatStreaming() {
   const processError = (error: unknown): string | null => {
     if (!error) return null
 
-    console.log(error)
+    log.error(error)
 
     if (typeof error === 'string') return error
 

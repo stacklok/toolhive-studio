@@ -1,13 +1,9 @@
 import type { ChatTransport, UIMessageChunk, ChatRequestOptions } from 'ai'
+import type { QueryClient } from '@tanstack/react-query'
 import type { ChatUIMessage } from '../types'
 
 interface ElectronIPCChatTransportConfig {
-  getSettings: () => Promise<{
-    provider: string
-    model: string
-    apiKey: string
-    enabledTools?: string[]
-  }>
+  queryClient: QueryClient
 }
 
 /**
@@ -15,6 +11,36 @@ interface ElectronIPCChatTransportConfig {
  */
 export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
   constructor(private config: ElectronIPCChatTransportConfig) {}
+
+  private async getSettingsFromQuery(): Promise<{
+    provider: string
+    model: string
+    apiKey: string
+    enabledTools: string[]
+  }> {
+    // Get selected model from cache
+    const selectedModel = this.config.queryClient.getQueryData<{
+      provider: string
+      model: string
+    }>(['chat', 'selectedModel'])
+
+    if (!selectedModel?.provider) {
+      return { provider: '', model: '', apiKey: '', enabledTools: [] }
+    }
+
+    // Get provider settings from cache
+    const providerSettings = this.config.queryClient.getQueryData<{
+      apiKey: string
+      enabledTools: string[]
+    }>(['chat', 'settings', selectedModel.provider])
+
+    return {
+      provider: selectedModel.provider,
+      model: selectedModel.model,
+      apiKey: providerSettings?.apiKey || '',
+      enabledTools: providerSettings?.enabledTools || [],
+    }
+  }
 
   async sendMessages(
     options: {
@@ -25,7 +51,7 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
       abortSignal: AbortSignal | undefined
     } & ChatRequestOptions
   ): Promise<ReadableStream<UIMessageChunk>> {
-    const settings = await this.config.getSettings()
+    const settings = await this.getSettingsFromQuery()
 
     if (
       !settings.provider ||
@@ -33,7 +59,6 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
       !settings.apiKey ||
       !settings.apiKey.trim()
     ) {
-      // Provide more specific error messages
       if (!settings.provider || !settings.model) {
         throw new Error('Please select an AI model in the settings')
       }
