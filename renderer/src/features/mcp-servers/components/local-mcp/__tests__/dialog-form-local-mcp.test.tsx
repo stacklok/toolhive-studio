@@ -8,11 +8,18 @@ import { http, HttpResponse } from 'msw'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useRunCustomServer } from '../../../hooks/use-run-custom-server'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 
 // Mock the hook
 vi.mock('../../../hooks/use-run-custom-server', () => ({
   useRunCustomServer: vi.fn(),
 }))
+
+vi.mock('@/common/hooks/use-check-server-status', () => ({
+  useCheckServerStatus: vi.fn(),
+}))
+
+const mockUseCheckServerStatus = vi.mocked(useCheckServerStatus)
 
 const mockUseRunCustomServer = vi.mocked(useRunCustomServer)
 
@@ -61,9 +68,12 @@ beforeEach(() => {
   // Default mock implementation
   mockUseRunCustomServer.mockReturnValue({
     installServerMutation: vi.fn(),
-    checkServerStatus: vi.fn(),
     isErrorSecrets: false,
     isPendingSecrets: false,
+  })
+
+  mockUseCheckServerStatus.mockReturnValue({
+    checkServerStatus: vi.fn(),
   })
 })
 
@@ -106,7 +116,6 @@ describe('DialogFormLocalMcp', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunCustomServer.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -163,7 +172,6 @@ describe('DialogFormLocalMcp', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunCustomServer.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -237,7 +245,6 @@ describe('DialogFormLocalMcp', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunCustomServer.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -324,7 +331,6 @@ describe('DialogFormLocalMcp', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunCustomServer.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -364,7 +370,6 @@ describe('DialogFormLocalMcp', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunCustomServer.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -430,9 +435,12 @@ describe('DialogFormLocalMcp', () => {
     const mockCheckServerStatus = vi.fn()
     const mockOnOpenChange = vi.fn()
 
+    mockUseCheckServerStatus.mockReturnValue({
+      checkServerStatus: mockCheckServerStatus,
+    })
+
     mockUseRunCustomServer.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: mockCheckServerStatus,
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -504,7 +512,6 @@ describe('DialogFormLocalMcp', () => {
       const mockInstallServerMutation = vi.fn()
       mockUseRunCustomServer.mockReturnValue({
         installServerMutation: mockInstallServerMutation,
-        checkServerStatus: vi.fn(),
         isErrorSecrets: false,
         isPendingSecrets: false,
       })
@@ -572,7 +579,6 @@ describe('DialogFormLocalMcp', () => {
       const mockInstallServerMutation = vi.fn()
       mockUseRunCustomServer.mockReturnValue({
         installServerMutation: mockInstallServerMutation,
-        checkServerStatus: vi.fn(),
         isErrorSecrets: false,
         isPendingSecrets: false,
       })
@@ -769,7 +775,6 @@ describe('DialogFormLocalMcp', () => {
       const mockInstallServerMutation = vi.fn()
       mockUseRunCustomServer.mockReturnValue({
         installServerMutation: mockInstallServerMutation,
-        checkServerStatus: vi.fn(),
         isErrorSecrets: false,
         isPendingSecrets: false,
       })
@@ -863,7 +868,6 @@ describe('DialogFormLocalMcp', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunCustomServer.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
