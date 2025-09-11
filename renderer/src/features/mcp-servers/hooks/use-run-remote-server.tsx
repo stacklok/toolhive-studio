@@ -1,12 +1,8 @@
 import {
   postApiV1BetaWorkloadsMutation,
-  getApiV1BetaWorkloadsByNameStatusOptions,
   postApiV1BetaSecretsDefaultKeysMutation,
-  getApiV1BetaWorkloadsQueryKey,
 } from '@api/@tanstack/react-query.gen'
-import { pollServerStatus } from '@/common/lib/polling'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useCallback, useRef } from 'react'
 import type { FormSchemaRemoteMcp } from '../lib/form-schema-remote-mcp'
 import { prepareCreateWorkloadData } from '../lib/orchestrate-run-remote-server'
 import {
@@ -17,16 +13,9 @@ import {
 import type { Options } from '@api/client'
 import { getApiV1BetaSecretsDefaultKeys } from '@api/sdk.gen'
 import { prepareSecretsWithoutNamingCollision } from '@/common/lib/secrets/prepare-secrets-without-naming-collision'
-import { toast } from 'sonner'
-import { Button } from '@/common/components/ui/button'
-import { Link } from '@tanstack/react-router'
 import { restartClientNotification } from '../lib/restart-client-notification'
 import { trackEvent } from '@/common/lib/analytics'
 import { groupMCPDefinedSecrets, saveMCPSecrets } from '@/common/lib/utils'
-
-type InstallServerCheck = (
-  data: FormSchemaRemoteMcp
-) => Promise<unknown> | unknown
 
 export function useRunRemoteServer({
   onSecretSuccess,
@@ -38,7 +27,6 @@ export function useRunRemoteServer({
     variables: Options<PostApiV1BetaSecretsDefaultKeysData>
   ) => void
 }) {
-  const toastIdRef = useRef(new Date(Date.now()).toISOString())
   const queryClient = useQueryClient()
 
   const { mutateAsync: saveSecret } = useMutation({
@@ -47,59 +35,6 @@ export function useRunRemoteServer({
   const { mutateAsync: createWorkload } = useMutation({
     ...postApiV1BetaWorkloadsMutation(),
   })
-
-  const handleSettled = useCallback<InstallServerCheck>(
-    async (formData) => {
-      toast.loading(`Starting "${formData.name}"...`, {
-        duration: 30_000,
-        id: toastIdRef.current,
-      })
-
-      const isServerReady = await pollServerStatus(
-        () =>
-          queryClient.fetchQuery(
-            getApiV1BetaWorkloadsByNameStatusOptions({
-              path: { name: formData.name },
-            })
-          ),
-        'running'
-      )
-
-      if (isServerReady) {
-        await queryClient.invalidateQueries({
-          queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
-        })
-
-        toast.success(`"${formData.name}" started successfully.`, {
-          id: toastIdRef.current,
-          duration: 5_000, // slightly longer than default
-          action: (
-            <Button asChild>
-              <Link
-                to="/group/$groupName"
-                params={{ groupName: 'default' }}
-                search={{ newServerName: formData.name }}
-                onClick={() => toast.dismiss(toastIdRef.current)}
-                viewTransition={{ types: ['slide-left'] }}
-                className="ml-auto"
-              >
-                View
-              </Link>
-            </Button>
-          ),
-        })
-      } else {
-        toast.warning(
-          `Server "${formData.name}" was created but may still be starting up. Check the servers list to monitor its status.`,
-          {
-            id: toastIdRef.current,
-            duration: 5_000,
-          }
-        )
-      }
-    },
-    [queryClient]
-  )
 
   const {
     mutateAsync: handleSecrets,
@@ -184,7 +119,6 @@ export function useRunRemoteServer({
 
   return {
     installServerMutation,
-    checkServerStatus: handleSettled,
     isPendingSecrets,
     isErrorSecrets,
   }

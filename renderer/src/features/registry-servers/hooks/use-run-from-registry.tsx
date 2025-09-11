@@ -7,18 +7,11 @@ import {
 import { getApiV1BetaSecretsDefaultKeys, type Options } from '@api/sdk.gen'
 import {
   postApiV1BetaWorkloadsMutation,
-  getApiV1BetaWorkloadsByNameStatusOptions,
   postApiV1BetaSecretsDefaultKeysMutation,
-  getApiV1BetaWorkloadsQueryKey,
 } from '@api/@tanstack/react-query.gen'
-import { pollServerStatus } from '@/common/lib/polling'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useCallback, useRef } from 'react'
 import { prepareCreateWorkloadData } from '../lib/orchestrate-run-registry-server'
-import { toast } from 'sonner'
-import { Button } from '@/common/components/ui/button'
 import { prepareSecretsWithoutNamingCollision } from '@/common/lib/secrets/prepare-secrets-without-naming-collision'
-import { Link } from '@tanstack/react-router'
 import { trackEvent } from '@/common/lib/analytics'
 import { restartClientNotification } from '@/features/mcp-servers/lib/restart-client-notification'
 import type { FormSchemaRegistryMcp } from '../lib/form-schema-registry-mcp'
@@ -27,10 +20,6 @@ import {
   saveMCPSecrets,
   groupMCPDefinedSecrets,
 } from '@/common/lib/utils'
-
-type InstallServerCheck = (
-  data: FormSchemaRegistryMcp
-) => Promise<unknown> | unknown
 
 export function useRunFromRegistry({
   onSecretSuccess,
@@ -42,7 +31,6 @@ export function useRunFromRegistry({
     variables: Options<PostApiV1BetaSecretsDefaultKeysData>
   ) => void
 }) {
-  const toastIdRef = useRef(new Date(Date.now()).toISOString())
   const queryClient = useQueryClient()
 
   const { mutateAsync: saveSecret } = useMutation({
@@ -60,59 +48,6 @@ export function useRunFromRegistry({
       })
     },
   })
-
-  const handleSettled = useCallback<InstallServerCheck>(
-    async (formData) => {
-      toast.loading(`Starting "${formData.name}"...`, {
-        duration: 30_000,
-        id: toastIdRef.current,
-      })
-
-      const isServerReady = await pollServerStatus(
-        () =>
-          queryClient.fetchQuery(
-            getApiV1BetaWorkloadsByNameStatusOptions({
-              path: { name: formData.name },
-            })
-          ),
-        'running'
-      )
-
-      if (isServerReady) {
-        await queryClient.invalidateQueries({
-          queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
-        })
-
-        toast.success(`"${formData.name}" started successfully.`, {
-          id: toastIdRef.current,
-          duration: 5_000, // slightly longer than default
-          action: (
-            <Button asChild>
-              <Link
-                to="/group/$groupName"
-                params={{ groupName: 'default' }}
-                search={{ newServerName: formData.name }}
-                onClick={() => toast.dismiss(toastIdRef.current)}
-                viewTransition={{ types: ['slide-left'] }}
-                className="ml-auto"
-              >
-                View
-              </Link>
-            </Button>
-          ),
-        })
-      } else {
-        toast.warning(
-          `Server "${formData.name}" was created but may still be starting up. Check the servers list to monitor its status.`,
-          {
-            id: toastIdRef.current,
-            duration: 2_000, // reset to default
-          }
-        )
-      }
-    },
-    [queryClient]
-  )
 
   const {
     mutateAsync: handleSecrets,
@@ -202,7 +137,6 @@ export function useRunFromRegistry({
 
   return {
     installServerMutation,
-    checkServerStatus: handleSettled,
     isPendingSecrets,
     isErrorSecrets,
   }

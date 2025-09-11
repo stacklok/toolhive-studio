@@ -8,10 +8,11 @@ import { useUpdateServer } from '@/features/mcp-servers/hooks/use-update-server'
 import { toast } from 'sonner'
 import { convertWorkloadToFormData } from '@/features/mcp-servers/lib/orchestrate-run-local-server'
 import { getApiV1BetaWorkloads } from '@api/sdk.gen'
+import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 
 export function CustomizeToolsPage() {
   const { serverName } = useParams({ from: '/customize-tools/$serverName' })
-
+  const { checkServerStatus } = useCheckServerStatus()
   const { data: workload, isLoading: isWorkloadLoading } = useSuspenseQuery({
     queryKey: ['workload', serverName],
     queryFn: async () => {
@@ -41,8 +42,7 @@ export function CustomizeToolsPage() {
     staleTime: 0,
   })
 
-  const { updateServerMutation, checkServerStatus } =
-    useUpdateServer(serverName)
+  const { updateServerMutation } = useUpdateServer(serverName)
 
   const handleApply = async (enabledTools: Record<string, boolean>) => {
     if (!serverTools) {
@@ -75,7 +75,7 @@ export function CustomizeToolsPage() {
         { data: formData },
         {
           onSuccess: () => {
-            checkServerStatus()
+            checkServerStatus({ serverName, isEditing: true })
             toast.success('Server tools updated successfully')
           },
           onError: (error) => {

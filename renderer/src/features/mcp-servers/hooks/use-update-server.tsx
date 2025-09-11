@@ -1,33 +1,24 @@
 import {
   postApiV1BetaWorkloadsByNameEditMutation,
-  getApiV1BetaWorkloadsByNameStatusOptions,
-  getApiV1BetaWorkloadsQueryKey,
   postApiV1BetaSecretsDefaultKeysMutation,
 } from '@api/@tanstack/react-query.gen'
 import { getApiV1BetaSecretsDefaultKeys } from '@api/sdk.gen'
-import { pollServerStatus } from '@/common/lib/polling'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useCallback, useRef } from 'react'
-
 import {
   type PostApiV1BetaSecretsDefaultKeysData,
   type SecretsSecretParameter,
 } from '@api/types.gen'
 import type { Options } from '@api/client'
 import { prepareSecretsWithoutNamingCollision } from '@/common/lib/secrets/prepare-secrets-without-naming-collision'
-import { toast } from 'sonner'
-import { Button } from '@/common/components/ui/button'
-import { Link } from '@tanstack/react-router'
 import { restartClientNotification } from '../lib/restart-client-notification'
 import { trackEvent } from '@/common/lib/analytics'
-import {
-  groupMCPDefinedSecrets,
-  prepareUpdateWorkloadData,
-} from '../lib/orchestrate-run-local-server'
+import { prepareUpdateWorkloadData } from '../lib/orchestrate-run-local-server'
 import type { FormSchemaLocalMcp } from '../lib/form-schema-local-mcp'
-import { getMCPDefinedSecrets, saveMCPSecrets } from '@/common/lib/utils'
-
-type UpdateServerCheck = () => Promise<unknown> | unknown
+import {
+  getMCPDefinedSecrets,
+  groupMCPDefinedSecrets,
+  saveMCPSecrets,
+} from '@/common/lib/utils'
 
 export function useUpdateServer(
   serverName: string,
@@ -39,7 +30,6 @@ export function useUpdateServer(
     ) => void
   }
 ) {
-  const toastIdRef = useRef(new Date(Date.now()).toISOString())
   const queryClient = useQueryClient()
 
   const { mutateAsync: updateWorkload } = useMutation({
@@ -49,56 +39,6 @@ export function useUpdateServer(
   const { mutateAsync: saveSecret } = useMutation({
     ...postApiV1BetaSecretsDefaultKeysMutation(),
   })
-
-  const handleSettled = useCallback<UpdateServerCheck>(async () => {
-    toast.loading(`Updating "${serverName}"...`, {
-      duration: 30_000,
-      id: toastIdRef.current,
-    })
-
-    const isServerReady = await pollServerStatus(
-      () =>
-        queryClient.fetchQuery(
-          getApiV1BetaWorkloadsByNameStatusOptions({
-            path: { name: serverName },
-          })
-        ),
-      'running'
-    )
-
-    if (isServerReady) {
-      await queryClient.invalidateQueries({
-        queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
-      })
-
-      toast.success(`"${serverName}" updated successfully.`, {
-        id: toastIdRef.current,
-        duration: 5_000,
-        action: (
-          <Button asChild>
-            <Link
-              to="/group/$groupName"
-              params={{ groupName: 'default' }}
-              search={{ newServerName: serverName }}
-              onClick={() => toast.dismiss(toastIdRef.current)}
-              viewTransition={{ types: ['slide-left'] }}
-              className="ml-auto"
-            >
-              View
-            </Link>
-          </Button>
-        ),
-      })
-    } else {
-      toast.warning(
-        `Server "${serverName}" was updated but may still be restarting. Check the servers list to monitor its status.`,
-        {
-          id: toastIdRef.current,
-          duration: 5_000,
-        }
-      )
-    }
-  }, [queryClient, serverName])
 
   const { mutate: updateServerMutation } = useMutation({
     mutationFn: async ({ data }: { data: FormSchemaLocalMcp }) => {
@@ -154,6 +94,5 @@ export function useUpdateServer(
 
   return {
     updateServerMutation,
-    checkServerStatus: handleSettled,
   }
 }

@@ -37,6 +37,7 @@ import { convertCreateRequestToFormData } from '../../lib/orchestrate-run-remote
 import { LoadingStateAlert } from '@/common/components/secrets/loading-state-alert'
 import { AlertErrorFormSubmission } from '@/common/components/workloads/alert-error-form-submission'
 import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-workload-form-wrapper'
+import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 
 const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
   name: '',
@@ -74,6 +75,7 @@ export function DialogFormRemoteMcp({
     completedCount: number
     secretsCount: number
   } | null>(null)
+  const { checkServerStatus } = useCheckServerStatus()
 
   const handleSecrets = (completedCount: number, secretsCount: number) => {
     setLoadingSecrets((prev) => ({
@@ -84,25 +86,20 @@ export function DialogFormRemoteMcp({
     }))
   }
 
-  const {
-    installServerMutation,
-    checkServerStatus,
-    isErrorSecrets,
-    isPendingSecrets,
-  } = useRunRemoteServer({
-    onSecretSuccess: handleSecrets,
-    onSecretError: (error, variables) => {
-      log.error('onSecretError', error, variables)
-    },
-  })
-
-  const { updateServerMutation, checkServerStatus: checkUpdateServerStatus } =
-    useUpdateServer(serverToEdit || '', {
+  const { installServerMutation, isErrorSecrets, isPendingSecrets } =
+    useRunRemoteServer({
       onSecretSuccess: handleSecrets,
       onSecretError: (error, variables) => {
-        log.error('onSecretError during update', error, variables)
+        log.error('onSecretError', error, variables)
       },
     })
+
+  const { updateServerMutation } = useUpdateServer(serverToEdit || '', {
+    onSecretSuccess: handleSecrets,
+    onSecretError: (error, variables) => {
+      log.error('onSecretError during update', error, variables)
+    },
+  })
 
   const { data } = useQuery({
     ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
@@ -150,7 +147,7 @@ export function DialogFormRemoteMcp({
         { data },
         {
           onSuccess: () => {
-            checkUpdateServerStatus()
+            checkServerStatus({ serverName: data.name, isEditing })
             closeDialog()
           },
           onSettled: (_, error) => {
@@ -170,7 +167,7 @@ export function DialogFormRemoteMcp({
         { data },
         {
           onSuccess: () => {
-            checkServerStatus(data)
+            checkServerStatus({ serverName: data.name })
             closeDialog()
           },
           onSettled: (_, error) => {
