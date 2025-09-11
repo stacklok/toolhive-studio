@@ -1,11 +1,8 @@
 import { it, expect, vi, describe, beforeEach } from 'vitest'
 import type { FormSchemaLocalMcp } from '../form-schema-local-mcp'
 import {
-  saveSecrets,
   prepareCreateWorkloadData,
-  groupSecrets,
   convertWorkloadToFormData,
-  getDefinedSecrets,
   convertCreateRequestToFormData,
   prepareUpdateWorkloadData,
 } from '../orchestrate-run-local-server'
@@ -16,6 +13,11 @@ import type {
   V1CreateRequest,
   V1ListSecretsResponse,
 } from '@api/types.gen'
+import {
+  getMCPDefinedSecrets,
+  groupMCPDefinedSecrets,
+  saveMCPSecrets,
+} from '@/common/lib/utils'
 
 vi.mock('sonner', async () => {
   const original = await vi.importActual<typeof import('sonner')>('sonner')
@@ -53,7 +55,7 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-describe('groupSecrets', () => {
+describe('groupMCPDefinedSecrets', () => {
   it('separates new and existing secrets correctly', () => {
     const secrets: DefinedSecret[] = [
       {
@@ -70,7 +72,7 @@ describe('groupSecrets', () => {
       },
     ]
 
-    const result = groupSecrets(secrets)
+    const result = groupMCPDefinedSecrets(secrets)
 
     expect(result.newSecrets).toHaveLength(2)
     expect(result.existingSecrets).toHaveLength(1)
@@ -83,7 +85,7 @@ describe('groupSecrets', () => {
   })
 
   it('handles empty secrets array', () => {
-    const result = groupSecrets([])
+    const result = groupMCPDefinedSecrets([])
 
     expect(result.newSecrets).toHaveLength(0)
     expect(result.existingSecrets).toHaveLength(0)
@@ -101,7 +103,7 @@ describe('groupSecrets', () => {
       },
     ]
 
-    const result = groupSecrets(secrets)
+    const result = groupMCPDefinedSecrets(secrets)
 
     expect(result.newSecrets).toHaveLength(2)
     expect(result.existingSecrets).toHaveLength(0)
@@ -119,7 +121,7 @@ describe('groupSecrets', () => {
       },
     ]
 
-    const result = groupSecrets(secrets)
+    const result = groupMCPDefinedSecrets(secrets)
 
     expect(result.newSecrets).toHaveLength(0)
     expect(result.existingSecrets).toHaveLength(2)
@@ -429,7 +431,7 @@ describe('saveSecrets', () => {
       return result
     })
 
-    const result = await saveSecrets(
+    const result = await saveMCPSecrets(
       secrets,
       mockSaveSecret,
       mockOnSecretSuccess,
@@ -480,7 +482,7 @@ describe('saveSecrets', () => {
     })
 
     await expect(
-      saveSecrets(
+      saveMCPSecrets(
         secrets,
         mockSaveSecret,
         mockOnSecretSuccess,
@@ -514,7 +516,7 @@ describe('saveSecrets', () => {
     })
 
     await expect(
-      saveSecrets(
+      saveMCPSecrets(
         secrets,
         mockSaveSecret,
         mockOnSecretSuccess,
@@ -527,7 +529,7 @@ describe('saveSecrets', () => {
     const { mockSaveSecret, mockOnSecretSuccess, mockOnSecretError } =
       createTestMocks()
 
-    const result = await saveSecrets(
+    const result = await saveMCPSecrets(
       [],
       mockSaveSecret,
       mockOnSecretSuccess,
@@ -568,7 +570,7 @@ describe('saveSecrets', () => {
       })
 
       const startTime = Date.now()
-      await saveSecrets(
+      await saveMCPSecrets(
         secrets,
         mockSaveSecret,
         mockOnSecretSuccess,
@@ -697,7 +699,7 @@ describe('convertWorkloadToFormData', () => {
   })
 })
 
-describe('getDefinedSecrets', () => {
+describe('getMCPDefinedSecrets', () => {
   it('filters out secrets with empty names', () => {
     const secrets: FormSchemaLocalMcp['secrets'] = [
       {
@@ -714,7 +716,7 @@ describe('getDefinedSecrets', () => {
       },
     ]
 
-    const result = getDefinedSecrets(secrets)
+    const result = getMCPDefinedSecrets(secrets)
 
     expect(result).toHaveLength(2)
     expect(result[0]?.name).toBe('VALID_SECRET')
@@ -733,7 +735,7 @@ describe('getDefinedSecrets', () => {
       },
     ]
 
-    const result = getDefinedSecrets(secrets)
+    const result = getMCPDefinedSecrets(secrets)
 
     expect(result).toHaveLength(1)
     expect(result[0]?.name).toBe('VALID_SECRET')
@@ -755,7 +757,7 @@ describe('getDefinedSecrets', () => {
       },
     ]
 
-    const result = getDefinedSecrets(secrets)
+    const result = getMCPDefinedSecrets(secrets)
 
     expect(result).toHaveLength(3)
     expect(result[0]?.value.isFromStore).toBe(true)
@@ -764,7 +766,7 @@ describe('getDefinedSecrets', () => {
   })
 
   it('returns empty array for empty input', () => {
-    const result = getDefinedSecrets([])
+    const result = getMCPDefinedSecrets([])
     expect(result).toEqual([])
   })
 })

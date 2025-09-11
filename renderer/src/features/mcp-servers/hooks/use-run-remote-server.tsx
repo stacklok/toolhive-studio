@@ -7,13 +7,8 @@ import {
 import { pollServerStatus } from '@/common/lib/polling'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useRef } from 'react'
-
 import type { FormSchemaRemoteMcp } from '../lib/form-schema-remote-mcp'
-import {
-  groupSecrets,
-  prepareCreateWorkloadData,
-  saveSecrets,
-} from '../lib/orchestrate-run-remote-server'
+import { prepareCreateWorkloadData } from '../lib/orchestrate-run-remote-server'
 import {
   type PostApiV1BetaSecretsDefaultKeysData,
   type SecretsSecretParameter,
@@ -27,6 +22,7 @@ import { Button } from '@/common/components/ui/button'
 import { Link } from '@tanstack/react-router'
 import { restartClientNotification } from '../lib/restart-client-notification'
 import { trackEvent } from '@/common/lib/analytics'
+import { groupMCPDefinedSecrets, saveMCPSecrets } from '@/common/lib/utils'
 
 type InstallServerCheck = (
   data: FormSchemaRemoteMcp
@@ -117,7 +113,9 @@ export function useRunRemoteServer({
       // We need to know which secrets are new (not from the registry) and which are
       // existing (already stored). This helps us handle the encryption and storage
       // of secrets correctly.
-      const { existingSecrets, newSecrets } = groupSecrets(data.secrets)
+      const { existingSecrets, newSecrets } = groupMCPDefinedSecrets(
+        data.secrets
+      )
 
       // Step 2: Fetch existing secrets & handle naming collisions
       // We need an up-to-date list of secrets so we can handle any existing keys
@@ -137,7 +135,7 @@ export function useRunRemoteServer({
       // If there are secrets with values, create them in the secret store first.
       // We need the data returned by the API to pass along with the "run workload" request.
       if (preparedNewSecrets.length > 0) {
-        newlyCreatedSecrets = await saveSecrets(
+        newlyCreatedSecrets = await saveMCPSecrets(
           preparedNewSecrets,
           saveSecret,
           onSecretSuccess,
