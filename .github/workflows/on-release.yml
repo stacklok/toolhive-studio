@@ -106,3 +106,12 @@ jobs:
           APPLE_API_KEY: ${{ env.APPLE_API_KEY_PATH }}
           APPLE_ISSUER_ID: ${{ env.APPLE_ISSUER_ID }}
           APPLE_KEY_ID: ${{ env.APPLE_KEY_ID }}
+
+  mirror-pages:
+    name: Mirror release to GitHub Pages
+    needs: [build-and-release]
+    if: ${{ always() && needs.build-and-release.result == 'success' }}
+    uses: ./.github/workflows/mirror-to-gh-pages.yml
+    with:
+      tag: ${{ github.ref_name }}
+    secrets: inherit
