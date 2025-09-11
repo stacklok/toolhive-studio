@@ -68,7 +68,6 @@ export async function startToolhive(tray?: Tray): Promise<void> {
     return
   }
 
-  log.info(`APP USER DATA: ${app.getPath('userData')}`)
   toolhivePort = await findFreePort()
   toolhiveMcpPort = await findFreePort()
   log.info(`Starting ToolHive from: ${binPath} on port ${toolhivePort}`)
