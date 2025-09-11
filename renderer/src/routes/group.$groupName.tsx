@@ -1,12 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { ChevronRight } from 'lucide-react'
 import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
 import { EmptyState } from '@/common/components/empty-state'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
-import { Button } from '@/common/components/ui/button'
-import { LinkViewTransition } from '@/common/components/link-view-transition'
 import { GridCardsMcpServers } from '@/features/mcp-servers/components/grid-cards-mcp-server'
 import { useMutationRestartServerAtStartup } from '@/features/mcp-servers/hooks/use-mutation-restart-server'
 import { TitlePage } from '@/common/components/title-page'
@@ -110,28 +107,15 @@ function GroupRoute() {
         {!isPending && !filteredWorkloads.length ? (
           <EmptyState
             title="Add your first MCP server"
-            body="You can add a server by running it with a command or by browsing the registry"
-            actions={[
-              <Button
-                variant="outline"
-                key="add-custom-server"
-                onClick={() =>
-                  setServerDialogOpen({ local: true, remote: false })
-                }
-              >
-                Add custom server
-              </Button>,
-              <div key="secondary-actions" className="flex gap-2">
-                <Button asChild variant="outline">
-                  <LinkViewTransition to="/registry">
-                    Browse registry <ChevronRight />
-                  </LinkViewTransition>
-                </Button>
-                <ManageClientsButton groupName={groupName} />
-              </div>,
-            ]}
+            body="Add a server manually or browse the MCP Server registry"
             illustration={IllustrationNoConnection}
-          />
+          >
+            <div className="my-6">
+              <DropdownMenuRunMcpServer
+                openRunCommandDialog={setServerDialogOpen}
+              />
+            </div>
+          </EmptyState>
         ) : (
           <GridCardsMcpServers mcpServers={filteredWorkloads} />
         )}

@@ -74,7 +74,7 @@ export function DropdownMenuRunMcpServer({
       <DropdownMenuTrigger asChild>
         <Button className={className}>
           <PlusIcon />
-          Add server
+          Add an MCP server
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="bottom" align="end">
