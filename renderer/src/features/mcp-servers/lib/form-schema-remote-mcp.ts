@@ -7,29 +7,29 @@ const OAUTH_VALIDATION_RULES = {
     {
       field: 'authorize_url',
       message: 'Authorize URL is required for OAuth2',
-      path: ['authorize_url'],
+      path: ['oauth_config', 'authorize_url'],
     },
     {
       field: 'token_url',
       message: 'Token URL is required for OAuth2',
-      path: ['token_url'],
+      path: ['oauth_config', 'token_url'],
     },
     {
       field: 'client_id',
       message: 'Client ID is required for OAuth2',
-      path: ['client_id'],
+      path: ['oauth_config', 'client_id'],
     },
   ],
   oidc: [
     {
       field: 'issuer',
       message: 'Issuer URL is required for OIDC',
-      path: ['issuer'],
+      path: ['oauth_config', 'issuer'],
     },
     {
       field: 'client_id',
       message: 'Client ID is required for OIDC',
-      path: ['client_id'],
+      path: ['oauth_config', 'client_id'],
     },
   ],
 }

@@ -303,7 +303,7 @@ export const createRemoteMcpBaseSchema = (workloads: CoreWorkload[]) => {
   const secretsSchema = createBasicSecretsSchema()
   const transportSchema = createTransportConfigSchema()
   const urlSchema = z.object({
-    url: z.string().nonempty('MCP URL is required'),
+    url: z.string().nonempty('The MCP server URL is required'),
   })
   const authTypeSchema = z.object({
     auth_type: z.enum(['none', 'oauth2', 'oidc']).default('none'),
