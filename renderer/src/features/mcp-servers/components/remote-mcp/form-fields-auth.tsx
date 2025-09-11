@@ -155,8 +155,8 @@ export function FormFieldsAuth({
                 <div className="flex items-center gap-1">
                   <FormLabel htmlFor={field.name}>PKCE</FormLabel>
                   <TooltipInfoIcon>
-                    The PKCE Proof Key for Code Exchange (RFC 7636),
-                    automatically enables PKCE flow without client_secret.
+                    Proof Key for Code Exchange (RFC 7636), automatically
+                    enables PKCE flow without client_secret.
                   </TooltipInfoIcon>
                 </div>
                 <FormControl>
@@ -279,7 +279,7 @@ export function FormFieldsAuth({
                   <FormLabel>Client Secret</FormLabel>
                   <TooltipInfoIcon>
                     The client secret key that proves your application's
-                    identity
+                    identity.
                   </TooltipInfoIcon>
                 </div>
                 <FormControl>
@@ -307,7 +307,7 @@ export function FormFieldsAuth({
                 <div className="flex items-center gap-1">
                   <FormLabel>Scopes</FormLabel>
                   <TooltipInfoIcon>
-                    The scopes list of permissions your app is requesting.
+                    The list of scopes (permissions) your app is requesting.
                   </TooltipInfoIcon>
                 </div>
                 <FormControl>
