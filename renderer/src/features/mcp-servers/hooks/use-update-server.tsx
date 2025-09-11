@@ -21,12 +21,11 @@ import { Link } from '@tanstack/react-router'
 import { restartClientNotification } from '../lib/restart-client-notification'
 import { trackEvent } from '@/common/lib/analytics'
 import {
-  getDefinedSecrets,
-  groupSecrets,
+  groupMCPDefinedSecrets,
   prepareUpdateWorkloadData,
-  saveSecrets,
 } from '../lib/orchestrate-run-local-server'
 import type { FormSchemaLocalMcp } from '../lib/form-schema-local-mcp'
+import { getMCPDefinedSecrets, saveMCPSecrets } from '@/common/lib/utils'
 
 type UpdateServerCheck = () => Promise<unknown> | unknown
 
@@ -106,8 +105,9 @@ export function useUpdateServer(
       let newlyCreatedSecrets: SecretsSecretParameter[] = []
 
       // Step 1: Group secrets into new and existing
-      const definedSecrets = getDefinedSecrets(data.secrets)
-      const { existingSecrets, newSecrets } = groupSecrets(definedSecrets)
+      const definedSecrets = getMCPDefinedSecrets(data.secrets)
+      const { existingSecrets, newSecrets } =
+        groupMCPDefinedSecrets(definedSecrets)
 
       // Step 2: Fetch existing secrets & handle naming collisions
       const { data: fetchedSecrets } = await getApiV1BetaSecretsDefaultKeys({
@@ -120,7 +120,7 @@ export function useUpdateServer(
 
       // Step 3: Encrypt secrets
       if (preparedNewSecrets.length > 0) {
-        newlyCreatedSecrets = await saveSecrets(
+        newlyCreatedSecrets = await saveMCPSecrets(
           preparedNewSecrets,
           saveSecret,
           options?.onSecretSuccess || (() => {}),

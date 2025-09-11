@@ -1,13 +1,13 @@
 import { it, expect, vi, describe } from 'vitest'
 import type { RegistryImageMetadata } from '@api/types.gen'
-import {
-  getDefinedSecrets,
-  saveSecrets,
-  prepareCreateWorkloadData,
-  groupSecrets,
-} from '../orchestrate-run-registry-server'
+import { prepareCreateWorkloadData } from '../orchestrate-run-registry-server'
 import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
 import type { FormSchemaRegistryMcp } from '../form-schema-registry-mcp'
+import {
+  getMCPDefinedSecrets,
+  groupMCPDefinedSecrets,
+  saveMCPSecrets,
+} from '@/common/lib/utils'
 
 const REGISTRY_SERVER: RegistryImageMetadata = {
   name: 'test-server',
@@ -27,7 +27,7 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-describe('getDefinedSecrets', () => {
+describe('getMCPDefinedSecrets', () => {
   it('filters out secrets with empty name or secret value', () => {
     const secrets: FormSchemaRegistryMcp['secrets'] = [
       {
@@ -48,7 +48,7 @@ describe('getDefinedSecrets', () => {
       },
     ]
 
-    const result = getDefinedSecrets(secrets)
+    const result = getMCPDefinedSecrets(secrets)
 
     expect(result).toEqual([
       {
@@ -74,18 +74,18 @@ describe('getDefinedSecrets', () => {
       },
     ]
 
-    const result = getDefinedSecrets(secrets)
+    const result = getMCPDefinedSecrets(secrets)
 
     expect(result).toEqual([])
   })
 
   it('handles empty secrets array', () => {
-    const result = getDefinedSecrets([])
+    const result = getMCPDefinedSecrets([])
     expect(result).toEqual([])
   })
 })
 
-describe('groupSecrets', () => {
+describe('groupMCPDefinedSecrets', () => {
   it('groups secrets into new and existing categories', () => {
     const secrets: DefinedSecret[] = [
       {
@@ -102,7 +102,7 @@ describe('groupSecrets', () => {
       },
     ]
 
-    const result = groupSecrets(secrets)
+    const result = groupMCPDefinedSecrets(secrets)
 
     expect(result.newSecrets).toEqual([
       {
@@ -124,7 +124,7 @@ describe('groupSecrets', () => {
   })
 
   it('handles empty secrets array', () => {
-    const result = groupSecrets([])
+    const result = groupMCPDefinedSecrets([])
     expect(result).toEqual({
       newSecrets: [],
       existingSecrets: [],
@@ -143,7 +143,7 @@ describe('groupSecrets', () => {
       },
     ]
 
-    const result = groupSecrets(secrets)
+    const result = groupMCPDefinedSecrets(secrets)
 
     expect(result.newSecrets).toEqual(secrets)
     expect(result.existingSecrets).toEqual([])
@@ -161,7 +161,7 @@ describe('groupSecrets', () => {
       },
     ]
 
-    const result = groupSecrets(secrets)
+    const result = groupMCPDefinedSecrets(secrets)
 
     expect(result.newSecrets).toEqual([])
     expect(result.existingSecrets).toEqual(secrets)
@@ -349,7 +349,7 @@ describe('saveSecrets', () => {
       },
     ]
 
-    const result = await saveSecrets(
+    const result = await saveMCPSecrets(
       secrets,
       mockSaveSecret,
       onSecretSuccess,
@@ -389,7 +389,7 @@ describe('saveSecrets', () => {
     const onSecretSuccess = vi.fn()
     const onSecretError = vi.fn()
 
-    const result = await saveSecrets(
+    const result = await saveMCPSecrets(
       [],
       mockSaveSecret,
       onSecretSuccess,
@@ -420,7 +420,7 @@ describe('saveSecrets', () => {
     ]
 
     await expect(
-      saveSecrets(secrets, mockSaveSecret, onSecretSuccess, onSecretError)
+      saveMCPSecrets(secrets, mockSaveSecret, onSecretSuccess, onSecretError)
     ).rejects.toThrow('Failed to create secret for key "SECRET_1"')
   })
 
@@ -443,7 +443,7 @@ describe('saveSecrets', () => {
     ]
 
     await expect(
-      saveSecrets(secrets, mockSaveSecret, onSecretSuccess, onSecretError)
+      saveMCPSecrets(secrets, mockSaveSecret, onSecretSuccess, onSecretError)
     ).rejects.toThrow('Save failed')
 
     expect(onSecretError).toHaveBeenCalledWith(mockError, {

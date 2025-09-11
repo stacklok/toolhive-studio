@@ -14,12 +14,7 @@ import {
 import { pollServerStatus } from '@/common/lib/polling'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useRef } from 'react'
-import {
-  getDefinedSecrets,
-  groupSecrets,
-  prepareCreateWorkloadData,
-  saveSecrets,
-} from '../lib/orchestrate-run-registry-server'
+import { prepareCreateWorkloadData } from '../lib/orchestrate-run-registry-server'
 import { toast } from 'sonner'
 import { Button } from '@/common/components/ui/button'
 import { prepareSecretsWithoutNamingCollision } from '@/common/lib/secrets/prepare-secrets-without-naming-collision'
@@ -27,6 +22,11 @@ import { Link } from '@tanstack/react-router'
 import { trackEvent } from '@/common/lib/analytics'
 import { restartClientNotification } from '@/features/mcp-servers/lib/restart-client-notification'
 import type { FormSchemaRegistryMcp } from '../lib/form-schema-registry-mcp'
+import {
+  getMCPDefinedSecrets,
+  saveMCPSecrets,
+  groupMCPDefinedSecrets,
+} from '@/common/lib/utils'
 
 type InstallServerCheck = (
   data: FormSchemaRegistryMcp
@@ -124,13 +124,14 @@ export function useRunFromRegistry({
 
       // NOTE: Due to how we populate the names of the secrets in the form, we may
       // have secrets with a `key` but no `value`. We filter those out.
-      const definedSecrets = getDefinedSecrets(data.secrets)
+      const definedSecrets = getMCPDefinedSecrets(data.secrets)
 
       // Step 1: Group secrets into new and existing
       // We need to know which secrets are new (not from the registry) and which are
       // existing (already stored). This helps us handle the encryption and storage
       // of secrets correctly.
-      const { existingSecrets, newSecrets } = groupSecrets(definedSecrets)
+      const { existingSecrets, newSecrets } =
+        groupMCPDefinedSecrets(definedSecrets)
 
       // Step 2: Fetch existing secrets & handle naming collisions
       // We need an up-to-date list of secrets so we can handle any existing keys
@@ -150,7 +151,7 @@ export function useRunFromRegistry({
       // If there are secrets with values, create them in the secret store first.
       // We need the data returned by the API to pass along with the "run workload" request.
       if (preparedNewSecrets.length > 0) {
-        newlyCreatedSecrets = await saveSecrets(
+        newlyCreatedSecrets = await saveMCPSecrets(
           preparedNewSecrets,
           saveSecret,
           onSecretSuccess,
