@@ -308,6 +308,7 @@ export function FormFieldsAuth({
                   <FormLabel>Scopes</FormLabel>
                   <TooltipInfoIcon>
                     The list of scopes (permissions) your app is requesting.
+                    Separate with commas.
                   </TooltipInfoIcon>
                 </div>
                 <FormControl>

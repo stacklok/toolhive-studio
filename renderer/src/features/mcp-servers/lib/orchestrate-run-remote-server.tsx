@@ -16,10 +16,17 @@ export function prepareCreateWorkloadData(
   secrets: SecretsSecretParameter[] = []
 ): V1CreateRequest {
   const { oauth_config, envVars, ...rest } = data
+
+  const oauthConfig = {
+    ...oauth_config,
+    scopes: oauth_config.scopes
+      ? oauth_config.scopes.split(',').map((s) => s.trim())
+      : [],
+  }
   // Transform client_secret from string to SecretsSecretParameter if it exists
-  const transformedOAuthConfig = oauth_config
+  const transformedOAuthConfig = oauthConfig
     ? {
-        ...oauth_config,
+        ...oauthConfig,
         client_secret: oauth_config.client_secret
           ? ({
               name: 'oauth_client_secret',
@@ -27,7 +34,7 @@ export function prepareCreateWorkloadData(
             } as SecretsSecretParameter)
           : undefined,
       }
-    : oauth_config
+    : oauthConfig
 
   const request = {
     ...rest,
@@ -48,10 +55,17 @@ export function prepareUpdateWorkloadData(
 ): V1UpdateRequest {
   const { oauth_config, envVars, ...rest } = data
 
+  const oauthConfig = {
+    ...oauth_config,
+    scopes: oauth_config.scopes
+      ? oauth_config.scopes.split(',').map((s) => s.trim())
+      : [],
+  }
+
   // Transform client_secret from string to SecretsSecretParameter if it exists
-  const transformedOAuthConfig = oauth_config
+  const transformedOAuthConfig = oauthConfig
     ? {
-        ...oauth_config,
+        ...oauthConfig,
         client_secret: oauth_config.client_secret
           ? ({
               name: 'oauth_client_secret',
@@ -59,7 +73,7 @@ export function prepareUpdateWorkloadData(
             } as SecretsSecretParameter)
           : undefined,
       }
-    : oauth_config
+    : oauthConfig
 
   return {
     ...omit(rest, 'auth_type'),
@@ -116,7 +130,9 @@ export function convertCreateRequestToFormData(
       client_secret: createRequest.oauth_config?.client_secret?.name,
       issuer: createRequest.oauth_config?.issuer,
       oauth_params: createRequest.oauth_config?.oauth_params,
-      scopes: createRequest.oauth_config?.scopes,
+      scopes: Array.isArray(createRequest.oauth_config?.scopes)
+        ? createRequest.oauth_config.scopes.join(',')
+        : createRequest.oauth_config?.scopes || '',
       token_url: createRequest.oauth_config?.token_url,
     },
     auth_type: authType,
