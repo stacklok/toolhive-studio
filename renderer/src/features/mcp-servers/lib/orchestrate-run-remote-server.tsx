@@ -23,7 +23,7 @@ export function prepareCreateWorkloadData(
         client_secret: oauth_config.client_secret
           ? ({
               name: 'oauth_client_secret',
-              target: 'client_secret',
+              target: oauth_config.client_secret,
             } as SecretsSecretParameter)
           : undefined,
       }
@@ -55,7 +55,7 @@ export function prepareUpdateWorkloadData(
         client_secret: oauth_config.client_secret
           ? ({
               name: 'oauth_client_secret',
-              target: 'client_secret',
+              target: oauth_config.client_secret,
             } as SecretsSecretParameter)
           : undefined,
       }
