@@ -220,8 +220,8 @@ importers:
         specifier: ^9.25.0
         version: 9.35.0
       '@hey-api/openapi-ts':
-        specifier: 0.83.0
-        version: 0.83.0(magicast@0.3.5)(typescript@5.9.2)
+        specifier: 0.83.1
+        version: 0.83.1(magicast@0.3.5)(typescript@5.9.2)
       '@playwright/test':
         specifier: ^1.54.1
         version: 1.55.0
@@ -992,8 +992,8 @@ packages:
     resolution: {integrity: sha512-+5eg9pgAAM9oSqJQuUtfTKbLz8yieFKN91myyXiLnprqFj8ROfxUKJLr9DKq/hGKyybKT1WxFSetDqCFm80pCA==}
     engines: {node: '>= 16'}
 
-  '@hey-api/openapi-ts@0.83.0':
-    resolution: {integrity: sha512-Oj1/P1gmrG1KPAC49BxQU6OwXl7X7URBM0AZmuYJsN8m/MHTchumc4jUmdG+O0ffKYfREwWv07JeK7+P9fvaKQ==}
+  '@hey-api/openapi-ts@0.83.1':
+    resolution: {integrity: sha512-AJIXDsXBLXS4uzhU+yVeNmD43uN6FYPcWpcid7Q0bA4JRXpI+6livOzUUMiuszt3NlgHy1gcf6x15W2xHNSoag==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=22.10.0}
     hasBin: true
     peerDependencies:
@@ -8189,7 +8189,7 @@ snapshots:
       js-yaml: 4.1.0
       lodash: 4.17.21
 
-  '@hey-api/openapi-ts@0.83.0(magicast@0.3.5)(typescript@5.9.2)':
+  '@hey-api/openapi-ts@0.83.1(magicast@0.3.5)(typescript@5.9.2)':
     dependencies:
       '@hey-api/codegen-core': 0.1.0(typescript@5.9.2)
       '@hey-api/json-schema-ref-parser': 1.1.0
