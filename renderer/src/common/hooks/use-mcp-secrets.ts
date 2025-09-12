@@ -176,7 +176,12 @@ export function useMCPSecrets({
     isPending: isPendingSecrets,
     isError: isErrorSecrets,
   } = useMutation({
-    mutationFn: async (secrets: DefinedSecret[]): Promise<MCPSecretsResult> => {
+    mutationFn: async (
+      secrets:
+        | FormSchemaRemoteMcp['secrets']
+        | FormSchemaLocalMcp['secrets']
+        | FormSchemaRegistryMcp['secrets']
+    ): Promise<MCPSecretsResult> => {
       let newlyCreatedSecrets: SecretsSecretParameter[] = []
 
       // Step 1: Group secrets into new and existing
