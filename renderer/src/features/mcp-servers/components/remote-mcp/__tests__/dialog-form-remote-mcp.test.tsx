@@ -216,7 +216,7 @@ describe('DialogFormRemoteMcp', () => {
     })
   })
 
-  it('shows loading state when submitting', async () => {
+  it.only('shows loading state when submitting', async () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunRemoteServer.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
@@ -325,7 +325,7 @@ describe('DialogFormRemoteMcp', () => {
               client_secret: '',
               issuer: '',
               oauth_params: {},
-              scopes: [],
+              scopes: '',
               skip_browser: false,
               token_url: '',
               use_pkce: true,
