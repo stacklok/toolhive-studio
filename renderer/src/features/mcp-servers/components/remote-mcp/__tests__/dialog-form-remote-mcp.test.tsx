@@ -216,7 +216,7 @@ describe('DialogFormRemoteMcp', () => {
     })
   })
 
-  it.only('shows loading state when submitting', async () => {
+  it('shows loading state when submitting', async () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunRemoteServer.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
