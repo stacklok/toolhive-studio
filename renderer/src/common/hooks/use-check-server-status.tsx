@@ -27,8 +27,7 @@ export function useCheckServerStatus() {
       isEditing?: boolean
     }): Promise<boolean> => {
       toast.loading(
-        `${isEditing ? 'Updating' : 'Starting'}     
-         "${serverName}"...`,
+        `${isEditing ? 'Updating' : 'Starting'} "${serverName}"...`,
         {
           duration: 30_000,
           id: toastIdRef.current,
