@@ -22,11 +22,8 @@ export function getFormSchemaRegistryMcp({
     ? workloads.filter((w) => w.name !== editingServerName)
     : workloads
 
-  return createRegistrySchema(
-    filteredWorkloads,
-    envVars,
-    secrets,
-    (value: unknown) => isEmptyEnvVar(value as string | null | undefined)
+  return createRegistrySchema(filteredWorkloads, envVars, secrets, (value) =>
+    isEmptyEnvVar(value as string | null | undefined)
   )
 }
 

@@ -157,7 +157,7 @@ const createRegistrySecretsSchema = (
     .object({
       name: secretNameSchema,
       value: z.object({
-        secret: z.string().optional(),
+        secret: z.string(),
         isFromStore: z.boolean(),
       }),
     })

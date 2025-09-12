@@ -4,22 +4,14 @@ import {
   type SecretsSecretParameter,
   type V1CreateRequest,
 } from '@api/types.gen'
-import { getApiV1BetaSecretsDefaultKeys, type Options } from '@api/sdk.gen'
-import {
-  postApiV1BetaWorkloadsMutation,
-  postApiV1BetaSecretsDefaultKeysMutation,
-} from '@api/@tanstack/react-query.gen'
+import { type Options } from '@api/sdk.gen'
+import { postApiV1BetaWorkloadsMutation } from '@api/@tanstack/react-query.gen'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { prepareCreateWorkloadData } from '../lib/orchestrate-run-registry-server'
-import { prepareSecretsWithoutNamingCollision } from '@/common/lib/secrets/prepare-secrets-without-naming-collision'
 import { trackEvent } from '@/common/lib/analytics'
 import { restartClientNotification } from '@/features/mcp-servers/lib/restart-client-notification'
 import type { FormSchemaRegistryMcp } from '../lib/form-schema-registry-mcp'
-import {
-  getMCPDefinedSecrets,
-  saveMCPSecrets,
-  groupMCPDefinedSecrets,
-} from '@/common/lib/utils'
+import { useMCPSecrets } from '@/common/hooks/use-mcp-secrets'
 
 export function useRunFromRegistry({
   onSecretSuccess,
@@ -32,10 +24,11 @@ export function useRunFromRegistry({
   ) => void
 }) {
   const queryClient = useQueryClient()
-
-  const { mutateAsync: saveSecret } = useMutation({
-    ...postApiV1BetaSecretsDefaultKeysMutation(),
+  const { handleSecrets, isPendingSecrets, isErrorSecrets } = useMCPSecrets({
+    onSecretSuccess,
+    onSecretError,
   })
+
   const { mutateAsync: createWorkload } = useMutation({
     ...postApiV1BetaWorkloadsMutation(),
     onSuccess: async (data) => {
@@ -49,58 +42,6 @@ export function useRunFromRegistry({
     },
   })
 
-  const {
-    mutateAsync: handleSecrets,
-    isPending: isPendingSecrets,
-    isError: isErrorSecrets,
-  } = useMutation({
-    mutationFn: async (data: FormSchemaRegistryMcp) => {
-      let newlyCreatedSecrets: SecretsSecretParameter[] = []
-
-      // NOTE: Due to how we populate the names of the secrets in the form, we may
-      // have secrets with a `key` but no `value`. We filter those out.
-      const definedSecrets = getMCPDefinedSecrets(data.secrets)
-
-      // Step 1: Group secrets into new and existing
-      // We need to know which secrets are new (not from the registry) and which are
-      // existing (already stored). This helps us handle the encryption and storage
-      // of secrets correctly.
-      const { existingSecrets, newSecrets } =
-        groupMCPDefinedSecrets(definedSecrets)
-
-      // Step 2: Fetch existing secrets & handle naming collisions
-      // We need an up-to-date list of secrets so we can handle any existing keys
-      // safely & correctly. This is done with a manual fetch call to avoid freshness issues /
-      // side-effects from the `useQuery` hook.
-      // In the event of a naming collision, we will append an incrementing number
-      // to the secret name, e.g. `MY_API_TOKEN` -> `MY_API_TOKEN_2`
-      const { data: fetchedSecrets } = await getApiV1BetaSecretsDefaultKeys({
-        throwOnError: true,
-      })
-      const preparedNewSecrets = prepareSecretsWithoutNamingCollision(
-        newSecrets,
-        fetchedSecrets
-      )
-
-      // Step 3: Encrypt secrets
-      // If there are secrets with values, create them in the secret store first.
-      // We need the data returned by the API to pass along with the "run workload" request.
-      if (preparedNewSecrets.length > 0) {
-        newlyCreatedSecrets = await saveMCPSecrets(
-          preparedNewSecrets,
-          saveSecret,
-          onSecretSuccess,
-          onSecretError
-        )
-      }
-
-      return {
-        newlyCreatedSecrets,
-        existingSecrets,
-      }
-    },
-  })
-
   const { mutate: installServerMutation } = useMutation({
     mutationFn: async ({
       server,
@@ -109,9 +50,11 @@ export function useRunFromRegistry({
       server: RegistryImageMetadata
       data: FormSchemaRegistryMcp
     }) => {
-      const { newlyCreatedSecrets, existingSecrets } = await handleSecrets(data)
+      const { newlyCreatedSecrets, existingSecrets } = await handleSecrets(
+        data.secrets
+      )
 
-      // Step 4: Create the MCP server workload
+      // Create the MCP server workload
       // Prepare the request data and send it to the API
       // We pass the encrypted secrets along with the request.
       const secretsForRequest: SecretsSecretParameter[] = [
