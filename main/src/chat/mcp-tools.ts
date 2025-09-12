@@ -100,89 +100,82 @@ export async function getMcpServerTools(serverName?: string): Promise<
     }
   | null
 > {
-  try {
-    const port = getToolhivePort()
-    const client = createClient({
-      baseUrl: `http://localhost:${port}`,
-      headers: getHeaders(),
-    })
+  const port = getToolhivePort()
+  const client = createClient({
+    baseUrl: `http://localhost:${port}`,
+    headers: getHeaders(),
+  })
 
-    const { data } = await getApiV1BetaWorkloads({
-      client,
-    })
-    const workloads = data?.workloads
+  const { data } = await getApiV1BetaWorkloads({
+    client,
+  })
+  const workloads = data?.workloads
 
-    // If serverName is provided, return server-specific format
-    if (serverName) {
-      // Get server tools for specific server
-      const workload = (workloads || []).find(
-        (w) => w.name === serverName && w.tool_type === 'mcp'
-      )
+  // If serverName is provided, return server-specific format
+  if (serverName) {
+    // Get server tools for specific server
+    const workload = (workloads || []).find((w) => w.name === serverName)
 
-      if (!workload) {
-        return null
-      }
-
-      // Get enabled tools for this server
-      const enabledTools = getEnabledMcpTools()
-      const enabledToolNames = enabledTools[serverName] || []
-
-      // If workload.tools is empty, try to discover tools by connecting to the server
-      let discoveredTools: string[] = workload.tools || []
-      let serverMcpTools: Record<string, McpToolDefinition> = {}
-
-      if (discoveredTools.length === 0 && workload.status === 'running') {
-        serverMcpTools = (await getWorkloadAvailableTools(workload)) || {}
-        discoveredTools = Object.keys(serverMcpTools)
-      }
-
-      const result = {
-        serverName: workload.name!,
-        serverPackage: workload.package,
-        tools: discoveredTools.map(
-          (
-            toolName
-          ): {
-            name: string
-            description: string
-            parameters: Record<string, unknown>
-            enabled: boolean
-          } => {
-            const toolDef = serverMcpTools[toolName]
-            return {
-              name: toolName,
-              description: toolDef?.description || '',
-              parameters: getToolParameters(toolDef?.inputSchema),
-              enabled: enabledToolNames.includes(toolName),
-            }
-          }
-        ),
-        isRunning: workload.status === 'running',
-      }
-
-      return result
+    if (!workload) {
+      throw new Error('Server not in the workload list')
     }
 
-    // Otherwise return the original format for backward compatibility
-    const mcpTools = (workloads || [])
-      .filter(
-        (workload) =>
-          workload.name && workload.tools && workload.tool_type === 'mcp'
-      )
-      .flatMap((workload) =>
-        workload.tools!.map((toolName) => ({
-          name: `mcp_${workload.name}_${toolName}`,
-          description: '',
-          inputSchema: {},
-          serverName: workload.name!,
-        }))
-      )
+    // Get enabled tools for this server
+    const enabledTools = getEnabledMcpTools()
+    const enabledToolNames = enabledTools[serverName] || []
 
-    return mcpTools
-  } catch (error) {
-    log.error('Failed to get MCP server tools:', error)
-    return serverName ? null : []
+    // If workload.tools is empty, try to discover tools by connecting to the server
+    let discoveredTools: string[] = workload.tools || []
+    let serverMcpTools: Record<string, McpToolDefinition> = {}
+
+    if (discoveredTools.length === 0 && workload.status === 'running') {
+      serverMcpTools = (await getWorkloadAvailableTools(workload)) || {}
+      discoveredTools = Object.keys(serverMcpTools)
+    }
+
+    const result = {
+      serverName: workload.name!,
+      serverPackage: workload.package,
+      tools: discoveredTools.map(
+        (
+          toolName
+        ): {
+          name: string
+          description: string
+          parameters: Record<string, unknown>
+          enabled: boolean
+        } => {
+          const toolDef = serverMcpTools[toolName]
+          return {
+            name: toolName,
+            description: toolDef?.description || '',
+            parameters: getToolParameters(toolDef?.inputSchema),
+            enabled: enabledToolNames.includes(toolName),
+          }
+        }
+      ),
+      isRunning: workload.status === 'running',
+    }
+
+    return result
   }
+
+  // Otherwise return the original format for backward compatibility
+  const mcpTools = (workloads || [])
+    .filter(
+      (workload) =>
+        workload.name && workload.tools && workload.tool_type === 'mcp'
+    )
+    .flatMap((workload) =>
+      workload.tools!.map((toolName) => ({
+        name: `mcp_${workload.name}_${toolName}`,
+        description: '',
+        inputSchema: {},
+        serverName: workload.name!,
+      }))
+    )
+
+  return mcpTools
 }
 
 // Create MCP tools for AI SDK
@@ -251,7 +244,7 @@ export async function createMcpTools(): Promise<{
       if (!workload || workload.tool_type !== 'mcp') continue
 
       try {
-        const config = createTransport(workload, serverName, port!)
+        const config = createTransport(workload)
 
         const mcpClient = await createMCPClient(config)
 

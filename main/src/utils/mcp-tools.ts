@@ -46,38 +46,34 @@ export function isMcpToolDefinition(obj: Tool): obj is McpToolDefinition {
   return true
 }
 
-export function createTransport(
-  workload: CoreWorkload,
-  serverName: string,
-  port: number
-): MCPClientConfig {
+export function createTransport(workload: CoreWorkload): MCPClientConfig {
   const transportConfigs = {
     stdio: () => ({
-      name: serverName,
+      name: workload.name,
       transport: new StdioMCPTransport({
         command: 'node',
         args: [],
       }),
     }),
     'streamable-http': () => {
-      const url = new URL(workload.url || `http://localhost:${port}/mcp`)
+      const url = new URL(`http://localhost:${workload.port}/mcp`)
       return {
-        name: serverName,
+        name: workload.name,
         transport: new StreamableHTTPClientTransport(url),
       }
     },
     sse: () => ({
-      name: serverName,
+      name: workload.name,
       transport: {
         type: 'sse' as const,
-        url: `${workload.url || `http://localhost:${port}/sse#${serverName}`}`,
+        url: `${`http://localhost:${workload.port}/sse#${workload.name}`}`,
       },
     }),
     default: () => ({
-      name: serverName,
+      name: workload.name,
       transport: {
         type: 'sse' as const,
-        url: `${workload.url || `http://localhost:${port}/sse#${serverName}`}`,
+        url: `${`http://localhost:${workload.port}/sse#${workload.name}`}`,
       },
     }),
   }
@@ -87,7 +83,7 @@ export function createTransport(
 
   if (transportType === 'stdio' && workload.url) {
     // If URL contains /sse or #, use SSE transport instead
-    if (workload.url.includes('/sse') || workload.url.includes('#')) {
+    if (workload.url.includes('/sse')) {
       // Override stdio to SSE based on URL pattern
       transportType = 'sse'
     }
@@ -104,7 +100,7 @@ export async function getWorkloadAvailableTools(workload: CoreWorkload) {
 
   try {
     // Try to create an MCP client and discover tools
-    const config = createTransport(workload, workload.name, workload.port!)
+    const config = createTransport(workload)
     if (config) {
       const mcpClient = await createMCPClient(config)
       const rawTools = await mcpClient.tools<'automatic'>()
@@ -125,6 +121,6 @@ export async function getWorkloadAvailableTools(workload: CoreWorkload) {
     }
   } catch (error) {
     log.error(`Failed to discover tools for ${workload.name}:`, error)
-    return {}
+    throw error
   }
 }

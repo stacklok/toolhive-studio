@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
 import type { CoreWorkload } from '@api/types.gen'
+import { toast } from 'sonner'
+import log from 'electron-log/renderer'
 import { Button } from '@/common/components/ui/button'
 import {
   DropdownMenu,
@@ -97,7 +99,8 @@ export function McpServerSelector({
           })
         }
       } catch (error) {
-        console.error('Failed to enable server tools:', error)
+        log.error('Failed to enable server tools:', error)
+        toast.error(`Failed to detect tools for ${serverName}`)
       }
     }
   }
