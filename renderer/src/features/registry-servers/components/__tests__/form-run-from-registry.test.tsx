@@ -8,11 +8,18 @@ import { server as mswServer } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { useRunFromRegistry } from '../../hooks/use-run-from-registry'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 
 // Mock the hook
 vi.mock('../../hooks/use-run-from-registry.tsx', () => ({
   useRunFromRegistry: vi.fn(),
 }))
+
+vi.mock('@/common/hooks/use-check-server-status', () => ({
+  useCheckServerStatus: vi.fn(),
+}))
+
+const mockUseCheckServerStatus = vi.mocked(useCheckServerStatus)
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -93,9 +100,12 @@ beforeEach(() => {
   // Default mock implementation
   mockUseRunFromRegistry.mockReturnValue({
     installServerMutation: vi.fn(),
-    checkServerStatus: vi.fn(),
     isErrorSecrets: false,
     isPendingSecrets: false,
+  })
+
+  mockUseCheckServerStatus.mockReturnValue({
+    checkServerStatus: vi.fn(),
   })
 })
 
@@ -163,7 +173,6 @@ describe('FormRunFromRegistry', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -204,7 +213,6 @@ describe('FormRunFromRegistry', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -253,7 +261,6 @@ describe('FormRunFromRegistry', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -271,7 +278,6 @@ describe('FormRunFromRegistry', () => {
     )
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -313,7 +319,6 @@ describe('FormRunFromRegistry', () => {
     vi.clearAllMocks()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -372,7 +377,6 @@ describe('FormRunFromRegistry', () => {
     vi.clearAllMocks()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -429,7 +433,6 @@ describe('FormRunFromRegistry', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -485,7 +488,6 @@ describe('FormRunFromRegistry', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -545,7 +547,6 @@ describe('FormRunFromRegistry', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -595,7 +596,6 @@ describe('FormRunFromRegistry', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: true,
     })
@@ -640,7 +640,6 @@ describe('FormRunFromRegistry', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: true,
       isPendingSecrets: false,
     })
@@ -705,9 +704,12 @@ describe('FormRunFromRegistry', () => {
     const mockCheckServerStatus = vi.fn()
     const mockOnOpenChange = vi.fn()
 
+    mockUseCheckServerStatus.mockReturnValue({
+      checkServerStatus: mockCheckServerStatus,
+    })
+
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: mockCheckServerStatus,
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -761,7 +763,6 @@ describe('FormRunFromRegistry', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -820,7 +821,6 @@ describe('FormRunFromRegistry', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -1001,7 +1001,6 @@ describe('Allowed Hosts field', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -1091,7 +1090,6 @@ describe('Allowed Hosts field', () => {
     const mockInstallServerMutation = vi.fn()
     vi.mocked(useRunFromRegistry).mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -1261,7 +1259,6 @@ describe('CommandArgumentsField', () => {
     vi.clearAllMocks()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: vi.fn(),
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -1425,7 +1422,6 @@ describe('Storage Volumes', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })

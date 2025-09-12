@@ -28,6 +28,7 @@ import {
   type FormSchemaLocalMcp,
 } from '../../lib/form-schema-local-mcp'
 import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-workload-form-wrapper'
+import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 
 type Tab = 'configuration' | 'network-isolation'
 type CommonFields = keyof FormSchemaLocalMcp
@@ -89,6 +90,7 @@ export function DialogFormLocalMcp({
       fieldTabMap: FIELD_TAB_MAP,
       defaultTab: 'configuration',
     })
+  const { checkServerStatus } = useCheckServerStatus()
 
   const handleSecrets = (completedCount: number, secretsCount: number) => {
     setLoadingSecrets((prev) => ({
@@ -99,25 +101,20 @@ export function DialogFormLocalMcp({
     }))
   }
 
-  const {
-    installServerMutation,
-    checkServerStatus,
-    isErrorSecrets,
-    isPendingSecrets,
-  } = useRunCustomServer({
-    onSecretSuccess: handleSecrets,
-    onSecretError: (error, variables) => {
-      log.error('onSecretError', error, variables)
-    },
-  })
-
-  const { updateServerMutation, checkServerStatus: checkUpdateServerStatus } =
-    useUpdateServer(serverToEdit || '', {
+  const { installServerMutation, isErrorSecrets, isPendingSecrets } =
+    useRunCustomServer({
       onSecretSuccess: handleSecrets,
       onSecretError: (error, variables) => {
-        log.error('onSecretError during update', error, variables)
+        log.error('onSecretError', error, variables)
       },
     })
+
+  const { updateServerMutation } = useUpdateServer(serverToEdit || '', {
+    onSecretSuccess: handleSecrets,
+    onSecretError: (error, variables) => {
+      log.error('onSecretError during update', error, variables)
+    },
+  })
 
   const { data } = useQuery({
     ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
@@ -166,7 +163,7 @@ export function DialogFormLocalMcp({
         { data },
         {
           onSuccess: () => {
-            checkUpdateServerStatus()
+            checkServerStatus({ serverName: data.name, isEditing })
             closeDialog()
           },
           onSettled: (_, error) => {
@@ -186,7 +183,7 @@ export function DialogFormLocalMcp({
         { data },
         {
           onSuccess: () => {
-            checkServerStatus(data)
+            checkServerStatus({ serverName: data.name })
             closeDialog()
           },
           onSettled: (_, error) => {
