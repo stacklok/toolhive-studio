@@ -1,24 +1,12 @@
-import {
-  postApiV1BetaWorkloadsByNameEditMutation,
-  postApiV1BetaSecretsDefaultKeysMutation,
-} from '@api/@tanstack/react-query.gen'
-import { getApiV1BetaSecretsDefaultKeys } from '@api/sdk.gen'
+import { postApiV1BetaWorkloadsByNameEditMutation } from '@api/@tanstack/react-query.gen'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import {
-  type PostApiV1BetaSecretsDefaultKeysData,
-  type SecretsSecretParameter,
-} from '@api/types.gen'
+import { type PostApiV1BetaSecretsDefaultKeysData } from '@api/types.gen'
 import type { Options } from '@api/client'
-import { prepareSecretsWithoutNamingCollision } from '@/common/lib/secrets/prepare-secrets-without-naming-collision'
 import { restartClientNotification } from '../lib/restart-client-notification'
 import { trackEvent } from '@/common/lib/analytics'
 import { prepareUpdateWorkloadData } from '../lib/orchestrate-run-local-server'
 import type { FormSchemaLocalMcp } from '../lib/form-schema-local-mcp'
-import {
-  getMCPDefinedSecrets,
-  groupMCPDefinedSecrets,
-  saveMCPSecrets,
-} from '@/common/lib/utils'
+import { useMCPSecrets } from '@/common/hooks/use-mcp-secrets'
 
 export function useUpdateServer(
   serverName: string,
@@ -31,44 +19,22 @@ export function useUpdateServer(
   }
 ) {
   const queryClient = useQueryClient()
+  const { handleSecrets, isPendingSecrets, isErrorSecrets } = useMCPSecrets({
+    onSecretSuccess: options?.onSecretSuccess || (() => {}),
+    onSecretError: options?.onSecretError || (() => {}),
+  })
 
   const { mutateAsync: updateWorkload } = useMutation({
     ...postApiV1BetaWorkloadsByNameEditMutation(),
   })
 
-  const { mutateAsync: saveSecret } = useMutation({
-    ...postApiV1BetaSecretsDefaultKeysMutation(),
-  })
-
   const { mutate: updateServerMutation } = useMutation({
     mutationFn: async ({ data }: { data: FormSchemaLocalMcp }) => {
-      let newlyCreatedSecrets: SecretsSecretParameter[] = []
-
-      // Step 1: Group secrets into new and existing
-      const definedSecrets = getMCPDefinedSecrets(data.secrets)
-      const { existingSecrets, newSecrets } =
-        groupMCPDefinedSecrets(definedSecrets)
-
-      // Step 2: Fetch existing secrets & handle naming collisions
-      const { data: fetchedSecrets } = await getApiV1BetaSecretsDefaultKeys({
-        throwOnError: true,
-      })
-      const preparedNewSecrets = prepareSecretsWithoutNamingCollision(
-        newSecrets,
-        fetchedSecrets
+      const { newlyCreatedSecrets, existingSecrets } = await handleSecrets(
+        data.secrets
       )
 
-      // Step 3: Encrypt secrets
-      if (preparedNewSecrets.length > 0) {
-        newlyCreatedSecrets = await saveMCPSecrets(
-          preparedNewSecrets,
-          saveSecret,
-          options?.onSecretSuccess || (() => {}),
-          options?.onSecretError || (() => {})
-        )
-      }
-
-      // Step 4: Update the workload with all secrets
+      // Update the workload with all secrets
       const allSecrets = [
         ...newlyCreatedSecrets,
         ...existingSecrets.map((secret) => ({
@@ -94,5 +60,7 @@ export function useUpdateServer(
 
   return {
     updateServerMutation,
+    isPendingSecrets,
+    isErrorSecrets,
   }
 }
