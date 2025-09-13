@@ -170,6 +170,7 @@ const config: ForgeConfig = {
           '--socket=session-bus',
           '--filesystem=/run/docker.sock',
           '--filesystem=/run/podman/podman.sock',
+          '--filesystem=xdg-run/podman/podman.sock',
         ],
         icon: './icons/icon.png',
         files: [],
