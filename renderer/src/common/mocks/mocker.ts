@@ -70,6 +70,13 @@ function opResponsesTypeName(method: string, rawPath: string): string {
 
 function autoGenerateHandlers() {
   const result = []
+  // Use Vite's import-glob to lazily import fixtures as real modules
+  // This lets fixtures export any JS/TS literal or logic and we just consume
+  // the default export without manual JSON parsing.
+  // Note: Keys in this map are paths relative to this file, e.g. './fixtures/<name>.ts'
+  const fixtureImporters: Record<string, () => Promise<unknown>> =
+    // @ts-ignore - vite-specific API available in vitest/vite runtime
+    import.meta.glob('./fixtures/*', { import: 'default' })
   const specPaths = Object.entries(
     ((openapi as any).paths ?? {}) as Record<string, any>
   )
@@ -84,7 +91,7 @@ function autoGenerateHandlers() {
       const mswPath = `*/${rawPath.replace(/^\//, '').replace(/\{([^}]+)\}/g, ':$1')}`
 
       result.push(
-        http[method](mswPath, () => {
+        http[method](mswPath, async () => {
           const successStatus = pickSuccessStatus(operation.responses || {})
 
           // Shorten noisy prefixes in fixture filenames.
@@ -104,7 +111,9 @@ function autoGenerateHandlers() {
 
           // Avoid per-request "handling" logs in normal runs
 
-          if (!fs.existsSync(fixtureFileName)) {
+          let data: any = undefined
+          const fileExists = fs.existsSync(fixtureFileName)
+          if (!fileExists) {
             // Generate fixtures for all statuses; for 204 use empty string
             let payload: any = successStatus === '204' ? '' : {}
             if (successStatus && successStatus !== '204') {
@@ -145,32 +154,24 @@ function autoGenerateHandlers() {
             // Write TypeScript fixture module with typed default export using `satisfies`
             const tsModule = `${typeImport}export default ${JSON.stringify(payload, null, 2)}${typeSatisfies}\n`
             fs.writeFileSync(fixtureFileName, tsModule)
+            // Use freshly generated payload directly
+            data = payload
           }
 
           if (successStatus === '204') {
             return new HttpResponse(null, { status: 204 })
           }
 
-          // Read TS fixture and parse the JSON (supports object, array, string, number, boolean, null)
-          const raw = fs.readFileSync(fixtureFileName, 'utf-8')
-          let data: any = {}
-          const startIdx = raw.indexOf('export default')
-          if (startIdx >= 0) {
-            const after = raw.slice(startIdx + 'export default'.length)
-            // Try object first
-            const lastBrace = after.lastIndexOf('}')
-            if (lastBrace >= 0) {
-              const jsonText = after.slice(0, lastBrace + 1)
-              data = JSON.parse(jsonText)
+          // If we didn't just generate, import from module map
+          if (data === undefined) {
+            const relPath = `./fixtures/${fileBase}`
+            const importer = fixtureImporters[relPath]
+            if (importer) {
+              const mod: any = await importer()
+              data = mod
             } else {
-              // Fallback: grab literal up to `satisfies` or end
-              const m = after.match(
-                /^[\s\n\r]*([\s\S]*?)(?:\s+satisfies\s|\n|$)/
-              )
-              if (m && m[1]) {
-                const literal = m[1].trim()
-                if (literal) data = JSON.parse(literal)
-              }
+              // As a last resort, return an empty object
+              data = {}
             }
           }
           const schema =
