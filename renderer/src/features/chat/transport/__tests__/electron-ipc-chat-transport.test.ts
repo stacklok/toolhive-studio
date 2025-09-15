@@ -231,6 +231,7 @@ describe('Electron IPC Chat Transport', () => {
       const stream = await transport.sendMessages(defaultOptions)
 
       expect(mockElectronAPI.chat.stream).toHaveBeenCalledWith({
+        chatId: 'test-chat',
         messages: [
           {
             id: 'msg-1',
