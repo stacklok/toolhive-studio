@@ -41,6 +41,33 @@ function pickSuccessStatus(responses: Record<string, any>): string | undefined {
   return twoXX
 }
 
+function toPascalCase(input: string): string {
+  const spaced = input.replace(/([0-9])([a-zA-Z])/g, '$1 $2')
+  return spaced
+    .split(/[^a-zA-Z0-9]+|\s+/)
+    .filter(Boolean)
+    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+    .join('')
+}
+
+function opResponsesTypeName(method: string, rawPath: string): string {
+  // Example: get + /api/v1beta/registry/{name}/servers/{serverName}
+  // -> GetApiV1BetaRegistryByNameServersByServerNameResponses
+  const segments = rawPath
+    .replace(/^\//, '')
+    .split('/')
+    .map((seg) => {
+      const m = seg.match(/^\{(.+)\}$/)
+      if (m) return `By${toPascalCase(m[1] as string)}`
+      return toPascalCase(seg)
+    })
+  const methodPart = toPascalCase(method)
+  return `${methodPart}${segments.join('')}Responses`
+}
+
+// Note: If we need to map component $ref names to SDK types in the future,
+// we can reintroduce a helper. Currently, we type fixtures via OperationResponses.
+
 function autoGenerateHandlers() {
   const result = []
   const specPaths = Object.entries(
@@ -78,7 +105,8 @@ function autoGenerateHandlers() {
           // Avoid per-request "handling" logs in normal runs
 
           if (!fs.existsSync(fixtureFileName)) {
-            let payload: any = {}
+            // Generate fixtures for all statuses; for 204 use empty string
+            let payload: any = successStatus === '204' ? '' : {}
             if (successStatus && successStatus !== '204') {
               const schema =
                 operation.responses?.[successStatus]?.content?.[
@@ -106,8 +134,16 @@ function autoGenerateHandlers() {
                 )
               }
             }
-            // Write TypeScript fixture module with default export
-            const tsModule = `export default ${JSON.stringify(payload, null, 2)}\n`
+            // Determine operation Response type for type-checking (status-specific)
+            let typeImport = ''
+            let typeSatisfies = ''
+            if (successStatus) {
+              const opType = opResponsesTypeName(method, rawPath)
+              typeImport = `import type { ${opType} } from '../../../../../api/generated/types.gen'\n\n`
+              typeSatisfies = ` satisfies ${opType}[${successStatus}]`
+            }
+            // Write TypeScript fixture module with typed default export using `satisfies`
+            const tsModule = `${typeImport}export default ${JSON.stringify(payload, null, 2)}${typeSatisfies}\n`
             fs.writeFileSync(fixtureFileName, tsModule)
           }
 
@@ -115,12 +151,18 @@ function autoGenerateHandlers() {
             return new HttpResponse(null, { status: 204 })
           }
 
-          // Read TS fixture and parse default-exported JSON literal
+          // Read TS fixture and parse JSON literal following `export default`
           const raw = fs.readFileSync(fixtureFileName, 'utf-8')
-          const jsonLiteral = raw
-            .replace(/^[^]*?export\s+default\s+/, '') // strip leading up to export default
-            .replace(/;?\s*$/s, '') // strip trailing semicolon/whitespace
-          const data = jsonLiteral ? JSON.parse(jsonLiteral) : {}
+          let data: any = {}
+          const startIdx = raw.indexOf('export default')
+          if (startIdx >= 0) {
+            const after = raw.slice(startIdx + 'export default'.length)
+            const lastBrace = after.lastIndexOf('}')
+            if (lastBrace >= 0) {
+              const jsonText = after.slice(0, lastBrace + 1)
+              data = JSON.parse(jsonText)
+            }
+          }
           const schema =
             operation.responses?.[successStatus ?? '200']?.content?.[
               'application/json'
