@@ -59,7 +59,19 @@ function autoGenerateHandlers() {
         http[method](mswPath, () => {
           const successStatus = pickSuccessStatus(operation.responses || {})
 
-          const fileBase = `${method}-${toFileSafe(rawPath)}.${successStatus ?? '200'}.json`
+          // Shorten noisy prefixes in fixture filenames.
+          // Example: "/api/v1beta/workloads/{name}" -> "workloads_name"
+          const safePath = toFileSafe(rawPath)
+            // Remove leading OpenAPI prefix once sanitized
+            .replace(/^api_v1beta_/, '')
+            // Also remove occurrences when embedded
+            .replace(/_api_v1beta_/g, '_')
+            .replace(/_api_v1beta$/, '')
+            // Normalize underscores after replacements
+            .replace(/__+/g, '_')
+            .replace(/^_+|_+$/g, '')
+
+          const fileBase = `${method}-${safePath}.${successStatus ?? '200'}.json`
           const fixtureFileName = `${FIXTURES_PATH}/${fileBase}`
 
           // Avoid per-request "handling" logs in normal runs

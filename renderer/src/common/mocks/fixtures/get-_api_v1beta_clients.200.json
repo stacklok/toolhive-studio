@@ -1,5 +1,0 @@
-[
-  { "name": { "name": "vscode" }, "groups": ["default"] },
-  { "name": { "name": "cursor" }, "groups": ["default", "research"] },
-  { "name": { "name": "claude-code" }, "groups": ["research"] }
-]
