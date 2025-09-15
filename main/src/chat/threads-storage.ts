@@ -12,7 +12,7 @@ export interface ChatSettingsThread {
   createdAt: number
 }
 
-export interface ChatSettingsThreads {
+interface ChatSettingsThreads {
   threads: Record<string, ChatSettingsThread>
   activeThreadId?: string
 }
