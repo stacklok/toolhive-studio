@@ -165,6 +165,10 @@ export type CoreWorkload = {
    */
   port?: number
   /**
+   * ProxyMode is the proxy mode for stdio transport (sse or streamable-http).
+   */
+  proxy_mode?: string
+  /**
    * Remote indicates whether this is a remote workload (true) or a container workload (false).
    */
   remote?: boolean
@@ -288,6 +292,29 @@ export type RegistryEnvVar = {
    * If true, the value will be stored as a secret rather than as a plain environment variable
    */
   secret?: boolean
+}
+
+export type RegistryGroup = {
+  /**
+   * Description is a human-readable description of the group's purpose and functionality
+   */
+  description?: string
+  /**
+   * Name is the identifier for the group, used when referencing the group in commands
+   */
+  name?: string
+  /**
+   * RemoteServers is a map of server names to their corresponding remote server definitions within this group
+   */
+  remote_servers?: {
+    [key: string]: RegistryRemoteServerMetadata
+  }
+  /**
+   * Servers is a map of server names to their corresponding server definitions within this group
+   */
+  servers?: {
+    [key: string]: RegistryImageMetadata
+  }
 }
 
 export type RegistryHeader = {
@@ -475,6 +502,10 @@ export type RegistryProvenance = {
  * Full registry data
  */
 export type RegistryRegistry = {
+  /**
+   * Groups is a slice of group definitions containing related MCP servers
+   */
+  groups?: Array<RegistryGroup>
   /**
    * LastUpdated is the timestamp when the registry was last updated, in RFC3339 format
    */
@@ -712,21 +743,15 @@ export type RunnerRunConfig = {
    */
   thv_ca_bundle?: string
   /**
-   * ToolOverride is the map of tool names to override. Tools to override are
-   * specified as ToolOverride structs.
-   */
-  tool_override?: {
-    [key: string]: RunnerToolOverride
-  }
-  /**
-   * ToolOverrideFile is the path to a file containing tool overrides.
-   * The file is a JSON struct mapping actual names to ToolOverride structs.
-   */
-  tool_override_file?: string
-  /**
    * ToolsFilter is the list of tools to filter
    */
   tools_filter?: Array<string>
+  /**
+   * ToolsOverride is a map from an actual tool to its overridden name and/or description
+   */
+  tools_override?: {
+    [key: string]: RunnerToolOverride
+  }
   /**
    * Transport is the transport mode (stdio, sse, or streamable-http)
    */
@@ -997,6 +1022,12 @@ export type V1CreateRequest = {
    * Tools filter
    */
   tools?: Array<string>
+  /**
+   * Tools override
+   */
+  tools_override?: {
+    [key: string]: V1ToolOverride
+  }
   /**
    * Transport configuration
    */
@@ -1324,6 +1355,20 @@ export type V1SetupSecretsResponse = {
 }
 
 /**
+ * Tool override
+ */
+export type V1ToolOverride = {
+  /**
+   * Description of the tool
+   */
+  description?: string
+  /**
+   * Name of the tool
+   */
+  name?: string
+}
+
+/**
  * Request to update an existing workload (name cannot be changed)
  */
 export type V1UpdateRequest = {
@@ -1377,6 +1422,12 @@ export type V1UpdateRequest = {
    * Tools filter
    */
   tools?: Array<string>
+  /**
+   * Tools override
+   */
+  tools_override?: {
+    [key: string]: V1ToolOverride
+  }
   /**
    * Transport configuration
    */
