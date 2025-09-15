@@ -210,6 +210,10 @@
             "description": "Port is the port on which the workload is exposed.\nThis is embedded in the URL.",
             "type": "integer"
           },
+          "proxy_mode": {
+            "description": "ProxyMode is the proxy mode for stdio transport (sse or streamable-http).",
+            "type": "string"
+          },
           "remote": {
             "description": "Remote indicates whether this is a remote workload (true) or a container workload (false).",
             "type": "boolean"
@@ -345,6 +349,33 @@
           "secret": {
             "description": "Secret indicates whether this environment variable contains sensitive information\nIf true, the value will be stored as a secret rather than as a plain environment variable",
             "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "registry.Group": {
+        "properties": {
+          "description": {
+            "description": "Description is a human-readable description of the group's purpose and functionality",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name is the identifier for the group, used when referencing the group in commands",
+            "type": "string"
+          },
+          "remote_servers": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/registry.RemoteServerMetadata"
+            },
+            "description": "RemoteServers is a map of server names to their corresponding remote server definitions within this group",
+            "type": "object"
+          },
+          "servers": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/registry.ImageMetadata"
+            },
+            "description": "Servers is a map of server names to their corresponding server definitions within this group",
+            "type": "object"
           }
         },
         "type": "object"
@@ -533,6 +564,12 @@
       "registry.Registry": {
         "description": "Full registry data",
         "properties": {
+          "groups": {
+            "description": "Groups is a slice of group definitions containing related MCP servers",
+            "items": { "$ref": "#/components/schemas/registry.Group" },
+            "type": "array",
+            "uniqueItems": false
+          },
           "last_updated": {
             "description": "LastUpdated is the timestamp when the registry was last updated, in RFC3339 format",
             "type": "string"
@@ -788,22 +825,18 @@
             "description": "ThvCABundle is the path to the CA certificate bundle for ToolHive HTTP operations",
             "type": "string"
           },
-          "tool_override": {
-            "additionalProperties": {
-              "$ref": "#/components/schemas/runner.ToolOverride"
-            },
-            "description": "ToolOverride is the map of tool names to override. Tools to override are\nspecified as ToolOverride structs.",
-            "type": "object"
-          },
-          "tool_override_file": {
-            "description": "ToolOverrideFile is the path to a file containing tool overrides.\nThe file is a JSON struct mapping actual names to ToolOverride structs.",
-            "type": "string"
-          },
           "tools_filter": {
             "description": "ToolsFilter is the list of tools to filter",
             "items": { "type": "string" },
             "type": "array",
             "uniqueItems": false
+          },
+          "tools_override": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/runner.ToolOverride"
+            },
+            "description": "ToolsOverride is a map from an actual tool to its overridden name and/or description",
+            "type": "object"
           },
           "transport": {
             "description": "Transport is the transport mode (stdio, sse, or streamable-http)",
@@ -872,7 +905,8 @@
           "environmentVariables": {
             "description": "EnvironmentVariables is a list of environment variable names that should be\nincluded in telemetry spans as attributes. Only variables in this list will\nbe read from the host machine and included in spans for observability.\nExample: []string{\"NODE_ENV\", \"DEPLOYMENT_ENV\", \"SERVICE_VERSION\"}",
             "items": { "type": "string" },
-            "type": "array"
+            "type": "array",
+            "uniqueItems": false
           },
           "headers": {
             "additionalProperties": { "type": "string" },
@@ -1175,6 +1209,13 @@
             "items": { "type": "string" },
             "type": "array",
             "uniqueItems": false
+          },
+          "tools_override": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/v1.toolOverride"
+            },
+            "description": "Tools override",
+            "type": "object"
           },
           "transport": {
             "description": "Transport configuration",
@@ -1500,6 +1541,17 @@
         },
         "type": "object"
       },
+      "v1.toolOverride": {
+        "description": "Tool override",
+        "properties": {
+          "description": {
+            "description": "Description of the tool",
+            "type": "string"
+          },
+          "name": { "description": "Name of the tool", "type": "string" }
+        },
+        "type": "object"
+      },
       "v1.updateRequest": {
         "description": "Request to update an existing workload (name cannot be changed)",
         "properties": {
@@ -1559,6 +1611,13 @@
             "items": { "type": "string" },
             "type": "array",
             "uniqueItems": false
+          },
+          "tools_override": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/v1.toolOverride"
+            },
+            "description": "Tools override",
+            "type": "object"
           },
           "transport": {
             "description": "Transport configuration",
