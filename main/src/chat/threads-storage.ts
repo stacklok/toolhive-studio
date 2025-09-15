@@ -56,12 +56,10 @@ const threadsStore = new Store<ChatSettingsThreads>({
   },
 })
 
-// Generate a unique thread ID
 function generateThreadId(): string {
   return `thread_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
 }
 
-// Create a new thread
 export function createThread(
   title?: string,
   initialMessages: ChatSettingsThread['messages'] = []
@@ -95,7 +93,6 @@ export function createThread(
   }
 }
 
-// Get a thread by ID
 export function getThread(threadId: string): ChatSettingsThread | null {
   try {
     const threads = threadsStore.get('threads')
@@ -109,7 +106,6 @@ export function getThread(threadId: string): ChatSettingsThread | null {
   }
 }
 
-// Get all threads
 export function getAllThreads(): ChatSettingsThread[] {
   try {
     const threads = threadsStore.get('threads')
@@ -125,7 +121,6 @@ export function getAllThreads(): ChatSettingsThread[] {
   }
 }
 
-// Update a thread
 export function updateThread(
   threadId: string,
   updates: Partial<Omit<ChatSettingsThread, 'id' | 'createdAt'>>
@@ -157,7 +152,6 @@ export function updateThread(
   }
 }
 
-// Add a message to a thread
 export function addMessageToThread(
   threadId: string,
   message: UIMessage<{
@@ -197,7 +191,6 @@ export function addMessageToThread(
   }
 }
 
-// Update messages in a thread (replace all messages)
 export function updateThreadMessages(
   threadId: string,
   messages: ChatSettingsThread['messages']
@@ -233,7 +226,6 @@ export function updateThreadMessages(
   }
 }
 
-// Delete a thread
 export function deleteThread(threadId: string): {
   success: boolean
   error?: string
@@ -265,7 +257,6 @@ export function deleteThread(threadId: string): {
   }
 }
 
-// Get active thread ID
 export function getActiveThreadId(): string | undefined {
   try {
     return threadsStore.get('activeThreadId')
@@ -275,7 +266,6 @@ export function getActiveThreadId(): string | undefined {
   }
 }
 
-// Set active thread ID
 export function setActiveThreadId(threadId: string | undefined): {
   success: boolean
   error?: string
@@ -300,7 +290,6 @@ export function setActiveThreadId(threadId: string | undefined): {
   }
 }
 
-// Clear all threads
 export function clearAllThreads(): { success: boolean; error?: string } {
   try {
     threadsStore.set('threads', {})
@@ -315,7 +304,6 @@ export function clearAllThreads(): { success: boolean; error?: string } {
   }
 }
 
-// Get thread count
 export function getThreadCount(): number {
   try {
     const threads = threadsStore.get('threads')

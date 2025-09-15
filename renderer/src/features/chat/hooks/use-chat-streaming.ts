@@ -90,8 +90,8 @@ export function useChatStreaming() {
   const clearMessages = useCallback(async () => {
     try {
       // Clear both UI state and persistent storage
-      setMessages([])
       await clearThreadMessages()
+      setMessages([])
       setPersistentError(null)
     } catch (err) {
       const errorMessage =

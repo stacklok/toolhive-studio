@@ -10,6 +10,7 @@ import { ModelSelector } from './model-selector'
 import { ErrorAlert } from './error-alert'
 
 import { useChatStreaming } from '../hooks/use-chat-streaming'
+import { useConfirm } from '@/common/hooks/use-confirm'
 
 function ChatInterfaceContent() {
   const {
@@ -24,6 +25,7 @@ function ChatInterfaceContent() {
     updateSettings,
     isPersistentLoading,
   } = useChatStreaming()
+  const confirm = useConfirm()
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
@@ -45,6 +47,19 @@ function ChatInterfaceContent() {
   const hasProviderAndModel = settings.provider && settings.model
   const hasMessages = messages.length > 0
 
+  const onClearMessages = useCallback(async () => {
+    const confirmed = await confirm(
+      'Are you sure you want to delete all messages?',
+      {
+        title: 'Clear messages',
+        buttons: { yes: 'Delete', no: 'Cancel' },
+        isDestructive: true,
+      }
+    )
+    if (!confirmed) return
+    clearMessages()
+  }, [clearMessages, confirm])
+
   return (
     <div className="bg-background flex h-full flex-col">
       {/* Model Selection Bar */}
@@ -62,7 +77,7 @@ function ChatInterfaceContent() {
             />
             {hasMessages && (
               <Button
-                onClick={clearMessages}
+                onClick={onClearMessages}
                 variant="ghost"
                 size="sm"
                 className="text-muted-foreground hover:text-foreground"
