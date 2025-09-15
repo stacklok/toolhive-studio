@@ -14,6 +14,11 @@ import { fileURLToPath } from 'url'
 // import { mswEndpoint } from './customHandlers'
 
 const ajv = new Ajv({ strict: true })
+// Ignore vendor extensions present in the OpenAPI schema
+// to prevent strict mode errors during validation
+// e.g., x-enum-varnames is a common extension for enum labels
+
+;(ajv as any).addKeyword('x-enum-varnames')
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)

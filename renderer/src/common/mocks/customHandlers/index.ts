@@ -1,14 +1,11 @@
 import { http, HttpResponse } from 'msw'
 import type json from '../../../../../api/openapi.json'
 import {
-  createWorkloadResponseFixture,
   getWorkloadByName,
   workloadListFixture,
   getMockLogs,
 } from './fixtures/servers'
-import { clientsFixture } from './fixtures/clients'
 import type {
-  V1CreateRequest,
   V1CreateSecretRequest,
   V1UpdateRegistryRequest,
 } from '../../../../../api/generated/types.gen'
@@ -67,25 +64,6 @@ export const customHandlers = [
       (names ?? []).includes(w.name || '')
     )
     return HttpResponse.json({ workloads: filtered })
-  }),
-
-  http.post(mswEndpoint('/api/v1beta/workloads'), async ({ request }) => {
-    try {
-      const { name, target_port } = (await request.json()) as V1CreateRequest
-
-      const response = {
-        ...createWorkloadResponseFixture,
-        name,
-        port: target_port || createWorkloadResponseFixture.port,
-      }
-
-      return HttpResponse.json(response, { status: 201 })
-    } catch {
-      return HttpResponse.json(
-        { error: 'Invalid request body' },
-        { status: 400 }
-      )
-    }
   }),
 
   http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
@@ -170,8 +148,6 @@ export const customHandlers = [
     })
   }),
 
-  // Removed: POST /api/v1beta/workloads/restart — allow auto-generated mock to handle this
-
   http.get(mswEndpoint('/api/v1beta/workloads/:name/logs'), ({ params }) => {
     const { name } = params
 
@@ -187,12 +163,6 @@ export const customHandlers = [
 
     const logs = getMockLogs(name as string)
     return new HttpResponse(logs, { status: 200 })
-  }),
-
-  http.get(mswEndpoint('/api/v1beta/discovery/clients'), () => {
-    // TODO: Don't stringify after
-    // https://github.com/stacklok/toolhive/issues/495 is resolved
-    return HttpResponse.json(clientsFixture)
   }),
 
   http.post(mswEndpoint('/api/v1beta/clients'), async ({ request }) => {
