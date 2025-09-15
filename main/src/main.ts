@@ -78,7 +78,6 @@ import {
   // Thread integration functions
   createChatThread,
   getThreadMessagesForTransport,
-  addMessageToExistingThread,
   getThreadInfo,
   ensureThreadExists,
   type ChatRequest,
@@ -766,21 +765,6 @@ ipcMain.handle('chat:create-chat-thread', (_, title?: string) =>
 ipcMain.handle(
   'chat:get-thread-messages-for-transport',
   (_, threadId: string) => getThreadMessagesForTransport(threadId)
-)
-ipcMain.handle(
-  'chat:add-message-to-existing-thread',
-  (
-    _,
-    threadId: string,
-    role: 'user' | 'assistant' | 'system',
-    text: string,
-    metadata?: {
-      model?: string
-      totalUsage?: LanguageModelV2Usage
-      responseTime?: number
-      finishReason?: string
-    }
-  ) => addMessageToExistingThread(threadId, role, text, metadata)
 )
 ipcMain.handle('chat:get-thread-info', (_, threadId: string) =>
   getThreadInfo(threadId)

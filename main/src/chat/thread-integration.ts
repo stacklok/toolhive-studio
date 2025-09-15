@@ -1,11 +1,7 @@
-import type { UIMessage } from 'ai'
-import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 import {
   createThread,
   getThread,
-  addMessageToThread,
   setActiveThreadId,
-  generateMessageId,
   type ChatSettingsThread,
 } from './threads-storage'
 
@@ -45,50 +41,6 @@ export async function getThreadMessagesForTransport(
 
   // Return stored messages directly
   return thread.messages
-}
-
-/**
- * Add a new message to an existing thread
- */
-export function addMessageToExistingThread(
-  threadId: string,
-  role: 'user' | 'assistant' | 'system',
-  text: string,
-  metadata?: {
-    model?: string
-    totalUsage?: LanguageModelV2Usage
-    responseTime?: number
-    finishReason?: string
-  }
-): { success: boolean; messageId?: string; error?: string } {
-  try {
-    const messageId = generateMessageId()
-    const message: UIMessage<{
-      createdAt?: number
-      model?: string
-      totalUsage?: LanguageModelV2Usage
-      responseTime?: number
-      finishReason?: string
-    }> = {
-      id: messageId,
-      role,
-      parts: [{ type: 'text', text }],
-      metadata: {
-        createdAt: Date.now(),
-        ...metadata,
-      },
-    }
-
-    const result = addMessageToThread(threadId, message)
-    return result.success
-      ? { success: true, messageId }
-      : { success: false, error: result.error }
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }
-  }
 }
 
 /**
@@ -171,52 +123,4 @@ export function ensureThreadExists(
       error: error instanceof Error ? error.message : 'Unknown error',
     }
   }
-}
-
-/**
- * Helper to generate a thread title from the first user message
- */
-export function generateThreadTitle(messages: unknown[]): string {
-  const firstUserMessage = messages.find(
-    (msg: unknown) =>
-      typeof msg === 'object' &&
-      msg !== null &&
-      'role' in msg &&
-      msg.role === 'user'
-  )
-
-  if (
-    !firstUserMessage ||
-    typeof firstUserMessage !== 'object' ||
-    !('parts' in firstUserMessage)
-  ) {
-    return `Chat ${new Date().toLocaleDateString()}`
-  }
-
-  const parts = firstUserMessage.parts
-  if (!Array.isArray(parts)) {
-    return `Chat ${new Date().toLocaleDateString()}`
-  }
-
-  const textPart = parts.find(
-    (part: unknown) =>
-      typeof part === 'object' &&
-      part !== null &&
-      'type' in part &&
-      part.type === 'text' &&
-      'text' in part
-  )
-
-  if (
-    !textPart ||
-    typeof textPart !== 'object' ||
-    !('text' in textPart) ||
-    typeof textPart.text !== 'string'
-  ) {
-    return `Chat ${new Date().toLocaleDateString()}`
-  }
-
-  // Take first 50 characters and add ellipsis if longer
-  const title = textPart.text.trim()
-  return title.length > 50 ? `${title.substring(0, 50)}...` : title
 }

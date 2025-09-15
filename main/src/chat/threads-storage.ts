@@ -2,44 +2,12 @@ import Store from 'electron-store'
 import log from '../logger'
 import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 import type { UIMessage } from 'ai'
-
-// Chat thread types following ChatSettings naming convention
-export interface ChatSettingsMessageMetadata {
-  createdAt?: number
-  model?: string
-  totalUsage?: LanguageModelV2Usage
-  responseTime?: number
-  finishReason?: string
-}
-
-export interface ChatSettingsMessagePart {
-  type: 'text' | 'image' | 'tool-call' | 'tool-result' | 'step-start'
-  text?: string
-  image?: string | Uint8Array | URL
-  toolCallId?: string
-  toolName?: string
-  args?: Record<string, unknown>
-  result?: unknown
-  isError?: boolean
-}
-
-export interface ChatSettingsMessage {
-  id: string
-  role: 'system' | 'user' | 'assistant' | 'tool'
-  parts: ChatSettingsMessagePart[]
-  metadata?: ChatSettingsMessageMetadata
-}
+import type { ChatUIMessage } from './types'
 
 export interface ChatSettingsThread {
   id: string
   title?: string
-  messages: UIMessage<{
-    createdAt?: number
-    model?: string
-    totalUsage?: LanguageModelV2Usage
-    responseTime?: number
-    finishReason?: string
-  }>[]
+  messages: ChatUIMessage[]
   lastEditTimestamp: number
   createdAt: number
 }

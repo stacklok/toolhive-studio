@@ -8,17 +8,17 @@ import { getHeaders } from '../headers'
 import { getTearingDownState } from '../app-state'
 
 // Chat store types
-export interface ChatSettingsProvider {
+interface ChatSettingsProvider {
   apiKey: string
   enabledTools: string[]
 }
 
-export interface ChatSettingsSelectedModel {
+interface ChatSettingsSelectedModel {
   provider: string
   model: string
 }
 
-export interface ChatSettings {
+interface ChatSettings {
   providers: Record<string, ChatSettingsProvider>
   selectedModel: ChatSettingsSelectedModel
   enabledMcpTools: Record<string, string[]> // serverName -> [toolName1, toolName2]
