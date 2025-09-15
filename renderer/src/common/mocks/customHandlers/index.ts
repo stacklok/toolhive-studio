@@ -6,7 +6,6 @@ import {
   workloadListFixture,
   getMockLogs,
 } from './fixtures/servers'
-import { versionFixture } from './fixtures/version'
 import { clientsFixture } from './fixtures/clients'
 import type {
   V1CreateRequest,
@@ -53,10 +52,6 @@ export const customHandlers = [
     return new HttpResponse(null, {
       status: 204,
     })
-  }),
-
-  http.get(mswEndpoint('/api/v1beta/version'), () => {
-    return HttpResponse.json(versionFixture)
   }),
 
   http.get(mswEndpoint('/api/v1beta/workloads'), ({ request }) => {
@@ -175,33 +170,7 @@ export const customHandlers = [
     })
   }),
 
-  // Batch restart endpoint
-  http.post(
-    mswEndpoint('/api/v1beta/workloads/restart'),
-    async ({ request }) => {
-      try {
-        const { names } = (await request.json()) as { names: string[] }
-
-        // Validate all servers exist
-        for (const name of names) {
-          const server = getWorkloadByName(name)
-          if (!server) {
-            return HttpResponse.json(
-              { error: `Server ${name} not found` },
-              { status: 404 }
-            )
-          }
-        }
-
-        return new HttpResponse(null, { status: 204 })
-      } catch {
-        return HttpResponse.json(
-          { error: 'Invalid request body' },
-          { status: 400 }
-        )
-      }
-    }
-  ),
+  // Removed: POST /api/v1beta/workloads/restart — allow auto-generated mock to handle this
 
   http.get(mswEndpoint('/api/v1beta/workloads/:name/logs'), ({ params }) => {
     const { name } = params
@@ -296,22 +265,7 @@ export const customHandlers = [
     }
   ),
 
-  http.get(mswEndpoint('/api/v1beta/clients'), () => {
-    return HttpResponse.json([
-      {
-        name: { name: 'vscode' },
-        groups: ['default'],
-      },
-      {
-        name: { name: 'cursor' },
-        groups: ['default', 'research'],
-      },
-      {
-        name: { name: 'claude-code' },
-        groups: ['research'],
-      },
-    ])
-  }),
+  // Removed: GET /api/v1beta/clients — allow auto-generated mock to handle this
 
   http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
     return HttpResponse.json({ servers: MOCK_REGISTRY_RESPONSE })

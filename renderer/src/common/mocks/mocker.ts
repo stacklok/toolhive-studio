@@ -151,16 +151,26 @@ function autoGenerateHandlers() {
             return new HttpResponse(null, { status: 204 })
           }
 
-          // Read TS fixture and parse JSON literal following `export default`
+          // Read TS fixture and parse the JSON (supports object, array, string, number, boolean, null)
           const raw = fs.readFileSync(fixtureFileName, 'utf-8')
           let data: any = {}
           const startIdx = raw.indexOf('export default')
           if (startIdx >= 0) {
             const after = raw.slice(startIdx + 'export default'.length)
+            // Try object first
             const lastBrace = after.lastIndexOf('}')
             if (lastBrace >= 0) {
               const jsonText = after.slice(0, lastBrace + 1)
               data = JSON.parse(jsonText)
+            } else {
+              // Fallback: grab literal up to `satisfies` or end
+              const m = after.match(
+                /^[\s\n\r]*([\s\S]*?)(?:\s+satisfies\s|\n|$)/
+              )
+              if (m && m[1]) {
+                const literal = m[1].trim()
+                if (literal) data = JSON.parse(literal)
+              }
             }
           }
           const schema =

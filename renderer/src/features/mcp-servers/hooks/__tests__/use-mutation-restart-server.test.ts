@@ -142,7 +142,24 @@ describe('useMutationRestartServerAtStartup', () => {
       wrapper: Wrapper,
     })
 
-    // Execute mutation with non-existent server name (will return 404 from MSW handler)
+    // Force API error for non-existent server by overriding the endpoint
+    server.use(
+      http.post(
+        mswEndpoint('/api/v1beta/workloads/restart'),
+        async ({ request }) => {
+          const { names } = (await request.json()) as { names: string[] }
+          if (names.includes('non-existent-server')) {
+            return HttpResponse.json(
+              { error: 'Server not found' },
+              { status: 404 }
+            )
+          }
+          return new HttpResponse(null, { status: 202 })
+        }
+      )
+    )
+
+    // Execute mutation with non-existent server name (overridden MSW handler returns 404)
     result.current
       .mutateAsync({ body: { names: ['non-existent-server'] } })
       .catch(() => {
