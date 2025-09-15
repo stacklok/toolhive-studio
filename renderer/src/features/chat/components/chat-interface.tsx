@@ -22,6 +22,7 @@ function ChatInterfaceContent() {
     cancelRequest,
     loadPersistedSettings,
     updateSettings,
+    isPersistentLoading,
   } = useChatStreaming()
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -76,7 +77,29 @@ function ChatInterfaceContent() {
 
       {/* Messages Area */}
       <div className="flex-1 overflow-hidden">
-        {hasMessages ? (
+        {isPersistentLoading ? (
+          <div className="flex h-full items-center justify-center">
+            <div className="flex items-center space-x-3">
+              <div className="flex space-x-1">
+                <div
+                  className="bg-muted-foreground h-2 w-2 animate-bounce
+                    rounded-full [animation-delay:-0.3s]"
+                ></div>
+                <div
+                  className="bg-muted-foreground h-2 w-2 animate-bounce
+                    rounded-full [animation-delay:-0.15s]"
+                ></div>
+                <div
+                  className="bg-muted-foreground h-2 w-2 animate-bounce
+                    rounded-full"
+                ></div>
+              </div>
+              <span className="text-muted-foreground text-sm">
+                Loading chat history...
+              </span>
+            </div>
+          </div>
+        ) : hasMessages ? (
           <div className="h-full overflow-y-auto scroll-smooth">
             <div className="container mx-auto py-8">
               <div className="space-y-8 pr-2">

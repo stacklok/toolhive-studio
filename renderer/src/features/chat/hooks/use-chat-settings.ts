@@ -82,25 +82,63 @@ export function useChatSettings() {
     useProviderSettings(selectedModel?.provider || '')
   const allProvidersWithSettingsQuery = useAllProvidersWithSettings()
 
+  // Query for enabled MCP servers (this is what the UI uses)
+  const { data: enabledMcpServers = [], isLoading: isMcpServersLoading } =
+    useQuery({
+      queryKey: ['chat', 'enabledMcpServers'],
+      queryFn: () => window.electronAPI.chat.getEnabledMcpServersFromTools(),
+      refetchOnWindowFocus: false,
+    })
+
+  // Query for enabled MCP tools (now automatically filters out stopped servers)
+  const { data: enabledMcpTools = {}, isLoading: isMcpToolsLoading } = useQuery(
+    {
+      queryKey: ['chat', 'enabled-mcp-tools'],
+      queryFn: () => window.electronAPI.chat.getEnabledMcpTools(),
+      refetchOnWindowFocus: false,
+    }
+  )
+
   const isLoading =
     isSelectedModelLoading ||
-    (selectedModel?.provider && isProviderSettingsLoading)
+    (selectedModel?.provider && isProviderSettingsLoading) ||
+    isMcpToolsLoading ||
+    isMcpServersLoading
 
   // Combine the data into a single ChatSettings object
-  const settings: ChatSettings = useMemo(
-    () => ({
+  const settings: ChatSettings = useMemo(() => {
+    // Use the same logic as the UI: only include tools from servers in enabledMcpServers
+    const mcpToolNames: string[] = []
+
+    // Get enabled server names (remove 'mcp_' prefix) - same as UI logic
+    const enabledServerNames = enabledMcpServers.map((serverId: string) =>
+      serverId.replace('mcp_', '')
+    )
+
+    // Include tools from all servers that are enabled (same as UI)
+    for (const serverName of enabledServerNames) {
+      const serverTools = enabledMcpTools[serverName] || []
+      mcpToolNames.push(...serverTools)
+    }
+
+    // Combine provider tools with MCP tools
+    const providerTools = providerSettings?.enabledTools || []
+    const allEnabledTools = [...providerTools, ...mcpToolNames]
+
+    return {
       provider: selectedModel?.provider || '',
       model: selectedModel?.model || '',
       apiKey: providerSettings?.apiKey || '',
-      enabledTools: providerSettings?.enabledTools || [],
-    }),
-    [
-      selectedModel?.provider,
-      selectedModel?.model,
-      providerSettings?.apiKey,
-      providerSettings?.enabledTools,
-    ]
-  )
+      enabledTools: allEnabledTools,
+    }
+  }, [
+    selectedModel?.provider,
+    selectedModel?.model,
+    providerSettings?.apiKey,
+    providerSettings?.enabledTools,
+    enabledMcpTools,
+    enabledMcpServers,
+  ])
 
   // Mutation to update selected model
   const updateSelectedModelMutation = useMutation({

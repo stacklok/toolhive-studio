@@ -4,6 +4,9 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type { CoreWorkload } from '../../api/generated/types.gen'
 import { TOOLHIVE_VERSION } from '../../utils/constants'
+import type { UIMessage } from 'ai'
+import type { LanguageModelV2Usage } from '@ai-sdk/provider'
+import type { ChatUIMessage } from '@/features/chat/types'
 
 // Expose auto-launch functionality to renderer
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -122,11 +125,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   chat: {
     getProviders: () => ipcRenderer.invoke('chat:get-providers'),
     stream: (request: {
-      messages: Array<{
-        id: string
-        role: string
-        parts: Array<{ type: string; text: string }>
-      }>
+      messages: ChatUIMessage[]
       provider: string
       model: string
       apiKey: string
@@ -159,6 +158,53 @@ contextBridge.exposeInMainWorld('electronAPI', {
         enabledTools
       ),
     getToolhiveMcpInfo: () => ipcRenderer.invoke('chat:get-toolhive-mcp-info'),
+
+    // Thread management
+    createThread: (title?: string, initialMessages?: unknown[]) =>
+      ipcRenderer.invoke('chat:create-thread', title, initialMessages),
+    getThread: (threadId: string) =>
+      ipcRenderer.invoke('chat:get-thread', threadId),
+    getAllThreads: () => ipcRenderer.invoke('chat:get-all-threads'),
+    updateThread: (threadId: string, updates: unknown) =>
+      ipcRenderer.invoke('chat:update-thread', threadId, updates),
+    deleteThread: (threadId: string) =>
+      ipcRenderer.invoke('chat:delete-thread', threadId),
+    clearAllThreads: () => ipcRenderer.invoke('chat:clear-all-threads'),
+    getThreadCount: () => ipcRenderer.invoke('chat:get-thread-count'),
+
+    // Message management
+    addMessageToThread: (threadId: string, message: unknown) =>
+      ipcRenderer.invoke('chat:add-message-to-thread', threadId, message),
+    updateThreadMessages: (threadId: string, messages: ChatUIMessage[]) =>
+      ipcRenderer.invoke('chat:update-thread-messages', threadId, messages),
+
+    // Active thread management
+    getActiveThreadId: () => ipcRenderer.invoke('chat:get-active-thread-id'),
+    setActiveThreadId: (threadId?: string) =>
+      ipcRenderer.invoke('chat:set-active-thread-id', threadId),
+
+    // High-level integration
+    createChatThread: (title?: string, initialUserMessage?: string) =>
+      ipcRenderer.invoke('chat:create-chat-thread', title, initialUserMessage),
+    getThreadMessagesForTransport: (threadId: string) =>
+      ipcRenderer.invoke('chat:get-thread-messages-for-transport', threadId),
+    addMessageToExistingThread: (
+      threadId: string,
+      role: string,
+      text: string,
+      metadata?: unknown
+    ) =>
+      ipcRenderer.invoke(
+        'chat:add-message-to-existing-thread',
+        threadId,
+        role,
+        text,
+        metadata
+      ),
+    getThreadInfo: (threadId: string) =>
+      ipcRenderer.invoke('chat:get-thread-info', threadId),
+    ensureThreadExists: (threadId?: string, title?: string) =>
+      ipcRenderer.invoke('chat:ensure-thread-exists', threadId, title),
   },
 
   // Utility functions
@@ -250,11 +296,7 @@ export interface ElectronAPI {
       Array<{ id: string; name: string; models: string[] }>
     >
     stream: (request: {
-      messages: Array<{
-        id: string
-        role: string
-        parts: Array<{ type: string; text: string }>
-      }>
+      messages: ChatUIMessage[]
       provider: string
       model: string
       apiKey: string
@@ -310,6 +352,122 @@ export interface ElectronAPI {
       toolCount: number
       tools: Array<{ name: string; description: string }>
     } | null>
+
+    // Thread management
+    createThread: (
+      title?: string,
+      initialMessages?: unknown[]
+    ) => Promise<{
+      success: boolean
+      threadId?: string
+      error?: string
+    }>
+    getThread: (threadId: string) => Promise<{
+      id: string
+      title?: string
+      messages: ChatUIMessage[]
+      lastEditTimestamp: number
+      createdAt: number
+    } | null>
+    getAllThreads: () => Promise<
+      Array<{
+        id: string
+        title?: string
+        messages: ChatUIMessage[]
+        lastEditTimestamp: number
+        createdAt: number
+      }>
+    >
+    updateThread: (
+      threadId: string,
+      updates: unknown
+    ) => Promise<{
+      success: boolean
+      error?: string
+    }>
+    deleteThread: (threadId: string) => Promise<{
+      success: boolean
+      error?: string
+    }>
+    clearAllThreads: () => Promise<{
+      success: boolean
+      error?: string
+    }>
+    getThreadCount: () => Promise<number>
+
+    // Message management
+    addMessageToThread: (
+      threadId: string,
+      message: unknown
+    ) => Promise<{
+      success: boolean
+      error?: string
+    }>
+    updateThreadMessages: (
+      threadId: string,
+      messages: ChatUIMessage[]
+    ) => Promise<{
+      success: boolean
+      error?: string
+    }>
+
+    // Active thread management
+    getActiveThreadId: () => Promise<string | undefined>
+    setActiveThreadId: (threadId?: string) => {
+      success: boolean
+      error?: string
+    }
+
+    // High-level integration
+    createChatThread: (
+      title?: string,
+      initialUserMessage?: string
+    ) => Promise<{
+      success: boolean
+      threadId?: string
+      error?: string
+    }>
+    getThreadMessagesForTransport: (threadId: string) => Promise<
+      UIMessage<{
+        createdAt?: number
+        model?: string
+        totalUsage?: LanguageModelV2Usage
+        responseTime?: number
+        finishReason?: string
+      }>[]
+    >
+    addMessageToExistingThread: (
+      threadId: string,
+      role: string,
+      text: string,
+      metadata?: unknown
+    ) => Promise<{
+      success: boolean
+      messageId?: string
+      error?: string
+    }>
+    getThreadInfo: (threadId: string) => Promise<{
+      thread: {
+        id: string
+        title?: string
+        messages: ChatUIMessage[]
+        lastEditTimestamp: number
+        createdAt: number
+      } | null
+      messageCount: number
+      lastActivity: Date | null
+      hasUserMessages: boolean
+      hasAssistantMessages: boolean
+    }>
+    ensureThreadExists: (
+      threadId?: string,
+      title?: string
+    ) => Promise<{
+      success: boolean
+      threadId?: string
+      error?: string
+      isNew?: boolean
+    }>
   }
   utils: {
     getWorkloadAvailableTools: (workload: unknown) => Promise<

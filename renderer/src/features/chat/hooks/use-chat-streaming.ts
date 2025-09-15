@@ -1,13 +1,17 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useEffect, useState } from 'react'
 import { useChat } from '@ai-sdk/react'
 import { useQueryClient } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
 import type { ChatUIMessage } from '../types'
 import { ElectronIPCChatTransport } from '../transport/electron-ipc-chat-transport'
 import { useChatSettings } from './use-chat-settings'
+import { useThreadManagement } from './use-thread-management'
 
 export function useChatStreaming() {
   const queryClient = useQueryClient()
+  const [isPersistentLoading, setIsPersistentLoading] = useState(true)
+  const [persistentError, setPersistentError] = useState<string | null>(null)
+
   const {
     settings,
     updateSettings,
@@ -15,6 +19,15 @@ export function useChatStreaming() {
     loadPersistedSettings,
     isLoading: isSettingsLoading,
   } = useChatSettings()
+
+  // Use dedicated thread management hook
+  const {
+    currentThreadId,
+    isLoading: isThreadLoading,
+    error: threadError,
+    loadMessages: loadThreadMessages,
+    clearMessages: clearThreadMessages,
+  } = useThreadManagement()
 
   const ipcTransport = useMemo(
     () =>
@@ -26,14 +39,41 @@ export function useChatStreaming() {
 
   const { messages, sendMessage, status, error, stop, setMessages } =
     useChat<ChatUIMessage>({
-      id: 'toolhive-chat',
+      id: currentThreadId || 'loading-thread',
       transport: ipcTransport,
       experimental_throttle: 200,
     })
 
+  useEffect(() => {
+    async function loadInitialMessages() {
+      if (!currentThreadId) return
+
+      try {
+        setIsPersistentLoading(true)
+        setPersistentError(null)
+
+        const persistedMessages = await loadThreadMessages()
+        setMessages(persistedMessages)
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to load chat history'
+        setPersistentError(errorMessage)
+        log.error('Failed to load persistent chat messages:', err)
+      } finally {
+        setIsPersistentLoading(false)
+      }
+    }
+
+    loadInitialMessages()
+  }, [currentThreadId, loadThreadMessages, setMessages])
+
   // Convert status to our isLoading format
   const isLoading =
-    status === 'submitted' || status === 'streaming' || isSettingsLoading
+    status === 'submitted' ||
+    status === 'streaming' ||
+    isSettingsLoading ||
+    isPersistentLoading ||
+    isThreadLoading
 
   const handleSendMessage = useCallback(
     async (content: string) => {
@@ -47,9 +87,19 @@ export function useChatStreaming() {
     [sendMessage, settings.provider, settings.model, settings.apiKey]
   )
 
-  const clearMessages = useCallback(() => {
-    setMessages([])
-  }, [setMessages])
+  const clearMessages = useCallback(async () => {
+    try {
+      // Clear both UI state and persistent storage
+      setMessages([])
+      await clearThreadMessages()
+      setPersistentError(null)
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to clear chat history'
+      setPersistentError(errorMessage)
+      log.error('Failed to clear persistent chat:', err)
+    }
+  }, [setMessages, clearThreadMessages])
 
   // Process error to handle different error formats
   const processError = (error: unknown): string | null => {
@@ -85,7 +135,10 @@ export function useChatStreaming() {
   }
 
   // Memoize the processed error to avoid recalculating on every render
-  const processedError = useMemo(() => processError(error), [error])
+  const processedError = useMemo(() => {
+    // Prioritize persistent error, then thread error, then streaming error
+    return persistentError || threadError || processError(error)
+  }, [error, persistentError, threadError])
 
   return useMemo(() => {
     return {
@@ -99,6 +152,7 @@ export function useChatStreaming() {
       updateSettings,
       updateEnabledTools,
       loadPersistedSettings,
+      isPersistentLoading,
     }
   }, [
     messages,
@@ -111,5 +165,6 @@ export function useChatStreaming() {
     updateSettings,
     updateEnabledTools,
     loadPersistedSettings,
+    isPersistentLoading,
   ])
 }
