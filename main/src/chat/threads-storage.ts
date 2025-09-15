@@ -17,7 +17,6 @@ export interface ChatSettingsThreads {
   activeThreadId?: string
 }
 
-// Type guard functions
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
@@ -28,7 +27,6 @@ function isUIMessage(value: unknown): boolean {
   if (typeof value.role !== 'string') return false
   if (!Array.isArray(value.parts)) return false
 
-  // Basic validation for UIMessage structure
   return true
 }
 
@@ -49,7 +47,6 @@ function isThreadsRecord(
   return Object.values(value).every((thread) => isThread(thread))
 }
 
-// Create a secure store for chat threads
 const threadsStore = new Store<ChatSettingsThreads>({
   name: 'chat-threads',
   encryptionKey: 'toolhive-threads-encryption-key',
@@ -62,11 +59,6 @@ const threadsStore = new Store<ChatSettingsThreads>({
 // Generate a unique thread ID
 function generateThreadId(): string {
   return `thread_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
-}
-
-// Generate a unique message ID
-export function generateMessageId(): string {
-  return `msg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
 }
 
 // Create a new thread
