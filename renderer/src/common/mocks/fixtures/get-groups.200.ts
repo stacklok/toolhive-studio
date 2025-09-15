@@ -1,0 +1,7 @@
+export default {
+  groups: [
+    { name: 'default', registered_clients: ['client-a'] },
+    { name: 'Research team', registered_clients: ['client-b'] },
+    { name: 'Archive', registered_clients: [] },
+  ],
+}

@@ -1,4 +1,6 @@
-This folder contains JSON fixtures for mocking api responses in MSW handlers.
+This folder contains TypeScript fixtures (default exports) for mocking API
+responses in MSW handlers.
 
-Feel free to manually modify the files, only the initial version is
-auto-generated.
+Notes:
+- Files are auto-generated on first run as `.ts` modules with `export default { ... }`.
+- You can edit fixtures manually; subsequent runs will reuse your edits.

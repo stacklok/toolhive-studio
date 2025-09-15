@@ -20,6 +20,7 @@ const __dirname = path.dirname(__filename)
 
 const FOLDER_PATH = __dirname
 const FIXTURES_PATH = `${FOLDER_PATH}/fixtures`
+const FIXTURE_EXT = 'ts'
 
 jsf.option({ alwaysFakeOptionals: true })
 jsf.option({ fillProperties: true })
@@ -71,7 +72,7 @@ function autoGenerateHandlers() {
             .replace(/__+/g, '_')
             .replace(/^_+|_+$/g, '')
 
-          const fileBase = `${method}-${safePath}.${successStatus ?? '200'}.json`
+          const fileBase = `${method}-${safePath}.${successStatus ?? '200'}.${FIXTURE_EXT}`
           const fixtureFileName = `${FIXTURES_PATH}/${fileBase}`
 
           // Avoid per-request "handling" logs in normal runs
@@ -105,14 +106,21 @@ function autoGenerateHandlers() {
                 )
               }
             }
-            fs.writeFileSync(fixtureFileName, JSON.stringify(payload, null, 2))
+            // Write TypeScript fixture module with default export
+            const tsModule = `export default ${JSON.stringify(payload, null, 2)}\n`
+            fs.writeFileSync(fixtureFileName, tsModule)
           }
 
           if (successStatus === '204') {
             return new HttpResponse(null, { status: 204 })
           }
 
-          const data = JSON.parse(fs.readFileSync(fixtureFileName, 'utf-8'))
+          // Read TS fixture and parse default-exported JSON literal
+          const raw = fs.readFileSync(fixtureFileName, 'utf-8')
+          const jsonLiteral = raw
+            .replace(/^[^]*?export\s+default\s+/, '') // strip leading up to export default
+            .replace(/;?\s*$/s, '') // strip trailing semicolon/whitespace
+          const data = jsonLiteral ? JSON.parse(jsonLiteral) : {}
           const schema =
             operation.responses?.[successStatus ?? '200']?.content?.[
               'application/json'
