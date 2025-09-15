@@ -152,9 +152,8 @@ function autoGenerateHandlers() {
             let typeSatisfies = ''
             if (successStatus) {
               const opType = opResponsesTypeName(method, rawPath)
-              // Note: fixtures now live under ./fixtures/<safePath>/<method>.<status>.ts
-              // which is one level deeper than before, hence one extra '../'
-              typeImport = `import type { ${opType} } from '../../../../../../api/generated/types.gen'\n\n`
+              // Use Vite/TS alias for generated API types
+              typeImport = `import type { ${opType} } from '@api/types.gen'\n\n`
               typeSatisfies = ` satisfies ${opType}[${successStatus}]`
             }
             // Write TypeScript fixture module with typed default export using `satisfies`
