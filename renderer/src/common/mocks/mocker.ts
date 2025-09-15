@@ -76,7 +76,7 @@ function autoGenerateHandlers() {
   // Note: Keys in this map are paths relative to this file, e.g. './fixtures/<name>.ts'
   const fixtureImporters: Record<string, () => Promise<unknown>> =
     // @ts-ignore - vite-specific API available in vitest/vite runtime
-    import.meta.glob('./fixtures/*', { import: 'default' })
+    import.meta.glob('./fixtures/**', { import: 'default' })
   const specPaths = Object.entries(
     ((openapi as any).paths ?? {}) as Record<string, any>
   )
@@ -106,12 +106,16 @@ function autoGenerateHandlers() {
             .replace(/__+/g, '_')
             .replace(/^_+|_+$/g, '')
 
-          const fileBase = `${method}-${safePath}.${successStatus ?? '200'}.${FIXTURE_EXT}`
+          // New path layout: <safePath>/<method>.<status>.ts
+          const fileBase = `${safePath}/${method}.${successStatus ?? '200'}.${FIXTURE_EXT}`
           const fixtureFileName = `${FIXTURES_PATH}/${fileBase}`
 
           // Avoid per-request "handling" logs in normal runs
 
           let data: any = undefined
+          if (!fs.existsSync(path.dirname(fixtureFileName))) {
+            fs.mkdirSync(path.dirname(fixtureFileName), { recursive: true })
+          }
           const fileExists = fs.existsSync(fixtureFileName)
           if (!fileExists) {
             // Generate fixtures for all statuses; for 204 use empty string
