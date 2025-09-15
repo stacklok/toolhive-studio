@@ -65,6 +65,10 @@ function opResponsesTypeName(method: string, rawPath: string): string {
   return `${methodPart}${segments.join('')}Responses`
 }
 
+function opResponseTypeName(method: string, rawPath: string): string {
+  return opResponsesTypeName(method, rawPath).replace(/Responses$/, 'Response')
+}
+
 // Note: If we need to map component $ref names to SDK types in the future,
 // we can reintroduce a helper. Currently, we type fixtures via OperationResponses.
 
@@ -106,8 +110,8 @@ function autoGenerateHandlers() {
             .replace(/__+/g, '_')
             .replace(/^_+|_+$/g, '')
 
-          // New path layout: <safePath>/<method>.<status>.ts
-          const fileBase = `${safePath}/${method}.${successStatus ?? '200'}.${FIXTURE_EXT}`
+          // Path layout without status: <safePath>/<method>.ts
+          const fileBase = `${safePath}/${method}.${FIXTURE_EXT}`
           const fixtureFileName = `${FIXTURES_PATH}/${fileBase}`
 
           // Avoid per-request "handling" logs in normal runs
@@ -117,10 +121,10 @@ function autoGenerateHandlers() {
             fs.mkdirSync(path.dirname(fixtureFileName), { recursive: true })
           }
           const fileExists = fs.existsSync(fixtureFileName)
-          if (!fileExists) {
+          if (!fileExists && successStatus !== '204') {
             // Generate fixtures for all statuses; for 204 use empty string
-            let payload: any = successStatus === '204' ? '' : {}
-            if (successStatus && successStatus !== '204') {
+            let payload: any = {}
+            if (successStatus) {
               const schema =
                 operation.responses?.[successStatus]?.content?.[
                   'application/json'
@@ -151,10 +155,10 @@ function autoGenerateHandlers() {
             let typeImport = ''
             let typeSatisfies = ''
             if (successStatus) {
-              const opType = opResponsesTypeName(method, rawPath)
-              // Use Vite/TS alias for generated API types
+              const opType = opResponseTypeName(method, rawPath)
+              // Use Vite/TS alias for generated API types; use union Response type
               typeImport = `import type { ${opType} } from '@api/types.gen'\n\n`
-              typeSatisfies = ` satisfies ${opType}[${successStatus}]`
+              typeSatisfies = ` satisfies ${opType}`
             }
             // Write TypeScript fixture module with typed default export using `satisfies`
             const tsModule = `${typeImport}export default ${JSON.stringify(payload, null, 2)}${typeSatisfies}\n`

@@ -1,4 +1,4 @@
-import type { GetApiV1BetaGroupsResponses } from '@api/types.gen'
+import type { GetApiV1BetaGroupsResponse } from '@api/types.gen'
 
 export default {
   groups: [
@@ -6,4 +6,4 @@ export default {
     { name: 'Research team', registered_clients: ['client-b'] },
     { name: 'Archive', registered_clients: [] },
   ],
-} satisfies GetApiV1BetaGroupsResponses[200]
+} satisfies GetApiV1BetaGroupsResponse
