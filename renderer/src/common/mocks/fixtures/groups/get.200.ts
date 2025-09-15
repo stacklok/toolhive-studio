@@ -1,4 +1,4 @@
-import type { GetApiV1BetaGroupsResponses } from '../../../../../api/generated/types.gen'
+import type { GetApiV1BetaGroupsResponses } from '../../../../../../api/generated/types.gen'
 
 export default {
   groups: [
