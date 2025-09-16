@@ -176,11 +176,8 @@ export function saveEnabledMcpTools(
 ): { success: boolean; error?: string } {
   try {
     const enabledMcpTools = chatStore.get('enabledMcpTools')
-    console.log(isToolsRecord(enabledMcpTools))
     const typedTools = isToolsRecord(enabledMcpTools) ? enabledMcpTools : {}
     typedTools[serverName] = toolNames
-    console.log('saveEnabledMcpTools', typedTools)
-    chatStore.set('enabledMcpTools', typedTools)
     return { success: true }
   } catch (error) {
     return {
@@ -246,7 +243,6 @@ export async function getEnabledMcpTools(): Promise<
           filteredTools[serverName] = tools
         } else if (tools.length > 0) {
           // Only log if server actually had tools to clean up
-          log.info('enabledMcpTools', enabledMcpTools)
           log.info(`Cleaning up tools for stopped server: ${serverName}`)
           serversToRemove.push(serverName)
         }
@@ -258,7 +254,6 @@ export async function getEnabledMcpTools(): Promise<
         for (const serverName of serversToRemove) {
           delete updatedTools[serverName]
         }
-        log.info('updatedTools', updatedTools)
         chatStore.set('enabledMcpTools', updatedTools)
       }
 

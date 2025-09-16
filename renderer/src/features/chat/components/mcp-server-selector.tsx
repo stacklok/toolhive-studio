@@ -45,10 +45,9 @@ export function McpServerSelector() {
         // First get the server's available tools
         const serverTools =
           await window.electronAPI.chat.getMcpServerTools(serverName)
-        console.log('serverTools', serverTools)
+
         if (serverTools?.tools && serverTools.tools.length > 0) {
           const allToolNames = serverTools.tools.map((tool) => tool.name)
-          console.log('allToolNames', allToolNames)
           await window.electronAPI.chat.saveEnabledMcpTools(
             serverName,
             allToolNames

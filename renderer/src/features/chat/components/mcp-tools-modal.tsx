@@ -192,7 +192,7 @@ export function McpToolsModal({
           <ScrollArea
             className={cn('min-h-0 flex-1 overflow-y-auto scroll-smooth pt-3')}
           >
-            <div className="space-b-1 pr-2 pb-4">
+            <div className="space-y-1 pr-2 pb-4">
               {isLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="text-muted-foreground text-sm">

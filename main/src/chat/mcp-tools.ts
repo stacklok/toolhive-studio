@@ -118,8 +118,6 @@ export async function getMcpServerTools(
   const enabledTools = await getEnabledMcpTools()
   const enabledToolNames = enabledTools[serverName] || []
 
-  log.info('getMcpServerTools', { serverName })
-
   if (!workload && serverName === TOOLHIVE_MCP_SERVER_NAME) {
     const toolhiveMcpResult = await getToolhiveMcpInfo(enabledToolNames)
     return toolhiveMcpResult
@@ -223,8 +221,6 @@ export async function createMcpTools(): Promise<{
     // Create MCP clients for each server with enabled tools
     for (const [serverName, toolNames] of Object.entries(enabledTools)) {
       if (toolNames.length === 0) continue
-
-      log.info('createMcpTools', { serverName })
 
       const workload = workloads?.find((w) => w.name === serverName)
 
