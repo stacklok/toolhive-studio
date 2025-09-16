@@ -8,11 +8,18 @@ import { http, HttpResponse } from 'msw'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useRunRemoteServer } from '../../../hooks/use-run-remote-server'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 
 // Mock the hook
 vi.mock('../../../hooks/use-run-remote-server', () => ({
   useRunRemoteServer: vi.fn(),
 }))
+
+vi.mock('@/common/hooks/use-check-server-status', () => ({
+  useCheckServerStatus: vi.fn(),
+}))
+
+const mockUseCheckServerStatus = vi.mocked(useCheckServerStatus)
 
 const mockUseRunRemoteServer = vi.mocked(useRunRemoteServer)
 
@@ -61,9 +68,12 @@ beforeEach(() => {
   // Default mock implementation
   mockUseRunRemoteServer.mockReturnValue({
     installServerMutation: vi.fn(),
-    checkServerStatus: vi.fn(),
     isErrorSecrets: false,
     isPendingSecrets: false,
+  })
+
+  mockUseCheckServerStatus.mockReturnValue({
+    checkServerStatus: vi.fn(),
   })
 })
 
@@ -72,7 +82,6 @@ describe('DialogFormRemoteMcp', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunRemoteServer.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -165,7 +174,6 @@ describe('DialogFormRemoteMcp', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunRemoteServer.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -212,7 +220,6 @@ describe('DialogFormRemoteMcp', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunRemoteServer.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -263,9 +270,12 @@ describe('DialogFormRemoteMcp', () => {
     const mockCheckServerStatus = vi.fn()
     const mockOnOpenChange = vi.fn()
 
+    mockUseCheckServerStatus.mockReturnValue({
+      checkServerStatus: mockCheckServerStatus,
+    })
+
     mockUseRunRemoteServer.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: mockCheckServerStatus,
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -315,7 +325,7 @@ describe('DialogFormRemoteMcp', () => {
               client_secret: '',
               issuer: '',
               oauth_params: {},
-              scopes: [],
+              scopes: '',
               skip_browser: false,
               token_url: '',
               use_pkce: true,
