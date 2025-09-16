@@ -83,18 +83,20 @@ function GroupRoute() {
       >
         <TitlePage title="MCP Servers">
           <>
-            {workloads.length > 0 && (
-              <div className="ml-auto flex gap-2">
-                <RefreshButton refresh={refetch} />
-                <DropdownMenuRunMcpServer
-                  openRunCommandDialog={setServerDialogOpen}
-                />
-                <ManageClientsButton groupName={groupName} />
-                {showSidebar ? (
-                  <GroupActionsDropdown groupName={groupName} />
-                ) : null}
-              </div>
-            )}
+            <div className="ml-auto flex gap-2">
+              {workloads.length > 0 && (
+                <>
+                  <RefreshButton refresh={refetch} />
+                  <DropdownMenuRunMcpServer
+                    openRunCommandDialog={setServerDialogOpen}
+                  />
+                  <ManageClientsButton groupName={groupName} />
+                </>
+              )}
+              {showSidebar ? (
+                <GroupActionsDropdown groupName={groupName} />
+              ) : null}
+            </div>
 
             <WrapperDialogFormMcp
               serverType={serverDialogOpen}
