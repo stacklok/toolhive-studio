@@ -50,7 +50,6 @@ export function McpServerSelector() {
 
   const handleToggleTool = async (serverId: string) => {
     // Extract server name from serverId (remove 'mcp_' prefix)
-    console.log('serverId', backendEnabledTools, serverId)
     const serverName = serverId.replace('mcp_', '')
 
     if (backendEnabledTools.includes(serverId)) {
