@@ -26,8 +26,6 @@ const __dirname = path.dirname(__filename)
 const FOLDER_PATH = __dirname
 const FIXTURES_PATH = `${FOLDER_PATH}/fixtures`
 const FIXTURE_EXT = 'ts'
-// Cache to serve freshly generated fixtures across requests
-const fixtureCache = new Map<string, any>()
 
 jsf.option({ alwaysFakeOptionals: true })
 jsf.option({ fillProperties: true })
@@ -78,9 +76,8 @@ function opResponseTypeName(method: string, rawPath: string): string {
 
 function autoGenerateHandlers() {
   const result = []
-  const fixtureImporters: Record<string, () => Promise<unknown>> =
-    // @ts-ignore - vite-specific API available in vitest/vite runtime
-    import.meta.glob('./fixtures/**', { import: 'default' })
+  // We will dynamically import fixtures on each request to always get the latest
+  // file contents (including freshly generated ones), so no need for a glob map.
   const specPaths = Object.entries(
     ((openapi as any).paths ?? {}) as Record<string, any>
   )
@@ -152,11 +149,8 @@ function autoGenerateHandlers() {
               : undefined
             const tsModule = buildMockModule(payload, { opType })
             fs.writeFileSync(fixtureFileName, tsModule)
-            // Use freshly generated payload directly
-            data = payload
-            // Store in cache so subsequent requests can use it
-            const relPath = `./fixtures/${fileBase}`
-            fixtureCache.set(relPath, payload)
+            // After generating, rely on live import below so that
+            // behavior matches pre-existing fixtures.
           }
 
           if (successStatus === '204') {
@@ -164,17 +158,16 @@ function autoGenerateHandlers() {
           }
 
           if (data === undefined) {
+            // Always live import the fixture so edits and freshly generated
+            // files are picked up without restarting tests/dev server.
             const relPath = `./fixtures/${fileBase}`
-            const importer = fixtureImporters[relPath]
-            if (importer) {
-              const mod: any = await importer()
-              data = mod
-            } else if (fixtureCache.has(relPath)) {
-              data = fixtureCache.get(relPath)
-            } else {
-              // Fail explicitly when fixture cannot be resolved
+            try {
+              // Add a timestamp query to bust the module cache between requests
+              const mod: any = await import(`${relPath}?t=${Date.now()}`)
+              data = mod?.default ?? mod
+            } catch (e) {
               return new HttpResponse(
-                `Missing mock fixture: ${relPath}. If this fixture was just auto-generated, restart the test/dev runtime to pick it up.`,
+                `Missing mock fixture: ${relPath}. ${e instanceof Error ? e.message : ''}`,
                 { status: 500 }
               )
             }
