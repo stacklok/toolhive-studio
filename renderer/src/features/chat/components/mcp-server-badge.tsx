@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Badge } from '@/common/components/ui/badge'
-import { Settings } from 'lucide-react'
+import { Settings2 } from 'lucide-react'
 import { McpToolsModal } from './mcp-tools-modal'
+import { getNormalizedServerName } from '../lib/utils'
 
 interface McpServerBadgeProps {
   serverName: string
   onToolsChange: () => void
 }
-
 export function McpServerBadge({
   serverName,
   onToolsChange,
@@ -22,38 +22,11 @@ export function McpServerBadge({
     refetchInterval: 5000, // Refresh every 5 seconds
   })
 
-  // Fetch server tools data to get total count
-  const { data: serverTools } = useQuery({
-    queryKey: ['mcp-server-tools', serverName],
-    queryFn: () => window.electronAPI.chat.getMcpServerTools(serverName),
-    refetchInterval: 7000, // Refresh every 7 seconds
-    staleTime: 0,
-    refetchOnMount: true,
-  })
-
   // Helper function to get enabled tools count for this server
   const getEnabledToolsCount = (): number => {
     if (!enabledMcpTools) return 0
     const serverToolsList = enabledMcpTools[serverName] || []
     return serverToolsList.length
-  }
-
-  // Helper function to format the badge counter
-  const formatBadgeCounter = (): string => {
-    const enabledCount = getEnabledToolsCount()
-    const totalCount = serverTools?.tools?.length || 0
-
-    if (totalCount === 0) {
-      return '(0)'
-    }
-
-    // If all tools are enabled, just show the count
-    if (enabledCount === totalCount) {
-      return `(${enabledCount})`
-    }
-
-    // If not all tools are enabled, show enabled/total
-    return `(${enabledCount}/${totalCount})`
   }
 
   const handleBadgeClick = () => {
@@ -68,21 +41,16 @@ export function McpServerBadge({
     <>
       <Badge
         variant="secondary"
-        className="hover:bg-secondary/80 group h-auto max-w-48 cursor-pointer
-          px-2 py-1 text-xs transition-colors duration-200"
+        className="group h-auto max-w-48 cursor-pointer"
         onClick={handleBadgeClick}
       >
-        <span className="truncate font-medium">{serverName}</span>
-        <span className="ml-1.5 font-mono text-xs opacity-60">
-          {formatBadgeCounter()}
-        </span>
-        <Settings
-          className="ml-1.5 h-3 w-3 opacity-50 transition-opacity duration-200
-            group-hover:opacity-80"
-        />
+        <span className="truncate">{getNormalizedServerName(serverName)}</span>
+        <Badge variant="outline" className="bg-background/90 font-light">
+          {getEnabledToolsCount()} tools
+        </Badge>
+        <Settings2 className="size-4" />
       </Badge>
 
-      {/* MCP Tools Modal */}
       <McpToolsModal
         open={modalOpen}
         onOpenChange={setModalOpen}

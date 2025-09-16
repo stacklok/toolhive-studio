@@ -30,3 +30,15 @@ export interface McpToolInfo {
   inputSchema: Record<string, unknown>
   serverName: string
 }
+
+export interface AvailableServer {
+  serverName: string
+  serverPackage?: string
+  tools: Array<{
+    name: string
+    description?: string
+    parameters?: Record<string, unknown>
+    enabled: boolean
+  }>
+  isRunning: boolean
+}

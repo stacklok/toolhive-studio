@@ -1,7 +1,5 @@
 import { useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
-import type { CoreWorkload } from '@api/types.gen'
+import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import log from 'electron-log/renderer'
 import { Button } from '@/common/components/ui/button'
@@ -13,46 +11,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/common/components/ui/dropdown-menu'
-import { ChevronDown } from 'lucide-react'
-import type { ChatMcpServer } from '../types'
+import { ChevronDown, Settings2 } from 'lucide-react'
 import { Badge } from '@/common/components/ui/badge'
 import { ScrollArea } from '@/common/components/ui/scroll-area'
+import { useAvailableServers } from '../hooks/use-available-servers'
+import { getNormalizedServerName } from '../lib/utils'
+import { McpToolsModal } from './mcp-tools-modal'
+import { cn } from '@/common/lib/utils'
 
 export function McpServerSelector() {
-  const [isOpen, setIsOpen] = useState(false)
   const queryClient = useQueryClient()
+  const [isOpen, setIsOpen] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [serverName, setServerName] = useState<string | null>(null)
+  const { allAvailableMcpServer, enabledMcpServers, backendEnabledTools } =
+    useAvailableServers()
 
-  const { data: workloadsData } = useQuery({
-    ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
-    refetchInterval: 30000,
-  })
-
-  const { data: backendEnabledTools = [] } = useQuery({
-    queryKey: ['chat', 'enabledMcpServers'],
-    queryFn: () => window.electronAPI.chat.getEnabledMcpServersFromTools(),
-    refetchInterval: 30000,
-  })
-
-  // Process workloads data to get running MCP servers
-  const mcpServers: ChatMcpServer[] = (workloadsData?.workloads || [])
-    .filter((w: CoreWorkload) => w.status === 'running' && w.url)
-    .map((w: CoreWorkload) => ({
-      id: `mcp_${w.name}`,
-      name: w.name || 'Unknown',
-      status: w.status as 'running' | 'stopped',
-      package: w.package,
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name))
-
-  const enabledMcpServers = mcpServers.filter((server) =>
-    backendEnabledTools.includes(server.id)
-  )
-
-  const handleToggleTool = async (serverId: string) => {
-    // Extract server name from serverId (remove 'mcp_' prefix)
-    const serverName = serverId.replace('mcp_', '')
-
-    if (backendEnabledTools.includes(serverId)) {
+  const handleToggleTool = async (serverName: string) => {
+    if (backendEnabledTools.includes(serverName)) {
       // Disable all tools for this server
       try {
         await window.electronAPI.chat.saveEnabledMcpTools(serverName, [])
@@ -69,9 +45,10 @@ export function McpServerSelector() {
         // First get the server's available tools
         const serverTools =
           await window.electronAPI.chat.getMcpServerTools(serverName)
-
+        console.log('serverTools', serverTools)
         if (serverTools?.tools && serverTools.tools.length > 0) {
           const allToolNames = serverTools.tools.map((tool) => tool.name)
+          console.log('allToolNames', allToolNames)
           await window.electronAPI.chat.saveEnabledMcpTools(
             serverName,
             allToolNames
@@ -91,9 +68,8 @@ export function McpServerSelector() {
   const handleClearEnabledServers = async () => {
     try {
       await Promise.allSettled(
-        backendEnabledTools.map((serverId) => {
-          const serverName = serverId.replace('mcp_', '')
-          if (backendEnabledTools.includes(serverId)) {
+        backendEnabledTools.map((serverName) => {
+          if (backendEnabledTools.includes(serverName)) {
             return window.electronAPI.chat.saveEnabledMcpTools(serverName, [])
           }
           return Promise.resolve()
@@ -108,60 +84,92 @@ export function McpServerSelector() {
     }
   }
 
-  return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex h-10 items-center justify-between gap-2"
-        >
-          <span>MCP Servers</span>
-          <Badge variant="secondary">{enabledMcpServers.length} Enabled</Badge>
-          <ChevronDown className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" side="top" className="max-h-96 w-72">
-        <DropdownMenuLabel>Available MCP Servers</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <ScrollArea>
-          {mcpServers.length === 0 ? (
-            <div className="text-muted-foreground p-2 text-sm">
-              No MCP servers running
-            </div>
-          ) : (
-            mcpServers.map((server) => (
-              <DropdownMenuCheckboxItem
-                key={server.id}
-                checked={backendEnabledTools.includes(server.id)}
-                onCheckedChange={() => handleToggleTool(server.id)}
-                className="flex cursor-pointer items-center gap-3 py-2"
-              >
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate font-medium">{server.name}</span>
-                </div>
-              </DropdownMenuCheckboxItem>
-            ))
-          )}
-        </ScrollArea>
+  const handleToolsChange = () => {
+    queryClient.invalidateQueries({
+      queryKey: ['chat', 'enabledMcpServers'],
+    })
+  }
 
-        {mcpServers.length > 0 && (
-          <>
-            <DropdownMenuSeparator />
-            <div className="p-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full cursor-pointer text-xs"
-                onClick={handleClearEnabledServers}
-                disabled={backendEnabledTools.length === 0}
-              >
-                Clear enabled servers
-              </Button>
-            </div>
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+  return (
+    <>
+      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex h-10 items-center justify-between gap-2"
+          >
+            <span>MCP Servers</span>
+            <Badge variant="secondary">
+              {enabledMcpServers.length} Enabled
+            </Badge>
+            <ChevronDown className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" side="top" className="max-h-96 w-72">
+          <DropdownMenuLabel>Available MCP Servers</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <ScrollArea>
+            {allAvailableMcpServer.length === 0 ? (
+              <div className="text-muted-foreground p-2 text-sm">
+                No MCP servers running
+              </div>
+            ) : (
+              allAvailableMcpServer.map((server) => (
+                <DropdownMenuCheckboxItem
+                  key={server.id}
+                  checked={backendEnabledTools.includes(server.name)}
+                  onCheckedChange={() => handleToggleTool(server.name)}
+                  onSelect={(event) => event.preventDefault()}
+                  className={cn('flex cursor-pointer items-center gap-3 py-1')}
+                >
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate font-normal">
+                      {getNormalizedServerName(server.name)}
+                    </span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="cursor-pointer"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      setModalOpen(true)
+                      setServerName(server.name)
+                    }}
+                  >
+                    <Settings2 className="size-4" />
+                  </Button>
+                </DropdownMenuCheckboxItem>
+              ))
+            )}
+          </ScrollArea>
+
+          {allAvailableMcpServer.length > 0 && (
+            <>
+              <DropdownMenuSeparator />
+              <div className="p-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full cursor-pointer font-light"
+                  onClick={handleClearEnabledServers}
+                  disabled={backendEnabledTools.length === 0}
+                >
+                  Clear enabled servers
+                </Button>
+              </div>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <McpToolsModal
+        open={!!serverName && modalOpen}
+        onOpenChange={setModalOpen}
+        serverName={serverName ?? ''}
+        onToolsChange={handleToolsChange}
+      />
+    </>
   )
 }

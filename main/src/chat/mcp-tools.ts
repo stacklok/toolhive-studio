@@ -9,7 +9,7 @@ import { getApiV1BetaWorkloads } from '@api/sdk.gen'
 import { getHeaders } from '../headers'
 import { getToolhivePort, getToolhiveMcpPort } from '../toolhive-manager'
 import log from '../logger'
-import type { McpToolInfo } from './types'
+import type { AvailableServer } from './types'
 import { getEnabledMcpTools } from './settings-storage'
 import {
   type McpToolDefinition,
@@ -17,6 +17,7 @@ import {
   getWorkloadAvailableTools,
   isMcpToolDefinition,
 } from '../utils/mcp-tools'
+import { TOOLHIVE_MCP_SERVER_NAME } from '../utils/constants'
 
 // Helper to safely extract properties
 function getToolParameters(inputSchema: unknown): Record<string, unknown> {
@@ -34,20 +35,25 @@ function getToolParameters(inputSchema: unknown): Record<string, unknown> {
 }
 
 // Check if Toolhive MCP is available and get its tools info
-export async function getToolhiveMcpInfo(): Promise<{
-  available: boolean
-  toolCount: number
-  tools: Array<{ name: string; description: string }>
-} | null> {
+export async function getToolhiveMcpInfo(
+  enabledToolNames: string[] = []
+): Promise<AvailableServer> {
   const toolhiveMcpPort = getToolhiveMcpPort()
+  const base = {
+    serverName: TOOLHIVE_MCP_SERVER_NAME,
+    serverPackage: 'toolhive-mcp',
+    tools: [],
+    isRunning: false,
+  }
+
   if (!toolhiveMcpPort) {
-    return { available: false, toolCount: 0, tools: [] }
+    return { ...base, isRunning: false }
   }
 
   try {
     const toolhiveMcpUrl = new URL(`http://localhost:${toolhiveMcpPort}/mcp`)
     const toolhiveMcpConfig = {
-      name: 'toolhive-mcp',
+      name: 'mcp_toolhive',
       transport: new StreamableHTTPClientTransport(toolhiveMcpUrl),
     }
 
@@ -69,36 +75,31 @@ export async function getToolhiveMcpInfo(): Promise<{
       return {
         name: toolName,
         description,
+        parameters: getToolParameters(toolDef?.inputSchema),
+        enabled: enabledToolNames.includes(toolName),
       }
     })
 
     return {
-      available: true,
-      toolCount: tools.length,
+      serverName: TOOLHIVE_MCP_SERVER_NAME,
+      serverPackage: 'toolhive-mcp',
       tools,
+      isRunning: true,
     }
   } catch (error) {
     log.error('Failed to get Toolhive MCP info:', error)
-    return { available: false, toolCount: 0, tools: [] }
+    return { ...base, isRunning: false }
   }
 }
 
 // Get MCP server tools information
-export async function getMcpServerTools(serverName?: string): Promise<
-  | McpToolInfo[]
-  | {
-      serverName: string
-      serverPackage?: string
-      tools: Array<{
-        name: string
-        description?: string
-        parameters?: Record<string, unknown>
-        enabled: boolean
-      }>
-      isRunning: boolean
-    }
-  | null
-> {
+export async function getMcpServerTools(
+  serverName: string
+): Promise<AvailableServer | null> {
+  if (!serverName) {
+    log.error('getMcpServerTools: serverName is not passed')
+  }
+
   const port = getToolhivePort()
   const client = createClient({
     baseUrl: `http://localhost:${port}`,
@@ -110,68 +111,58 @@ export async function getMcpServerTools(serverName?: string): Promise<
   })
   const workloads = data?.workloads
 
-  // If serverName is provided, return server-specific format
-  if (serverName) {
-    // Get server tools for specific server
-    const workload = (workloads || []).find((w) => w.name === serverName)
+  // Get server tools for specific server
+  const workload = (workloads || []).find((w) => w.name === serverName)
 
-    if (!workload) {
-      throw new Error('Server not in the workload list')
-    }
+  // Get enabled tools for this server
+  const enabledTools = await getEnabledMcpTools()
+  const enabledToolNames = enabledTools[serverName] || []
 
-    // Get enabled tools for this server
-    const enabledTools = await getEnabledMcpTools()
-    const enabledToolNames = enabledTools[serverName] || []
+  log.info('getMcpServerTools', { serverName })
 
-    // If workload.tools is empty, try to discover tools by connecting to the server
-    let discoveredTools: string[] = workload.tools || []
-    let serverMcpTools: Record<string, McpToolDefinition> = {}
-
-    if (discoveredTools.length === 0 && workload.status === 'running') {
-      serverMcpTools = (await getWorkloadAvailableTools(workload)) || {}
-      discoveredTools = Object.keys(serverMcpTools)
-    }
-
-    const result = {
-      serverName: workload.name!,
-      serverPackage: workload.package,
-      tools: discoveredTools.map(
-        (
-          toolName
-        ): {
-          name: string
-          description: string
-          parameters: Record<string, unknown>
-          enabled: boolean
-        } => {
-          const toolDef = serverMcpTools[toolName]
-          return {
-            name: toolName,
-            description: toolDef?.description || '',
-            parameters: getToolParameters(toolDef?.inputSchema),
-            enabled: enabledToolNames.includes(toolName),
-          }
-        }
-      ),
-      isRunning: workload.status === 'running',
-    }
-
-    return result
+  if (!workload && serverName === TOOLHIVE_MCP_SERVER_NAME) {
+    const toolhiveMcpResult = await getToolhiveMcpInfo(enabledToolNames)
+    return toolhiveMcpResult
   }
 
-  // Otherwise return the original format for backward compatibility
-  const mcpTools = (workloads || [])
-    .filter((workload) => workload.name && workload.tools)
-    .flatMap((workload) =>
-      workload.tools!.map((toolName) => ({
-        name: `mcp_${workload.name}_${toolName}`,
-        description: '',
-        inputSchema: {},
-        serverName: workload.name!,
-      }))
-    )
+  if (!workload) {
+    throw new Error('Server not in the workload list')
+  }
 
-  return mcpTools
+  // If workload.tools is empty, try to discover tools by connecting to the server
+  let discoveredTools: string[] = workload.tools || []
+  let serverMcpTools: Record<string, McpToolDefinition> = {}
+
+  if (discoveredTools.length === 0 && workload.status === 'running') {
+    serverMcpTools = (await getWorkloadAvailableTools(workload)) || {}
+    discoveredTools = Object.keys(serverMcpTools)
+  }
+
+  const result = {
+    serverName: workload.name!,
+    serverPackage: workload.package,
+    tools: discoveredTools.map(
+      (
+        toolName
+      ): {
+        name: string
+        description: string
+        parameters: Record<string, unknown>
+        enabled: boolean
+      } => {
+        const toolDef = serverMcpTools[toolName]
+        return {
+          name: toolName,
+          description: toolDef?.description || '',
+          parameters: getToolParameters(toolDef?.inputSchema),
+          enabled: enabledToolNames.includes(toolName),
+        }
+      }
+    ),
+    isRunning: workload.status === 'running',
+  }
+
+  return result
 }
 
 // Create MCP tools for AI SDK
@@ -186,31 +177,33 @@ export async function createMcpTools(): Promise<{
     const port = getToolhivePort()
     const toolhiveMcpPort = getToolhiveMcpPort()
 
-    // Add default Toolhive MCP client if toolhiveMcpPort is available
-    if (toolhiveMcpPort) {
-      try {
-        const toolhiveMcpUrl = new URL(
-          `http://localhost:${toolhiveMcpPort}/mcp`
-        )
-        const toolhiveMcpConfig = {
-          name: 'toolhive-mcp',
-          transport: new StreamableHTTPClientTransport(toolhiveMcpUrl),
-        }
-
-        const toolhiveMcpClient = await createMCPClient(toolhiveMcpConfig)
-        mcpClients.push(toolhiveMcpClient)
-
-        // Get all tools from the Toolhive MCP server
-        const toolhiveMcpTools = await toolhiveMcpClient.tools()
-
-        // Add all tools from Toolhive MCP (always enabled, cannot be disabled)
-        for (const [toolName, toolDef] of Object.entries(toolhiveMcpTools)) {
-          if (isMcpToolDefinition(toolDef)) {
-            mcpTools[toolName] = toolDef
+    const getToolhiveMcpTools = async () => {
+      // Add default Toolhive MCP client if toolhiveMcpPort is available
+      if (toolhiveMcpPort) {
+        try {
+          const toolhiveMcpUrl = new URL(
+            `http://localhost:${toolhiveMcpPort}/mcp`
+          )
+          const toolhiveMcpConfig = {
+            name: 'toolhive-mcp',
+            transport: new StreamableHTTPClientTransport(toolhiveMcpUrl),
           }
+
+          const toolhiveMcpClient = await createMCPClient(toolhiveMcpConfig)
+          mcpClients.push(toolhiveMcpClient)
+
+          // Get all tools from the Toolhive MCP server
+          const toolhiveMcpTools = await toolhiveMcpClient.tools()
+
+          // Add all tools from Toolhive MCP (always enabled, cannot be disabled)
+          for (const [toolName, toolDef] of Object.entries(toolhiveMcpTools)) {
+            if (isMcpToolDefinition(toolDef)) {
+              mcpTools[toolName] = toolDef
+            }
+          }
+        } catch (error) {
+          log.error('Failed to create Toolhive MCP client:', error)
         }
-      } catch (error) {
-        log.error('Failed to create Toolhive MCP client:', error)
       }
     }
 
@@ -227,16 +220,19 @@ export async function createMcpTools(): Promise<{
     // Get enabled tools from storage
     const enabledTools = await getEnabledMcpTools()
 
-    // Continue with regular MCP servers even if no enabled tools (since we might have Toolhive MCP)
-    if (Object.keys(enabledTools).length === 0) {
-      return { tools: mcpTools, clients: mcpClients }
-    }
-
     // Create MCP clients for each server with enabled tools
     for (const [serverName, toolNames] of Object.entries(enabledTools)) {
       if (toolNames.length === 0) continue
 
+      log.info('createMcpTools', { serverName })
+
       const workload = workloads?.find((w) => w.name === serverName)
+
+      if (!workload && serverName === TOOLHIVE_MCP_SERVER_NAME) {
+        await getToolhiveMcpTools()
+        continue
+      }
+
       if (!workload) {
         log.debug(`Skipping ${serverName}: workload not found`)
         continue
