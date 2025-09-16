@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react'
+import { renderHook, waitFor, act } from '@testing-library/react'
 import { expect, it, vi, beforeEach, describe } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
@@ -68,7 +68,7 @@ beforeEach(() => {
 
 describe('useMutationRestartServerAtStartup', () => {
   it('successfully restarts servers from shutdown list', async () => {
-    const { Wrapper } = createQueryClientWrapper()
+    const { Wrapper, queryClient } = createQueryClientWrapper()
 
     const shutdownServers = [
       createWorkload('postgres-db', 'stopped'),
@@ -101,8 +101,10 @@ describe('useMutationRestartServerAtStartup', () => {
       wrapper: Wrapper,
     })
 
-    await result.current.mutateAsync({
-      body: { names: ['postgres-db', 'github'] },
+    await act(async () => {
+      await result.current.mutateAsync({
+        body: { names: ['postgres-db', 'github'] },
+      })
     })
 
     await waitFor(() => {
@@ -115,6 +117,11 @@ describe('useMutationRestartServerAtStartup', () => {
     expect(
       window.electronAPI.shutdownStore.clearShutdownHistory
     ).toHaveBeenCalled()
+
+    await waitFor(() => {
+      expect(queryClient.isMutating()).toBe(0)
+      expect(queryClient.isFetching()).toBe(0)
+    })
   })
 
   it('handles empty server list', async () => {
@@ -216,7 +223,6 @@ describe('useMutationRestartServer', () => {
       { wrapper: Wrapper }
     )
 
-    // Execute mutation with non-existent server (will return 404 from MSW handler)
     result.current.mutateAsync({ path: { name: serverName } }).catch(() => {
       // Expected error, ignore
     })
