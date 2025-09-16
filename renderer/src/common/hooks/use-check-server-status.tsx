@@ -21,9 +21,11 @@ export function useCheckServerStatus() {
   const checkServerStatus = useCallback(
     async ({
       serverName,
+      groupName,
       isEditing = false,
     }: {
       serverName: string
+      groupName: string
       isEditing?: boolean
     }): Promise<boolean> => {
       toast.loading(
@@ -58,7 +60,7 @@ export function useCheckServerStatus() {
               <Button asChild>
                 <Link
                   to="/group/$groupName"
-                  params={{ groupName: 'default' }}
+                  params={{ groupName }}
                   search={{ newServerName: serverName }}
                   onClick={() => toast.dismiss(toastIdRef.current)}
                   viewTransition={{ types: ['slide-left'] }}

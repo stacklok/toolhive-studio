@@ -63,10 +63,12 @@ export function DialogFormRemoteMcp({
   closeDialog,
   isOpen,
   serverToEdit,
+  groupName,
 }: {
   closeDialog: () => void
   serverToEdit?: string | null
   isOpen: boolean
+  groupName: string
 }) {
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -92,6 +94,7 @@ export function DialogFormRemoteMcp({
       onSecretError: (error, variables) => {
         log.error('onSecretError', error, variables)
       },
+      groupName,
     })
 
   const { updateServerMutation } = useUpdateServer(serverToEdit || '', {
@@ -147,7 +150,7 @@ export function DialogFormRemoteMcp({
         { data },
         {
           onSuccess: () => {
-            checkServerStatus({ serverName: data.name, isEditing })
+            checkServerStatus({ serverName: data.name, groupName, isEditing })
             closeDialog()
           },
           onSettled: (_, error) => {
@@ -167,7 +170,7 @@ export function DialogFormRemoteMcp({
         { data },
         {
           onSuccess: () => {
-            checkServerStatus({ serverName: data.name })
+            checkServerStatus({ serverName: data.name, groupName })
             closeDialog()
           },
           onSettled: (_, error) => {
