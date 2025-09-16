@@ -23,14 +23,6 @@ export interface ChatRequest {
   enabledTools?: string[]
 }
 
-// MCP Tool information interface
-export interface McpToolInfo {
-  name: string
-  description: string
-  inputSchema: Record<string, unknown>
-  serverName: string
-}
-
 export interface AvailableServer {
   serverName: string
   serverPackage?: string
