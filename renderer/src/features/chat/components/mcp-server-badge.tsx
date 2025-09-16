@@ -19,14 +19,14 @@ export function McpServerBadge({
   const { data: enabledMcpTools } = useQuery({
     queryKey: ['enabled-mcp-tools'],
     queryFn: () => window.electronAPI.chat.getEnabledMcpTools(),
-    refetchInterval: 2000, // Refresh every 2 seconds to keep counts updated
+    refetchInterval: 5000, // Refresh every 5 seconds
   })
 
   // Fetch server tools data to get total count
   const { data: serverTools } = useQuery({
     queryKey: ['mcp-server-tools', serverName],
     queryFn: () => window.electronAPI.chat.getMcpServerTools(serverName),
-    refetchInterval: 5000, // Refresh every 5 seconds
+    refetchInterval: 7000, // Refresh every 7 seconds
     staleTime: 0,
     refetchOnMount: true,
   })

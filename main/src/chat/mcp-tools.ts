@@ -3,7 +3,6 @@ import {
   type experimental_MCPClient as MCPClient,
 } from 'ai'
 import type { ToolSet } from 'ai'
-
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import { createClient } from '@api/client'
 import { getApiV1BetaWorkloads } from '@api/sdk.gen'
@@ -11,7 +10,7 @@ import { getHeaders } from '../headers'
 import { getToolhivePort, getToolhiveMcpPort } from '../toolhive-manager'
 import log from '../logger'
 import type { McpToolInfo } from './types'
-import { getEnabledMcpTools } from './storage'
+import { getEnabledMcpTools } from './settings-storage'
 import {
   type McpToolDefinition,
   createTransport,
@@ -121,7 +120,7 @@ export async function getMcpServerTools(serverName?: string): Promise<
     }
 
     // Get enabled tools for this server
-    const enabledTools = getEnabledMcpTools()
+    const enabledTools = await getEnabledMcpTools()
     const enabledToolNames = enabledTools[serverName] || []
 
     // If workload.tools is empty, try to discover tools by connecting to the server
@@ -162,10 +161,7 @@ export async function getMcpServerTools(serverName?: string): Promise<
 
   // Otherwise return the original format for backward compatibility
   const mcpTools = (workloads || [])
-    .filter(
-      (workload) =>
-        workload.name && workload.tools && workload.tool_type === 'mcp'
-    )
+    .filter((workload) => workload.name && workload.tools)
     .flatMap((workload) =>
       workload.tools!.map((toolName) => ({
         name: `mcp_${workload.name}_${toolName}`,
@@ -229,7 +225,7 @@ export async function createMcpTools(): Promise<{
     const workloads = data?.workloads
 
     // Get enabled tools from storage
-    const enabledTools = getEnabledMcpTools()
+    const enabledTools = await getEnabledMcpTools()
 
     // Continue with regular MCP servers even if no enabled tools (since we might have Toolhive MCP)
     if (Object.keys(enabledTools).length === 0) {
@@ -241,7 +237,12 @@ export async function createMcpTools(): Promise<{
       if (toolNames.length === 0) continue
 
       const workload = workloads?.find((w) => w.name === serverName)
-      if (!workload || workload.tool_type !== 'mcp') continue
+      if (!workload) {
+        log.debug(`Skipping ${serverName}: workload not found`)
+        continue
+      }
+
+      log.debug(`Found MCP workload for ${serverName}:`, workload.package)
 
       try {
         const config = createTransport(workload)
@@ -254,13 +255,19 @@ export async function createMcpTools(): Promise<{
         const serverMcpTools = await mcpClient.tools()
 
         // Add only the enabled tools from this server
+        let addedToolsCount = 0
         for (const toolName of toolNames) {
           if (serverMcpTools[toolName]) {
             mcpTools[toolName] = serverMcpTools[toolName]
+            addedToolsCount++
+          } else {
+            log.warn(`Tool ${toolName} not found in server ${serverName}`)
           }
         }
 
-        // MCP client created successfully
+        log.debug(
+          `Added ${addedToolsCount}/${toolNames.length} tools from ${serverName}`
+        )
       } catch (error) {
         log.error(`Failed to create MCP client for ${serverName}:`, error)
       }
