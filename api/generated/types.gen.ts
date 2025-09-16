@@ -1011,6 +1011,10 @@ export type V1CreateRequest = {
    */
   proxy_mode?: string
   /**
+   * Port for the HTTP proxy to listen on
+   */
+  proxy_port?: number
+  /**
    * Secret parameters to inject
    */
   secrets?: Array<SecretsSecretParameter>
@@ -1410,6 +1414,10 @@ export type V1UpdateRequest = {
    * Proxy mode to use
    */
   proxy_mode?: string
+  /**
+   * Port for the HTTP proxy to listen on
+   */
+  proxy_port?: number
   /**
    * Secret parameters to inject
    */
