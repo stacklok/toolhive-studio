@@ -76,8 +76,11 @@ function opResponseTypeName(method: string, rawPath: string): string {
 
 function autoGenerateHandlers() {
   const result = []
-  // We will dynamically import fixtures on each request to always get the latest
-  // file contents (including freshly generated ones), so no need for a glob map.
+  // Use a glob map so Vitest/Vite can track these files for watch/HMR.
+  // We'll still import per-request to get latest contents.
+  const fixtureImporters: Record<string, () => Promise<unknown>> =
+    // @ts-ignore - vite-specific API available in vitest/vite runtime
+    import.meta.glob('./fixtures/**', { import: 'default' })
   const specPaths = Object.entries(
     ((openapi as any).paths ?? {}) as Record<string, any>
   )
@@ -158,13 +161,17 @@ function autoGenerateHandlers() {
           }
 
           if (data === undefined) {
-            // Always live import the fixture so edits and freshly generated
-            // files are picked up without restarting tests/dev server.
             const relPath = `./fixtures/${fileBase}`
             try {
-              // Add a timestamp query to bust the module cache between requests
-              const mod: any = await import(`${relPath}?t=${Date.now()}`)
-              data = mod?.default ?? mod
+              const importer = fixtureImporters[relPath]
+              if (importer) {
+                const mod: any = await importer()
+                data = mod?.default ?? mod
+              } else {
+                // Fall back to dynamic import for freshly generated files
+                const mod: any = await import(relPath)
+                data = mod?.default ?? mod
+              }
             } catch (e) {
               return new HttpResponse(
                 `Missing mock fixture: ${relPath}. ${e instanceof Error ? e.message : ''}`,
