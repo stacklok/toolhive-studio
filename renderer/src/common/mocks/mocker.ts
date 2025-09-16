@@ -11,6 +11,7 @@ import { JSONSchemaFaker as jsf } from 'json-schema-faker'
 import { http, HttpResponse } from 'msw'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { buildMockModule } from './mockTemplate'
 
 const ajv = new Ajv({ strict: true })
 // Ignore vendor extensions present in the OpenAPI schema
@@ -146,14 +147,10 @@ function autoGenerateHandlers() {
               }
             }
 
-            let typeImport = ''
-            let typeSatisfies = ''
-            if (successStatus) {
-              const opType = opResponseTypeName(method, rawPath)
-              typeImport = `import type { ${opType} } from '@api/types.gen'\n\n`
-              typeSatisfies = ` satisfies ${opType}`
-            }
-            const tsModule = `${typeImport}export default ${JSON.stringify(payload, null, 2)}${typeSatisfies}\n`
+            const opType = successStatus
+              ? opResponseTypeName(method, rawPath)
+              : undefined
+            const tsModule = buildMockModule(payload, { opType })
             fs.writeFileSync(fixtureFileName, tsModule)
             // Use freshly generated payload directly
             data = payload
