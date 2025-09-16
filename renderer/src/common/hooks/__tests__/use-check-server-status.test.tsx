@@ -12,7 +12,6 @@ describe('useCheckServerStatus', () => {
   const loading = vi.mocked(toast.loading)
 
   beforeEach(() => {
-    vi.clearAllMocks()
     // Make polling immediately resolve to success
     vi.spyOn(polling, 'pollServerStatus').mockResolvedValue(true)
   })
