@@ -11,6 +11,8 @@ import { ErrorAlert } from './error-alert'
 
 import { useChatStreaming } from '../hooks/use-chat-streaming'
 import { useConfirm } from '@/common/hooks/use-confirm'
+import { Separator } from '@/common/components/ui/separator'
+import { McpServerSettings } from './mcp-server-settings'
 
 function ChatInterfaceContent() {
   const {
@@ -63,32 +65,30 @@ function ChatInterfaceContent() {
   return (
     <div className="bg-background flex h-full flex-col">
       {/* Model Selection Bar */}
-      <div
-        className="border-border/20 bg-background/95
-          supports-[backdrop-filter]:bg-background/60 border-b backdrop-blur"
-      >
-        <div className="container mx-auto py-4">
-          <div className="flex items-center justify-between">
-            <ModelSelector
-              settings={settings}
-              onSettingsChange={updateSettings}
-              onOpenSettings={() => setIsSettingsOpen(true)}
-              onProviderChange={handleProviderChange}
-            />
-            {hasMessages && (
-              <Button
-                onClick={onClearMessages}
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Clear
-              </Button>
-            )}
-          </div>
+
+      <div className="w-full pb-4">
+        <div className="flex items-center gap-2">
+          <ModelSelector
+            settings={settings}
+            onSettingsChange={updateSettings}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+            onProviderChange={handleProviderChange}
+          />
+          <McpServerSelector />
+          {hasMessages && (
+            <Button
+              onClick={onClearMessages}
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-foreground h-10"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Clear
+            </Button>
+          )}
         </div>
       </div>
+      <Separator />
 
       {/* Messages Area */}
       <div className="flex-1 overflow-hidden">
@@ -116,7 +116,7 @@ function ChatInterfaceContent() {
           </div>
         ) : hasMessages ? (
           <div className="h-full overflow-y-auto scroll-smooth">
-            <div className="container mx-auto py-8">
+            <div className="w-full py-8">
               <div className="space-y-8 pr-2">
                 {messages.map((message, index: number) => (
                   <div
@@ -199,36 +199,31 @@ function ChatInterfaceContent() {
       <ErrorAlert error={error} />
 
       {/* Input Area */}
-      <div
-        className="border-border/20 bg-background/95
-          supports-[backdrop-filter]:bg-background/60 border-t backdrop-blur"
-      >
-        <div className="container mx-auto py-6">
-          {/* MCP Tools Selection */}
-          {hasProviderAndModel && (
-            <div className="mb-4">
-              <McpServerSelector />
-            </div>
-          )}
+      <div className="mx-auto w-full py-6">
+        {/* MCP Tools Selection */}
+        {hasProviderAndModel && (
+          <div className="mb-4">
+            <McpServerSettings />
+          </div>
+        )}
 
-          {/* Response Timer */}
-          {isLoading && (
-            <div className="flex justify-center pb-2">
-              <div className="text-muted-foreground text-sm">
-                Generating response...
-              </div>
+        {/* Response Timer */}
+        {isLoading && (
+          <div className="flex justify-center pb-2">
+            <div className="text-muted-foreground text-sm">
+              Generating response...
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Chat Input */}
-          <ChatInput
-            onSendMessage={sendMessage}
-            onStopGeneration={cancelRequest}
-            isLoading={isLoading}
-            disabled={!hasProviderAndModel}
-            selectedModel={settings.model}
-          />
-        </div>
+        {/* Chat Input */}
+        <ChatInput
+          onSendMessage={sendMessage}
+          onStopGeneration={cancelRequest}
+          isLoading={isLoading}
+          disabled={!hasProviderAndModel}
+          selectedModel={settings.model}
+        />
       </div>
 
       {/* API Keys Modal */}
