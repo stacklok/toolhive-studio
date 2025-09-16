@@ -1,13 +1,22 @@
+import type { LanguageModelV2Usage } from '@ai-sdk/provider'
+import type { UIMessage } from 'ai'
+
+// Define message metadata schema for type safety
+interface MessageMetadata {
+  createdAt?: number
+  model?: string
+  totalUsage?: LanguageModelV2Usage
+  responseTime?: number
+  finishReason?: string
+}
+
+// Create a typed UIMessage with our metadata
+export type ChatUIMessage = UIMessage<MessageMetadata>
+
 // Chat request interface
 export interface ChatRequest {
-  messages: Array<{
-    id: string
-    role: 'user' | 'assistant'
-    parts: Array<{
-      type: string
-      text?: string
-    }>
-  }>
+  chatId: string
+  messages: ChatUIMessage[]
   provider: string
   model: string
   apiKey: string

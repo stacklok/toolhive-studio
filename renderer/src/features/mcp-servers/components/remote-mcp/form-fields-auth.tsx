@@ -17,6 +17,76 @@ import {
 import { type FormSchemaRemoteMcp } from '../../lib/form-schema-remote-mcp'
 import { type UseFormReturn } from 'react-hook-form'
 
+function ClientAuthFields({
+  form,
+  authType,
+}: {
+  form: UseFormReturn<FormSchemaRemoteMcp>
+  authType: string | undefined
+}) {
+  if (authType === 'none') return null
+  return (
+    <>
+      <FormField
+        control={form.control}
+        name="oauth_config.client_id"
+        render={({ field }) => (
+          <FormItem>
+            <div className="flex items-center gap-1">
+              <FormLabel>Client ID</FormLabel>
+              <TooltipInfoIcon>
+                The client ID for your application registered with the OIDC
+                provider.
+              </TooltipInfoIcon>
+            </div>
+            <FormControl>
+              <Input
+                autoCorrect="off"
+                autoComplete="off"
+                autoFocus
+                data-1p-ignore
+                placeholder="e.g. 00000000-0000-0000-0000-000000000000"
+                value={field.value}
+                onChange={(e) => field.onChange(e.target.value)}
+                name={field.name}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="oauth_config.client_secret"
+        render={({ field }) => (
+          <FormItem>
+            <div className="flex items-center gap-1">
+              <FormLabel>Client Secret</FormLabel>
+              <TooltipInfoIcon>
+                The client secret key that proves your application's identity.
+              </TooltipInfoIcon>
+            </div>
+            <FormControl>
+              <Input
+                autoCorrect="off"
+                autoComplete="off"
+                type="password"
+                autoFocus
+                data-1p-ignore
+                placeholder="e.g. secret"
+                value={field.value}
+                onChange={(e) => field.onChange(e.target.value)}
+                name={field.name}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </>
+  )
+}
 export function FormFieldsAuth({
   authType,
   form,
@@ -89,63 +159,7 @@ export function FormFieldsAuth({
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="oauth_config.client_id"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex items-center gap-1">
-                  <FormLabel>Client ID</FormLabel>
-                  <TooltipInfoIcon>
-                    The client ID for your application registered with the OIDC
-                    provider.
-                  </TooltipInfoIcon>
-                </div>
-                <FormControl>
-                  <Input
-                    autoCorrect="off"
-                    autoComplete="off"
-                    autoFocus
-                    data-1p-ignore
-                    placeholder="e.g. 00000000-0000-0000-0000-000000000000"
-                    value={field.value}
-                    onChange={(e) => field.onChange(e.target.value)}
-                    name={field.name}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="oauth_config.client_secret"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex items-center gap-1">
-                  <FormLabel>Client Secret</FormLabel>
-                  <TooltipInfoIcon>
-                    The client secret key that proves your application's
-                    identity.
-                  </TooltipInfoIcon>
-                </div>
-                <FormControl>
-                  <Input
-                    autoCorrect="off"
-                    autoComplete="off"
-                    autoFocus
-                    data-1p-ignore
-                    placeholder="e.g. secret"
-                    value={field.value}
-                    onChange={(e) => field.onChange(e.target.value)}
-                    name={field.name}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <ClientAuthFields form={form} authType={authType} />
 
           <FormField
             control={form.control}
@@ -241,63 +255,7 @@ export function FormFieldsAuth({
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="oauth_config.client_id"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex items-center gap-1">
-                  <FormLabel>Client ID</FormLabel>
-                  <TooltipInfoIcon>
-                    The client ID for your application registered with the OAuth
-                    provider.
-                  </TooltipInfoIcon>
-                </div>
-                <FormControl>
-                  <Input
-                    autoCorrect="off"
-                    autoComplete="off"
-                    autoFocus
-                    data-1p-ignore
-                    placeholder="e.g. 00000000-0000-0000-0000-000000000000"
-                    value={field.value}
-                    onChange={(e) => field.onChange(e.target.value)}
-                    name={field.name}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="oauth_config.client_secret"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex items-center gap-1">
-                  <FormLabel>Client Secret</FormLabel>
-                  <TooltipInfoIcon>
-                    The client secret key that proves your application's
-                    identity.
-                  </TooltipInfoIcon>
-                </div>
-                <FormControl>
-                  <Input
-                    autoCorrect="off"
-                    autoComplete="off"
-                    autoFocus
-                    data-1p-ignore
-                    placeholder="e.g. secret"
-                    value={field.value}
-                    onChange={(e) => field.onChange(e.target.value)}
-                    name={field.name}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <ClientAuthFields form={form} authType={authType} />
 
           <FormField
             control={form.control}
@@ -308,6 +266,7 @@ export function FormFieldsAuth({
                   <FormLabel>Scopes</FormLabel>
                   <TooltipInfoIcon>
                     The list of scopes (permissions) your app is requesting.
+                    Separate with commas.
                   </TooltipInfoIcon>
                 </div>
                 <FormControl>

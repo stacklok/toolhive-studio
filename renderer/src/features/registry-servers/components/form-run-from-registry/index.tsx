@@ -21,6 +21,7 @@ import {
 } from '../../lib/form-schema-registry-mcp'
 import { AlertErrorFormSubmission } from '@/common/components/workloads/alert-error-form-submission'
 import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-workload-form-wrapper'
+import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 
 type Tab = 'configuration' | 'network-isolation'
 type Field = keyof FormSchemaRegistryMcp
@@ -58,24 +59,21 @@ export function FormRunFromRegistry({
     () => groupEnvVars(server?.env_vars || []),
     [server?.env_vars]
   )
-  const {
-    installServerMutation,
-    checkServerStatus,
-    isErrorSecrets,
-    isPendingSecrets,
-  } = useRunFromRegistry({
-    onSecretSuccess: (completedCount, secretsCount) => {
-      setLoadingSecrets((prev) => ({
-        ...prev,
-        text: `Encrypting secrets (${completedCount} of ${secretsCount})...`,
-        completedCount,
-        secretsCount,
-      }))
-    },
-    onSecretError: (error, variables) => {
-      log.error('onSecretError', error, variables)
-    },
-  })
+  const { checkServerStatus } = useCheckServerStatus()
+  const { installServerMutation, isErrorSecrets, isPendingSecrets } =
+    useRunFromRegistry({
+      onSecretSuccess: (completedCount, secretsCount) => {
+        setLoadingSecrets((prev) => ({
+          ...prev,
+          text: `Encrypting secrets (${completedCount} of ${secretsCount})...`,
+          completedCount,
+          secretsCount,
+        }))
+      },
+      onSecretError: (error, variables) => {
+        log.error('onSecretError', error, variables)
+      },
+    })
   const { activeTab, setActiveTab, activateTabWithError, resetTab } =
     useFormTabState<Tab, Field>({
       fieldTabMap: FIELD_TAB_MAP,
@@ -141,7 +139,7 @@ export function FormRunFromRegistry({
       },
       {
         onSuccess: () => {
-          checkServerStatus(data)
+          checkServerStatus({ serverName: data.name })
           onOpenChange(false)
           setActiveTab('configuration')
         },

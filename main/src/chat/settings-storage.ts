@@ -1,5 +1,28 @@
 import Store from 'electron-store'
 import log from '../logger'
+import { getToolhivePort } from '../toolhive-manager'
+import { createClient } from '@api/client'
+import { getApiV1BetaWorkloads } from '@api/sdk.gen'
+import type { CoreWorkload } from '@api/types.gen'
+import { getHeaders } from '../headers'
+import { getTearingDownState } from '../app-state'
+
+// Chat store types
+interface ChatSettingsProvider {
+  apiKey: string
+  enabledTools: string[]
+}
+
+interface ChatSettingsSelectedModel {
+  provider: string
+  model: string
+}
+
+interface ChatSettings {
+  providers: Record<string, ChatSettingsProvider>
+  selectedModel: ChatSettingsSelectedModel
+  enabledMcpTools: Record<string, string[]> // serverName -> [toolName1, toolName2]
+}
 
 // Type guard functions
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -10,9 +33,7 @@ function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === 'string')
 }
 
-function isProvidersRecord(
-  value: unknown
-): value is Record<string, ChatSettings> {
+function isProvidersRecord(value: unknown): value is ChatSettings['providers'] {
   if (!isRecord(value)) return false
   return Object.values(value).every(
     (item) =>
@@ -22,14 +43,14 @@ function isProvidersRecord(
   )
 }
 
-function isToolsRecord(value: unknown): value is Record<string, string[]> {
+function isToolsRecord(
+  value: unknown
+): value is ChatSettings['enabledMcpTools'] {
   if (!isRecord(value)) return false
   return Object.values(value).every((item) => isStringArray(item))
 }
 
-function isSelectedModel(
-  value: unknown
-): value is { provider: string; model: string } {
+function isSelectedModel(value: unknown): value is ChatSettingsSelectedModel {
   return (
     isRecord(value) &&
     typeof value.provider === 'string' &&
@@ -38,34 +59,21 @@ function isSelectedModel(
 }
 
 // Create a secure store for chat settings (API keys and model selection)
-const chatStore = new Store({
+const chatStore = new Store<ChatSettings>({
   name: 'chat-settings',
   encryptionKey: 'toolhive-chat-encryption-key', // Basic encryption for API keys
   defaults: {
-    providers: {} as Record<
-      string,
-      {
-        apiKey: string
-        enabledTools: string[]
-      }
-    >,
+    providers: {},
     selectedModel: {
       provider: '',
       model: '',
     },
-    // Individual tool enablement per server (single source of truth)
-    enabledMcpTools: {} as Record<string, string[]>, // serverName -> [toolName1, toolName2]
+    enabledMcpTools: {},
   },
 })
 
-// Chat settings interface
-interface ChatSettings {
-  apiKey: string
-  enabledTools: string[]
-}
-
 // Get chat settings for a provider
-export function getChatSettings(providerId: string): ChatSettings {
+export function getChatSettings(providerId: string): ChatSettingsProvider {
   try {
     const providers = chatStore.get('providers')
     if (isProvidersRecord(providers)) {
@@ -81,7 +89,7 @@ export function getChatSettings(providerId: string): ChatSettings {
 // Save chat settings for a provider
 export function saveChatSettings(
   providerId: string,
-  settings: ChatSettings
+  settings: ChatSettingsProvider
 ): { success: boolean; error?: string } {
   try {
     const providers = chatStore.get('providers')
@@ -126,7 +134,7 @@ export function clearChatSettings(providerId?: string): {
 }
 
 // Get selected model
-export function getSelectedModel(): { provider: string; model: string } {
+export function getSelectedModel(): ChatSettingsSelectedModel {
   try {
     const selectedModel = chatStore.get('selectedModel')
     if (
@@ -159,20 +167,6 @@ export function saveSelectedModel(
   }
 }
 
-// Get enabled MCP tools for a specific server
-// function getEnabledMcpToolsForServer(serverName: string): string[] {
-//   try {
-//     const enabledMcpTools = chatStore.get('enabledMcpTools')
-//     if (isToolsRecord(enabledMcpTools)) {
-//       return enabledMcpTools[serverName] || []
-//     }
-//     return []
-//   } catch (error) {
-//     log.error('Failed to get enabled MCP tools:', error)
-//     return []
-//   }
-// }
-
 // Save enabled MCP tools for a server
 export function saveEnabledMcpTools(
   serverName: string,
@@ -193,14 +187,77 @@ export function saveEnabledMcpTools(
   }
 }
 
-// Get all enabled MCP tools (global)
-export function getEnabledMcpTools(): Record<string, string[]> {
+// Get all enabled MCP tools (global) - filters out tools from stopped servers
+export async function getEnabledMcpTools(): Promise<
+  ChatSettings['enabledMcpTools']
+> {
   try {
     const enabledMcpTools = chatStore.get('enabledMcpTools')
-    if (isToolsRecord(enabledMcpTools)) {
+    if (!isToolsRecord(enabledMcpTools)) {
+      return {}
+    }
+
+    // Skip validation during shutdown to prevent interrupting teardown
+    if (getTearingDownState()) {
+      log.debug('Skipping MCP tools validation during teardown')
       return enabledMcpTools
     }
-    return {}
+
+    // Get running servers to filter out tools from stopped servers
+    const port = getToolhivePort()
+
+    if (!port) {
+      // If ToolHive is not running, return stored tools without validation
+      return enabledMcpTools
+    }
+
+    try {
+      const client = createClient({
+        baseUrl: `http://localhost:${port}`,
+        headers: getHeaders(),
+      })
+
+      const { data } = await getApiV1BetaWorkloads({
+        client,
+        query: { all: true },
+      })
+
+      const runningServerNames = (data?.workloads || [])
+        .filter((w: CoreWorkload) => w.status === 'running')
+        .map((w: CoreWorkload) => w.name)
+
+      // Filter enabled tools to only include tools from running servers
+      const filteredTools: ChatSettings['enabledMcpTools'] = {}
+      const serversToRemove: string[] = []
+
+      for (const [serverName, tools] of Object.entries(enabledMcpTools)) {
+        if (runningServerNames.includes(serverName)) {
+          filteredTools[serverName] = tools
+        } else if (tools.length > 0) {
+          // Only log if server actually had tools to clean up
+          log.info(`Cleaning up tools for stopped server: ${serverName}`)
+          serversToRemove.push(serverName)
+        }
+      }
+
+      // Remove stopped servers from storage in one operation
+      if (serversToRemove.length > 0) {
+        const updatedTools = { ...enabledMcpTools }
+        for (const serverName of serversToRemove) {
+          delete updatedTools[serverName]
+        }
+        chatStore.set('enabledMcpTools', updatedTools)
+      }
+
+      return filteredTools
+    } catch (apiError) {
+      log.warn(
+        'Failed to check running servers during shutdown, returning stored tools:',
+        apiError
+      )
+      // During shutdown, just return stored tools without validation
+      return enabledMcpTools
+    }
   } catch (error) {
     log.error('Failed to get all enabled MCP tools:', error)
     return {}
@@ -208,9 +265,9 @@ export function getEnabledMcpTools(): Record<string, string[]> {
 }
 
 // Get enabled MCP servers from tools (get servers that have enabled tools)
-export function getEnabledMcpServersFromTools(): string[] {
+export async function getEnabledMcpServersFromTools(): Promise<string[]> {
   try {
-    const allEnabledTools = getEnabledMcpTools()
+    const allEnabledTools = await getEnabledMcpTools()
     const enabledServerNames = Object.keys(allEnabledTools).filter(
       (serverName) => {
         const tools = allEnabledTools[serverName]

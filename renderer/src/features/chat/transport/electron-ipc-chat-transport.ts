@@ -69,14 +69,8 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
     }
 
     const backendRequest = {
-      messages: options.messages.map((msg) => ({
-        id: msg.id,
-        role: msg.role,
-        parts: msg.parts.map((part) => ({
-          type: part.type,
-          text: part.type === 'text' ? part.text : '',
-        })),
-      })),
+      chatId: options.chatId,
+      messages: options.messages,
       provider: settings.provider,
       model: settings.model,
       apiKey: settings.apiKey,

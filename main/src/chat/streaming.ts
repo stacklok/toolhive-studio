@@ -1,9 +1,18 @@
-import { streamText, stepCountIs } from 'ai'
+import {
+  streamText,
+  stepCountIs,
+  type UIMessage,
+  convertToModelMessages,
+  createIdGenerator,
+} from 'ai'
 import log from '../logger'
 import { CHAT_PROVIDERS } from './providers'
 import { createMcpTools } from './mcp-tools'
 import { streamUIMessagesOverIPC } from './stream-utils'
 import type { ChatRequest } from './types'
+import type { LanguageModelV2Usage } from '@ai-sdk/provider'
+import { updateThreadMessages } from './threads-storage'
+
 /**
  * Handle chat streaming request using real-time IPC events
  */
@@ -21,28 +30,13 @@ export async function handleChatStreamRealtime(
 
     // Create AI model
     const model = provider.createModel(request.model, request.apiKey)
-
-    // Convert messages to AI SDK CoreMessage format
-    const messages = request.messages
-      .map((msg) => ({
-        role: msg.role as 'user' | 'assistant',
-        content: msg.parts
-          .filter(
-            (part) => part.type === 'text' && part.text && part.text.trim()
-          )
-          .map((part) => part.text!.trim())
-          .join('\n'),
-      }))
-      .filter((msg) => msg.content.trim().length > 0) // Filter out messages with empty content
-
     // Get MCP tools if enabled
     const { tools: mcpTools, clients: mcpClients } = await createMcpTools()
 
     try {
-      // Use AI SDK's streamText - this is the recommended approach
       const result = streamText({
         model,
-        messages,
+        messages: convertToModelMessages(request.messages),
         tools: Object.keys(mcpTools).length > 0 ? mcpTools : undefined,
         toolChoice: Object.keys(mcpTools).length > 0 ? 'auto' : undefined,
         stopWhen: stepCountIs(50), // Increase step limit for complex tool chains
@@ -112,19 +106,23 @@ The repository shows active development with regular commits and community engag
 Remember: Always interpret and format tool results beautifully. Never show raw data!`,
       })
 
-      // Create UI message stream with metadata
+      // Create UI message stream with metadata and persistence
       const startTime = Date.now()
+
+      // Use the AI SDK's built-in UI message stream
       const uiMessageStream = result.toUIMessageStream({
+        originalMessages: request.messages,
+        generateMessageId: createIdGenerator({
+          prefix: 'msg',
+          size: 16,
+        }),
         messageMetadata: ({ part }) => {
-          // Send metadata when streaming starts
           if (part.type === 'start') {
             return {
               createdAt: Date.now(),
               model: request.model,
             }
           }
-
-          // Send additional metadata when streaming completes
           if (part.type === 'finish') {
             const endTime = Date.now()
             return {
@@ -134,12 +132,37 @@ Remember: Always interpret and format tool results beautifully. Never show raw d
             }
           }
         },
+        onFinish: async ({
+          messages: finalMessages,
+        }: {
+          messages: UIMessage<{
+            createdAt?: number
+            model?: string
+            totalUsage?: LanguageModelV2Usage
+            responseTime?: number
+            finishReason?: string
+          }>[]
+        }) => {
+          // Save the complete conversation when streaming finishes
+          try {
+            const result = updateThreadMessages(request.chatId, finalMessages)
+            if (!result.success) {
+              log.error(
+                `[PERSISTENCE] Failed to save messages: ${result.error}`
+              )
+            }
+          } catch (saveError) {
+            log.error(
+              '[CHAT] Failed to save messages to thread storage:',
+              saveError
+            )
+          }
+        },
       })
 
-      // Stream UI messages over IPC in real-time with cleanup callback
+      // Stream over IPC
       streamUIMessagesOverIPC(sender, streamId, uiMessageStream, async () => {
         // Clean up MCP clients after stream completes
-
         for (const client of mcpClients) {
           try {
             await client.close()

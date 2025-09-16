@@ -42,6 +42,16 @@ vi.mock('../../transport/electron-ipc-chat-transport', () => ({
   })),
 }))
 
+vi.mock('../use-thread-management', () => ({
+  useThreadManagement: vi.fn(() => ({
+    currentThreadId: 'toolhive-chat',
+    isLoading: false,
+    error: null,
+    loadMessages: vi.fn().mockResolvedValue([]),
+    clearMessages: vi.fn().mockResolvedValue(undefined),
+  })),
+}))
+
 // Get references to the mocked functions after mocking
 
 // Mock electron API chat methods
@@ -52,6 +62,11 @@ const mockChatAPI = {
   saveSelectedModel: vi.fn(),
   saveSettings: vi.fn(),
   clearSettings: vi.fn(),
+  getAllThreads: vi.fn(),
+  setActiveThreadId: vi.fn(),
+  createChatThread: vi.fn(),
+  getThreadMessagesForTransport: vi.fn(),
+  updateThreadMessages: vi.fn(),
 }
 
 // Extend the existing window.electronAPI with chat methods
@@ -109,6 +124,14 @@ describe('useChatStreaming', () => {
     mockChatAPI.saveSelectedModel.mockResolvedValue({ success: true })
     mockChatAPI.saveSettings.mockResolvedValue({ success: true })
     mockChatAPI.clearSettings.mockResolvedValue({ success: true })
+    mockChatAPI.getAllThreads.mockResolvedValue([])
+    mockChatAPI.setActiveThreadId.mockResolvedValue({ success: true })
+    mockChatAPI.createChatThread.mockResolvedValue({
+      success: true,
+      threadId: 'toolhive-chat',
+    })
+    mockChatAPI.getThreadMessagesForTransport.mockResolvedValue([])
+    mockChatAPI.updateThreadMessages.mockResolvedValue({ success: true })
 
     // Reset mockUseChat state to default values
     mockUseChat.messages = []

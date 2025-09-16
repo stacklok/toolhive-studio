@@ -157,7 +157,7 @@ const createRegistrySecretsSchema = (
     .object({
       name: secretNameSchema,
       value: z.object({
-        secret: z.string().optional(),
+        secret: z.string(),
         isFromStore: z.boolean(),
       }),
     })
@@ -291,7 +291,7 @@ const remoteMcpOauthConfigSchema = z.object({
   client_secret: z.string().optional(),
   issuer: z.string().optional(),
   oauth_params: z.record(z.string(), z.string()).optional(),
-  scopes: z.array(z.string()).optional(),
+  scopes: z.string().optional(),
   skip_browser: z.boolean(),
   token_url: z.string().optional(),
   use_pkce: z.boolean(),

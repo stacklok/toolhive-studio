@@ -19,6 +19,11 @@ const OAUTH_VALIDATION_RULES = {
       message: 'Client ID is required for OAuth2',
       path: ['oauth_config', 'client_id'],
     },
+    {
+      field: 'client_secret',
+      message: 'Client Secret is required for OAuth2',
+      path: ['oauth_config', 'client_secret'],
+    },
   ],
   oidc: [
     {

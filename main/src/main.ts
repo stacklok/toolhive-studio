@@ -63,8 +63,28 @@ import {
   discoverToolSupportedModels,
   fetchOpenRouterModels,
   getToolhiveMcpInfo,
+  // Thread storage functions
+  createThread,
+  getThread,
+  getAllThreads,
+  updateThread,
+  deleteThread,
+  clearAllThreads,
+  getThreadCount,
+  addMessageToThread,
+  updateThreadMessages,
+  getActiveThreadId,
+  setActiveThreadId,
+  // Thread integration functions
+  createChatThread,
+  getThreadMessagesForTransport,
+  getThreadInfo,
+  ensureThreadExists,
   type ChatRequest,
+  type ChatSettingsThread,
+  handleChatStreamRealtime,
 } from './chat'
+import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 import { getWorkloadAvailableTools } from './utils/mcp-tools'
 import {
   getQuittingState,
@@ -74,6 +94,7 @@ import {
   setTray,
   getTray,
 } from './app-state'
+import type { UIMessage } from 'ai'
 
 const store = new Store<{
   isTelemetryEnabled: boolean
@@ -619,7 +640,6 @@ ipcMain.handle('chat:get-providers', async () => {
 // Chat streaming endpoint - uses real-time IPC events
 ipcMain.handle('chat:stream', async (event, request: ChatRequest) => {
   const streamId = `stream-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-  const { handleChatStreamRealtime } = await import('./chat')
 
   // Start streaming (non-blocking)
   handleChatStreamRealtime(request, streamId, event.sender)
@@ -666,6 +686,93 @@ ipcMain.handle(
     saveEnabledMcpTools(serverName, enabledTools)
 )
 ipcMain.handle('chat:get-toolhive-mcp-info', () => getToolhiveMcpInfo())
+
+// ────────────────────────────────────────────────────────────────────────────
+//  Chat Threads Storage IPC handlers
+// ────────────────────────────────────────────────────────────────────────────
+
+// Thread management
+ipcMain.handle(
+  'chat:create-thread',
+  (
+    _,
+    title?: string,
+    initialMessages?: UIMessage<{
+      createdAt?: number
+      model?: string
+      totalUsage?: LanguageModelV2Usage
+      responseTime?: number
+      finishReason?: string
+    }>[]
+  ) => createThread(title, initialMessages)
+)
+ipcMain.handle('chat:get-thread', (_, threadId: string) => getThread(threadId))
+ipcMain.handle('chat:get-all-threads', () => getAllThreads())
+ipcMain.handle(
+  'chat:update-thread',
+  (
+    _,
+    threadId: string,
+    updates: Partial<Omit<ChatSettingsThread, 'id' | 'createdAt'>>
+  ) => updateThread(threadId, updates)
+)
+ipcMain.handle('chat:delete-thread', (_, threadId: string) =>
+  deleteThread(threadId)
+)
+ipcMain.handle('chat:clear-all-threads', () => clearAllThreads())
+ipcMain.handle('chat:get-thread-count', () => getThreadCount())
+
+// Message management
+ipcMain.handle(
+  'chat:add-message-to-thread',
+  (
+    _,
+    threadId: string,
+    message: UIMessage<{
+      createdAt?: number
+      model?: string
+      totalUsage?: LanguageModelV2Usage
+      responseTime?: number
+      finishReason?: string
+    }>
+  ) => addMessageToThread(threadId, message)
+)
+ipcMain.handle(
+  'chat:update-thread-messages',
+  (
+    _,
+    threadId: string,
+    messages: UIMessage<{
+      createdAt?: number
+      model?: string
+      totalUsage?: LanguageModelV2Usage
+      responseTime?: number
+      finishReason?: string
+    }>[]
+  ) => updateThreadMessages(threadId, messages)
+)
+
+// Active thread management
+ipcMain.handle('chat:get-active-thread-id', () => getActiveThreadId())
+ipcMain.handle('chat:set-active-thread-id', (_, threadId?: string) =>
+  setActiveThreadId(threadId)
+)
+
+// High-level thread integration
+ipcMain.handle('chat:create-chat-thread', (_, title?: string) =>
+  createChatThread(title)
+)
+ipcMain.handle(
+  'chat:get-thread-messages-for-transport',
+  (_, threadId: string) => getThreadMessagesForTransport(threadId)
+)
+ipcMain.handle('chat:get-thread-info', (_, threadId: string) =>
+  getThreadInfo(threadId)
+)
+ipcMain.handle(
+  'chat:ensure-thread-exists',
+  (_, threadId?: string, title?: string) => ensureThreadExists(threadId, title)
+)
 
 // Workload tools discovery handler
 ipcMain.handle('utils:get-workload-available-tools', async (_, workload) =>
