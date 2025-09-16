@@ -1,10 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// Small utility to render the TypeScript module for generated mock fixtures.
-// It conditionally adds a type import and `satisfies` clause when a response
-// type name is provided.
-
+/**
+ * Renders a TypeScript module for a generated mock fixture.
+ * If a response type name is provided, adds a type-only import from
+ * `@api/types.gen` and a `satisfies` clause on the default export
+ * to enforce the expected response type.
+ */
 export function buildMockModule(
-  payload: any,
+  payload: unknown,
   options?: { opType?: string }
 ): string {
   const opType = options?.opType?.trim()
