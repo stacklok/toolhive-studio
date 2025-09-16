@@ -14,29 +14,11 @@ import {
   DropdownMenuLabel,
 } from '@/common/components/ui/dropdown-menu'
 import { ChevronDown } from 'lucide-react'
-import { McpServerBadge } from './mcp-server-badge'
-import { ToolhiveMcpBadge } from './toolhive-mcp-badge'
-import { useChatSettings } from '../hooks/use-chat-settings'
+import type { ChatMcpServer } from '../types'
+import { Badge } from '@/common/components/ui/badge'
+import { ScrollArea } from '@/common/components/ui/scroll-area'
 
-interface McpServerSelectorProps {
-  enabledTools?: string[] // Made optional since we're not using it
-  onEnabledToolsChange?: (tools: string[]) => void
-}
-
-interface McpServer {
-  id: string
-  name: string
-  status: 'running' | 'stopped'
-  package?: string
-}
-
-export function McpServerSelector({
-  onEnabledToolsChange,
-}: McpServerSelectorProps) {
-  // Use TanStack Query hook for settings management
-  const { updateEnabledTools: settingsUpdateEnabledTools } = useChatSettings()
-  const updateEnabledTools = onEnabledToolsChange || settingsUpdateEnabledTools
-
+export function McpServerSelector() {
   const [isOpen, setIsOpen] = useState(false)
   const queryClient = useQueryClient()
 
@@ -52,7 +34,7 @@ export function McpServerSelector({
   })
 
   // Process workloads data to get running MCP servers
-  const mcpServers: McpServer[] = (workloadsData?.workloads || [])
+  const mcpServers: ChatMcpServer[] = (workloadsData?.workloads || [])
     .filter((w: CoreWorkload) => w.status === 'running' && w.url)
     .map((w: CoreWorkload) => ({
       id: `mcp_${w.name}`,
@@ -60,16 +42,18 @@ export function McpServerSelector({
       status: w.status as 'running' | 'stopped',
       package: w.package,
     }))
+    .sort((a, b) => a.name.localeCompare(b.name))
 
   const enabledMcpServers = mcpServers.filter((server) =>
     backendEnabledTools.includes(server.id)
   )
 
-  const handleToggleTool = async (toolId: string) => {
-    // Extract server name from toolId (remove 'mcp_' prefix)
-    const serverName = toolId.replace('mcp_', '')
+  const handleToggleTool = async (serverId: string) => {
+    // Extract server name from serverId (remove 'mcp_' prefix)
+    console.log('serverId', backendEnabledTools, serverId)
+    const serverName = serverId.replace('mcp_', '')
 
-    if (backendEnabledTools.includes(toolId)) {
+    if (backendEnabledTools.includes(serverId)) {
       // Disable all tools for this server
       try {
         await window.electronAPI.chat.saveEnabledMcpTools(serverName, [])
@@ -105,108 +89,80 @@ export function McpServerSelector({
     }
   }
 
-  const handleToolsChange = async () => {
-    // Individual tool changes are already saved by the modal,
-    // invalidate query to refetch latest state
-    queryClient.invalidateQueries({ queryKey: ['chat', 'enabledMcpServers'] })
+  const handleClearEnabledServers = async () => {
+    try {
+      await Promise.allSettled(
+        backendEnabledTools.map((serverId) => {
+          const serverName = serverId.replace('mcp_', '')
+          if (backendEnabledTools.includes(serverId)) {
+            return window.electronAPI.chat.saveEnabledMcpTools(serverName, [])
+          }
+          return Promise.resolve()
+        })
+      )
+      queryClient.invalidateQueries({
+        queryKey: ['chat', 'enabledMcpServers'],
+      })
+    } catch (error) {
+      log.error('Failed to clear enabled servers:', error)
+      toast.error('Failed to clear enabled servers')
+    }
   }
 
   return (
-    <div className="space-y-3">
-      {/* Header with dropdown */}
-      <div className="flex items-center justify-between">
-        <div className="text-muted-foreground text-sm font-medium">
-          MCP Server selected ({enabledMcpServers.length})
-        </div>
-        <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center justify-between gap-2"
-            >
-              <span>MCP Servers</span>
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="start"
-            side="top"
-            className="max-h-96 w-72 overflow-y-auto"
-          >
-            <DropdownMenuLabel>Available MCP Servers</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-
-            {mcpServers.length === 0 ? (
-              <div className="text-muted-foreground p-2 text-sm">
-                No MCP servers running
-              </div>
-            ) : (
-              mcpServers.map((server) => (
-                <DropdownMenuCheckboxItem
-                  key={server.id}
-                  checked={backendEnabledTools.includes(server.id)}
-                  onCheckedChange={() => handleToggleTool(server.id)}
-                  className="flex items-center gap-3 py-3"
-                >
-                  <div className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate font-medium">{server.name}</span>
-                    {server.package && (
-                      <span className="text-muted-foreground truncate text-xs">
-                        {server.package}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex shrink-0 items-center gap-1">
-                    <div className="h-2 w-2 rounded-full bg-green-500" />
-                    <span className="text-muted-foreground text-xs">
-                      Running
-                    </span>
-                  </div>
-                </DropdownMenuCheckboxItem>
-              ))
-            )}
-
-            {mcpServers.length > 0 && (
-              <>
-                <DropdownMenuSeparator />
-                <div className="p-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full text-xs"
-                    onClick={() => {
-                      // Clear all enabled tools and invalidate query
-                      updateEnabledTools([])
-                      queryClient.invalidateQueries({
-                        queryKey: ['chat', 'enabledMcpServers'],
-                      })
-                    }}
-                    disabled={backendEnabledTools.length === 0}
-                  >
-                    Clear All
-                  </Button>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex h-10 items-center justify-between gap-2"
+        >
+          <span>MCP Servers</span>
+          <Badge variant="secondary">{enabledMcpServers.length} Enabled</Badge>
+          <ChevronDown className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" side="top" className="max-h-96 w-72">
+        <DropdownMenuLabel>Available MCP Servers</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <ScrollArea>
+          {mcpServers.length === 0 ? (
+            <div className="text-muted-foreground p-2 text-sm">
+              No MCP servers running
+            </div>
+          ) : (
+            mcpServers.map((server) => (
+              <DropdownMenuCheckboxItem
+                key={server.id}
+                checked={backendEnabledTools.includes(server.id)}
+                onCheckedChange={() => handleToggleTool(server.id)}
+                className="flex cursor-pointer items-center gap-3 py-2"
+              >
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate font-medium">{server.name}</span>
                 </div>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+              </DropdownMenuCheckboxItem>
+            ))
+          )}
+        </ScrollArea>
 
-      {/* Selected tools as badges */}
-      <div className="flex flex-wrap items-center gap-3">
-        {/* Toolhive MCP Badge (always shows when available) */}
-        <ToolhiveMcpBadge />
-
-        {/* Regular MCP server badges */}
-        {enabledMcpServers.map((server) => (
-          <McpServerBadge
-            key={server.id}
-            serverName={server.name}
-            onToolsChange={handleToolsChange}
-          />
-        ))}
-      </div>
-    </div>
+        {mcpServers.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <div className="p-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full cursor-pointer text-xs"
+                onClick={handleClearEnabledServers}
+                disabled={backendEnabledTools.length === 0}
+              >
+                Clear enabled servers
+              </Button>
+            </div>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

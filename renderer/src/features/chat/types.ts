@@ -25,3 +25,10 @@ export interface ChatSettings {
   apiKey: string
   enabledTools?: string[]
 }
+
+export interface ChatMcpServer {
+  id: string
+  name: string
+  status: 'running' | 'stopped'
+  package?: string
+}

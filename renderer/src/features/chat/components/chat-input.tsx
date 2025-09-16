@@ -95,13 +95,6 @@ export function ChatInput({
           </Button>
         )}
       </div>
-
-      {/* Helper text */}
-      <div className="text-muted-foreground mt-3 text-center text-xs">
-        {disabled
-          ? 'Select an AI model to start chatting'
-          : 'Press Enter to send'}
-      </div>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Bot, Key, Settings, ChevronDown, Check, Search } from 'lucide-react'
+import { Bot, Key, ChevronDown, Check, Search } from 'lucide-react'
 import { Button } from '@/common/components/ui/button'
 import { Input } from '@/common/components/ui/input'
 import {
@@ -51,10 +51,6 @@ export function ModelSelector({
     )
   }
 
-  const selectedProvider = providersWithApiKeys.find(
-    (p) => p.id === settings.provider
-  )
-
   const handleModelSelect = (providerId: string, modelId: string) => {
     onSettingsChange({
       ...settings,
@@ -73,48 +69,14 @@ export function ModelSelector({
     )
   }
 
-  // Format model name for better display
-  const formatModelName = (model: string, providerId: string): string => {
-    if (providerId !== 'openrouter') return model
-
-    // For OpenRouter models, extract provider and model name
-    const parts = model.split('/')
-    if (parts.length >= 2) {
-      const provider = parts[0]
-      const modelName = parts.slice(1).join('/')
-
-      // Capitalize provider name
-      const providerName =
-        provider
-          ?.split('-')
-          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ') || provider
-
-      // Format model name
-      const formattedModelName = modelName
-        .replace(/-/g, ' ')
-        .replace(/\b\w/g, (l) => l.toUpperCase())
-
-      return `${formattedModelName} (${providerName})`
-    }
-
-    // Fallback for models without provider prefix
-    return model.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
-  }
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          className="h-10 min-w-[320px] justify-between"
-        >
+        <Button variant="outline" className="h-10 justify-between">
           <div className="flex items-center gap-2">
             <Bot className="h-4 w-4" />
             {settings.provider && settings.model ? (
-              <span className="font-mono text-sm">
-                {selectedProvider?.name}: {settings.model}
-              </span>
+              <span className="font-mono text-sm">{settings.model}</span>
             ) : (
               <span>Select AI Model</span>
             )}
@@ -132,7 +94,7 @@ export function ModelSelector({
 
         {providersWithApiKeys.map((provider) => {
           const filteredModels = getFilteredModels(provider)
-          const hasSearch = provider.models.length > 10
+          const hasSearch = provider.models.length > 50
 
           return (
             <DropdownMenuSub key={provider.id}>
@@ -201,34 +163,8 @@ export function ModelSelector({
                           <div className="flex items-center gap-2">
                             {isSelected && <Check className="h-4 w-4" />}
                             <div className="flex flex-col">
-                              <span className="font-mono text-sm">
-                                {provider.id === 'openrouter'
-                                  ? formatModelName(model, provider.id)
-                                  : model}
-                              </span>
-                              {provider.id === 'openrouter' && (
-                                <span className="text-muted-foreground text-xs">
-                                  {model}
-                                </span>
-                              )}
+                              <span className="font-mono text-sm">{model}</span>
                             </div>
-                          </div>
-                          <div className="flex gap-1">
-                            {(model.includes('gpt-5') ||
-                              model.includes('claude-4') ||
-                              model.includes('gemini-2.5')) && (
-                              <Badge variant="default" className="text-xs">
-                                Latest
-                              </Badge>
-                            )}
-                            {(model.includes('o1') ||
-                              model.includes('o3') ||
-                              model.includes('reasoning') ||
-                              model.includes('thinking')) && (
-                              <Badge variant="secondary" className="text-xs">
-                                Reasoning
-                              </Badge>
-                            )}
                           </div>
                         </DropdownMenuItem>
                       )
@@ -259,7 +195,6 @@ export function ModelSelector({
 
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onOpenSettings} className="cursor-pointer">
-          <Settings className="mr-2 h-4 w-4" />
           Manage API Keys
         </DropdownMenuItem>
       </DropdownMenuContent>
