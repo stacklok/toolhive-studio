@@ -73,10 +73,12 @@ export function DialogFormLocalMcp({
   isOpen,
   closeDialog,
   serverToEdit,
+  groupName,
 }: {
   isOpen: boolean
   closeDialog: () => void
   serverToEdit?: string | null
+  groupName: string
 }) {
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -107,6 +109,7 @@ export function DialogFormLocalMcp({
       onSecretError: (error, variables) => {
         log.error('onSecretError', error, variables)
       },
+      groupName,
     })
 
   const { updateServerMutation } = useUpdateServer(serverToEdit || '', {
@@ -163,7 +166,7 @@ export function DialogFormLocalMcp({
         { data },
         {
           onSuccess: () => {
-            checkServerStatus({ serverName: data.name, isEditing })
+            checkServerStatus({ serverName: data.name, groupName, isEditing })
             closeDialog()
           },
           onSettled: (_, error) => {
@@ -183,7 +186,7 @@ export function DialogFormLocalMcp({
         { data },
         {
           onSuccess: () => {
-            checkServerStatus({ serverName: data.name })
+            checkServerStatus({ serverName: data.name, groupName })
             closeDialog()
           },
           onSettled: (_, error) => {

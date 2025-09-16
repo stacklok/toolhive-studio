@@ -81,7 +81,7 @@ describe('DialogFormLocalMcp', () => {
   it('renders form fields correctly for docker image', async () => {
     renderWithProviders(
       <Wrapper>
-        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
+        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} groupName="default" />
       </Wrapper>
     )
 
@@ -122,7 +122,7 @@ describe('DialogFormLocalMcp', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
+        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} groupName="default" />
       </Wrapper>
     )
 
@@ -178,7 +178,7 @@ describe('DialogFormLocalMcp', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
+        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} groupName="default" />
       </Wrapper>
     )
 
@@ -251,7 +251,7 @@ describe('DialogFormLocalMcp', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
+        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} groupName="default" />
       </Wrapper>
     )
 
@@ -337,7 +337,7 @@ describe('DialogFormLocalMcp', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
+        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} groupName="default" />
       </Wrapper>
     )
 
@@ -376,7 +376,7 @@ describe('DialogFormLocalMcp', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
+        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} groupName="default" />
       </Wrapper>
     )
 
@@ -411,7 +411,7 @@ describe('DialogFormLocalMcp', () => {
   it('renders aria-hidden column labels for storage volumes', async () => {
     renderWithProviders(
       <Wrapper>
-        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
+        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} groupName="default" />
       </Wrapper>
     )
 
@@ -447,7 +447,11 @@ describe('DialogFormLocalMcp', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DialogFormLocalMcp isOpen closeDialog={mockOnOpenChange} />
+        <DialogFormLocalMcp
+          isOpen
+          closeDialog={mockOnOpenChange}
+          groupName="default"
+        />
       </Wrapper>
     )
 
@@ -494,7 +498,11 @@ describe('DialogFormLocalMcp', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DialogFormLocalMcp isOpen closeDialog={mockOnOpenChange} />
+        <DialogFormLocalMcp
+          isOpen
+          closeDialog={mockOnOpenChange}
+          groupName="default"
+        />
       </Wrapper>
     )
 
@@ -518,7 +526,11 @@ describe('DialogFormLocalMcp', () => {
 
       renderWithProviders(
         <Wrapper>
-          <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
+          <DialogFormLocalMcp
+            isOpen
+            closeDialog={vi.fn()}
+            groupName="default"
+          />
         </Wrapper>
       )
 
@@ -585,7 +597,11 @@ describe('DialogFormLocalMcp', () => {
 
       renderWithProviders(
         <Wrapper>
-          <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
+          <DialogFormLocalMcp
+            isOpen
+            closeDialog={vi.fn()}
+            groupName="default"
+          />
         </Wrapper>
       )
 
@@ -627,7 +643,11 @@ describe('DialogFormLocalMcp', () => {
 
       renderWithProviders(
         <Wrapper>
-          <DialogFormLocalMcp isOpen closeDialog={mockOnOpenChange} />
+          <DialogFormLocalMcp
+            isOpen
+            closeDialog={mockOnOpenChange}
+            groupName="default"
+          />
         </Wrapper>
       )
 
@@ -645,7 +665,11 @@ describe('DialogFormLocalMcp', () => {
 
       renderWithProviders(
         <Wrapper>
-          <DialogFormLocalMcp isOpen closeDialog={mockOnOpenChange} />
+          <DialogFormLocalMcp
+            isOpen
+            closeDialog={mockOnOpenChange}
+            groupName="default"
+          />
         </Wrapper>
       )
 
@@ -660,7 +684,11 @@ describe('DialogFormLocalMcp', () => {
     it('activates the network isolation tab if a validation error occurs there while on the configuration tab', async () => {
       renderWithProviders(
         <Wrapper>
-          <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
+          <DialogFormLocalMcp
+            isOpen
+            closeDialog={vi.fn()}
+            groupName="default"
+          />
         </Wrapper>
       )
 
@@ -710,7 +738,11 @@ describe('DialogFormLocalMcp', () => {
     it('activates the configuration tab if a validation error occurs there while on the network isolation tab', async () => {
       renderWithProviders(
         <Wrapper>
-          <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
+          <DialogFormLocalMcp
+            isOpen
+            closeDialog={vi.fn()}
+            groupName="default"
+          />
         </Wrapper>
       )
 
@@ -733,7 +765,11 @@ describe('DialogFormLocalMcp', () => {
     it('shows alert when network isolation is enabled but no hosts or ports are configured', async () => {
       renderWithProviders(
         <Wrapper>
-          <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
+          <DialogFormLocalMcp
+            isOpen
+            closeDialog={vi.fn()}
+            groupName="default"
+          />
         </Wrapper>
       )
 
@@ -781,7 +817,11 @@ describe('DialogFormLocalMcp', () => {
 
       renderWithProviders(
         <Wrapper>
-          <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
+          <DialogFormLocalMcp
+            isOpen
+            closeDialog={vi.fn()}
+            groupName="default"
+          />
         </Wrapper>
       )
 
@@ -874,7 +914,7 @@ describe('DialogFormLocalMcp', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} />
+        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} groupName="default" />
       </Wrapper>
     )
 

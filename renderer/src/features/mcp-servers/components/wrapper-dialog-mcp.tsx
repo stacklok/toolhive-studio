@@ -5,10 +5,12 @@ export function WrapperDialogFormMcp({
   serverType,
   closeDialog,
   serverToEdit,
+  groupName,
 }: {
   serverType: { local: boolean; remote: boolean }
   closeDialog: () => void
   serverToEdit?: string | null
+  groupName: string
 }) {
   return (
     <>
@@ -16,12 +18,14 @@ export function WrapperDialogFormMcp({
         isOpen={serverType.local}
         closeDialog={closeDialog}
         serverToEdit={serverToEdit}
+        groupName={groupName}
       />
 
       <DialogFormRemoteMcp
         closeDialog={closeDialog}
         serverToEdit={serverToEdit}
         isOpen={serverType.remote}
+        groupName={groupName}
       />
     </>
   )

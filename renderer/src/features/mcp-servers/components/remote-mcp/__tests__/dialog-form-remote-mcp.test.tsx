@@ -88,7 +88,7 @@ describe('DialogFormRemoteMcp', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DialogFormRemoteMcp isOpen closeDialog={vi.fn()} />
+        <DialogFormRemoteMcp isOpen closeDialog={vi.fn()} groupName="default" />
       </Wrapper>
     )
 
@@ -180,7 +180,7 @@ describe('DialogFormRemoteMcp', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DialogFormRemoteMcp isOpen closeDialog={vi.fn()} />
+        <DialogFormRemoteMcp isOpen closeDialog={vi.fn()} groupName="default" />
       </Wrapper>
     )
 
@@ -226,7 +226,7 @@ describe('DialogFormRemoteMcp', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DialogFormRemoteMcp isOpen closeDialog={vi.fn()} />
+        <DialogFormRemoteMcp isOpen closeDialog={vi.fn()} groupName="default" />
       </Wrapper>
     )
 
@@ -282,7 +282,11 @@ describe('DialogFormRemoteMcp', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DialogFormRemoteMcp isOpen closeDialog={mockOnOpenChange} />
+        <DialogFormRemoteMcp
+          isOpen
+          closeDialog={mockOnOpenChange}
+          groupName="default"
+        />
       </Wrapper>
     )
 
@@ -357,7 +361,11 @@ describe('DialogFormRemoteMcp', () => {
 
     renderWithProviders(
       <Wrapper>
-        <DialogFormRemoteMcp isOpen closeDialog={mockOnOpenChange} />
+        <DialogFormRemoteMcp
+          isOpen
+          closeDialog={mockOnOpenChange}
+          groupName="default"
+        />
       </Wrapper>
     )
 

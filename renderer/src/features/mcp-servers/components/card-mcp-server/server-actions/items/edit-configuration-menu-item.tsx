@@ -42,13 +42,14 @@ export function EditConfigurationMenuItem({
         </a>
       </DropdownMenuItem>
 
-      {!isLoadingServer && (
+      {!isLoadingServer && serverData?.group && (
         <WrapperDialogFormMcp
           serverType={serverDialogOpen}
           closeDialog={() =>
             setServerDialogOpen({ local: false, remote: false })
           }
           serverToEdit={serverName}
+          groupName={serverData.group}
         />
       )}
     </>

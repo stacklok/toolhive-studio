@@ -75,7 +75,11 @@ export function CustomizeToolsPage() {
         { data: formData },
         {
           onSuccess: () => {
-            checkServerStatus({ serverName, isEditing: true })
+            checkServerStatus({
+              serverName,
+              groupName: workload?.group || 'default',
+              isEditing: true,
+            })
             toast.success('Server tools updated successfully')
           },
           onError: (error) => {

@@ -101,6 +101,7 @@ function GroupRoute() {
               closeDialog={() =>
                 setServerDialogOpen({ local: false, remote: false })
               }
+              groupName={groupName}
             />
           </>
         </TitlePage>

@@ -15,12 +15,14 @@ import { useMCPSecrets } from '@/common/hooks/use-mcp-secrets'
 export function useRunCustomServer({
   onSecretSuccess,
   onSecretError,
+  groupName,
 }: {
   onSecretSuccess: (completedCount: number, secretsCount: number) => void
   onSecretError: (
     error: string,
     variables: Options<PostApiV1BetaSecretsDefaultKeysData>
   ) => void
+  groupName: string
 }) {
   const queryClient = useQueryClient()
   const { handleSecrets, isPendingSecrets, isErrorSecrets } = useMCPSecrets({
@@ -48,10 +50,10 @@ export function useRunCustomServer({
         })),
       ]
 
-      const createRequest: V1CreateRequest = prepareCreateWorkloadData(
-        data,
-        secretsForRequest
-      )
+      const createRequest: V1CreateRequest = {
+        ...prepareCreateWorkloadData(data, secretsForRequest),
+        ...(groupName ? { group: groupName } : {}),
+      }
 
       await createWorkload({
         body: createRequest,
