@@ -11,7 +11,6 @@ import { JSONSchemaFaker as jsf } from 'json-schema-faker'
 import { http, HttpResponse } from 'msw'
 import path from 'path'
 import { fileURLToPath } from 'url'
-// import { mswEndpoint } from './customHandlers'
 
 const ajv = new Ajv({ strict: true })
 // Ignore vendor extensions present in the OpenAPI schema
@@ -26,6 +25,8 @@ const __dirname = path.dirname(__filename)
 const FOLDER_PATH = __dirname
 const FIXTURES_PATH = `${FOLDER_PATH}/fixtures`
 const FIXTURE_EXT = 'ts'
+// Cache to serve freshly generated fixtures across requests
+const fixtureCache = new Map<string, any>()
 
 jsf.option({ alwaysFakeOptionals: true })
 jsf.option({ fillProperties: true })
@@ -74,15 +75,8 @@ function opResponseTypeName(method: string, rawPath: string): string {
   return opResponsesTypeName(method, rawPath).replace(/Responses$/, 'Response')
 }
 
-// Note: If we need to map component $ref names to SDK types in the future,
-// we can reintroduce a helper. Currently, we type fixtures via OperationResponses.
-
 function autoGenerateHandlers() {
   const result = []
-  // Use Vite's import-glob to lazily import fixtures as real modules
-  // This lets fixtures export any JS/TS literal or logic and we just consume
-  // the default export without manual JSON parsing.
-  // Note: Keys in this map are paths relative to this file, e.g. './fixtures/<name>.ts'
   const fixtureImporters: Record<string, () => Promise<unknown>> =
     // @ts-ignore - vite-specific API available in vitest/vite runtime
     import.meta.glob('./fixtures/**', { import: 'default' })
@@ -106,20 +100,15 @@ function autoGenerateHandlers() {
           // Shorten noisy prefixes in fixture filenames.
           // Example: "/api/v1beta/workloads/{name}" -> "workloads_name"
           const safePath = toFileSafe(rawPath)
-            // Remove leading OpenAPI prefix once sanitized
             .replace(/^api_v1beta_/, '')
-            // Also remove occurrences when embedded
             .replace(/_api_v1beta_/g, '_')
             .replace(/_api_v1beta$/, '')
             // Normalize underscores after replacements
             .replace(/__+/g, '_')
             .replace(/^_+|_+$/g, '')
 
-          // Path layout without status: <safePath>/<method>.ts
           const fileBase = `${safePath}/${method}.${FIXTURE_EXT}`
           const fixtureFileName = `${FIXTURES_PATH}/${fileBase}`
-
-          // Avoid per-request "handling" logs in normal runs
 
           let data: any = undefined
           if (!fs.existsSync(path.dirname(fixtureFileName))) {
@@ -156,36 +145,41 @@ function autoGenerateHandlers() {
                 )
               }
             }
-            // Determine operation Response type for type-checking (status-specific)
+
             let typeImport = ''
             let typeSatisfies = ''
             if (successStatus) {
               const opType = opResponseTypeName(method, rawPath)
-              // Use Vite/TS alias for generated API types; use union Response type
               typeImport = `import type { ${opType} } from '@api/types.gen'\n\n`
               typeSatisfies = ` satisfies ${opType}`
             }
-            // Write TypeScript fixture module with typed default export using `satisfies`
             const tsModule = `${typeImport}export default ${JSON.stringify(payload, null, 2)}${typeSatisfies}\n`
             fs.writeFileSync(fixtureFileName, tsModule)
             // Use freshly generated payload directly
             data = payload
+            // Store in cache so subsequent requests can use it
+            const relPath = `./fixtures/${fileBase}`
+            fixtureCache.set(relPath, payload)
           }
 
           if (successStatus === '204') {
             return new HttpResponse(null, { status: 204 })
           }
 
-          // If we didn't just generate, import from module map
           if (data === undefined) {
             const relPath = `./fixtures/${fileBase}`
             const importer = fixtureImporters[relPath]
             if (importer) {
               const mod: any = await importer()
               data = mod
+            } else if (fixtureCache.has(relPath)) {
+              data = fixtureCache.get(relPath)
             } else {
-              // As a last resort, return an empty object
-              data = {}
+              // Fail explicitly when fixture cannot be resolved
+              return new HttpResponse(
+                `Missing mock fixture: ${relPath}. If this fixture was just auto-generated, restart the test/dev runtime to pick it up.`,
+                { status: 500 }
+              )
             }
           }
           const schema =

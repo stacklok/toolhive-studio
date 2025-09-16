@@ -235,8 +235,6 @@ export const customHandlers = [
     }
   ),
 
-  // Removed: GET /api/v1beta/clients — allow auto-generated mock to handle this
-
   http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
     return HttpResponse.json({ servers: MOCK_REGISTRY_RESPONSE })
   }),
