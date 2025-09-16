@@ -7,36 +7,9 @@ import { useCheckServerStatus } from '../use-check-server-status'
 import * as polling from '../../lib/polling'
 import { toast } from 'sonner'
 
-type ToastLike = {
-  success: (...args: unknown[]) => unknown
-  loading: (...args: unknown[]) => unknown
-  warning: (...args: unknown[]) => unknown
-  dismiss: (...args: unknown[]) => unknown
-}
-
-vi.mock('sonner', async (importOriginal) => {
-  const mod = (await importOriginal()) as { toast?: ToastLike } & Record<
-    string,
-    unknown
-  >
-  const mockedToast: ToastLike = {
-    success: vi.fn(),
-    loading: vi.fn(),
-    warning: vi.fn(),
-    dismiss: vi.fn(),
-  }
-  return {
-    ...mod,
-    toast: {
-      ...(mod.toast ?? ({} as ToastLike)),
-      ...mockedToast,
-    },
-  }
-})
-
 describe('useCheckServerStatus', () => {
-  const successSpy = vi.spyOn(toast, 'success')
-  const loadingSpy = vi.spyOn(toast, 'loading')
+  const success = vi.mocked(toast.success)
+  const loading = vi.mocked(toast.loading)
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -84,11 +57,11 @@ describe('useCheckServerStatus', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Trigger' }))
 
     // Loading toast shown first
-    expect(loadingSpy).toHaveBeenCalled()
+    expect(loading).toHaveBeenCalled()
 
     // Success toast should contain an action with a Link to the correct group
-    expect(successSpy).toHaveBeenCalled()
-    const [, opts] = successSpy.mock.calls[0]!
+    expect(success).toHaveBeenCalled()
+    const [, opts] = success.mock.calls[0]!
     // Extract Link element from action (Button asChild > Link)
     const actionNode = (opts as { action?: unknown })?.action as
       | { props?: Record<string, unknown> }
