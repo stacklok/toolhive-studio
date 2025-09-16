@@ -9,7 +9,7 @@ runs:
     - name: Install pnpm
       uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4
       with:
-        version: '10.15.1'
+        version: '10.16.1'
         run_install: false
 
     - name: Install Node.js
