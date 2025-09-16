@@ -9,12 +9,8 @@ export const Route = createFileRoute('/playground')({
 function Playground() {
   return (
     <>
-      <TitlePage title="Chat Playground">
-        <p className="text-muted-foreground">
-          Test and interact with AI models using your MCP servers
-        </p>
-      </TitlePage>
-      <div className="h-[calc(100vh-10rem)] space-y-6">
+      <TitlePage title="Playground" />
+      <div className="h-[calc(100vh-10rem)]">
         <ChatInterface />
       </div>
     </>

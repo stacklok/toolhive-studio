@@ -11,15 +11,21 @@ import { JSONSchemaFaker as jsf } from 'json-schema-faker'
 import { http, HttpResponse } from 'msw'
 import path from 'path'
 import { fileURLToPath } from 'url'
-// import { mswEndpoint } from './customHandlers'
+import { buildMockModule } from './mockTemplate'
 
 const ajv = new Ajv({ strict: true })
+// Ignore vendor extensions present in the OpenAPI schema
+// to prevent strict mode errors during validation
+// e.g., x-enum-varnames is a common extension for enum labels
+
+;(ajv as any).addKeyword('x-enum-varnames')
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const FOLDER_PATH = __dirname
 const FIXTURES_PATH = `${FOLDER_PATH}/fixtures`
+const FIXTURE_EXT = 'ts'
 
 jsf.option({ alwaysFakeOptionals: true })
 jsf.option({ fillProperties: true })
@@ -40,8 +46,41 @@ function pickSuccessStatus(responses: Record<string, any>): string | undefined {
   return twoXX
 }
 
+function toPascalCase(input: string): string {
+  const spaced = input.replace(/([0-9])([a-zA-Z])/g, '$1 $2')
+  return spaced
+    .split(/[^a-zA-Z0-9]+|\s+/)
+    .filter(Boolean)
+    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+    .join('')
+}
+
+function opResponsesTypeName(method: string, rawPath: string): string {
+  // Example: get + /api/v1beta/registry/{name}/servers/{serverName}
+  // -> GetApiV1BetaRegistryByNameServersByServerNameResponses
+  const segments = rawPath
+    .replace(/^\//, '')
+    .split('/')
+    .map((seg) => {
+      const m = seg.match(/^\{(.+)\}$/)
+      if (m) return `By${toPascalCase(m[1] as string)}`
+      return toPascalCase(seg)
+    })
+  const methodPart = toPascalCase(method)
+  return `${methodPart}${segments.join('')}Responses`
+}
+
+function opResponseTypeName(method: string, rawPath: string): string {
+  return opResponsesTypeName(method, rawPath).replace(/Responses$/, 'Response')
+}
+
 function autoGenerateHandlers() {
   const result = []
+  // Use a glob map so Vitest/Vite can track these files for watch/HMR.
+  // We'll still import per-request to get latest contents.
+  const fixtureImporters: Record<string, () => Promise<unknown>> =
+    // @ts-ignore - vite-specific API available in vitest/vite runtime
+    import.meta.glob('./fixtures/**', { import: 'default' })
   const specPaths = Object.entries(
     ((openapi as any).paths ?? {}) as Record<string, any>
   )
@@ -56,17 +95,31 @@ function autoGenerateHandlers() {
       const mswPath = `*/${rawPath.replace(/^\//, '').replace(/\{([^}]+)\}/g, ':$1')}`
 
       result.push(
-        http[method](mswPath, () => {
+        http[method](mswPath, async () => {
           const successStatus = pickSuccessStatus(operation.responses || {})
 
-          const fileBase = `${method}-${toFileSafe(rawPath)}.${successStatus ?? '200'}.json`
+          // Shorten noisy prefixes in fixture filenames.
+          // Example: "/api/v1beta/workloads/{name}" -> "workloads_name"
+          const safePath = toFileSafe(rawPath)
+            .replace(/^api_v1beta_/, '')
+            .replace(/_api_v1beta_/g, '_')
+            .replace(/_api_v1beta$/, '')
+            // Normalize underscores after replacements
+            .replace(/__+/g, '_')
+            .replace(/^_+|_+$/g, '')
+
+          const fileBase = `${safePath}/${method}.${FIXTURE_EXT}`
           const fixtureFileName = `${FIXTURES_PATH}/${fileBase}`
 
-          // Avoid per-request "handling" logs in normal runs
-
-          if (!fs.existsSync(fixtureFileName)) {
+          let data: any = undefined
+          if (!fs.existsSync(path.dirname(fixtureFileName))) {
+            fs.mkdirSync(path.dirname(fixtureFileName), { recursive: true })
+          }
+          const fileExists = fs.existsSync(fixtureFileName)
+          if (!fileExists && successStatus !== '204') {
+            // Generate fixtures for all statuses; for 204 use empty string
             let payload: any = {}
-            if (successStatus && successStatus !== '204') {
+            if (successStatus) {
               const schema =
                 operation.responses?.[successStatus]?.content?.[
                   'application/json'
@@ -93,14 +146,39 @@ function autoGenerateHandlers() {
                 )
               }
             }
-            fs.writeFileSync(fixtureFileName, JSON.stringify(payload, null, 2))
+
+            const opType = successStatus
+              ? opResponseTypeName(method, rawPath)
+              : undefined
+            const tsModule = buildMockModule(payload, { opType })
+            fs.writeFileSync(fixtureFileName, tsModule)
+            // After generating, rely on live import below so that
+            // behavior matches pre-existing fixtures.
           }
 
           if (successStatus === '204') {
             return new HttpResponse(null, { status: 204 })
           }
 
-          const data = JSON.parse(fs.readFileSync(fixtureFileName, 'utf-8'))
+          if (data === undefined) {
+            const relPath = `./fixtures/${fileBase}`
+            try {
+              const importer = fixtureImporters[relPath]
+              if (importer) {
+                const mod: any = await importer()
+                data = mod?.default ?? mod
+              } else {
+                // Fall back to dynamic import for freshly generated files
+                const mod: any = await import(relPath)
+                data = mod?.default ?? mod
+              }
+            } catch (e) {
+              return new HttpResponse(
+                `Missing mock fixture: ${relPath}. ${e instanceof Error ? e.message : ''}`,
+                { status: 500 }
+              )
+            }
+          }
           const schema =
             operation.responses?.[successStatus ?? '200']?.content?.[
               'application/json'

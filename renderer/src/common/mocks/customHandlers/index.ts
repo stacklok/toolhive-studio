@@ -1,15 +1,11 @@
 import { http, HttpResponse } from 'msw'
 import type json from '../../../../../api/openapi.json'
 import {
-  createWorkloadResponseFixture,
   getWorkloadByName,
   workloadListFixture,
   getMockLogs,
 } from './fixtures/servers'
-import { versionFixture } from './fixtures/version'
-import { clientsFixture } from './fixtures/clients'
 import type {
-  V1CreateRequest,
   V1CreateSecretRequest,
   V1UpdateRegistryRequest,
 } from '../../../../../api/generated/types.gen'
@@ -55,10 +51,6 @@ export const customHandlers = [
     })
   }),
 
-  http.get(mswEndpoint('/api/v1beta/version'), () => {
-    return HttpResponse.json(versionFixture)
-  }),
-
   http.get(mswEndpoint('/api/v1beta/workloads'), ({ request }) => {
     const url = new URL(request.url)
     const group = (url.searchParams.get('group') || 'default').toLowerCase()
@@ -72,25 +64,6 @@ export const customHandlers = [
       (names ?? []).includes(w.name || '')
     )
     return HttpResponse.json({ workloads: filtered })
-  }),
-
-  http.post(mswEndpoint('/api/v1beta/workloads'), async ({ request }) => {
-    try {
-      const { name, target_port } = (await request.json()) as V1CreateRequest
-
-      const response = {
-        ...createWorkloadResponseFixture,
-        name,
-        port: target_port || createWorkloadResponseFixture.port,
-      }
-
-      return HttpResponse.json(response, { status: 201 })
-    } catch {
-      return HttpResponse.json(
-        { error: 'Invalid request body' },
-        { status: 400 }
-      )
-    }
   }),
 
   http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
@@ -175,34 +148,6 @@ export const customHandlers = [
     })
   }),
 
-  // Batch restart endpoint
-  http.post(
-    mswEndpoint('/api/v1beta/workloads/restart'),
-    async ({ request }) => {
-      try {
-        const { names } = (await request.json()) as { names: string[] }
-
-        // Validate all servers exist
-        for (const name of names) {
-          const server = getWorkloadByName(name)
-          if (!server) {
-            return HttpResponse.json(
-              { error: `Server ${name} not found` },
-              { status: 404 }
-            )
-          }
-        }
-
-        return new HttpResponse(null, { status: 204 })
-      } catch {
-        return HttpResponse.json(
-          { error: 'Invalid request body' },
-          { status: 400 }
-        )
-      }
-    }
-  ),
-
   http.get(mswEndpoint('/api/v1beta/workloads/:name/logs'), ({ params }) => {
     const { name } = params
 
@@ -218,12 +163,6 @@ export const customHandlers = [
 
     const logs = getMockLogs(name as string)
     return new HttpResponse(logs, { status: 200 })
-  }),
-
-  http.get(mswEndpoint('/api/v1beta/discovery/clients'), () => {
-    // TODO: Don't stringify after
-    // https://github.com/stacklok/toolhive/issues/495 is resolved
-    return HttpResponse.json(clientsFixture)
   }),
 
   http.post(mswEndpoint('/api/v1beta/clients'), async ({ request }) => {
@@ -295,23 +234,6 @@ export const customHandlers = [
       return new HttpResponse(null, { status: 204 })
     }
   ),
-
-  http.get(mswEndpoint('/api/v1beta/clients'), () => {
-    return HttpResponse.json([
-      {
-        name: { name: 'vscode' },
-        groups: ['default'],
-      },
-      {
-        name: { name: 'cursor' },
-        groups: ['default', 'research'],
-      },
-      {
-        name: { name: 'claude-code' },
-        groups: ['research'],
-      },
-    ])
-  }),
 
   http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
     return HttpResponse.json({ servers: MOCK_REGISTRY_RESPONSE })

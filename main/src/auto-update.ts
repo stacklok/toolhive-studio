@@ -106,13 +106,13 @@ async function performUpdateInstallation(releaseName: string | null) {
 }
 
 let getMainWindow: () => BrowserWindow | null = () => null
-let createWindow: () => BrowserWindow = () => {
+let createWindow: () => Promise<BrowserWindow> = () => {
   throw new Error('createWindow not initialized')
 }
 
 export function initAutoUpdate(
   mainWindowGetter: () => BrowserWindow | null,
-  windowCreator: () => BrowserWindow
+  windowCreator: () => Promise<BrowserWindow>
 ) {
   getMainWindow = mainWindowGetter
   createWindow = windowCreator
@@ -140,7 +140,7 @@ export function initAutoUpdate(
           '[update] MainWindow not available, recreating for update dialog'
         )
         try {
-          mainWindow = createWindow()
+          mainWindow = await createWindow()
           await pollWindowReady(mainWindow)
         } catch (error) {
           log.error(

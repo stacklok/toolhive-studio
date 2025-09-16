@@ -4,7 +4,6 @@ import {
   ipcMain,
   nativeTheme,
   session,
-  shell,
   dialog,
 } from 'electron'
 import path from 'node:path'
@@ -12,9 +11,23 @@ import { existsSync, readFile } from 'node:fs'
 import started from 'electron-squirrel-startup'
 import * as Sentry from '@sentry/electron/main'
 import { initTray, updateTrayStatus, safeTrayDestroy } from './system-tray'
-import { showInDock, hideWindow } from './dock-utils'
+import { showInDock } from './dock-utils'
 import { setAutoLaunch, getAutoLaunchStatus } from './auto-launch'
 import { createApplicationMenu } from './menu'
+import {
+  getMainWindow,
+  isMainWindowValid,
+  createMainWindow,
+  showMainWindow,
+  focusMainWindow,
+  hideMainWindow,
+  closeMainWindow,
+  minimizeMainWindow,
+  toggleMaximizeMainWindow,
+  isMainWindowMaximized,
+  sendToMainWindowRenderer,
+  recreateMainWindowForShutdown,
+} from './main-window'
 
 import { getCspString } from './csp'
 import {
@@ -33,7 +46,7 @@ import {
   getToolhiveMcpPort,
 } from './toolhive-manager'
 import log from './logger'
-import { getAppVersion, isOfficialReleaseBuild, pollWindowReady } from './util'
+import { getAppVersion, isOfficialReleaseBuild } from './util'
 import { delay } from '../../utils/delay'
 import {
   initAutoUpdate,
@@ -105,9 +118,7 @@ Sentry.init({
   beforeSend: (event) => (store.get('isTelemetryEnabled', true) ? event : null),
 })
 
-// Forge environment variables
-declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined
-declare const MAIN_WINDOW_VITE_NAME: string
+// Environment variables are now handled in mainWindow.ts
 
 log.info(`ToolHive binary path: ${binPath}`)
 log.info(`Binary file exists: ${existsSync(binPath)}`)
@@ -124,24 +135,10 @@ export async function blockQuit(source: string, event?: Electron.Event) {
   }
 
   try {
-    if (!mainWindow || mainWindow.isDestroyed()) {
-      log.info('MainWindow destroyed, recreating for graceful shutdown...')
-      mainWindow = createWindow()
-    }
+    const shutdownWindow = await recreateMainWindowForShutdown()
 
-    if (mainWindow) {
-      log.info('Showing window for graceful shutdown...')
-
-      if (mainWindow.isMinimized()) {
-        mainWindow.restore()
-      }
-
-      mainWindow.show()
-      mainWindow.focus()
-
-      await pollWindowReady(mainWindow)
-
-      mainWindow?.webContents.send('graceful-exit')
+    if (shutdownWindow) {
+      sendToMainWindowRenderer('graceful-exit')
 
       // Give renderer time to navigate to shutdown page
       await delay(500)
@@ -177,11 +174,7 @@ if (!gotTheLock) {
 } else {
   app.on('second-instance', () => {
     // Someone tried to run a second instance, focus our window instead
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore()
-      mainWindow.focus()
-      mainWindow.show()
-    }
+    focusMainWindow()
   })
 }
 
@@ -193,86 +186,8 @@ if (started) {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-//  Main-window creation
+//  Main-window management is now handled by MainWindowManager
 // ────────────────────────────────────────────────────────────────────────────
-const shouldStartHidden =
-  process.argv.includes('--hidden') || process.argv.includes('--start-hidden')
-const isDevelopment = process.env.NODE_ENV === 'development'
-
-function getPlatformSpecificWindowOptions() {
-  const platformConfigs = {
-    darwin: {
-      titleBarStyle: 'hidden' as const,
-      trafficLightPosition: { x: 21, y: 24 },
-    },
-    win32: {
-      frame: false, // Completely frameless for custom window controls
-    },
-    linux: {
-      frame: false, // Frameless for custom controls
-    },
-  }
-
-  return (
-    platformConfigs[process.platform as keyof typeof platformConfigs] ||
-    platformConfigs.linux
-  )
-}
-
-function createWindow() {
-  const mainWindow = new BrowserWindow({
-    width: 1040,
-    height: 700,
-    show: !shouldStartHidden,
-    autoHideMenuBar: true,
-    webPreferences: {
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js'),
-      webSecurity: !isDevelopment,
-    },
-    ...getPlatformSpecificWindowOptions(),
-  })
-
-  // Minimize-to-tray instead of close
-  mainWindow.on('minimize', () => {
-    if (shouldStartHidden || getTray()) {
-      hideWindow(mainWindow)
-    }
-  })
-
-  mainWindow.on('close', (event) => {
-    if (!getQuittingState() && getTray()) {
-      event.preventDefault()
-      hideWindow(mainWindow)
-    }
-  })
-
-  // External links → default browser
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      shell.openExternal(url)
-      return { action: 'deny' }
-    }
-    return { action: 'allow' }
-  })
-
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(`${MAIN_WINDOW_VITE_DEV_SERVER_URL}/`)
-  } else {
-    mainWindow.loadFile(
-      path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)
-    )
-  }
-
-  // Open developer tools at startup in development
-  if (isDevelopment && import.meta.env.VITE_ENABLE_AUTO_DEVTOOLS === 'true') {
-    mainWindow.webContents.openDevTools()
-  }
-
-  return mainWindow
-}
-
-let mainWindow: BrowserWindow | null = null
 
 app.whenReady().then(async () => {
   resetUpdateState()
@@ -288,40 +203,52 @@ app.whenReady().then(async () => {
   }
 
   // Initialize auto-update system
-  initAutoUpdate(() => mainWindow, createWindow)
+  initAutoUpdate(
+    () => getMainWindow(),
+    () => createMainWindow()
+  )
 
   // Start ToolHive with tray reference
   await startToolhive(getTray() || undefined)
 
   // Create main window
-  mainWindow = createWindow()
+  try {
+    const mainWindow = await createMainWindow()
 
-  mainWindow.webContents.once('did-finish-load', () => {
-    if (!mainWindow) return
+    if (mainWindow) {
+      mainWindow.webContents.on('before-input-event', (event, input) => {
+        const isCmdQ =
+          process.platform === 'darwin' &&
+          input.meta &&
+          input.key.toLowerCase() === 'q'
+        const isCtrlQ =
+          process.platform !== 'darwin' &&
+          input.control &&
+          input.key.toLowerCase() === 'q'
 
-    checkForUpdates()
+        if (isCmdQ || isCtrlQ) {
+          event.preventDefault()
+          log.info('CmdOrCtrl+Q pressed, hiding window')
+          try {
+            hideMainWindow()
+          } catch (error) {
+            log.error('Failed to hide window on keyboard shortcut:', error)
+          }
+        }
+      })
 
-    mainWindow.webContents.on('before-input-event', (event, input) => {
-      const isCmdQ =
-        process.platform === 'darwin' &&
-        input.meta &&
-        input.key.toLowerCase() === 'q'
-      const isCtrlQ =
-        process.platform !== 'darwin' &&
-        input.control &&
-        input.key.toLowerCase() === 'q'
-
-      if (isCmdQ || isCtrlQ) {
-        event.preventDefault()
-        log.info('CmdOrCtrl+Q pressed, hiding window')
-        hideWindow(mainWindow!)
-      }
-    })
-  })
+      mainWindow.webContents.once('did-finish-load', () => {
+        log.info('Main window did-finish-load event triggered')
+        checkForUpdates()
+      })
+    }
+  } catch (error) {
+    log.error('Failed to create main window:', error)
+  }
 
   // Setup CSP headers
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-    if (isDevelopment) {
+    if (process.env.NODE_ENV === 'development') {
       return callback({ responseHeaders: details.responseHeaders })
     }
     const port = getToolhivePort()
@@ -356,12 +283,16 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
 
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    mainWindow = createWindow()
-  } else {
-    showInDock()
-    mainWindow?.show()
+app.on('activate', async () => {
+  try {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      await createMainWindow()
+    } else {
+      showInDock()
+      await showMainWindow()
+    }
+  } catch (error) {
+    log.error('Failed to handle app activation:', error)
   }
 })
 
@@ -369,11 +300,14 @@ app.on('will-finish-launching', () => {
   log.info('App will finish launching')
 })
 
-app.on('before-quit', (e) => {
-  if (mainWindow) {
-    mainWindow.show()
-    mainWindow.focus()
-    mainWindow.webContents.send('show-quit-confirmation')
+app.on('before-quit', async (e) => {
+  try {
+    if (isMainWindowValid()) {
+      await showMainWindow()
+      sendToMainWindowRenderer('show-quit-confirmation')
+    }
+  } catch (error) {
+    log.error('Failed to show quit confirmation:', error)
   }
 
   if (!getQuittingState()) {
@@ -438,15 +372,20 @@ ipcMain.handle('set-auto-launch', (_event, enabled: boolean) => {
   return getAutoLaunchStatus()
 })
 
-ipcMain.handle('show-app', () => {
-  showInDock()
-  mainWindow?.show()
-  mainWindow?.focus()
+ipcMain.handle('show-app', async () => {
+  try {
+    showInDock()
+    await showMainWindow()
+  } catch (error) {
+    log.error('Failed to show app:', error)
+  }
 })
 
 ipcMain.handle('hide-app', () => {
-  if (mainWindow) {
-    hideWindow(mainWindow)
+  try {
+    hideMainWindow()
+  } catch (error) {
+    log.error('Failed to hide app:', error)
   }
 })
 
@@ -460,23 +399,36 @@ ipcMain.handle('is-toolhive-running', () => isToolhiveRunning())
 
 // Window control handlers for custom title bar
 ipcMain.handle('window-minimize', () => {
-  mainWindow?.minimize()
+  try {
+    minimizeMainWindow()
+  } catch (error) {
+    log.error('Failed to minimize window:', error)
+  }
 })
 
 ipcMain.handle('window-maximize', () => {
-  if (mainWindow?.isMaximized()) {
-    mainWindow.unmaximize()
-  } else {
-    mainWindow?.maximize()
+  try {
+    toggleMaximizeMainWindow()
+  } catch (error) {
+    log.error('Failed to maximize window:', error)
   }
 })
 
 ipcMain.handle('window-close', () => {
-  mainWindow?.close()
+  try {
+    closeMainWindow()
+  } catch (error) {
+    log.error('Failed to close window:', error)
+  }
 })
 
 ipcMain.handle('window-is-maximized', () => {
-  return mainWindow?.isMaximized() ?? false
+  try {
+    return isMainWindowMaximized()
+  } catch (error) {
+    log.error('Failed to check if window is maximized:', error)
+    return false
+  }
 })
 
 ipcMain.handle('check-container-engine', async () => {
@@ -564,21 +516,35 @@ ipcMain.handle(
 
 // File/folder pickers for renderer
 ipcMain.handle('dialog:select-file', async () => {
-  if (!mainWindow) return null
-  const result = await dialog.showOpenDialog(mainWindow, {
-    properties: ['openFile'],
-  })
-  if (result.canceled || result.filePaths.length === 0) return null
-  return result.filePaths[0]
+  try {
+    const mainWindow = getMainWindow()
+    if (!mainWindow) return null
+
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openFile'],
+    })
+    if (result.canceled || result.filePaths.length === 0) return null
+    return result.filePaths[0]
+  } catch (error) {
+    log.error('Failed to show file dialog:', error)
+    return null
+  }
 })
 
 ipcMain.handle('dialog:select-folder', async () => {
-  if (!mainWindow) return null
-  const result = await dialog.showOpenDialog(mainWindow, {
-    properties: ['openDirectory'],
-  })
-  if (result.canceled || result.filePaths.length === 0) return null
-  return result.filePaths[0]
+  try {
+    const mainWindow = getMainWindow()
+    if (!mainWindow) return null
+
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openDirectory'],
+    })
+    if (result.canceled || result.filePaths.length === 0) return null
+    return result.filePaths[0]
+  } catch (error) {
+    log.error('Failed to show folder dialog:', error)
+    return null
+  }
 })
 
 // Feature flag IPC handlers
