@@ -178,4 +178,56 @@ describe('Group route delete group confirmation', () => {
     expect(recFlow.recordedRequests).toEqual([])
     expect(router.state.location.pathname).toBe('/group/default')
   })
+
+  it('shows delete option and deletes an empty group (empty state)', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+    recordRequests()
+
+    const router = createFileRouteTestRouter(
+      GroupGroupNameRouteImport,
+      '/group/$groupName',
+      '/group/archive',
+      queryClient
+    )
+
+    render(
+      <ConfirmProvider>
+        <PromptProvider>
+          <QueryClientProvider client={queryClient}>
+            <RouterProvider router={router} />
+          </QueryClientProvider>
+        </PromptProvider>
+      </ConfirmProvider>
+    )
+
+    await screen.findByText(/add your first mcp server/i)
+
+    const recFlow = recordRequests()
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: /options/i })
+    )
+    await userEvent.click(
+      await screen.findByRole('menuitem', { name: /delete group/i })
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('Delete group')).toBeVisible()
+    })
+    await userEvent.click(screen.getByRole('button', { name: 'Delete' }))
+
+    await waitFor(() => {
+      const del = recFlow.recordedRequests.find(
+        (r) =>
+          r.method === 'DELETE' && r.pathname === '/api/v1beta/groups/archive'
+      )
+      expect(del).toBeTruthy()
+      expect(del?.search).toMatchObject({ 'with-workloads': 'true' })
+    })
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe('/group/default')
+    })
+  })
 })
