@@ -88,7 +88,7 @@ describe('useCheckServerStatus', () => {
 
     // Success toast should contain an action with a Link to the correct group
     expect(successSpy).toHaveBeenCalled()
-    const [, opts] = successSpy.mock.calls[0]
+    const [, opts] = successSpy.mock.calls[0]!
     // Extract Link element from action (Button asChild > Link)
     const actionNode = (opts as { action?: unknown })?.action as
       | { props?: Record<string, unknown> }
