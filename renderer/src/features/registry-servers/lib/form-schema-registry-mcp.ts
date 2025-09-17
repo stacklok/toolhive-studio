@@ -22,19 +22,11 @@ export function getFormSchemaRegistryMcp({
     ? workloads.filter((w) => w.name !== editingServerName)
     : workloads
 
-  const base = createRegistrySchema(
-    filteredWorkloads,
-    envVars,
-    secrets,
-    (value) => isEmptyEnvVar(value as string | null | undefined)
+  return createRegistrySchema(filteredWorkloads, envVars, secrets, (value) =>
+    isEmptyEnvVar(value as string | null | undefined)
   )
-
-  return base.safeExtend({
-    group: z.string().nonempty('Group is required'),
-  })
 }
 
-export type FormSchemaRegistryMcp = Omit<
-  z.infer<ReturnType<typeof getFormSchemaRegistryMcp>>,
-  'group'
-> & { group?: string }
+export type FormSchemaRegistryMcp = z.infer<
+  ReturnType<typeof getFormSchemaRegistryMcp>
+>

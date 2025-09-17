@@ -244,6 +244,10 @@ export const createRegistrySchema = (
   const volumesSchema = createVolumesSchema()
 
   return nameSchema
+    .extend({
+      // Registry installs are always tied to a group
+      group: z.string().nonempty('Group is required'),
+    })
     .extend(secretsSchema.shape)
     .extend(envVarsSchema.shape)
     .extend(commandArgsSchema.shape)
