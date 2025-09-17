@@ -5,7 +5,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from '@/common/components/ui/dialog'
 import { Button } from '@/common/components/ui/button'
@@ -13,8 +12,10 @@ import { Badge } from '@/common/components/ui/badge'
 import { Switch } from '@/common/components/ui/switch'
 import { Input } from '@/common/components/ui/input'
 
-import { Search, Wrench, Package, AlertCircle } from 'lucide-react'
+import { Search, Wrench, AlertCircle, CheckCheck, ListX } from 'lucide-react'
 import { cn } from '@/common/lib/utils'
+import { getNormalizedServerName } from '../lib/utils'
+import { ScrollArea } from '@/common/components/ui/scroll-area'
 
 interface McpToolInfo {
   name: string
@@ -138,107 +139,60 @@ export function McpToolsModal({
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Wrench className="h-5 w-5" />
-            MCP Tools - {serverName}
+            Manage tools
           </DialogTitle>
-          {serverTools?.serverPackage && (
-            <div
-              className="text-muted-foreground -mt-1 mb-2 flex items-center
-                gap-1 text-xs"
+          <div className="flex items-center gap-1">
+            {getNormalizedServerName(serverName)}
+            <Badge variant="secondary" className="text-muted-foreground">
+              {enabledCount} tools enabled
+            </Badge>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="secondary"
+              size="lg"
+              onClick={() =>
+                setLocalEnabledTools(
+                  serverTools?.tools.map((t) => t.name) || []
+                )
+              }
+              disabled={enabledCount === totalCount}
+              className="cursor-pointer text-xs"
             >
-              <Package className="h-3 w-3" />
-              {serverTools.serverPackage}
-            </div>
-          )}
-          <DialogDescription>
-            Manage individual tools for this MCP server. Enable or disable
-            specific tools to control what's available in the chat.
-          </DialogDescription>
+              <CheckCheck className="h-4 w-4" />
+              Enable All
+            </Button>
+            <Button
+              variant="secondary"
+              size="lg"
+              onClick={() => setLocalEnabledTools([])}
+              disabled={enabledCount === 0}
+              className="cursor-pointer text-xs"
+            >
+              <ListX className="h-4 w-4" />
+              Disable All
+            </Button>
+          </div>
         </DialogHeader>
 
         <div className="flex min-h-0 flex-1 flex-col space-y-4">
-          {/* Status and Search */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Badge
-                  variant={serverTools?.isRunning ? 'default' : 'destructive'}
-                >
-                  {serverTools?.isRunning ? 'Running' : 'Stopped'}
-                </Badge>
-                {totalCount > 0 && (
-                  <Badge variant="outline">
-                    {enabledCount}/{totalCount} tools enabled
-                  </Badge>
-                )}
-              </div>
-            </div>
-
-            <div className="relative">
-              <Search
-                className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4
-                  -translate-y-1/2"
-              />
-              <Input
-                placeholder="Search tools..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
+          <div className="relative mb-0 pr-2">
+            <Search
+              className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4
+                -translate-y-1/2"
+            />
+            <Input
+              placeholder="Search tools..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
           </div>
 
-          {/* Enable/Disable All Controls */}
-          {serverTools?.isRunning && totalCount > 0 && (
-            <div
-              className="bg-muted/20 flex items-center justify-between
-                rounded-t-md border-b px-1 py-3"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground text-sm font-medium">
-                  Quick Actions
-                </span>
-                <Badge variant="outline" className="text-xs">
-                  {enabledCount}/{totalCount} enabled
-                </Badge>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setLocalEnabledTools([])}
-                  disabled={enabledCount === 0}
-                  className="text-xs"
-                >
-                  Disable All
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setLocalEnabledTools(
-                      serverTools?.tools.map((t) => t.name) || []
-                    )
-                  }
-                  disabled={enabledCount === totalCount}
-                  className="text-xs"
-                >
-                  Enable All
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Tools List */}
-          <div
-            className={cn(
-              'min-h-0 flex-1 overflow-y-auto scroll-smooth border',
-              serverTools?.isRunning && totalCount > 0
-                ? 'rounded-b-md border-t-0'
-                : 'rounded-md'
-            )}
+          <ScrollArea
+            className={cn('min-h-0 flex-1 overflow-y-auto scroll-smooth pt-3')}
           >
-            <div className="space-y-1 p-4">
+            <div className="space-y-1 pr-2 pb-4">
               {isLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="text-muted-foreground text-sm">
@@ -326,7 +280,7 @@ export function McpToolsModal({
                 </div>
               )}
             </div>
-          </div>
+          </ScrollArea>
         </div>
 
         <DialogFooter className="flex-shrink-0">

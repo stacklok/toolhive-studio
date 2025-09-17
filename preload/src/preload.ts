@@ -3,7 +3,7 @@
 
 import { contextBridge, ipcRenderer } from 'electron'
 import type { CoreWorkload } from '../../api/generated/types.gen'
-import type { ChatUIMessage } from '../../main/src/chat/types'
+import type { AvailableServer, ChatUIMessage } from '../../main/src/chat/types'
 import { TOOLHIVE_VERSION } from '../../utils/constants'
 import type { UIMessage } from 'ai'
 import type { LanguageModelV2Usage } from '@ai-sdk/provider'
@@ -188,19 +188,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('chat:create-chat-thread', title, initialUserMessage),
     getThreadMessagesForTransport: (threadId: string) =>
       ipcRenderer.invoke('chat:get-thread-messages-for-transport', threadId),
-    addMessageToExistingThread: (
-      threadId: string,
-      role: string,
-      text: string,
-      metadata?: unknown
-    ) =>
-      ipcRenderer.invoke(
-        'chat:add-message-to-existing-thread',
-        threadId,
-        role,
-        text,
-        metadata
-      ),
     getThreadInfo: (threadId: string) =>
       ipcRenderer.invoke('chat:get-thread-info', threadId),
     ensureThreadExists: (threadId?: string, title?: string) =>
@@ -330,28 +317,14 @@ export interface ElectronAPI {
       provider: string,
       model: string
     ) => Promise<{ success: boolean; error?: string }>
-    getMcpServerTools: (serverName: string) => Promise<{
-      serverName: string
-      serverPackage?: string
-      tools: Array<{
-        name: string
-        description?: string
-        parameters?: Record<string, unknown>
-        enabled: boolean
-      }>
-      isRunning: boolean
-    } | null>
+    getMcpServerTools: (serverId: string) => Promise<AvailableServer>
     getEnabledMcpTools: () => Promise<Record<string, string[]>>
     getEnabledMcpServersFromTools: () => Promise<string[]>
     saveEnabledMcpTools: (
       serverName: string,
       enabledTools: string[]
     ) => Promise<{ success: boolean; error?: string }>
-    getToolhiveMcpInfo: () => Promise<{
-      available: boolean
-      toolCount: number
-      tools: Array<{ name: string; description: string }>
-    } | null>
+    getToolhiveMcpInfo: () => Promise<AvailableServer>
 
     // Thread management
     createThread: (
@@ -436,16 +409,6 @@ export interface ElectronAPI {
         finishReason?: string
       }>[]
     >
-    addMessageToExistingThread: (
-      threadId: string,
-      role: string,
-      text: string,
-      metadata?: unknown
-    ) => Promise<{
-      success: boolean
-      messageId?: string
-      error?: string
-    }>
     getThreadInfo: (threadId: string) => Promise<{
       thread: {
         id: string

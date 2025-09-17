@@ -1,11 +1,13 @@
 import Store from 'electron-store'
 import log from '../logger'
-import { getToolhivePort } from '../toolhive-manager'
+import { getToolhivePort, isToolhiveRunning } from '../toolhive-manager'
 import { createClient } from '@api/client'
 import { getApiV1BetaWorkloads } from '@api/sdk.gen'
 import type { CoreWorkload } from '@api/types.gen'
 import { getHeaders } from '../headers'
 import { getTearingDownState } from '../app-state'
+import { getToolhiveMcpInfo } from './mcp-tools'
+import { TOOLHIVE_MCP_SERVER_NAME } from '../utils/constants'
 
 // Chat store types
 interface ChatSettingsProvider {
@@ -175,9 +177,7 @@ export function saveEnabledMcpTools(
   try {
     const enabledMcpTools = chatStore.get('enabledMcpTools')
     const typedTools = isToolsRecord(enabledMcpTools) ? enabledMcpTools : {}
-    // Store tools with their vanilla names
     typedTools[serverName] = toolNames
-    chatStore.set('enabledMcpTools', typedTools)
     return { success: true }
   } catch (error) {
     return {
@@ -203,14 +203,13 @@ export async function getEnabledMcpTools(): Promise<
       return enabledMcpTools
     }
 
-    // Get running servers to filter out tools from stopped servers
-    const port = getToolhivePort()
-
-    if (!port) {
+    if (!isToolhiveRunning()) {
       // If ToolHive is not running, return stored tools without validation
       return enabledMcpTools
     }
 
+    // Get running servers to filter out tools from stopped servers
+    const port = getToolhivePort()
     try {
       const client = createClient({
         baseUrl: `http://localhost:${port}`,
@@ -222,16 +221,25 @@ export async function getEnabledMcpTools(): Promise<
         query: { all: true },
       })
 
+      const toolHiveMcpInfo = await getToolhiveMcpInfo()
+
       const runningServerNames = (data?.workloads || [])
         .filter((w: CoreWorkload) => w.status === 'running')
         .map((w: CoreWorkload) => w.name)
+
+      const internalMcpServerName = toolHiveMcpInfo.isRunning
+        ? [TOOLHIVE_MCP_SERVER_NAME]
+        : []
 
       // Filter enabled tools to only include tools from running servers
       const filteredTools: ChatSettings['enabledMcpTools'] = {}
       const serversToRemove: string[] = []
 
       for (const [serverName, tools] of Object.entries(enabledMcpTools)) {
-        if (runningServerNames.includes(serverName)) {
+        if (
+          runningServerNames.includes(serverName) ||
+          internalMcpServerName.includes(serverName)
+        ) {
           filteredTools[serverName] = tools
         } else if (tools.length > 0) {
           // Only log if server actually had tools to clean up
@@ -252,7 +260,7 @@ export async function getEnabledMcpTools(): Promise<
       return filteredTools
     } catch (apiError) {
       log.warn(
-        'Failed to check running servers during shutdown, returning stored tools:',
+        'Failed to check running servers tools, returning stored tools:',
         apiError
       )
       // During shutdown, just return stored tools without validation
@@ -274,8 +282,7 @@ export async function getEnabledMcpServersFromTools(): Promise<string[]> {
         return tools && tools.length > 0
       }
     )
-    // Return server IDs in the format expected by the UI
-    return enabledServerNames.map((serverName) => `mcp_${serverName}`)
+    return enabledServerNames
   } catch (error) {
     log.error('Failed to get enabled MCP servers from tools:', error)
     return []
