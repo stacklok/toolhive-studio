@@ -28,6 +28,7 @@ type Field = keyof FormSchemaRegistryMcp
 
 const FIELD_TAB_MAP = {
   name: 'configuration',
+  group: 'configuration',
   cmd_arguments: 'configuration',
   secrets: 'configuration',
   envVars: 'configuration',
@@ -137,13 +138,13 @@ export function FormRunFromRegistry({
       {
         server,
         data,
-        groupName: form.getValues('group') || 'default',
+        groupName: (data.group ?? 'default') as string,
       },
       {
         onSuccess: () => {
           checkServerStatus({
             serverName: data.name,
-            groupName: form.getValues('group') || 'default',
+            groupName: (data.group ?? 'default') as string,
           })
           onOpenChange(false)
           setActiveTab('configuration')
