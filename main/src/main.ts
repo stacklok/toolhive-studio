@@ -639,7 +639,7 @@ ipcMain.handle(
 )
 
 // MCP tools management handlers (single source of truth)
-ipcMain.handle('chat:get-mcp-server-tools', (_, serverName?: string) =>
+ipcMain.handle('chat:get-mcp-server-tools', (_, serverName: string) =>
   getMcpServerTools(serverName)
 )
 ipcMain.handle('chat:get-enabled-mcp-tools', () => getEnabledMcpTools())

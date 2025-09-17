@@ -78,12 +78,12 @@ function ChatInterfaceContent() {
           {hasMessages && (
             <Button
               onClick={onClearMessages}
-              variant="ghost"
+              variant="secondary"
               size="sm"
-              className="text-muted-foreground hover:text-foreground h-10"
+              className="h-10 cursor-pointer font-light"
             >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Clear
+              <Trash2 className="h-4 w-4" />
+              Clear Chat
             </Button>
           )}
         </div>
