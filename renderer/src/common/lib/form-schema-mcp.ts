@@ -215,7 +215,8 @@ export const createRegistrySchema = (
   workloads: CoreWorkload[],
   envVars: Array<{ name?: string; required?: boolean }>,
   secrets: Array<{ name?: string; required?: boolean }>,
-  isEmptyValueFn: (value: unknown) => boolean
+  isEmptyValueFn: (value: unknown) => boolean,
+  extraShape?: Record<string, unknown>
 ) => {
   const isNonEmptyString = (v: unknown): v is string =>
     typeof v === 'string' && v.length > 0
@@ -243,15 +244,22 @@ export const createRegistrySchema = (
   const networkSchema = createNetworkConfigSchema()
   const volumesSchema = createVolumesSchema()
 
-  return nameSchema
+  // Build the base schema and inject any extra shape before adding refinements
+  const base = nameSchema
     .extend(secretsSchema.shape)
     .extend(envVarsSchema.shape)
     .extend(commandArgsSchema.shape)
     .extend(networkSchema.shape)
     .extend(volumesSchema.shape)
-    .superRefine((data, ctx) => {
-      addNetworkValidation(ctx, data)
-    })
+  const withExtra = extraShape
+    ? (base as unknown as z.ZodObject<z.ZodRawShape>).extend(
+        extraShape as z.ZodRawShape
+      )
+    : base
+
+  return withExtra.superRefine((data, ctx) => {
+    addNetworkValidation(ctx, data)
+  })
 }
 
 export const createMcpBaseSchema = (workloads: CoreWorkload[]) => {
