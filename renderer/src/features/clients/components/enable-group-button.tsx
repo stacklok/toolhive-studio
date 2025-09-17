@@ -1,5 +1,5 @@
 import { Button } from '@/common/components/ui/button'
-import { CheckCircle } from 'lucide-react'
+import { Power } from 'lucide-react'
 import { useManageClientsDialog } from '../hooks/use-manage-clients-dialog'
 
 export function EnableGroupButton({
@@ -12,14 +12,14 @@ export function EnableGroupButton({
   const { openDialog } = useManageClientsDialog(groupName)
   return (
     <Button
-      variant="outline"
+      variant="enable"
       onClick={() =>
         openDialog({ title: 'Enable Group', confirmText: 'Enable' })
       }
       className={className}
     >
-      <CheckCircle className="mr-2 h-4 w-4" />
       Enable group
+      <Power className="ml-2 h-4 w-4" />
     </Button>
   )
 }
