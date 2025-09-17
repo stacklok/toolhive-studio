@@ -140,113 +140,105 @@ export function DialogApiKeys({
               </div>
             ) : (
               providerKeys.map((pk) => (
-                <>
-                  <Collapsible
-                    key={pk.provider.id}
-                    open={expandedProviders[pk.provider.id]}
-                    onOpenChange={() => toggleProviderExpanded(pk.provider.id)}
-                    className="border-border overflow-hidden rounded-lg border"
-                  >
-                    <CollapsibleTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="hover:bg-muted/50 h-auto w-full
-                          cursor-pointer justify-between rounded-none p-4"
-                      >
-                        <div
-                          className="flex w-full items-center justify-between"
-                        >
-                          <div className="flex items-center gap-2">
-                            {getProviderIcon(pk.provider.id)}
-                            <h3 className="text-left font-medium">
-                              {pk.provider.name}
-                            </h3>
-                          </div>
-                          {pk.hasKey && (
-                            <Badge variant="secondary" className="text-xs">
-                              <Check className="mr-1 h-3 w-3" />
-                              Configured
-                            </Badge>
-                          )}
+                <Collapsible
+                  key={pk.provider.id}
+                  open={expandedProviders[pk.provider.id]}
+                  onOpenChange={() => toggleProviderExpanded(pk.provider.id)}
+                  className="border-border overflow-hidden rounded-lg border"
+                >
+                  <CollapsibleTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="hover:bg-muted/50 h-auto w-full cursor-pointer
+                        justify-between rounded-none p-4"
+                    >
+                      <div className="flex w-full items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {getProviderIcon(pk.provider.id)}
+                          <h3 className="text-left font-medium">
+                            {pk.provider.name}
+                          </h3>
                         </div>
-                      </Button>
-                    </CollapsibleTrigger>
+                        {pk.hasKey && (
+                          <Badge variant="secondary" className="text-xs">
+                            <Check className="mr-1 h-3 w-3" />
+                            Configured
+                          </Badge>
+                        )}
+                      </div>
+                    </Button>
+                  </CollapsibleTrigger>
 
-                    <CollapsibleContent>
-                      <div
-                        className="border-border/30 bg-muted/10 space-y-3
-                          border-t px-4 pb-4"
-                      >
-                        <div className="space-y-2 pt-2">
-                          <div className="space-y-2">
-                            <Label
-                              htmlFor={`apikey-${pk.provider.id}`}
-                              className="text-sm font-medium"
-                            >
-                              API Key
-                            </Label>
-                            <div className="flex gap-2">
-                              <div className="relative flex-1">
-                                <Input
-                                  id={`apikey-${pk.provider.id}`}
-                                  type={
-                                    showApiKeys[pk.provider.id]
-                                      ? 'text'
-                                      : 'password'
-                                  }
-                                  value={pk.apiKey}
-                                  onChange={(e) =>
-                                    handleApiKeyChange(
-                                      pk.provider.id,
-                                      e.target.value
-                                    )
-                                  }
-                                  placeholder={`Enter your ${pk.provider.name} API key`}
-                                  className="pr-10"
-                                />
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  className="absolute top-0 right-0 h-full px-3
-                                    py-2 hover:bg-transparent"
-                                  onClick={() =>
-                                    toggleShowApiKey(pk.provider.id)
-                                  }
-                                >
-                                  {showApiKeys[pk.provider.id] ? (
-                                    <EyeOff
-                                      className="text-muted-foreground h-4 w-4"
-                                    />
-                                  ) : (
-                                    <Eye
-                                      className="text-muted-foreground h-4 w-4"
-                                    />
-                                  )}
-                                </Button>
-                              </div>
-                              {pk.hasKey && (
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleRemoveApiKey(pk.provider.id)
-                                  }
-                                  className="hover:bg-destructive
-                                    hover:text-destructive-foreground
-                                    cursor-pointer px-3"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              )}
+                  <CollapsibleContent>
+                    <div
+                      className="border-border/30 bg-muted/10 space-y-3 border-t
+                        px-4 pb-4"
+                    >
+                      <div className="space-y-2 pt-2">
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor={`apikey-${pk.provider.id}`}
+                            className="text-sm font-medium"
+                          >
+                            API Key
+                          </Label>
+                          <div className="flex gap-2">
+                            <div className="relative flex-1">
+                              <Input
+                                id={`apikey-${pk.provider.id}`}
+                                type={
+                                  showApiKeys[pk.provider.id]
+                                    ? 'text'
+                                    : 'password'
+                                }
+                                value={pk.apiKey}
+                                onChange={(e) =>
+                                  handleApiKeyChange(
+                                    pk.provider.id,
+                                    e.target.value
+                                  )
+                                }
+                                placeholder={`Enter your ${pk.provider.name} API key`}
+                                className="pr-10"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute top-0 right-0 h-full px-3
+                                  py-2 hover:bg-transparent"
+                                onClick={() => toggleShowApiKey(pk.provider.id)}
+                              >
+                                {showApiKeys[pk.provider.id] ? (
+                                  <EyeOff
+                                    className="text-muted-foreground h-4 w-4"
+                                  />
+                                ) : (
+                                  <Eye className="text-muted-foreground h-4 w-4" />
+                                )}
+                              </Button>
                             </div>
+                            {pk.hasKey && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  handleRemoveApiKey(pk.provider.id)
+                                }
+                                className="hover:bg-destructive
+                                  hover:text-destructive-foreground
+                                  cursor-pointer px-3"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                </>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               ))
             )}
           </div>
