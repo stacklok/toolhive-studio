@@ -6,9 +6,7 @@ export function McpServerSettings() {
 
   return (
     <div className="space-y-3">
-      {/* Selected tools as badges */}
       <div className="flex flex-wrap items-center gap-3">
-        {/* Regular MCP server badges */}
         {enabledMcpServers.map((server) => (
           <McpServerBadge
             key={server.id}
