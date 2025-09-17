@@ -154,7 +154,7 @@ export function CardMcpServer({
         'transition-all duration-300 ease-in-out',
         isNewServer ? 'ring-2' : undefined,
         isDeleting ? 'pointer-events-none opacity-50' : undefined,
-        isInDisabledGroup ? 'opacity-50' : undefined,
+        isInDisabledGroup ? 'opacity-50 grayscale' : undefined,
         (isTransitioning || hadRecentStatusChange) && 'animate-diagonal-ring',
         isStopped && 'bg-card/65'
       )}

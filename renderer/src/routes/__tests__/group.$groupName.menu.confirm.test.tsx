@@ -236,7 +236,7 @@ describe('Group route delete group confirmation', () => {
 })
 
 describe('Group route disabled state marking', () => {
-  it('renders cards at 50% opacity when group has no registered clients', async () => {
+  it('renders cards at 50% opacity and grayscale when group has no registered clients', async () => {
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     })
@@ -272,6 +272,7 @@ describe('Group route disabled state marking', () => {
     expect(cards.length).toBeGreaterThan(0)
     cards.forEach((card) => {
       expect(card).toHaveClass('opacity-50')
+      expect(card).toHaveClass('grayscale')
     })
   })
 
@@ -319,6 +320,7 @@ describe('Group route disabled state marking', () => {
     // Ensure none of the cards are styled as disabled
     cards.forEach((card) => {
       expect(card).not.toHaveClass('opacity-50')
+      expect(card).not.toHaveClass('grayscale')
     })
   })
 })
