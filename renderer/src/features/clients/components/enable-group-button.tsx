@@ -19,7 +19,7 @@ export function EnableGroupButton({
       className={className}
     >
       Enable group
-      <Power className="ml-2 h-4 w-4" />
+      <Power className="h-4 w-4" />
     </Button>
   )
 }
