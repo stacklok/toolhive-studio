@@ -4,11 +4,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { RouterProvider } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { recordRequests } from '@/common/mocks/node'
+import { server } from '@/common/mocks/node'
 import { ConfirmProvider } from '@/common/contexts/confirm/provider'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
 import { Route as GroupGroupNameRouteImport } from '@/routes/group.$groupName'
 import { toast } from 'sonner'
 import { createFileRouteTestRouter } from '@/common/test/create-file-route-test-router'
+import { http, HttpResponse } from 'msw'
+import { mswEndpoint } from '@/common/mocks/customHandlers'
 
 describe('Group route delete group confirmation', () => {
   beforeEach(() => {
@@ -228,6 +231,93 @@ describe('Group route delete group confirmation', () => {
     })
     await waitFor(() => {
       expect(router.state.location.pathname).toBe('/group/default')
+    })
+  })
+})
+
+describe('Group route disabled state marking', () => {
+  it('adds data-is-in-disabled-group to cards when group has no registered clients', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [{ name: 'research', registered_clients: [] }],
+        })
+      )
+    )
+
+    const router = createFileRouteTestRouter(
+      GroupGroupNameRouteImport,
+      '/group/$groupName',
+      '/group/research',
+      queryClient
+    )
+
+    render(
+      <ConfirmProvider>
+        <PromptProvider>
+          <QueryClientProvider client={queryClient}>
+            <RouterProvider router={router} />
+          </QueryClientProvider>
+        </PromptProvider>
+      </ConfirmProvider>
+    )
+
+    await waitFor(() => expect(screen.getByText('fetch')).toBeVisible())
+
+    const cards = document.querySelectorAll('[data-slot="card"]')
+    expect(cards.length).toBeGreaterThan(0)
+    cards.forEach((card) => {
+      expect(card).toHaveAttribute('data-is-in-disabled-group', 'true')
+    })
+  })
+
+  it('does not add the attribute when group has registered clients', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [{ name: 'research', registered_clients: ['vscode'] }],
+        })
+      )
+    )
+
+    const router = createFileRouteTestRouter(
+      GroupGroupNameRouteImport,
+      '/group/$groupName',
+      '/group/research',
+      queryClient
+    )
+
+    render(
+      <ConfirmProvider>
+        <PromptProvider>
+          <QueryClientProvider client={queryClient}>
+            <RouterProvider router={router} />
+          </QueryClientProvider>
+        </PromptProvider>
+      </ConfirmProvider>
+    )
+
+    await waitFor(() => expect(screen.getByText('fetch')).toBeVisible())
+    // Wait until the disabled attribute is cleared after groups data loads
+    await waitFor(() => {
+      const anyDisabled = document.querySelector(
+        '[data-slot="card"][data-is-in-disabled-group="true"]'
+      )
+      expect(anyDisabled).toBeNull()
+    })
+
+    const cards = document.querySelectorAll('[data-slot="card"]')
+    expect(cards.length).toBeGreaterThan(0)
+    cards.forEach((card) => {
+      expect(card).not.toHaveAttribute('data-is-in-disabled-group')
     })
   })
 })
