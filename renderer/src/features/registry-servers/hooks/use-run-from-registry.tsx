@@ -46,9 +46,11 @@ export function useRunFromRegistry({
     mutationFn: async ({
       server,
       data,
+      groupName,
     }: {
       server: RegistryImageMetadata
       data: FormSchemaRegistryMcp
+      groupName?: string
     }) => {
       const { newlyCreatedSecrets, existingSecrets } = await handleSecrets(
         data.secrets
@@ -65,11 +67,10 @@ export function useRunFromRegistry({
         })),
       ]
 
-      const createRequest: V1CreateRequest = prepareCreateWorkloadData(
-        server,
-        data,
-        secretsForRequest
-      )
+      const createRequest: V1CreateRequest = {
+        ...prepareCreateWorkloadData(server, data, secretsForRequest),
+        ...(groupName ? { group: groupName } : {}),
+      }
 
       const response = await createWorkload({
         body: createRequest,

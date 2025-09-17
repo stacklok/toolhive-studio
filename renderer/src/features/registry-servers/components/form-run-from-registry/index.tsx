@@ -99,6 +99,7 @@ export function FormRunFromRegistry({
     resolver: zodV4Resolver(formSchema),
     defaultValues: {
       name: server?.name || '',
+      group: 'default',
       cmd_arguments,
       volumes: [{ host: '', container: '', accessMode: 'rw' }],
       secrets: groupedEnvVars.secrets.map((s) => ({
@@ -136,10 +137,14 @@ export function FormRunFromRegistry({
       {
         server,
         data,
+        groupName: form.getValues('group') || 'default',
       },
       {
         onSuccess: () => {
-          checkServerStatus({ serverName: data.name, groupName: 'default' })
+          checkServerStatus({
+            serverName: data.name,
+            groupName: form.getValues('group') || 'default',
+          })
           onOpenChange(false)
           setActiveTab('configuration')
         },
