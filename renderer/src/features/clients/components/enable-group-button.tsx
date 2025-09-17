@@ -29,10 +29,10 @@ export function EnableGroupButton({
     )
   }
 
-  // Temporary behavior while feature flag is off
+  // Temporary behavior while feature flag is off: keep green look
   return (
     <Button
-      variant="outline"
+      variant="enable"
       onClick={() => openDialog({ title: 'Add a client', confirmText: 'Add' })}
       className={className}
     >
