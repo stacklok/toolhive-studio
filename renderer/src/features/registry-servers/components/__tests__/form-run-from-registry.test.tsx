@@ -639,22 +639,6 @@ describe('FormRunFromRegistry', () => {
     })
   })
 
-  it('renders a Group dropdown', async () => {
-    const server = { ...REGISTRY_SERVER }
-    server.env_vars = ENV_VARS_OPTIONAL
-
-    renderWithProviders(
-      <FormRunFromRegistry isOpen onOpenChange={vi.fn()} server={server} />
-    )
-
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeVisible()
-    })
-
-    // New field label should exist
-    expect(screen.getByText('Group')).toBeInTheDocument()
-  })
-
   it('passes the selected group to the mutation and uses it for navigation', async () => {
     const mockInstallServerMutation = vi.fn()
     const mockCheckServerStatus = vi.fn()
