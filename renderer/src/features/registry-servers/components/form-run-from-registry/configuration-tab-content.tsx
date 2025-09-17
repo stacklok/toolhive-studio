@@ -213,7 +213,7 @@ export function ConfigurationTabContent({
           control={form.control}
           name="group"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="mb-10">
               <FormLabel htmlFor={field.name}>Group</FormLabel>
               <FormControl>
                 <Select
