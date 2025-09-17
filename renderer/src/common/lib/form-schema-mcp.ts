@@ -245,7 +245,7 @@ export const createRegistrySchema = (
 
   return nameSchema
     .extend({
-      group: z.string().nonempty('Group is required'),
+      group: z.string().min(1, 'Group is required'),
     })
     .extend(secretsSchema.shape)
     .extend(envVarsSchema.shape)
