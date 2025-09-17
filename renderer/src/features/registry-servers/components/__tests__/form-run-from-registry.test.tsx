@@ -636,6 +636,94 @@ describe('FormRunFromRegistry', () => {
     })
   })
 
+  it('passes the selected group to the mutation and uses it for navigation', async () => {
+    const mockInstallServerMutation = vi.fn()
+    const mockCheckServerStatus = vi.fn()
+
+    mockUseRunFromRegistry.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+    mockUseCheckServerStatus.mockReturnValue({
+      checkServerStatus: mockCheckServerStatus,
+    })
+
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    renderWithProviders(
+      <FormRunFromRegistry isOpen onOpenChange={vi.fn()} server={server} />
+    )
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeVisible())
+
+    const trigger = screen.getByRole('combobox', { name: 'Group' })
+    await userEvent.click(trigger)
+    const option = await screen.findByRole('option', { name: 'Research team' })
+    await userEvent.click(option)
+
+    await userEvent.type(
+      screen.getByLabelText('Server name'),
+      'my-registry-srv',
+      {
+        initialSelectionStart: 0,
+        initialSelectionEnd: REGISTRY_SERVER.name?.length,
+      }
+    )
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalled()
+    })
+
+    const firstArgs = mockInstallServerMutation.mock.calls[0]?.[0]
+    expect(firstArgs?.groupName).toBe('Research team')
+
+    const onSuccess = mockInstallServerMutation.mock.calls[0]?.[1]?.onSuccess
+    onSuccess?.()
+    await waitFor(() => {
+      expect(mockCheckServerStatus).toHaveBeenCalledWith(
+        expect.objectContaining({ groupName: 'Research team' })
+      )
+    })
+  })
+
+  it('uses the default group when user does not change selection', async () => {
+    const mockInstallServerMutation = vi.fn()
+    mockUseRunFromRegistry.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    renderWithProviders(
+      <FormRunFromRegistry isOpen onOpenChange={vi.fn()} server={server} />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    await userEvent.type(screen.getByLabelText('Server name'), 'srv', {
+      initialSelectionStart: 0,
+      initialSelectionEnd: REGISTRY_SERVER.name?.length,
+    })
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalled()
+    })
+    const firstArgs = mockInstallServerMutation.mock.calls[0]?.[0]
+    expect(firstArgs?.groupName).toBe('default')
+  })
+
   it('shows error state when isErrorSecrets is true', async () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
@@ -804,12 +892,12 @@ describe('FormRunFromRegistry', () => {
 
     await waitFor(() => {
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        {
+        expect.objectContaining({
           server,
           data: expect.objectContaining({
             cmd_arguments: ['--debug', '--verbose'],
           }),
-        },
+        }),
         expect.any(Object)
       )
     })

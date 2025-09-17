@@ -32,6 +32,7 @@ describe('prepareCreateWorkloadData', () => {
   it('prepares workload data with all fields', () => {
     const data: FormSchemaRegistryMcp = {
       name: 'Test Server',
+      group: 'default',
       envVars: [
         { name: 'DEBUG', value: 'true' },
         { name: 'PORT', value: '8080' },
@@ -69,6 +70,7 @@ describe('prepareCreateWorkloadData', () => {
   it('handles empty env vars and secrets', () => {
     const data: FormSchemaRegistryMcp = {
       name: 'Test Server',
+      group: 'default',
       envVars: [],
       secrets: [],
       networkIsolation: false,
@@ -95,6 +97,7 @@ describe('prepareCreateWorkloadData', () => {
   it('handles empty cmd_arguments', () => {
     const data: FormSchemaRegistryMcp = {
       name: 'Test Server',
+      group: 'default',
       envVars: [],
       secrets: [],
       cmd_arguments: [],
@@ -112,6 +115,7 @@ describe('prepareCreateWorkloadData', () => {
   it('handles undefined cmd_arguments', () => {
     const data: FormSchemaRegistryMcp = {
       name: 'Test Server',
+      group: 'default',
       envVars: [],
       secrets: [],
       cmd_arguments: undefined,
@@ -135,6 +139,7 @@ describe('prepareCreateWorkloadData', () => {
 
     const data: FormSchemaRegistryMcp = {
       name: 'Test Server',
+      group: 'default',
       envVars: [],
       secrets: [],
       networkIsolation: false,
@@ -151,6 +156,7 @@ describe('prepareCreateWorkloadData', () => {
   it('filters out environment variables with empty values', () => {
     const data: FormSchemaRegistryMcp = {
       name: 'Test Server',
+      group: 'default',
       envVars: [
         { name: 'DEBUG', value: 'true' },
         { name: 'PORT', value: '8080' },
@@ -180,6 +186,7 @@ describe('prepareCreateWorkloadData', () => {
   it('includes network isolation data when enabled', () => {
     const data: FormSchemaRegistryMcp = {
       name: 'test-server',
+      group: 'default',
       cmd_arguments: [],
       secrets: [],
       envVars: [],
@@ -206,6 +213,7 @@ describe('prepareCreateWorkloadData', () => {
   it('excludes network isolation data when disabled', () => {
     const data: FormSchemaRegistryMcp = {
       name: 'test-server',
+      group: 'default',
       cmd_arguments: [],
       secrets: [],
       envVars: [],
