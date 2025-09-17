@@ -51,12 +51,10 @@ describe('EnableGroupButton – flows', () => {
       await screen.findByRole('button', { name: /enable group/i })
     )
 
-    // Toggle two clients and save
     await user.click(await screen.findByRole('switch', { name: 'vscode' }))
     await user.click(await screen.findByRole('switch', { name: /cursor/i }))
     await user.click(await screen.findByRole('button', { name: /enable/i }))
 
-    // Expect two POST registrations
     await waitFor(() =>
       expect(
         rec.recordedRequests.filter(
