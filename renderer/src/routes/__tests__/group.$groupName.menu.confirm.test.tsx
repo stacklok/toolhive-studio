@@ -24,6 +24,15 @@ describe('Group route delete group confirmation', () => {
     })
     recordRequests()
 
+    // Ensure group is enabled so Manage Clients button is visible
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [{ name: 'research', registered_clients: ['vscode'] }],
+        })
+      )
+    )
+
     const router = createFileRouteTestRouter(
       GroupGroupNameRouteImport,
       '/group/$groupName',
@@ -90,6 +99,15 @@ describe('Group route delete group confirmation', () => {
     })
     recordRequests()
 
+    // Ensure group is enabled so Manage Clients button is visible
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [{ name: 'research', registered_clients: ['vscode'] }],
+        })
+      )
+    )
+
     const router = createFileRouteTestRouter(
       GroupGroupNameRouteImport,
       '/group/$groupName',
@@ -139,6 +157,15 @@ describe('Group route delete group confirmation', () => {
       defaultOptions: { queries: { retry: false } },
     })
     recordRequests()
+
+    // Ensure default group is enabled so Manage Clients button is visible
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [{ name: 'default', registered_clients: ['vscode'] }],
+        })
+      )
+    )
 
     const router = createFileRouteTestRouter(
       GroupGroupNameRouteImport,
@@ -274,6 +301,12 @@ describe('Group route disabled state marking', () => {
       expect(card).toHaveClass('opacity-50')
       expect(card).toHaveClass('grayscale')
     })
+
+    // Buttons hidden when group is disabled
+    expect(
+      screen.queryByRole('button', { name: /add an mcp server/i })
+    ).toBeNull()
+    expect(screen.queryByRole('button', { name: /manage clients/i })).toBeNull()
   })
 
   it('does not add the attribute when group has registered clients', async () => {
@@ -322,5 +355,13 @@ describe('Group route disabled state marking', () => {
       expect(card).not.toHaveClass('opacity-50')
       expect(card).not.toHaveClass('grayscale')
     })
+
+    // Buttons visible when group is enabled
+    expect(
+      screen.getByRole('button', { name: /add an mcp server/i })
+    ).toBeVisible()
+    expect(
+      screen.getByRole('button', { name: /manage clients/i })
+    ).toBeVisible()
   })
 })

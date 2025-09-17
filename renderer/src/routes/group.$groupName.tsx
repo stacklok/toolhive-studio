@@ -14,6 +14,7 @@ import { RefreshButton } from '@/common/components/refresh-button'
 import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/dropdown-menu-run-mcp-server'
 import { WrapperDialogFormMcp } from '@/features/mcp-servers/components/wrapper-dialog-mcp'
 import { ManageClientsButton } from '@/features/clients/components/manage-clients-button'
+import { EnableGroupButton } from '@/features/clients/components/enable-group-button'
 import { GroupActionsDropdown } from '@/features/mcp-servers/components/group-actions-dropdown'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
 
@@ -96,10 +97,16 @@ function GroupRoute() {
               {workloads.length > 0 && (
                 <>
                   <RefreshButton refresh={refetch} />
-                  <DropdownMenuRunMcpServer
-                    openRunCommandDialog={setServerDialogOpen}
-                  />
-                  <ManageClientsButton groupName={groupName} />
+                  {!isInDisabledGroup ? (
+                    <DropdownMenuRunMcpServer
+                      openRunCommandDialog={setServerDialogOpen}
+                    />
+                  ) : null}
+                  {!isInDisabledGroup ? (
+                    <ManageClientsButton groupName={groupName} />
+                  ) : (
+                    <EnableGroupButton groupName={groupName} />
+                  )}
                 </>
               )}
               {showSidebar ? (
@@ -122,11 +129,13 @@ function GroupRoute() {
             body="Add a server manually or browse the MCP Server registry"
             illustration={IllustrationNoConnection}
           >
-            <div className="my-6">
-              <DropdownMenuRunMcpServer
-                openRunCommandDialog={setServerDialogOpen}
-              />
-            </div>
+            {!isInDisabledGroup ? (
+              <div className="my-6">
+                <DropdownMenuRunMcpServer
+                  openRunCommandDialog={setServerDialogOpen}
+                />
+              </div>
+            ) : null}
           </EmptyState>
         ) : (
           <GridCardsMcpServers
