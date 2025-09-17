@@ -34,7 +34,10 @@ async function setupSecretProvider(queryClient: QueryClient) {
         await createEncryptedProvider()
       }
     })
-    .catch(createEncryptedProvider)
+    .catch(() => {
+      log.info('Error setting up secret provider, creating encrypted provider')
+      createEncryptedProvider()
+    })
 }
 
 function RootComponent() {
