@@ -154,10 +154,10 @@ export function CardMcpServer({
         'transition-all duration-300 ease-in-out',
         isNewServer ? 'ring-2' : undefined,
         isDeleting ? 'pointer-events-none opacity-50' : undefined,
+        isInDisabledGroup ? 'opacity-50' : undefined,
         (isTransitioning || hadRecentStatusChange) && 'animate-diagonal-ring',
         isStopped && 'bg-card/65'
       )}
-      data-is-in-disabled-group={isInDisabledGroup ? 'true' : undefined}
     >
       <CardHeader>
         <div className="flex items-center justify-between gap-6 overflow-hidden">

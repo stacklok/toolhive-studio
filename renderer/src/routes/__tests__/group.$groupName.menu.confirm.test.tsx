@@ -236,7 +236,7 @@ describe('Group route delete group confirmation', () => {
 })
 
 describe('Group route disabled state marking', () => {
-  it('adds data-is-in-disabled-group to cards when group has no registered clients', async () => {
+  it('renders cards at 50% opacity when group has no registered clients', async () => {
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     })
@@ -271,7 +271,7 @@ describe('Group route disabled state marking', () => {
     const cards = document.querySelectorAll('[data-slot="card"]')
     expect(cards.length).toBeGreaterThan(0)
     cards.forEach((card) => {
-      expect(card).toHaveAttribute('data-is-in-disabled-group', 'true')
+      expect(card).toHaveClass('opacity-50')
     })
   })
 
@@ -306,18 +306,19 @@ describe('Group route disabled state marking', () => {
     )
 
     await waitFor(() => expect(screen.getByText('fetch')).toBeVisible())
-    // Wait until the disabled attribute is cleared after groups data loads
+    // Wait until the disabled styling is cleared after groups data loads
     await waitFor(() => {
       const anyDisabled = document.querySelector(
-        '[data-slot="card"][data-is-in-disabled-group="true"]'
+        '[data-slot="card"].opacity-50'
       )
       expect(anyDisabled).toBeNull()
     })
 
     const cards = document.querySelectorAll('[data-slot="card"]')
     expect(cards.length).toBeGreaterThan(0)
+    // Ensure none of the cards are styled as disabled
     cards.forEach((card) => {
-      expect(card).not.toHaveAttribute('data-is-in-disabled-group')
+      expect(card).not.toHaveClass('opacity-50')
     })
   })
 })
