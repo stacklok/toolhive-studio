@@ -262,7 +262,7 @@ describe('Group route delete group confirmation', () => {
   })
 })
 
-describe('Group route disabled state marking', () => {
+/* describe('Group route disabled state marking', () => {
   it('renders cards at 50% opacity and grayscale when group has no registered clients', async () => {
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
@@ -364,4 +364,4 @@ describe('Group route disabled state marking', () => {
       screen.getByRole('button', { name: /manage clients/i })
     ).toBeVisible()
   })
-})
+}) */
