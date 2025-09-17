@@ -153,7 +153,7 @@ describe('toolhive-manager', () => {
           expect.stringMatching(/--port=\d+/),
         ]),
         {
-          stdio: 'ignore',
+          stdio: ['ignore', 'ignore', 'pipe'],
           detached: false,
         }
       )
@@ -276,7 +276,7 @@ describe('toolhive-manager', () => {
           expect.stringMatching(/--port=\d+/),
         ]),
         {
-          stdio: 'ignore',
+          stdio: ['ignore', 'ignore', 'pipe'],
           detached: false,
         }
       )

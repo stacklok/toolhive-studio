@@ -128,7 +128,7 @@ export async function startToolhive(tray?: Tray): Promise<void> {
       `--port=${toolhivePort}`,
     ],
     {
-      stdio: 'ignore',
+      stdio: ['ignore', 'ignore', 'pipe'],
       detached: false,
     }
   )
@@ -137,6 +137,17 @@ export async function startToolhive(tray?: Tray): Promise<void> {
 
   if (tray) {
     updateTrayStatus(tray, !!toolhiveProcess)
+  }
+
+  // Capture and log stderr
+  if (toolhiveProcess.stderr) {
+    log.info(`[ToolHive] Capturing stderr enabled`)
+    toolhiveProcess.stderr.on('data', (data) => {
+      const output = data.toString().trim()
+      if (output) {
+        log.error(`[ToolHive stderr] ${output}`)
+      }
+    })
   }
 
   toolhiveProcess.on('error', (error) => {
