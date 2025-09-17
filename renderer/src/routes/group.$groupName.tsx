@@ -15,6 +15,7 @@ import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/drop
 import { WrapperDialogFormMcp } from '@/features/mcp-servers/components/wrapper-dialog-mcp'
 import { ManageClientsButton } from '@/features/clients/components/manage-clients-button'
 import { GroupActionsDropdown } from '@/features/mcp-servers/components/group-actions-dropdown'
+import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
 
 export const Route = createFileRoute('/group/$groupName')({
   loader: ({ context: { queryClient }, params: { groupName } }) =>
@@ -43,6 +44,14 @@ function GroupRoute() {
   })
 
   const workloads = data?.workloads ?? []
+  const { data: groupsData } = useGroups()
+  const currentGroup = (groupsData?.groups ?? []).find(
+    (g) => (g.name ?? '').toLowerCase() === (groupName ?? '').toLowerCase()
+  )
+  const isInDisabledGroup = !(
+    currentGroup?.registered_clients &&
+    currentGroup.registered_clients.length > 0
+  )
   const filteredWorkloads = workloads
   const [serverDialogOpen, setServerDialogOpen] = useState<{
     local: boolean
@@ -120,7 +129,10 @@ function GroupRoute() {
             </div>
           </EmptyState>
         ) : (
-          <GridCardsMcpServers mcpServers={filteredWorkloads} />
+          <GridCardsMcpServers
+            mcpServers={filteredWorkloads}
+            isInDisabledGroup={isInDisabledGroup}
+          />
         )}
       </div>
     </div>

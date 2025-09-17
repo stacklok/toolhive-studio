@@ -5,8 +5,10 @@ import { InputSearch } from '@/common/components/ui/input-search'
 
 export function GridCardsMcpServers({
   mcpServers,
+  isInDisabledGroup,
 }: {
   mcpServers: CoreWorkload[]
+  isInDisabledGroup?: boolean
 }) {
   const [filters, setFilters] = useState({
     text: '',
@@ -57,6 +59,7 @@ export function GridCardsMcpServers({
               statusContext={mcpServer.status_context}
               url={mcpServer.url ?? ''}
               transport={mcpServer.transport_type}
+              isInDisabledGroup={isInDisabledGroup}
             />
           ) : null
         )}
