@@ -97,11 +97,6 @@ export function CardRegistryServer({
             </TooltipContent>
           </Tooltip>
         )}
-        {server?.metadata?.stars ? (
-          <div className="flex items-center gap-2">
-            <Stars stars={server.metadata.stars} />
-          </div>
-        ) : null}
         {server?.repository_url ? (
           <Button
             variant="ghost"
@@ -117,6 +112,11 @@ export function CardRegistryServer({
               <Github className="text-muted-foreground size-4" />
             </a>
           </Button>
+        ) : null}
+        {server?.metadata?.stars ? (
+          <div className="flex items-center gap-2">
+            <Stars stars={server.metadata.stars} />
+          </div>
         ) : null}
       </CardFooter>
     </Card>
