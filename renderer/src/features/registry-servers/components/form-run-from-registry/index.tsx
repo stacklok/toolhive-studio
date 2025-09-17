@@ -138,13 +138,13 @@ export function FormRunFromRegistry({
       {
         server,
         data,
-        groupName: (data.group ?? 'default') as string,
+        groupName: data.group,
       },
       {
         onSuccess: () => {
           checkServerStatus({
             serverName: data.name,
-            groupName: (data.group ?? 'default') as string,
+            groupName: data.group,
           })
           onOpenChange(false)
           setActiveTab('configuration')
