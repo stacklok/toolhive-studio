@@ -245,7 +245,6 @@ export const createRegistrySchema = (
 
   return nameSchema
     .extend({
-      // Registry installs are always tied to a group
       group: z.string().nonempty('Group is required'),
     })
     .extend(secretsSchema.shape)
