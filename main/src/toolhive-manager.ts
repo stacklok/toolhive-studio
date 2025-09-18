@@ -105,7 +105,7 @@ async function findFreePort(
 }
 
 export async function startToolhive(tray?: Tray): Promise<void> {
-  Sentry.withScope(async (scope) => {
+  Sentry.withScope<Promise<void>>(async (scope) => {
     if (!existsSync(binPath)) {
       log.error(`ToolHive binary not found at: ${binPath}`)
       return
