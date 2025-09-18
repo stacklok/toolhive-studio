@@ -1,50 +1,25 @@
-import type { ComponentProps } from 'react'
+import type { ComponentProps, JSX } from 'react'
 import { Package } from 'lucide-react'
-// Import only the needed Simple Icons to keep bundle size small
-// Each import is a JS object with { title, slug, hex, path, ... }
-import visualStudioCode from 'simple-icons/icons/visualstudiocode.js'
-import anthropic from 'simple-icons/icons/anthropic.js'
-import sourcegraph from 'simple-icons/icons/sourcegraph.js'
-import jetbrains from 'simple-icons/icons/jetbrains.js'
+import { SiAnthropic, SiJetbrains } from '@icons-pack/react-simple-icons'
 
 type Props = {
   name: string
 } & Pick<ComponentProps<'svg'>, 'className' | 'aria-hidden' | 'focusable'>
 
-type SimpleIcon = { title: string; path: string }
+type IconComponent = (p: ComponentProps<'svg'>) => JSX.Element
 
-// Map known client identifiers to Simple Icons data objects.
-const ICONS: Record<string, SimpleIcon> = {
-  // VS Code
-  vscode: visualStudioCode,
-  'vscode-insider': visualStudioCode,
+// Map known client identifiers to React Simple Icons components.
+const ICONS: Record<string, IconComponent> = {
   // Anthropic / Claude Code
-  'claude-code': anthropic,
-  // Sourcegraph Amp (map derivatives to Sourcegraph brand)
-  'amp-cli': sourcegraph,
-  'amp-cursor': sourcegraph,
-  'amp-windsurf': sourcegraph,
+  'claude-code': (p) => <SiAnthropic {...p} />,
   // JetBrains for windsorf plugin targeting JetBrains IDEs
-  'windsurf-jetbrains': jetbrains,
+  'windsurf-jetbrains': (p) => <SiJetbrains {...p} />,
 }
 
 export function BrandIcon({ name, className, ...rest }: Props) {
   const key = name.toLowerCase()
-  const icon = ICONS[key]
-  if (icon) {
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        role="img"
-        aria-label={icon.title}
-        className={className}
-        fill="currentColor"
-        {...rest}
-      >
-        <path d={icon.path} />
-      </svg>
-    )
-  }
+  const Icon = ICONS[key]
+  if (Icon) return <Icon className={className} aria-hidden {...rest} />
 
   // Fallback to a generic lucide package icon when no brand is available
   return <Package className={className} {...rest} />

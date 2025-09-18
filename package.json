@@ -136,11 +136,12 @@
     "lucide-react": "^0.544.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "@icons-pack/react-simple-icons": "^13.7.0",
     "react-hook-form": "7.62.0",
     "regexp.escape": "^2.0.1",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
-    "simple-icons": "^14.15.0",
+    
     "sonner": "^2.0.3",
     "streamdown": "^1.2.0",
     "tailwind-merge": "^3.3.0",

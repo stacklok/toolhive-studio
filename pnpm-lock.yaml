@@ -35,6 +35,9 @@ importers:
       '@fontsource/space-mono':
         specifier: ^5.2.7
         version: 5.2.8
+      '@icons-pack/react-simple-icons':
+        specifier: ^13.7.0
+        version: 13.7.0(react@19.1.1)
       '@modelcontextprotocol/sdk':
         specifier: ^1.17.2
         version: 1.17.5
@@ -155,9 +158,6 @@ importers:
       remark-math:
         specifier: ^6.0.0
         version: 6.0.0
-      simple-icons:
-        specifier: ^14.15.0
-        version: 14.15.0
       sonner:
         specifier: ^2.0.3
         version: 2.0.7(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -1035,6 +1035,11 @@ packages:
 
   '@iconify/utils@3.0.2':
     resolution: {integrity: sha512-EfJS0rLfVuRuJRn4psJHtK2A9TqVnkxPpHY6lYHiB9+8eSuudsxbwMiavocG45ujOo6FJ+CIRlRnlOGinzkaGQ==}
+
+  '@icons-pack/react-simple-icons@13.7.0':
+    resolution: {integrity: sha512-Vx5mnIm/3gD/9dpCfw/EdCXwzCswmvWnvMjL6zUJTbpk2PuyCdx5zSfiX8KQKYszD/1Z2mfaiBtqCxlHuDcpuA==}
+    peerDependencies:
+      react: ^16.13 || ^17 || ^18 || ^19
 
   '@img/sharp-darwin-arm64@0.33.5':
     resolution: {integrity: sha512-UT4p+iz/2H4twwAoLCqfA9UH5pI6DggwKEGuaPy7nCVQ8ZsiY5PIcrRvD1DzuY3qYL07NtIQcWnBSY/heikIFQ==}
@@ -6468,10 +6473,6 @@ packages:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
 
-  simple-icons@14.15.0:
-    resolution: {integrity: sha512-yjlJ8skP4isCd4dQTDGFbv0hQgDIr57DbWaovEeHADPAZa5DBEAs+3ZnBb76ti+yz7/OzFI3SqTP1SKku1uhCw==}
-    engines: {node: '>=0.12.18'}
-
   simple-swizzle@0.2.2:
     resolution: {integrity: sha512-JA//kQgZtbuY83m+xT+tXJkmJncGMTFT+C+g2h2R9uxkYIrE2yy9sgmcLhCnw57/WSD+Eh3J97FPEDFnbXnDUg==}
 
@@ -8292,6 +8293,10 @@ snapshots:
       mlly: 1.8.0
     transitivePeerDependencies:
       - supports-color
+
+  '@icons-pack/react-simple-icons@13.7.0(react@19.1.1)':
+    dependencies:
+      react: 19.1.1
 
   '@img/sharp-darwin-arm64@0.33.5':
     optionalDependencies:
@@ -14534,8 +14539,6 @@ snapshots:
   signal-exit@3.0.7: {}
 
   signal-exit@4.1.0: {}
-
-  simple-icons@14.15.0: {}
 
   simple-swizzle@0.2.2:
     dependencies:
