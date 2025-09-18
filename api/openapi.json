@@ -738,6 +738,10 @@
             "description": "Debug indicates whether debug mode is enabled",
             "type": "boolean"
           },
+          "env_file_dir": {
+            "description": "EnvFileDir is the directory path to load environment files from",
+            "type": "string"
+          },
           "env_vars": {
             "additionalProperties": { "type": "string" },
             "description": "EnvVars are the parsed environment variables as key-value pairs",
