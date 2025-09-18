@@ -291,7 +291,15 @@ const remoteMcpOauthConfigSchema = z.object({
     ),
 
   client_id: z.string().optional(),
-  client_secret: z.string().optional(),
+  client_secret: z
+    .object({
+      name: z.string(),
+      value: z.object({
+        secret: z.string(),
+        isFromStore: z.boolean(),
+      }),
+    })
+    .optional(),
   issuer: z.string().optional(),
   oauth_params: z.record(z.string(), z.string()).optional(),
   scopes: z.string().optional(),

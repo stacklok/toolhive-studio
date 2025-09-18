@@ -42,6 +42,13 @@ const OAUTH_VALIDATION_RULES = {
 const validateOAuthField = (value: string | undefined): boolean =>
   Boolean(value && value.trim() !== '')
 
+const validateClientSecretField = (
+  value:
+    | { name: string; value: { secret: string; isFromStore: boolean } }
+    | undefined
+): boolean =>
+  Boolean(value && value.value.secret && value.value.secret.trim() !== '')
+
 export const getFormSchemaRemoteMcp = (
   workloads: CoreWorkload[],
   editingServerName?: string
@@ -61,11 +68,23 @@ export const getFormSchemaRemoteMcp = (
         OAUTH_VALIDATION_RULES[auth_type as keyof typeof OAUTH_VALIDATION_RULES]
 
       validationRules?.forEach(({ field, message, path }) => {
-        const fieldValue = (oauth_config as Record<string, unknown>)[field] as
-          | string
-          | undefined
+        const fieldValue = (oauth_config as Record<string, unknown>)[field]
 
-        if (!validateOAuthField(fieldValue)) {
+        let isValid = false
+        if (field === 'client_secret') {
+          isValid = validateClientSecretField(
+            fieldValue as
+              | {
+                  name: string
+                  value: { secret: string; isFromStore: boolean }
+                }
+              | undefined
+          )
+        } else {
+          isValid = validateOAuthField(fieldValue as string | undefined)
+        }
+
+        if (!isValid) {
           ctx.addIssue({
             code: 'custom',
             message,
