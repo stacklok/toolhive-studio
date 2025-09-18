@@ -28,6 +28,7 @@ type Field = keyof FormSchemaRegistryMcp
 
 const FIELD_TAB_MAP = {
   name: 'configuration',
+  group: 'configuration',
   cmd_arguments: 'configuration',
   secrets: 'configuration',
   envVars: 'configuration',
@@ -99,6 +100,7 @@ export function FormRunFromRegistry({
     resolver: zodV4Resolver(formSchema),
     defaultValues: {
       name: server?.name || '',
+      group: 'default',
       cmd_arguments,
       volumes: [{ host: '', container: '', accessMode: 'rw' }],
       secrets: groupedEnvVars.secrets.map((s) => ({
@@ -136,10 +138,14 @@ export function FormRunFromRegistry({
       {
         server,
         data,
+        groupName: data.group,
       },
       {
         onSuccess: () => {
-          checkServerStatus({ serverName: data.name, groupName: 'default' })
+          checkServerStatus({
+            serverName: data.name,
+            groupName: data.group,
+          })
           onOpenChange(false)
           setActiveTab('configuration')
         },

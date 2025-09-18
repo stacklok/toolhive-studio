@@ -244,6 +244,9 @@ export const createRegistrySchema = (
   const volumesSchema = createVolumesSchema()
 
   return nameSchema
+    .extend({
+      group: z.string().min(1, 'Group is required'),
+    })
     .extend(secretsSchema.shape)
     .extend(envVarsSchema.shape)
     .extend(commandArgsSchema.shape)

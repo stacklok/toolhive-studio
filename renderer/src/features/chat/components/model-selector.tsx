@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Bot, Key, ChevronDown, Check, Search } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { Bot, ChevronDown, Check, Search } from 'lucide-react'
 import { Button } from '@/common/components/ui/button'
 import { Input } from '@/common/components/ui/input'
 import {
@@ -13,7 +13,6 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/common/components/ui/dropdown-menu'
-import { Badge } from '@/common/components/ui/badge'
 import { useAvailableModels } from '../hooks/use-available-models'
 import { getProviderIcon } from './provider-icons'
 import type { ChatSettings } from '../types'
@@ -32,24 +31,7 @@ export function ModelSelector({
 }: ModelSelectorProps) {
   const { providersWithApiKeys, isLoading } = useAvailableModels()
   const [searchQueries, setSearchQueries] = useState<Record<string, string>>({})
-
-  if (isLoading) {
-    return (
-      <Button variant="outline" disabled>
-        <Bot className="mr-2 h-4 w-4 animate-pulse" />
-        Loading models...
-      </Button>
-    )
-  }
-
-  if (providersWithApiKeys.length === 0) {
-    return (
-      <Button variant="outline" onClick={onOpenSettings}>
-        <Key className="mr-2 h-4 w-4" />
-        Add API Keys
-      </Button>
-    )
-  }
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const handleModelSelect = (providerId: string, modelId: string) => {
     onSettingsChange({
@@ -72,7 +54,11 @@ export function ModelSelector({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="h-10 justify-between">
+        <Button
+          variant="outline"
+          className="h-10 justify-between"
+          disabled={isLoading}
+        >
           <div className="flex items-center gap-2">
             <Bot className="h-4 w-4" />
             {settings.provider && settings.model ? (
@@ -104,15 +90,15 @@ export function ModelSelector({
                     {getProviderIcon(provider.id)}
                     <span>{provider.name}</span>
                   </div>
-                  <Badge variant="outline" className="text-xs">
-                    {searchQueries[provider.id]
-                      ? filteredModels.length
-                      : provider.models.length}
-                  </Badge>
                 </div>
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent
-                className="flex max-h-[500px] w-80 flex-col overflow-hidden"
+                className="flex max-h-[480px] w-auto max-w-100 flex-col
+                  overflow-hidden px-2"
+                onFocus={(e) => {
+                  e.preventDefault()
+                  inputRef.current?.focus()
+                }}
               >
                 <div className="flex-shrink-0">
                   <DropdownMenuLabel className="text-muted-foreground text-xs">
@@ -120,7 +106,6 @@ export function ModelSelector({
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
 
-                  {/* Search input for providers with many models */}
                   {hasSearch && (
                     <div className="bg-background border-b p-2">
                       <div className="relative">
@@ -129,14 +114,15 @@ export function ModelSelector({
                             left-2 h-4 w-4"
                         />
                         <Input
+                          ref={inputRef}
                           placeholder="Search models..."
                           value={searchQueries[provider.id] || ''}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setSearchQueries((prev) => ({
                               ...prev,
                               [provider.id]: e.target.value,
                             }))
-                          }
+                          }}
                           className="h-8 pl-8"
                           onClick={(e) => e.stopPropagation()}
                         />
@@ -161,7 +147,9 @@ export function ModelSelector({
                             justify-between"
                         >
                           <div className="flex items-center gap-2">
-                            {isSelected && <Check className="h-4 w-4" />}
+                            <div className="h-4 w-4">
+                              {isSelected && <Check className="h-4 w-4" />}
+                            </div>
                             <div className="flex flex-col">
                               <span className="font-mono text-sm">{model}</span>
                             </div>
@@ -178,7 +166,6 @@ export function ModelSelector({
                   )}
                 </div>
 
-                {/* Model count info for providers with search */}
                 {hasSearch && (
                   <div className="bg-background flex-shrink-0 border-t p-2">
                     <p className="text-muted-foreground text-center text-xs">

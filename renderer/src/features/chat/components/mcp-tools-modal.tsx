@@ -292,7 +292,7 @@ export function McpToolsModal({
             disabled={saveToolsMutation.isPending || !serverTools?.isRunning}
             className={cn(saveToolsMutation.isPending && 'opacity-50')}
           >
-            {saveToolsMutation.isPending ? 'Saving...' : 'Save Changes'}
+            {saveToolsMutation.isPending ? 'Saving...' : 'Save'}
           </Button>
         </DialogFooter>
       </DialogContent>
