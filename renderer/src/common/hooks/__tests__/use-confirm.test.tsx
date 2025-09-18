@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { useConfirm } from '../use-confirm'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
 import { type ReactNode, useState } from 'react'
-import { type ConfirmConfig } from '@/common/contexts/confirm'
+import { type ConfirmConfig } from '@/common/confirm'
 
 const createTestComponent = (
   message: ReactNode,

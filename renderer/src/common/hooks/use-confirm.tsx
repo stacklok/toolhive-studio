@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react'
 import { usePrompt } from '@/common/hooks/use-prompt'
 import { Checkbox } from '@/common/components/ui/checkbox'
-import { type ConfirmConfig } from '@/common/contexts/confirm'
+import { type ConfirmConfig } from '@/common/confirm'
 import { z } from 'zod/v4'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 
