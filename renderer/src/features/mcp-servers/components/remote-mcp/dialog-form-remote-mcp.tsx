@@ -16,10 +16,6 @@ import {
   SelectContent,
   SelectItem,
 } from '@/common/components/ui/select'
-import {
-  getFormSchemaRemoteMcp,
-  type FormSchemaRemoteMcp,
-} from '../../lib/form-schema-remote-mcp'
 import { FormFieldsArrayCustomSecrets } from '../form-fields-array-custom-secrets'
 import { FormFieldsArrayCustomEnvVars } from '../form-fields-array-custom-env-vars'
 import { FormFieldsAuth } from './form-fields-auth'
@@ -38,6 +34,10 @@ import { LoadingStateAlert } from '@/common/components/secrets/loading-state-ale
 import { AlertErrorFormSubmission } from '@/common/components/workloads/alert-error-form-submission'
 import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-workload-form-wrapper'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
+import {
+  getFormSchemaRemoteMcp,
+  type FormSchemaRemoteMcp,
+} from '@/common/lib/workloads/remote/form-schema-remote-mcp'
 
 const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
   name: '',
@@ -46,7 +46,7 @@ const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
   oauth_config: {
     authorize_url: '',
     client_id: '',
-    client_secret: '',
+    client_secret: undefined,
     issuer: '',
     oauth_params: {},
     scopes: '',

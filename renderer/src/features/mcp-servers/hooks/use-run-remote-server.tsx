@@ -1,6 +1,6 @@
 import { postApiV1BetaWorkloadsMutation } from '@api/@tanstack/react-query.gen'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { FormSchemaRemoteMcp } from '../lib/form-schema-remote-mcp'
+import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
 import { prepareCreateWorkloadData } from '../lib/orchestrate-run-remote-server'
 import {
   type PostApiV1BetaSecretsDefaultKeysData,
@@ -36,9 +36,15 @@ export function useRunRemoteServer({
 
   const { mutate: installServerMutation } = useMutation({
     mutationFn: async ({ data }: { data: FormSchemaRemoteMcp }) => {
-      const { newlyCreatedSecrets, existingSecrets } = await handleSecrets(
-        data.secrets
-      )
+      const isDefaultAuthType = data.auth_type === 'none'
+      const secrets = isDefaultAuthType
+        ? data.secrets
+        : data.oauth_config.client_secret
+          ? [data.oauth_config.client_secret]
+          : []
+
+      const { newlyCreatedSecrets, existingSecrets } =
+        await handleSecrets(secrets)
       // Create the MCP server workload
       // Prepare the request data and send it to the API
       // We pass the encrypted secrets along with the request.
@@ -51,10 +57,12 @@ export function useRunRemoteServer({
       ]
 
       const createRequest: V1CreateRequest = {
-        ...prepareCreateWorkloadData(data, secretsForRequest),
+        ...prepareCreateWorkloadData(
+          data,
+          isDefaultAuthType ? secretsForRequest : []
+        ),
         ...(groupName ? { group: groupName } : {}),
       }
-
       await createWorkload({
         body: createRequest,
       })

@@ -14,8 +14,10 @@ import {
   SelectContent,
   SelectItem,
 } from '@/common/components/ui/select'
-import { type FormSchemaRemoteMcp } from '../../lib/form-schema-remote-mcp'
 import { type UseFormReturn } from 'react-hook-form'
+import { SecretStoreCombobox } from '@/common/components/secrets/secret-store-combobox'
+import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
+import { cn } from '@/common/lib/utils'
 
 function ClientAuthFields({
   form,
@@ -59,30 +61,90 @@ function ClientAuthFields({
       <FormField
         control={form.control}
         name="oauth_config.client_secret"
-        render={({ field }) => (
-          <FormItem>
-            <div className="flex items-center gap-1">
-              <FormLabel>Client Secret</FormLabel>
-              <TooltipInfoIcon>
-                The client secret key that proves your application's identity.
-              </TooltipInfoIcon>
-            </div>
-            <FormControl>
-              <Input
-                autoCorrect="off"
-                autoComplete="off"
-                type="password"
-                autoFocus
-                data-1p-ignore
-                placeholder="e.g. secret"
-                value={field.value}
-                onChange={(e) => field.onChange(e.target.value)}
-                name={field.name}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
+        render={({ field }) => {
+          const currentValue =
+            field.value &&
+            typeof field.value === 'object' &&
+            field.value !== null
+              ? field.value
+              : {
+                  name: 'CLIENT_SECRET',
+                  value: { secret: '', isFromStore: false },
+                }
+
+          return (
+            <FormItem>
+              <div className="flex items-center gap-1">
+                <FormLabel>Client Secret</FormLabel>
+                <TooltipInfoIcon>
+                  The client secret key that proves your application's identity.
+                </TooltipInfoIcon>
+              </div>
+              <p className="text-muted-foreground mb-6 text-sm">
+                All secrets are encrypted and securely stored by ToolHive.
+              </p>
+              <FormControl>
+                <div
+                  className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]
+                    gap-2"
+                >
+                  <div>
+                    <FormLabel
+                      required={true}
+                      htmlFor={`oauth_config.client_secret.value`}
+                      className={cn(
+                        `text-muted-foreground !border-input h-full items-center
+                        font-mono !ring-0`
+                      )}
+                    >
+                      CLIENT_SECRET
+                      <TooltipInfoIcon className="m-w-90">
+                        The client secret key that proves your application's
+                        identity.
+                      </TooltipInfoIcon>
+                    </FormLabel>
+                  </div>
+                  <div
+                    className="grid grid-cols-[auto_calc(var(--spacing)_*_9)]"
+                  >
+                    <Input
+                      autoCorrect="off"
+                      autoComplete="off"
+                      type="password"
+                      data-1p-ignore
+                      className="rounded-tr-none rounded-br-none border-r-0
+                        font-mono focus-visible:z-10"
+                      placeholder="e.g. secret_123_ABC_789_XYZ"
+                      value={currentValue?.value?.secret || ''}
+                      onChange={(e) =>
+                        field.onChange({
+                          ...currentValue,
+                          value: {
+                            secret: e.target.value,
+                            isFromStore: false,
+                          },
+                        })
+                      }
+                    />
+                    <SecretStoreCombobox
+                      value={currentValue?.value?.secret}
+                      onChange={(secretKey) =>
+                        field.onChange({
+                          ...currentValue,
+                          value: {
+                            secret: secretKey,
+                            isFromStore: true,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )
+        }}
       />
     </>
   )

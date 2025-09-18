@@ -2,11 +2,11 @@ import { postApiV1BetaWorkloadsByNameEditMutation } from '@api/@tanstack/react-q
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { type PostApiV1BetaSecretsDefaultKeysData } from '@api/types.gen'
 import type { Options } from '@api/client'
-import type { FormSchemaRemoteMcp } from '../lib/form-schema-remote-mcp'
 import { restartClientNotification } from '../lib/restart-client-notification'
 import { trackEvent } from '@/common/lib/analytics'
 import { prepareUpdateWorkloadData } from '../lib/orchestrate-run-remote-server'
 import { useMCPSecrets } from '@/common/hooks/use-mcp-secrets'
+import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
 
 export function useUpdateServer(
   serverName: string,
@@ -30,9 +30,15 @@ export function useUpdateServer(
 
   const { mutate: updateServerMutation } = useMutation({
     mutationFn: async ({ data }: { data: FormSchemaRemoteMcp }) => {
-      const { newlyCreatedSecrets, existingSecrets } = await handleSecrets(
-        data.secrets
-      )
+      const isDefaultAuthType = data.auth_type === 'none'
+      const secrets = isDefaultAuthType
+        ? data.secrets
+        : data.oauth_config.client_secret
+          ? [data.oauth_config.client_secret]
+          : []
+
+      const { newlyCreatedSecrets, existingSecrets } =
+        await handleSecrets(secrets)
 
       // Update the workload with all secrets
       const allSecrets = [
@@ -42,7 +48,10 @@ export function useUpdateServer(
           target: secret.name,
         })),
       ]
-      const updateRequest = prepareUpdateWorkloadData(data, allSecrets)
+      const updateRequest = prepareUpdateWorkloadData(
+        data,
+        isDefaultAuthType ? allSecrets : []
+      )
 
       await updateWorkload({
         path: { name: serverName },
