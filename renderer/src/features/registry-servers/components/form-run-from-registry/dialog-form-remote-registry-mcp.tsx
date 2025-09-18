@@ -101,7 +101,7 @@ export function DialogFormRemoteRegistryMcp<
       oauth_config: {
         authorize_url: '',
         client_id: '',
-        client_secret: '',
+        client_secret: undefined,
         issuer: '',
         oauth_params: {},
         scopes: '',
@@ -150,6 +150,7 @@ export function DialogFormRemoteRegistryMcp<
   }
 
   if (!server) return null
+
   const authType = form.watch('auth_type')
   const isLoading = isSubmitting
 

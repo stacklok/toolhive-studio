@@ -97,7 +97,7 @@ export function convertCreateRequestToFormData(
       authorize_url: createRequest.oauth_config?.authorize_url,
       callback_port: createRequest.oauth_config?.callback_port,
       client_id: createRequest.oauth_config?.client_id,
-      client_secret: '',
+      client_secret: undefined,
       issuer: createRequest.oauth_config?.issuer,
       oauth_params: createRequest.oauth_config?.oauth_params,
       scopes: Array.isArray(createRequest.oauth_config?.scopes)
