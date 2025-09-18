@@ -69,10 +69,15 @@ export function FormDialog({
           </ScrollArea>
 
           <DialogFooter>
-            <Button variant="secondary" onClick={handleCancel} type="button">
+            <Button
+              variant={config.buttons?.cancelVariant ?? 'secondary'}
+              onClick={handleCancel}
+              type="button"
+            >
               {config.buttons?.cancel ?? 'Cancel'}
             </Button>
             <Button
+              variant={config.buttons?.confirmVariant ?? 'default'}
               type="submit"
               disabled={form.formState.isSubmitting || !form.formState.isValid}
             >

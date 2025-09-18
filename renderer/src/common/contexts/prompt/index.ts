@@ -1,5 +1,7 @@
 import { createContext, type ReactNode } from 'react'
 import type { UseFormReturn, FieldValues, Resolver } from 'react-hook-form'
+import type { VariantProps } from 'class-variance-authority'
+import type { buttonVariants } from '@/common/components/ui/button'
 
 export type ReactHookFormPromptConfig<TValues extends FieldValues> = {
   title?: string
@@ -10,6 +12,8 @@ export type ReactHookFormPromptConfig<TValues extends FieldValues> = {
   buttons?: {
     confirm?: string
     cancel?: string
+    confirmVariant?: VariantProps<typeof buttonVariants>['variant']
+    cancelVariant?: VariantProps<typeof buttonVariants>['variant']
   }
 }
 
