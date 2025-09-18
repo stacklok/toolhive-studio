@@ -9,6 +9,7 @@ import {
 import { Button } from '@/common/components/ui/button'
 import { ScrollArea } from '@/common/components/ui/scroll-area'
 import type { ReactHookFormPromptConfig } from '.'
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import type { UseFormReturn } from 'react-hook-form'
 
@@ -32,6 +33,15 @@ export function FormDialog({
     resolver: config.resolver,
     mode: 'onChange',
   })
+
+  // Ensure initial validity reflects provided defaults/resolver.
+  // react-hook-form initializes `formState.isValid` as false until validation runs.
+  // Trigger once on mount so the submit button state matches current defaults
+  // (and simple resolvers that always resolve) without requiring user input.
+  useEffect(() => {
+    void form.trigger()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
@@ -79,11 +89,7 @@ export function FormDialog({
             <Button
               variant={config.buttons?.confirmVariant ?? 'default'}
               type="submit"
-              disabled={
-                form.formState.isSubmitting ||
-                (config.disableSubmitUntilValid !== false &&
-                  !form.formState.isValid)
-              }
+              disabled={form.formState.isSubmitting || !form.formState.isValid}
             >
               {config.buttons?.confirm ?? 'OK'}
             </Button>

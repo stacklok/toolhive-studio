@@ -9,7 +9,6 @@ export type ReactHookFormPromptConfig<TValues extends FieldValues> = {
   defaultValues: TValues
   resolver?: Resolver<TValues>
   fields: (form: UseFormReturn<TValues>) => ReactNode
-  disableSubmitUntilValid?: boolean
   buttons?: {
     confirm?: string
     cancel?: string
