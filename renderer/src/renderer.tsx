@@ -15,7 +15,6 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import log from 'electron-log/renderer'
 
 import './index.css'
-import { ConfirmProvider } from './common/contexts/confirm/provider'
 import { PromptProvider } from './common/contexts/prompt/provider'
 import { trackPageView } from './common/lib/analytics'
 import { queryClient } from './common/lib/query-client'
@@ -103,16 +102,14 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
   root.render(
     <StrictMode>
       <ThemeProvider defaultTheme="system" storageKey="toolhive-ui-theme">
-        <ConfirmProvider>
-          <PromptProvider>
-            <QueryClientProvider client={queryClient}>
-              <TooltipProvider delayDuration={0}>
-                <RouterProvider router={router} />
-              </TooltipProvider>
-              <ReactQueryDevtools initialIsOpen={false} />
-            </QueryClientProvider>
-          </PromptProvider>
-        </ConfirmProvider>
+        <PromptProvider>
+          <QueryClientProvider client={queryClient}>
+            <TooltipProvider delayDuration={0}>
+              <RouterProvider router={router} />
+            </TooltipProvider>
+            <ReactQueryDevtools initialIsOpen={false} />
+          </QueryClientProvider>
+        </PromptProvider>
       </ThemeProvider>
     </StrictMode>
   )

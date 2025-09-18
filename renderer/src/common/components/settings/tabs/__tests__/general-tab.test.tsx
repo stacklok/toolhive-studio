@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { GeneralTab } from '../general-tab'
-import { ConfirmProvider } from '@/common/contexts/confirm/provider'
+import { PromptProvider } from '@/common/contexts/prompt/provider'
 import {
   useAutoLaunchStatus,
   useSetAutoLaunch,
@@ -41,11 +41,11 @@ const renderWithProviders = (component: React.ReactElement) => {
   })
 
   return render(
-    <ConfirmProvider>
+    <PromptProvider>
       <QueryClientProvider client={queryClient}>
         {component}
       </QueryClientProvider>
-    </ConfirmProvider>
+    </PromptProvider>
   )
 }
 

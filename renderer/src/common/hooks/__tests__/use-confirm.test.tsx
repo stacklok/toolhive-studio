@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useConfirm } from '../use-confirm'
-import { ConfirmProvider } from '@/common/contexts/confirm/provider'
+import { PromptProvider } from '@/common/contexts/prompt/provider'
 import { type ReactNode, useState } from 'react'
 import { type ConfirmConfig } from '@/common/contexts/confirm'
 
@@ -38,9 +38,9 @@ describe('useConfirm', () => {
     })
 
     render(
-      <ConfirmProvider>
+      <PromptProvider>
         <TestComponent />
-      </ConfirmProvider>
+      </PromptProvider>
     )
 
     await userEvent.click(
@@ -67,9 +67,9 @@ describe('useConfirm', () => {
     )
 
     render(
-      <ConfirmProvider>
+      <PromptProvider>
         <TestComponent />
-      </ConfirmProvider>
+      </PromptProvider>
     )
 
     await userEvent.click(
@@ -103,9 +103,9 @@ describe('useConfirm', () => {
     })
 
     render(
-      <ConfirmProvider>
+      <PromptProvider>
         <TestComponent />
-      </ConfirmProvider>
+      </PromptProvider>
     )
 
     await userEvent.click(
@@ -136,9 +136,9 @@ describe('useConfirm', () => {
     })
 
     render(
-      <ConfirmProvider>
+      <PromptProvider>
         <TestComponent />
-      </ConfirmProvider>
+      </PromptProvider>
     )
 
     await userEvent.click(
@@ -167,9 +167,9 @@ describe('useConfirm', () => {
     })
 
     render(
-      <ConfirmProvider>
+      <PromptProvider>
         <TestComponent />
-      </ConfirmProvider>
+      </PromptProvider>
     )
 
     await userEvent.click(
@@ -207,9 +207,9 @@ describe('useConfirm', () => {
     })
 
     render(
-      <ConfirmProvider>
+      <PromptProvider>
         <TestComponent />
-      </ConfirmProvider>
+      </PromptProvider>
     )
 
     await userEvent.click(
@@ -237,9 +237,9 @@ describe('useConfirm', () => {
     })
 
     render(
-      <ConfirmProvider>
+      <PromptProvider>
         <TestComponent />
-      </ConfirmProvider>
+      </PromptProvider>
     )
 
     await userEvent.click(
@@ -272,9 +272,9 @@ describe('useConfirm', () => {
     })
 
     render(
-      <ConfirmProvider>
+      <PromptProvider>
         <TestComponent />
-      </ConfirmProvider>
+      </PromptProvider>
     )
 
     await userEvent.click(
