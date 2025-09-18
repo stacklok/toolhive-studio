@@ -94,6 +94,7 @@ export function CardMcpServer({
   url,
   remote,
   transport,
+  isInDisabledGroup,
 }: {
   name: string
   status: CoreWorkload['status']
@@ -101,6 +102,7 @@ export function CardMcpServer({
   remote?: CoreWorkload['remote']
   url: string
   transport: CoreWorkload['transport_type']
+  isInDisabledGroup?: boolean
 }) {
   const isRemoteMcpEnabled = useFeatureFlag(featureFlagKeys.REMOTE_MCP)
   const nameRef = useRef<HTMLElement | null>(null)
@@ -152,6 +154,7 @@ export function CardMcpServer({
         'transition-all duration-300 ease-in-out',
         isNewServer ? 'ring-2' : undefined,
         isDeleting ? 'pointer-events-none opacity-50' : undefined,
+        isInDisabledGroup ? 'opacity-50 grayscale' : undefined,
         (isTransitioning || hadRecentStatusChange) && 'animate-diagonal-ring',
         isStopped && 'bg-card/65'
       )}

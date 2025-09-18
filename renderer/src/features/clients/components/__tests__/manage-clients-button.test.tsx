@@ -9,8 +9,6 @@ import { http, HttpResponse } from 'msw'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
 
-// Use the shared request recorder from mocks/node.ts for consistency
-
 describe('ManageClientsButton – BDD flows', () => {
   let queryClient: QueryClient
 
@@ -88,18 +86,15 @@ describe('ManageClientsButton – BDD flows', () => {
         body: { name: 'cursor', groups: ['default'] },
       },
     ])
-    // no-op: global recorder persists; we reset via recordRequests() per test
   })
 
   it('enables a single client when none are enabled (clients API returns null)', async () => {
-    // Given: no clients are registered in the group
     server.use(
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({
           groups: [{ name: 'default', registered_clients: [] }],
         })
       ),
-      // Simulate backend returning null for current clients list
       http.get(mswEndpoint('/api/v1beta/clients'), () =>
         HttpResponse.json(null)
       )
@@ -107,7 +102,6 @@ describe('ManageClientsButton – BDD flows', () => {
 
     const rec = recordRequests()
 
-    // When: the user enables only VS Code and saves
     const user = userEvent.setup()
     renderWithProviders({ groupName: 'default' })
     await user.click(
@@ -116,7 +110,6 @@ describe('ManageClientsButton – BDD flows', () => {
     await user.click(await screen.findByRole('switch', { name: 'vscode' }))
     await user.click(await screen.findByRole('button', { name: /save/i }))
 
-    // Then: exactly one POST registration should be sent
     await waitFor(() =>
       expect(
         rec.recordedRequests.filter(
