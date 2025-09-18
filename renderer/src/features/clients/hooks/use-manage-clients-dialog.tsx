@@ -6,7 +6,6 @@ import { z } from 'zod/v4'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { useManageClients } from './use-manage-clients'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
-import type { ReactNode } from 'react'
 
 export function useManageClientsDialog(groupName: string) {
   const promptForm = usePrompt()
@@ -25,7 +24,7 @@ export function useManageClientsDialog(groupName: string) {
   })
 
   const openDialog = async (opts?: {
-    title?: ReactNode
+    title?: string
     confirmText?: string
   }) => {
     const formSchema = z.object(
