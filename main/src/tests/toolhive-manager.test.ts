@@ -30,6 +30,12 @@ vi.mock('../system-tray')
 vi.mock('../logger')
 vi.mock('@sentry/electron/main', () => ({
   captureMessage: vi.fn(),
+  withScope: vi.fn((callback) => {
+    const mockScope = {
+      addBreadcrumb: vi.fn(),
+    }
+    callback(mockScope)
+  }),
 }))
 
 const mockSpawn = vi.mocked(spawn)
@@ -201,7 +207,7 @@ describe('toolhive-manager', () => {
       )
       expect(mockCaptureMessage).toHaveBeenCalledWith(
         `Failed to start ToolHive: ${JSON.stringify(testError)}`,
-        'error'
+        'fatal'
       )
       expect(mockUpdateTrayStatus).toHaveBeenCalledWith(mockTray, false)
     })
