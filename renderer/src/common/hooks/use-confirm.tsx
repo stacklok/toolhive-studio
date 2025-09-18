@@ -29,6 +29,7 @@ export function useConfirm() {
       description: config.description,
       defaultValues: { doNotShowAgain: false },
       resolver: zodV4Resolver(formSchema),
+      disableSubmitUntilValid: false,
       fields: (form) => (
         <div className="space-y-4">
           <div className="py-2">{message}</div>

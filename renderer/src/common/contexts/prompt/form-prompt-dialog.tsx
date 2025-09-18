@@ -79,7 +79,11 @@ export function FormDialog({
             <Button
               variant={config.buttons?.confirmVariant ?? 'default'}
               type="submit"
-              disabled={form.formState.isSubmitting || !form.formState.isValid}
+              disabled={
+                form.formState.isSubmitting ||
+                (config.disableSubmitUntilValid !== false &&
+                  !form.formState.isValid)
+              }
             >
               {config.buttons?.confirm ?? 'OK'}
             </Button>
