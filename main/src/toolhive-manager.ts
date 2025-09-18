@@ -150,13 +150,16 @@ export async function startToolhive(tray?: Tray): Promise<void> {
       log.info(`[ToolHive] Capturing stderr enabled`)
       toolhiveProcess.stderr.on('data', (data) => {
         const output = data.toString().trim()
-        if (output) {
-          scope.addBreadcrumb({
-            category: 'debug',
-            message: `[ToolHive stderr] ${output}`,
-            level: 'log',
-          })
+        if (!output) return
+        if (output.includes('A new version of ToolHive is available')) {
+          return
         }
+        log.error(`[ToolHive stderr] ${output}`)
+        scope.addBreadcrumb({
+          category: 'debug',
+          message: `[ToolHive stderr] ${output}`,
+          level: 'log',
+        })
       })
     }
 

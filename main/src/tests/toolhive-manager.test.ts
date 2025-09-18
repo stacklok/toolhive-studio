@@ -238,10 +238,10 @@ describe('toolhive-manager', () => {
 
       const startPromise = startToolhive(mockTray)
 
+      // Advancing the timer actually allows the promise to resolve
       await vi.advanceTimersByTimeAsync(50)
       await startPromise
 
-      // Clear previous calls
       mockCaptureMessage.mockClear()
 
       mockProcess.emit('exit', 1)
@@ -260,7 +260,6 @@ describe('toolhive-manager', () => {
       await vi.advanceTimersByTimeAsync(50)
       await startPromise
 
-      // Clear previous calls
       mockCaptureMessage.mockClear()
 
       mockProcess.emit('exit', 0)
@@ -276,7 +275,6 @@ describe('toolhive-manager', () => {
       await vi.advanceTimersByTimeAsync(50)
       await startPromise
 
-      // Clear previous calls
       mockCaptureMessage.mockClear()
 
       // Create a new mock process for the restart
