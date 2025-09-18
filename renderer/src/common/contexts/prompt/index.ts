@@ -9,6 +9,7 @@ export type ReactHookFormPromptConfig<TValues extends FieldValues> = {
   defaultValues: TValues
   resolver?: Resolver<TValues>
   fields: (form: UseFormReturn<TValues>) => ReactNode
+  validateOnMount?: boolean
   buttons?: {
     confirm?: string
     cancel?: string

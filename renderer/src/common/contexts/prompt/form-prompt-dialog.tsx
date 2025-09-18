@@ -34,14 +34,12 @@ export function FormDialog({
     mode: 'onChange',
   })
 
-  // Ensure initial validity reflects provided defaults/resolver.
-  // react-hook-form initializes `formState.isValid` as false until validation runs.
-  // Trigger once on mount so the submit button state matches current defaults
-  // (and simple resolvers that always resolve) without requiring user input.
+  // Optional: validate on mount when the caller needs initial isValid
+  // to reflect defaults (e.g., confirm dialogs that should be enabled).
+  // Defaults to false to avoid showing validation errors before user input.
   useEffect(() => {
-    void form.trigger()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    if (config.validateOnMount) void form.trigger()
+  }, [form, config.validateOnMount])
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
