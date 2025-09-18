@@ -2,13 +2,7 @@ import { LinkViewTransition } from '@/common/components/link-view-transition'
 import { Button } from '@/common/components/ui/button'
 import { Separator } from '@/common/components/ui/separator'
 import { createFileRoute, Link, useParams } from '@tanstack/react-router'
-import {
-  ChevronLeft,
-  ExternalLink,
-  GithubIcon,
-  ShieldCheck,
-  Wrench,
-} from 'lucide-react'
+import { ChevronLeft, GithubIcon, ShieldCheck, Wrench } from 'lucide-react'
 import { getApiV1BetaRegistryByNameServersByServerNameOptions } from '@api/@tanstack/react-query.gen'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { Stars } from '@/features/registry-servers/components/stars'
@@ -67,10 +61,6 @@ export function RegistryServerDetail() {
     RegistryImageMetadata | RegistryRemoteServerMetadata | null
   >(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const homepageUrl: string | undefined =
-    typeof server?.custom_metadata?.homepage === 'string'
-      ? server?.custom_metadata?.homepage
-      : undefined
 
   if (!server) return null
 
@@ -176,15 +166,6 @@ export function RegistryServerDetail() {
             <Button variant="outline">
               <GithubIcon className="size-4" />
               GitHub
-            </Button>
-          </Link>
-        )}
-
-        {homepageUrl && (
-          <Link to={homepageUrl as string} target="_blank">
-            <Button variant="outline">
-              <ExternalLink className="size-4" />
-              MCP Server details
             </Button>
           </Link>
         )}
