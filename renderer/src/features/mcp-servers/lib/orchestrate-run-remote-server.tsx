@@ -37,7 +37,7 @@ export function prepareCreateWorkloadData(
     : oauthConfig
 
   const request = {
-    ...rest,
+    ...omit(rest, 'auth_type'),
     oauth_config: transformedOAuthConfig,
     env_vars: mapEnvVars(envVars),
     secrets,
