@@ -25,7 +25,7 @@ import {
 } from '@/common/components/ui/tooltip'
 import { FormRunFromRegistry } from '@/features/registry-servers/components/form-run-from-registry'
 import { trackEvent } from '@/common/lib/analytics'
-import { DialogFormRemoteRegistryMcp } from '@/features/registry-servers/components/form-run-from-registry/dialog-form-remote-registry-mcp'
+import { DialogFormRemoteRegistryMcp } from '@/features/registry-servers/components/dialog-form-remote-registry-mcp'
 
 const statusMap = {
   deprecated: 'Deprecated',
@@ -191,7 +191,7 @@ export function RegistryServerDetail() {
       </div>
 
       {isRemoteServer ? (
-        <DialogFormRemoteRegistryMcp<RegistryRemoteServerMetadata>
+        <DialogFormRemoteRegistryMcp
           key={selectedServer?.name}
           server={selectedServer}
           isOpen={isModalOpen}

@@ -10,7 +10,7 @@ import type { Options } from '@api/client'
 import { prepareSecretsWithoutNamingCollision } from '@/common/lib/secrets/prepare-secrets-without-naming-collision'
 import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
 import type { FormSchemaLocalMcp } from '@/features/mcp-servers/lib/form-schema-local-mcp'
-import type { FormSchemaRemoteMcp } from '@/features/mcp-servers/lib/form-schema-remote-mcp'
+import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
 import type { FormSchemaRegistryMcp } from '@/features/registry-servers/lib/form-schema-registry-mcp'
 import type { UseMutateAsyncFunction } from '@tanstack/react-query'
 

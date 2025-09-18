@@ -326,7 +326,7 @@ describe('DialogFormRemoteMcp', () => {
               authorize_url: '',
               callback_port: 8888,
               client_id: '',
-              client_secret: '',
+              client_secret: undefined,
               issuer: '',
               oauth_params: {},
               scopes: '',
