@@ -4,6 +4,7 @@ import { Label } from '@/common/components/ui/label'
 import { Button } from '@/common/components/ui/button'
 import { Switch } from '@/common/components/ui/switch'
 import { Code } from 'lucide-react'
+import BrandIcon from '@/common/components/brand-icon'
 import { z } from 'zod/v4'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { useManageClients } from '../hooks/use-manage-clients'
@@ -12,12 +13,12 @@ import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 interface ManageClientsButtonProps {
   groupName: string
   variant?:
-    | 'default'
-    | 'outline'
-    | 'secondary'
-    | 'ghost'
-    | 'link'
-    | 'destructive'
+  | 'default'
+  | 'outline'
+  | 'secondary'
+  | 'ghost'
+  | 'link'
+  | 'destructive'
   className?: string
 }
 
@@ -67,7 +68,7 @@ export function ManageClientsButton({
             return (
               <div
                 key={client.client_type}
-                className="flex items-start gap-2 border-b p-4 align-middle last:border-b-0"
+                className="flex items-center gap-3 border-b p-4 last:border-b-0"
               >
                 <Switch
                   id={fieldName}
@@ -78,9 +79,12 @@ export function ManageClientsButton({
                   }}
                 />
 
-                <Label htmlFor={fieldName} className="text-sm font-medium">
-                  {displayName}
-                </Label>
+                <div className="flex items-center gap-2">
+                  <BrandIcon name={displayName} className="size-3" />
+                  <Label htmlFor={fieldName} className="text-sm font-medium">
+                    {displayName}
+                  </Label>
+                </div>
               </div>
             )
           })}
