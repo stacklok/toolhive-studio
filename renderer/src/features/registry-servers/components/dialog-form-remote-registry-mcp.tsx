@@ -1,3 +1,21 @@
+import { useMemo, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { useQuery } from '@tanstack/react-query'
+import log from 'electron-log/renderer'
+import type { RegistryRemoteServerMetadata } from '@api/types.gen'
+import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
+import { groupEnvVars } from '../lib/group-env-vars'
+import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
+import { LoadingStateAlert } from '../../../common/components/secrets/loading-state-alert'
+import { AlertErrorFormSubmission } from '@/common/components/workloads/alert-error-form-submission'
+import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-workload-form-wrapper'
+import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
+import {
+  getFormSchemaRemoteMcp,
+  type FormSchemaRemoteMcp,
+} from '@/common/lib/workloads/remote/form-schema-remote-mcp'
+import { convertCreateRequestToFormData } from '../lib/orchestrate-run-remote-registry-server'
+import { useRunRemoteServer } from '@/features/mcp-servers/hooks/use-run-remote-server'
 import {
   FormField,
   FormItem,
@@ -7,8 +25,9 @@ import {
 } from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
 import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
-import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
-import { useForm } from 'react-hook-form'
+import { FormFieldsArrayCustomEnvVars } from '@/features/mcp-servers/components/form-fields-array-custom-env-vars'
+import { FormFieldsArrayCustomSecrets } from '@/features/mcp-servers/components/form-fields-array-custom-secrets'
+import { FormFieldsAuth } from '@/features/mcp-servers/components/remote-mcp/form-fields-auth'
 import {
   Select,
   SelectTrigger,
@@ -16,29 +35,6 @@ import {
   SelectContent,
   SelectItem,
 } from '@/common/components/ui/select'
-import { FormFieldsArrayCustomSecrets } from '../form-fields-array-custom-secrets'
-import { FormFieldsArrayCustomEnvVars } from '../form-fields-array-custom-env-vars'
-import { FormFieldsAuth } from './form-fields-auth'
-import { useRunRemoteServer } from '../../hooks/use-run-remote-server'
-import log from 'electron-log/renderer'
-import { useState } from 'react'
-import { useUpdateServer } from '../../hooks/use-update-remote-server'
-import {
-  getApiV1BetaSecretsDefaultKeysOptions,
-  getApiV1BetaWorkloadsByNameOptions,
-  getApiV1BetaWorkloadsOptions,
-} from '@api/@tanstack/react-query.gen'
-import { useQuery } from '@tanstack/react-query'
-import { convertCreateRequestToFormData } from '../../lib/orchestrate-run-remote-server'
-import { LoadingStateAlert } from '@/common/components/secrets/loading-state-alert'
-import { AlertErrorFormSubmission } from '@/common/components/workloads/alert-error-form-submission'
-import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-workload-form-wrapper'
-import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
-import {
-  getFormSchemaRemoteMcp,
-  type FormSchemaRemoteMcp,
-} from '@/common/lib/workloads/remote/form-schema-remote-mcp'
-import { ExternalLinkIcon } from 'lucide-react'
 
 const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
   name: '',
@@ -60,17 +56,17 @@ const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
   url: '',
 }
 
-export function DialogFormRemoteMcp({
-  closeDialog,
-  isOpen,
-  serverToEdit,
-  groupName,
-}: {
-  closeDialog: () => void
-  serverToEdit?: string | null
+interface FormRunFromRegistryProps {
+  server: RegistryRemoteServerMetadata | null
   isOpen: boolean
-  groupName: string
-}) {
+  closeDialog: () => void
+}
+
+export function DialogFormRemoteRegistryMcp({
+  server,
+  isOpen,
+  closeDialog,
+}: FormRunFromRegistryProps) {
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [loadingSecrets, setLoadingSecrets] = useState<{
@@ -78,8 +74,11 @@ export function DialogFormRemoteMcp({
     completedCount: number
     secretsCount: number
   } | null>(null)
+  const groupedEnvVars = useMemo(
+    () => groupEnvVars(server?.env_vars || []),
+    [server?.env_vars]
+  )
   const { checkServerStatus } = useCheckServerStatus()
-
   const handleSecrets = (completedCount: number, secretsCount: number) => {
     setLoadingSecrets((prev) => ({
       ...prev,
@@ -91,105 +90,70 @@ export function DialogFormRemoteMcp({
 
   const { installServerMutation, isErrorSecrets, isPendingSecrets } =
     useRunRemoteServer({
+      groupName: 'default',
       onSecretSuccess: handleSecrets,
       onSecretError: (error, variables) => {
         log.error('onSecretError', error, variables)
       },
-      groupName,
     })
-
-  const { updateServerMutation } = useUpdateServer(serverToEdit || '', {
-    onSecretSuccess: handleSecrets,
-    onSecretError: (error, variables) => {
-      log.error('onSecretError during update', error, variables)
-    },
-  })
 
   const { data } = useQuery({
     ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
     retry: false,
   })
 
-  const { data: availableSecrets } = useQuery({
-    ...getApiV1BetaSecretsDefaultKeysOptions(),
-    enabled: !!serverToEdit,
-    retry: false,
-  })
-
-  const { data: existingServerData, isLoading: isLoadingServer } = useQuery({
-    ...getApiV1BetaWorkloadsByNameOptions({
-      path: { name: serverToEdit || '' },
-    }),
-    enabled: !!serverToEdit,
-    retry: false,
-  })
-
   const workloads = data?.workloads ?? []
-  const existingServer = existingServerData
-  const isEditing = !!existingServer && !!serverToEdit
-  const editingFormData =
-    isEditing &&
-    convertCreateRequestToFormData(existingServer, availableSecrets)
 
   const form = useForm<FormSchemaRemoteMcp>({
     resolver: zodV4Resolver(
-      getFormSchemaRemoteMcp(workloads, serverToEdit || undefined)
+      getFormSchemaRemoteMcp(workloads, server?.name || undefined)
     ),
     defaultValues: DEFAULT_FORM_VALUES,
     reValidateMode: 'onChange',
     mode: 'onChange',
-    ...(editingFormData ? { values: editingFormData } : {}),
+    ...(server
+      ? {
+          values: convertCreateRequestToFormData(
+            server,
+            groupedEnvVars.secrets,
+            groupedEnvVars.envVars
+          ),
+        }
+      : {}),
   })
 
   const onSubmitForm = (data: FormSchemaRemoteMcp) => {
+    if (!server) return
+
     setIsSubmitting(true)
-    if (error) {
-      setError(null)
-    }
-    if (isEditing) {
-      updateServerMutation(
-        { data },
-        {
-          onSuccess: () => {
-            checkServerStatus({ serverName: data.name, groupName, isEditing })
-            closeDialog()
-          },
-          onSettled: (_, error) => {
-            setIsSubmitting(false)
-            setLoadingSecrets(null)
-            if (!error) {
-              form.reset()
-            }
-          },
-          onError: (error) => {
-            setError(typeof error === 'string' ? error : error.message)
-          },
-        }
-      )
-    } else {
-      installServerMutation(
-        { data },
-        {
-          onSuccess: () => {
-            checkServerStatus({ serverName: data.name, groupName })
-            closeDialog()
-          },
-          onSettled: (_, error) => {
-            setIsSubmitting(false)
-            if (!error) {
-              form.reset()
-            }
-          },
-          onError: (error) => {
-            setError(typeof error === 'string' ? error : error.message)
-          },
-        }
-      )
-    }
+    if (error) setError(null)
+
+    installServerMutation(
+      {
+        data,
+      },
+      {
+        onSuccess: () => {
+          checkServerStatus({ serverName: data.name, groupName: 'default' })
+          closeDialog()
+        },
+        onSettled: (_, error) => {
+          setIsSubmitting(false)
+          if (!error) {
+            form.reset()
+          }
+        },
+        onError: (error) => {
+          setError(typeof error === 'string' ? error : error.message)
+        },
+      }
+    )
   }
 
+  if (!server) return null
+
   const authType = form.watch('auth_type')
-  const isLoading = isSubmitting || (isEditing && isLoadingServer)
+  const isLoading = isSubmitting
 
   return (
     <DialogWorkloadFormWrapper
@@ -200,30 +164,17 @@ export function DialogFormRemoteMcp({
       }}
       actionsOnCancel={closeDialog}
       actionsIsDisabled={isLoading}
-      actionsIsEditing={isEditing}
       form={form}
       onSubmit={form.handleSubmit(onSubmitForm)}
-      title={
-        isEditing
-          ? `Edit ${serverToEdit} remote MCP server`
-          : 'Add a remote MCP server'
-      }
+      title={`Add ${server?.name} remote MCP server`}
     >
       {isLoading && (
         <LoadingStateAlert
           isPendingSecrets={isPendingSecrets}
-          loadingSecrets={
-            isLoadingServer
-              ? {
-                  text: `Loading server "${serverToEdit}"...`,
-                  completedCount: 0,
-                  secretsCount: 0,
-                }
-              : loadingSecrets
-          }
+          loadingSecrets={loadingSecrets}
         />
       )}
-      {!isSubmitting && !(isEditing && isLoadingServer) && (
+      {!isSubmitting && (
         <div className="flex flex-1 flex-col overflow-hidden">
           <div className="px-6 pb-4">
             {error && (
@@ -257,7 +208,7 @@ export function DialogFormRemoteMcp({
                       value={field.value}
                       onChange={(e) => field.onChange(e.target.value)}
                       name={field.name}
-                      disabled={isEditing}
+                      disabled={isSubmitting}
                     />
                   </FormControl>
                   <FormMessage />
@@ -335,35 +286,22 @@ export function DialogFormRemoteMcp({
                     <FormLabel htmlFor={field.name}>
                       Authorization method
                     </FormLabel>
-                    <TooltipInfoIcon
-                      className="flex flex-wrap items-center gap-1"
-                    >
+                    <TooltipInfoIcon>
                       The authorization method the MCP server uses to
-                      authenticate clients. Refer to the{' '}
-                      <a
-                        rel="noopener noreferrer"
-                        className="flex cursor-pointer items-center gap-1
-                          underline"
-                        href="https://docs.stacklok.com/toolhive/guides-ui/run-mcp-servers#remote-mcp-server"
-                        target="_blank"
-                      >
-                        documentation <ExternalLinkIcon size={12} />
-                      </a>
+                      authenticate clients.
                     </TooltipInfoIcon>
                   </div>
                   <FormControl>
                     <Select
                       onValueChange={field.onChange}
-                      value={field.value || ''}
+                      value={field.value ?? 'none'}
                       name={field.name}
                     >
                       <SelectTrigger id={field.name} className="w-full">
                         <SelectValue placeholder="Select authorization method" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">
-                          Dynamic Client Registration
-                        </SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         <SelectItem value="oauth2">OAuth2</SelectItem>
                         <SelectItem value="oidc">OIDC</SelectItem>
                       </SelectContent>

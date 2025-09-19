@@ -7,7 +7,10 @@ import { getApiV1BetaRegistryByNameServersByServerNameOptions } from '@api/@tans
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { Stars } from '@/features/registry-servers/components/stars'
 import { Badge } from '@/common/components/ui/badge'
-import type { RegistryImageMetadata } from '@api/types.gen'
+import type {
+  RegistryImageMetadata,
+  RegistryRemoteServerMetadata,
+} from '@api/types.gen'
 import { useState } from 'react'
 import {
   Tooltip,
@@ -16,6 +19,7 @@ import {
 } from '@/common/components/ui/tooltip'
 import { FormRunFromRegistry } from '@/features/registry-servers/components/form-run-from-registry'
 import { trackEvent } from '@/common/lib/analytics'
+import { DialogFormRemoteRegistryMcp } from '@/features/registry-servers/components/dialog-form-remote-registry-mcp'
 
 const statusMap = {
   deprecated: 'Deprecated',
@@ -41,7 +45,7 @@ export const Route = createFileRoute('/(registry)/registry_/$name')({
 export function RegistryServerDetail() {
   const { name } = useParams({ from: '/(registry)/registry_/$name' })
   const {
-    data: { server },
+    data: { server: localServer, remote_server: remoteServer },
   } = useSuspenseQuery(
     getApiV1BetaRegistryByNameServersByServerNameOptions({
       path: {
@@ -50,14 +54,19 @@ export function RegistryServerDetail() {
       },
     })
   )
+  const server = localServer || remoteServer
+  const isRemoteServer = !!remoteServer
   const [showAllTools, setShowAllTools] = useState(false)
-  const [selectedServer, setSelectedServer] =
-    useState<RegistryImageMetadata | null>(null)
+  const [selectedServer, setSelectedServer] = useState<
+    RegistryImageMetadata | RegistryRemoteServerMetadata | null
+  >(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   if (!server) return null
 
-  const handleCardClick = (server: RegistryImageMetadata) => {
+  const handleCardClick = (
+    server: RegistryImageMetadata | RegistryRemoteServerMetadata
+  ) => {
     setSelectedServer(server)
     setIsModalOpen(true)
   }
@@ -91,7 +100,7 @@ export function RegistryServerDetail() {
           )}
           <Badge variant="secondary">{server.transport}</Badge>
           <Stars stars={server.metadata?.stars} className="size-4" />
-          {server.provenance && (
+          {'provenance' in server && server.provenance && (
             <Tooltip>
               <TooltipTrigger
                 className="text-muted-foreground flex items-center gap-2"
@@ -152,20 +161,31 @@ export function RegistryServerDetail() {
           <Wrench className="size-4" />
           Install server
         </Button>
-        <Link to={repositoryUrl} target="_blank">
-          <Button variant="outline">
-            <GithubIcon className="size-4" />
-            GitHub
-          </Button>
-        </Link>
+        {repositoryUrl && (
+          <Link to={repositoryUrl} target="_blank">
+            <Button variant="outline">
+              <GithubIcon className="size-4" />
+              GitHub
+            </Button>
+          </Link>
+        )}
       </div>
 
-      <FormRunFromRegistry
-        key={selectedServer?.name}
-        server={selectedServer}
-        isOpen={isModalOpen}
-        onOpenChange={setIsModalOpen}
-      />
+      {isRemoteServer ? (
+        <DialogFormRemoteRegistryMcp
+          key={selectedServer?.name}
+          server={selectedServer}
+          isOpen={isModalOpen}
+          closeDialog={() => setIsModalOpen(false)}
+        />
+      ) : (
+        <FormRunFromRegistry
+          key={selectedServer?.name}
+          server={selectedServer}
+          isOpen={isModalOpen}
+          onOpenChange={setIsModalOpen}
+        />
+      )}
     </div>
   )
 }

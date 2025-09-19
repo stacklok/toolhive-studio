@@ -4,7 +4,7 @@ import {
   type V1ListSecretsResponse,
   type V1UpdateRequest,
 } from '@api/types.gen'
-import type { FormSchemaRemoteMcp } from './form-schema-remote-mcp'
+import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
 import { mapEnvVars, omit } from '@/common/lib/utils'
 
 /**
@@ -20,24 +20,24 @@ export function prepareCreateWorkloadData(
   const oauthConfig = {
     ...oauth_config,
     scopes: oauth_config.scopes
-      ? oauth_config.scopes.split(',').map((s) => s.trim())
+      ? oauth_config.scopes.split(',').map((s: string) => s.trim())
       : [],
   }
-  // Transform client_secret from string to SecretsSecretParameter if it exists
+  // Transform client_secret from object to SecretsSecretParameter if it exists
   const transformedOAuthConfig = oauthConfig
     ? {
         ...oauthConfig,
         client_secret: oauth_config.client_secret
           ? ({
-              name: 'oauth_client_secret',
-              target: oauth_config.client_secret,
+              name: oauth_config.client_secret.name,
+              target: oauth_config.client_secret.name,
             } as SecretsSecretParameter)
           : undefined,
       }
     : oauthConfig
 
   const request = {
-    ...rest,
+    ...omit(rest, 'auth_type'),
     oauth_config: transformedOAuthConfig,
     env_vars: mapEnvVars(envVars),
     secrets,
@@ -58,7 +58,7 @@ export function prepareUpdateWorkloadData(
   const oauthConfig = {
     ...oauth_config,
     scopes: oauth_config.scopes
-      ? oauth_config.scopes.split(',').map((s) => s.trim())
+      ? oauth_config.scopes.split(',').map((s: string) => s.trim())
       : [],
   }
 
@@ -68,8 +68,8 @@ export function prepareUpdateWorkloadData(
         ...oauthConfig,
         client_secret: oauth_config.client_secret
           ? ({
-              name: 'oauth_client_secret',
-              target: oauth_config.client_secret,
+              name: oauth_config.client_secret.name,
+              target: oauth_config.client_secret.name,
             } as SecretsSecretParameter)
           : undefined,
       }
@@ -127,7 +127,17 @@ export function convertCreateRequestToFormData(
       authorize_url: createRequest.oauth_config?.authorize_url,
       callback_port: createRequest.oauth_config?.callback_port,
       client_id: createRequest.oauth_config?.client_id,
-      client_secret: createRequest.oauth_config?.client_secret?.name,
+      client_secret: createRequest.oauth_config?.client_secret
+        ? {
+            name: createRequest.oauth_config.client_secret.name || '',
+            value: {
+              secret: createRequest.oauth_config.client_secret.name || '',
+              isFromStore: availableSecretKeys.has(
+                createRequest.oauth_config.client_secret.name || ''
+              ),
+            },
+          }
+        : undefined,
       issuer: createRequest.oauth_config?.issuer,
       oauth_params: createRequest.oauth_config?.oauth_params,
       scopes: Array.isArray(createRequest.oauth_config?.scopes)

@@ -5,11 +5,21 @@ import {
   CardContent,
   CardFooter,
 } from '@/common/components/ui/card'
-import type { RegistryImageMetadata } from '@api/types.gen'
-import { Github, Plus } from 'lucide-react'
+import type {
+  RegistryImageMetadata,
+  RegistryRemoteServerMetadata,
+} from '@api/types.gen'
+import { CloudIcon, Github, LaptopIcon, Plus } from 'lucide-react'
 import { cn } from '@/common/lib/utils'
 import { Button } from '@/common/components/ui/button'
 import { Stars } from './stars'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/common/components/ui/tooltip'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { featureFlagKeys } from '../../../../../utils/feature-flags'
 
 const statusMap = {
   deprecated: 'Deprecated',
@@ -20,9 +30,12 @@ export function CardRegistryServer({
   server,
   onClick,
 }: {
-  server: RegistryImageMetadata
+  server: RegistryImageMetadata | RegistryRemoteServerMetadata
   onClick?: () => void
 }) {
+  const isRemoteMcpEnabled = useFeatureFlag(featureFlagKeys.REMOTE_MCP)
+  const isRemote = 'url' in server
+
   return (
     <Card
       className={cn(
@@ -68,11 +81,22 @@ export function CardRegistryServer({
         </div>
       </CardContent>
       <CardFooter className="mt-auto flex items-center gap-2">
-        {server?.metadata?.stars ? (
-          <div className="flex items-center gap-2">
-            <Stars stars={server.metadata.stars} />
-          </div>
-        ) : null}
+        {isRemoteMcpEnabled && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="relative z-10">
+                {isRemote ? (
+                  <CloudIcon className="text-muted-foreground size-5" />
+                ) : (
+                  <LaptopIcon className="text-muted-foreground size-5" />
+                )}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              {isRemote ? 'Remote MCP server' : 'Local MCP server'}
+            </TooltipContent>
+          </Tooltip>
+        )}
         {server?.repository_url ? (
           <Button
             variant="ghost"
@@ -88,6 +112,11 @@ export function CardRegistryServer({
               <Github className="text-muted-foreground size-4" />
             </a>
           </Button>
+        ) : null}
+        {server?.metadata?.stars ? (
+          <div className="flex items-center gap-2">
+            <Stars stars={server.metadata.stars} />
+          </div>
         ) : null}
       </CardFooter>
     </Card>

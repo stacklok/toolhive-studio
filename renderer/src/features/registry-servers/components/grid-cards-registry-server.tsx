@@ -1,4 +1,7 @@
-import type { RegistryImageMetadata } from '@api/types.gen'
+import type {
+  RegistryImageMetadata,
+  RegistryRemoteServerMetadata,
+} from '@api/types.gen'
 import { CardRegistryServer } from './card-registry-server'
 import { useFilterSort } from '@/common/hooks/use-filter-sort'
 import { InputSearch } from '@/common/components/ui/input-search'
@@ -7,7 +10,7 @@ import { useNavigate } from '@tanstack/react-router'
 export function GridCardsRegistryServer({
   servers,
 }: {
-  servers: RegistryImageMetadata[]
+  servers: RegistryImageMetadata[] | RegistryRemoteServerMetadata[]
 }) {
   const navigate = useNavigate()
 
