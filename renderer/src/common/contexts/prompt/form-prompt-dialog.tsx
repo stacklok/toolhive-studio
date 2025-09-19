@@ -9,6 +9,7 @@ import {
 import { Button } from '@/common/components/ui/button'
 import { ScrollArea } from '@/common/components/ui/scroll-area'
 import type { ReactHookFormPromptConfig } from '.'
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import type { UseFormReturn } from 'react-hook-form'
 
@@ -32,6 +33,13 @@ export function FormDialog({
     resolver: config.resolver,
     mode: 'onChange',
   })
+
+  // Optional: validate on mount when the caller needs initial isValid
+  // to reflect defaults (e.g., confirm dialogs that should be enabled).
+  // Defaults to false to avoid showing validation errors before user input.
+  useEffect(() => {
+    if (config.validateOnMount) void form.trigger()
+  }, [form, config.validateOnMount])
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
@@ -69,10 +77,15 @@ export function FormDialog({
           </ScrollArea>
 
           <DialogFooter>
-            <Button variant="secondary" onClick={handleCancel} type="button">
+            <Button
+              variant={config.buttons?.cancelVariant ?? 'secondary'}
+              onClick={handleCancel}
+              type="button"
+            >
               {config.buttons?.cancel ?? 'Cancel'}
             </Button>
             <Button
+              variant={config.buttons?.confirmVariant ?? 'default'}
               type="submit"
               disabled={form.formState.isSubmitting || !form.formState.isValid}
             >

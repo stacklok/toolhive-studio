@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { RouterProvider } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { recordRequests } from '@/common/mocks/node'
-import { ConfirmProvider } from '@/common/contexts/confirm/provider'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
 import { Route as GroupGroupNameRouteImport } from '@/routes/group.$groupName'
 import { toast } from 'sonner'
@@ -29,13 +28,11 @@ describe('Group route delete group confirmation', () => {
     )
 
     render(
-      <ConfirmProvider>
-        <PromptProvider>
-          <QueryClientProvider client={queryClient}>
-            <RouterProvider router={router} />
-          </QueryClientProvider>
-        </PromptProvider>
-      </ConfirmProvider>
+      <PromptProvider>
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} />
+        </QueryClientProvider>
+      </PromptProvider>
     )
 
     const manageClientsButton = await screen.findByRole('button', {
@@ -95,13 +92,11 @@ describe('Group route delete group confirmation', () => {
     )
 
     render(
-      <ConfirmProvider>
-        <PromptProvider>
-          <QueryClientProvider client={queryClient}>
-            <RouterProvider router={router} />
-          </QueryClientProvider>
-        </PromptProvider>
-      </ConfirmProvider>
+      <PromptProvider>
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} />
+        </QueryClientProvider>
+      </PromptProvider>
     )
 
     const manageClientsButton = await screen.findByRole('button', {
@@ -145,13 +140,11 @@ describe('Group route delete group confirmation', () => {
     )
 
     render(
-      <ConfirmProvider>
-        <PromptProvider>
-          <QueryClientProvider client={queryClient}>
-            <RouterProvider router={router} />
-          </QueryClientProvider>
-        </PromptProvider>
-      </ConfirmProvider>
+      <PromptProvider>
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} />
+        </QueryClientProvider>
+      </PromptProvider>
     )
 
     const manageClientsButton = await screen.findByRole('button', {
@@ -193,13 +186,11 @@ describe('Group route delete group confirmation', () => {
     )
 
     render(
-      <ConfirmProvider>
-        <PromptProvider>
-          <QueryClientProvider client={queryClient}>
-            <RouterProvider router={router} />
-          </QueryClientProvider>
-        </PromptProvider>
-      </ConfirmProvider>
+      <PromptProvider>
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} />
+        </QueryClientProvider>
+      </PromptProvider>
     )
 
     await screen.findByText(/add your first mcp server/i)
