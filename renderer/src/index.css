@@ -5,7 +5,8 @@
 
 @source '../../node_modules/streamdown/dist/index.js';
 
-@custom-variant dark (&: is(.dark *));
+/* Ensure Tailwind's `dark:` variant targets when any ancestor has `.dark` */
+@custom-variant dark (.dark &);
 
 @theme inline {
   --font-sans: 'Inter Variable', sans-serif;
