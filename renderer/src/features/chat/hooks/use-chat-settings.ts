@@ -80,7 +80,10 @@ export function useChatSettings() {
     useSelectedModel()
   const { data: providerSettings, isLoading: isProviderSettingsLoading } =
     useProviderSettings(selectedModel?.provider || '')
-  const allProvidersWithSettingsQuery = useAllProvidersWithSettings()
+  const {
+    data: allProvidersWithSettings,
+    isLoading: isAllProviderWithSettingsLoading,
+  } = useAllProvidersWithSettings()
 
   // Query for enabled MCP servers (this is what the UI uses)
   const { data: enabledMcpServers = [], isLoading: isMcpServersLoading } =
@@ -107,16 +110,10 @@ export function useChatSettings() {
 
   // Combine the data into a single ChatSettings object
   const settings: ChatSettings = useMemo(() => {
-    // Use the same logic as the UI: only include tools from servers in enabledMcpServers
     const mcpToolNames: string[] = []
 
-    // Get enabled server names (remove 'mcp_' prefix) - same as UI logic
-    const enabledServerNames = enabledMcpServers.map((serverId: string) =>
-      serverId.replace('mcp_', '')
-    )
-
     // Include tools from all servers that are enabled (same as UI)
-    for (const serverName of enabledServerNames) {
+    for (const serverName of enabledMcpServers) {
       const serverTools = enabledMcpTools[serverName] || []
       mcpToolNames.push(...serverTools)
     }
@@ -271,8 +268,8 @@ export function useChatSettings() {
       updateEnabledTools,
       updateProviderSettingsMutation,
       loadPersistedSettings,
-      allProvidersWithSettings: allProvidersWithSettingsQuery.data || [],
-      isLoadingProviders: allProvidersWithSettingsQuery.isLoading,
+      allProvidersWithSettings: allProvidersWithSettings || [],
+      isLoadingProviders: isAllProviderWithSettingsLoading,
       isLoading: combinedIsLoading,
     }),
     [
@@ -281,8 +278,8 @@ export function useChatSettings() {
       updateEnabledTools,
       updateProviderSettingsMutation,
       loadPersistedSettings,
-      allProvidersWithSettingsQuery.data,
-      allProvidersWithSettingsQuery.isLoading,
+      allProvidersWithSettings,
+      isAllProviderWithSettingsLoading,
       combinedIsLoading,
     ]
   )

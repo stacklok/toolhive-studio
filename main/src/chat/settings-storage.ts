@@ -178,6 +178,7 @@ export function saveEnabledMcpTools(
     const enabledMcpTools = chatStore.get('enabledMcpTools')
     const typedTools = isToolsRecord(enabledMcpTools) ? enabledMcpTools : {}
     typedTools[serverName] = toolNames
+    chatStore.set('enabledMcpTools', typedTools)
     return { success: true }
   } catch (error) {
     return {
