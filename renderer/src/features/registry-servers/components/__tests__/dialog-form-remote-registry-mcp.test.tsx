@@ -205,7 +205,7 @@ describe('DialogFormRemoteRegistryMcp', () => {
 
     await userEvent.click(
       screen.getByRole('option', {
-        name: /oauth2/i,
+        name: 'OAuth 2.0',
       })
     )
 
@@ -306,7 +306,7 @@ describe('DialogFormRemoteRegistryMcp', () => {
 
     // Select OAuth2 authentication
     await userEvent.click(screen.getByLabelText('Authorization method'))
-    await userEvent.click(screen.getByRole('option', { name: 'OAuth2' }))
+    await userEvent.click(screen.getByRole('option', { name: 'OAuth 2.0' }))
 
     // OAuth2 fields should now be visible
     await waitFor(() => {
@@ -377,7 +377,7 @@ describe('DialogFormRemoteRegistryMcp', () => {
 
     // Select OAuth2 authentication
     await userEvent.click(screen.getByLabelText('Authorization method'))
-    await userEvent.click(screen.getByRole('option', { name: 'OAuth2' }))
+    await userEvent.click(screen.getByRole('option', { name: 'OAuth 2.0' }))
 
     // Secrets section should be hidden for OAuth2
     await waitFor(() => {

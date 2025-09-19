@@ -19,11 +19,6 @@ const OAUTH_VALIDATION_RULES = {
       message: 'Client ID is required for OAuth2',
       path: ['oauth_config', 'client_id'],
     },
-    {
-      field: 'client_secret',
-      message: 'Client Secret is required for OAuth2',
-      path: ['oauth_config', 'client_secret'],
-    },
   ],
   oidc: [
     {
@@ -49,6 +44,9 @@ const validateClientSecretField = (
 ): boolean =>
   Boolean(value && value.value.secret && value.value.secret.trim() !== '')
 
+const validateCallbackPortField = (value: number | undefined): boolean =>
+  Boolean(value !== undefined && value !== null && value > 0)
+
 export const getFormSchemaRemoteMcp = (
   workloads: CoreWorkload[],
   editingServerName?: string
@@ -61,9 +59,19 @@ export const getFormSchemaRemoteMcp = (
     (data, ctx) => {
       const { auth_type, oauth_config } = data
 
-      // Skip validation if no authentication is required
-      if (auth_type === 'none') return
+      // Validate callback_port is required when auth_type is 'none'
+      if (auth_type === 'none') {
+        if (!validateCallbackPortField(oauth_config?.callback_port)) {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'Callback port is required',
+            path: ['oauth_config', 'callback_port'],
+          })
+        }
+        return
+      }
 
+      // Validate OAuth/OIDC specific fields
       const validationRules =
         OAUTH_VALIDATION_RULES[auth_type as keyof typeof OAUTH_VALIDATION_RULES]
 

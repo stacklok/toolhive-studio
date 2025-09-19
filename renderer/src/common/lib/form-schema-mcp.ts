@@ -282,14 +282,7 @@ export const createMcpBaseSchema = (workloads: CoreWorkload[]) => {
 
 const remoteMcpOauthConfigSchema = z.object({
   authorize_url: z.string().optional(),
-  callback_port: z
-    .number()
-    .optional()
-    .refine(
-      (val) => val !== undefined && val !== null,
-      'Callback port is required'
-    ),
-
+  callback_port: z.number().optional(),
   client_id: z.string().optional(),
   client_secret: z
     .object({

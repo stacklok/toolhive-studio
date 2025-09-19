@@ -7,17 +7,11 @@ import {
 } from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
 import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@/common/components/ui/select'
 import { type UseFormReturn } from 'react-hook-form'
 import { SecretStoreCombobox } from '@/common/components/secrets/secret-store-combobox'
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
 import { cn } from '@/common/lib/utils'
+import { Checkbox } from '@/common/components/ui/checkbox'
 
 function ClientAuthFields({
   form,
@@ -90,7 +84,6 @@ function ClientAuthFields({
                 >
                   <div>
                     <FormLabel
-                      required={true}
                       htmlFor={`oauth_config.client_secret.value`}
                       className={cn(
                         `text-muted-foreground !border-input h-full items-center
@@ -222,38 +215,6 @@ export function FormFieldsAuth({
           />
 
           <ClientAuthFields form={form} authType={authType} />
-
-          <FormField
-            control={form.control}
-            name="oauth_config.use_pkce"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex items-center gap-1">
-                  <FormLabel htmlFor={field.name}>PKCE</FormLabel>
-                  <TooltipInfoIcon>
-                    Proof Key for Code Exchange (RFC 7636), automatically
-                    enables PKCE flow without client_secret.
-                  </TooltipInfoIcon>
-                </div>
-                <FormControl>
-                  <Select
-                    onValueChange={(value) => field.onChange(value === 'true')}
-                    value={field.value ? 'true' : 'false'}
-                    name={field.name}
-                  >
-                    <SelectTrigger id={field.name} className="w-full">
-                      <SelectValue placeholder="Select PKCE" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="true">True</SelectItem>
-                      <SelectItem value="false">False</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </>
       )}
 
@@ -348,6 +309,35 @@ export function FormFieldsAuth({
             )}
           />
         </>
+      )}
+
+      {authType !== 'none' && (
+        <FormField
+          control={form.control}
+          name="oauth_config.use_pkce"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex items-center gap-1">
+                <FormLabel htmlFor={field.name}>PKCE</FormLabel>
+                <TooltipInfoIcon>
+                  Proof Key for Code Exchange (RFC 7636), automatically enables
+                  PKCE flow without client_secret.
+                </TooltipInfoIcon>
+              </div>
+              <FormControl>
+                <Checkbox
+                  id={field.name}
+                  name={field.name}
+                  checked={field.value}
+                  onCheckedChange={(checked) => {
+                    field.onChange(checked)
+                  }}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       )}
     </>
   )
