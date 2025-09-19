@@ -100,6 +100,7 @@ export const Route = createRootRouteWithContext<{
       },
       retry: 3,
       retryDelay: 300,
+      staleTime: 0,
     })
     try {
       await queryClient.ensureQueryData({

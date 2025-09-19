@@ -308,7 +308,10 @@ export function toggleMaximizeMainWindow(): void {
  */
 export function isMainWindowMaximized(): boolean {
   try {
-    return mainWindow?.isMaximized() ?? false
+    if (!isMainWindowValid()) {
+      return false
+    }
+    return mainWindow!.isMaximized()
   } catch (error) {
     log.error('Failed to check if window is maximized:', error)
     return false
