@@ -45,17 +45,20 @@ export function McpServerSelector() {
         // First get the server's available tools
         const serverTools =
           await window.electronAPI.chat.getMcpServerTools(serverName)
-
         if (serverTools?.tools && serverTools.tools.length > 0) {
           const allToolNames = serverTools.tools.map((tool) => tool.name)
-          await window.electronAPI.chat.saveEnabledMcpTools(
+          const response = await window.electronAPI.chat.saveEnabledMcpTools(
             serverName,
             allToolNames
           )
-          // Invalidate query to refetch latest state
-          queryClient.invalidateQueries({
-            queryKey: ['chat', 'enabledMcpServers'],
-          })
+          if (response.success) {
+            // Invalidate query to refetch latest state
+            queryClient.invalidateQueries({
+              queryKey: ['chat', 'enabledMcpServers'],
+            })
+          } else {
+            toast.error(`Failed to enable server tools for ${serverName}`)
+          }
         }
       } catch (error) {
         log.error('Failed to enable server tools:', error)

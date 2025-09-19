@@ -412,7 +412,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
           {/* Message Content */}
           <div className="space-y-2">
             <div
-              className="bg-primary text-primary-foreground rounded-2xl
+              className="bg-secondary text-secondary-foreground rounded-2xl
                 rounded-br-md px-4 py-3 shadow-sm"
             >
               <div className="break-words">

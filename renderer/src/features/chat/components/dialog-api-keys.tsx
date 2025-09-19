@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import log from 'electron-log/renderer'
 import { Button } from '@/common/components/ui/button'
 import { Input } from '@/common/components/ui/input'
@@ -42,6 +42,8 @@ export function DialogApiKeys({
   >({})
 
   const {
+    settings,
+    updateSettings,
     updateProviderSettingsMutation,
     allProvidersWithSettings,
     isLoadingProviders,
@@ -95,7 +97,7 @@ export function DialogApiKeys({
     }))
   }
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     try {
       await Promise.all(
         providerKeys.map(async (pk) => {
@@ -115,12 +117,33 @@ export function DialogApiKeys({
         })
       )
 
+      // on first api key set auto select the provider and model
+      const firstProviderWithApiKey = allProvidersWithSettings.find(
+        (pk) => pk.hasKey
+      )
+      if (!!firstProviderWithApiKey && !settings.apiKey) {
+        updateSettings({
+          ...settings,
+          apiKey: firstProviderWithApiKey.apiKey,
+          provider: firstProviderWithApiKey.provider.id,
+          model: firstProviderWithApiKey.provider.models[0] || '',
+        })
+      }
+
       onSaved?.()
       onOpenChange(false)
     } catch (error) {
       log.error('Failed to save API keys:', error)
     }
-  }
+  }, [
+    providerKeys,
+    allProvidersWithSettings,
+    settings,
+    updateSettings,
+    updateProviderSettingsMutation,
+    onSaved,
+    onOpenChange,
+  ])
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
