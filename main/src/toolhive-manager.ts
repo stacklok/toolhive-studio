@@ -154,7 +154,7 @@ export async function startToolhive(tray?: Tray): Promise<void> {
         if (output.includes('A new version of ToolHive is available')) {
           return
         }
-        log.error(`[ToolHive stderr] ${output}`)
+        log.info(`[ToolHive stderr] ${output}`)
         scope.addBreadcrumb({
           category: 'debug',
           message: `[ToolHive stderr] ${output}`,
