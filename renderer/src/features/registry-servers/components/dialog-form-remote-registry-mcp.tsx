@@ -106,9 +106,7 @@ export function DialogFormRemoteRegistryMcp({
   const workloads = data?.workloads ?? []
 
   const form = useForm<FormSchemaRemoteMcp>({
-    resolver: zodV4Resolver(
-      getFormSchemaRemoteMcp(workloads, server?.name || undefined)
-    ),
+    resolver: zodV4Resolver(getFormSchemaRemoteMcp(workloads)),
     defaultValues: DEFAULT_FORM_VALUES,
     reValidateMode: 'onChange',
     mode: 'onChange',
