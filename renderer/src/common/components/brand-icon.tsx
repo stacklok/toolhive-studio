@@ -1,28 +1,35 @@
-import type { ComponentProps, JSX } from 'react'
-import { Package } from 'lucide-react'
-import { SiAnthropic, SiJetbrains } from '@icons-pack/react-simple-icons'
+import type { ComponentProps } from 'react'
+import { Icon } from '@iconify/react'
+import homeIcon from '@iconify/icons-heroicons-outline/home'
+import vscodeIcons from '@iconify-json/vscode-icons/icons.json'
+import simpleIcons from '@iconify-json/simple-icons/icons.json'
 
 type Props = {
   name: string
 } & Pick<ComponentProps<'svg'>, 'className' | 'aria-hidden' | 'focusable'>
 
-type IconComponent = (p: ComponentProps<'svg'>) => JSX.Element
+const cursorRulesIcon = (vscodeIcons as any).icons?.['file-type-cursorrules']
+const claudeIcon = (simpleIcons as any).icons?.['claude']
 
-// Map known client identifiers to React Simple Icons components.
-const ICONS: Record<string, IconComponent> = {
-  // Anthropic / Claude Code
-  'claude-code': (p) => <SiAnthropic {...p} />,
-  // JetBrains for windsorf plugin targeting JetBrains IDEs
-  'windsurf-jetbrains': (p) => <SiJetbrains {...p} />,
+const ICONS: Record<string, unknown> = {
+  // Cursor editor
+  cursor: cursorRulesIcon,
+  // Claude (Anthropic)
+  'claude-code': claudeIcon,
 }
 
-export function BrandIcon({ name, className, ...rest }: Props) {
+export default function BrandIcon({ name, className, ...rest }: Props) {
   const key = name.toLowerCase()
-  const Icon = ICONS[key]
-  if (Icon) return <Icon className={className} aria-hidden {...rest} />
-
-  // Fallback to a generic lucide package icon when no brand is available
-  return <Package className={className} {...rest} />
+  const icon = (ICONS[key] ?? homeIcon) as any
+  return (
+    <Icon
+      icon={icon}
+      className={className}
+      aria-hidden
+      inline={false}
+      preserveAspectRatio="xMidYMid meet"
+      style={{ overflow: 'visible', display: 'block' }}
+      {...rest}
+    />
+  )
 }
-
-export default BrandIcon

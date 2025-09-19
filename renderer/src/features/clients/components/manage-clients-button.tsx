@@ -13,12 +13,12 @@ import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 interface ManageClientsButtonProps {
   groupName: string
   variant?:
-    | 'default'
-    | 'outline'
-    | 'secondary'
-    | 'ghost'
-    | 'link'
-    | 'destructive'
+  | 'default'
+  | 'outline'
+  | 'secondary'
+  | 'ghost'
+  | 'link'
+  | 'destructive'
   className?: string
 }
 
@@ -68,7 +68,7 @@ export function ManageClientsButton({
             return (
               <div
                 key={client.client_type}
-                className="flex items-start gap-3 border-b p-4 align-middle last:border-b-0"
+                className="flex items-center gap-3 border-b p-4 last:border-b-0"
               >
                 <Switch
                   id={fieldName}
@@ -80,11 +80,7 @@ export function ManageClientsButton({
                 />
 
                 <div className="flex items-center gap-2">
-                  <BrandIcon
-                    name={displayName}
-                    className="text-foreground/70 h-4 w-4"
-                    aria-hidden
-                  />
+                  <BrandIcon name={displayName} className="size-3 shrink-0" />
                   <Label htmlFor={fieldName} className="text-sm font-medium">
                     {displayName}
                   </Label>

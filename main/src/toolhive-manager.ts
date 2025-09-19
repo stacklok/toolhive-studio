@@ -7,6 +7,7 @@ import type { Tray } from 'electron'
 import { updateTrayStatus } from './system-tray'
 import log from './logger'
 import * as Sentry from '@sentry/electron/main'
+import { getQuittingState } from './app-state'
 
 const binName = process.platform === 'win32' ? 'thv.exe' : 'thv'
 const binPath = app.isPackaged
@@ -104,65 +105,84 @@ async function findFreePort(
 }
 
 export async function startToolhive(tray?: Tray): Promise<void> {
-  if (!existsSync(binPath)) {
-    log.error(`ToolHive binary not found at: ${binPath}`)
-    return
-  }
-
-  log.info(`APP USER DATA: ${app.getPath('userData')}`)
-  toolhivePort = await findFreePort(50000, 50100)
-  toolhiveMcpPort = await findFreePort()
-  log.info(
-    `Starting ToolHive from: ${binPath} on port ${toolhivePort}, MCP on port ${toolhiveMcpPort}`
-  )
-
-  toolhiveProcess = spawn(
-    binPath,
-    [
-      'serve',
-      '--openapi',
-      '--experimental-mcp',
-      '--experimental-mcp-host=127.0.0.1',
-      `--experimental-mcp-port=${toolhiveMcpPort}`,
-      '--host=127.0.0.1',
-      `--port=${toolhivePort}`,
-    ],
-    {
-      stdio: ['ignore', 'ignore', 'pipe'],
-      detached: false,
+  Sentry.withScope<Promise<void>>(async (scope) => {
+    if (!existsSync(binPath)) {
+      log.error(`ToolHive binary not found at: ${binPath}`)
+      return
     }
-  )
 
-  log.info(`[startToolhive] Process spawned with PID: ${toolhiveProcess.pid}`)
+    toolhivePort = await findFreePort(50000, 50100)
+    toolhiveMcpPort = await findFreePort()
+    log.info(
+      `Starting ToolHive from: ${binPath} on port ${toolhivePort}, MCP on port ${toolhiveMcpPort}`
+    )
 
-  if (tray) {
-    updateTrayStatus(tray, !!toolhiveProcess)
-  }
+    toolhiveProcess = spawn(
+      binPath,
+      [
+        'serve',
+        '--openapi',
+        '--experimental-mcp',
+        '--experimental-mcp-host=127.0.0.1',
+        `--experimental-mcp-port=${toolhiveMcpPort}`,
+        '--host=127.0.0.1',
+        `--port=${toolhivePort}`,
+      ],
+      {
+        stdio: ['ignore', 'ignore', 'pipe'],
+        detached: false,
+      }
+    )
 
-  // Capture and log stderr
-  if (toolhiveProcess.stderr) {
-    log.info(`[ToolHive] Capturing stderr enabled`)
-    toolhiveProcess.stderr.on('data', (data) => {
-      const output = data.toString().trim()
-      if (output) {
+    log.info(`[startToolhive] Process spawned with PID: ${toolhiveProcess.pid}`)
+
+    scope.addBreadcrumb({
+      category: 'debug',
+      message: `Starting ToolHive from: ${binPath} on port ${toolhivePort}, MCP on port ${toolhiveMcpPort}, PID: ${toolhiveProcess.pid}`,
+    })
+
+    if (tray) {
+      updateTrayStatus(tray, !!toolhiveProcess)
+    }
+
+    // Capture and log stderr
+    if (toolhiveProcess.stderr) {
+      log.info(`[ToolHive] Capturing stderr enabled`)
+      toolhiveProcess.stderr.on('data', (data) => {
+        const output = data.toString().trim()
+        if (!output) return
+        if (output.includes('A new version of ToolHive is available')) {
+          return
+        }
         log.error(`[ToolHive stderr] ${output}`)
+        scope.addBreadcrumb({
+          category: 'debug',
+          message: `[ToolHive stderr] ${output}`,
+          level: 'log',
+        })
+      })
+    }
+
+    toolhiveProcess.on('error', (error) => {
+      log.error('Failed to start ToolHive: ', error)
+      Sentry.captureMessage(
+        `Failed to start ToolHive: ${JSON.stringify(error)}`,
+        'fatal'
+      )
+      if (tray) updateTrayStatus(tray, false)
+    })
+
+    toolhiveProcess.on('exit', (code) => {
+      log.warn(`ToolHive process exited with code: ${code}`)
+      toolhiveProcess = undefined
+      if (tray) updateTrayStatus(tray, false)
+      if (!isRestarting && !getQuittingState()) {
+        Sentry.captureMessage(
+          `ToolHive process exited with code: ${code}`,
+          'fatal'
+        )
       }
     })
-  }
-
-  toolhiveProcess.on('error', (error) => {
-    log.error('Failed to start ToolHive: ', error)
-    Sentry.captureMessage(
-      `Failed to start ToolHive: ${JSON.stringify(error)}`,
-      'error'
-    )
-    if (tray) updateTrayStatus(tray, false)
-  })
-
-  toolhiveProcess.on('exit', (code) => {
-    log.warn(`ToolHive process exited with code: ${code}`)
-    toolhiveProcess = undefined
-    if (tray) updateTrayStatus(tray, false)
   })
 }
 
@@ -189,7 +209,7 @@ export async function restartToolhive(tray?: Tray): Promise<void> {
     log.error('Failed to restart ToolHive: ', error)
     Sentry.captureMessage(
       `Failed to restart ToolHive: ${JSON.stringify(error)}`,
-      'error'
+      'fatal'
     )
   } finally {
     // avoid another restart until process is stabilized

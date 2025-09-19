@@ -664,6 +664,10 @@ export type RunnerRunConfig = {
    */
   debug?: boolean
   /**
+   * EnvFileDir is the directory path to load environment files from
+   */
+  env_file_dir?: string
+  /**
    * EnvVars are the parsed environment variables as key-value pairs
    */
   env_vars?: {

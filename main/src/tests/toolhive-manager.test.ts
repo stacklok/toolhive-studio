@@ -11,10 +11,12 @@ import {
   getToolhiveMcpPort,
   isToolhiveRunning,
   stopToolhive,
+  restartToolhive,
 } from '../toolhive-manager'
 import { updateTrayStatus } from '../system-tray'
 import log from '../logger'
 import * as Sentry from '@sentry/electron/main'
+import { getQuittingState } from '../app-state'
 
 // Mock dependencies
 vi.mock('node:child_process')
@@ -28,8 +30,17 @@ vi.mock('electron', () => ({
 }))
 vi.mock('../system-tray')
 vi.mock('../logger')
+vi.mock('../app-state', () => ({
+  getQuittingState: vi.fn().mockReturnValue(false),
+}))
 vi.mock('@sentry/electron/main', () => ({
   captureMessage: vi.fn(),
+  withScope: vi.fn((callback) => {
+    const mockScope = {
+      addBreadcrumb: vi.fn(),
+    }
+    callback(mockScope)
+  }),
 }))
 
 const mockSpawn = vi.mocked(spawn)
@@ -39,6 +50,7 @@ const mockApp = vi.mocked(app)
 const mockUpdateTrayStatus = vi.mocked(updateTrayStatus)
 const mockLog = vi.mocked(log)
 const mockCaptureMessage = vi.mocked(Sentry.captureMessage)
+const mockGetQuittingState = vi.mocked(getQuittingState)
 
 // Mock process for testing
 class MockProcess extends EventEmitter {
@@ -201,7 +213,7 @@ describe('toolhive-manager', () => {
       )
       expect(mockCaptureMessage).toHaveBeenCalledWith(
         `Failed to start ToolHive: ${JSON.stringify(testError)}`,
-        'error'
+        'fatal'
       )
       expect(mockUpdateTrayStatus).toHaveBeenCalledWith(mockTray, false)
     })
@@ -219,6 +231,72 @@ describe('toolhive-manager', () => {
       )
       expect(mockUpdateTrayStatus).toHaveBeenCalledWith(mockTray, false)
       expect(isToolhiveRunning()).toBe(false)
+    })
+
+    it('captures Sentry message when process exits unexpectedly', async () => {
+      mockGetQuittingState.mockReturnValue(false)
+
+      const startPromise = startToolhive(mockTray)
+
+      // Advancing the timer actually allows the promise to resolve
+      await vi.advanceTimersByTimeAsync(50)
+      await startPromise
+
+      mockCaptureMessage.mockClear()
+
+      mockProcess.emit('exit', 1)
+
+      expect(mockCaptureMessage).toHaveBeenCalledWith(
+        'ToolHive process exited with code: 1',
+        'fatal'
+      )
+    })
+
+    it('does not capture Sentry message when app is quitting', async () => {
+      mockGetQuittingState.mockReturnValue(true)
+
+      const startPromise = startToolhive(mockTray)
+
+      await vi.advanceTimersByTimeAsync(50)
+      await startPromise
+
+      mockCaptureMessage.mockClear()
+
+      mockProcess.emit('exit', 0)
+
+      expect(mockCaptureMessage).not.toHaveBeenCalled()
+    })
+
+    it('does not capture Sentry message when process exits during restart', async () => {
+      mockGetQuittingState.mockReturnValue(false)
+
+      // Start initial process
+      const startPromise = startToolhive(mockTray)
+      await vi.advanceTimersByTimeAsync(50)
+      await startPromise
+
+      mockCaptureMessage.mockClear()
+
+      // Create a new mock process for the restart
+      const newMockProcess = new MockProcess()
+      mockSpawn.mockReturnValue(
+        newMockProcess as unknown as ReturnType<typeof spawn>
+      )
+
+      // Start restart (this sets isRestarting = true)
+      const restartPromise = restartToolhive(mockTray)
+
+      // Let the original process exit during restart
+      mockProcess.emit('exit', 0)
+
+      await vi.advanceTimersByTimeAsync(50)
+      await restartPromise
+
+      // Advance time to complete restart timeout
+      await vi.advanceTimersByTimeAsync(5000)
+
+      // Should not have called Sentry because isRestarting was true
+      expect(mockCaptureMessage).not.toHaveBeenCalled()
     })
 
     it('assigns different ports to main and MCP services', async () => {
