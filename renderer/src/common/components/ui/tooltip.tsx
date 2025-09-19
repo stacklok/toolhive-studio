@@ -35,12 +35,19 @@ function Tooltip({ onlyWhenTruncated = false, ...props }: TooltipProps) {
     [onlyWhenTruncated]
   )
 
-  const effectiveOpen = onlyWhenTruncated
-    ? // if not truncated, force closed; otherwise respect consumer control
-      isTruncated
-      ? props.open
-      : false
-    : props.open
+  const effectiveOpen = React.useMemo(() => {
+    if (!onlyWhenTruncated) {
+      return props.open
+    }
+
+    // When onlyWhenTruncated is enabled, only show tooltip if text is truncated
+    if (!isTruncated) {
+      return false
+    }
+
+    // Text is truncated, respect consumer control or default to false
+    return props.open ?? false
+  }, [onlyWhenTruncated, isTruncated, props.open])
 
   return (
     <TooltipProvider>
