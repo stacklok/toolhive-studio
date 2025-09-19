@@ -31,10 +31,7 @@ export function GridCardsRegistryServer({
         onChange={(v) => setFilter(v)}
         placeholder="Search..."
       />
-      <div
-        className="grid grid-cols-[repeat(auto-fit,minmax(250px,350px))]
-          justify-center gap-4"
-      >
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-4">
         {filteredAndSortedServers.map((server) => (
           <CardRegistryServer
             key={server.name}
