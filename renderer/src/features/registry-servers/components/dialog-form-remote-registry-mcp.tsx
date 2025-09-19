@@ -35,6 +35,7 @@ import {
   SelectContent,
   SelectItem,
 } from '@/common/components/ui/select'
+import { ExternalLinkIcon } from 'lucide-react'
 
 const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
   name: '',
@@ -288,7 +289,16 @@ export function DialogFormRemoteRegistryMcp({
                     </FormLabel>
                     <TooltipInfoIcon>
                       The authorization method the MCP server uses to
-                      authenticate clients.
+                      authenticate clients. Refer to the{' '}
+                      <a
+                        rel="noopener noreferrer"
+                        className="flex cursor-pointer items-center gap-1
+                          underline"
+                        href="https://docs.stacklok.com/toolhive/guides-ui/run-mcp-servers#configure-server"
+                        target="_blank"
+                      >
+                        documentation <ExternalLinkIcon size={12} />
+                      </a>
                     </TooltipInfoIcon>
                   </div>
                   <FormControl>
@@ -301,8 +311,10 @@ export function DialogFormRemoteRegistryMcp({
                         <SelectValue placeholder="Select authorization method" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        <SelectItem value="oauth2">OAuth2</SelectItem>
+                        <SelectItem value="none">
+                          Dynamic Client Registration
+                        </SelectItem>
+                        <SelectItem value="oauth2">OAuth 2.0</SelectItem>
                         <SelectItem value="oidc">OIDC</SelectItem>
                       </SelectContent>
                     </Select>
