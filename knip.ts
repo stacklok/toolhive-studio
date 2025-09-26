@@ -23,6 +23,7 @@ export default {
     'renderer/src/common/hooks/use-servers.ts',
     'renderer/src/common/lib/utils.ts',
     'renderer/src/common/components/ui/**',
+    'renderer/src/common/components/ai-elements/**',
     'renderer/src/vite-env.d.ts',
     'renderer/src/types/global.d.ts',
     'renderer/src/features/mcp-servers/hooks/use-mutation-restart-server.ts',
