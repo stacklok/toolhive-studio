@@ -13,6 +13,6 @@
     "paths": {
       "@/*": ["./renderer/src/*"],
       "@api/*": ["./api/generated/*"]
-    },
-  },
+    }
+  }
 }
