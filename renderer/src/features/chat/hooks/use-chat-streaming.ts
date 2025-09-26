@@ -122,6 +122,30 @@ export function useChatStreaming() {
     return 'An unknown error occurred'
   }
 
+  // Create a validated sendMessage wrapper
+  const validatedSendMessage = useCallback(
+    async (messageOrText: string | Record<string, unknown>) => {
+      // Validate settings before sending
+      if (
+        !settings.provider ||
+        !settings.model ||
+        !settings.apiKey ||
+        !settings.apiKey.trim()
+      ) {
+        throw new Error('Please configure your AI provider settings first')
+      }
+
+      // Handle both string input (for tests) and object input (for components)
+      if (typeof messageOrText === 'string') {
+        return sendMessage({ text: messageOrText })
+      } else {
+        // Pass the object directly to preserve original types
+        return sendMessage(messageOrText as Parameters<typeof sendMessage>[0])
+      }
+    },
+    [settings, sendMessage]
+  )
+
   // Memoize the processed error to avoid recalculating on every render
   const processedError = useMemo(() => {
     // Prioritize persistent error, then thread error, then streaming error
@@ -135,7 +159,7 @@ export function useChatStreaming() {
       isLoading,
       error: processedError,
       settings,
-      sendMessage,
+      sendMessage: validatedSendMessage,
       clearMessages,
       cancelRequest: stop,
       updateSettings,
@@ -149,7 +173,7 @@ export function useChatStreaming() {
     isLoading,
     processedError,
     settings,
-    sendMessage,
+    validatedSendMessage,
     clearMessages,
     stop,
     updateSettings,
