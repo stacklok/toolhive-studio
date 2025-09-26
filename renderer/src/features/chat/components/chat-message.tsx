@@ -16,6 +16,7 @@ import remarkMath from 'remark-math'
 import { useShikiTheme } from '../lib/theme-utils'
 import { TokenUsage } from './token-usage'
 import { NoContentMessage } from './no-content-message'
+import { AttachmentPreview } from './attachment-preview'
 import { useState } from 'react'
 import type { ChatUIMessage } from '../types'
 
@@ -429,6 +430,25 @@ export function ChatMessage({ message }: ChatMessageProps) {
                     ?.text || ''}
                 </Streamdown>
               </div>
+              {/* Render file attachments */}
+              {(() => {
+                const fileAttachments = message.parts.filter(
+                  (p) => p.type === 'file'
+                )
+                if (fileAttachments.length === 0) return null
+
+                return (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {fileAttachments.map((attachment, index) => (
+                      <AttachmentPreview
+                        key={index}
+                        attachment={attachment}
+                        totalAttachments={fileAttachments.length}
+                      />
+                    ))}
+                  </div>
+                )
+              })()}
             </div>
 
             {/* Timestamp for user messages */}

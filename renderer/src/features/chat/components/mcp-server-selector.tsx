@@ -97,7 +97,7 @@ export function McpServerSelector() {
       <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
         <DropdownMenuTrigger asChild>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             className="flex h-10 items-center justify-between gap-2"
           >
