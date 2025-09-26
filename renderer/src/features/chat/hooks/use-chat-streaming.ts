@@ -75,18 +75,6 @@ export function useChatStreaming() {
     isPersistentLoading ||
     isThreadLoading
 
-  const handleSendMessage = useCallback(
-    async (content: string) => {
-      // Validate settings before sending to prevent transport errors
-      if (!settings.provider || !settings.model || !settings.apiKey?.trim()) {
-        throw new Error('Please configure your AI provider settings first')
-      }
-
-      await sendMessage({ text: content })
-    },
-    [sendMessage, settings.provider, settings.model, settings.apiKey]
-  )
-
   const clearMessages = useCallback(async () => {
     try {
       // Clear both UI state and persistent storage
@@ -142,11 +130,12 @@ export function useChatStreaming() {
 
   return useMemo(() => {
     return {
+      status,
       messages,
       isLoading,
       error: processedError,
       settings,
-      sendMessage: handleSendMessage,
+      sendMessage,
       clearMessages,
       cancelRequest: stop,
       updateSettings,
@@ -155,11 +144,12 @@ export function useChatStreaming() {
       isPersistentLoading,
     }
   }, [
+    status,
     messages,
     isLoading,
     processedError,
     settings,
-    handleSendMessage,
+    sendMessage,
     clearMessages,
     stop,
     updateSettings,
