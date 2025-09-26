@@ -42,6 +42,30 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
     }
   }
 
+  private processMessagesForIPC(messages: ChatUIMessage[]): ChatUIMessage[] {
+    return messages.map((message) => {
+      if (!message.parts?.length) {
+        return message
+      }
+
+      // Files should already be in data URL format from PromptInput
+      message.parts.forEach((part) => {
+        if (
+          part.type === 'file' &&
+          'url' in part &&
+          part.url?.startsWith('blob:')
+        ) {
+          console.warn(
+            'Unexpected blob URL found - files should already be base64:',
+            part.filename
+          )
+        }
+      })
+
+      return message
+    })
+  }
+
   async sendMessages(
     options: {
       trigger: 'submit-message' | 'regenerate-message'
@@ -68,9 +92,12 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
       throw new Error('Please configure your AI provider settings first')
     }
 
+    // Process messages for IPC (files should already be base64)
+    const processedMessages = this.processMessagesForIPC(options.messages)
+
     const backendRequest = {
       chatId: options.chatId,
-      messages: options.messages,
+      messages: processedMessages,
       provider: settings.provider,
       model: settings.model,
       apiKey: settings.apiKey,
