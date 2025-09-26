@@ -175,6 +175,7 @@ export function ChatInputPrompt({
 
   return (
     <PromptInput
+      accept="image/*,.pdf,.txt,.md,.json,.xml,.yaml,.yml,.csv,.js,.ts,.jsx,.tsx,.py,.java,.cpp,.c,.h,.html,.css,.scss,.less,.sql,.sh,.bat,.docx,.doc,.rtf"
       onError={console.error}
       onAbort={onStopGeneration}
       onSubmit={handleSubmit}
