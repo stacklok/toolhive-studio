@@ -112,6 +112,71 @@ describe('DialogFormLocalMcp', () => {
     ).toBeInTheDocument()
   })
 
+  it('preselects the current route group in Group dropdown even with delayed groups', async () => {
+    // Provide groups including a non-default one
+    mswServer.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({ groups: [{ name: 'default' }, { name: 'research' }] }, { status: 200 })
+      )
+    )
+
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} groupName="research" />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Group select should show the route group preselected
+    const groupCombobox = await screen.findByRole('combobox', { name: 'Group' })
+    expect(groupCombobox).toHaveTextContent('research')
+  })
+
+  it('submits the selected group in form data', async () => {
+    const mockInstallServerMutation = vi.fn()
+    mockUseRunCustomServer.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+
+    mswServer.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({ groups: [{ name: 'default' }, { name: 'research' }] })
+      )
+    )
+
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} groupName="research" />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Fill minimal required fields
+    await userEvent.type(screen.getByRole('textbox', { name: /name/i }), 'test-server')
+    await userEvent.click(screen.getByLabelText('Transport'))
+    await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
+    await userEvent.type(
+      screen.getByRole('textbox', { name: 'Docker image' }),
+      'ghcr.io/test/server'
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Install server' }))
+
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalled()
+    })
+    const firstArgs = mockInstallServerMutation.mock.calls[0]?.[0]
+    expect(firstArgs?.data?.group).toBe('research')
+  })
+
   it('submits docker image form with minimal required fields', async () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunCustomServer.mockReturnValue({

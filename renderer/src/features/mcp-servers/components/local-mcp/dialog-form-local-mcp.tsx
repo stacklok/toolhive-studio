@@ -30,6 +30,7 @@ import {
 import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-workload-form-wrapper'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
+import { useEffect } from 'react'
 
 type Tab = 'configuration' | 'network-isolation'
 type CommonFields = keyof FormSchemaLocalMcp
@@ -166,6 +167,16 @@ export function DialogFormLocalMcp({
         }
       : {}),
   })
+
+  // Keep the form's group in sync with the current route when opening (create mode)
+  useEffect(() => {
+    if (isEditing || !isOpen) return
+    form.setValue('group', groupName, {
+      shouldDirty: false,
+      shouldTouch: false,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupName, isEditing, isOpen])
 
   const onSubmitForm = (data: FormSchemaLocalMcp) => {
     setIsSubmitting(true)
