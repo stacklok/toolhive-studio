@@ -168,15 +168,13 @@ export function DialogFormLocalMcp({
       : {}),
   })
 
-  // Keep the form's group in sync with the current route when opening (create mode)
   useEffect(() => {
     if (isEditing || !isOpen) return
     form.setValue('group', groupName, {
       shouldDirty: false,
       shouldTouch: false,
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groupName, isEditing, isOpen])
+  }, [form, groupName, isEditing, isOpen])
 
   const onSubmitForm = (data: FormSchemaLocalMcp) => {
     setIsSubmitting(true)
