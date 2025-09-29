@@ -50,12 +50,10 @@ export function useRunCustomServer({
         })),
       ]
 
-      const overrideGroupName = (data as unknown as { group?: string })?.group
-
       const createRequest: V1CreateRequest = {
         ...prepareCreateWorkloadData(data, secretsForRequest),
-        ...((overrideGroupName ?? groupName)
-          ? { group: overrideGroupName ?? groupName }
+        ...((data.group ?? groupName)
+          ? { group: data.group ?? groupName }
           : {}),
       }
 
