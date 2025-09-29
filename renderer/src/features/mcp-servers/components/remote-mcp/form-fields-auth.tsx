@@ -172,9 +172,10 @@ export function FormFieldsAuth({
                 data-1p-ignore
                 placeholder="e.g. 50051"
                 value={field.value || ''}
-                onChange={(e) => {
+                onChange={async (e) => {
                   const value = e.target.value
                   field.onChange(value === '' ? '' : parseInt(value, 10))
+                  await form.trigger()
                 }}
                 name={field.name}
               />

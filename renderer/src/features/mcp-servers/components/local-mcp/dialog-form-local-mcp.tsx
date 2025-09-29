@@ -168,6 +168,7 @@ export function DialogFormLocalMcp({
           onSuccess: () => {
             checkServerStatus({ serverName: data.name, groupName, isEditing })
             closeDialog()
+            form.reset()
           },
           onSettled: (_, error) => {
             setIsSubmitting(false)
