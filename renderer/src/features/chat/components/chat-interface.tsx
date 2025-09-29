@@ -11,7 +11,6 @@ import { ChatMessage } from './chat-message'
 import { DialogApiKeys } from './dialog-api-keys'
 import { ErrorAlert } from './error-alert'
 import { useChatStreaming } from '../hooks/use-chat-streaming'
-import { McpServerSettings } from './mcp-server-settings'
 import { ChatInputPrompt } from './chat-input-prompt'
 import { Separator } from '@/common/components/ui/separator'
 import { useConfirm } from '@/common/hooks/use-confirm'
@@ -252,7 +251,6 @@ export function ChatInterface() {
                   {/* Chat Input integrated with main content */}
                   {hasProviderAndModel && (
                     <div className="mx-auto max-w-2xl space-y-4">
-                      <McpServerSettings />
                       <ChatInputPrompt
                         onSendMessage={sendMessage}
                         onStopGeneration={cancelRequest}
@@ -288,11 +286,6 @@ export function ChatInterface() {
           {/* Chat Input when there are messages */}
           {hasMessages && (
             <div className="mx-auto w-full pt-4 pb-2">
-              {hasProviderAndModel && (
-                <div className="mb-4">
-                  <McpServerSettings />
-                </div>
-              )}
               <ChatInputPrompt
                 onSendMessage={sendMessage}
                 onStopGeneration={cancelRequest}

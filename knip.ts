@@ -24,10 +24,10 @@ export default {
     'renderer/src/common/lib/utils.ts',
     'renderer/src/common/components/ui/**',
     'renderer/src/common/components/ai-elements/**',
+    'renderer/src/features/chat/components/mcp-server-badge.tsx',
+    'renderer/src/features/chat/components/mcp-server-settings.tsx',
     'renderer/src/vite-env.d.ts',
     'renderer/src/types/global.d.ts',
-    'renderer/src/features/mcp-servers/hooks/use-mutation-restart-server.ts',
-    'renderer/src/features/mcp-servers/hooks/use-mutation-stop-server.ts',
     'main/src/vite-env.d.ts',
   ],
   ignoreDependencies: [

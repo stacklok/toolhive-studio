@@ -9,6 +9,7 @@ interface McpServerBadgeProps {
   serverName: string
   onToolsChange: () => void
 }
+// TODO: we are not using this at the moment, but better keep it here for now
 export function McpServerBadge({
   serverName,
   onToolsChange,
