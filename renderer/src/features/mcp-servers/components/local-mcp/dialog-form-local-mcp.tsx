@@ -29,6 +29,9 @@ import {
 } from '../../lib/form-schema-local-mcp'
 import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-workload-form-wrapper'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
+import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { featureFlagKeys } from '../../../../../../utils/feature-flags'
 
 type Tab = 'configuration' | 'network-isolation'
 type CommonFields = keyof FormSchemaLocalMcp
@@ -52,6 +55,8 @@ const FIELD_TAB_MAP = {
   volumes: 'configuration',
 } satisfies FieldTabMapping<Tab, Field>
 
+type LocalFormWithGroup = FormSchemaLocalMcp & { group?: string }
+
 const DEFAULT_FORM_VALUES = {
   type: 'docker_image',
   name: '',
@@ -67,7 +72,7 @@ const DEFAULT_FORM_VALUES = {
   envVars: [],
   secrets: [],
   cmd_arguments: [],
-} as Partial<FormSchemaLocalMcp>
+} as Partial<LocalFormWithGroup>
 
 export function DialogFormLocalMcp({
   isOpen,
@@ -145,14 +150,20 @@ export function DialogFormLocalMcp({
     isEditing &&
     convertCreateRequestToFormData(existingServer, availableSecrets)
 
-  const form = useForm<FormSchemaLocalMcp>({
+  const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
+  const { data: groupsData } = useGroups()
+  const groups = groupsData?.groups ?? []
+
+  const form = useForm<LocalFormWithGroup>({
     resolver: zodV4Resolver(
       getFormSchemaLocalMcp(workloads, serverToEdit || undefined)
     ),
-    defaultValues: DEFAULT_FORM_VALUES,
+    defaultValues: { ...DEFAULT_FORM_VALUES, group: groupName },
     reValidateMode: 'onChange',
     mode: 'onChange',
-    ...(editingFormData ? { values: editingFormData } : {}),
+    ...(editingFormData
+      ? { values: { ...editingFormData, group: existingServer?.group ?? groupName } }
+      : {}),
   })
 
   const onSubmitForm = (data: FormSchemaLocalMcp) => {
@@ -166,7 +177,11 @@ export function DialogFormLocalMcp({
         { data },
         {
           onSuccess: () => {
-            checkServerStatus({ serverName: data.name, groupName, isEditing })
+            checkServerStatus({
+              serverName: data.name,
+              groupName: form.getValues('group') || groupName,
+              isEditing,
+            })
             closeDialog()
           },
           onSettled: (_, error) => {
@@ -186,7 +201,10 @@ export function DialogFormLocalMcp({
         { data },
         {
           onSuccess: () => {
-            checkServerStatus({ serverName: data.name, groupName })
+            checkServerStatus({
+              serverName: data.name,
+              groupName: form.getValues('group') || groupName,
+            })
             closeDialog()
           },
           onSettled: (_, error) => {
@@ -265,10 +283,18 @@ export function DialogFormLocalMcp({
           </Tabs>
           {activeTab === 'configuration' && (
             <div className="flex-1 space-y-4 overflow-y-auto px-6">
-              <FormFieldsBase form={form} isEditing={isEditing} />
+              <FormFieldsBase
+                form={form}
+                isEditing={isEditing}
+                groupProps={{
+                  enabled: isGroupsEnabled,
+                  show: !isEditing,
+                  groups,
+                }}
+              />
               <FormFieldsArrayCustomSecrets form={form} />
               <FormFieldsArrayCustomEnvVars form={form} />
-              <FormFieldsArrayVolumes<FormSchemaLocalMcp> form={form} />
+              <FormFieldsArrayVolumes<LocalFormWithGroup> form={form} />
             </div>
           )}
           {activeTab === 'network-isolation' && (

@@ -19,12 +19,18 @@ import { RadioGroup, RadioGroupItem } from '@/common/components/ui/radio-group'
 import { CommandArgumentsField } from '@/common/components/workload-cmd-arg/command-arguments-field'
 import type { FormSchemaLocalMcp } from '../../lib/form-schema-local-mcp'
 
-export function FormFieldsBase({
+export function FormFieldsBase<T extends FormSchemaLocalMcp & { group?: string }>({
   form,
   isEditing = false,
+  groupProps,
 }: {
-  form: UseFormReturn<FormSchemaLocalMcp>
+  form: UseFormReturn<T>
   isEditing?: boolean
+  groupProps?: {
+    enabled: boolean
+    show: boolean
+    groups: Array<{ name?: string | null }>
+  }
 }) {
   const typeValue = form.watch('type')
   const protocolValue = form.watch('protocol') ?? 'npx'
@@ -91,6 +97,40 @@ export function FormFieldsBase({
           </FormItem>
         )}
       />
+
+      {groupProps?.enabled && groupProps?.show && (
+        // Inserted just under the Server Name field
+        <FormField
+          control={form.control}
+          name={"group"}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor={field.name}>Group</FormLabel>
+              <FormControl>
+                <Select
+                  onValueChange={(value) => field.onChange(value)}
+                  value={field.value}
+                  name={field.name}
+                >
+                  <SelectTrigger id={field.name} className="w-full">
+                    <SelectValue placeholder="Select a group" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {groupProps.groups
+                      .filter((g) => g.name)
+                      .map((g) => (
+                        <SelectItem key={g.name!} value={g.name!}>
+                          {g.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
       <FormField
         control={form.control}
