@@ -16,9 +16,6 @@ import {
   SelectContent,
   SelectItem,
 } from '@/common/components/ui/select'
-import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
-import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
-import { featureFlagKeys } from '../../../../../../utils/feature-flags'
 import { FormFieldsArrayCustomSecrets } from '../form-fields-array-custom-secrets'
 import { FormFieldsArrayCustomEnvVars } from '../form-fields-array-custom-env-vars'
 import { FormFieldsAuth } from './form-fields-auth'
@@ -43,9 +40,7 @@ import {
 } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
 import { ExternalLinkIcon } from 'lucide-react'
 
-type RemoteFormWithGroup = FormSchemaRemoteMcp & { group?: string }
-
-const DEFAULT_FORM_VALUES: RemoteFormWithGroup = {
+const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
   name: '',
   transport: 'streamable-http',
   auth_type: 'none',
@@ -136,20 +131,14 @@ export function DialogFormRemoteMcp({
     isEditing &&
     convertCreateRequestToFormData(existingServer, availableSecrets)
 
-  const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
-  const { data: groupsData } = useGroups()
-  const groups = groupsData?.groups ?? []
-
-  const form = useForm<RemoteFormWithGroup>({
+  const form = useForm<FormSchemaRemoteMcp>({
     resolver: zodV4Resolver(
       getFormSchemaRemoteMcp(workloads, serverToEdit || undefined)
     ),
-    defaultValues: { ...DEFAULT_FORM_VALUES, group: groupName },
+    defaultValues: DEFAULT_FORM_VALUES,
     reValidateMode: 'onChange',
     mode: 'onChange',
-    ...(editingFormData
-      ? { values: { ...editingFormData, group: existingServer?.group ?? groupName } }
-      : {}),
+    ...(editingFormData ? { values: editingFormData } : {}),
   })
 
   const onSubmitForm = (data: FormSchemaRemoteMcp) => {
@@ -186,10 +175,7 @@ export function DialogFormRemoteMcp({
         { data },
         {
           onSuccess: () => {
-            checkServerStatus({
-              serverName: data.name,
-              groupName: form.getValues('group') || groupName,
-            })
+            checkServerStatus({ serverName: data.name, groupName })
             closeDialog()
           },
           onSettled: (_, error) => {
@@ -282,40 +268,7 @@ export function DialogFormRemoteMcp({
                 </FormItem>
               )}
             />
-            {isGroupsEnabled && !isEditing && (
-              <FormField
-                control={form.control}
-                name="group"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center gap-1">
-                      <FormLabel htmlFor={field.name}>Group</FormLabel>
-                    </div>
-                    <FormControl>
-                      <Select
-                        onValueChange={(value) => field.onChange(value)}
-                        value={field.value}
-                        name={field.name}
-                      >
-                        <SelectTrigger id={field.name} className="w-full">
-                          <SelectValue placeholder="Select a group" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {groups
-                            .filter((g) => g.name)
-                            .map((g) => (
-                              <SelectItem key={g.name} value={g.name!}>
-                                {g.name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+
             <FormField
               control={form.control}
               name="url"

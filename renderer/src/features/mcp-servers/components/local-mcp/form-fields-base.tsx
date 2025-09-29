@@ -19,7 +19,7 @@ import { RadioGroup, RadioGroupItem } from '@/common/components/ui/radio-group'
 import { CommandArgumentsField } from '@/common/components/workload-cmd-arg/command-arguments-field'
 import type { FormSchemaLocalMcp } from '../../lib/form-schema-local-mcp'
 
-export function FormFieldsBase<T extends FormSchemaLocalMcp & { group?: string }>({
+export function FormFieldsBase<T extends FormSchemaLocalMcp>({
   form,
   isEditing = false,
   groupProps,
@@ -27,7 +27,6 @@ export function FormFieldsBase<T extends FormSchemaLocalMcp & { group?: string }
   form: UseFormReturn<T>
   isEditing?: boolean
   groupProps?: {
-    enabled: boolean
     show: boolean
     groups: Array<{ name?: string | null }>
   }
@@ -98,11 +97,11 @@ export function FormFieldsBase<T extends FormSchemaLocalMcp & { group?: string }
         )}
       />
 
-      {groupProps?.enabled && groupProps?.show && (
+      {groupProps?.show && (
         // Inserted just under the Server Name field
         <FormField
           control={form.control}
-          name={"group"}
+          name={'group'}
           render={({ field }) => (
             <FormItem>
               <FormLabel htmlFor={field.name}>Group</FormLabel>

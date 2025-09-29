@@ -56,16 +56,12 @@ export function useRunRemoteServer({
         })),
       ]
 
-      const overrideGroupName = (data as unknown as { group?: string })?.group
-
       const createRequest: V1CreateRequest = {
         ...prepareCreateWorkloadData(
           data,
           isDefaultAuthType ? secretsForRequest : []
         ),
-        ...((overrideGroupName ?? groupName)
-          ? { group: overrideGroupName ?? groupName }
-          : {}),
+        ...(groupName ? { group: groupName } : {}),
       }
       await createWorkload({
         body: createRequest,

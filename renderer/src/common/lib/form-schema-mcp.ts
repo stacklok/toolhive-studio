@@ -274,8 +274,8 @@ export const createMcpBaseSchema = (workloads: CoreWorkload[]) => {
     .extend(envVarsSchema.shape)
     .extend(secretsSchema.shape)
     .extend({
-      // Optional for custom MCPs; default is derived from route
-      group: z.string().optional(),
+      // Required for custom MCPs; default is derived from route but user can change it
+      group: z.string().min(1, 'Group is required'),
     })
 
   return commonSchema
@@ -325,10 +325,6 @@ export const createRemoteMcpBaseSchema = (workloads: CoreWorkload[]) => {
     .extend(urlSchema.shape)
     .extend(authTypeSchema.shape)
     .extend({ oauth_config: remoteMcpOauthConfigSchema })
-    .extend({
-      // Optional for custom remote MCPs; default is derived from route
-      group: z.string().optional(),
-    })
 
   return commonSchema
 }

@@ -30,8 +30,6 @@ import {
 import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-workload-form-wrapper'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
-import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
-import { featureFlagKeys } from '../../../../../../utils/feature-flags'
 
 type Tab = 'configuration' | 'network-isolation'
 type CommonFields = keyof FormSchemaLocalMcp
@@ -150,7 +148,6 @@ export function DialogFormLocalMcp({
     isEditing &&
     convertCreateRequestToFormData(existingServer, availableSecrets)
 
-  const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
   const { data: groupsData } = useGroups()
   const groups = groupsData?.groups ?? []
 
@@ -162,7 +159,12 @@ export function DialogFormLocalMcp({
     reValidateMode: 'onChange',
     mode: 'onChange',
     ...(editingFormData
-      ? { values: { ...editingFormData, group: existingServer?.group ?? groupName } }
+      ? {
+          values: {
+            ...editingFormData,
+            group: existingServer?.group ?? groupName,
+          },
+        }
       : {}),
   })
 
@@ -287,7 +289,6 @@ export function DialogFormLocalMcp({
                 form={form}
                 isEditing={isEditing}
                 groupProps={{
-                  enabled: isGroupsEnabled,
                   show: !isEditing,
                   groups,
                 }}
