@@ -274,8 +274,7 @@ export const createMcpBaseSchema = (workloads: CoreWorkload[]) => {
     .extend(envVarsSchema.shape)
     .extend(secretsSchema.shape)
     .extend({
-      // Optional in schema to keep TS/tests simpler; UI enforces selection
-      group: z.string().optional(),
+      group: z.string(),
     })
 
   return commonSchema
