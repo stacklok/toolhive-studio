@@ -100,7 +100,7 @@ export function ChatInterface() {
 
   return (
     <>
-      <TitlePage title="Chat">
+      <TitlePage title="Playground">
         {hasMessages && (
           <Button
             onClick={onClearMessages}

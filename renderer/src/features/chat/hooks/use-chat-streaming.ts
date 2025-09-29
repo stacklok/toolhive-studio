@@ -6,6 +6,7 @@ import type { ChatUIMessage } from '../types'
 import { ElectronIPCChatTransport } from '../transport/electron-ipc-chat-transport'
 import { useChatSettings } from './use-chat-settings'
 import { useThreadManagement } from './use-thread-management'
+import type { FileUIPart } from 'ai'
 
 export function useChatStreaming() {
   const queryClient = useQueryClient()
@@ -20,7 +21,6 @@ export function useChatStreaming() {
     isLoading: isSettingsLoading,
   } = useChatSettings()
 
-  // Use dedicated thread management hook
   const {
     currentThreadId,
     isLoading: isThreadLoading,
@@ -67,7 +67,6 @@ export function useChatStreaming() {
     loadInitialMessages()
   }, [currentThreadId, loadThreadMessages, setMessages])
 
-  // Convert status to our isLoading format
   const isLoading =
     status === 'submitted' ||
     status === 'streaming' ||
@@ -77,7 +76,6 @@ export function useChatStreaming() {
 
   const clearMessages = useCallback(async () => {
     try {
-      // Clear both UI state and persistent storage
       await clearThreadMessages()
       setMessages([])
       setPersistentError(null)
@@ -122,10 +120,15 @@ export function useChatStreaming() {
     return 'An unknown error occurred'
   }
 
-  // Create a validated sendMessage wrapper
   const validatedSendMessage = useCallback(
-    async (messageOrText: string | Record<string, unknown>) => {
-      // Validate settings before sending
+    async (
+      messageOrText:
+        | string
+        | {
+            text: string
+            files?: FileUIPart[]
+          }
+    ) => {
       if (
         !settings.provider ||
         !settings.model ||
@@ -135,12 +138,10 @@ export function useChatStreaming() {
         throw new Error('Please configure your AI provider settings first')
       }
 
-      // Handle both string input (for tests) and object input (for components)
       if (typeof messageOrText === 'string') {
         return sendMessage({ text: messageOrText })
       } else {
-        // Pass the object directly to preserve original types
-        return sendMessage(messageOrText as Parameters<typeof sendMessage>[0])
+        return sendMessage(messageOrText)
       }
     },
     [settings, sendMessage]
@@ -148,7 +149,6 @@ export function useChatStreaming() {
 
   // Memoize the processed error to avoid recalculating on every render
   const processedError = useMemo(() => {
-    // Prioritize persistent error, then thread error, then streaming error
     return persistentError || threadError || processError(error)
   }, [error, persistentError, threadError])
 

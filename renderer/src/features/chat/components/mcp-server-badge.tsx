@@ -16,7 +16,6 @@ export function McpServerBadge({
 }: McpServerBadgeProps) {
   const [modalOpen, setModalOpen] = useState(false)
 
-  // Fetch enabled tools for this specific server
   const { data: enabledMcpTools } = useQuery({
     queryKey: ['enabled-mcp-tools'],
     queryFn: () => window.electronAPI.chat.getEnabledMcpTools(),
