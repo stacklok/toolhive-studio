@@ -53,7 +53,6 @@ export function ChatInterface() {
 
     const { scrollTop, scrollHeight, clientHeight } = container
     const distanceFromBottom = scrollHeight - scrollTop - clientHeight
-    console.log('distanceFromBottom', distanceFromBottom)
     const isAtBottom = distanceFromBottom === 0
 
     setShowScrollToBottom(!isAtBottom)
