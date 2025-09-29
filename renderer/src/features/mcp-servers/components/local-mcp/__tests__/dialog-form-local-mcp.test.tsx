@@ -1,3 +1,4 @@
+import React from 'react'
 import { render, waitFor, screen, act } from '@testing-library/react'
 import { it, expect, vi, describe, beforeEach } from 'vitest'
 import { DialogFormLocalMcp } from '../dialog-form-local-mcp'
@@ -112,11 +113,67 @@ describe('DialogFormLocalMcp', () => {
     ).toBeInTheDocument()
   })
 
+  it('opens with the latest groupName when group changes before opening', async () => {
+    // Provide groups API
+    mswServer.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [{ name: 'default' }, { name: 'research' }],
+        })
+      )
+    )
+
+    const mockInstallServerMutation = vi.fn()
+    mockUseRunCustomServer.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+
+    // Test harness to keep the dialog mounted while toggling props
+    function Harness() {
+      const [group, setGroup] = React.useState('default')
+      const [open, setOpen] = React.useState(false)
+
+      React.useEffect(() => {
+        // Change group first while closed, then open
+        const t = setTimeout(() => {
+          setGroup('research')
+          setOpen(true)
+        }, 0)
+        return () => clearTimeout(t)
+      }, [])
+
+      return (
+        <Dialog open>
+          <DialogFormLocalMcp
+            isOpen={open}
+            closeDialog={vi.fn()}
+            groupName={group}
+          />
+        </Dialog>
+      )
+    }
+
+    renderWithProviders(<Harness />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    const groupCombobox = await screen.findByRole('combobox', { name: 'Group' })
+    await userEvent.click(groupCombobox)
+    const selected = await screen.findByRole('option', { name: 'research' })
+    expect(selected).toHaveAttribute('aria-selected', 'true')
+  })
+
   it('preselects the current route group in Group dropdown even with delayed groups', async () => {
     // Provide groups including a non-default one
     mswServer.use(
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({ groups: [{ name: 'default' }, { name: 'research' }] }, { status: 200 })
+        HttpResponse.json(
+          { groups: [{ name: 'default' }, { name: 'research' }] },
+          { status: 200 }
+        )
       )
     )
 
@@ -145,7 +202,9 @@ describe('DialogFormLocalMcp', () => {
 
     mswServer.use(
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({ groups: [{ name: 'default' }, { name: 'research' }] })
+        HttpResponse.json({
+          groups: [{ name: 'default' }, { name: 'research' }],
+        })
       )
     )
 
@@ -160,7 +219,10 @@ describe('DialogFormLocalMcp', () => {
     })
 
     // Fill minimal required fields
-    await userEvent.type(screen.getByRole('textbox', { name: /name/i }), 'test-server')
+    await userEvent.type(
+      screen.getByRole('textbox', { name: /name/i }),
+      'test-server'
+    )
     await userEvent.click(screen.getByLabelText('Transport'))
     await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
     await userEvent.type(
@@ -168,7 +230,9 @@ describe('DialogFormLocalMcp', () => {
       'ghcr.io/test/server'
     )
 
-    await userEvent.click(screen.getByRole('button', { name: 'Install server' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
 
     await waitFor(() => {
       expect(mockInstallServerMutation).toHaveBeenCalled()

@@ -1,7 +1,6 @@
 import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { useEffect } from 'react'
 import { RouterProvider } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { recordRequests, server as mswServer } from '@/common/mocks/node'
@@ -11,15 +10,24 @@ import { createFileRouteTestRouter } from '@/common/test/create-file-route-test-
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
 
-// Auto-open the local custom MCP dialog on route render to avoid UI pointer issues
-vi.mock('@/features/mcp-servers/components/dropdown-menu-run-mcp-server', () => ({
-  DropdownMenuRunMcpServer: ({ openRunCommandDialog }: { openRunCommandDialog: (s: { local: boolean; remote: boolean }) => void }) => {
-    useEffect(() => {
-      openRunCommandDialog({ local: true, remote: false })
-    }, [openRunCommandDialog])
-    return null
-  },
-}))
+// Provide a test-only trigger to open the Local MCP dialog on demand
+vi.mock(
+  '@/features/mcp-servers/components/dropdown-menu-run-mcp-server',
+  () => ({
+    DropdownMenuRunMcpServer: ({
+      openRunCommandDialog,
+    }: {
+      openRunCommandDialog: (s: { local: boolean; remote: boolean }) => void
+    }) => {
+      return (
+        <button
+          aria-label="Open Local Dialog"
+          onClick={() => openRunCommandDialog({ local: true, remote: false })}
+        />
+      )
+    },
+  })
+)
 
 describe('Group route - custom local MCP defaults to current group', () => {
   beforeEach(() => {
@@ -35,7 +43,9 @@ describe('Group route - custom local MCP defaults to current group', () => {
     // Provide groups including the target group
     mswServer.use(
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({ groups: [{ name: 'default' }, { name: 'research' }] })
+        HttpResponse.json({
+          groups: [{ name: 'default' }, { name: 'research' }],
+        })
       )
     )
 
@@ -54,7 +64,10 @@ describe('Group route - custom local MCP defaults to current group', () => {
       </PromptProvider>
     )
 
-    // Open the add menu and choose Custom MCP server
+    // Open the dialog
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Open Local Dialog' })
+    )
     // Dialog should open and Group should be preselected to research
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -73,7 +86,9 @@ describe('Group route - custom local MCP defaults to current group', () => {
 
     mswServer.use(
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({ groups: [{ name: 'default' }, { name: 'research' }] })
+        HttpResponse.json({
+          groups: [{ name: 'default' }, { name: 'research' }],
+        })
       )
     )
 
@@ -101,7 +116,10 @@ describe('Group route - custom local MCP defaults to current group', () => {
       expect(router.state.location.pathname).toBe('/group/research')
     })
 
-    // Open the add menu and choose Custom MCP server
+    // Open the dialog after navigation
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Open Local Dialog' })
+    )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
@@ -142,6 +160,9 @@ describe('Group route - custom local MCP defaults to current group', () => {
       </PromptProvider>
     )
 
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Open Local Dialog' })
+    )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
