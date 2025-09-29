@@ -1,6 +1,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogTitle,
 } from '@/common/components/ui/dialog'
 import { X } from 'lucide-react'
@@ -21,8 +22,12 @@ export function ImageModal({
 }: ImageModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-h-[90vh] max-w-4xl p-2">
+      <DialogContent
+        aria-describedby="image-modal-description"
+        className="max-h-[90vh] max-w-4xl p-2"
+      >
         <DialogTitle className="sr-only">{fileName}</DialogTitle>
+        <DialogDescription aria-describedby={`ImageModal for ${fileName}`} />
         <div className="relative">
           <Button
             variant="ghost"

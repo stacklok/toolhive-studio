@@ -6,6 +6,7 @@ import { Label } from '@/common/components/ui/label'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -158,11 +159,15 @@ export function DialogApiKeys({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent
+        aria-describedby="dialog-api-keys-description"
+        className="max-w-2xl"
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             Manage API Keys
           </DialogTitle>
+          <DialogDescription aria-describedby="Modal for managing provider API keys" />
         </DialogHeader>
         <ScrollArea className="max-h-[600px] overflow-y-auto">
           <div className="space-y-3">
