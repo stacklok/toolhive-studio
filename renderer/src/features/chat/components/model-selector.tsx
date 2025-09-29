@@ -65,11 +65,11 @@ export function ModelSelector({
           disabled={isLoading}
         >
           <div className="flex min-w-0 items-center gap-2">
-            <Bot className="h-4 w-4" />
+            {getProviderIcon(settings.provider)}
             {settings.provider && settings.model ? (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="max-w-40 truncate font-mono text-sm">
+                  <span className="max-w-40 truncate text-sm">
                     {settings.model}
                   </span>
                 </TooltipTrigger>

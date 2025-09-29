@@ -1,4 +1,9 @@
 import React from 'react'
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/common/components/ui/tooltip'
 
 // Provider SVG icons for the UI
 const PROVIDER_ICONS: Record<string, React.ReactElement> = {
@@ -76,7 +81,65 @@ const PROVIDER_ICONS: Record<string, React.ReactElement> = {
   ),
 }
 
-// Get provider icon as React component
+// Provider names for tooltips
+const PROVIDER_NAMES: Record<string, string> = {
+  openai: 'OpenAI',
+  anthropic: 'Anthropic',
+  google: 'Google',
+  xai: 'xAI',
+  openrouter: 'OpenRouter',
+}
+// Get provider icon wrapped with tooltip
+function getProviderIconWithTooltip(
+  providerId: string
+): React.ReactElement | null {
+  const icon = PROVIDER_ICONS[providerId]
+  const name = PROVIDER_NAMES[providerId]
+
+  if (!icon || !name) return null
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex items-center">{icon}</span>
+      </TooltipTrigger>
+      <TooltipContent>{name}</TooltipContent>
+    </Tooltip>
+  )
+}
+
+function getProviderIdFromModel(model: string): string | null {
+  if (!model) return null
+
+  // Handle OpenRouter models with prefixes
+  if (model.includes('/')) {
+    return 'openrouter'
+  }
+
+  // Handle direct provider models
+  if (model.startsWith('claude-')) return 'anthropic'
+  if (model.startsWith('gemini-')) return 'google'
+  if (model.startsWith('grok-')) return 'xai'
+  if (
+    model.startsWith('gpt-') ||
+    model.startsWith('o3') ||
+    model.startsWith('o4')
+  )
+    return 'openai'
+
+  return null
+}
+
+// Get provider icon by model (without tooltip)
+export function getProviderIconByModel(
+  model: string
+): React.ReactElement | null {
+  if (!model) return null
+  const providerId = getProviderIdFromModel(model)
+  if (!providerId) return null
+  return getProviderIconWithTooltip(providerId) || null
+}
+
 export function getProviderIcon(providerId: string): React.ReactElement | null {
-  return PROVIDER_ICONS[providerId] || PROVIDER_ICONS['openrouter'] || null
+  return getProviderIconWithTooltip(providerId) || null
 }

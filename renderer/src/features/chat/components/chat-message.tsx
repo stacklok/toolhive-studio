@@ -19,6 +19,7 @@ import { NoContentMessage } from './no-content-message'
 import { AttachmentPreview } from './attachment-preview'
 import { useState } from 'react'
 import type { ChatUIMessage } from '../types'
+import { getProviderIconByModel } from './provider-icons'
 
 interface ChatMessageProps {
   message: ChatUIMessage
@@ -405,6 +406,9 @@ export function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === 'user'
   const shikiTheme = useShikiTheme()
 
+  const providerIcon =
+    message.metadata?.model && getProviderIconByModel(message.metadata?.model)
+
   if (isUser) {
     // User message with bubble styling
     return (
@@ -482,7 +486,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
         className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center
           rounded-lg"
       >
-        <Bot className="h-4 w-4" />
+        {providerIcon ?? <Bot className="h-4 w-4" />}
       </div>
 
       {/* Message Content */}
