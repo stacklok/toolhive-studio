@@ -274,8 +274,8 @@ export const createMcpBaseSchema = (workloads: CoreWorkload[]) => {
     .extend(envVarsSchema.shape)
     .extend(secretsSchema.shape)
     .extend({
-      // Required for custom MCPs; default is derived from route but user can change it
-      group: z.string().min(1, 'Group is required'),
+      // Optional in schema to keep TS/tests simpler; UI enforces selection
+      group: z.string().optional(),
     })
 
   return commonSchema

@@ -19,12 +19,12 @@ import { RadioGroup, RadioGroupItem } from '@/common/components/ui/radio-group'
 import { CommandArgumentsField } from '@/common/components/workload-cmd-arg/command-arguments-field'
 import type { FormSchemaLocalMcp } from '../../lib/form-schema-local-mcp'
 
-export function FormFieldsBase<T extends FormSchemaLocalMcp>({
+export function FormFieldsBase({
   form,
   isEditing = false,
   groupProps,
 }: {
-  form: UseFormReturn<T>
+  form: UseFormReturn<FormSchemaLocalMcp>
   isEditing?: boolean
   groupProps?: {
     show: boolean

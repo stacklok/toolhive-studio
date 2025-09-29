@@ -38,6 +38,7 @@ type Field = CommonFields | VariantSpecificFields
 
 const FIELD_TAB_MAP = {
   name: 'configuration',
+  group: 'configuration',
   transport: 'configuration',
   type: 'configuration',
   image: 'configuration',
@@ -52,8 +53,6 @@ const FIELD_TAB_MAP = {
   networkIsolation: 'network-isolation',
   volumes: 'configuration',
 } satisfies FieldTabMapping<Tab, Field>
-
-type LocalFormWithGroup = FormSchemaLocalMcp & { group?: string }
 
 const DEFAULT_FORM_VALUES = {
   type: 'docker_image',
@@ -70,7 +69,7 @@ const DEFAULT_FORM_VALUES = {
   envVars: [],
   secrets: [],
   cmd_arguments: [],
-} as Partial<LocalFormWithGroup>
+} as Partial<FormSchemaLocalMcp>
 
 export function DialogFormLocalMcp({
   isOpen,
@@ -151,7 +150,7 @@ export function DialogFormLocalMcp({
   const { data: groupsData } = useGroups()
   const groups = groupsData?.groups ?? []
 
-  const form = useForm<LocalFormWithGroup>({
+  const form = useForm<FormSchemaLocalMcp>({
     resolver: zodV4Resolver(
       getFormSchemaLocalMcp(workloads, serverToEdit || undefined)
     ),
@@ -295,7 +294,7 @@ export function DialogFormLocalMcp({
               />
               <FormFieldsArrayCustomSecrets form={form} />
               <FormFieldsArrayCustomEnvVars form={form} />
-              <FormFieldsArrayVolumes<LocalFormWithGroup> form={form} />
+              <FormFieldsArrayVolumes<FormSchemaLocalMcp> form={form} />
             </div>
           )}
           {activeTab === 'network-isolation' && (
