@@ -23,8 +23,9 @@ export function Group(props: {
       <div className="flex min-w-0 items-center gap-2">
         <span
           aria-hidden
-          className={`inline-block size-[7px] rounded-full
-            ${isEnabled ? 'bg-green-600' : 'bg-zinc-900/20'}`}
+          className={`inline-block size-[7px] shrink-0 rounded-full ${
+            isEnabled ? 'bg-green-600' : 'bg-zinc-900/20 dark:bg-zinc-200/50'
+          }`}
         />
         <span className="truncate">{name}</span>
       </div>
