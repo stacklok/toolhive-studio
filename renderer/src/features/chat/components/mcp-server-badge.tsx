@@ -9,13 +9,13 @@ interface McpServerBadgeProps {
   serverName: string
   onToolsChange: () => void
 }
+// TODO: we are not using this at the moment, but better keep it here for now
 export function McpServerBadge({
   serverName,
   onToolsChange,
 }: McpServerBadgeProps) {
   const [modalOpen, setModalOpen] = useState(false)
 
-  // Fetch enabled tools for this specific server
   const { data: enabledMcpTools } = useQuery({
     queryKey: ['enabled-mcp-tools'],
     queryFn: () => window.electronAPI.chat.getEnabledMcpTools(),

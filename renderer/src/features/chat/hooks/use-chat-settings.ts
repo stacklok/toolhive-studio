@@ -12,7 +12,8 @@ export interface ProviderWithSettings {
 // Query keys
 const CHAT_SETTINGS_KEYS = {
   selectedModel: ['chat', 'selectedModel'] as const,
-  settings: (provider: string) => ['chat', 'settings', provider] as const,
+  settings: (provider: ChatProvider | string) =>
+    ['chat', 'settings', provider] as const,
   allSettings: ['chat', 'settings'] as const,
   allProvidersWithSettings: ['chat', 'allProvidersWithSettings'] as const,
 }

@@ -1,5 +1,7 @@
 import type { WebContents } from 'electron'
 import log from '../logger'
+import type { AsyncIterableStream, InferUIMessageChunk } from 'ai'
+import type { ChatUIMessage } from './types'
 
 /**
  * Send an async iterable stream over IPC as real-time events
@@ -50,7 +52,7 @@ function sendAsyncIterable<T>(
 export function streamUIMessagesOverIPC(
   sender: WebContents,
   streamId: string,
-  uiMessageStream: AsyncIterable<unknown>,
+  uiMessageStream: AsyncIterableStream<InferUIMessageChunk<ChatUIMessage>>,
   onComplete?: () => void | Promise<void>
 ) {
   sendAsyncIterable(

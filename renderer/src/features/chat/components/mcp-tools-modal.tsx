@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '@/common/components/ui/dialog'
 import { Button } from '@/common/components/ui/button'
 import { Badge } from '@/common/components/ui/badge'
@@ -141,6 +142,9 @@ export function McpToolsModal({
           <DialogTitle className="flex items-center gap-2">
             Manage tools
           </DialogTitle>
+          <DialogDescription
+            aria-describedby={`Manage the tools for ${getNormalizedServerName(serverName)}`}
+          />
           <div className="flex items-center gap-1">
             {getNormalizedServerName(serverName)}
             <Badge variant="secondary" className="text-muted-foreground">

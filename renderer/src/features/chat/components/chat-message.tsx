@@ -16,8 +16,10 @@ import remarkMath from 'remark-math'
 import { useShikiTheme } from '../lib/theme-utils'
 import { TokenUsage } from './token-usage'
 import { NoContentMessage } from './no-content-message'
+import { AttachmentPreview } from './attachment-preview'
 import { useState } from 'react'
 import type { ChatUIMessage } from '../types'
+import { getProviderIconByModel } from './provider-icons'
 
 interface ChatMessageProps {
   message: ChatUIMessage
@@ -404,6 +406,9 @@ export function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === 'user'
   const shikiTheme = useShikiTheme()
 
+  const providerIcon =
+    message.metadata?.model && getProviderIconByModel(message.metadata?.model)
+
   if (isUser) {
     // User message with bubble styling
     return (
@@ -429,6 +434,25 @@ export function ChatMessage({ message }: ChatMessageProps) {
                     ?.text || ''}
                 </Streamdown>
               </div>
+              {/* Render file attachments */}
+              {(() => {
+                const fileAttachments = message.parts.filter(
+                  (p) => p.type === 'file'
+                )
+                if (fileAttachments.length === 0) return null
+
+                return (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {fileAttachments.map((attachment, index) => (
+                      <AttachmentPreview
+                        key={index}
+                        attachment={attachment}
+                        totalAttachments={fileAttachments.length}
+                      />
+                    ))}
+                  </div>
+                )
+              })()}
             </div>
 
             {/* Timestamp for user messages */}
@@ -462,7 +486,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
         className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center
           rounded-lg"
       >
-        <Bot className="h-4 w-4" />
+        {providerIcon ?? <Bot className="h-4 w-4" />}
       </div>
 
       {/* Message Content */}

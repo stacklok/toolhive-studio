@@ -52,14 +52,14 @@ export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
     models: [
       // GPT series
       'gpt-5',
+      'gpt-5-nano',
+      'gpt-5-mini',
+      'gpt-5-reasoning',
       'gpt-4o',
       'gpt-4o-mini',
       'gpt-4.1',
       'gpt-4.1-mini',
       'gpt-4.1-nano',
-      'gpt-5-reasoning',
-      'gpt-5-mini',
-      'gpt-5-nano',
       'gpt-oss-20b',
       'gpt-oss-120b',
       'gpt-imagegen',
@@ -75,8 +75,8 @@ export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
     name: 'Anthropic',
     models: [
       // Claude 4 models (newest)
-      'claude-opus-4-20250514',
       'claude-sonnet-4-20250514',
+      'claude-opus-4-20250514',
 
       // Claude 3.7 models
       'claude-3-7-sonnet-20250219',
@@ -270,7 +270,8 @@ export async function fetchOpenRouterModels(): Promise<string[]> {
           modelId.includes('whisper') ||
           modelId.includes('tts') ||
           modelId.includes('dall-e') ||
-          modelId.includes('moderation')
+          modelId.includes('moderation') ||
+          modelId.includes('audio')
 
         if (isNotChatModel) return false
 
@@ -281,26 +282,6 @@ export async function fetchOpenRouterModels(): Promise<string[]> {
           model.supported_parameters?.includes('function_call')
 
         return supportsTools
-      })
-      .sort((a, b) => {
-        // Get fallback models for priority sorting
-        const fallbackModels =
-          CHAT_PROVIDER_INFO.find((p) => p.id === 'openrouter')?.models || []
-
-        const aIndex = fallbackModels.indexOf(a.id)
-        const bIndex = fallbackModels.indexOf(b.id)
-
-        // If both models are in fallback list, maintain their original order
-        if (aIndex !== -1 && bIndex !== -1) {
-          return aIndex - bIndex
-        }
-
-        // If only one model is in fallback list, prioritize it
-        if (aIndex !== -1) return -1
-        if (bIndex !== -1) return 1
-
-        // For models not in fallback list, sort alphabetically by name
-        return a.name.localeCompare(b.name)
       })
       .map((model) => model.id)
 
