@@ -18,8 +18,6 @@ import {
 import type { ChatStatus, FileUIPart } from 'ai'
 import { ModelSelector } from './model-selector'
 import { McpServerSelector } from './mcp-server-selector'
-import { Button } from '@/common/components/ui/button'
-import { Trash2 } from 'lucide-react'
 import type { ChatSettings } from '../types'
 
 interface ChatInputProps {
@@ -32,20 +30,18 @@ interface ChatInputProps {
   }) => Promise<void>
   onStopGeneration: () => void
   onSettingsOpen: (isOpen: boolean) => void
-  onClearMessages: () => void
   handleProviderChange: (providerId: string) => void
   hasProviderAndModel: boolean
   hasMessages: boolean
 }
 
-function InputWithClearAttachments({
+function InputWithAttachments({
   text,
   setText,
   status,
   settings,
   updateSettings,
   onSettingsOpen,
-  onClearMessages,
   handleProviderChange,
   hasProviderAndModel,
   hasMessages,
@@ -115,17 +111,6 @@ function InputWithClearAttachments({
                 onProviderChange={handleProviderChange}
               />
               <McpServerSelector />
-              {hasMessages && (
-                <Button
-                  onClick={onClearMessages}
-                  variant="ghost"
-                  size="sm"
-                  className="mr-2"
-                >
-                  Clear Chat
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
             </>
           )}
         </PromptInputTools>
@@ -142,7 +127,6 @@ export function ChatInputPrompt({
   onSendMessage,
   onStopGeneration,
   onSettingsOpen,
-  onClearMessages,
   handleProviderChange,
   hasProviderAndModel,
   hasMessages,
@@ -183,12 +167,11 @@ export function ChatInputPrompt({
       multiple
       syncHiddenInput
     >
-      <InputWithClearAttachments
+      <InputWithAttachments
         status={status}
         settings={settings}
         updateSettings={updateSettings}
         onSettingsOpen={onSettingsOpen}
-        onClearMessages={onClearMessages}
         handleProviderChange={handleProviderChange}
         hasProviderAndModel={hasProviderAndModel}
         hasMessages={hasMessages}
