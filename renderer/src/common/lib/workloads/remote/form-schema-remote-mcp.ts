@@ -6,7 +6,7 @@ const OAUTH_VALIDATION_RULES = {
   oauth2: [
     {
       field: 'authorize_url',
-      message: 'Authorize URL is required for OAuth2',
+      message: 'Authorize URL is required for OAuth 2.0',
       path: ['oauth_config', 'authorize_url'],
     },
     {
@@ -16,7 +16,7 @@ const OAUTH_VALIDATION_RULES = {
     },
     {
       field: 'client_id',
-      message: 'Client ID is required for OAuth2',
+      message: 'Client ID is required for OAuth 2.0 ',
       path: ['oauth_config', 'client_id'],
     },
   ],
@@ -44,9 +44,6 @@ const validateClientSecretField = (
 ): boolean =>
   Boolean(value && value.value.secret && value.value.secret.trim() !== '')
 
-const validateCallbackPortField = (value: number | undefined): boolean =>
-  Boolean(value !== undefined && value !== null && value > 0)
-
 export const getFormSchemaRemoteMcp = (
   workloads: CoreWorkload[],
   editingServerName?: string
@@ -59,15 +56,25 @@ export const getFormSchemaRemoteMcp = (
     (data, ctx) => {
       const { auth_type, oauth_config } = data
 
-      // Validate callback_port is required when auth_type is 'none'
-      if (auth_type === 'none') {
-        if (!validateCallbackPortField(oauth_config?.callback_port)) {
+      // Validate callback_port when it's provided
+      const port = oauth_config?.callback_port
+      if (port !== undefined && port !== null) {
+        if (typeof port === 'number' && (port < 1024 || port > 65535)) {
           ctx.addIssue({
             code: 'custom',
-            message: 'Callback port is required',
+            message: 'Port must be between 1024 and 65535',
             path: ['oauth_config', 'callback_port'],
           })
         }
+      }
+
+      // Validate callback_port is required when auth_type is 'none'
+      if (auth_type === 'none' && (port === undefined || port === null)) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Callback port is required',
+          path: ['oauth_config', 'callback_port'],
+        })
         return
       }
 
