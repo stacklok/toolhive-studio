@@ -98,7 +98,6 @@ export function FormFieldsBase({
       />
 
       {groupProps?.show && (
-        // Inserted just under the Server Name field
         <FormField
           control={form.control}
           name={'group'}
