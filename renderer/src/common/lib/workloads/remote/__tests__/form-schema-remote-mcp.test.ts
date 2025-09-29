@@ -158,7 +158,7 @@ describe('getFormSchemaRemoteMcp', () => {
       const errors = result.error?.issues.map((issue) => issue.message)
       expect(errors).toContain('Authorize URL is required for OAuth 2.0')
       expect(errors).toContain('Token URL is required for OAuth2')
-      expect(errors).toContain('Client ID is required for OAuth 2.0 ')
+      expect(errors).toContain('Client ID is required for OAuth 2.0')
     })
   })
 
