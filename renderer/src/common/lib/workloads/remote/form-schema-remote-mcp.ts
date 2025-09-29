@@ -16,7 +16,7 @@ const OAUTH_VALIDATION_RULES = {
     },
     {
       field: 'client_id',
-      message: 'Client ID is required for OAuth 2.0 ',
+      message: 'Client ID is required for OAuth 2.0',
       path: ['oauth_config', 'client_id'],
     },
   ],
