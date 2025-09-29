@@ -50,11 +50,10 @@ export function useRunCustomServer({
         })),
       ]
 
+      const group = data.group ?? groupName
       const createRequest: V1CreateRequest = {
         ...prepareCreateWorkloadData(data, secretsForRequest),
-        ...((data.group ?? groupName)
-          ? { group: data.group ?? groupName }
-          : {}),
+        ...(group ? { group } : {}),
       }
 
       await createWorkload({

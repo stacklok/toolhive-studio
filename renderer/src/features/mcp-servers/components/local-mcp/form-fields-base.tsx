@@ -100,7 +100,7 @@ export function FormFieldsBase({
       {groupProps?.show && (
         <FormField
           control={form.control}
-          name={'group'}
+          name="group"
           render={({ field }) => (
             <FormItem>
               <FormLabel htmlFor={field.name}>Group</FormLabel>
