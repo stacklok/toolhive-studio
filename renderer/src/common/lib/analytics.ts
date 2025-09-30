@@ -8,6 +8,11 @@ export function trackEvent(eventName: string, data = {}) {
       attributes: {
         'analytics.source': 'tracking',
         'analytics.type': 'event',
+        'screen.width': window.innerWidth,
+        'screen.height': window.innerHeight,
+        'screen.aspect_ratio': (window.innerWidth / window.innerHeight).toFixed(
+          2
+        ),
         ...data,
         timestamp: new Date().toISOString(),
       },
@@ -26,6 +31,11 @@ export function trackPageView(pageName: string, data = {}) {
         'analytics.type': 'page_view',
         'page.name': pageName,
         'action.type': 'navigation',
+        'screen.width': window.innerWidth,
+        'screen.height': window.innerHeight,
+        'screen.aspect_ratio': (window.innerWidth / window.innerHeight).toFixed(
+          2
+        ),
         ...data,
         timestamp: new Date().toISOString(),
       },
