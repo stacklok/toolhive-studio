@@ -22,13 +22,10 @@ function getViewTransition(
   from: string,
   to: string
 ): ViewTransitionOptions | boolean {
-  // Match route by checking if path starts with route prefix (for dynamic segments)
   const matchRoute = (path: string): Route | null => {
     for (const route of ORDERED_ROUTES) {
       if (path === route) return route
 
-      // For patterns like /group/$groupName, match /group/* paths
-      // For patterns like /logs/$groupName/$serverName, match /logs/*/* paths
       const parts = route.split('/')
       const pathParts = path.split('/')
 
@@ -71,11 +68,9 @@ export const LinkViewTransition = forwardRef<
     typeof props.to === 'string' ? props.to : String(props.to)
   )
 
-  // Cast is necessary because Link's generic types don't properly infer through forwardRef
-  type LinkProps = Parameters<typeof Link>[0]
   return (
     <Link
-      {...(props as unknown as LinkProps)}
+      {...(props as unknown as Parameters<typeof Link>[0])}
       ref={ref}
       viewTransition={viewTransition}
     />
