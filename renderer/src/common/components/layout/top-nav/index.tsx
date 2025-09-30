@@ -113,7 +113,7 @@ function TopNavLinks() {
               hover:text-foreground focus:text-foreground
               data-[status=active]:text-foreground
               data-[status=active]:before:bg-foreground
-              focus-visible:ring-ring/50 relative px-3 py-2 text-sm
+              focus-visible:ring-ring/50 relative py-2 pr-0 pl-3 text-sm
               transition-all outline-none hover:bg-transparent
               focus:bg-transparent focus-visible:ring-[3px]
               focus-visible:outline-1 data-[status=active]:bg-transparent
