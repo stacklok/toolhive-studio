@@ -294,7 +294,7 @@ export function DialogFormRemoteRegistryMcp({
                         rel="noopener noreferrer"
                         className="flex cursor-pointer items-center gap-1
                           underline"
-                        href="https://docs.stacklok.com/toolhive/guides-ui/run-mcp-servers#configure-server"
+                        href="https://docs.stacklok.com/toolhive/guides-ui/run-mcp-servers?server-type=remote#configure-the-server"
                         target="_blank"
                       >
                         documentation <ExternalLinkIcon size={12} />

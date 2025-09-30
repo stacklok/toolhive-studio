@@ -351,7 +351,7 @@ export function DialogFormRemoteMcp({
                         rel="noopener noreferrer"
                         className="flex cursor-pointer items-center gap-1
                           underline"
-                        href="https://docs.stacklok.com/toolhive/guides-ui/run-mcp-servers#custom-mcp-server"
+                        href="https://docs.stacklok.com/toolhive/guides-ui/run-mcp-servers?custom-type=custom_remote#install-a-custom-mcp-server"
                         target="_blank"
                       >
                         documentation <ExternalLinkIcon size={12} />
