@@ -10,6 +10,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useRunCustomServer } from '../../../hooks/use-run-custom-server'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
+import { useUpdateServer } from '../../../hooks/use-update-server'
 
 // Mock the hook
 vi.mock('../../../hooks/use-run-custom-server', () => ({
@@ -20,9 +21,15 @@ vi.mock('@/common/hooks/use-check-server-status', () => ({
   useCheckServerStatus: vi.fn(),
 }))
 
+vi.mock('../../../hooks/use-update-server', () => ({
+  useUpdateServer: vi.fn(),
+}))
+
 const mockUseCheckServerStatus = vi.mocked(useCheckServerStatus)
 
 const mockUseRunCustomServer = vi.mocked(useRunCustomServer)
+
+const mockUseUpdateServer = vi.mocked(useUpdateServer)
 
 window.HTMLElement.prototype.hasPointerCapture = vi.fn()
 window.HTMLElement.prototype.scrollIntoView = vi.fn()
@@ -75,6 +82,12 @@ beforeEach(() => {
 
   mockUseCheckServerStatus.mockReturnValue({
     checkServerStatus: vi.fn(),
+  })
+
+  mockUseUpdateServer.mockReturnValue({
+    updateServerMutation: vi.fn(),
+    isPendingSecrets: false,
+    isErrorSecrets: false,
   })
 })
 
@@ -189,6 +202,52 @@ describe('DialogFormLocalMcp', () => {
 
     // Group select should show the route group preselected
     const groupCombobox = await screen.findByRole('combobox', { name: 'Group' })
+    expect(groupCombobox).toHaveTextContent('research')
+  })
+
+  it('shows group field when editing an existing server', async () => {
+    // Mock the existing server data
+    mswServer.use(
+      http.get(mswEndpoint('/api/v1beta/workloads/test-server'), () =>
+        HttpResponse.json({
+          name: 'test-server',
+          type: 'docker_image',
+          transport: 'stdio',
+          image: 'ghcr.io/test/server',
+          group: 'research',
+          cmd_arguments: [],
+          env_vars: [],
+          secrets: [],
+          network_isolation: false,
+          allowed_hosts: [],
+          allowed_ports: [],
+          volumes: [],
+        })
+      ),
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [{ name: 'default' }, { name: 'research' }],
+        })
+      )
+    )
+
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormLocalMcp
+          isOpen
+          closeDialog={vi.fn()}
+          serverToEdit="test-server"
+          groupName="research"
+        />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    const groupCombobox = await screen.findByRole('combobox', { name: 'Group' })
+    expect(groupCombobox).toBeVisible()
     expect(groupCombobox).toHaveTextContent('research')
   })
 

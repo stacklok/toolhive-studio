@@ -301,7 +301,7 @@ export function DialogFormLocalMcp({
                 form={form}
                 isEditing={isEditing}
                 groupProps={{
-                  show: isGroupsEnabled && !isEditing,
+                  show: isGroupsEnabled,
                   groups,
                 }}
               />
