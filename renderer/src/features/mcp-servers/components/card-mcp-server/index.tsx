@@ -91,6 +91,7 @@ export function CardMcpServer({
   url,
   remote,
   transport,
+  groupName,
 }: {
   name: string
   status: CoreWorkload['status']
@@ -98,6 +99,7 @@ export function CardMcpServer({
   remote?: CoreWorkload['remote']
   url: string
   transport: CoreWorkload['transport_type']
+  groupName: string
 }) {
   const nameRef = useRef<HTMLElement | null>(null)
   const search = useSearch({
@@ -186,6 +188,7 @@ export function CardMcpServer({
               url={url}
               status={status}
               remote={!!remote}
+              groupName={groupName}
             />
           </div>
         </div>

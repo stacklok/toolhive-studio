@@ -5,8 +5,10 @@ import { InputSearch } from '@/common/components/ui/input-search'
 
 export function GridCardsMcpServers({
   mcpServers,
+  groupName,
 }: {
   mcpServers: CoreWorkload[]
+  groupName: string
 }) {
   const [filters, setFilters] = useState({
     text: '',
@@ -59,6 +61,7 @@ export function GridCardsMcpServers({
               statusContext={mcpServer.status_context}
               url={mcpServer.url ?? ''}
               transport={mcpServer.transport_type}
+              groupName={groupName}
             />
           ) : null
         )}

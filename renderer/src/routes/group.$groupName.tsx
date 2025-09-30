@@ -120,7 +120,7 @@ function GroupRoute() {
             </div>
           </EmptyState>
         ) : (
-          <GridCardsMcpServers mcpServers={filteredWorkloads} />
+          <GridCardsMcpServers mcpServers={filteredWorkloads} groupName={groupName} />
         )}
       </div>
     </div>

@@ -33,6 +33,7 @@ function createCardMcpServerTestRouter() {
         statusContext={undefined}
         url="http://localhost:8080"
         transport="http"
+        groupName="default"
       />
     ),
   })
