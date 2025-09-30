@@ -6,8 +6,6 @@ import { EmptyState } from '@/common/components/empty-state'
 import { ExternalLinkIcon } from 'lucide-react'
 import { Button } from '@/common/components/ui/button'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
-import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
-import { featureFlagKeys } from '../../../../utils/feature-flags'
 
 export const Route = createFileRoute('/(registry)/registry')({
   loader: async ({ context: { queryClient } }) =>
@@ -18,17 +16,13 @@ export const Route = createFileRoute('/(registry)/registry')({
 })
 
 export function Registry() {
-  const isRemoteMcpEnabled = useFeatureFlag(featureFlagKeys.REMOTE_MCP)
   const { data } = useSuspenseQuery(
     getApiV1BetaRegistryByNameServersOptions({ path: { name: 'default' } })
   )
   const { servers: serversList = [], remote_servers: remoteServersList = [] } =
     data || {}
 
-  const servers = [
-    ...serversList,
-    ...(isRemoteMcpEnabled ? remoteServersList : []),
-  ]
+  const servers = [...serversList, ...remoteServersList]
 
   return (
     <>

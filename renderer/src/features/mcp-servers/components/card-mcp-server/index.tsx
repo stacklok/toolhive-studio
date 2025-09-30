@@ -19,11 +19,8 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from '@/common/components/ui/tooltip'
-
 import { ServerActionsDropdown } from './server-actions'
 import { CloudIcon, LaptopIcon } from 'lucide-react'
-import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
-import { featureFlagKeys } from '../../../../../../utils/feature-flags'
 
 type CardContentMcpServerProps = {
   status: CoreWorkload['status']
@@ -102,9 +99,7 @@ export function CardMcpServer({
   url: string
   transport: CoreWorkload['transport_type']
 }) {
-  const isRemoteMcpEnabled = useFeatureFlag(featureFlagKeys.REMOTE_MCP)
   const nameRef = useRef<HTMLElement | null>(null)
-
   const search = useSearch({
     strict: false,
   })
@@ -174,20 +169,18 @@ export function CardMcpServer({
             </Tooltip>
           </CardTitle>
           <div className="flex items-center gap-1">
-            {isRemoteMcpEnabled && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  {remote ? (
-                    <CloudIcon className="size-5" />
-                  ) : (
-                    <LaptopIcon className="size-5" />
-                  )}
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">
-                  {remote ? 'Remote MCP server' : 'Local MCP server'}
-                </TooltipContent>
-              </Tooltip>
-            )}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                {remote ? (
+                  <CloudIcon className="size-5" />
+                ) : (
+                  <LaptopIcon className="size-5" />
+                )}
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                {remote ? 'Remote MCP server' : 'Local MCP server'}
+              </TooltipContent>
+            </Tooltip>
             <ServerActionsDropdown
               name={name}
               url={url}

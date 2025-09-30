@@ -18,8 +18,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/common/components/ui/tooltip'
-import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
-import { featureFlagKeys } from '../../../../../utils/feature-flags'
 
 const statusMap = {
   deprecated: 'Deprecated',
@@ -33,7 +31,6 @@ export function CardRegistryServer({
   server: RegistryImageMetadata | RegistryRemoteServerMetadata
   onClick?: () => void
 }) {
-  const isRemoteMcpEnabled = useFeatureFlag(featureFlagKeys.REMOTE_MCP)
   const isRemote = 'url' in server
 
   return (
@@ -81,22 +78,20 @@ export function CardRegistryServer({
         </div>
       </CardContent>
       <CardFooter className="mt-auto flex items-center gap-2">
-        {isRemoteMcpEnabled && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="relative z-10">
-                {isRemote ? (
-                  <CloudIcon className="text-muted-foreground size-5" />
-                ) : (
-                  <LaptopIcon className="text-muted-foreground size-5" />
-                )}
-              </div>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs">
-              {isRemote ? 'Remote MCP server' : 'Local MCP server'}
-            </TooltipContent>
-          </Tooltip>
-        )}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="relative z-10">
+              {isRemote ? (
+                <CloudIcon className="text-muted-foreground size-5" />
+              ) : (
+                <LaptopIcon className="text-muted-foreground size-5" />
+              )}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs">
+            {isRemote ? 'Remote MCP server' : 'Local MCP server'}
+          </TooltipContent>
+        </Tooltip>
         {server?.repository_url ? (
           <Button
             variant="ghost"
