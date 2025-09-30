@@ -36,7 +36,7 @@ export function Registry() {
           actions={[
             <Button asChild key="docs">
               <a
-                href="https://docs.stacklok.com/toolhive/guides-cli/registry#use-a-remote-registry"
+                href="https://docs.stacklok.com/toolhive/guides-ui/registry#registry-settings"
                 target="_blank"
                 rel="noreferrer"
               >
