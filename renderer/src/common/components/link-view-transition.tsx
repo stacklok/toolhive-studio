@@ -22,22 +22,29 @@ function getViewTransition(
   from: string,
   to: string
 ): ViewTransitionOptions | boolean {
-  // Try to match routes by normalizing paths to their patterns
-  const normalizeRoute = (path: string): Route | null => {
+  // Match route by checking if path starts with route prefix (for dynamic segments)
+  const matchRoute = (path: string): Route | null => {
     for (const route of ORDERED_ROUTES) {
-      // Exact match
       if (path === route) return route
 
-      // Pattern match: replace dynamic segments with their pattern
-      const pattern = route.replace(/\$\w+/g, '[^/]+')
-      const regex = new RegExp(`^${pattern}$`)
-      if (regex.test(path)) return route
+      // For patterns like /group/$groupName, match /group/* paths
+      // For patterns like /logs/$groupName/$serverName, match /logs/*/* paths
+      const parts = route.split('/')
+      const pathParts = path.split('/')
+
+      if (parts.length !== pathParts.length) continue
+
+      const matches = parts.every(
+        (part, i) => part.startsWith('$') || part === pathParts[i]
+      )
+
+      if (matches) return route
     }
     return null
   }
 
-  const fromRoute = normalizeRoute(from)
-  const toRoute = normalizeRoute(to)
+  const fromRoute = matchRoute(from)
+  const toRoute = matchRoute(to)
 
   if (!fromRoute || !toRoute || fromRoute === toRoute) {
     return false
@@ -57,10 +64,10 @@ export const LinkViewTransition = forwardRef<
   HTMLAnchorElement,
   Record<string, unknown> & { to: string }
 >((props, ref) => {
-  const location = useRouterState({ select: (s) => s.location })
+  const routeId = useRouterState({ select: (s) => s.location.pathname })
 
   const viewTransition = getViewTransition(
-    location.pathname,
+    routeId,
     typeof props.to === 'string' ? props.to : String(props.to)
   )
 
