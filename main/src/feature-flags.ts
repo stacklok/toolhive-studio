@@ -29,10 +29,6 @@ const featureFlagOptions: Record<FeatureFlagKey, FeatureFlagOptions> = {
     isDisabled: false,
     defaultValue: false,
   },
-  [featureFlagKeys.REMOTE_MCP]: {
-    isDisabled: false,
-    defaultValue: false,
-  },
 }
 
 // Create a dedicated store for feature flags

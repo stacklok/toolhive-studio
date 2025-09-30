@@ -34,7 +34,7 @@ export function RegistryTypeField({
       name="type"
       render={({ field }) => (
         <FormItem className="w-full">
-          <FormLabel required>Registry Type</FormLabel>
+          <FormLabel>Registry Type</FormLabel>
           <FormDescription>
             Choose between ToolHive default registry, a custom remote registry
             HTTPS url, or a custom local registry file.
