@@ -61,8 +61,11 @@ export function useUpdateServer(
         queryClient,
       })
       trackEvent(`Workload ${serverName} updated`, {
+        pageName: '/',
+        isEditing: true,
+        remote: true,
         workload: serverName,
-        'route.pathname': '/customize-tools',
+        'route.pathname': '/',
       })
     },
   })

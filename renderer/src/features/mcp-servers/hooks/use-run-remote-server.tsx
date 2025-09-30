@@ -12,18 +12,22 @@ import { restartClientNotification } from '../lib/restart-client-notification'
 import { trackEvent } from '@/common/lib/analytics'
 import { useMCPSecrets } from '@/common/hooks/use-mcp-secrets'
 
-export function useRunRemoteServer({
-  onSecretSuccess,
-  onSecretError,
-  groupName,
-}: {
+interface UseRunRemoteServerProps {
+  pageName: string
   onSecretSuccess: (completedCount: number, secretsCount: number) => void
   onSecretError: (
     error: string,
     variables: Options<PostApiV1BetaSecretsDefaultKeysData>
   ) => void
   groupName: string
-}) {
+}
+
+export function useRunRemoteServer({
+  pageName,
+  onSecretSuccess,
+  onSecretError,
+  groupName,
+}: UseRunRemoteServerProps) {
   const queryClient = useQueryClient()
   const { handleSecrets, isPendingSecrets, isErrorSecrets } = useMCPSecrets({
     onSecretSuccess,
@@ -70,6 +74,8 @@ export function useRunRemoteServer({
         queryClient,
       })
       trackEvent(`Workload remote ${data.name} started`, {
+        remote: true,
+        pageName,
         workload: data.name,
         'route.pathname': '/',
       })

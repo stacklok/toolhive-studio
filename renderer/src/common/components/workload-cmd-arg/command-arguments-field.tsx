@@ -87,7 +87,7 @@ export function CommandArgumentsField<
       control={control}
       name={'cmd_arguments' as Path<T>}
       render={({ field }) => (
-        <FormItem className="mb-10">
+        <FormItem>
           <FormLabel htmlFor={`${field.name}-input`}>
             Command arguments
           </FormLabel>

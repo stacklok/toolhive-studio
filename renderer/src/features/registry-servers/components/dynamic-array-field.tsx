@@ -42,6 +42,7 @@ interface DynamicArrayFieldProps<
   tooltipContent?: string
   addButtonText?: string
   columnHeaders?: ColumnHeader[]
+  className?: string
   /**
    * Tailwind class names to configure the grid layout
    */
@@ -73,6 +74,7 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
   columnHeaders,
   form,
   children,
+  className,
 }: DynamicArrayFieldProps<TFieldValues>) {
   const { control, formState } = form
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({})
@@ -130,7 +132,7 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
   )
 
   return (
-    <div className="mt-6 w-full">
+    <div className={cn('w-full', className)}>
       <div className="flex flex-col items-start gap-2">
         <div className="flex items-center gap-2">
           <FormLabel htmlFor={`${name}-0`}>{label}</FormLabel>
