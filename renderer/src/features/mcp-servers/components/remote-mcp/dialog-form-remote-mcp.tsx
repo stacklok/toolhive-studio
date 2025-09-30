@@ -91,6 +91,7 @@ export function DialogFormRemoteMcp({
 
   const { installServerMutation, isErrorSecrets, isPendingSecrets } =
     useRunRemoteServer({
+      pageName: '/',
       onSecretSuccess: handleSecrets,
       onSecretError: (error, variables) => {
         log.error('onSecretError', error, variables)

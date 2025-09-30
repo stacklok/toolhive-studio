@@ -195,7 +195,7 @@ export function ConfigurationTabContent({
         control={form.control}
         name="name"
         render={({ field }) => (
-          <FormItem className="mb-10">
+          <FormItem>
             <FormLabel>Server name</FormLabel>
             <FormDescription>
               Choose a unique name for this server instance
@@ -213,7 +213,7 @@ export function ConfigurationTabContent({
           control={form.control}
           name="group"
           render={({ field }) => (
-            <FormItem className="mb-10">
+            <FormItem>
               <FormLabel htmlFor={field.name}>Group</FormLabel>
               <FormControl>
                 <Select
@@ -254,7 +254,7 @@ export function ConfigurationTabContent({
       <FormFieldsArrayVolumes<FormSchemaRegistryMcp> form={form} />
 
       {groupedEnvVars.secrets[0] ? (
-        <section className="mb-10">
+        <section className="mb-6">
           <Label className="mb-2" htmlFor="secrets.0.value">
             Secrets
           </Label>
@@ -275,7 +275,7 @@ export function ConfigurationTabContent({
       ) : null}
 
       {groupedEnvVars.envVars[0] ? (
-        <section className="mb-10">
+        <section className="mb-6">
           <Label className="mb-2" htmlFor="envVars.0.value">
             Environment variables
           </Label>
