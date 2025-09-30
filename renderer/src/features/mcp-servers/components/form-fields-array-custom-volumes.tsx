@@ -41,7 +41,7 @@ export function FormFieldsArrayVolumes<TForm extends FieldValues>({
   form: UseFormReturn<TForm>
 }) {
   return (
-    <FormItem className="mb-10">
+    <FormItem>
       <Controller
         control={form.control}
         name={'volumes' as Path<TForm>}
