@@ -208,22 +208,25 @@ describe('DialogFormLocalMcp', () => {
   it('shows group field when editing an existing server', async () => {
     // Mock the existing server data
     mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads/test-server'), () =>
-        HttpResponse.json({
-          name: 'test-server',
-          type: 'docker_image',
-          transport: 'stdio',
-          image: 'ghcr.io/test/server',
-          group: 'research',
-          cmd_arguments: [],
-          env_vars: [],
-          secrets: [],
-          network_isolation: false,
-          allowed_hosts: [],
-          allowed_ports: [],
-          volumes: [],
-        })
-      ),
+      http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
+        if (params.name === 'test-server') {
+          return HttpResponse.json({
+            name: 'test-server',
+            type: 'docker_image',
+            transport: 'stdio',
+            image: 'ghcr.io/test/server',
+            group: 'research',
+            cmd_arguments: [],
+            env_vars: [],
+            secrets: [],
+            network_isolation: false,
+            allowed_hosts: [],
+            allowed_ports: [],
+            volumes: [],
+          })
+        }
+        return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
+      }),
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({
           groups: [{ name: 'default' }, { name: 'research' }],
