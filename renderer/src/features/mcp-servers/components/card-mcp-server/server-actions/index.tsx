@@ -22,7 +22,7 @@ interface ServerActionsDropdownProps {
   url: string
   status: string | undefined
   remote: boolean
-  groupName: string
+  group?: string
 }
 
 export function ServerActionsDropdown({
@@ -30,7 +30,7 @@ export function ServerActionsDropdown({
   url,
   status,
   remote,
-  groupName,
+  group,
 }: ServerActionsDropdownProps) {
   const isCustomizeToolsEnabled = useFeatureFlag(
     featureFlagKeys.CUSTOMIZE_TOOLS
@@ -71,7 +71,7 @@ export function ServerActionsDropdown({
         {repositoryUrl && (
           <GithubRepositoryMenuItem repositoryUrl={repositoryUrl} />
         )}
-        <LogsMenuItem serverName={name} remote={remote} groupName={groupName} />
+        <LogsMenuItem serverName={name} remote={remote} group={group} />
         {isCustomizeToolsEnabled && (
           <CustomizeToolsMenuItem serverName={name} status={status} />
         )}
