@@ -67,7 +67,6 @@ export function NetworkIsolationTabContent({
                       gridConfig="grid-cols-[minmax(0,1fr)_auto]"
                       tooltipContent={`Specify domain names or IP addresses. To include subdomains, use a leading period (".")`}
                       form={form}
-                      className="mt-6"
                     >
                       {({
                         fieldProps,
@@ -117,7 +116,6 @@ export function NetworkIsolationTabContent({
                       addButtonText="Add a port"
                       gridConfig="grid-cols-[minmax(0,1fr)_auto]"
                       form={form}
-                      className="mt-6"
                     >
                       {({
                         fieldProps,

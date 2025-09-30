@@ -67,7 +67,6 @@ export function NetworkIsolationTabContent({
                       addButtonText="Add a host"
                       tooltipContent={`Specify domain names or IP addresses. To include subdomains, use a leading period (".")`}
                       form={form}
-                      className="mt-6"
                     >
                       {({
                         fieldProps,
@@ -117,7 +116,6 @@ export function NetworkIsolationTabContent({
                       inputLabelPrefix="Port"
                       addButtonText="Add a port"
                       form={form}
-                      className="mt-6"
                     >
                       {({
                         fieldProps,
