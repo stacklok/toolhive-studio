@@ -21,6 +21,7 @@ import {
 import { useAvailableModels } from '../hooks/use-available-models'
 import { getProviderIcon } from './provider-icons'
 import type { ChatSettings } from '../types'
+import { trackEvent } from '@/common/lib/analytics'
 
 interface ModelSelectorProps {
   settings: ChatSettings
@@ -39,6 +40,7 @@ export function ModelSelector({
   const inputRef = useRef<HTMLInputElement>(null)
 
   const handleModelSelect = (providerId: string, modelId: string) => {
+    trackEvent(`Playground: select model ${modelId}`, { provider: providerId })
     onSettingsChange({
       ...settings,
       provider: providerId,

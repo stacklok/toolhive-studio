@@ -17,6 +17,7 @@ import { Search, Wrench, AlertCircle, CheckCheck, ListX } from 'lucide-react'
 import { cn } from '@/common/lib/utils'
 import { getNormalizedServerName } from '../lib/utils'
 import { ScrollArea } from '@/common/components/ui/scroll-area'
+import { trackEvent } from '@/common/lib/analytics'
 
 interface McpToolInfo {
   name: string
@@ -109,6 +110,9 @@ export function McpToolsModal({
   }
 
   const handleSave = () => {
+    trackEvent(`Playground: save tools for ${serverName}`, {
+      tools_count: localEnabledTools.length,
+    })
     saveToolsMutation.mutate(localEnabledTools)
   }
 
@@ -118,6 +122,9 @@ export function McpToolsModal({
       const enabledTools = serverTools.tools
         .filter((tool) => tool.enabled)
         .map((tool) => tool.name)
+      trackEvent(`Playground: cancel tool setting for ${serverName}`, {
+        tools_count: enabledTools.length,
+      })
       setLocalEnabledTools(enabledTools)
     }
     onOpenChange(false)

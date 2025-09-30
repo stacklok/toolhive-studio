@@ -167,9 +167,11 @@ export async function getMcpServerTools(
 export async function createMcpTools(): Promise<{
   tools: ToolSet
   clients: MCPClient[]
+  enabledTools: Record<string, string[]>
 }> {
   const mcpTools: ToolSet = {}
   const mcpClients: MCPClient[] = []
+  let enabledTools: Record<string, string[]> = {}
 
   try {
     const port = getToolhivePort()
@@ -216,7 +218,7 @@ export async function createMcpTools(): Promise<{
     const workloads = data?.workloads
 
     // Get enabled tools from storage
-    const enabledTools = await getEnabledMcpTools()
+    enabledTools = await getEnabledMcpTools()
 
     // Create MCP clients for each server with enabled tools
     for (const [serverName, toolNames] of Object.entries(enabledTools)) {
@@ -270,5 +272,5 @@ export async function createMcpTools(): Promise<{
     log.error('Failed to create MCP tools:', error)
   }
 
-  return { tools: mcpTools, clients: mcpClients }
+  return { tools: mcpTools, clients: mcpClients, enabledTools }
 }

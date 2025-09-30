@@ -23,6 +23,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/common/components/ui/tooltip'
+import { trackEvent } from '@/common/lib/analytics'
 
 export function McpServerSelector() {
   const queryClient = useQueryClient()
@@ -44,6 +45,9 @@ export function McpServerSelector() {
 
   const handleToggleTool = async (serverName: string) => {
     if (backendEnabledTools.includes(serverName)) {
+      trackEvent(`Playground: disable server ${serverName}`, {
+        tools_count: enabledMcpTools?.[serverName]?.length,
+      })
       // Disable all tools for this server
       try {
         await window.electronAPI.chat.saveEnabledMcpTools(serverName, [])
@@ -55,6 +59,9 @@ export function McpServerSelector() {
         console.error('Failed to disable server tools:', error)
       }
     } else {
+      trackEvent(`Playground: enable server ${serverName}`, {
+        tools_count: enabledMcpTools?.[serverName]?.length,
+      })
       setServerToggling(serverName)
       // Enable all tools for this server by default
       try {
@@ -89,6 +96,9 @@ export function McpServerSelector() {
 
   const handleClearEnabledServers = async () => {
     try {
+      trackEvent('Playground: disable all servers', {
+        server_count: backendEnabledTools?.length,
+      })
       await Promise.allSettled(
         backendEnabledTools.map((serverName) => {
           if (backendEnabledTools.includes(serverName)) {
@@ -125,9 +135,14 @@ export function McpServerSelector() {
     })
   }
 
+  const handleOpenSettings = (open: boolean) => {
+    trackEvent(`Playground: open manage mcp server settings`)
+    setIsOpen(open)
+  }
+
   return (
     <>
-      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+      <DropdownMenu open={isOpen} onOpenChange={handleOpenSettings}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
