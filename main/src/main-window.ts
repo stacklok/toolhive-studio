@@ -9,8 +9,8 @@ import { pollWindowReady } from './util'
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined
 declare const MAIN_WINDOW_VITE_NAME: string
 
-const DEFAULT_WINDOW_WIDTH = 1040
-const DEFAULT_WINDOW_HEIGHT = 700
+const DEFAULT_WINDOW_WIDTH = 1280
+const DEFAULT_WINDOW_HEIGHT = 800
 const TRAFFIC_LIGHT_POSITION = { x: 21, y: 24 }
 
 interface WindowOptions {
