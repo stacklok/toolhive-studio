@@ -6,6 +6,7 @@ type Route = FileRouteTypes['fullPaths']
 const ORDERED_ROUTES: Route[] = [
   '/group/default' as Route,
   '/group/$groupName',
+  '/logs/$groupName/$serverName',
   '/registry',
   '/playground',
   '/secrets',
@@ -21,12 +22,29 @@ function getViewTransition(
   from: string,
   to: string
 ): ViewTransitionOptions | boolean {
-  const fromIndex = ORDERED_ROUTES.indexOf(from as Route)
-  const toIndex = ORDERED_ROUTES.indexOf(to as Route)
+  // Try to match routes by normalizing paths to their patterns
+  const normalizeRoute = (path: string): Route | null => {
+    for (const route of ORDERED_ROUTES) {
+      // Exact match
+      if (path === route) return route
 
-  if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) {
+      // Pattern match: replace dynamic segments with their pattern
+      const pattern = route.replace(/\$\w+/g, '[^/]+')
+      const regex = new RegExp(`^${pattern}$`)
+      if (regex.test(path)) return route
+    }
+    return null
+  }
+
+  const fromRoute = normalizeRoute(from)
+  const toRoute = normalizeRoute(to)
+
+  if (!fromRoute || !toRoute || fromRoute === toRoute) {
     return false
   }
+
+  const fromIndex = ORDERED_ROUTES.indexOf(fromRoute)
+  const toIndex = ORDERED_ROUTES.indexOf(toRoute)
 
   if (toIndex > fromIndex) {
     return { types: ['slide-left'] }
