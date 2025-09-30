@@ -59,6 +59,7 @@ export function GridCardsMcpServers({
               statusContext={mcpServer.status_context}
               url={mcpServer.url ?? ''}
               transport={mcpServer.transport_type}
+              group={mcpServer.group}
             />
           ) : null
         )}

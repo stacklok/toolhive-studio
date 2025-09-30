@@ -33,6 +33,7 @@ function createCardMcpServerTestRouter() {
         statusContext={undefined}
         url="http://localhost:8080"
         transport="http"
+        group="default"
       />
     ),
   })
@@ -80,7 +81,7 @@ it('navigates to logs page when logs menu item is clicked', async () => {
   await user.click(logsMenuItem)
 
   await waitFor(() => {
-    expect(router.state.location.pathname).toBe('/logs/postgres-db')
+    expect(router.state.location.pathname).toBe('/logs/default/postgres-db')
   })
 })
 

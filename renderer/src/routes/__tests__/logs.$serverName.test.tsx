@@ -12,18 +12,30 @@ describe('Logs Route', () => {
   })
 
   const testCases = [
-    { serverName: 'postgres-db', description: 'simple server name' },
+    {
+      serverName: 'postgres-db',
+      groupName: 'default',
+      description: 'simple server name',
+    },
     {
       serverName: 'vscode-server',
+      groupName: 'production',
       description: 'server name with hyphens',
     },
-    { serverName: 'github', description: 'server name with numbers' },
+    {
+      serverName: 'github',
+      groupName: 'research',
+      description: 'server name with numbers',
+    },
   ]
 
-  testCases.forEach(({ serverName, description }) => {
+  testCases.forEach(({ serverName, groupName, description }) => {
     it(`displays server name as header for ${description}`, async () => {
-      const router = createTestRouter(LogsPage, '/logs/$serverName')
-      router.navigate({ to: '/logs/$serverName', params: { serverName } })
+      const router = createTestRouter(LogsPage, '/logs/$groupName/$serverName')
+      router.navigate({
+        to: '/logs/$groupName/$serverName',
+        params: { serverName, groupName },
+      })
       renderRoute(router)
 
       await waitFor(() => {
@@ -31,9 +43,12 @@ describe('Logs Route', () => {
       })
     })
 
-    it(`has a back button that navigates to root route for ${description}`, async () => {
-      const router = createTestRouter(LogsPage, '/logs/$serverName')
-      router.navigate({ to: '/logs/$serverName', params: { serverName } })
+    it(`has a back button that navigates to correct group for ${description}`, async () => {
+      const router = createTestRouter(LogsPage, '/logs/$groupName/$serverName')
+      router.navigate({
+        to: '/logs/$groupName/$serverName',
+        params: { serverName, groupName },
+      })
       renderRoute(router)
 
       await waitFor(() => {
@@ -42,18 +57,24 @@ describe('Logs Route', () => {
 
       const backButton = screen.getByRole('button', { name: /back/i })
       expect(backButton).toBeVisible()
-      expect(backButton.closest('a')).toHaveAttribute('href', '/group/default')
+      expect(backButton.closest('a')).toHaveAttribute(
+        'href',
+        `/group/${groupName}`
+      )
 
       await userEvent.click(backButton)
 
       await waitFor(() => {
-        expect(router.state.location.pathname).toBe('/group/default')
+        expect(router.state.location.pathname).toBe(`/group/${groupName}`)
       })
     })
 
     it(`filters logs when searching for ${description}`, async () => {
-      const router = createTestRouter(LogsPage, '/logs/$serverName')
-      router.navigate({ to: '/logs/$serverName', params: { serverName } })
+      const router = createTestRouter(LogsPage, '/logs/$groupName/$serverName')
+      router.navigate({
+        to: '/logs/$groupName/$serverName',
+        params: { serverName, groupName },
+      })
       renderRoute(router)
 
       await waitFor(() => {
@@ -85,8 +106,12 @@ describe('Logs Route', () => {
 
   it('handles empty logs response gracefully', async () => {
     const serverName = 'empty-logs-server'
-    const router = createTestRouter(LogsPage, '/logs/$serverName')
-    router.navigate({ to: '/logs/$serverName', params: { serverName } })
+    const groupName = 'default'
+    const router = createTestRouter(LogsPage, '/logs/$groupName/$serverName')
+    router.navigate({
+      to: '/logs/$groupName/$serverName',
+      params: { serverName, groupName },
+    })
     renderRoute(router)
 
     await waitFor(() => {
@@ -98,8 +123,12 @@ describe('Logs Route', () => {
 
   it('refreshes logs when refresh button is clicked', async () => {
     const serverName = 'postgres-db'
-    const router = createTestRouter(LogsPage, '/logs/$serverName')
-    router.navigate({ to: '/logs/$serverName', params: { serverName } })
+    const groupName = 'default'
+    const router = createTestRouter(LogsPage, '/logs/$groupName/$serverName')
+    router.navigate({
+      to: '/logs/$groupName/$serverName',
+      params: { serverName, groupName },
+    })
     renderRoute(router)
 
     await waitFor(() => {
