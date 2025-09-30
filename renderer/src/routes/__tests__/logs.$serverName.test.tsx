@@ -57,7 +57,10 @@ describe('Logs Route', () => {
 
       const backButton = screen.getByRole('button', { name: /back/i })
       expect(backButton).toBeVisible()
-      expect(backButton.closest('a')).toHaveAttribute('href', `/group/${groupName}`)
+      expect(backButton.closest('a')).toHaveAttribute(
+        'href',
+        `/group/${groupName}`
+      )
 
       await userEvent.click(backButton)
 

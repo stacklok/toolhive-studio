@@ -34,10 +34,7 @@ export function LogsPage() {
   return (
     <div className="flex max-h-full w-full flex-1 flex-col">
       <div className="mb-2">
-        <LinkViewTransition
-          to="/group/$groupName"
-          params={{ groupName } as any}
-        >
+        <LinkViewTransition to="/group/$groupName" params={{ groupName }}>
           <Button
             variant="ghost"
             aria-label="Back"
