@@ -24,6 +24,7 @@ import {
   type ProviderWithSettings,
 } from '../hooks/use-chat-settings'
 import { ScrollArea } from '@/common/components/ui/scroll-area'
+import { trackEvent } from '@/common/lib/analytics'
 
 interface DialogApiKeysProps {
   isOpen: boolean
@@ -65,6 +66,7 @@ export function DialogApiKeys({
   }, [isOpen, allProvidersWithSettings])
 
   const handleApiKeyChange = (providerId: string, apiKey: string) => {
+    trackEvent(`Playground: change api key for ${providerId}`)
     setProviderKeys((prev) =>
       prev.map((pk) =>
         pk.provider.id === providerId
@@ -75,6 +77,7 @@ export function DialogApiKeys({
   }
 
   const toggleShowApiKey = (providerId: string) => {
+    trackEvent(`Playground: toggle show api key for ${providerId}`)
     setShowApiKeys((prev) => ({
       ...prev,
       [providerId]: !prev[providerId],
@@ -82,6 +85,7 @@ export function DialogApiKeys({
   }
 
   const handleRemoveApiKey = (providerId: string) => {
+    trackEvent(`Playground: remove api key for ${providerId}`)
     setProviderKeys((prev) =>
       prev.map((pk) =>
         pk.provider.id === providerId
@@ -92,6 +96,7 @@ export function DialogApiKeys({
   }
 
   const toggleProviderExpanded = (providerId: string) => {
+    trackEvent(`Playground: toggle provider expanded for ${providerId}`)
     setExpandedProviders((prev) => ({
       ...prev,
       [providerId]: !prev[providerId],
@@ -100,6 +105,7 @@ export function DialogApiKeys({
 
   const handleSave = useCallback(async () => {
     try {
+      trackEvent(`Playground: save api keys`)
       providerKeys.forEach(async (pk) => {
         // Get existing enabled tools from the cached data to preserve them
         const originalProvider = allProvidersWithSettings.find(

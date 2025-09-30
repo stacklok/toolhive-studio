@@ -4,6 +4,7 @@ import { Badge } from '@/common/components/ui/badge'
 import { Settings2 } from 'lucide-react'
 import { McpToolsModal } from './mcp-tools-modal'
 import { getNormalizedServerName } from '../lib/utils'
+import { trackEvent } from '@/common/lib/analytics'
 
 interface McpServerBadgeProps {
   serverName: string
@@ -30,6 +31,9 @@ export function McpServerBadge({
   }
 
   const handleBadgeClick = () => {
+    trackEvent(`Playground: open tool setting for ${serverName}`, {
+      tools_count: enabledMcpTools?.[serverName]?.length,
+    })
     setModalOpen(true)
   }
 

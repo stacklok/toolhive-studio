@@ -7,6 +7,7 @@ import { ElectronIPCChatTransport } from '../transport/electron-ipc-chat-transpo
 import { useChatSettings } from './use-chat-settings'
 import { useThreadManagement } from './use-thread-management'
 import type { FileUIPart } from 'ai'
+import { trackEvent } from '@/common/lib/analytics'
 
 export function useChatStreaming() {
   const queryClient = useQueryClient()
@@ -76,6 +77,9 @@ export function useChatStreaming() {
 
   const clearMessages = useCallback(async () => {
     try {
+      trackEvent('Playground: clear chat', {
+        'chat.total_messages': messages.length,
+      })
       await clearThreadMessages()
       setMessages([])
       setPersistentError(null)
@@ -85,7 +89,7 @@ export function useChatStreaming() {
       setPersistentError(errorMessage)
       log.error('Failed to clear persistent chat:', err)
     }
-  }, [setMessages, clearThreadMessages])
+  }, [messages.length, clearThreadMessages, setMessages])
 
   // Process error to handle different error formats
   const processError = (error: unknown): string | null => {

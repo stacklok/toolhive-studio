@@ -19,6 +19,7 @@ import type { ChatStatus, FileUIPart } from 'ai'
 import { ModelSelector } from './model-selector'
 import { McpServerSelector } from './mcp-server-selector'
 import type { ChatSettings } from '../types'
+import { trackEvent } from '@/common/lib/analytics'
 
 interface ChatInputProps {
   status: ChatStatus
@@ -82,6 +83,11 @@ function InputWithAttachments({
     return 'Type your message...'
   }
 
+  const handleOpenSettings = () => {
+    trackEvent(`Playground: open manage api settings`)
+    onSettingsOpen(true)
+  }
+
   return (
     <>
       <PromptInputBody>
@@ -107,7 +113,7 @@ function InputWithAttachments({
               <ModelSelector
                 settings={settings}
                 onSettingsChange={updateSettings}
-                onOpenSettings={() => onSettingsOpen(true)}
+                onOpenSettings={handleOpenSettings}
                 onProviderChange={handleProviderChange}
               />
               <McpServerSelector />
