@@ -107,6 +107,7 @@ export function convertWorkloadToFormData(
       | 'sse'
       | 'stdio'
       | 'streamable-http',
+    group: 'default',
     target_port: workload.port,
     cmd_arguments: [],
     envVars: [],
@@ -179,6 +180,7 @@ export function convertCreateRequestToFormData(
   const baseFormData = {
     name: createRequest.name || '',
     transport,
+    group: 'default',
     target_port: transport === 'stdio' ? 0 : createRequest.target_port,
     cmd_arguments: createRequest.cmd_arguments || [],
     envVars: Object.entries(createRequest.env_vars || {}).map(

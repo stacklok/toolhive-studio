@@ -38,6 +38,7 @@ describe('prepareCreateWorkloadData', () => {
       name: 'foo-bar',
       transport: 'stdio',
       type: 'docker_image',
+      group: 'default',
       envVars: [
         { name: 'DEBUG', value: 'true' },
         { name: 'PORT', value: '8080' },
@@ -76,6 +77,7 @@ describe('prepareCreateWorkloadData', () => {
       name: 'npm-server',
       transport: 'stdio',
       type: 'package_manager',
+      group: 'default',
       envVars: [],
       secrets: [],
       cmd_arguments: [],
@@ -106,6 +108,7 @@ describe('prepareCreateWorkloadData', () => {
       name: 'test-server',
       transport: 'stdio',
       type: 'docker_image',
+      group: 'default',
       envVars: [
         { name: 'DEBUG', value: 'true' },
         { name: 'EMPTY_VAR', value: '' },
@@ -131,6 +134,7 @@ describe('prepareCreateWorkloadData', () => {
       name: 'test-server',
       transport: 'stdio',
       type: 'docker_image',
+      group: 'default',
       envVars: [
         { name: 'DEBUG', value: 'true' },
         { name: 'EMPTY_VAR', value: '' },
@@ -169,6 +173,7 @@ describe('prepareCreateWorkloadData', () => {
       name: 'test-server',
       transport: 'stdio',
       type: 'docker_image',
+      group: 'default',
       envVars: [],
       secrets: [],
       cmd_arguments: [],
@@ -189,6 +194,7 @@ describe('prepareCreateWorkloadData', () => {
       name: 'test-server',
       transport: 'stdio',
       type: 'docker_image',
+      group: 'default',
       envVars: [],
       secrets: [],
       cmd_arguments: ['--flag1', '--flag2=value', '--flag3'],
@@ -213,6 +219,7 @@ describe('prepareCreateWorkloadData', () => {
       name: 'test-server',
       transport: 'stdio',
       type: 'docker_image',
+      group: 'default',
       envVars: [],
       secrets: [],
       cmd_arguments: [],
@@ -233,6 +240,7 @@ describe('prepareCreateWorkloadData', () => {
       name: 'test-server',
       transport: 'stdio',
       type: 'docker_image',
+      group: 'default',
       envVars: [],
       secrets: [],
       cmd_arguments: [],
@@ -262,6 +270,7 @@ describe('prepareCreateWorkloadData', () => {
       name: 'test-server',
       transport: 'stdio',
       type: 'docker_image',
+      group: 'default',
       envVars: [],
       secrets: [],
       cmd_arguments: [],
@@ -283,6 +292,7 @@ describe('prepareCreateWorkloadData', () => {
       name: 'test-server',
       transport: 'stdio',
       type: 'docker_image',
+      group: 'default',
       envVars: [],
       secrets: [],
       cmd_arguments: [],
@@ -314,6 +324,7 @@ describe('convertWorkloadToFormData', () => {
     expect(result).toEqual({
       name: 'docker-server',
       transport: 'stdio',
+      group: 'default',
       target_port: undefined,
       cmd_arguments: [],
       envVars: [],
@@ -340,6 +351,7 @@ describe('convertWorkloadToFormData', () => {
     expect(result).toEqual({
       name: 'npm-server',
       transport: 'sse',
+      group: 'default',
       target_port: 8080,
       cmd_arguments: [],
       envVars: [],
@@ -436,6 +448,7 @@ describe('convertCreateRequestToFormData', () => {
     expect(result).toEqual({
       name: 'docker-server',
       transport: 'stdio',
+      group: 'default',
       target_port: 0,
       cmd_arguments: ['--debug'],
       envVars: [
@@ -470,6 +483,7 @@ describe('convertCreateRequestToFormData', () => {
     expect(result).toEqual({
       name: 'npm-server',
       transport: 'sse',
+      group: 'default',
       target_port: 3000,
       cmd_arguments: [],
       envVars: [],
@@ -494,6 +508,7 @@ describe('convertCreateRequestToFormData', () => {
     const result = convertCreateRequestToFormData(createRequest)
 
     expect(result.transport).toBe('stdio') // defaults to stdio
+    expect(result.group).toBe('default')
   })
 
   it('marks secrets as not from store when not available', () => {
@@ -587,6 +602,7 @@ describe('prepareUpdateWorkloadData', () => {
       transport: 'sse',
       target_port: 3000,
       type: 'docker_image',
+      group: 'default',
       image: 'ghcr.io/test/updated-server',
       cmd_arguments: ['--verbose'],
       envVars: [
@@ -624,6 +640,7 @@ describe('prepareUpdateWorkloadData', () => {
       name: 'npm-updated',
       transport: 'stdio',
       type: 'package_manager',
+      group: 'default',
       protocol: 'uvx',
       package_name: 'updated-package',
       cmd_arguments: [],
@@ -646,6 +663,7 @@ describe('prepareUpdateWorkloadData', () => {
       name: 'test-server',
       transport: 'stdio',
       type: 'docker_image',
+      group: 'default',
       image: 'test-image',
       cmd_arguments: [],
       envVars: [],
@@ -675,6 +693,7 @@ describe('prepareUpdateWorkloadData', () => {
       name: 'test-server',
       transport: 'stdio',
       type: 'docker_image',
+      group: 'default',
       image: 'test-image',
       cmd_arguments: [],
       envVars: [
@@ -699,6 +718,7 @@ describe('prepareUpdateWorkloadData', () => {
       name: 'test-server',
       transport: 'stdio',
       type: 'docker_image',
+      group: 'default',
       image: 'test-image',
       cmd_arguments: [],
       envVars: [],
@@ -725,6 +745,7 @@ describe('prepareUpdateWorkloadData', () => {
       name: 'test-server',
       transport: 'stdio',
       type: 'docker_image',
+      group: 'default',
       image: 'test-image',
       cmd_arguments: [],
       envVars: [],

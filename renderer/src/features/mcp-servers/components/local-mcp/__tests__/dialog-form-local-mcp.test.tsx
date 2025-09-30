@@ -1,3 +1,4 @@
+import React from 'react'
 import { render, waitFor, screen, act } from '@testing-library/react'
 import { it, expect, vi, describe, beforeEach } from 'vitest'
 import { DialogFormLocalMcp } from '../dialog-form-local-mcp'
@@ -9,6 +10,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useRunCustomServer } from '../../../hooks/use-run-custom-server'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
+import { useUpdateServer } from '../../../hooks/use-update-server'
 
 // Mock the hook
 vi.mock('../../../hooks/use-run-custom-server', () => ({
@@ -19,9 +21,15 @@ vi.mock('@/common/hooks/use-check-server-status', () => ({
   useCheckServerStatus: vi.fn(),
 }))
 
+vi.mock('../../../hooks/use-update-server', () => ({
+  useUpdateServer: vi.fn(),
+}))
+
 const mockUseCheckServerStatus = vi.mocked(useCheckServerStatus)
 
 const mockUseRunCustomServer = vi.mocked(useRunCustomServer)
+
+const mockUseUpdateServer = vi.mocked(useUpdateServer)
 
 window.HTMLElement.prototype.hasPointerCapture = vi.fn()
 window.HTMLElement.prototype.scrollIntoView = vi.fn()
@@ -75,6 +83,12 @@ beforeEach(() => {
   mockUseCheckServerStatus.mockReturnValue({
     checkServerStatus: vi.fn(),
   })
+
+  mockUseUpdateServer.mockReturnValue({
+    updateServerMutation: vi.fn(),
+    isPendingSecrets: false,
+    isErrorSecrets: false,
+  })
 })
 
 describe('DialogFormLocalMcp', () => {
@@ -110,6 +124,183 @@ describe('DialogFormLocalMcp', () => {
     expect(
       screen.getByRole('button', { name: 'Install server' })
     ).toBeInTheDocument()
+  })
+
+  it('opens with the latest groupName when group changes before opening', async () => {
+    // Provide groups API
+    mswServer.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [{ name: 'default' }, { name: 'research' }],
+        })
+      )
+    )
+
+    const mockInstallServerMutation = vi.fn()
+    mockUseRunCustomServer.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+
+    // Test harness to keep the dialog mounted while toggling props
+    function Harness() {
+      const [group, setGroup] = React.useState('default')
+      const [open, setOpen] = React.useState(false)
+
+      React.useEffect(() => {
+        // Change group first while closed, then open
+        const t = setTimeout(() => {
+          setGroup('research')
+          setOpen(true)
+        }, 0)
+        return () => clearTimeout(t)
+      }, [])
+
+      return (
+        <Dialog open>
+          <DialogFormLocalMcp
+            isOpen={open}
+            closeDialog={vi.fn()}
+            groupName={group}
+          />
+        </Dialog>
+      )
+    }
+
+    renderWithProviders(<Harness />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    const groupCombobox = await screen.findByRole('combobox', { name: 'Group' })
+    await userEvent.click(groupCombobox)
+    const selected = await screen.findByRole('option', { name: 'research' })
+    expect(selected).toHaveAttribute('aria-selected', 'true')
+  })
+
+  it('preselects the current route group in Group dropdown even with delayed groups', async () => {
+    // Provide groups including a non-default one
+    mswServer.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json(
+          { groups: [{ name: 'default' }, { name: 'research' }] },
+          { status: 200 }
+        )
+      )
+    )
+
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} groupName="research" />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Group select should show the route group preselected
+    const groupCombobox = await screen.findByRole('combobox', { name: 'Group' })
+    expect(groupCombobox).toHaveTextContent('research')
+  })
+
+  it('shows group field when editing an existing server', async () => {
+    // Mock the existing server data
+    mswServer.use(
+      http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
+        if (params.name === 'test-server') {
+          return HttpResponse.json({
+            name: 'test-server',
+            type: 'docker_image',
+            transport: 'stdio',
+            image: 'ghcr.io/test/server',
+            group: 'research',
+            cmd_arguments: [],
+            env_vars: [],
+            secrets: [],
+            network_isolation: false,
+            allowed_hosts: [],
+            allowed_ports: [],
+            volumes: [],
+          })
+        }
+        return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
+      }),
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [{ name: 'default' }, { name: 'research' }],
+        })
+      )
+    )
+
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormLocalMcp
+          isOpen
+          closeDialog={vi.fn()}
+          serverToEdit="test-server"
+          groupName="research"
+        />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    const groupCombobox = await screen.findByRole('combobox', { name: 'Group' })
+    expect(groupCombobox).toBeVisible()
+    expect(groupCombobox).toHaveTextContent('research')
+  })
+
+  it('submits the selected group in form data', async () => {
+    const mockInstallServerMutation = vi.fn()
+    mockUseRunCustomServer.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+
+    mswServer.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [{ name: 'default' }, { name: 'research' }],
+        })
+      )
+    )
+
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} groupName="research" />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Fill minimal required fields
+    await userEvent.type(
+      screen.getByRole('textbox', { name: /name/i }),
+      'test-server'
+    )
+    await userEvent.click(screen.getByLabelText('Transport'))
+    await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
+    await userEvent.type(
+      screen.getByRole('textbox', { name: 'Docker image' }),
+      'ghcr.io/test/server'
+    )
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalled()
+    })
+    const firstArgs = mockInstallServerMutation.mock.calls[0]?.[0]
+    expect(firstArgs?.data?.group).toBe('research')
   })
 
   it('submits docker image form with minimal required fields', async () => {

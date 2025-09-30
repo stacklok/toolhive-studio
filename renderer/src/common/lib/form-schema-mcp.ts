@@ -273,6 +273,9 @@ export const createMcpBaseSchema = (workloads: CoreWorkload[]) => {
     .extend(volumesSchema.shape)
     .extend(envVarsSchema.shape)
     .extend(secretsSchema.shape)
+    .extend({
+      group: z.string(),
+    })
 
   return commonSchema
 }

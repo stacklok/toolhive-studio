@@ -151,7 +151,11 @@ export function DialogFormRemoteMcp({
         { data },
         {
           onSuccess: () => {
-            checkServerStatus({ serverName: data.name, groupName, isEditing })
+            checkServerStatus({
+              serverName: data.name,
+              groupName,
+              isEditing,
+            })
             closeDialog()
             form.reset()
           },
@@ -265,6 +269,7 @@ export function DialogFormRemoteMcp({
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="url"
