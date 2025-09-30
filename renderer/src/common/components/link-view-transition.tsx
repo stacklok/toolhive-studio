@@ -1,6 +1,6 @@
 import type { FileRouteTypes } from '@/route-tree.gen'
 import { Link, useRouterState } from '@tanstack/react-router'
-import { forwardRef } from 'react'
+import { forwardRef, type ComponentProps } from 'react'
 
 type Route = FileRouteTypes['fullPaths']
 const ORDERED_ROUTES: Route[] = [
@@ -59,14 +59,14 @@ function getViewTransition(
 
 export const LinkViewTransition = forwardRef<
   HTMLAnchorElement,
-  Record<string, unknown> & { to: string }
+  Omit<ComponentProps<typeof Link>, 'viewTransition' | 'params'> & {
+    params?: Record<string, unknown>
+  }
 >((props, ref) => {
   const routeId = useRouterState({ select: (s) => s.location.pathname })
 
-  const viewTransition = getViewTransition(
-    routeId,
-    typeof props.to === 'string' ? props.to : String(props.to)
-  )
+  const toPath = typeof props.to === 'string' ? props.to : String(props.to)
+  const viewTransition = getViewTransition(routeId, toPath)
 
   return (
     <Link
