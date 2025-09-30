@@ -196,7 +196,7 @@ export function McpToolsModal({
               placeholder="Search tools..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
+              className="mb-2 pl-9"
             />
           </div>
 
