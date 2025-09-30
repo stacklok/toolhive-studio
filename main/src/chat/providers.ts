@@ -75,10 +75,13 @@ export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
     name: 'Anthropic',
     models: [
       // Claude 4 models (newest)
-      'claude-sonnet-4-20250514',
-      'claude-opus-4-20250514',
+      'claude-sonnet-4-5',
+      'claude-opus-4-1',
+      'claude-sonnet-4-0',
+      'claude-opus-4-0',
 
       // Claude 3.7 models
+      'claude-3-7-sonnet-latest',
       'claude-3-7-sonnet-20250219',
 
       // Claude 3.5 models (current generation)
