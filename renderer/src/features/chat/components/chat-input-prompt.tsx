@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import type { ChatStatus, FileUIPart } from 'ai'
 import {
   PromptInput,
   PromptInputActionAddAttachments,
@@ -15,11 +16,15 @@ import {
   usePromptInputAttachments,
   type PromptInputMessage,
 } from '@/common/components/ai-elements/prompt-input'
-import type { ChatStatus, FileUIPart } from 'ai'
+import { trackEvent } from '@/common/lib/analytics'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/common/components/ui/tooltip'
 import { ModelSelector } from './model-selector'
 import { McpServerSelector } from './mcp-server-selector'
 import type { ChatSettings } from '../types'
-import { trackEvent } from '@/common/lib/analytics'
 
 interface ChatInputProps {
   status: ChatStatus
@@ -92,7 +97,14 @@ function InputWithAttachments({
     <>
       <PromptInputBody>
         <PromptInputAttachments>
-          {(attachment) => <PromptInputAttachment data={attachment} />}
+          {(attachment) => (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <PromptInputAttachment data={attachment} />
+              </TooltipTrigger>
+              <TooltipContent>{attachment.filename}</TooltipContent>
+            </Tooltip>
+          )}
         </PromptInputAttachments>
         <PromptInputTextarea
           onChange={(e) => setText(e.target.value)}
@@ -165,7 +177,6 @@ export function ChatInputPrompt({
 
   return (
     <PromptInput
-      accept="image/*,.pdf,.txt,.md,.json,.xml,.yaml,.yml,.csv,.js,.ts,.jsx,.tsx,.py,.java,.cpp,.c,.h,.html,.css,.scss,.less,.sql,.sh,.bat,.docx,.doc,.rtf"
       onError={console.error}
       onAbort={onStopGeneration}
       onSubmit={handleSubmit}
