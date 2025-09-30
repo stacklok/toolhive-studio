@@ -13,6 +13,11 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/common/components/ui/dropdown-menu'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/common/components/ui/tooltip'
 import { useAvailableModels } from '../hooks/use-available-models'
 import { getProviderIcon } from './provider-icons'
 import type { ChatSettings } from '../types'
@@ -55,14 +60,23 @@ export function ModelSelector({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
+          variant="ghost"
           className="h-10 justify-between"
           disabled={isLoading}
         >
-          <div className="flex items-center gap-2">
-            <Bot className="h-4 w-4" />
+          <div className="flex min-w-0 items-center gap-2">
+            {getProviderIcon(settings.provider)}
             {settings.provider && settings.model ? (
-              <span className="font-mono text-sm">{settings.model}</span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="max-w-40 truncate text-sm">
+                    {settings.model}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{settings.model}</p>
+                </TooltipContent>
+              </Tooltip>
             ) : (
               <span>Select AI Model</span>
             )}
@@ -86,9 +100,11 @@ export function ModelSelector({
             <DropdownMenuSub key={provider.id}>
               <DropdownMenuSubTrigger>
                 <div className="flex w-full items-center justify-between">
-                  <div className="flex items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
                     {getProviderIcon(provider.id)}
-                    <span>{provider.name}</span>
+                    <span className="max-w-40 truncate" title={provider.name}>
+                      {provider.name}
+                    </span>
                   </div>
                 </div>
               </DropdownMenuSubTrigger>

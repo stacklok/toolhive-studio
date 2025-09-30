@@ -135,6 +135,7 @@ export function DialogFormRemoteRegistryMcp({
         onSuccess: () => {
           checkServerStatus({ serverName: data.name, groupName: 'default' })
           closeDialog()
+          form.reset()
         },
         onSettled: (_, error) => {
           setIsSubmitting(false)

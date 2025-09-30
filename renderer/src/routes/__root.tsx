@@ -98,8 +98,8 @@ export const Route = createRootRouteWithContext<{
         }
         return res
       },
-      retry: 3,
-      retryDelay: 300,
+      retry: 5,
+      retryDelay: 500,
       staleTime: 0,
     })
     try {

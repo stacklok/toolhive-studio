@@ -6,6 +6,7 @@ import type { ChatUIMessage } from '../types'
 import { ElectronIPCChatTransport } from '../transport/electron-ipc-chat-transport'
 import { useChatSettings } from './use-chat-settings'
 import { useThreadManagement } from './use-thread-management'
+import type { FileUIPart } from 'ai'
 
 export function useChatStreaming() {
   const queryClient = useQueryClient()
@@ -20,7 +21,6 @@ export function useChatStreaming() {
     isLoading: isSettingsLoading,
   } = useChatSettings()
 
-  // Use dedicated thread management hook
   const {
     currentThreadId,
     isLoading: isThreadLoading,
@@ -67,7 +67,6 @@ export function useChatStreaming() {
     loadInitialMessages()
   }, [currentThreadId, loadThreadMessages, setMessages])
 
-  // Convert status to our isLoading format
   const isLoading =
     status === 'submitted' ||
     status === 'streaming' ||
@@ -75,21 +74,8 @@ export function useChatStreaming() {
     isPersistentLoading ||
     isThreadLoading
 
-  const handleSendMessage = useCallback(
-    async (content: string) => {
-      // Validate settings before sending to prevent transport errors
-      if (!settings.provider || !settings.model || !settings.apiKey?.trim()) {
-        throw new Error('Please configure your AI provider settings first')
-      }
-
-      await sendMessage({ text: content })
-    },
-    [sendMessage, settings.provider, settings.model, settings.apiKey]
-  )
-
   const clearMessages = useCallback(async () => {
     try {
-      // Clear both UI state and persistent storage
       await clearThreadMessages()
       setMessages([])
       setPersistentError(null)
@@ -134,19 +120,46 @@ export function useChatStreaming() {
     return 'An unknown error occurred'
   }
 
+  const validatedSendMessage = useCallback(
+    async (
+      messageOrText:
+        | string
+        | {
+            text: string
+            files?: FileUIPart[]
+          }
+    ) => {
+      if (
+        !settings.provider ||
+        !settings.model ||
+        !settings.apiKey ||
+        !settings.apiKey.trim()
+      ) {
+        throw new Error('Please configure your AI provider settings first')
+      }
+
+      if (typeof messageOrText === 'string') {
+        return sendMessage({ text: messageOrText })
+      } else {
+        return sendMessage(messageOrText)
+      }
+    },
+    [settings, sendMessage]
+  )
+
   // Memoize the processed error to avoid recalculating on every render
   const processedError = useMemo(() => {
-    // Prioritize persistent error, then thread error, then streaming error
     return persistentError || threadError || processError(error)
   }, [error, persistentError, threadError])
 
   return useMemo(() => {
     return {
+      status,
       messages,
       isLoading,
       error: processedError,
       settings,
-      sendMessage: handleSendMessage,
+      sendMessage: validatedSendMessage,
       clearMessages,
       cancelRequest: stop,
       updateSettings,
@@ -155,11 +168,12 @@ export function useChatStreaming() {
       isPersistentLoading,
     }
   }, [
+    status,
     messages,
     isLoading,
     processedError,
     settings,
-    handleSendMessage,
+    validatedSendMessage,
     clearMessages,
     stop,
     updateSettings,

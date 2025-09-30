@@ -6,6 +6,7 @@ import { Label } from '@/common/components/ui/label'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -27,7 +28,7 @@ import { ScrollArea } from '@/common/components/ui/scroll-area'
 interface DialogApiKeysProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
-  onSaved?: () => void
+  onSaved?: (providerKeys: ProviderWithSettings[]) => void
 }
 
 export function DialogApiKeys({
@@ -99,29 +100,40 @@ export function DialogApiKeys({
 
   const handleSave = useCallback(async () => {
     try {
-      await Promise.all(
-        providerKeys.map(async (pk) => {
-          // Get existing enabled tools from the cached data to preserve them
-          const originalProvider = allProvidersWithSettings.find(
-            (p) => p.provider.id === pk.provider.id
-          )
-          const existingEnabledTools = originalProvider?.enabledTools || []
+      providerKeys.forEach(async (pk) => {
+        // Get existing enabled tools from the cached data to preserve them
+        const originalProvider = allProvidersWithSettings.find(
+          (p) => p.provider.id === pk.provider.id
+        )
+        const existingEnabledTools = originalProvider?.enabledTools || []
 
-          return updateProviderSettingsMutation.mutateAsync({
-            provider: pk.provider.id,
-            settings: {
-              apiKey: pk.apiKey,
-              enabledTools: existingEnabledTools,
-            },
-          })
+        updateProviderSettingsMutation.mutateAsync({
+          provider: pk.provider.id,
+          settings: {
+            apiKey: pk.apiKey,
+            enabledTools: existingEnabledTools,
+          },
         })
+      })
+
+      // Find the first provider with a valid API key after saving
+      const updatedProvidersWithKeys = providerKeys.filter(
+        (pk) => pk.hasKey && pk.apiKey.trim()
+      )
+      const firstProviderWithApiKey = updatedProvidersWithKeys[0]
+
+      // Auto select provider and model in two cases:
+      // 1. First time setting an API key (no current API key)
+      // 2. Current provider no longer has a valid API key (fallback scenario)
+      const currentProviderHasKey = updatedProvidersWithKeys.some(
+        (pk) =>
+          pk.provider.id === settings.provider && pk.hasKey && pk.apiKey.trim()
       )
 
-      // on first api key set auto select the provider and model
-      const firstProviderWithApiKey = allProvidersWithSettings.find(
-        (pk) => pk.hasKey
-      )
-      if (!!firstProviderWithApiKey && !settings.apiKey) {
+      if (
+        firstProviderWithApiKey &&
+        (!settings.apiKey || !currentProviderHasKey)
+      ) {
         updateSettings({
           ...settings,
           apiKey: firstProviderWithApiKey.apiKey,
@@ -130,7 +142,7 @@ export function DialogApiKeys({
         })
       }
 
-      onSaved?.()
+      onSaved?.(providerKeys)
       onOpenChange(false)
     } catch (error) {
       log.error('Failed to save API keys:', error)
@@ -147,11 +159,15 @@ export function DialogApiKeys({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent
+        aria-describedby="dialog-api-keys-description"
+        className="max-w-2xl"
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             Manage API Keys
           </DialogTitle>
+          <DialogDescription aria-describedby="Modal for managing provider API keys" />
         </DialogHeader>
         <ScrollArea className="max-h-[600px] overflow-y-auto">
           <div className="space-y-3">

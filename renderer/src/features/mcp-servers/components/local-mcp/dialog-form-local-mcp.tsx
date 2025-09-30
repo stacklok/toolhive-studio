@@ -196,6 +196,7 @@ export function DialogFormLocalMcp({
               isEditing,
             })
             closeDialog()
+            form.reset()
           },
           onSettled: (_, error) => {
             setIsSubmitting(false)

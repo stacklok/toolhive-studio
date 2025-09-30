@@ -157,6 +157,7 @@ export function DialogFormRemoteMcp({
               isEditing,
             })
             closeDialog()
+            form.reset()
           },
           onSettled: (_, error) => {
             setIsSubmitting(false)
