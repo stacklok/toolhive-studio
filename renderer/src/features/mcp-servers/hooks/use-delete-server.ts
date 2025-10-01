@@ -46,8 +46,6 @@ export function useDeleteServer({ name }: { name: string }) {
           })
         )
       )
-      // No navigation needed - the query invalidation will update the UI
-      // and the user will stay on their current group page
     },
     onSettled: () => {
       queryClient.invalidateQueries({
