@@ -1,5 +1,5 @@
 import { screen, waitFor } from '@testing-library/react'
-import { expect, it, beforeEach } from 'vitest'
+import { expect, it, beforeEach, vi } from 'vitest'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
 import userEvent from '@testing-library/user-event'
@@ -140,4 +140,71 @@ it('shows "Copy server to a group" menu item and handles the complete workflow',
       "volumes": [],
     }
   `)
+})
+
+it('stays on the same group page after deleting a server', async () => {
+  // Create a router starting in a non-default group
+  const rootRoute = createRootRoute({
+    component: Outlet,
+    errorComponent: ({ error }) => <div>{error.message}</div>,
+  })
+
+  const groupRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/group/$groupName',
+    component: () => (
+      <CardMcpServer
+        name="fetch1"
+        status="running"
+        statusContext={undefined}
+        url="http://localhost:8080"
+        transport="http"
+        group="g1"
+      />
+    ),
+  })
+
+  const testRouter = new Router({
+    routeTree: rootRoute.addChildren([groupRoute]),
+    history: createMemoryHistory({ initialEntries: ['/group/g1'] }),
+  }) as unknown as ReturnType<typeof createTestRouter>
+
+  // Mock the delete endpoint to return success
+  server.use(
+    http.delete(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+      return HttpResponse.json({}, { status: 204 })
+    }),
+    http.get(mswEndpoint('/api/v1beta/workloads/:name/status'), () => {
+      return HttpResponse.json({ status: 'not_found' }, { status: 404 })
+    })
+  )
+
+  // Mock the confirm dialog to auto-confirm
+  vi.mock('@/common/hooks/use-confirm', () => ({
+    useConfirm: () => () => Promise.resolve(true),
+  }))
+
+  renderRoute(testRouter)
+
+  await waitFor(() => {
+    expect(screen.getByText('fetch1')).toBeVisible()
+  })
+
+  const user = userEvent.setup()
+  const menuButton = screen.getByRole('button', { name: /more/i })
+  await user.click(menuButton)
+
+  const removeMenuItem = screen.getByRole('menuitem', { name: /remove/i })
+  await user.click(removeMenuItem)
+
+  // Wait for navigation - this should stay on g1, not redirect to default
+  await waitFor(
+    () => {
+      // After the fix, this should be '/group/g1'
+      // Currently, the bug causes it to redirect to '/group/default'
+      const pathname = testRouter.state.location.pathname
+      expect(pathname).toBe('/group/g1')
+    },
+    { timeout: 5000 }
+  )
 })

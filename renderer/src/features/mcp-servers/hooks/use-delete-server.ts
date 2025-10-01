@@ -9,7 +9,13 @@ import { pollServerDelete } from '@/common/lib/polling'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 
-export function useDeleteServer({ name }: { name: string }) {
+export function useDeleteServer({
+  name,
+  group,
+}: {
+  name: string
+  group?: string
+}) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const queryKey = getApiV1BetaWorkloadsQueryKey({ query: { all: true } })
@@ -50,7 +56,7 @@ export function useDeleteServer({ name }: { name: string }) {
       )
       navigate({
         to: '/group/$groupName',
-        params: { groupName: 'default' },
+        params: { groupName: group || 'default' },
         search: (prev) => prev,
       })
     },
