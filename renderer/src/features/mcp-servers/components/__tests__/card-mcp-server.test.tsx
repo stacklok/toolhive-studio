@@ -1,5 +1,5 @@
 import { screen, waitFor } from '@testing-library/react'
-import { expect, it, beforeEach, vi } from 'vitest'
+import { expect, it, beforeEach } from 'vitest'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
 import userEvent from '@testing-library/user-event'
@@ -178,11 +178,6 @@ it('stays on the same group page after deleting a server', async () => {
       return HttpResponse.json({ status: 'not_found' }, { status: 404 })
     })
   )
-
-  // Mock the confirm dialog to auto-confirm
-  vi.mock('@/common/hooks/use-confirm', () => ({
-    useConfirm: () => () => Promise.resolve(true),
-  }))
 
   renderRoute(testRouter)
 
