@@ -50,7 +50,7 @@ export function GridCardsMcpServers({
         className="grid gap-4"
         style={{
           gridTemplateColumns:
-            'repeat(auto-fill, minmax(max(300px, min(450px, 100%)), 1fr))',
+            'repeat(auto-fill, minmax(max(300px, min(400px, 100%)), 1fr))',
         }}
       >
         {visibleMcpServers.map((mcpServer) =>
