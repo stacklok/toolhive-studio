@@ -2,6 +2,7 @@ import type { CoreWorkload } from '@api/types.gen'
 import { CardMcpServer } from './card-mcp-server'
 import { useMemo, useState } from 'react'
 import { InputSearch } from '@/common/components/ui/input-search'
+import { cn } from '@/common/lib/utils'
 
 export function GridCardsMcpServers({
   mcpServers,
@@ -47,7 +48,12 @@ export function GridCardsMcpServers({
       />
 
       <div
-        className="grid grid-cols-[repeat(auto-fill,minmax(250px,400px))] gap-4"
+        className={cn(
+          'grid gap-4',
+          visibleMcpServers.length <= 3
+            ? 'grid-cols-[repeat(auto-fill,minmax(max(200px,min(300px,100%)),1fr))]'
+            : 'grid-cols-[repeat(auto-fit,minmax(max(200px,min(300px,100%)),1fr))]'
+        )}
       >
         {visibleMcpServers.map((mcpServer) =>
           mcpServer.name ? (

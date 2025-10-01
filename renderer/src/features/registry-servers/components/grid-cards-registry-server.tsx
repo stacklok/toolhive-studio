@@ -6,6 +6,7 @@ import { CardRegistryServer } from './card-registry-server'
 import { useFilterSort } from '@/common/hooks/use-filter-sort'
 import { InputSearch } from '@/common/components/ui/input-search'
 import { useNavigate } from '@tanstack/react-router'
+import { cn } from '@/common/lib/utils'
 
 export function GridCardsRegistryServer({
   servers,
@@ -32,7 +33,12 @@ export function GridCardsRegistryServer({
         placeholder="Search..."
       />
       <div
-        className="grid grid-cols-[repeat(auto-fill,minmax(250px,400px))] gap-4"
+        className={cn(
+          'grid gap-4',
+          filteredAndSortedServers.length <= 3
+            ? 'grid-cols-[repeat(auto-fill,minmax(max(200px,min(300px,100%)),1fr))]'
+            : 'grid-cols-[repeat(auto-fit,minmax(max(200px,min(300px,100%)),1fr))]'
+        )}
       >
         {filteredAndSortedServers.map((server) => (
           <CardRegistryServer
