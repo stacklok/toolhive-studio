@@ -38,12 +38,20 @@ export function useChatStreaming() {
     [queryClient]
   )
 
-  const { messages, sendMessage, status, error, stop, setMessages } =
-    useChat<ChatUIMessage>({
-      id: currentThreadId || 'loading-thread',
-      transport: ipcTransport,
-      experimental_throttle: 200,
-    })
+  const {
+    messages,
+    sendMessage,
+    status,
+    error,
+    clearError,
+    stop,
+    setMessages,
+  } = useChat<ChatUIMessage>({
+    id: currentThreadId || 'loading-thread',
+    transport: ipcTransport,
+    resume: false,
+    experimental_throttle: 200,
+  })
 
   useEffect(() => {
     async function loadInitialMessages() {
@@ -165,7 +173,10 @@ export function useChatStreaming() {
       settings,
       sendMessage: validatedSendMessage,
       clearMessages,
-      cancelRequest: stop,
+      cancelRequest: async () => {
+        await stop()
+        clearError()
+      },
       updateSettings,
       updateEnabledTools,
       loadPersistedSettings,
@@ -179,10 +190,11 @@ export function useChatStreaming() {
     settings,
     validatedSendMessage,
     clearMessages,
-    stop,
     updateSettings,
     updateEnabledTools,
     loadPersistedSettings,
     isPersistentLoading,
+    clearError,
+    stop,
   ])
 }
