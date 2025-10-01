@@ -49,6 +49,7 @@ export function GridCardsMcpServers({
       <div
         className="grid gap-4"
         style={{
+          gridAutoFlow: 'row',
           gridTemplateColumns:
             'repeat(auto-fill, minmax(max(200px, min(300px, 100%)), 1fr))',
         }}
