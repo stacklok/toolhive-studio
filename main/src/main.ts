@@ -46,7 +46,7 @@ import {
   getToolhiveMcpPort,
 } from './toolhive-manager'
 import log from './logger'
-import { getAppVersion, isOfficialReleaseBuild } from './util'
+import { getAppVersion, getInstanceId, isOfficialReleaseBuild } from './util'
 import { delay } from '../../utils/delay'
 import {
   initAutoUpdate,
@@ -487,6 +487,11 @@ ipcMain.handle('sentry.opt-out', (): boolean => {
 ipcMain.handle('sentry.opt-in', (): boolean => {
   store.set('isTelemetryEnabled', true)
   return true
+})
+
+ipcMain.handle('get-instance-id', async () => {
+  const instanceId = await getInstanceId()
+  return instanceId
 })
 
 // Log file operations
