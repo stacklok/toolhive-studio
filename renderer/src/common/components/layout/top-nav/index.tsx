@@ -16,9 +16,12 @@ import { useConfirmQuit } from '@/common/hooks/use-confirm-quit'
 import { QuitConfirmationListener } from './quit-confirmation-listener'
 import { SettingsIcon } from 'lucide-react'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { useRouterState } from '@tanstack/react-router'
 
 function TopNavLinks() {
   const isPlaygroundEnabled = useFeatureFlag('playground')
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const isGroupRoute = pathname.startsWith('/group/')
 
   return (
     <NavigationMenu>
@@ -44,6 +47,7 @@ function TopNavLinks() {
               data-[status=active]:hover:bg-transparent
               data-[status=active]:focus:bg-transparent
               data-[status=hover]:bg-transparent"
+            data-status={isGroupRoute ? 'active' : undefined}
             asChild
           >
             <LinkViewTransition to="/group/default">
