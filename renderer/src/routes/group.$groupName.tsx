@@ -83,7 +83,7 @@ function GroupRoute() {
       >
         <TitlePage title="MCP Servers">
           <>
-            <div className="ml-auto flex gap-2">
+            <div className="flex gap-2 lg:ml-auto">
               {workloads.length > 0 && (
                 <>
                   <RefreshButton refresh={refetch} />
