@@ -32,11 +32,11 @@ export function GridCardsRegistryServer({
         placeholder="Search..."
       />
       <div
-        className="grid gap-4"
-        style={{
-          gridTemplateColumns:
-            'repeat(auto-fill, minmax(max(200px, min(300px, 100%)), 1fr))',
-        }}
+        className={`grid gap-4 ${
+          filteredAndSortedServers.length === 1
+            ? 'grid-cols-[repeat(auto-fill,minmax(max(200px,min(300px,100%)),1fr))]'
+            : 'grid-cols-[repeat(auto-fit,minmax(max(200px,min(300px,100%)),1fr))]'
+          }`}
       >
         {filteredAndSortedServers.map((server) => (
           <CardRegistryServer
