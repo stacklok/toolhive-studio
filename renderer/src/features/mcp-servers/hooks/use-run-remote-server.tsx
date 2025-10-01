@@ -74,10 +74,11 @@ export function useRunRemoteServer({
         queryClient,
       })
       trackEvent(`Workload remote ${data.name} started`, {
-        remote: true,
-        pageName,
+        remote: 'true',
+        auth_type: data.auth_type,
+        transport: data.transport,
         workload: data.name,
-        'route.pathname': '/',
+        'route.pathname': pageName,
       })
     },
   })

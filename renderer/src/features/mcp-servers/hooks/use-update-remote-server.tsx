@@ -60,10 +60,12 @@ export function useUpdateServer(
       await restartClientNotification({
         queryClient,
       })
-      trackEvent(`Workload ${serverName} updated`, {
+      trackEvent(`Workload remote ${serverName} updated`, {
         pageName: '/',
-        isEditing: true,
-        remote: true,
+        isEditing: 'true',
+        remote: 'true',
+        auth_type: data.auth_type,
+        transport: data.transport,
         workload: serverName,
         'route.pathname': '/',
       })

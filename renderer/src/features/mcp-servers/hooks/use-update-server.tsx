@@ -53,6 +53,9 @@ export function useUpdateServer(
       })
       trackEvent(`Workload ${serverName} updated`, {
         workload: serverName,
+        isEditing: 'true',
+        transport: data.transport,
+        type: data.type,
         'route.pathname': '/customize-tools',
       })
     },
