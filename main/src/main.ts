@@ -46,7 +46,7 @@ import {
   getToolhiveMcpPort,
 } from './toolhive-manager'
 import log from './logger'
-import { getAppVersion, isOfficialReleaseBuild } from './util'
+import { getAppVersion, getInstanceId, isOfficialReleaseBuild } from './util'
 import { delay } from '../../utils/delay'
 import {
   initAutoUpdate,
@@ -116,7 +116,32 @@ const store = new Store<{
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
   tracesSampleRate: 1.0,
+  // It will send errors, exceptions and captured messages to Sentry only if the user has enabled telemetry
   beforeSend: (event) => (store.get('isTelemetryEnabled', true) ? event : null),
+  // It will send transactions to Sentry only if the user has enabled telemetry
+  beforeSendTransaction: async (transaction) => {
+    if (!store.get('isTelemetryEnabled', true)) {
+      return null
+    }
+    if (!transaction?.contexts?.trace) return null
+
+    const instanceId = await getInstanceId()
+    const trace = transaction.contexts.trace
+
+    return {
+      ...transaction,
+      contexts: {
+        ...transaction.contexts,
+        trace: {
+          ...trace,
+          data: {
+            ...transaction.contexts.trace.data,
+            'custom.user_id': instanceId,
+          },
+        },
+      },
+    }
+  },
 })
 
 // Environment variables are now handled in mainWindow.ts
@@ -487,6 +512,11 @@ ipcMain.handle('sentry.opt-out', (): boolean => {
 ipcMain.handle('sentry.opt-in', (): boolean => {
   store.set('isTelemetryEnabled', true)
   return true
+})
+
+ipcMain.handle('get-instance-id', async () => {
+  const instanceId = await getInstanceId()
+  return instanceId
 })
 
 // Log file operations

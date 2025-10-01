@@ -42,8 +42,33 @@ Sentry.init({
   // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
+  // It will send errors, exceptions and captured messages to Sentry only if the user has enabled telemetry
   beforeSend: async (event) =>
     (await window.electronAPI.sentry.isEnabled) ? event : null,
+  // It will send transactions to Sentry only if the user has enabled telemetry
+  beforeSendTransaction: async (transaction) => {
+    if (!(await window.electronAPI.sentry.isEnabled)) {
+      return null
+    }
+    if (!transaction?.contexts?.trace) return null
+
+    const instanceId = await window.electronAPI.getInstanceId()
+    const trace = transaction.contexts.trace
+
+    return {
+      ...transaction,
+      contexts: {
+        ...transaction.contexts,
+        trace: {
+          ...trace,
+          data: {
+            ...transaction.contexts.trace.data,
+            'custom.user_id': instanceId,
+          },
+        },
+      },
+    }
+  },
 })
 
 // @tanstack/react-router setup
