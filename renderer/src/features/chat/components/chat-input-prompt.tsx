@@ -48,10 +48,11 @@ function InputWithAttachments({
   settings,
   updateSettings,
   onSettingsOpen,
+  onStopGeneration,
   handleProviderChange,
   hasProviderAndModel,
   hasMessages,
-}: Omit<ChatInputProps, 'onSendMessage' | 'onStopGeneration'> & {
+}: Omit<ChatInputProps, 'onSendMessage'> & {
   text: string
   setText: (text: string) => void
 }) {
@@ -93,6 +94,18 @@ function InputWithAttachments({
     onSettingsOpen(true)
   }
 
+  const handleSubmit = () => {
+    trackEvent(`Playground: submit`, { 'playground.status': status })
+    const isStoppable = ['streaming', 'error', 'submitted'].includes(status)
+    if (isStoppable) {
+      onStopGeneration()
+    }
+    // if there is an error, clear the attachments
+    if (status === 'error') {
+      attachments.clear()
+    }
+  }
+
   return (
     <>
       <PromptInputBody>
@@ -117,7 +130,7 @@ function InputWithAttachments({
           <PromptInputActionMenu>
             <PromptInputActionMenuTrigger />
             <PromptInputActionMenuContent>
-              <PromptInputActionAddAttachments />
+              <PromptInputActionAddAttachments label="Add images or PDFs" />
             </PromptInputActionMenuContent>
           </PromptInputActionMenu>
           {hasProviderAndModel && (
@@ -132,7 +145,11 @@ function InputWithAttachments({
             </>
           )}
         </PromptInputTools>
-        <PromptInputSubmit disabled={!text && !hasMessages} status={status} />
+        <PromptInputSubmit
+          onClick={handleSubmit}
+          disabled={!text && !hasMessages}
+          status={status}
+        />
       </PromptInputToolbar>
     </>
   )
@@ -177,9 +194,11 @@ export function ChatInputPrompt({
 
   return (
     <PromptInput
+      accept="image/*,application/pdf,.pdf"
       onError={console.error}
       onAbort={onStopGeneration}
       onSubmit={handleSubmit}
+      maxFiles={5}
       globalDrop
       multiple
       syncHiddenInput
@@ -189,6 +208,7 @@ export function ChatInputPrompt({
         settings={settings}
         updateSettings={updateSettings}
         onSettingsOpen={onSettingsOpen}
+        onStopGeneration={onStopGeneration}
         handleProviderChange={handleProviderChange}
         hasProviderAndModel={hasProviderAndModel}
         hasMessages={hasMessages}
