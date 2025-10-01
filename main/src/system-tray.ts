@@ -5,6 +5,20 @@ import { createApplicationMenu } from './menu'
 import log from './logger'
 import { getAppVersion } from './util'
 import { hideWindow, showWindow, showInDock } from './dock-utils'
+import { showMainWindow, sendToMainWindowRenderer } from './main-window'
+
+// Safe tray destruction with error handling
+export function safeTrayDestroy(tray: Tray | null) {
+  try {
+    if (tray && !tray.isDestroyed()) {
+      tray.destroy()
+      log.info('[tray] Tray destroyed successfully')
+    }
+  } catch (error) {
+    log.error('[tray] Failed to destroy tray: ', error)
+    // Don't throw - this shouldn't block operations
+  }
+}
 
 ///////////////////////////////////////////////////
 // Tray icon
@@ -167,14 +181,14 @@ const createHideMenuItem = () => ({
 const createQuitMenuItem = () => ({
   label: 'Quit ToolHive',
   type: 'normal' as const,
-  click: () => {
-    // Trigger the quit confirmation flow
-    const window = BrowserWindow.getAllWindows()[0]
-    if (window) {
+  click: async () => {
+    try {
+      // Trigger the quit confirmation flow
       showInDock() // Ensure app is visible in dock
-      window.show()
-      window.focus()
-      window.webContents.send('show-quit-confirmation')
+      await showMainWindow()
+      sendToMainWindowRenderer('show-quit-confirmation')
+    } catch (error) {
+      log.error('Failed to show quit confirmation from tray:', error)
     }
   },
 })

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { pollServerStatus, pollServerDelete } from '../polling'
-import type { WorkloadsWorkload } from '@api/types.gen'
+import type { CoreWorkload } from '@api/types.gen'
 
 describe('Polling Utility', () => {
   beforeEach(() => {
@@ -16,8 +16,8 @@ describe('Polling Utility', () => {
     it('returns true when server reaches desired status', async () => {
       const mockFetchServer = vi
         .fn()
-        .mockResolvedValueOnce({ status: 'starting' } as WorkloadsWorkload)
-        .mockResolvedValueOnce({ status: 'running' } as WorkloadsWorkload)
+        .mockResolvedValueOnce({ status: 'starting' } as CoreWorkload)
+        .mockResolvedValueOnce({ status: 'running' } as CoreWorkload)
 
       const pollPromise = pollServerStatus(mockFetchServer, 'running', {
         maxAttempts: 3,
@@ -34,7 +34,7 @@ describe('Polling Utility', () => {
     it('returns false when server never reaches desired status', async () => {
       const mockFetchServer = vi
         .fn()
-        .mockResolvedValue({ status: 'starting' } as WorkloadsWorkload)
+        .mockResolvedValue({ status: 'starting' } as CoreWorkload)
 
       const pollPromise = pollServerStatus(mockFetchServer, 'running', {
         maxAttempts: 3,
@@ -52,7 +52,7 @@ describe('Polling Utility', () => {
       const mockFetchServer = vi
         .fn()
         .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValueOnce({ status: 'running' } as WorkloadsWorkload)
+        .mockResolvedValueOnce({ status: 'running' } as CoreWorkload)
 
       const pollPromise = pollServerStatus(mockFetchServer, 'running', {
         maxAttempts: 3,
@@ -69,7 +69,7 @@ describe('Polling Utility', () => {
     it('returns true immediately if first attempt matches', async () => {
       const mockFetchServer = vi
         .fn()
-        .mockResolvedValueOnce({ status: 'running' } as WorkloadsWorkload)
+        .mockResolvedValueOnce({ status: 'running' } as CoreWorkload)
 
       const result = await pollServerStatus(mockFetchServer, 'running', {
         maxAttempts: 3,
@@ -83,8 +83,8 @@ describe('Polling Utility', () => {
     it('works with different status values', async () => {
       const mockFetchServer = vi
         .fn()
-        .mockResolvedValueOnce({ status: 'starting' } as WorkloadsWorkload)
-        .mockResolvedValueOnce({ status: 'stopped' } as WorkloadsWorkload)
+        .mockResolvedValueOnce({ status: 'starting' } as CoreWorkload)
+        .mockResolvedValueOnce({ status: 'stopped' } as CoreWorkload)
 
       const pollPromise = pollServerStatus(mockFetchServer, 'stopped', {
         maxAttempts: 3,
@@ -101,7 +101,7 @@ describe('Polling Utility', () => {
     it('respects custom configuration', async () => {
       const mockFetchServer = vi
         .fn()
-        .mockResolvedValue({ status: 'starting' } as WorkloadsWorkload)
+        .mockResolvedValue({ status: 'starting' } as CoreWorkload)
 
       const pollPromise = pollServerStatus(mockFetchServer, 'running', {
         maxAttempts: 2,
@@ -120,7 +120,7 @@ describe('Polling Utility', () => {
     it('returns true when server fetch fails (server deleted)', async () => {
       const mockFetchServer = vi
         .fn()
-        .mockResolvedValueOnce({ status: 'running' } as WorkloadsWorkload)
+        .mockResolvedValueOnce({ status: 'running' } as CoreWorkload)
         .mockRejectedValueOnce(new Error('Not found'))
 
       const pollPromise = pollServerDelete(mockFetchServer, {
@@ -152,7 +152,7 @@ describe('Polling Utility', () => {
     it('returns false if server never gets deleted', async () => {
       const mockFetchServer = vi
         .fn()
-        .mockResolvedValue({ status: 'running' } as WorkloadsWorkload)
+        .mockResolvedValue({ status: 'running' } as CoreWorkload)
 
       const pollPromise = pollServerDelete(mockFetchServer, {
         maxAttempts: 3,
@@ -169,8 +169,8 @@ describe('Polling Utility', () => {
     it('handles mixed scenarios (running then deleted)', async () => {
       const mockFetchServer = vi
         .fn()
-        .mockResolvedValueOnce({ status: 'running' } as WorkloadsWorkload)
-        .mockResolvedValueOnce({ status: 'stopping' } as WorkloadsWorkload)
+        .mockResolvedValueOnce({ status: 'running' } as CoreWorkload)
+        .mockResolvedValueOnce({ status: 'stopping' } as CoreWorkload)
         .mockRejectedValueOnce(new Error('Not found'))
 
       const pollPromise = pollServerDelete(mockFetchServer, {
@@ -190,7 +190,7 @@ describe('Polling Utility', () => {
     it('respects delayFirst option', async () => {
       const mockFetchServer = vi
         .fn()
-        .mockResolvedValue({ status: 'running' } as WorkloadsWorkload)
+        .mockResolvedValue({ status: 'running' } as CoreWorkload)
 
       const pollPromise = pollServerStatus(mockFetchServer, 'running', {
         maxAttempts: 1,
@@ -207,7 +207,7 @@ describe('Polling Utility', () => {
     it('uses default configuration when none provided', async () => {
       const mockFetchServer = vi
         .fn()
-        .mockResolvedValue({ status: 'running' } as WorkloadsWorkload)
+        .mockResolvedValue({ status: 'running' } as CoreWorkload)
 
       const result = await pollServerStatus(mockFetchServer, 'running')
 
@@ -220,8 +220,8 @@ describe('Polling Utility', () => {
     it('handles undefined server data', async () => {
       const mockFetchServer = vi
         .fn()
-        .mockResolvedValueOnce(undefined as unknown as WorkloadsWorkload)
-        .mockResolvedValueOnce({ status: 'running' } as WorkloadsWorkload)
+        .mockResolvedValueOnce(undefined as unknown as CoreWorkload)
+        .mockResolvedValueOnce({ status: 'running' } as CoreWorkload)
 
       const pollPromise = pollServerStatus(mockFetchServer, 'running', {
         maxAttempts: 3,
@@ -238,8 +238,8 @@ describe('Polling Utility', () => {
     it('handles null server data', async () => {
       const mockFetchServer = vi
         .fn()
-        .mockResolvedValueOnce(null as unknown as WorkloadsWorkload)
-        .mockResolvedValueOnce({ status: 'running' } as WorkloadsWorkload)
+        .mockResolvedValueOnce(null as unknown as CoreWorkload)
+        .mockResolvedValueOnce({ status: 'running' } as CoreWorkload)
 
       const pollPromise = pollServerStatus(mockFetchServer, 'running', {
         maxAttempts: 3,
@@ -256,8 +256,8 @@ describe('Polling Utility', () => {
     it('handles server with missing status', async () => {
       const mockFetchServer = vi
         .fn()
-        .mockResolvedValueOnce({} as WorkloadsWorkload)
-        .mockResolvedValueOnce({ status: 'running' } as WorkloadsWorkload)
+        .mockResolvedValueOnce({} as CoreWorkload)
+        .mockResolvedValueOnce({ status: 'running' } as CoreWorkload)
 
       const pollPromise = pollServerStatus(mockFetchServer, 'running', {
         maxAttempts: 3,
@@ -288,7 +288,7 @@ describe('Polling Utility', () => {
     it('does not delay before first attempt by default', async () => {
       const mockFetchServer = vi
         .fn()
-        .mockResolvedValue({ status: 'running' } as WorkloadsWorkload)
+        .mockResolvedValue({ status: 'running' } as CoreWorkload)
 
       const pollPromise = pollServerStatus(mockFetchServer, 'running', {
         maxAttempts: 1,
@@ -304,8 +304,8 @@ describe('Polling Utility', () => {
     it('respects interval timing between attempts', async () => {
       const mockFetchServer = vi
         .fn()
-        .mockResolvedValueOnce({ status: 'starting' } as WorkloadsWorkload)
-        .mockResolvedValueOnce({ status: 'running' } as WorkloadsWorkload)
+        .mockResolvedValueOnce({ status: 'starting' } as CoreWorkload)
+        .mockResolvedValueOnce({ status: 'running' } as CoreWorkload)
 
       const pollPromise = pollServerStatus(mockFetchServer, 'running', {
         maxAttempts: 3,

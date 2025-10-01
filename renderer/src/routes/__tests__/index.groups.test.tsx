@@ -1,0 +1,114 @@
+import { vi } from 'vitest'
+vi.mock('@/common/hooks/use-feature-flag', () => ({
+  useFeatureFlag: () => true,
+}))
+import { screen, waitFor } from '@testing-library/react'
+import { describe, it, expect, beforeEach } from 'vitest'
+import { GroupsManager } from '@/features/mcp-servers/components/groups-manager'
+import { renderRoute } from '@/common/test/render-route'
+import { createTestRouter } from '@/common/test/create-test-router'
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  Outlet,
+  Router,
+} from '@tanstack/react-router'
+
+function createGroupsTestRouter() {
+  const rootRoute = createRootRoute({
+    component: Outlet,
+    errorComponent: ({ error }) => <div>{error.message}</div>,
+  })
+
+  const groupRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/group/$groupName',
+    component: () => <GroupsManager />,
+  })
+
+  const router = new Router({
+    routeTree: rootRoute.addChildren([groupRoute]),
+    history: createMemoryHistory({ initialEntries: ['/group/default'] }),
+  })
+
+  return router
+}
+
+const router = createGroupsTestRouter() as unknown as ReturnType<
+  typeof createTestRouter
+>
+
+beforeEach(() => {
+  vi.clearAllMocks()
+
+  Object.defineProperty(window, 'electronAPI', {
+    value: {
+      shutdownStore: {
+        getLastShutdownServers: vi.fn().mockResolvedValue([]),
+        clearShutdownHistory: vi.fn().mockResolvedValue(undefined),
+      },
+      onServerShutdown: vi.fn().mockReturnValue(() => {}),
+    },
+    writable: true,
+  })
+})
+
+describe('Groups Manager in Index route (feature flagged)', () => {
+  it('renders the groups sidebar with all groups', async () => {
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.getByText('default')).toBeVisible()
+      expect(screen.getByText('Research team')).toBeVisible()
+      expect(screen.getByText('Archive')).toBeVisible()
+    })
+  })
+
+  it('marks the Default group as active with correct styling', async () => {
+    renderRoute(router)
+
+    const defaultGroup = await screen.findByText('default')
+    const groupItem = defaultGroup.closest('div')!.parentElement as HTMLElement
+
+    expect(groupItem).toHaveClass('rounded-md')
+    expect(groupItem).toHaveClass('border', 'border-input')
+    expect(groupItem).toHaveClass('bg-background')
+    expect(groupItem).toHaveClass('shadow-sm')
+
+    expect(groupItem).toHaveClass('flex', 'h-9', 'w-[215px]', 'px-4', 'py-2')
+  })
+
+  it('shows 7px status dots with correct colors (green for enabled, gray for disabled)', async () => {
+    renderRoute(router)
+
+    const defaultGroup = await screen.findByText('default')
+    const researchGroup = await screen.findByText('Research team')
+    const archiveGroup = await screen.findByText('Archive')
+
+    for (const el of [defaultGroup, researchGroup]) {
+      const container = el.parentElement as HTMLElement
+      const dot = container.querySelector('span.rounded-full') as HTMLElement
+      expect(dot).toBeTruthy()
+      expect(dot).toHaveClass('size-[7px]')
+      expect(dot).toHaveClass('bg-green-600')
+    }
+
+    {
+      const container = archiveGroup.parentElement as HTMLElement
+      const dot = container.querySelector('span.rounded-full') as HTMLElement
+      expect(dot).toBeTruthy()
+      expect(dot).toHaveClass('size-[7px]')
+      expect(dot).toHaveClass('bg-zinc-900/20')
+    }
+  })
+
+  it('does not display textual Enabled/Disabled labels', async () => {
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.queryByText(/Enabled/i)).toBeNull()
+      expect(screen.queryByText(/Disabled/i)).toBeNull()
+    })
+  })
+})

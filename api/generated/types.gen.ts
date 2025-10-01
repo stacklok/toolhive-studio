@@ -40,10 +40,6 @@ export type AuditConfig = {
  */
 export type AuthTokenValidatorConfig = {
   /**
-   * AllowOpaqueTokens indicates whether to allow opaque tokens (non-JWT)
-   */
-  allowOpaqueTokens?: boolean
-  /**
    * AllowPrivateIP allows JWKS/OIDC endpoints on private IP addresses
    */
   allowPrivateIP?: boolean
@@ -64,6 +60,14 @@ export type AuthTokenValidatorConfig = {
    */
   clientID?: string
   /**
+   * ClientSecret is the optional OIDC client secret for introspection
+   */
+  clientSecret?: string
+  /**
+   * IntrospectionURL is the optional introspection endpoint for validating tokens
+   */
+  introspectionURL?: string
+  /**
    * Issuer is the OIDC issuer URL (e.g., https://accounts.google.com)
    */
   issuer?: string
@@ -71,6 +75,10 @@ export type AuthTokenValidatorConfig = {
    * JWKSURL is the URL to fetch the JWKS from
    */
   jwksurl?: string
+  /**
+   * ResourceURL is the explicit resource URL for OAuth discovery (RFC 9728)
+   */
+  resourceURL?: string
 }
 
 /**
@@ -105,10 +113,6 @@ export type AuthzConfig = {
  */
 export type AuthzConfigType = string
 
-export type ClientClient = {
-  name?: ClientMcpClient
-}
-
 export type ClientMcpClient = string
 
 export type ClientMcpClientStatus = {
@@ -126,8 +130,73 @@ export type ClientMcpClientStatus = {
   registered?: boolean
 }
 
+export type ClientRegisteredClient = {
+  groups?: Array<string>
+  name?: ClientMcpClient
+}
+
+export type CoreWorkload = {
+  /**
+   * CreatedAt is the timestamp when the workload was created.
+   */
+  created_at?: string
+  /**
+   * Group is the name of the group this workload belongs to, if any.
+   */
+  group?: string
+  /**
+   * Labels are the container labels (excluding standard ToolHive labels)
+   */
+  labels?: {
+    [key: string]: string
+  }
+  /**
+   * Name is the name of the workload.
+   * It is used as a unique identifier.
+   */
+  name?: string
+  /**
+   * Package specifies the Workload Package used to create this Workload.
+   */
+  package?: string
+  /**
+   * Port is the port on which the workload is exposed.
+   * This is embedded in the URL.
+   */
+  port?: number
+  /**
+   * ProxyMode is the proxy mode for stdio transport (sse or streamable-http).
+   */
+  proxy_mode?: string
+  /**
+   * Remote indicates whether this is a remote workload (true) or a container workload (false).
+   */
+  remote?: boolean
+  status?: RuntimeWorkloadStatus
+  /**
+   * StatusContext provides additional context about the workload's status.
+   * The exact meaning is determined by the status and the underlying runtime.
+   */
+  status_context?: string
+  /**
+   * ToolType is the type of tool this workload represents.
+   * For now, it will always be "mcp" - representing an MCP server.
+   */
+  tool_type?: string
+  /**
+   * ToolsFilter is the filter on tools applied to the workload.
+   */
+  tools?: Array<string>
+  transport_type?: TypesTransportType
+  /**
+   * URL is the URL of the workload exposed by the ToolHive proxy.
+   */
+  url?: string
+}
+
 export type GroupsGroup = {
   name?: string
+  registered_clients?: Array<string>
 }
 
 /**
@@ -179,6 +248,12 @@ export type PermissionsProfile = {
   name?: string
   network?: PermissionsNetworkPermissions
   /**
+   * Privileged indicates whether the container should run in privileged mode
+   * When true, the container has access to all host devices and capabilities
+   * Use with extreme caution as this removes most security isolation
+   */
+  privileged?: boolean
+  /**
    * Read is a list of mount declarations that the container can read from
    * These can be in the following formats:
    * - A single path: The same path will be mounted from host to container
@@ -219,13 +294,67 @@ export type RegistryEnvVar = {
   secret?: boolean
 }
 
+export type RegistryGroup = {
+  /**
+   * Description is a human-readable description of the group's purpose and functionality
+   */
+  description?: string
+  /**
+   * Name is the identifier for the group, used when referencing the group in commands
+   */
+  name?: string
+  /**
+   * RemoteServers is a map of server names to their corresponding remote server definitions within this group
+   */
+  remote_servers?: {
+    [key: string]: RegistryRemoteServerMetadata
+  }
+  /**
+   * Servers is a map of server names to their corresponding server definitions within this group
+   */
+  servers?: {
+    [key: string]: RegistryImageMetadata
+  }
+}
+
+export type RegistryHeader = {
+  /**
+   * Choices provides a list of valid values for the header (optional)
+   */
+  choices?: Array<string>
+  /**
+   * Default is the value to use if the header is not explicitly provided
+   * Only used for non-required headers
+   */
+  default?: string
+  /**
+   * Description is a human-readable explanation of the header's purpose
+   */
+  description?: string
+  /**
+   * Name is the header name (e.g., X-API-Key, Authorization)
+   */
+  name?: string
+  /**
+   * Required indicates whether this header must be provided
+   * If true and not provided via command line or secrets, the user will be prompted for a value
+   */
+  required?: boolean
+  /**
+   * Secret indicates whether this header contains sensitive information
+   * If true, the value will be stored as a secret rather than as plain text
+   */
+  secret?: boolean
+}
+
 /**
- * Server details
+ * Container server details (if it's a container server)
  */
 export type RegistryImageMetadata = {
   /**
    * Args are the default command-line arguments to pass to the MCP server container.
-   * These arguments will be prepended to any command-line arguments provided by the user.
+   * These arguments will be used only if no command-line arguments are provided by the user.
+   * If the user provides arguments, they will override these defaults.
    */
   args?: Array<string>
   /**
@@ -253,7 +382,7 @@ export type RegistryImageMetadata = {
   metadata?: RegistryMetadata
   /**
    * Name is the identifier for the MCP server, used when referencing the server in commands
-   * If not provided, it will be auto-generated from the image name
+   * If not provided, it will be auto-generated from the registry key
    */
   name?: string
   permissions?: PermissionsProfile
@@ -263,7 +392,7 @@ export type RegistryImageMetadata = {
    */
   repository_url?: string
   /**
-   * The Status indicates whether the server is currently active or deprecated
+   * Status indicates whether the server is currently active or deprecated
    */
   status?: string
   /**
@@ -275,7 +404,7 @@ export type RegistryImageMetadata = {
    */
   target_port?: number
   /**
-   * Tier represents the tier classification level of the server, e.g., "official" or "community" driven
+   * Tier represents the tier classification level of the server, e.g., "Official" or "Community"
    */
   tier?: string
   /**
@@ -283,7 +412,9 @@ export type RegistryImageMetadata = {
    */
   tools?: Array<string>
   /**
-   * Transport defines the communication protocol for the server (stdio, sse, or streamable-http)
+   * Transport defines the communication protocol for the server
+   * For containers: stdio, sse, or streamable-http
+   * For remote servers: sse or streamable-http (stdio not supported)
    */
   transport?: string
 }
@@ -307,6 +438,54 @@ export type RegistryMetadata = {
 }
 
 /**
+ * OAuthConfig provides OAuth/OIDC configuration for authentication to the remote server
+ * Used with the thv proxy command's --remote-auth flags
+ */
+export type RegistryOAuthConfig = {
+  /**
+   * AuthorizeURL is the OAuth authorization endpoint URL
+   * Used for non-OIDC OAuth flows when issuer is not provided
+   */
+  authorize_url?: string
+  /**
+   * CallbackPort is the specific port to use for the OAuth callback server
+   * If not specified, a random available port will be used
+   */
+  callback_port?: number
+  /**
+   * ClientID is the OAuth client ID for authentication
+   */
+  client_id?: string
+  /**
+   * Issuer is the OAuth/OIDC issuer URL (e.g., https://accounts.google.com)
+   * Used for OIDC discovery to find authorization and token endpoints
+   */
+  issuer?: string
+  /**
+   * OAuthParams contains additional OAuth parameters to include in the authorization request
+   * These are server-specific parameters like "prompt", "response_mode", etc.
+   */
+  oauth_params?: {
+    [key: string]: string
+  }
+  /**
+   * Scopes are the OAuth scopes to request
+   * If not specified, defaults to ["openid", "profile", "email"] for OIDC
+   */
+  scopes?: Array<string>
+  /**
+   * TokenURL is the OAuth token endpoint URL
+   * Used for non-OIDC OAuth flows when issuer is not provided
+   */
+  token_url?: string
+  /**
+   * UsePKCE indicates whether to use PKCE for the OAuth flow
+   * Defaults to true for enhanced security
+   */
+  use_pkce?: boolean
+}
+
+/**
  * Provenance contains verification and signing metadata
  */
 export type RegistryProvenance = {
@@ -324,9 +503,20 @@ export type RegistryProvenance = {
  */
 export type RegistryRegistry = {
   /**
+   * Groups is a slice of group definitions containing related MCP servers
+   */
+  groups?: Array<RegistryGroup>
+  /**
    * LastUpdated is the timestamp when the registry was last updated, in RFC3339 format
    */
   last_updated?: string
+  /**
+   * RemoteServers is a map of server names to their corresponding remote server definitions
+   * These are MCP servers accessed via HTTP/HTTPS using the thv proxy command
+   */
+  remote_servers?: {
+    [key: string]: RegistryRemoteServerMetadata
+  }
   /**
    * Servers is a map of server names to their corresponding server definitions
    */
@@ -339,9 +529,105 @@ export type RegistryRegistry = {
   version?: string
 }
 
+/**
+ * Remote server details (if it's a remote server)
+ */
+export type RegistryRemoteServerMetadata = {
+  /**
+   * CustomMetadata allows for additional user-defined metadata
+   */
+  custom_metadata?: {
+    [key: string]: unknown
+  }
+  /**
+   * Description is a human-readable description of the server's purpose and functionality
+   */
+  description?: string
+  /**
+   * EnvVars defines environment variables that can be passed to configure the client
+   * These might be needed for client-side configuration when connecting to the remote server
+   */
+  env_vars?: Array<RegistryEnvVar>
+  /**
+   * Headers defines HTTP headers that can be passed to the remote server for authentication
+   * These are used with the thv proxy command's authentication features
+   */
+  headers?: Array<RegistryHeader>
+  metadata?: RegistryMetadata
+  /**
+   * Name is the identifier for the MCP server, used when referencing the server in commands
+   * If not provided, it will be auto-generated from the registry key
+   */
+  name?: string
+  oauth_config?: RegistryOAuthConfig
+  /**
+   * RepositoryURL is the URL to the source code repository for the server
+   */
+  repository_url?: string
+  /**
+   * Status indicates whether the server is currently active or deprecated
+   */
+  status?: string
+  /**
+   * Tags are categorization labels for the server to aid in discovery and filtering
+   */
+  tags?: Array<string>
+  /**
+   * Tier represents the tier classification level of the server, e.g., "Official" or "Community"
+   */
+  tier?: string
+  /**
+   * Tools is a list of tool names provided by this MCP server
+   */
+  tools?: Array<string>
+  /**
+   * Transport defines the communication protocol for the server
+   * For containers: stdio, sse, or streamable-http
+   * For remote servers: sse or streamable-http (stdio not supported)
+   */
+  transport?: string
+  /**
+   * URL is the endpoint URL for the remote MCP server (e.g., https://api.example.com/mcp)
+   */
+  url?: string
+}
+
 export type RegistryVerifiedAttestation = {
   predicate?: unknown
   predicate_type?: string
+}
+
+/**
+ * RemoteAuthConfig contains OAuth configuration for remote MCP servers
+ */
+export type RunnerRemoteAuthConfig = {
+  authorizeURL?: string
+  callbackPort?: number
+  clientID?: string
+  clientSecret?: string
+  clientSecretFile?: string
+  /**
+   * Environment variables for the client
+   */
+  envVars?: Array<RegistryEnvVar>
+  /**
+   * Headers for HTTP requests
+   */
+  headers?: Array<RegistryHeader>
+  /**
+   * OAuth endpoint configuration (from registry)
+   */
+  issuer?: string
+  /**
+   * OAuth parameters for server-specific customization
+   */
+  oauthParams?: {
+    [key: string]: string
+  }
+  scopes?: Array<string>
+  skipBrowser?: boolean
+  timeout?: string
+  tokenURL?: string
 }
 
 export type RunnerRunConfig = {
@@ -378,6 +664,10 @@ export type RunnerRunConfig = {
    */
   debug?: boolean
   /**
+   * EnvFileDir is the directory path to load environment files from
+   */
+  env_file_dir?: string
+  /**
    * EnvVars are the parsed environment variables as key-value pairs
    */
   env_vars?: {
@@ -401,10 +691,6 @@ export type RunnerRunConfig = {
    */
   isolate_network?: boolean
   /**
-   * JWKSAllowPrivateIP allows JWKS/OIDC endpoints on private IP addresses
-   */
-  jwks_allow_private_ip?: boolean
-  /**
    * JWKSAuthTokenFile is the path to file containing auth token for JWKS/OIDC requests
    */
   jwks_auth_token_file?: string
@@ -413,6 +699,11 @@ export type RunnerRunConfig = {
    * Only applicable when using Kubernetes runtime
    */
   k8s_pod_template_patch?: string
+  /**
+   * MiddlewareConfigs contains the list of middleware to apply to the transport
+   * and the configuration for each middleware.
+   */
+  middleware_configs?: Array<TypesMiddlewareConfig>
   /**
    * Name is the name of the MCP server
    */
@@ -428,6 +719,15 @@ export type RunnerRunConfig = {
    */
   port?: number
   proxy_mode?: TypesProxyMode
+  remote_auth_config?: RunnerRemoteAuthConfig
+  /**
+   * RemoteURL is the URL of the remote MCP server (if running remotely)
+   */
+  remote_url?: string
+  /**
+   * SchemaVersion is the version of the RunConfig schema
+   */
+  schema_version?: string
   /**
    * Secrets are the secret parameters to pass to the container
    * Format: "<secret name>,target=<target environment variable>"
@@ -451,6 +751,12 @@ export type RunnerRunConfig = {
    */
   tools_filter?: Array<string>
   /**
+   * ToolsOverride is a map from an actual tool to its overridden name and/or description
+   */
+  tools_override?: {
+    [key: string]: RunnerToolOverride
+  }
+  /**
    * Transport is the transport mode (stdio, sse, or streamable-http)
    */
   transport?: string
@@ -459,6 +765,17 @@ export type RunnerRunConfig = {
    * Format: "host-path:container-path[:ro]"
    */
   volumes?: Array<string>
+}
+
+export type RunnerToolOverride = {
+  /**
+   * Description is the redefined description of the tool
+   */
+  description?: string
+  /**
+   * Name is the redefined name of the tool
+   */
+  name?: string
 }
 
 /**
@@ -503,7 +820,14 @@ export type TelemetryConfig = {
    */
   insecure?: boolean
   /**
+   * MetricsEnabled controls whether OTLP metrics are enabled
+   * When false, OTLP metrics are not sent even if an endpoint is configured
+   * This is independent of EnablePrometheusMetricsPath
+   */
+  metricsEnabled?: boolean
+  /**
    * SamplingRate is the trace sampling rate (0.0-1.0)
+   * Only used when TracingEnabled is true
    */
   samplingRate?: number
   /**
@@ -514,6 +838,25 @@ export type TelemetryConfig = {
    * ServiceVersion is the service version for telemetry
    */
   serviceVersion?: string
+  /**
+   * TracingEnabled controls whether distributed tracing is enabled
+   * When false, no tracer provider is created even if an endpoint is configured
+   */
+  tracingEnabled?: boolean
+}
+
+export type TypesMiddlewareConfig = {
+  /**
+   * Parameters is a JSON object containing the middleware parameters.
+   * It is stored as a raw message to allow flexible parameter types.
+   */
+  parameters?: {
+    [key: string]: unknown
+  }
+  /**
+   * Type is a string representing the middleware type.
+   */
+  type?: string
 }
 
 /**
@@ -526,7 +869,48 @@ export type TypesProxyMode = string
  */
 export type TypesTransportType = string
 
+/**
+ * Type of registry (file, url, or default)
+ */
+export type V1RegistryType = string
+
+/**
+ * Request containing registry configuration updates
+ */
+export type V1UpdateRegistryRequest = {
+  /**
+   * Allow private IP addresses for registry URL
+   */
+  allow_private_ip?: boolean
+  /**
+   * Local registry file path
+   */
+  local_path?: string
+  /**
+   * Registry URL (for remote registries)
+   */
+  url?: string
+}
+
+/**
+ * Response containing update result
+ */
+export type V1UpdateRegistryResponse = {
+  /**
+   * Status message
+   */
+  message?: string
+  /**
+   * Registry type after update
+   */
+  type?: string
+}
+
 export type V1BulkClientRequest = {
+  /**
+   * Groups is the list of groups configured on the client.
+   */
+  groups?: Array<string>
   /**
    * Names is the list of client names to operate on.
    */
@@ -550,12 +934,20 @@ export type V1ClientStatusResponse = {
 
 export type V1CreateClientRequest = {
   /**
+   * Groups is the list of groups configured on the client.
+   */
+  groups?: Array<string>
+  /**
    * Name is the type of the client to register.
    */
   name?: string
 }
 
 export type V1CreateClientResponse = {
+  /**
+   * Groups is the list of groups configured on the client.
+   */
+  groups?: Array<string>
   /**
    * Name is the type of the client that was registered.
    */
@@ -591,7 +983,14 @@ export type V1CreateRequest = {
   /**
    * Environment variables to set in the container
    */
-  env_vars?: Array<string>
+  env_vars?: {
+    [key: string]: string
+  }
+  /**
+   * Group name this workload belongs to
+   */
+  group?: string
+  headers?: Array<RegistryHeader>
   /**
    * Host to bind to
    */
@@ -608,12 +1007,17 @@ export type V1CreateRequest = {
    * Whether network isolation is turned on. This applies the rules in the permission profile.
    */
   network_isolation?: boolean
+  oauth_config?: V1RemoteOAuthConfig
   oidc?: V1OidcOptions
   permission_profile?: PermissionsProfile
   /**
    * Proxy mode to use
    */
   proxy_mode?: string
+  /**
+   * Port for the HTTP proxy to listen on
+   */
+  proxy_port?: number
   /**
    * Secret parameters to inject
    */
@@ -627,9 +1031,19 @@ export type V1CreateRequest = {
    */
   tools?: Array<string>
   /**
+   * Tools override
+   */
+  tools_override?: {
+    [key: string]: V1ToolOverride
+  }
+  /**
    * Transport configuration
    */
   transport?: string
+  /**
+   * Remote server specific fields
+   */
+  url?: string
   /**
    * Volume mounts
    */
@@ -696,6 +1110,14 @@ export type V1GetRegistryResponse = {
    */
   server_count?: number
   /**
+   * Source of the registry (URL, file path, or empty string for built-in)
+   */
+  source?: string
+  /**
+   * Type of registry (file, url, or default)
+   */
+  type?: string
+  /**
    * Version of the registry schema
    */
   version?: string
@@ -720,6 +1142,11 @@ export type V1GetSecretsProviderResponse = {
  * Response containing server details
  */
 export type V1GetServerResponse = {
+  /**
+   * Indicates if this is a remote server
+   */
+  is_remote?: boolean
+  remote_server?: RegistryRemoteServerMetadata
   server?: RegistryImageMetadata
 }
 
@@ -745,7 +1172,11 @@ export type V1ListSecretsResponse = {
  */
 export type V1ListServersResponse = {
   /**
-   * List of servers in the registry
+   * List of remote servers in the registry (if any)
+   */
+  remote_servers?: Array<RegistryRemoteServerMetadata>
+  /**
+   * List of container servers in the registry
    */
   servers?: Array<RegistryImageMetadata>
 }
@@ -755,10 +1186,6 @@ export type V1ListServersResponse = {
  */
 export type V1OidcOptions = {
   /**
-   * Allow opaque tokens (non-JWT) for OIDC validation
-   */
-  allow_opaque_tokens?: boolean
-  /**
    * Expected audience
    */
   audience?: string
@@ -766,6 +1193,14 @@ export type V1OidcOptions = {
    * OAuth2 client ID
    */
   client_id?: string
+  /**
+   * OAuth2 client secret
+   */
+  client_secret?: string
+  /**
+   * Token introspection URL for OIDC
+   */
+  introspection_url?: string
   /**
    * OIDC issuer URL
    */
@@ -819,6 +1254,11 @@ export type V1RegistryInfo = {
    */
   server_count?: number
   /**
+   * Source of the registry (URL, file path, or empty string for built-in)
+   */
+  source?: string
+  type?: V1RegistryType
+  /**
    * Version of the registry schema
    */
   version?: string
@@ -832,6 +1272,51 @@ export type V1RegistryListResponse = {
    * List of registries
    */
   registries?: Array<V1RegistryInfo>
+}
+
+/**
+ * OAuth configuration for remote server authentication
+ */
+export type V1RemoteOAuthConfig = {
+  /**
+   * OAuth authorization endpoint URL (alternative to issuer for non-OIDC OAuth)
+   */
+  authorize_url?: string
+  /**
+   * Specific port for OAuth callback server
+   */
+  callback_port?: number
+  /**
+   * OAuth client ID for authentication
+   */
+  client_id?: string
+  client_secret?: SecretsSecretParameter
+  /**
+   * OAuth/OIDC issuer URL (e.g., https://accounts.google.com)
+   */
+  issuer?: string
+  /**
+   * Additional OAuth parameters for server-specific customization
+   */
+  oauth_params?: {
+    [key: string]: string
+  }
+  /**
+   * OAuth scopes to request
+   */
+  scopes?: Array<string>
+  /**
+   * Whether to skip opening browser for OAuth flow (defaults to false)
+   */
+  skip_browser?: boolean
+  /**
+   * OAuth token endpoint URL (alternative to issuer for non-OIDC OAuth)
+   */
+  token_url?: string
+  /**
+   * Whether to use PKCE for the OAuth flow
+   */
+  use_pkce?: boolean
 }
 
 /**
@@ -878,6 +1363,98 @@ export type V1SetupSecretsResponse = {
 }
 
 /**
+ * Tool override
+ */
+export type V1ToolOverride = {
+  /**
+   * Description of the tool
+   */
+  description?: string
+  /**
+   * Name of the tool
+   */
+  name?: string
+}
+
+/**
+ * Request to update an existing workload (name cannot be changed)
+ */
+export type V1UpdateRequest = {
+  /**
+   * Authorization configuration
+   */
+  authz_config?: string
+  /**
+   * Command arguments to pass to the container
+   */
+  cmd_arguments?: Array<string>
+  /**
+   * Environment variables to set in the container
+   */
+  env_vars?: {
+    [key: string]: string
+  }
+  /**
+   * Group name this workload belongs to
+   */
+  group?: string
+  headers?: Array<RegistryHeader>
+  /**
+   * Host to bind to
+   */
+  host?: string
+  /**
+   * Docker image to use
+   */
+  image?: string
+  /**
+   * Whether network isolation is turned on. This applies the rules in the permission profile.
+   */
+  network_isolation?: boolean
+  oauth_config?: V1RemoteOAuthConfig
+  oidc?: V1OidcOptions
+  permission_profile?: PermissionsProfile
+  /**
+   * Proxy mode to use
+   */
+  proxy_mode?: string
+  /**
+   * Port for the HTTP proxy to listen on
+   */
+  proxy_port?: number
+  /**
+   * Secret parameters to inject
+   */
+  secrets?: Array<SecretsSecretParameter>
+  /**
+   * Port to expose from the container
+   */
+  target_port?: number
+  /**
+   * Tools filter
+   */
+  tools?: Array<string>
+  /**
+   * Tools override
+   */
+  tools_override?: {
+    [key: string]: V1ToolOverride
+  }
+  /**
+   * Transport configuration
+   */
+  transport?: string
+  /**
+   * Remote server specific fields
+   */
+  url?: string
+  /**
+   * Volume mounts
+   */
+  volumes?: Array<string>
+}
+
+/**
  * Request to update an existing secret
  */
 export type V1UpdateSecretRequest = {
@@ -912,58 +1489,17 @@ export type V1WorkloadListResponse = {
   /**
    * List of container information for each workload
    */
-  workloads?: Array<WorkloadsWorkload>
+  workloads?: Array<CoreWorkload>
 }
 
-export type WorkloadsWorkload = {
+/**
+ * Response containing workload status information
+ */
+export type V1WorkloadStatusResponse = {
   /**
-   * CreatedAt is the timestamp when the workload was created.
+   * Current status of the workload
    */
-  created_at?: string
-  /**
-   * Group is the name of the group this workload belongs to, if any.
-   */
-  group?: string
-  /**
-   * Labels are the container labels (excluding standard ToolHive labels)
-   */
-  labels?: {
-    [key: string]: string
-  }
-  /**
-   * Name is the name of the workload.
-   * It is used as a unique identifier.
-   */
-  name?: string
-  /**
-   * Package specifies the Workload Package used to create this Workload.
-   */
-  package?: string
-  /**
-   * Port is the port on which the workload is exposed.
-   * This is embedded in the URL.
-   */
-  port?: number
-  status?: RuntimeWorkloadStatus
-  /**
-   * StatusContext provides additional context about the workload's status.
-   * The exact meaning is determined by the status and the underlying runtime.
-   */
-  status_context?: string
-  /**
-   * ToolType is the type of tool this workload represents.
-   * For now, it will always be "mcp" - representing an MCP server.
-   */
-  tool_type?: string
-  /**
-   * ToolsFilter is the filter on tools applied to the workload.
-   */
-  tools?: Array<string>
-  transport_type?: TypesTransportType
-  /**
-   * URL is the URL of the workload exposed by the ToolHive proxy.
-   */
-  url?: string
+  status?: string
 }
 
 export type GetApiOpenapiJsonData = {
@@ -996,7 +1532,7 @@ export type GetApiV1BetaClientsResponses = {
   /**
    * OK
    */
-  200: Array<ClientClient>
+  200: Array<ClientRegisteredClient>
 }
 
 export type GetApiV1BetaClientsResponse =
@@ -1123,6 +1659,46 @@ export type DeleteApiV1BetaClientsByNameResponses = {
 
 export type DeleteApiV1BetaClientsByNameResponse =
   DeleteApiV1BetaClientsByNameResponses[keyof DeleteApiV1BetaClientsByNameResponses]
+
+export type DeleteApiV1BetaClientsByNameGroupsByGroupData = {
+  body?: never
+  path: {
+    /**
+     * Client name to unregister
+     */
+    name: string
+    /**
+     * Group name to remove client from
+     */
+    group: string
+  }
+  query?: never
+  url: '/api/v1beta/clients/{name}/groups/{group}'
+}
+
+export type DeleteApiV1BetaClientsByNameGroupsByGroupErrors = {
+  /**
+   * Invalid request
+   */
+  400: string
+  /**
+   * Client or group not found
+   */
+  404: string
+}
+
+export type DeleteApiV1BetaClientsByNameGroupsByGroupError =
+  DeleteApiV1BetaClientsByNameGroupsByGroupErrors[keyof DeleteApiV1BetaClientsByNameGroupsByGroupErrors]
+
+export type DeleteApiV1BetaClientsByNameGroupsByGroupResponses = {
+  /**
+   * No Content
+   */
+  204: void
+}
+
+export type DeleteApiV1BetaClientsByNameGroupsByGroupResponse =
+  DeleteApiV1BetaClientsByNameGroupsByGroupResponses[keyof DeleteApiV1BetaClientsByNameGroupsByGroupResponses]
 
 export type GetApiV1BetaDiscoveryClientsData = {
   body?: never
@@ -1382,6 +1958,45 @@ export type GetApiV1BetaRegistryByNameResponses = {
 
 export type GetApiV1BetaRegistryByNameResponse =
   GetApiV1BetaRegistryByNameResponses[keyof GetApiV1BetaRegistryByNameResponses]
+
+export type PutApiV1BetaRegistryByNameData = {
+  /**
+   * Registry configuration
+   */
+  body: V1UpdateRegistryRequest
+  path: {
+    /**
+     * Registry name (must be 'default')
+     */
+    name: string
+  }
+  query?: never
+  url: '/api/v1beta/registry/{name}'
+}
+
+export type PutApiV1BetaRegistryByNameErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+  /**
+   * Not Found
+   */
+  404: string
+}
+
+export type PutApiV1BetaRegistryByNameError =
+  PutApiV1BetaRegistryByNameErrors[keyof PutApiV1BetaRegistryByNameErrors]
+
+export type PutApiV1BetaRegistryByNameResponses = {
+  /**
+   * OK
+   */
+  200: V1UpdateRegistryResponse
+}
+
+export type PutApiV1BetaRegistryByNameResponse =
+  PutApiV1BetaRegistryByNameResponses[keyof PutApiV1BetaRegistryByNameResponses]
 
 export type GetApiV1BetaRegistryByNameServersData = {
   body?: never
@@ -1923,11 +2538,50 @@ export type GetApiV1BetaWorkloadsByNameResponses = {
   /**
    * OK
    */
-  200: WorkloadsWorkload
+  200: V1CreateRequest
 }
 
 export type GetApiV1BetaWorkloadsByNameResponse =
   GetApiV1BetaWorkloadsByNameResponses[keyof GetApiV1BetaWorkloadsByNameResponses]
+
+export type PostApiV1BetaWorkloadsByNameEditData = {
+  /**
+   * Update workload request
+   */
+  body: V1UpdateRequest
+  path: {
+    /**
+     * Workload name
+     */
+    name: string
+  }
+  query?: never
+  url: '/api/v1beta/workloads/{name}/edit'
+}
+
+export type PostApiV1BetaWorkloadsByNameEditErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+  /**
+   * Not Found
+   */
+  404: string
+}
+
+export type PostApiV1BetaWorkloadsByNameEditError =
+  PostApiV1BetaWorkloadsByNameEditErrors[keyof PostApiV1BetaWorkloadsByNameEditErrors]
+
+export type PostApiV1BetaWorkloadsByNameEditResponses = {
+  /**
+   * OK
+   */
+  200: V1CreateWorkloadResponse
+}
+
+export type PostApiV1BetaWorkloadsByNameEditResponse =
+  PostApiV1BetaWorkloadsByNameEditResponses[keyof PostApiV1BetaWorkloadsByNameEditResponses]
 
 export type GetApiV1BetaWorkloadsByNameExportData = {
   body?: never
@@ -2028,6 +2682,38 @@ export type PostApiV1BetaWorkloadsByNameRestartResponses = {
 
 export type PostApiV1BetaWorkloadsByNameRestartResponse =
   PostApiV1BetaWorkloadsByNameRestartResponses[keyof PostApiV1BetaWorkloadsByNameRestartResponses]
+
+export type GetApiV1BetaWorkloadsByNameStatusData = {
+  body?: never
+  path: {
+    /**
+     * Workload name
+     */
+    name: string
+  }
+  query?: never
+  url: '/api/v1beta/workloads/{name}/status'
+}
+
+export type GetApiV1BetaWorkloadsByNameStatusErrors = {
+  /**
+   * Not Found
+   */
+  404: string
+}
+
+export type GetApiV1BetaWorkloadsByNameStatusError =
+  GetApiV1BetaWorkloadsByNameStatusErrors[keyof GetApiV1BetaWorkloadsByNameStatusErrors]
+
+export type GetApiV1BetaWorkloadsByNameStatusResponses = {
+  /**
+   * OK
+   */
+  200: V1WorkloadStatusResponse
+}
+
+export type GetApiV1BetaWorkloadsByNameStatusResponse =
+  GetApiV1BetaWorkloadsByNameStatusResponses[keyof GetApiV1BetaWorkloadsByNameStatusResponses]
 
 export type PostApiV1BetaWorkloadsByNameStopData = {
   body?: never

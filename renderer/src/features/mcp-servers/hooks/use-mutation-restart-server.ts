@@ -1,8 +1,8 @@
-import type { V1WorkloadListResponse, WorkloadsWorkload } from '@api/types.gen'
+import type { V1WorkloadListResponse, CoreWorkload } from '@api/types.gen'
 import {
   postApiV1BetaWorkloadsByNameRestartMutation,
   getApiV1BetaWorkloadsQueryKey,
-  getApiV1BetaWorkloadsByNameOptions,
+  getApiV1BetaWorkloadsByNameStatusOptions,
   postApiV1BetaWorkloadsRestartMutation,
 } from '@api/@tanstack/react-query.gen'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
@@ -22,7 +22,9 @@ const getMutationData = (name: string) => ({
 
 export function useMutationRestartServerAtStartup() {
   const queryClient = useQueryClient()
-  const queryKey = getApiV1BetaWorkloadsQueryKey({ query: { all: true } })
+  const queryKey = getApiV1BetaWorkloadsQueryKey({
+    query: { all: true, group: 'default' },
+  })
 
   useEffect(() => {
     const cleanup = window.electronAPI.onServerShutdown(() => {
@@ -69,7 +71,7 @@ export function useMutationRestartServerAtStartup() {
 
           const updatedData = {
             ...oldData,
-            workloads: workloads?.map((server: WorkloadsWorkload) =>
+            workloads: workloads?.map((server: CoreWorkload) =>
               serverNames.includes(server.name || '')
                 ? { ...server, status: 'restarting' }
                 : server
@@ -91,14 +93,18 @@ export function useMutationRestartServerAtStartup() {
       // Poll until all servers are running
       await pollBatchServerStatus(
         async (names) => {
-          const servers = await Promise.all(
+          const statusResponses = await Promise.all(
             names.map((name) =>
               queryClient.fetchQuery(
-                getApiV1BetaWorkloadsByNameOptions({ path: { name } })
+                getApiV1BetaWorkloadsByNameStatusOptions({ path: { name } })
               )
             )
           )
-          return servers
+          // Convert status responses to CoreWorkload-like objects for polling
+          return statusResponses.map((response, index) => ({
+            name: names[index],
+            status: response.status || 'unknown',
+          })) as CoreWorkload[]
         },
         serverNames,
         'running'
@@ -117,7 +123,9 @@ export function useMutationRestartServerAtStartup() {
 
 export function useMutationRestartServer({ name }: { name: string }) {
   const queryClient = useQueryClient()
-  const queryKey = getApiV1BetaWorkloadsQueryKey({ query: { all: true } })
+  const queryKey = getApiV1BetaWorkloadsQueryKey({
+    query: { all: true, group: 'default' },
+  })
 
   return useToastMutation({
     ...getMutationData(name),
@@ -133,7 +141,7 @@ export function useMutationRestartServer({ name }: { name: string }) {
 
           const updatedData = {
             ...oldData,
-            workloads: oldData.workloads?.map((server: WorkloadsWorkload) =>
+            workloads: oldData.workloads?.map((server: CoreWorkload) =>
               server.name === name ? { ...server, status: 'running' } : server
             ),
           }

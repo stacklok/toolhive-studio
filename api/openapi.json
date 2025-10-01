@@ -42,10 +42,6 @@
       "auth.TokenValidatorConfig": {
         "description": "OIDCConfig contains OIDC configuration",
         "properties": {
-          "allowOpaqueTokens": {
-            "description": "AllowOpaqueTokens indicates whether to allow opaque tokens (non-JWT)",
-            "type": "boolean"
-          },
           "allowPrivateIP": {
             "description": "AllowPrivateIP allows JWKS/OIDC endpoints on private IP addresses",
             "type": "boolean"
@@ -66,12 +62,24 @@
             "description": "ClientID is the OIDC client ID",
             "type": "string"
           },
+          "clientSecret": {
+            "description": "ClientSecret is the optional OIDC client secret for introspection",
+            "type": "string"
+          },
+          "introspectionURL": {
+            "description": "IntrospectionURL is the optional introspection endpoint for validating tokens",
+            "type": "string"
+          },
           "issuer": {
             "description": "Issuer is the OIDC issuer URL (e.g., https://accounts.google.com)",
             "type": "string"
           },
           "jwksurl": {
             "description": "JWKSURL is the URL to fetch the JWKS from",
+            "type": "string"
+          },
+          "resourceURL": {
+            "description": "ResourceURL is the explicit resource URL for OAuth discovery (RFC 9728)",
             "type": "string"
           }
         },
@@ -110,12 +118,6 @@
         "type": "string",
         "x-enum-varnames": ["ConfigTypeCedarV1"]
       },
-      "client.Client": {
-        "properties": {
-          "name": { "$ref": "#/components/schemas/client.MCPClient" }
-        },
-        "type": "object"
-      },
       "client.MCPClient": {
         "type": "string",
         "x-enum-varnames": [
@@ -131,7 +133,9 @@
           "AmpVSCode",
           "AmpCursor",
           "AmpVSCodeInsider",
-          "AmpWindsurf"
+          "AmpWindsurf",
+          "LMStudio",
+          "Goose"
         ]
       },
       "client.MCPClientStatus": {
@@ -152,7 +156,9 @@
               "AmpVSCode",
               "AmpCursor",
               "AmpVSCodeInsider",
-              "AmpWindsurf"
+              "AmpWindsurf",
+              "LMStudio",
+              "Goose"
             ]
           },
           "installed": {
@@ -166,8 +172,86 @@
         },
         "type": "object"
       },
+      "client.RegisteredClient": {
+        "properties": {
+          "groups": {
+            "items": { "type": "string" },
+            "type": "array",
+            "uniqueItems": false
+          },
+          "name": { "$ref": "#/components/schemas/client.MCPClient" }
+        },
+        "type": "object"
+      },
+      "core.Workload": {
+        "properties": {
+          "created_at": {
+            "description": "CreatedAt is the timestamp when the workload was created.",
+            "type": "string"
+          },
+          "group": {
+            "description": "Group is the name of the group this workload belongs to, if any.",
+            "type": "string"
+          },
+          "labels": {
+            "additionalProperties": { "type": "string" },
+            "description": "Labels are the container labels (excluding standard ToolHive labels)",
+            "type": "object"
+          },
+          "name": {
+            "description": "Name is the name of the workload.\nIt is used as a unique identifier.",
+            "type": "string"
+          },
+          "package": {
+            "description": "Package specifies the Workload Package used to create this Workload.",
+            "type": "string"
+          },
+          "port": {
+            "description": "Port is the port on which the workload is exposed.\nThis is embedded in the URL.",
+            "type": "integer"
+          },
+          "proxy_mode": {
+            "description": "ProxyMode is the proxy mode for stdio transport (sse or streamable-http).",
+            "type": "string"
+          },
+          "remote": {
+            "description": "Remote indicates whether this is a remote workload (true) or a container workload (false).",
+            "type": "boolean"
+          },
+          "status": { "$ref": "#/components/schemas/runtime.WorkloadStatus" },
+          "status_context": {
+            "description": "StatusContext provides additional context about the workload's status.\nThe exact meaning is determined by the status and the underlying runtime.",
+            "type": "string"
+          },
+          "tool_type": {
+            "description": "ToolType is the type of tool this workload represents.\nFor now, it will always be \"mcp\" - representing an MCP server.",
+            "type": "string"
+          },
+          "tools": {
+            "description": "ToolsFilter is the filter on tools applied to the workload.",
+            "items": { "type": "string" },
+            "type": "array",
+            "uniqueItems": false
+          },
+          "transport_type": {
+            "$ref": "#/components/schemas/types.TransportType"
+          },
+          "url": {
+            "description": "URL is the URL of the workload exposed by the ToolHive proxy.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "groups.Group": {
-        "properties": { "name": { "type": "string" } },
+        "properties": {
+          "name": { "type": "string" },
+          "registered_clients": {
+            "items": { "type": "string" },
+            "type": "array",
+            "uniqueItems": false
+          }
+        },
         "type": "object"
       },
       "ignore.Config": {
@@ -225,6 +309,10 @@
           "network": {
             "$ref": "#/components/schemas/permissions.NetworkPermissions"
           },
+          "privileged": {
+            "description": "Privileged indicates whether the container should run in privileged mode\nWhen true, the container has access to all host devices and capabilities\nUse with extreme caution as this removes most security isolation",
+            "type": "boolean"
+          },
           "read": {
             "description": "Read is a list of mount declarations that the container can read from\nThese can be in the following formats:\n- A single path: The same path will be mounted from host to container\n- host-path:container-path: Different paths for host and container\n- resource-uri:container-path: Mount a resource identified by URI to a container path",
             "items": { "type": "string" },
@@ -265,11 +353,69 @@
         },
         "type": "object"
       },
+      "registry.Group": {
+        "properties": {
+          "description": {
+            "description": "Description is a human-readable description of the group's purpose and functionality",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name is the identifier for the group, used when referencing the group in commands",
+            "type": "string"
+          },
+          "remote_servers": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/registry.RemoteServerMetadata"
+            },
+            "description": "RemoteServers is a map of server names to their corresponding remote server definitions within this group",
+            "type": "object"
+          },
+          "servers": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/registry.ImageMetadata"
+            },
+            "description": "Servers is a map of server names to their corresponding server definitions within this group",
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "registry.Header": {
+        "properties": {
+          "choices": {
+            "description": "Choices provides a list of valid values for the header (optional)",
+            "items": { "type": "string" },
+            "type": "array",
+            "uniqueItems": false
+          },
+          "default": {
+            "description": "Default is the value to use if the header is not explicitly provided\nOnly used for non-required headers",
+            "type": "string"
+          },
+          "description": {
+            "description": "Description is a human-readable explanation of the header's purpose",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name is the header name (e.g., X-API-Key, Authorization)",
+            "type": "string"
+          },
+          "required": {
+            "description": "Required indicates whether this header must be provided\nIf true and not provided via command line or secrets, the user will be prompted for a value",
+            "type": "boolean"
+          },
+          "secret": {
+            "description": "Secret indicates whether this header contains sensitive information\nIf true, the value will be stored as a secret rather than as plain text",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
       "registry.ImageMetadata": {
-        "description": "Server details",
+        "description": "Container server details (if it's a container server)",
         "properties": {
           "args": {
-            "description": "Args are the default command-line arguments to pass to the MCP server container.\nThese arguments will be prepended to any command-line arguments provided by the user.",
+            "description": "Args are the default command-line arguments to pass to the MCP server container.\nThese arguments will be used only if no command-line arguments are provided by the user.\nIf the user provides arguments, they will override these defaults.",
             "items": { "type": "string" },
             "type": "array",
             "uniqueItems": false
@@ -301,7 +447,7 @@
           },
           "metadata": { "$ref": "#/components/schemas/registry.Metadata" },
           "name": {
-            "description": "Name is the identifier for the MCP server, used when referencing the server in commands\nIf not provided, it will be auto-generated from the image name",
+            "description": "Name is the identifier for the MCP server, used when referencing the server in commands\nIf not provided, it will be auto-generated from the registry key",
             "type": "string"
           },
           "permissions": { "$ref": "#/components/schemas/permissions.Profile" },
@@ -311,7 +457,7 @@
             "type": "string"
           },
           "status": {
-            "description": "The Status indicates whether the server is currently active or deprecated",
+            "description": "Status indicates whether the server is currently active or deprecated",
             "type": "string"
           },
           "tags": {
@@ -325,7 +471,7 @@
             "type": "integer"
           },
           "tier": {
-            "description": "Tier represents the tier classification level of the server, e.g., \"official\" or \"community\" driven",
+            "description": "Tier represents the tier classification level of the server, e.g., \"Official\" or \"Community\"",
             "type": "string"
           },
           "tools": {
@@ -335,7 +481,7 @@
             "uniqueItems": false
           },
           "transport": {
-            "description": "Transport defines the communication protocol for the server (stdio, sse, or streamable-http)",
+            "description": "Transport defines the communication protocol for the server\nFor containers: stdio, sse, or streamable-http\nFor remote servers: sse or streamable-http (stdio not supported)",
             "type": "string"
           }
         },
@@ -359,6 +505,47 @@
         },
         "type": "object"
       },
+      "registry.OAuthConfig": {
+        "description": "OAuthConfig provides OAuth/OIDC configuration for authentication to the remote server\nUsed with the thv proxy command's --remote-auth flags",
+        "properties": {
+          "authorize_url": {
+            "description": "AuthorizeURL is the OAuth authorization endpoint URL\nUsed for non-OIDC OAuth flows when issuer is not provided",
+            "type": "string"
+          },
+          "callback_port": {
+            "description": "CallbackPort is the specific port to use for the OAuth callback server\nIf not specified, a random available port will be used",
+            "type": "integer"
+          },
+          "client_id": {
+            "description": "ClientID is the OAuth client ID for authentication",
+            "type": "string"
+          },
+          "issuer": {
+            "description": "Issuer is the OAuth/OIDC issuer URL (e.g., https://accounts.google.com)\nUsed for OIDC discovery to find authorization and token endpoints",
+            "type": "string"
+          },
+          "oauth_params": {
+            "additionalProperties": { "type": "string" },
+            "description": "OAuthParams contains additional OAuth parameters to include in the authorization request\nThese are server-specific parameters like \"prompt\", \"response_mode\", etc.",
+            "type": "object"
+          },
+          "scopes": {
+            "description": "Scopes are the OAuth scopes to request\nIf not specified, defaults to [\"openid\", \"profile\", \"email\"] for OIDC",
+            "items": { "type": "string" },
+            "type": "array",
+            "uniqueItems": false
+          },
+          "token_url": {
+            "description": "TokenURL is the OAuth token endpoint URL\nUsed for non-OIDC OAuth flows when issuer is not provided",
+            "type": "string"
+          },
+          "use_pkce": {
+            "description": "UsePKCE indicates whether to use PKCE for the OAuth flow\nDefaults to true for enhanced security",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
       "registry.Provenance": {
         "description": "Provenance contains verification and signing metadata",
         "properties": {
@@ -377,9 +564,22 @@
       "registry.Registry": {
         "description": "Full registry data",
         "properties": {
+          "groups": {
+            "description": "Groups is a slice of group definitions containing related MCP servers",
+            "items": { "$ref": "#/components/schemas/registry.Group" },
+            "type": "array",
+            "uniqueItems": false
+          },
           "last_updated": {
             "description": "LastUpdated is the timestamp when the registry was last updated, in RFC3339 format",
             "type": "string"
+          },
+          "remote_servers": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/registry.RemoteServerMetadata"
+            },
+            "description": "RemoteServers is a map of server names to their corresponding remote server definitions\nThese are MCP servers accessed via HTTP/HTTPS using the thv proxy command",
+            "type": "object"
           },
           "servers": {
             "additionalProperties": {
@@ -395,10 +595,111 @@
         },
         "type": "object"
       },
+      "registry.RemoteServerMetadata": {
+        "description": "Remote server details (if it's a remote server)",
+        "properties": {
+          "custom_metadata": {
+            "additionalProperties": {},
+            "description": "CustomMetadata allows for additional user-defined metadata",
+            "type": "object"
+          },
+          "description": {
+            "description": "Description is a human-readable description of the server's purpose and functionality",
+            "type": "string"
+          },
+          "env_vars": {
+            "description": "EnvVars defines environment variables that can be passed to configure the client\nThese might be needed for client-side configuration when connecting to the remote server",
+            "items": { "$ref": "#/components/schemas/registry.EnvVar" },
+            "type": "array",
+            "uniqueItems": false
+          },
+          "headers": {
+            "description": "Headers defines HTTP headers that can be passed to the remote server for authentication\nThese are used with the thv proxy command's authentication features",
+            "items": { "$ref": "#/components/schemas/registry.Header" },
+            "type": "array",
+            "uniqueItems": false
+          },
+          "metadata": { "$ref": "#/components/schemas/registry.Metadata" },
+          "name": {
+            "description": "Name is the identifier for the MCP server, used when referencing the server in commands\nIf not provided, it will be auto-generated from the registry key",
+            "type": "string"
+          },
+          "oauth_config": {
+            "$ref": "#/components/schemas/registry.OAuthConfig"
+          },
+          "repository_url": {
+            "description": "RepositoryURL is the URL to the source code repository for the server",
+            "type": "string"
+          },
+          "status": {
+            "description": "Status indicates whether the server is currently active or deprecated",
+            "type": "string"
+          },
+          "tags": {
+            "description": "Tags are categorization labels for the server to aid in discovery and filtering",
+            "items": { "type": "string" },
+            "type": "array",
+            "uniqueItems": false
+          },
+          "tier": {
+            "description": "Tier represents the tier classification level of the server, e.g., \"Official\" or \"Community\"",
+            "type": "string"
+          },
+          "tools": {
+            "description": "Tools is a list of tool names provided by this MCP server",
+            "items": { "type": "string" },
+            "type": "array",
+            "uniqueItems": false
+          },
+          "transport": {
+            "description": "Transport defines the communication protocol for the server\nFor containers: stdio, sse, or streamable-http\nFor remote servers: sse or streamable-http (stdio not supported)",
+            "type": "string"
+          },
+          "url": {
+            "description": "URL is the endpoint URL for the remote MCP server (e.g., https://api.example.com/mcp)",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "registry.VerifiedAttestation": {
         "properties": {
           "predicate": {},
           "predicate_type": { "type": "string" }
+        },
+        "type": "object"
+      },
+      "runner.RemoteAuthConfig": {
+        "description": "RemoteAuthConfig contains OAuth configuration for remote MCP servers",
+        "properties": {
+          "authorizeURL": { "type": "string" },
+          "callbackPort": { "type": "integer" },
+          "clientID": { "type": "string" },
+          "clientSecret": { "type": "string" },
+          "clientSecretFile": { "type": "string" },
+          "envVars": {
+            "description": "Environment variables for the client",
+            "items": { "$ref": "#/components/schemas/registry.EnvVar" },
+            "type": "array"
+          },
+          "headers": {
+            "description": "Headers for HTTP requests",
+            "items": { "$ref": "#/components/schemas/registry.Header" },
+            "type": "array"
+          },
+          "issuer": {
+            "description": "OAuth endpoint configuration (from registry)",
+            "type": "string"
+          },
+          "oauthParams": {
+            "additionalProperties": { "type": "string" },
+            "description": "OAuth parameters for server-specific customization",
+            "type": "object"
+          },
+          "scopes": { "items": { "type": "string" }, "type": "array" },
+          "skipBrowser": { "type": "boolean" },
+          "timeout": { "example": "5m", "type": "string" },
+          "tokenURL": { "type": "string" }
         },
         "type": "object"
       },
@@ -437,6 +738,10 @@
             "description": "Debug indicates whether debug mode is enabled",
             "type": "boolean"
           },
+          "env_file_dir": {
+            "description": "EnvFileDir is the directory path to load environment files from",
+            "type": "string"
+          },
           "env_vars": {
             "additionalProperties": { "type": "string" },
             "description": "EnvVars are the parsed environment variables as key-value pairs",
@@ -459,10 +764,6 @@
             "description": "IsolateNetwork indicates whether to isolate the network for the container",
             "type": "boolean"
           },
-          "jwks_allow_private_ip": {
-            "description": "JWKSAllowPrivateIP allows JWKS/OIDC endpoints on private IP addresses",
-            "type": "boolean"
-          },
           "jwks_auth_token_file": {
             "description": "JWKSAuthTokenFile is the path to file containing auth token for JWKS/OIDC requests",
             "type": "string"
@@ -470,6 +771,12 @@
           "k8s_pod_template_patch": {
             "description": "K8sPodTemplatePatch is a JSON string to patch the Kubernetes pod template\nOnly applicable when using Kubernetes runtime",
             "type": "string"
+          },
+          "middleware_configs": {
+            "description": "MiddlewareConfigs contains the list of middleware to apply to the transport\nand the configuration for each middleware.",
+            "items": { "$ref": "#/components/schemas/types.MiddlewareConfig" },
+            "type": "array",
+            "uniqueItems": false
           },
           "name": {
             "description": "Name is the name of the MCP server",
@@ -490,6 +797,17 @@
             "type": "integer"
           },
           "proxy_mode": { "$ref": "#/components/schemas/types.ProxyMode" },
+          "remote_auth_config": {
+            "$ref": "#/components/schemas/runner.RemoteAuthConfig"
+          },
+          "remote_url": {
+            "description": "RemoteURL is the URL of the remote MCP server (if running remotely)",
+            "type": "string"
+          },
+          "schema_version": {
+            "description": "SchemaVersion is the version of the RunConfig schema",
+            "type": "string"
+          },
           "secrets": {
             "description": "Secrets are the secret parameters to pass to the container\nFormat: \"\u003csecret name\u003e,target=\u003ctarget environment variable\u003e\"",
             "items": { "type": "string" },
@@ -517,6 +835,13 @@
             "type": "array",
             "uniqueItems": false
           },
+          "tools_override": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/runner.ToolOverride"
+            },
+            "description": "ToolsOverride is a map from an actual tool to its overridden name and/or description",
+            "type": "object"
+          },
           "transport": {
             "description": "Transport is the transport mode (stdio, sse, or streamable-http)",
             "type": "string",
@@ -532,6 +857,19 @@
             "items": { "type": "string" },
             "type": "array",
             "uniqueItems": false
+          }
+        },
+        "type": "object"
+      },
+      "runner.ToolOverride": {
+        "properties": {
+          "description": {
+            "description": "Description is the redefined description of the tool",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name is the redefined name of the tool",
+            "type": "string"
           }
         },
         "type": "object"
@@ -571,7 +909,8 @@
           "environmentVariables": {
             "description": "EnvironmentVariables is a list of environment variable names that should be\nincluded in telemetry spans as attributes. Only variables in this list will\nbe read from the host machine and included in spans for observability.\nExample: []string{\"NODE_ENV\", \"DEPLOYMENT_ENV\", \"SERVICE_VERSION\"}",
             "items": { "type": "string" },
-            "type": "array"
+            "type": "array",
+            "uniqueItems": false
           },
           "headers": {
             "additionalProperties": { "type": "string" },
@@ -582,8 +921,12 @@
             "description": "Insecure indicates whether to use HTTP instead of HTTPS for the OTLP endpoint",
             "type": "boolean"
           },
+          "metricsEnabled": {
+            "description": "MetricsEnabled controls whether OTLP metrics are enabled\nWhen false, OTLP metrics are not sent even if an endpoint is configured\nThis is independent of EnablePrometheusMetricsPath",
+            "type": "boolean"
+          },
           "samplingRate": {
-            "description": "SamplingRate is the trace sampling rate (0.0-1.0)",
+            "description": "SamplingRate is the trace sampling rate (0.0-1.0)\nOnly used when TracingEnabled is true",
             "type": "number"
           },
           "serviceName": {
@@ -592,6 +935,23 @@
           },
           "serviceVersion": {
             "description": "ServiceVersion is the service version for telemetry",
+            "type": "string"
+          },
+          "tracingEnabled": {
+            "description": "TracingEnabled controls whether distributed tracing is enabled\nWhen false, no tracer provider is created even if an endpoint is configured",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "types.MiddlewareConfig": {
+        "properties": {
+          "parameters": {
+            "description": "Parameters is a JSON object containing the middleware parameters.\nIt is stored as a raw message to allow flexible parameter types.",
+            "type": "object"
+          },
+          "type": {
+            "description": "Type is a string representing the middleware type.",
             "type": "string"
           }
         },
@@ -612,8 +972,52 @@
           "TransportTypeInspector"
         ]
       },
+      "v1.RegistryType": {
+        "description": "Type of registry (file, url, or default)",
+        "type": "string",
+        "x-enum-varnames": [
+          "RegistryTypeFile",
+          "RegistryTypeURL",
+          "RegistryTypeDefault"
+        ]
+      },
+      "v1.UpdateRegistryRequest": {
+        "description": "Request containing registry configuration updates",
+        "properties": {
+          "allow_private_ip": {
+            "description": "Allow private IP addresses for registry URL",
+            "type": "boolean"
+          },
+          "local_path": {
+            "description": "Local registry file path",
+            "type": "string"
+          },
+          "url": {
+            "description": "Registry URL (for remote registries)",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "v1.UpdateRegistryResponse": {
+        "description": "Response containing update result",
+        "properties": {
+          "message": { "description": "Status message", "type": "string" },
+          "type": {
+            "description": "Registry type after update",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "v1.bulkClientRequest": {
         "properties": {
+          "groups": {
+            "description": "Groups is the list of groups configured on the client.",
+            "items": { "type": "string" },
+            "type": "array",
+            "uniqueItems": false
+          },
           "names": {
             "description": "Names is the list of client names to operate on.",
             "items": {
@@ -631,7 +1035,9 @@
                 "AmpVSCode",
                 "AmpCursor",
                 "AmpVSCodeInsider",
-                "AmpWindsurf"
+                "AmpWindsurf",
+                "LMStudio",
+                "Goose"
               ]
             },
             "type": "array",
@@ -667,6 +1073,12 @@
       },
       "v1.createClientRequest": {
         "properties": {
+          "groups": {
+            "description": "Groups is the list of groups configured on the client.",
+            "items": { "type": "string" },
+            "type": "array",
+            "uniqueItems": false
+          },
           "name": {
             "description": "Name is the type of the client to register.",
             "type": "string",
@@ -683,7 +1095,9 @@
               "AmpVSCode",
               "AmpCursor",
               "AmpVSCodeInsider",
-              "AmpWindsurf"
+              "AmpWindsurf",
+              "LMStudio",
+              "Goose"
             ]
           }
         },
@@ -691,6 +1105,12 @@
       },
       "v1.createClientResponse": {
         "properties": {
+          "groups": {
+            "description": "Groups is the list of groups configured on the client.",
+            "items": { "type": "string" },
+            "type": "array",
+            "uniqueItems": false
+          },
           "name": {
             "description": "Name is the type of the client that was registered.",
             "type": "string",
@@ -707,7 +1127,9 @@
               "AmpVSCode",
               "AmpCursor",
               "AmpVSCodeInsider",
-              "AmpWindsurf"
+              "AmpWindsurf",
+              "LMStudio",
+              "Goose"
             ]
           }
         },
@@ -745,8 +1167,16 @@
             "uniqueItems": false
           },
           "env_vars": {
+            "additionalProperties": { "type": "string" },
             "description": "Environment variables to set in the container",
-            "items": { "type": "string" },
+            "type": "object"
+          },
+          "group": {
+            "description": "Group name this workload belongs to",
+            "type": "string"
+          },
+          "headers": {
+            "items": { "$ref": "#/components/schemas/registry.Header" },
             "type": "array",
             "uniqueItems": false
           },
@@ -757,6 +1187,9 @@
             "description": "Whether network isolation is turned on. This applies the rules in the permission profile.",
             "type": "boolean"
           },
+          "oauth_config": {
+            "$ref": "#/components/schemas/v1.remoteOAuthConfig"
+          },
           "oidc": { "$ref": "#/components/schemas/v1.oidcOptions" },
           "permission_profile": {
             "$ref": "#/components/schemas/permissions.Profile"
@@ -764,6 +1197,10 @@
           "proxy_mode": {
             "description": "Proxy mode to use",
             "type": "string"
+          },
+          "proxy_port": {
+            "description": "Port for the HTTP proxy to listen on",
+            "type": "integer"
           },
           "secrets": {
             "description": "Secret parameters to inject",
@@ -781,8 +1218,19 @@
             "type": "array",
             "uniqueItems": false
           },
+          "tools_override": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/v1.toolOverride"
+            },
+            "description": "Tools override",
+            "type": "object"
+          },
           "transport": {
             "description": "Transport configuration",
+            "type": "string"
+          },
+          "url": {
+            "description": "Remote server specific fields",
             "type": "string"
           },
           "volumes": {
@@ -840,6 +1288,19 @@
             "description": "Number of servers in the registry",
             "type": "integer"
           },
+          "source": {
+            "description": "Source of the registry (URL, file path, or empty string for built-in)",
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of registry (file, url, or default)",
+            "type": "string",
+            "x-enum-varnames": [
+              "RegistryTypeFile",
+              "RegistryTypeURL",
+              "RegistryTypeDefault"
+            ]
+          },
           "version": {
             "description": "Version of the registry schema",
             "type": "string"
@@ -867,6 +1328,13 @@
       "v1.getServerResponse": {
         "description": "Response containing server details",
         "properties": {
+          "is_remote": {
+            "description": "Indicates if this is a remote server",
+            "type": "boolean"
+          },
+          "remote_server": {
+            "$ref": "#/components/schemas/registry.RemoteServerMetadata"
+          },
           "server": { "$ref": "#/components/schemas/registry.ImageMetadata" }
         },
         "type": "object"
@@ -897,8 +1365,16 @@
       "v1.listServersResponse": {
         "description": "Response containing a list of servers",
         "properties": {
+          "remote_servers": {
+            "description": "List of remote servers in the registry (if any)",
+            "items": {
+              "$ref": "#/components/schemas/registry.RemoteServerMetadata"
+            },
+            "type": "array",
+            "uniqueItems": false
+          },
           "servers": {
-            "description": "List of servers in the registry",
+            "description": "List of container servers in the registry",
             "items": { "$ref": "#/components/schemas/registry.ImageMetadata" },
             "type": "array",
             "uniqueItems": false
@@ -909,12 +1385,16 @@
       "v1.oidcOptions": {
         "description": "OIDC configuration options",
         "properties": {
-          "allow_opaque_tokens": {
-            "description": "Allow opaque tokens (non-JWT) for OIDC validation",
-            "type": "boolean"
-          },
           "audience": { "description": "Expected audience", "type": "string" },
           "client_id": { "description": "OAuth2 client ID", "type": "string" },
+          "client_secret": {
+            "description": "OAuth2 client secret",
+            "type": "string"
+          },
+          "introspection_url": {
+            "description": "Token introspection URL for OIDC",
+            "type": "string"
+          },
           "issuer": { "description": "OIDC issuer URL", "type": "string" },
           "jwks_url": {
             "description": "JWKS URL for key verification",
@@ -961,6 +1441,11 @@
             "description": "Number of servers in the registry",
             "type": "integer"
           },
+          "source": {
+            "description": "Source of the registry (URL, file path, or empty string for built-in)",
+            "type": "string"
+          },
+          "type": { "$ref": "#/components/schemas/v1.RegistryType" },
           "version": {
             "description": "Version of the registry schema",
             "type": "string"
@@ -976,6 +1461,54 @@
             "items": { "$ref": "#/components/schemas/v1.registryInfo" },
             "type": "array",
             "uniqueItems": false
+          }
+        },
+        "type": "object"
+      },
+      "v1.remoteOAuthConfig": {
+        "description": "OAuth configuration for remote server authentication",
+        "properties": {
+          "authorize_url": {
+            "description": "OAuth authorization endpoint URL (alternative to issuer for non-OIDC OAuth)",
+            "type": "string"
+          },
+          "callback_port": {
+            "description": "Specific port for OAuth callback server",
+            "type": "integer"
+          },
+          "client_id": {
+            "description": "OAuth client ID for authentication",
+            "type": "string"
+          },
+          "client_secret": {
+            "$ref": "#/components/schemas/secrets.SecretParameter"
+          },
+          "issuer": {
+            "description": "OAuth/OIDC issuer URL (e.g., https://accounts.google.com)",
+            "type": "string"
+          },
+          "oauth_params": {
+            "additionalProperties": { "type": "string" },
+            "description": "Additional OAuth parameters for server-specific customization",
+            "type": "object"
+          },
+          "scopes": {
+            "description": "OAuth scopes to request",
+            "items": { "type": "string" },
+            "type": "array",
+            "uniqueItems": false
+          },
+          "skip_browser": {
+            "description": "Whether to skip opening browser for OAuth flow (defaults to false)",
+            "type": "boolean"
+          },
+          "token_url": {
+            "description": "OAuth token endpoint URL (alternative to issuer for non-OIDC OAuth)",
+            "type": "string"
+          },
+          "use_pkce": {
+            "description": "Whether to use PKCE for the OAuth flow",
+            "type": "boolean"
           }
         },
         "type": "object"
@@ -1016,6 +1549,105 @@
         },
         "type": "object"
       },
+      "v1.toolOverride": {
+        "description": "Tool override",
+        "properties": {
+          "description": {
+            "description": "Description of the tool",
+            "type": "string"
+          },
+          "name": { "description": "Name of the tool", "type": "string" }
+        },
+        "type": "object"
+      },
+      "v1.updateRequest": {
+        "description": "Request to update an existing workload (name cannot be changed)",
+        "properties": {
+          "authz_config": {
+            "description": "Authorization configuration",
+            "type": "string"
+          },
+          "cmd_arguments": {
+            "description": "Command arguments to pass to the container",
+            "items": { "type": "string" },
+            "type": "array",
+            "uniqueItems": false
+          },
+          "env_vars": {
+            "additionalProperties": { "type": "string" },
+            "description": "Environment variables to set in the container",
+            "type": "object"
+          },
+          "group": {
+            "description": "Group name this workload belongs to",
+            "type": "string"
+          },
+          "headers": {
+            "items": { "$ref": "#/components/schemas/registry.Header" },
+            "type": "array",
+            "uniqueItems": false
+          },
+          "host": { "description": "Host to bind to", "type": "string" },
+          "image": { "description": "Docker image to use", "type": "string" },
+          "network_isolation": {
+            "description": "Whether network isolation is turned on. This applies the rules in the permission profile.",
+            "type": "boolean"
+          },
+          "oauth_config": {
+            "$ref": "#/components/schemas/v1.remoteOAuthConfig"
+          },
+          "oidc": { "$ref": "#/components/schemas/v1.oidcOptions" },
+          "permission_profile": {
+            "$ref": "#/components/schemas/permissions.Profile"
+          },
+          "proxy_mode": {
+            "description": "Proxy mode to use",
+            "type": "string"
+          },
+          "proxy_port": {
+            "description": "Port for the HTTP proxy to listen on",
+            "type": "integer"
+          },
+          "secrets": {
+            "description": "Secret parameters to inject",
+            "items": { "$ref": "#/components/schemas/secrets.SecretParameter" },
+            "type": "array",
+            "uniqueItems": false
+          },
+          "target_port": {
+            "description": "Port to expose from the container",
+            "type": "integer"
+          },
+          "tools": {
+            "description": "Tools filter",
+            "items": { "type": "string" },
+            "type": "array",
+            "uniqueItems": false
+          },
+          "tools_override": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/v1.toolOverride"
+            },
+            "description": "Tools override",
+            "type": "object"
+          },
+          "transport": {
+            "description": "Transport configuration",
+            "type": "string"
+          },
+          "url": {
+            "description": "Remote server specific fields",
+            "type": "string"
+          },
+          "volumes": {
+            "description": "Volume mounts",
+            "items": { "type": "string" },
+            "type": "array",
+            "uniqueItems": false
+          }
+        },
+        "type": "object"
+      },
       "v1.updateSecretRequest": {
         "description": "Request to update an existing secret",
         "properties": {
@@ -1043,61 +1675,29 @@
         "properties": {
           "workloads": {
             "description": "List of container information for each workload",
-            "items": { "$ref": "#/components/schemas/workloads.Workload" },
+            "items": { "$ref": "#/components/schemas/core.Workload" },
             "type": "array",
             "uniqueItems": false
           }
         },
         "type": "object"
       },
-      "workloads.Workload": {
+      "v1.workloadStatusResponse": {
+        "description": "Response containing workload status information",
         "properties": {
-          "created_at": {
-            "description": "CreatedAt is the timestamp when the workload was created.",
-            "type": "string"
-          },
-          "group": {
-            "description": "Group is the name of the group this workload belongs to, if any.",
-            "type": "string"
-          },
-          "labels": {
-            "additionalProperties": { "type": "string" },
-            "description": "Labels are the container labels (excluding standard ToolHive labels)",
-            "type": "object"
-          },
-          "name": {
-            "description": "Name is the name of the workload.\nIt is used as a unique identifier.",
-            "type": "string"
-          },
-          "package": {
-            "description": "Package specifies the Workload Package used to create this Workload.",
-            "type": "string"
-          },
-          "port": {
-            "description": "Port is the port on which the workload is exposed.\nThis is embedded in the URL.",
-            "type": "integer"
-          },
-          "status": { "$ref": "#/components/schemas/runtime.WorkloadStatus" },
-          "status_context": {
-            "description": "StatusContext provides additional context about the workload's status.\nThe exact meaning is determined by the status and the underlying runtime.",
-            "type": "string"
-          },
-          "tool_type": {
-            "description": "ToolType is the type of tool this workload represents.\nFor now, it will always be \"mcp\" - representing an MCP server.",
-            "type": "string"
-          },
-          "tools": {
-            "description": "ToolsFilter is the filter on tools applied to the workload.",
-            "items": { "type": "string" },
-            "type": "array",
-            "uniqueItems": false
-          },
-          "transport_type": {
-            "$ref": "#/components/schemas/types.TransportType"
-          },
-          "url": {
-            "description": "URL is the URL of the workload exposed by the ToolHive proxy.",
-            "type": "string"
+          "status": {
+            "description": "Current status of the workload",
+            "type": "string",
+            "x-enum-varnames": [
+              "WorkloadStatusRunning",
+              "WorkloadStatusStopped",
+              "WorkloadStatusError",
+              "WorkloadStatusStarting",
+              "WorkloadStatusStopping",
+              "WorkloadStatusUnhealthy",
+              "WorkloadStatusRemoving",
+              "WorkloadStatusUnknown"
+            ]
           }
         },
         "type": "object"
@@ -1134,7 +1734,9 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": { "$ref": "#/components/schemas/client.Client" },
+                  "items": {
+                    "$ref": "#/components/schemas/client.RegisteredClient"
+                  },
                   "type": "array"
                 }
               }
@@ -1264,6 +1866,44 @@
           }
         },
         "summary": "Unregister a client",
+        "tags": ["clients"]
+      }
+    },
+    "/api/v1beta/clients/{name}/groups/{group}": {
+      "delete": {
+        "description": "Unregister a client from a specific group in ToolHive",
+        "parameters": [
+          {
+            "description": "Client name to unregister",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "description": "Group name to remove client from",
+            "in": "path",
+            "name": "group",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "No Content" },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Invalid request"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Client or group not found"
+          }
+        },
+        "summary": "Unregister a client from a specific group",
         "tags": ["clients"]
       }
     },
@@ -1527,6 +2167,55 @@
           }
         },
         "summary": "Get a registry",
+        "tags": ["registry"]
+      },
+      "put": {
+        "description": "Update registry URL or local path for the default registry",
+        "parameters": [
+          {
+            "description": "Registry name (must be 'default')",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1.UpdateRegistryRequest"
+              }
+            }
+          },
+          "description": "Registry configuration",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1.UpdateRegistryResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Not Found"
+          }
+        },
+        "summary": "Update registry configuration",
         "tags": ["registry"]
       }
     },
@@ -2116,7 +2805,7 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/workloads.Workload" }
+                "schema": { "$ref": "#/components/schemas/v1.createRequest" }
               }
             },
             "description": "OK"
@@ -2129,6 +2818,55 @@
           }
         },
         "summary": "Get workload details",
+        "tags": ["workloads"]
+      }
+    },
+    "/api/v1beta/workloads/{name}/edit": {
+      "post": {
+        "description": "Update an existing workload configuration",
+        "parameters": [
+          {
+            "description": "Workload name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/v1.updateRequest" }
+            }
+          },
+          "description": "Update workload request",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1.createWorkloadResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Not Found"
+          }
+        },
+        "summary": "Update workload",
         "tags": ["workloads"]
       }
     },
@@ -2228,6 +2966,40 @@
           }
         },
         "summary": "Restart a workload",
+        "tags": ["workloads"]
+      }
+    },
+    "/api/v1beta/workloads/{name}/status": {
+      "get": {
+        "description": "Get the current status of a specific workload",
+        "parameters": [
+          {
+            "description": "Workload name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1.workloadStatusResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Not Found"
+          }
+        },
+        "summary": "Get workload status",
         "tags": ["workloads"]
       }
     },

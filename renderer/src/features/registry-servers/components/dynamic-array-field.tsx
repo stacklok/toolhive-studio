@@ -1,8 +1,11 @@
-import React, { useRef, useCallback } from 'react'
+import {
+  useRef,
+  useCallback,
+  type ReactNode,
+  type ChangeEventHandler,
+} from 'react'
 import { Button } from '@/common/components/ui/button'
-import { Input } from '@/common/components/ui/input'
-import { Label } from '@/common/components/ui/label'
-import { InfoIcon, Trash2 } from 'lucide-react'
+import { InfoIcon, Plus, Trash2 } from 'lucide-react'
 import {
   useFieldArray,
   type FieldValues,
@@ -10,11 +13,12 @@ import {
   type Path,
   type ControllerRenderProps,
   type UseFormReturn,
+  type Control,
 } from 'react-hook-form'
 import {
+  FormDescription,
   FormField,
-  FormItem,
-  FormControl,
+  FormLabel,
   FormMessage,
 } from '@/common/components/ui/form'
 import {
@@ -22,6 +26,11 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from '@/common/components/ui/tooltip'
+import { cn } from '@/common/lib/utils'
+
+interface ColumnHeader {
+  title: React.ReactNode
+}
 
 interface DynamicArrayFieldProps<
   TFieldValues extends FieldValues = FieldValues,
@@ -29,22 +38,43 @@ interface DynamicArrayFieldProps<
   name: ArrayPath<TFieldValues>
   label: string
   inputLabelPrefix?: string
+  description?: string
   tooltipContent?: string
   addButtonText?: string
-  type?: 'text' | 'number'
-  inputProps?: React.InputHTMLAttributes<HTMLInputElement>
+  columnHeaders?: ColumnHeader[]
+  className?: string
+  /**
+   * Tailwind class names to configure the grid layout
+   */
+  gridConfig: string
   form: UseFormReturn<TFieldValues>
+  children: (args: {
+    idx: number
+    fieldProps: {
+      control: Control<TFieldValues>
+      name: Path<TFieldValues>
+    }
+    setInputRef: (idx: number) => (el: HTMLInputElement | null) => void
+    inputProps: {
+      id: string
+      onChange: ChangeEventHandler
+    }
+    message: ReactNode
+  }) => ReactNode
 }
 
 export function DynamicArrayField<TFieldValues extends FieldValues>({
   name,
   label,
+  description,
   tooltipContent,
   inputLabelPrefix = 'Item',
   addButtonText = 'Add',
-  type = 'text',
-  inputProps = {},
+  gridConfig,
+  columnHeaders,
   form,
+  children,
+  className,
 }: DynamicArrayFieldProps<TFieldValues>) {
   const { control, formState } = form
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({})
@@ -102,22 +132,35 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
   )
 
   return (
-    <div className="mt-6 w-full">
-      <div className="flex items-center gap-2">
-        <Label htmlFor={`${name}-0`}>{label}</Label>
-        {tooltipContent && (
-          <Tooltip>
-            <TooltipTrigger asChild autoFocus={false}>
-              <InfoIcon className="text-muted-foreground size-4 rounded-full" />
-            </TooltipTrigger>
-            <TooltipContent>{tooltipContent}</TooltipContent>
-          </Tooltip>
-        )}
+    <div className={cn('w-full', className)}>
+      <div className="flex flex-col items-start gap-2">
+        <div className="flex items-center gap-2">
+          <FormLabel htmlFor={`${name}-0`}>{label}</FormLabel>
+          {tooltipContent && (
+            <Tooltip>
+              <TooltipTrigger asChild autoFocus={false}>
+                <InfoIcon className="text-muted-foreground size-4 rounded-full" />
+              </TooltipTrigger>
+              <TooltipContent>{tooltipContent}</TooltipContent>
+            </Tooltip>
+          )}
+        </div>
+        {description && <FormDescription>{description}</FormDescription>}
       </div>
 
-      <div className="mt-2 flex flex-col gap-2">
+      <div className={cn('mt-3 grid auto-rows-auto gap-2', gridConfig)}>
+        {columnHeaders &&
+          columnHeaders.map(({ title }, headerIndex) => (
+            <div
+              key={`column-header-${headerIndex}`}
+              aria-hidden
+              className="text-muted-foreground w-full text-xs"
+            >
+              {title}
+            </div>
+          ))}
         {fields.map((field, idx) => (
-          <div key={field.id} className="flex items-start gap-2">
+          <div key={field.id} className="contents">
             <FormField
               control={control}
               name={`${name}.${idx}.value` as Path<TFieldValues>}
@@ -126,28 +169,30 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
               }: {
                 field: ControllerRenderProps<TFieldValues, Path<TFieldValues>>
               }) => (
-                <FormItem className="flex-grow">
-                  <FormControl className="w-full">
-                    <Input
-                      {...field}
-                      type={type}
-                      ref={setInputRef(idx)}
-                      id={`${name}-${idx}`}
-                      aria-label={`${inputLabelPrefix} ${idx + 1}`}
-                      className="min-w-0 grow"
-                      {...inputProps}
-                      onChange={async (e) => {
+                <>
+                  {children({
+                    fieldProps: {
+                      control,
+                      name: `${name}.${idx}.value` as Path<TFieldValues>,
+                    },
+                    idx,
+                    setInputRef,
+                    inputProps: {
+                      id: `${name}-${idx}`,
+                      onChange: async (e) => {
                         field.onChange(e)
+
                         // There is an issue with react-hook-form about error validation for array fields
                         // take a look to the PR for detail https://github.com/stacklok/toolhive-studio/pull/664
                         await resetValidation(idx)
-                      }}
-                    />
-                  </FormControl>
-                  {isInvalid(idx) && <FormMessage />}
-                </FormItem>
+                      },
+                    },
+                    message: isInvalid(idx) && <FormMessage />,
+                  })}
+                </>
               )}
             />
+
             <Button
               type="button"
               variant="outline"
@@ -169,6 +214,7 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
             } as TFieldValues[ArrayPath<TFieldValues>][number])
           }}
         >
+          <Plus />
           {addButtonText}
         </Button>
       </div>

@@ -3,17 +3,23 @@
 
 @import './styles/view-transitions.css';
 
-@custom-variant dark (&: is(.dark *));
+@source '../../node_modules/streamdown/dist/index.js';
+
+/* Ensure Tailwind's `dark:` variant targets when any ancestor has `.dark` */
+@custom-variant dark (.dark &);
 
 @theme inline {
   --font-sans: 'Inter Variable', sans-serif;
   --font-mono: 'Space Mono', monospace;
   --font-display: 'Atkinson Hyperlegible', sans-serif;
 
+  --spacing-sidebar: 247px;
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);

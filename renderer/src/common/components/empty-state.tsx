@@ -16,17 +16,22 @@ function Actions({ actions }: { actions: [ReactNode, ReactNode?] }) {
   )
 }
 
+type EmptyStateProps = {
+  illustration: (props: SVGProps<SVGSVGElement>) => JSX.Element
+  title: string
+  body: string
+} & (
+  | { actions: [ReactNode, ReactNode?]; children?: never }
+  | { actions?: never; children: ReactNode }
+)
+
 export function EmptyState({
   actions,
   body,
   illustration: Illustration,
   title,
-}: {
-  illustration: (props: SVGProps<SVGSVGElement>) => JSX.Element
-  title: string
-  body: string
-  actions: [ReactNode, ReactNode?] | null
-}) {
+  children,
+}: EmptyStateProps) {
   return (
     <div
       className="mx-auto flex max-w-[40rem] flex-col items-center justify-center
@@ -35,7 +40,7 @@ export function EmptyState({
       <Illustration className="mb-4 size-32" />
       <h4 className="text-foreground mb-2 text-3xl font-bold">{title}</h4>
       <p className="text-muted-foreground">{body}</p>
-      {actions ? <Actions actions={actions} /> : null}
+      {actions ? <Actions actions={actions} /> : children}
     </div>
   )
 }

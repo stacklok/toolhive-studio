@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react'
+import { renderHook, waitFor, act } from '@testing-library/react'
 import { expect, it, vi, beforeEach, describe } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
@@ -6,11 +6,11 @@ import {
   useMutationRestartServerAtStartup,
   useMutationRestartServer,
 } from '../use-mutation-restart-server'
-import type { WorkloadsWorkload } from '@api/types.gen'
+import type { CoreWorkload } from '@api/types.gen'
 import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
-import { mswEndpoint } from '@/common/mocks/msw-endpoint'
 import { toast } from 'sonner'
+import { mswEndpoint } from '@/common/mocks/customHandlers'
 
 vi.mock('sonner', () => ({
   toast: {
@@ -39,7 +39,7 @@ Object.defineProperty(window, 'electronAPI', {
 const createWorkload = (
   name: string,
   status: string = 'running'
-): WorkloadsWorkload => ({ name, status })
+): CoreWorkload => ({ name, status })
 
 const createQueryClientWrapper = () => {
   const queryClient = new QueryClient({
@@ -68,7 +68,7 @@ beforeEach(() => {
 
 describe('useMutationRestartServerAtStartup', () => {
   it('successfully restarts servers from shutdown list', async () => {
-    const { Wrapper } = createQueryClientWrapper()
+    const { Wrapper, queryClient } = createQueryClientWrapper()
 
     const shutdownServers = [
       createWorkload('postgres-db', 'stopped'),
@@ -80,22 +80,32 @@ describe('useMutationRestartServerAtStartup', () => {
 
     // Use MSW to simulate servers becoming 'running' after restart for polling
     server.use(
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-        const { name } = params
-        if (name === 'postgres-db' || name === 'github') {
-          return HttpResponse.json(createWorkload(name as string, 'running'))
+      http.get(
+        mswEndpoint('/api/v1beta/workloads/:name/status'),
+        ({ params }) => {
+          const { name } = params
+          if (name === 'postgres-db' || name === 'github') {
+            return HttpResponse.json({
+              status: 'running',
+            })
+          }
+          // Fall back to default behavior for other servers
+          return HttpResponse.json({
+            status: 'stopped',
+          })
         }
-        // Fall back to default behavior for other servers
-        return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
-      })
+      )
     )
 
     const { result } = renderHook(() => useMutationRestartServerAtStartup(), {
       wrapper: Wrapper,
     })
 
-    // Note: useToastMutation doesn't return the promise, so we can't await it
-    result.current.mutateAsync({ body: { names: ['postgres-db', 'github'] } })
+    await act(async () => {
+      await result.current.mutateAsync({
+        body: { names: ['postgres-db', 'github'] },
+      })
+    })
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true)
@@ -107,6 +117,11 @@ describe('useMutationRestartServerAtStartup', () => {
     expect(
       window.electronAPI.shutdownStore.clearShutdownHistory
     ).toHaveBeenCalled()
+
+    await waitFor(() => {
+      expect(queryClient.isMutating()).toBe(0)
+      expect(queryClient.isFetching()).toBe(0)
+    })
   })
 
   it('handles empty server list', async () => {
@@ -134,8 +149,29 @@ describe('useMutationRestartServerAtStartup', () => {
       wrapper: Wrapper,
     })
 
-    // Execute mutation with non-existent server name (will return 404 from MSW handler)
-    result.current.mutateAsync({ body: { names: ['non-existent-server'] } })
+    // Force API error for non-existent server by overriding the endpoint
+    server.use(
+      http.post(
+        mswEndpoint('/api/v1beta/workloads/restart'),
+        async ({ request }) => {
+          const { names } = (await request.json()) as { names: string[] }
+          if (names.includes('non-existent-server')) {
+            return HttpResponse.json(
+              { error: 'Server not found' },
+              { status: 404 }
+            )
+          }
+          return new HttpResponse(null, { status: 202 })
+        }
+      )
+    )
+
+    // Execute mutation with non-existent server name (overridden MSW handler returns 404)
+    result.current
+      .mutateAsync({ body: { names: ['non-existent-server'] } })
+      .catch(() => {
+        // Expected error, ignore
+      })
 
     await waitFor(() => {
       expect(result.current.isError).toBe(true)
@@ -187,8 +223,9 @@ describe('useMutationRestartServer', () => {
       { wrapper: Wrapper }
     )
 
-    // Execute mutation with non-existent server (will return 404 from MSW handler)
-    result.current.mutateAsync({ path: { name: serverName } })
+    result.current.mutateAsync({ path: { name: serverName } }).catch(() => {
+      // Expected error, ignore
+    })
 
     await waitFor(() => {
       expect(result.current.isError).toBe(true)

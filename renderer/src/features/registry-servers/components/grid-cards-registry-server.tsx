@@ -1,6 +1,8 @@
-import type { RegistryImageMetadata } from '@api/types.gen'
+import type {
+  RegistryImageMetadata,
+  RegistryRemoteServerMetadata,
+} from '@api/types.gen'
 import { CardRegistryServer } from './card-registry-server'
-import { useMemo } from 'react'
 import { useFilterSort } from '@/common/hooks/use-filter-sort'
 import { InputSearch } from '@/common/components/ui/input-search'
 import { useNavigate } from '@tanstack/react-router'
@@ -8,23 +10,16 @@ import { useNavigate } from '@tanstack/react-router'
 export function GridCardsRegistryServer({
   servers,
 }: {
-  servers: RegistryImageMetadata[]
+  servers: RegistryImageMetadata[] | RegistryRemoteServerMetadata[]
 }) {
   const navigate = useNavigate()
-  const filteredServers = useMemo(() => {
-    return servers.filter(
-      (server) =>
-        typeof server.name === 'string' &&
-        !['filesystem', 'sqlite'].includes(server.name)
-    )
-  }, [servers])
 
   const {
     filter,
     setFilter,
     filteredData: filteredAndSortedServers,
   } = useFilterSort({
-    data: filteredServers,
+    data: servers,
     filterFields: (server) => [server.name || '', server.description || ''],
     sortBy: (server) => server.name || '',
   })
@@ -36,7 +31,9 @@ export function GridCardsRegistryServer({
         onChange={(v) => setFilter(v)}
         placeholder="Search..."
       />
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div
+        className="grid grid-cols-[repeat(auto-fill,minmax(250px,400px))] gap-4"
+      >
         {filteredAndSortedServers.map((server) => (
           <CardRegistryServer
             key={server.name}

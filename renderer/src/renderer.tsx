@@ -7,7 +7,7 @@ import {
   createRouter,
 } from '@tanstack/react-router'
 import { routeTree } from './route-tree.gen'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { TooltipProvider } from '@radix-ui/react-tooltip'
 import * as Sentry from '@sentry/electron/renderer'
 import { ThemeProvider } from './common/components/theme/theme-provider'
@@ -15,8 +15,11 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import log from 'electron-log/renderer'
 
 import './index.css'
-import { ConfirmProvider } from './common/contexts/confirm/provider'
+import { PromptProvider } from './common/contexts/prompt/provider'
 import { trackPageView } from './common/lib/analytics'
+import { queryClient } from './common/lib/query-client'
+// Import feature flags to bind them to window for developer tools access
+import './common/lib/feature-flags'
 
 // Sentry setup
 Sentry.init({
@@ -51,10 +54,9 @@ declare module '@tanstack/react-router' {
 }
 
 const memoryHistory = createMemoryHistory({
-  initialEntries: ['/'],
+  initialEntries: ['/group/default'],
 })
 
-const queryClient = new QueryClient({})
 const router = createRouter({
   routeTree,
   context: { queryClient },
@@ -100,14 +102,14 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
   root.render(
     <StrictMode>
       <ThemeProvider defaultTheme="system" storageKey="toolhive-ui-theme">
-        <ConfirmProvider>
+        <PromptProvider>
           <QueryClientProvider client={queryClient}>
             <TooltipProvider delayDuration={0}>
               <RouterProvider router={router} />
             </TooltipProvider>
             <ReactQueryDevtools initialIsOpen={false} />
           </QueryClientProvider>
-        </ConfirmProvider>
+        </PromptProvider>
       </ThemeProvider>
     </StrictMode>
   )

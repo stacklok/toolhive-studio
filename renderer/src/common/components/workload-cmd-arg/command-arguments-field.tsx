@@ -13,12 +13,13 @@ import {
 import { cn } from '@/common/lib/utils'
 import type { Control, Path } from 'react-hook-form'
 import { Input } from '@/common/components/ui/input'
-import type { FormSchemaRunFromRegistry } from '@/features/registry-servers/lib/get-form-schema-run-from-registry'
-import type { FormSchemaRunMcpCommand } from '@/features/mcp-servers/lib/form-schema-run-mcp-server-with-command'
+import type { FormSchemaLocalMcp } from '@/features/mcp-servers/lib/form-schema-local-mcp'
+import type { UseFormReturn } from 'react-hook-form'
+import type { FormSchemaRegistryMcp } from '@/features/registry-servers/lib/form-schema-registry-mcp'
 
 type CmdArguments =
-  | FormSchemaRunFromRegistry['cmd_arguments']
-  | FormSchemaRunMcpCommand['cmd_arguments']
+  | FormSchemaRegistryMcp['cmd_arguments']
+  | FormSchemaLocalMcp['cmd_arguments']
 
 interface CommandArgumentsFieldProps<
   T extends {
@@ -27,23 +28,38 @@ interface CommandArgumentsFieldProps<
 > {
   getValues: (name: 'cmd_arguments') => string[] | undefined
   setValue: (name: 'cmd_arguments', value: string[]) => void
-  cmd_arguments?: string[]
   control: Control<T>
+}
+
+interface CommandArgumentsFieldFormProps<
+  T extends {
+    cmd_arguments?: CmdArguments
+  },
+> {
+  form: UseFormReturn<T>
 }
 
 export function CommandArgumentsField<
   T extends {
     cmd_arguments?: CmdArguments
   },
->({
-  getValues,
-  setValue,
-  cmd_arguments = [],
-  control,
-}: CommandArgumentsFieldProps<T>) {
+>(props: CommandArgumentsFieldProps<T> | CommandArgumentsFieldFormProps<T>) {
+  const { getValues, setValue, control } =
+    'form' in props
+      ? {
+          getValues: props.form.getValues as (
+            name: 'cmd_arguments'
+          ) => string[] | undefined,
+          setValue: props.form.setValue as (
+            name: 'cmd_arguments',
+            value: string[]
+          ) => void,
+          control: props.form.control,
+        }
+      : props
   const [inputValue, setInputValue] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
-  // console.log({ cmd_arguments }, getValues('cmd_arguments'))
+
   const addArgument = () => {
     if (inputValue.trim()) {
       const currentArgs = getValues('cmd_arguments') || []
@@ -71,7 +87,7 @@ export function CommandArgumentsField<
       control={control}
       name={'cmd_arguments' as Path<T>}
       render={({ field }) => (
-        <FormItem className="mb-10">
+        <FormItem>
           <FormLabel htmlFor={`${field.name}-input`}>
             Command arguments
           </FormLabel>
@@ -103,18 +119,14 @@ export function CommandArgumentsField<
                       <Badge
                         key={index}
                         variant="secondary"
-                        className={cn(
-                          'flex h-6 items-center gap-1 px-2 font-mono text-xs',
-                          cmd_arguments?.includes(arg) &&
-                            'cursor-not-allowed opacity-40'
-                        )}
+                        className="flex h-6 items-center gap-1 px-2 font-mono
+                          text-xs"
                       >
                         {arg}
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
-                          disabled={cmd_arguments?.includes(arg)}
                           className="hover:text-muted-foreground/80 ml-1 size-3
                             p-1 hover:cursor-pointer disabled:cursor-not-allowed
                             disabled:opacity-40"

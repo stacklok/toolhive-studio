@@ -8,21 +8,28 @@ import {
 } from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
 import { Label } from '@/common/components/ui/label'
-import { AlertErrorFormSubmission } from '../../../../common/components/workloads/alert-error-form-submission'
 import type { UseFormReturn } from 'react-hook-form'
-import type { FormSchemaRunFromRegistry } from '../../lib/get-form-schema-run-from-registry'
 import type { GroupedEnvVars } from '../../lib/group-env-vars'
 import type { RegistryEnvVar } from '@api/types.gen'
 import { cn } from '@/common/lib/utils'
-import { FormComboboxSecretStore } from '@/common/components/secrets/form-combobox-secrets-store'
+import { SecretStoreCombobox } from '@/common/components/secrets/secret-store-combobox'
 import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
 import { CommandArgumentsField } from '@/common/components/workload-cmd-arg/command-arguments-field'
+import { FormFieldsArrayVolumes } from '@/features/mcp-servers/components/form-fields-array-custom-volumes'
+import type { FormSchemaRegistryMcp } from '../../lib/form-schema-registry-mcp'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { featureFlagKeys } from '../../../../../../utils/feature-flags'
+import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/common/components/ui/select'
 
 interface ConfigurationTabContentProps {
-  error: string | null
-  isErrorSecrets: boolean
-  setError: (err: string | null) => void
-  form: UseFormReturn<FormSchemaRunFromRegistry>
+  form: UseFormReturn<FormSchemaRegistryMcp>
   groupedEnvVars: GroupedEnvVars
 }
 
@@ -32,7 +39,7 @@ function SecretRow({
   index,
 }: {
   secret: RegistryEnvVar
-  form: UseFormReturn<FormSchemaRunFromRegistry>
+  form: UseFormReturn<FormSchemaRegistryMcp>
   index: number
 }) {
   return (
@@ -64,12 +71,12 @@ function SecretRow({
         )}
       />
 
-      <div className="grid grid-cols-[auto_calc(var(--spacing)_*_9)]">
-        <FormField
-          control={form.control}
-          name={`secrets.${index}.value`}
-          render={({ field }) => (
-            <FormItem>
+      <FormField
+        control={form.control}
+        name={`secrets.${index}.value`}
+        render={({ field }) => (
+          <FormItem>
+            <div className="grid grid-cols-[auto_calc(var(--spacing)_*_9)]">
               <FormControl>
                 <Input
                   id={`secrets.${index}.value`}
@@ -96,15 +103,20 @@ function SecretRow({
                   aria-label={`${secret.name ?? ''} value`}
                 />
               </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormComboboxSecretStore<FormSchemaRunFromRegistry>
-          form={form}
-          name={`secrets.${index}.value`}
-        />
-      </div>
+              <SecretStoreCombobox
+                value={field.value.secret}
+                onChange={(secretKey) =>
+                  field.onChange({
+                    secret: secretKey,
+                    isFromStore: true,
+                  })
+                }
+              />
+            </div>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </div>
   )
 }
@@ -115,7 +127,7 @@ function EnvVarRow({
   index,
 }: {
   envVar: RegistryEnvVar
-  form: UseFormReturn<FormSchemaRunFromRegistry>
+  form: UseFormReturn<FormSchemaRegistryMcp>
   index: number
 }) {
   return (
@@ -170,26 +182,20 @@ function EnvVarRow({
 }
 
 export function ConfigurationTabContent({
-  error,
-  isErrorSecrets,
-  setError,
   form,
   groupedEnvVars,
 }: ConfigurationTabContentProps) {
+  const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
+  const { data: groupsData } = useGroups()
+  const groups = groupsData?.groups ?? []
+
   return (
-    <div className="relative max-h-[65dvh] space-y-4 overflow-y-auto px-6">
-      {error && (
-        <AlertErrorFormSubmission
-          error={error}
-          isErrorSecrets={isErrorSecrets}
-          onDismiss={() => setError(null)}
-        />
-      )}
+    <div className="flex-1 space-y-4 overflow-y-auto px-6">
       <FormField
         control={form.control}
-        name="serverName"
+        name="name"
         render={({ field }) => (
-          <FormItem className="mb-10">
+          <FormItem>
             <FormLabel>Server name</FormLabel>
             <FormDescription>
               Choose a unique name for this server instance
@@ -202,15 +208,53 @@ export function ConfigurationTabContent({
         )}
       />
 
-      <CommandArgumentsField<FormSchemaRunFromRegistry>
+      {isGroupsEnabled && (
+        <FormField
+          control={form.control}
+          name="group"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor={field.name}>Group</FormLabel>
+              <FormControl>
+                <Select
+                  value={field.value || 'default'}
+                  onValueChange={(v) => field.onChange(v)}
+                  name={field.name}
+                >
+                  <SelectTrigger
+                    id={field.name}
+                    aria-label="Group"
+                    className="w-full"
+                  >
+                    <SelectValue placeholder="Select a group" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {groups
+                      .filter((g) => g.name)
+                      .map((g) => (
+                        <SelectItem key={g.name} value={g.name!}>
+                          {g.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
+
+      <CommandArgumentsField<FormSchemaRegistryMcp>
         getValues={(name) => form.getValues(name)}
         setValue={(name, value) => form.setValue(name, value)}
-        cmd_arguments={form.getValues('cmd_arguments')}
         control={form.control}
       />
 
+      <FormFieldsArrayVolumes<FormSchemaRegistryMcp> form={form} />
+
       {groupedEnvVars.secrets[0] ? (
-        <section className="mb-10">
+        <section className="mb-6">
           <Label className="mb-2" htmlFor="secrets.0.value">
             Secrets
           </Label>
@@ -231,7 +275,7 @@ export function ConfigurationTabContent({
       ) : null}
 
       {groupedEnvVars.envVars[0] ? (
-        <section className="mb-10">
+        <section className="mb-6">
           <Label className="mb-2" htmlFor="envVars.0.value">
             Environment variables
           </Label>

@@ -6,13 +6,20 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { server as mswServer } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
-import { mswEndpoint } from '@/common/mocks/msw-endpoint'
 import { useRunFromRegistry } from '../../hooks/use-run-from-registry'
+import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 
 // Mock the hook
 vi.mock('../../hooks/use-run-from-registry.tsx', () => ({
   useRunFromRegistry: vi.fn(),
 }))
+
+vi.mock('@/common/hooks/use-check-server-status', () => ({
+  useCheckServerStatus: vi.fn(),
+}))
+
+const mockUseCheckServerStatus = vi.mocked(useCheckServerStatus)
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -93,9 +100,12 @@ beforeEach(() => {
   // Default mock implementation
   mockUseRunFromRegistry.mockReturnValue({
     installServerMutation: vi.fn(),
-    checkServerStatus: vi.fn(),
     isErrorSecrets: false,
     isPendingSecrets: false,
+  })
+
+  mockUseCheckServerStatus.mockReturnValue({
+    checkServerStatus: vi.fn(),
   })
 })
 
@@ -134,11 +144,35 @@ describe('FormRunFromRegistry', () => {
     ).toBeInTheDocument()
   })
 
+  it('renders storage volumes field on configuration tab', async () => {
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Verify the storage volumes field exists with correct title and description
+    expect(screen.getByText('Storage volumes')).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Provide the MCP server access to a local folder. Optionally specific individual files.'
+      )
+    ).toBeInTheDocument()
+  })
+
   it('shows loading state and hides tabs when submitting', async () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -179,13 +213,12 @@ describe('FormRunFromRegistry', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
 
     // --- Scenario 1: Valid data ---
-    let server = { ...REGISTRY_SERVER }
+    const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
     const mockOnOpenChange = vi.fn()
     renderWithProviders(
@@ -222,6 +255,16 @@ describe('FormRunFromRegistry', () => {
         mockInstallServerMutation.mock.calls[0]?.[0]?.data?.networkIsolation
       ).toBe(false)
     })
+  })
+
+  it('should not submit the form if the server name is not valid', async () => {
+    const mockInstallServerMutation = vi.fn()
+    mockUseRunFromRegistry.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+    let server = { ...REGISTRY_SERVER }
 
     // --- Scenario 2: Secret from store ---
     vi.clearAllMocks()
@@ -235,18 +278,13 @@ describe('FormRunFromRegistry', () => {
     )
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
     server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
     renderWithProviders(
-      <FormRunFromRegistry
-        isOpen={true}
-        onOpenChange={vi.fn()}
-        server={server}
-      />
+      <FormRunFromRegistry isOpen onOpenChange={vi.fn()} server={server} />
     )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -281,7 +319,6 @@ describe('FormRunFromRegistry', () => {
     vi.clearAllMocks()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -314,7 +351,7 @@ describe('FormRunFromRegistry', () => {
         expect.objectContaining({
           server: expect.any(Object),
           data: expect.objectContaining({
-            serverName: 'my-awesome-server',
+            name: 'my-awesome-server',
             cmd_arguments: ['stdio'],
             envVars: [{ name: 'ENV_VAR', value: '' }],
             secrets: [
@@ -323,6 +360,13 @@ describe('FormRunFromRegistry', () => {
             networkIsolation: false,
             allowedHosts: [],
             allowedPorts: [],
+            volumes: [
+              {
+                accessMode: 'rw',
+                container: '',
+                host: '',
+              },
+            ],
           }),
         }),
         expect.any(Object)
@@ -333,7 +377,6 @@ describe('FormRunFromRegistry', () => {
     vi.clearAllMocks()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -370,7 +413,7 @@ describe('FormRunFromRegistry', () => {
         expect.objectContaining({
           server: expect.any(Object),
           data: expect.objectContaining({
-            serverName: 'my-awesome-server',
+            name: 'my-awesome-server',
             cmd_arguments: ['--debug', '--verbose'],
             envVars: [{ name: 'ENV_VAR', value: '' }],
             secrets: [
@@ -390,7 +433,6 @@ describe('FormRunFromRegistry', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -446,7 +488,6 @@ describe('FormRunFromRegistry', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -506,7 +547,6 @@ describe('FormRunFromRegistry', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -556,7 +596,6 @@ describe('FormRunFromRegistry', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: true,
     })
@@ -597,11 +636,98 @@ describe('FormRunFromRegistry', () => {
     })
   })
 
+  it('passes the selected group to the mutation and uses it for navigation', async () => {
+    const mockInstallServerMutation = vi.fn()
+    const mockCheckServerStatus = vi.fn()
+
+    mockUseRunFromRegistry.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+    mockUseCheckServerStatus.mockReturnValue({
+      checkServerStatus: mockCheckServerStatus,
+    })
+
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    renderWithProviders(
+      <FormRunFromRegistry isOpen onOpenChange={vi.fn()} server={server} />
+    )
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeVisible())
+
+    const trigger = screen.getByRole('combobox', { name: 'Group' })
+    await userEvent.click(trigger)
+    const option = await screen.findByRole('option', { name: 'Research team' })
+    await userEvent.click(option)
+
+    await userEvent.type(
+      screen.getByLabelText('Server name'),
+      'my-registry-srv',
+      {
+        initialSelectionStart: 0,
+        initialSelectionEnd: REGISTRY_SERVER.name?.length,
+      }
+    )
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalled()
+    })
+
+    const firstArgs = mockInstallServerMutation.mock.calls[0]?.[0]
+    expect(firstArgs?.groupName).toBe('Research team')
+
+    const onSuccess = mockInstallServerMutation.mock.calls[0]?.[1]?.onSuccess
+    onSuccess?.()
+    await waitFor(() => {
+      expect(mockCheckServerStatus).toHaveBeenCalledWith(
+        expect.objectContaining({ groupName: 'Research team' })
+      )
+    })
+  })
+
+  it('uses the default group when user does not change selection', async () => {
+    const mockInstallServerMutation = vi.fn()
+    mockUseRunFromRegistry.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+
+    renderWithProviders(
+      <FormRunFromRegistry isOpen onOpenChange={vi.fn()} server={server} />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    await userEvent.type(screen.getByLabelText('Server name'), 'srv', {
+      initialSelectionStart: 0,
+      initialSelectionEnd: REGISTRY_SERVER.name?.length,
+    })
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalled()
+    })
+    const firstArgs = mockInstallServerMutation.mock.calls[0]?.[0]
+    expect(firstArgs?.groupName).toBe('default')
+  })
+
   it('shows error state when isErrorSecrets is true', async () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: true,
       isPendingSecrets: false,
     })
@@ -666,9 +792,12 @@ describe('FormRunFromRegistry', () => {
     const mockCheckServerStatus = vi.fn()
     const mockOnOpenChange = vi.fn()
 
+    mockUseCheckServerStatus.mockReturnValue({
+      checkServerStatus: mockCheckServerStatus,
+    })
+
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: mockCheckServerStatus,
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -722,7 +851,6 @@ describe('FormRunFromRegistry', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -764,12 +892,12 @@ describe('FormRunFromRegistry', () => {
 
     await waitFor(() => {
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
-        {
+        expect.objectContaining({
           server,
           data: expect.objectContaining({
             cmd_arguments: ['--debug', '--verbose'],
           }),
-        },
+        }),
         expect.any(Object)
       )
     })
@@ -781,7 +909,6 @@ describe('FormRunFromRegistry', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -815,7 +942,7 @@ describe('FormRunFromRegistry', () => {
         expect.objectContaining({
           server: expect.any(Object),
           data: expect.objectContaining({
-            serverName: 'foo-bar-server',
+            name: 'foo-bar-server',
             allowedPorts: [],
             networkIsolation: true,
           }),
@@ -935,7 +1062,11 @@ describe('Allowed Hosts field', () => {
       await userEvent.click(
         screen.getByRole('button', { name: /install server/i })
       )
-      expect(screen.queryByText(/invalid host format/i)).not.toBeInTheDocument()
+      await waitFor(() => {
+        expect(
+          screen.queryByText(/invalid host format/i)
+        ).not.toBeInTheDocument()
+      })
     }
     // Valid host with dot
     hostInputRef = screen.queryByLabelText('Host 1')
@@ -946,7 +1077,11 @@ describe('Allowed Hosts field', () => {
       await userEvent.click(
         screen.getByRole('button', { name: /install server/i })
       )
-      expect(screen.queryByText(/invalid host format/i)).not.toBeInTheDocument()
+      await waitFor(() => {
+        expect(
+          screen.queryByText(/invalid host format/i)
+        ).not.toBeInTheDocument()
+      })
     }
   })
 
@@ -954,7 +1089,6 @@ describe('Allowed Hosts field', () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -999,7 +1133,7 @@ describe('Allowed Hosts field', () => {
         expect.objectContaining({
           server: expect.any(Object),
           data: expect.objectContaining({
-            serverName: 'my-network-server',
+            name: 'my-network-server',
             allowedHosts: [{ value: 'foo.bar.com' }],
             networkIsolation: true,
           }),
@@ -1039,6 +1173,98 @@ describe('Allowed Hosts field', () => {
     // Both should be present
     expect(screen.getByLabelText('Host 1')).toBeInTheDocument()
     expect(screen.getByLabelText('Host 2')).toBeInTheDocument()
+  })
+  it('skip allowedHosts and allowedPorts validation when network isolation is disabled', async () => {
+    const mockInstallServerMutation = vi.fn()
+    vi.mocked(useRunFromRegistry).mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+
+    const server = { ...REGISTRY_SERVER }
+    server.env_vars = ENV_VARS_OPTIONAL
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+      />
+    )
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    await userEvent.type(
+      screen.getByLabelText('Server name'),
+      'my-test-server',
+      {
+        initialSelectionStart: 0,
+        initialSelectionEnd: REGISTRY_SERVER.name?.length,
+      }
+    )
+
+    // Go to network isolation tab
+    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    await userEvent.click(networkTab)
+
+    const switchLabel = screen.getByLabelText(
+      'Enable outbound network filtering'
+    )
+    await userEvent.click(switchLabel)
+
+    const addHostButton = screen.getByRole('button', { name: /add a host/i })
+    await userEvent.click(addHostButton)
+    const hostInput = screen.getByLabelText('Host 1')
+    await userEvent.type(hostInput, 'fake-invalid-host-format')
+
+    const addPortButton = screen.getByRole('button', { name: /add a port/i })
+    await userEvent.click(addPortButton)
+    const portInput = screen.getByLabelText('Port 1')
+    await userEvent.type(portInput, '99999')
+
+    // Verify validation errors appear when network isolation is enabled
+    await waitFor(() => {
+      expect(screen.getByText('Invalid host format')).toBeInTheDocument()
+      expect(
+        screen.getByText('Port must be a number between 1 and 65535')
+      ).toBeInTheDocument()
+    })
+
+    // Disable network isolation
+    await userEvent.click(switchLabel)
+
+    // Verify validation errors disappear when network isolation is disabled
+    await waitFor(() => {
+      expect(screen.queryByText('Invalid host format')).not.toBeInTheDocument()
+      expect(
+        screen.queryByText('Port must be a number between 1 and 65535')
+      ).not.toBeInTheDocument()
+    })
+
+    // Go back to configuration tab and submit form
+    const configTab = screen.getByRole('tab', { name: /configuration/i })
+    await userEvent.click(configTab)
+
+    // Form should submit successfully even with invalid host and port when network isolation is disabled
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          server: expect.any(Object),
+          data: expect.objectContaining({
+            name: 'my-test-server',
+            allowedHosts: [{ value: 'fake-invalid-host-format' }],
+            allowedPorts: [{ value: '99999' }],
+            networkIsolation: false,
+          }),
+        }),
+        expect.any(Object)
+      )
+    })
   })
 })
 
@@ -1121,7 +1347,6 @@ describe('CommandArgumentsField', () => {
     vi.clearAllMocks()
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: vi.fn(),
-      checkServerStatus: vi.fn(),
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
@@ -1228,7 +1453,7 @@ describe('CommandArgumentsField', () => {
     expect(screen.getByText('--stdio')).toBeInTheDocument()
 
     const removeButton = screen.getByLabelText('Remove argument --stdio')
-    expect(removeButton).toBeDisabled()
+    expect(removeButton).toBeEnabled()
   })
 
   it('does not add empty arguments', async () => {
@@ -1277,5 +1502,182 @@ describe('CommandArgumentsField', () => {
     expect(screen.getByText('repos,issues,pull_requests')).toBeVisible()
     expect(screen.getByText('--read-only')).toBeVisible()
     expect(commandArgsInput).toHaveValue('')
+  })
+})
+
+describe('Storage Volumes', () => {
+  it('configure storage volumes', async () => {
+    const mockInstallServerMutation = vi.fn()
+    mockUseRunFromRegistry.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={{ ...REGISTRY_SERVER }}
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    await userEvent.type(
+      screen.getByLabelText('Server name'),
+      'my-awesome-server',
+      {
+        initialSelectionStart: 0,
+        initialSelectionEnd: REGISTRY_SERVER.name?.length,
+      }
+    )
+
+    await userEvent.type(
+      screen.getByRole('textbox', {
+        name: /host path 1/i,
+      }),
+      'host-path-volume'
+    )
+    await userEvent.type(
+      screen.getByRole('textbox', {
+        name: /container path 1/i,
+      }),
+      'container-path-volume'
+    )
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          server: expect.any(Object),
+          data: expect.objectContaining({
+            name: 'my-awesome-server',
+            cmd_arguments: [],
+            envVars: [
+              {
+                name: 'ENV_VAR',
+                value: '',
+              },
+            ],
+            secrets: [
+              {
+                name: 'SECRET',
+                value: {
+                  isFromStore: false,
+                  secret: '',
+                },
+              },
+            ],
+            networkIsolation: false,
+            allowedHosts: [],
+            allowedPorts: [],
+            volumes: [
+              {
+                accessMode: 'rw',
+                container: 'container-path-volume',
+                host: 'host-path-volume',
+              },
+            ],
+          }),
+        }),
+        expect.any(Object)
+      )
+    })
+  })
+
+  it('shows a Select path menu with file and folder options', async () => {
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={{ ...REGISTRY_SERVER }}
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    const selectPath = screen.getByLabelText('Select path')
+    await userEvent.click(selectPath)
+
+    expect(
+      screen.getByRole('menuitem', { name: /mount a single file/i })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('menuitem', { name: /mount an entire folder/i })
+    ).toBeInTheDocument()
+  })
+
+  it('fills Host path when selecting a single file from the picker', async () => {
+    const originalElectronAPI = window.electronAPI
+    const mockElectronAPI: typeof window.electronAPI = {
+      ...originalElectronAPI,
+      selectFile: vi.fn().mockResolvedValue('/tmp/example.txt'),
+      selectFolder: vi.fn().mockResolvedValue(null),
+    }
+    window.electronAPI = mockElectronAPI
+
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={{ ...REGISTRY_SERVER }}
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    await userEvent.click(screen.getByLabelText('Select path'))
+    await userEvent.click(
+      screen.getByRole('menuitem', { name: /mount a single file/i })
+    )
+
+    expect(screen.getByRole('textbox', { name: /host path 1/i })).toHaveValue(
+      '/tmp/example.txt'
+    )
+    expect(mockElectronAPI.selectFile).toHaveBeenCalled()
+    window.electronAPI = originalElectronAPI
+  })
+
+  it('fills Host path when selecting a folder from the picker', async () => {
+    const originalElectronAPI = window.electronAPI
+    const mockElectronAPI: typeof window.electronAPI = {
+      ...originalElectronAPI,
+      selectFile: vi.fn().mockResolvedValue(null),
+      selectFolder: vi.fn().mockResolvedValue('/home/user/my-folder'),
+    }
+    window.electronAPI = mockElectronAPI
+
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={{ ...REGISTRY_SERVER }}
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    await userEvent.click(screen.getByLabelText('Select path'))
+    await userEvent.click(
+      screen.getByRole('menuitem', { name: /mount an entire folder/i })
+    )
+
+    expect(screen.getByRole('textbox', { name: /host path 1/i })).toHaveValue(
+      '/home/user/my-folder'
+    )
+    expect(mockElectronAPI.selectFolder).toHaveBeenCalled()
+    window.electronAPI = originalElectronAPI
   })
 })

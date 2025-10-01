@@ -1,4 +1,4 @@
-import { getHealth } from '@api/sdk.gen'
+import { getHealth, postApiV1BetaSecrets } from '@api/sdk.gen'
 import { Main } from '@/common/components/layout/main'
 import { TopNav } from '@/common/components/layout/top-nav'
 import { Error as ErrorComponent } from '@/common/components/error'
@@ -11,10 +11,7 @@ import {
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { Toaster } from '@/common/components/ui/sonner'
-import {
-  postApiV1BetaSecretsOptions,
-  getApiV1BetaSecretsDefaultOptions,
-} from '@api/@tanstack/react-query.gen'
+import { getApiV1BetaSecretsDefaultOptions } from '@api/@tanstack/react-query.gen'
 import '@fontsource/space-mono/400.css'
 import '@fontsource/atkinson-hyperlegible/400.css'
 import '@fontsource/atkinson-hyperlegible/700.css'
@@ -24,12 +21,11 @@ import '@fontsource-variable/inter/wght.css'
 import log from 'electron-log/renderer'
 
 async function setupSecretProvider(queryClient: QueryClient) {
-  const createEncryptedProvider = () =>
-    queryClient.ensureQueryData(
-      postApiV1BetaSecretsOptions({
-        body: { provider_type: 'encrypted' },
-      })
-    )
+  const createEncryptedProvider = async () =>
+    postApiV1BetaSecrets({
+      body: { provider_type: 'encrypted' },
+      throwOnError: true,
+    })
 
   return queryClient
     .ensureQueryData(getApiV1BetaSecretsDefaultOptions())
@@ -38,7 +34,13 @@ async function setupSecretProvider(queryClient: QueryClient) {
         await createEncryptedProvider()
       }
     })
-    .catch(createEncryptedProvider)
+    .catch((err) => {
+      log.info(
+        'Error setting up secret provider, creating encrypted provider',
+        JSON.stringify(err)
+      )
+      return createEncryptedProvider()
+    })
 }
 
 function RootComponent() {
@@ -96,8 +98,9 @@ export const Route = createRootRouteWithContext<{
         }
         return res
       },
-      retry: 3,
-      retryDelay: 300,
+      retry: 5,
+      retryDelay: 500,
+      staleTime: 0,
     })
     try {
       await queryClient.ensureQueryData({

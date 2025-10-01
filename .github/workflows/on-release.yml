@@ -40,7 +40,7 @@ jobs:
       NODE_OPTIONS: '--max_old_space_size=4096'
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -106,3 +106,12 @@ jobs:
           APPLE_API_KEY: ${{ env.APPLE_API_KEY_PATH }}
           APPLE_ISSUER_ID: ${{ env.APPLE_ISSUER_ID }}
           APPLE_KEY_ID: ${{ env.APPLE_KEY_ID }}
+
+  mirror-pages:
+    name: Mirror release to GitHub Pages
+    needs: [build-and-release]
+    if: ${{ always() && needs.build-and-release.result == 'success' }}
+    uses: ./.github/workflows/mirror-to-gh-pages.yml
+    with:
+      tag: ${{ github.ref_name }}
+    secrets: inherit

@@ -1,0 +1,126 @@
+name: Mirror latest release to GitHub Pages with LFS
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to mirror (e.g., v0.4.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get release info
+        id: release
+        run: |
+          # Get tag from either workflow_call or workflow_dispatch input
+          TAG="${{ inputs.tag }}"
+          echo "Processing release tag: $TAG"
+
+          # Get release metadata from API
+          RELEASE_DATA=$(gh api "repos/${{ github.repository }}/releases/tags/$TAG")
+          echo "prerelease=$(echo "$RELEASE_DATA" | jq -r '.prerelease')" >> "$GITHUB_OUTPUT"
+          echo "published_at=$(echo "$RELEASE_DATA" | jq -r '.published_at // .created_at')" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download and process release assets
+        run: |
+          TAG="${{ steps.release.outputs.tag }}"
+          BASE_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          TIMESTAMP=$(date +%s)
+
+          # Skip prereleases to only mirror stable releases
+          if [[ "${{ steps.release.outputs.prerelease }}" == "true" ]]; then
+            echo "Skipping prerelease $TAG"
+            exit 0
+          fi
+
+          # Download assets for latest release only
+          mkdir -p "latest"
+          gh release download "$TAG" -R "${{ github.repository }}" --dir "latest"
+
+          cd "latest"
+
+          # Generate checksums
+          sha256sum * > SHA256SUMS.txt
+          for file in *; do
+            [ -f "$file" ] && sha256sum "$file" | cut -d' ' -f1 > "$file.sha256"
+          done
+
+          # Create manifest
+          jq -n \
+            --arg tag "$TAG" \
+            --arg published_at "${{ steps.release.outputs.published_at }}" \
+            --argjson prerelease ${{ steps.release.outputs.prerelease }} \
+            --arg base_url "$BASE_URL" \
+            --arg timestamp "$TIMESTAMP" \
+            '
+            {
+              tag: $tag,
+              prerelease: $prerelease,
+              published_at: $published_at,
+              base_url: $base_url,
+              assets: []
+            }
+            ' > index.json
+
+          # Add asset info to manifest
+          for file in *; do
+            # Skip non-files and excluded files
+            [ -f "$file" ] || continue
+            [[ "$file" == "index.json" || "$file" == "SHA256SUMS.txt" || "$file" == *.sha256 ]] && continue
+            
+            # Get file size portably
+            SIZE=$(wc -c < "$file" | tr -d '[:space:]')
+            if ! [[ "$SIZE" =~ ^[0-9]+$ ]]; then
+              echo "Error: Could not determine size of $file" >&2
+              exit 1
+            fi
+            
+            # Include all files (Git LFS will handle large ones automatically)
+            echo "Including file: $file (${SIZE} bytes)"
+            SHA=$(cat "$file.sha256")
+            jq --arg name "$file" \
+               --arg url "$BASE_URL/latest/$file" \
+               --arg sha256 "$SHA" \
+               --argjson size "$SIZE" \
+               '.assets += [{name: $name, url: $url, size: $size, sha256: $sha256}]' \
+               index.json > tmp.json && mv tmp.json index.json
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Git LFS attributes
+        run: |
+          # Create .gitattributes for LFS tracking of large files
+          cat > .gitattributes << 'EOF'
+          # Track large binary files with Git LFS
+          latest/*.dmg filter=lfs diff=lfs merge=lfs -text
+          latest/*.exe filter=lfs diff=lfs merge=lfs -text
+          latest/*.zip filter=lfs diff=lfs merge=lfs -text
+          latest/*.deb filter=lfs diff=lfs merge=lfs -text
+          latest/*.rpm filter=lfs diff=lfs merge=lfs -text
+          latest/*.nupkg filter=lfs diff=lfs merge=lfs -text
+          latest/*.flatpak filter=lfs diff=lfs merge=lfs -text
+          latest/*.tar.gz filter=lfs diff=lfs merge=lfs -text
+          EOF
+
+      - name: Deploy to GitHub Pages with LFS
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
+          keep_files: false
+          commit_message: 'Update latest release to ${{ steps.release.outputs.tag }}'

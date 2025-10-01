@@ -40,7 +40,7 @@ export function SecretsTable({
       />
       <div className="overflow-hidden rounded-md border">
         <Table className="">
-          <TableHeader>
+          <TableHeader className="bg-muted/50">
             <TableRow>
               <TableHead
                 className="text-muted-foreground flex items-center px-5 text-xs"

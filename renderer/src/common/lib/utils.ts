@@ -12,3 +12,45 @@ export function cn(...inputs: ClassValue[]) {
 export function isEmptyEnvVar(value: string | undefined | null): boolean {
   return !value || value.trim() === ''
 }
+
+export function getVolumes(
+  volumes: Array<{
+    host: string
+    container: string
+    accessMode?: 'ro' | 'rw'
+  }>
+): Array<string> {
+  return volumes
+    .filter((volume) => volume.host && volume.container)
+    .map(
+      (volume) =>
+        `${volume.host}:${volume.container}${volume.accessMode === 'ro' ? ':ro' : ''}`
+    )
+}
+
+/**
+ * Maps environment variables from the form into the format expected by the API.
+ * Filters out environment variables with empty or whitespace-only values.
+ */
+export function mapEnvVars(envVars: { name: string; value?: string }[]) {
+  return Object.fromEntries(
+    envVars
+      .filter((envVar) => !isEmptyEnvVar(envVar.value))
+      .map(({ name, value }) => [name, value as string])
+  )
+}
+
+/**
+ * Creates a new object with specified keys omitted from the original object.
+ * Type-safe utility that ensures the omitted keys exist on the source object.
+ */
+export function omit<T extends Record<string, unknown>, K extends keyof T>(
+  obj: T,
+  ...keys: K[]
+): Omit<T, K> {
+  const result = { ...obj }
+  for (const key of keys) {
+    delete result[key]
+  }
+  return result
+}

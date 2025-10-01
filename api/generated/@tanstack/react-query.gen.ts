@@ -8,6 +8,7 @@ import {
   postApiV1BetaClientsRegister,
   postApiV1BetaClientsUnregister,
   deleteApiV1BetaClientsByName,
+  deleteApiV1BetaClientsByNameGroupsByGroup,
   getApiV1BetaDiscoveryClients,
   getApiV1BetaGroups,
   postApiV1BetaGroups,
@@ -17,6 +18,7 @@ import {
   postApiV1BetaRegistry,
   deleteApiV1BetaRegistryByName,
   getApiV1BetaRegistryByName,
+  putApiV1BetaRegistryByName,
   getApiV1BetaRegistryByNameServers,
   getApiV1BetaRegistryByNameServersByServerName,
   postApiV1BetaSecrets,
@@ -33,9 +35,11 @@ import {
   postApiV1BetaWorkloadsStop,
   deleteApiV1BetaWorkloadsByName,
   getApiV1BetaWorkloadsByName,
+  postApiV1BetaWorkloadsByNameEdit,
   getApiV1BetaWorkloadsByNameExport,
   getApiV1BetaWorkloadsByNameLogs,
   postApiV1BetaWorkloadsByNameRestart,
+  getApiV1BetaWorkloadsByNameStatus,
   postApiV1BetaWorkloadsByNameStop,
   getHealth,
 } from '../sdk.gen'
@@ -55,6 +59,9 @@ import type {
   DeleteApiV1BetaClientsByNameData,
   DeleteApiV1BetaClientsByNameError,
   DeleteApiV1BetaClientsByNameResponse,
+  DeleteApiV1BetaClientsByNameGroupsByGroupData,
+  DeleteApiV1BetaClientsByNameGroupsByGroupError,
+  DeleteApiV1BetaClientsByNameGroupsByGroupResponse,
   GetApiV1BetaDiscoveryClientsData,
   GetApiV1BetaGroupsData,
   PostApiV1BetaGroupsData,
@@ -71,6 +78,9 @@ import type {
   DeleteApiV1BetaRegistryByNameError,
   DeleteApiV1BetaRegistryByNameResponse,
   GetApiV1BetaRegistryByNameData,
+  PutApiV1BetaRegistryByNameData,
+  PutApiV1BetaRegistryByNameError,
+  PutApiV1BetaRegistryByNameResponse,
   GetApiV1BetaRegistryByNameServersData,
   GetApiV1BetaRegistryByNameServersByServerNameData,
   PostApiV1BetaSecretsData,
@@ -105,38 +115,46 @@ import type {
   DeleteApiV1BetaWorkloadsByNameError,
   DeleteApiV1BetaWorkloadsByNameResponse,
   GetApiV1BetaWorkloadsByNameData,
+  PostApiV1BetaWorkloadsByNameEditData,
+  PostApiV1BetaWorkloadsByNameEditError,
+  PostApiV1BetaWorkloadsByNameEditResponse,
   GetApiV1BetaWorkloadsByNameExportData,
   GetApiV1BetaWorkloadsByNameLogsData,
   PostApiV1BetaWorkloadsByNameRestartData,
   PostApiV1BetaWorkloadsByNameRestartError,
   PostApiV1BetaWorkloadsByNameRestartResponse,
+  GetApiV1BetaWorkloadsByNameStatusData,
   PostApiV1BetaWorkloadsByNameStopData,
   PostApiV1BetaWorkloadsByNameStopError,
   PostApiV1BetaWorkloadsByNameStopResponse,
   GetHealthData,
 } from '../types.gen'
-import { client as _heyApiClient } from '../client.gen'
+import { client } from '../client.gen'
 
 export type QueryKey<TOptions extends Options> = [
   Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
     _id: string
     _infinite?: boolean
+    tags?: ReadonlyArray<string>
   },
 ]
 
 const createQueryKey = <TOptions extends Options>(
   id: string,
   options?: TOptions,
-  infinite?: boolean
+  infinite?: boolean,
+  tags?: ReadonlyArray<string>
 ): [QueryKey<TOptions>[0]] => {
   const params: QueryKey<TOptions>[0] = {
     _id: id,
     baseUrl:
-      options?.baseUrl ||
-      (options?.client ?? _heyApiClient).getConfig().baseUrl,
+      options?.baseUrl || (options?.client ?? client).getConfig().baseUrl,
   } as QueryKey<TOptions>[0]
   if (infinite) {
     params._infinite = infinite
+  }
+  if (tags) {
+    params.tags = tags
   }
   if (options?.body) {
     params.body = options.body
@@ -203,31 +221,6 @@ export const getApiV1BetaClientsOptions = (
   })
 }
 
-export const postApiV1BetaClientsQueryKey = (
-  options: Options<PostApiV1BetaClientsData>
-) => createQueryKey('postApiV1BetaClients', options)
-
-/**
- * Register a new client
- * Register a new client with ToolHive
- */
-export const postApiV1BetaClientsOptions = (
-  options: Options<PostApiV1BetaClientsData>
-) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await postApiV1BetaClients({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      })
-      return data
-    },
-    queryKey: postApiV1BetaClientsQueryKey(options),
-  })
-}
-
 /**
  * Register a new client
  * Register a new client with ToolHive
@@ -244,41 +237,16 @@ export const postApiV1BetaClientsMutation = (
     PostApiV1BetaClientsError,
     Options<PostApiV1BetaClientsData>
   > = {
-    mutationFn: async (localOptions) => {
+    mutationFn: async (fnOptions) => {
       const { data } = await postApiV1BetaClients({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       })
       return data
     },
   }
   return mutationOptions
-}
-
-export const postApiV1BetaClientsRegisterQueryKey = (
-  options: Options<PostApiV1BetaClientsRegisterData>
-) => createQueryKey('postApiV1BetaClientsRegister', options)
-
-/**
- * Register multiple clients
- * Register multiple clients with ToolHive
- */
-export const postApiV1BetaClientsRegisterOptions = (
-  options: Options<PostApiV1BetaClientsRegisterData>
-) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await postApiV1BetaClientsRegister({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      })
-      return data
-    },
-    queryKey: postApiV1BetaClientsRegisterQueryKey(options),
-  })
 }
 
 /**
@@ -297,41 +265,16 @@ export const postApiV1BetaClientsRegisterMutation = (
     PostApiV1BetaClientsRegisterError,
     Options<PostApiV1BetaClientsRegisterData>
   > = {
-    mutationFn: async (localOptions) => {
+    mutationFn: async (fnOptions) => {
       const { data } = await postApiV1BetaClientsRegister({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       })
       return data
     },
   }
   return mutationOptions
-}
-
-export const postApiV1BetaClientsUnregisterQueryKey = (
-  options: Options<PostApiV1BetaClientsUnregisterData>
-) => createQueryKey('postApiV1BetaClientsUnregister', options)
-
-/**
- * Unregister multiple clients
- * Unregister multiple clients from ToolHive
- */
-export const postApiV1BetaClientsUnregisterOptions = (
-  options: Options<PostApiV1BetaClientsUnregisterData>
-) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await postApiV1BetaClientsUnregister({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      })
-      return data
-    },
-    queryKey: postApiV1BetaClientsUnregisterQueryKey(options),
-  })
 }
 
 /**
@@ -350,10 +293,10 @@ export const postApiV1BetaClientsUnregisterMutation = (
     PostApiV1BetaClientsUnregisterError,
     Options<PostApiV1BetaClientsUnregisterData>
   > = {
-    mutationFn: async (localOptions) => {
+    mutationFn: async (fnOptions) => {
       const { data } = await postApiV1BetaClientsUnregister({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       })
       return data
@@ -378,10 +321,38 @@ export const deleteApiV1BetaClientsByNameMutation = (
     DeleteApiV1BetaClientsByNameError,
     Options<DeleteApiV1BetaClientsByNameData>
   > = {
-    mutationFn: async (localOptions) => {
+    mutationFn: async (fnOptions) => {
       const { data } = await deleteApiV1BetaClientsByName({
         ...options,
-        ...localOptions,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Unregister a client from a specific group
+ * Unregister a client from a specific group in ToolHive
+ */
+export const deleteApiV1BetaClientsByNameGroupsByGroupMutation = (
+  options?: Partial<Options<DeleteApiV1BetaClientsByNameGroupsByGroupData>>
+): UseMutationOptions<
+  DeleteApiV1BetaClientsByNameGroupsByGroupResponse,
+  DeleteApiV1BetaClientsByNameGroupsByGroupError,
+  Options<DeleteApiV1BetaClientsByNameGroupsByGroupData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    DeleteApiV1BetaClientsByNameGroupsByGroupResponse,
+    DeleteApiV1BetaClientsByNameGroupsByGroupError,
+    Options<DeleteApiV1BetaClientsByNameGroupsByGroupData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await deleteApiV1BetaClientsByNameGroupsByGroup({
+        ...options,
+        ...fnOptions,
         throwOnError: true,
       })
       return data
@@ -440,31 +411,6 @@ export const getApiV1BetaGroupsOptions = (
   })
 }
 
-export const postApiV1BetaGroupsQueryKey = (
-  options: Options<PostApiV1BetaGroupsData>
-) => createQueryKey('postApiV1BetaGroups', options)
-
-/**
- * Create a new group
- * Create a new group with the specified name
- */
-export const postApiV1BetaGroupsOptions = (
-  options: Options<PostApiV1BetaGroupsData>
-) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await postApiV1BetaGroups({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      })
-      return data
-    },
-    queryKey: postApiV1BetaGroupsQueryKey(options),
-  })
-}
-
 /**
  * Create a new group
  * Create a new group with the specified name
@@ -481,10 +427,10 @@ export const postApiV1BetaGroupsMutation = (
     PostApiV1BetaGroupsError,
     Options<PostApiV1BetaGroupsData>
   > = {
-    mutationFn: async (localOptions) => {
+    mutationFn: async (fnOptions) => {
       const { data } = await postApiV1BetaGroups({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       })
       return data
@@ -509,10 +455,10 @@ export const deleteApiV1BetaGroupsByNameMutation = (
     DeleteApiV1BetaGroupsByNameError,
     Options<DeleteApiV1BetaGroupsByNameData>
   > = {
-    mutationFn: async (localOptions) => {
+    mutationFn: async (fnOptions) => {
       const { data } = await deleteApiV1BetaGroupsByName({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       })
       return data
@@ -571,31 +517,6 @@ export const getApiV1BetaRegistryOptions = (
   })
 }
 
-export const postApiV1BetaRegistryQueryKey = (
-  options?: Options<PostApiV1BetaRegistryData>
-) => createQueryKey('postApiV1BetaRegistry', options)
-
-/**
- * Add a registry
- * Add a new registry
- */
-export const postApiV1BetaRegistryOptions = (
-  options?: Options<PostApiV1BetaRegistryData>
-) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await postApiV1BetaRegistry({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      })
-      return data
-    },
-    queryKey: postApiV1BetaRegistryQueryKey(options),
-  })
-}
-
 /**
  * Add a registry
  * Add a new registry
@@ -612,10 +533,10 @@ export const postApiV1BetaRegistryMutation = (
     PostApiV1BetaRegistryError,
     Options<PostApiV1BetaRegistryData>
   > = {
-    mutationFn: async (localOptions) => {
+    mutationFn: async (fnOptions) => {
       const { data } = await postApiV1BetaRegistry({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       })
       return data
@@ -640,10 +561,10 @@ export const deleteApiV1BetaRegistryByNameMutation = (
     DeleteApiV1BetaRegistryByNameError,
     Options<DeleteApiV1BetaRegistryByNameData>
   > = {
-    mutationFn: async (localOptions) => {
+    mutationFn: async (fnOptions) => {
       const { data } = await deleteApiV1BetaRegistryByName({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       })
       return data
@@ -675,6 +596,34 @@ export const getApiV1BetaRegistryByNameOptions = (
     },
     queryKey: getApiV1BetaRegistryByNameQueryKey(options),
   })
+}
+
+/**
+ * Update registry configuration
+ * Update registry URL or local path for the default registry
+ */
+export const putApiV1BetaRegistryByNameMutation = (
+  options?: Partial<Options<PutApiV1BetaRegistryByNameData>>
+): UseMutationOptions<
+  PutApiV1BetaRegistryByNameResponse,
+  PutApiV1BetaRegistryByNameError,
+  Options<PutApiV1BetaRegistryByNameData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PutApiV1BetaRegistryByNameResponse,
+    PutApiV1BetaRegistryByNameError,
+    Options<PutApiV1BetaRegistryByNameData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await putApiV1BetaRegistryByName({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
 }
 
 export const getApiV1BetaRegistryByNameServersQueryKey = (
@@ -727,31 +676,6 @@ export const getApiV1BetaRegistryByNameServersByServerNameOptions = (
   })
 }
 
-export const postApiV1BetaSecretsQueryKey = (
-  options: Options<PostApiV1BetaSecretsData>
-) => createQueryKey('postApiV1BetaSecrets', options)
-
-/**
- * Setup or reconfigure secrets provider
- * Setup the secrets provider with the specified type and configuration.
- */
-export const postApiV1BetaSecretsOptions = (
-  options: Options<PostApiV1BetaSecretsData>
-) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await postApiV1BetaSecrets({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      })
-      return data
-    },
-    queryKey: postApiV1BetaSecretsQueryKey(options),
-  })
-}
-
 /**
  * Setup or reconfigure secrets provider
  * Setup the secrets provider with the specified type and configuration.
@@ -768,10 +692,10 @@ export const postApiV1BetaSecretsMutation = (
     PostApiV1BetaSecretsError,
     Options<PostApiV1BetaSecretsData>
   > = {
-    mutationFn: async (localOptions) => {
+    mutationFn: async (fnOptions) => {
       const { data } = await postApiV1BetaSecrets({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       })
       return data
@@ -830,31 +754,6 @@ export const getApiV1BetaSecretsDefaultKeysOptions = (
   })
 }
 
-export const postApiV1BetaSecretsDefaultKeysQueryKey = (
-  options: Options<PostApiV1BetaSecretsDefaultKeysData>
-) => createQueryKey('postApiV1BetaSecretsDefaultKeys', options)
-
-/**
- * Create a new secret
- * Create a new secret in the default provider (encrypted provider only)
- */
-export const postApiV1BetaSecretsDefaultKeysOptions = (
-  options: Options<PostApiV1BetaSecretsDefaultKeysData>
-) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await postApiV1BetaSecretsDefaultKeys({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      })
-      return data
-    },
-    queryKey: postApiV1BetaSecretsDefaultKeysQueryKey(options),
-  })
-}
-
 /**
  * Create a new secret
  * Create a new secret in the default provider (encrypted provider only)
@@ -871,10 +770,10 @@ export const postApiV1BetaSecretsDefaultKeysMutation = (
     PostApiV1BetaSecretsDefaultKeysError,
     Options<PostApiV1BetaSecretsDefaultKeysData>
   > = {
-    mutationFn: async (localOptions) => {
+    mutationFn: async (fnOptions) => {
       const { data } = await postApiV1BetaSecretsDefaultKeys({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       })
       return data
@@ -899,10 +798,10 @@ export const deleteApiV1BetaSecretsDefaultKeysByKeyMutation = (
     DeleteApiV1BetaSecretsDefaultKeysByKeyError,
     Options<DeleteApiV1BetaSecretsDefaultKeysByKeyData>
   > = {
-    mutationFn: async (localOptions) => {
+    mutationFn: async (fnOptions) => {
       const { data } = await deleteApiV1BetaSecretsDefaultKeysByKey({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       })
       return data
@@ -927,10 +826,10 @@ export const putApiV1BetaSecretsDefaultKeysByKeyMutation = (
     PutApiV1BetaSecretsDefaultKeysByKeyError,
     Options<PutApiV1BetaSecretsDefaultKeysByKeyData>
   > = {
-    mutationFn: async (localOptions) => {
+    mutationFn: async (fnOptions) => {
       const { data } = await putApiV1BetaSecretsDefaultKeysByKey({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       })
       return data
@@ -989,31 +888,6 @@ export const getApiV1BetaWorkloadsOptions = (
   })
 }
 
-export const postApiV1BetaWorkloadsQueryKey = (
-  options: Options<PostApiV1BetaWorkloadsData>
-) => createQueryKey('postApiV1BetaWorkloads', options)
-
-/**
- * Create a new workload
- * Create and start a new workload
- */
-export const postApiV1BetaWorkloadsOptions = (
-  options: Options<PostApiV1BetaWorkloadsData>
-) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await postApiV1BetaWorkloads({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      })
-      return data
-    },
-    queryKey: postApiV1BetaWorkloadsQueryKey(options),
-  })
-}
-
 /**
  * Create a new workload
  * Create and start a new workload
@@ -1030,41 +904,16 @@ export const postApiV1BetaWorkloadsMutation = (
     PostApiV1BetaWorkloadsError,
     Options<PostApiV1BetaWorkloadsData>
   > = {
-    mutationFn: async (localOptions) => {
+    mutationFn: async (fnOptions) => {
       const { data } = await postApiV1BetaWorkloads({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       })
       return data
     },
   }
   return mutationOptions
-}
-
-export const postApiV1BetaWorkloadsDeleteQueryKey = (
-  options: Options<PostApiV1BetaWorkloadsDeleteData>
-) => createQueryKey('postApiV1BetaWorkloadsDelete', options)
-
-/**
- * Delete workloads in bulk
- * Delete multiple workloads by name or by group
- */
-export const postApiV1BetaWorkloadsDeleteOptions = (
-  options: Options<PostApiV1BetaWorkloadsDeleteData>
-) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await postApiV1BetaWorkloadsDelete({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      })
-      return data
-    },
-    queryKey: postApiV1BetaWorkloadsDeleteQueryKey(options),
-  })
 }
 
 /**
@@ -1083,41 +932,16 @@ export const postApiV1BetaWorkloadsDeleteMutation = (
     PostApiV1BetaWorkloadsDeleteError,
     Options<PostApiV1BetaWorkloadsDeleteData>
   > = {
-    mutationFn: async (localOptions) => {
+    mutationFn: async (fnOptions) => {
       const { data } = await postApiV1BetaWorkloadsDelete({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       })
       return data
     },
   }
   return mutationOptions
-}
-
-export const postApiV1BetaWorkloadsRestartQueryKey = (
-  options: Options<PostApiV1BetaWorkloadsRestartData>
-) => createQueryKey('postApiV1BetaWorkloadsRestart', options)
-
-/**
- * Restart workloads in bulk
- * Restart multiple workloads by name or by group
- */
-export const postApiV1BetaWorkloadsRestartOptions = (
-  options: Options<PostApiV1BetaWorkloadsRestartData>
-) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await postApiV1BetaWorkloadsRestart({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      })
-      return data
-    },
-    queryKey: postApiV1BetaWorkloadsRestartQueryKey(options),
-  })
 }
 
 /**
@@ -1136,41 +960,16 @@ export const postApiV1BetaWorkloadsRestartMutation = (
     PostApiV1BetaWorkloadsRestartError,
     Options<PostApiV1BetaWorkloadsRestartData>
   > = {
-    mutationFn: async (localOptions) => {
+    mutationFn: async (fnOptions) => {
       const { data } = await postApiV1BetaWorkloadsRestart({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       })
       return data
     },
   }
   return mutationOptions
-}
-
-export const postApiV1BetaWorkloadsStopQueryKey = (
-  options: Options<PostApiV1BetaWorkloadsStopData>
-) => createQueryKey('postApiV1BetaWorkloadsStop', options)
-
-/**
- * Stop workloads in bulk
- * Stop multiple workloads by name or by group
- */
-export const postApiV1BetaWorkloadsStopOptions = (
-  options: Options<PostApiV1BetaWorkloadsStopData>
-) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await postApiV1BetaWorkloadsStop({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      })
-      return data
-    },
-    queryKey: postApiV1BetaWorkloadsStopQueryKey(options),
-  })
 }
 
 /**
@@ -1189,10 +988,10 @@ export const postApiV1BetaWorkloadsStopMutation = (
     PostApiV1BetaWorkloadsStopError,
     Options<PostApiV1BetaWorkloadsStopData>
   > = {
-    mutationFn: async (localOptions) => {
+    mutationFn: async (fnOptions) => {
       const { data } = await postApiV1BetaWorkloadsStop({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       })
       return data
@@ -1217,10 +1016,10 @@ export const deleteApiV1BetaWorkloadsByNameMutation = (
     DeleteApiV1BetaWorkloadsByNameError,
     Options<DeleteApiV1BetaWorkloadsByNameData>
   > = {
-    mutationFn: async (localOptions) => {
+    mutationFn: async (fnOptions) => {
       const { data } = await deleteApiV1BetaWorkloadsByName({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       })
       return data
@@ -1252,6 +1051,34 @@ export const getApiV1BetaWorkloadsByNameOptions = (
     },
     queryKey: getApiV1BetaWorkloadsByNameQueryKey(options),
   })
+}
+
+/**
+ * Update workload
+ * Update an existing workload configuration
+ */
+export const postApiV1BetaWorkloadsByNameEditMutation = (
+  options?: Partial<Options<PostApiV1BetaWorkloadsByNameEditData>>
+): UseMutationOptions<
+  PostApiV1BetaWorkloadsByNameEditResponse,
+  PostApiV1BetaWorkloadsByNameEditError,
+  Options<PostApiV1BetaWorkloadsByNameEditData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaWorkloadsByNameEditResponse,
+    PostApiV1BetaWorkloadsByNameEditError,
+    Options<PostApiV1BetaWorkloadsByNameEditData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1BetaWorkloadsByNameEdit({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
 }
 
 export const getApiV1BetaWorkloadsByNameExportQueryKey = (
@@ -1304,31 +1131,6 @@ export const getApiV1BetaWorkloadsByNameLogsOptions = (
   })
 }
 
-export const postApiV1BetaWorkloadsByNameRestartQueryKey = (
-  options: Options<PostApiV1BetaWorkloadsByNameRestartData>
-) => createQueryKey('postApiV1BetaWorkloadsByNameRestart', options)
-
-/**
- * Restart a workload
- * Restart a running workload
- */
-export const postApiV1BetaWorkloadsByNameRestartOptions = (
-  options: Options<PostApiV1BetaWorkloadsByNameRestartData>
-) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await postApiV1BetaWorkloadsByNameRestart({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      })
-      return data
-    },
-    queryKey: postApiV1BetaWorkloadsByNameRestartQueryKey(options),
-  })
-}
-
 /**
  * Restart a workload
  * Restart a running workload
@@ -1345,10 +1147,10 @@ export const postApiV1BetaWorkloadsByNameRestartMutation = (
     PostApiV1BetaWorkloadsByNameRestartError,
     Options<PostApiV1BetaWorkloadsByNameRestartData>
   > = {
-    mutationFn: async (localOptions) => {
+    mutationFn: async (fnOptions) => {
       const { data } = await postApiV1BetaWorkloadsByNameRestart({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       })
       return data
@@ -1357,20 +1159,20 @@ export const postApiV1BetaWorkloadsByNameRestartMutation = (
   return mutationOptions
 }
 
-export const postApiV1BetaWorkloadsByNameStopQueryKey = (
-  options: Options<PostApiV1BetaWorkloadsByNameStopData>
-) => createQueryKey('postApiV1BetaWorkloadsByNameStop', options)
+export const getApiV1BetaWorkloadsByNameStatusQueryKey = (
+  options: Options<GetApiV1BetaWorkloadsByNameStatusData>
+) => createQueryKey('getApiV1BetaWorkloadsByNameStatus', options)
 
 /**
- * Stop a workload
- * Stop a running workload
+ * Get workload status
+ * Get the current status of a specific workload
  */
-export const postApiV1BetaWorkloadsByNameStopOptions = (
-  options: Options<PostApiV1BetaWorkloadsByNameStopData>
+export const getApiV1BetaWorkloadsByNameStatusOptions = (
+  options: Options<GetApiV1BetaWorkloadsByNameStatusData>
 ) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await postApiV1BetaWorkloadsByNameStop({
+      const { data } = await getApiV1BetaWorkloadsByNameStatus({
         ...options,
         ...queryKey[0],
         signal,
@@ -1378,7 +1180,7 @@ export const postApiV1BetaWorkloadsByNameStopOptions = (
       })
       return data
     },
-    queryKey: postApiV1BetaWorkloadsByNameStopQueryKey(options),
+    queryKey: getApiV1BetaWorkloadsByNameStatusQueryKey(options),
   })
 }
 
@@ -1398,10 +1200,10 @@ export const postApiV1BetaWorkloadsByNameStopMutation = (
     PostApiV1BetaWorkloadsByNameStopError,
     Options<PostApiV1BetaWorkloadsByNameStopData>
   > = {
-    mutationFn: async (localOptions) => {
+    mutationFn: async (fnOptions) => {
       const { data } = await postApiV1BetaWorkloadsByNameStop({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       })
       return data

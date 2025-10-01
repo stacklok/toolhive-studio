@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider } from '@tanstack/react-router'
 import { render } from '@testing-library/react'
 import { createTestRouter } from './create-test-router'
-import { ConfirmProvider } from '../contexts/confirm/provider'
+import { PromptProvider } from '../contexts/prompt/provider'
 
 // NOTE: This is used only to infer a type for the router
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -18,10 +18,10 @@ export function renderRoute(router: typeof _router) {
   })
 
   return render(
-    <ConfirmProvider>
+    <PromptProvider>
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
       </QueryClientProvider>
-    </ConfirmProvider>
+    </PromptProvider>
   )
 }

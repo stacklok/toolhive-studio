@@ -64,6 +64,8 @@ export function useToastMutation<
         },
         ...(toastId ? { id: toastId } : {}),
       })
+
+      return promise
     },
     [errorMsg, loadingMsg, originalMutateAsync, successMsg, toastId]
   )

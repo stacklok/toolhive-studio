@@ -20,7 +20,7 @@ export function NotFound() {
             The page you're looking for doesn't exist or has been moved.
           </p>
           <Button asChild className="w-full">
-            <LinkViewTransition to="/">
+            <LinkViewTransition to="/group/default">
               <Home className="mr-2 size-4" />
               Go to Installed
             </LinkViewTransition>

@@ -15,8 +15,11 @@ import { Separator } from '../../ui/separator'
 import { useConfirmQuit } from '@/common/hooks/use-confirm-quit'
 import { QuitConfirmationListener } from './quit-confirmation-listener'
 import { SettingsIcon } from 'lucide-react'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 
 function TopNavLinks() {
+  const isPlaygroundEnabled = useFeatureFlag('playground')
+
   return (
     <NavigationMenu>
       <NavigationMenuList className="gap-0">
@@ -43,7 +46,9 @@ function TopNavLinks() {
               data-[status=hover]:bg-transparent"
             asChild
           >
-            <LinkViewTransition to="/">MCP Servers</LinkViewTransition>
+            <LinkViewTransition to="/group/default">
+              MCP Servers
+            </LinkViewTransition>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
@@ -72,38 +77,43 @@ function TopNavLinks() {
             <LinkViewTransition to="/registry">Registry</LinkViewTransition>
           </NavigationMenuLink>
         </NavigationMenuItem>
+
+        {isPlaygroundEnabled && (
+          <NavigationMenuItem>
+            <NavigationMenuLink
+              className="app-region-no-drag text-muted-foreground
+                hover:text-foreground focus:text-foreground
+                data-[status=active]:text-foreground
+                data-[status=active]:before:bg-foreground
+                focus-visible:ring-ring/50 relative px-3 py-2 text-sm
+                transition-all outline-none hover:bg-transparent
+                focus:bg-transparent focus-visible:ring-[3px]
+                focus-visible:outline-1 data-[status=active]:bg-transparent
+                data-[status=active]:before:absolute
+                data-[status=active]:before:right-3
+                data-[status=active]:before:bottom-[-14px]
+                data-[status=active]:before:left-3
+                data-[status=active]:before:h-0.5
+                data-[status=active]:before:rounded-t-[1px]
+                data-[status=active]:before:opacity-90
+                data-[status=active]:before:content-['']
+                data-[status=active]:hover:bg-transparent
+                data-[status=active]:focus:bg-transparent"
+              asChild
+            >
+              <LinkViewTransition to="/playground">
+                Playground
+              </LinkViewTransition>
+            </NavigationMenuLink>
+          </NavigationMenuItem>
+        )}
         <NavigationMenuItem>
           <NavigationMenuLink
             className="app-region-no-drag text-muted-foreground
               hover:text-foreground focus:text-foreground
               data-[status=active]:text-foreground
               data-[status=active]:before:bg-foreground
-              focus-visible:ring-ring/50 relative px-3 py-2 text-sm
-              transition-all outline-none hover:bg-transparent
-              focus:bg-transparent focus-visible:ring-[3px]
-              focus-visible:outline-1 data-[status=active]:bg-transparent
-              data-[status=active]:before:absolute
-              data-[status=active]:before:right-3
-              data-[status=active]:before:bottom-[-14px]
-              data-[status=active]:before:left-3
-              data-[status=active]:before:h-0.5
-              data-[status=active]:before:rounded-t-[1px]
-              data-[status=active]:before:opacity-90
-              data-[status=active]:before:content-['']
-              data-[status=active]:hover:bg-transparent
-              data-[status=active]:focus:bg-transparent"
-            asChild
-          >
-            <LinkViewTransition to="/clients">Clients</LinkViewTransition>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuLink
-            className="app-region-no-drag text-muted-foreground
-              hover:text-foreground focus:text-foreground
-              data-[status=active]:text-foreground
-              data-[status=active]:before:bg-foreground
-              focus-visible:ring-ring/50 relative px-3 py-2 text-sm
+              focus-visible:ring-ring/50 relative py-2 pr-0 pl-3 text-sm
               transition-all outline-none hover:bg-transparent
               focus:bg-transparent focus-visible:ring-[3px]
               focus-visible:outline-1 data-[status=active]:bg-transparent

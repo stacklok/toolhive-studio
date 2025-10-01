@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { VersionTab } from '../version-tab'
-import { ConfirmProvider } from '@/common/contexts/confirm/provider'
+import { PromptProvider } from '@/common/contexts/prompt/provider'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const mockElectronAPI = {
@@ -24,11 +24,11 @@ const renderWithProviders = (component: React.ReactElement) => {
   })
 
   return render(
-    <ConfirmProvider>
+    <PromptProvider>
       <QueryClientProvider client={queryClient}>
         {component}
       </QueryClientProvider>
-    </ConfirmProvider>
+    </PromptProvider>
   )
 }
 

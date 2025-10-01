@@ -2,8 +2,11 @@
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 
 import { contextBridge, ipcRenderer } from 'electron'
-import type { WorkloadsWorkload } from '../../api/generated/types.gen'
+import type { CoreWorkload } from '../../api/generated/types.gen'
+import type { AvailableServer, ChatUIMessage } from '../../main/src/chat/types'
 import { TOOLHIVE_VERSION } from '../../utils/constants'
+import type { UIMessage } from 'ai'
+import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 
 // Expose auto-launch functionality to renderer
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -25,6 +28,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // ToolHive port
   getToolhivePort: () => ipcRenderer.invoke('get-toolhive-port'),
+  getToolhiveMcpPort: () => ipcRenderer.invoke('get-toolhive-mcp-port'),
   getToolhiveVersion: () => TOOLHIVE_VERSION,
   // ToolHive is running
   isToolhiveRunning: () => ipcRenderer.invoke('is-toolhive-running'),
@@ -60,6 +64,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.removeListener('graceful-exit', callback)
     }
   },
+
+  // File/folder pickers
+  selectFile: (): Promise<string | null> =>
+    ipcRenderer.invoke('dialog:select-file'),
+  selectFolder: (): Promise<string | null> =>
+    ipcRenderer.invoke('dialog:select-folder'),
 
   // Quit confirmation
   onShowQuitConfirmation: (callback: () => void) => {
@@ -102,6 +112,101 @@ contextBridge.exposeInMainWorld('electronAPI', {
     clearShutdownHistory: () =>
       ipcRenderer.invoke('shutdown-store:clear-history'),
   },
+
+  // Feature flags
+  featureFlags: {
+    get: (key: string) => ipcRenderer.invoke('feature-flags:get', key),
+    enable: (key: string) => ipcRenderer.invoke('feature-flags:enable', key),
+    disable: (key: string) => ipcRenderer.invoke('feature-flags:disable', key),
+    getAll: () => ipcRenderer.invoke('feature-flags:get-all'),
+  },
+
+  // Chat functionality
+  chat: {
+    getProviders: () => ipcRenderer.invoke('chat:get-providers'),
+    stream: (request: {
+      messages: ChatUIMessage[]
+      provider: string
+      model: string
+      apiKey: string
+      enabledTools?: string[]
+    }) =>
+      ipcRenderer.invoke('chat:stream', request) as Promise<{
+        streamId: string
+      }>,
+    getSettings: (providerId: string) =>
+      ipcRenderer.invoke('chat:get-settings', providerId),
+    saveSettings: (
+      providerId: string,
+      settings: { apiKey: string; enabledTools: string[] }
+    ) => ipcRenderer.invoke('chat:save-settings', providerId, settings),
+    clearSettings: (providerId?: string) =>
+      ipcRenderer.invoke('chat:clear-settings', providerId),
+    discoverModels: () => ipcRenderer.invoke('chat:discover-models'),
+    getSelectedModel: () => ipcRenderer.invoke('chat:get-selected-model'),
+    saveSelectedModel: (provider: string, model: string) =>
+      ipcRenderer.invoke('chat:save-selected-model', provider, model),
+    getMcpServerTools: (serverName: string) =>
+      ipcRenderer.invoke('chat:get-mcp-server-tools', serverName),
+    getEnabledMcpTools: () => ipcRenderer.invoke('chat:get-enabled-mcp-tools'),
+    getEnabledMcpServersFromTools: () =>
+      ipcRenderer.invoke('chat:get-enabled-mcp-servers-from-tools'),
+    saveEnabledMcpTools: (serverName: string, enabledTools: string[]) =>
+      ipcRenderer.invoke(
+        'chat:save-enabled-mcp-tools',
+        serverName,
+        enabledTools
+      ),
+    getToolhiveMcpInfo: () => ipcRenderer.invoke('chat:get-toolhive-mcp-info'),
+
+    // Thread management
+    createThread: (title?: string, initialMessages?: unknown[]) =>
+      ipcRenderer.invoke('chat:create-thread', title, initialMessages),
+    getThread: (threadId: string) =>
+      ipcRenderer.invoke('chat:get-thread', threadId),
+    getAllThreads: () => ipcRenderer.invoke('chat:get-all-threads'),
+    updateThread: (threadId: string, updates: unknown) =>
+      ipcRenderer.invoke('chat:update-thread', threadId, updates),
+    deleteThread: (threadId: string) =>
+      ipcRenderer.invoke('chat:delete-thread', threadId),
+    clearAllThreads: () => ipcRenderer.invoke('chat:clear-all-threads'),
+    getThreadCount: () => ipcRenderer.invoke('chat:get-thread-count'),
+
+    // Message management
+    addMessageToThread: (threadId: string, message: unknown) =>
+      ipcRenderer.invoke('chat:add-message-to-thread', threadId, message),
+    updateThreadMessages: (threadId: string, messages: ChatUIMessage[]) =>
+      ipcRenderer.invoke('chat:update-thread-messages', threadId, messages),
+
+    // Active thread management
+    getActiveThreadId: () => ipcRenderer.invoke('chat:get-active-thread-id'),
+    setActiveThreadId: (threadId?: string) =>
+      ipcRenderer.invoke('chat:set-active-thread-id', threadId),
+
+    // High-level integration
+    createChatThread: (title?: string, initialUserMessage?: string) =>
+      ipcRenderer.invoke('chat:create-chat-thread', title, initialUserMessage),
+    getThreadMessagesForTransport: (threadId: string) =>
+      ipcRenderer.invoke('chat:get-thread-messages-for-transport', threadId),
+    getThreadInfo: (threadId: string) =>
+      ipcRenderer.invoke('chat:get-thread-info', threadId),
+    ensureThreadExists: (threadId?: string, title?: string) =>
+      ipcRenderer.invoke('chat:ensure-thread-exists', threadId, title),
+  },
+
+  // Utility functions
+  utils: {
+    getWorkloadAvailableTools: (workload: unknown) =>
+      ipcRenderer.invoke('utils:get-workload-available-tools', workload),
+  },
+
+  // IPC event listeners for streaming
+  on: (channel: string, listener: (...args: unknown[]) => void) => {
+    ipcRenderer.on(channel, (_, ...args) => listener(...args))
+  },
+  removeListener: (channel: string, listener: (...args: unknown[]) => void) => {
+    ipcRenderer.removeListener(channel, listener)
+  },
 })
 
 export interface ElectronAPI {
@@ -115,6 +220,7 @@ export interface ElectronAPI {
   hideApp: () => Promise<void>
   quitApp: () => Promise<void>
   getToolhivePort: () => Promise<number | undefined>
+  getToolhiveMcpPort: () => Promise<number | undefined>
   getToolhiveVersion: () => Promise<string>
   isToolhiveRunning: () => Promise<boolean>
   checkContainerEngine: () => Promise<{
@@ -159,7 +265,192 @@ export interface ElectronAPI {
     callback: (_event: Electron.IpcRendererEvent) => void
   ) => void
   shutdownStore: {
-    getLastShutdownServers: () => Promise<WorkloadsWorkload[]>
+    getLastShutdownServers: () => Promise<CoreWorkload[]>
     clearShutdownHistory: () => Promise<{ success: boolean }>
   }
+  featureFlags: {
+    get: (key: string) => Promise<boolean>
+    enable: (key: string) => Promise<void>
+    disable: (key: string) => Promise<void>
+    getAll: () => Promise<Record<string, boolean>>
+  }
+  // File/folder pickers
+  selectFile: () => Promise<string | null>
+  selectFolder: () => Promise<string | null>
+  // chat
+  chat: {
+    getProviders: () => Promise<
+      Array<{ id: string; name: string; models: string[] }>
+    >
+    stream: (request: {
+      messages: ChatUIMessage[]
+      provider: string
+      model: string
+      apiKey: string
+      enabledTools?: string[]
+    }) => Promise<{ streamId: string }>
+    getSettings: (
+      providerId: string
+    ) => Promise<{ apiKey: string; enabledTools: string[] }>
+    saveSettings: (
+      providerId: string,
+      settings: { apiKey: string; enabledTools: string[] }
+    ) => Promise<{ success: boolean; error?: string }>
+    clearSettings: (
+      providerId?: string
+    ) => Promise<{ success: boolean; error?: string }>
+    discoverModels: () => Promise<{
+      providers: Array<{
+        id: string
+        name: string
+        models: Array<{
+          id: string
+          supportsTools: boolean
+          category?: string
+          experimental?: boolean
+        }>
+      }>
+      discoveredAt: string
+    }>
+    getSelectedModel: () => Promise<{ provider: string; model: string }>
+    saveSelectedModel: (
+      provider: string,
+      model: string
+    ) => Promise<{ success: boolean; error?: string }>
+    getMcpServerTools: (serverId: string) => Promise<AvailableServer>
+    getEnabledMcpTools: () => Promise<Record<string, string[]>>
+    getEnabledMcpServersFromTools: () => Promise<string[]>
+    saveEnabledMcpTools: (
+      serverName: string,
+      enabledTools: string[]
+    ) => Promise<{ success: boolean; error?: string }>
+    getToolhiveMcpInfo: () => Promise<AvailableServer>
+
+    // Thread management
+    createThread: (
+      title?: string,
+      initialMessages?: unknown[]
+    ) => Promise<{
+      success: boolean
+      threadId?: string
+      error?: string
+    }>
+    getThread: (threadId: string) => Promise<{
+      id: string
+      title?: string
+      messages: ChatUIMessage[]
+      lastEditTimestamp: number
+      createdAt: number
+    } | null>
+    getAllThreads: () => Promise<
+      Array<{
+        id: string
+        title?: string
+        messages: ChatUIMessage[]
+        lastEditTimestamp: number
+        createdAt: number
+      }>
+    >
+    updateThread: (
+      threadId: string,
+      updates: unknown
+    ) => Promise<{
+      success: boolean
+      error?: string
+    }>
+    deleteThread: (threadId: string) => Promise<{
+      success: boolean
+      error?: string
+    }>
+    clearAllThreads: () => Promise<{
+      success: boolean
+      error?: string
+    }>
+    getThreadCount: () => Promise<number>
+
+    // Message management
+    addMessageToThread: (
+      threadId: string,
+      message: unknown
+    ) => Promise<{
+      success: boolean
+      error?: string
+    }>
+    updateThreadMessages: (
+      threadId: string,
+      messages: ChatUIMessage[]
+    ) => Promise<{
+      success: boolean
+      error?: string
+    }>
+
+    // Active thread management
+    getActiveThreadId: () => Promise<string | undefined>
+    setActiveThreadId: (threadId?: string) => {
+      success: boolean
+      error?: string
+    }
+
+    // High-level integration
+    createChatThread: (
+      title?: string,
+      initialUserMessage?: string
+    ) => Promise<{
+      success: boolean
+      threadId?: string
+      error?: string
+    }>
+    getThreadMessagesForTransport: (threadId: string) => Promise<
+      UIMessage<{
+        createdAt?: number
+        model?: string
+        totalUsage?: LanguageModelV2Usage
+        responseTime?: number
+        finishReason?: string
+      }>[]
+    >
+    getThreadInfo: (threadId: string) => Promise<{
+      thread: {
+        id: string
+        title?: string
+        messages: ChatUIMessage[]
+        lastEditTimestamp: number
+        createdAt: number
+      } | null
+      messageCount: number
+      lastActivity: Date | null
+      hasUserMessages: boolean
+      hasAssistantMessages: boolean
+    }>
+    ensureThreadExists: (
+      threadId?: string,
+      title?: string
+    ) => Promise<{
+      success: boolean
+      threadId?: string
+      error?: string
+      isNew?: boolean
+    }>
+  }
+  utils: {
+    getWorkloadAvailableTools: (workload: unknown) => Promise<
+      | Record<
+          string,
+          {
+            description?: string
+            inputSchema?: {
+              properties?: Record<string, unknown>
+            }
+          }
+        >
+      | undefined
+    >
+  }
+
+  // IPC event listeners for streaming
+  on: (channel: string, listener: (...args: unknown[]) => void) => void
+  removeListener: (
+    channel: string,
+    listener: (...args: unknown[]) => void
+  ) => void
 }

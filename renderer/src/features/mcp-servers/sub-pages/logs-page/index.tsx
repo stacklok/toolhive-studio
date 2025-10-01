@@ -11,7 +11,9 @@ import { InputSearch } from '@/common/components/ui/input-search'
 import { highlight } from './search'
 
 export function LogsPage() {
-  const { serverName } = useParams({ from: '/logs/$serverName' })
+  const { serverName, groupName } = useParams({
+    from: '/logs/$groupName/$serverName',
+  })
   const [search, setSearch] = useState('')
 
   const { data: logs, refetch } = useSuspenseQuery(
@@ -32,7 +34,7 @@ export function LogsPage() {
   return (
     <div className="flex max-h-full w-full flex-1 flex-col">
       <div className="mb-2">
-        <LinkViewTransition to="/">
+        <LinkViewTransition to="/group/$groupName" params={{ groupName }}>
           <Button
             variant="ghost"
             aria-label="Back"

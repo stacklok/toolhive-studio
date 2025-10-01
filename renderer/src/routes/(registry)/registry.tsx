@@ -19,21 +19,24 @@ export function Registry() {
   const { data } = useSuspenseQuery(
     getApiV1BetaRegistryByNameServersOptions({ path: { name: 'default' } })
   )
-  const { servers: serversList = [] } = data || {}
+  const { servers: serversList = [], remote_servers: remoteServersList = [] } =
+    data || {}
+
+  const servers = [...serversList, ...remoteServersList]
 
   return (
     <>
       <div className="mb-6 flex items-center">
         <h1 className="text-3xl font-bold">Registry</h1>
       </div>
-      {serversList.length === 0 ? (
+      {servers.length === 0 ? (
         <EmptyState
           title="No MCP servers found"
           body="If you are using a custom registry, please ensure it is configured correctly."
           actions={[
             <Button asChild key="docs">
               <a
-                href="https://docs.stacklok.com/toolhive/guides-cli/registry#use-a-remote-registry"
+                href="https://docs.stacklok.com/toolhive/guides-ui/registry#registry-settings"
                 target="_blank"
                 rel="noreferrer"
               >
@@ -44,7 +47,7 @@ export function Registry() {
           illustration={IllustrationNoConnection}
         />
       ) : (
-        <GridCardsRegistryServer servers={serversList} />
+        <GridCardsRegistryServer servers={servers} />
       )}
     </>
   )
