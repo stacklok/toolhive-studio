@@ -187,7 +187,7 @@ export function McpToolsModal({
         </DialogHeader>
 
         <div className="flex min-h-0 flex-1 flex-col space-y-4">
-          <div className="relative mb-0 pr-2">
+          <div className="relative mb-2 flex items-center pr-2">
             <Search
               className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4
                 -translate-y-1/2"
@@ -196,7 +196,7 @@ export function McpToolsModal({
               placeholder="Search tools..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="mb-2 pl-9"
+              className="pl-9"
             />
           </div>
 
