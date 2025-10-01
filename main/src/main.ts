@@ -116,7 +116,32 @@ const store = new Store<{
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
   tracesSampleRate: 1.0,
+  // It will send errors, exceptions and captured messages to Sentry only if the user has enabled telemetry
   beforeSend: (event) => (store.get('isTelemetryEnabled', true) ? event : null),
+  // It will send transactions to Sentry only if the user has enabled telemetry
+  beforeSendTransaction: async (transaction) => {
+    if (!store.get('isTelemetryEnabled', true)) {
+      return null
+    }
+    if (!transaction?.contexts?.trace) return null
+
+    const instanceId = await getInstanceId()
+    const trace = transaction.contexts.trace
+
+    return {
+      ...transaction,
+      contexts: {
+        ...transaction.contexts,
+        trace: {
+          ...trace,
+          data: {
+            ...transaction.contexts.trace.data,
+            'custom.user_id': instanceId,
+          },
+        },
+      },
+    }
+  },
 })
 
 // Environment variables are now handled in mainWindow.ts
