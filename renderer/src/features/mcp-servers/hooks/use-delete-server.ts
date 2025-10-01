@@ -7,17 +7,9 @@ import {
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { pollServerDelete } from '@/common/lib/polling'
 import { useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from '@tanstack/react-router'
 
-export function useDeleteServer({
-  name,
-  group,
-}: {
-  name: string
-  group?: string
-}) {
+export function useDeleteServer({ name }: { name: string }) {
   const queryClient = useQueryClient()
-  const navigate = useNavigate()
   const queryKey = getApiV1BetaWorkloadsQueryKey({ query: { all: true } })
 
   return useToastMutation({
@@ -54,11 +46,8 @@ export function useDeleteServer({
           })
         )
       )
-      navigate({
-        to: '/group/$groupName',
-        params: { groupName: group || 'default' },
-        search: (prev) => prev,
-      })
+      // No navigation needed - the query invalidation will update the UI
+      // and the user will stay on their current group page
     },
     onSettled: () => {
       queryClient.invalidateQueries({

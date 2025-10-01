@@ -5,16 +5,14 @@ import { useDeleteServer } from '../../../../hooks/use-delete-server'
 
 interface RemoveServerMenuItemProps {
   serverName: string
-  group?: string
 }
 
 export function RemoveServerMenuItem({
   serverName,
-  group,
 }: RemoveServerMenuItemProps) {
   const confirm = useConfirm()
   const { mutateAsync: deleteServer, isPending: isDeletePending } =
-    useDeleteServer({ name: serverName, group })
+    useDeleteServer({ name: serverName })
 
   const handleRemove = async (e: React.MouseEvent) => {
     e.stopPropagation()
