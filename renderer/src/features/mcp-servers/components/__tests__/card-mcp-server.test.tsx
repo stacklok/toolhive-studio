@@ -169,16 +169,6 @@ it('stays on the same group page after deleting a server', async () => {
     history: createMemoryHistory({ initialEntries: ['/group/g1'] }),
   }) as unknown as ReturnType<typeof createTestRouter>
 
-  // Mock the delete endpoint to return success
-  server.use(
-    http.delete(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-      return HttpResponse.json({}, { status: 204 })
-    }),
-    http.get(mswEndpoint('/api/v1beta/workloads/:name/status'), () => {
-      return HttpResponse.json({ status: 'not_found' }, { status: 404 })
-    })
-  )
-
   renderRoute(testRouter)
 
   await waitFor(() => {
