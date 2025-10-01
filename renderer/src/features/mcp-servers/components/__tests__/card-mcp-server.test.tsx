@@ -143,7 +143,8 @@ it('shows "Copy server to a group" menu item and handles the complete workflow',
 })
 
 it('stays on the same group page after deleting a server', async () => {
-  // Create a router starting in a non-default group
+  // this verifies that a bug reported here is fixed:
+  // https://github.com/stacklok/toolhive-studio/issues/904
   const rootRoute = createRootRoute({
     component: Outlet,
     errorComponent: ({ error }) => <div>{error.message}</div>,
@@ -182,11 +183,8 @@ it('stays on the same group page after deleting a server', async () => {
   const removeMenuItem = screen.getByRole('menuitem', { name: /remove/i })
   await user.click(removeMenuItem)
 
-  // Wait for navigation - this should stay on g1, not redirect to default
   await waitFor(
     () => {
-      // After the fix, this should be '/group/g1'
-      // Currently, the bug causes it to redirect to '/group/default'
       const pathname = testRouter.state.location.pathname
       expect(pathname).toBe('/group/g1')
     },
