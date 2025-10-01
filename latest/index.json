@@ -1,80 +1,80 @@
 {
-  "tag": "v0.7.1",
+  "tag": "v0.7.2",
   "prerelease": false,
-  "published_at": "2025-10-01T16:09:33Z",
+  "published_at": "2025-10-01T17:05:51Z",
   "base_url": "https://stacklok.github.io/toolhive-studio",
   "assets": [
     {
       "name": "RELEASES",
       "url": "https://stacklok.github.io/toolhive-studio/latest/RELEASES",
       "size": 79,
-      "sha256": "346803f9da34f222f701c4fdbb69ca5701797e63d752ba62110a8a6300972748"
+      "sha256": "c7415036411f9af02d0caaf873862a572885e2806698c6a55d858f85dded9f22"
     },
     {
-      "name": "ToolHive-0.7.1-1.x86_64.rpm",
-      "url": "https://stacklok.github.io/toolhive-studio/latest/ToolHive-0.7.1-1.x86_64.rpm",
-      "size": 124348185,
-      "sha256": "83e5bad359a3ba71856eef753f9b58cd11d26c0d9b78a5f51b268b1f6482b403"
+      "name": "ToolHive-0.7.2-1.x86_64.rpm",
+      "url": "https://stacklok.github.io/toolhive-studio/latest/ToolHive-0.7.2-1.x86_64.rpm",
+      "size": 124349089,
+      "sha256": "629710651244f505dfe489afd7b9f0f9006e1a2015f9ee7d3320afe6245c082a"
     },
     {
-      "name": "ToolHive-0.7.1-full.nupkg",
-      "url": "https://stacklok.github.io/toolhive-studio/latest/ToolHive-0.7.1-full.nupkg",
-      "size": 161733244,
-      "sha256": "226d46beccf3913e8ce309c82f69e02b35b1dfe9516fd5673bf5339ad585e06c"
+      "name": "ToolHive-0.7.2-full.nupkg",
+      "url": "https://stacklok.github.io/toolhive-studio/latest/ToolHive-0.7.2-full.nupkg",
+      "size": 161732669,
+      "sha256": "acdcf173c3b9db512dfe34c9288af25dc82e571dbc0acdea378deb01ae729a02"
     },
     {
       "name": "ToolHive-arm64.dmg",
       "url": "https://stacklok.github.io/toolhive-studio/latest/ToolHive-arm64.dmg",
-      "size": 152674362,
-      "sha256": "173ed0375ff9ba25c55b511ff5ae47566a58c3b27685ef674872cccd99c3b55d"
+      "size": 152673902,
+      "sha256": "cd813471767ab6971e872d95b076cc7785aa177408b72c439677056c9be9a29e"
     },
     {
-      "name": "ToolHive-darwin-arm64-0.7.1.zip",
-      "url": "https://stacklok.github.io/toolhive-studio/latest/ToolHive-darwin-arm64-0.7.1.zip",
-      "size": 151064382,
-      "sha256": "7ff3978b35679983960bd8698ff821cae147a7422038f5dc11a715040e3544e0"
+      "name": "ToolHive-darwin-arm64-0.7.2.zip",
+      "url": "https://stacklok.github.io/toolhive-studio/latest/ToolHive-darwin-arm64-0.7.2.zip",
+      "size": 151064200,
+      "sha256": "9788db2b9d13ba040a341473a71b87e5bcde015c97b1a41ca10002908cd177f6"
     },
     {
-      "name": "ToolHive-darwin-x64-0.7.1.zip",
-      "url": "https://stacklok.github.io/toolhive-studio/latest/ToolHive-darwin-x64-0.7.1.zip",
-      "size": 160007881,
-      "sha256": "b7025b3a77454de68921fbe576e9b54e6cd4e095d21a9b2028ba5a8496328730"
+      "name": "ToolHive-darwin-x64-0.7.2.zip",
+      "url": "https://stacklok.github.io/toolhive-studio/latest/ToolHive-darwin-x64-0.7.2.zip",
+      "size": 160007792,
+      "sha256": "7b349bb395d974a0b75d55379b0e26adf5ce0a029c0933582d53653c62a69829"
     },
     {
-      "name": "ToolHive-win32-x64-0.7.1.zip",
-      "url": "https://stacklok.github.io/toolhive-studio/latest/ToolHive-win32-x64-0.7.1.zip",
-      "size": 168134321,
-      "sha256": "84a272fadd383afbdc1d6242cd43ab3049f19911f408849467a986ef2f771f09"
+      "name": "ToolHive-win32-x64-0.7.2.zip",
+      "url": "https://stacklok.github.io/toolhive-studio/latest/ToolHive-win32-x64-0.7.2.zip",
+      "size": 168134670,
+      "sha256": "2840339d3cbe21e2a41ddc3d08990e80df453904cb93f882c31d56918a219218"
     },
     {
       "name": "ToolHive-x64.dmg",
       "url": "https://stacklok.github.io/toolhive-studio/latest/ToolHive-x64.dmg",
-      "size": 161456852,
-      "sha256": "c5c536979384717f36b1c8bcd88dde455b4ef68b628b04dceb1444d19f681f04"
+      "size": 161457033,
+      "sha256": "1bc283707b70052dec1faefb09bef0f5bd1885cd8f42a3d7fa5e7db07828e2f0"
     },
     {
       "name": "ToolHive.Setup.exe",
       "url": "https://stacklok.github.io/toolhive-studio/latest/ToolHive.Setup.exe",
-      "size": 162640056,
-      "sha256": "017f8124ab5d8de6ce1b989d564da388c6ac47057dc1830d0ffe05705878f4e4"
+      "size": 162641080,
+      "sha256": "2de5b1a219000cc54d8618765cf22e31b9015746fdcacf63f449fa74a244fae5"
     },
     {
       "name": "io.github.stacklok.toolhive_studio_stable_x86_64.flatpak",
       "url": "https://stacklok.github.io/toolhive-studio/latest/io.github.stacklok.toolhive_studio_stable_x86_64.flatpak",
-      "size": 113669912,
-      "sha256": "28fa124e44ab98bbaf4a1ea4be5a82142894a9ada2fad661b98fb6ddc9ba50a3"
+      "size": 113771688,
+      "sha256": "a3e4cc8f3c96b2c9edb46c13a9f72328daed2d8312cf202df9033747408f492f"
     },
     {
       "name": "toolhive-studio-linux-x64.tar.gz",
       "url": "https://stacklok.github.io/toolhive-studio/latest/toolhive-studio-linux-x64.tar.gz",
-      "size": 159960862,
-      "sha256": "71523b80edc6e36354e7c0af6575d8efdea425dea33dd06d91a5911d5c653adb"
+      "size": 159961398,
+      "sha256": "c2fbe0aa95e2260720959b219b96f827dd381c001ecedf43b167f27cfcc0db83"
     },
     {
-      "name": "toolhive_0.7.1_amd64.deb",
-      "url": "https://stacklok.github.io/toolhive-studio/latest/toolhive_0.7.1_amd64.deb",
-      "size": 118799374,
-      "sha256": "2ea0ff3067629feb0f29753d204ed75594efbc066f23a64b0d5ae760b9582d61"
+      "name": "toolhive_0.7.2_amd64.deb",
+      "url": "https://stacklok.github.io/toolhive-studio/latest/toolhive_0.7.2_amd64.deb",
+      "size": 118797116,
+      "sha256": "da7fef9f6b48a212a0a2243ab6a8cbf43dd6915955426843b879bfde2312bbaa"
     }
   ]
 }
