@@ -254,11 +254,30 @@ export const PromptInput = ({
       if (!accept || accept.trim() === '') {
         return true
       }
-      // Simple check: if accept includes "image/*", filter to images; otherwise allow.
-      if (accept.includes('image/*')) {
-        return f.type.startsWith('image/')
+
+      const acceptTypes = accept.split(',').map((t) => t.trim())
+
+      for (const acceptType of acceptTypes) {
+        // Check wildcard patterns like "image/*"
+        if (acceptType.includes('/*')) {
+          const prefix = acceptType.split('/')[0]
+          if (f.type.startsWith(`${prefix}/`)) {
+            return true
+          }
+        }
+        // Check file extension match
+        else if (acceptType.startsWith('.')) {
+          if (f.name.toLowerCase().endsWith(acceptType.toLowerCase())) {
+            return true
+          }
+        }
+        // Check exact MIME type match
+        else if (f.type === acceptType) {
+          return true
+        }
       }
-      return true
+
+      return false
     },
     [accept]
   )
