@@ -11,6 +11,7 @@ import { useEffect } from 'react'
 import { registryFormSchema, type RegistryFormData } from './schema'
 import { RegistryForm } from './registry-form'
 import { delay } from '../../../../../../utils/delay'
+import { trackEvent } from '@/common/lib/analytics'
 
 export function RegistryTab() {
   const { isPending: isPendingRegistry, data: registry } = useQuery({
@@ -66,12 +67,20 @@ export function RegistryTab() {
 
   const onSubmit = async (data: RegistryFormData) => {
     if (data.type === 'default') {
+      trackEvent('Registry updated', {
+        registry_type: 'default',
+        registry_source: '',
+      })
       await updateRegistry({ type: 'default' })
       form.setValue('type', 'default')
       form.setValue('source', '')
       form.trigger(['type', 'source'])
     } else {
       await updateRegistry(data)
+      trackEvent('Registry updated', {
+        registry_type: data.type,
+        registry_source: data.source,
+      })
     }
   }
 

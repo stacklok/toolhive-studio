@@ -16,6 +16,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState, useEffect } from 'react'
 import { Sun, Moon, Monitor } from 'lucide-react'
 import log from 'electron-log/renderer'
+import { trackEvent } from '@/common/lib/analytics'
 
 const CONFIRM_QUIT_STORAGE_KEY = 'doNotShowAgain_confirm_quit'
 
@@ -104,6 +105,9 @@ function TelemetryField() {
   const handleTelemetryToggle = async () => {
     if (isSentryLoading || isOptInPending || isOptOutPending) return
     if (isTelemetryEnabled) {
+      trackEvent('Telemetry disabled', {
+        telemetry_enabled: 'false',
+      })
       await sentryOptOut()
     } else {
       await sentryOptIn()

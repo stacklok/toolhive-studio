@@ -137,6 +137,7 @@ Sentry.init({
           data: {
             ...transaction.contexts.trace.data,
             'custom.user_id': instanceId,
+            auto_launch_status: `${getAutoLaunchStatus()}`,
           },
         },
       },
