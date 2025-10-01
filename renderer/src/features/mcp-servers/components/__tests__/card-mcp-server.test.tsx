@@ -141,3 +141,53 @@ it('shows "Copy server to a group" menu item and handles the complete workflow',
     }
   `)
 })
+
+it('stays on the same group page after deleting a server', async () => {
+  // this verifies that a bug reported here is fixed:
+  // https://github.com/stacklok/toolhive-studio/issues/904
+  const rootRoute = createRootRoute({
+    component: Outlet,
+    errorComponent: ({ error }) => <div>{error.message}</div>,
+  })
+
+  const groupRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/group/$groupName',
+    component: () => (
+      <CardMcpServer
+        name="fetch1"
+        status="running"
+        statusContext={undefined}
+        url="http://localhost:8080"
+        transport="http"
+        group="g1"
+      />
+    ),
+  })
+
+  const testRouter = new Router({
+    routeTree: rootRoute.addChildren([groupRoute]),
+    history: createMemoryHistory({ initialEntries: ['/group/g1'] }),
+  }) as unknown as ReturnType<typeof createTestRouter>
+
+  renderRoute(testRouter)
+
+  await waitFor(() => {
+    expect(screen.getByText('fetch1')).toBeVisible()
+  })
+
+  const user = userEvent.setup()
+  const menuButton = screen.getByRole('button', { name: /more/i })
+  await user.click(menuButton)
+
+  const removeMenuItem = screen.getByRole('menuitem', { name: /remove/i })
+  await user.click(removeMenuItem)
+
+  await waitFor(
+    () => {
+      const pathname = testRouter.state.location.pathname
+      expect(pathname).toBe('/group/g1')
+    },
+    { timeout: 5000 }
+  )
+})
