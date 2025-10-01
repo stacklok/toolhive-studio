@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Button } from '@/common/components/ui/button'
-import { Alert, AlertDescription } from '@/common/components/ui/alert'
 import { X, AlertTriangle } from 'lucide-react'
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from '@/common/components/ui/alert'
+import { Button } from '@/common/components/ui/button'
+import { Separator } from '@/common/components/ui/separator'
 
 interface ErrorAlertProps {
   error: string | null
@@ -28,8 +33,19 @@ export function ErrorAlert({ error, className = '' }: ErrorAlertProps) {
         variant="destructive"
         className="border-destructive/20 bg-destructive/10 relative"
       >
+        <AlertTitle className="flex items-center justify-between">
+          Something went wrong with the request:
+        </AlertTitle>
         <AlertTriangle className="h-4 w-4" />
-        <AlertDescription className="pr-8">{error}</AlertDescription>
+        <AlertDescription className="pr-8">
+          <Separator className="my-2 flex-wrap" />
+          <p
+            className="max-h-20 max-w-full overflow-auto font-mono text-xs
+              text-gray-300"
+          >
+            {error}
+          </p>
+        </AlertDescription>
         <Button
           variant="ghost"
           size="sm"
