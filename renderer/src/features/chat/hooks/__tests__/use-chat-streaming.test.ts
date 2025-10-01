@@ -71,7 +71,7 @@ const mockChatAPI = {
 
 // Extend the existing window.electronAPI with chat methods
 Object.defineProperty(window, 'electronAPI', {
-  value: { chat: mockChatAPI },
+  value: { chat: mockChatAPI, getInstanceId: vi.fn() },
   writable: true,
 })
 

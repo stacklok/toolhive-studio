@@ -1,8 +1,7 @@
 import * as Sentry from '@sentry/electron/renderer'
 
-const instanceId = await window.electronAPI.getInstanceId()
-
 export async function trackEvent(eventName: string, data = {}) {
+  const instanceId = await window.electronAPI.getInstanceId()
   Sentry.startSpan(
     {
       name: eventName,
@@ -25,6 +24,7 @@ export async function trackEvent(eventName: string, data = {}) {
 }
 
 export async function trackPageView(pageName: string, data = {}) {
+  const instanceId = await window.electronAPI.getInstanceId()
   Sentry.startSpan(
     {
       name: `Page: ${pageName}`,

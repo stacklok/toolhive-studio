@@ -38,7 +38,7 @@ export async function getInstanceId() {
     const updatesFilePath = path.join(userDataPath, 'updates.json')
     if (!existsSync(updatesFilePath)) {
       log.warn(`Updates file does not exist: ${updatesFilePath}`)
-      return
+      return ''
     }
 
     const content = await new Promise<string>((resolve, reject) => {
@@ -54,6 +54,6 @@ export async function getInstanceId() {
     return instanceId
   } catch (error) {
     log.error('Failed to retrieve instance_id:', error)
-    return
+    return ''
   }
 }
