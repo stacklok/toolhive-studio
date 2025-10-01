@@ -35,7 +35,7 @@ export function GridCardsRegistryServer({
         className="grid gap-4"
         style={{
           gridTemplateColumns:
-            'repeat(auto-fill, minmax(max(300px, min(400px, 100%)), 1fr))',
+            'repeat(auto-fill, minmax(max(200px, min(300px, 100%)), 1fr))',
         }}
       >
         {filteredAndSortedServers.map((server) => (
