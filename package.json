@@ -10,7 +10,8 @@
   },
   "scripts": {
     "start": "electron-forge start",
-    "e2e": "env CI=true sh -c \"tsc -b --clean && tsc -b && electron-forge package && playwright test\"",
+    "start:ephemeral": "BIN_NAME='thv.sh' BIN_ARCH='ephemeral' electron-forge start",
+    "e2e": "env CI=true sh -c \"tsc -b --clean && tsc -b && electron-forge package && BIN_NAME='thv.sh' BIN_ARCH='ephemeral' playwright test\"",
     "package": "tsc -b --clean && tsc -b && electron-forge package",
     "make": "tsc -b --clean && tsc -b && electron-forge make",
     "prettier": "prettier . --check",

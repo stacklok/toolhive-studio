@@ -22,6 +22,11 @@ import { getQuittingState } from '../app-state'
 vi.mock('node:child_process')
 vi.mock('node:fs')
 vi.mock('node:net')
+vi.mock('../../utils/delay', () => ({
+  delay: vi.fn(
+    (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+  ),
+}))
 vi.mock('electron', () => ({
   app: {
     isPackaged: false,
@@ -39,7 +44,7 @@ vi.mock('@sentry/electron/main', () => ({
     const mockScope = {
       addBreadcrumb: vi.fn(),
     }
-    callback(mockScope)
+    return callback(mockScope)
   }),
 }))
 
@@ -181,7 +186,7 @@ describe('toolhive-manager', () => {
     it('updates tray status when tray is provided', async () => {
       const startPromise = startToolhive(mockTray)
 
-      await vi.advanceTimersByTimeAsync(50)
+      await vi.advanceTimersByTimeAsync(4000)
       await startPromise
 
       expect(mockUpdateTrayStatus).toHaveBeenCalledWith(mockTray, true)
@@ -190,7 +195,7 @@ describe('toolhive-manager', () => {
     it('logs process PID after spawning', async () => {
       const startPromise = startToolhive()
 
-      await vi.advanceTimersByTimeAsync(50)
+      await vi.advanceTimersByTimeAsync(4000)
       await startPromise
 
       expect(mockLog.info).toHaveBeenCalledWith(
@@ -201,7 +206,7 @@ describe('toolhive-manager', () => {
     it('handles process error events', async () => {
       const startPromise = startToolhive(mockTray)
 
-      await vi.advanceTimersByTimeAsync(50)
+      await vi.advanceTimersByTimeAsync(4000)
       await startPromise
 
       const testError = new Error('Test spawn error')
@@ -221,7 +226,7 @@ describe('toolhive-manager', () => {
     it('handles process exit events', async () => {
       const startPromise = startToolhive(mockTray)
 
-      await vi.advanceTimersByTimeAsync(50)
+      await vi.advanceTimersByTimeAsync(4000)
       await startPromise
 
       mockProcess.emit('exit', 1)
@@ -239,7 +244,7 @@ describe('toolhive-manager', () => {
       const startPromise = startToolhive(mockTray)
 
       // Advancing the timer actually allows the promise to resolve
-      await vi.advanceTimersByTimeAsync(50)
+      await vi.advanceTimersByTimeAsync(4000)
       await startPromise
 
       mockCaptureMessage.mockClear()

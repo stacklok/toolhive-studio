@@ -7,24 +7,17 @@ import type { Tray } from 'electron'
 import { updateTrayStatus } from './system-tray'
 import log from './logger'
 import * as Sentry from '@sentry/electron/main'
+import { delay } from '../../utils/delay'
 import { getQuittingState } from './app-state'
 
-const binName = process.platform === 'win32' ? 'thv.exe' : 'thv'
+// Use environment variables for binary customization with Windows fallback
+const binName =
+  process.env.BIN_NAME ?? (process.platform === 'win32' ? 'thv.exe' : 'thv')
+const binArch = process.env.BIN_ARCH ?? `${process.platform}-${process.arch}`
+
 const binPath = app.isPackaged
-  ? path.join(
-      process.resourcesPath,
-      'bin',
-      `${process.platform}-${process.arch}`,
-      binName
-    )
-  : path.resolve(
-      __dirname,
-      '..',
-      '..',
-      'bin',
-      `${process.platform}-${process.arch}`,
-      binName
-    )
+  ? path.join(process.resourcesPath, 'bin', binArch, binName)
+  : path.resolve(__dirname, '..', '..', 'bin', binArch, binName)
 
 let toolhiveProcess: ReturnType<typeof spawn> | undefined
 let toolhivePort: number | undefined
@@ -105,7 +98,7 @@ async function findFreePort(
 }
 
 export async function startToolhive(tray?: Tray): Promise<void> {
-  Sentry.withScope<Promise<void>>(async (scope) => {
+  return Sentry.withScope<Promise<void>>(async (scope) => {
     if (!existsSync(binPath)) {
       log.error(`ToolHive binary not found at: ${binPath}`)
       return
@@ -133,6 +126,8 @@ export async function startToolhive(tray?: Tray): Promise<void> {
         detached: false,
       }
     )
+
+    await delay(4000)
 
     log.info(`[startToolhive] Process spawned with PID: ${toolhiveProcess.pid}`)
 
