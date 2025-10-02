@@ -1,12 +1,7 @@
 import { LinkViewTransition } from '@/common/components/link-view-transition'
 import { Button } from '@/common/components/ui/button'
 import { Separator } from '@/common/components/ui/separator'
-import {
-  createFileRoute,
-  Link,
-  useParams,
-  useSearch,
-} from '@tanstack/react-router'
+import { createFileRoute, Link, useParams } from '@tanstack/react-router'
 import { ChevronLeft, GithubIcon, ShieldCheck, Wrench } from 'lucide-react'
 import { getApiV1BetaRegistryByNameServersByServerNameOptions } from '@api/@tanstack/react-query.gen'
 import { useSuspenseQuery } from '@tanstack/react-query'
@@ -48,8 +43,7 @@ export const Route = createFileRoute('/(registry)/registry_/$name')({
 })
 
 export function RegistryServerDetail() {
-  const { name } = useParams({ from: '/(registry)/registry_/$name' })
-  const search = useSearch({ from: '/(registry)/registry_/$name' })
+  const { name } = useParams({ from: '/(registry)/registry_.$name' })
   const {
     data: { server: localServer, remote_server: remoteServer },
   } = useSuspenseQuery(
@@ -70,11 +64,12 @@ export function RegistryServerDetail() {
 
   // Handle deep linking: auto-open modal when coming from a deep link
   useEffect(() => {
-    if (server && search && 'server' in search) {
+    const params = new URLSearchParams(window.location.search)
+    if (server && params.has('server')) {
       setSelectedServer(server)
       setIsModalOpen(true)
     }
-  }, [server, search])
+  }, [server])
 
   if (!server) return null
 
