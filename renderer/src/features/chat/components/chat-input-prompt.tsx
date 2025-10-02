@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import type { ChatStatus, FileUIPart } from 'ai'
+import log from 'electron-log/renderer'
 import {
   PromptInput,
   PromptInputActionAddAttachments,
@@ -25,6 +26,26 @@ import {
 import { ModelSelector } from './model-selector'
 import { McpServerSelector } from './mcp-server-selector'
 import type { ChatSettings } from '../types'
+import { toast } from 'sonner'
+import { toastVariants } from '@/common/lib/toast'
+
+const errorToastConfig = {
+  max_files: {
+    id: 'error_max_files',
+    title: 'You reached the maximum number of files',
+    description: 'You can only upload up to 5 files',
+  },
+  max_file_size: {
+    id: 'error_max_file_size',
+    title: 'File size too large',
+    description: 'The file size must be less than 10MB',
+  },
+  accept: {
+    id: 'error_accept',
+    title: 'File type not supported',
+    description: 'Only images and PDFs are supported',
+  },
+} as const
 
 interface ChatInputProps {
   status: ChatStatus
@@ -195,7 +216,22 @@ export function ChatInputPrompt({
   return (
     <PromptInput
       accept="image/*,application/pdf,.pdf"
-      onError={console.error}
+      onError={(er) => {
+        if (!('code' in er)) {
+          log.error('PromptInput onError: unknown error', er)
+          return
+        }
+
+        const config = errorToastConfig[er.code]
+        if (config) {
+          toast.error(config.title, {
+            id: config.id,
+            description: config.description,
+            duration: 5000,
+            ...toastVariants.destructive,
+          })
+        }
+      }}
       onAbort={onStopGeneration}
       onSubmit={handleSubmit}
       maxFiles={5}
