@@ -2,11 +2,10 @@ import type { ReactElement } from 'react'
 
 export function Group(props: {
   name: string
-  isEnabled: boolean
   isActive: boolean
   onClick?: () => void
 }): ReactElement {
-  const { name, isEnabled, isActive, onClick } = props
+  const { name, isActive, onClick } = props
 
   return (
     <div
@@ -20,15 +19,7 @@ export function Group(props: {
       role="button"
       tabIndex={0}
     >
-      <div className="flex min-w-0 items-center gap-2">
-        <span
-          aria-hidden
-          className={`inline-block size-[7px] shrink-0 rounded-full ${
-            isEnabled ? 'bg-green-600' : 'bg-zinc-900/20 dark:bg-zinc-200/50'
-          }`}
-        />
-        <span className="truncate">{name}</span>
-      </div>
+      <span className="truncate">{name}</span>
     </div>
   )
 }

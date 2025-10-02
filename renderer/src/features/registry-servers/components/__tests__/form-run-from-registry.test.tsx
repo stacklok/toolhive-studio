@@ -659,7 +659,7 @@ describe('FormRunFromRegistry', () => {
 
     const trigger = screen.getByRole('combobox', { name: 'Group' })
     await userEvent.click(trigger)
-    const option = await screen.findByRole('option', { name: 'Research team' })
+    const option = await screen.findByRole('option', { name: 'research' })
     await userEvent.click(option)
 
     await userEvent.type(
@@ -679,13 +679,13 @@ describe('FormRunFromRegistry', () => {
     })
 
     const firstArgs = mockInstallServerMutation.mock.calls[0]?.[0]
-    expect(firstArgs?.groupName).toBe('Research team')
+    expect(firstArgs?.groupName).toBe('research')
 
     const onSuccess = mockInstallServerMutation.mock.calls[0]?.[1]?.onSuccess
     onSuccess?.()
     await waitFor(() => {
       expect(mockCheckServerStatus).toHaveBeenCalledWith(
-        expect.objectContaining({ groupName: 'Research team' })
+        expect.objectContaining({ groupName: 'research' })
       )
     })
   })

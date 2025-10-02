@@ -60,8 +60,8 @@ describe('Groups Manager in Index route (feature flagged)', () => {
 
     await waitFor(() => {
       expect(screen.getByText('default')).toBeVisible()
-      expect(screen.getByText('Research team')).toBeVisible()
-      expect(screen.getByText('Archive')).toBeVisible()
+      expect(screen.getByText('research')).toBeVisible()
+      expect(screen.getByText('archive')).toBeVisible()
     })
   })
 
@@ -69,7 +69,7 @@ describe('Groups Manager in Index route (feature flagged)', () => {
     renderRoute(router)
 
     const defaultGroup = await screen.findByText('default')
-    const groupItem = defaultGroup.closest('div')!.parentElement as HTMLElement
+    const groupItem = defaultGroup.parentElement as HTMLElement
 
     expect(groupItem).toHaveClass('rounded-md')
     expect(groupItem).toHaveClass('border', 'border-input')
@@ -77,38 +77,5 @@ describe('Groups Manager in Index route (feature flagged)', () => {
     expect(groupItem).toHaveClass('shadow-sm')
 
     expect(groupItem).toHaveClass('flex', 'h-9', 'w-[215px]', 'px-4', 'py-2')
-  })
-
-  it('shows 7px status dots with correct colors (green for enabled, gray for disabled)', async () => {
-    renderRoute(router)
-
-    const defaultGroup = await screen.findByText('default')
-    const researchGroup = await screen.findByText('Research team')
-    const archiveGroup = await screen.findByText('Archive')
-
-    for (const el of [defaultGroup, researchGroup]) {
-      const container = el.parentElement as HTMLElement
-      const dot = container.querySelector('span.rounded-full') as HTMLElement
-      expect(dot).toBeTruthy()
-      expect(dot).toHaveClass('size-[7px]')
-      expect(dot).toHaveClass('bg-green-600')
-    }
-
-    {
-      const container = archiveGroup.parentElement as HTMLElement
-      const dot = container.querySelector('span.rounded-full') as HTMLElement
-      expect(dot).toBeTruthy()
-      expect(dot).toHaveClass('size-[7px]')
-      expect(dot).toHaveClass('bg-zinc-900/20')
-    }
-  })
-
-  it('does not display textual Enabled/Disabled labels', async () => {
-    renderRoute(router)
-
-    await waitFor(() => {
-      expect(screen.queryByText(/Enabled/i)).toBeNull()
-      expect(screen.queryByText(/Disabled/i)).toBeNull()
-    })
   })
 })
