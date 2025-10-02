@@ -1,4 +1,6 @@
 import { app, BrowserWindow } from 'electron'
+import { existsSync, readFile } from 'node:fs'
+import path from 'node:path'
 import log from './logger'
 import { delay } from '../../utils/delay'
 
@@ -27,5 +29,31 @@ export function isOfficialReleaseBuild(): boolean {
   } catch {
     log.error('Failed to get app version')
     return false
+  }
+}
+
+export async function getInstanceId() {
+  try {
+    const userDataPath = app.getPath('userData')
+    const updatesFilePath = path.join(userDataPath, 'updates.json')
+    if (!existsSync(updatesFilePath)) {
+      log.warn(`Updates file does not exist: ${updatesFilePath}`)
+      return ''
+    }
+
+    const content = await new Promise<string>((resolve, reject) => {
+      readFile(updatesFilePath, 'utf8', (err, data) => {
+        if (err) reject(err)
+        else resolve(data)
+      })
+    })
+
+    const updatesData = JSON.parse(content)
+    const instanceId = updatesData?.instance_id
+    log.info(`Retrieved instance_id: ${instanceId}`)
+    return instanceId
+  } catch (error) {
+    log.error('Failed to retrieve instance_id:', error)
+    return ''
   }
 }

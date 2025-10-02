@@ -16,9 +16,12 @@ import { useConfirmQuit } from '@/common/hooks/use-confirm-quit'
 import { QuitConfirmationListener } from './quit-confirmation-listener'
 import { SettingsIcon } from 'lucide-react'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { useRouterState } from '@tanstack/react-router'
 
 function TopNavLinks() {
   const isPlaygroundEnabled = useFeatureFlag('playground')
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const isGroupRoute = pathname.startsWith('/group/')
 
   return (
     <NavigationMenu>
@@ -44,6 +47,7 @@ function TopNavLinks() {
               data-[status=active]:hover:bg-transparent
               data-[status=active]:focus:bg-transparent
               data-[status=hover]:bg-transparent"
+            data-status={isGroupRoute ? 'active' : undefined}
             asChild
           >
             <LinkViewTransition to="/group/default">
@@ -113,7 +117,7 @@ function TopNavLinks() {
               hover:text-foreground focus:text-foreground
               data-[status=active]:text-foreground
               data-[status=active]:before:bg-foreground
-              focus-visible:ring-ring/50 relative py-2 pr-0 pl-3 text-sm
+              focus-visible:ring-ring/50 relative px-3 py-2 text-sm
               transition-all outline-none hover:bg-transparent
               focus:bg-transparent focus-visible:ring-[3px]
               focus-visible:outline-1 data-[status=active]:bg-transparent
@@ -169,9 +173,9 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
   return (
     <TopNavContainer {...props}>
       <QuitConfirmationListener />
-      <div className="flex h-10 items-center gap-4">
+      <div className="flex h-10 items-center">
         <TopNavLinks />
-        <Separator orientation="vertical" />
+        <Separator orientation="vertical" className="mr-4 ml-2" />
         <div className="flex items-center gap-2">
           <LinkViewTransition to="/settings" className="app-region-no-drag">
             <SettingsIcon className="text-muted-foreground size-4" />

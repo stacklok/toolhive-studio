@@ -21,6 +21,7 @@ beforeAll(() => {
         getLastShutdownServers: async () => [],
         clearShutdownHistory: async () => ({ success: true }),
       } as ElectronAPI['shutdownStore'],
+      getInstanceId: async () => 'test-instance-id',
     }
     Object.defineProperty(window, 'electronAPI', {
       value: electronStub as ElectronAPI,

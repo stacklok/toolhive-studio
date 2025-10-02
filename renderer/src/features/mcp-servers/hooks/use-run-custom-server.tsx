@@ -65,6 +65,7 @@ export function useRunCustomServer({
       trackEvent(`Workload ${data.name} started`, {
         workload: data.name,
         transport: data.transport,
+        type: data.type,
         'route.pathname': '/',
       })
     },

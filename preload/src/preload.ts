@@ -26,6 +26,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   isOfficialReleaseBuild: () => ipcRenderer.invoke('is-official-release-build'),
   getTelemetryHeaders: () => ipcRenderer.invoke('telemetry-headers'),
 
+  getInstanceId: () => ipcRenderer.invoke('get-instance-id'),
+
   // ToolHive port
   getToolhivePort: () => ipcRenderer.invoke('get-toolhive-port'),
   getToolhiveMcpPort: () => ipcRenderer.invoke('get-toolhive-mcp-port'),
@@ -284,6 +286,7 @@ export interface ElectronAPI {
     optIn: () => Promise<boolean>
     optOut: () => Promise<boolean>
   }
+  getInstanceId: () => Promise<string>
   getMainLogContent: () => Promise<string>
   isMac: boolean
   isWindows: boolean
