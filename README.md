@@ -72,7 +72,7 @@ setup, no security headaches, no runtime hassles.
 ## Getting started
 
 To get started with ToolHive, download the latest release from
-[the website](https://toolhive.dev/download.html) and follow the
+[the website](https://toolhive.dev/download/) and follow the
 [quickstart guide](https://docs.stacklok.com/toolhive/tutorials/quickstart-ui).
 
 ---
