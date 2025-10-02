@@ -43,7 +43,7 @@ export const Route = createFileRoute('/(registry)/registry_/$name')({
 })
 
 export function RegistryServerDetail() {
-  const { name } = useParams({ from: '/(registry)/registry_.$name' })
+  const { name } = useParams({ from: '/(registry)/registry_/$name' })
   const {
     data: { server: localServer, remote_server: remoteServer },
   } = useSuspenseQuery(
