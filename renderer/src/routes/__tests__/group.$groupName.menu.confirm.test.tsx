@@ -122,7 +122,11 @@ describe('Group route delete group confirmation', () => {
 
     await new Promise((r) => setTimeout(r, 10))
 
-    expect(recFlow.recordedRequests).toEqual([])
+    // Filter out workload requests made by GroupsManager on sidebar
+    const nonWorkloadRequests = recFlow.recordedRequests.filter(
+      (req) => req.pathname !== '/api/v1beta/workloads'
+    )
+    expect(nonWorkloadRequests).toEqual([])
     expect(router.state.location.pathname).toBe('/group/research')
   })
 
@@ -168,7 +172,11 @@ describe('Group route delete group confirmation', () => {
         'The default group cannot be deleted'
       )
     })
-    expect(recFlow.recordedRequests).toEqual([])
+    // Filter out workload requests made by GroupsManager on sidebar
+    const nonWorkloadRequests = recFlow.recordedRequests.filter(
+      (req) => req.pathname !== '/api/v1beta/workloads'
+    )
+    expect(nonWorkloadRequests).toEqual([])
     expect(router.state.location.pathname).toBe('/group/default')
   })
 

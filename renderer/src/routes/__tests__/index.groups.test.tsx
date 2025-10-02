@@ -60,8 +60,8 @@ describe('Groups Manager in Index route (feature flagged)', () => {
 
     await waitFor(() => {
       expect(screen.getByText('default')).toBeVisible()
-      expect(screen.getByText('Research team')).toBeVisible()
-      expect(screen.getByText('Archive')).toBeVisible()
+      expect(screen.getByText('research')).toBeVisible()
+      expect(screen.getByText('archive')).toBeVisible()
     })
   })
 
@@ -83,19 +83,22 @@ describe('Groups Manager in Index route (feature flagged)', () => {
     renderRoute(router)
 
     const defaultGroup = await screen.findByText('default')
-    const researchGroup = await screen.findByText('Research team')
-    const archiveGroup = await screen.findByText('Archive')
+    const researchGroup = await screen.findByText('research')
+    const archiveGroup = await screen.findByText('archive')
 
-    for (const el of [defaultGroup, researchGroup]) {
-      const container = el.parentElement as HTMLElement
+    // Default group should be enabled (has running workloads: vscode-server, osv-2, osv)
+    {
+      const container = defaultGroup.parentElement as HTMLElement
       const dot = container.querySelector('span.rounded-full') as HTMLElement
       expect(dot).toBeTruthy()
       expect(dot).toHaveClass('size-[7px]')
       expect(dot).toHaveClass('bg-green-600')
     }
 
-    {
-      const container = archiveGroup.parentElement as HTMLElement
+    // Research group should be disabled (all workloads are stopped: github, fetch)
+    // Archive group should be disabled (no workloads)
+    for (const el of [researchGroup, archiveGroup]) {
+      const container = el.parentElement as HTMLElement
       const dot = container.querySelector('span.rounded-full') as HTMLElement
       expect(dot).toBeTruthy()
       expect(dot).toHaveClass('size-[7px]')
