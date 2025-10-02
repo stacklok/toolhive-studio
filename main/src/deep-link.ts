@@ -102,9 +102,7 @@ export async function handleDeepLink(url: string): Promise<void> {
  */
 export function generateInstallServerLink(
   serverName: string,
-  registryName?: string,
-  environment?: Record<string, string>,
-  secrets?: Record<string, string>
+  registryName?: string
 ): string {
   const url = new URL('toolhive://install-server')
 
@@ -112,20 +110,6 @@ export function generateInstallServerLink(
 
   if (registryName) {
     url.searchParams.set('registry', registryName)
-  }
-
-  // Add environment variables with env_ prefix
-  if (environment) {
-    for (const [key, value] of Object.entries(environment)) {
-      url.searchParams.set(`env_${key}`, value)
-    }
-  }
-
-  // Add secrets with secret_ prefix
-  if (secrets) {
-    for (const [key, value] of Object.entries(secrets)) {
-      url.searchParams.set(`secret_${key}`, value)
-    }
   }
 
   return url.toString()
@@ -136,9 +120,7 @@ export function generateInstallServerLink(
  */
 export function generateCliCommand(
   serverName: string,
-  registryName?: string,
-  environment?: Record<string, string>,
-  secrets?: Record<string, string>
+  registryName?: string
 ): string {
   let command = `thv run`
 
@@ -147,20 +129,6 @@ export function generateCliCommand(
   }
 
   command += ` ${serverName}`
-
-  // Add environment variables
-  if (environment) {
-    for (const [key, value] of Object.entries(environment)) {
-      command += ` --env ${key}=${value}`
-    }
-  }
-
-  // Add secrets (note: in real usage, secrets should be set separately for security)
-  if (secrets) {
-    for (const [key] of Object.entries(secrets)) {
-      command += ` --secret ${key}=<your-${key.toLowerCase().replace(/_/g, '-')}>`
-    }
-  }
 
   return command
 }

@@ -204,31 +204,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Deep linking functions
   deepLink: {
-    generateInstallLink: (
-      serverName: string,
-      registryName?: string,
-      environment?: Record<string, string>,
-      secrets?: Record<string, string>
-    ) =>
+    generateInstallLink: (serverName: string, registryName?: string) =>
       ipcRenderer.invoke(
         'deep-link:generate-install-link',
         serverName,
-        registryName,
-        environment,
-        secrets
+        registryName
       ),
-    generateCliCommand: (
-      serverName: string,
-      registryName?: string,
-      environment?: Record<string, string>,
-      secrets?: Record<string, string>
-    ) =>
+    generateCliCommand: (serverName: string, registryName?: string) =>
       ipcRenderer.invoke(
         'deep-link:generate-cli-command',
         serverName,
-        registryName,
-        environment,
-        secrets
+        registryName
       ),
     onNavigate: (callback: (data: unknown) => void) => {
       ipcRenderer.on('deep-link-navigate', (_, data) => callback(data))
@@ -488,15 +474,11 @@ export interface ElectronAPI {
   deepLink: {
     generateInstallLink: (
       serverName: string,
-      registryName?: string,
-      environment?: Record<string, string>,
-      secrets?: Record<string, string>
+      registryName?: string
     ) => Promise<string>
     generateCliCommand: (
       serverName: string,
-      registryName?: string,
-      environment?: Record<string, string>,
-      secrets?: Record<string, string>
+      registryName?: string
     ) => Promise<string>
     onNavigate: (callback: (data: unknown) => void) => () => void
   }
