@@ -1,0 +1,39 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug ToolHive Studio Main Process",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/.bin/electron-forge",
+      "args": ["start", "--", "--inspect=9229"],
+      "env": {
+        "NODE_ENV": "development",
+        "PATH": "/Users/nigel/.nvm/versions/node/v22.20.0/bin:${env:PATH}"
+      },
+      "runtimeExecutable": "/Users/nigel/.nvm/versions/node/v22.20.0/bin/node",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Attach to ToolHive Studio",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Launch ToolHive Studio (Terminal)",
+      "type": "node",
+      "request": "launch",
+      "program": "/Users/nigel/.nvm/versions/node/v22.20.0/bin/pnpm",
+      "args": ["run", "start:debug"],
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ]
+}

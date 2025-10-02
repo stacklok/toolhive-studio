@@ -12,6 +12,7 @@ import {
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { Toaster } from '@/common/components/ui/sonner'
 import { getApiV1BetaSecretsDefaultOptions } from '@api/@tanstack/react-query.gen'
+import { useDeepLink } from '@/common/hooks/use-deep-link'
 import '@fontsource/space-mono/400.css'
 import '@fontsource/atkinson-hyperlegible/400.css'
 import '@fontsource/atkinson-hyperlegible/700.css'
@@ -46,6 +47,9 @@ async function setupSecretProvider(queryClient: QueryClient) {
 function RootComponent() {
   const matches = useMatches()
   const isShutdownRoute = matches.some((match) => match.routeId === '/shutdown')
+
+  // Initialize deep link handling
+  useDeepLink()
 
   return (
     <>

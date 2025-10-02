@@ -200,6 +200,42 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('utils:get-workload-available-tools', workload),
   },
 
+  // Deep linking functions
+  deepLink: {
+    generateInstallLink: (
+      serverName: string,
+      registryName?: string,
+      environment?: Record<string, string>,
+      secrets?: Record<string, string>
+    ) =>
+      ipcRenderer.invoke(
+        'deep-link:generate-install-link',
+        serverName,
+        registryName,
+        environment,
+        secrets
+      ),
+    generateCliCommand: (
+      serverName: string,
+      registryName?: string,
+      environment?: Record<string, string>,
+      secrets?: Record<string, string>
+    ) =>
+      ipcRenderer.invoke(
+        'deep-link:generate-cli-command',
+        serverName,
+        registryName,
+        environment,
+        secrets
+      ),
+    onNavigate: (callback: (data: unknown) => void) => {
+      ipcRenderer.on('deep-link-navigate', (_, data) => callback(data))
+      return () => {
+        ipcRenderer.removeListener('deep-link-navigate', callback)
+      }
+    },
+  },
+
   // IPC event listeners for streaming
   on: (channel: string, listener: (...args: unknown[]) => void) => {
     ipcRenderer.on(channel, (_, ...args) => listener(...args))
@@ -445,6 +481,21 @@ export interface ElectronAPI {
         >
       | undefined
     >
+  }
+  deepLink: {
+    generateInstallLink: (
+      serverName: string,
+      registryName?: string,
+      environment?: Record<string, string>,
+      secrets?: Record<string, string>
+    ) => Promise<string>
+    generateCliCommand: (
+      serverName: string,
+      registryName?: string,
+      environment?: Record<string, string>,
+      secrets?: Record<string, string>
+    ) => Promise<string>
+    onNavigate: (callback: (data: unknown) => void) => () => void
   }
 
   // IPC event listeners for streaming

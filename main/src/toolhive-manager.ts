@@ -10,21 +10,26 @@ import * as Sentry from '@sentry/electron/main'
 import { getQuittingState } from './app-state'
 
 const binName = process.platform === 'win32' ? 'thv.exe' : 'thv'
-const binPath = app.isPackaged
-  ? path.join(
-      process.resourcesPath,
-      'bin',
-      `${process.platform}-${process.arch}`,
-      binName
-    )
-  : path.resolve(
-      __dirname,
-      '..',
-      '..',
-      'bin',
-      `${process.platform}-${process.arch}`,
-      binName
-    )
+
+// Allow override via environment variable for development
+const customBinPath = process.env.TOOLHIVE_BINARY_PATH
+const binPath =
+  customBinPath ||
+  (app.isPackaged
+    ? path.join(
+        process.resourcesPath,
+        'bin',
+        `${process.platform}-${process.arch}`,
+        binName
+      )
+    : path.resolve(
+        __dirname,
+        '..',
+        '..',
+        'bin',
+        `${process.platform}-${process.arch}`,
+        binName
+      ))
 
 let toolhiveProcess: ReturnType<typeof spawn> | undefined
 let toolhivePort: number | undefined

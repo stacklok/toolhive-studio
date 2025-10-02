@@ -178,7 +178,7 @@ export async function createMainWindow(
     await loadWindowContent(mainWindow)
 
     // Setup developer tools in development
-    if (isDevelopment && import.meta.env.VITE_ENABLE_AUTO_DEVTOOLS === 'true') {
+    if (isDevelopment && process.env.VITE_ENABLE_AUTO_DEVTOOLS === 'true') {
       mainWindow.webContents.openDevTools()
     }
 

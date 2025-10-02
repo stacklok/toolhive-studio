@@ -53,6 +53,13 @@ import {
   resetUpdateState,
   checkForUpdates,
 } from './auto-update'
+import {
+  handleDeepLink,
+  registerProtocol,
+  generateInstallServerLink,
+  generateCliCommand,
+} from './deep-link'
+import { startControlServer, stopControlServer } from './control-server'
 import Store from 'electron-store'
 import { getHeaders } from './headers'
 import {
@@ -159,6 +166,13 @@ export async function blockQuit(source: string, event?: Electron.Event) {
     // Stop the embedded ToolHive server
     stopToolhive()
 
+    // Stop control server
+    try {
+      await stopControlServer()
+    } catch (error) {
+      log.error('Failed to stop control server during cleanup:', error)
+    }
+
     safeTrayDestroy(getTray())
     app.quit()
   }
@@ -186,6 +200,9 @@ if (started) {
   app.quit()
 }
 
+// Register custom protocol for deep linking
+registerProtocol()
+
 // ────────────────────────────────────────────────────────────────────────────
 //  Main-window management is now handled by MainWindowManager
 // ────────────────────────────────────────────────────────────────────────────
@@ -209,8 +226,23 @@ app.whenReady().then(async () => {
     () => createMainWindow()
   )
 
+  // Handle deep links on app launch (macOS/Linux)
+  const argv = process.argv
+  const deepLinkUrl = argv.find((arg) => arg.startsWith('toolhive://'))
+  if (deepLinkUrl) {
+    // Delay handling to ensure app is fully ready
+    setTimeout(() => handleDeepLink(deepLinkUrl), 1000)
+  }
+
   // Start ToolHive with tray reference
   await startToolhive(getTray() || undefined)
+
+  // Start control server for deep link navigation
+  try {
+    await startControlServer()
+  } catch (error) {
+    log.error('Failed to start control server:', error)
+  }
 
   // Create main window
   try {
@@ -284,6 +316,28 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
 
+// Handle deep links on Windows/Linux (second instance)
+app.on('second-instance', (_event, commandLine) => {
+  // Someone tried to run a second instance, focus our window instead
+  const mainWindow = getMainWindow()
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore()
+    mainWindow.focus()
+  }
+
+  // Handle deep link from command line
+  const deepLinkUrl = commandLine.find((arg) => arg.startsWith('toolhive://'))
+  if (deepLinkUrl) {
+    handleDeepLink(deepLinkUrl)
+  }
+})
+
+// Handle deep links on macOS
+app.on('open-url', (event, url) => {
+  event.preventDefault()
+  handleDeepLink(url)
+})
+
 app.on('activate', async () => {
   try {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -331,6 +385,11 @@ app.on('will-quit', (e) => blockQuit('will-quit', e))
       }
     } finally {
       stopToolhive()
+      try {
+        await stopControlServer()
+      } catch (error) {
+        log.error('Failed to stop control server during signal cleanup:', error)
+      }
       safeTrayDestroy(getTray())
       process.exit(0)
     }
@@ -744,4 +803,36 @@ ipcMain.handle(
 // Workload tools discovery handler
 ipcMain.handle('utils:get-workload-available-tools', async (_, workload) =>
   getWorkloadAvailableTools(workload)
+)
+
+// Deep link handlers
+ipcMain.handle(
+  'deep-link:generate-install-link',
+  (
+    _,
+    serverName: string,
+    registryName?: string,
+    environment?: Record<string, string>,
+    secrets?: Record<string, string>
+  ) => {
+    return generateInstallServerLink(
+      serverName,
+      registryName,
+      environment,
+      secrets
+    )
+  }
+)
+
+ipcMain.handle(
+  'deep-link:generate-cli-command',
+  (
+    _,
+    serverName: string,
+    registryName?: string,
+    environment?: Record<string, string>,
+    secrets?: Record<string, string>
+  ) => {
+    return generateCliCommand(serverName, registryName, environment, secrets)
+  }
 )
