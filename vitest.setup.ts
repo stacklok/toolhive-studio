@@ -22,6 +22,11 @@ beforeAll(() => {
         clearShutdownHistory: async () => ({ success: true }),
       } as ElectronAPI['shutdownStore'],
       getInstanceId: async () => 'test-instance-id',
+      deepLink: {
+        onNavigate: () => () => {},
+        generateInstallLink: async () => '',
+        generateCliCommand: async () => '',
+      },
     }
     Object.defineProperty(window, 'electronAPI', {
       value: electronStub as ElectronAPI,

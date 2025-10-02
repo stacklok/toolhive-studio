@@ -200,6 +200,7 @@ function handleNavigateGet(url: URL, res: ServerResponse): void {
 
 /**
  * Get the control server URL
+ * @public
  */
 export function getControlServerUrl(): string {
   return `http://${CONTROL_HOST}:${CONTROL_PORT}`
@@ -207,6 +208,7 @@ export function getControlServerUrl(): string {
 
 /**
  * Check if the control server is running (for external tools)
+ * @public
  */
 export async function isControlServerRunning(): Promise<boolean> {
   return new Promise((resolve) => {

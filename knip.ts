@@ -34,10 +34,6 @@ export default {
     interface: true,
     type: true,
   },
-  ignoreExports: [
-    '^getControlServerUrl$', // Public API for external tools
-    '^isControlServerRunning$', // Public API for external tools
-  ],
   ignoreDependencies: [
     '@electron-forge/maker-dmg', // Used indirectly in MakerDMGWithArch
     '@electron-forge/publisher-github',
