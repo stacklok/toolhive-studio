@@ -30,6 +30,10 @@ export default {
     'renderer/src/types/global.d.ts',
     'main/src/vite-env.d.ts',
   ],
+  ignoreExportsUsedInFile: {
+    interface: true,
+    type: true,
+  },
   ignoreDependencies: [
     '@electron-forge/maker-dmg', // Used indirectly in MakerDMGWithArch
     '@electron-forge/publisher-github',
