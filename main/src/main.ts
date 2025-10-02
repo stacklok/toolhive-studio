@@ -839,31 +839,14 @@ ipcMain.handle('utils:get-workload-available-tools', async (_, workload) =>
 // Deep link handlers
 ipcMain.handle(
   'deep-link:generate-install-link',
-  (
-    _,
-    serverName: string,
-    registryName?: string,
-    environment?: Record<string, string>,
-    secrets?: Record<string, string>
-  ) => {
-    return generateInstallServerLink(
-      serverName,
-      registryName,
-      environment,
-      secrets
-    )
+  (_, serverName: string, registryName?: string) => {
+    return generateInstallServerLink(serverName, registryName)
   }
 )
 
 ipcMain.handle(
   'deep-link:generate-cli-command',
-  (
-    _,
-    serverName: string,
-    registryName?: string,
-    environment?: Record<string, string>,
-    secrets?: Record<string, string>
-  ) => {
-    return generateCliCommand(serverName, registryName, environment, secrets)
+  (_, serverName: string, registryName?: string) => {
+    return generateCliCommand(serverName, registryName)
   }
 )
