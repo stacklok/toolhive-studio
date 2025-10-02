@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import type { ChatStatus, FileUIPart } from 'ai'
+import log from 'electron-log/renderer'
 import {
   PromptInput,
   PromptInputActionAddAttachments,
@@ -25,6 +26,8 @@ import {
 import { ModelSelector } from './model-selector'
 import { McpServerSelector } from './mcp-server-selector'
 import type { ChatSettings } from '../types'
+import { toast } from 'sonner'
+import { toastVariants } from '@/common/lib/toast'
 
 interface ChatInputProps {
   status: ChatStatus
@@ -195,7 +198,36 @@ export function ChatInputPrompt({
   return (
     <PromptInput
       accept="image/*,application/pdf,.pdf"
-      onError={console.error}
+      onError={(er) => {
+        if (!('code' in er)) {
+          log.error('PromptInput onError: unknown error', er)
+          return
+        }
+
+        if (er.code === 'max_files') {
+          toast.error('You reached the maximum number of files', {
+            id: 'error_max_files',
+            description: 'You can only upload up to 5 files',
+            duration: 5000,
+            ...toastVariants.destructive,
+          })
+        }
+        if (er.code === 'max_file_size') {
+          toast.error('File size must be less than 10MB', {
+            id: 'error_max_file_size',
+            duration: 5000,
+            ...toastVariants.destructive,
+          })
+        }
+        if (er.code === 'accept') {
+          toast.error('File type not supported', {
+            id: 'error_accept',
+            description: 'Only images and PDFs are supported',
+            duration: 5000,
+            ...toastVariants.destructive,
+          })
+        }
+      }}
       onAbort={onStopGeneration}
       onSubmit={handleSubmit}
       maxFiles={5}
