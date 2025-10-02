@@ -19,17 +19,19 @@ toolhive://action?parameter=value
 ### Supported Actions
 
 #### `install-server`
+
 Navigate to the server installation page in the registry.
 
 **Parameters:**
+
 - `server` (required): Server name to install
 - `registry` (optional): Registry name (defaults to 'official')
 
 **Example:**
+
 ```
 toolhive://install-server?server=github&registry=official
 ```
-
 
 ## HTTP Control Endpoint
 
@@ -38,9 +40,11 @@ When ToolHive Studio is running, it starts an HTTP control server on `http://127
 ### Endpoints
 
 #### `GET /health`
+
 Check if the control server is running.
 
 **Response:**
+
 ```json
 {
   "status": "ok",
@@ -50,9 +54,11 @@ Check if the control server is running.
 ```
 
 #### `POST /navigate`
+
 Navigate to a deep link URL.
 
 **Request Body:**
+
 ```json
 {
   "url": "toolhive://install-server?server=github-mcp-server"
@@ -60,6 +66,7 @@ Navigate to a deep link URL.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -68,9 +75,11 @@ Navigate to a deep link URL.
 ```
 
 #### `GET /navigate?url=<encoded-url>`
+
 Alternative GET endpoint for navigation.
 
 **Example:**
+
 ```
 GET /navigate?url=toolhive%3A//install-server%3Fserver%3Dgithub-mcp-server
 ```
@@ -78,20 +87,24 @@ GET /navigate?url=toolhive%3A//install-server%3Fserver%3Dgithub-mcp-server
 ## Usage Examples
 
 ### From Documentation
+
 Include deep links in your MCP server documentation:
 
-```markdown
+````markdown
 ## Quick Install
 
 Click here to install in ToolHive Studio:
 [Install GitHub MCP Server](toolhive://install-server?server=github-mcp-server&registry=official)
 
 Or run this command:
+
 ```bash
 thv run --registry official github-mcp-server
 ```
+````
 
 ### From Error Messages
+
 When a required secret is missing, generate a deep link:
 
 ```typescript
@@ -100,6 +113,7 @@ console.error(`Missing API_KEY. Configure it here: ${deepLink}`)
 ```
 
 ### From External Tools
+
 Use the HTTP control endpoint to navigate programmatically:
 
 ```bash
@@ -113,29 +127,30 @@ curl -X POST http://127.0.0.1:51234/navigate \
 ```
 
 ### From JavaScript/Node.js
+
 ```javascript
 async function openInToolHive(serverName, environment = {}, secrets = {}) {
   const url = new URL('toolhive://install-server')
   url.searchParams.set('server', serverName)
-  
+
   // Add environment variables
   for (const [key, value] of Object.entries(environment)) {
     url.searchParams.set(`env_${key}`, value)
   }
-  
+
   // Add secrets
   for (const [key, value] of Object.entries(secrets)) {
     url.searchParams.set(`secret_${key}`, value)
   }
-  
+
   // Try HTTP control endpoint first (if UI is running)
   try {
     const response = await fetch('http://127.0.0.1:51234/navigate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: url.toString() })
+      body: JSON.stringify({ url: url.toString() }),
     })
-    
+
     if (response.ok) {
       console.log('Navigated via control endpoint')
       return
@@ -143,7 +158,7 @@ async function openInToolHive(serverName, environment = {}, secrets = {}) {
   } catch (error) {
     // Control endpoint not available, fall back to OS
   }
-  
+
   // Fallback to OS deep link (will launch app if not running)
   window.open(url.toString(), '_blank')
 }

@@ -45,6 +45,31 @@ beforeAll(() => {
     ),
   }))
 
+  vi.mock('electron-log', () => ({
+    default: new Proxy(
+      {},
+      {
+        get: () => vi.fn(() => new Proxy({}, { get: () => vi.fn() })),
+      }
+    ),
+  }))
+
+  vi.mock('electron', () => ({
+    app: {
+      getPath: vi.fn(() => '/tmp/test'),
+      getName: vi.fn(() => 'test-app'),
+      on: vi.fn(),
+      whenReady: vi.fn(() => Promise.resolve()),
+      setAsDefaultProtocolClient: vi.fn(),
+      requestSingleInstanceLock: vi.fn(() => true),
+    },
+    BrowserWindow: vi.fn(),
+    ipcMain: {
+      handle: vi.fn(),
+      on: vi.fn(),
+    },
+  }))
+
   vi.mock('sonner', () => ({
     Toaster: () => null,
     toast: {
