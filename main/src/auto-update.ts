@@ -16,6 +16,8 @@ import {
   isCurrentVersionOlder,
   normalizeVersion,
 } from '../../utils/parse-release-version'
+import { createMainWindow } from './main-window'
+import Store from 'electron-store'
 
 interface ReleaseAsset {
   name: string
@@ -32,6 +34,10 @@ interface ReleaseInfo {
   assets: ReleaseAsset[]
 }
 
+const store = new Store<{
+  isAutoUpdateEnabled: boolean
+}>({ name: 'auto-update', defaults: { isAutoUpdateEnabled: true } })
+
 let pendingUpdateVersion: string | null = null
 let updateState:
   | 'checking'
@@ -39,7 +45,6 @@ let updateState:
   | 'downloaded'
   | 'installing'
   | 'none' = 'none'
-let isAutoUpdateEnabled = false
 
 /**
  * Gets all download assets for the current platform
@@ -167,19 +172,17 @@ let createWindow: () => Promise<BrowserWindow> = () => {
 }
 
 export function initAutoUpdate({
-  isAutoUpdateEnabled: enabled,
   isManualUpdate = false,
   mainWindowGetter,
   windowCreator,
 }: {
-  isAutoUpdateEnabled: boolean
   isManualUpdate?: boolean
   mainWindowGetter: () => BrowserWindow | null
   windowCreator: () => Promise<BrowserWindow>
 }) {
   getMainWindow = mainWindowGetter
   createWindow = windowCreator
-  isAutoUpdateEnabled = enabled
+  const isAutoUpdateEnabled = store.get('isAutoUpdateEnabled', true)
 
   if (!isAutoUpdateEnabled && !isManualUpdate) {
     log.info('[update] Auto update is disabled, skipping initialization')
@@ -339,7 +342,8 @@ export function setAutoUpdateEnabled(enabled: boolean) {
   log.info(
     `[update] Auto update ${enabled ? 'enabled' : 'disabled'} dynamically`
   )
-  isAutoUpdateEnabled = enabled
+
+  store.set('isAutoUpdateEnabled', enabled)
 
   if (!enabled) {
     // Reset update state when disabled
@@ -359,6 +363,10 @@ export function checkForUpdates() {
 
 export function getUpdateState() {
   return updateState
+}
+
+export function getIsAutoUpdateEnabled() {
+  return store.get('isAutoUpdateEnabled')
 }
 
 export async function getLatestAvailableVersion() {
@@ -402,4 +410,12 @@ export async function getLatestAvailableVersion() {
       isNewVersionAvailable: false,
     }
   }
+}
+
+export function manualUpdate() {
+  initAutoUpdate({
+    isManualUpdate: true,
+    mainWindowGetter: () => getMainWindow(),
+    windowCreator: () => createMainWindow(),
+  })
 }
