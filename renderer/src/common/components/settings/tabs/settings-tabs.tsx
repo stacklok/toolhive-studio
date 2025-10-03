@@ -46,7 +46,15 @@ export function SettingsTabs() {
                 data-[state=active]:text-accent-foreground w-full cursor-pointer
                 justify-start py-2 text-base data-[state=active]:shadow-none"
             >
-              {tab.label}
+              <div className="relative">
+                {tab.label}
+                {tab.value === 'version' && (
+                  <div
+                    className="bg-muted-foreground absolute -top-0 -right-2
+                      size-2 rounded-full"
+                  />
+                )}
+              </div>
             </TabsTrigger>
           ))}
         </TabsList>
