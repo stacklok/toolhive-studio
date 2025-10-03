@@ -17,14 +17,14 @@ import {
   normalizeVersion,
 } from '../../utils/parse-release-version'
 
-export interface ReleaseAsset {
+interface ReleaseAsset {
   name: string
   url: string
   size: number
   sha256: string
 }
 
-export interface ReleaseInfo {
+interface ReleaseInfo {
   tag: string
   prerelease: boolean
   published_at: string
