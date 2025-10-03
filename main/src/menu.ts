@@ -1,6 +1,7 @@
 import { Menu, app } from 'electron'
 import { getAutoLaunchStatus, setAutoLaunch } from './auto-launch'
 import { updateTrayStatus } from './system-tray'
+import { handleCheckForUpdates } from './utils/update-dialogs'
 import log from './logger'
 
 function createAutoLaunchItem(accelerator: string) {
@@ -51,6 +52,13 @@ export function createApplicationMenu() {
       label: app.getName(),
       submenu: [
         { role: 'about' as const },
+        { type: 'separator' as const },
+        {
+          label: 'Check for Updates...',
+          click: async () => {
+            await handleCheckForUpdates()
+          },
+        },
         { type: 'separator' as const },
         createAutoLaunchItem(isMac ? 'Cmd+L' : 'Ctrl+L'),
         { type: 'separator' as const },
