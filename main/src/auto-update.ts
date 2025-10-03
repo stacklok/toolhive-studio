@@ -377,12 +377,13 @@ export async function getLatestAvailableVersion() {
     }
     const data = await response.json()
     const latestTag = getAssetForCurrentPlatform(data)
+    const currentVersion = getAppVersion()
 
     return {
-      currentVersion: getAppVersion(),
+      currentVersion: currentVersion,
       latestVersion: latestTag,
       isNewVersionAvailable: isCurrentVersionOlder(
-        getAppVersion(),
+        currentVersion,
         normalizeVersion(latestTag ?? '')
       ),
     }
