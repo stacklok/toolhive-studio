@@ -26,6 +26,9 @@ vi.mock('electron', () => ({
     isPackaged: false,
     getPath: vi.fn().mockReturnValue('/test/userData'),
   },
+  ipcMain: {
+    handle: vi.fn(),
+  },
 }))
 vi.mock('../system-tray')
 vi.mock('../logger')
@@ -41,6 +44,18 @@ vi.mock('@sentry/electron/main', () => ({
     callback(mockScope)
   }),
 }))
+
+// Mock electron-store
+vi.mock('electron-store', () => {
+  const mockStoreInstance = {
+    get: vi.fn((_key: string, defaultValue?: unknown) => defaultValue ?? true),
+    set: vi.fn(),
+  }
+
+  return {
+    default: vi.fn().mockImplementation(() => mockStoreInstance),
+  }
+})
 
 const mockSpawn = vi.mocked(spawn)
 const mockExistsSync = vi.mocked(existsSync)
