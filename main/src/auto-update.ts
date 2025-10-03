@@ -8,10 +8,34 @@ import {
   isToolhiveRunning,
 } from './toolhive-manager'
 import { safeTrayDestroy } from './system-tray'
-import { pollWindowReady } from './util'
+import { getAppVersion, pollWindowReady } from './util'
 import { delay } from '../../utils/delay'
 import log from './logger'
 import { setQuittingState, setTearingDownState } from './app-state'
+import {
+  isCurrentVersionOlder,
+  normalizeVersion,
+} from '../../utils/parse-release-version'
+import Store from 'electron-store'
+
+interface ReleaseAsset {
+  name: string
+  url: string
+  size: number
+  sha256: string
+}
+
+interface ReleaseInfo {
+  tag: string
+  prerelease: boolean
+  published_at: string
+  base_url: string
+  assets: ReleaseAsset[]
+}
+
+const store = new Store<{
+  isAutoUpdateEnabled: boolean
+}>({ name: 'auto-update', defaults: { isAutoUpdateEnabled: true } })
 
 let pendingUpdateVersion: string | null = null
 let updateState:
@@ -20,6 +44,42 @@ let updateState:
   | 'downloaded'
   | 'installing'
   | 'none' = 'none'
+
+/**
+ * Gets all download assets for the current platform
+ * @param releaseInfo - The release information from the API
+ * @returns The tag of the release
+ */
+function getAssetForCurrentPlatform(
+  releaseInfo: ReleaseInfo
+): string | undefined {
+  const platform = process.platform
+
+  // Map platform to asset name patterns
+  const assetPatterns: Record<string, string[]> = {
+    darwin: ['darwin-arm64', 'darwin-x64'],
+    win32: ['win32-x64', 'Setup.exe'],
+    linux: ['linux-x64', 'amd64'],
+  }
+
+  const patterns = assetPatterns[platform]
+  if (!patterns) {
+    log.error(`[update] Unsupported platform: ${platform}`)
+    return
+  }
+
+  const assets = releaseInfo.assets.filter((asset) => {
+    const assetName = asset.name.toLowerCase()
+    return patterns.some((pattern) => assetName.includes(pattern.toLowerCase()))
+  })
+
+  if (assets.length > 0) {
+    return releaseInfo.tag
+  } else {
+    log.error(`[update] No assets found for patterns: ${patterns.join(', ')}`)
+    return
+  }
+}
 
 async function safeServerShutdown(): Promise<boolean> {
   try {
@@ -110,12 +170,33 @@ let createWindow: () => Promise<BrowserWindow> = () => {
   throw new Error('createWindow not initialized')
 }
 
-export function initAutoUpdate(
-  mainWindowGetter: () => BrowserWindow | null,
+// Store original references to avoid recursion in manualUpdate
+let originalMainWindowGetter: (() => BrowserWindow | null) | null = null
+let originalWindowCreator: (() => Promise<BrowserWindow>) | null = null
+
+export function initAutoUpdate({
+  isManualUpdate = false,
+  mainWindowGetter,
+  windowCreator,
+}: {
+  isManualUpdate?: boolean
+  mainWindowGetter: () => BrowserWindow | null
   windowCreator: () => Promise<BrowserWindow>
-) {
+}) {
   getMainWindow = mainWindowGetter
   createWindow = windowCreator
+
+  // Save original references on first call (non-manual update)
+  if (!isManualUpdate && !originalMainWindowGetter) {
+    originalMainWindowGetter = mainWindowGetter
+    originalWindowCreator = windowCreator
+  }
+  const isAutoUpdateEnabled = store.get('isAutoUpdateEnabled', true)
+
+  if (!isAutoUpdateEnabled && !isManualUpdate) {
+    log.info('[update] Auto update is disabled, skipping initialization')
+    return
+  }
 
   resetAllUpdateState()
 
@@ -248,12 +329,12 @@ export function initAutoUpdate(
       }
     }
   })
-
-  ipcMain.handle('is-update-in-progress', () => {
-    log.debug(`[is-update-in-progress]: ${updateState}`)
-    return updateState === 'installing'
-  })
 }
+
+ipcMain.handle('is-update-in-progress', () => {
+  log.debug(`[is-update-in-progress]: ${updateState}`)
+  return updateState === 'installing'
+})
 
 export function resetUpdateState() {
   updateState = 'none'
@@ -266,6 +347,23 @@ export function resetAllUpdateState() {
   pendingUpdateVersion = null
 }
 
+export function setAutoUpdateEnabled(enabled: boolean) {
+  log.info(
+    `[update] Auto update ${enabled ? 'enabled' : 'disabled'} dynamically`
+  )
+
+  store.set('isAutoUpdateEnabled', enabled)
+
+  if (!enabled) {
+    // Reset update state when disabled
+    updateState = 'none'
+    pendingUpdateVersion = null
+
+    // Remove all autoUpdater listeners to prevent further update activity
+    autoUpdater.removeAllListeners()
+  }
+}
+
 export function checkForUpdates() {
   if (updateState === 'none') {
     autoUpdater.checkForUpdates()
@@ -274,4 +372,66 @@ export function checkForUpdates() {
 
 export function getUpdateState() {
   return updateState
+}
+
+export function getIsAutoUpdateEnabled() {
+  return store.get('isAutoUpdateEnabled')
+}
+
+export async function getLatestAvailableVersion() {
+  const currentVersion = getAppVersion()
+  try {
+    const response = await fetch(
+      'https://stacklok.github.io/toolhive-studio/latest',
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+    if (!response.ok) {
+      log.error(
+        '[update] Failed to check for ToolHive update: ',
+        response.statusText
+      )
+      return {
+        currentVersion: currentVersion,
+        latestVersion: undefined,
+        isNewVersionAvailable: false,
+      }
+    }
+    const data = await response.json()
+    const latestTag = getAssetForCurrentPlatform(data)
+
+    return {
+      currentVersion: currentVersion,
+      latestVersion: latestTag,
+      isNewVersionAvailable: isCurrentVersionOlder(
+        currentVersion,
+        normalizeVersion(latestTag ?? '')
+      ),
+    }
+  } catch (error) {
+    log.error('[update] Failed to check for ToolHive update: ', error)
+    return {
+      currentVersion: currentVersion,
+      latestVersion: undefined,
+      isNewVersionAvailable: false,
+    }
+  }
+}
+
+export function manualUpdate() {
+  if (!originalMainWindowGetter || !originalWindowCreator) {
+    log.error(
+      '[update] Cannot perform manual update: initAutoUpdate was not called first'
+    )
+    return
+  }
+
+  initAutoUpdate({
+    isManualUpdate: true,
+    mainWindowGetter: originalMainWindowGetter,
+    windowCreator: originalWindowCreator,
+  })
 }

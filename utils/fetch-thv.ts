@@ -7,6 +7,10 @@ import * as unzipper from 'unzipper'
 import * as path from 'node:path'
 import { spawn } from 'node:child_process'
 import { TOOLHIVE_VERSION } from './constants'
+import {
+  normalizeVersion,
+  isCurrentVersionOlder,
+} from './parse-release-version'
 
 const execFileAsync = promisify(execFile)
 
@@ -23,32 +27,6 @@ const ARCH_MAP: Record<string, string> = {
 
 const GITHUB_API_URL =
   'https://api.github.com/repos/stacklok/toolhive/releases/latest'
-
-function normalizeVersion(version: string): string {
-  return version.startsWith('v') ? version.slice(1) : version
-}
-
-function parseVersion(version: string): number[] {
-  return normalizeVersion(version).split('.').map(Number)
-}
-
-function isCurrentVersionOlder(
-  currentVersionTag: string,
-  latestVersionTag: string
-): boolean {
-  const currentVersion = parseVersion(currentVersionTag)
-  const latestVersion = parseVersion(latestVersionTag)
-
-  for (let i = 0; i < latestVersion.length; i++) {
-    const part1 = currentVersion[i] || 0
-    const part2 = latestVersion[i] || 0
-
-    if (part1 < part2) return true
-    if (part1 > part2) return false
-  }
-
-  return false
-}
 
 async function fetchLatestRelease(): Promise<string | null> {
   try {

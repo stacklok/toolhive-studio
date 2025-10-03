@@ -50,7 +50,6 @@ export async function getInstanceId() {
 
     const updatesData = JSON.parse(content)
     const instanceId = updatesData?.instance_id
-    log.info(`Retrieved instance_id: ${instanceId}`)
     return instanceId
   } catch (error) {
     log.error('Failed to retrieve instance_id:', error)

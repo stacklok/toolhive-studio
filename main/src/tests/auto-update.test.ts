@@ -56,6 +56,18 @@ vi.mock('update-electron-app', () => ({
   updateElectronApp: vi.fn(),
 }))
 
+// Mock electron-store
+vi.mock('electron-store', () => {
+  const mockStoreInstance = {
+    get: vi.fn((_key: string, defaultValue?: unknown) => defaultValue ?? true),
+    set: vi.fn(),
+  }
+
+  return {
+    default: vi.fn().mockImplementation(() => mockStoreInstance),
+  }
+})
+
 // Mock dependencies
 vi.mock('../graceful-exit', () => ({
   stopAllServers: vi.fn().mockResolvedValue(undefined),
@@ -158,10 +170,10 @@ describe('auto-update', () => {
       vi.mocked(getTray).mockReturnValue(mockTray)
 
       // Initialize auto-update to register event handlers AFTER creating mocks
-      initAutoUpdate(
-        () => mockMainWindow,
-        async () => mockMainWindow
-      )
+      initAutoUpdate({
+        mainWindowGetter: () => mockMainWindow,
+        windowCreator: async () => mockMainWindow,
+      })
     })
 
     afterEach(() => {
@@ -177,19 +189,17 @@ describe('auto-update', () => {
       it('initializes update system correctly', () => {
         // Reset and re-initialize to test
         resetAllUpdateState()
-        initAutoUpdate(
-          () => mockMainWindow,
-          async () => mockMainWindow
-        )
+        initAutoUpdate({
+          mainWindowGetter: () => mockMainWindow,
+          windowCreator: async () => mockMainWindow,
+        })
 
+        // Only check for handler registered inside initAutoUpdate
         expect(vi.mocked(ipcMain.handle)).toHaveBeenCalledWith(
           'install-update-and-restart',
           expect.any(Function)
         )
-        expect(vi.mocked(ipcMain.handle)).toHaveBeenCalledWith(
-          'is-update-in-progress',
-          expect.any(Function)
-        )
+        // Note: 'is-update-in-progress' is registered at module level, not in initAutoUpdate
       })
 
       it('sets up mock update notification in development', async () => {
@@ -197,10 +207,10 @@ describe('auto-update', () => {
         process.env.NODE_ENV = 'development'
 
         resetAllUpdateState()
-        initAutoUpdate(
-          () => mockMainWindow,
-          async () => mockMainWindow
-        )
+        initAutoUpdate({
+          mainWindowGetter: () => mockMainWindow,
+          windowCreator: async () => mockMainWindow,
+        })
 
         // Simulate mock update event
         vi.mocked(autoUpdater).emit(
@@ -287,7 +297,10 @@ describe('auto-update', () => {
           checkboxChecked: false,
         }) // "Later"
 
-        initAutoUpdate(() => destroyedWindow, mockCreateWindow)
+        initAutoUpdate({
+          mainWindowGetter: () => destroyedWindow,
+          windowCreator: mockCreateWindow,
+        })
 
         vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
 
@@ -308,7 +321,10 @@ describe('auto-update', () => {
           throw new Error('Window creation failed')
         })
 
-        initAutoUpdate(() => destroyedWindow, mockCreateWindow)
+        initAutoUpdate({
+          mainWindowGetter: () => destroyedWindow,
+          windowCreator: mockCreateWindow,
+        })
 
         vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
 
@@ -330,10 +346,10 @@ describe('auto-update', () => {
           },
         } as unknown as BrowserWindow
 
-        initAutoUpdate(
-          () => minimizedWindow,
-          async () => mockMainWindow
-        )
+        initAutoUpdate({
+          mainWindowGetter: () => minimizedWindow,
+          windowCreator: async () => mockMainWindow,
+        })
 
         vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
 
@@ -408,20 +424,15 @@ describe('auto-update', () => {
       let installHandler: (
         ...args: unknown[]
       ) => Promise<{ success: boolean; error?: string }>
-      let progressHandler: (...args: unknown[]) => boolean
 
       beforeEach(() => {
         const installCall = vi
           .mocked(ipcMain.handle)
           .mock.calls.find((call) => call[0] === 'install-update-and-restart')
-        const progressCall = vi
-          .mocked(ipcMain.handle)
-          .mock.calls.find((call) => call[0] === 'is-update-in-progress')
 
         installHandler = installCall?.[1] as (
           ...args: unknown[]
         ) => Promise<{ success: boolean; error?: string }>
-        progressHandler = progressCall?.[1] as (...args: unknown[]) => boolean
       })
 
       it('handles install-update-and-restart IPC', async () => {
@@ -470,7 +481,8 @@ describe('auto-update', () => {
       })
 
       it('reports update progress correctly', async () => {
-        expect(progressHandler()).toBe(false)
+        // Initially, no update is in progress
+        expect(getUpdateState()).toBe('none')
 
         vi.mocked(dialog.showMessageBox).mockResolvedValue({
           response: 0,
@@ -485,7 +497,8 @@ describe('auto-update', () => {
 
         await updatePromise
 
-        expect(progressHandler()).toBe(true)
+        // After update process starts, state should be 'installing'
+        expect(getUpdateState()).toBe('installing')
       })
     })
 
@@ -516,10 +529,10 @@ describe('auto-update', () => {
 
     describe('error handling and recovery', () => {
       beforeEach(() => {
-        initAutoUpdate(
-          () => mockMainWindow,
-          async () => mockMainWindow
-        )
+        initAutoUpdate({
+          mainWindowGetter: () => mockMainWindow,
+          windowCreator: async () => mockMainWindow,
+        })
       })
 
       it('handles update installation failure with recovery', async () => {
@@ -573,314 +586,321 @@ describe('auto-update', () => {
           expect.any(Error)
         )
       })
+
+      describe('platform-specific behavior', () => {
+        it('shows correct dialog on macOS', async () => {
+          const originalPlatform = process.platform
+          Object.defineProperty(process, 'platform', { value: 'darwin' })
+
+          vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
+
+          await vi.runAllTimersAsync()
+
+          expect(vi.mocked(dialog.showMessageBox)).toHaveBeenCalledWith(
+            mockMainWindow,
+            expect.objectContaining({
+              message: 'Release v1.2.3',
+              detail:
+                'A new version has been downloaded.\nRestart the application to apply the updates.',
+            })
+          )
+
+          Object.defineProperty(process, 'platform', {
+            value: originalPlatform,
+          })
+        })
+
+        it('shows correct dialog on Windows', async () => {
+          const originalPlatform = process.platform
+          Object.defineProperty(process, 'platform', { value: 'win32' })
+
+          vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
+
+          await vi.runAllTimersAsync()
+
+          expect(vi.mocked(dialog.showMessageBox)).toHaveBeenCalledWith(
+            mockMainWindow,
+            expect.objectContaining({
+              message:
+                'A new version has been downloaded.\nRestart the application to apply the updates.',
+              detail: 'Ready to install v1.2.3',
+            })
+          )
+
+          Object.defineProperty(process, 'platform', {
+            value: originalPlatform,
+          })
+        })
+      })
     })
 
-    describe('platform-specific behavior', () => {
-      it('shows correct dialog on macOS', async () => {
-        const originalPlatform = process.platform
-        Object.defineProperty(process, 'platform', { value: 'darwin' })
+    describe('integration tests', () => {
+      let mockMainWindow: BrowserWindow
+      let mockTray: Tray
+
+      beforeEach(() => {
+        vi.clearAllMocks()
+
+        // Use fake timers for consistent testing
+        vi.useFakeTimers()
+
+        // Reset all update state between tests
+        resetAllUpdateState()
+
+        // Setup mock window and tray
+        mockMainWindow = {
+          isDestroyed: vi.fn(() => false),
+          isMinimized: vi.fn(() => false),
+          restore: vi.fn(),
+          webContents: {
+            send: vi.fn(),
+          },
+        } as unknown as BrowserWindow
+
+        mockTray = {
+          isDestroyed: vi.fn(() => false),
+          destroy: vi.fn(),
+        } as unknown as Tray
+
+        // Set tray in app-state for integration tests
+        vi.mocked(getTray).mockReturnValue(mockTray)
+      })
+
+      afterEach(() => {
+        vi.resetAllMocks()
+        // Restore real timers
+        vi.useRealTimers()
+        // Clean up event listeners to prevent memory leaks
+        vi.mocked(autoUpdater).removeAllListeners()
+        vi.mocked(app).removeAllListeners()
+      })
+
+      it('integrates with graceful exit during update', async () => {
+        vi.mocked(dialog.showMessageBox).mockResolvedValue({
+          response: 0,
+          checkboxChecked: false,
+        })
+
+        initAutoUpdate({
+          mainWindowGetter: () => mockMainWindow,
+          windowCreator: async () => mockMainWindow,
+        })
+
+        const updatePromise = new Promise<void>((resolve) => {
+          vi.mocked(autoUpdater).quitAndInstall = vi.fn(() => resolve())
+        })
+
+        vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
+
+        await updatePromise
+
+        // Should call graceful exit sequence
+        expect(vi.mocked(stopAllServers)).toHaveBeenCalled()
+        expect(vi.mocked(stopToolhive)).toHaveBeenCalled()
+        expect(vi.mocked(safeTrayDestroy)).toHaveBeenCalled()
+      })
+
+      it('handles server shutdown failure during update', async () => {
+        vi.mocked(stopAllServers).mockRejectedValue(
+          new Error('Server stop failed')
+        )
+        vi.mocked(dialog.showMessageBox).mockResolvedValue({
+          response: 0,
+          checkboxChecked: false,
+        })
+
+        initAutoUpdate({
+          mainWindowGetter: () => mockMainWindow,
+          windowCreator: async () => mockMainWindow,
+        })
+
+        const updatePromise = new Promise<void>((resolve) => {
+          vi.mocked(autoUpdater).quitAndInstall = vi.fn(() => resolve())
+        })
+
+        vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
+
+        await updatePromise
+
+        // Should proceed with update despite server shutdown failure
+        expect(vi.mocked(stopAllServers)).toHaveBeenCalled()
+        expect(vi.mocked(stopToolhive)).toHaveBeenCalled()
+        expect(vi.mocked(autoUpdater).quitAndInstall).toHaveBeenCalled()
+      })
+
+      it('integrates with toolhive manager port detection', async () => {
+        vi.mocked(getToolhivePort).mockReturnValue(undefined)
+        vi.mocked(dialog.showMessageBox).mockResolvedValue({
+          response: 0,
+          checkboxChecked: false,
+        })
+
+        initAutoUpdate({
+          mainWindowGetter: () => mockMainWindow,
+          windowCreator: async () => mockMainWindow,
+        })
+
+        const updatePromise = new Promise<void>((resolve) => {
+          vi.mocked(autoUpdater).quitAndInstall = vi.fn(() => resolve())
+        })
+
+        vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
+
+        await updatePromise
+
+        // Should skip server shutdown when no port is available
+        expect(vi.mocked(getToolhivePort)).toHaveBeenCalled()
+        expect(vi.mocked(stopAllServers)).not.toHaveBeenCalled()
+      })
+
+      it('handles missing toolhive port gracefully', async () => {
+        vi.mocked(getToolhivePort).mockReturnValue(undefined)
+        vi.mocked(dialog.showMessageBox).mockResolvedValue({
+          response: 0,
+          checkboxChecked: false,
+        })
+
+        initAutoUpdate({
+          mainWindowGetter: () => mockMainWindow,
+          windowCreator: async () => mockMainWindow,
+        })
+
+        const updatePromise = new Promise<void>((resolve) => {
+          vi.mocked(autoUpdater).quitAndInstall = vi.fn(() => resolve())
+        })
+
+        vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
+
+        await updatePromise
+
+        expect(vi.mocked(log).info).toHaveBeenCalledWith(
+          '[update] No ToolHive port available, skipping server shutdown'
+        )
+      })
+
+      it('integrates with system tray destruction', async () => {
+        const mockTrayWithDestroy = {
+          isDestroyed: vi.fn(() => false),
+          destroy: vi.fn(),
+        } as unknown as Tray
+
+        // Set the specific tray for this test
+        vi.mocked(getTray).mockReturnValue(mockTrayWithDestroy)
+
+        vi.mocked(dialog.showMessageBox).mockResolvedValue({
+          response: 0,
+          checkboxChecked: false,
+        })
+
+        initAutoUpdate({
+          mainWindowGetter: () => mockMainWindow,
+          windowCreator: async () => mockMainWindow,
+        })
+
+        const updatePromise = new Promise<void>((resolve) => {
+          vi.mocked(autoUpdater).quitAndInstall = vi.fn(() => resolve())
+        })
+
+        vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
+
+        await updatePromise
+
+        expect(vi.mocked(safeTrayDestroy)).toHaveBeenCalled()
+      })
+
+      it('respects event listener removal during update', async () => {
+        vi.mocked(dialog.showMessageBox).mockResolvedValue({
+          response: 0,
+          checkboxChecked: false,
+        })
+
+        initAutoUpdate({
+          mainWindowGetter: () => mockMainWindow,
+          windowCreator: async () => mockMainWindow,
+        })
+
+        // Add some listeners to app
+        const beforeQuitSpy = vi.fn()
+        const willQuitSpy = vi.fn()
+        vi.mocked(app).on('before-quit', beforeQuitSpy)
+        vi.mocked(app).on('will-quit', willQuitSpy)
+
+        const updatePromise = new Promise<void>((resolve) => {
+          vi.mocked(autoUpdater).quitAndInstall = vi.fn(() => resolve())
+        })
+
+        vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
+
+        await updatePromise
+
+        // Listeners should be removed
+        expect(vi.mocked(app).listenerCount('before-quit')).toBe(0)
+        expect(vi.mocked(app).listenerCount('will-quit')).toBe(0)
+      })
+
+      it('handles window recreation with polling integration', async () => {
+        const destroyedWindow = {
+          isDestroyed: vi.fn(() => true),
+        } as unknown as BrowserWindow
+
+        const newWindow = {
+          isDestroyed: vi.fn(() => false),
+          isMinimized: vi.fn(() => false),
+          restore: vi.fn(),
+          webContents: { send: vi.fn() },
+        } as unknown as BrowserWindow
+
+        const createWindow = vi.fn(async () => newWindow)
+        vi.mocked(dialog.showMessageBox).mockResolvedValue({
+          response: 1,
+          checkboxChecked: false,
+        }) // Later
+
+        initAutoUpdate({
+          mainWindowGetter: () => destroyedWindow,
+          windowCreator: createWindow,
+        })
 
         vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
 
         await vi.runAllTimersAsync()
 
-        expect(vi.mocked(dialog.showMessageBox)).toHaveBeenCalledWith(
-          mockMainWindow,
-          expect.objectContaining({
-            message: 'Release v1.2.3',
-            detail:
-              'A new version has been downloaded.\nRestart the application to apply the updates.',
-          })
-        )
-
-        Object.defineProperty(process, 'platform', { value: originalPlatform })
+        // Should create new window and poll for readiness
+        expect(createWindow).toHaveBeenCalled()
+        expect(vi.mocked(pollWindowReady)).toHaveBeenCalledWith(newWindow)
       })
 
-      it('shows correct dialog on Windows', async () => {
-        const originalPlatform = process.platform
-        Object.defineProperty(process, 'platform', { value: 'win32' })
+      it('handles server shutdown failure scenarios', async () => {
+        // Mock failure by making stopAllServers reject
+        vi.mocked(stopAllServers).mockRejectedValue(
+          new Error('Server shutdown failed')
+        )
+        vi.mocked(dialog.showMessageBox).mockResolvedValue({
+          response: 0,
+          checkboxChecked: false,
+        })
+
+        initAutoUpdate({
+          mainWindowGetter: () => mockMainWindow,
+          windowCreator: async () => mockMainWindow,
+        })
+
+        let quitAndInstallCalled = false
+        vi.mocked(autoUpdater).quitAndInstall = vi.fn(() => {
+          quitAndInstallCalled = true
+        })
 
         vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
 
+        // Run all timers to complete the update flow
         await vi.runAllTimersAsync()
 
-        expect(vi.mocked(dialog.showMessageBox)).toHaveBeenCalledWith(
-          mockMainWindow,
-          expect.objectContaining({
-            message:
-              'A new version has been downloaded.\nRestart the application to apply the updates.',
-            detail: 'Ready to install v1.2.3',
-          })
+        expect(quitAndInstallCalled).toBe(true)
+        // Should have logged shutdown failure warning
+        expect(vi.mocked(log.warn)).toHaveBeenCalledWith(
+          '[update] Server shutdown failed, proceeding with update anyway'
         )
-
-        Object.defineProperty(process, 'platform', { value: originalPlatform })
       })
-    })
-  })
-
-  describe('integration tests', () => {
-    let mockMainWindow: BrowserWindow
-    let mockTray: Tray
-
-    beforeEach(() => {
-      vi.clearAllMocks()
-
-      // Use fake timers for consistent testing
-      vi.useFakeTimers()
-
-      // Reset all update state between tests
-      resetAllUpdateState()
-
-      // Setup mock window and tray
-      mockMainWindow = {
-        isDestroyed: vi.fn(() => false),
-        isMinimized: vi.fn(() => false),
-        restore: vi.fn(),
-        webContents: {
-          send: vi.fn(),
-        },
-      } as unknown as BrowserWindow
-
-      mockTray = {
-        isDestroyed: vi.fn(() => false),
-        destroy: vi.fn(),
-      } as unknown as Tray
-
-      // Set tray in app-state for integration tests
-      vi.mocked(getTray).mockReturnValue(mockTray)
-    })
-
-    afterEach(() => {
-      vi.resetAllMocks()
-      // Restore real timers
-      vi.useRealTimers()
-      // Clean up event listeners to prevent memory leaks
-      vi.mocked(autoUpdater).removeAllListeners()
-      vi.mocked(app).removeAllListeners()
-    })
-
-    it('integrates with graceful exit during update', async () => {
-      vi.mocked(dialog.showMessageBox).mockResolvedValue({
-        response: 0,
-        checkboxChecked: false,
-      })
-
-      initAutoUpdate(
-        () => mockMainWindow,
-        async () => mockMainWindow
-      )
-
-      const updatePromise = new Promise<void>((resolve) => {
-        vi.mocked(autoUpdater).quitAndInstall = vi.fn(() => resolve())
-      })
-
-      vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
-
-      await updatePromise
-
-      // Should call graceful exit sequence
-      expect(vi.mocked(stopAllServers)).toHaveBeenCalled()
-      expect(vi.mocked(stopToolhive)).toHaveBeenCalled()
-      expect(vi.mocked(safeTrayDestroy)).toHaveBeenCalled()
-    })
-
-    it('handles server shutdown failure during update', async () => {
-      vi.mocked(stopAllServers).mockRejectedValue(
-        new Error('Server stop failed')
-      )
-      vi.mocked(dialog.showMessageBox).mockResolvedValue({
-        response: 0,
-        checkboxChecked: false,
-      })
-
-      initAutoUpdate(
-        () => mockMainWindow,
-        async () => mockMainWindow
-      )
-
-      const updatePromise = new Promise<void>((resolve) => {
-        vi.mocked(autoUpdater).quitAndInstall = vi.fn(() => resolve())
-      })
-
-      vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
-
-      await updatePromise
-
-      // Should proceed with update despite server shutdown failure
-      expect(vi.mocked(stopAllServers)).toHaveBeenCalled()
-      expect(vi.mocked(stopToolhive)).toHaveBeenCalled()
-      expect(vi.mocked(autoUpdater).quitAndInstall).toHaveBeenCalled()
-    })
-
-    it('integrates with toolhive manager port detection', async () => {
-      vi.mocked(getToolhivePort).mockReturnValue(undefined)
-      vi.mocked(dialog.showMessageBox).mockResolvedValue({
-        response: 0,
-        checkboxChecked: false,
-      })
-
-      initAutoUpdate(
-        () => mockMainWindow,
-        async () => mockMainWindow
-      )
-
-      const updatePromise = new Promise<void>((resolve) => {
-        vi.mocked(autoUpdater).quitAndInstall = vi.fn(() => resolve())
-      })
-
-      vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
-
-      await updatePromise
-
-      // Should skip server shutdown when no port is available
-      expect(vi.mocked(getToolhivePort)).toHaveBeenCalled()
-      expect(vi.mocked(stopAllServers)).not.toHaveBeenCalled()
-    })
-
-    it('handles missing toolhive port gracefully', async () => {
-      vi.mocked(getToolhivePort).mockReturnValue(undefined)
-      vi.mocked(dialog.showMessageBox).mockResolvedValue({
-        response: 0,
-        checkboxChecked: false,
-      })
-
-      initAutoUpdate(
-        () => mockMainWindow,
-        async () => mockMainWindow
-      )
-
-      const updatePromise = new Promise<void>((resolve) => {
-        vi.mocked(autoUpdater).quitAndInstall = vi.fn(() => resolve())
-      })
-
-      vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
-
-      await updatePromise
-
-      expect(vi.mocked(log).info).toHaveBeenCalledWith(
-        '[update] No ToolHive port available, skipping server shutdown'
-      )
-    })
-
-    it('integrates with system tray destruction', async () => {
-      const mockTrayWithDestroy = {
-        isDestroyed: vi.fn(() => false),
-        destroy: vi.fn(),
-      } as unknown as Tray
-
-      // Set the specific tray for this test
-      vi.mocked(getTray).mockReturnValue(mockTrayWithDestroy)
-
-      vi.mocked(dialog.showMessageBox).mockResolvedValue({
-        response: 0,
-        checkboxChecked: false,
-      })
-
-      initAutoUpdate(
-        () => mockMainWindow,
-        async () => mockMainWindow
-      )
-
-      const updatePromise = new Promise<void>((resolve) => {
-        vi.mocked(autoUpdater).quitAndInstall = vi.fn(() => resolve())
-      })
-
-      vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
-
-      await updatePromise
-
-      expect(vi.mocked(safeTrayDestroy)).toHaveBeenCalled()
-    })
-
-    it('respects event listener removal during update', async () => {
-      vi.mocked(dialog.showMessageBox).mockResolvedValue({
-        response: 0,
-        checkboxChecked: false,
-      })
-
-      initAutoUpdate(
-        () => mockMainWindow,
-        async () => mockMainWindow
-      )
-
-      // Add some listeners to app
-      const beforeQuitSpy = vi.fn()
-      const willQuitSpy = vi.fn()
-      vi.mocked(app).on('before-quit', beforeQuitSpy)
-      vi.mocked(app).on('will-quit', willQuitSpy)
-
-      const updatePromise = new Promise<void>((resolve) => {
-        vi.mocked(autoUpdater).quitAndInstall = vi.fn(() => resolve())
-      })
-
-      vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
-
-      await updatePromise
-
-      // Listeners should be removed
-      expect(vi.mocked(app).listenerCount('before-quit')).toBe(0)
-      expect(vi.mocked(app).listenerCount('will-quit')).toBe(0)
-    })
-
-    it('handles window recreation with polling integration', async () => {
-      const destroyedWindow = {
-        isDestroyed: vi.fn(() => true),
-      } as unknown as BrowserWindow
-
-      const newWindow = {
-        isDestroyed: vi.fn(() => false),
-        isMinimized: vi.fn(() => false),
-        restore: vi.fn(),
-        webContents: { send: vi.fn() },
-      } as unknown as BrowserWindow
-
-      const createWindow = vi.fn(async () => newWindow)
-      vi.mocked(dialog.showMessageBox).mockResolvedValue({
-        response: 1,
-        checkboxChecked: false,
-      }) // Later
-
-      initAutoUpdate(() => destroyedWindow, createWindow)
-
-      vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
-
-      await vi.runAllTimersAsync()
-
-      // Should create new window and poll for readiness
-      expect(createWindow).toHaveBeenCalled()
-      expect(vi.mocked(pollWindowReady)).toHaveBeenCalledWith(newWindow)
-    })
-
-    it('handles server shutdown failure scenarios', async () => {
-      // Mock failure by making stopAllServers reject
-      vi.mocked(stopAllServers).mockRejectedValue(
-        new Error('Server shutdown failed')
-      )
-      vi.mocked(dialog.showMessageBox).mockResolvedValue({
-        response: 0,
-        checkboxChecked: false,
-      })
-
-      initAutoUpdate(
-        () => mockMainWindow,
-        async () => mockMainWindow
-      )
-
-      let quitAndInstallCalled = false
-      vi.mocked(autoUpdater).quitAndInstall = vi.fn(() => {
-        quitAndInstallCalled = true
-      })
-
-      vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
-
-      // Run all timers to complete the update flow
-      await vi.runAllTimersAsync()
-
-      expect(quitAndInstallCalled).toBe(true)
-      // Should have logged shutdown failure warning
-      expect(vi.mocked(log.warn)).toHaveBeenCalledWith(
-        '[update] Server shutdown failed, proceeding with update anyway'
-      )
     })
   })
 })

@@ -7,6 +7,7 @@ import { getAppVersion } from './util'
 import { hideWindow, showWindow, showInDock } from './dock-utils'
 import { showMainWindow, sendToMainWindowRenderer } from './main-window'
 import { getTray, setTray } from './app-state'
+import { handleCheckForUpdates } from './utils/update-dialogs'
 
 // Safe tray destruction with error handling
 export function safeTrayDestroy() {
@@ -69,7 +70,7 @@ const createTrayWithSetup =
     try {
       return setupFn(toolHiveIsRunning)
     } catch (error) {
-      log.error('Failed to create tray: ', error)
+      log.error('[tray] Failed to create tray: ', error)
       throw error
     }
   }
@@ -128,7 +129,7 @@ const handleStartOnLogin = async (toolHiveIsRunning: boolean) => {
     // Update the application menu to reflect the new state
     createApplicationMenu()
   } catch (error) {
-    log.error('Failed to toggle auto-launch: ', error)
+    log.error('[tray] Failed to toggle auto-launch: ', error)
   }
 }
 
@@ -148,6 +149,15 @@ const getCurrentAppVersion = () => {
     enabled: false,
   }
 }
+
+const createUpdateMenuItem = () => ({
+  label: 'Check for Updates...',
+  type: 'normal' as const,
+  enabled: true,
+  click: async () => {
+    await handleCheckForUpdates()
+  },
+})
 
 const startOnLoginMenu = (toolHiveIsRunning: boolean) => {
   const isStartOnLogin = getAutoLaunchStatus()
@@ -184,7 +194,7 @@ const createQuitMenuItem = () => ({
       await showMainWindow()
       sendToMainWindowRenderer('show-quit-confirmation')
     } catch (error) {
-      log.error('Failed to show quit confirmation from tray:', error)
+      log.error('[tray] Failed to show quit confirmation from tray:', error)
     }
   },
 })
@@ -194,6 +204,7 @@ const createSeparator = () => ({ type: 'separator' as const })
 const createMenuTemplate = (toolHiveIsRunning: boolean) => [
   createStatusMenuItem(toolHiveIsRunning),
   getCurrentAppVersion(),
+  createUpdateMenuItem(),
   createSeparator(),
   startOnLoginMenu(toolHiveIsRunning),
   createSeparator(),
@@ -257,6 +268,6 @@ export const updateTrayStatus = (toolHiveIsRunning: boolean) => {
   try {
     setupTrayMenu(toolHiveIsRunning)
   } catch (error) {
-    log.error('Failed to update tray status: ', error)
+    log.error('[tray] Failed to update tray status: ', error)
   }
 }
