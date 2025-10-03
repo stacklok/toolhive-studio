@@ -85,7 +85,7 @@ export function VersionTab() {
               if (isAutoUpdateEnabledLoading || isSetAutoUpdatePending) return
               setAutoUpdate(!isAutoUpdateEnabled)
             }}
-            disabled={isAutoUpdateEnabledLoading}
+            disabled={isAutoUpdateEnabledLoading || isSetAutoUpdatePending}
           />
         </div>
         {appInfo.isNewVersionAvailable && (
