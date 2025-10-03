@@ -44,6 +44,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Update installation
   installUpdateAndRestart: () =>
     ipcRenderer.invoke('install-update-and-restart'),
+  isAutoUpdateEnabled: () => ipcRenderer.invoke('auto-update:get'),
+  setAutoUpdate: (enabled: boolean) =>
+    ipcRenderer.invoke('auto-update:set', enabled),
+  getUpdateState: () => ipcRenderer.invoke('get-update-state'),
+  manualUpdate: () => ipcRenderer.invoke('manual-update'),
 
   // Theme management
   darkMode: {
@@ -212,7 +217,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
 })
 
 export interface ElectronAPI {
-  getAppVersion: () => Promise<string>
+  getAppVersion: () => Promise<{
+    currentVersion: string
+    latestVersion: string
+    isNewVersionAvailable: boolean
+  }>
   isOfficialReleaseBuild: () => Promise<boolean>
   getTelemetryHeaders: () => Promise<Record<string, string>>
   isUpdateInProgress: () => Promise<boolean>
@@ -236,6 +245,8 @@ export interface ElectronAPI {
     error?: string
   }>
   installUpdateAndRestart: () => Promise<{ success: boolean }>
+  isAutoUpdateEnabled: () => Promise<boolean>
+  setAutoUpdate: (enabled: boolean) => Promise<boolean>
   darkMode: {
     toggle: () => Promise<boolean>
     system: () => Promise<boolean>
@@ -266,7 +277,20 @@ export interface ElectronAPI {
   }
   onUpdateDownloaded: (
     callback: (_event: Electron.IpcRendererEvent) => void
-  ) => void
+  ) => () => void
+  onUpdateAvailable: (
+    callback: (_event: Electron.IpcRendererEvent) => void
+  ) => () => void
+  onUpdateChecking: (
+    callback: (_event: Electron.IpcRendererEvent) => void
+  ) => () => void
+  onUpdateNotAvailable: (
+    callback: (_event: Electron.IpcRendererEvent) => void
+  ) => () => void
+  getUpdateState: () => Promise<
+    'checking' | 'downloading' | 'downloaded' | 'installing' | 'none'
+  >
+  manualUpdate: () => Promise<void>
   shutdownStore: {
     getLastShutdownServers: () => Promise<CoreWorkload[]>
     clearShutdownHistory: () => Promise<{ success: boolean }>
