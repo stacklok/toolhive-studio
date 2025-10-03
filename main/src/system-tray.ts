@@ -251,7 +251,6 @@ function setupTrayMenu(toolHiveIsRunning: boolean) {
 
 // Function to update tray status without recreating the entire tray
 export const updateTrayStatus = (toolHiveIsRunning: boolean) => {
-  console.log('updateTrayStatus', toolHiveIsRunning)
   const tray = getTray()
   if (!tray || tray.isDestroyed()) return
 
