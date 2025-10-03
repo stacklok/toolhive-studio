@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import log from 'electron-log/renderer'
 
-interface AppVersionInfo {
+export interface AppVersionInfo {
   currentVersion: string
   latestVersion: string
   isNewVersionAvailable: boolean
