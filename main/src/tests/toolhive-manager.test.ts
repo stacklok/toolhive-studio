@@ -3,7 +3,6 @@ import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import net from 'node:net'
 import { app } from 'electron'
-import type { Tray } from 'electron'
 import { EventEmitter } from 'node:events'
 import {
   startToolhive,
@@ -93,7 +92,6 @@ class MockServer extends EventEmitter {
 
 describe('toolhive-manager', () => {
   let mockProcess: MockProcess
-  let mockTray: Tray
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -104,7 +102,6 @@ describe('toolhive-manager', () => {
 
     // Setup mocks
     mockProcess = new MockProcess()
-    mockTray = {} as Tray
 
     mockSpawn.mockReturnValue(
       mockProcess as unknown as ReturnType<typeof spawn>
@@ -178,13 +175,13 @@ describe('toolhive-manager', () => {
       expect(getToolhiveMcpPort()).toBeTypeOf('number')
     })
 
-    it('updates tray status when tray is provided', async () => {
-      const startPromise = startToolhive(mockTray)
+    it('updates tray status after starting', async () => {
+      const startPromise = startToolhive()
 
       await vi.advanceTimersByTimeAsync(50)
       await startPromise
 
-      expect(mockUpdateTrayStatus).toHaveBeenCalledWith(mockTray, true)
+      expect(mockUpdateTrayStatus).toHaveBeenCalledWith(true)
     })
 
     it('logs process PID after spawning', async () => {
@@ -199,7 +196,7 @@ describe('toolhive-manager', () => {
     })
 
     it('handles process error events', async () => {
-      const startPromise = startToolhive(mockTray)
+      const startPromise = startToolhive()
 
       await vi.advanceTimersByTimeAsync(50)
       await startPromise
@@ -215,11 +212,11 @@ describe('toolhive-manager', () => {
         `Failed to start ToolHive: ${JSON.stringify(testError)}`,
         'fatal'
       )
-      expect(mockUpdateTrayStatus).toHaveBeenCalledWith(mockTray, false)
+      expect(mockUpdateTrayStatus).toHaveBeenCalledWith(false)
     })
 
     it('handles process exit events', async () => {
-      const startPromise = startToolhive(mockTray)
+      const startPromise = startToolhive()
 
       await vi.advanceTimersByTimeAsync(50)
       await startPromise
@@ -229,14 +226,14 @@ describe('toolhive-manager', () => {
       expect(mockLog.warn).toHaveBeenCalledWith(
         'ToolHive process exited with code: 1'
       )
-      expect(mockUpdateTrayStatus).toHaveBeenCalledWith(mockTray, false)
+      expect(mockUpdateTrayStatus).toHaveBeenCalledWith(false)
       expect(isToolhiveRunning()).toBe(false)
     })
 
     it('captures Sentry message when process exits unexpectedly', async () => {
       mockGetQuittingState.mockReturnValue(false)
 
-      const startPromise = startToolhive(mockTray)
+      const startPromise = startToolhive()
 
       // Advancing the timer actually allows the promise to resolve
       await vi.advanceTimersByTimeAsync(50)
@@ -255,7 +252,7 @@ describe('toolhive-manager', () => {
     it('does not capture Sentry message when app is quitting', async () => {
       mockGetQuittingState.mockReturnValue(true)
 
-      const startPromise = startToolhive(mockTray)
+      const startPromise = startToolhive()
 
       await vi.advanceTimersByTimeAsync(50)
       await startPromise
@@ -271,7 +268,7 @@ describe('toolhive-manager', () => {
       mockGetQuittingState.mockReturnValue(false)
 
       // Start initial process
-      const startPromise = startToolhive(mockTray)
+      const startPromise = startToolhive()
       await vi.advanceTimersByTimeAsync(50)
       await startPromise
 
@@ -284,7 +281,7 @@ describe('toolhive-manager', () => {
       )
 
       // Start restart (this sets isRestarting = true)
-      const restartPromise = restartToolhive(mockTray)
+      const restartPromise = restartToolhive()
 
       // Let the original process exit during restart
       mockProcess.emit('exit', 0)

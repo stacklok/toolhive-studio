@@ -6,9 +6,11 @@ import log from './logger'
 import { getAppVersion } from './util'
 import { hideWindow, showWindow, showInDock } from './dock-utils'
 import { showMainWindow, sendToMainWindowRenderer } from './main-window'
+import { getTray, setTray } from './app-state'
 
 // Safe tray destruction with error handling
-export function safeTrayDestroy(tray: Tray | null) {
+export function safeTrayDestroy() {
+  const tray = getTray()
   try {
     if (tray && !tray.isDestroyed()) {
       tray.destroy()
@@ -62,13 +64,10 @@ function getIcon(): Electron.NativeImage {
 ///////////////////////////////////////////////////
 
 const createTrayWithSetup =
-  (setupFn: (tray: Tray, toolHiveIsRunning: boolean) => void) =>
+  (setupFn: (toolHiveIsRunning: boolean) => void) =>
   (toolHiveIsRunning: boolean) => {
     try {
-      const tray = new Tray(getIcon())
-
-      setupFn(tray, toolHiveIsRunning)
-      return tray
+      return setupFn(toolHiveIsRunning)
     } catch (error) {
       log.error('Failed to create tray: ', error)
       throw error
@@ -111,10 +110,7 @@ const showWindowWithFocus = (window: BrowserWindow) => {
   bringToFrontOnWindows(window)
 }
 
-const handleStartOnLogin = async (
-  currentTray: Tray,
-  toolHiveIsRunning: boolean
-) => {
+const handleStartOnLogin = async (toolHiveIsRunning: boolean) => {
   const currentStatus = getAutoLaunchStatus()
 
   try {
@@ -127,10 +123,10 @@ const handleStartOnLogin = async (
     }
 
     // Update the tray menu to reflect the new state
-    setupTrayMenu(currentTray, toolHiveIsRunning)
+    setupTrayMenu(toolHiveIsRunning)
 
     // Update the application menu to reflect the new state
-    createApplicationMenu(currentTray)
+    createApplicationMenu()
   } catch (error) {
     log.error('Failed to toggle auto-launch: ', error)
   }
@@ -153,14 +149,14 @@ const getCurrentAppVersion = () => {
   }
 }
 
-const startOnLoginMenu = (currentTray: Tray, toolHiveIsRunning: boolean) => {
+const startOnLoginMenu = (toolHiveIsRunning: boolean) => {
   const isStartOnLogin = getAutoLaunchStatus()
   return {
     label: 'Start on login',
     checked: isStartOnLogin,
     accelerator: 'CmdOrCtrl+L',
     type: 'checkbox' as const,
-    click: () => handleStartOnLogin(currentTray, toolHiveIsRunning),
+    click: () => handleStartOnLogin(toolHiveIsRunning),
   }
 }
 
@@ -195,11 +191,11 @@ const createQuitMenuItem = () => ({
 
 const createSeparator = () => ({ type: 'separator' as const })
 
-const createMenuTemplate = (currentTray: Tray, toolHiveIsRunning: boolean) => [
+const createMenuTemplate = (toolHiveIsRunning: boolean) => [
   createStatusMenuItem(toolHiveIsRunning),
   getCurrentAppVersion(),
   createSeparator(),
-  startOnLoginMenu(currentTray, toolHiveIsRunning),
+  startOnLoginMenu(toolHiveIsRunning),
   createSeparator(),
   createShowMenuItem(),
   createHideMenuItem(),
@@ -233,8 +229,15 @@ const createClickHandler = () => {
   }
 }
 
-function setupTrayMenu(tray: Tray, toolHiveIsRunning: boolean) {
-  const menuTemplate = createMenuTemplate(tray, toolHiveIsRunning)
+// if tray is not there let's create a new one
+function setupTrayMenu(toolHiveIsRunning: boolean) {
+  let tray = getTray()
+  if (!tray || tray.isDestroyed()) {
+    tray = new Tray(getIcon())
+    setTray(tray)
+  }
+
+  const menuTemplate = createMenuTemplate(toolHiveIsRunning)
   const contextMenu = Menu.buildFromTemplate(menuTemplate)
 
   tray.setToolTip('ToolHive')
@@ -247,11 +250,13 @@ function setupTrayMenu(tray: Tray, toolHiveIsRunning: boolean) {
 }
 
 // Function to update tray status without recreating the entire tray
-export const updateTrayStatus = (tray: Tray, toolHiveIsRunning: boolean) => {
+export const updateTrayStatus = (toolHiveIsRunning: boolean) => {
+  console.log('updateTrayStatus', toolHiveIsRunning)
+  const tray = getTray()
   if (!tray || tray.isDestroyed()) return
 
   try {
-    setupTrayMenu(tray, toolHiveIsRunning)
+    setupTrayMenu(toolHiveIsRunning)
   } catch (error) {
     log.error('Failed to update tray status: ', error)
   }

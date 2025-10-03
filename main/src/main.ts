@@ -104,7 +104,6 @@ import {
   setQuittingState,
   getTearingDownState,
   setTearingDownState,
-  setTray,
   getTray,
 } from './app-state'
 import type { UIMessage } from 'ai'
@@ -185,7 +184,7 @@ export async function blockQuit(source: string, event?: Electron.Event) {
     // Stop the embedded ToolHive server
     stopToolhive()
 
-    safeTrayDestroy(getTray())
+    safeTrayDestroy()
     app.quit()
   }
 }
@@ -221,10 +220,10 @@ app.whenReady().then(async () => {
 
   // Initialize tray first
   try {
-    setTray(initTray({ toolHiveIsRunning: false })) // Start with false, will update after ToolHive starts
+    initTray({ toolHiveIsRunning: false }) // Start with false, will update after ToolHive starts
     log.info('System tray initialized successfully')
     // Setup application menu
-    createApplicationMenu(getTray())
+    createApplicationMenu()
   } catch (error) {
     log.error('Failed to initialize system tray: ', error)
   }
@@ -236,7 +235,7 @@ app.whenReady().then(async () => {
   )
 
   // Start ToolHive with tray reference
-  await startToolhive(getTray() || undefined)
+  await startToolhive()
 
   // Create main window
   try {
@@ -297,7 +296,7 @@ app.whenReady().then(async () => {
     if (getTray() && process.platform !== 'win32') {
       try {
         getTray()?.destroy()
-        setTray(initTray({ toolHiveIsRunning: isToolhiveRunning() }))
+        initTray({ toolHiveIsRunning: isToolhiveRunning() })
       } catch (error) {
         log.error('Failed to update tray after theme change: ', error)
       }
@@ -357,7 +356,7 @@ app.on('will-quit', (e) => blockQuit('will-quit', e))
       }
     } finally {
       stopToolhive()
-      safeTrayDestroy(getTray())
+      safeTrayDestroy()
       process.exit(0)
     }
   })
@@ -391,11 +390,9 @@ ipcMain.handle('get-auto-launch-status', () => getAutoLaunchStatus())
 ipcMain.handle('set-auto-launch', (_event, enabled: boolean) => {
   setAutoLaunch(enabled)
   // Update tray menu if exists
-  if (getTray()) {
-    updateTrayStatus(getTray()!, isToolhiveRunning())
-  }
+  updateTrayStatus(isToolhiveRunning())
   // Update menu
-  createApplicationMenu(getTray())
+  createApplicationMenu()
   return getAutoLaunchStatus()
 })
 
@@ -464,7 +461,7 @@ ipcMain.handle('check-container-engine', async () => {
 
 ipcMain.handle('restart-toolhive', async () => {
   try {
-    await restartToolhive(getTray() || undefined)
+    await restartToolhive()
     return { success: true }
   } catch (error) {
     log.error('Failed to restart ToolHive: ', error)
