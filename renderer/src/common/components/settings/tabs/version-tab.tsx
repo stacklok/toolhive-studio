@@ -1,5 +1,16 @@
 import { Badge } from '../../ui/badge'
-import { useAppVersion } from '../../../hooks/use-app-version'
+import {
+  useAppVersion,
+  useCurrentUpdateState,
+} from '../../../hooks/use-app-version'
+import { Switch } from '../../ui/switch'
+import {
+  useAutoUpdateStatus,
+  useSetAutoUpdate,
+} from '@/common/hooks/use-auto-update'
+import { Button } from '../../ui/button'
+import { Alert, AlertDescription } from '../../ui/alert'
+import { AlertCircleIcon, Download } from 'lucide-react'
 
 function VersionInfoWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -14,6 +25,14 @@ function VersionInfoWrapper({ children }: { children: React.ReactNode }) {
 
 export function VersionTab() {
   const { data: appInfo, isLoading, error } = useAppVersion()
+  const { data: updateState, isLoading: isUpdateStateLoading } =
+    useCurrentUpdateState()
+  const isDownloading = isUpdateStateLoading || updateState === 'downloading'
+
+  const { data: isAutoUpdateEnabled, isLoading: isAutoUpdateEnabledLoading } =
+    useAutoUpdateStatus()
+  const { mutateAsync: setAutoUpdate, isPending: isSetAutoUpdatePending } =
+    useSetAutoUpdate()
 
   if (isLoading) {
     return (
@@ -30,25 +49,70 @@ export function VersionTab() {
   }
 
   return (
-    <VersionInfoWrapper>
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Desktop UI version</span>
-          <Badge variant="secondary">{appInfo.appVersion}</Badge>
-        </div>
+    <>
+      <VersionInfoWrapper>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Desktop UI version</span>
+            <Badge variant="secondary">{appInfo.currentVersion}</Badge>
+          </div>
 
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">ToolHive binary version</span>
-          <Badge variant="secondary">{appInfo.toolhiveVersion}</Badge>
-        </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">ToolHive binary version</span>
+            <Badge variant="secondary">{appInfo.toolhiveVersion}</Badge>
+          </div>
 
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Build type</span>
-          <Badge variant={appInfo.isReleaseBuild ? 'default' : 'outline'}>
-            {appInfo.isReleaseBuild ? 'Release' : 'Development'}
-          </Badge>
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Build type</span>
+            <Badge variant={appInfo.isReleaseBuild ? 'default' : 'outline'}>
+              {appInfo.isReleaseBuild ? 'Release' : 'Development'}
+            </Badge>
+          </div>
         </div>
+      </VersionInfoWrapper>
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold">ToolHive Updates</h2>
+        <div className="flex items-center justify-between">
+          <p className="text-muted-foreground text-sm">
+            Automatically download and install ToolHive updates when a new
+            release is available.
+          </p>
+
+          <Switch
+            id="auto-update"
+            checked={isAutoUpdateEnabled ?? true}
+            onCheckedChange={() => {
+              if (isAutoUpdateEnabledLoading || isSetAutoUpdatePending) return
+              setAutoUpdate(!isAutoUpdateEnabled)
+            }}
+            disabled={isAutoUpdateEnabledLoading}
+          />
+        </div>
+        {appInfo.isNewVersionAvailable && (
+          <div>
+            <Alert className="flex h-full items-center">
+              <AlertDescription className="flex w-full items-center gap-2">
+                <AlertCircleIcon className="flex size-4 items-center" />
+                <div className="flex w-full items-center justify-between">
+                  <div className="font-medium">
+                    A new version {appInfo.latestVersion} is available
+                  </div>
+                  <Button
+                    variant="outline"
+                    disabled={isDownloading}
+                    onClick={() => {
+                      window.electronAPI.manualUpdate()
+                    }}
+                  >
+                    <Download className="size-4" />{' '}
+                    {isDownloading ? 'Downloading...' : 'Download'}
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
       </div>
-    </VersionInfoWrapper>
+    </>
   )
 }
