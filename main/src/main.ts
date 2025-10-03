@@ -53,6 +53,7 @@ import {
   getLatestAvailableVersion,
   getUpdateState,
   initAutoUpdate,
+  manualUpdate,
   resetUpdateState,
   setAutoUpdateEnabled,
 } from './auto-update'
@@ -531,11 +532,7 @@ ipcMain.handle('auto-update:get', () => {
 
 ipcMain.handle('manual-update', async () => {
   log.info('[update] triggered manual update')
-  initAutoUpdate({
-    isManualUpdate: true,
-    mainWindowGetter: () => getMainWindow(),
-    windowCreator: () => createMainWindow(),
-  })
+  manualUpdate()
 })
 
 ipcMain.handle('get-app-version', async () => {

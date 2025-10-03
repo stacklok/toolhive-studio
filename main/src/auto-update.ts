@@ -16,7 +16,6 @@ import {
   isCurrentVersionOlder,
   normalizeVersion,
 } from '../../utils/parse-release-version'
-import { createMainWindow } from './main-window'
 import Store from 'electron-store'
 
 interface ReleaseAsset {
@@ -171,6 +170,10 @@ let createWindow: () => Promise<BrowserWindow> = () => {
   throw new Error('createWindow not initialized')
 }
 
+// Store original references to avoid recursion in manualUpdate
+let originalMainWindowGetter: (() => BrowserWindow | null) | null = null
+let originalWindowCreator: (() => Promise<BrowserWindow>) | null = null
+
 export function initAutoUpdate({
   isManualUpdate = false,
   mainWindowGetter,
@@ -182,6 +185,12 @@ export function initAutoUpdate({
 }) {
   getMainWindow = mainWindowGetter
   createWindow = windowCreator
+
+  // Save original references on first call (non-manual update)
+  if (!isManualUpdate && !originalMainWindowGetter) {
+    originalMainWindowGetter = mainWindowGetter
+    originalWindowCreator = windowCreator
+  }
   const isAutoUpdateEnabled = store.get('isAutoUpdateEnabled', true)
 
   if (!isAutoUpdateEnabled && !isManualUpdate) {
@@ -413,9 +422,16 @@ export async function getLatestAvailableVersion() {
 }
 
 export function manualUpdate() {
+  if (!originalMainWindowGetter || !originalWindowCreator) {
+    log.error(
+      '[update] Cannot perform manual update: initAutoUpdate was not called first'
+    )
+    return
+  }
+
   initAutoUpdate({
     isManualUpdate: true,
-    mainWindowGetter: () => getMainWindow(),
-    windowCreator: () => createMainWindow(),
+    mainWindowGetter: originalMainWindowGetter,
+    windowCreator: originalWindowCreator,
   })
 }
