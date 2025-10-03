@@ -49,6 +49,7 @@ import log from './logger'
 import { getInstanceId, isOfficialReleaseBuild } from './util'
 import { delay } from '../../utils/delay'
 import {
+  getIsAutoUpdateEnabled,
   getLatestAvailableVersion,
   getUpdateState,
   initAutoUpdate,
@@ -111,9 +112,8 @@ import {
 import type { UIMessage } from 'ai'
 
 const store = new Store<{
-  isAutoUpdateEnabled: boolean
   isTelemetryEnabled: boolean
-}>({ defaults: { isAutoUpdateEnabled: true, isTelemetryEnabled: true } })
+}>({ defaults: { isTelemetryEnabled: true } })
 
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
@@ -233,7 +233,6 @@ app.whenReady().then(async () => {
 
   // Initialize auto-update system
   initAutoUpdate({
-    isAutoUpdateEnabled: store.get('isAutoUpdateEnabled', true),
     mainWindowGetter: () => getMainWindow(),
     windowCreator: () => createMainWindow(),
   })
@@ -522,20 +521,17 @@ ipcMain.handle('get-instance-id', async () => {
 // ────────────────────────────────────────────────────────────────────────────
 
 ipcMain.handle('auto-update:set', async (_, enabled: boolean) => {
-  store.set('isAutoUpdateEnabled', enabled)
   setAutoUpdateEnabled(enabled)
   return enabled
 })
 
 ipcMain.handle('auto-update:get', () => {
-  const enabled = store.get('isAutoUpdateEnabled')
-  return enabled
+  return getIsAutoUpdateEnabled()
 })
 
 ipcMain.handle('manual-update', async () => {
   log.info('[update] triggered manual update')
   initAutoUpdate({
-    isAutoUpdateEnabled: store.get('isAutoUpdateEnabled', true),
     isManualUpdate: true,
     mainWindowGetter: () => getMainWindow(),
     windowCreator: () => createMainWindow(),
