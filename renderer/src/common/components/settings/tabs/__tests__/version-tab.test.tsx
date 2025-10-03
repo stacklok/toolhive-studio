@@ -8,6 +8,10 @@ const mockElectronAPI = {
   getAppVersion: vi.fn(),
   isOfficialReleaseBuild: vi.fn(),
   getToolhiveVersion: vi.fn(),
+  isAutoUpdateEnabled: vi.fn(),
+  setAutoUpdate: vi.fn(),
+  manualUpdate: vi.fn(),
+  getUpdateState: vi.fn(),
 }
 
 Object.defineProperty(window, 'electronAPI', {
@@ -34,9 +38,15 @@ const renderWithProviders = (component: React.ReactElement) => {
 
 describe('VersionTab', () => {
   beforeEach(() => {
-    mockElectronAPI.getAppVersion.mockResolvedValue('1.0.0')
+    mockElectronAPI.getAppVersion.mockResolvedValue({
+      currentVersion: '1.0.0',
+      latestVersion: undefined,
+      isNewVersionAvailable: false,
+    })
     mockElectronAPI.isOfficialReleaseBuild.mockResolvedValue(true)
     mockElectronAPI.getToolhiveVersion.mockResolvedValue('0.9.0')
+    mockElectronAPI.isAutoUpdateEnabled.mockResolvedValue(true)
+    mockElectronAPI.getUpdateState.mockResolvedValue('none')
   })
 
   it('renders version information heading', async () => {
@@ -126,6 +136,24 @@ describe('VersionTab', () => {
       expect(screen.getByText('1.0.0')).toBeVisible()
     })
 
+    expect(screen.getByText('ToolHive binary version')).toBeVisible()
+  })
+
+  it('show update available alert', async () => {
+    mockElectronAPI.getAppVersion.mockResolvedValue({
+      currentVersion: '1.0.0',
+      latestVersion: '2.0.0',
+      isNewVersionAvailable: true,
+    })
+
+    renderWithProviders(<VersionTab />)
+
+    await waitFor(() => {
+      expect(screen.getByText('1.0.0')).toBeVisible()
+    })
+
+    expect(screen.getByText(/A new version 2.0.0 is available/i)).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Download' })).toBeVisible()
     expect(screen.getByText('ToolHive binary version')).toBeVisible()
   })
 })

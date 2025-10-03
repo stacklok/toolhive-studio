@@ -46,12 +46,14 @@ import {
   getToolhiveMcpPort,
 } from './toolhive-manager'
 import log from './logger'
-import { getAppVersion, getInstanceId, isOfficialReleaseBuild } from './util'
+import { getInstanceId, isOfficialReleaseBuild } from './util'
 import { delay } from '../../utils/delay'
 import {
+  getLatestAvailableVersion,
+  getUpdateState,
   initAutoUpdate,
   resetUpdateState,
-  checkForUpdates,
+  setAutoUpdateEnabled,
 } from './auto-update'
 import Store from 'electron-store'
 import { getHeaders } from './headers'
@@ -109,8 +111,9 @@ import {
 import type { UIMessage } from 'ai'
 
 const store = new Store<{
+  isAutoUpdateEnabled: boolean
   isTelemetryEnabled: boolean
-}>({ defaults: { isTelemetryEnabled: true } })
+}>({ defaults: { isAutoUpdateEnabled: false, isTelemetryEnabled: true } })
 
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
@@ -229,10 +232,11 @@ app.whenReady().then(async () => {
   }
 
   // Initialize auto-update system
-  initAutoUpdate(
-    () => getMainWindow(),
-    () => createMainWindow()
-  )
+  initAutoUpdate({
+    isAutoUpdateEnabled: store.get('isAutoUpdateEnabled', true),
+    mainWindowGetter: () => getMainWindow(),
+    windowCreator: () => createMainWindow(),
+  })
 
   // Start ToolHive with tray reference
   await startToolhive()
@@ -265,7 +269,7 @@ app.whenReady().then(async () => {
 
       mainWindow.webContents.once('did-finish-load', () => {
         log.info('Main window did-finish-load event triggered')
-        checkForUpdates()
+        // checkForUpdates()
       })
     }
   } catch (error) {
@@ -490,10 +494,6 @@ ipcMain.handle('shutdown-store:clear-history', () => {
   return { success: true }
 })
 
-ipcMain.handle('get-app-version', () => {
-  return getAppVersion()
-})
-
 // ────────────────────────────────────────────────────────────────────────────
 //  Sentry IPC handlers
 // ────────────────────────────────────────────────────────────────────────────
@@ -515,6 +515,40 @@ ipcMain.handle('sentry.opt-in', (): boolean => {
 ipcMain.handle('get-instance-id', async () => {
   const instanceId = await getInstanceId()
   return instanceId
+})
+
+// ────────────────────────────────────────────────────────────────────────────
+//  Auto-update IPC handlers
+// ────────────────────────────────────────────────────────────────────────────
+
+ipcMain.handle('auto-update:set', async (_, enabled: boolean) => {
+  store.set('isAutoUpdateEnabled', enabled)
+  setAutoUpdateEnabled(enabled)
+  return enabled
+})
+
+ipcMain.handle('auto-update:get', () => {
+  const enabled = store.get('isAutoUpdateEnabled')
+  return enabled ?? true
+})
+
+ipcMain.handle('manual-update', async () => {
+  log.info('[update] triggered manual update')
+  initAutoUpdate({
+    isAutoUpdateEnabled: store.get('isAutoUpdateEnabled', true),
+    isManualUpdate: true,
+    mainWindowGetter: () => getMainWindow(),
+    windowCreator: () => createMainWindow(),
+  })
+})
+
+ipcMain.handle('get-app-version', async () => {
+  const versionInfo = await getLatestAvailableVersion()
+  return versionInfo
+})
+
+ipcMain.handle('get-update-state', async () => {
+  return getUpdateState()
 })
 
 // Log file operations
