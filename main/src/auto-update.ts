@@ -345,6 +345,9 @@ export function setAutoUpdateEnabled(enabled: boolean) {
     // Reset update state when disabled
     updateState = 'none'
     pendingUpdateVersion = null
+
+    // Remove all autoUpdater listeners to prevent further update activity
+    autoUpdater.removeAllListeners()
   }
 }
 
@@ -359,6 +362,7 @@ export function getUpdateState() {
 }
 
 export async function getLatestAvailableVersion() {
+  const currentVersion = getAppVersion()
   try {
     const response = await fetch(
       'https://stacklok.github.io/toolhive-studio/latest',
@@ -373,11 +377,14 @@ export async function getLatestAvailableVersion() {
         '[update] Failed to check for ToolHive update: ',
         response.statusText
       )
-      return
+      return {
+        currentVersion: currentVersion,
+        latestVersion: undefined,
+        isNewVersionAvailable: false,
+      }
     }
     const data = await response.json()
     const latestTag = getAssetForCurrentPlatform(data)
-    const currentVersion = getAppVersion()
 
     return {
       currentVersion: currentVersion,
@@ -389,6 +396,10 @@ export async function getLatestAvailableVersion() {
     }
   } catch (error) {
     log.error('[update] Failed to check for ToolHive update: ', error)
-    return
+    return {
+      currentVersion: currentVersion,
+      latestVersion: undefined,
+      isNewVersionAvailable: false,
+    }
   }
 }

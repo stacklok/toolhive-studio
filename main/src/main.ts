@@ -113,7 +113,7 @@ import type { UIMessage } from 'ai'
 const store = new Store<{
   isAutoUpdateEnabled: boolean
   isTelemetryEnabled: boolean
-}>({ defaults: { isAutoUpdateEnabled: false, isTelemetryEnabled: true } })
+}>({ defaults: { isAutoUpdateEnabled: true, isTelemetryEnabled: true } })
 
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
@@ -529,7 +529,7 @@ ipcMain.handle('auto-update:set', async (_, enabled: boolean) => {
 
 ipcMain.handle('auto-update:get', () => {
   const enabled = store.get('isAutoUpdateEnabled')
-  return enabled ?? true
+  return enabled
 })
 
 ipcMain.handle('manual-update', async () => {

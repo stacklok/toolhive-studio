@@ -66,7 +66,7 @@ export function useCurrentUpdateState() {
     refetchInterval: (query) => {
       const state = query.state.data
       // Stop polling when state is 'downloaded'
-      return state === 'downloaded' ? false : 100
+      return state === 'downloaded' ? false : 300
     },
     refetchOnMount: true,
     refetchOnWindowFocus: true,
