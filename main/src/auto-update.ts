@@ -11,7 +11,7 @@ import { safeTrayDestroy } from './system-tray'
 import { pollWindowReady } from './util'
 import { delay } from '../../utils/delay'
 import log from './logger'
-import { setQuittingState, setTearingDownState, getTray } from './app-state'
+import { setQuittingState, setTearingDownState } from './app-state'
 
 let pendingUpdateVersion: string | null = null
 let updateState:
@@ -79,7 +79,7 @@ async function performUpdateInstallation(releaseName: string | null) {
       log.error('[update] Error stopping ToolHive: ', error)
     }
 
-    safeTrayDestroy(getTray())
+    safeTrayDestroy()
 
     log.info('[update] all cleaned up, calling autoUpdater.quitAndInstall()...')
     autoUpdater.quitAndInstall()
@@ -89,7 +89,7 @@ async function performUpdateInstallation(releaseName: string | null) {
 
     // Attempt recovery
     try {
-      safeTrayDestroy(getTray())
+      safeTrayDestroy()
       log.info('[update] attempting app relaunch after update failure')
       // this creates a new app instance
       app.relaunch()

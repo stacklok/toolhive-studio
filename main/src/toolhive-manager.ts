@@ -3,7 +3,6 @@ import { existsSync } from 'node:fs'
 import path from 'node:path'
 import net from 'node:net'
 import { app } from 'electron'
-import type { Tray } from 'electron'
 import { updateTrayStatus } from './system-tray'
 import log from './logger'
 import * as Sentry from '@sentry/electron/main'
@@ -41,9 +40,6 @@ export function getToolhiveMcpPort(): number | undefined {
 
 export function isToolhiveRunning(): boolean {
   const isRunning = !!toolhiveProcess && !toolhiveProcess.killed
-  log.debug(
-    `[isToolhiveRunning] Process exists: ${!!toolhiveProcess}, Killed: ${toolhiveProcess?.killed}, Port: ${toolhivePort}, Result: ${isRunning}`
-  )
   return isRunning
 }
 
@@ -104,7 +100,7 @@ async function findFreePort(
   return await getRandomPort()
 }
 
-export async function startToolhive(tray?: Tray): Promise<void> {
+export async function startToolhive(): Promise<void> {
   Sentry.withScope<Promise<void>>(async (scope) => {
     if (!existsSync(binPath)) {
       log.error(`ToolHive binary not found at: ${binPath}`)
@@ -141,9 +137,7 @@ export async function startToolhive(tray?: Tray): Promise<void> {
       message: `Starting ToolHive from: ${binPath} on port ${toolhivePort}, MCP on port ${toolhiveMcpPort}, PID: ${toolhiveProcess.pid}`,
     })
 
-    if (tray) {
-      updateTrayStatus(tray, !!toolhiveProcess)
-    }
+    updateTrayStatus(!!toolhiveProcess)
 
     // Capture and log stderr
     if (toolhiveProcess.stderr) {
@@ -169,14 +163,14 @@ export async function startToolhive(tray?: Tray): Promise<void> {
         `Failed to start ToolHive: ${JSON.stringify(error)}`,
         'fatal'
       )
-      if (tray) updateTrayStatus(tray, false)
+      updateTrayStatus(false)
     })
 
     toolhiveProcess.on('exit', (code) => {
       log.warn(`ToolHive process exited with code: ${code}`)
       toolhiveProcess = undefined
-      if (tray) updateTrayStatus(tray, false)
       if (!isRestarting && !getQuittingState()) {
+        updateTrayStatus(false)
         Sentry.captureMessage(
           `ToolHive process exited with code: ${code}`,
           'fatal'
@@ -186,7 +180,7 @@ export async function startToolhive(tray?: Tray): Promise<void> {
   })
 }
 
-export async function restartToolhive(tray?: Tray): Promise<void> {
+export async function restartToolhive(): Promise<void> {
   if (isRestarting) {
     log.info('Restart already in progress, skipping...')
     return
@@ -203,7 +197,7 @@ export async function restartToolhive(tray?: Tray): Promise<void> {
     }
 
     // Start new process
-    await startToolhive(tray)
+    await startToolhive()
     log.info('ToolHive restarted successfully')
   } catch (error) {
     log.error('Failed to restart ToolHive: ', error)

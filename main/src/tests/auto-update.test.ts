@@ -237,7 +237,7 @@ describe('auto-update', () => {
         expect(vi.mocked(dialog.showMessageBox)).toHaveBeenCalled()
         expect(vi.mocked(stopAllServers)).toHaveBeenCalled()
         expect(vi.mocked(stopToolhive)).toHaveBeenCalled()
-        expect(vi.mocked(safeTrayDestroy)).toHaveBeenCalledWith(mockTray)
+        expect(vi.mocked(safeTrayDestroy)).toHaveBeenCalled()
       })
 
       it('handles update-downloaded event with user clicking later', async () => {
@@ -681,7 +681,7 @@ describe('auto-update', () => {
       // Should call graceful exit sequence
       expect(vi.mocked(stopAllServers)).toHaveBeenCalled()
       expect(vi.mocked(stopToolhive)).toHaveBeenCalled()
-      expect(vi.mocked(safeTrayDestroy)).toHaveBeenCalledWith(mockTray)
+      expect(vi.mocked(safeTrayDestroy)).toHaveBeenCalled()
     })
 
     it('handles server shutdown failure during update', async () => {
@@ -789,9 +789,7 @@ describe('auto-update', () => {
 
       await updatePromise
 
-      expect(vi.mocked(safeTrayDestroy)).toHaveBeenCalledWith(
-        mockTrayWithDestroy
-      )
+      expect(vi.mocked(safeTrayDestroy)).toHaveBeenCalled()
     })
 
     it('respects event listener removal during update', async () => {

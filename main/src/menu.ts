@@ -3,10 +3,7 @@ import { getAutoLaunchStatus, setAutoLaunch } from './auto-launch'
 import { updateTrayStatus } from './system-tray'
 import log from './logger'
 
-function createAutoLaunchItem(
-  accelerator: string,
-  trayRef: Electron.Tray | null
-) {
+function createAutoLaunchItem(accelerator: string) {
   return {
     label: 'Start on Login',
     type: 'checkbox' as const,
@@ -16,10 +13,8 @@ function createAutoLaunchItem(
       try {
         const currentStatus = getAutoLaunchStatus()
         setAutoLaunch(!currentStatus)
-        if (trayRef) {
-          updateTrayStatus(trayRef, true)
-        }
-        createApplicationMenu(trayRef)
+        updateTrayStatus(true)
+        createApplicationMenu()
       } catch (error) {
         log.error('Failed to toggle auto-launch: ', error)
       }
@@ -27,7 +22,7 @@ function createAutoLaunchItem(
   }
 }
 
-export function createApplicationMenu(trayRef: Electron.Tray | null) {
+export function createApplicationMenu() {
   const isMac = process.platform === 'darwin'
   const defaultMenu = Menu.getApplicationMenu()?.items ?? []
 
@@ -57,7 +52,7 @@ export function createApplicationMenu(trayRef: Electron.Tray | null) {
       submenu: [
         { role: 'about' as const },
         { type: 'separator' as const },
-        createAutoLaunchItem(isMac ? 'Cmd+L' : 'Ctrl+L', trayRef),
+        createAutoLaunchItem(isMac ? 'Cmd+L' : 'Ctrl+L'),
         { type: 'separator' as const },
         ...(isMac
           ? [
