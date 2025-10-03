@@ -1,7 +1,7 @@
 import { Badge } from '../../ui/badge'
 import {
-  useAppVersion,
   useCurrentUpdateState,
+  type AppVersionInfo,
 } from '../../../hooks/use-app-version'
 import { Switch } from '../../ui/switch'
 import {
@@ -11,6 +11,12 @@ import {
 import { Button } from '../../ui/button'
 import { Alert, AlertDescription } from '../../ui/alert'
 import { AlertCircleIcon, Download } from 'lucide-react'
+
+interface VersionTabProps {
+  appInfo: AppVersionInfo | undefined
+  isLoading: boolean
+  error: Error | null
+}
 
 function VersionInfoWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -23,8 +29,7 @@ function VersionInfoWrapper({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function VersionTab() {
-  const { data: appInfo, isLoading, error } = useAppVersion()
+export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
   const { data: updateState, isLoading: isUpdateStateLoading } =
     useCurrentUpdateState()
   const isDownloading = isUpdateStateLoading || updateState === 'downloading'
