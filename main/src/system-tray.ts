@@ -7,6 +7,7 @@ import { getAppVersion } from './util'
 import { hideWindow, showWindow, showInDock } from './dock-utils'
 import { showMainWindow, sendToMainWindowRenderer } from './main-window'
 import { getTray, setTray } from './app-state'
+import { getLatestAvailableVersion, manualUpdate } from './auto-update'
 
 // Safe tray destruction with error handling
 export function safeTrayDestroy() {
@@ -69,7 +70,7 @@ const createTrayWithSetup =
     try {
       return setupFn(toolHiveIsRunning)
     } catch (error) {
-      log.error('Failed to create tray: ', error)
+      log.error('[tray] Failed to create tray: ', error)
       throw error
     }
   }
@@ -128,7 +129,7 @@ const handleStartOnLogin = async (toolHiveIsRunning: boolean) => {
     // Update the application menu to reflect the new state
     createApplicationMenu()
   } catch (error) {
-    log.error('Failed to toggle auto-launch: ', error)
+    log.error('[tray] Failed to toggle auto-launch: ', error)
   }
 }
 
@@ -148,6 +149,59 @@ const getCurrentAppVersion = () => {
     enabled: false,
   }
 }
+
+// Store update info to persist across menu rebuilds
+let updateInfo: { latestVersion: string; isAvailable: boolean } | null = null
+
+const createUpdateMenuItem = (toolHiveIsRunning: boolean) => ({
+  label: updateInfo?.isAvailable
+    ? `New version available ${updateInfo.latestVersion}`
+    : 'Check for Updates',
+  sublabel: updateInfo?.isAvailable
+    ? 'Click to download'
+    : updateInfo?.latestVersion
+      ? 'Already up to date'
+      : undefined,
+  type: 'normal' as const,
+  enabled: true,
+  click: async () => {
+    // If update is already available, start the update process
+    if (updateInfo?.isAvailable) {
+      log.info(
+        '[tray] Starting manual update to version:',
+        updateInfo.latestVersion
+      )
+      manualUpdate()
+      return
+    }
+
+    // Otherwise, check for updates
+    try {
+      const appVersionInfo = await getLatestAvailableVersion()
+
+      if (appVersionInfo.latestVersion) {
+        updateInfo = {
+          latestVersion: appVersionInfo.latestVersion,
+          isAvailable: appVersionInfo.isNewVersionAvailable,
+        }
+
+        // Update menu to show the new information
+        setupTrayMenu(toolHiveIsRunning)
+
+        if (appVersionInfo.isNewVersionAvailable) {
+          log.info(
+            '[tray] New version available:',
+            appVersionInfo.latestVersion
+          )
+        } else {
+          log.info('[tray] Already on the latest version')
+        }
+      }
+    } catch (error) {
+      log.error('[tray] Failed to check for updates:', error)
+    }
+  },
+})
 
 const startOnLoginMenu = (toolHiveIsRunning: boolean) => {
   const isStartOnLogin = getAutoLaunchStatus()
@@ -184,7 +238,7 @@ const createQuitMenuItem = () => ({
       await showMainWindow()
       sendToMainWindowRenderer('show-quit-confirmation')
     } catch (error) {
-      log.error('Failed to show quit confirmation from tray:', error)
+      log.error('[tray] Failed to show quit confirmation from tray:', error)
     }
   },
 })
@@ -194,6 +248,7 @@ const createSeparator = () => ({ type: 'separator' as const })
 const createMenuTemplate = (toolHiveIsRunning: boolean) => [
   createStatusMenuItem(toolHiveIsRunning),
   getCurrentAppVersion(),
+  createUpdateMenuItem(toolHiveIsRunning),
   createSeparator(),
   startOnLoginMenu(toolHiveIsRunning),
   createSeparator(),
@@ -257,6 +312,6 @@ export const updateTrayStatus = (toolHiveIsRunning: boolean) => {
   try {
     setupTrayMenu(toolHiveIsRunning)
   } catch (error) {
-    log.error('Failed to update tray status: ', error)
+    log.error('[tray] Failed to update tray status: ', error)
   }
 }
