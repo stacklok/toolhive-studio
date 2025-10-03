@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, cleanup } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { SettingsTabs } from '../settings-tabs'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
@@ -11,6 +11,9 @@ const mockElectronAPI = {
   getAppVersion: vi.fn(),
   isReleaseBuild: vi.fn(),
   getToolhiveVersion: vi.fn(),
+  isAutoUpdateEnabled: vi.fn(),
+  setAutoUpdate: vi.fn(),
+  getUpdateState: vi.fn(),
   sentry: {
     isEnabled: vi.fn(),
     optIn: vi.fn(),
@@ -31,6 +34,35 @@ vi.mock('@/common/hooks/use-auto-launch', () => ({
   useSetAutoLaunch: vi.fn().mockReturnValue({
     mutateAsync: vi.fn(),
     isPending: false,
+  }),
+}))
+
+vi.mock('@/common/hooks/use-auto-update', () => ({
+  useAutoUpdateStatus: vi.fn().mockReturnValue({
+    data: false,
+    isLoading: false,
+  }),
+  useSetAutoUpdate: vi.fn().mockReturnValue({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
+}))
+
+vi.mock('@/common/hooks/use-app-version', () => ({
+  useAppVersion: vi.fn().mockReturnValue({
+    data: {
+      currentVersion: '1.0.0',
+      latestVersion: '1.0.0',
+      isNewVersionAvailable: false,
+      isReleaseBuild: true,
+      toolhiveVersion: '0.9.0',
+    },
+    isLoading: false,
+    error: null,
+  }),
+  useCurrentUpdateState: vi.fn().mockReturnValue({
+    data: 'none',
+    isLoading: false,
   }),
 }))
 
@@ -59,7 +91,13 @@ describe('SettingsTabs', () => {
     mockElectronAPI.getAppVersion.mockResolvedValue('1.0.0')
     mockElectronAPI.isReleaseBuild.mockResolvedValue(true)
     mockElectronAPI.getToolhiveVersion.mockResolvedValue('0.9.0')
+    mockElectronAPI.isAutoUpdateEnabled.mockResolvedValue(false)
+    mockElectronAPI.getUpdateState.mockResolvedValue('none')
     mockElectronAPI.sentry.isEnabled.mockResolvedValue(true)
+  })
+
+  afterEach(() => {
+    cleanup()
   })
 
   it('renders all tab triggers', async () => {
@@ -77,7 +115,7 @@ describe('SettingsTabs', () => {
       ).toBeVisible()
     })
   })
-  it('shows Version tab as default active tab', async () => {
+  it('shows Version tab when clicked', async () => {
     renderWithProviders(<SettingsTabs />)
     await userEvent.click(screen.getByRole('tab', { name: 'Version' }))
     await waitFor(() => {
@@ -86,8 +124,9 @@ describe('SettingsTabs', () => {
       ).toBeVisible()
     })
   })
-  it('shows Logs tab as default active tab', async () => {
+  it('shows Logs tab when clicked', async () => {
     renderWithProviders(<SettingsTabs />)
+
     await userEvent.click(screen.getByRole('tab', { name: 'Logs' }))
     await waitFor(() => {
       expect(
