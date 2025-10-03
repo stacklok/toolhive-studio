@@ -7,7 +7,7 @@ import { getAppVersion } from './util'
 import { hideWindow, showWindow, showInDock } from './dock-utils'
 import { showMainWindow, sendToMainWindowRenderer } from './main-window'
 import { getTray, setTray } from './app-state'
-import { getLatestAvailableVersion, manualUpdate } from './auto-update'
+import { handleCheckForUpdates } from './utils/update-dialogs'
 
 // Safe tray destruction with error handling
 export function safeTrayDestroy() {
@@ -150,56 +150,12 @@ const getCurrentAppVersion = () => {
   }
 }
 
-// Store update info to persist across menu rebuilds
-let updateInfo: { latestVersion: string; isAvailable: boolean } | null = null
-
-const createUpdateMenuItem = (toolHiveIsRunning: boolean) => ({
-  label: updateInfo?.isAvailable
-    ? `New version available ${updateInfo.latestVersion}`
-    : 'Check for Updates',
-  sublabel: updateInfo?.isAvailable
-    ? 'Click to download'
-    : updateInfo?.latestVersion
-      ? 'Already up to date'
-      : undefined,
+const createUpdateMenuItem = () => ({
+  label: 'Check for Updates...',
   type: 'normal' as const,
   enabled: true,
   click: async () => {
-    // If update is already available, start the update process
-    if (updateInfo?.isAvailable) {
-      log.info(
-        '[tray] Starting manual update to version:',
-        updateInfo.latestVersion
-      )
-      manualUpdate()
-      return
-    }
-
-    // Otherwise, check for updates
-    try {
-      const appVersionInfo = await getLatestAvailableVersion()
-
-      if (appVersionInfo.latestVersion) {
-        updateInfo = {
-          latestVersion: appVersionInfo.latestVersion,
-          isAvailable: appVersionInfo.isNewVersionAvailable,
-        }
-
-        // Update menu to show the new information
-        setupTrayMenu(toolHiveIsRunning)
-
-        if (appVersionInfo.isNewVersionAvailable) {
-          log.info(
-            '[tray] New version available:',
-            appVersionInfo.latestVersion
-          )
-        } else {
-          log.info('[tray] Already on the latest version')
-        }
-      }
-    } catch (error) {
-      log.error('[tray] Failed to check for updates:', error)
-    }
+    await handleCheckForUpdates()
   },
 })
 
@@ -248,7 +204,7 @@ const createSeparator = () => ({ type: 'separator' as const })
 const createMenuTemplate = (toolHiveIsRunning: boolean) => [
   createStatusMenuItem(toolHiveIsRunning),
   getCurrentAppVersion(),
-  createUpdateMenuItem(toolHiveIsRunning),
+  createUpdateMenuItem(),
   createSeparator(),
   startOnLoginMenu(toolHiveIsRunning),
   createSeparator(),
