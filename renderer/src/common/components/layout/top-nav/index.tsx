@@ -14,7 +14,7 @@ import { TopNavContainer } from './container'
 import { Separator } from '../../ui/separator'
 import { useConfirmQuit } from '@/common/hooks/use-confirm-quit'
 import { QuitConfirmationListener } from './quit-confirmation-listener'
-import { SettingsIcon } from 'lucide-react'
+import { ArrowUpCircle, SettingsIcon } from 'lucide-react'
 import { useRouterState } from '@tanstack/react-router'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../ui/tooltip'
 import { Button } from '../../ui/button'
@@ -182,10 +182,11 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
                   <Button variant="ghost" size="sm" className="cursor-pointer">
                     <div className="relative inline-flex items-center">
                       <SettingsIcon className="text-muted-foreground size-4" />
-                      <div
-                        className="bg-muted-foreground absolute -top-0.5
-                          -right-0.5 size-1.75 rounded-full"
-                      />
+                      <div className="absolute -top-1 -right-1">
+                        <div className="bg-background rounded-full p-0.5">
+                          <ArrowUpCircle className="size-3 text-blue-500" />
+                        </div>
+                      </div>
                     </div>
                   </Button>
                 </TooltipTrigger>
