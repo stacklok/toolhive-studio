@@ -2,7 +2,7 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useRunRemoteServer } from '../use-run-remote-server'
-import { server as mswServer } from '@/common/mocks/node'
+import { server as mswServer, recordRequests } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
@@ -30,12 +30,12 @@ beforeEach(() => {
 
 describe('useRunRemoteServer', () => {
   it('uses form data group instead of groupName prop when form data has a group', async () => {
-    let apiRequestBody: { group?: string } | null = null
+    // Use the automatic request recorder
+    const rec = recordRequests()
 
-    // Mock the API to capture what gets sent
+    // Mock the API responses
     mswServer.use(
-      http.post(mswEndpoint('/api/v1beta/workloads'), async ({ request }) => {
-        apiRequestBody = await request.json()
+      http.post(mswEndpoint('/api/v1beta/workloads'), () => {
         return HttpResponse.json(
           { name: 'test-server', port: 8080 },
           { status: 201 }
@@ -88,12 +88,22 @@ describe('useRunRemoteServer', () => {
       }
     )
 
-    // Wait for the API call to complete
+    // Wait for the API call and find the workload creation request
     await waitFor(() => {
-      expect(apiRequestBody).not.toBeNull()
+      const workloadRequest = rec.recordedRequests.find(
+        (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
+      )
+      expect(workloadRequest).toBeDefined()
     })
 
+    const workloadRequest = rec.recordedRequests.find(
+      (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
+    )
+
     // The API should receive 'production' (from form data), not 'default' (from prop)
-    expect(apiRequestBody.group).toBe('production')
+    expect(workloadRequest?.payload).toMatchObject({
+      group: 'production',
+      name: 'test-server',
+    })
   })
 })
