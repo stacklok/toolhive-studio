@@ -169,7 +169,9 @@ export type CoreWorkload = {
    */
   port?: number
   /**
-   * ProxyMode is the proxy mode for stdio transport (sse or streamable-http).
+   * ProxyMode is the proxy mode that clients should use to connect.
+   * For stdio transports, this will be the proxy mode (sse or streamable-http).
+   * For direct transports (sse/streamable-http), this will be the same as TransportType.
    */
   proxy_mode?: string
   /**
@@ -218,9 +220,20 @@ export type IgnoreConfig = {
 }
 
 /**
+ * Inbound defines inbound network permissions
+ */
+export type PermissionsInboundNetworkPermissions = {
+  /**
+   * AllowHost is a list of allowed hosts for inbound connections
+   */
+  allow_host?: Array<string>
+}
+
+/**
  * Network defines network permissions
  */
 export type PermissionsNetworkPermissions = {
+  inbound?: PermissionsInboundNetworkPermissions
   outbound?: PermissionsOutboundNetworkPermissions
 }
 
@@ -765,6 +778,10 @@ export type RunnerRunConfig = {
    */
   transport?: string
   /**
+   * TrustProxyHeaders indicates whether to trust X-Forwarded-* headers from reverse proxies
+   */
+  trust_proxy_headers?: boolean
+  /**
    * Volumes are the directory mounts to pass to the container
    * Format: "host-path:container-path[:ro]"
    */
@@ -1044,6 +1061,10 @@ export type V1CreateRequest = {
    * Transport configuration
    */
   transport?: string
+  /**
+   * Whether to trust X-Forwarded-* headers from reverse proxies
+   */
+  trust_proxy_headers?: boolean
   /**
    * Remote server specific fields
    */
@@ -1448,6 +1469,10 @@ export type V1UpdateRequest = {
    * Transport configuration
    */
   transport?: string
+  /**
+   * Whether to trust X-Forwarded-* headers from reverse proxies
+   */
+  trust_proxy_headers?: boolean
   /**
    * Remote server specific fields
    */
