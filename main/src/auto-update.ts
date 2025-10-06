@@ -175,6 +175,10 @@ export function initAutoUpdate({
   mainWindowGetter: () => BrowserWindow | null
   windowCreator: () => Promise<BrowserWindow>
 }) {
+  // Always save references first, so manualUpdate() can work even if auto-update is disabled
+  mainWindowGetter = getterParam
+  windowCreator = creatorParam
+
   const isAutoUpdateEnabled = store.get('isAutoUpdateEnabled')
   log.info('[update] isAutoUpdateEnabled: ', isAutoUpdateEnabled)
   if (!isAutoUpdateEnabled && !isManualUpdate) {
@@ -183,10 +187,6 @@ export function initAutoUpdate({
   }
 
   resetAllUpdateState()
-
-  // Update references after reset
-  mainWindowGetter = getterParam
-  windowCreator = creatorParam
 
   // Remove any existing listeners to prevent duplicates
   autoUpdater.removeAllListeners()
@@ -341,8 +341,6 @@ export function resetAllUpdateState() {
   setQuittingState(false)
   setTearingDownState(false)
   pendingUpdateVersion = null
-  mainWindowGetter = null
-  windowCreator = null
 }
 
 export function setAutoUpdateEnabled(enabled: boolean) {
