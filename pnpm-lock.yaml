@@ -28,13 +28,13 @@ importers:
         version: 2.0.23(zod@4.1.8)
       '@fontsource-variable/inter':
         specifier: ^5.2.6
-        version: 5.2.6
+        version: 5.2.8
       '@fontsource/atkinson-hyperlegible':
         specifier: ^5.2.6
-        version: 5.2.7
+        version: 5.2.8
       '@fontsource/space-mono':
         specifier: ^5.2.7
-        version: 5.2.8
+        version: 5.2.9
       '@modelcontextprotocol/sdk':
         specifier: ^1.17.2
         version: 1.19.1
@@ -985,14 +985,14 @@ packages:
   '@floating-ui/utils@0.2.10':
     resolution: {integrity: sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==}
 
-  '@fontsource-variable/inter@5.2.6':
-    resolution: {integrity: sha512-jks/bficUPQ9nn7GvXvHtlQIPudW7Wx8CrlZoY8bhxgeobNxlQan8DclUJuYF2loYRrGpfrhCIZZspXYysiVGg==}
+  '@fontsource-variable/inter@5.2.8':
+    resolution: {integrity: sha512-kOfP2D+ykbcX/P3IFnokOhVRNoTozo5/JxhAIVYLpea/UBmCQ/YWPBfWIDuBImXX/15KH+eKh4xpEUyS2sQQGQ==}
 
-  '@fontsource/atkinson-hyperlegible@5.2.7':
-    resolution: {integrity: sha512-WUCchUMKXKH9VO1ZStn64CMdWl+l+kJY+6Ia9lFoO5C+z7jHx3Z2y73lBnHwz3n8it5Hs2wdk0JDyhs8hPbXxw==}
+  '@fontsource/atkinson-hyperlegible@5.2.8':
+    resolution: {integrity: sha512-HciLcJ5DIK/OVOdo71EbEN4NnvDFlp6/SpAxtcbWf2aAdcsOuPqITxj5KNEXb48qSPSdnnZdGGnSJChPKi3/bA==}
 
-  '@fontsource/space-mono@5.2.8':
-    resolution: {integrity: sha512-25X0fg1+kxxLes9/c6AozhrrAuBW1uLaOL584IRg4DZxVxNOMzcS3mHS1UtmsyTwtU2HpiIt9Kv23Q+7xQO+hg==}
+  '@fontsource/space-mono@5.2.9':
+    resolution: {integrity: sha512-b61faFOHEISQ/pD25G+cfGY9o/WW6lRv6hBQQfpWvEJ4y1V+S4gmth95EVyBE2VL3qDYHeVQ8nBzrplzdXTDDg==}
 
   '@gar/promisify@1.1.3':
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
@@ -8397,11 +8397,11 @@ snapshots:
 
   '@floating-ui/utils@0.2.10': {}
 
-  '@fontsource-variable/inter@5.2.6': {}
+  '@fontsource-variable/inter@5.2.8': {}
 
-  '@fontsource/atkinson-hyperlegible@5.2.7': {}
+  '@fontsource/atkinson-hyperlegible@5.2.8': {}
 
-  '@fontsource/space-mono@5.2.8': {}
+  '@fontsource/space-mono@5.2.9': {}
 
   '@gar/promisify@1.1.3': {}
 
