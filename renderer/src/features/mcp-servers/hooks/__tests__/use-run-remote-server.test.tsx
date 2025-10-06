@@ -1,5 +1,5 @@
 import { renderHook, waitFor } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useRunRemoteServer } from '../use-run-remote-server'
 import { server as mswServer, recordRequests } from '@/common/mocks/node'
@@ -24,10 +24,6 @@ const wrapper = ({ children }: { children: React.ReactNode }) => {
   )
 }
 
-beforeEach(() => {
-  vi.clearAllMocks()
-})
-
 describe('useRunRemoteServer', () => {
   it('uses form data group instead of groupName prop when form data has a group', async () => {
     // Use the automatic request recorder
@@ -44,8 +40,8 @@ describe('useRunRemoteServer', () => {
       () =>
         useRunRemoteServer({
           pageName: '/test',
-          onSecretSuccess: vi.fn(),
-          onSecretError: vi.fn(),
+          onSecretSuccess: () => {},
+          onSecretError: () => {},
           groupName: 'default', // This is the prop
         }),
       { wrapper }
@@ -74,30 +70,19 @@ describe('useRunRemoteServer', () => {
     }
 
     // Call the mutation
-    result.current.installServerMutation(
-      { data: formData },
-      {
-        onSuccess: vi.fn(),
-        onError: vi.fn(),
-      }
-    )
+    result.current.installServerMutation({ data: formData })
 
-    // Wait for the API call and find the workload creation request
+    // Wait for the API call and verify the payload
     await waitFor(() => {
       const workloadRequest = rec.recordedRequests.find(
         (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
       )
-      expect(workloadRequest).toBeDefined()
-    })
 
-    const workloadRequest = rec.recordedRequests.find(
-      (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
-    )
-
-    // The API should receive 'production' (from form data), not 'default' (from prop)
-    expect(workloadRequest?.payload).toMatchObject({
-      group: 'production',
-      name: 'test-server',
+      // The API should receive 'production' (from form data), not 'default' (from prop)
+      expect(workloadRequest?.payload).toMatchObject({
+        group: 'production',
+        name: 'test-server',
+      })
     })
   })
 })
