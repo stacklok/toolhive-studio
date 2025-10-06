@@ -386,6 +386,18 @@ export function getIsAutoUpdateEnabled() {
   return store.get('isAutoUpdateEnabled')
 }
 
+function isCurrentVersionPrerelease(
+  currentVersion: string,
+  releaseData: ReleaseInfo
+): boolean {
+  return (
+    currentVersion.includes('-beta') ||
+    currentVersion.includes('-alpha') ||
+    currentVersion.includes('-rc') ||
+    releaseData.prerelease === true
+  )
+}
+
 export async function getLatestAvailableVersion() {
   const currentVersion = getAppVersion()
   try {
@@ -410,14 +422,21 @@ export async function getLatestAvailableVersion() {
     }
     const data = await response.json()
     const latestTag = getAssetsTagByPlatform(data)
+    log.info('[update] latestTag: ', latestTag)
+
+    // If current version is a prerelease (contains -beta, -alpha, -rc) OR data.prerelease is true,
+    // always consider it as older than ANY latest version
+    // This allows testing updates even when running a prerelease build
+    const currentIsPrerelease = isCurrentVersionPrerelease(currentVersion, data)
+
+    const isNewVersion = currentIsPrerelease
+      ? latestTag !== undefined // If prerelease, any latest tag is considered new
+      : isCurrentVersionOlder(currentVersion, normalizeVersion(latestTag ?? ''))
 
     return {
       currentVersion: currentVersion,
       latestVersion: latestTag,
-      isNewVersionAvailable: isCurrentVersionOlder(
-        currentVersion,
-        normalizeVersion(latestTag ?? '')
-      ),
+      isNewVersionAvailable: isNewVersion,
     }
   } catch (error) {
     log.error('[update] Failed to check for ToolHive update: ', error)
