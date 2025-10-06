@@ -55,6 +55,7 @@ const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
   envVars: [],
   secrets: [],
   url: '',
+  group: 'default',
 }
 
 interface FormRunFromRegistryProps {

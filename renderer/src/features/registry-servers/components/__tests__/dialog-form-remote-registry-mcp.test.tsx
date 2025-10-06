@@ -260,6 +260,7 @@ describe('DialogFormRemoteRegistryMcp', () => {
                 value: 'false',
               },
             ],
+            group: 'default',
             name: 'test-registry-server',
             oauth_config: {
               authorize_url: 'https://api.example.com/authorize',
