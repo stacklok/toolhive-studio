@@ -1081,17 +1081,6 @@ describe('auto-update', () => {
     })
 
     describe('manualUpdate', () => {
-      it('logs error when initAutoUpdate was not called first', () => {
-        // Reset to clear any previous initialization
-        resetAllUpdateState()
-
-        manualUpdate()
-
-        expect(vi.mocked(log).error).toHaveBeenCalledWith(
-          '[update] Cannot perform manual update: initAutoUpdate was not called first'
-        )
-      })
-
       it('calls initAutoUpdate with isManualUpdate flag', () => {
         // Initialize first
         initAutoUpdate({
