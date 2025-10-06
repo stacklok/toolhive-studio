@@ -949,6 +949,9 @@ describe('auto-update', () => {
       })
 
       it('returns latest version when available for current platform', async () => {
+        const originalPlatform = process.platform
+        Object.defineProperty(process, 'platform', { value: 'darwin' })
+
         const mockResponse: ReleaseInfo = {
           tag: 'v1.5.0',
           prerelease: false,
@@ -971,6 +974,8 @@ describe('auto-update', () => {
           latestVersion: 'v1.5.0',
           isNewVersionAvailable: true,
         })
+
+        Object.defineProperty(process, 'platform', { value: originalPlatform })
       })
 
       it('returns no update when latest version is not available for platform', async () => {
