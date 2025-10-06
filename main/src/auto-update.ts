@@ -422,7 +422,6 @@ export async function getLatestAvailableVersion() {
     }
     const data = await response.json()
     const latestTag = getAssetsTagByPlatform(data)
-    log.info('[update] latestTag: ', latestTag)
 
     // If current version is a prerelease (contains -beta, -alpha, -rc) OR data.prerelease is true,
     // always consider it as older than ANY latest version
