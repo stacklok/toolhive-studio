@@ -8,6 +8,10 @@ import {
   resetAllUpdateState,
   checkForUpdates,
   getUpdateState,
+  setAutoUpdateEnabled,
+  manualUpdate,
+  getLatestAvailableVersion,
+  type ReleaseInfo,
 } from '../auto-update'
 
 vi.mock('electron', () => {
@@ -47,6 +51,7 @@ vi.mock('electron', () => {
     },
     ipcMain: {
       handle: vi.fn(),
+      removeHandler: vi.fn(),
     },
   }
 })
@@ -86,6 +91,7 @@ vi.mock('../system-tray', () => ({
 
 vi.mock('../util', () => ({
   pollWindowReady: vi.fn().mockResolvedValue(undefined),
+  getAppVersion: vi.fn(() => '1.0.0'),
 }))
 
 vi.mock('../../../utils/delay', () => ({
@@ -122,7 +128,6 @@ describe('auto-update', () => {
   describe('unit tests', () => {
     let mockMainWindow: BrowserWindow
     let mockTray: Tray
-    let mockCreateWindow: () => Promise<BrowserWindow>
 
     beforeEach(() => {
       vi.clearAllMocks()
@@ -151,9 +156,6 @@ describe('auto-update', () => {
         isDestroyed: vi.fn(() => false),
         destroy: vi.fn(),
       } as unknown as Tray
-
-      // Create mock window creator
-      mockCreateWindow = vi.fn().mockResolvedValue(mockMainWindow)
 
       // Setup default mocks
       vi.mocked(stopAllServers).mockResolvedValue(undefined)
@@ -187,6 +189,9 @@ describe('auto-update', () => {
 
     describe('initAutoUpdate', () => {
       it('initializes update system correctly', () => {
+        // Spy on autoUpdater.on to verify event registrations
+        const onSpy = vi.spyOn(autoUpdater, 'on')
+
         // Reset and re-initialize to test
         resetAllUpdateState()
         initAutoUpdate({
@@ -194,12 +199,32 @@ describe('auto-update', () => {
           windowCreator: async () => mockMainWindow,
         })
 
-        // Only check for handler registered inside initAutoUpdate
+        // Verify IPC handler is registered
         expect(vi.mocked(ipcMain.handle)).toHaveBeenCalledWith(
           'install-update-and-restart',
           expect.any(Function)
         )
-        // Note: 'is-update-in-progress' is registered at module level, not in initAutoUpdate
+
+        // Verify autoUpdater event listeners are registered and called
+        expect(onSpy).toHaveBeenCalledWith(
+          'update-downloaded',
+          expect.any(Function)
+        )
+        expect(onSpy).toHaveBeenCalledWith(
+          'checking-for-update',
+          expect.any(Function)
+        )
+        expect(onSpy).toHaveBeenCalledWith(
+          'update-available',
+          expect.any(Function)
+        )
+        expect(onSpy).toHaveBeenCalledWith(
+          'update-not-available',
+          expect.any(Function)
+        )
+        expect(onSpy).toHaveBeenCalledWith('error', expect.any(Function))
+
+        onSpy.mockRestore()
       })
 
       it('sets up mock update notification in development', async () => {
@@ -288,42 +313,51 @@ describe('auto-update', () => {
       })
 
       it('recreates window when destroyed', async () => {
-        const destroyedWindow = {
-          isDestroyed: vi.fn(() => true),
+        // Change existing window mock to return destroyed
+        vi.mocked(mockMainWindow.isDestroyed).mockReturnValue(true)
+
+        const newWindow = {
+          isDestroyed: vi.fn(() => false),
+          isMinimized: vi.fn(() => false),
+          restore: vi.fn(),
+          webContents: { send: vi.fn() },
         } as unknown as BrowserWindow
+
+        const createWindowSpy = vi.fn().mockResolvedValue(newWindow)
 
         vi.mocked(dialog.showMessageBox).mockResolvedValue({
           response: 1,
           checkboxChecked: false,
         }) // "Later"
 
+        // Re-initialize with new window creator
+        resetAllUpdateState()
         initAutoUpdate({
-          mainWindowGetter: () => destroyedWindow,
-          windowCreator: mockCreateWindow,
+          mainWindowGetter: () => mockMainWindow,
+          windowCreator: createWindowSpy,
         })
 
         vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
 
-        // Run all timers to trigger window recreation
         await vi.runAllTimersAsync()
 
-        expect(mockCreateWindow).toHaveBeenCalled()
-        expect(vi.mocked(pollWindowReady)).toHaveBeenCalledWith(mockMainWindow)
+        expect(createWindowSpy).toHaveBeenCalled()
+        expect(vi.mocked(pollWindowReady)).toHaveBeenCalledWith(newWindow)
       })
 
       it('handles window creation failure gracefully', async () => {
-        const destroyedWindow = {
-          isDestroyed: vi.fn(() => true),
-        } as unknown as BrowserWindow
+        // Change existing window mock to return destroyed
+        vi.mocked(mockMainWindow.isDestroyed).mockReturnValue(true)
 
-        const mockCreateWindowSpy = mockCreateWindow as ReturnType<typeof vi.fn>
-        mockCreateWindowSpy.mockImplementation(() => {
-          throw new Error('Window creation failed')
-        })
+        const failingCreator = vi
+          .fn()
+          .mockRejectedValue(new Error('Window creation failed'))
 
+        // Re-initialize with failing window creator
+        resetAllUpdateState()
         initAutoUpdate({
-          mainWindowGetter: () => destroyedWindow,
-          windowCreator: mockCreateWindow,
+          mainWindowGetter: () => mockMainWindow,
+          windowCreator: failingCreator,
         })
 
         vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
@@ -346,6 +380,8 @@ describe('auto-update', () => {
           },
         } as unknown as BrowserWindow
 
+        // Re-initialize with minimized window
+        resetAllUpdateState()
         initAutoUpdate({
           mainWindowGetter: () => minimizedWindow,
           windowCreator: async () => mockMainWindow,
@@ -856,6 +892,8 @@ describe('auto-update', () => {
           checkboxChecked: false,
         }) // Later
 
+        // Re-initialize with destroyed window
+        resetAllUpdateState()
         initAutoUpdate({
           mainWindowGetter: () => destroyedWindow,
           windowCreator: createWindow,
@@ -900,6 +938,197 @@ describe('auto-update', () => {
         expect(vi.mocked(log.warn)).toHaveBeenCalledWith(
           '[update] Server shutdown failed, proceeding with update anyway'
         )
+      })
+    })
+
+    describe('getLatestAvailableVersion', () => {
+      const originalFetch = global.fetch
+
+      afterEach(() => {
+        global.fetch = originalFetch
+      })
+
+      it('returns latest version when available for current platform', async () => {
+        const mockResponse: ReleaseInfo = {
+          tag: 'v1.5.0',
+          prerelease: false,
+          published_at: '2024-01-01',
+          base_url: 'https://example.com',
+          assets: [
+            { name: 'app-darwin-arm64.zip', url: '', size: 100, sha256: '' },
+          ],
+        }
+
+        global.fetch = vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => mockResponse,
+        })
+
+        const result = await getLatestAvailableVersion()
+
+        expect(result).toEqual({
+          currentVersion: '1.0.0',
+          latestVersion: 'v1.5.0',
+          isNewVersionAvailable: true,
+        })
+      })
+
+      it('returns no update when latest version is not available for platform', async () => {
+        const mockResponse: ReleaseInfo = {
+          tag: 'v1.5.0',
+          prerelease: false,
+          published_at: '2024-01-01',
+          base_url: 'https://example.com',
+          assets: [{ name: 'app-other.zip', url: '', size: 100, sha256: '' }],
+        }
+
+        global.fetch = vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => mockResponse,
+        })
+
+        const result = await getLatestAvailableVersion()
+
+        expect(result).toEqual({
+          currentVersion: '1.0.0',
+          latestVersion: undefined,
+          isNewVersionAvailable: false,
+        })
+      })
+
+      it('handles fetch failure gracefully', async () => {
+        global.fetch = vi.fn().mockRejectedValue(new Error('Network error'))
+
+        const result = await getLatestAvailableVersion()
+
+        expect(result).toEqual({
+          currentVersion: '1.0.0',
+          latestVersion: undefined,
+          isNewVersionAvailable: false,
+        })
+        expect(vi.mocked(log).error).toHaveBeenCalledWith(
+          '[update] Failed to check for ToolHive update: ',
+          expect.any(Error)
+        )
+      })
+
+      it('handles non-ok response', async () => {
+        global.fetch = vi.fn().mockResolvedValue({
+          ok: false,
+          statusText: 'Not Found',
+        })
+
+        const result = await getLatestAvailableVersion()
+
+        expect(result).toEqual({
+          currentVersion: '1.0.0',
+          latestVersion: undefined,
+          isNewVersionAvailable: false,
+        })
+        expect(vi.mocked(log).error).toHaveBeenCalledWith(
+          '[update] Failed to check for ToolHive update: ',
+          'Not Found'
+        )
+      })
+    })
+
+    describe('setAutoUpdateEnabled', () => {
+      it('disables auto-update and clears state', () => {
+        // First enable it
+        initAutoUpdate({
+          mainWindowGetter: () => mockMainWindow,
+          windowCreator: async () => mockMainWindow,
+        })
+
+        // Set to checking state
+        vi.mocked(autoUpdater).emit('checking-for-update')
+        expect(getUpdateState()).toBe('checking')
+
+        // Disable auto-update
+        setAutoUpdateEnabled(false)
+
+        expect(getUpdateState()).toBe('none')
+        expect(vi.mocked(ipcMain.removeHandler)).toHaveBeenCalledWith(
+          'install-update-and-restart'
+        )
+      })
+
+      it('re-enables auto-update after being disabled', () => {
+        // Initialize first
+        initAutoUpdate({
+          mainWindowGetter: () => mockMainWindow,
+          windowCreator: async () => mockMainWindow,
+        })
+
+        // Disable
+        setAutoUpdateEnabled(false)
+
+        // Re-enable
+        setAutoUpdateEnabled(true)
+
+        // Should re-register IPC handler
+        const calls = vi.mocked(ipcMain.handle).mock.calls
+        const installHandlerCalls = calls.filter(
+          (call) => call[0] === 'install-update-and-restart'
+        )
+        expect(installHandlerCalls.length).toBeGreaterThan(0)
+      })
+    })
+
+    describe('manualUpdate', () => {
+      it('logs error when initAutoUpdate was not called first', () => {
+        // Reset to clear any previous initialization
+        resetAllUpdateState()
+
+        manualUpdate()
+
+        expect(vi.mocked(log).error).toHaveBeenCalledWith(
+          '[update] Cannot perform manual update: initAutoUpdate was not called first'
+        )
+      })
+
+      it('calls initAutoUpdate with isManualUpdate flag', () => {
+        // Initialize first
+        initAutoUpdate({
+          mainWindowGetter: () => mockMainWindow,
+          windowCreator: async () => mockMainWindow,
+        })
+
+        // Clear previous IPC handler calls
+        vi.clearAllMocks()
+
+        // Spy on autoUpdater.on to verify event registrations
+        const onSpy = vi.spyOn(autoUpdater, 'on')
+
+        // Call manual update
+        manualUpdate()
+
+        // Verify IPC handler was registered again
+        expect(vi.mocked(ipcMain.handle)).toHaveBeenCalledWith(
+          'install-update-and-restart',
+          expect.any(Function)
+        )
+
+        // Verify autoUpdater event listeners are registered
+        expect(onSpy).toHaveBeenCalledWith(
+          'update-downloaded',
+          expect.any(Function)
+        )
+        expect(onSpy).toHaveBeenCalledWith(
+          'checking-for-update',
+          expect.any(Function)
+        )
+        expect(onSpy).toHaveBeenCalledWith(
+          'update-available',
+          expect.any(Function)
+        )
+        expect(onSpy).toHaveBeenCalledWith(
+          'update-not-available',
+          expect.any(Function)
+        )
+        expect(onSpy).toHaveBeenCalledWith('error', expect.any(Function))
+
+        onSpy.mockRestore()
       })
     })
   })

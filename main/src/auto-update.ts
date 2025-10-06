@@ -18,14 +18,14 @@ import {
 } from '../../utils/parse-release-version'
 import Store from 'electron-store'
 
-interface ReleaseAsset {
+export interface ReleaseAsset {
   name: string
   url: string
   size: number
   sha256: string
 }
 
-interface ReleaseInfo {
+export interface ReleaseInfo {
   tag: string
   prerelease: boolean
   published_at: string
@@ -177,11 +177,6 @@ export function initAutoUpdate({
   mainWindowGetter: () => BrowserWindow | null
   windowCreator: () => Promise<BrowserWindow>
 }) {
-  // Save references only on first call
-  if (!mainWindowGetter) {
-    mainWindowGetter = getterParam
-    windowCreator = creatorParam
-  }
   const isAutoUpdateEnabled = store.get('isAutoUpdateEnabled')
   log.info('[update] isAutoUpdateEnabled: ', isAutoUpdateEnabled)
   if (!isAutoUpdateEnabled && !isManualUpdate) {
@@ -190,6 +185,10 @@ export function initAutoUpdate({
   }
 
   resetAllUpdateState()
+
+  // Update references after reset
+  mainWindowGetter = getterParam
+  windowCreator = creatorParam
 
   // Remove any existing listeners to prevent duplicates
   autoUpdater.removeAllListeners()
@@ -344,6 +343,8 @@ export function resetAllUpdateState() {
   setQuittingState(false)
   setTearingDownState(false)
   pendingUpdateVersion = null
+  mainWindowGetter = null
+  windowCreator = null
 }
 
 export function setAutoUpdateEnabled(enabled: boolean) {
