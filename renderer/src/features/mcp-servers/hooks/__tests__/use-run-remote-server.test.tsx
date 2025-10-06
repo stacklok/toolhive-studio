@@ -30,7 +30,7 @@ beforeEach(() => {
 
 describe('useRunRemoteServer', () => {
   it('uses form data group instead of groupName prop when form data has a group', async () => {
-    let apiRequestBody: any = null
+    let apiRequestBody: { group?: string } | null = null
 
     // Mock the API to capture what gets sent
     mswServer.use(
