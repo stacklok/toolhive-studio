@@ -26,10 +26,8 @@ const wrapper = ({ children }: { children: React.ReactNode }) => {
 
 describe('useRunRemoteServer', () => {
   it('sends the group from form data to the API', async () => {
-    // Use the automatic request recorder
     const rec = recordRequests()
 
-    // Only mock the endpoint we're testing - other endpoints have global handlers or aren't critical
     mswServer.use(
       http.post(mswEndpoint('/api/v1beta/workloads'), () => {
         return HttpResponse.json({ name: 'test-server', port: 8080 })
@@ -65,19 +63,16 @@ describe('useRunRemoteServer', () => {
       },
       envVars: [],
       secrets: [],
-      group: 'production', // User selected 'production' in the form
+      group: 'production',
     }
 
-    // Call the mutation
     result.current.installServerMutation({ data: formData })
 
-    // Wait for the API call and verify the payload
     await waitFor(() => {
       const workloadRequest = rec.recordedRequests.find(
         (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
       )
 
-      // The API should receive 'production' from form data
       expect(workloadRequest?.payload).toMatchObject({
         group: 'production',
         name: 'test-server',
