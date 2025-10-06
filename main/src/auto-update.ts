@@ -180,7 +180,6 @@ export function initAutoUpdate({
   windowCreator = creatorParam
 
   const isAutoUpdateEnabled = store.get('isAutoUpdateEnabled')
-  log.info('[update] isAutoUpdateEnabled: ', isAutoUpdateEnabled)
   if (!isAutoUpdateEnabled && !isManualUpdate) {
     log.info('[update] Auto update is disabled, skipping initialization')
     return
