@@ -50,6 +50,7 @@ function isThreadsRecord(
 const threadsStore = new Store<ChatSettingsThreads>({
   name: 'chat-threads',
   encryptionKey: 'toolhive-threads-encryption-key',
+  clearInvalidConfig: true,
   defaults: {
     threads: {},
     activeThreadId: undefined,
