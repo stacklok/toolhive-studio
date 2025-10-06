@@ -11,6 +11,7 @@ import {
 import { Button } from '../../ui/button'
 import { Alert, AlertDescription } from '../../ui/alert'
 import { AlertCircleIcon, Download } from 'lucide-react'
+import { trackEvent } from '@/common/lib/analytics'
 
 interface VersionTabProps {
   appInfo: AppVersionInfo | undefined
@@ -107,6 +108,14 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
                     disabled={isDownloading}
                     onClick={() => {
                       window.electronAPI.manualUpdate()
+                      trackEvent('manual-update', {
+                        pageName: '/settings/version',
+                        'page.tab': 'version',
+                        'latest.version': appInfo.latestVersion,
+                        'current.version': appInfo.currentVersion,
+                        'is.new.version.available':
+                          appInfo.isNewVersionAvailable,
+                      })
                     }}
                   >
                     <Download className="size-4" />{' '}
