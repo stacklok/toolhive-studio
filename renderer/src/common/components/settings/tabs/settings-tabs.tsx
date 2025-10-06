@@ -56,7 +56,7 @@ export function SettingsTabs() {
                 {tab.label}
                 {tab.value === 'version' && isNewVersionAvailable && (
                   <div className="bg-background rounded-full p-0.5">
-                    <ArrowUpCircle className="size-3 text-blue-500" />
+                    <ArrowUpCircle className="size-2.5 text-blue-500" />
                   </div>
                 )}
               </div>
