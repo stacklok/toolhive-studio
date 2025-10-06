@@ -5,7 +5,6 @@ import { prepareCreateWorkloadData } from '../lib/orchestrate-run-remote-server'
 import {
   type PostApiV1BetaSecretsDefaultKeysData,
   type SecretsSecretParameter,
-  type V1CreateRequest,
 } from '@api/types.gen'
 import type { Options } from '@api/client'
 import { restartClientNotification } from '../lib/restart-client-notification'
@@ -19,14 +18,12 @@ interface UseRunRemoteServerProps {
     error: string,
     variables: Options<PostApiV1BetaSecretsDefaultKeysData>
   ) => void
-  groupName: string
 }
 
 export function useRunRemoteServer({
   pageName,
   onSecretSuccess,
   onSecretError,
-  groupName,
 }: UseRunRemoteServerProps) {
   const queryClient = useQueryClient()
   const { handleSecrets, isPendingSecrets, isErrorSecrets } = useMCPSecrets({
@@ -65,13 +62,8 @@ export function useRunRemoteServer({
         isDefaultAuthType ? secretsForRequest : []
       )
 
-      const createRequest: V1CreateRequest = {
-        ...preparedData,
-        // Only use groupName as fallback if group is not already set in form data
-        group: preparedData.group || groupName,
-      }
       await createWorkload({
-        body: createRequest,
+        body: preparedData,
       })
       await restartClientNotification({
         queryClient,

@@ -93,7 +93,6 @@ export function DialogFormRemoteRegistryMcp({
   const { installServerMutation, isErrorSecrets, isPendingSecrets } =
     useRunRemoteServer({
       pageName: 'registry',
-      groupName: 'default',
       onSecretSuccess: handleSecrets,
       onSecretError: (error, variables) => {
         log.error('onSecretError', error, variables)

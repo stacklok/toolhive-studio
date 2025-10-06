@@ -25,7 +25,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => {
 }
 
 describe('useRunRemoteServer', () => {
-  it('uses form data group instead of groupName prop when form data has a group', async () => {
+  it('sends the group from form data to the API', async () => {
     // Use the automatic request recorder
     const rec = recordRequests()
 
@@ -42,7 +42,6 @@ describe('useRunRemoteServer', () => {
           pageName: '/test',
           onSecretSuccess: () => {},
           onSecretError: () => {},
-          groupName: 'default', // This is the prop
         }),
       { wrapper }
     )
@@ -78,7 +77,7 @@ describe('useRunRemoteServer', () => {
         (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
       )
 
-      // The API should receive 'production' (from form data), not 'default' (from prop)
+      // The API should receive 'production' from form data
       expect(workloadRequest?.payload).toMatchObject({
         group: 'production',
         name: 'test-server',
