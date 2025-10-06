@@ -176,7 +176,7 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
         <Separator orientation="vertical" className="mr-4 ml-2" />
         <div className="flex items-center gap-2">
           <LinkViewTransition to="/settings" className="app-region-no-drag">
-            {appVersion?.isNewVersionAvailable ? (
+            {appVersion?.isNewVersionAvailable && appVersion.isReleaseBuild ? (
               <Tooltip>
                 <TooltipTrigger asChild autoFocus={false}>
                   <Button variant="ghost" size="sm" className="cursor-pointer">

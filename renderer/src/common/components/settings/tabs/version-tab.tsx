@@ -93,7 +93,7 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
             disabled={isAutoUpdateEnabledLoading || isSetAutoUpdatePending}
           />
         </div>
-        {appInfo.isNewVersionAvailable && (
+        {appInfo.isNewVersionAvailable && appInfo.isReleaseBuild && (
           <div>
             <Alert className="flex h-full items-center">
               <AlertDescription className="flex w-full items-center gap-2">
