@@ -21,6 +21,7 @@ describe('getFormSchemaRemoteMcp', () => {
     },
     envVars: [],
     secrets: [],
+    group: 'default',
   }
 
   describe('auth_type: "none"', () => {
@@ -335,6 +336,19 @@ describe('getFormSchemaRemoteMcp', () => {
         issue.path.includes('envVars')
       )
       expect(envVarError?.message).toBe('Name is required')
+    })
+  })
+
+  describe('group assignment', () => {
+    it('allows specifying a group when adding a remote server', () => {
+      const input = {
+        ...baseValidInput,
+        group: 'my-group',
+      }
+
+      const result = getFormSchemaRemoteMcp([]).safeParse(input)
+      expect(result.success, `${result.error}`).toBe(true)
+      expect(result.data?.group).toBe('my-group')
     })
   })
 })

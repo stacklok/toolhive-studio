@@ -324,6 +324,9 @@ export const createRemoteMcpBaseSchema = (workloads: CoreWorkload[]) => {
     .extend(urlSchema.shape)
     .extend(authTypeSchema.shape)
     .extend({ oauth_config: remoteMcpOauthConfigSchema })
+    .extend({
+      group: z.string().min(1, 'Group is required'),
+    })
 
   return commonSchema
 }
