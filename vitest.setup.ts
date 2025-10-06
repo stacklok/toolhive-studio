@@ -60,6 +60,10 @@ beforeAll(() => {
   window.HTMLElement.prototype.scrollIntoView = function () {}
   window.HTMLElement.prototype.hasPointerCapture = vi.fn()
   window.HTMLElement.prototype.releasePointerCapture = vi.fn()
+  // Prevent jsdom from attempting navigation when clicking download links
+  if (window.HTMLAnchorElement) {
+    window.HTMLAnchorElement.prototype.click = vi.fn()
+  }
 
   global.ResizeObserver = class ResizeObserver {
     disconnect() {

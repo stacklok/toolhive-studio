@@ -19,10 +19,9 @@ vi.mock('electron-log/renderer', () => ({
   },
 }))
 
-global.URL = {
-  createObjectURL: vi.fn().mockReturnValue('blob:mock-url'),
-  revokeObjectURL: vi.fn(),
-} as unknown as typeof URL
+// Mock URL methods while keeping the native URL constructor
+global.URL.createObjectURL = vi.fn().mockReturnValue('blob:mock-url')
+global.URL.revokeObjectURL = vi.fn()
 
 global.Blob = vi.fn().mockImplementation((content, options) => ({
   content,
