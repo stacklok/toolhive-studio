@@ -637,7 +637,7 @@ describe('auto-update', () => {
             expect.objectContaining({
               message: 'Release v1.2.3',
               detail:
-                'A new version has been downloaded.\nRestart the application to apply the updates.',
+                'A new version has been downloaded.\nThe update will be applied on the next application restart.',
             })
           )
 
@@ -658,7 +658,7 @@ describe('auto-update', () => {
             mockMainWindow,
             expect.objectContaining({
               message:
-                'A new version has been downloaded.\nRestart the application to apply the updates.',
+                'A new version has been downloaded.\nThe update will be applied on the next application restart.',
               detail: 'Ready to install v1.2.3',
             })
           )

@@ -244,10 +244,10 @@ export function initAutoUpdate({
         message:
           process.platform === 'darwin'
             ? `Release ${releaseName}`
-            : 'A new version has been downloaded.\nRestart the application to apply the updates.',
+            : 'A new version has been downloaded.\nThe update will be applied on the next application restart.',
         detail:
           process.platform === 'darwin'
-            ? 'A new version has been downloaded.\nRestart the application to apply the updates.'
+            ? 'A new version has been downloaded.\nThe update will be applied on the next application restart.'
             : `Ready to install ${releaseName}`,
         icon: undefined,
       }
