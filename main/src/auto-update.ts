@@ -50,7 +50,7 @@ let updateState:
  * @param releaseInfo - The release information from the API
  * @returns The tag of the release
  */
-function getAssetForCurrentPlatform(
+export function getAssetsTagByPlatform(
   releaseInfo: ReleaseInfo
 ): string | undefined {
   const platform = process.platform
@@ -120,7 +120,7 @@ async function performUpdateInstallation(releaseName: string | null) {
     log.info('[update] starting graceful shutdown before update...')
 
     // Notify renderer of graceful exit
-    const mainWindow = getMainWindow()
+    const mainWindow = mainWindowGetter?.()
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('graceful-exit')
       // Give renderer time to handle the event
@@ -165,40 +165,35 @@ async function performUpdateInstallation(releaseName: string | null) {
   }
 }
 
-let getMainWindow: () => BrowserWindow | null = () => null
-let createWindow: () => Promise<BrowserWindow> = () => {
-  throw new Error('createWindow not initialized')
-}
-
-// Store original references to avoid recursion in manualUpdate
-let originalMainWindowGetter: (() => BrowserWindow | null) | null = null
-let originalWindowCreator: (() => Promise<BrowserWindow>) | null = null
+let mainWindowGetter: (() => BrowserWindow | null) | null = null
+let windowCreator: (() => Promise<BrowserWindow>) | null = null
 
 export function initAutoUpdate({
   isManualUpdate = false,
-  mainWindowGetter,
-  windowCreator,
+  mainWindowGetter: getterParam,
+  windowCreator: creatorParam,
 }: {
   isManualUpdate?: boolean
   mainWindowGetter: () => BrowserWindow | null
   windowCreator: () => Promise<BrowserWindow>
 }) {
-  getMainWindow = mainWindowGetter
-  createWindow = windowCreator
-
-  // Save original references on first call (non-manual update)
-  if (!isManualUpdate && !originalMainWindowGetter) {
-    originalMainWindowGetter = mainWindowGetter
-    originalWindowCreator = windowCreator
+  // Save references only on first call
+  if (!mainWindowGetter) {
+    mainWindowGetter = getterParam
+    windowCreator = creatorParam
   }
-  const isAutoUpdateEnabled = store.get('isAutoUpdateEnabled', true)
-
+  const isAutoUpdateEnabled = store.get('isAutoUpdateEnabled')
+  log.info('[update] isAutoUpdateEnabled: ', isAutoUpdateEnabled)
   if (!isAutoUpdateEnabled && !isManualUpdate) {
     log.info('[update] Auto update is disabled, skipping initialization')
     return
   }
 
   resetAllUpdateState()
+
+  // Remove any existing listeners to prevent duplicates
+  autoUpdater.removeAllListeners()
+  ipcMain.removeHandler('install-update-and-restart')
 
   updateElectronApp({ logger: log, notifyUser: false })
 
@@ -213,7 +208,7 @@ export function initAutoUpdate({
     updateState = 'downloaded'
 
     try {
-      let mainWindow = getMainWindow()
+      let mainWindow = mainWindowGetter?.()
 
       // check if destroyed is important for not crashing the app
       if (!mainWindow || mainWindow.isDestroyed()) {
@@ -221,7 +216,11 @@ export function initAutoUpdate({
           '[update] MainWindow not available, recreating for update dialog'
         )
         try {
-          mainWindow = await createWindow()
+          if (!windowCreator) {
+            log.error('[update] Window creator not initialized')
+            return
+          }
+          mainWindow = await windowCreator()
           await pollWindowReady(mainWindow)
         } catch (error) {
           log.error(
@@ -274,7 +273,7 @@ export function initAutoUpdate({
       log.error('[update] error in update-downloaded handler:', error)
       updateState = 'none'
       // Fallback: send notification to renderer
-      const mainWindow = getMainWindow()
+      const mainWindow = mainWindowGetter?.()
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('update-downloaded')
       }
@@ -361,6 +360,19 @@ export function setAutoUpdateEnabled(enabled: boolean) {
 
     // Remove all autoUpdater listeners to prevent further update activity
     autoUpdater.removeAllListeners()
+    ipcMain.removeHandler('install-update-and-restart')
+  } else {
+    // Re-initialize auto-update when enabled
+    if (!mainWindowGetter || !windowCreator) {
+      log.error('[update] Cannot re-enable auto-update: references not found')
+      return
+    }
+
+    initAutoUpdate({
+      isManualUpdate: false,
+      mainWindowGetter,
+      windowCreator,
+    })
   }
 }
 
@@ -401,7 +413,7 @@ export async function getLatestAvailableVersion() {
       }
     }
     const data = await response.json()
-    const latestTag = getAssetForCurrentPlatform(data)
+    const latestTag = getAssetsTagByPlatform(data)
 
     return {
       currentVersion: currentVersion,
@@ -422,7 +434,7 @@ export async function getLatestAvailableVersion() {
 }
 
 export function manualUpdate() {
-  if (!originalMainWindowGetter || !originalWindowCreator) {
+  if (!mainWindowGetter || !windowCreator) {
     log.error(
       '[update] Cannot perform manual update: initAutoUpdate was not called first'
     )
@@ -431,7 +443,7 @@ export function manualUpdate() {
 
   initAutoUpdate({
     isManualUpdate: true,
-    mainWindowGetter: originalMainWindowGetter,
-    windowCreator: originalWindowCreator,
+    mainWindowGetter,
+    windowCreator,
   })
 }
