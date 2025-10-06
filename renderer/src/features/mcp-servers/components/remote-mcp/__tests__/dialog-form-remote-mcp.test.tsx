@@ -314,6 +314,7 @@ describe('DialogFormRemoteMcp', () => {
             url: 'https://api.example.com/mcp',
             auth_type: 'none',
             name: 'test-remote-server',
+            group: 'default',
             oauth_config: {
               authorize_url: '',
               callback_port: 8888,

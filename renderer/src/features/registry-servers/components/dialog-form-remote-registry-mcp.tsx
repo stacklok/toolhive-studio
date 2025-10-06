@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
@@ -36,6 +36,9 @@ import {
   SelectItem,
 } from '@/common/components/ui/select'
 import { ExternalLinkIcon } from 'lucide-react'
+import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { featureFlagKeys } from '../../../../../utils/feature-flags'
 
 const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
   name: '',
@@ -106,6 +109,10 @@ export function DialogFormRemoteRegistryMcp({
 
   const workloads = data?.workloads ?? []
 
+  const { data: groupsData } = useGroups()
+  const groups = groupsData?.groups ?? []
+  const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
+
   const form = useForm<FormSchemaRemoteMcp>({
     resolver: zodV4Resolver(getFormSchemaRemoteMcp(workloads)),
     defaultValues: DEFAULT_FORM_VALUES,
@@ -121,6 +128,14 @@ export function DialogFormRemoteRegistryMcp({
         }
       : {}),
   })
+
+  useEffect(() => {
+    if (!isOpen) return
+    form.setValue('group', 'default', {
+      shouldDirty: false,
+      shouldTouch: false,
+    })
+  }, [form, isOpen])
 
   const onSubmitForm = (data: FormSchemaRemoteMcp) => {
     if (!server) return
@@ -277,6 +292,39 @@ export function DialogFormRemoteRegistryMcp({
                 </FormItem>
               )}
             />
+
+            {isGroupsEnabled && (
+              <FormField
+                control={form.control}
+                name="group"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel htmlFor={field.name}>Group</FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={(value) => field.onChange(value)}
+                        value={field.value}
+                        name={field.name}
+                      >
+                        <SelectTrigger id={field.name} className="w-full">
+                          <SelectValue placeholder="Select a group" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {groups
+                            .filter((g) => g.name)
+                            .map((g) => (
+                              <SelectItem key={g.name!} value={g.name!}>
+                                {g.name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}
