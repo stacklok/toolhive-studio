@@ -18,14 +18,14 @@ import {
 } from '../../utils/parse-release-version'
 import Store from 'electron-store'
 
-export interface ReleaseAsset {
+interface ReleaseAsset {
   name: string
   url: string
   size: number
   sha256: string
 }
 
-export interface ReleaseInfo {
+interface ReleaseInfo {
   tag: string
   prerelease: boolean
   published_at: string
@@ -50,9 +50,7 @@ let updateState:
  * @param releaseInfo - The release information from the API
  * @returns The tag of the release
  */
-export function getAssetsTagByPlatform(
-  releaseInfo: ReleaseInfo
-): string | undefined {
+function getAssetsTagByPlatform(releaseInfo: ReleaseInfo): string | undefined {
   const platform = process.platform
 
   // Map platform to asset name patterns
