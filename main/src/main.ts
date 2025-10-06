@@ -269,7 +269,6 @@ app.whenReady().then(async () => {
 
       mainWindow.webContents.once('did-finish-load', () => {
         log.info('Main window did-finish-load event triggered')
-        // checkForUpdates()
       })
     }
   } catch (error) {
