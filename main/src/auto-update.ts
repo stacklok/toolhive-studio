@@ -25,7 +25,7 @@ interface ReleaseAsset {
   sha256: string
 }
 
-interface ReleaseInfo {
+export interface ReleaseInfo {
   tag: string
   prerelease: boolean
   published_at: string
