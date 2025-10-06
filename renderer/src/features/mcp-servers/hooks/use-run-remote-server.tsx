@@ -60,12 +60,15 @@ export function useRunRemoteServer({
         })),
       ]
 
+      const preparedData = prepareCreateWorkloadData(
+        data,
+        isDefaultAuthType ? secretsForRequest : []
+      )
+
       const createRequest: V1CreateRequest = {
-        ...prepareCreateWorkloadData(
-          data,
-          isDefaultAuthType ? secretsForRequest : []
-        ),
-        ...(groupName ? { group: groupName } : {}),
+        ...preparedData,
+        // Only use groupName as fallback if group is not already set in form data
+        group: preparedData.group || groupName,
       }
       await createWorkload({
         body: createRequest,

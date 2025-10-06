@@ -150,6 +150,7 @@ export function convertCreateRequestToFormData(
       ([name, value]) => ({ name, value })
     ),
     secrets,
+    group: createRequest.group || '',
   }
 
   return baseFormData
