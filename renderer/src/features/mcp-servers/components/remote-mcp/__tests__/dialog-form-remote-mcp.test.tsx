@@ -79,6 +79,7 @@ beforeEach(() => {
 
 describe('DialogFormRemoteMcp', () => {
   it('handles secrets correctly - both inline and from store', async () => {
+    const user = userEvent.setup({ delay: null })
     const mockInstallServerMutation = vi.fn()
     mockUseRunRemoteServer.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
@@ -97,27 +98,25 @@ describe('DialogFormRemoteMcp', () => {
     })
 
     // Fill basic fields
-    await userEvent.type(
+    await user.type(
       screen.getByRole('textbox', { name: /server name/i }),
       'secret-server'
     )
-    await userEvent.click(screen.getByLabelText('Transport'))
-    await userEvent.click(
-      screen.getByRole('option', { name: /streamable http/i })
-    )
+    await user.click(screen.getByLabelText('Transport'))
+    await user.click(screen.getByRole('option', { name: /streamable http/i }))
 
     // Add inline secret
-    await userEvent.click(screen.getByRole('button', { name: 'Add secret' }))
-    await userEvent.type(screen.getByLabelText('Secret key'), 'API_TOKEN')
-    await userEvent.type(screen.getByLabelText('Secret value'), 'secret-value')
+    await user.click(screen.getByRole('button', { name: 'Add secret' }))
+    await user.type(screen.getByLabelText('Secret key'), 'API_TOKEN')
+    await user.type(screen.getByLabelText('Secret value'), 'secret-value')
 
     // Add secret from store
-    await userEvent.click(screen.getByRole('button', { name: 'Add secret' }))
-    await userEvent.type(
+    await user.click(screen.getByRole('button', { name: 'Add secret' }))
+    await user.type(
       screen.getAllByLabelText('Secret key')[1] as HTMLElement,
       'GITHUB_TOKEN'
     )
-    await userEvent.click(
+    await user.click(
       screen.getAllByLabelText('Use a secret from the store')[1] as HTMLElement
     )
 
@@ -127,21 +126,17 @@ describe('DialogFormRemoteMcp', () => {
       ).toBeVisible()
     })
 
-    await userEvent.click(
-      screen.getByRole('option', { name: 'SECRET_FROM_STORE' })
-    )
+    await user.click(screen.getByRole('option', { name: 'SECRET_FROM_STORE' }))
 
-    await userEvent.type(
+    await user.type(
       screen.getByRole('textbox', {
         name: /server url/i,
       }),
       'https://api.example.com/mcp'
     )
-    await userEvent.type(screen.getByLabelText('Callback port'), '8888')
+    await user.type(screen.getByLabelText('Callback port'), '8888')
 
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Install server' })
-    )
+    await user.click(screen.getByRole('button', { name: 'Install server' }))
 
     await waitFor(() => {
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
@@ -171,6 +166,7 @@ describe('DialogFormRemoteMcp', () => {
   })
 
   it('validates required fields and shows errors', async () => {
+    const user = userEvent.setup({ delay: null })
     const mockInstallServerMutation = vi.fn()
     mockUseRunRemoteServer.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
@@ -189,9 +185,7 @@ describe('DialogFormRemoteMcp', () => {
     })
 
     // Try to submit without filling required fields
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Install server' })
-    )
+    await user.click(screen.getByRole('button', { name: 'Install server' }))
 
     await waitFor(() => {
       expect(mockInstallServerMutation).not.toHaveBeenCalled()
@@ -217,6 +211,7 @@ describe('DialogFormRemoteMcp', () => {
   })
 
   it('shows loading state when submitting', async () => {
+    const user = userEvent.setup({ delay: null })
     const mockInstallServerMutation = vi.fn()
     mockUseRunRemoteServer.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
@@ -235,27 +230,25 @@ describe('DialogFormRemoteMcp', () => {
     })
 
     // Fill required fields
-    await userEvent.type(
+    await user.type(
       screen.getByRole('textbox', { name: /server name/i }),
       'test-server'
     )
-    await userEvent.click(screen.getByLabelText('Transport'))
-    await userEvent.click(
+    await user.click(screen.getByLabelText('Transport'))
+    await user.click(
       screen.getByRole('option', {
         name: /streamable http/i,
       })
     )
-    await userEvent.type(
+    await user.type(
       screen.getByRole('textbox', {
         name: /server url/i,
       }),
       'https://api.example.com/mcp'
     )
-    await userEvent.type(screen.getByLabelText('Callback port'), '8888')
+    await user.type(screen.getByLabelText('Callback port'), '8888')
 
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Install server' })
-    )
+    await user.click(screen.getByRole('button', { name: 'Install server' }))
 
     // The loading state should be shown
     await waitFor(() => {
@@ -266,6 +259,7 @@ describe('DialogFormRemoteMcp', () => {
   })
 
   it('submit remote mcp', async () => {
+    const user = userEvent.setup({ delay: null })
     const mockInstallServerMutation = vi.fn()
     const mockCheckServerStatus = vi.fn()
     const mockOnOpenChange = vi.fn()
@@ -294,14 +288,14 @@ describe('DialogFormRemoteMcp', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
     // Fill required fields
-    await userEvent.type(
+    await user.type(
       screen.getByRole('textbox', {
         name: /name/i,
       }),
       'test-remote-server'
     )
 
-    await userEvent.type(
+    await user.type(
       screen.getByRole('textbox', {
         name: /url/i,
       }),
@@ -310,10 +304,8 @@ describe('DialogFormRemoteMcp', () => {
 
     expect(screen.getByLabelText('Authorization method')).toBeVisible()
 
-    await userEvent.type(screen.getByLabelText('Callback port'), '8888')
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Install server' })
-    )
+    await user.type(screen.getByLabelText('Callback port'), '8888')
+    await user.click(screen.getByRole('button', { name: 'Install server' }))
     await waitFor(() => {
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -357,6 +349,7 @@ describe('DialogFormRemoteMcp', () => {
   })
 
   it('can cancel and close dialog', async () => {
+    const user = userEvent.setup({ delay: null })
     const mockOnOpenChange = vi.fn()
 
     renderWithProviders(
@@ -373,7 +366,7 @@ describe('DialogFormRemoteMcp', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
 
     expect(mockOnOpenChange).toHaveBeenCalled()
   })

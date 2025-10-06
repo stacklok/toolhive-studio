@@ -125,6 +125,7 @@ describe('DialogFormRemoteRegistryMcp', () => {
   })
 
   it('validates required fields and shows errors', async () => {
+    const user = userEvent.setup({ delay: null })
     const mockInstallServerMutation = vi.fn()
     mockUseRunRemoteServer.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
@@ -148,12 +149,10 @@ describe('DialogFormRemoteRegistryMcp', () => {
 
     // Clear the server name field to trigger validation
     const nameInput = screen.getByRole('textbox', { name: /server name/i })
-    await userEvent.clear(nameInput)
+    await user.clear(nameInput)
 
     // Try to submit without filling required fields
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Install server' })
-    )
+    await user.click(screen.getByRole('button', { name: 'Install server' }))
 
     await waitFor(() => {
       expect(mockInstallServerMutation).not.toHaveBeenCalled()
@@ -166,6 +165,7 @@ describe('DialogFormRemoteRegistryMcp', () => {
   })
 
   it('renders form with pre-filled server data and calls mutation on install', async () => {
+    const user = userEvent.setup({ delay: null })
     const mockInstallServerMutation = vi.fn()
 
     mockUseCheckServerStatus.mockReturnValue({
@@ -197,48 +197,48 @@ describe('DialogFormRemoteRegistryMcp', () => {
       screen.getByDisplayValue('https://api.example.com/mcp')
     ).toBeInTheDocument()
 
-    await userEvent.click(
+    await user.click(
       screen.getByRole('combobox', {
         name: /authorization method/i,
       })
     )
 
-    await userEvent.click(
+    await user.click(
       screen.getByRole('option', {
         name: 'OAuth 2.0',
       })
     )
 
-    await userEvent.type(screen.getByLabelText('Callback port'), '8888')
+    await user.type(screen.getByLabelText('Callback port'), '8888')
 
-    await userEvent.type(
+    await user.type(
       screen.getByRole('textbox', {
         name: /authorize url/i,
       }),
       'https://api.example.com/authorize'
     )
 
-    await userEvent.type(
+    await user.type(
       screen.getByRole('textbox', {
         name: /token url/i,
       }),
       'https://api.example.com/token'
     )
 
-    await userEvent.type(
+    await user.type(
       screen.getByRole('textbox', {
         name: /client id/i,
       }),
       'client_id'
     )
 
-    await userEvent.click(
+    await user.click(
       screen.getByRole('combobox', {
         name: /use a secret from the store/i,
       })
     )
 
-    await userEvent.click(
+    await user.click(
       screen.getByRole('option', {
         name: /secret_from_store/i,
       })
@@ -247,7 +247,7 @@ describe('DialogFormRemoteRegistryMcp', () => {
     const submitButton = screen.getByRole('button', { name: 'Install server' })
     expect(submitButton).toBeEnabled()
 
-    await userEvent.click(submitButton)
+    await user.click(submitButton)
 
     await waitFor(() => {
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
@@ -290,6 +290,7 @@ describe('DialogFormRemoteRegistryMcp', () => {
   })
 
   it('displays OAuth2 fields when OAuth2 is selected', async () => {
+    const user = userEvent.setup({ delay: null })
     renderWithProviders(
       <Wrapper>
         <DialogFormRemoteRegistryMcp
@@ -305,8 +306,8 @@ describe('DialogFormRemoteRegistryMcp', () => {
     })
 
     // Select OAuth2 authentication
-    await userEvent.click(screen.getByLabelText('Authorization method'))
-    await userEvent.click(screen.getByRole('option', { name: 'OAuth 2.0' }))
+    await user.click(screen.getByLabelText('Authorization method'))
+    await user.click(screen.getByRole('option', { name: 'OAuth 2.0' }))
 
     // OAuth2 fields should now be visible
     await waitFor(() => {
@@ -315,6 +316,7 @@ describe('DialogFormRemoteRegistryMcp', () => {
   })
 
   it('can cancel and close dialog', async () => {
+    const user = userEvent.setup({ delay: null })
     const mockCloseDialog = vi.fn()
 
     renderWithProviders(
@@ -331,7 +333,7 @@ describe('DialogFormRemoteRegistryMcp', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
 
     expect(mockCloseDialog).toHaveBeenCalled()
   })
@@ -361,6 +363,7 @@ describe('DialogFormRemoteRegistryMcp', () => {
   })
 
   it('hides secrets fields for OAuth2 auth type', async () => {
+    const user = userEvent.setup({ delay: null })
     renderWithProviders(
       <Wrapper>
         <DialogFormRemoteRegistryMcp
@@ -376,8 +379,8 @@ describe('DialogFormRemoteRegistryMcp', () => {
     })
 
     // Select OAuth2 authentication
-    await userEvent.click(screen.getByLabelText('Authorization method'))
-    await userEvent.click(screen.getByRole('option', { name: 'OAuth 2.0' }))
+    await user.click(screen.getByLabelText('Authorization method'))
+    await user.click(screen.getByRole('option', { name: 'OAuth 2.0' }))
 
     // Secrets section should be hidden for OAuth2
     await waitFor(() => {
