@@ -33,16 +33,10 @@ describe('useRunRemoteServer', () => {
     // Use the automatic request recorder
     const rec = recordRequests()
 
-    // Mock the API responses
+    // Only mock the endpoint we're testing - other endpoints have global handlers or aren't critical
     mswServer.use(
       http.post(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json(
-          { name: 'test-server', port: 8080 },
-          { status: 201 }
-        )
-      }),
-      http.post(mswEndpoint('/api/v1beta/clients/restart'), () => {
-        return HttpResponse.json({ success: true })
+        return HttpResponse.json({ name: 'test-server', port: 8080 })
       })
     )
 
