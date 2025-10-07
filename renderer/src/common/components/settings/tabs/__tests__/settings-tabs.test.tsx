@@ -48,22 +48,12 @@ vi.mock('@/common/hooks/use-auto-update', () => ({
   }),
 }))
 
+const mockUseAppVersion = vi.fn()
+const mockUseCurrentUpdateState = vi.fn()
+
 vi.mock('@/common/hooks/use-app-version', () => ({
-  useAppVersion: vi.fn().mockReturnValue({
-    data: {
-      currentVersion: '1.0.0',
-      latestVersion: '1.0.0',
-      isNewVersionAvailable: false,
-      isReleaseBuild: true,
-      toolhiveVersion: '0.9.0',
-    },
-    isLoading: false,
-    error: null,
-  }),
-  useCurrentUpdateState: vi.fn().mockReturnValue({
-    data: 'none',
-    isLoading: false,
-  }),
+  useAppVersion: () => mockUseAppVersion(),
+  useCurrentUpdateState: () => mockUseCurrentUpdateState(),
 }))
 
 const renderWithProviders = (component: React.ReactElement) => {
@@ -84,6 +74,8 @@ const renderWithProviders = (component: React.ReactElement) => {
 }
 
 describe('SettingsTabs', () => {
+  const originalEnv = import.meta.env.MODE
+
   beforeEach(() => {
     vi.clearAllMocks()
 
@@ -94,10 +86,29 @@ describe('SettingsTabs', () => {
     mockElectronAPI.isAutoUpdateEnabled.mockResolvedValue(false)
     mockElectronAPI.getUpdateState.mockResolvedValue('none')
     mockElectronAPI.sentry.isEnabled.mockResolvedValue(true)
+
+    // Reset mock return values
+    mockUseAppVersion.mockReturnValue({
+      data: {
+        currentVersion: '1.0.0',
+        latestVersion: '1.0.0',
+        isNewVersionAvailable: false,
+        isReleaseBuild: true,
+        toolhiveVersion: '0.9.0',
+      },
+      isLoading: false,
+      error: null,
+    })
+
+    mockUseCurrentUpdateState.mockReturnValue({
+      data: 'none',
+      isLoading: false,
+    })
   })
 
   afterEach(() => {
     cleanup()
+    import.meta.env.MODE = originalEnv
   })
 
   it('renders all tab triggers', async () => {
@@ -133,5 +144,102 @@ describe('SettingsTabs', () => {
         screen.getByRole('heading', { name: 'Application Logs' })
       ).toBeVisible()
     })
+  })
+
+  it('shows update icon on Version tab in production when new version is available', async () => {
+    import.meta.env.MODE = 'production'
+    mockUseAppVersion.mockReturnValue({
+      data: {
+        currentVersion: '1.0.0',
+        latestVersion: '2.0.0',
+        isNewVersionAvailable: true,
+        isReleaseBuild: true,
+        toolhiveVersion: '0.9.0',
+      },
+      isLoading: false,
+      error: null,
+    })
+
+    renderWithProviders(<SettingsTabs />)
+
+    const versionTab = screen.getByRole('tab', { name: /Version/i })
+    expect(versionTab).toBeVisible()
+
+    // Check that the ArrowUpCircle icon is present
+    const icon = versionTab.querySelector('svg')
+    expect(icon).toBeInTheDocument()
+    expect(icon).toHaveClass('text-blue-500')
+  })
+
+  it('does not show update icon on Version tab in development mode', async () => {
+    import.meta.env.MODE = 'development'
+    mockUseAppVersion.mockReturnValue({
+      data: {
+        currentVersion: '1.0.0',
+        latestVersion: '2.0.0',
+        isNewVersionAvailable: true,
+        isReleaseBuild: true,
+        toolhiveVersion: '0.9.0',
+      },
+      isLoading: false,
+      error: null,
+    })
+
+    renderWithProviders(<SettingsTabs />)
+
+    const versionTab = screen.getByRole('tab', { name: /Version/i })
+    expect(versionTab).toBeVisible()
+
+    // Check that the icon is not present
+    const icon = versionTab.querySelector('svg')
+    expect(icon).not.toBeInTheDocument()
+  })
+
+  it('does not show update icon on Version tab when no update is available', async () => {
+    import.meta.env.MODE = 'production'
+    mockUseAppVersion.mockReturnValue({
+      data: {
+        currentVersion: '1.0.0',
+        latestVersion: '1.0.0',
+        isNewVersionAvailable: false,
+        isReleaseBuild: true,
+        toolhiveVersion: '0.9.0',
+      },
+      isLoading: false,
+      error: null,
+    })
+
+    renderWithProviders(<SettingsTabs />)
+
+    const versionTab = screen.getByRole('tab', { name: /Version/i })
+    expect(versionTab).toBeVisible()
+
+    // Check that the icon is not present
+    const icon = versionTab.querySelector('svg')
+    expect(icon).not.toBeInTheDocument()
+  })
+
+  it('does not show update icon on other tabs', async () => {
+    import.meta.env.MODE = 'production'
+    mockUseAppVersion.mockReturnValue({
+      data: {
+        currentVersion: '1.0.0',
+        latestVersion: '2.0.0',
+        isNewVersionAvailable: true,
+        isReleaseBuild: true,
+        toolhiveVersion: '0.9.0',
+      },
+      isLoading: false,
+      error: null,
+    })
+
+    renderWithProviders(<SettingsTabs />)
+
+    const generalTab = screen.getByRole('tab', { name: 'General' })
+    const logsTab = screen.getByRole('tab', { name: 'Logs' })
+
+    // Check that these tabs don't have the icon
+    expect(generalTab.querySelector('svg')).not.toBeInTheDocument()
+    expect(logsTab.querySelector('svg')).not.toBeInTheDocument()
   })
 })
