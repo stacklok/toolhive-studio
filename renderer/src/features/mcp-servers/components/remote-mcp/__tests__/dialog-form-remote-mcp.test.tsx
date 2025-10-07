@@ -62,12 +62,6 @@ beforeEach(() => {
     // Mock empty workloads by default
     http.get(mswEndpoint('/api/v1beta/workloads'), () => {
       return HttpResponse.json({ workloads: [] })
-    }),
-    // Mock groups endpoint
-    http.get(mswEndpoint('/api/v1beta/groups'), () => {
-      return HttpResponse.json({
-        groups: [{ name: 'default' }],
-      })
     })
   )
 
@@ -126,24 +120,20 @@ describe('DialogFormRemoteMcp', () => {
       screen.getAllByLabelText('Use a secret from the store')[1] as HTMLElement
     )
 
-    // Wait for secrets to load and select one
-    const secretOption = await screen.findByRole('option', {
-      name: 'SECRET_FROM_STORE',
-    })
-    await user.click(secretOption)
-
-    // Wait for popover to close
     await waitFor(() => {
       expect(
-        screen.queryByRole('option', { name: 'SECRET_FROM_STORE' })
-      ).not.toBeInTheDocument()
+        screen.getByRole('dialog', { name: 'Secrets store' })
+      ).toBeVisible()
     })
 
-    // Ensure the server URL field is available and type into it
-    const serverUrlField = await screen.findByRole('textbox', {
-      name: /server url/i,
-    })
-    await user.type(serverUrlField, 'https://api.example.com/mcp')
+    await user.click(screen.getByRole('option', { name: 'SECRET_FROM_STORE' }))
+
+    await user.type(
+      screen.getByRole('textbox', {
+        name: /server url/i,
+      }),
+      'https://api.example.com/mcp'
+    )
     await user.type(screen.getByLabelText('Callback port'), '8888')
 
     await user.click(screen.getByRole('button', { name: 'Install server' }))
@@ -324,7 +314,6 @@ describe('DialogFormRemoteMcp', () => {
             url: 'https://api.example.com/mcp',
             auth_type: 'none',
             name: 'test-remote-server',
-            group: 'default',
             oauth_config: {
               authorize_url: '',
               callback_port: 8888,
