@@ -405,14 +405,6 @@ describe('DialogFormRemoteRegistryMcp', () => {
             { name: 'staging' },
           ],
         })
-      }),
-      // Mock feature flags to enable groups
-      http.get(mswEndpoint('/api/v1beta/feature-flags'), () => {
-        return HttpResponse.json({
-          flags: {
-            groups: true,
-          },
-        })
       })
     )
 
