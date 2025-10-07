@@ -393,4 +393,49 @@ describe('DialogFormRemoteRegistryMcp', () => {
       ).not.toBeInTheDocument()
     })
   })
+
+  it('displays group selector when feature flag is enabled', async () => {
+    // Mock groups API
+    mswServer.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () => {
+        return HttpResponse.json({
+          groups: [
+            { name: 'default' },
+            { name: 'production' },
+            { name: 'staging' },
+          ],
+        })
+      }),
+      // Mock feature flags to enable groups
+      http.get(mswEndpoint('/api/v1beta/feature-flags'), () => {
+        return HttpResponse.json({
+          flags: {
+            groups: true,
+          },
+        })
+      })
+    )
+
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRemoteRegistryMcp
+          server={mockServer}
+          isOpen
+          closeDialog={vi.fn()}
+        />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Group selector should be visible
+    await waitFor(
+      () => {
+        expect(screen.getByLabelText('Group')).toBeInTheDocument()
+      },
+      { timeout: 3000 }
+    )
+  })
 })
