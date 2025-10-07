@@ -1,13 +1,17 @@
-import { render, screen, waitFor } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { VersionTab } from '../version-tab'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import type { AppVersionInfo } from '@/common/hooks/use-app-version'
+import userEvent from '@testing-library/user-event'
 
 const mockElectronAPI = {
-  getAppVersion: vi.fn(),
-  isOfficialReleaseBuild: vi.fn(),
-  getToolhiveVersion: vi.fn(),
+  isAutoUpdateEnabled: vi.fn(),
+  setAutoUpdate: vi.fn(),
+  manualUpdate: vi.fn(),
+  getUpdateState: vi.fn(),
+  isLinux: false,
 }
 
 Object.defineProperty(window, 'electronAPI', {
@@ -23,6 +27,10 @@ const renderWithProviders = (component: React.ReactElement) => {
     },
   })
 
+  // Set default query data for useCurrentUpdateState and useAutoUpdateStatus
+  queryClient.setQueryData(['update-state'], 'none')
+  queryClient.setQueryData(['auto-update-enabled'], true)
+
   return render(
     <PromptProvider>
       <QueryClientProvider client={queryClient}>
@@ -32,27 +40,42 @@ const renderWithProviders = (component: React.ReactElement) => {
   )
 }
 
+const mockAppInfo: AppVersionInfo = {
+  currentVersion: '1.0.0',
+  latestVersion: '',
+  isNewVersionAvailable: false,
+  isReleaseBuild: true,
+  toolhiveVersion: '0.9.0',
+}
+
 describe('VersionTab', () => {
+  const originalEnv = import.meta.env.MODE
+
   beforeEach(() => {
-    mockElectronAPI.getAppVersion.mockResolvedValue('1.0.0')
-    mockElectronAPI.isOfficialReleaseBuild.mockResolvedValue(true)
-    mockElectronAPI.getToolhiveVersion.mockResolvedValue('0.9.0')
+    mockElectronAPI.isAutoUpdateEnabled.mockResolvedValue(true)
+    mockElectronAPI.getUpdateState.mockResolvedValue('none')
+    mockElectronAPI.isLinux = false
+    vi.stubGlobal('open', vi.fn())
   })
 
-  it('renders version information heading', async () => {
-    renderWithProviders(<VersionTab />)
-
-    await waitFor(() => {
-      expect(screen.getByText('Version Information')).toBeVisible()
-    })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    // Reset import.meta.env.MODE
+    import.meta.env.MODE = originalEnv
   })
 
-  it('displays version information when loaded', async () => {
-    renderWithProviders(<VersionTab />)
+  it('renders version information heading', () => {
+    renderWithProviders(
+      <VersionTab appInfo={mockAppInfo} isLoading={false} error={null} />
+    )
 
-    await waitFor(() => {
-      expect(screen.getByText('1.0.0')).toBeVisible()
-    })
+    expect(screen.getByText('Version Information')).toBeVisible()
+  })
+
+  it('displays version information when loaded', () => {
+    renderWithProviders(
+      <VersionTab appInfo={mockAppInfo} isLoading={false} error={null} />
+    )
 
     expect(screen.getByText('Desktop UI version')).toBeVisible()
     expect(screen.getByText('ToolHive binary version')).toBeVisible()
@@ -62,50 +85,41 @@ describe('VersionTab', () => {
     expect(screen.getByText('Release')).toBeVisible()
   })
 
-  it('displays development build type when not a release build', async () => {
-    mockElectronAPI.isOfficialReleaseBuild.mockResolvedValue(false)
+  it('displays development build type when not a release build', () => {
+    const devAppInfo: AppVersionInfo = {
+      ...mockAppInfo,
+      isReleaseBuild: false,
+    }
 
-    renderWithProviders(<VersionTab />)
-
-    await waitFor(() => {
-      expect(screen.getByText('Development')).toBeVisible()
-    })
-  })
-
-  it('handles error when fetching version info', async () => {
-    mockElectronAPI.getAppVersion.mockRejectedValue(
-      new Error('Failed to fetch')
-    )
-    mockElectronAPI.isOfficialReleaseBuild.mockRejectedValue(
-      new Error('Failed to fetch')
-    )
-    mockElectronAPI.getToolhiveVersion.mockRejectedValue(
-      new Error('Failed to fetch')
+    renderWithProviders(
+      <VersionTab appInfo={devAppInfo} isLoading={false} error={null} />
     )
 
-    renderWithProviders(<VersionTab />)
-
-    await waitFor(() => {
-      expect(screen.getAllByText('N/A')).toHaveLength(2)
-    })
+    expect(screen.getByText('Development')).toBeVisible()
   })
 
-  it('calls all version APIs on mount', async () => {
-    renderWithProviders(<VersionTab />)
+  it('handles error when fetching version info', () => {
+    const error = new Error('Failed to fetch')
 
-    await waitFor(() => {
-      expect(mockElectronAPI.getAppVersion).toHaveBeenCalledTimes(1)
-      expect(mockElectronAPI.isOfficialReleaseBuild).toHaveBeenCalledTimes(1)
-      expect(mockElectronAPI.getToolhiveVersion).toHaveBeenCalledTimes(1)
-    })
+    renderWithProviders(
+      <VersionTab appInfo={undefined} isLoading={false} error={error} />
+    )
+
+    expect(screen.getByText('Failed to load version information')).toBeVisible()
   })
 
-  it('displays version badges with correct variants', async () => {
-    renderWithProviders(<VersionTab />)
+  it('displays loading state', () => {
+    renderWithProviders(
+      <VersionTab appInfo={undefined} isLoading={true} error={null} />
+    )
 
-    await waitFor(() => {
-      expect(screen.getByText('1.0.0')).toBeVisible()
-    })
+    expect(screen.getByText('Loading version information...')).toBeVisible()
+  })
+
+  it('displays version badges with correct variants', () => {
+    renderWithProviders(
+      <VersionTab appInfo={mockAppInfo} isLoading={false} error={null} />
+    )
 
     const badges = screen.getAllByText((content, element) => {
       return (
@@ -117,15 +131,142 @@ describe('VersionTab', () => {
     expect(badges).toHaveLength(3)
   })
 
-  it('displays empty toolhive version when not provided', async () => {
-    mockElectronAPI.getToolhiveVersion.mockResolvedValue('')
+  it('displays empty toolhive version when not provided', () => {
+    const appInfoWithEmptyToolhive: AppVersionInfo = {
+      ...mockAppInfo,
+      toolhiveVersion: '',
+    }
 
-    renderWithProviders(<VersionTab />)
-
-    await waitFor(() => {
-      expect(screen.getByText('1.0.0')).toBeVisible()
-    })
+    renderWithProviders(
+      <VersionTab
+        appInfo={appInfoWithEmptyToolhive}
+        isLoading={false}
+        error={null}
+      />
+    )
 
     expect(screen.getByText('ToolHive binary version')).toBeVisible()
+  })
+
+  it('show update available alert', () => {
+    import.meta.env.MODE = 'production'
+
+    const appInfoWithUpdate: AppVersionInfo = {
+      ...mockAppInfo,
+      latestVersion: '2.0.0',
+      isNewVersionAvailable: true,
+    }
+
+    renderWithProviders(
+      <VersionTab appInfo={appInfoWithUpdate} isLoading={false} error={null} />
+    )
+
+    expect(screen.getByText(/A new version 2.0.0 is available/i)).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Download' })).toBeVisible()
+    expect(screen.getByText('ToolHive binary version')).toBeVisible()
+  })
+
+  it('calls window.open on Linux when Download button is clicked', async () => {
+    import.meta.env.MODE = 'production'
+    mockElectronAPI.isLinux = true
+    const user = userEvent.setup()
+
+    const appInfoWithUpdate: AppVersionInfo = {
+      ...mockAppInfo,
+      latestVersion: '2.0.0',
+      isNewVersionAvailable: true,
+    }
+
+    renderWithProviders(
+      <VersionTab appInfo={appInfoWithUpdate} isLoading={false} error={null} />
+    )
+
+    const downloadButton = screen.getByRole('button', { name: 'Download' })
+    await user.click(downloadButton)
+
+    expect(window.open).toHaveBeenCalledWith(
+      'https://github.com/stacklok/toolhive-studio/releases/latest'
+    )
+    expect(mockElectronAPI.manualUpdate).not.toHaveBeenCalled()
+  })
+
+  it('calls manualUpdate on non-Linux when Download button is clicked', async () => {
+    import.meta.env.MODE = 'production'
+    mockElectronAPI.isLinux = false
+    const user = userEvent.setup()
+
+    const appInfoWithUpdate: AppVersionInfo = {
+      ...mockAppInfo,
+      latestVersion: '2.0.0',
+      isNewVersionAvailable: true,
+    }
+
+    renderWithProviders(
+      <VersionTab appInfo={appInfoWithUpdate} isLoading={false} error={null} />
+    )
+
+    const downloadButton = screen.getByRole('button', { name: 'Download' })
+    await user.click(downloadButton)
+
+    expect(mockElectronAPI.manualUpdate).toHaveBeenCalled()
+    expect(window.open).not.toHaveBeenCalled()
+  })
+
+  it('does not show update alert in development mode', () => {
+    import.meta.env.MODE = 'development'
+
+    const appInfoWithUpdate: AppVersionInfo = {
+      ...mockAppInfo,
+      latestVersion: '2.0.0',
+      isNewVersionAvailable: true,
+    }
+
+    renderWithProviders(
+      <VersionTab appInfo={appInfoWithUpdate} isLoading={false} error={null} />
+    )
+
+    expect(
+      screen.queryByText(/A new version 2.0.0 is available/i)
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Download' })
+    ).not.toBeInTheDocument()
+  })
+
+  it('shows update alert in production mode when update is available', () => {
+    import.meta.env.MODE = 'production'
+
+    const appInfoWithUpdate: AppVersionInfo = {
+      ...mockAppInfo,
+      latestVersion: '2.0.0',
+      isNewVersionAvailable: true,
+    }
+
+    renderWithProviders(
+      <VersionTab appInfo={appInfoWithUpdate} isLoading={false} error={null} />
+    )
+
+    expect(screen.getByText(/A new version 2.0.0 is available/i)).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Download' })).toBeVisible()
+  })
+
+  it('does not show update alert in production mode when no update is available', () => {
+    import.meta.env.MODE = 'production'
+
+    const appInfoNoUpdate: AppVersionInfo = {
+      ...mockAppInfo,
+      isNewVersionAvailable: false,
+    }
+
+    renderWithProviders(
+      <VersionTab appInfo={appInfoNoUpdate} isLoading={false} error={null} />
+    )
+
+    expect(
+      screen.queryByText(/A new version .* is available/i)
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Download' })
+    ).not.toBeInTheDocument()
   })
 })
