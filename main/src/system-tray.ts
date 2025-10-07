@@ -150,14 +150,17 @@ const getCurrentAppVersion = () => {
   }
 }
 
-const createUpdateMenuItem = () => ({
-  label: 'Check for Updates...',
-  type: 'normal' as const,
-  enabled: true,
-  click: async () => {
-    await handleCheckForUpdates()
-  },
-})
+const createUpdateMenuItem = () => {
+  const isProduction = process.env.NODE_ENV === 'production'
+  return {
+    label: 'Check for Updates...',
+    type: 'normal' as const,
+    enabled: isProduction,
+    click: async () => {
+      await handleCheckForUpdates()
+    },
+  }
+}
 
 const startOnLoginMenu = (toolHiveIsRunning: boolean) => {
   const isStartOnLogin = getAutoLaunchStatus()

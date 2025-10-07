@@ -30,8 +30,8 @@ const tabs: TabItem[] = [
 
 export function SettingsTabs() {
   const { data: appInfo, isLoading, error } = useAppVersion()
-  const isNewVersionAvailable =
-    appInfo?.isNewVersionAvailable && appInfo.isReleaseBuild
+  const isProduction = import.meta.env.MODE === 'production'
+  const isNewVersionAvailable = appInfo?.isNewVersionAvailable && isProduction
 
   return (
     <>
@@ -55,8 +55,8 @@ export function SettingsTabs() {
               <div className="flex items-center gap-2">
                 {tab.label}
                 {tab.value === 'version' && isNewVersionAvailable && (
-                  <div className="bg-background rounded-full p-0.5">
-                    <ArrowUpCircle className="size-2.5 text-blue-500" />
+                  <div className="bg-background rounded-full">
+                    <ArrowUpCircle className="size-4 text-blue-500" />
                   </div>
                 )}
               </div>

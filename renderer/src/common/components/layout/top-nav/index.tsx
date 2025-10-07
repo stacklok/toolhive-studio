@@ -141,6 +141,7 @@ function TopNavLinks() {
 export function TopNav(props: HTMLProps<HTMLElement>) {
   const confirmQuit = useConfirmQuit()
   const { data: appVersion } = useAppVersion()
+  const isProduction = import.meta.env.MODE === 'production'
 
   useEffect(() => {
     const cleanup = window.electronAPI.onUpdateDownloaded(() => {
@@ -176,14 +177,14 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
         <Separator orientation="vertical" className="mr-4 ml-2" />
         <div className="flex items-center gap-2">
           <LinkViewTransition to="/settings" className="app-region-no-drag">
-            {appVersion?.isNewVersionAvailable && appVersion.isReleaseBuild ? (
+            {appVersion?.isNewVersionAvailable && isProduction ? (
               <Tooltip>
                 <TooltipTrigger asChild autoFocus={false}>
                   <Button variant="ghost" size="sm" className="cursor-pointer">
                     <div className="relative inline-flex items-center">
                       <SettingsIcon className="text-muted-foreground size-4" />
                       <div className="absolute -top-1 -right-1">
-                        <div className="bg-background rounded-full p-0.5">
+                        <div className="bg-background rounded-full">
                           <ArrowUpCircle className="size-2.5 text-blue-500" />
                         </div>
                       </div>

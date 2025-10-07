@@ -31,6 +31,7 @@ function VersionInfoWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
+  const isProduction = import.meta.env.MODE === 'production'
   const { data: updateState, isLoading: isUpdateStateLoading } =
     useCurrentUpdateState()
   const isDownloading = isUpdateStateLoading || updateState === 'downloading'
@@ -94,7 +95,7 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
             disabled={isAutoUpdateEnabledLoading || isSetAutoUpdatePending}
           />
         </div>
-        {appInfo.isNewVersionAvailable && appInfo.isReleaseBuild && (
+        {appInfo.isNewVersionAvailable && isProduction && (
           <div>
             <Alert className="flex h-full items-center">
               <AlertDescription className="flex w-full items-center gap-2">

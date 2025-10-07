@@ -47,6 +47,7 @@ export function createApplicationMenu() {
 
   const existingMenus = convertMenuItemsToTemplate(defaultMenu)
   const restMenuItems = existingMenus.slice(1)
+  const isProduction = process.env.NODE_ENV === 'production'
   const template: Electron.MenuItemConstructorOptions[] = [
     {
       label: app.getName(),
@@ -55,6 +56,7 @@ export function createApplicationMenu() {
         { type: 'separator' as const },
         {
           label: 'Check for Updates...',
+          visible: isProduction,
           click: async () => {
             await handleCheckForUpdates()
           },
