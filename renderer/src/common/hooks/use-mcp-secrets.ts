@@ -66,12 +66,7 @@ export async function saveMCPSecrets(
     // confusion when many secrets are being created in quick succession.
     // The delay is between 100 and 500ms
     await new Promise((resolve) =>
-      setTimeout(
-        resolve,
-        process.env.NODE_ENV === 'test'
-          ? 0
-          : Math.floor(Math.random() * 401) + 100
-      )
+      setTimeout(resolve, Math.floor(Math.random() * 401) + 100)
     )
     createdSecrets.push({
       /** The name of the secret in the secret store */
