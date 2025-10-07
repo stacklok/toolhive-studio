@@ -1,4 +1,4 @@
-import { dialog } from 'electron'
+import { dialog, shell } from 'electron'
 import log from '../logger'
 import { getAppVersion } from '../util'
 import { getLatestAvailableVersion, manualUpdate } from '../auto-update'
@@ -25,6 +25,13 @@ export async function handleCheckForUpdates(): Promise<boolean> {
       })
 
       if (response.response === 0) {
+        const isLinux = process.platform === 'linux'
+        if (isLinux) {
+          shell.openExternal(
+            'https://github.com/stacklok/toolhive-studio/releases/latest'
+          )
+          return true
+        }
         log.info(
           '[update] Starting manual update to version:',
           appVersionInfo.latestVersion

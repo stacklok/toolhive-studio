@@ -55,6 +55,32 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
     )
   }
 
+  const handleManualUpdate = () => {
+    const isLinux = window.electronAPI?.isLinux
+    if (isLinux) {
+      window.open('https://github.com/stacklok/toolhive-studio/releases/latest')
+
+      trackEvent('redirect to github releases', {
+        pageName: '/settings/version',
+        'page.tab': 'version',
+        'latest.version': appInfo.latestVersion,
+        'current.version': appInfo.currentVersion,
+        'is.new.version.available': appInfo?.isNewVersionAvailable,
+      })
+
+      return
+    }
+
+    window.electronAPI.manualUpdate()
+    trackEvent('manual-update', {
+      pageName: '/settings/version',
+      'page.tab': 'version',
+      'latest.version': appInfo.latestVersion,
+      'current.version': appInfo.currentVersion,
+      'is.new.version.available': appInfo?.isNewVersionAvailable,
+    })
+  }
+
   return (
     <>
       <VersionInfoWrapper>
@@ -108,15 +134,7 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
                     variant="outline"
                     disabled={isDownloading}
                     onClick={() => {
-                      window.electronAPI.manualUpdate()
-                      trackEvent('manual-update', {
-                        pageName: '/settings/version',
-                        'page.tab': 'version',
-                        'latest.version': appInfo.latestVersion,
-                        'current.version': appInfo.currentVersion,
-                        'is.new.version.available':
-                          appInfo.isNewVersionAvailable,
-                      })
+                      handleManualUpdate()
                     }}
                   >
                     <Download className="size-4" />{' '}
