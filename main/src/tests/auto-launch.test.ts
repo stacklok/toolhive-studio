@@ -1,5 +1,11 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { createDesktopEntry } from '../auto-launch'
+
+vi.mock('electron', () => ({
+  app: {
+    isPackaged: false,
+  },
+}))
 
 describe('Linux desktop-entry generation', () => {
   it('quotes the Exec path when it contains spaces', () => {
