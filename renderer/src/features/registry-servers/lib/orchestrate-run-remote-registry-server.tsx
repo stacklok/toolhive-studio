@@ -1,5 +1,4 @@
 import {
-  type RegistryEnvVar,
   type RegistryRemoteServerMetadata,
   type V1CreateRequest,
 } from '@api/types.gen'
@@ -15,9 +14,7 @@ const getAuthType = (
 }
 
 export function convertCreateRequestToFormData(
-  createRequest: RegistryRemoteServerMetadata,
-  secrets: RegistryEnvVar[],
-  envVars: RegistryEnvVar[]
+  createRequest: RegistryRemoteServerMetadata
 ): FormSchemaRemoteMcp {
   const authType = getAuthType(createRequest.oauth_config)
   const baseFormData: FormSchemaRemoteMcp = {
@@ -39,15 +36,8 @@ export function convertCreateRequestToFormData(
       token_url: createRequest.oauth_config?.token_url ?? '',
     },
     auth_type: authType,
-    envVars: envVars.map((e) => ({
-      name: e.name || '',
-      value: e.default || '',
-    })),
-    secrets: secrets.map((s) => ({
-      name: s.name || '',
-      value: { secret: s.default || '', isFromStore: false },
-    })),
     group: 'default',
+    secrets: [],
   }
 
   return baseFormData

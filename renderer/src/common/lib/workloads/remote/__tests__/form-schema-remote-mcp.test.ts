@@ -19,7 +19,6 @@ describe('getFormSchemaRemoteMcp', () => {
       token_url: '',
       use_pkce: true,
     },
-    envVars: [],
     secrets: [],
     group: 'default',
   }
@@ -304,38 +303,6 @@ describe('getFormSchemaRemoteMcp', () => {
 
       const result = getFormSchemaRemoteMcp([]).safeParse(input)
       expect(result.success, `${result.error}`).toBe(true)
-    })
-  })
-
-  describe('environment variables and secrets', () => {
-    it('passes with valid environment variables and secrets', () => {
-      const input = {
-        ...baseValidInput,
-        envVars: [{ name: 'API_KEY', value: 'test-key' }],
-        secrets: [
-          {
-            name: 'SECRET_TOKEN',
-            value: { secret: 'secret-value', isFromStore: false },
-          },
-        ],
-      }
-
-      const result = getFormSchemaRemoteMcp([]).safeParse(input)
-      expect(result.success, `${result.error}`).toBe(true)
-    })
-
-    it('fails with invalid environment variable name', () => {
-      const input = {
-        ...baseValidInput,
-        envVars: [{ name: '', value: 'test-key' }],
-      }
-
-      const result = getFormSchemaRemoteMcp([]).safeParse(input)
-      expect(result.success).toBe(false)
-      const envVarError = result.error?.issues.find((issue) =>
-        issue.path.includes('envVars')
-      )
-      expect(envVarError?.message).toBe('Name is required')
     })
   })
 })

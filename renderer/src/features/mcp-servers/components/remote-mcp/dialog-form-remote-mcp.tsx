@@ -16,13 +16,11 @@ import {
   SelectContent,
   SelectItem,
 } from '@/common/components/ui/select'
-import { FormFieldsArrayCustomSecrets } from '../form-fields-array-custom-secrets'
-import { FormFieldsArrayCustomEnvVars } from '../form-fields-array-custom-env-vars'
 import { FormFieldsAuth } from './form-fields-auth'
 import { useRunRemoteServer } from '../../hooks/use-run-remote-server'
 import log from 'electron-log/renderer'
 import { useState } from 'react'
-import { useUpdateServer } from '../../hooks/use-update-remote-server'
+import { useUpdateRemoteServer } from '../../hooks/use-update-remote-server'
 import {
   getApiV1BetaSecretsDefaultKeysOptions,
   getApiV1BetaWorkloadsByNameOptions,
@@ -58,7 +56,6 @@ const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
     token_url: '',
     use_pkce: true,
   },
-  envVars: [],
   secrets: [],
   url: '',
   group: '',
@@ -102,7 +99,7 @@ export function DialogFormRemoteMcp({
       },
     })
 
-  const { updateServerMutation } = useUpdateServer(serverToEdit || '', {
+  const { updateServerMutation } = useUpdateRemoteServer(serverToEdit || '', {
     onSecretSuccess: handleSecrets,
     onSecretError: (error, variables) => {
       log.error('onSecretError during update', error, variables)
@@ -432,13 +429,6 @@ export function DialogFormRemoteMcp({
             />
 
             <FormFieldsAuth authType={authType} form={form} />
-
-            {(authType === undefined || authType === 'none') && (
-              <>
-                <FormFieldsArrayCustomSecrets form={form} />
-                <FormFieldsArrayCustomEnvVars form={form} />
-              </>
-            )}
           </div>
         </div>
       )}

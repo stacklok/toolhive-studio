@@ -8,7 +8,7 @@ import { prepareUpdateWorkloadData } from '../lib/orchestrate-run-remote-server'
 import { useMCPSecrets } from '@/common/hooks/use-mcp-secrets'
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
 
-export function useUpdateServer(
+export function useUpdateRemoteServer(
   serverName: string,
   options?: {
     onSecretSuccess?: (completedCount: number, secretsCount: number) => void
@@ -19,7 +19,7 @@ export function useUpdateServer(
   }
 ) {
   const queryClient = useQueryClient()
-  const { handleSecrets, isPendingSecrets, isErrorSecrets } = useMCPSecrets({
+  const { isPendingSecrets, isErrorSecrets } = useMCPSecrets({
     onSecretSuccess: options?.onSecretSuccess || (() => {}),
     onSecretError: options?.onSecretError || (() => {}),
   })
@@ -30,28 +30,7 @@ export function useUpdateServer(
 
   const { mutate: updateServerMutation } = useMutation({
     mutationFn: async ({ data }: { data: FormSchemaRemoteMcp }) => {
-      const isDefaultAuthType = data.auth_type === 'none'
-      const secrets = isDefaultAuthType
-        ? data.secrets
-        : data.oauth_config.client_secret
-          ? [data.oauth_config.client_secret]
-          : []
-
-      const { newlyCreatedSecrets, existingSecrets } =
-        await handleSecrets(secrets)
-
-      // Update the workload with all secrets
-      const allSecrets = [
-        ...newlyCreatedSecrets,
-        ...existingSecrets.map((secret) => ({
-          name: secret.value.secret,
-          target: secret.name,
-        })),
-      ]
-      const updateRequest = prepareUpdateWorkloadData(
-        data,
-        isDefaultAuthType ? allSecrets : []
-      )
+      const updateRequest = prepareUpdateWorkloadData(data)
 
       await updateWorkload({
         path: { name: serverName },
