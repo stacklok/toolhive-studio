@@ -47,7 +47,7 @@ export function createApplicationMenu() {
 
   const existingMenus = convertMenuItemsToTemplate(defaultMenu)
   const restMenuItems = existingMenus.slice(1)
-  const isProduction = process.env.NODE_ENV === 'production'
+  const isProduction = app.isPackaged
   const template: Electron.MenuItemConstructorOptions[] = [
     {
       label: app.getName(),

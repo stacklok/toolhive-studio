@@ -151,7 +151,7 @@ const getCurrentAppVersion = () => {
 }
 
 const createUpdateMenuItem = () => {
-  const isProduction = process.env.NODE_ENV === 'production'
+  const isProduction = app.isPackaged
   return {
     label: 'Check for Updates...',
     type: 'normal' as const,
