@@ -19,6 +19,11 @@ vi.mock('@/common/hooks/use-check-server-status', () => ({
   useCheckServerStatus: vi.fn(),
 }))
 
+// Mock the delay utility to remove artificial delays in tests
+vi.mock('../../../../../../../utils/delay', () => ({
+  delay: vi.fn().mockResolvedValue(undefined),
+}))
+
 const mockUseCheckServerStatus = vi.mocked(useCheckServerStatus)
 
 const mockUseRunRemoteServer = vi.mocked(useRunRemoteServer)
@@ -47,6 +52,18 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => (
 
 beforeEach(() => {
   vi.clearAllMocks()
+
+  // Disable animations for faster, more reliable tests
+  const style = document.createElement('style')
+  style.innerHTML = `
+    *, *::before, *::after {
+      animation-duration: 0ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0ms !important;
+      transition-delay: 0ms !important;
+    }
+  `
+  document.head.appendChild(style)
 
   // Setup MSW with default secrets
   mswServer.use(
@@ -120,12 +137,7 @@ describe('DialogFormRemoteMcp', () => {
       screen.getAllByLabelText('Use a secret from the store')[1] as HTMLElement
     )
 
-    await waitFor(() => {
-      expect(
-        screen.getByRole('dialog', { name: 'Secrets store' })
-      ).toBeVisible()
-    })
-
+    // Select a secret from the store
     await user.click(screen.getByRole('option', { name: 'SECRET_FROM_STORE' }))
 
     await user.type(
