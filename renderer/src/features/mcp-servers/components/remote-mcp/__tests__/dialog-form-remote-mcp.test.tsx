@@ -19,11 +19,6 @@ vi.mock('@/common/hooks/use-check-server-status', () => ({
   useCheckServerStatus: vi.fn(),
 }))
 
-// Mock the delay utility to remove artificial delays in tests
-vi.mock('../../../../../../../utils/delay', () => ({
-  delay: vi.fn().mockResolvedValue(undefined),
-}))
-
 const mockUseCheckServerStatus = vi.mocked(useCheckServerStatus)
 
 const mockUseRunRemoteServer = vi.mocked(useRunRemoteServer)
@@ -53,18 +48,6 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => (
 beforeEach(() => {
   vi.clearAllMocks()
 
-  // Disable animations for faster, more reliable tests
-  const style = document.createElement('style')
-  style.innerHTML = `
-    *, *::before, *::after {
-      animation-duration: 0ms !important;
-      animation-delay: 0ms !important;
-      transition-duration: 0ms !important;
-      transition-delay: 0ms !important;
-    }
-  `
-  document.head.appendChild(style)
-
   // Setup MSW with default secrets
   mswServer.use(
     http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
@@ -79,6 +62,12 @@ beforeEach(() => {
     // Mock empty workloads by default
     http.get(mswEndpoint('/api/v1beta/workloads'), () => {
       return HttpResponse.json({ workloads: [] })
+    }),
+    // Mock groups endpoint
+    http.get(mswEndpoint('/api/v1beta/groups'), () => {
+      return HttpResponse.json({
+        groups: [{ name: 'default' }],
+      })
     })
   )
 
@@ -137,15 +126,24 @@ describe('DialogFormRemoteMcp', () => {
       screen.getAllByLabelText('Use a secret from the store')[1] as HTMLElement
     )
 
-    // Select a secret from the store
-    await user.click(screen.getByRole('option', { name: 'SECRET_FROM_STORE' }))
+    // Wait for secrets to load and select one
+    const secretOption = await screen.findByRole('option', {
+      name: 'SECRET_FROM_STORE',
+    })
+    await user.click(secretOption)
 
-    await user.type(
-      screen.getByRole('textbox', {
-        name: /server url/i,
-      }),
-      'https://api.example.com/mcp'
-    )
+    // Wait for popover to close
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('option', { name: 'SECRET_FROM_STORE' })
+      ).not.toBeInTheDocument()
+    })
+
+    // Ensure the server URL field is available and type into it
+    const serverUrlField = await screen.findByRole('textbox', {
+      name: /server url/i,
+    })
+    await user.type(serverUrlField, 'https://api.example.com/mcp')
     await user.type(screen.getByLabelText('Callback port'), '8888')
 
     await user.click(screen.getByRole('button', { name: 'Install server' }))
