@@ -2,7 +2,7 @@ import log from 'electron-log/main'
 import { app } from 'electron'
 import path from 'node:path'
 
-const isDevelopment = process.env.NODE_ENV === 'development'
+const isDevelopment = !app.isPackaged
 
 log.transports.file.resolvePathFn = () => {
   const logPath = app.getPath('logs')
