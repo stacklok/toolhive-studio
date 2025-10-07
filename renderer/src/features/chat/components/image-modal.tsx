@@ -25,6 +25,7 @@ export function ImageModal({
       <DialogContent
         aria-describedby="image-modal-description"
         className="max-h-[90vh] max-w-4xl p-2"
+        showCloseButton={false}
       >
         <DialogTitle className="sr-only">{fileName}</DialogTitle>
         <DialogDescription aria-describedby={`ImageModal for ${fileName}`} />

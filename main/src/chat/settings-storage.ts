@@ -64,6 +64,7 @@ function isSelectedModel(value: unknown): value is ChatSettingsSelectedModel {
 const chatStore = new Store<ChatSettings>({
   name: 'chat-settings',
   encryptionKey: 'toolhive-chat-encryption-key', // Basic encryption for API keys
+  clearInvalidConfig: true,
   defaults: {
     providers: {},
     selectedModel: {
