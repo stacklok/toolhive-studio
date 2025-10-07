@@ -56,6 +56,30 @@ vi.mock('electron', () => {
   }
 })
 
+vi.mock('@sentry/electron/main', () => ({
+  captureMessage: vi.fn(),
+  captureException: vi.fn(),
+  startSpan: vi.fn((_, callback) => {
+    const mockSpan = {
+      setStatus: vi.fn(),
+      setAttribute: vi.fn(),
+      addLink: vi.fn(),
+      spanContext: vi.fn(),
+    }
+    return callback(mockSpan)
+  }),
+  startSpanManual: vi.fn((_, callback) => {
+    const mockSpan = {
+      setStatus: vi.fn(),
+      setAttribute: vi.fn(),
+      addLink: vi.fn(),
+      spanContext: vi.fn(),
+    }
+    const mockFinish = vi.fn()
+    return callback(mockSpan, mockFinish)
+  }),
+}))
+
 // Mock update-electron-app
 vi.mock('update-electron-app', () => ({
   updateElectronApp: vi.fn(),

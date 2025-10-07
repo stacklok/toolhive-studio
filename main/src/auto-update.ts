@@ -1,5 +1,6 @@
 import { app, autoUpdater, dialog, ipcMain, type BrowserWindow } from 'electron'
 import { updateElectronApp } from 'update-electron-app'
+import * as Sentry from '@sentry/electron/main'
 import { stopAllServers } from './graceful-exit'
 import {
   stopToolhive,
@@ -98,69 +99,104 @@ async function safeServerShutdown(): Promise<boolean> {
 }
 
 async function performUpdateInstallation(releaseName: string | null) {
-  if (updateState === 'installing') {
-    log.warn('[update] Update installation already in progress')
-    return
-  }
+  return Sentry.startSpanManual(
+    {
+      name: 'Auto-update installation',
+      op: 'update.install',
+      attributes: {
+        'analytics.source': 'tracking',
+        'analytics.type': 'event',
+        release_name: releaseName || 'unknown',
+        update_state: updateState,
+        toolhive_running: isToolhiveRunning(),
+      },
+    },
+    async (span, finish) => {
+      try {
+        if (updateState === 'installing') {
+          log.warn('[update] Update installation already in progress')
+          span.setStatus({ code: 2, message: 'Already in progress' })
+          finish()
+          return
+        }
 
-  log.info(`[update] installing update to version: ${releaseName || 'unknown'}`)
-  updateState = 'installing'
+        log.info(
+          `[update] installing update to version: ${releaseName || 'unknown'}`
+        )
+        updateState = 'installing'
 
-  try {
-    // Remove event listeners to avoid interference
-    log.info('[update] removing quit listeners to avoid interference')
-    app.removeAllListeners('before-quit')
-    app.removeAllListeners('will-quit')
+        try {
+          // Remove event listeners to avoid interference
+          log.info('[update] removing quit listeners to avoid interference')
+          app.removeAllListeners('before-quit')
+          app.removeAllListeners('will-quit')
 
-    setQuittingState(true)
-    setTearingDownState(true)
+          setQuittingState(true)
+          setTearingDownState(true)
 
-    log.info('[update] starting graceful shutdown before update...')
+          log.info('[update] starting graceful shutdown before update...')
 
-    // Notify renderer of graceful exit
-    const mainWindow = mainWindowGetter?.()
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('graceful-exit')
-      // Give renderer time to handle the event
-      await delay(500)
+          // Notify renderer of graceful exit
+          const mainWindow = mainWindowGetter?.()
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('graceful-exit')
+            // Give renderer time to handle the event
+            await delay(500)
+          }
+
+          const shutdownSuccess = await safeServerShutdown()
+          if (!shutdownSuccess) {
+            log.warn(
+              '[update] Server shutdown failed, proceeding with update anyway'
+            )
+          }
+
+          try {
+            stopToolhive()
+            log.info('[update] ToolHive stopped')
+          } catch (error) {
+            log.error('[update] Error stopping ToolHive: ', error)
+          }
+
+          safeTrayDestroy()
+
+          log.info(
+            '[update] all cleaned up, calling autoUpdater.quitAndInstall()...'
+          )
+          autoUpdater.quitAndInstall()
+          span.setStatus({ code: 1 })
+        } catch (error) {
+          log.error('[update] error during update installation:', error)
+          span.setStatus({
+            code: 2,
+            message:
+              error instanceof Error
+                ? `[update] error during update installation, ${error?.name} - ${error?.message}`
+                : `[update] error during update installation JSON.stringify(error)`,
+          })
+          updateState = 'none'
+
+          // Attempt recovery
+          try {
+            safeTrayDestroy()
+            log.info('[update] attempting app relaunch after update failure')
+            // this creates a new app instance
+            app.relaunch()
+            //  this quits the current instance
+            app.quit()
+          } catch (recoveryError) {
+            log.error('[update] recovery failed: ', recoveryError)
+            // Force quit as last resort
+            process.exit(1)
+          }
+
+          throw error
+        }
+      } finally {
+        finish()
+      }
     }
-
-    const shutdownSuccess = await safeServerShutdown()
-    if (!shutdownSuccess) {
-      log.warn('[update] Server shutdown failed, proceeding with update anyway')
-    }
-
-    try {
-      stopToolhive()
-      log.info('[update] ToolHive stopped')
-    } catch (error) {
-      log.error('[update] Error stopping ToolHive: ', error)
-    }
-
-    safeTrayDestroy()
-
-    log.info('[update] all cleaned up, calling autoUpdater.quitAndInstall()...')
-    autoUpdater.quitAndInstall()
-  } catch (error) {
-    log.error('[update] error during update installation:', error)
-    updateState = 'none'
-
-    // Attempt recovery
-    try {
-      safeTrayDestroy()
-      log.info('[update] attempting app relaunch after update failure')
-      // this creates a new app instance
-      app.relaunch()
-      //  this quits the current instance
-      app.quit()
-    } catch (recoveryError) {
-      log.error('[update] recovery failed: ', recoveryError)
-      // Force quit as last resort
-      process.exit(1)
-    }
-
-    throw error
-  }
+  )
 }
 
 let mainWindowGetter: (() => BrowserWindow | null) | null = null
@@ -175,155 +211,318 @@ export function initAutoUpdate({
   mainWindowGetter: () => BrowserWindow | null
   windowCreator: () => Promise<BrowserWindow>
 }) {
-  // Always save references first, so manualUpdate() can work even if auto-update is disabled
-  mainWindowGetter = getterParam
-  windowCreator = creatorParam
+  return Sentry.startSpanManual(
+    {
+      name: 'Auto-update initialization',
+      op: 'update.init',
+      attributes: {
+        'analytics.source': 'tracking',
+        'analytics.type': 'event',
+        is_manual_update: isManualUpdate,
+        update_state: updateState,
+        toolhive_running: isToolhiveRunning(),
+        is_auto_update_enabled: store.get('isAutoUpdateEnabled'),
+      },
+    },
+    async (span, finish) => {
+      try {
+        // Always save references first, so manualUpdate() can work even if auto-update is disabled
+        mainWindowGetter = getterParam
+        windowCreator = creatorParam
 
-  const isAutoUpdateEnabled = store.get('isAutoUpdateEnabled')
-  if (!isAutoUpdateEnabled && !isManualUpdate) {
-    log.info('[update] Auto update is disabled, skipping initialization')
-    return
-  }
-
-  resetAllUpdateState()
-
-  // Remove any existing listeners to prevent duplicates
-  autoUpdater.removeAllListeners()
-  ipcMain.removeHandler('install-update-and-restart')
-
-  updateElectronApp({ logger: log, notifyUser: false })
-
-  autoUpdater.on('update-downloaded', async (_, __, releaseName) => {
-    if (updateState === 'installing') {
-      log.warn('[update] Update already in progress, ignoring duplicate event')
-      return
-    }
-
-    log.info('[update] downloaded - showing dialog')
-    pendingUpdateVersion = releaseName
-    updateState = 'downloaded'
-
-    try {
-      let mainWindow = mainWindowGetter?.()
-
-      // check if destroyed is important for not crashing the app
-      if (!mainWindow || mainWindow.isDestroyed()) {
-        log.warn(
-          '[update] MainWindow not available, recreating for update dialog'
-        )
-        try {
-          if (!windowCreator) {
-            log.error('[update] Window creator not initialized')
-            return
-          }
-          mainWindow = await windowCreator()
-          await pollWindowReady(mainWindow)
-        } catch (error) {
-          log.error(
-            '[update] Failed to create window for update dialog: ',
-            error
-          )
-          // Fallback: send notification to existing renderer if available
-          if (mainWindow && !mainWindow.isDestroyed()) {
-            mainWindow.webContents.send('update-downloaded')
-          }
+        const isAutoUpdateEnabled = store.get('isAutoUpdateEnabled')
+        if (!isAutoUpdateEnabled && !isManualUpdate) {
+          log.info('[update] Auto update is disabled, skipping initialization')
+          span.setStatus({ code: 1 })
+          finish()
           return
         }
-      }
 
-      if (mainWindow.isMinimized() && !mainWindow.isDestroyed()) {
-        mainWindow.restore()
-      }
+        resetAllUpdateState()
 
-      const dialogOpts = {
-        type: 'info' as const,
-        buttons: ['Restart', 'Later'],
-        cancelId: 1,
-        defaultId: 0,
-        title: `Release ${releaseName}`,
-        message:
-          process.platform === 'darwin'
-            ? `Release ${releaseName}`
-            : 'A new version has been downloaded.\nThe update will be applied on the next application restart.',
-        detail:
-          process.platform === 'darwin'
-            ? 'A new version has been downloaded.\nThe update will be applied on the next application restart.'
-            : `Ready to install ${releaseName}`,
-        icon: undefined,
-      }
+        // Remove any existing listeners to prevent duplicates
+        autoUpdater.removeAllListeners()
+        ipcMain.removeHandler('install-update-and-restart')
 
-      const returnValue = await dialog.showMessageBox(mainWindow, dialogOpts)
+        updateElectronApp({ logger: log, notifyUser: false })
 
-      if (returnValue.response === 0) {
-        await performUpdateInstallation(releaseName)
-      } else {
-        updateState = 'none'
-        log.info(
-          '[update] user deferred update installation - showing toast notification'
-        )
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('update-downloaded')
-        }
-      }
-    } catch (error) {
-      log.error('[update] error in update-downloaded handler:', error)
-      updateState = 'none'
-      // Fallback: send notification to renderer
-      const mainWindow = mainWindowGetter?.()
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('update-downloaded')
+        autoUpdater.on('update-downloaded', async (_, __, releaseName) => {
+          return Sentry.startSpanManual(
+            {
+              name: 'Handle update downloaded',
+              op: 'update.downloaded',
+              attributes: {
+                'analytics.source': 'tracking',
+                'analytics.type': 'event',
+                release_name: releaseName,
+                update_state: updateState,
+              },
+            },
+            async (span, finish) => {
+              try {
+                if (updateState === 'installing') {
+                  log.warn(
+                    '[update] Update already in progress, ignoring duplicate event'
+                  )
+                  span.setStatus({
+                    code: 2,
+                    message:
+                      'Update already in progress, ignoring duplicate event',
+                  })
+                  finish()
+                  return
+                }
+
+                log.info('[update] downloaded - showing dialog')
+                pendingUpdateVersion = releaseName
+                updateState = 'downloaded'
+
+                try {
+                  let mainWindow = mainWindowGetter?.()
+
+                  // check if destroyed is important for not crashing the app
+                  if (!mainWindow || mainWindow.isDestroyed()) {
+                    log.warn(
+                      '[update] MainWindow not available, recreating for update dialog'
+                    )
+                    try {
+                      if (!windowCreator) {
+                        log.error('[update] Window creator not initialized')
+                        span.setStatus({
+                          code: 2,
+                          message: 'Window creator not initialized',
+                        })
+                        finish()
+                        return
+                      }
+                      mainWindow = await windowCreator()
+                      await pollWindowReady(mainWindow)
+                    } catch (error) {
+                      log.error(
+                        '[update] Failed to create window for update dialog: ',
+                        error
+                      )
+                      span.setStatus({
+                        code: 2,
+                        message:
+                          error instanceof Error
+                            ? `Failed to create window: ${error.message}`
+                            : 'Failed to create window',
+                      })
+                      // Fallback: send notification to existing renderer if available
+                      if (mainWindow && !mainWindow.isDestroyed()) {
+                        mainWindow.webContents.send('update-downloaded')
+                      }
+                      finish()
+                      return
+                    }
+                  }
+
+                  if (mainWindow.isMinimized() && !mainWindow.isDestroyed()) {
+                    mainWindow.restore()
+                  }
+
+                  const dialogOpts = {
+                    type: 'info' as const,
+                    buttons: ['Restart', 'Later'],
+                    cancelId: 1,
+                    defaultId: 0,
+                    title: `Release ${releaseName}`,
+                    message:
+                      process.platform === 'darwin'
+                        ? `Release ${releaseName}`
+                        : 'A new version has been downloaded.\nThe update will be applied on the next application restart.',
+                    detail:
+                      process.platform === 'darwin'
+                        ? 'A new version has been downloaded.\nThe update will be applied on the next application restart.'
+                        : `Ready to install ${releaseName}`,
+                    icon: undefined,
+                  }
+
+                  const returnValue = await dialog.showMessageBox(
+                    mainWindow,
+                    dialogOpts
+                  )
+
+                  if (returnValue.response === 0) {
+                    await performUpdateInstallation(releaseName)
+                    span.setStatus({ code: 1 })
+                  } else {
+                    updateState = 'none'
+                    log.info(
+                      '[update] user deferred update installation - showing toast notification'
+                    )
+                    if (mainWindow && !mainWindow.isDestroyed()) {
+                      mainWindow.webContents.send('update-downloaded')
+                    }
+                    span.setStatus({ code: 1, message: 'User deferred update' })
+                  }
+                } catch (error) {
+                  log.error(
+                    '[update] error in update-downloaded handler:',
+                    error
+                  )
+                  span.setStatus({
+                    code: 2,
+                    message:
+                      error instanceof Error
+                        ? `${error.name} - ${error.message}`
+                        : 'Unknown error',
+                  })
+                  updateState = 'none'
+                  // Fallback: send notification to renderer
+                  const mainWindow = mainWindowGetter?.()
+                  if (mainWindow && !mainWindow.isDestroyed()) {
+                    mainWindow.webContents.send('update-downloaded')
+                  }
+                }
+              } finally {
+                finish()
+              }
+            }
+          )
+        })
+
+        autoUpdater.on('checking-for-update', () => {
+          Sentry.startSpan(
+            {
+              name: 'Checking for update',
+              op: 'update.checking',
+              attributes: {
+                'analytics.source': 'tracking',
+                'analytics.type': 'event',
+                current_version: getAppVersion(),
+                toolhive_running: isToolhiveRunning(),
+                update_state: updateState,
+              },
+            },
+            () => {
+              log.info('[update] checking for updates...')
+              updateState = 'checking'
+            }
+          )
+        })
+
+        autoUpdater.on('update-available', () => {
+          Sentry.startSpan(
+            {
+              name: 'Update available',
+              op: 'update.available',
+              attributes: {
+                'analytics.source': 'tracking',
+                'analytics.type': 'event',
+                current_version: getAppVersion(),
+                update_state: updateState,
+                toolhive_running: isToolhiveRunning(),
+              },
+            },
+            () => {
+              log.info('[update] update is available, starting download...')
+              updateState = 'downloading'
+            }
+          )
+        })
+
+        autoUpdater.on('update-not-available', () => {
+          Sentry.startSpan(
+            {
+              name: 'Update not available',
+              op: 'update.not_available',
+              attributes: {
+                'analytics.source': 'tracking',
+                'analytics.type': 'event',
+                current_version: getAppVersion(),
+                update_state: updateState,
+                toolhive_running: isToolhiveRunning(),
+              },
+            },
+            () => {
+              if (updateState === 'downloading') {
+                log.warn(
+                  '[update] update became unavailable during download - ignoring'
+                )
+                return
+              }
+              log.info('[update] no update available')
+              updateState = 'none'
+            }
+          )
+        })
+
+        autoUpdater.on('error', (message) => {
+          return Sentry.startSpanManual(
+            {
+              name: 'Auto-update error',
+              op: 'update.error',
+              attributes: {
+                'analytics.source': 'tracking',
+                'analytics.type': 'event',
+                update_state: updateState,
+                toolhive_running: isToolhiveRunning(),
+              },
+            },
+            (span, finish) => {
+              try {
+                log.error(
+                  '[update] there was a problem updating the application: ',
+                  message
+                )
+                log.info('[update] update state: ', updateState)
+                log.info(
+                  '[update] toolhive binary is running: ',
+                  isToolhiveRunning()
+                )
+
+                span.setStatus({
+                  code: 2,
+                  message:
+                    message instanceof Error
+                      ? message.message
+                      : String(message),
+                })
+                updateState = 'none'
+              } finally {
+                finish()
+              }
+            }
+          )
+        })
+
+        ipcMain.handle('install-update-and-restart', async () => {
+          if (updateState === 'installing') {
+            log.warn('[update] Update installation already in progress via IPC')
+            return { success: false, error: 'Update already in progress' }
+          }
+
+          log.info(
+            `[update] installing update and restarting application via IPC ${pendingUpdateVersion || 'unknown'}`
+          )
+
+          try {
+            await performUpdateInstallation(pendingUpdateVersion)
+            return { success: true }
+          } catch (error) {
+            log.error('[update] IPC update installation failed: ', error)
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            }
+          }
+        })
+
+        span.setStatus({ code: 1 })
+      } catch (error) {
+        log.error('[update] error during initialization:', error)
+        span.setStatus({
+          code: 2,
+          message: error instanceof Error ? error.message : 'Unknown error',
+        })
+        throw error
+      } finally {
+        finish()
       }
     }
-  })
-
-  autoUpdater.on('checking-for-update', () => {
-    log.info('[update] checking for updates...')
-    updateState = 'checking'
-  })
-
-  autoUpdater.on('update-available', () => {
-    updateState = 'downloading'
-  })
-
-  autoUpdater.on('update-not-available', () => {
-    if (updateState === 'downloading') {
-      log.warn('[update] update became unavailable during download - ignoring')
-      return
-    }
-    updateState = 'none'
-  })
-
-  autoUpdater.on('error', (message) => {
-    log.error(
-      '[update] there was a problem updating the application: ',
-      message
-    )
-    log.info('[update] update state: ', updateState)
-    log.info('[update] toolhive binary is running: ', isToolhiveRunning())
-    updateState = 'none'
-  })
-
-  ipcMain.handle('install-update-and-restart', async () => {
-    if (updateState === 'installing') {
-      log.warn('[update] Update installation already in progress via IPC')
-      return { success: false, error: 'Update already in progress' }
-    }
-
-    log.info(
-      `[update] installing update and restarting application via IPC ${pendingUpdateVersion || 'unknown'}`
-    )
-
-    try {
-      await performUpdateInstallation(pendingUpdateVersion)
-      return { success: true }
-    } catch (error) {
-      log.error('[update] IPC update installation failed: ', error)
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      }
-    }
-  })
+  )
 }
 
 ipcMain.handle('is-update-in-progress', () => {
@@ -399,65 +598,133 @@ function isCurrentVersionPrerelease(
 }
 
 export async function getLatestAvailableVersion() {
-  const currentVersion = getAppVersion()
-  try {
-    const response = await fetch(
-      'https://stacklok.github.io/toolhive-studio/latest',
-      {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+  return Sentry.startSpanManual(
+    {
+      name: 'Check for latest version',
+      op: 'update.get_latest_version',
+      attributes: {
+        'analytics.source': 'tracking',
+        'analytics.type': 'event',
+        current_version: getAppVersion(),
+        update_state: updateState,
+        toolhive_running: isToolhiveRunning(),
+        is_auto_update_enabled: store.get('isAutoUpdateEnabled'),
+      },
+    },
+    async (span, finish) => {
+      const currentVersion = getAppVersion()
+      try {
+        const response = await fetch(
+          'https://stacklok.github.io/toolhive-studio/latest',
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        )
+        if (!response.ok) {
+          log.error(
+            '[update] Failed to check for ToolHive update: ',
+            response.statusText
+          )
+          span.setStatus({
+            code: 2,
+            message: `HTTP ${response.status}: ${response.statusText}`,
+          })
+          return {
+            currentVersion: currentVersion,
+            latestVersion: undefined,
+            isNewVersionAvailable: false,
+          }
+        }
+        const data = await response.json()
+        const latestTag = getAssetsTagByPlatform(data)
+
+        // If current version is a prerelease (contains -beta, -alpha, -rc) OR data.prerelease is true,
+        // always consider it as older than ANY latest version
+        // This allows testing updates even when running a prerelease build
+        const currentIsPrerelease = isCurrentVersionPrerelease(
+          currentVersion,
+          data
+        )
+
+        const isNewVersion = currentIsPrerelease
+          ? latestTag !== undefined // If prerelease, any latest tag is considered new
+          : isCurrentVersionOlder(
+              currentVersion,
+              normalizeVersion(latestTag ?? '')
+            )
+
+        span.setAttribute('latest_version', latestTag ?? 'unknown')
+        span.setAttribute('is_new_version_available', isNewVersion)
+        span.setStatus({ code: 1 })
+
+        return {
+          currentVersion: currentVersion,
+          latestVersion: latestTag,
+          isNewVersionAvailable: isNewVersion,
+        }
+      } catch (error) {
+        log.error('[update] Failed to check for ToolHive update: ', error)
+        span.setStatus({
+          code: 2,
+          message: error instanceof Error ? error.message : 'Unknown error',
+        })
+        return {
+          currentVersion: currentVersion,
+          latestVersion: undefined,
+          isNewVersionAvailable: false,
+        }
+      } finally {
+        finish()
       }
-    )
-    if (!response.ok) {
-      log.error(
-        '[update] Failed to check for ToolHive update: ',
-        response.statusText
-      )
-      return {
-        currentVersion: currentVersion,
-        latestVersion: undefined,
-        isNewVersionAvailable: false,
-      }
     }
-    const data = await response.json()
-    const latestTag = getAssetsTagByPlatform(data)
-
-    // If current version is a prerelease (contains -beta, -alpha, -rc) OR data.prerelease is true,
-    // always consider it as older than ANY latest version
-    // This allows testing updates even when running a prerelease build
-    const currentIsPrerelease = isCurrentVersionPrerelease(currentVersion, data)
-
-    const isNewVersion = currentIsPrerelease
-      ? latestTag !== undefined // If prerelease, any latest tag is considered new
-      : isCurrentVersionOlder(currentVersion, normalizeVersion(latestTag ?? ''))
-
-    return {
-      currentVersion: currentVersion,
-      latestVersion: latestTag,
-      isNewVersionAvailable: isNewVersion,
-    }
-  } catch (error) {
-    log.error('[update] Failed to check for ToolHive update: ', error)
-    return {
-      currentVersion: currentVersion,
-      latestVersion: undefined,
-      isNewVersionAvailable: false,
-    }
-  }
+  )
 }
 
 export function manualUpdate() {
-  if (!mainWindowGetter || !windowCreator) {
-    log.error(
-      '[update] Cannot perform manual update: initAutoUpdate was not called first'
-    )
-    return
-  }
+  return Sentry.startSpanManual(
+    {
+      name: 'Manual update triggered',
+      op: 'update.manual',
+      attributes: {
+        'analytics.source': 'tracking',
+        'analytics.type': 'event',
+        update_state: updateState,
+        toolhive_running: isToolhiveRunning(),
+        is_auto_update_enabled: store.get('isAutoUpdateEnabled'),
+      },
+    },
+    async (span, finish) => {
+      try {
+        if (!mainWindowGetter || !windowCreator) {
+          log.error(
+            '[update] Cannot perform manual update: initAutoUpdate was not called first'
+          )
+          span.setStatus({ code: 2, message: 'References not initialized' })
+          finish()
+          return
+        }
 
-  initAutoUpdate({
-    isManualUpdate: true,
-    mainWindowGetter,
-    windowCreator,
-  })
+        initAutoUpdate({
+          isManualUpdate: true,
+          mainWindowGetter,
+          windowCreator,
+        })
+        span.setStatus({ code: 1 })
+      } catch (error) {
+        log.error('[update] error during manual update:', error)
+        span.setStatus({
+          code: 2,
+          message:
+            error instanceof Error
+              ? error.message
+              : `Unknown error during manual update ${JSON.stringify(error)}`,
+        })
+        throw error
+      } finally {
+        finish()
+      }
+    }
+  )
 }
