@@ -4,7 +4,11 @@ import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-sch
 import { prepareCreateWorkloadData } from '../lib/orchestrate-run-remote-server'
 import {
   type PostApiV1BetaSecretsDefaultKeysData,
+<<<<<<< HEAD
   type SecretsSecretParameter,
+=======
+  type V1CreateRequest,
+>>>>>>> 21d41716 (leftover)
 } from '@api/types.gen'
 import type { Options } from '@api/client'
 import { restartClientNotification } from '../lib/restart-client-notification'
@@ -44,24 +48,20 @@ export function useRunRemoteServer({
           ? [data.oauth_config.client_secret]
           : []
 
-      const { newlyCreatedSecrets, existingSecrets } =
-        await handleSecrets(secrets)
-      // Create the MCP server workload
-      // Prepare the request data and send it to the API
-      // We pass the encrypted secrets along with the request.
-      const secretsForRequest: SecretsSecretParameter[] = [
-        ...newlyCreatedSecrets,
-        ...existingSecrets.map((secret) => ({
-          name: secret.value.secret,
-          target: secret.name,
-        })),
-      ]
+      await handleSecrets(secrets)
 
+<<<<<<< HEAD
       const preparedData = prepareCreateWorkloadData(
         data,
         isDefaultAuthType ? secretsForRequest : []
       )
 
+=======
+      const createRequest: V1CreateRequest = {
+        ...prepareCreateWorkloadData(data),
+        ...(groupName ? { group: groupName } : {}),
+      }
+>>>>>>> 21d41716 (leftover)
       await createWorkload({
         body: preparedData,
       })
