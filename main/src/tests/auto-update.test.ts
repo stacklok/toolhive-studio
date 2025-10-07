@@ -389,7 +389,7 @@ describe('auto-update', () => {
         await vi.runAllTimersAsync()
 
         expect(vi.mocked(log).error).toHaveBeenCalledWith(
-          '[update] Failed to create window for update dialog: ',
+          '[update] Failed to prepare update dialog:',
           expect.any(Error)
         )
       })
@@ -642,7 +642,7 @@ describe('auto-update', () => {
         await vi.runAllTimersAsync()
 
         expect(vi.mocked(log).error).toHaveBeenCalledWith(
-          '[update] error in update-downloaded handler:',
+          '[update] Dialog error in update-downloaded handler:',
           expect.any(Error)
         )
       })

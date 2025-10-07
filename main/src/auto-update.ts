@@ -247,18 +247,21 @@ export function initAutoUpdate({
         updateElectronApp({ logger: log, notifyUser: false })
 
         autoUpdater.on('update-downloaded', async (_, __, releaseName) => {
-          return Sentry.startSpanManual(
+          // Phase 1: Prepare dialog (fast, technical operation)
+          const mainWindow = await Sentry.startSpanManual(
             {
-              name: 'Handle update downloaded',
+              name: 'Prepare update dialog',
               op: 'update.downloaded',
               attributes: {
                 'analytics.source': 'tracking',
                 'analytics.type': 'event',
                 release_name: releaseName,
                 update_state: updateState,
+                toolhive_running: isToolhiveRunning(),
+                is_auto_update_enabled: store.get('isAutoUpdateEnabled'),
               },
             },
-            async (span, finish) => {
+            async (span, finish): Promise<BrowserWindow | null> => {
               try {
                 if (updateState === 'installing') {
                   log.warn(
@@ -266,121 +269,151 @@ export function initAutoUpdate({
                   )
                   span.setStatus({
                     code: 2,
-                    message:
-                      'Update already in progress, ignoring duplicate event',
+                    message: 'Update already in progress',
                   })
                   finish()
-                  return
+                  return null
                 }
 
-                log.info('[update] downloaded - showing dialog')
+                log.info('[update] downloaded - preparing dialog')
                 pendingUpdateVersion = releaseName
                 updateState = 'downloaded'
 
-                try {
-                  let mainWindow = mainWindowGetter?.()
+                let window = mainWindowGetter?.()
 
-                  // check if destroyed is important for not crashing the app
-                  if (!mainWindow || mainWindow.isDestroyed()) {
-                    log.warn(
-                      '[update] MainWindow not available, recreating for update dialog'
-                    )
-                    try {
-                      if (!windowCreator) {
-                        log.error('[update] Window creator not initialized')
-                        span.setStatus({
-                          code: 2,
-                          message: 'Window creator not initialized',
-                        })
-                        finish()
-                        return
-                      }
-                      mainWindow = await windowCreator()
-                      await pollWindowReady(mainWindow)
-                    } catch (error) {
-                      log.error(
-                        '[update] Failed to create window for update dialog: ',
-                        error
-                      )
-                      span.setStatus({
-                        code: 2,
-                        message:
-                          error instanceof Error
-                            ? `Failed to create window: ${error.message}`
-                            : 'Failed to create window',
-                      })
-                      // Fallback: send notification to existing renderer if available
-                      if (mainWindow && !mainWindow.isDestroyed()) {
-                        mainWindow.webContents.send('update-downloaded')
-                      }
-                      finish()
-                      return
-                    }
-                  }
-
-                  if (mainWindow.isMinimized() && !mainWindow.isDestroyed()) {
-                    mainWindow.restore()
-                  }
-
-                  const dialogOpts = {
-                    type: 'info' as const,
-                    buttons: ['Restart', 'Later'],
-                    cancelId: 1,
-                    defaultId: 0,
-                    title: `Release ${releaseName}`,
-                    message:
-                      process.platform === 'darwin'
-                        ? `Release ${releaseName}`
-                        : 'A new version has been downloaded.\nThe update will be applied on the next application restart.',
-                    detail:
-                      process.platform === 'darwin'
-                        ? 'A new version has been downloaded.\nThe update will be applied on the next application restart.'
-                        : `Ready to install ${releaseName}`,
-                    icon: undefined,
-                  }
-
-                  const returnValue = await dialog.showMessageBox(
-                    mainWindow,
-                    dialogOpts
+                // check if destroyed is important for not crashing the app
+                if (!window || window.isDestroyed()) {
+                  log.warn(
+                    '[update] MainWindow not available, recreating for update dialog'
                   )
-
-                  if (returnValue.response === 0) {
-                    await performUpdateInstallation(releaseName)
-                    span.setStatus({ code: 1 })
-                  } else {
-                    updateState = 'none'
-                    log.info(
-                      '[update] user deferred update installation - showing toast notification'
-                    )
-                    if (mainWindow && !mainWindow.isDestroyed()) {
-                      mainWindow.webContents.send('update-downloaded')
-                    }
-                    span.setStatus({ code: 1, message: 'User deferred update' })
+                  if (!windowCreator) {
+                    log.error('[update] Window creator not initialized')
+                    span.setStatus({
+                      code: 2,
+                      message: 'Window creator not initialized',
+                    })
+                    finish()
+                    return null
                   }
-                } catch (error) {
-                  log.error(
-                    '[update] error in update-downloaded handler:',
-                    error
-                  )
-                  span.setStatus({
-                    code: 2,
-                    message:
-                      error instanceof Error
-                        ? `${error.name} - ${error.message}`
-                        : 'Unknown error',
-                  })
-                  updateState = 'none'
-                  // Fallback: send notification to renderer
-                  const mainWindow = mainWindowGetter?.()
-                  if (mainWindow && !mainWindow.isDestroyed()) {
-                    mainWindow.webContents.send('update-downloaded')
-                  }
+                  window = await windowCreator()
+                  await pollWindowReady(window)
                 }
-              } finally {
+
+                if (window.isMinimized() && !window.isDestroyed()) {
+                  window.restore()
+                }
+
+                span.setStatus({ code: 1 })
                 finish()
+                return window
+              } catch (error) {
+                log.error('[update] Failed to prepare update dialog:', error)
+                span.setStatus({
+                  code: 2,
+                  message:
+                    error instanceof Error
+                      ? `Failed to prepare dialog: ${error.message}`
+                      : 'Failed to prepare dialog',
+                })
+                finish()
+                return null
               }
             }
           )
+
+          if (!mainWindow || mainWindow.isDestroyed()) {
+            // Fallback: send notification to renderer
+            const fallbackWindow = mainWindowGetter?.()
+            if (fallbackWindow && !fallbackWindow.isDestroyed()) {
+              fallbackWindow.webContents.send('update-downloaded')
+            }
+            return
+          }
+
+          // Phase 2: Show dialog and wait for user decision (user interaction time)
+          const dialogOpts = {
+            type: 'info' as const,
+            buttons: ['Restart', 'Later'],
+            cancelId: 1,
+            defaultId: 0,
+            title: `Release ${releaseName}`,
+            message:
+              process.platform === 'darwin'
+                ? `Release ${releaseName}`
+                : 'A new version has been downloaded.\nThe update will be applied on the next application restart.',
+            detail:
+              process.platform === 'darwin'
+                ? 'A new version has been downloaded.\nThe update will be applied on the next application restart.'
+                : `Ready to install ${releaseName}`,
+            icon: undefined,
+          }
+
+          let userChoice: 'restart' | 'later' | 'error' = 'error'
+          const userDecisionStartTime = Date.now()
+
+          try {
+            const returnValue = await dialog.showMessageBox(
+              mainWindow,
+              dialogOpts
+            )
+            userChoice = returnValue.response === 0 ? 'restart' : 'later'
+          } catch (error) {
+            log.error(
+              '[update] Dialog error in update-downloaded handler:',
+              error
+            )
+            userChoice = 'error'
+            // Fallback: send notification
+            if (mainWindow && !mainWindow.isDestroyed()) {
+              mainWindow.webContents.send('update-downloaded')
+            }
+          }
+
+          const userDecisionTime = Date.now() - userDecisionStartTime
+
+          // Track user decision with timing (separate span, not blocking)
+          Sentry.startSpan(
+            {
+              name: 'User update decision',
+              op: 'update.downloaded',
+              attributes: {
+                'analytics.source': 'tracking',
+                'analytics.type': 'event',
+                release_name: releaseName,
+                user_choice: userChoice,
+                decision_time_ms: userDecisionTime,
+                update_state: updateState,
+                toolhive_running: isToolhiveRunning(),
+                is_auto_update_enabled: store.get('isAutoUpdateEnabled'),
+                decision_time_seconds: Math.round(userDecisionTime / 1000),
+              },
+            },
+            () => {
+              log.info(
+                `[update] User decision: ${userChoice} (took ${Math.round(userDecisionTime / 1000)}s)`
+              )
+            }
+          )
+
+          // Phase 3: Handle user choice
+          if (userChoice === 'restart') {
+            try {
+              await performUpdateInstallation(releaseName)
+            } catch (error) {
+              log.error(
+                '[update] Installation failed, recovery attempted:',
+                error
+              )
+            }
+          } else {
+            updateState = 'none'
+            log.info(
+              '[update] user deferred update installation - showing toast notification'
+            )
+            if (mainWindow && !mainWindow.isDestroyed()) {
+              mainWindow.webContents.send('update-downloaded')
+            }
+          }
         })
 
         autoUpdater.on('checking-for-update', () => {
