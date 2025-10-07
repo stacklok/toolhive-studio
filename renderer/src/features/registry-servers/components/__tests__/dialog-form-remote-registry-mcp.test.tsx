@@ -394,8 +394,7 @@ describe('DialogFormRemoteRegistryMcp', () => {
     })
   })
 
-  it('displays group selector when feature flag is enabled', async () => {
-    // Mock groups API
+  it('displays group selector', async () => {
     mswServer.use(
       http.get(mswEndpoint('/api/v1beta/groups'), () => {
         return HttpResponse.json({
@@ -422,7 +421,6 @@ describe('DialogFormRemoteRegistryMcp', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Group selector should be visible
     await waitFor(
       () => {
         expect(screen.getByLabelText('Group')).toBeInTheDocument()
