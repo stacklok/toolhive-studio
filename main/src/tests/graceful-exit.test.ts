@@ -18,6 +18,11 @@ vi.mock('../headers')
 vi.mock('../logger')
 vi.mock('../../../utils/delay')
 vi.mock('electron-store')
+vi.mock('electron', () => ({
+  app: {
+    isPackaged: false,
+  },
+}))
 
 const mockGetApiV1BetaWorkloads = vi.mocked(sdkGen.getApiV1BetaWorkloads)
 const mockPostApiV1BetaWorkloadsByNameStop = vi.mocked(
