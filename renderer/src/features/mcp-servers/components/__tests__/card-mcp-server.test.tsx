@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import { expect, it, beforeEach } from 'vitest'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
@@ -77,6 +77,12 @@ beforeEach(() => {
         host: '127.0.0.1',
         target_port: 28135,
       })
+    }),
+    // Mock the groups endpoint
+    http.get(mswEndpoint('/api/v1beta/groups'), () => {
+      return HttpResponse.json({
+        groups: [{ name: 'default' }, { name: 'research' }],
+      })
     })
   )
 })
@@ -111,7 +117,9 @@ it(
 
     const user = userEvent.setup()
 
-    const dropdownTrigger = screen.getByRole('button', { name: /more options/i })
+    const dropdownTrigger = screen.getByRole('button', {
+      name: /more options/i,
+    })
     await user.click(dropdownTrigger)
 
     const addToGroupMenuItem = screen.queryByRole('menuitem', {
@@ -144,13 +152,25 @@ it(
 
     // Wait for group selection dialog to close
     await waitFor(() => {
-      expect(screen.queryByText('Select destination group')).not.toBeInTheDocument()
+      expect(
+        screen.queryByText('Select destination group')
+      ).not.toBeInTheDocument()
     })
 
+    // Add small delay for dialog close animation and next prompt to appear
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
     // Now should show name input prompt
-    // Wait for the name input to appear with its pre-filled value
-    const nameInput = await screen.findByDisplayValue('postgres-db-default', {}, { timeout: 10000 })
-    expect(nameInput).toBeVisible()
+    // Wait for the dialog with "Name" label to appear and correct value
+    await waitFor(
+      () => {
+        expect(screen.getByText('Copy server to a group')).toBeVisible()
+        const nameInput = screen.getByLabelText('Name')
+        expect(nameInput).toBeVisible()
+        expect(nameInput).toHaveValue('postgres-db-default')
+      },
+      { timeout: 10000 }
+    )
 
     const confirmButton = screen.getByRole('button', { name: /ok|confirm/i })
     await user.click(confirmButton)
@@ -219,7 +239,9 @@ it(
     const user = userEvent.setup()
 
     // Open the copy menu
-    const dropdownTrigger = screen.getByRole('button', { name: /more options/i })
+    const dropdownTrigger = screen.getByRole('button', {
+      name: /more options/i,
+    })
     await user.click(dropdownTrigger)
 
     const copyMenuItem = screen.getByRole('menuitem', {
@@ -243,21 +265,33 @@ it(
 
     // Wait for group selection dialog to close
     await waitFor(() => {
-      expect(screen.queryByText('Select destination group')).not.toBeInTheDocument()
+      expect(
+        screen.queryByText('Select destination group')
+      ).not.toBeInTheDocument()
     })
 
+    // Add small delay for dialog close animation and next prompt to appear
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
     // Now should show name input prompt with pre-filled value
-    let nameInput = await screen.findByDisplayValue('postgres-db-research', {}, { timeout: 10000 })
-    expect(nameInput).toBeVisible()
+    await waitFor(
+      () => {
+        expect(screen.getByText('Copy server to a group')).toBeVisible()
+        const nameInput = screen.getByLabelText('Name')
+        expect(nameInput).toBeVisible()
+        expect(nameInput).toHaveValue('postgres-db-research')
+      },
+      { timeout: 10000 }
+    )
+
+    let nameInput = screen.getByLabelText('Name')
 
     let confirmButton = screen.getByRole('button', { name: /ok|confirm/i })
     await user.click(confirmButton)
 
     // First 409 conflict - should show validation error
     await waitFor(() => {
-      expect(
-        screen.getByText(/This name is already taken/i)
-      ).toBeVisible()
+      expect(screen.getByText(/This name is already taken/i)).toBeVisible()
     })
 
     // Dialog should still be open with the same name input
@@ -274,9 +308,7 @@ it(
 
     // Second 409 conflict - should show validation error again
     await waitFor(() => {
-      expect(
-        screen.getByText(/This name is already taken/i)
-      ).toBeVisible()
+      expect(screen.getByText(/This name is already taken/i)).toBeVisible()
     })
 
     nameInput = screen.getByDisplayValue('postgres-db-attempt2')
@@ -288,7 +320,9 @@ it(
 
     // Should succeed and close dialog
     await waitFor(() => {
-      expect(screen.queryByText('Copy server to a group')).not.toBeInTheDocument()
+      expect(
+        screen.queryByText('Copy server to a group')
+      ).not.toBeInTheDocument()
     })
 
     // Verify all three attempts were made with different names

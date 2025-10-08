@@ -66,6 +66,7 @@ export function AddServerToGroupMenuItem({
     const rejectedNames = new Set<string>()
     const maxAttempts = 5
     let attemptCount = 0
+    let lastAttemptedName = `${serverName}-${groupName}`
 
     while (attemptCount < maxAttempts) {
       attemptCount++
@@ -81,7 +82,7 @@ export function AddServerToGroupMenuItem({
       const nameResult = await prompt({
         ...generateSimplePrompt({
           inputType: 'text',
-          initialValue: `${serverName}-${groupName}`,
+          initialValue: lastAttemptedName,
           title: 'Copy server to a group',
           placeholder: 'Enter server name...',
           label: 'Name',
@@ -91,6 +92,8 @@ export function AddServerToGroupMenuItem({
           confirm: 'OK',
           cancel: 'Cancel',
         },
+        // Validate on mount if this is a retry after a 409 error
+        validateOnMount: attemptCount > 1,
       })
 
       if (!nameResult) {
@@ -98,6 +101,7 @@ export function AddServerToGroupMenuItem({
       }
 
       const customName = nameResult.value
+      lastAttemptedName = customName
 
       try {
         // Fetch server configuration
@@ -122,7 +126,7 @@ export function AddServerToGroupMenuItem({
         }
 
         // Don't use throwOnError so we can check the status code
-        const response = await createWorkload({
+        await createWorkload({
           body: {
             name: customName,
             image: runConfig.image,
