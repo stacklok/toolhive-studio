@@ -4,12 +4,12 @@ import { usePrompt, generateSimplePrompt } from '@/common/hooks/use-prompt'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../../../../../../utils/feature-flags'
 import { useGroups } from '../../../../hooks/use-groups'
-import { z } from 'zod/v4'
 import { toast } from 'sonner'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { postApiV1BetaWorkloadsMutation } from '@api/@tanstack/react-query.gen'
 import { getApiV1BetaWorkloadsByNameExport } from '@api/sdk.gen'
 import { getApiV1BetaWorkloadsQueryKey } from '@api/@tanstack/react-query.gen'
+import { useRequestName } from '../../../../hooks/use-request-valid-name'
 
 interface AddServerToGroupMenuItemProps {
   serverName: string
@@ -21,6 +21,7 @@ export function AddServerToGroupMenuItem({
   const prompt = usePrompt()
   const queryClient = useQueryClient()
   const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
+  const requestName = useRequestName()
 
   const { data: groupsData } = useGroups()
 
@@ -64,42 +65,24 @@ export function AddServerToGroupMenuItem({
 
     const maxAttempts = 5
     let attemptCount = 0
-    let lastAttemptedName = `${serverName}-${groupName}`
+    let toastId: string | number | undefined
     let lastRejectedName: string | null = null
+    let lastAttemptedName = `${serverName}-${groupName}`
 
     while (attemptCount < maxAttempts) {
       attemptCount++
 
-      // Prompt for name with validation against the last rejected name
-      const validationSchema = z
-        .string()
-        .min(1, 'Name is required')
-        .refine((name) => name !== lastRejectedName, {
-          message: 'This name is already taken. Please choose another name.',
-        })
-
-      const nameResult = await prompt({
-        ...generateSimplePrompt({
-          inputType: 'text',
-          initialValue: lastAttemptedName,
-          title: 'Copy server to a group',
-          placeholder: 'Enter server name...',
-          label: 'Name',
-          validationSchema,
-        }),
-        buttons: {
-          confirm: 'OK',
-          cancel: 'Cancel',
-        },
-        // Validate on mount if this is a retry after a 409 error
+      const customName = await requestName({
+        initialValue: lastAttemptedName,
+        title: 'Copy server to a group',
+        rejectedName: lastRejectedName,
         validateOnMount: attemptCount > 1,
       })
 
-      if (!nameResult) {
+      if (!customName) {
         return // User cancelled
       }
 
-      const customName = nameResult.value
       lastAttemptedName = customName
 
       try {
@@ -119,7 +102,6 @@ export function AddServerToGroupMenuItem({
         })
 
         // Show loading toast only on first attempt
-        let toastId: string | number | undefined
         if (attemptCount === 1) {
           toastId = toast.loading('Copying server to group...')
         }
@@ -192,7 +174,7 @@ export function AddServerToGroupMenuItem({
           errorMessage.toLowerCase().includes('conflict')
 
         if (is409 && attemptCount < maxAttempts) {
-          // Track this name as rejected so validation will catch it
+          // Track this name as rejected for validation
           lastRejectedName = customName
           // Dismiss any existing toasts
           toast.dismiss()
