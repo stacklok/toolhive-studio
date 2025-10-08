@@ -178,7 +178,10 @@ export function AddServerToGroupMenuItem({
         if (toastId) {
           toast.dismiss(toastId)
         }
-        toast.error(errorMessage || 'Failed to copy server to group')
+        toast.error(
+          errorMessage ||
+            'An unexpected error occurred while copying the server to the group'
+        )
         return false
       }
     }
