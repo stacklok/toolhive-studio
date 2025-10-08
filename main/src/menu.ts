@@ -1,6 +1,7 @@
 import { Menu, app } from 'electron'
 import { getAutoLaunchStatus, setAutoLaunch } from './auto-launch'
 import { updateTrayStatus } from './system-tray'
+import { handleCheckForUpdates } from './utils/update-dialogs'
 import log from './logger'
 
 function createAutoLaunchItem(accelerator: string) {
@@ -46,11 +47,20 @@ export function createApplicationMenu() {
 
   const existingMenus = convertMenuItemsToTemplate(defaultMenu)
   const restMenuItems = existingMenus.slice(1)
+  const isProduction = app.isPackaged
   const template: Electron.MenuItemConstructorOptions[] = [
     {
       label: app.getName(),
       submenu: [
         { role: 'about' as const },
+        { type: 'separator' as const },
+        {
+          label: 'Check for Updates...',
+          visible: isProduction,
+          click: async () => {
+            await handleCheckForUpdates()
+          },
+        },
         { type: 'separator' as const },
         createAutoLaunchItem(isMac ? 'Cmd+L' : 'Ctrl+L'),
         { type: 'separator' as const },

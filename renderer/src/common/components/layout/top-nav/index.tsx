@@ -14,8 +14,11 @@ import { TopNavContainer } from './container'
 import { Separator } from '../../ui/separator'
 import { useConfirmQuit } from '@/common/hooks/use-confirm-quit'
 import { QuitConfirmationListener } from './quit-confirmation-listener'
-import { SettingsIcon } from 'lucide-react'
+import { ArrowUpCircle, SettingsIcon } from 'lucide-react'
 import { useRouterState } from '@tanstack/react-router'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../ui/tooltip'
+import { Button } from '../../ui/button'
+import { useAppVersion } from '@/common/hooks/use-app-version'
 
 function TopNavLinks() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
@@ -137,6 +140,8 @@ function TopNavLinks() {
 
 export function TopNav(props: HTMLProps<HTMLElement>) {
   const confirmQuit = useConfirmQuit()
+  const { data: appVersion } = useAppVersion()
+  const isProduction = import.meta.env.MODE === 'production'
 
   useEffect(() => {
     const cleanup = window.electronAPI.onUpdateDownloaded(() => {
@@ -172,7 +177,27 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
         <Separator orientation="vertical" className="mr-4 ml-2" />
         <div className="flex items-center gap-2">
           <LinkViewTransition to="/settings" className="app-region-no-drag">
-            <SettingsIcon className="text-muted-foreground size-4" />
+            {appVersion?.isNewVersionAvailable && isProduction ? (
+              <Tooltip>
+                <TooltipTrigger asChild autoFocus={false}>
+                  <Button variant="ghost" size="sm" className="cursor-pointer">
+                    <div className="relative inline-flex items-center">
+                      <SettingsIcon className="text-muted-foreground size-4" />
+                      <div className="absolute -top-1 -right-1">
+                        <div className="bg-background rounded-full">
+                          <ArrowUpCircle className="size-2.5 text-blue-500" />
+                        </div>
+                      </div>
+                    </div>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>New update available</TooltipContent>
+              </Tooltip>
+            ) : (
+              <Button variant="ghost" size="sm" className="cursor-pointer">
+                <SettingsIcon className="text-muted-foreground size-4" />
+              </Button>
+            )}
           </LinkViewTransition>
           <HelpDropdown className="app-region-no-drag" />
         </div>

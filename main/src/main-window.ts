@@ -1,4 +1,4 @@
-import { BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, shell } from 'electron'
 import path from 'node:path'
 import log from './logger'
 import { hideWindow } from './dock-utils'
@@ -40,7 +40,7 @@ function logError(
 let mainWindow: BrowserWindow | null = null
 const shouldStartHidden =
   process.argv.includes('--hidden') || process.argv.includes('--start-hidden')
-const isDevelopment = process.env.NODE_ENV === 'development'
+const isDevelopment = !app.isPackaged
 
 /**
  * Get platform-specific window configuration

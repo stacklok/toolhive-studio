@@ -8,10 +8,34 @@ import {
   isToolhiveRunning,
 } from './toolhive-manager'
 import { safeTrayDestroy } from './system-tray'
-import { pollWindowReady } from './util'
+import { getAppVersion, pollWindowReady } from './util'
 import { delay } from '../../utils/delay'
 import log from './logger'
 import { setQuittingState, setTearingDownState } from './app-state'
+import {
+  isCurrentVersionOlder,
+  normalizeVersion,
+} from '../../utils/parse-release-version'
+import Store from 'electron-store'
+
+interface ReleaseAsset {
+  name: string
+  url: string
+  size: number
+  sha256: string
+}
+
+export interface ReleaseInfo {
+  tag: string
+  prerelease: boolean
+  published_at: string
+  base_url: string
+  assets: ReleaseAsset[]
+}
+
+const store = new Store<{
+  isAutoUpdateEnabled: boolean
+}>({ name: 'auto-update', defaults: { isAutoUpdateEnabled: true } })
 
 let pendingUpdateVersion: string | null = null
 let updateState:
@@ -20,6 +44,40 @@ let updateState:
   | 'downloaded'
   | 'installing'
   | 'none' = 'none'
+
+/**
+ * Gets all download assets for the current platform
+ * @param releaseInfo - The release information from the API
+ * @returns The tag of the release
+ */
+function getAssetsTagByPlatform(releaseInfo: ReleaseInfo): string | undefined {
+  const platform = process.platform
+
+  // Map platform to asset name patterns
+  const assetPatterns: Record<string, string[]> = {
+    darwin: ['darwin-arm64', 'darwin-x64'],
+    win32: ['win32-x64', 'Setup.exe'],
+    linux: ['linux-x64', 'amd64'],
+  }
+
+  const patterns = assetPatterns[platform]
+  if (!patterns) {
+    log.error(`[update] Unsupported platform: ${platform}`)
+    return
+  }
+
+  const assets = releaseInfo.assets.filter((asset) => {
+    const assetName = asset.name.toLowerCase()
+    return patterns.some((pattern) => assetName.includes(pattern.toLowerCase()))
+  })
+
+  if (assets.length > 0) {
+    return releaseInfo.tag
+  } else {
+    log.error(`[update] No assets found for patterns: ${patterns.join(', ')}`)
+    return
+  }
+}
 
 async function safeServerShutdown(): Promise<boolean> {
   try {
@@ -60,7 +118,7 @@ async function performUpdateInstallation(releaseName: string | null) {
     log.info('[update] starting graceful shutdown before update...')
 
     // Notify renderer of graceful exit
-    const mainWindow = getMainWindow()
+    const mainWindow = mainWindowGetter?.()
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('graceful-exit')
       // Give renderer time to handle the event
@@ -105,19 +163,33 @@ async function performUpdateInstallation(releaseName: string | null) {
   }
 }
 
-let getMainWindow: () => BrowserWindow | null = () => null
-let createWindow: () => Promise<BrowserWindow> = () => {
-  throw new Error('createWindow not initialized')
-}
+let mainWindowGetter: (() => BrowserWindow | null) | null = null
+let windowCreator: (() => Promise<BrowserWindow>) | null = null
 
-export function initAutoUpdate(
-  mainWindowGetter: () => BrowserWindow | null,
+export function initAutoUpdate({
+  isManualUpdate = false,
+  mainWindowGetter: getterParam,
+  windowCreator: creatorParam,
+}: {
+  isManualUpdate?: boolean
+  mainWindowGetter: () => BrowserWindow | null
   windowCreator: () => Promise<BrowserWindow>
-) {
-  getMainWindow = mainWindowGetter
-  createWindow = windowCreator
+}) {
+  // Always save references first, so manualUpdate() can work even if auto-update is disabled
+  mainWindowGetter = getterParam
+  windowCreator = creatorParam
+
+  const isAutoUpdateEnabled = store.get('isAutoUpdateEnabled')
+  if (!isAutoUpdateEnabled && !isManualUpdate) {
+    log.info('[update] Auto update is disabled, skipping initialization')
+    return
+  }
 
   resetAllUpdateState()
+
+  // Remove any existing listeners to prevent duplicates
+  autoUpdater.removeAllListeners()
+  ipcMain.removeHandler('install-update-and-restart')
 
   updateElectronApp({ logger: log, notifyUser: false })
 
@@ -132,7 +204,7 @@ export function initAutoUpdate(
     updateState = 'downloaded'
 
     try {
-      let mainWindow = getMainWindow()
+      let mainWindow = mainWindowGetter?.()
 
       // check if destroyed is important for not crashing the app
       if (!mainWindow || mainWindow.isDestroyed()) {
@@ -140,7 +212,11 @@ export function initAutoUpdate(
           '[update] MainWindow not available, recreating for update dialog'
         )
         try {
-          mainWindow = await createWindow()
+          if (!windowCreator) {
+            log.error('[update] Window creator not initialized')
+            return
+          }
+          mainWindow = await windowCreator()
           await pollWindowReady(mainWindow)
         } catch (error) {
           log.error(
@@ -168,10 +244,10 @@ export function initAutoUpdate(
         message:
           process.platform === 'darwin'
             ? `Release ${releaseName}`
-            : 'A new version has been downloaded.\nRestart the application to apply the updates.',
+            : 'A new version has been downloaded.\nThe update will be applied on the next application restart.',
         detail:
           process.platform === 'darwin'
-            ? 'A new version has been downloaded.\nRestart the application to apply the updates.'
+            ? 'A new version has been downloaded.\nThe update will be applied on the next application restart.'
             : `Ready to install ${releaseName}`,
         icon: undefined,
       }
@@ -193,7 +269,7 @@ export function initAutoUpdate(
       log.error('[update] error in update-downloaded handler:', error)
       updateState = 'none'
       // Fallback: send notification to renderer
-      const mainWindow = getMainWindow()
+      const mainWindow = mainWindowGetter?.()
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('update-downloaded')
       }
@@ -248,12 +324,12 @@ export function initAutoUpdate(
       }
     }
   })
-
-  ipcMain.handle('is-update-in-progress', () => {
-    log.debug(`[is-update-in-progress]: ${updateState}`)
-    return updateState === 'installing'
-  })
 }
+
+ipcMain.handle('is-update-in-progress', () => {
+  log.debug(`[is-update-in-progress]: ${updateState}`)
+  return updateState === 'installing'
+})
 
 export function resetUpdateState() {
   updateState = 'none'
@@ -266,6 +342,36 @@ export function resetAllUpdateState() {
   pendingUpdateVersion = null
 }
 
+export function setAutoUpdateEnabled(enabled: boolean) {
+  log.info(
+    `[update] Auto update ${enabled ? 'enabled' : 'disabled'} dynamically`
+  )
+
+  store.set('isAutoUpdateEnabled', enabled)
+
+  if (!enabled) {
+    // Reset update state when disabled
+    updateState = 'none'
+    pendingUpdateVersion = null
+
+    // Remove all autoUpdater listeners to prevent further update activity
+    autoUpdater.removeAllListeners()
+    ipcMain.removeHandler('install-update-and-restart')
+  } else {
+    // Re-initialize auto-update when enabled
+    if (!mainWindowGetter || !windowCreator) {
+      log.error('[update] Cannot re-enable auto-update: references not found')
+      return
+    }
+
+    initAutoUpdate({
+      isManualUpdate: false,
+      mainWindowGetter,
+      windowCreator,
+    })
+  }
+}
+
 export function checkForUpdates() {
   if (updateState === 'none') {
     autoUpdater.checkForUpdates()
@@ -274,4 +380,84 @@ export function checkForUpdates() {
 
 export function getUpdateState() {
   return updateState
+}
+
+export function getIsAutoUpdateEnabled() {
+  return store.get('isAutoUpdateEnabled')
+}
+
+function isCurrentVersionPrerelease(
+  currentVersion: string,
+  releaseData: ReleaseInfo
+): boolean {
+  return (
+    currentVersion.includes('-beta') ||
+    currentVersion.includes('-alpha') ||
+    currentVersion.includes('-rc') ||
+    releaseData.prerelease === true
+  )
+}
+
+export async function getLatestAvailableVersion() {
+  const currentVersion = getAppVersion()
+  try {
+    const response = await fetch(
+      'https://stacklok.github.io/toolhive-studio/latest',
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+    if (!response.ok) {
+      log.error(
+        '[update] Failed to check for ToolHive update: ',
+        response.statusText
+      )
+      return {
+        currentVersion: currentVersion,
+        latestVersion: undefined,
+        isNewVersionAvailable: false,
+      }
+    }
+    const data = await response.json()
+    const latestTag = getAssetsTagByPlatform(data)
+
+    // If current version is a prerelease (contains -beta, -alpha, -rc) OR data.prerelease is true,
+    // always consider it as older than ANY latest version
+    // This allows testing updates even when running a prerelease build
+    const currentIsPrerelease = isCurrentVersionPrerelease(currentVersion, data)
+
+    const isNewVersion = currentIsPrerelease
+      ? latestTag !== undefined // If prerelease, any latest tag is considered new
+      : isCurrentVersionOlder(currentVersion, normalizeVersion(latestTag ?? ''))
+
+    return {
+      currentVersion: currentVersion,
+      latestVersion: latestTag,
+      isNewVersionAvailable: isNewVersion,
+    }
+  } catch (error) {
+    log.error('[update] Failed to check for ToolHive update: ', error)
+    return {
+      currentVersion: currentVersion,
+      latestVersion: undefined,
+      isNewVersionAvailable: false,
+    }
+  }
+}
+
+export function manualUpdate() {
+  if (!mainWindowGetter || !windowCreator) {
+    log.error(
+      '[update] Cannot perform manual update: initAutoUpdate was not called first'
+    )
+    return
+  }
+
+  initAutoUpdate({
+    isManualUpdate: true,
+    mainWindowGetter,
+    windowCreator,
+  })
 }

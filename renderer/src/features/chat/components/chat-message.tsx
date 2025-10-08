@@ -13,7 +13,6 @@ import {
 import { Streamdown } from 'streamdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
-import { useShikiTheme } from '../lib/theme-utils'
 import { TokenUsage } from './token-usage'
 import { NoContentMessage } from './no-content-message'
 import { AttachmentPreview } from './attachment-preview'
@@ -28,7 +27,6 @@ interface ChatMessageProps {
 // Helper function to render reasoning steps
 function ReasoningComponent({ part }: { part: ChatUIMessage['parts'][0] }) {
   const [isOpen, setIsOpen] = useState(false)
-  const shikiTheme = useShikiTheme()
 
   if (part.type !== 'reasoning') return null
 
@@ -65,7 +63,6 @@ function ReasoningComponent({ part }: { part: ChatUIMessage['parts'][0] }) {
                 remarkPlugins={[remarkGfm, remarkMath]}
                 allowedImagePrefixes={['data:']}
                 defaultOrigin="https://localhost"
-                shikiTheme={shikiTheme}
               >
                 {'text' in part
                   ? part.text || 'No reasoning content'
@@ -110,7 +107,6 @@ function ToolCallComponent({ part }: { part: ChatUIMessage['parts'][0] }) {
   const [isInputOpen, setIsInputOpen] = useState(false)
   const [isOutputOpen, setIsOutputOpen] = useState(false)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
-  const shikiTheme = useShikiTheme()
 
   // Handle AI SDK tool call parts (type starts with 'tool-' or is 'dynamic-tool')
   if (!part.type.startsWith('tool-') && part.type !== 'dynamic-tool')
@@ -282,7 +278,6 @@ function ToolCallComponent({ part }: { part: ChatUIMessage['parts'][0] }) {
                                     remarkPlugins={[remarkGfm, remarkMath]}
                                     allowedImagePrefixes={['data:']}
                                     defaultOrigin="https://localhost"
-                                    shikiTheme={shikiTheme}
                                   >
                                     {String(item.text || '')}
                                   </Streamdown>
@@ -404,7 +399,6 @@ function ToolCallComponent({ part }: { part: ChatUIMessage['parts'][0] }) {
 
 export function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === 'user'
-  const shikiTheme = useShikiTheme()
 
   const providerIcon =
     message.metadata?.model && getProviderIconByModel(message.metadata?.model)
@@ -428,7 +422,6 @@ export function ChatMessage({ message }: ChatMessageProps) {
                   remarkPlugins={[remarkGfm, remarkMath]}
                   allowedImagePrefixes={['data:']}
                   defaultOrigin="https://localhost"
-                  shikiTheme={shikiTheme}
                 >
                   {message.parts.find((p) => p.type === 'text' && 'text' in p)
                     ?.text || ''}
@@ -616,7 +609,6 @@ export function ChatMessage({ message }: ChatMessageProps) {
                     remarkPlugins={[remarkGfm, remarkMath]}
                     allowedImagePrefixes={['data:']}
                     defaultOrigin="https://localhost"
-                    shikiTheme={shikiTheme}
                   >
                     {allTextContent}
                   </Streamdown>

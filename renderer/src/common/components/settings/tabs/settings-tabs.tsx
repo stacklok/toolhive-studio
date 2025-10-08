@@ -3,6 +3,8 @@ import { GeneralTab } from './general-tab'
 import { VersionTab } from './version-tab'
 import { LogsTab } from './logs-tab'
 import { RegistryTab } from '../registry/registry-tab'
+import { useAppVersion } from '@/common/hooks/use-app-version'
+import { ArrowUpCircle } from 'lucide-react'
 
 type Tab = 'general' | 'registry' | 'version' | 'logs'
 type TabItem = { label: string; value: Tab }
@@ -27,6 +29,10 @@ const tabs: TabItem[] = [
 ] as const satisfies TabItem[]
 
 export function SettingsTabs() {
+  const { data: appInfo, isLoading, error } = useAppVersion()
+  const isProduction = import.meta.env.MODE === 'production'
+  const isNewVersionAvailable = appInfo?.isNewVersionAvailable && isProduction
+
   return (
     <>
       <Tabs
@@ -46,7 +52,14 @@ export function SettingsTabs() {
                 data-[state=active]:text-accent-foreground w-full cursor-pointer
                 justify-start py-2 text-base data-[state=active]:shadow-none"
             >
-              {tab.label}
+              <div className="flex items-center gap-2">
+                {tab.label}
+                {tab.value === 'version' && isNewVersionAvailable && (
+                  <div className="bg-background rounded-full">
+                    <ArrowUpCircle className="size-4 text-blue-500" />
+                  </div>
+                )}
+              </div>
             </TabsTrigger>
           ))}
         </TabsList>
@@ -60,7 +73,7 @@ export function SettingsTabs() {
         </TabsContent>
 
         <TabsContent value="version" className="space-y-6">
-          <VersionTab />
+          <VersionTab isLoading={isLoading} error={error} appInfo={appInfo} />
         </TabsContent>
 
         <TabsContent value="logs" className="space-y-6">

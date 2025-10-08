@@ -2,8 +2,10 @@ import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import log from 'electron-log/renderer'
 
-interface AppVersionInfo {
-  appVersion: string
+export interface AppVersionInfo {
+  currentVersion: string
+  latestVersion: string
+  isNewVersionAvailable: boolean
   isReleaseBuild: boolean
   toolhiveVersion: string
 }
@@ -20,7 +22,18 @@ export function useAppVersion() {
         ])
 
         return {
-          appVersion: version.status === 'fulfilled' ? version.value : 'N/A',
+          currentVersion:
+            version.status === 'fulfilled'
+              ? version?.value?.currentVersion
+              : 'N/A',
+          latestVersion:
+            version.status === 'fulfilled'
+              ? version?.value?.latestVersion
+              : 'N/A',
+          isNewVersionAvailable:
+            version.status === 'fulfilled'
+              ? version?.value?.isNewVersionAvailable
+              : false,
           isReleaseBuild:
             release.status === 'fulfilled' ? release.value : false,
           toolhiveVersion:
@@ -35,5 +48,27 @@ export function useAppVersion() {
       }
     },
     refetchOnMount: true,
+  })
+}
+
+export function useCurrentUpdateState() {
+  return useQuery({
+    queryKey: ['update-state'],
+    queryFn: async (): Promise<string> => {
+      try {
+        const state = await window.electronAPI.getUpdateState()
+        return state
+      } catch (error) {
+        log.error('Failed to fetch update state:', error)
+        return 'none'
+      }
+    },
+    refetchInterval: (query) => {
+      const state = query.state.data
+      // Stop polling when state is 'downloaded'
+      return state === 'downloaded' ? false : 300
+    },
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   })
 }
