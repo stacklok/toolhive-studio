@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import { expect, it, beforeEach } from 'vitest'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
@@ -62,6 +62,21 @@ beforeEach(() => {
       const payload = await request.json()
       capturedCreateWorkloadPayload = payload
       return HttpResponse.json({ name: 'test-server-copied' })
+    }),
+    // Mock the workload export endpoint
+    http.get(mswEndpoint('/api/v1beta/workloads/:name/export'), () => {
+      return HttpResponse.json({
+        name: 'postgres-db',
+        image: 'ghcr.io/postgres/postgres-mcp-server:latest',
+        transport: 'stdio',
+        cmd_args: [],
+        env_vars: {},
+        secrets: [],
+        volumes: [],
+        isolate_network: false,
+        host: '127.0.0.1',
+        target_port: 28135,
+      })
     })
   )
 })
@@ -85,47 +100,68 @@ it('navigates to logs page when logs menu item is clicked', async () => {
   })
 })
 
-it('shows "Copy server to a group" menu item and handles the complete workflow', async () => {
-  renderRoute(router)
+it(
+  'shows "Copy server to a group" menu item and handles the complete workflow',
+  async () => {
+    renderRoute(router)
 
-  await waitFor(() => {
-    expect(screen.getByText('postgres-db')).toBeVisible()
-  })
+    await waitFor(() => {
+      expect(screen.getByText('postgres-db')).toBeVisible()
+    })
 
-  const user = userEvent.setup()
+    const user = userEvent.setup()
 
-  const dropdownTrigger = screen.getByRole('button', { name: /more options/i })
-  await user.click(dropdownTrigger)
+    const dropdownTrigger = screen.getByRole('button', { name: /more options/i })
+    await user.click(dropdownTrigger)
 
-  const addToGroupMenuItem = screen.queryByRole('menuitem', {
-    name: /copy server to a group/i,
-  })
-  expect(addToGroupMenuItem).toBeInTheDocument()
+    const addToGroupMenuItem = screen.queryByRole('menuitem', {
+      name: /copy server to a group/i,
+    })
+    expect(addToGroupMenuItem).toBeInTheDocument()
 
-  await user.click(addToGroupMenuItem!)
+    // Click and wait a bit for async handler to start
+    await user.click(addToGroupMenuItem!)
+    await new Promise((resolve) => setTimeout(resolve, 100))
 
-  await waitFor(() => {
-    expect(screen.getByText('Copy server to a group')).toBeVisible()
-  })
+    // Wait for the group selection dialog to appear
+    await waitFor(
+      () => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument()
+        expect(screen.getByText('Copy server to a group')).toBeVisible()
+        expect(screen.getByText('Select destination group')).toBeVisible()
+      },
+      { timeout: 10000 }
+    )
 
-  expect(screen.getByText('Select destination group')).toBeVisible()
+    const selectTrigger = screen.getByRole('combobox')
+    await user.click(selectTrigger)
 
-  const selectTrigger = screen.getByRole('combobox')
-  await user.click(selectTrigger)
+    const groupOption = screen.getByRole('option', { name: 'default' })
+    await user.click(groupOption)
 
-  const groupOption = screen.getByRole('option', { name: 'default' })
-  await user.click(groupOption)
+    const submitButton = screen.getByRole('button', { name: 'OK' })
+    await user.click(submitButton)
 
-  const submitButton = screen.getByRole('button', { name: 'OK' })
-  await user.click(submitButton)
+    // Wait for group selection dialog to close
+    await waitFor(() => {
+      expect(screen.queryByText('Select destination group')).not.toBeInTheDocument()
+    })
 
-  // Wait for the mutation to complete and verify the payload
-  await waitFor(() => {
-    expect(capturedCreateWorkloadPayload).toBeTruthy()
-  })
+    // Now should show name input prompt
+    // Wait for the name input to appear with its pre-filled value
+    const nameInput = await screen.findByDisplayValue('postgres-db-default', {}, { timeout: 10000 })
+    expect(nameInput).toBeVisible()
 
-  // Verify that the createWorkload was called with the correct payload
-  expect(capturedCreateWorkloadPayload).toMatchInlineSnapshot(`
+    const confirmButton = screen.getByRole('button', { name: /ok|confirm/i })
+    await user.click(confirmButton)
+
+    // Wait for the mutation to complete and verify the payload
+    await waitFor(() => {
+      expect(capturedCreateWorkloadPayload).toBeTruthy()
+    })
+
+    // Verify that the createWorkload was called with the correct payload
+    expect(capturedCreateWorkloadPayload).toMatchInlineSnapshot(`
     {
       "cmd_arguments": [],
       "env_vars": {},
@@ -140,107 +176,131 @@ it('shows "Copy server to a group" menu item and handles the complete workflow',
       "volumes": [],
     }
   `)
-})
+  },
+  { timeout: 15000 }
+)
 
-it('re-prompts for a new name when API returns 409 conflict, then succeeds', async () => {
-  let attemptCount = 0
-  const capturedNames: string[] = []
+it(
+  'shows validation error and re-prompts when API returns 409 conflict',
+  async () => {
+    let attemptCount = 0
+    const capturedNames: string[] = []
 
-  server.use(
-    http.post(mswEndpoint('/api/v1beta/workloads'), async ({ request }) => {
-      const payload = (await request.json()) as { name: string }
-      capturedNames.push(payload.name)
-      attemptCount++
+    server.use(
+      http.post(mswEndpoint('/api/v1beta/workloads'), async ({ request }) => {
+        const payload = (await request.json()) as { name: string }
+        capturedNames.push(payload.name)
+        attemptCount++
 
-      // First two attempts return 409 conflict
-      if (attemptCount <= 2) {
-        return HttpResponse.json(
-          { detail: 'A workload with this name already exists in the group' },
-          { status: 409 }
-        )
-      }
+        // First two attempts return 409 conflict (plain text, like real API)
+        if (attemptCount <= 2) {
+          return new HttpResponse(
+            `Workload with name ${payload.name} already exists`,
+            {
+              status: 409,
+              headers: {
+                'Content-Type': 'text/plain; charset=utf-8',
+              },
+            }
+          )
+        }
 
-      // Third attempt succeeds
-      return HttpResponse.json({ name: payload.name })
+        // Third attempt succeeds
+        return HttpResponse.json({ name: payload.name })
+      })
+    )
+
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.getByText('postgres-db')).toBeVisible()
     })
-  )
 
-  renderRoute(router)
+    const user = userEvent.setup()
 
-  await waitFor(() => {
-    expect(screen.getByText('postgres-db')).toBeVisible()
-  })
+    // Open the copy menu
+    const dropdownTrigger = screen.getByRole('button', { name: /more options/i })
+    await user.click(dropdownTrigger)
 
-  const user = userEvent.setup()
+    const copyMenuItem = screen.getByRole('menuitem', {
+      name: /copy server to a group/i,
+    })
+    await user.click(copyMenuItem)
 
-  // Open the copy menu
-  const dropdownTrigger = screen.getByRole('button', { name: /more options/i })
-  await user.click(dropdownTrigger)
+    await waitFor(() => {
+      expect(screen.getByText('Copy server to a group')).toBeVisible()
+    })
 
-  const copyMenuItem = screen.getByRole('menuitem', {
-    name: /copy server to a group/i,
-  })
-  await user.click(copyMenuItem)
+    // Select destination group
+    const selectTrigger = screen.getByRole('combobox')
+    await user.click(selectTrigger)
 
-  await waitFor(() => {
-    expect(screen.getByText('Copy server to a group')).toBeVisible()
-  })
+    const groupOption = screen.getByRole('option', { name: 'research' })
+    await user.click(groupOption)
 
-  // Select destination group
-  const selectTrigger = screen.getByRole('combobox')
-  await user.click(selectTrigger)
+    const submitButton = screen.getByRole('button', { name: 'OK' })
+    await user.click(submitButton)
 
-  const groupOption = screen.getByRole('option', { name: 'research' })
-  await user.click(groupOption)
+    // Wait for group selection dialog to close
+    await waitFor(() => {
+      expect(screen.queryByText('Select destination group')).not.toBeInTheDocument()
+    })
 
-  const submitButton = screen.getByRole('button', { name: 'OK' })
-  await user.click(submitButton)
+    // Now should show name input prompt with pre-filled value
+    let nameInput = await screen.findByDisplayValue('postgres-db-research', {}, { timeout: 10000 })
+    expect(nameInput).toBeVisible()
 
-  // First 409 conflict - should show error message and re-prompt
-  await waitFor(() => {
-    expect(
-      screen.getByText(/name already exists|already taken|choose another/i)
-    ).toBeVisible()
-  })
+    let confirmButton = screen.getByRole('button', { name: /ok|confirm/i })
+    await user.click(confirmButton)
 
-  // Dialog should still be open with name input
-  let nameInput = screen.getByLabelText(/name/i)
-  expect(nameInput).toBeVisible()
+    // First 409 conflict - should show validation error
+    await waitFor(() => {
+      expect(
+        screen.getByText(/This name is already taken/i)
+      ).toBeVisible()
+    })
 
-  // User enters a different name
-  await user.clear(nameInput)
-  await user.type(nameInput, 'postgres-db-attempt2')
+    // Dialog should still be open with the same name input
+    nameInput = screen.getByDisplayValue('postgres-db-research')
+    expect(nameInput).toBeVisible()
+    expect(nameInput).toHaveValue('postgres-db-research')
 
-  let confirmButton = screen.getByRole('button', { name: /ok|confirm/i })
-  await user.click(confirmButton)
+    // User enters a different name
+    await user.clear(nameInput)
+    await user.type(nameInput, 'postgres-db-attempt2')
 
-  // Second 409 conflict - should show error and re-prompt again
-  await waitFor(() => {
-    expect(
-      screen.getByText(/name already exists|already taken|choose another/i)
-    ).toBeVisible()
-  })
+    confirmButton = screen.getByRole('button', { name: /ok|confirm/i })
+    await user.click(confirmButton)
 
-  nameInput = screen.getByLabelText(/name/i)
-  await user.clear(nameInput)
-  await user.type(nameInput, 'postgres-db-final')
+    // Second 409 conflict - should show validation error again
+    await waitFor(() => {
+      expect(
+        screen.getByText(/This name is already taken/i)
+      ).toBeVisible()
+    })
 
-  confirmButton = screen.getByRole('button', { name: /ok|confirm/i })
-  await user.click(confirmButton)
+    nameInput = screen.getByDisplayValue('postgres-db-attempt2')
+    await user.clear(nameInput)
+    await user.type(nameInput, 'postgres-db-final')
 
-  // Should succeed and close dialog
-  await waitFor(() => {
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-  })
+    confirmButton = screen.getByRole('button', { name: /ok|confirm/i })
+    await user.click(confirmButton)
 
-  // Verify all three attempts were made with different names
-  expect(attemptCount).toBe(3)
-  expect(capturedNames).toEqual([
-    'postgres-db-research',
-    'postgres-db-attempt2',
-    'postgres-db-final',
-  ])
-})
+    // Should succeed and close dialog
+    await waitFor(() => {
+      expect(screen.queryByText('Copy server to a group')).not.toBeInTheDocument()
+    })
+
+    // Verify all three attempts were made with different names
+    expect(attemptCount).toBe(3)
+    expect(capturedNames).toEqual([
+      'postgres-db-research',
+      'postgres-db-attempt2',
+      'postgres-db-final',
+    ])
+  },
+  { timeout: 20000 }
+)
 
 it('stays on the same group page after deleting a server', async () => {
   // this verifies that a bug reported here is fixed:

@@ -62,41 +62,42 @@ export function AddServerToGroupMenuItem({
 
     const groupName = groupResult.value
 
-    // Retry loop for handling 409 conflicts
+    // Track names that have been rejected by the API
+    const rejectedNames = new Set<string>()
     const maxAttempts = 5
     let attemptCount = 0
 
     while (attemptCount < maxAttempts) {
       attemptCount++
 
-      // If this is a retry, show a name input prompt
-      let customName: string
-      if (attemptCount > 1) {
-        const nameResult = await prompt({
-          ...generateSimplePrompt({
-            inputType: 'text',
-            initialValue: `${serverName}-${groupName}-${attemptCount}`,
-            title: 'Copy server to a group',
-            placeholder: 'Enter server name...',
-            label: 'Name',
-            description:
-              'The previous name was already taken. Please choose another name.',
-            validationSchema: z.string().min(1, 'Name is required'),
-          }),
-          buttons: {
-            confirm: 'OK',
-            cancel: 'Cancel',
-          },
+      // Prompt for name with validation against rejected names
+      const validationSchema = z
+        .string()
+        .min(1, 'Name is required')
+        .refine((name) => !rejectedNames.has(name), {
+          message: 'This name is already taken. Please choose another name.',
         })
 
-        if (!nameResult) {
-          return // User cancelled
-        }
+      const nameResult = await prompt({
+        ...generateSimplePrompt({
+          inputType: 'text',
+          initialValue: `${serverName}-${groupName}`,
+          title: 'Copy server to a group',
+          placeholder: 'Enter server name...',
+          label: 'Name',
+          validationSchema,
+        }),
+        buttons: {
+          confirm: 'OK',
+          cancel: 'Cancel',
+        },
+      })
 
-        customName = nameResult.value
-      } else {
-        customName = `${serverName}-${groupName}`
+      if (!nameResult) {
+        return // User cancelled
       }
+
+      const customName = nameResult.value
 
       try {
         // Fetch server configuration
@@ -158,9 +159,28 @@ export function AddServerToGroupMenuItem({
         }
         return
       } catch (error: unknown) {
-        // For 409, the error message typically contains "already exists"
-        const errorObj = error as { detail?: string; _rawError?: unknown }
-        const errorMessage = errorObj?.detail || 'Unknown error'
+        // The API returns plain text for 409 errors, not JSON
+        // Error can be a string directly or an object with the string inside
+        let errorMessage: string
+
+        if (typeof error === 'string') {
+          errorMessage = error
+        } else if (error && typeof error === 'object') {
+          const errorObj = error as {
+            detail?: string
+            message?: string
+            error?: string
+            _rawError?: string
+          }
+          errorMessage =
+            errorObj._rawError ||
+            errorObj.detail ||
+            errorObj.message ||
+            errorObj.error ||
+            'Failed to copy server to group'
+        } else {
+          errorMessage = 'Failed to copy server to group'
+        }
 
         // Check if it's a 409 conflict error based on the error message
         const is409 =
@@ -169,7 +189,9 @@ export function AddServerToGroupMenuItem({
           errorMessage.toLowerCase().includes('conflict')
 
         if (is409 && attemptCount < maxAttempts) {
-          // Dismiss any existing toasts before re-prompting
+          // Add this name to the rejected list so validation will catch it
+          rejectedNames.add(customName)
+          // Dismiss any existing toasts
           toast.dismiss()
           // Continue to next iteration to re-prompt
           continue
@@ -181,7 +203,7 @@ export function AddServerToGroupMenuItem({
           return
         } else {
           // Other error - show error message and exit
-          toast.error(errorMessage || 'Failed to copy server to group')
+          toast.error(errorMessage)
           return
         }
       }
