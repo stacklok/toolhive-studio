@@ -107,17 +107,19 @@ export function AddServerToGroupMenuItem({
     let customName = `${serverName}-${groupName}`
 
     while (true) {
-      // Ask the user to confirm or change the name
-      const userProvidedName = await ensureUniqueName(prompt, {
-        initialValue: customName,
-        rejectedName: lastRejectedName,
-      })
+      // Only prompt for name if we already tried and got a conflict
+      if (lastRejectedName !== null) {
+        const userProvidedName = await ensureUniqueName(prompt, {
+          initialValue: customName,
+          rejectedName: lastRejectedName,
+        })
 
-      if (!userProvidedName) {
-        return // User cancelled
+        if (!userProvidedName) {
+          return // User cancelled
+        }
+
+        customName = userProvidedName
       }
-
-      customName = userProvidedName
 
       try {
         // Fetch server configuration
@@ -137,7 +139,6 @@ export function AddServerToGroupMenuItem({
 
         const toastId = toast.loading('Copying server to group...')
 
-        // Don't use throwOnError so we can check the status code
         await createWorkload({
           body: {
             name: customName,
@@ -153,9 +154,6 @@ export function AddServerToGroupMenuItem({
             target_port: runConfig.target_port,
             group: groupName,
           },
-        }).catch((error) => {
-          // Re-throw with status code attached if possible
-          throw { ...error, _rawError: error }
         })
 
         // Success! Invalidate queries and show success toast
@@ -169,45 +167,19 @@ export function AddServerToGroupMenuItem({
         )
         return
       } catch (error: unknown) {
-        // The API returns plain text for 409 errors, not JSON
-        // Error can be a string directly or an object with the string inside
-        let errorMessage: string
-
-        if (typeof error === 'string') {
-          errorMessage = error
-        } else if (error && typeof error === 'object') {
-          const errorObj = error as {
-            detail?: string
-            message?: string
-            error?: string
-            _rawError?: string
-          }
-          errorMessage =
-            errorObj._rawError ||
-            errorObj.detail ||
-            errorObj.message ||
-            errorObj.error ||
-            'Failed to copy server to group'
-        } else {
-          errorMessage = 'Failed to copy server to group'
-        }
-
-        // Check if it's a 409 conflict error based on the error message
-        const is409 =
-          errorMessage.toLowerCase().includes('already exists') ||
-          errorMessage.toLowerCase().includes('already taken') ||
-          errorMessage.toLowerCase().includes('conflict')
+        // Check if it's a 409 conflict (name already exists)
+        const errorMessage = String(error)
+        const is409 = errorMessage.toLowerCase().includes('already exists')
 
         if (is409) {
-          // Track this name as rejected for validation
+          // Track this name as rejected and re-prompt
           lastRejectedName = customName
-          // Continue to next iteration to re-prompt
           continue
-        } else {
-          // Other error - show error message and exit
-          toast.error(errorMessage)
-          return
         }
+
+        // Other error - show error message and exit
+        toast.error(errorMessage || 'Failed to copy server to group')
+        return
       }
     }
   }

@@ -136,25 +136,7 @@ it(
       ).not.toBeInTheDocument()
     })
 
-    // Add small delay for dialog close animation and next prompt to appear
-    await new Promise((resolve) => setTimeout(resolve, 100))
-
-    // Now should show name input prompt
-    // Wait for the dialog with "Name" label to appear and correct value
-    await waitFor(
-      () => {
-        expect(screen.getByText('Copy server to a group')).toBeVisible()
-        const nameInput = screen.getByLabelText('Name')
-        expect(nameInput).toBeVisible()
-        expect(nameInput).toHaveValue('postgres-db-default')
-      },
-      { timeout: 10000 }
-    )
-
-    const confirmButton = screen.getByRole('button', { name: /ok|confirm/i })
-    await user.click(confirmButton)
-
-    // Wait for the mutation to complete and verify the payload
+    // Wait for the mutation to complete with automatic name
     await waitFor(() => {
       expect(capturedCreateWorkloadPayload).toBeTruthy()
     })
