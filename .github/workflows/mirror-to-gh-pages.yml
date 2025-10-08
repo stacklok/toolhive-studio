@@ -1,4 +1,4 @@
-name: Mirror latest release to GitHub Pages with LFS
+name: Mirror latest release to GitHub Pages
 
 on:
   workflow_call:
@@ -102,22 +102,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Git LFS attributes
-        run: |
-          # Create .gitattributes for LFS tracking of large files
-          cat > .gitattributes << 'EOF'
-          # Track large binary files with Git LFS
-          latest/*.dmg filter=lfs diff=lfs merge=lfs -text
-          latest/*.exe filter=lfs diff=lfs merge=lfs -text
-          latest/*.zip filter=lfs diff=lfs merge=lfs -text
-          latest/*.deb filter=lfs diff=lfs merge=lfs -text
-          latest/*.rpm filter=lfs diff=lfs merge=lfs -text
-          latest/*.nupkg filter=lfs diff=lfs merge=lfs -text
-          latest/*.flatpak filter=lfs diff=lfs merge=lfs -text
-          latest/*.tar.gz filter=lfs diff=lfs merge=lfs -text
-          EOF
-
-      - name: Deploy to GitHub Pages with LFS
+      - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
