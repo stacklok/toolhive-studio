@@ -87,7 +87,6 @@ export function AddServerToGroupMenuItem({
       return
     }
 
-    // First prompt: Select destination group
     const groupResult = await prompt(
       generateSimplePrompt({
         title: 'Copy server to a group',
@@ -107,7 +106,6 @@ export function AddServerToGroupMenuItem({
     let customName = `${serverName}-${groupName}`
 
     while (true) {
-      // Only prompt for name if we already tried and got a conflict
       if (lastRejectedName !== null) {
         const userProvidedName = await ensureUniqueName(prompt, {
           initialValue: customName,
@@ -122,7 +120,6 @@ export function AddServerToGroupMenuItem({
       }
 
       try {
-        // Fetch server configuration
         const { data: runConfig } = await getApiV1BetaWorkloadsByNameExport({
           path: { name: serverName },
           throwOnError: true,
@@ -156,7 +153,6 @@ export function AddServerToGroupMenuItem({
           },
         })
 
-        // Success! Invalidate queries and show success toast
         await queryClient.invalidateQueries({
           queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
         })
@@ -167,17 +163,14 @@ export function AddServerToGroupMenuItem({
         )
         return
       } catch (error: unknown) {
-        // Check if it's a 409 conflict (name already exists)
         const errorMessage = String(error)
         const is409 = errorMessage.toLowerCase().includes('already exists')
 
         if (is409) {
-          // Track this name as rejected and re-prompt
           lastRejectedName = customName
           continue
         }
 
-        // Other error - show error message and exit
         toast.error(errorMessage || 'Failed to copy server to group')
         return
       }

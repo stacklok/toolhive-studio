@@ -106,7 +106,6 @@ it('shows "Copy server to a group" menu item and handles the complete workflow',
 
   await user.click(addToGroupMenuItem!)
 
-  // Wait for the group selection dialog to appear
   await waitFor(() => {
     expect(screen.getByRole('dialog')).toBeInTheDocument()
     expect(screen.getByText('Copy server to a group')).toBeVisible()
@@ -122,19 +121,15 @@ it('shows "Copy server to a group" menu item and handles the complete workflow',
   const submitButton = screen.getByRole('button', { name: 'OK' })
   await user.click(submitButton)
 
-  // Wait for group selection dialog to close
   await waitFor(() => {
     expect(
       screen.queryByText('Select destination group')
     ).not.toBeInTheDocument()
   })
 
-  // Wait for the mutation to complete with automatic name
   await waitFor(() => {
     expect(capturedCreateWorkloadPayload).toBeTruthy()
   })
-
-  // Verify that the createWorkload was called with the correct payload
   expect(capturedCreateWorkloadPayload).toMatchInlineSnapshot(`
     {
       "cmd_arguments": [],
@@ -188,7 +183,6 @@ it('shows validation error and re-prompts when API returns 409 conflict', async 
 
   const user = userEvent.setup()
 
-  // Open the copy menu
   const dropdownTrigger = screen.getByRole('button', {
     name: /more options/i,
   })
@@ -203,7 +197,6 @@ it('shows validation error and re-prompts when API returns 409 conflict', async 
     expect(screen.getByText('Copy server to a group')).toBeVisible()
   })
 
-  // Select destination group
   const selectTrigger = screen.getByRole('combobox')
   await user.click(selectTrigger)
 
@@ -213,14 +206,12 @@ it('shows validation error and re-prompts when API returns 409 conflict', async 
   const submitButton = screen.getByRole('button', { name: 'OK' })
   await user.click(submitButton)
 
-  // Wait for group selection dialog to close
   await waitFor(() => {
     expect(
       screen.queryByText('Select destination group')
     ).not.toBeInTheDocument()
   })
 
-  // Now should show name input prompt with pre-filled value
   await waitFor(() => {
     expect(screen.getByText('Copy server to a group')).toBeVisible()
     const nameInput = screen.getByLabelText('Name')
@@ -233,24 +224,20 @@ it('shows validation error and re-prompts when API returns 409 conflict', async 
   let confirmButton = screen.getByRole('button', { name: /ok|confirm/i })
   await user.click(confirmButton)
 
-  // First 409 conflict - should show validation error
   await waitFor(() => {
     expect(screen.getByText(/This name is already taken/i)).toBeVisible()
   })
 
-  // Dialog should still be open with the same name input
   nameInput = screen.getByDisplayValue('postgres-db-research')
   expect(nameInput).toBeVisible()
   expect(nameInput).toHaveValue('postgres-db-research')
 
-  // User enters a different name
   await user.clear(nameInput)
   await user.type(nameInput, 'postgres-db-attempt2')
 
   confirmButton = screen.getByRole('button', { name: /ok|confirm/i })
   await user.click(confirmButton)
 
-  // Second 409 conflict - should show validation error again
   await waitFor(() => {
     expect(screen.getByText(/This name is already taken/i)).toBeVisible()
   })
@@ -262,12 +249,9 @@ it('shows validation error and re-prompts when API returns 409 conflict', async 
   confirmButton = screen.getByRole('button', { name: /ok|confirm/i })
   await user.click(confirmButton)
 
-  // Should succeed and close dialog
   await waitFor(() => {
     expect(screen.queryByText('Copy server to a group')).not.toBeInTheDocument()
   })
-
-  // Verify all three attempts were made with different names
   expect(attemptCount).toBe(3)
   expect(capturedNames).toEqual([
     'postgres-db-research',
