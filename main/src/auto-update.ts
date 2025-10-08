@@ -598,7 +598,6 @@ export function initAutoUpdate({
         mainWindowGetter = getterParam
         windowCreator = creatorParam
 
-        const isAutoUpdateEnabled = store.get('isAutoUpdateEnabled')
         if (!isAutoUpdateEnabled && !isManualUpdate) {
           log.info('[update] Auto update is disabled, skipping initialization')
           rootSpan.setStatus({ code: 1 })
