@@ -62,27 +62,6 @@ beforeEach(() => {
       const payload = await request.json()
       capturedCreateWorkloadPayload = payload
       return HttpResponse.json({ name: 'test-server-copied' })
-    }),
-    // Mock the workload export endpoint
-    http.get(mswEndpoint('/api/v1beta/workloads/:name/export'), () => {
-      return HttpResponse.json({
-        name: 'postgres-db',
-        image: 'ghcr.io/postgres/postgres-mcp-server:latest',
-        transport: 'stdio',
-        cmd_args: [],
-        env_vars: {},
-        secrets: [],
-        volumes: [],
-        isolate_network: false,
-        host: '127.0.0.1',
-        target_port: 28135,
-      })
-    }),
-    // Mock the groups endpoint
-    http.get(mswEndpoint('/api/v1beta/groups'), () => {
-      return HttpResponse.json({
-        groups: [{ name: 'default' }, { name: 'research' }],
-      })
     })
   )
 })
