@@ -602,7 +602,7 @@ describe('prepareUpdateWorkloadData', () => {
       transport: 'sse',
       target_port: 3000,
       type: 'docker_image',
-      group: 'default',
+      group: 'production',
       image: 'ghcr.io/test/updated-server',
       cmd_arguments: ['--verbose'],
       envVars: [
@@ -625,6 +625,7 @@ describe('prepareUpdateWorkloadData', () => {
     expect(result).toEqual({
       image: 'ghcr.io/test/updated-server',
       transport: 'sse',
+      group: 'production',
       target_port: 3000,
       cmd_arguments: ['--verbose'],
       env_vars: { DEBUG: 'true', LOG_LEVEL: 'info' },

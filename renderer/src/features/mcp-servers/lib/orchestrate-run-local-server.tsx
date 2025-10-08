@@ -241,6 +241,7 @@ export function prepareUpdateWorkloadData(
   return {
     image,
     transport: data.transport,
+    group: data.group,
     target_port: data.target_port,
     cmd_arguments: data.cmd_arguments || [],
     env_vars: mapEnvVars(data.envVars),
