@@ -87,7 +87,7 @@ jobs:
                '.assets += [{name: $name, url: $url, size: $size}]' \
                index.json > tmp.json && mv tmp.json index.json
           done
-          
+
           echo "Generated manifest with $(jq '.assets | length' index.json) assets"
           echo "Manifest content:"
           cat index.json
