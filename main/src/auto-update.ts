@@ -109,7 +109,10 @@ async function installUpdateAndRestart() {
   )
 
   try {
-    await performUpdateInstallation(pendingUpdateVersion, true)
+    await performUpdateInstallation({
+      releaseName: pendingUpdateVersion,
+      installByNotification: true,
+    })
     return { success: true }
   } catch (error) {
     log.error('[update] IPC update installation failed: ', error)
@@ -133,6 +136,7 @@ function handleUpdateError({
     {
       name: 'Auto-update error',
       op: 'update.error',
+      parentSpan: rootSpan,
       attributes: {
         'analytics.source': 'tracking',
         'analytics.type': 'event',
@@ -149,16 +153,6 @@ function handleUpdateError({
         )
         log.info('[update] update state: ', updateState)
         log.info('[update] toolhive binary is running: ', isToolhiveRunning())
-
-        // Link to parent root span if available
-        if (rootSpan) {
-          startSpan.addLink({
-            context: rootSpan.spanContext(),
-            attributes: {
-              'sentry.link.type': 'parent_root',
-            },
-          })
-        }
 
         startSpan.setStatus({
           code: 2,
@@ -194,6 +188,7 @@ function handleUpdateNotAvailable({
     {
       name: 'Update not available',
       op: 'update.not_available',
+      parentSpan: rootSpan,
       attributes: {
         update_flow: 'true',
         'analytics.source': 'tracking',
@@ -203,7 +198,7 @@ function handleUpdateNotAvailable({
         toolhive_running: `${isToolhiveRunning()}`,
       },
     },
-    (span) => {
+    () => {
       if (updateState === 'downloading') {
         log.warn(
           '[update] update became unavailable during download - ignoring'
@@ -212,16 +207,6 @@ function handleUpdateNotAvailable({
       }
       log.info('[update] no update available')
       updateState = 'none'
-
-      // Link to parent root span if available
-      if (rootSpan) {
-        span.addLink({
-          context: rootSpan.spanContext(),
-          attributes: {
-            'sentry.link.type': 'parent_root',
-          },
-        })
-      }
 
       rootSpan.setStatus({ code: 1 })
       rootFinish()
@@ -234,6 +219,7 @@ function handleUpdateAvailable(rootSpan: Sentry.Span) {
     {
       name: 'Update available',
       op: 'update.available',
+      parentSpan: rootSpan,
       attributes: {
         update_flow: 'true',
         'analytics.source': 'tracking',
@@ -243,19 +229,9 @@ function handleUpdateAvailable(rootSpan: Sentry.Span) {
         toolhive_running: `${isToolhiveRunning()}`,
       },
     },
-    (span) => {
+    () => {
       log.info('[update] update is available, starting download...')
       updateState = 'downloading'
-
-      // Link to parent root span if available
-      if (rootSpan) {
-        span.addLink({
-          context: rootSpan.spanContext(),
-          attributes: {
-            'sentry.link.type': 'parent_root',
-          },
-        })
-      }
     }
   )
 }
@@ -265,6 +241,7 @@ function handleUpdateChecking(rootSpan: Sentry.Span) {
     {
       name: 'Checking for update',
       op: 'update.checking',
+      parentSpan: rootSpan,
       attributes: {
         update_flow: 'true',
         'analytics.source': 'tracking',
@@ -274,19 +251,9 @@ function handleUpdateChecking(rootSpan: Sentry.Span) {
         update_state: updateState,
       },
     },
-    (span) => {
+    () => {
       log.info('[update] checking for updates...')
       updateState = 'checking'
-
-      // Link to parent root span if available
-      if (rootSpan) {
-        span.addLink({
-          context: rootSpan.spanContext(),
-          attributes: {
-            'sentry.link.type': 'parent_root',
-          },
-        })
-      }
     }
   )
 }
@@ -307,11 +274,12 @@ async function handleUpdateDownloaded({
     {
       name: 'Prepare update dialog',
       op: 'update.downloaded',
+      parentSpan: rootSpan,
       attributes: {
         'analytics.source': 'tracking',
         'analytics.type': 'event',
         update_flow: 'true',
-        release_name: releaseName!,
+        release_name: releaseName || 'unknown',
         update_state: updateState,
         toolhive_running: `${isToolhiveRunning()}`,
         is_auto_update_enabled: `${isAutoUpdateEnabled}`,
@@ -334,13 +302,6 @@ async function handleUpdateDownloaded({
         log.info('[update] downloaded - preparing dialog')
         pendingUpdateVersion = releaseName
         updateState = 'downloaded'
-
-        span.addLink({
-          context: rootSpan.spanContext(),
-          attributes: {
-            'sentry.link.type': 'parent_root',
-          },
-        })
 
         let window = mainWindowGetter?.()
 
@@ -430,29 +391,20 @@ async function handleUpdateDownloaded({
     {
       name: `User update decision ${userChoice}`,
       op: `update.user_decision`,
+      parentSpan: rootSpan,
       attributes: {
         'analytics.source': 'tracking',
         'analytics.type': 'event',
         update_flow: 'true',
-        release_name: releaseName,
+        release_name: releaseName || 'unknown',
         user_choice: userChoice,
         update_state: updateState,
         toolhive_running: `${isToolhiveRunning()}`,
         is_auto_update_enabled: `${isAutoUpdateEnabled}`,
       },
     },
-    (span) => {
+    () => {
       log.info(`[update] User decision: ${userChoice}`)
-
-      // Link to parent root span if available
-      if (rootSpan) {
-        span.addLink({
-          context: rootSpan.spanContext(),
-          attributes: {
-            'sentry.link.type': 'parent_root',
-          },
-        })
-      }
     }
   )
 
@@ -461,7 +413,11 @@ async function handleUpdateDownloaded({
     rootSpan.setStatus({ code: 1 })
     rootFinish()
     try {
-      await performUpdateInstallation(releaseName)
+      await performUpdateInstallation({
+        releaseName: releaseName || 'unknown',
+        rootSpan,
+        rootFinish,
+      })
     } catch (error) {
       // Error already logged and recovery attempted in performUpdateInstallation
       log.error('[update] Installation failed after recovery attempt:', error)
@@ -480,14 +436,22 @@ async function handleUpdateDownloaded({
   }
 }
 
-async function performUpdateInstallation(
-  releaseName: string | null,
-  installByNotification: boolean = false
-) {
+async function performUpdateInstallation({
+  releaseName,
+  installByNotification = false,
+  rootSpan,
+  rootFinish,
+}: {
+  releaseName: string | null
+  installByNotification?: boolean
+  rootSpan?: Sentry.Span
+  rootFinish?: () => void
+}) {
   return Sentry.startSpanManual(
     {
       name: 'Auto-update installation',
       op: 'update.install',
+      ...(rootSpan ? { parentSpan: rootSpan } : {}),
       attributes: {
         'analytics.source': 'tracking',
         'analytics.type': 'event',
@@ -503,6 +467,9 @@ async function performUpdateInstallation(
         log.warn('[update] Update installation already in progress')
         span.setStatus({ code: 2, message: 'Already in progress' })
         finish()
+        if (rootFinish) {
+          rootFinish()
+        }
         return
       }
 
@@ -550,6 +517,9 @@ async function performUpdateInstallation(
 
         span.setStatus({ code: 1 })
         finish()
+        if (rootFinish) {
+          rootFinish()
+        }
 
         try {
           const flushResult = await Sentry.flush(2000) // Wait max 2 seconds for Sentry to send data
@@ -570,6 +540,9 @@ async function performUpdateInstallation(
               : `[update] error during update installation JSON.stringify(error)`,
         })
         finish()
+        if (rootFinish) {
+          rootFinish()
+        }
         updateState = 'none'
 
         // Attempt recovery
