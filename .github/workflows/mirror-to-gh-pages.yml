@@ -35,10 +35,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Download and process release assets
+      - name: Generate manifest from GitHub Releases
         run: |
           TAG="${{ steps.release.outputs.tag }}"
           BASE_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          RELEASE_URL="https://github.com/${{ github.repository }}/releases/download/$TAG"
           TIMESTAMP=$(date +%s)
 
           # Skip prereleases to only mirror stable releases
@@ -47,19 +48,14 @@ jobs:
             exit 0
           fi
 
-          # Download assets for latest release only
+          # Create directory for manifest
           mkdir -p "latest"
-          gh release download "$TAG" -R "${{ github.repository }}" --dir "latest"
-
           cd "latest"
 
-          # Generate checksums
-          sha256sum * > SHA256SUMS.txt
-          for file in *; do
-            [ -f "$file" ] && sha256sum "$file" | cut -d' ' -f1 > "$file.sha256"
-          done
+          # Get release metadata from GitHub API
+          RELEASE_DATA=$(gh api "repos/${{ github.repository }}/releases/tags/$TAG")
 
-          # Create manifest
+          # Create manifest pointing to GitHub Releases
           jq -n \
             --arg tag "$TAG" \
             --arg published_at "${{ steps.release.outputs.published_at }}" \
@@ -76,29 +72,25 @@ jobs:
             }
             ' > index.json
 
-          # Add asset info to manifest
-          for file in *; do
-            # Skip non-files and excluded files
-            [ -f "$file" ] || continue
-            [[ "$file" == "index.json" || "$file" == "SHA256SUMS.txt" || "$file" == *.sha256 ]] && continue
+          # Add asset info to manifest using GitHub Releases URLs
+          echo "$RELEASE_DATA" | jq -r '.assets[] | @json' | while read -r asset; do
+            NAME=$(echo "$asset" | jq -r '.name')
+            SIZE=$(echo "$asset" | jq -r '.size')
+            DOWNLOAD_URL=$(echo "$asset" | jq -r '.browser_download_url')
             
-            # Get file size portably
-            SIZE=$(wc -c < "$file" | tr -d '[:space:]')
-            if ! [[ "$SIZE" =~ ^[0-9]+$ ]]; then
-              echo "Error: Could not determine size of $file" >&2
-              exit 1
-            fi
+            echo "Adding asset: $NAME (${SIZE} bytes) -> $DOWNLOAD_URL"
             
-            # Include all files (Git LFS will handle large ones automatically)
-            echo "Including file: $file (${SIZE} bytes)"
-            SHA=$(cat "$file.sha256")
-            jq --arg name "$file" \
-               --arg url "$BASE_URL/latest/$file" \
-               --arg sha256 "$SHA" \
+            # Add to manifest with direct GitHub Releases URL
+            jq --arg name "$NAME" \
+               --arg url "$DOWNLOAD_URL" \
                --argjson size "$SIZE" \
-               '.assets += [{name: $name, url: $url, size: $size, sha256: $sha256}]' \
+               '.assets += [{name: $name, url: $url, size: $size}]' \
                index.json > tmp.json && mv tmp.json index.json
           done
+          
+          echo "Generated manifest with $(jq '.assets | length' index.json) assets"
+          echo "Manifest content:"
+          cat index.json
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
