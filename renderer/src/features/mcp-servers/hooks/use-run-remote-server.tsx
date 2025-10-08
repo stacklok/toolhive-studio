@@ -2,14 +2,7 @@ import { postApiV1BetaWorkloadsMutation } from '@api/@tanstack/react-query.gen'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
 import { prepareCreateWorkloadData } from '../lib/orchestrate-run-remote-server'
-import {
-  type PostApiV1BetaSecretsDefaultKeysData,
-<<<<<<< HEAD
-  type SecretsSecretParameter,
-=======
-  type V1CreateRequest,
->>>>>>> 21d41716 (leftover)
-} from '@api/types.gen'
+import { type PostApiV1BetaSecretsDefaultKeysData } from '@api/types.gen'
 import type { Options } from '@api/client'
 import { restartClientNotification } from '../lib/restart-client-notification'
 import { trackEvent } from '@/common/lib/analytics'
@@ -50,18 +43,8 @@ export function useRunRemoteServer({
 
       await handleSecrets(secrets)
 
-<<<<<<< HEAD
-      const preparedData = prepareCreateWorkloadData(
-        data,
-        isDefaultAuthType ? secretsForRequest : []
-      )
+      const preparedData = prepareCreateWorkloadData(data)
 
-=======
-      const createRequest: V1CreateRequest = {
-        ...prepareCreateWorkloadData(data),
-        ...(groupName ? { group: groupName } : {}),
-      }
->>>>>>> 21d41716 (leftover)
       await createWorkload({
         body: preparedData,
       })
