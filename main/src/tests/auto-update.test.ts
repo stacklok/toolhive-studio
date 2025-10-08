@@ -11,7 +11,6 @@ import {
   setAutoUpdateEnabled,
   manualUpdate,
   getLatestAvailableVersion,
-  type ReleaseInfo,
 } from '../auto-update'
 
 vi.mock('electron', () => {
@@ -988,7 +987,7 @@ describe('auto-update', () => {
         const originalPlatform = process.platform
         Object.defineProperty(process, 'platform', { value: 'darwin' })
 
-        const mockResponse: ReleaseInfo = {
+        const mockResponse = {
           tag: 'v1.5.0',
           prerelease: false,
           published_at: '2024-01-01',
@@ -1015,7 +1014,7 @@ describe('auto-update', () => {
       })
 
       it('returns no update when latest version is not available for platform', async () => {
-        const mockResponse: ReleaseInfo = {
+        const mockResponse = {
           tag: 'v1.5.0',
           prerelease: false,
           published_at: '2024-01-01',
