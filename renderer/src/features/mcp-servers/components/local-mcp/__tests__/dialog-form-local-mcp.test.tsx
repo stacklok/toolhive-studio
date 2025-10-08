@@ -160,6 +160,7 @@ describe('DialogFormLocalMcp', () => {
       return (
         <Dialog open>
           <DialogFormLocalMcp
+            key={`new-${group}`}
             isOpen={open}
             closeDialog={vi.fn()}
             groupName={group}

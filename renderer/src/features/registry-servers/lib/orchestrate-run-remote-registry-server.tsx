@@ -47,7 +47,7 @@ export function convertCreateRequestToFormData(
       name: s.name || '',
       value: { secret: s.default || '', isFromStore: false },
     })),
-    group: 'default',
+    group: createRequest.group ?? 'default',
   }
 
   return baseFormData
