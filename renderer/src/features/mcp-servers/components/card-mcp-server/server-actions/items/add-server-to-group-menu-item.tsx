@@ -15,16 +15,14 @@ interface AddServerToGroupMenuItemProps {
   serverName: string
 }
 
-async function requestName(
+async function ensureUniqueName(
   prompt: ReturnType<typeof usePrompt>,
   {
     initialValue,
     rejectedName,
-    validateOnMount,
   }: {
     initialValue: string
     rejectedName: string | null
-    validateOnMount: boolean
   }
 ): Promise<string | null> {
   const validationSchema = z
@@ -47,7 +45,8 @@ async function requestName(
       confirm: 'OK',
       cancel: 'Cancel',
     },
-    validateOnMount,
+    // Show validation error immediately if we're retrying after a conflict
+    validateOnMount: rejectedName !== null,
   })
 
   if (!nameResult) {
@@ -105,21 +104,20 @@ export function AddServerToGroupMenuItem({
     const groupName = groupResult.value
 
     let lastRejectedName: string | null = null
-    let lastAttemptedName = `${serverName}-${groupName}`
-    let isRetry = false
+    let customName = `${serverName}-${groupName}`
 
     while (true) {
-      const customName = await requestName(prompt, {
-        initialValue: lastAttemptedName,
+      // Ask the user to confirm or change the name
+      const userProvidedName = await ensureUniqueName(prompt, {
+        initialValue: customName,
         rejectedName: lastRejectedName,
-        validateOnMount: isRetry,
       })
 
-      if (!customName) {
+      if (!userProvidedName) {
         return // User cancelled
       }
 
-      lastAttemptedName = customName
+      customName = userProvidedName
 
       try {
         // Fetch server configuration
@@ -203,9 +201,6 @@ export function AddServerToGroupMenuItem({
         if (is409) {
           // Track this name as rejected for validation
           lastRejectedName = customName
-          isRetry = true
-          // Dismiss any existing toasts
-          toast.dismiss()
           // Continue to next iteration to re-prompt
           continue
         } else {
