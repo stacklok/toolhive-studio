@@ -104,6 +104,7 @@ export function AddServerToGroupMenuItem({
 
     let lastRejectedName: string | null = null
     let customName = `${serverName}-${groupName}`
+    let toastId: string | number | undefined
 
     while (true) {
       if (lastRejectedName !== null) {
@@ -134,7 +135,7 @@ export function AddServerToGroupMenuItem({
           }
         })
 
-        const toastId = toast.loading('Copying server to group...')
+        toastId = toast.loading('Copying server to group...')
 
         await createWorkload({
           body: {
@@ -167,10 +168,16 @@ export function AddServerToGroupMenuItem({
         const is409 = errorMessage.toLowerCase().includes('already exists')
 
         if (is409) {
+          if (toastId) {
+            toast.dismiss(toastId)
+          }
           lastRejectedName = customName
           continue
         }
 
+        if (toastId) {
+          toast.dismiss(toastId)
+        }
         toast.error(errorMessage || 'Failed to copy server to group')
         return
       }
