@@ -42,7 +42,6 @@ import { ExternalLinkIcon } from 'lucide-react'
 import { useGroups } from '../../hooks/use-groups'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../../../../utils/feature-flags'
-import { useEffect } from 'react'
 
 const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
   name: '',
@@ -156,14 +155,6 @@ export function DialogFormRemoteMcp({
         }
       : {}),
   })
-
-  useEffect(() => {
-    if (isEditing || !isOpen) return
-    form.setValue('group', groupName, {
-      shouldDirty: false,
-      shouldTouch: false,
-    })
-  }, [form, groupName, isEditing, isOpen])
 
   const onSubmitForm = (data: FormSchemaRemoteMcp) => {
     setIsSubmitting(true)

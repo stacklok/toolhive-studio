@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
@@ -128,14 +128,6 @@ export function DialogFormRemoteRegistryMcp({
         }
       : {}),
   })
-
-  useEffect(() => {
-    if (!isOpen) return
-    form.setValue('group', 'default', {
-      shouldDirty: false,
-      shouldTouch: false,
-    })
-  }, [form, isOpen])
 
   const onSubmitForm = (data: FormSchemaRemoteMcp) => {
     if (!server) return

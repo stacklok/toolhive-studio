@@ -22,6 +22,7 @@ export function WrapperDialogFormMcp({
       />
 
       <DialogFormRemoteMcp
+        key={serverToEdit || groupName}
         closeDialog={closeDialog}
         serverToEdit={serverToEdit}
         isOpen={serverType.remote}
