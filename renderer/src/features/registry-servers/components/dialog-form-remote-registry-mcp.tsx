@@ -141,7 +141,10 @@ export function DialogFormRemoteRegistryMcp({
       },
       {
         onSuccess: () => {
-          checkServerStatus({ serverName: data.name, groupName: 'default' })
+          checkServerStatus({
+            serverName: data.name,
+            groupName: data.group || 'default',
+          })
           closeDialog()
           form.reset()
         },

@@ -168,7 +168,7 @@ export function DialogFormRemoteMcp({
           onSuccess: () => {
             checkServerStatus({
               serverName: data.name,
-              groupName: form.getValues('group') || groupName,
+              groupName: data.group || groupName,
               isEditing,
             })
             closeDialog()
@@ -193,7 +193,7 @@ export function DialogFormRemoteMcp({
           onSuccess: () => {
             checkServerStatus({
               serverName: data.name,
-              groupName: form.getValues('group') || groupName,
+              groupName: data.group || groupName,
             })
             closeDialog()
           },
