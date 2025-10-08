@@ -62,6 +62,9 @@ beforeEach(() => {
     // Mock empty workloads by default
     http.get(mswEndpoint('/api/v1beta/workloads'), () => {
       return HttpResponse.json({ workloads: [] })
+    }),
+    http.get(mswEndpoint('/api/v1beta/groups'), () => {
+      return HttpResponse.json({ groups: [{ name: 'default' }] })
     })
   )
 
