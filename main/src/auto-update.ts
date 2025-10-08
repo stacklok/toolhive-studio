@@ -537,7 +537,7 @@ async function performUpdateInstallation({
           message:
             error instanceof Error
               ? `[update] error during update installation, ${error?.name} - ${error?.message}`
-              : `[update] error during update installation JSON.stringify(error)`,
+              : `[update] error during update installation ${JSON.stringify(error)}`,
         })
         finish()
         if (rootFinish) {
