@@ -9,10 +9,52 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { postApiV1BetaWorkloadsMutation } from '@api/@tanstack/react-query.gen'
 import { getApiV1BetaWorkloadsByNameExport } from '@api/sdk.gen'
 import { getApiV1BetaWorkloadsQueryKey } from '@api/@tanstack/react-query.gen'
-import { useRequestName } from '../../../../hooks/use-request-valid-name'
+import { z } from 'zod/v4'
 
 interface AddServerToGroupMenuItemProps {
   serverName: string
+}
+
+async function requestName(
+  prompt: ReturnType<typeof usePrompt>,
+  {
+    initialValue,
+    rejectedName,
+    validateOnMount,
+  }: {
+    initialValue: string
+    rejectedName: string | null
+    validateOnMount: boolean
+  }
+): Promise<string | null> {
+  const validationSchema = z
+    .string()
+    .min(1, 'Name is required')
+    .refine((name) => name !== rejectedName, {
+      message: 'This name is already taken. Please choose another name.',
+    })
+
+  const nameResult = await prompt({
+    ...generateSimplePrompt({
+      inputType: 'text',
+      initialValue,
+      title: 'Copy server to a group',
+      placeholder: 'Enter server name...',
+      label: 'Name',
+      validationSchema,
+    }),
+    buttons: {
+      confirm: 'OK',
+      cancel: 'Cancel',
+    },
+    validateOnMount,
+  })
+
+  if (!nameResult) {
+    return null
+  }
+
+  return nameResult.value
 }
 
 export function AddServerToGroupMenuItem({
@@ -21,7 +63,6 @@ export function AddServerToGroupMenuItem({
   const prompt = usePrompt()
   const queryClient = useQueryClient()
   const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
-  const requestName = useRequestName()
 
   const { data: groupsData } = useGroups()
 
@@ -72,9 +113,8 @@ export function AddServerToGroupMenuItem({
     while (attemptCount < maxAttempts) {
       attemptCount++
 
-      const customName = await requestName({
+      const customName = await requestName(prompt, {
         initialValue: lastAttemptedName,
-        title: 'Copy server to a group',
         rejectedName: lastRejectedName,
         validateOnMount: attemptCount > 1,
       })
