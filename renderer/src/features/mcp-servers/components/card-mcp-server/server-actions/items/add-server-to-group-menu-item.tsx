@@ -106,7 +106,7 @@ export function AddServerToGroupMenuItem({
     let customName = `${serverName}-${groupName}`
     let toastId: string | number | undefined
 
-    while (true) {
+    const attemptCreateWorkload = async (): Promise<boolean> => {
       if (lastRejectedName !== null) {
         const userProvidedName = await ensureUniqueName(prompt, {
           initialValue: customName,
@@ -114,7 +114,7 @@ export function AddServerToGroupMenuItem({
         })
 
         if (!userProvidedName) {
-          return // User cancelled
+          return false
         }
 
         customName = userProvidedName
@@ -162,7 +162,7 @@ export function AddServerToGroupMenuItem({
           `Server "${serverName}" copied to group "${groupName}" successfully`,
           { id: toastId }
         )
-        return
+        return false
       } catch (error: unknown) {
         const errorMessage = String(error)
         const is409 = errorMessage.toLowerCase().includes('already exists')
@@ -172,15 +172,19 @@ export function AddServerToGroupMenuItem({
             toast.dismiss(toastId)
           }
           lastRejectedName = customName
-          continue
+          return true
         }
 
         if (toastId) {
           toast.dismiss(toastId)
         }
         toast.error(errorMessage || 'Failed to copy server to group')
-        return
+        return false
       }
+    }
+
+    while (await attemptCreateWorkload()) {
+      // Retry on name conflict unless user cancelled or another error happened
     }
   }
 
