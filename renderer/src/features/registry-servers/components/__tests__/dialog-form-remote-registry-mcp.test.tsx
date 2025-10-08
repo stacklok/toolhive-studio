@@ -260,6 +260,7 @@ describe('DialogFormRemoteRegistryMcp', () => {
                 value: 'false',
               },
             ],
+            group: 'default',
             name: 'test-registry-server',
             oauth_config: {
               authorize_url: 'https://api.example.com/authorize',
@@ -391,5 +392,40 @@ describe('DialogFormRemoteRegistryMcp', () => {
         screen.queryByRole('button', { name: 'Add environment variable' })
       ).not.toBeInTheDocument()
     })
+  })
+
+  it('displays group selector', async () => {
+    mswServer.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () => {
+        return HttpResponse.json({
+          groups: [
+            { name: 'default' },
+            { name: 'production' },
+            { name: 'staging' },
+          ],
+        })
+      })
+    )
+
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRemoteRegistryMcp
+          server={mockServer}
+          isOpen
+          closeDialog={vi.fn()}
+        />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    await waitFor(
+      () => {
+        expect(screen.getByLabelText('Group')).toBeInTheDocument()
+      },
+      { timeout: 3000 }
+    )
   })
 })

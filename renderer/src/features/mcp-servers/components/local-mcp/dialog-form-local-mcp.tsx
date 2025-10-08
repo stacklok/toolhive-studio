@@ -32,7 +32,6 @@ import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../../../../utils/feature-flags'
-import { useEffect } from 'react'
 
 type Tab = 'configuration' | 'network-isolation'
 type CommonFields = keyof FormSchemaLocalMcp
@@ -171,14 +170,6 @@ export function DialogFormLocalMcp({
       : {}),
   })
 
-  useEffect(() => {
-    if (isEditing || !isOpen) return
-    form.setValue('group', groupName, {
-      shouldDirty: false,
-      shouldTouch: false,
-    })
-  }, [form, groupName, isEditing, isOpen])
-
   const onSubmitForm = (data: FormSchemaLocalMcp) => {
     setIsSubmitting(true)
     if (error) {
@@ -192,7 +183,7 @@ export function DialogFormLocalMcp({
           onSuccess: () => {
             checkServerStatus({
               serverName: data.name,
-              groupName: form.getValues('group') || groupName,
+              groupName: data.group || groupName,
               isEditing,
             })
             closeDialog()
@@ -217,7 +208,7 @@ export function DialogFormLocalMcp({
           onSuccess: () => {
             checkServerStatus({
               serverName: data.name,
-              groupName: form.getValues('group') || groupName,
+              groupName: data.group || groupName,
             })
             closeDialog()
           },

@@ -15,6 +15,7 @@ export function WrapperDialogFormMcp({
   return (
     <>
       <DialogFormLocalMcp
+        key={`local-${serverToEdit || 'new'}-${groupName}`}
         isOpen={serverType.local}
         closeDialog={closeDialog}
         serverToEdit={serverToEdit}
@@ -22,6 +23,7 @@ export function WrapperDialogFormMcp({
       />
 
       <DialogFormRemoteMcp
+        key={`remote-${serverToEdit || 'new'}-${groupName}`}
         closeDialog={closeDialog}
         serverToEdit={serverToEdit}
         isOpen={serverType.remote}

@@ -21,6 +21,7 @@ describe('getFormSchemaRemoteMcp', () => {
     },
     envVars: [],
     secrets: [],
+    group: 'default',
   }
 
   describe('auth_type: "none"', () => {
