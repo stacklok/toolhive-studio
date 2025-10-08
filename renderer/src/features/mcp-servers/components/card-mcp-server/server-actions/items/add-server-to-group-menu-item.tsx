@@ -62,20 +62,19 @@ export function AddServerToGroupMenuItem({
 
     const groupName = groupResult.value
 
-    // Track names that have been rejected by the API
-    const rejectedNames = new Set<string>()
     const maxAttempts = 5
     let attemptCount = 0
     let lastAttemptedName = `${serverName}-${groupName}`
+    let lastRejectedName: string | null = null
 
     while (attemptCount < maxAttempts) {
       attemptCount++
 
-      // Prompt for name with validation against rejected names
+      // Prompt for name with validation against the last rejected name
       const validationSchema = z
         .string()
         .min(1, 'Name is required')
-        .refine((name) => !rejectedNames.has(name), {
+        .refine((name) => name !== lastRejectedName, {
           message: 'This name is already taken. Please choose another name.',
         })
 
@@ -193,8 +192,8 @@ export function AddServerToGroupMenuItem({
           errorMessage.toLowerCase().includes('conflict')
 
         if (is409 && attemptCount < maxAttempts) {
-          // Add this name to the rejected list so validation will catch it
-          rejectedNames.add(customName)
+          // Track this name as rejected so validation will catch it
+          lastRejectedName = customName
           // Dismiss any existing toasts
           toast.dismiss()
           // Continue to next iteration to re-prompt
