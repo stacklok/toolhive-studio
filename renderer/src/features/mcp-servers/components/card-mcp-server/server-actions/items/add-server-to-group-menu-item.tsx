@@ -104,19 +104,15 @@ export function AddServerToGroupMenuItem({
 
     const groupName = groupResult.value
 
-    const maxAttempts = 5
-    let attemptCount = 0
-    let toastId: string | number | undefined
     let lastRejectedName: string | null = null
     let lastAttemptedName = `${serverName}-${groupName}`
+    let isRetry = false
 
-    while (attemptCount < maxAttempts) {
-      attemptCount++
-
+    while (true) {
       const customName = await requestName(prompt, {
         initialValue: lastAttemptedName,
         rejectedName: lastRejectedName,
-        validateOnMount: attemptCount > 1,
+        validateOnMount: isRetry,
       })
 
       if (!customName) {
@@ -141,10 +137,7 @@ export function AddServerToGroupMenuItem({
           }
         })
 
-        // Show loading toast only on first attempt
-        if (attemptCount === 1) {
-          toastId = toast.loading('Copying server to group...')
-        }
+        const toastId = toast.loading('Copying server to group...')
 
         // Don't use throwOnError so we can check the status code
         await createWorkload({
@@ -172,16 +165,10 @@ export function AddServerToGroupMenuItem({
           queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
         })
 
-        if (toastId) {
-          toast.success(
-            `Server "${serverName}" copied to group "${groupName}" successfully`,
-            { id: toastId }
-          )
-        } else {
-          toast.success(
-            `Server "${serverName}" copied to group "${groupName}" successfully`
-          )
-        }
+        toast.success(
+          `Server "${serverName}" copied to group "${groupName}" successfully`,
+          { id: toastId }
+        )
         return
       } catch (error: unknown) {
         // The API returns plain text for 409 errors, not JSON
@@ -213,19 +200,14 @@ export function AddServerToGroupMenuItem({
           errorMessage.toLowerCase().includes('already taken') ||
           errorMessage.toLowerCase().includes('conflict')
 
-        if (is409 && attemptCount < maxAttempts) {
+        if (is409) {
           // Track this name as rejected for validation
           lastRejectedName = customName
+          isRetry = true
           // Dismiss any existing toasts
           toast.dismiss()
           // Continue to next iteration to re-prompt
           continue
-        } else if (is409) {
-          // Max attempts reached
-          toast.error(
-            'Unable to copy server after multiple attempts. Please try a different name.'
-          )
-          return
         } else {
           // Other error - show error message and exit
           toast.error(errorMessage)
