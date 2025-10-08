@@ -34,11 +34,12 @@ export function FormDialog({
     mode: 'onChange',
   })
 
-  // Reset form when config changes (e.g., when showing a new prompt)
-  // and optionally validate immediately
+  // Reset form with new default values when config changes.
+  // This is needed when showing multiple prompts in sequence with different defaults.
+  // For example: first prompt returns "default", second prompt should show "server-default" not "default".
   useEffect(() => {
     form.reset(config.defaultValues)
-    // Validate after reset if requested (e.g., to show errors for invalid defaults)
+    // Optionally validate immediately to show errors for invalid defaults
     if (config.validateOnMount) {
       void form.trigger()
     }
