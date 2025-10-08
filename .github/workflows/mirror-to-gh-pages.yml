@@ -72,7 +72,7 @@ jobs:
             }
             ' > index.json
 
-          # Add asset info to manifest using GitHub Releases URLs
+          # Add asset info to manifest and create redirect pages
           echo "$RELEASE_DATA" | jq -r '.assets[] | @json' | while read -r asset; do
             NAME=$(echo "$asset" | jq -r '.name')
             SIZE=$(echo "$asset" | jq -r '.size')
@@ -87,6 +87,14 @@ jobs:
                '.assets += [{name: $name, url: $url, size: $size}]' \
                index.json > tmp.json && mv tmp.json index.json
           done
+
+          # Create index.html for the downloads page
+          printf '%s\n' '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>ToolHive Studio Downloads</title></head><body><h1>ToolHive Studio Downloads</h1><p>Loading release information...</p><div id="assets"></div><script>fetch("./index.json").then(r=>r.json()).then(d=>{document.getElementById("assets").innerHTML="<h2>Release "+d.tag+"</h2><ul>"+d.assets.map(a=>"<li><a href=\""+a.url+"\">"+a.name+"</a> ("+(a.size/1024/1024).toFixed(2)+" MB)</li>").join("")+"</ul>";});</script></body></html>' > index.html
+
+          # Go back to parent to create 404.html that handles file redirects
+          cd ..
+          printf '%s\n' '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Redirecting...</title><script>(function(){var p=window.location.pathname;var m=p.match(/\/latest\/(.+)$/);if(m&&m[1]){var f=m[1];var t="'"$TAG"'";var r="'"${{ github.repository }}"'";var u="https://github.com/"+r+"/releases/download/"+t+"/"+f;window.location.replace(u);}else{document.body.innerHTML="<h1>404 - Not Found</h1>";}})();</script></head><body><p>Redirecting...</p></body></html>' > 404.html
+          cd latest
 
           echo "Generated manifest with $(jq '.assets | length' index.json) assets"
           echo "Manifest content:"
