@@ -16,9 +16,11 @@ export function useMutationUpdateWorkloadGroup() {
     mutationFn: async ({
       workloadName,
       groupName,
+      customName,
     }: {
       workloadName: string
       groupName: string
+      customName?: string
     }) => {
       const { data: runConfig } = await getApiV1BetaWorkloadsByNameExport({
         path: { name: workloadName },
@@ -36,7 +38,7 @@ export function useMutationUpdateWorkloadGroup() {
 
       const result = await createWorkload({
         body: {
-          name: `${runConfig.name}-${groupName}`,
+          name: customName || `${runConfig.name}-${groupName}`,
           image: runConfig.image,
           transport: runConfig.transport,
           cmd_arguments: runConfig.cmd_args || [],

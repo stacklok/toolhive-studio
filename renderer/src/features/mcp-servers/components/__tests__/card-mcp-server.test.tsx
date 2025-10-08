@@ -142,6 +142,106 @@ it('shows "Copy server to a group" menu item and handles the complete workflow',
   `)
 })
 
+it('re-prompts for a new name when API returns 409 conflict, then succeeds', async () => {
+  let attemptCount = 0
+  const capturedNames: string[] = []
+
+  server.use(
+    http.post(mswEndpoint('/api/v1beta/workloads'), async ({ request }) => {
+      const payload = (await request.json()) as { name: string }
+      capturedNames.push(payload.name)
+      attemptCount++
+
+      // First two attempts return 409 conflict
+      if (attemptCount <= 2) {
+        return HttpResponse.json(
+          { detail: 'A workload with this name already exists in the group' },
+          { status: 409 }
+        )
+      }
+
+      // Third attempt succeeds
+      return HttpResponse.json({ name: payload.name })
+    })
+  )
+
+  renderRoute(router)
+
+  await waitFor(() => {
+    expect(screen.getByText('postgres-db')).toBeVisible()
+  })
+
+  const user = userEvent.setup()
+
+  // Open the copy menu
+  const dropdownTrigger = screen.getByRole('button', { name: /more options/i })
+  await user.click(dropdownTrigger)
+
+  const copyMenuItem = screen.getByRole('menuitem', {
+    name: /copy server to a group/i,
+  })
+  await user.click(copyMenuItem)
+
+  await waitFor(() => {
+    expect(screen.getByText('Copy server to a group')).toBeVisible()
+  })
+
+  // Select destination group
+  const selectTrigger = screen.getByRole('combobox')
+  await user.click(selectTrigger)
+
+  const groupOption = screen.getByRole('option', { name: 'research' })
+  await user.click(groupOption)
+
+  const submitButton = screen.getByRole('button', { name: 'OK' })
+  await user.click(submitButton)
+
+  // First 409 conflict - should show error message and re-prompt
+  await waitFor(() => {
+    expect(
+      screen.getByText(/name already exists|already taken|choose another/i)
+    ).toBeVisible()
+  })
+
+  // Dialog should still be open with name input
+  let nameInput = screen.getByLabelText(/name/i)
+  expect(nameInput).toBeVisible()
+
+  // User enters a different name
+  await user.clear(nameInput)
+  await user.type(nameInput, 'postgres-db-attempt2')
+
+  let confirmButton = screen.getByRole('button', { name: /ok|confirm/i })
+  await user.click(confirmButton)
+
+  // Second 409 conflict - should show error and re-prompt again
+  await waitFor(() => {
+    expect(
+      screen.getByText(/name already exists|already taken|choose another/i)
+    ).toBeVisible()
+  })
+
+  nameInput = screen.getByLabelText(/name/i)
+  await user.clear(nameInput)
+  await user.type(nameInput, 'postgres-db-final')
+
+  confirmButton = screen.getByRole('button', { name: /ok|confirm/i })
+  await user.click(confirmButton)
+
+  // Should succeed and close dialog
+  await waitFor(() => {
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  // Verify all three attempts were made with different names
+  expect(attemptCount).toBe(3)
+  expect(capturedNames).toEqual([
+    'postgres-db-research',
+    'postgres-db-attempt2',
+    'postgres-db-final',
+  ])
+})
+
 it('stays on the same group page after deleting a server', async () => {
   // this verifies that a bug reported here is fixed:
   // https://github.com/stacklok/toolhive-studio/issues/904
