@@ -59,12 +59,21 @@ vi.mock('electron', () => {
 vi.mock('@sentry/electron/main', () => ({
   captureMessage: vi.fn(),
   captureException: vi.fn(),
+  flush: vi.fn(() => Promise.resolve(true)),
+  spanToJSON: vi.fn(() => ({
+    span_id: 'mock-span-id',
+    trace_id: 'mock-trace-id',
+    parent_span_id: undefined,
+  })),
   startSpan: vi.fn((_, callback) => {
     const mockSpan = {
       setStatus: vi.fn(),
       setAttribute: vi.fn(),
       addLink: vi.fn(),
-      spanContext: vi.fn(),
+      spanContext: vi.fn(() => ({
+        spanId: 'mock-span-id',
+        traceId: 'mock-trace-id',
+      })),
     }
     return callback(mockSpan)
   }),
@@ -73,7 +82,10 @@ vi.mock('@sentry/electron/main', () => ({
       setStatus: vi.fn(),
       setAttribute: vi.fn(),
       addLink: vi.fn(),
-      spanContext: vi.fn(),
+      spanContext: vi.fn(() => ({
+        spanId: 'mock-span-id',
+        traceId: 'mock-trace-id',
+      })),
     }
     const mockFinish = vi.fn()
     return callback(mockSpan, mockFinish)
