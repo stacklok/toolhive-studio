@@ -106,9 +106,7 @@ it(
     })
     expect(addToGroupMenuItem).toBeInTheDocument()
 
-    // Click and wait a bit for async handler to start
     await user.click(addToGroupMenuItem!)
-    await new Promise((resolve) => setTimeout(resolve, 100))
 
     // Wait for the group selection dialog to appear
     await waitFor(
@@ -230,9 +228,6 @@ it(
         screen.queryByText('Select destination group')
       ).not.toBeInTheDocument()
     })
-
-    // Add small delay for dialog close animation and next prompt to appear
-    await new Promise((resolve) => setTimeout(resolve, 100))
 
     // Now should show name input prompt with pre-filled value
     await waitFor(
