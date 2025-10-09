@@ -29,7 +29,7 @@ export const Route = createFileRoute('/group/$groupName')({
   component: GroupRoute,
 })
 
-function GroupRoute() {
+export function GroupRoute() {
   const { groupName } = Route.useParams()
   const showSidebar = useFeatureFlag(featureFlagKeys.GROUPS)
 
