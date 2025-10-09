@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useTransition } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { z } from 'zod/v4'
@@ -53,114 +53,106 @@ async function ensureUniqueName(
 export function useCopyServerToGroup(serverName: string) {
   const prompt = usePrompt()
   const queryClient = useQueryClient()
-  const [isProcessing, setIsProcessing] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
   const { mutateAsync: createWorkload } = useMutation({
     ...postApiV1BetaWorkloadsMutation(),
   })
 
-  const copyServerToGroup = async (
-    groupName: string,
-    customName: string
-  ): Promise<boolean> => {
-    setIsProcessing(true)
-    let lastRejectedName: string | null = null
-    let currentName = customName
-    let toastId: string | number | undefined
+  const copyServerToGroup = (groupName: string, customName: string): void => {
+    startTransition(async () => {
+      let lastRejectedName: string | null = null
+      let currentName = customName
+      let toastId: string | number | undefined
 
-    const attemptCreateWorkload = async (): Promise<boolean> => {
-      if (lastRejectedName !== null) {
-        const userProvidedName = await ensureUniqueName(prompt, {
-          initialValue: currentName,
-          rejectedName: lastRejectedName,
-        })
+      const attemptCreateWorkload = async (): Promise<boolean> => {
+        if (lastRejectedName !== null) {
+          const userProvidedName = await ensureUniqueName(prompt, {
+            initialValue: currentName,
+            rejectedName: lastRejectedName,
+          })
 
-        if (!userProvidedName) {
-          return false
+          if (!userProvidedName) {
+            return false
+          }
+
+          currentName = userProvidedName
         }
 
-        currentName = userProvidedName
-      }
+        try {
+          const { data: runConfig } = await getApiV1BetaWorkloadsByNameExport({
+            path: { name: serverName },
+            throwOnError: true,
+          })
 
-      try {
-        const { data: runConfig } = await getApiV1BetaWorkloadsByNameExport({
-          path: { name: serverName },
-          throwOnError: true,
-        })
+          const secrets = (runConfig.secrets || []).map((secretStr) => {
+            const [secretName, target] = secretStr.split(',target=')
 
-        const secrets = (runConfig.secrets || []).map((secretStr) => {
-          const [secretName, target] = secretStr.split(',target=')
+            return {
+              name: secretName,
+              target: target,
+            }
+          })
 
-          return {
-            name: secretName,
-            target: target,
+          toastId = toast.loading('Copying server to group...')
+
+          await createWorkload({
+            body: {
+              name: currentName,
+              image: runConfig.image,
+              transport: runConfig.transport,
+              cmd_arguments: runConfig.cmd_args || [],
+              env_vars: runConfig.env_vars || {},
+              secrets: secrets,
+              volumes: runConfig.volumes || [],
+              network_isolation: runConfig.isolate_network || false,
+              permission_profile: runConfig.permission_profile,
+              host: runConfig.host,
+              target_port: runConfig.target_port,
+              group: groupName,
+            },
+          })
+
+          await queryClient.invalidateQueries({
+            queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
+          })
+
+          toast.success(
+            `Server "${serverName}" copied to group "${groupName}" successfully`,
+            { id: toastId }
+          )
+          return false
+        } catch (error: unknown) {
+          const errorMessage = String(error)
+          const is409 = errorMessage.toLowerCase().includes('already exists')
+
+          if (is409) {
+            if (toastId) {
+              toast.dismiss(toastId)
+            }
+            lastRejectedName = currentName
+            return true
           }
-        })
 
-        toastId = toast.loading('Copying server to group...')
-
-        await createWorkload({
-          body: {
-            name: currentName,
-            image: runConfig.image,
-            transport: runConfig.transport,
-            cmd_arguments: runConfig.cmd_args || [],
-            env_vars: runConfig.env_vars || {},
-            secrets: secrets,
-            volumes: runConfig.volumes || [],
-            network_isolation: runConfig.isolate_network || false,
-            permission_profile: runConfig.permission_profile,
-            host: runConfig.host,
-            target_port: runConfig.target_port,
-            group: groupName,
-          },
-        })
-
-        await queryClient.invalidateQueries({
-          queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
-        })
-
-        toast.success(
-          `Server "${serverName}" copied to group "${groupName}" successfully`,
-          { id: toastId }
-        )
-        return false
-      } catch (error: unknown) {
-        const errorMessage = String(error)
-        const is409 = errorMessage.toLowerCase().includes('already exists')
-
-        if (is409) {
           if (toastId) {
             toast.dismiss(toastId)
           }
-          lastRejectedName = currentName
-          return true
+          toast.error(
+            errorMessage ||
+              'An unexpected error occurred while copying the server to the group'
+          )
+          return false
         }
-
-        if (toastId) {
-          toast.dismiss(toastId)
-        }
-        toast.error(
-          errorMessage ||
-            'An unexpected error occurred while copying the server to the group'
-        )
-        return false
       }
-    }
 
-    try {
       while (await attemptCreateWorkload()) {
         // Retry on name conflict unless user cancelled or another error happened
       }
-    } finally {
-      setIsProcessing(false)
-    }
-
-    return true
+    })
   }
 
   return {
     copyServerToGroup,
-    isProcessing,
+    isPending,
   }
 }
