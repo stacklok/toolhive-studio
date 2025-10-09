@@ -11,7 +11,6 @@ import {
   setAutoUpdateEnabled,
   manualUpdate,
   getLatestAvailableVersion,
-  type ReleaseInfo,
 } from '../auto-update'
 
 vi.mock('electron', () => {
@@ -55,6 +54,42 @@ vi.mock('electron', () => {
     },
   }
 })
+
+vi.mock('@sentry/electron/main', () => ({
+  captureMessage: vi.fn(),
+  captureException: vi.fn(),
+  flush: vi.fn(() => Promise.resolve(true)),
+  spanToJSON: vi.fn(() => ({
+    span_id: 'mock-span-id',
+    trace_id: 'mock-trace-id',
+    parent_span_id: undefined,
+  })),
+  startSpan: vi.fn((_, callback) => {
+    const mockSpan = {
+      setStatus: vi.fn(),
+      setAttribute: vi.fn(),
+      addLink: vi.fn(),
+      spanContext: vi.fn(() => ({
+        spanId: 'mock-span-id',
+        traceId: 'mock-trace-id',
+      })),
+    }
+    return callback(mockSpan)
+  }),
+  startSpanManual: vi.fn((_, callback) => {
+    const mockSpan = {
+      setStatus: vi.fn(),
+      setAttribute: vi.fn(),
+      addLink: vi.fn(),
+      spanContext: vi.fn(() => ({
+        spanId: 'mock-span-id',
+        traceId: 'mock-trace-id',
+      })),
+    }
+    const mockFinish = vi.fn()
+    return callback(mockSpan, mockFinish)
+  }),
+}))
 
 // Mock update-electron-app
 vi.mock('update-electron-app', () => ({
@@ -365,7 +400,7 @@ describe('auto-update', () => {
         await vi.runAllTimersAsync()
 
         expect(vi.mocked(log).error).toHaveBeenCalledWith(
-          '[update] Failed to create window for update dialog: ',
+          '[update] Failed to prepare update dialog:',
           expect.any(Error)
         )
       })
@@ -618,7 +653,7 @@ describe('auto-update', () => {
         await vi.runAllTimersAsync()
 
         expect(vi.mocked(log).error).toHaveBeenCalledWith(
-          '[update] error in update-downloaded handler:',
+          '[update] Dialog error in update-downloaded handler:',
           expect.any(Error)
         )
       })
@@ -952,7 +987,7 @@ describe('auto-update', () => {
         const originalPlatform = process.platform
         Object.defineProperty(process, 'platform', { value: 'darwin' })
 
-        const mockResponse: ReleaseInfo = {
+        const mockResponse = {
           tag: 'v1.5.0',
           prerelease: false,
           published_at: '2024-01-01',
@@ -979,7 +1014,7 @@ describe('auto-update', () => {
       })
 
       it('returns no update when latest version is not available for platform', async () => {
-        const mockResponse: ReleaseInfo = {
+        const mockResponse = {
           tag: 'v1.5.0',
           prerelease: false,
           published_at: '2024-01-01',

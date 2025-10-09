@@ -77,7 +77,6 @@ async function loadWindowContent(window: BrowserWindow): Promise<void> {
         `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`
       )
       await window.loadFile(filePath)
-      log.info('Loaded production HTML file')
     }
   } catch (error) {
     logError('Failed to load window content', error)
@@ -206,8 +205,6 @@ export function focusMainWindow(): void {
 
     mainWindow!.show()
     mainWindow!.focus()
-
-    log.info('Main window focused successfully')
   } catch (error) {
     logError('Failed to focus main window', error)
   }
