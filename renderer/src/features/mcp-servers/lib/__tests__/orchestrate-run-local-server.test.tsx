@@ -4,7 +4,7 @@ import {
   prepareCreateWorkloadData,
   convertWorkloadToFormData,
   convertCreateRequestToFormData,
-  prepareUpdateWorkloadData,
+  prepareUpdateLocalWorkloadData,
 } from '../orchestrate-run-local-server'
 import type {
   SecretsSecretParameter,
@@ -595,7 +595,7 @@ describe('convertCreateRequestToFormData', () => {
   })
 })
 
-describe('prepareUpdateWorkloadData', () => {
+describe('prepareUpdateLocalWorkloadData', () => {
   it('prepares update data for docker image type', () => {
     const data: FormSchemaLocalMcp = {
       name: 'updated-server',
@@ -620,7 +620,7 @@ describe('prepareUpdateWorkloadData', () => {
       { name: 'api-key', target: 'API_KEY' },
     ]
 
-    const result = prepareUpdateWorkloadData(data, secrets)
+    const result = prepareUpdateLocalWorkloadData(data, secrets)
 
     expect(result).toEqual({
       image: 'ghcr.io/test/updated-server',
@@ -653,7 +653,7 @@ describe('prepareUpdateWorkloadData', () => {
       volumes: [],
     }
 
-    const result = prepareUpdateWorkloadData(data)
+    const result = prepareUpdateLocalWorkloadData(data)
 
     expect(result.image).toBe('uvx://updated-package')
     expect(result.transport).toBe('stdio')
@@ -675,7 +675,7 @@ describe('prepareUpdateWorkloadData', () => {
       volumes: [],
     }
 
-    const result = prepareUpdateWorkloadData(data)
+    const result = prepareUpdateLocalWorkloadData(data)
 
     expect(result.network_isolation).toBe(true)
     expect(result.permission_profile).toEqual({
@@ -709,7 +709,7 @@ describe('prepareUpdateWorkloadData', () => {
       volumes: [],
     }
 
-    const result = prepareUpdateWorkloadData(data)
+    const result = prepareUpdateLocalWorkloadData(data)
 
     expect(result.env_vars).toEqual({ VALID_VAR: 'valid-value' })
   })
@@ -733,7 +733,7 @@ describe('prepareUpdateWorkloadData', () => {
       ],
     }
 
-    const result = prepareUpdateWorkloadData(data)
+    const result = prepareUpdateLocalWorkloadData(data)
 
     expect(result.volumes).toEqual([
       '/host1:/container1',
@@ -757,7 +757,7 @@ describe('prepareUpdateWorkloadData', () => {
       volumes: [],
     }
 
-    const result = prepareUpdateWorkloadData(data)
+    const result = prepareUpdateLocalWorkloadData(data)
 
     expect(result.secrets).toEqual([])
   })

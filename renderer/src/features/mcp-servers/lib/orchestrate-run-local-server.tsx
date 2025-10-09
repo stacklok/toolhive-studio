@@ -228,7 +228,7 @@ export function convertCreateRequestToFormData(
 /**
  * Transforms form data into an update request object
  */
-export function prepareUpdateWorkloadData(
+export function prepareUpdateLocalWorkloadData(
   data: FormSchemaLocalMcp,
   secrets: SecretsSecretParameter[] = []
 ): V1UpdateRequest {
