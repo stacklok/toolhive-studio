@@ -461,7 +461,7 @@ export function DialogFormRemoteMcp({
         form.reset()
       }}
       actionsOnCancel={closeDialog}
-      actionsIsDisabled={isLoading}
+      actionsIsDisabled={isLoading || isExistingServerDataError}
       actionsIsEditing={isEditing}
       form={form}
       onSubmit={form.handleSubmit(onSubmitForm)}
