@@ -5,17 +5,16 @@ import {
   type V1UpdateRequest,
 } from '@api/types.gen'
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
-import { mapEnvVars, omit } from '@/common/lib/utils'
+import { omit } from '@/common/lib/utils'
 
 /**
  * Combines the registry server definition, the form fields, and the newly
  * created secrets from the secret store into a single request object.
  */
 export function prepareCreateWorkloadData(
-  data: FormSchemaRemoteMcp,
-  secrets: SecretsSecretParameter[] = []
+  data: FormSchemaRemoteMcp
 ): V1CreateRequest {
-  const { oauth_config, envVars, ...rest } = data
+  const { oauth_config, ...rest } = data
 
   const oauthConfig = {
     ...oauth_config,
@@ -37,10 +36,8 @@ export function prepareCreateWorkloadData(
     : oauthConfig
 
   const request = {
-    ...omit(rest, 'auth_type'),
+    ...omit(rest, 'auth_type', 'secrets'),
     oauth_config: transformedOAuthConfig,
-    env_vars: mapEnvVars(envVars),
-    secrets,
   }
 
   return request
@@ -50,10 +47,9 @@ export function prepareCreateWorkloadData(
  * Transforms form data into an update request object
  */
 export function prepareUpdateWorkloadData(
-  data: FormSchemaRemoteMcp,
-  secrets: SecretsSecretParameter[] = []
+  data: FormSchemaRemoteMcp
 ): V1UpdateRequest {
-  const { oauth_config, envVars, ...rest } = data
+  const { oauth_config, ...rest } = data
 
   const oauthConfig = {
     ...oauth_config,
@@ -76,10 +72,8 @@ export function prepareUpdateWorkloadData(
     : oauthConfig
 
   return {
-    ...omit(rest, 'auth_type'),
+    ...omit(rest, 'auth_type', 'secrets'),
     oauth_config: transformedOAuthConfig,
-    env_vars: mapEnvVars(envVars),
-    secrets,
   }
 }
 
@@ -146,9 +140,6 @@ export function convertCreateRequestToFormData(
       token_url: createRequest.oauth_config?.token_url,
     },
     auth_type: authType,
-    envVars: Object.entries(createRequest.env_vars || {}).map(
-      ([name, value]) => ({ name, value })
-    ),
     secrets,
     group: createRequest.group ?? 'default',
   }

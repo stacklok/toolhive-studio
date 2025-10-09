@@ -81,105 +81,6 @@ beforeEach(() => {
 })
 
 describe('DialogFormRemoteMcp', () => {
-  it(
-    'handles secrets correctly - both inline and from store',
-    async () => {
-      const user = userEvent.setup({ delay: null })
-      const mockInstallServerMutation = vi.fn()
-      mockUseRunRemoteServer.mockReturnValue({
-        installServerMutation: mockInstallServerMutation,
-        isErrorSecrets: false,
-        isPendingSecrets: false,
-      })
-
-      renderWithProviders(
-        <Wrapper>
-          <DialogFormRemoteMcp
-            isOpen
-            closeDialog={vi.fn()}
-            groupName="default"
-          />
-        </Wrapper>
-      )
-
-      await waitFor(() => {
-        expect(screen.getByRole('dialog')).toBeVisible()
-      })
-
-      // Fill basic fields
-      await user.type(
-        screen.getByRole('textbox', { name: /server name/i }),
-        'secret-server'
-      )
-      await user.click(screen.getByLabelText('Transport'))
-      await user.click(screen.getByRole('option', { name: /streamable http/i }))
-
-      // Add inline secret
-      await user.click(screen.getByRole('button', { name: 'Add secret' }))
-      await user.type(screen.getByLabelText('Secret key'), 'API_TOKEN')
-      await user.type(screen.getByLabelText('Secret value'), 'secret-value')
-
-      // Add secret from store
-      await user.click(screen.getByRole('button', { name: 'Add secret' }))
-      await user.type(
-        screen.getAllByLabelText('Secret key')[1] as HTMLElement,
-        'GITHUB_TOKEN'
-      )
-      await user.click(
-        screen.getAllByLabelText(
-          'Use a secret from the store'
-        )[1] as HTMLElement
-      )
-
-      await waitFor(() => {
-        expect(
-          screen.getByRole('dialog', { name: 'Secrets store' })
-        ).toBeVisible()
-      })
-
-      await user.click(
-        screen.getByRole('option', { name: 'SECRET_FROM_STORE' })
-      )
-
-      await user.type(
-        screen.getByRole('textbox', {
-          name: /server url/i,
-        }),
-        'https://api.example.com/mcp'
-      )
-      await user.type(screen.getByLabelText('Callback port'), '8888')
-
-      await user.click(screen.getByRole('button', { name: 'Install server' }))
-
-      await waitFor(() => {
-        expect(mockInstallServerMutation).toHaveBeenCalledWith(
-          {
-            data: expect.objectContaining({
-              secrets: [
-                {
-                  name: 'API_TOKEN',
-                  value: {
-                    isFromStore: false,
-                    secret: 'secret-value',
-                  },
-                },
-                {
-                  name: 'GITHUB_TOKEN',
-                  value: {
-                    isFromStore: true,
-                    secret: 'SECRET_FROM_STORE',
-                  },
-                },
-              ],
-            }),
-          },
-          expect.any(Object)
-        )
-      })
-    },
-    { timeout: 10000 }
-  )
-
   it('validates required fields and shows errors', async () => {
     const user = userEvent.setup({ delay: null })
     const mockInstallServerMutation = vi.fn()
@@ -325,7 +226,6 @@ describe('DialogFormRemoteMcp', () => {
       expect(mockInstallServerMutation).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            envVars: [],
             url: 'https://api.example.com/mcp',
             auth_type: 'none',
             name: 'test-remote-server',
@@ -341,7 +241,6 @@ describe('DialogFormRemoteMcp', () => {
               token_url: '',
               use_pkce: true,
             },
-            secrets: [],
             transport: 'streamable-http',
           }),
         }),
