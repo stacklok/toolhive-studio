@@ -7,6 +7,8 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogOverlay,
+  DialogPortal,
   DialogTitle,
 } from '../ui/dialog'
 
@@ -35,43 +37,46 @@ export function DialogWorkloadFormWrapper<T extends FieldValues = FieldValues>({
 }) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="flex max-h-[95dvh] flex-col p-0 sm:max-w-2xl"
-        onCloseAutoFocus={onCloseAutoFocus}
-        onInteractOutside={(e) =>
-          // Prevent closing the dialog when clicking outside
-          e.preventDefault()
-        }
-      >
-        <Form {...form}>
-          <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col">
-            <DialogHeader className="flex-shrink-0 p-6 pb-4">
-              <DialogTitle>{title}</DialogTitle>
-              <DialogDescription className="sr-only">
-                ToolHive allows you to securely run a remote MCP server or a
-                custom local MCP server from a Docker image or a package
-                manager.
-              </DialogDescription>
-            </DialogHeader>
+      <DialogPortal>
+        <DialogOverlay />
+        <DialogContent
+          className="flex max-h-[95dvh] flex-col p-0 sm:max-w-2xl"
+          onCloseAutoFocus={onCloseAutoFocus}
+          onInteractOutside={(e) =>
+            // Prevent closing the dialog when clicking outside
+            e.preventDefault()
+          }
+        >
+          <Form {...form}>
+            <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col">
+              <DialogHeader className="flex-shrink-0 p-6 pb-4">
+                <DialogTitle>{title}</DialogTitle>
+                <DialogDescription className="sr-only">
+                  ToolHive allows you to securely run a remote MCP server or a
+                  custom local MCP server from a Docker image or a package
+                  manager.
+                </DialogDescription>
+              </DialogHeader>
 
-            {children}
+              {children}
 
-            <DialogFooter className="p-6">
-              <Button
-                type="button"
-                variant="outline"
-                disabled={actionsIsDisabled}
-                onClick={actionsOnCancel}
-              >
-                Cancel
-              </Button>
-              <Button disabled={actionsIsDisabled} type="submit">
-                {actionsIsEditing ? 'Update server' : 'Install server'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
+              <DialogFooter className="p-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={actionsIsDisabled}
+                  onClick={actionsOnCancel}
+                >
+                  Cancel
+                </Button>
+                <Button disabled={actionsIsDisabled} type="submit">
+                  {actionsIsEditing ? 'Update server' : 'Install server'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </DialogPortal>
     </Dialog>
   )
 }
