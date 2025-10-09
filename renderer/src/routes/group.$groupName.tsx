@@ -37,7 +37,7 @@ export function GroupRoute() {
     ...getApiV1BetaWorkloadsOptions({
       query: {
         all: true,
-        group: groupName,
+        group: groupName || 'default', // Fallback to 'default' if groupName is undefined
       },
     }),
   })

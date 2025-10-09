@@ -19,48 +19,44 @@ vi.mock('@tanstack/react-router', async () => {
 })
 
 describe('Groups Bug - Route should pass group parameter to API', () => {
-  it.fails(
-    'should call API with group=default but actually calls with group=null',
-    async () => {
-      const baseUrl = 'https://foo.bar.com'
-      const requestRecorder = recordRequests()
+  it('should call API with group=default', async () => {
+    const baseUrl = 'https://foo.bar.com'
+    const requestRecorder = recordRequests()
 
-      // Mock minimal API responses
-      server.use(
-        http.get(`${baseUrl}/api/v1beta/workloads`, () => {
-          return HttpResponse.json({ workloads: [] })
-        })
-      )
-
-      // Render the route
-      function WrapperComponent() {
-        return <GroupRoute />
-      }
-
-      const router = createTestRouter(WrapperComponent, '/group/default')
-      renderRoute(router)
-
-      // Wait for API call to be made
-      await waitFor(() => {
-        const workloadRequests = requestRecorder.recordedRequests.filter(
-          (req) => req.pathname === '/api/v1beta/workloads'
-        )
-        expect(workloadRequests.length).toBeGreaterThan(0)
+    // Mock minimal API responses
+    server.use(
+      http.get(`${baseUrl}/api/v1beta/workloads`, () => {
+        return HttpResponse.json({ workloads: [] })
       })
+    )
 
-      // Check what group parameter was actually sent
+    // Render the route - we're testing the component in isolation
+    // which means Route.useParams() doesn't have router context
+    function WrapperComponent() {
+      return <GroupRoute />
+    }
+
+    const router = createTestRouter(WrapperComponent, '/group/default')
+    renderRoute(router)
+
+    // Wait for API call to be made
+    await waitFor(() => {
       const workloadRequests = requestRecorder.recordedRequests.filter(
         (req) => req.pathname === '/api/v1beta/workloads'
       )
+      expect(workloadRequests.length).toBeGreaterThan(0)
+    })
 
-      const groupParam = workloadRequests[0]?.search?.group
+    // Check what group parameter was actually sent
+    const workloadRequests = requestRecorder.recordedRequests.filter(
+      (req) => req.pathname === '/api/v1beta/workloads'
+    )
 
-      // BUG: This should be 'default' but it's actually null/undefined
-      // When the bug is fixed, change this to it() and update the expectation
-      console.log('🐛 API called with group parameter:', groupParam)
-      console.log('Expected: "default", Actual:', groupParam)
+    const groupParam = workloadRequests[0]?.search?.group
 
-      expect(groupParam).toBe('default')
-    }
-  )
+    // Verify that the API is called with the correct group parameter
+    // This ensures that Route.useParams() is properly providing the groupName,
+    // or that the component has a proper fallback when groupName is undefined
+    expect(groupParam).toBe('default')
+  })
 })
