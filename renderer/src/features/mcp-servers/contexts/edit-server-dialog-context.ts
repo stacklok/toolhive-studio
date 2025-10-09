@@ -7,7 +7,7 @@ interface EditServerDialogState {
   groupName: string | null
 }
 
-export interface EditServerDialogContextValue {
+interface EditServerDialogContextValue {
   state: EditServerDialogState
   openDialog: (serverName: string, isRemote: boolean, groupName: string) => void
   closeDialog: () => void
