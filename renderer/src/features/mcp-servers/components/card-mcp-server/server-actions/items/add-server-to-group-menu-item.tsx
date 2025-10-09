@@ -48,7 +48,7 @@ export function AddServerToGroupMenuItem({
 
     if (!groupResult) {
       trackEvent('Server copy cancelled', {
-        cancelledAt: 'group_selection',
+        cancelled_at: 'group_selection',
       })
       return // User cancelled
     }
