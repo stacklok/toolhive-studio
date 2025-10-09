@@ -15,8 +15,8 @@ export function useMutationDeleteGroup() {
     onSuccess: () => {
       const remainingGroupsCount = (groupsData?.groups?.length ?? 1) - 1
       trackEvent('Group deleted', {
-        isDefaultGroup: false,
-        remainingGroupsCount,
+        is_default_group: false,
+        remaining_groups_count: remainingGroupsCount,
       })
       queryClient.invalidateQueries({ queryKey: ['api', 'v1beta', 'groups'] })
       navigate({ to: '/group/$groupName', params: { groupName: 'default' } })

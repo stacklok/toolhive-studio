@@ -129,9 +129,9 @@ export function useCopyServerToGroup(serverName: string) {
           )
 
           trackEvent('Server copied to group', {
-            destinationIsDefaultGroup: groupName === 'default',
+            destination_is_default_group: groupName === 'default',
             transport: runConfig.transport || 'unknown',
-            retryCount,
+            retry_count: retryCount,
           })
 
           return false
@@ -164,7 +164,7 @@ export function useCopyServerToGroup(serverName: string) {
 
       if (cancelledAt) {
         trackEvent('Server copy cancelled', {
-          cancelledAt,
+          cancelled_at: cancelledAt,
         })
       }
     })

@@ -21,7 +21,7 @@ export function useMutationCreateGroup() {
     onSuccess: () => {
       const existingGroupsCount = groupsData?.groups?.length ?? 0
       trackEvent('Group created', {
-        existingGroupsCount,
+        existing_groups_count: existingGroupsCount,
       })
       queryClient.invalidateQueries({ queryKey: ['api', 'v1beta', 'groups'] })
     },

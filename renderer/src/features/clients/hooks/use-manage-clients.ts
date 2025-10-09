@@ -114,7 +114,7 @@ export function useManageClients(groupName: string) {
     trackEvent(`Client ${clientType} registered`, {
       client: clientType,
       groups: newGroups,
-      isDefaultGroup: groupName === 'default',
+      is_default_group: groupName === 'default',
     })
   }
 
@@ -131,7 +131,7 @@ export function useManageClients(groupName: string) {
     await unregisterClient({ clientType, groupName })
     trackEvent(`Client ${clientType} unregistered`, {
       client: clientType,
-      isDefaultGroup: groupName === 'default',
+      is_default_group: groupName === 'default',
     })
   }
 
@@ -178,10 +178,10 @@ export function useManageClients(groupName: string) {
     const changesCount = addedCount + removedCount
     if (changesCount > 0) {
       trackEvent('Group clients updated', {
-        isDefaultGroup: groupName === 'default',
-        changesCount,
-        addedCount,
-        removedCount,
+        is_default_group: groupName === 'default',
+        changes_count: changesCount,
+        added_count: addedCount,
+        removed_count: removedCount,
       })
     }
   }
