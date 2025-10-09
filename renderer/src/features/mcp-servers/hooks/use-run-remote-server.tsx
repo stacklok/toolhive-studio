@@ -56,6 +56,7 @@ export function useRunRemoteServer({
         auth_type: data.auth_type,
         transport: data.transport,
         workload: data.name,
+        isDefaultGroup: data.group === 'default',
         'route.pathname': pageName,
       })
     },

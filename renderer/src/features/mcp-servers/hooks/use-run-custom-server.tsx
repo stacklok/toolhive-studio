@@ -66,6 +66,7 @@ export function useRunCustomServer({
         workload: data.name,
         transport: data.transport,
         type: data.type,
+        isDefaultGroup: group === 'default',
         'route.pathname': '/',
       })
     },

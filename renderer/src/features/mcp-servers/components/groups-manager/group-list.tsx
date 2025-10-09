@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { Group } from './group'
+import { trackEvent } from '@/common/lib/analytics'
 
 interface GroupListProps {
   apiGroups: Array<{ name?: string; registered_clients?: string[] }>
@@ -7,6 +8,13 @@ interface GroupListProps {
 }
 
 export function GroupList({ apiGroups, currentGroupName }: GroupListProps) {
+  const handleGroupClick = (toGroupName: string) => {
+    trackEvent('Group navigated', {
+      fromIsDefaultGroup: currentGroupName === 'default',
+      toIsDefaultGroup: toGroupName === 'default',
+    })
+  }
+
   return (
     <div className="space-y-2">
       {apiGroups.map((group) => (
@@ -15,6 +23,7 @@ export function GroupList({ apiGroups, currentGroupName }: GroupListProps) {
           to="/group/$groupName"
           params={{ groupName: group.name ?? '' }}
           preload="intent"
+          onClick={() => handleGroupClick(group.name ?? '')}
         >
           <Group
             name={group.name ?? ''}

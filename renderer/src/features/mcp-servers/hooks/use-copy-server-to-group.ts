@@ -8,6 +8,7 @@ import {
   getApiV1BetaWorkloadsQueryKey,
 } from '@api/@tanstack/react-query.gen'
 import { getApiV1BetaWorkloadsByNameExport } from '@api/sdk.gen'
+import { trackEvent } from '@/common/lib/analytics'
 
 async function ensureUniqueName(
   prompt: ReturnType<typeof usePrompt>,
@@ -64,6 +65,9 @@ export function useCopyServerToGroup(serverName: string) {
       let lastRejectedName: string | null = null
       let currentName = customName
       let toastId: string | number | undefined
+      let retryCount = 0
+      let cancelledAt: 'group_selection' | 'name_conflict_resolution' | null =
+        null
 
       const attemptCreateWorkload = async (): Promise<boolean> => {
         if (lastRejectedName !== null) {
@@ -73,10 +77,12 @@ export function useCopyServerToGroup(serverName: string) {
           })
 
           if (!userProvidedName) {
+            cancelledAt = 'name_conflict_resolution'
             return false
           }
 
           currentName = userProvidedName
+          retryCount++
         }
 
         try {
@@ -121,6 +127,13 @@ export function useCopyServerToGroup(serverName: string) {
             `Server "${serverName}" copied to group "${groupName}" successfully`,
             { id: toastId }
           )
+
+          trackEvent('Server copied to group', {
+            destinationIsDefaultGroup: groupName === 'default',
+            transport: runConfig.transport || 'unknown',
+            retryCount,
+          })
+
           return false
         } catch (error: unknown) {
           const errorMessage = String(error)
@@ -147,6 +160,12 @@ export function useCopyServerToGroup(serverName: string) {
 
       while (await attemptCreateWorkload()) {
         // Retry on name conflict unless user cancelled or another error happened
+      }
+
+      if (cancelledAt) {
+        trackEvent('Server copy cancelled', {
+          cancelledAt,
+        })
       }
     })
   }

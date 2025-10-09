@@ -31,12 +31,14 @@ export function useRunFromRegistry({
 
   const { mutateAsync: createWorkload } = useMutation({
     ...postApiV1BetaWorkloadsMutation(),
-    onSuccess: async (data) => {
+    onSuccess: async (data, variables) => {
       await restartClientNotification({
         queryClient,
       })
+      const groupName = variables.body.group || 'default'
       trackEvent(`Workload ${data.name} started`, {
         workload: data.name,
+        isDefaultGroup: groupName === 'default',
         'route.pathname': '/registry',
       })
     },
