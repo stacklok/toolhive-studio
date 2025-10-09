@@ -14,6 +14,7 @@ import {
 import { createMemoryHistory } from '@tanstack/react-router'
 import { CardMcpServer } from '../card-mcp-server/index'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { EditServerDialogProvider } from '../../contexts/edit-server-dialog-provider'
 
 let capturedCreateWorkloadPayload: unknown = null
 
@@ -27,14 +28,16 @@ function createCardMcpServerTestRouter() {
     getParentRoute: () => rootRoute,
     path: '/group/$groupName',
     component: () => (
-      <CardMcpServer
-        name="postgres-db"
-        status="running"
-        statusContext={undefined}
-        url="http://localhost:8080"
-        transport="http"
-        group="default"
-      />
+      <EditServerDialogProvider>
+        <CardMcpServer
+          name="postgres-db"
+          status="running"
+          statusContext={undefined}
+          url="http://localhost:8080"
+          transport="http"
+          group="default"
+        />
+      </EditServerDialogProvider>
     ),
   })
 
@@ -154,14 +157,16 @@ it('stays on the same group page after deleting a server', async () => {
     getParentRoute: () => rootRoute,
     path: '/group/$groupName',
     component: () => (
-      <CardMcpServer
-        name="fetch1"
-        status="running"
-        statusContext={undefined}
-        url="http://localhost:8080"
-        transport="http"
-        group="g1"
-      />
+      <EditServerDialogProvider>
+        <CardMcpServer
+          name="fetch1"
+          status="running"
+          statusContext={undefined}
+          url="http://localhost:8080"
+          transport="http"
+          group="g1"
+        />
+      </EditServerDialogProvider>
     ),
   })
 
