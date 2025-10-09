@@ -19,7 +19,7 @@ vi.mock('@tanstack/react-router', async () => {
 })
 
 describe('Groups Bug - Route should pass group parameter to API', () => {
-  it('should call API with group=default', async () => {
+  it('should call API with group=default when groups feature is enabled', async () => {
     const baseUrl = 'https://foo.bar.com'
     const requestRecorder = recordRequests()
 
@@ -55,6 +55,7 @@ describe('Groups Bug - Route should pass group parameter to API', () => {
     const groupParam = workloadRequests[0]?.search?.group
 
     // Verify that the API is called with the correct group parameter
+    // When groups feature is enabled (mocked to return true), it should filter by group
     // This ensures that Route.useParams() is properly providing the groupName,
     // or that the component has a proper fallback when groupName is undefined
     expect(groupParam).toBe('default')
