@@ -3,12 +3,16 @@ import { CardMcpServer } from './card-mcp-server'
 import { useMemo, useState } from 'react'
 import { InputSearch } from '@/common/components/ui/input-search'
 import { cn } from '@/common/lib/utils'
+import { EditServerDialogProvider } from '../contexts/edit-server-dialog-provider'
+import { useEditServerDialog } from '../hooks/use-edit-server-dialog'
+import { WrapperDialogFormMcp } from './wrapper-dialog-mcp'
 
-export function GridCardsMcpServers({
+function GridCardsMcpServersContent({
   mcpServers,
 }: {
   mcpServers: CoreWorkload[]
 }) {
+  const { state, closeDialog } = useEditServerDialog()
   const [filters, setFilters] = useState({
     text: '',
     state: 'all',
@@ -79,6 +83,27 @@ export function GridCardsMcpServers({
             </p>
           </div>
         )}
+
+      {state.isOpen && state.serverName && state.groupName && (
+        <WrapperDialogFormMcp
+          serverType={{ local: !state.isRemote, remote: state.isRemote }}
+          closeDialog={closeDialog}
+          serverToEdit={state.serverName}
+          groupName={state.groupName}
+        />
+      )}
     </div>
+  )
+}
+
+export function GridCardsMcpServers({
+  mcpServers,
+}: {
+  mcpServers: CoreWorkload[]
+}) {
+  return (
+    <EditServerDialogProvider>
+      <GridCardsMcpServersContent mcpServers={mcpServers} />
+    </EditServerDialogProvider>
   )
 }

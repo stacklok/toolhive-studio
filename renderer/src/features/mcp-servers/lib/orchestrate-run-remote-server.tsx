@@ -46,7 +46,7 @@ export function prepareCreateWorkloadData(
 /**
  * Transforms form data into an update request object
  */
-export function prepareUpdateWorkloadData(
+export function prepareUpdateRemoteWorkloadData(
   data: FormSchemaRemoteMcp
 ): V1UpdateRequest {
   const { oauth_config, ...rest } = data

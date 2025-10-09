@@ -1,9 +1,8 @@
 import { Settings } from 'lucide-react'
-import { useState } from 'react'
 import { DropdownMenuItem } from '@/common/components/ui/dropdown-menu'
-import { WrapperDialogFormMcp } from '../../../wrapper-dialog-mcp'
 import { getApiV1BetaWorkloadsByNameOptions } from '@api/@tanstack/react-query.gen'
 import { useQuery } from '@tanstack/react-query'
+import { useEditServerDialog } from '../../../../hooks/use-edit-server-dialog'
 
 interface EditConfigurationMenuItemProps {
   serverName: string
@@ -12,46 +11,26 @@ interface EditConfigurationMenuItemProps {
 export function EditConfigurationMenuItem({
   serverName,
 }: EditConfigurationMenuItemProps) {
-  const [serverDialogOpen, setServerDialogOpen] = useState<{
-    local: boolean
-    remote: boolean
-  }>({
-    local: false,
-    remote: false,
-  })
+  const { openDialog } = useEditServerDialog()
 
-  const { data: serverData, isLoading: isLoadingServer } = useQuery({
+  const { data: serverData } = useQuery({
     ...getApiV1BetaWorkloadsByNameOptions({
       path: { name: serverName || '' },
     }),
   })
 
-  const handleEdit = (e: React.MouseEvent) => {
-    e.preventDefault()
+  const handleEdit = () => {
+    if (!serverData?.group) return
     const isRemote = !!serverData?.url
-
-    setServerDialogOpen({ local: !isRemote, remote: isRemote })
+    openDialog(serverName, isRemote, serverData.group)
   }
 
   return (
-    <>
-      <DropdownMenuItem asChild className="flex cursor-pointer items-center">
-        <a className="self-start" onClick={handleEdit}>
-          <Settings className="mr-2 h-4 w-4" />
-          Edit configuration
-        </a>
-      </DropdownMenuItem>
-
-      {!isLoadingServer && serverData?.group && (
-        <WrapperDialogFormMcp
-          serverType={serverDialogOpen}
-          closeDialog={() =>
-            setServerDialogOpen({ local: false, remote: false })
-          }
-          serverToEdit={serverName}
-          groupName={serverData.group}
-        />
-      )}
-    </>
+    <DropdownMenuItem asChild className="flex cursor-pointer items-center">
+      <a className="self-start" onClick={handleEdit}>
+        <Settings className="mr-2 h-4 w-4" />
+        Edit configuration
+      </a>
+    </DropdownMenuItem>
   )
 }

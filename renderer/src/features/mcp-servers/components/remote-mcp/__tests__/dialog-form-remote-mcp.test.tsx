@@ -7,12 +7,16 @@ import { server as mswServer } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useRunRemoteServer } from '../../../hooks/use-run-remote-server'
+import { useUpdateServer } from '../../../hooks/use-update-server'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 
-// Mock the hook
 vi.mock('../../../hooks/use-run-remote-server', () => ({
   useRunRemoteServer: vi.fn(),
+}))
+
+vi.mock('../../../hooks/use-update-server', () => ({
+  useUpdateServer: vi.fn(),
 }))
 
 vi.mock('@/common/hooks/use-check-server-status', () => ({
@@ -20,8 +24,8 @@ vi.mock('@/common/hooks/use-check-server-status', () => ({
 }))
 
 const mockUseCheckServerStatus = vi.mocked(useCheckServerStatus)
-
 const mockUseRunRemoteServer = vi.mocked(useRunRemoteServer)
+const mockUseUpdateServer = vi.mocked(useUpdateServer)
 
 window.HTMLElement.prototype.hasPointerCapture = vi.fn()
 window.HTMLElement.prototype.scrollIntoView = vi.fn()
@@ -48,7 +52,6 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => (
 beforeEach(() => {
   vi.clearAllMocks()
 
-  // Setup MSW with default secrets
   mswServer.use(
     http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
       return HttpResponse.json({
@@ -59,7 +62,7 @@ beforeEach(() => {
         ],
       })
     }),
-    // Mock empty workloads by default
+
     http.get(mswEndpoint('/api/v1beta/workloads'), () => {
       return HttpResponse.json({ workloads: [] })
     }),
@@ -68,11 +71,16 @@ beforeEach(() => {
     })
   )
 
-  // Default mock implementation
   mockUseRunRemoteServer.mockReturnValue({
     installServerMutation: vi.fn(),
     isErrorSecrets: false,
     isPendingSecrets: false,
+  })
+
+  mockUseUpdateServer.mockReturnValue({
+    updateServerMutation: vi.fn(),
+    isPendingSecrets: false,
+    isErrorSecrets: false,
   })
 
   mockUseCheckServerStatus.mockReturnValue({
@@ -100,14 +108,12 @@ describe('DialogFormRemoteMcp', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Try to submit without filling required fields
     await user.click(screen.getByRole('button', { name: 'Install server' }))
 
     await waitFor(() => {
       expect(mockInstallServerMutation).not.toHaveBeenCalled()
     })
 
-    // Check that validation errors are shown
     await waitFor(() => {
       expect(
         screen.getByRole('textbox', {
@@ -145,7 +151,6 @@ describe('DialogFormRemoteMcp', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Fill required fields
     await user.type(
       screen.getByRole('textbox', { name: /server name/i }),
       'test-server'
@@ -166,7 +171,6 @@ describe('DialogFormRemoteMcp', () => {
 
     await user.click(screen.getByRole('button', { name: 'Install server' }))
 
-    // The loading state should be shown
     await waitFor(() => {
       expect(
         screen.getByText(/installing server|creating secrets/i)
@@ -203,7 +207,7 @@ describe('DialogFormRemoteMcp', () => {
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
-    // Fill required fields
+
     await user.type(
       screen.getByRole('textbox', {
         name: /name/i,
@@ -248,7 +252,6 @@ describe('DialogFormRemoteMcp', () => {
       )
     })
 
-    // Simulate successful submission
     const onSuccessCallback =
       mockInstallServerMutation.mock.calls[0]?.[1]?.onSuccess
 
@@ -283,5 +286,89 @@ describe('DialogFormRemoteMcp', () => {
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
 
     expect(mockOnOpenChange).toHaveBeenCalled()
+  })
+
+  it('updates an existing remote server', async () => {
+    const user = userEvent.setup({ delay: null })
+    const mockUpdateServerMutation = vi.fn()
+    const mockCheckServerStatus = vi.fn()
+    const mockOnOpenChange = vi.fn()
+
+    mockUseCheckServerStatus.mockReturnValue({
+      checkServerStatus: mockCheckServerStatus,
+    })
+
+    mockUseUpdateServer.mockReturnValue({
+      updateServerMutation: mockUpdateServerMutation,
+      isPendingSecrets: false,
+      isErrorSecrets: false,
+    })
+
+    mswServer.use(
+      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+        return HttpResponse.json({
+          name: 'existing-server',
+          url: 'https://old-api.example.com',
+          transport: 'streamable-http',
+          auth_type: 'none',
+          oauth_config: {
+            callback_port: 8080,
+          },
+          group: 'default',
+        })
+      })
+    )
+
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRemoteMcp
+          isOpen
+          closeDialog={mockOnOpenChange}
+          groupName="default"
+          serverToEdit="existing-server"
+        />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    await waitFor(() => {
+      expect(screen.getByRole('textbox', { name: /url/i })).toHaveValue(
+        'https://old-api.example.com'
+      )
+    })
+
+    const urlInput = screen.getByRole('textbox', { name: /url/i })
+    await user.clear(urlInput)
+    await user.type(urlInput, 'https://new-api.example.com')
+
+    await user.click(screen.getByRole('button', { name: /update server/i }))
+
+    await waitFor(() => {
+      expect(mockUpdateServerMutation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            name: 'existing-server',
+            url: 'https://new-api.example.com',
+            transport: 'streamable-http',
+          }),
+        }),
+        expect.any(Object)
+      )
+    })
+
+    const onSuccessCallback =
+      mockUpdateServerMutation.mock.calls[0]?.[1]?.onSuccess
+
+    await act(async () => {
+      onSuccessCallback?.()
+    })
+
+    await waitFor(() => {
+      expect(mockCheckServerStatus).toHaveBeenCalled()
+      expect(mockOnOpenChange).toHaveBeenCalled()
+    })
   })
 })

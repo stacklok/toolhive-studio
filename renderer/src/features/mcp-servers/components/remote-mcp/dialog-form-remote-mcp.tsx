@@ -20,7 +20,7 @@ import { FormFieldsAuth } from './form-fields-auth'
 import { useRunRemoteServer } from '../../hooks/use-run-remote-server'
 import log from 'electron-log/renderer'
 import { useState } from 'react'
-import { useUpdateRemoteServer } from '../../hooks/use-update-remote-server'
+import { useUpdateServer } from '../../hooks/use-update-server'
 import {
   getApiV1BetaSecretsDefaultKeysOptions,
   getApiV1BetaWorkloadsByNameOptions,
@@ -99,7 +99,8 @@ export function DialogFormRemoteMcp({
       },
     })
 
-  const { updateServerMutation } = useUpdateRemoteServer(serverToEdit || '', {
+  const { updateServerMutation } = useUpdateServer(serverToEdit || '', {
+    isRemote: true,
     onSecretSuccess: handleSecrets,
     onSecretError: (error, variables) => {
       log.error('onSecretError during update', error, variables)
