@@ -1,10 +1,10 @@
 import { DropdownMenuItem } from '@/common/components/ui/dropdown-menu'
 import { Copy } from 'lucide-react'
 import { usePrompt, generateSimplePrompt } from '@/common/hooks/use-prompt'
-import { useMutationUpdateWorkloadGroup } from '../../../../hooks/use-mutation-update-workload-group'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../../../../../../utils/feature-flags'
 import { useGroups } from '../../../../hooks/use-groups'
+import { useCopyServerToGroup } from '../../../../hooks/use-copy-server-to-group'
 
 interface AddServerToGroupMenuItemProps {
   serverName: string
@@ -14,10 +14,9 @@ export function AddServerToGroupMenuItem({
   serverName,
 }: AddServerToGroupMenuItemProps) {
   const prompt = usePrompt()
-  const updateGroupMutation = useMutationUpdateWorkloadGroup()
   const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
-
   const { data: groupsData } = useGroups()
+  const { copyServerToGroup } = useCopyServerToGroup(serverName)
 
   if (!isGroupsEnabled) {
     return null
@@ -37,7 +36,7 @@ export function AddServerToGroupMenuItem({
       return
     }
 
-    const result = await prompt(
+    const groupResult = await prompt(
       generateSimplePrompt({
         title: 'Copy server to a group',
         label: 'Select destination group',
@@ -46,12 +45,14 @@ export function AddServerToGroupMenuItem({
       })
     )
 
-    if (result) {
-      await updateGroupMutation.mutateAsync({
-        workloadName: serverName,
-        groupName: result.value,
-      })
+    if (!groupResult) {
+      return // User cancelled
     }
+
+    const groupName = groupResult.value
+    const customName = `${serverName}-${groupName}`
+
+    await copyServerToGroup(groupName, customName)
   }
 
   return (

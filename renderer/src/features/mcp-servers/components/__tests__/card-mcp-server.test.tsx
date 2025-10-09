@@ -94,7 +94,9 @@ it('shows "Copy server to a group" menu item and handles the complete workflow',
 
   const user = userEvent.setup()
 
-  const dropdownTrigger = screen.getByRole('button', { name: /more options/i })
+  const dropdownTrigger = screen.getByRole('button', {
+    name: /more options/i,
+  })
   await user.click(dropdownTrigger)
 
   const addToGroupMenuItem = screen.queryByRole('menuitem', {
@@ -105,10 +107,10 @@ it('shows "Copy server to a group" menu item and handles the complete workflow',
   await user.click(addToGroupMenuItem!)
 
   await waitFor(() => {
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
     expect(screen.getByText('Copy server to a group')).toBeVisible()
+    expect(screen.getByText('Select destination group')).toBeVisible()
   })
-
-  expect(screen.getByText('Select destination group')).toBeVisible()
 
   const selectTrigger = screen.getByRole('combobox')
   await user.click(selectTrigger)
@@ -119,12 +121,15 @@ it('shows "Copy server to a group" menu item and handles the complete workflow',
   const submitButton = screen.getByRole('button', { name: 'OK' })
   await user.click(submitButton)
 
-  // Wait for the mutation to complete and verify the payload
+  await waitFor(() => {
+    expect(
+      screen.queryByText('Select destination group')
+    ).not.toBeInTheDocument()
+  })
+
   await waitFor(() => {
     expect(capturedCreateWorkloadPayload).toBeTruthy()
   })
-
-  // Verify that the createWorkload was called with the correct payload
   expect(capturedCreateWorkloadPayload).toMatchInlineSnapshot(`
     {
       "cmd_arguments": [],
@@ -140,6 +145,119 @@ it('shows "Copy server to a group" menu item and handles the complete workflow',
       "volumes": [],
     }
   `)
+})
+
+it('shows validation error and re-prompts when API returns 409 conflict', async () => {
+  let attemptCount = 0
+  const capturedNames: string[] = []
+
+  server.use(
+    http.post(mswEndpoint('/api/v1beta/workloads'), async ({ request }) => {
+      const payload = (await request.json()) as { name: string }
+      capturedNames.push(payload.name)
+      attemptCount++
+
+      // First two attempts return 409 conflict (plain text, like real API)
+      if (attemptCount <= 2) {
+        return new HttpResponse(
+          `Workload with name ${payload.name} already exists`,
+          {
+            status: 409,
+            headers: {
+              'Content-Type': 'text/plain; charset=utf-8',
+            },
+          }
+        )
+      }
+
+      // Third attempt succeeds
+      return HttpResponse.json({ name: payload.name })
+    })
+  )
+
+  renderRoute(router)
+
+  await waitFor(() => {
+    expect(screen.getByText('postgres-db')).toBeVisible()
+  })
+
+  const user = userEvent.setup()
+
+  const dropdownTrigger = screen.getByRole('button', {
+    name: /more options/i,
+  })
+  await user.click(dropdownTrigger)
+
+  const copyMenuItem = screen.getByRole('menuitem', {
+    name: /copy server to a group/i,
+  })
+  await user.click(copyMenuItem)
+
+  await waitFor(() => {
+    expect(screen.getByText('Copy server to a group')).toBeVisible()
+  })
+
+  const selectTrigger = screen.getByRole('combobox')
+  await user.click(selectTrigger)
+
+  const groupOption = screen.getByRole('option', { name: 'research' })
+  await user.click(groupOption)
+
+  const submitButton = screen.getByRole('button', { name: 'OK' })
+  await user.click(submitButton)
+
+  await waitFor(() => {
+    expect(
+      screen.queryByText('Select destination group')
+    ).not.toBeInTheDocument()
+  })
+
+  await waitFor(() => {
+    expect(screen.getByText('Copy server to a group')).toBeVisible()
+    const nameInput = screen.getByLabelText('Name')
+    expect(nameInput).toBeVisible()
+    expect(nameInput).toHaveValue('postgres-db-research')
+  })
+
+  let nameInput = screen.getByLabelText('Name')
+
+  let confirmButton = screen.getByRole('button', { name: /ok|confirm/i })
+  await user.click(confirmButton)
+
+  await waitFor(() => {
+    expect(screen.getByText(/This name is already taken/i)).toBeVisible()
+  })
+
+  nameInput = screen.getByDisplayValue('postgres-db-research')
+  expect(nameInput).toBeVisible()
+  expect(nameInput).toHaveValue('postgres-db-research')
+
+  await user.clear(nameInput)
+  await user.type(nameInput, 'postgres-db-attempt2')
+
+  confirmButton = screen.getByRole('button', { name: /ok|confirm/i })
+  await user.click(confirmButton)
+
+  await waitFor(() => {
+    expect(screen.getByText(/This name is already taken/i)).toBeVisible()
+  })
+
+  nameInput = screen.getByDisplayValue('postgres-db-attempt2')
+  await user.clear(nameInput)
+  await user.type(nameInput, 'postgres-db-final')
+
+  confirmButton = screen.getByRole('button', { name: /ok|confirm/i })
+  await user.click(confirmButton)
+
+  await waitFor(() => {
+    expect(screen.queryByText('Copy server to a group')).not.toBeInTheDocument()
+  })
+  expect(attemptCount).toBe(3)
+  expect(capturedNames).toEqual([
+    'postgres-db-research',
+    'postgres-db-attempt2',
+    'postgres-db-final',
+  ])
 })
 
 it('stays on the same group page after deleting a server', async () => {
@@ -183,11 +301,8 @@ it('stays on the same group page after deleting a server', async () => {
   const removeMenuItem = screen.getByRole('menuitem', { name: /remove/i })
   await user.click(removeMenuItem)
 
-  await waitFor(
-    () => {
-      const pathname = testRouter.state.location.pathname
-      expect(pathname).toBe('/group/g1')
-    },
-    { timeout: 5000 }
-  )
+  await waitFor(() => {
+    const pathname = testRouter.state.location.pathname
+    expect(pathname).toBe('/group/g1')
+  })
 })

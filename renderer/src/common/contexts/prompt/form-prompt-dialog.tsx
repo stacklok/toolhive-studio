@@ -34,12 +34,16 @@ export function FormDialog({
     mode: 'onChange',
   })
 
-  // Optional: validate on mount when the caller needs initial isValid
-  // to reflect defaults (e.g., confirm dialogs that should be enabled).
-  // Defaults to false to avoid showing validation errors before user input.
+  // Reset form with new default values when config changes.
+  // This is needed when showing multiple prompts in sequence with different defaults.
+  // For example: first prompt returns "default", second prompt should show "server-default" not "default".
   useEffect(() => {
-    if (config.validateOnMount) void form.trigger()
-  }, [form, config.validateOnMount])
+    form.reset(config.defaultValues)
+    // Optionally validate immediately to show errors for invalid defaults
+    if (config.validateOnMount) {
+      void form.trigger()
+    }
+  }, [form, config.defaultValues, config.validateOnMount])
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
