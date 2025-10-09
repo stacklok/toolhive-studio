@@ -1,10 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
 import type { RegistryRemoteServerMetadata } from '@api/types.gen'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
-import { groupEnvVars } from '../lib/group-env-vars'
 import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
 import { LoadingStateAlert } from '../../../common/components/secrets/loading-state-alert'
 import { AlertErrorFormSubmission } from '@/common/components/workloads/alert-error-form-submission'
@@ -25,8 +24,6 @@ import {
 } from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
 import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
-import { FormFieldsArrayCustomEnvVars } from '@/features/mcp-servers/components/form-fields-array-custom-env-vars'
-import { FormFieldsArrayCustomSecrets } from '@/features/mcp-servers/components/form-fields-array-custom-secrets'
 import { FormFieldsAuth } from '@/features/mcp-servers/components/remote-mcp/form-fields-auth'
 import {
   Select,
@@ -55,7 +52,6 @@ const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
     token_url: '',
     use_pkce: true,
   },
-  envVars: [],
   secrets: [],
   url: '',
   group: 'default',
@@ -79,10 +75,6 @@ export function DialogFormRemoteRegistryMcp({
     completedCount: number
     secretsCount: number
   } | null>(null)
-  const groupedEnvVars = useMemo(
-    () => groupEnvVars(server?.env_vars || []),
-    [server?.env_vars]
-  )
   const { checkServerStatus } = useCheckServerStatus()
   const handleSecrets = (completedCount: number, secretsCount: number) => {
     setLoadingSecrets((prev) => ({
@@ -120,11 +112,7 @@ export function DialogFormRemoteRegistryMcp({
     mode: 'onChange',
     ...(server
       ? {
-          values: convertCreateRequestToFormData(
-            server,
-            groupedEnvVars.secrets,
-            groupedEnvVars.envVars
-          ),
+          values: convertCreateRequestToFormData(server),
         }
       : {}),
   })
@@ -368,13 +356,6 @@ export function DialogFormRemoteRegistryMcp({
             />
 
             <FormFieldsAuth authType={authType} form={form} />
-
-            {(authType === undefined || authType === 'none') && (
-              <>
-                <FormFieldsArrayCustomSecrets form={form} />
-                <FormFieldsArrayCustomEnvVars form={form} />
-              </>
-            )}
           </div>
         </div>
       )}

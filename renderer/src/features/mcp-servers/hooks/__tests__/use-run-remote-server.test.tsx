@@ -61,7 +61,6 @@ describe('useRunRemoteServer', () => {
         token_url: '',
         use_pkce: true,
       },
-      envVars: [],
       secrets: [],
       group: 'production',
     }

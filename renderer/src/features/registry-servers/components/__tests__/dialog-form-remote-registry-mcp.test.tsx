@@ -254,12 +254,6 @@ describe('DialogFormRemoteRegistryMcp', () => {
         {
           data: {
             auth_type: 'oauth2',
-            envVars: [
-              {
-                name: 'DEBUG_MODE',
-                value: 'false',
-              },
-            ],
             group: 'default',
             name: 'test-registry-server',
             oauth_config: {
@@ -337,30 +331,6 @@ describe('DialogFormRemoteRegistryMcp', () => {
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
 
     expect(mockCloseDialog).toHaveBeenCalled()
-  })
-
-  it('displays secrets fields for none auth type', async () => {
-    renderWithProviders(
-      <Wrapper>
-        <DialogFormRemoteRegistryMcp
-          server={mockServer}
-          isOpen
-          closeDialog={vi.fn()}
-        />
-      </Wrapper>
-    )
-
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeVisible()
-    })
-
-    // With none auth type (default), secrets section should be visible
-    expect(
-      screen.getByRole('button', { name: 'Add secret' })
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: 'Add environment variable' })
-    ).toBeInTheDocument()
   })
 
   it('hides secrets fields for OAuth2 auth type', async () => {

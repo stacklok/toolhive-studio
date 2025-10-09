@@ -306,7 +306,6 @@ const remoteMcpOauthConfigSchema = z.object({
 
 export const createRemoteMcpBaseSchema = (workloads: CoreWorkload[]) => {
   const nameSchema = createNameSchema(workloads)
-  const envVarsSchema = createBasicEnvVarsSchema()
   const secretsSchema = createBasicSecretsSchema()
   const transportSchema = createTransportConfigSchema()
   const urlSchema = z.object({
@@ -319,7 +318,6 @@ export const createRemoteMcpBaseSchema = (workloads: CoreWorkload[]) => {
   const commonSchema = nameSchema
     .extend(urlSchema.shape)
     .extend(transportSchema.shape)
-    .extend(envVarsSchema.shape)
     .extend(secretsSchema.shape)
     .extend(urlSchema.shape)
     .extend(authTypeSchema.shape)

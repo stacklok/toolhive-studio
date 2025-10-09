@@ -1,4 +1,4 @@
-name: Mirror latest release to GitHub Pages with LFS
+name: Mirror latest release to GitHub Pages
 
 on:
   workflow_call:
@@ -35,10 +35,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Download and process release assets
+      - name: Generate manifest from GitHub Releases
         run: |
           TAG="${{ steps.release.outputs.tag }}"
           BASE_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          RELEASE_URL="https://github.com/${{ github.repository }}/releases/download/$TAG"
           TIMESTAMP=$(date +%s)
 
           # Skip prereleases to only mirror stable releases
@@ -47,19 +48,14 @@ jobs:
             exit 0
           fi
 
-          # Download assets for latest release only
+          # Create directory for manifest
           mkdir -p "latest"
-          gh release download "$TAG" -R "${{ github.repository }}" --dir "latest"
-
           cd "latest"
 
-          # Generate checksums
-          sha256sum * > SHA256SUMS.txt
-          for file in *; do
-            [ -f "$file" ] && sha256sum "$file" | cut -d' ' -f1 > "$file.sha256"
-          done
+          # Get release metadata from GitHub API
+          RELEASE_DATA=$(gh api "repos/${{ github.repository }}/releases/tags/$TAG")
 
-          # Create manifest
+          # Create manifest pointing to GitHub Releases
           jq -n \
             --arg tag "$TAG" \
             --arg published_at "${{ steps.release.outputs.published_at }}" \
@@ -76,48 +72,34 @@ jobs:
             }
             ' > index.json
 
-          # Add asset info to manifest
-          for file in *; do
-            # Skip non-files and excluded files
-            [ -f "$file" ] || continue
-            [[ "$file" == "index.json" || "$file" == "SHA256SUMS.txt" || "$file" == *.sha256 ]] && continue
+          # Add asset info to manifest and create redirect pages
+          echo "$RELEASE_DATA" | jq -r '.assets[] | @json' | while read -r asset; do
+            NAME=$(echo "$asset" | jq -r '.name')
+            SIZE=$(echo "$asset" | jq -r '.size')
+            DOWNLOAD_URL=$(echo "$asset" | jq -r '.browser_download_url')
             
-            # Get file size portably
-            SIZE=$(wc -c < "$file" | tr -d '[:space:]')
-            if ! [[ "$SIZE" =~ ^[0-9]+$ ]]; then
-              echo "Error: Could not determine size of $file" >&2
-              exit 1
-            fi
+            echo "Adding asset: $NAME (${SIZE} bytes) -> $DOWNLOAD_URL"
             
-            # Include all files (Git LFS will handle large ones automatically)
-            echo "Including file: $file (${SIZE} bytes)"
-            SHA=$(cat "$file.sha256")
-            jq --arg name "$file" \
-               --arg url "$BASE_URL/latest/$file" \
-               --arg sha256 "$SHA" \
+            # Add to manifest with direct GitHub Releases URL
+            jq --arg name "$NAME" \
+               --arg url "$DOWNLOAD_URL" \
                --argjson size "$SIZE" \
-               '.assets += [{name: $name, url: $url, size: $size, sha256: $sha256}]' \
+               '.assets += [{name: $name, url: $url, size: $size}]' \
                index.json > tmp.json && mv tmp.json index.json
           done
+
+          # Go back to parent to create 404.html that handles file redirects
+          cd ..
+          printf '%s\n' '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Redirecting...</title><script>(function(){var p=window.location.pathname;var m=p.match(/\/latest\/(.+)$/);if(m&&m[1]){var f=m[1];var t="'"$TAG"'";var r="'"${{ github.repository }}"'";var u="https://github.com/"+r+"/releases/download/"+t+"/"+f;window.location.replace(u);}else{document.body.innerHTML="<h1>404 - Not Found</h1>";}})();</script></head><body><p>Redirecting...</p></body></html>' > 404.html
+          cd latest
+
+          echo "Generated manifest with $(jq '.assets | length' index.json) assets"
+          echo "Manifest content:"
+          cat index.json
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Git LFS attributes
-        run: |
-          # Create .gitattributes for LFS tracking of large files
-          cat > .gitattributes << 'EOF'
-          # Track large binary files with Git LFS
-          latest/*.dmg filter=lfs diff=lfs merge=lfs -text
-          latest/*.exe filter=lfs diff=lfs merge=lfs -text
-          latest/*.zip filter=lfs diff=lfs merge=lfs -text
-          latest/*.deb filter=lfs diff=lfs merge=lfs -text
-          latest/*.rpm filter=lfs diff=lfs merge=lfs -text
-          latest/*.nupkg filter=lfs diff=lfs merge=lfs -text
-          latest/*.flatpak filter=lfs diff=lfs merge=lfs -text
-          latest/*.tar.gz filter=lfs diff=lfs merge=lfs -text
-          EOF
-
-      - name: Deploy to GitHub Pages with LFS
+      - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
