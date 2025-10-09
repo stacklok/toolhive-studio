@@ -11,7 +11,6 @@ import { useUpdateServer } from '../../../hooks/use-update-server'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 
-// Mock the hooks
 vi.mock('../../../hooks/use-run-remote-server', () => ({
   useRunRemoteServer: vi.fn(),
 }))
@@ -53,7 +52,6 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => (
 beforeEach(() => {
   vi.clearAllMocks()
 
-  // Setup MSW with default secrets
   mswServer.use(
     http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
       return HttpResponse.json({
@@ -64,7 +62,7 @@ beforeEach(() => {
         ],
       })
     }),
-    // Mock empty workloads by default
+
     http.get(mswEndpoint('/api/v1beta/workloads'), () => {
       return HttpResponse.json({ workloads: [] })
     }),
@@ -73,7 +71,6 @@ beforeEach(() => {
     })
   )
 
-  // Default mock implementation
   mockUseRunRemoteServer.mockReturnValue({
     installServerMutation: vi.fn(),
     isErrorSecrets: false,
@@ -111,14 +108,12 @@ describe('DialogFormRemoteMcp', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Try to submit without filling required fields
     await user.click(screen.getByRole('button', { name: 'Install server' }))
 
     await waitFor(() => {
       expect(mockInstallServerMutation).not.toHaveBeenCalled()
     })
 
-    // Check that validation errors are shown
     await waitFor(() => {
       expect(
         screen.getByRole('textbox', {
@@ -156,7 +151,6 @@ describe('DialogFormRemoteMcp', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Fill required fields
     await user.type(
       screen.getByRole('textbox', { name: /server name/i }),
       'test-server'
@@ -177,7 +171,6 @@ describe('DialogFormRemoteMcp', () => {
 
     await user.click(screen.getByRole('button', { name: 'Install server' }))
 
-    // The loading state should be shown
     await waitFor(() => {
       expect(
         screen.getByText(/installing server|creating secrets/i)
@@ -214,7 +207,7 @@ describe('DialogFormRemoteMcp', () => {
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
-    // Fill required fields
+
     await user.type(
       screen.getByRole('textbox', {
         name: /name/i,
@@ -259,7 +252,6 @@ describe('DialogFormRemoteMcp', () => {
       )
     })
 
-    // Simulate successful submission
     const onSuccessCallback =
       mockInstallServerMutation.mock.calls[0]?.[1]?.onSuccess
 
@@ -312,7 +304,6 @@ describe('DialogFormRemoteMcp', () => {
       isErrorSecrets: false,
     })
 
-    // Mock the existing server data
     mswServer.use(
       http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
         return HttpResponse.json({
@@ -343,19 +334,16 @@ describe('DialogFormRemoteMcp', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Wait for form to load with existing data
     await waitFor(() => {
       expect(screen.getByRole('textbox', { name: /url/i })).toHaveValue(
         'https://old-api.example.com'
       )
     })
 
-    // Update the URL
     const urlInput = screen.getByRole('textbox', { name: /url/i })
     await user.clear(urlInput)
     await user.type(urlInput, 'https://new-api.example.com')
 
-    // Submit the form
     await user.click(screen.getByRole('button', { name: /update server/i }))
 
     await waitFor(() => {
@@ -371,7 +359,6 @@ describe('DialogFormRemoteMcp', () => {
       )
     })
 
-    // Simulate successful submission
     const onSuccessCallback =
       mockUpdateServerMutation.mock.calls[0]?.[1]?.onSuccess
 
