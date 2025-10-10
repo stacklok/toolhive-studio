@@ -1,4 +1,5 @@
 import { getHealth, postApiV1BetaSecrets } from '@api/sdk.gen'
+import { client } from '@api/client.gen'
 import { Main } from '@/common/components/layout/main'
 import { TopNav } from '@/common/components/layout/top-nav'
 import { Error as ErrorComponent } from '@/common/components/error'
@@ -19,6 +20,7 @@ import '@fontsource/atkinson-hyperlegible/400-italic.css'
 import '@fontsource/atkinson-hyperlegible/700-italic.css'
 import '@fontsource-variable/inter/wght.css'
 import log from 'electron-log/renderer'
+import * as Sentry from '@sentry/electron/renderer'
 
 async function setupSecretProvider(queryClient: QueryClient) {
   const createEncryptedProvider = async () =>
@@ -112,7 +114,41 @@ export const Route = createRootRouteWithContext<{
         gcTime: 0,
       })
     } catch (error) {
-      throw new Error(`${error}`)
+      const isToolhiveRunning = await window.electronAPI.isToolhiveRunning()
+      const port = await window.electronAPI.getToolhivePort()
+      const clientConfig = client.getConfig()
+      const containerEngineStatus =
+        await window.electronAPI.checkContainerEngine()
+
+      log.error(
+        `[beforeLoad] Client baseUrl: ${clientConfig.baseUrl || 'NOT SET'}`
+      )
+
+      Sentry.captureException(error, {
+        level: 'error',
+        tags: {
+          component: 'root-route',
+          phase: 'beforeLoad',
+          toolhive_running: `${isToolhiveRunning}`,
+          container_engine_available: `${containerEngineStatus.available}`,
+        },
+        extra: {
+          is_toolhive_running: `${isToolhiveRunning}`,
+          toolhive_port: port,
+          client_base_url: clientConfig.baseUrl,
+          client_configured: `${!!clientConfig.baseUrl}`,
+          container_engine: {
+            available: `${containerEngineStatus.available}`,
+          },
+          error_message:
+            error instanceof Error ? error.message : JSON.stringify(error),
+        },
+        fingerprint: [
+          'health-check-failed',
+          isToolhiveRunning ? 'process-running' : 'process-not-running',
+        ],
+      })
+      throw new Error(`Health check failed: ${error}`)
     }
   },
   loader: async ({ context: { queryClient } }) =>
