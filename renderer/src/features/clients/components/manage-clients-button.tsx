@@ -8,6 +8,7 @@ import { z } from 'zod/v4'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { useManageClients } from '../hooks/use-manage-clients'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
+import { trackEvent } from '@/common/lib/analytics'
 
 interface ManageClientsButtonProps {
   groupName: string
@@ -43,6 +44,15 @@ export function ManageClientsButton({
   })
 
   const handleManageClients = async () => {
+    const registeredClientsCount =
+      Object.values(defaultValues).filter(Boolean).length
+
+    trackEvent('Manage clients opened', {
+      is_default_group: String(groupName === 'default'),
+      installed_clients_count: installedClients.length,
+      registered_clients_count: registeredClientsCount,
+    })
+
     const formSchema = z.object(
       installedClients.reduce(
         (acc, client) => {
