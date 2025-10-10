@@ -1,4 +1,4 @@
-import type { V1WorkloadListResponse, CoreWorkload } from '@api/types.gen'
+import type { CoreWorkload } from '@api/types.gen'
 import {
   postApiV1BetaWorkloadsByNameRestartMutation,
   getApiV1BetaWorkloadsQueryKey,
@@ -54,7 +54,6 @@ export function useMutationRestartServerAtStartup() {
               )
             )
           )
-          // Convert status responses to CoreWorkload-like objects for polling
           return statusResponses.map((response, index) => ({
             name: names[index],
             status: response.status || 'unknown',
@@ -66,7 +65,7 @@ export function useMutationRestartServerAtStartup() {
 
       await window.electronAPI.shutdownStore.clearShutdownHistory()
 
-      // Invalidate all workload queries to refetch with correct groups
+      // Invalidate all workload queries (all groups) to refetch with correct state
       queryClient.invalidateQueries({
         queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
       })
@@ -76,50 +75,13 @@ export function useMutationRestartServerAtStartup() {
 
 export function useMutationRestartServer({ name }: { name: string }) {
   const queryClient = useQueryClient()
-  const baseQueryKey = getApiV1BetaWorkloadsQueryKey({ query: { all: true } })
 
   return useToastMutation({
     ...getMutationData(name),
-    onMutate: async () => {
-      // Cancel all outgoing workload queries to prevent race conditions
-      await queryClient.cancelQueries({ queryKey: baseQueryKey })
-
-      // Get all matching query caches (for all groups)
-      const previousCaches = new Map<string, V1WorkloadListResponse>()
-      const queryCache = queryClient.getQueryCache()
-
-      queryCache.findAll({ queryKey: baseQueryKey }).forEach((query) => {
-        const data = query.state.data as V1WorkloadListResponse | undefined
-        if (data) {
-          previousCaches.set(JSON.stringify(query.queryKey), data)
-
-          // Optimistically update this query's cache
-          queryClient.setQueryData(query.queryKey, {
-            ...data,
-            workloads: data.workloads?.map((server: CoreWorkload) =>
-              server.name === name ? { ...server, status: 'running' } : server
-            ),
-          })
-        }
-      })
-
-      return { previousCaches }
-    },
-
-    onError: (_error, _variables, context) => {
-      // Rollback all optimistic updates on error
-      if (context?.previousCaches) {
-        context.previousCaches.forEach((data, queryKeyStr) => {
-          const queryKey = JSON.parse(queryKeyStr)
-          queryClient.setQueryData(queryKey, data)
-        })
-      }
-    },
-
     onSuccess: () => {
-      // Invalidate all workload queries to refetch with correct status
+      // Invalidate all workload queries (all groups) to refetch with correct status
       queryClient.invalidateQueries({
-        queryKey: baseQueryKey,
+        queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
       })
     },
   })

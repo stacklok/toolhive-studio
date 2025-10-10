@@ -5,6 +5,7 @@ import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../../../../../../utils/feature-flags'
 import { useGroups } from '../../../../hooks/use-groups'
 import { useCopyServerToGroup } from '../../../../hooks/use-copy-server-to-group'
+import { trackEvent } from '@/common/lib/analytics'
 
 interface AddServerToGroupMenuItemProps {
   serverName: string
@@ -46,6 +47,9 @@ export function AddServerToGroupMenuItem({
     )
 
     if (!groupResult) {
+      trackEvent('Server copy cancelled', {
+        cancelled_at: 'group_selection',
+      })
       return // User cancelled
     }
 

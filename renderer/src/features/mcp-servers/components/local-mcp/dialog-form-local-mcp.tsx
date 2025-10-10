@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
@@ -31,6 +31,7 @@ import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { AlertErrorFetchingEditingData } from '@/common/components/workloads/alert-error-fetching-editing-data'
 import { featureFlagKeys } from '../../../../../../utils/feature-flags'
 
 type Tab = 'configuration' | 'network-isolation'
@@ -134,7 +135,11 @@ export function DialogFormLocalMcp({
     retry: false,
   })
 
-  const { data: existingServerData, isLoading: isLoadingServer } = useQuery({
+  const {
+    data: existingServerData,
+    isLoading: isLoadingServer,
+    isError: isExistingServerDataError,
+  } = useQuery({
     ...getApiV1BetaWorkloadsByNameOptions({
       path: { name: serverToEdit || '' },
     }),
@@ -227,6 +232,99 @@ export function DialogFormLocalMcp({
   }
   const isLoading = isSubmitting || (isEditing && isLoadingServer)
 
+  const renderContent = useCallback(() => {
+    if (!isLoading && isExistingServerDataError) {
+      return (
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <div className="px-6 pb-4">
+            <AlertErrorFetchingEditingData />
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <>
+        {isLoading && (
+          <LoadingStateAlert
+            isPendingSecrets={isPendingSecrets}
+            loadingSecrets={
+              isLoadingServer
+                ? {
+                    text: `Loading server "${serverToEdit}"...`,
+                    completedCount: 0,
+                    secretsCount: 0,
+                  }
+                : loadingSecrets
+            }
+          />
+        )}
+        {!isSubmitting && !(isEditing && isLoadingServer) && (
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <div className="px-6 pb-4">
+              {error && (
+                <AlertErrorFormSubmission
+                  error={error}
+                  isErrorSecrets={isErrorSecrets}
+                  onDismiss={() => setError(null)}
+                />
+              )}
+            </div>
+            <Tabs
+              className="mb-6 w-full flex-shrink-0 px-6"
+              value={activeTab}
+              onValueChange={(value: string) => setActiveTab(value as Tab)}
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="configuration">Configuration</TabsTrigger>
+                <TabsTrigger value="network-isolation">
+                  Network Isolation
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            {activeTab === 'configuration' && (
+              <div className="flex-1 space-y-4 overflow-y-auto px-6">
+                <FormFieldsBase
+                  form={form}
+                  isEditing={isEditing}
+                  groupProps={{
+                    show: isGroupsEnabled,
+                    groups,
+                  }}
+                />
+                <FormFieldsArrayCustomSecrets form={form} />
+                <FormFieldsArrayCustomEnvVars form={form} />
+                <FormFieldsArrayVolumes<FormSchemaLocalMcp> form={form} />
+              </div>
+            )}
+            {activeTab === 'network-isolation' && (
+              <div className="flex-1 overflow-y-auto">
+                <NetworkIsolationTabContent form={form} />
+              </div>
+            )}
+          </div>
+        )}
+      </>
+    )
+  }, [
+    isLoading,
+    isExistingServerDataError,
+    isPendingSecrets,
+    isSubmitting,
+    isEditing,
+    isLoadingServer,
+    loadingSecrets,
+    error,
+    isErrorSecrets,
+    setError,
+    activeTab,
+    setActiveTab,
+    form,
+    groups,
+    isGroupsEnabled,
+    serverToEdit,
+  ])
+
   return (
     <DialogWorkloadFormWrapper
       onOpenChange={closeDialog}
@@ -239,7 +337,7 @@ export function DialogFormLocalMcp({
         closeDialog()
         setActiveTab('configuration')
       }}
-      actionsIsDisabled={isLoading}
+      actionsIsDisabled={isLoading || isExistingServerDataError}
       actionsIsEditing={isEditing}
       form={form}
       onSubmit={form.handleSubmit(onSubmitForm, activateTabWithError)}
@@ -249,65 +347,7 @@ export function DialogFormLocalMcp({
           : 'Custom local MCP server'
       }
     >
-      {isLoading && (
-        <LoadingStateAlert
-          isPendingSecrets={isPendingSecrets}
-          loadingSecrets={
-            isLoadingServer
-              ? {
-                  text: `Loading server "${serverToEdit}"...`,
-                  completedCount: 0,
-                  secretsCount: 0,
-                }
-              : loadingSecrets
-          }
-        />
-      )}
-      {!isSubmitting && !(isEditing && isLoadingServer) && (
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <div className="px-6 pb-4">
-            {error && (
-              <AlertErrorFormSubmission
-                error={error}
-                isErrorSecrets={isErrorSecrets}
-                onDismiss={() => setError(null)}
-              />
-            )}
-          </div>
-          <Tabs
-            className="mb-6 w-full flex-shrink-0 px-6"
-            value={activeTab}
-            onValueChange={(value: string) => setActiveTab(value as Tab)}
-          >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="configuration">Configuration</TabsTrigger>
-              <TabsTrigger value="network-isolation">
-                Network Isolation
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-          {activeTab === 'configuration' && (
-            <div className="flex-1 space-y-4 overflow-y-auto px-6">
-              <FormFieldsBase
-                form={form}
-                isEditing={isEditing}
-                groupProps={{
-                  show: isGroupsEnabled,
-                  groups,
-                }}
-              />
-              <FormFieldsArrayCustomSecrets form={form} />
-              <FormFieldsArrayCustomEnvVars form={form} />
-              <FormFieldsArrayVolumes<FormSchemaLocalMcp> form={form} />
-            </div>
-          )}
-          {activeTab === 'network-isolation' && (
-            <div className="flex-1 overflow-y-auto">
-              <NetworkIsolationTabContent form={form} />
-            </div>
-          )}
-        </div>
-      )}
+      {renderContent()}
     </DialogWorkloadFormWrapper>
   )
 }
