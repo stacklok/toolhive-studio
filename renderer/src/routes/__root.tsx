@@ -133,11 +133,9 @@ export const Route = createRootRouteWithContext<{
         tags: {
           component: 'root-route',
           phase: 'beforeLoad',
-          toolhive_running: `${isToolhiveRunning}`,
-          container_engine_available: `${containerEngineStatus.available}`,
         },
         extra: {
-          is_toolhive_running: `${isToolhiveRunning}`,
+          toolhive_running: `${isToolhiveRunning}`,
           toolhive_port: port,
           client_base_url: clientConfig.baseUrl,
           client_configured: `${!!clientConfig.baseUrl}`,
