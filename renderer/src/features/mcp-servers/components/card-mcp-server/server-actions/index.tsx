@@ -36,7 +36,6 @@ export function ServerActionsDropdown({
     featureFlagKeys.CUSTOMIZE_TOOLS
   )
   const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
-  const isEditWorkloadEnabled = useFeatureFlag(featureFlagKeys.EDIT_WORKLOAD)
 
   const { data: serverDetails } = useServerDetails(name)
 
@@ -65,9 +64,7 @@ export function ServerActionsDropdown({
       >
         <ServerUrl url={url} />
         <DropdownMenuSeparator />
-        {isEditWorkloadEnabled && (
-          <EditConfigurationMenuItem serverName={name} />
-        )}
+        <EditConfigurationMenuItem serverName={name} />
         {repositoryUrl && (
           <GithubRepositoryMenuItem repositoryUrl={repositoryUrl} />
         )}
