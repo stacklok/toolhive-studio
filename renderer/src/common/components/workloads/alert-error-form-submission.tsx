@@ -6,6 +6,7 @@ import {
 import { Button } from '@/common/components/ui/button'
 import { Separator } from '@/common/components/ui/separator'
 import { X } from 'lucide-react'
+import { LinkErrorDiscord } from './link-error-discord'
 
 interface AlertErrorFormSubmissionProps {
   error: string
@@ -44,17 +45,7 @@ export function AlertErrorFormSubmission({
         <p className="text-red-300">
           {isErrorSecrets && 'Failed to create secrets for the server. '}
           Check the configuration and try again. <br />
-          If issues persist, contact the ToolHive team via{' '}
-          <Button asChild variant="link" size="xs" className="text-sm">
-            <a
-              href="https://discord.gg/stacklok"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="pl-0 text-red-300"
-            >
-              Discord.
-            </a>
-          </Button>
+          If issues persist, contact the ToolHive team via <LinkErrorDiscord />.
         </p>
         {!isErrorSecrets && (
           <>
