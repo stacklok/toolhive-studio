@@ -129,7 +129,7 @@ export function useCopyServerToGroup(serverName: string) {
           )
 
           trackEvent('Server copied to group', {
-            destination_is_default_group: groupName === 'default',
+            destination_is_default_group: String(groupName === 'default'),
             transport: runConfig.transport || 'unknown',
             retry_count: retryCount,
           })

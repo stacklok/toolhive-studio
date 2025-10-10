@@ -10,8 +10,8 @@ interface GroupListProps {
 export function GroupList({ apiGroups, currentGroupName }: GroupListProps) {
   const handleGroupClick = (toGroupName: string) => {
     trackEvent('Group navigated', {
-      from_is_default_group: currentGroupName === 'default',
-      to_is_default_group: toGroupName === 'default',
+      from_is_default_group: String(currentGroupName === 'default'),
+      to_is_default_group: String(toGroupName === 'default'),
     })
   }
 

@@ -38,7 +38,7 @@ export function useRunFromRegistry({
       const groupName = variables.body.group || 'default'
       trackEvent(`Workload ${data.name} started`, {
         workload: data.name,
-        is_default_group: groupName === 'default',
+        is_default_group: String(groupName === 'default'),
         'route.pathname': '/registry',
       })
     },

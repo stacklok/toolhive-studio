@@ -48,7 +48,7 @@ export function ManageClientsButton({
       Object.values(defaultValues).filter(Boolean).length
 
     trackEvent('Manage clients opened', {
-      is_default_group: groupName === 'default',
+      is_default_group: String(groupName === 'default'),
       installed_clients_count: installedClients.length,
       registered_clients_count: registeredClientsCount,
     })
