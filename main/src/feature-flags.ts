@@ -15,7 +15,7 @@ interface FeatureFlagOptions {
 const featureFlagOptions: Record<FeatureFlagKey, FeatureFlagOptions> = {
   [featureFlagKeys.GROUPS]: {
     isDisabled: false,
-    defaultValue: false,
+    defaultValue: true,
   },
   [featureFlagKeys.CUSTOMIZE_TOOLS]: {
     isDisabled: false,
