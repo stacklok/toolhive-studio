@@ -23,15 +23,12 @@ describe('Groups Bug - Route should pass group parameter to API', () => {
     const baseUrl = 'https://foo.bar.com'
     const requestRecorder = recordRequests()
 
-    // Mock minimal API responses
     server.use(
       http.get(`${baseUrl}/api/v1beta/workloads`, () => {
         return HttpResponse.json({ workloads: [] })
       })
     )
 
-    // Render the route - we're testing the component in isolation
-    // which means Route.useParams() doesn't have router context
     function WrapperComponent() {
       return <GroupRoute />
     }
@@ -39,7 +36,6 @@ describe('Groups Bug - Route should pass group parameter to API', () => {
     const router = createTestRouter(WrapperComponent, '/group/default')
     renderRoute(router)
 
-    // Wait for API call to be made
     await waitFor(() => {
       const workloadRequests = requestRecorder.recordedRequests.filter(
         (req) => req.pathname === '/api/v1beta/workloads'
@@ -47,17 +43,12 @@ describe('Groups Bug - Route should pass group parameter to API', () => {
       expect(workloadRequests.length).toBeGreaterThan(0)
     })
 
-    // Check what group parameter was actually sent
     const workloadRequests = requestRecorder.recordedRequests.filter(
       (req) => req.pathname === '/api/v1beta/workloads'
     )
 
     const groupParam = workloadRequests[0]?.search?.group
 
-    // Verify that the API is called with the correct group parameter
-    // When groups feature is enabled (mocked to return true), it should filter by group
-    // This ensures that Route.useParams() is properly providing the groupName,
-    // or that the component has a proper fallback when groupName is undefined
     expect(groupParam).toBe('default')
   })
 })

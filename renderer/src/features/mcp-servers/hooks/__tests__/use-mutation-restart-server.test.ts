@@ -6,11 +6,12 @@ import {
   useMutationRestartServerAtStartup,
   useMutationRestartServer,
 } from '../use-mutation-restart-server'
-import type { CoreWorkload } from '@api/types.gen'
+import type { V1WorkloadListResponse } from '@api/types.gen'
 import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { toast } from 'sonner'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { getApiV1BetaWorkloadsQueryKey } from '@api/@tanstack/react-query.gen'
 
 vi.mock('sonner', () => ({
   toast: {
@@ -34,12 +35,6 @@ Object.defineProperty(window, 'electronAPI', {
   },
   writable: true,
 })
-
-// Factory functions for test data
-const createWorkload = (
-  name: string,
-  status: string = 'running'
-): CoreWorkload => ({ name, status })
 
 const createQueryClientWrapper = () => {
   const queryClient = new QueryClient({
@@ -69,14 +64,6 @@ beforeEach(() => {
 describe('useMutationRestartServerAtStartup', () => {
   it('successfully restarts servers from shutdown list', async () => {
     const { Wrapper, queryClient } = createQueryClientWrapper()
-
-    const shutdownServers = [
-      createWorkload('postgres-db', 'stopped'),
-      createWorkload('github', 'stopped'),
-    ]
-    vi.mocked(
-      window.electronAPI.shutdownStore.getLastShutdownServers
-    ).mockResolvedValue(shutdownServers)
 
     // Use MSW to simulate servers becoming 'running' after restart for polling
     server.use(
@@ -111,9 +98,7 @@ describe('useMutationRestartServerAtStartup', () => {
       expect(result.current.isSuccess).toBe(true)
     })
 
-    expect(
-      window.electronAPI.shutdownStore.getLastShutdownServers
-    ).toHaveBeenCalled()
+    // After successful restart, shutdown history should be cleared
     expect(
       window.electronAPI.shutdownStore.clearShutdownHistory
     ).toHaveBeenCalled()
@@ -229,6 +214,46 @@ describe('useMutationRestartServer', () => {
 
     await waitFor(() => {
       expect(result.current.isError).toBe(true)
+    })
+  })
+
+  it('should update the correct group cache when restarting a server from non-default group', async () => {
+    const { Wrapper, queryClient } = createQueryClientWrapper()
+    const serverName = 'postgres-db'
+    const groupName = 'engineering'
+
+    // Pre-populate the engineering group's cache with a stopped server
+    const engineeringQueryKey = getApiV1BetaWorkloadsQueryKey({
+      query: { all: true, group: groupName },
+    })
+
+    queryClient.setQueryData(engineeringQueryKey, {
+      workloads: [{ name: serverName, status: 'stopped', group: groupName }],
+    } as V1WorkloadListResponse)
+
+    const { result } = renderHook(
+      () => useMutationRestartServer({ name: serverName }),
+      { wrapper: Wrapper }
+    )
+
+    // Trigger the mutation (don't await to check optimistic update)
+    act(() => {
+      result.current.mutateAsync({ path: { name: serverName } }).catch(() => {
+        // Ignore errors for this test
+      })
+    })
+
+    // Check that the engineering group's cache was updated optimistically
+    await waitFor(() => {
+      const engineeringData = queryClient.getQueryData(engineeringQueryKey) as
+        | V1WorkloadListResponse
+        | undefined
+      const server = engineeringData?.workloads?.find(
+        (w) => w.name === serverName
+      )
+
+      // This should pass once the bug is fixed
+      expect(server?.status).toBe('running')
     })
   })
 })

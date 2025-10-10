@@ -76,39 +76,51 @@ export function useMutationRestartServerAtStartup() {
 
 export function useMutationRestartServer({ name }: { name: string }) {
   const queryClient = useQueryClient()
-  const queryKey = getApiV1BetaWorkloadsQueryKey({
-    query: { all: true, group: 'default' },
-  })
+  const baseQueryKey = getApiV1BetaWorkloadsQueryKey({ query: { all: true } })
 
   return useToastMutation({
     ...getMutationData(name),
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey })
+      // Cancel all outgoing workload queries to prevent race conditions
+      await queryClient.cancelQueries({ queryKey: baseQueryKey })
 
-      const previousServersList = queryClient.getQueryData(queryKey)
+      // Get all matching query caches (for all groups)
+      const previousCaches = new Map<string, V1WorkloadListResponse>()
+      const queryCache = queryClient.getQueryCache()
 
-      queryClient.setQueryData(
-        queryKey,
-        (oldData: V1WorkloadListResponse | undefined) => {
-          if (!oldData) return oldData
+      queryCache.findAll({ queryKey: baseQueryKey }).forEach((query) => {
+        const data = query.state.data as V1WorkloadListResponse | undefined
+        if (data) {
+          previousCaches.set(JSON.stringify(query.queryKey), data)
 
-          const updatedData = {
-            ...oldData,
-            workloads: oldData.workloads?.map((server: CoreWorkload) =>
+          // Optimistically update this query's cache
+          queryClient.setQueryData(query.queryKey, {
+            ...data,
+            workloads: data.workloads?.map((server: CoreWorkload) =>
               server.name === name ? { ...server, status: 'running' } : server
             ),
-          }
-          return updatedData
+          })
         }
-      )
+      })
 
-      return { previousServersList }
+      return { previousCaches }
     },
 
     onError: (_error, _variables, context) => {
-      if (context?.previousServersList) {
-        queryClient.setQueryData(queryKey, context.previousServersList)
+      // Rollback all optimistic updates on error
+      if (context?.previousCaches) {
+        context.previousCaches.forEach((data, queryKeyStr) => {
+          const queryKey = JSON.parse(queryKeyStr)
+          queryClient.setQueryData(queryKey, data)
+        })
       }
+    },
+
+    onSuccess: () => {
+      // Invalidate all workload queries to refetch with correct status
+      queryClient.invalidateQueries({
+        queryKey: baseQueryKey,
+      })
     },
   })
 }
