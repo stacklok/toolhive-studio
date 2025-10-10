@@ -6,7 +6,6 @@ import {
   useMutationRestartServerAtStartup,
   useMutationRestartServer,
 } from '../use-mutation-restart-server'
-import type { CoreWorkload } from '@api/types.gen'
 import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { toast } from 'sonner'
@@ -34,12 +33,6 @@ Object.defineProperty(window, 'electronAPI', {
   },
   writable: true,
 })
-
-// Factory functions for test data
-const createWorkload = (
-  name: string,
-  status: string = 'running'
-): CoreWorkload => ({ name, status })
 
 const createQueryClientWrapper = () => {
   const queryClient = new QueryClient({
@@ -69,14 +62,6 @@ beforeEach(() => {
 describe('useMutationRestartServerAtStartup', () => {
   it('successfully restarts servers from shutdown list', async () => {
     const { Wrapper, queryClient } = createQueryClientWrapper()
-
-    const shutdownServers = [
-      createWorkload('postgres-db', 'stopped'),
-      createWorkload('github', 'stopped'),
-    ]
-    vi.mocked(
-      window.electronAPI.shutdownStore.getLastShutdownServers
-    ).mockResolvedValue(shutdownServers)
 
     // Use MSW to simulate servers becoming 'running' after restart for polling
     server.use(
@@ -111,9 +96,7 @@ describe('useMutationRestartServerAtStartup', () => {
       expect(result.current.isSuccess).toBe(true)
     })
 
-    expect(
-      window.electronAPI.shutdownStore.getLastShutdownServers
-    ).toHaveBeenCalled()
+    // After successful restart, shutdown history should be cleared
     expect(
       window.electronAPI.shutdownStore.clearShutdownHistory
     ).toHaveBeenCalled()

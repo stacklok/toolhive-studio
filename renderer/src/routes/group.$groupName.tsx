@@ -29,7 +29,7 @@ export const Route = createFileRoute('/group/$groupName')({
   component: GroupRoute,
 })
 
-function GroupRoute() {
+export function GroupRoute() {
   const { groupName } = Route.useParams()
   const showSidebar = useFeatureFlag(featureFlagKeys.GROUPS)
 
@@ -37,7 +37,9 @@ function GroupRoute() {
     ...getApiV1BetaWorkloadsOptions({
       query: {
         all: true,
-        group: groupName,
+        // Only filter by group if the groups feature is enabled
+        // When disabled, show all servers by omitting the group parameter
+        group: showSidebar ? groupName || 'default' : undefined,
       },
     }),
   })
