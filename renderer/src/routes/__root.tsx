@@ -114,15 +114,19 @@ export const Route = createRootRouteWithContext<{
         gcTime: 0,
       })
     } catch (error) {
-      const isToolhiveRunning = await window.electronAPI.isToolhiveRunning()
-      const port = await window.electronAPI.getToolhivePort()
+      const [isToolhiveRunning, port, containerEngineStatus] =
+        await Promise.all([
+          window.electronAPI.isToolhiveRunning(),
+          window.electronAPI.getToolhivePort(),
+          window.electronAPI.checkContainerEngine(),
+        ])
+
       const clientConfig = client.getConfig()
-      const containerEngineStatus =
-        await window.electronAPI.checkContainerEngine()
 
       log.error(
         `[beforeLoad] Client baseUrl: ${clientConfig.baseUrl || 'NOT SET'}`
       )
+      log.error(`[beforeLoad] ToolHive process running: ${isToolhiveRunning}`)
 
       Sentry.captureException(error, {
         level: 'error',
