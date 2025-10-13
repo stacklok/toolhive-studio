@@ -203,7 +203,7 @@ it('shows validation error and re-prompts when API returns 409 conflict', async 
   const selectTrigger = screen.getByRole('combobox')
   await user.click(selectTrigger)
 
-  const groupOption = screen.getByRole('option', { name: 'research' })
+  const groupOption = screen.getByRole('option', { name: 'my group' })
   await user.click(groupOption)
 
   const submitButton = screen.getByRole('button', { name: 'OK' })
@@ -219,7 +219,7 @@ it('shows validation error and re-prompts when API returns 409 conflict', async 
     expect(screen.getByText('Copy server to a group')).toBeVisible()
     const nameInput = screen.getByLabelText('Name')
     expect(nameInput).toBeVisible()
-    expect(nameInput).toHaveValue('postgres-db-research')
+    expect(nameInput).toHaveValue('postgres-db-my-group')
   })
 
   let nameInput = screen.getByLabelText('Name')
@@ -231,9 +231,9 @@ it('shows validation error and re-prompts when API returns 409 conflict', async 
     expect(screen.getByText(/This name is already taken/i)).toBeVisible()
   })
 
-  nameInput = screen.getByDisplayValue('postgres-db-research')
+  nameInput = screen.getByDisplayValue('postgres-db-my-group')
   expect(nameInput).toBeVisible()
-  expect(nameInput).toHaveValue('postgres-db-research')
+  expect(nameInput).toHaveValue('postgres-db-my-group')
 
   await user.clear(nameInput)
   await user.type(nameInput, 'postgres-db-attempt2')
@@ -257,7 +257,7 @@ it('shows validation error and re-prompts when API returns 409 conflict', async 
   })
   expect(attemptCount).toBe(3)
   expect(capturedNames).toEqual([
-    'postgres-db-research',
+    'postgres-db-my-group',
     'postgres-db-attempt2',
     'postgres-db-final',
   ])
