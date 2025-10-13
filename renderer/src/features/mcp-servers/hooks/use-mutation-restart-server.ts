@@ -59,15 +59,23 @@ export function useMutationRestartServerAtStartup() {
       queries.forEach((query) => {
         previousData.set(query.queryKey, query.state.data)
 
+        const queryKeyGroup =
+          (query.queryKey[1] as { query?: { group?: string } })?.query?.group ??
+          'default'
+
         queryClient.setQueryData(
           query.queryKey,
           (oldData: V1WorkloadListResponse | undefined) => {
             if (!oldData) return oldData
 
+            const groupShutdownServers = shutdownServers.filter(
+              (server) => (server.group ?? 'default') === queryKeyGroup
+            )
+
             const seenNames = new Set<string>()
             const workloads = [
               ...(oldData.workloads ?? []),
-              ...shutdownServers,
+              ...groupShutdownServers,
             ].filter((server) => {
               if (server.name && !seenNames.has(server.name)) {
                 seenNames.add(server.name)
@@ -145,7 +153,7 @@ export function useMutationRestartServer({
     ...getMutationData(name),
     onMutate: async () => {
       const queryKey = getApiV1BetaWorkloadsQueryKey({
-        query: { all: true, group },
+        query: { all: true, group: group ?? 'default' },
       })
 
       await queryClient.cancelQueries({ queryKey })
@@ -178,7 +186,7 @@ export function useMutationRestartServer({
     onError: (_error, _variables, context) => {
       if (context?.previousData) {
         const queryKey = getApiV1BetaWorkloadsQueryKey({
-          query: { all: true, group },
+          query: { all: true, group: group ?? 'default' },
         })
         queryClient.setQueryData(queryKey, context.previousData)
       }
