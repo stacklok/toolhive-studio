@@ -102,13 +102,11 @@ export function useCopyServerToGroup(serverName: string) {
 
           toastId = toast.loading('Copying server to group...')
 
-          // Determine if this is a remote server by checking for remote_url
           const isRemoteServer = !!runConfig.remote_url
 
           await createWorkload({
             body: {
               name: currentName,
-              // For remote servers, use URL and oauth_config instead of image/volumes/cmd_arguments
               ...(isRemoteServer
                 ? {
                     url: runConfig.remote_url,
@@ -134,7 +132,7 @@ export function useCopyServerToGroup(serverName: string) {
                           skip_browser:
                             runConfig.remote_auth_config.skipBrowser || false,
                           token_url: runConfig.remote_auth_config.tokenURL,
-                          use_pkce: true, // Default to true for security
+                          use_pkce: true,
                         }
                       : undefined,
                   }
