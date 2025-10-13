@@ -27,17 +27,20 @@ type CardContentMcpServerProps = {
   statusContext: CoreWorkload['status_context']
   name: string
   transport: CoreWorkload['transport_type']
+  group?: CoreWorkload['group']
 }
 
 function CardContentMcpServer({
   name,
   status,
   transport,
+  group,
 }: CardContentMcpServerProps) {
   const isRunning = status === 'running'
   const { mutateAsync: restartMutate, isPending: isRestartPending } =
     useMutationRestartServer({
       name,
+      group,
     })
   const { mutateAsync: stopMutate, isPending: isStopPending } =
     useMutationStopServerList({
@@ -198,6 +201,7 @@ export function CardMcpServer({
         statusContext={statusContext}
         name={name}
         transport={transport}
+        group={group}
       />
     </Card>
   )
