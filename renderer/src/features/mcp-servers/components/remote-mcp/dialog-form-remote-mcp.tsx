@@ -19,7 +19,7 @@ import {
 import { FormFieldsAuth } from './form-fields-auth'
 import { useRunRemoteServer } from '../../hooks/use-run-remote-server'
 import log from 'electron-log/renderer'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useUpdateServer } from '../../hooks/use-update-server'
 import {
   getApiV1BetaSecretsDefaultKeysOptions,
@@ -40,6 +40,7 @@ import { ExternalLinkIcon } from 'lucide-react'
 import { useGroups } from '../../hooks/use-groups'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../../../../utils/feature-flags'
+import { AlertErrorFetchingEditingData } from '@/common/components/workloads/alert-error-fetching-editing-data'
 
 const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
   name: '',
@@ -118,7 +119,11 @@ export function DialogFormRemoteMcp({
     retry: false,
   })
 
-  const { data: existingServerData, isLoading: isLoadingServer } = useQuery({
+  const {
+    data: existingServerData,
+    isLoading: isLoadingServer,
+    isError: isExistingServerDataError,
+  } = useQuery({
     ...getApiV1BetaWorkloadsByNameOptions({
       path: { name: serverToEdit || '' },
     }),
@@ -212,6 +217,242 @@ export function DialogFormRemoteMcp({
   const authType = form.watch('auth_type')
   const isLoading = isSubmitting || (isEditing && isLoadingServer)
 
+  const renderContent = useCallback(() => {
+    if (!isLoading && isExistingServerDataError) {
+      return (
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <div className="px-6 pb-4">
+            <AlertErrorFetchingEditingData />
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <>
+        {isLoading && (
+          <LoadingStateAlert
+            isPendingSecrets={isPendingSecrets}
+            loadingSecrets={
+              isLoadingServer
+                ? {
+                    text: `Loading server "${serverToEdit}"...`,
+                    completedCount: 0,
+                    secretsCount: 0,
+                  }
+                : loadingSecrets
+            }
+          />
+        )}
+        {!isSubmitting && !(isEditing && isLoadingServer) && (
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <div className="px-6 pb-4">
+              {error && (
+                <AlertErrorFormSubmission
+                  error={error}
+                  isErrorSecrets={isErrorSecrets}
+                  onDismiss={() => setError(null)}
+                />
+              )}
+            </div>
+            <div className="flex-1 space-y-4 overflow-y-auto px-6">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center gap-1">
+                      <FormLabel>Server name</FormLabel>
+                      <TooltipInfoIcon>
+                        The human-readable name you will use to identify this
+                        server.
+                      </TooltipInfoIcon>
+                    </div>
+                    <FormControl>
+                      <Input
+                        autoCorrect="off"
+                        autoComplete="off"
+                        autoFocus
+                        data-1p-ignore
+                        placeholder="e.g. my-awesome-server"
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        name={field.name}
+                        disabled={isEditing}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {isGroupsEnabled && (
+                <FormField
+                  control={form.control}
+                  name="group"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel htmlFor={field.name}>Group</FormLabel>
+                      <FormControl>
+                        <Select
+                          onValueChange={(value) => field.onChange(value)}
+                          value={field.value}
+                          name={field.name}
+                        >
+                          <SelectTrigger id={field.name} className="w-full">
+                            <SelectValue placeholder="Select a group" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {groups
+                              .filter((g) => g.name)
+                              .map((g) => (
+                                <SelectItem key={g.name!} value={g.name!}>
+                                  {g.name}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              <FormField
+                control={form.control}
+                name="url"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center gap-1">
+                      <FormLabel>Server URL</FormLabel>
+                      <TooltipInfoIcon>
+                        The URL of the MCP server.
+                      </TooltipInfoIcon>
+                    </div>
+                    <FormControl>
+                      <Input
+                        autoCorrect="off"
+                        autoComplete="off"
+                        autoFocus
+                        data-1p-ignore
+                        placeholder="e.g. https://example.com/mcp"
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        name={field.name}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="transport"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center gap-1">
+                      <FormLabel htmlFor={field.name}>Transport</FormLabel>
+                      <TooltipInfoIcon>
+                        The transport protocol the MCP server uses to
+                        communicate with clients.
+                      </TooltipInfoIcon>
+                    </div>
+                    <FormControl>
+                      <Select
+                        onValueChange={(value) => field.onChange(value)}
+                        value={field.value}
+                        name={field.name}
+                      >
+                        <SelectTrigger id={field.name} className="w-full">
+                          <SelectValue placeholder="e.g. SSE, Streamable HTTP" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="sse">SSE</SelectItem>
+                          <SelectItem value="streamable-http">
+                            Streamable HTTP
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="auth_type"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center gap-1">
+                      <FormLabel htmlFor={field.name}>
+                        Authorization method
+                      </FormLabel>
+                      <TooltipInfoIcon
+                        className="flex flex-wrap items-center gap-1"
+                      >
+                        The authorization method the MCP server uses to
+                        authenticate clients. Refer to the{' '}
+                        <a
+                          rel="noopener noreferrer"
+                          className="flex cursor-pointer items-center gap-1
+                            underline"
+                          href="https://docs.stacklok.com/toolhive/guides-ui/run-mcp-servers?custom-type=custom_remote#install-a-custom-mcp-server"
+                          target="_blank"
+                        >
+                          documentation <ExternalLinkIcon size={12} />
+                        </a>
+                      </TooltipInfoIcon>
+                    </div>
+                    <FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || ''}
+                        name={field.name}
+                      >
+                        <SelectTrigger id={field.name} className="w-full">
+                          <SelectValue placeholder="Select authorization method" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">
+                            Dynamic Client Registration
+                          </SelectItem>
+                          <SelectItem value="oauth2">OAuth 2.0</SelectItem>
+                          <SelectItem value="oidc">OIDC</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormFieldsAuth authType={authType} form={form} />
+            </div>
+          </div>
+        )}
+      </>
+    )
+  }, [
+    form,
+    isLoading,
+    isExistingServerDataError,
+    isPendingSecrets,
+    isSubmitting,
+    isEditing,
+    isLoadingServer,
+    loadingSecrets,
+    error,
+    isErrorSecrets,
+    serverToEdit,
+    authType,
+    isGroupsEnabled,
+    groups,
+    setError,
+  ])
+
   return (
     <DialogWorkloadFormWrapper
       onOpenChange={closeDialog}
@@ -220,7 +461,7 @@ export function DialogFormRemoteMcp({
         form.reset()
       }}
       actionsOnCancel={closeDialog}
-      actionsIsDisabled={isLoading}
+      actionsIsDisabled={isLoading || isExistingServerDataError}
       actionsIsEditing={isEditing}
       form={form}
       onSubmit={form.handleSubmit(onSubmitForm)}
@@ -230,209 +471,7 @@ export function DialogFormRemoteMcp({
           : 'Add a remote MCP server'
       }
     >
-      {isLoading && (
-        <LoadingStateAlert
-          isPendingSecrets={isPendingSecrets}
-          loadingSecrets={
-            isLoadingServer
-              ? {
-                  text: `Loading server "${serverToEdit}"...`,
-                  completedCount: 0,
-                  secretsCount: 0,
-                }
-              : loadingSecrets
-          }
-        />
-      )}
-      {!isSubmitting && !(isEditing && isLoadingServer) && (
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <div className="px-6 pb-4">
-            {error && (
-              <AlertErrorFormSubmission
-                error={error}
-                isErrorSecrets={isErrorSecrets}
-                onDismiss={() => setError(null)}
-              />
-            )}
-          </div>
-          <div className="flex-1 space-y-4 overflow-y-auto px-6">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex items-center gap-1">
-                    <FormLabel>Server name</FormLabel>
-                    <TooltipInfoIcon>
-                      The human-readable name you will use to identify this
-                      server.
-                    </TooltipInfoIcon>
-                  </div>
-                  <FormControl>
-                    <Input
-                      autoCorrect="off"
-                      autoComplete="off"
-                      autoFocus
-                      data-1p-ignore
-                      placeholder="e.g. my-awesome-server"
-                      value={field.value}
-                      onChange={(e) => field.onChange(e.target.value)}
-                      name={field.name}
-                      disabled={isEditing}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {isGroupsEnabled && (
-              <FormField
-                control={form.control}
-                name="group"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel htmlFor={field.name}>Group</FormLabel>
-                    <FormControl>
-                      <Select
-                        onValueChange={(value) => field.onChange(value)}
-                        value={field.value}
-                        name={field.name}
-                      >
-                        <SelectTrigger id={field.name} className="w-full">
-                          <SelectValue placeholder="Select a group" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {groups
-                            .filter((g) => g.name)
-                            .map((g) => (
-                              <SelectItem key={g.name!} value={g.name!}>
-                                {g.name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
-            <FormField
-              control={form.control}
-              name="url"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex items-center gap-1">
-                    <FormLabel>Server URL</FormLabel>
-                    <TooltipInfoIcon>
-                      The URL of the MCP server.
-                    </TooltipInfoIcon>
-                  </div>
-                  <FormControl>
-                    <Input
-                      autoCorrect="off"
-                      autoComplete="off"
-                      autoFocus
-                      data-1p-ignore
-                      placeholder="e.g. https://example.com/mcp"
-                      value={field.value}
-                      onChange={(e) => field.onChange(e.target.value)}
-                      name={field.name}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="transport"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex items-center gap-1">
-                    <FormLabel htmlFor={field.name}>Transport</FormLabel>
-                    <TooltipInfoIcon>
-                      The transport protocol the MCP server uses to communicate
-                      with clients.
-                    </TooltipInfoIcon>
-                  </div>
-                  <FormControl>
-                    <Select
-                      onValueChange={(value) => field.onChange(value)}
-                      value={field.value}
-                      name={field.name}
-                    >
-                      <SelectTrigger id={field.name} className="w-full">
-                        <SelectValue placeholder="e.g. SSE, Streamable HTTP" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="sse">SSE</SelectItem>
-                        <SelectItem value="streamable-http">
-                          Streamable HTTP
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="auth_type"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex items-center gap-1">
-                    <FormLabel htmlFor={field.name}>
-                      Authorization method
-                    </FormLabel>
-                    <TooltipInfoIcon
-                      className="flex flex-wrap items-center gap-1"
-                    >
-                      The authorization method the MCP server uses to
-                      authenticate clients. Refer to the{' '}
-                      <a
-                        rel="noopener noreferrer"
-                        className="flex cursor-pointer items-center gap-1
-                          underline"
-                        href="https://docs.stacklok.com/toolhive/guides-ui/run-mcp-servers?custom-type=custom_remote#install-a-custom-mcp-server"
-                        target="_blank"
-                      >
-                        documentation <ExternalLinkIcon size={12} />
-                      </a>
-                    </TooltipInfoIcon>
-                  </div>
-                  <FormControl>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value || ''}
-                      name={field.name}
-                    >
-                      <SelectTrigger id={field.name} className="w-full">
-                        <SelectValue placeholder="Select authorization method" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">
-                          Dynamic Client Registration
-                        </SelectItem>
-                        <SelectItem value="oauth2">OAuth 2.0</SelectItem>
-                        <SelectItem value="oidc">OIDC</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormFieldsAuth authType={authType} form={form} />
-          </div>
-        </div>
-      )}
+      {renderContent()}
     </DialogWorkloadFormWrapper>
   )
 }
