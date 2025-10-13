@@ -26,7 +26,6 @@ export function GridCardsRegistryServer({
 }) {
   const navigate = useNavigate()
 
-  // Combine servers and groups into a single array with type discriminator
   const items: RegistryItem[] = [
     ...groups.map((group) => ({ ...group, type: 'group' as const })),
     ...servers.map((server) => ({ ...server, type: 'server' as const })),

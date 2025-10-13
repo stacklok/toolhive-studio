@@ -22,7 +22,6 @@ export function CardRegistryGroup({
   group: RegistryGroup
   onClick?: () => void
 }) {
-  // Count total servers in the group
   const serverCount =
     (group.servers ? Object.keys(group.servers).length : 0) +
     (group.remote_servers ? Object.keys(group.remote_servers).length : 0)
@@ -47,7 +46,6 @@ export function CardRegistryGroup({
             onClick={() => onClick?.()}
           >
             {group.name}
-            {/** make the entire area of the card clickable */}
             <span className="absolute inset-0 rounded-md" />{' '}
           </button>
           <Plus

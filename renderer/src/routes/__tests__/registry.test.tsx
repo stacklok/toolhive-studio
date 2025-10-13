@@ -61,7 +61,6 @@ describe('Groups in Registry', () => {
   ]
 
   it('displays groups from registry', async () => {
-    // Mock registry response with groups
     server.use(
       http.get(mswEndpoint('/api/v1beta/registry/:name'), () => {
         return HttpResponse.json({
@@ -88,13 +87,11 @@ describe('Groups in Registry', () => {
       'Expected web-scraping group to be visible'
     ).toBeVisible()
 
-    // Check that Group badges are displayed
     const groupBadges = screen.queryAllByText('Group')
     expect(groupBadges.length).toBeGreaterThan(0)
   })
 
   it('handles empty groups array gracefully', async () => {
-    // Mock registry response with empty groups
     server.use(
       http.get(mswEndpoint('/api/v1beta/registry/:name'), () => {
         return HttpResponse.json({
@@ -110,14 +107,12 @@ describe('Groups in Registry', () => {
     renderRoute(router)
 
     await waitFor(() => {
-      // Wait for servers to load
       expect(
         screen.queryByText('atlassian'),
         'Expected atlassian to be visible'
       ).toBeVisible()
     })
 
-    // No groups should be displayed
     const groupBadges = screen.queryAllByText('Group')
     expect(groupBadges.length).toBe(0)
   })
