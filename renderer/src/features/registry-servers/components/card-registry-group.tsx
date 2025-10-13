@@ -6,7 +6,7 @@ import {
   CardFooter,
 } from '@/common/components/ui/card'
 import type { RegistryGroup } from '@api/types.gen'
-import { FolderIcon, Plus } from 'lucide-react'
+import { GitFork, Plus } from 'lucide-react'
 import { cn } from '@/common/lib/utils'
 import { Badge } from '@/common/components/ui/badge'
 import {
@@ -56,7 +56,10 @@ export function CardRegistryGroup({
               group-hover:text-foreground transition-color size-5"
           />
         </CardTitle>
-        <Badge variant="secondary" className="w-fit">
+        <Badge
+          variant="secondary"
+          className="bg-foreground/5 w-fit rounded-full px-2.5 py-0.5"
+        >
           Group
         </Badge>
       </CardHeader>
@@ -70,7 +73,7 @@ export function CardRegistryGroup({
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="relative z-10 flex items-center gap-2">
-              <FolderIcon className="text-muted-foreground size-5" />
+              <GitFork className="text-muted-foreground size-5" />
               <span className="text-muted-foreground text-sm">
                 {serverCount} {serverCount === 1 ? 'server' : 'servers'}
               </span>
