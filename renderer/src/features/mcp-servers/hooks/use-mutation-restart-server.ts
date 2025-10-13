@@ -22,9 +22,6 @@ const getMutationData = (name: string) => ({
 
 export function useMutationRestartServerAtStartup() {
   const queryClient = useQueryClient()
-  const queryKey = getApiV1BetaWorkloadsQueryKey({
-    query: { all: true, group: 'default' },
-  })
 
   useEffect(() => {
     const cleanup = window.electronAPI.onServerShutdown(() => {
@@ -41,47 +38,65 @@ export function useMutationRestartServerAtStartup() {
     toastId: TOAST_ID,
     ...postApiV1BetaWorkloadsRestartMutation(),
     onMutate: async (variables) => {
-      await queryClient.cancelQueries({ queryKey })
-      const previousServersList = queryClient.getQueryData(queryKey)
       const serverNames = variables.body.names
 
       if (!serverNames || serverNames.length === 0) {
-        return { previousServersList }
+        return
       }
 
       const shutdownServers =
         await window.electronAPI.shutdownStore.getLastShutdownServers()
 
-      queryClient.setQueryData(
-        queryKey,
-        (oldData: V1WorkloadListResponse | undefined) => {
-          if (!oldData) return oldData
+      await queryClient.cancelQueries({
+        queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
+      })
 
-          const seenNames = new Set<string>()
-          const workloads = [
-            ...(oldData.workloads ?? []),
-            ...shutdownServers,
-          ].filter((server) => {
-            if (server.name && !seenNames.has(server.name)) {
-              seenNames.add(server.name)
-              return true
+      const previousData = new Map()
+      const queries = queryClient.getQueryCache().findAll({
+        queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
+      })
+
+      queries.forEach((query) => {
+        previousData.set(query.queryKey, query.state.data)
+
+        const queryKeyGroup =
+          (query.queryKey[1] as { query?: { group?: string } })?.query?.group ??
+          'default'
+
+        queryClient.setQueryData(
+          query.queryKey,
+          (oldData: V1WorkloadListResponse | undefined) => {
+            if (!oldData) return oldData
+
+            const groupShutdownServers = shutdownServers.filter(
+              (server) => (server.group ?? 'default') === queryKeyGroup
+            )
+
+            const seenNames = new Set<string>()
+            const workloads = [
+              ...(oldData.workloads ?? []),
+              ...groupShutdownServers,
+            ].filter((server) => {
+              if (server.name && !seenNames.has(server.name)) {
+                seenNames.add(server.name)
+                return true
+              }
+              return false
+            })
+
+            return {
+              ...oldData,
+              workloads: workloads?.map((server: CoreWorkload) =>
+                serverNames.includes(server.name || '')
+                  ? { ...server, status: 'restarting' }
+                  : server
+              ),
             }
-            return false
-          })
-
-          const updatedData = {
-            ...oldData,
-            workloads: workloads?.map((server: CoreWorkload) =>
-              serverNames.includes(server.name || '')
-                ? { ...server, status: 'restarting' }
-                : server
-            ),
           }
-          return updatedData
-        }
-      )
+        )
+      })
 
-      return { previousServersList }
+      return { previousData }
     },
     onSuccess: async (_data, variables) => {
       const serverNames = variables.body.names
@@ -100,7 +115,6 @@ export function useMutationRestartServerAtStartup() {
               )
             )
           )
-          // Convert status responses to CoreWorkload-like objects for polling
           return statusResponses.map((response, index) => ({
             name: names[index],
             status: response.status || 'unknown',
@@ -111,50 +125,70 @@ export function useMutationRestartServerAtStartup() {
       )
 
       await window.electronAPI.shutdownStore.clearShutdownHistory()
-      queryClient.invalidateQueries({ queryKey })
+
+      queryClient.invalidateQueries({
+        queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
+      })
     },
     onError: (_error, _variables, context) => {
-      if (context?.previousServersList) {
-        queryClient.setQueryData(queryKey, context.previousServersList)
+      if (context?.previousData) {
+        context.previousData.forEach((data, queryKey) => {
+          queryClient.setQueryData(queryKey, data)
+        })
       }
     },
   })
 }
 
-export function useMutationRestartServer({ name }: { name: string }) {
+export function useMutationRestartServer({
+  name,
+  group,
+}: {
+  name: string
+  group?: string
+}) {
   const queryClient = useQueryClient()
-  const queryKey = getApiV1BetaWorkloadsQueryKey({
-    query: { all: true, group: 'default' },
-  })
 
   return useToastMutation({
     ...getMutationData(name),
     onMutate: async () => {
+      const queryKey = getApiV1BetaWorkloadsQueryKey({
+        query: { all: true, group: group ?? 'default' },
+      })
+
       await queryClient.cancelQueries({ queryKey })
 
-      const previousServersList = queryClient.getQueryData(queryKey)
+      const previousData = queryClient.getQueryData(queryKey)
 
       queryClient.setQueryData(
         queryKey,
         (oldData: V1WorkloadListResponse | undefined) => {
           if (!oldData) return oldData
 
-          const updatedData = {
+          return {
             ...oldData,
             workloads: oldData.workloads?.map((server: CoreWorkload) =>
-              server.name === name ? { ...server, status: 'running' } : server
+              server.name === name
+                ? { ...server, status: 'restarting' }
+                : server
             ),
           }
-          return updatedData
         }
       )
 
-      return { previousServersList }
+      return { previousData }
     },
-
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
+      })
+    },
     onError: (_error, _variables, context) => {
-      if (context?.previousServersList) {
-        queryClient.setQueryData(queryKey, context.previousServersList)
+      if (context?.previousData) {
+        const queryKey = getApiV1BetaWorkloadsQueryKey({
+          query: { all: true, group: group ?? 'default' },
+        })
+        queryClient.setQueryData(queryKey, context.previousData)
       }
     },
   })
