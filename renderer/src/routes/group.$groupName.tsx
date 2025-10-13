@@ -37,9 +37,8 @@ export function GroupRoute() {
     ...getApiV1BetaWorkloadsOptions({
       query: {
         all: true,
-        // Only filter by group if the groups feature is enabled
-        // When disabled, show all servers by omitting the group parameter
-        group: showSidebar ? groupName || 'default' : undefined,
+        // When groups feature is disabled, always use 'default' group
+        group: showSidebar ? groupName : 'default',
       },
     }),
   })
