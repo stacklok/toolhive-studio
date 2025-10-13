@@ -102,15 +102,50 @@ export function useCopyServerToGroup(serverName: string) {
 
           toastId = toast.loading('Copying server to group...')
 
+          // Determine if this is a remote server by checking for remote_url
+          const isRemoteServer = !!runConfig.remote_url
+
           await createWorkload({
             body: {
               name: currentName,
-              image: runConfig.image,
+              // For remote servers, use URL and oauth_config instead of image/volumes/cmd_arguments
+              ...(isRemoteServer
+                ? {
+                    url: runConfig.remote_url,
+                    oauth_config: runConfig.remote_auth_config
+                      ? {
+                          authorize_url:
+                            runConfig.remote_auth_config.authorizeURL,
+                          callback_port:
+                            runConfig.remote_auth_config.callbackPort,
+                          client_id: runConfig.remote_auth_config.clientID,
+                          client_secret: runConfig.remote_auth_config
+                            .clientSecret
+                            ? {
+                                name: runConfig.remote_auth_config.clientSecret,
+                                target:
+                                  runConfig.remote_auth_config.clientSecret,
+                              }
+                            : undefined,
+                          issuer: runConfig.remote_auth_config.issuer,
+                          oauth_params:
+                            runConfig.remote_auth_config.oauthParams,
+                          scopes: runConfig.remote_auth_config.scopes,
+                          skip_browser:
+                            runConfig.remote_auth_config.skipBrowser || false,
+                          token_url: runConfig.remote_auth_config.tokenURL,
+                          use_pkce: true, // Default to true for security
+                        }
+                      : undefined,
+                  }
+                : {
+                    image: runConfig.image,
+                    volumes: runConfig.volumes || [],
+                    cmd_arguments: runConfig.cmd_args || [],
+                  }),
               transport: runConfig.transport,
-              cmd_arguments: runConfig.cmd_args || [],
               env_vars: runConfig.env_vars || {},
               secrets: secrets,
-              volumes: runConfig.volumes || [],
               network_isolation: runConfig.isolate_network || false,
               permission_profile: runConfig.permission_profile,
               host: runConfig.host,
