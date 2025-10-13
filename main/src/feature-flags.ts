@@ -21,6 +21,10 @@ const featureFlagOptions: Record<FeatureFlagKey, FeatureFlagOptions> = {
     isDisabled: false,
     defaultValue: false,
   },
+  [featureFlagKeys.GROUPS_IN_REGISTRY]: {
+    isDisabled: false,
+    defaultValue: false,
+  },
 }
 
 // Create a dedicated store for feature flags
