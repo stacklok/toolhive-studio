@@ -60,7 +60,7 @@ describe('useCopyServerToGroup', () => {
     }
 
     mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads/mcp-shell/export'), () => {
+      http.get(mswEndpoint('/api/v1beta/workloads/:name/export'), () => {
         return HttpResponse.json(remoteServerConfig)
       }),
       http.post(mswEndpoint('/api/v1beta/workloads'), () => {
