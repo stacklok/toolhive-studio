@@ -9,7 +9,7 @@ export function McpServersSidebar(): ReactElement {
     <aside
       className="border-input bg-muted/50 text-sidebar-foreground w-sidebar
         fixed top-16 bottom-0 left-0 z-0 flex h-full flex-col items-start gap-3
-        border-r px-4 pt-10 pb-4"
+        border-r px-4 pt-4 pb-4"
     >
       <div className="flex flex-col gap-3">
         {isGroupsEnabled ? <GroupsManager /> : null}
