@@ -99,6 +99,3 @@ bin/
 /blob-report/
 /playwright/.cache/
 /test-videos/
-
-# TODO files (temporary task tracking)
-TODO-*.md
