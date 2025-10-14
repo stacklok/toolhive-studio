@@ -3,7 +3,7 @@ import {
   getApiV1BetaRegistryByNameOptions,
 } from '@api/@tanstack/react-query.gen'
 import { createFileRoute } from '@tanstack/react-router'
-import { GridCardsRegistryServer } from '@/features/registry-servers/components/grid-cards-registry-server'
+import { GridCardsRegistry } from '@/features/registry-servers/components/grid-cards-registry'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { EmptyState } from '@/common/components/empty-state'
 import { ExternalLinkIcon } from 'lucide-react'
@@ -75,7 +75,7 @@ export function Registry() {
           illustration={IllustrationNoConnection}
         />
       ) : (
-        <GridCardsRegistryServer servers={servers} groups={groups} />
+        <GridCardsRegistry servers={servers} groups={groups} />
       )}
     </>
   )

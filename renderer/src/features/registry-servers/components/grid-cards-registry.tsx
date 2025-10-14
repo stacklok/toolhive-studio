@@ -8,13 +8,9 @@ import { useFilterSort } from '@/common/hooks/use-filter-sort'
 import { InputSearch } from '@/common/components/ui/input-search'
 import { useNavigate } from '@tanstack/react-router'
 import { cn } from '@/common/lib/utils'
-import type { WithTypeTag } from '@/common/types/utils'
+import type { RegistryItem } from '../types'
 
-type RegistryItem =
-  | WithTypeTag<'server', RegistryImageMetadata | RegistryRemoteServerMetadata>
-  | WithTypeTag<'group', RegistryGroup>
-
-export function GridCardsRegistryServer({
+export function GridCardsRegistry({
   servers,
   groups = [],
 }: {
