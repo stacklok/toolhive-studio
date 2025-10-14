@@ -10,7 +10,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/common/components/ui/tooltip'
-import { CardRegistryWrapper } from './card-registry-wrapper'
+import { CardRegistryBase } from './card-registry-base'
 
 const statusMap = {
   deprecated: 'Deprecated',
@@ -77,7 +77,7 @@ export function CardRegistryServer({
   )
 
   return (
-    <CardRegistryWrapper
+    <CardRegistryBase
       title={server.name!}
       description={server.description}
       badge={badge}

@@ -9,7 +9,7 @@ import { Plus } from 'lucide-react'
 import { cn } from '@/common/lib/utils'
 import type { ReactNode } from 'react'
 
-export function CardRegistryWrapper({
+export function CardRegistryBase({
   title,
   description,
   badge,

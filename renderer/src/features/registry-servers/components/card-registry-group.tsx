@@ -6,7 +6,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/common/components/ui/tooltip'
-import { CardRegistryWrapper } from './card-registry-wrapper'
+import { CardRegistryBase } from './card-registry-base'
 
 export function CardRegistryGroup({
   group,
@@ -46,7 +46,7 @@ export function CardRegistryGroup({
   )
 
   return (
-    <CardRegistryWrapper
+    <CardRegistryBase
       title={group.name!}
       description={group.description}
       badge={badge}
