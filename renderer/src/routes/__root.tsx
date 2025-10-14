@@ -23,24 +23,6 @@ import log from 'electron-log/renderer'
 import * as Sentry from '@sentry/electron/renderer'
 import { StartingToolHive } from '@/common/components/starting-toolhive'
 
-class HealthCheckError extends Error {
-  isToolhiveRunning: boolean
-  containerEngineAvailable: boolean
-
-  constructor(
-    message: string,
-    context: {
-      isToolhiveRunning: boolean
-      containerEngineAvailable: boolean
-    }
-  ) {
-    super(message)
-    this.name = 'HealthCheckError'
-    this.isToolhiveRunning = context.isToolhiveRunning
-    this.containerEngineAvailable = context.containerEngineAvailable
-  }
-}
-
 async function setupSecretProvider(queryClient: QueryClient) {
   const createEncryptedProvider = async () =>
     postApiV1BetaSecrets({
@@ -90,10 +72,15 @@ export const Route = createRootRouteWithContext<{
 }>()({
   component: RootComponent,
   errorComponent: ({ error }) => {
+    const cause = error instanceof Error ? error.cause : undefined
+
     if (
-      error instanceof HealthCheckError &&
-      error.isToolhiveRunning &&
-      error.containerEngineAvailable
+      cause &&
+      typeof cause === 'object' &&
+      'isToolhiveRunning' in cause &&
+      'containerEngineAvailable' in cause &&
+      cause.isToolhiveRunning &&
+      cause.containerEngineAvailable
     ) {
       log.info(`[HealthCheckError] Server not ready`)
       return <StartingToolHive />
@@ -185,9 +172,11 @@ export const Route = createRootRouteWithContext<{
         })
       }
 
-      throw new HealthCheckError(`Health check failed: ${error}`, {
-        isToolhiveRunning,
-        containerEngineAvailable: containerEngineStatus.available,
+      throw new Error('Health check failed', {
+        cause: {
+          isToolhiveRunning,
+          containerEngineAvailable: containerEngineStatus.available,
+        },
       })
     }
   },
