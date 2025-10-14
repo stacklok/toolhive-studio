@@ -2,7 +2,7 @@ import { AlertCircle } from 'lucide-react'
 import { LinkErrorDiscord } from '../workloads/link-error-discord'
 import { BaseErrorScreen } from './base-error-screen'
 
-export function GenericError({ error }: { error: Error }) {
+export function GenericError({ error }: { error?: Error }) {
   return (
     <BaseErrorScreen
       title="Oops, something went wrong"

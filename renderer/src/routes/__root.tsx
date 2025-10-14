@@ -99,7 +99,7 @@ export const Route = createRootRouteWithContext<{
       return <StartingToolHive />
     }
 
-    log.info(`[HealthCheckError] Server ready`, JSON.stringify(error))
+    log.error(`[ErrorComponent] Error occurred`, JSON.stringify(error))
     return <ErrorComponent error={error} />
   },
   notFoundComponent: () => <NotFound />,
