@@ -165,7 +165,7 @@ export async function stopAllServers(
 }
 
 /** Get the list of servers that were shut down in the last shutdown */
-export function getLastShutdownServers(): string[] {
+export function getLastShutdownServers(): CoreWorkload[] {
   return shutdownStore.get('lastShutdownServers', [])
 }
 

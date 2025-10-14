@@ -37,7 +37,8 @@ function GroupRoute() {
     ...getApiV1BetaWorkloadsOptions({
       query: {
         all: true,
-        group: groupName,
+        // When groups feature is disabled, always use 'default' group
+        group: showSidebar ? groupName : 'default',
       },
     }),
   })
