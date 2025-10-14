@@ -23,6 +23,7 @@ export function BaseErrorScreen({
 }: BaseErrorScreenProps) {
   const handleReload = () => {
     if (typeof window !== 'undefined') {
+      window.electronAPI.restartToolhive()
       window.location.reload()
     }
   }
