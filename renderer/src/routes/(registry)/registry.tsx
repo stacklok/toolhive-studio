@@ -14,16 +14,12 @@ import { featureFlagKeys } from '../../../../utils/feature-flags'
 
 export const Route = createFileRoute('/(registry)/registry')({
   loader: async ({ context: { queryClient } }) => {
-    // Fetch servers
     const serversPromise = queryClient.ensureQueryData(
       getApiV1BetaRegistryByNameServersOptions({ path: { name: 'default' } })
     )
-
-    // Fetch full registry (which includes groups) for feature flag users
     const registryPromise = queryClient.ensureQueryData(
       getApiV1BetaRegistryByNameOptions({ path: { name: 'default' } })
     )
-
     return Promise.all([serversPromise, registryPromise])
   },
   component: Registry,
