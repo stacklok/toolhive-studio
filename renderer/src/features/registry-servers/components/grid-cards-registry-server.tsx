@@ -3,8 +3,7 @@ import type {
   RegistryRemoteServerMetadata,
   RegistryGroup,
 } from '@api/types.gen'
-import { CardRegistryServer } from './card-registry-server'
-import { CardRegistryGroup } from './card-registry-group'
+import { CardRegistry } from './card-registry'
 import { useFilterSort } from '@/common/hooks/use-filter-sort'
 import { InputSearch } from '@/common/components/ui/input-search'
 import { useNavigate } from '@tanstack/react-router'
@@ -56,31 +55,18 @@ export function GridCardsRegistryServer({
             : 'grid-cols-[repeat(auto-fit,minmax(max(200px,min(300px,100%)),1fr))]'
         )}
       >
-        {filteredAndSortedItems.map((item) =>
-          item.type === 'group' ? (
-            <CardRegistryGroup
-              key={item.name}
-              group={item}
-              onClick={() => {
-                navigate({
-                  to: '/registry/$name',
-                  params: { name: item.name! },
-                })
-              }}
-            />
-          ) : (
-            <CardRegistryServer
-              key={item.name}
-              server={item}
-              onClick={() => {
-                navigate({
-                  to: '/registry/$name',
-                  params: { name: item.name! },
-                })
-              }}
-            />
-          )
-        )}
+        {filteredAndSortedItems.map((item) => (
+          <CardRegistry
+            key={item.name}
+            item={item}
+            onClick={() => {
+              navigate({
+                to: '/registry/$name',
+                params: { name: item.name! },
+              })
+            }}
+          />
+        ))}
       </div>
       {filteredAndSortedItems.length === 0 && (
         <div className="text-muted-foreground py-12 text-center">
