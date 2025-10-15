@@ -65,7 +65,7 @@ export function GridCardsRegistry({
       {filteredAndSortedItems.length === 0 && (
         <div className="text-muted-foreground py-12 text-center">
           <p className="text-sm">
-            No registry items found matching the current filter
+            No servers or groups found matching the current filter
           </p>
         </div>
       )}
