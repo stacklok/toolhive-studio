@@ -291,6 +291,71 @@ describe('prepareCreateWorkloadData', () => {
 
     expect(() => prepareCreateWorkloadData(data)).not.toThrow()
   })
+
+  it('includes tools field when provided for docker image', () => {
+    const data: FormSchemaLocalMcp = {
+      image: 'test-image',
+      name: 'test-server',
+      transport: 'stdio',
+      type: 'docker_image',
+      group: 'default',
+      envVars: [],
+      secrets: [],
+      cmd_arguments: [],
+      networkIsolation: false,
+      allowedHosts: [],
+      allowedPorts: [],
+      volumes: [],
+      tools: ['tool1', 'tool2', 'tool3'],
+    }
+
+    const result = prepareCreateWorkloadData(data)
+
+    expect(result.tools).toEqual(['tool1', 'tool2', 'tool3'])
+  })
+
+  it('excludes tools field when not provided', () => {
+    const data: FormSchemaLocalMcp = {
+      image: 'test-image',
+      name: 'test-server',
+      transport: 'stdio',
+      type: 'docker_image',
+      group: 'default',
+      envVars: [],
+      secrets: [],
+      cmd_arguments: [],
+      networkIsolation: false,
+      allowedHosts: [],
+      allowedPorts: [],
+      volumes: [],
+    }
+
+    const result = prepareCreateWorkloadData(data)
+
+    expect(result.tools).toBeUndefined()
+  })
+
+  it('converts empty tools array correctly', () => {
+    const data: FormSchemaLocalMcp = {
+      image: 'test-image',
+      name: 'test-server',
+      transport: 'stdio',
+      type: 'docker_image',
+      group: 'default',
+      envVars: [],
+      secrets: [],
+      cmd_arguments: [],
+      networkIsolation: false,
+      allowedHosts: [],
+      allowedPorts: [],
+      volumes: [],
+      tools: [],
+    }
+
+    const result = prepareCreateWorkloadData(data)
+
+    expect(result.tools).toEqual([])
+  })
 })
 
 describe('convertWorkloadToFormData', () => {
@@ -404,6 +469,44 @@ describe('convertWorkloadToFormData', () => {
     const result = convertWorkloadToFormData(workload)
 
     expect(result.transport).toBe('stdio')
+  })
+
+  it('preserves tools from workload for package manager', () => {
+    const workload: CoreWorkload = {
+      name: 'npm-server',
+      package: 'npx://my-package',
+      transport_type: 'stdio',
+      tools: ['tool1', 'tool2'],
+    }
+
+    const result = convertWorkloadToFormData(workload)
+
+    expect(result.tools).toEqual(['tool1', 'tool2'])
+  })
+
+  it('preserves tools as undefined when not in workload', () => {
+    const workload: CoreWorkload = {
+      name: 'docker-server',
+      package: 'test-image',
+      transport_type: 'stdio',
+    }
+
+    const result = convertWorkloadToFormData(workload)
+
+    expect(result.tools).toBeUndefined()
+  })
+
+  it('converts empty tools array from workload', () => {
+    const workload: CoreWorkload = {
+      name: 'npm-server',
+      package: 'npx://my-package',
+      transport_type: 'stdio',
+      tools: [],
+    }
+
+    const result = convertWorkloadToFormData(workload)
+
+    expect(result.tools).toEqual([])
   })
 })
 
@@ -575,6 +678,60 @@ describe('convertCreateRequestToFormData', () => {
     expect(result.envVars).toEqual([])
     expect(result.secrets).toEqual([])
   })
+
+  it('preserves tools from create request for docker image', () => {
+    const createRequest: V1CreateRequest = {
+      name: 'docker-server',
+      image: 'test-image',
+      transport: 'stdio',
+      tools: ['tool1', 'tool2', 'tool3'],
+    }
+
+    const result = convertCreateRequestToFormData(createRequest)
+
+    expect(result.type).toBe('docker_image')
+    expect(result.tools).toEqual(['tool1', 'tool2', 'tool3'])
+  })
+
+  it('preserves tools as undefined when not in create request', () => {
+    const createRequest: V1CreateRequest = {
+      name: 'docker-server',
+      image: 'test-image',
+      transport: 'stdio',
+    }
+
+    const result = convertCreateRequestToFormData(createRequest)
+
+    expect(result.tools).toBeUndefined()
+  })
+
+  it('converts empty tools array from create request', () => {
+    const createRequest: V1CreateRequest = {
+      name: 'docker-server',
+      image: 'test-image',
+      transport: 'stdio',
+      tools: [],
+    }
+
+    const result = convertCreateRequestToFormData(createRequest)
+
+    expect(result.tools).toEqual([])
+  })
+
+  it('does not include tools for package manager type', () => {
+    const createRequest: V1CreateRequest = {
+      name: 'npm-server',
+      image: 'npx://my-package',
+      transport: 'stdio',
+      tools: ['tool1', 'tool2'],
+    }
+
+    const result = convertCreateRequestToFormData(createRequest)
+
+    expect(result.type).toBe('package_manager')
+
+    expect('tools' in result).toBe(false)
+  })
 })
 
 describe('prepareUpdateLocalWorkloadData', () => {
@@ -742,5 +899,93 @@ describe('prepareUpdateLocalWorkloadData', () => {
     const result = prepareUpdateLocalWorkloadData(data)
 
     expect(result.secrets).toEqual([])
+  })
+
+  it('includes tools field when provided', () => {
+    const data: FormSchemaLocalMcp = {
+      name: 'test-server',
+      transport: 'stdio',
+      type: 'docker_image',
+      group: 'default',
+      image: 'test-image',
+      cmd_arguments: [],
+      envVars: [],
+      secrets: [],
+      networkIsolation: false,
+      allowedHosts: [],
+      allowedPorts: [],
+      volumes: [],
+      tools: ['tool1', 'tool2', 'tool3'],
+    }
+
+    const result = prepareUpdateLocalWorkloadData(data)
+
+    expect(result.tools).toEqual(['tool1', 'tool2', 'tool3'])
+  })
+
+  it('excludes tools field when not provided', () => {
+    const data: FormSchemaLocalMcp = {
+      name: 'test-server',
+      transport: 'stdio',
+      type: 'docker_image',
+      group: 'default',
+      image: 'test-image',
+      cmd_arguments: [],
+      envVars: [],
+      secrets: [],
+      networkIsolation: false,
+      allowedHosts: [],
+      allowedPorts: [],
+      volumes: [],
+    }
+
+    const result = prepareUpdateLocalWorkloadData(data)
+
+    expect(result.tools).toBeUndefined()
+  })
+
+  it('converts empty tools array correctly', () => {
+    const data: FormSchemaLocalMcp = {
+      name: 'test-server',
+      transport: 'stdio',
+      type: 'docker_image',
+      group: 'default',
+      image: 'test-image',
+      cmd_arguments: [],
+      envVars: [],
+      secrets: [],
+      networkIsolation: false,
+      allowedHosts: [],
+      allowedPorts: [],
+      volumes: [],
+      tools: [],
+    }
+
+    const result = prepareUpdateLocalWorkloadData(data)
+
+    expect(result.tools).toEqual([])
+  })
+
+  it('includes tools for package manager type', () => {
+    const data: FormSchemaLocalMcp = {
+      name: 'npm-server',
+      transport: 'stdio',
+      type: 'package_manager',
+      group: 'default',
+      protocol: 'npx',
+      package_name: 'my-package',
+      cmd_arguments: [],
+      envVars: [],
+      secrets: [],
+      networkIsolation: false,
+      allowedHosts: [],
+      allowedPorts: [],
+      volumes: [],
+      tools: ['tool1', 'tool2'],
+    }
+
+    const result = prepareUpdateLocalWorkloadData(data)
+
+    expect(result.tools).toEqual(['tool1', 'tool2'])
   })
 })

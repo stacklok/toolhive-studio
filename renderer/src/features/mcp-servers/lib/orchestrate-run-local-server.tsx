@@ -85,6 +85,7 @@ export function prepareCreateWorkloadData(
     network_isolation: networkIsolation,
     permission_profile,
     volumes: getVolumes(volumes ?? []),
+    tools: data.tools || undefined,
   }
 }
 
