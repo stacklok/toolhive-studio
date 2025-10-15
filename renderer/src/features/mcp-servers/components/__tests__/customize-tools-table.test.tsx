@@ -54,7 +54,7 @@ describe('CustomizeToolsTable', () => {
       await waitFor(() => {
         const applyButton = screen.getByRole('button', { name: /apply/i })
         const resetButton = screen.getByRole('button', {
-          name: /reset to the original list/i,
+          name: /enable all tools/i,
         })
 
         expect(applyButton).toBeDisabled()
@@ -333,7 +333,7 @@ describe('CustomizeToolsTable', () => {
       })
 
       const resetButton = screen.getByRole('button', {
-        name: /reset to the original list/i,
+        name: /enable all tools/i,
       })
       await userEvent.click(resetButton)
 
@@ -354,7 +354,7 @@ describe('CustomizeToolsTable', () => {
       })
 
       const resetButton = screen.getByRole('button', {
-        name: /reset to the original list/i,
+        name: /enable all tools/i,
       })
 
       await userEvent.click(resetButton)
@@ -558,7 +558,7 @@ describe('CustomizeToolsTable', () => {
       await waitFor(() => {
         const applyButton = screen.getByRole('button', { name: /apply/i })
         const resetButton = screen.getByRole('button', {
-          name: /reset to the original list/i,
+          name: /enable all tools/i,
         })
 
         expect(applyButton).toBeInTheDocument()
@@ -596,7 +596,7 @@ describe('CustomizeToolsTable', () => {
       await waitFor(() => {
         const applyButton = screen.getByRole('button', { name: /apply/i })
         const resetButton = screen.getByRole('button', {
-          name: /reset to the original list/i,
+          name: /enable all tools/i,
         })
 
         expect(applyButton).not.toBeDisabled()
