@@ -9,6 +9,8 @@ import {
 } from '../ui/card'
 import { RefreshCw } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { withMinimumDelay } from './utils'
+import log from 'electron-log/renderer'
 
 interface BaseErrorScreenProps {
   title: string
@@ -21,9 +23,14 @@ export function BaseErrorScreen({
   icon,
   children,
 }: BaseErrorScreenProps) {
-  const handleReload = () => {
+  const handleReload = async () => {
     if (typeof window !== 'undefined') {
-      window.location.reload()
+      try {
+        await withMinimumDelay(window.electronAPI.restartToolhive, 1200)
+        window.location.reload()
+      } catch (error) {
+        log.error('Error restarting ToolHive: ', error)
+      }
     }
   }
 

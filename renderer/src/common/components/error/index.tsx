@@ -3,7 +3,7 @@ import { ConnectionRefusedError } from './connection-refused-error'
 import { GenericError } from './generic-error'
 
 interface ErrorProps {
-  error?: Error & { containerEngineAvailable?: boolean }
+  error?: Error & { cause?: { containerEngineAvailable?: boolean } }
 }
 
 export function Error({ error }: ErrorProps = {}) {
@@ -24,7 +24,7 @@ export function Error({ error }: ErrorProps = {}) {
     error?.toString().includes('ENOTFOUND') ||
     error?.toString().includes('Network Error') ||
     error?.message?.includes('failed to ping Docker server') ||
-    !error?.containerEngineAvailable
+    !error?.cause?.containerEngineAvailable
   ) {
     return <ConnectionRefusedError />
   }

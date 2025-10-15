@@ -45,14 +45,21 @@ describe('Error', () => {
   })
 
   it('renders <KeyringError /> when error contains "OS keyring is not available" and platform is Linux', () => {
-    const keyringError = new Error('OS keyring is not available')
-
+    const keyringError = new Error('OS keyring is not available', {
+      cause: { containerEngineAvailable: true },
+    })
     mockElectronAPI.isLinux = true
     mockElectronAPI.platform = 'linux'
 
     render(
       <QueryClientProvider client={queryClient}>
-        <ErrorComponent error={keyringError} />
+        <ErrorComponent
+          error={
+            keyringError as Error & {
+              cause?: { containerEngineAvailable?: boolean }
+            }
+          }
+        />
       </QueryClientProvider>
     )
 
@@ -63,16 +70,22 @@ describe('Error', () => {
   })
 
   it('renders generic error when keyring error occurs on non-Linux platform', () => {
-    const keyringError = new Error('OS keyring is not available')
-    // Set containerEngineAvailable to avoid triggering ConnectionRefusedError
-    Object.assign(keyringError, { containerEngineAvailable: true })
+    const keyringError = new Error('OS keyring is not available', {
+      cause: { containerEngineAvailable: true },
+    })
 
     mockElectronAPI.isLinux = false
     mockElectronAPI.platform = 'win32'
 
     render(
       <QueryClientProvider client={queryClient}>
-        <ErrorComponent error={keyringError} />
+        <ErrorComponent
+          error={
+            keyringError as Error & {
+              cause?: { containerEngineAvailable?: boolean }
+            }
+          }
+        />
       </QueryClientProvider>
     )
 
@@ -89,13 +102,19 @@ describe('Error', () => {
   })
 
   it('renders generic error properly', () => {
-    const genericError = new Error('Something unexpected happened')
-    // Set containerEngineAvailable to avoid triggering ConnectionRefusedError
-    Object.assign(genericError, { containerEngineAvailable: true })
+    const genericError = new Error('Something unexpected happened', {
+      cause: { containerEngineAvailable: true },
+    })
 
     render(
       <QueryClientProvider client={queryClient}>
-        <ErrorComponent error={genericError} />
+        <ErrorComponent
+          error={
+            genericError as Error & {
+              cause?: { containerEngineAvailable?: boolean }
+            }
+          }
+        />
       </QueryClientProvider>
     )
 
