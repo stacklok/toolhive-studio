@@ -28,8 +28,8 @@ export function prepareCreateWorkloadData(
         ...oauthConfig,
         client_secret: oauth_config.client_secret
           ? ({
-              name: oauth_config.client_secret.name,
-              target: oauth_config.client_secret.name,
+              name: oauth_config.client_secret.value.secret,
+              target: oauth_config.client_secret.value.secret,
             } as SecretsSecretParameter)
           : undefined,
       }
@@ -64,8 +64,8 @@ export function prepareUpdateRemoteWorkloadData(
         ...oauthConfig,
         client_secret: oauth_config.client_secret
           ? ({
-              name: oauth_config.client_secret.name,
-              target: oauth_config.client_secret.name,
+              name: oauth_config.client_secret.value.secret,
+              target: oauth_config.client_secret.value.secret,
             } as SecretsSecretParameter)
           : undefined,
       }
@@ -125,9 +125,9 @@ export function convertCreateRequestToFormData(
         ? {
             name: createRequest.oauth_config.client_secret.name || '',
             value: {
-              secret: createRequest.oauth_config.client_secret.name || '',
+              secret: createRequest.oauth_config.client_secret.target || '',
               isFromStore: availableSecretKeys.has(
-                createRequest.oauth_config.client_secret.name || ''
+                createRequest.oauth_config.client_secret.target || ''
               ),
             },
           }
