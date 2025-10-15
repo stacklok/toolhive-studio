@@ -74,7 +74,22 @@ export const customHandlers = [
       return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
     }
 
-    return HttpResponse.json(server)
+    // Transform CoreWorkload to V1CreateRequest format
+    return HttpResponse.json({
+      name: server.name,
+      image: server.package || 'ghcr.io/default/default:latest',
+      transport: 'stdio',
+      target_port: server.port || 0,
+      cmd_arguments: [],
+      env_vars: {},
+      secrets: [],
+      volumes: [],
+      network_isolation: false,
+      permission_profile: undefined,
+      host: '127.0.0.1',
+      tools: server.tools || [],
+      group: server.group,
+    })
   }),
 
   http.delete(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {

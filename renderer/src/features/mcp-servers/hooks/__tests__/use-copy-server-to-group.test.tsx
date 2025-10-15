@@ -5,7 +5,7 @@ import { useCopyServerToGroup } from '../use-copy-server-to-group'
 import { server as mswServer, recordRequests } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
-import type { RunnerRunConfig } from '@api/types.gen'
+import type { V1CreateRequest } from '@api/types.gen'
 import userEvent from '@testing-library/user-event'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
 
@@ -33,10 +33,9 @@ describe('useCopyServerToGroup', () => {
     const rec = recordRequests()
     const wrapper = createWrapper()
 
-    const remoteServerConfig: RunnerRunConfig = {
+    const remoteServerConfig: V1CreateRequest = {
       name: 'mcp-shell',
-      remote_url: 'http://127.0.0.1:8000/mcp',
-      image: '',
+      url: 'http://127.0.0.1:8000/mcp',
       transport: 'streamable-http',
       host: '127.0.0.1',
       target_port: 64341,
@@ -54,13 +53,11 @@ describe('useCopyServerToGroup', () => {
           },
         },
       },
-      isolate_network: false,
-      volumes: [],
-      cmd_args: [],
+      network_isolation: false,
     }
 
     mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads/:name/export'), () => {
+      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
         return HttpResponse.json(remoteServerConfig)
       }),
       http.post(mswEndpoint('/api/v1beta/workloads'), () => {
