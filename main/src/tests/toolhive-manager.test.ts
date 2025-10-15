@@ -44,6 +44,11 @@ vi.mock('@sentry/electron/main', () => ({
     callback(mockScope)
   }),
 }))
+vi.mock('../tcp-proxy', () => ({
+  startProxies: vi.fn().mockResolvedValue(undefined),
+  stopProxies: vi.fn(),
+  areProxiesRunning: vi.fn().mockReturnValue(false),
+}))
 
 // Mock electron-store
 vi.mock('electron-store', () => {

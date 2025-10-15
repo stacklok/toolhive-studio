@@ -7,6 +7,7 @@ import { updateTrayStatus } from './system-tray'
 import log from './logger'
 import * as Sentry from '@sentry/electron/main'
 import { getQuittingState } from './app-state'
+import { startProxies, stopProxies } from './tcp-proxy'
 
 const binName = process.platform === 'win32' ? 'thv.exe' : 'thv'
 const binPath = app.isPackaged
@@ -168,6 +169,7 @@ export async function startToolhive(): Promise<void> {
 
     toolhiveProcess.on('exit', (code) => {
       log.warn(`ToolHive process exited with code: ${code}`)
+      stopProxies()
       toolhiveProcess = undefined
       if (!isRestarting && !getQuittingState()) {
         updateTrayStatus(false)
@@ -177,6 +179,10 @@ export async function startToolhive(): Promise<void> {
         )
       }
     })
+
+    // Start TCP proxies on Linux to allow Docker containers to reach ToolHive
+    // Proxies forward traffic from Docker bridge IPs (e.g., 172.20.0.1) to 127.0.0.1
+    await startProxies(toolhivePort, toolhiveMcpPort)
   })
 }
 
@@ -222,6 +228,7 @@ export function stopToolhive(): void {
   } else {
     log.info(`[stopToolhive] No process to stop`)
   }
+  stopProxies()
 }
 
 export { binPath }
