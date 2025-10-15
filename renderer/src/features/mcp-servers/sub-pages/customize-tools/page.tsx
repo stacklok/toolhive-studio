@@ -1,19 +1,29 @@
-import { LinkViewTransition } from '@/common/components/link-view-transition'
-import { Button } from '@/common/components/ui/button'
-import { CustomizeToolsTable } from '@/features/mcp-servers/components/customize-tools-table'
-import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
-import { useParams } from '@tanstack/react-router'
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useNavigate, useParams } from '@tanstack/react-router'
 import { ChevronLeft } from 'lucide-react'
-import { useUpdateServer } from '@/features/mcp-servers/hooks/use-update-server'
 import { toast } from 'sonner'
-import { convertWorkloadToFormData } from '@/features/mcp-servers/lib/orchestrate-run-local-server'
 import { getApiV1BetaWorkloads } from '@api/sdk.gen'
+import {
+  getApiV1BetaSecretsDefaultKeysOptions,
+  getApiV1BetaWorkloadsByNameOptions,
+} from '@api/@tanstack/react-query.gen'
+import { LinkViewTransition } from '@/common/components/link-view-transition'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
+import { Button } from '@/common/components/ui/button'
+import { useUpdateServer } from '@/features/mcp-servers/hooks/use-update-server'
+import { CustomizeToolsTable } from '@/features/mcp-servers/components/customize-tools-table'
+import { convertCreateRequestToFormData } from '@/features/mcp-servers/lib/orchestrate-run-local-server'
+import { useIsServerFromRegistry } from '../../hooks/use-is-server-from-registry'
 
+// This is only for the servers from the registry at the moment
 export function CustomizeToolsPage() {
+  const navigate = useNavigate()
   const { serverName } = useParams({ from: '/customize-tools/$serverName' })
   const { checkServerStatus } = useCheckServerStatus()
-  const { data: workload, isLoading: isWorkloadLoading } = useSuspenseQuery({
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const { data: workload, isFetching: isWorkloadLoading } = useQuery({
     queryKey: ['workload', serverName],
     queryFn: async () => {
       const { data } = await getApiV1BetaWorkloads({
@@ -25,8 +35,24 @@ export function CustomizeToolsPage() {
       return data?.workloads?.find((item) => item.name === serverName) ?? null
     },
   })
+  const {
+    data: existingServerData,
+    isFetching: isLoadingServer,
+    isError: isExistingServerDataError,
+  } = useQuery({
+    ...getApiV1BetaWorkloadsByNameOptions({
+      path: { name: serverName || '' },
+    }),
+    enabled: !!serverName,
+    retry: false,
+  })
+  const {
+    isFromRegistry,
+    registryTools = [],
+    drift,
+  } = useIsServerFromRegistry(serverName)
 
-  const { data: serverTools, isLoading } = useQuery({
+  const { data: serverTools, isFetching: isLoadingServerTools } = useQuery({
     queryKey: ['workload-available-tools', serverName, workload?.name],
     queryFn: async () => {
       if (!workload) return null
@@ -42,7 +68,74 @@ export function CustomizeToolsPage() {
     staleTime: 0,
   })
 
+  const { data: availableSecrets } = useQuery({
+    ...getApiV1BetaSecretsDefaultKeysOptions(),
+    enabled: !!serverName,
+    retry: false,
+  })
+
+  const toolsMap = {
+    ...Object.fromEntries(
+      registryTools.map((name) => [name, { name, description: '' }])
+    ),
+    ...(serverTools
+      ? Object.fromEntries(
+          Object.entries(serverTools).map(([name, toolDef]) => [
+            name,
+            { name, description: toolDef.description },
+          ])
+        )
+      : {}),
+  }
+  const completedTools = Object.values(toolsMap).map((tool) => ({
+    ...tool,
+    isInitialEnabled: !existingServerData?.tools
+      ? true
+      : existingServerData?.tools?.includes(tool.name),
+  }))
+
   const { updateServerMutation } = useUpdateServer(serverName)
+
+  const handleUpdateServer = async (tools: string[] | null) => {
+    if (!existingServerData || isExistingServerDataError) {
+      throw new Error('Existing server data not available')
+    }
+
+    const formData = convertCreateRequestToFormData(
+      existingServerData,
+      availableSecrets
+    )
+
+    updateServerMutation(
+      {
+        data: {
+          ...formData,
+          tools,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success('Server tools updated successfully')
+          checkServerStatus({
+            serverName,
+            groupName: workload?.group || 'default',
+            isEditing: true,
+          })
+          navigate({
+            to: '/group/$groupName',
+            params: { groupName: workload?.group || 'default' },
+            search: { newServerName: serverName },
+          })
+        },
+        onError: (error) => {
+          setIsSubmitting(false)
+          toast.error(
+            `Failed to update server: ${typeof error === 'string' ? error : error.message}`
+          )
+        },
+      }
+    )
+  }
 
   const handleApply = async (enabledTools: Record<string, boolean>) => {
     if (!serverTools) {
@@ -50,56 +143,43 @@ export function CustomizeToolsPage() {
       return
     }
 
+    setIsSubmitting(true)
+
     try {
-      // Step 1: Save enabled tools using temporary API
       const enabledToolNames = Object.entries(enabledTools)
         .filter(([, enabled]) => enabled)
         .map(([toolName]) => toolName)
 
-      const toolsSaveResult = await window.electronAPI.chat.saveEnabledMcpTools(
-        serverName,
-        enabledToolNames
-      )
+      const toolsEnabledDrift =
+        enabledToolNames.length !== completedTools.length
 
-      if (!toolsSaveResult.success) {
-        throw new Error(toolsSaveResult.error || 'Failed to save tool settings')
-      }
-
-      // Step 2: Update server with existing data
-      if (!workload) {
-        throw new Error('Workload data not available')
-      }
-
-      const formData = convertWorkloadToFormData(workload)
-      updateServerMutation(
-        { data: formData },
-        {
-          onSuccess: () => {
-            checkServerStatus({
-              serverName,
-              groupName: workload?.group || 'default',
-              isEditing: true,
-            })
-            toast.success('Server tools updated successfully')
-          },
-          onError: (error) => {
-            toast.error(
-              `Failed to update server: ${typeof error === 'string' ? error : error.message}`
-            )
-          },
-        }
-      )
+      handleUpdateServer(toolsEnabledDrift ? enabledToolNames : null)
     } catch (error) {
+      setIsSubmitting(false)
       toast.error(
         `Failed to apply changes: ${error instanceof Error ? error.message : 'Unknown error'}`
       )
     }
   }
 
-  const handleCancel = () => {
-    // Navigate back or reset - for now just go back
-    window.history.back()
+  const handleReset = () => {
+    try {
+      handleUpdateServer(null)
+    } catch (error) {
+      setIsSubmitting(false)
+      toast.error(
+        `Failed to reset changes: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
+    }
   }
+
+  if (!isFromRegistry) return null
+
+  console.log('loading', {
+    isWorkloadLoading,
+    isLoadingServerTools,
+    isLoadingServer,
+  })
 
   return (
     <div className="">
@@ -123,17 +203,16 @@ export function CustomizeToolsPage() {
           <div>Server is not running</div>
         ) : (
           <CustomizeToolsTable
-            tools={
-              serverTools
-                ? Object.entries(serverTools).map(([name, toolDef]) => ({
-                    name,
-                    description: toolDef.description,
-                  }))
-                : []
+            tools={completedTools || []}
+            isLoading={
+              isSubmitting ||
+              isWorkloadLoading ||
+              isLoadingServerTools ||
+              isLoadingServer
             }
-            isLoading={isWorkloadLoading || isLoading}
             onApply={handleApply}
-            onCancel={handleCancel}
+            onReset={handleReset}
+            drift={drift}
           />
         )}
       </div>

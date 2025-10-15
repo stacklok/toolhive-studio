@@ -116,12 +116,14 @@ export function convertWorkloadToFormData(
     allowedHosts: [],
     allowedPorts: [],
     volumes: [],
+    tools: undefined,
   }
 
   if (isPackageManager) {
     const [protocol, packageName] = image.split('://')
     return {
       ...baseFormData,
+      tools: workload.tools || undefined,
       type: 'package_manager',
       protocol: (protocol || 'npx') as 'npx' | 'uvx' | 'go',
       package_name: packageName || '',
@@ -219,6 +221,8 @@ export function convertCreateRequestToFormData(
   } else {
     return {
       ...baseFormData,
+      // We’re keeping tool filtering available only for local images, since it’s currently supported only for images pulled from a registry.
+      tools: createRequest.tools || undefined,
       type: 'docker_image',
       image: image || '',
     }
@@ -261,5 +265,6 @@ export function prepareUpdateLocalWorkloadData(
         }
       : undefined,
     volumes: getVolumes(data.volumes ?? []),
+    tools: data.tools || undefined,
   }
 }
