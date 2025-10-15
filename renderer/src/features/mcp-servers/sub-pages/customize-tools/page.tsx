@@ -59,7 +59,7 @@ export function CustomizeToolsPage() {
       const results =
         await window.electronAPI.utils.getWorkloadAvailableTools(workload)
       // for showing the loading state
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await new Promise((resolve) => setTimeout(resolve, 500))
       return results
     },
     enabled:
@@ -174,12 +174,6 @@ export function CustomizeToolsPage() {
   }
 
   if (!isFromRegistry) return null
-
-  console.log('loading', {
-    isWorkloadLoading,
-    isLoadingServerTools,
-    isLoadingServer,
-  })
 
   return (
     <div className="">
