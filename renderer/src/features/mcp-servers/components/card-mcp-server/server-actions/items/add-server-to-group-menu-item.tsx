@@ -54,7 +54,7 @@ export function AddServerToGroupMenuItem({
     }
 
     const groupName = groupResult.value
-    const customName = `${serverName}-${groupName}`
+    const customName = `${serverName}-${groupName.replace(/\s+/g, '-')}`
 
     await copyServerToGroup(groupName, customName)
   }

@@ -21,6 +21,7 @@ import '@fontsource/atkinson-hyperlegible/700-italic.css'
 import '@fontsource-variable/inter/wght.css'
 import log from 'electron-log/renderer'
 import * as Sentry from '@sentry/electron/renderer'
+import { StartingToolHive } from '@/common/components/starting-toolhive'
 
 async function setupSecretProvider(queryClient: QueryClient) {
   const createEncryptedProvider = async () =>
@@ -71,6 +72,21 @@ export const Route = createRootRouteWithContext<{
 }>()({
   component: RootComponent,
   errorComponent: ({ error }) => {
+    const cause = error instanceof Error ? error.cause : undefined
+
+    if (
+      cause &&
+      typeof cause === 'object' &&
+      'isToolhiveRunning' in cause &&
+      'containerEngineAvailable' in cause &&
+      cause.isToolhiveRunning &&
+      cause.containerEngineAvailable
+    ) {
+      log.info(`[HealthCheckError] Server not ready`)
+      return <StartingToolHive />
+    }
+
+    log.error(`[ErrorComponent] Error occurred`, JSON.stringify(error))
     return <ErrorComponent error={error} />
   },
   notFoundComponent: () => <NotFound />,
@@ -114,12 +130,10 @@ export const Route = createRootRouteWithContext<{
         gcTime: 0,
       })
     } catch (error) {
-      const [isToolhiveRunning, port, containerEngineStatus] =
-        await Promise.all([
-          window.electronAPI.isToolhiveRunning(),
-          window.electronAPI.getToolhivePort(),
-          window.electronAPI.checkContainerEngine(),
-        ])
+      const [isToolhiveRunning, containerEngineStatus] = await Promise.all([
+        window.electronAPI.isToolhiveRunning(),
+        window.electronAPI.checkContainerEngine(),
+      ])
 
       const clientConfig = client.getConfig()
 
@@ -128,29 +142,42 @@ export const Route = createRootRouteWithContext<{
       )
       log.error(`[beforeLoad] ToolHive process running: ${isToolhiveRunning}`)
 
-      Sentry.captureException(error, {
-        level: 'error',
-        tags: {
-          component: 'root-route',
-          phase: 'beforeLoad',
-        },
-        extra: {
-          toolhive_running: `${isToolhiveRunning}`,
-          toolhive_port: port,
-          client_base_url: clientConfig.baseUrl,
-          client_configured: `${!!clientConfig.baseUrl}`,
-          container_engine: {
-            available: `${containerEngineStatus.available}`,
+      if (
+        !isToolhiveRunning ||
+        !containerEngineStatus.available ||
+        !clientConfig.baseUrl
+      ) {
+        Sentry.captureException(error, {
+          level: 'error',
+          tags: {
+            component: 'root-route',
+            phase: 'beforeLoad',
           },
-          error_message:
-            error instanceof Error ? error.message : JSON.stringify(error),
+          extra: {
+            toolhive_running: `${isToolhiveRunning}`,
+            client_base_url: clientConfig.baseUrl,
+            client_configured: `${!!clientConfig.baseUrl}`,
+            container_engine: {
+              available: `${containerEngineStatus.available}`,
+            },
+            error_message:
+              error instanceof Error ? error.message : JSON.stringify(error),
+          },
+          fingerprint: [
+            'toolhive-not-running',
+            'container-engine-not-available',
+            'client-base-url-not-set',
+            isToolhiveRunning ? 'process-running' : 'process-not-running',
+          ],
+        })
+      }
+
+      throw new Error('Health check failed', {
+        cause: {
+          isToolhiveRunning,
+          containerEngineAvailable: containerEngineStatus.available,
         },
-        fingerprint: [
-          'health-check-failed',
-          isToolhiveRunning ? 'process-running' : 'process-not-running',
-        ],
       })
-      throw new Error(`Health check failed: ${error}`)
     }
   },
   loader: async ({ context: { queryClient } }) =>
