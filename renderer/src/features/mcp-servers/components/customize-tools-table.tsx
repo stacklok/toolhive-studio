@@ -117,6 +117,11 @@ export function CustomizeToolsTable({
   }
 
   const hasMany = tools.length > 10 || isLoading
+  const heightClass = hasMany
+    ? drift
+      ? 'h-[calc(100vh-390px)]'
+      : 'h-[calc(100vh-240px)]'
+    : undefined
 
   return (
     <>
@@ -143,12 +148,7 @@ export function CustomizeToolsTable({
           </AlertDescription>
         </Alert>
       )}
-      <div
-        className={cn(
-          'flex flex-col gap-5',
-          hasMany && 'h-[calc(100vh-240px)]'
-        )}
-      >
+      <div className={cn('flex flex-col gap-5', heightClass)}>
         <div
           className={cn(
             'flex flex-col overflow-hidden rounded-md border',
