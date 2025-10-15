@@ -10,13 +10,11 @@ import {
 } from '@/common/components/ui/table'
 import { useState, useEffect, useCallback } from 'react'
 import { Skeleton } from '@/common/components/ui/skeleton'
-import { ScrollArea } from '@/common/components/ui/scroll-area'
 import {
   Alert,
   AlertDescription,
   AlertTitle,
 } from '@/common/components/ui/alert'
-import { cn } from '@/common/lib/utils'
 import { Badge } from '@/common/components/ui/badge'
 
 interface Tool {
@@ -116,15 +114,8 @@ export function CustomizeToolsTable({
     return <div>No tools available</div>
   }
 
-  const hasMany = tools.length > 10 || isLoading
-  const heightClass = hasMany
-    ? drift
-      ? 'h-[calc(100vh-390px)]'
-      : 'h-[calc(100vh-240px)]'
-    : undefined
-
   return (
-    <>
+    <div className="flex max-h-full flex-col gap-5">
       {drift && (
         <Alert variant="warning">
           <AlertTitle className="flex items-center justify-between">
@@ -148,20 +139,15 @@ export function CustomizeToolsTable({
           </AlertDescription>
         </Alert>
       )}
-      <div className={cn('flex flex-col gap-5', heightClass)}>
-        <div
-          className={cn(
-            'flex flex-col overflow-hidden rounded-md border',
-            hasMany && 'min-h-0 flex-1'
-          )}
-        >
+      <div className="flex flex-col gap-5">
+        <div className="overflow-hidden rounded-md border">
           <Table className="table-fixed">
             <colgroup>
               <col className="w-[60px]" />
               <col className="w-[200px]" />
               <col />
             </colgroup>
-            <TableHeader className="bg-muted/50">
+            <TableHeader className="bg-muted/50 sticky top-0 z-10">
               <TableRow className="border-border border-b">
                 <TableHead className="text-muted-foreground text-xs"></TableHead>
                 <TableHead className="text-muted-foreground text-xs">
@@ -173,17 +159,15 @@ export function CustomizeToolsTable({
               </TableRow>
             </TableHeader>
           </Table>
-          <div className={cn(hasMany && 'min-h-0 flex-1')}>
-            <ScrollArea className={cn(hasMany && 'h-full')}>
-              <Table className="table-fixed">
-                <colgroup>
-                  <col className="w-[60px]" />
-                  <col className="w-[200px]" />
-                  <col />
-                </colgroup>
-                <TableBody>{renderTableBody()}</TableBody>
-              </Table>
-            </ScrollArea>
+          <div className="max-h-[calc(100vh-350px)] overflow-auto">
+            <Table className="table-fixed">
+              <colgroup>
+                <col className="w-[60px]" />
+                <col className="w-[200px]" />
+                <col />
+              </colgroup>
+              <TableBody>{renderTableBody()}</TableBody>
+            </Table>
           </div>
         </div>
 
@@ -192,10 +176,10 @@ export function CustomizeToolsTable({
             Apply
           </Button>
           <Button variant="outline" onClick={handleReset} disabled={isLoading}>
-            Reset to the original list
+            Enable all tools
           </Button>
         </div>
       </div>
-    </>
+    </div>
   )
 }

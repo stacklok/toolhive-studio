@@ -164,6 +164,7 @@ export function CustomizeToolsPage() {
 
   const handleReset = () => {
     try {
+      setIsSubmitting(true)
       handleUpdateServer(null)
     } catch (error) {
       setIsSubmitting(false)
@@ -176,7 +177,7 @@ export function CustomizeToolsPage() {
   if (!isFromRegistry) return null
 
   return (
-    <div className="">
+    <div className="flex max-h-full flex-col">
       <div className="mb-2">
         <LinkViewTransition to="/group/default">
           <Button
@@ -189,10 +190,12 @@ export function CustomizeToolsPage() {
           </Button>
         </LinkViewTransition>
       </div>
-      <div className="mb-5 flex flex-col gap-5">
+      <div className="mb-5">
         <h1 className="m-0 mb-0 p-0 text-3xl font-bold">
           Customize Tools for {serverName}
         </h1>
+      </div>
+      <div className="min-h-0 flex-1">
         {workload?.status !== 'running' ? (
           <div>Server is not running</div>
         ) : (
