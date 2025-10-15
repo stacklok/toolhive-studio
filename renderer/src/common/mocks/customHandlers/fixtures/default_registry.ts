@@ -260,5 +260,47 @@ export const DEFAULT_REGISTRY = {
         ],
       },
     },
+    groups: [
+      {
+        name: 'dev-toolkit',
+        description: 'Essential tools for development',
+        servers: {
+          atlassian: {
+            name: 'atlassian',
+            image: 'ghcr.io/sooperset/mcp-atlassian:latest',
+            description:
+              'Connect to Atlassian products like Confluence, Jira Cloud and Server/Data deployments.',
+            tier: 'Community',
+            status: 'Active',
+            transport: 'stdio',
+            permissions: {
+              network: {
+                outbound: {
+                  allow_host: ['.atlassian.net', '.atlassian.com'],
+                  allow_port: [443],
+                },
+              },
+            },
+            tools: ['confluence_search', 'jira_get_issue'],
+            env_vars: [],
+            args: [],
+            metadata: {
+              stars: 2692,
+              pulls: 11969,
+              last_updated: '2025-08-06T00:24:12Z',
+            },
+            repository_url: 'https://github.com/sooperset/mcp-atlassian',
+            tags: ['atlassian', 'confluence', 'jira'],
+          },
+        },
+        remote_servers: {},
+      },
+      {
+        name: 'web-scraping',
+        description: 'Tools for web scraping',
+        servers: {},
+        remote_servers: {},
+      },
+    ],
   },
 } as const satisfies V1GetRegistryResponse

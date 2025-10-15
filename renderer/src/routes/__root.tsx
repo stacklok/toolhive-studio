@@ -72,7 +72,10 @@ export const Route = createRootRouteWithContext<{
 }>()({
   component: RootComponent,
   errorComponent: ({ error }) => {
-    const cause = error instanceof Error ? error.cause : undefined
+    const errorData = error as Error & {
+      cause?: { containerEngineAvailable?: boolean }
+    }
+    const cause = errorData instanceof Error ? errorData.cause : undefined
 
     if (
       cause &&
@@ -86,8 +89,8 @@ export const Route = createRootRouteWithContext<{
       return <StartingToolHive />
     }
 
-    log.error(`[ErrorComponent] Error occurred`, JSON.stringify(error))
-    return <ErrorComponent error={error} />
+    log.error(`[ErrorComponent] Error occurred`, errorData)
+    return <ErrorComponent error={errorData} />
   },
   notFoundComponent: () => <NotFound />,
   onError: (error) => {
