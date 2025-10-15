@@ -7,7 +7,7 @@ import {
   postApiV1BetaWorkloadsMutation,
   getApiV1BetaWorkloadsQueryKey,
 } from '@api/@tanstack/react-query.gen'
-import { getApiV1BetaWorkloadsByNameExport } from '@api/sdk.gen'
+import { getApiV1BetaWorkloadsByName } from '@api/sdk.gen'
 import { trackEvent } from '@/common/lib/analytics'
 
 async function ensureUniqueName(
@@ -86,32 +86,34 @@ export function useCopyServerToGroup(serverName: string) {
         }
 
         try {
-          const { data: runConfig } = await getApiV1BetaWorkloadsByNameExport({
+          const { data: runConfig } = await getApiV1BetaWorkloadsByName({
             path: { name: serverName },
             throwOnError: true,
           })
 
-          const secrets = (runConfig.secrets || []).map((secretStr) => {
-            const [secretName, target] = secretStr.split(',target=')
-
-            return {
-              name: secretName,
-              target: target,
-            }
-          })
+          const secrets = runConfig.secrets || []
 
           toastId = toast.loading('Copying server to group...')
+
+          const isRemoteServer = !!runConfig.url
 
           await createWorkload({
             body: {
               name: currentName,
-              image: runConfig.image,
+              ...(isRemoteServer
+                ? {
+                    url: runConfig.url,
+                    oauth_config: runConfig.oauth_config,
+                  }
+                : {
+                    image: runConfig.image,
+                    volumes: runConfig.volumes,
+                    cmd_arguments: runConfig.cmd_arguments,
+                  }),
               transport: runConfig.transport,
-              cmd_arguments: runConfig.cmd_args || [],
-              env_vars: runConfig.env_vars || {},
+              env_vars: runConfig.env_vars,
               secrets: secrets,
-              volumes: runConfig.volumes || [],
-              network_isolation: runConfig.isolate_network || false,
+              network_isolation: runConfig.network_isolation,
               permission_profile: runConfig.permission_profile,
               host: runConfig.host,
               target_port: runConfig.target_port,
