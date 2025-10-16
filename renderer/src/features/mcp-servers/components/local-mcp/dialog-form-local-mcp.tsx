@@ -284,10 +284,7 @@ export function DialogFormLocalMcp({
                 <FormFieldsBase
                   form={form}
                   isEditing={isEditing}
-                  groupProps={{
-                    show: true,
-                    groups,
-                  }}
+                  groups={groups}
                 />
                 <FormFieldsArrayCustomSecrets form={form} />
                 <FormFieldsArrayCustomEnvVars form={form} />
