@@ -142,6 +142,7 @@ export function DialogFormLocalMcp({
   const existingServer = existingServerData
 
   const { updateServerMutation } = useUpdateServer(serverToEdit || '', {
+    originalGroup: existingServer?.group,
     onSecretSuccess: handleSecrets,
     onSecretError: (error, variables) => {
       log.error('onSecretError during update', error, variables)

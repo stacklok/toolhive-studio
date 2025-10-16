@@ -10,13 +10,11 @@ import { useMCPSecrets } from '@/common/hooks/use-mcp-secrets'
 import { useMutationUpdateWorkload } from './use-mutation-update-workload'
 import { useLocation } from '@tanstack/react-router'
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
-import {
-  getApiV1BetaWorkloadsOptions,
-  getApiV1BetaWorkloadsByNameOptions,
-} from '@api/@tanstack/react-query.gen'
+import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
 
 type UseUpdateServerOptions<TIsRemote extends boolean = false> = {
   isRemote?: TIsRemote
+  originalGroup?: string
   onSecretSuccess?: (completedCount: number, secretsCount: number) => void
   onSecretError?: (
     error: string,
@@ -88,15 +86,8 @@ export function useUpdateServer<TIsRemote extends boolean = false>(
       // Collect groups to invalidate (original and new)
       const groupsToInvalidate = new Set<string>()
 
-      // Look up the original group from the cache
-      const existingServerData = queryClient.getQueryData(
-        getApiV1BetaWorkloadsByNameOptions({
-          path: { name: serverName },
-        }).queryKey
-      )
-
-      if (existingServerData?.group) {
-        groupsToInvalidate.add(existingServerData.group)
+      if (options?.originalGroup) {
+        groupsToInvalidate.add(options.originalGroup)
       }
 
       if (data.group) {

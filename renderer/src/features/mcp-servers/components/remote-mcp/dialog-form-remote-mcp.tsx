@@ -126,6 +126,7 @@ export function DialogFormRemoteMcp({
 
   const { updateServerMutation } = useUpdateServer(serverToEdit || '', {
     isRemote: true,
+    originalGroup: existingServer?.group,
     onSecretSuccess: handleSecrets,
     onSecretError: (error, variables) => {
       log.error('onSecretError during update', error, variables)
