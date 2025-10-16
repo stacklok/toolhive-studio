@@ -687,34 +687,41 @@
       "runner.RemoteAuthConfig": {
         "description": "RemoteAuthConfig contains OAuth configuration for remote MCP servers",
         "properties": {
-          "authorizeURL": { "type": "string" },
-          "callbackPort": { "type": "integer" },
-          "clientID": { "type": "string" },
-          "clientSecret": { "type": "string" },
-          "clientSecretFile": { "type": "string" },
-          "envVars": {
+          "authorize_url": { "type": "string" },
+          "callback_port": { "type": "integer" },
+          "client_id": { "type": "string" },
+          "client_secret": { "type": "string" },
+          "client_secret_file": { "type": "string" },
+          "env_vars": {
             "description": "Environment variables for the client",
             "items": { "$ref": "#/components/schemas/registry.EnvVar" },
-            "type": "array"
+            "type": "array",
+            "uniqueItems": false
           },
           "headers": {
             "description": "Headers for HTTP requests",
             "items": { "$ref": "#/components/schemas/registry.Header" },
-            "type": "array"
+            "type": "array",
+            "uniqueItems": false
           },
           "issuer": {
             "description": "OAuth endpoint configuration (from registry)",
             "type": "string"
           },
-          "oauthParams": {
+          "oauth_params": {
             "additionalProperties": { "type": "string" },
             "description": "OAuth parameters for server-specific customization",
             "type": "object"
           },
-          "scopes": { "items": { "type": "string" }, "type": "array" },
-          "skipBrowser": { "type": "boolean" },
+          "scopes": {
+            "items": { "type": "string" },
+            "type": "array",
+            "uniqueItems": false
+          },
+          "skip_browser": { "type": "boolean" },
           "timeout": { "example": "5m", "type": "string" },
-          "tokenURL": { "type": "string" }
+          "token_url": { "type": "string" },
+          "use_pkce": { "type": "boolean" }
         },
         "type": "object"
       },

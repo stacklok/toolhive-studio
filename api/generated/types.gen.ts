@@ -618,15 +618,15 @@ export type RegistryVerifiedAttestation = {
  * RemoteAuthConfig contains OAuth configuration for remote MCP servers
  */
 export type RunnerRemoteAuthConfig = {
-  authorizeURL?: string
-  callbackPort?: number
-  clientID?: string
-  clientSecret?: string
-  clientSecretFile?: string
+  authorize_url?: string
+  callback_port?: number
+  client_id?: string
+  client_secret?: string
+  client_secret_file?: string
   /**
    * Environment variables for the client
    */
-  envVars?: Array<RegistryEnvVar>
+  env_vars?: Array<RegistryEnvVar>
   /**
    * Headers for HTTP requests
    */
@@ -638,13 +638,14 @@ export type RunnerRemoteAuthConfig = {
   /**
    * OAuth parameters for server-specific customization
    */
-  oauthParams?: {
+  oauth_params?: {
     [key: string]: string
   }
   scopes?: Array<string>
-  skipBrowser?: boolean
+  skip_browser?: boolean
   timeout?: string
-  tokenURL?: string
+  token_url?: string
+  use_pkce?: boolean
 }
 
 export type RunnerRunConfig = {
