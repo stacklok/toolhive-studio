@@ -115,13 +115,6 @@ export function DialogFormLocalMcp({
       groupName,
     })
 
-  const { updateServerMutation } = useUpdateServer(serverToEdit || '', {
-    onSecretSuccess: handleSecrets,
-    onSecretError: (error, variables) => {
-      log.error('onSecretError during update', error, variables)
-    },
-  })
-
   const { data } = useQuery({
     ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
     retry: false,
@@ -147,6 +140,14 @@ export function DialogFormLocalMcp({
 
   const workloads = data?.workloads ?? []
   const existingServer = existingServerData
+
+  const { updateServerMutation } = useUpdateServer(serverToEdit || '', {
+    originalGroup: existingServer?.group,
+    onSecretSuccess: handleSecrets,
+    onSecretError: (error, variables) => {
+      log.error('onSecretError during update', error, variables)
+    },
+  })
   const isEditing = !!existingServer && !!serverToEdit
   const editingFormData =
     isEditing &&

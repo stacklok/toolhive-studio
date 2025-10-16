@@ -98,14 +98,6 @@ export function DialogFormRemoteMcp({
       },
     })
 
-  const { updateServerMutation } = useUpdateServer(serverToEdit || '', {
-    isRemote: true,
-    onSecretSuccess: handleSecrets,
-    onSecretError: (error, variables) => {
-      log.error('onSecretError during update', error, variables)
-    },
-  })
-
   const { data } = useQuery({
     ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
     retry: false,
@@ -131,6 +123,15 @@ export function DialogFormRemoteMcp({
 
   const workloads = data?.workloads ?? []
   const existingServer = existingServerData
+
+  const { updateServerMutation } = useUpdateServer(serverToEdit || '', {
+    isRemote: true,
+    originalGroup: existingServer?.group,
+    onSecretSuccess: handleSecrets,
+    onSecretError: (error, variables) => {
+      log.error('onSecretError during update', error, variables)
+    },
+  })
   const isEditing = !!existingServer && !!serverToEdit
   const editingFormData =
     isEditing &&
