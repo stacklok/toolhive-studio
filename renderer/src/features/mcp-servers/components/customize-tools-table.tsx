@@ -16,6 +16,7 @@ import {
   AlertTitle,
 } from '@/common/components/ui/alert'
 import { Badge } from '@/common/components/ui/badge'
+import { TriangleAlert } from 'lucide-react'
 
 interface Tool {
   name: string
@@ -117,7 +118,8 @@ export function CustomizeToolsTable({
   return (
     <div className="flex max-h-full flex-col gap-5">
       {drift && (
-        <Alert variant="warning">
+        <Alert>
+          <TriangleAlert className="size-4 stroke-orange-600" />
           <AlertTitle className="flex items-center justify-between">
             <b>Tag drift detected</b>
           </AlertTitle>
@@ -125,15 +127,10 @@ export function CustomizeToolsTable({
             <p>
               This image has drifted from the version in the registry.{' '}
               <b>Local</b> image tag:{' '}
-              <Badge className="bg-orange-600 text-white">
-                {drift.localTag}
-              </Badge>{' '}
-              <b>Registry</b> image tag:{' '}
-              <Badge className="bg-orange-600 text-white">
-                {drift.registryTag}
-              </Badge>{' '}
+              <Badge variant="outline">{drift.localTag}</Badge> <b>Registry</b>{' '}
+              image tag: <Badge variant="outline">{drift.registryTag}</Badge>{' '}
               <br />
-              Please upgrade to the latest one. Enabled tools are up to date,
+              Please upgrade to the latest one. Enabled tools are up to date,x
               but some disabled tools may no longer match the current image.
             </p>
           </AlertDescription>
