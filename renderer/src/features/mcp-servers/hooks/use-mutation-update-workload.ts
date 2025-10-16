@@ -17,11 +17,6 @@ export const useMutationUpdateWorkload = () => {
       const previousServersList = queryClient.getQueryData(queryKey)
 
       queryClient.setQueryData(queryKey, (old: V1WorkloadListResponse) => {
-        // If the query data doesn't exist yet (e.g., moving to a new group), skip optimistic update
-        if (!old) {
-          return old
-        }
-
         const newWorkloads = old.workloads?.map((server) =>
           server.name === path.name ? { ...server, status: 'updating' } : server
         )

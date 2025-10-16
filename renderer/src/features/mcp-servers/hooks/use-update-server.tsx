@@ -10,11 +10,9 @@ import { useMCPSecrets } from '@/common/hooks/use-mcp-secrets'
 import { useMutationUpdateWorkload } from './use-mutation-update-workload'
 import { useLocation } from '@tanstack/react-router'
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
-import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
 
 type UseUpdateServerOptions<TIsRemote extends boolean = false> = {
   isRemote?: TIsRemote
-  originalGroup?: string
   onSecretSuccess?: (completedCount: number, secretsCount: number) => void
   onSecretError?: (
     error: string,
@@ -81,29 +79,6 @@ export function useUpdateServer<TIsRemote extends boolean = false>(
       await restartClientNotification({
         queryClient,
       })
-    },
-    onSuccess: async (_result, { data }) => {
-      // Collect groups to invalidate (original and new)
-      const groupsToInvalidate = new Set<string>()
-
-      if (options?.originalGroup) {
-        groupsToInvalidate.add(options.originalGroup)
-      }
-
-      if (data.group) {
-        groupsToInvalidate.add(data.group)
-      }
-
-      // Invalidate queries for all affected groups
-      await Promise.all(
-        Array.from(groupsToInvalidate).map((group) =>
-          queryClient.invalidateQueries({
-            queryKey: getApiV1BetaWorkloadsOptions({
-              query: { all: true, group },
-            }).queryKey,
-          })
-        )
-      )
     },
     onMutate: ({ data }) => {
       trackEvent(
