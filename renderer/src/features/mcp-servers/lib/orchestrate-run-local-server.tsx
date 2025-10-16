@@ -117,14 +117,12 @@ export function convertWorkloadToFormData(
     allowedHosts: [],
     allowedPorts: [],
     volumes: [],
-    tools: undefined,
   }
 
   if (isPackageManager) {
     const [protocol, packageName] = image.split('://')
     return {
       ...baseFormData,
-      tools: workload.tools || undefined,
       type: 'package_manager',
       protocol: (protocol || 'npx') as 'npx' | 'uvx' | 'go',
       package_name: packageName || '',
@@ -134,6 +132,7 @@ export function convertWorkloadToFormData(
       ...baseFormData,
       type: 'docker_image',
       image: image || '',
+      tools: workload.tools || undefined,
     }
   }
 }

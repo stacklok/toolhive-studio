@@ -471,19 +471,6 @@ describe('convertWorkloadToFormData', () => {
     expect(result.transport).toBe('stdio')
   })
 
-  it('preserves tools from workload for package manager', () => {
-    const workload: CoreWorkload = {
-      name: 'npm-server',
-      package: 'npx://my-package',
-      transport_type: 'stdio',
-      tools: ['tool1', 'tool2'],
-    }
-
-    const result = convertWorkloadToFormData(workload)
-
-    expect(result.tools).toEqual(['tool1', 'tool2'])
-  })
-
   it('preserves tools as undefined when not in workload', () => {
     const workload: CoreWorkload = {
       name: 'docker-server',
@@ -494,19 +481,6 @@ describe('convertWorkloadToFormData', () => {
     const result = convertWorkloadToFormData(workload)
 
     expect(result.tools).toBeUndefined()
-  })
-
-  it('converts empty tools array from workload', () => {
-    const workload: CoreWorkload = {
-      name: 'npm-server',
-      package: 'npx://my-package',
-      transport_type: 'stdio',
-      tools: [],
-    }
-
-    const result = convertWorkloadToFormData(workload)
-
-    expect(result.tools).toEqual([])
   })
 })
 
