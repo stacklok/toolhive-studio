@@ -130,7 +130,7 @@ export function CustomizeToolsTable({
               <Badge variant="outline">{drift.localTag}</Badge> <b>Registry</b>{' '}
               image tag: <Badge variant="outline">{drift.registryTag}</Badge>{' '}
               <br />
-              Please upgrade to the latest one. Enabled tools are up to date,x
+              Please upgrade to the latest one. Enabled tools are up to date,
               but some disabled tools may no longer match the current image.
             </p>
           </AlertDescription>
