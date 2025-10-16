@@ -66,17 +66,6 @@ export const customHandlers = [
     return HttpResponse.json({ workloads: filtered })
   }),
 
-  http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-    const { name } = params
-
-    const server = getWorkloadByName(name as string)
-    if (!server) {
-      return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
-    }
-
-    return HttpResponse.json(server)
-  }),
-
   http.delete(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
     const { name } = params
 

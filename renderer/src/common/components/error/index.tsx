@@ -1,10 +1,9 @@
-import { AlertCircle } from 'lucide-react'
-import { BaseErrorScreen } from './base-error-screen'
 import { KeyringError } from './keyring-error'
 import { ConnectionRefusedError } from './connection-refused-error'
+import { GenericError } from './generic-error'
 
 interface ErrorProps {
-  error?: Error
+  error?: Error & { cause?: { containerEngineAvailable?: boolean } }
 }
 
 export function Error({ error }: ErrorProps = {}) {
@@ -24,26 +23,11 @@ export function Error({ error }: ErrorProps = {}) {
     error?.toString().includes('connect ECONNREFUSED') ||
     error?.toString().includes('ENOTFOUND') ||
     error?.toString().includes('Network Error') ||
-    error?.message?.includes('fetch') ||
-    error?.message?.includes('failed to ping Docker server')
+    error?.message?.includes('failed to ping Docker server') ||
+    !error?.cause?.containerEngineAvailable
   ) {
     return <ConnectionRefusedError />
   }
 
-  return (
-    <BaseErrorScreen
-      title="Oops, something went wrong"
-      icon={<AlertCircle className="text-destructive size-12" />}
-    >
-      <p>
-        We're sorry, but something unexpected happened. Please try reloading the
-        app.
-      </p>
-      {error?.message && (
-        <div className="bg-muted rounded-md p-3 text-sm">
-          <code>{error.message}</code>
-        </div>
-      )}
-    </BaseErrorScreen>
-  )
+  return <GenericError error={error} />
 }

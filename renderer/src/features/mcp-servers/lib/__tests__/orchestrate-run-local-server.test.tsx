@@ -1,4 +1,4 @@
-import { it, expect, vi, describe, beforeEach } from 'vitest'
+import { it, expect, describe } from 'vitest'
 import type { FormSchemaLocalMcp } from '../form-schema-local-mcp'
 import {
   prepareCreateWorkloadData,
@@ -12,24 +12,6 @@ import type {
   V1CreateRequest,
   V1ListSecretsResponse,
 } from '@api/types.gen'
-
-vi.mock('sonner', async () => {
-  const original = await vi.importActual<typeof import('sonner')>('sonner')
-  return {
-    ...original,
-    toast: {
-      loading: vi.fn(),
-      success: vi.fn(),
-      warning: vi.fn(),
-      error: vi.fn(),
-      dismiss: vi.fn(),
-    },
-  }
-})
-
-beforeEach(() => {
-  vi.clearAllMocks()
-})
 
 describe('prepareCreateWorkloadData', () => {
   it('prepares data for docker image type', () => {

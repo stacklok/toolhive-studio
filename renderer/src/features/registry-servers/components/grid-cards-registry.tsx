@@ -1,28 +1,37 @@
 import type {
   RegistryImageMetadata,
   RegistryRemoteServerMetadata,
+  RegistryGroup,
 } from '@api/types.gen'
-import { CardRegistryServer } from './card-registry-server'
+import { CardRegistry } from './card-registry'
 import { useFilterSort } from '@/common/hooks/use-filter-sort'
 import { InputSearch } from '@/common/components/ui/input-search'
 import { useNavigate } from '@tanstack/react-router'
 import { cn } from '@/common/lib/utils'
+import type { RegistryItem } from '../types'
 
-export function GridCardsRegistryServer({
+export function GridCardsRegistry({
   servers,
+  groups = [],
 }: {
-  servers: RegistryImageMetadata[] | RegistryRemoteServerMetadata[]
+  servers: (RegistryImageMetadata | RegistryRemoteServerMetadata)[]
+  groups?: RegistryGroup[]
 }) {
   const navigate = useNavigate()
+
+  const items: RegistryItem[] = [
+    ...groups.map((group) => ({ ...group, type: 'group' as const })),
+    ...servers.map((server) => ({ ...server, type: 'server' as const })),
+  ]
 
   const {
     filter,
     setFilter,
-    filteredData: filteredAndSortedServers,
+    filteredData: filteredAndSortedItems,
   } = useFilterSort({
-    data: servers,
-    filterFields: (server) => [server.name || '', server.description || ''],
-    sortBy: (server) => server.name || '',
+    data: items,
+    filterFields: (item) => [item.name || '', item.description || ''],
+    sortBy: (item) => item.name || '',
   })
 
   return (
@@ -35,28 +44,28 @@ export function GridCardsRegistryServer({
       <div
         className={cn(
           'grid gap-4',
-          filteredAndSortedServers.length <= 3
+          filteredAndSortedItems.length <= 3
             ? 'grid-cols-[repeat(auto-fill,minmax(max(200px,min(300px,100%)),1fr))]'
             : 'grid-cols-[repeat(auto-fit,minmax(max(200px,min(300px,100%)),1fr))]'
         )}
       >
-        {filteredAndSortedServers.map((server) => (
-          <CardRegistryServer
-            key={server.name}
-            server={server}
+        {filteredAndSortedItems.map((item) => (
+          <CardRegistry
+            key={item.name}
+            item={item}
             onClick={() => {
               navigate({
                 to: '/registry/$name',
-                params: { name: server.name! },
+                params: { name: item.name! },
               })
             }}
           />
         ))}
       </div>
-      {filteredAndSortedServers.length === 0 && (
+      {filteredAndSortedItems.length === 0 && (
         <div className="text-muted-foreground py-12 text-center">
           <p className="text-sm">
-            No registry servers found matching the current filter
+            No servers or groups found matching the current filter
           </p>
         </div>
       )}
