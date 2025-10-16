@@ -34,8 +34,6 @@ import {
 } from '@/common/components/ui/select'
 import { ExternalLinkIcon } from 'lucide-react'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
-import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
-import { featureFlagKeys } from '../../../../../utils/feature-flags'
 
 const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
   name: '',
@@ -103,7 +101,6 @@ export function DialogFormRemoteRegistryMcp({
 
   const { data: groupsData } = useGroups()
   const groups = groupsData?.groups ?? []
-  const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
 
   const form = useForm<FormSchemaRemoteMcp>({
     resolver: zodV4Resolver(getFormSchemaRemoteMcp(workloads)),
@@ -276,38 +273,36 @@ export function DialogFormRemoteRegistryMcp({
               )}
             />
 
-            {isGroupsEnabled && (
-              <FormField
-                control={form.control}
-                name="group"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel htmlFor={field.name}>Group</FormLabel>
-                    <FormControl>
-                      <Select
-                        onValueChange={(value) => field.onChange(value)}
-                        value={field.value}
-                        name={field.name}
-                      >
-                        <SelectTrigger id={field.name} className="w-full">
-                          <SelectValue placeholder="Select a group" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {groups
-                            .filter((g) => g.name)
-                            .map((g) => (
-                              <SelectItem key={g.name!} value={g.name!}>
-                                {g.name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+            <FormField
+              control={form.control}
+              name="group"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel htmlFor={field.name}>Group</FormLabel>
+                  <FormControl>
+                    <Select
+                      onValueChange={(value) => field.onChange(value)}
+                      value={field.value}
+                      name={field.name}
+                    >
+                      <SelectTrigger id={field.name} className="w-full">
+                        <SelectValue placeholder="Select a group" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {groups
+                          .filter((g) => g.name)
+                          .map((g) => (
+                            <SelectItem key={g.name!} value={g.name!}>
+                              {g.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}

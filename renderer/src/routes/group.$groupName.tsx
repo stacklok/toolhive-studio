@@ -8,8 +8,6 @@ import { GridCardsMcpServers } from '@/features/mcp-servers/components/grid-card
 import { useMutationRestartServerAtStartup } from '@/features/mcp-servers/hooks/use-mutation-restart-server'
 import { TitlePage } from '@/common/components/title-page'
 import { McpServersSidebar } from '@/features/mcp-servers/components/mcp-servers-sidebar'
-import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
-import { featureFlagKeys } from '../../../utils/feature-flags'
 import { RefreshButton } from '@/common/components/refresh-button'
 import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/dropdown-menu-run-mcp-server'
 import { WrapperDialogFormMcp } from '@/features/mcp-servers/components/wrapper-dialog-mcp'
@@ -31,14 +29,12 @@ export const Route = createFileRoute('/group/$groupName')({
 
 function GroupRoute() {
   const { groupName } = Route.useParams()
-  const showSidebar = useFeatureFlag(featureFlagKeys.GROUPS)
 
   const { data, refetch } = useSuspenseQuery({
     ...getApiV1BetaWorkloadsOptions({
       query: {
         all: true,
-        // When groups feature is disabled, always use 'default' group
-        group: showSidebar ? groupName : 'default',
+        group: groupName,
       },
     }),
   })
@@ -78,10 +74,8 @@ function GroupRoute() {
 
   return (
     <div className="flex h-full gap-6">
-      {showSidebar ? <McpServersSidebar /> : null}
-      <div
-        className={showSidebar ? 'ml-sidebar min-w-0 flex-1' : 'min-w-0 flex-1'}
-      >
+      <McpServersSidebar />
+      <div className="ml-sidebar min-w-0 flex-1">
         <TitlePage title="MCP Servers">
           <>
             <div className="flex gap-2 lg:ml-auto">
@@ -94,9 +88,7 @@ function GroupRoute() {
                   <ManageClientsButton groupName={groupName} />
                 </>
               )}
-              {showSidebar ? (
-                <GroupActionsDropdown groupName={groupName} />
-              ) : null}
+              <GroupActionsDropdown groupName={groupName} />
             </div>
 
             <WrapperDialogFormMcp

@@ -30,9 +30,7 @@ import {
 import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-workload-form-wrapper'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
-import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { AlertErrorFetchingEditingData } from '@/common/components/workloads/alert-error-fetching-editing-data'
-import { featureFlagKeys } from '../../../../../../utils/feature-flags'
 
 type Tab = 'configuration' | 'network-isolation'
 type CommonFields = keyof FormSchemaLocalMcp
@@ -156,7 +154,6 @@ export function DialogFormLocalMcp({
 
   const { data: groupsData } = useGroups()
   const groups = groupsData?.groups ?? []
-  const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
 
   const form = useForm<FormSchemaLocalMcp>({
     resolver: zodV4Resolver(
@@ -288,7 +285,7 @@ export function DialogFormLocalMcp({
                   form={form}
                   isEditing={isEditing}
                   groupProps={{
-                    show: isGroupsEnabled,
+                    show: true,
                     groups,
                   }}
                 />
@@ -321,7 +318,6 @@ export function DialogFormLocalMcp({
     setActiveTab,
     form,
     groups,
-    isGroupsEnabled,
     serverToEdit,
   ])
 
