@@ -1,8 +1,6 @@
 import { DropdownMenuItem } from '@/common/components/ui/dropdown-menu'
 import { Copy } from 'lucide-react'
 import { usePrompt, generateSimplePrompt } from '@/common/hooks/use-prompt'
-import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
-import { featureFlagKeys } from '../../../../../../../../utils/feature-flags'
 import { useGroups } from '../../../../hooks/use-groups'
 import { useCopyServerToGroup } from '../../../../hooks/use-copy-server-to-group'
 import { trackEvent } from '@/common/lib/analytics'
@@ -15,13 +13,8 @@ export function AddServerToGroupMenuItem({
   serverName,
 }: AddServerToGroupMenuItemProps) {
   const prompt = usePrompt()
-  const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
   const { data: groupsData } = useGroups()
   const { copyServerToGroup } = useCopyServerToGroup(serverName)
-
-  if (!isGroupsEnabled) {
-    return null
-  }
 
   const handleAddToGroup = async () => {
     const groups = groupsData?.groups ?? []

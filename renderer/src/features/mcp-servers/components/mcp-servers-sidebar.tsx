@@ -1,10 +1,7 @@
 import type { ReactElement } from 'react'
 import { GroupsManager } from './groups-manager'
-import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
-import { featureFlagKeys } from '../../../../../utils/feature-flags'
 
 export function McpServersSidebar(): ReactElement {
-  const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
   return (
     <aside
       className="border-input bg-muted/50 text-sidebar-foreground w-sidebar
@@ -12,7 +9,7 @@ export function McpServersSidebar(): ReactElement {
         border-r px-4 pt-4 pb-4"
     >
       <div className="flex flex-col gap-3">
-        {isGroupsEnabled ? <GroupsManager /> : null}
+        <GroupsManager />
       </div>
     </aside>
   )

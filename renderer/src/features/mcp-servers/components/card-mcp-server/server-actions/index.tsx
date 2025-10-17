@@ -35,7 +35,6 @@ export function ServerActionsDropdown({
   const isCustomizeToolsEnabled = useFeatureFlag(
     featureFlagKeys.CUSTOMIZE_TOOLS
   )
-  const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
 
   const { data: serverDetails } = useServerDetails(name)
 
@@ -73,8 +72,7 @@ export function ServerActionsDropdown({
           <CustomizeToolsMenuItem serverName={name} status={status} />
         )}
         <RemoveServerMenuItem serverName={name} />
-        {isGroupsEnabled && <DropdownMenuSeparator />}
-
+        <DropdownMenuSeparator />
         <AddServerToGroupMenuItem serverName={name} />
       </DropdownMenuContent>
     </DropdownMenu>

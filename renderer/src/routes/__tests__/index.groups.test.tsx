@@ -1,7 +1,4 @@
 import { vi } from 'vitest'
-vi.mock('@/common/hooks/use-feature-flag', () => ({
-  useFeatureFlag: () => true,
-}))
 import { screen, waitFor } from '@testing-library/react'
 import { describe, it, expect, beforeEach } from 'vitest'
 import { GroupsManager } from '@/features/mcp-servers/components/groups-manager'
