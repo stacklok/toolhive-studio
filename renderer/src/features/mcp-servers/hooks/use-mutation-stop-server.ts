@@ -15,10 +15,16 @@ const getMutationData = (name: string) => ({
   loadingMsg: `Stopping server ${name}...`,
 })
 
-export function useMutationStopServerList({ name }: { name: string }) {
+export function useMutationStopServerList({
+  name,
+  group = 'default',
+}: {
+  name: string
+  group?: string
+}) {
   const queryClient = useQueryClient()
   const queryKey = getApiV1BetaWorkloadsQueryKey({
-    query: { all: true, group: 'default' },
+    query: { all: true, group: group },
   })
   return useToastMutation({
     ...getMutationData(name),

@@ -148,14 +148,13 @@ export function useMutationRestartServer({
   group?: string
 }) {
   const queryClient = useQueryClient()
+  const queryKey = getApiV1BetaWorkloadsQueryKey({
+    query: { all: true, group: group ?? 'default' },
+  })
 
   return useToastMutation({
     ...getMutationData(name),
     onMutate: async () => {
-      const queryKey = getApiV1BetaWorkloadsQueryKey({
-        query: { all: true, group: group ?? 'default' },
-      })
-
       await queryClient.cancelQueries({ queryKey })
 
       const previousData = queryClient.getQueryData(queryKey)
@@ -178,10 +177,26 @@ export function useMutationRestartServer({
 
       return { previousData }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
-      })
+    onSuccess: async () => {
+      // Poll until server running
+      await pollBatchServerStatus(
+        async (names) => {
+          const statusResponses = await Promise.all(
+            names.map((name) =>
+              queryClient.fetchQuery(
+                getApiV1BetaWorkloadsByNameStatusOptions({ path: { name } })
+              )
+            )
+          )
+          return statusResponses.map((response, index) => ({
+            name: names[index],
+            status: response.status || 'unknown',
+          })) as CoreWorkload[]
+        },
+        [name],
+        'running'
+      )
+      queryClient.invalidateQueries({ queryKey })
     },
     onError: (_error, _variables, context) => {
       if (context?.previousData) {
