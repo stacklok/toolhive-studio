@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   postApiV1BetaWorkloadsByNameEditMutation,
   getApiV1BetaWorkloadsQueryKey,
+  getApiV1BetaWorkloadsByNameOptions,
+  getApiV1BetaWorkloadsByNameQueryKey,
 } from '@api/@tanstack/react-query.gen'
 import type { V1WorkloadListResponse } from '@api/types.gen'
 
@@ -32,13 +34,29 @@ export const useMutationUpdateWorkload = () => {
         queryClient.setQueryData(context?.queryKey, context.previousServersList)
       }
     },
-    onSettled: (_data, _error, variables, cachedResult) => {
-      // Only refetch workloads without cached data, as servers may be temporarily unavailable during restart.
-      if (!cachedResult?.previousServersList) {
-        const queryKey = getApiV1BetaWorkloadsQueryKey({
-          query: { all: true, group: variables.body.group },
+    onSettled: async (_data, _error, variables, cachedResult) => {
+      const workloadDetail = await queryClient.fetchQuery(
+        getApiV1BetaWorkloadsByNameOptions({
+          path: { name: variables.path.name },
         })
-        queryClient.refetchQueries({ queryKey })
+      )
+      const workloads =
+        (cachedResult?.previousServersList as V1WorkloadListResponse)
+          ?.workloads ?? []
+
+      // Only refetch workloads without cached data, as servers may be temporarily unavailable during restart.
+      if (
+        !workloads.some((workload) => workload.name === variables.path.name)
+      ) {
+        const workloadsQueryKey = getApiV1BetaWorkloadsQueryKey({
+          query: { all: true, group: workloadDetail.group ?? 'default' },
+        })
+        const workloadDetailQueryKey = getApiV1BetaWorkloadsByNameQueryKey({
+          path: { name: variables.path.name },
+        })
+
+        queryClient.refetchQueries({ queryKey: workloadsQueryKey })
+        queryClient.refetchQueries({ queryKey: workloadDetailQueryKey })
       }
     },
   })
