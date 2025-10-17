@@ -1,11 +1,13 @@
 import type { ReactElement } from 'react'
+import type { LucideIcon } from 'lucide-react'
 
 export function Group(props: {
   name: string
   isActive: boolean
   onClick?: () => void
+  icon?: LucideIcon
 }): ReactElement {
-  const { name, isActive, onClick } = props
+  const { name, isActive, onClick, icon: Icon } = props
 
   return (
     <div
@@ -19,6 +21,7 @@ export function Group(props: {
       role="button"
       tabIndex={0}
     >
+      {Icon && <Icon className="h-4 w-4" />}
       <span className="truncate">{name}</span>
     </div>
   )
