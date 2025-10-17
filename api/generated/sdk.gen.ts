@@ -137,7 +137,6 @@ export type Options<
 
 /**
  * Get OpenAPI specification
- *
  * Returns the OpenAPI specification for the API
  */
 export const getApiOpenapiJson = <ThrowOnError extends boolean = false>(
@@ -155,7 +154,6 @@ export const getApiOpenapiJson = <ThrowOnError extends boolean = false>(
 
 /**
  * List all clients
- *
  * List all registered clients in ToolHive
  */
 export const getApiV1BetaClients = <ThrowOnError extends boolean = false>(
@@ -173,7 +171,6 @@ export const getApiV1BetaClients = <ThrowOnError extends boolean = false>(
 
 /**
  * Register a new client
- *
  * Register a new client with ToolHive
  */
 export const postApiV1BetaClients = <ThrowOnError extends boolean = false>(
@@ -195,7 +192,6 @@ export const postApiV1BetaClients = <ThrowOnError extends boolean = false>(
 
 /**
  * Register multiple clients
- *
  * Register multiple clients with ToolHive
  */
 export const postApiV1BetaClientsRegister = <
@@ -219,7 +215,6 @@ export const postApiV1BetaClientsRegister = <
 
 /**
  * Unregister multiple clients
- *
  * Unregister multiple clients from ToolHive
  */
 export const postApiV1BetaClientsUnregister = <
@@ -243,7 +238,6 @@ export const postApiV1BetaClientsUnregister = <
 
 /**
  * Unregister a client
- *
  * Unregister a client from ToolHive
  */
 export const deleteApiV1BetaClientsByName = <
@@ -263,7 +257,6 @@ export const deleteApiV1BetaClientsByName = <
 
 /**
  * Unregister a client from a specific group
- *
  * Unregister a client from a specific group in ToolHive
  */
 export const deleteApiV1BetaClientsByNameGroupsByGroup = <
@@ -283,7 +276,6 @@ export const deleteApiV1BetaClientsByNameGroupsByGroup = <
 
 /**
  * List all clients status
- *
  * List all clients compatible with ToolHive and their status
  */
 export const getApiV1BetaDiscoveryClients = <
@@ -303,7 +295,6 @@ export const getApiV1BetaDiscoveryClients = <
 
 /**
  * List all groups
- *
  * Get a list of all groups
  */
 export const getApiV1BetaGroups = <ThrowOnError extends boolean = false>(
@@ -321,7 +312,6 @@ export const getApiV1BetaGroups = <ThrowOnError extends boolean = false>(
 
 /**
  * Create a new group
- *
  * Create a new group with the specified name
  */
 export const postApiV1BetaGroups = <ThrowOnError extends boolean = false>(
@@ -343,7 +333,6 @@ export const postApiV1BetaGroups = <ThrowOnError extends boolean = false>(
 
 /**
  * Delete a group
- *
  * Delete a group by name.
  */
 export const deleteApiV1BetaGroupsByName = <
@@ -363,7 +352,6 @@ export const deleteApiV1BetaGroupsByName = <
 
 /**
  * Get group details
- *
  * Get details of a specific group
  */
 export const getApiV1BetaGroupsByName = <ThrowOnError extends boolean = false>(
@@ -381,7 +369,6 @@ export const getApiV1BetaGroupsByName = <ThrowOnError extends boolean = false>(
 
 /**
  * List registries
- *
  * Get a list of the current registries
  */
 export const getApiV1BetaRegistry = <ThrowOnError extends boolean = false>(
@@ -399,7 +386,6 @@ export const getApiV1BetaRegistry = <ThrowOnError extends boolean = false>(
 
 /**
  * Add a registry
- *
  * Add a new registry
  */
 export const postApiV1BetaRegistry = <ThrowOnError extends boolean = false>(
@@ -421,7 +407,6 @@ export const postApiV1BetaRegistry = <ThrowOnError extends boolean = false>(
 
 /**
  * Remove a registry
- *
  * Remove a specific registry
  */
 export const deleteApiV1BetaRegistryByName = <
@@ -441,7 +426,6 @@ export const deleteApiV1BetaRegistryByName = <
 
 /**
  * Get a registry
- *
  * Get details of a specific registry
  */
 export const getApiV1BetaRegistryByName = <
@@ -461,7 +445,6 @@ export const getApiV1BetaRegistryByName = <
 
 /**
  * Update registry configuration
- *
  * Update registry URL or local path for the default registry
  */
 export const putApiV1BetaRegistryByName = <
@@ -485,7 +468,6 @@ export const putApiV1BetaRegistryByName = <
 
 /**
  * List servers in a registry
- *
  * Get a list of servers in a specific registry
  */
 export const getApiV1BetaRegistryByNameServers = <
@@ -505,7 +487,6 @@ export const getApiV1BetaRegistryByNameServers = <
 
 /**
  * Get a server from a registry
- *
  * Get details of a specific server in a registry
  */
 export const getApiV1BetaRegistryByNameServersByServerName = <
@@ -528,7 +509,6 @@ export const getApiV1BetaRegistryByNameServersByServerName = <
 
 /**
  * Setup or reconfigure secrets provider
- *
  * Setup the secrets provider with the specified type and configuration.
  */
 export const postApiV1BetaSecrets = <ThrowOnError extends boolean = false>(
@@ -550,7 +530,6 @@ export const postApiV1BetaSecrets = <ThrowOnError extends boolean = false>(
 
 /**
  * Get secrets provider details
- *
  * Get details of the default secrets provider
  */
 export const getApiV1BetaSecretsDefault = <
@@ -570,7 +549,6 @@ export const getApiV1BetaSecretsDefault = <
 
 /**
  * List secrets
- *
  * Get a list of all secret keys from the default provider
  */
 export const getApiV1BetaSecretsDefaultKeys = <
@@ -590,7 +568,6 @@ export const getApiV1BetaSecretsDefaultKeys = <
 
 /**
  * Create a new secret
- *
  * Create a new secret in the default provider (encrypted provider only)
  */
 export const postApiV1BetaSecretsDefaultKeys = <
@@ -614,7 +591,6 @@ export const postApiV1BetaSecretsDefaultKeys = <
 
 /**
  * Delete a secret
- *
  * Delete a secret from the default provider (encrypted provider only)
  */
 export const deleteApiV1BetaSecretsDefaultKeysByKey = <
@@ -634,7 +610,6 @@ export const deleteApiV1BetaSecretsDefaultKeysByKey = <
 
 /**
  * Update a secret
- *
  * Update an existing secret in the default provider (encrypted provider only)
  */
 export const putApiV1BetaSecretsDefaultKeysByKey = <
@@ -658,7 +633,6 @@ export const putApiV1BetaSecretsDefaultKeysByKey = <
 
 /**
  * Get server version
- *
  * Returns the current version of the server
  */
 export const getApiV1BetaVersion = <ThrowOnError extends boolean = false>(
@@ -676,7 +650,6 @@ export const getApiV1BetaVersion = <ThrowOnError extends boolean = false>(
 
 /**
  * List all workloads
- *
  * Get a list of all running workloads, optionally filtered by group
  */
 export const getApiV1BetaWorkloads = <ThrowOnError extends boolean = false>(
@@ -694,7 +667,6 @@ export const getApiV1BetaWorkloads = <ThrowOnError extends boolean = false>(
 
 /**
  * Create a new workload
- *
  * Create and start a new workload
  */
 export const postApiV1BetaWorkloads = <ThrowOnError extends boolean = false>(
@@ -716,7 +688,6 @@ export const postApiV1BetaWorkloads = <ThrowOnError extends boolean = false>(
 
 /**
  * Delete workloads in bulk
- *
  * Delete multiple workloads by name or by group
  */
 export const postApiV1BetaWorkloadsDelete = <
@@ -740,7 +711,6 @@ export const postApiV1BetaWorkloadsDelete = <
 
 /**
  * Restart workloads in bulk
- *
  * Restart multiple workloads by name or by group
  */
 export const postApiV1BetaWorkloadsRestart = <
@@ -764,7 +734,6 @@ export const postApiV1BetaWorkloadsRestart = <
 
 /**
  * Stop workloads in bulk
- *
  * Stop multiple workloads by name or by group
  */
 export const postApiV1BetaWorkloadsStop = <
@@ -788,7 +757,6 @@ export const postApiV1BetaWorkloadsStop = <
 
 /**
  * Delete a workload
- *
  * Delete a workload
  */
 export const deleteApiV1BetaWorkloadsByName = <
@@ -808,7 +776,6 @@ export const deleteApiV1BetaWorkloadsByName = <
 
 /**
  * Get workload details
- *
  * Get details of a specific workload
  */
 export const getApiV1BetaWorkloadsByName = <
@@ -828,7 +795,6 @@ export const getApiV1BetaWorkloadsByName = <
 
 /**
  * Update workload
- *
  * Update an existing workload configuration
  */
 export const postApiV1BetaWorkloadsByNameEdit = <
@@ -852,7 +818,6 @@ export const postApiV1BetaWorkloadsByNameEdit = <
 
 /**
  * Export workload configuration
- *
  * Export a workload's run configuration as JSON
  */
 export const getApiV1BetaWorkloadsByNameExport = <
@@ -872,7 +837,6 @@ export const getApiV1BetaWorkloadsByNameExport = <
 
 /**
  * Get logs for a specific workload
- *
  * Retrieve at most 100 lines of logs for a specific workload by name.
  */
 export const getApiV1BetaWorkloadsByNameLogs = <
@@ -892,7 +856,6 @@ export const getApiV1BetaWorkloadsByNameLogs = <
 
 /**
  * Restart a workload
- *
  * Restart a running workload
  */
 export const postApiV1BetaWorkloadsByNameRestart = <
@@ -912,7 +875,6 @@ export const postApiV1BetaWorkloadsByNameRestart = <
 
 /**
  * Get workload status
- *
  * Get the current status of a specific workload
  */
 export const getApiV1BetaWorkloadsByNameStatus = <
@@ -932,7 +894,6 @@ export const getApiV1BetaWorkloadsByNameStatus = <
 
 /**
  * Stop a workload
- *
  * Stop a running workload
  */
 export const postApiV1BetaWorkloadsByNameStop = <
@@ -952,7 +913,6 @@ export const postApiV1BetaWorkloadsByNameStop = <
 
 /**
  * Health check
- *
  * Check if the API is healthy
  */
 export const getHealth = <ThrowOnError extends boolean = false>(
