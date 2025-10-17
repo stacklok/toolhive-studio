@@ -10,6 +10,13 @@ import { ManageClientsButton } from '@/features/clients/components/manage-client
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
 import { Checkbox } from '@/common/components/ui/checkbox'
 import { Label } from '@/common/components/ui/label'
+import { Button } from '@/common/components/ui/button'
+import {
+  Alert,
+  AlertTitle,
+  AlertDescription,
+} from '@/common/components/ui/alert'
+import { AlertTriangle } from 'lucide-react'
 
 export const Route = createFileRoute('/mcp-optimizer')({
   component: McpOptimizerRoute,
@@ -61,6 +68,13 @@ function McpOptimizerRoute() {
         </TitlePage>
         <div className="p-6">
           <div className="mx-auto max-w-2xl">
+            <Alert className="mb-6">
+              <AlertTriangle />
+              <AlertTitle>Experimental Feature</AlertTitle>
+              <AlertDescription>
+                This is an experimental feature currently under development.
+              </AlertDescription>
+            </Alert>
             <div className="mb-6">
               <h2 className="text-lg font-semibold">
                 Select Groups to Optimize
@@ -98,6 +112,9 @@ function McpOptimizerRoute() {
                   </div>
                 )
               })}
+            </div>
+            <div className="mt-6 flex justify-end">
+              <Button>Apply Changes</Button>
             </div>
           </div>
         </div>
