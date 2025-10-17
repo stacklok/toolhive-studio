@@ -22,7 +22,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/common/components/ui/dropdown-menu'
-import { AlertTriangle, Settings } from 'lucide-react'
+import { AlertTriangle, Settings, RotateCw, Text, Edit3 } from 'lucide-react'
 
 export const Route = createFileRoute('/mcp-optimizer')({
   component: McpOptimizerRoute,
@@ -91,13 +91,16 @@ function McpOptimizerRoute() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" role="menu" className="w-56">
                   <DropdownMenuItem className="flex cursor-pointer items-center">
-                    Configuration Option 1
+                    <RotateCw className="mr-2 h-4 w-4" />
+                    Restart Meta-MCP
                   </DropdownMenuItem>
                   <DropdownMenuItem className="flex cursor-pointer items-center">
-                    Configuration Option 2
+                    <Text className="mr-2 h-4 w-4" />
+                    Meta-MCP logs
                   </DropdownMenuItem>
                   <DropdownMenuItem className="flex cursor-pointer items-center">
-                    Advanced Settings
+                    <Edit3 className="mr-2 h-4 w-4" />
+                    Customize Meta-MCP configuration
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
