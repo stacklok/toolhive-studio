@@ -16,7 +16,13 @@ import {
   AlertTitle,
   AlertDescription,
 } from '@/common/components/ui/alert'
-import { AlertTriangle } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/common/components/ui/dropdown-menu'
+import { AlertTriangle, Settings } from 'lucide-react'
 
 export const Route = createFileRoute('/mcp-optimizer')({
   component: McpOptimizerRoute,
@@ -76,6 +82,25 @@ function McpOptimizerRoute() {
         <TitlePage title="MCP Optimizer">
           <>
             <div className="flex gap-2 lg:ml-auto">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Advanced
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" role="menu" className="w-56">
+                  <DropdownMenuItem className="flex cursor-pointer items-center">
+                    Configuration Option 1
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex cursor-pointer items-center">
+                    Configuration Option 2
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex cursor-pointer items-center">
+                    Advanced Settings
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <ManageClientsButton groupName="mcp-optimizer" />
             </div>
           </>
