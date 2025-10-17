@@ -53,9 +53,10 @@ export const useMutationUpdateWorkload = () => {
         const workloadDetailQueryKey = getApiV1BetaWorkloadsByNameQueryKey({
           path: { name: variables.path.name },
         })
-
-        queryClient.refetchQueries({ queryKey: workloadsQueryKey })
-        queryClient.refetchQueries({ queryKey: workloadDetailQueryKey })
+        await Promise.all([
+          queryClient.refetchQueries({ queryKey: workloadsQueryKey }),
+          queryClient.refetchQueries({ queryKey: workloadDetailQueryKey }),
+        ])
       }
     },
   })

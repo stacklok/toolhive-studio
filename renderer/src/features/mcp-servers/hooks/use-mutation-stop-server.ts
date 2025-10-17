@@ -46,7 +46,7 @@ export function useMutationStopServerList({
             workloads: oldData.workloads?.map((server: CoreWorkload) =>
               server.name === name ? { ...server, status: 'stopping' } : server
             ),
-          } as V1WorkloadListResponse
+          }
           return updatedData
         }
       )
@@ -68,7 +68,7 @@ export function useMutationStopServerList({
           return statusResponses.map((response, index) => ({
             name: names[index],
             status: response.status || 'unknown',
-          })) as CoreWorkload[]
+          }))
         },
         [name],
         'stopped'

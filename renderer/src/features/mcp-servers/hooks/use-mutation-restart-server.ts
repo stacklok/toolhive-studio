@@ -191,7 +191,7 @@ export function useMutationRestartServer({
           return statusResponses.map((response, index) => ({
             name: names[index],
             status: response.status || 'unknown',
-          })) as CoreWorkload[]
+          }))
         },
         [name],
         'running'
