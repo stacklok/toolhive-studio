@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
@@ -27,6 +27,8 @@ function McpOptimizerRoute() {
   const { data: groupsData } = useGroups()
   const groups = groupsData?.groups ?? []
 
+  const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set())
+
   // Fetch all workloads to see which servers are in each group
   const { data: workloadsData } = useQuery({
     ...getApiV1BetaWorkloadsOptions({
@@ -52,6 +54,18 @@ function McpOptimizerRoute() {
     })
     return grouped
   }, [workloads])
+
+  const toggleGroup = (groupName: string) => {
+    setSelectedGroups((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(groupName)) {
+        newSet.delete(groupName)
+      } else {
+        newSet.add(groupName)
+      }
+      return newSet
+    })
+  }
 
   return (
     <div className="flex h-full gap-6">
@@ -107,14 +121,20 @@ function McpOptimizerRoute() {
                 return (
                   <div
                     key={groupName}
-                    className="flex items-start gap-3 border-b p-4
-                      last:border-b-0"
+                    className="hover:bg-accent flex cursor-pointer items-start
+                      gap-3 border-b p-4 last:border-b-0"
+                    onClick={() => toggleGroup(groupName)}
                   >
-                    <Checkbox id={groupName} className="mt-0.5" />
+                    <Checkbox
+                      id={groupName}
+                      className="mt-0.5"
+                      checked={selectedGroups.has(groupName)}
+                      onCheckedChange={() => toggleGroup(groupName)}
+                    />
                     <div className="flex flex-1 flex-col gap-1">
                       <Label
                         htmlFor={groupName}
-                        className="text-sm font-medium"
+                        className="cursor-pointer text-sm font-medium"
                       >
                         {groupName}
                       </Label>
