@@ -8,7 +8,7 @@ import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../utils/feature-flags'
 import { ManageClientsButton } from '@/features/clients/components/manage-clients-button'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
-import { Checkbox } from '@/common/components/ui/checkbox'
+import { RadioGroup, RadioGroupItem } from '@/common/components/ui/radio-group'
 import { Label } from '@/common/components/ui/label'
 import { Button } from '@/common/components/ui/button'
 import {
@@ -33,7 +33,7 @@ function McpOptimizerRoute() {
   const { data: groupsData } = useGroups()
   const groups = groupsData?.groups ?? []
 
-  const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set())
+  const [selectedGroup, setSelectedGroup] = useState<string>('')
 
   // Fetch all workloads to see which servers are in each group
   const { data: workloadsData } = useQuery({
@@ -60,18 +60,6 @@ function McpOptimizerRoute() {
     })
     return grouped
   }, [workloads])
-
-  const toggleGroup = (groupName: string) => {
-    setSelectedGroups((prev) => {
-      const newSet = new Set(prev)
-      if (newSet.has(groupName)) {
-        newSet.delete(groupName)
-      } else {
-        newSet.add(groupName)
-      }
-      return newSet
-    })
-  }
 
   return (
     <div className="flex h-full gap-6">
@@ -140,40 +128,47 @@ function McpOptimizerRoute() {
                 and optimized.
               </p>
             </div>
-            <div className="rounded-xl border">
-              {groups.map((group) => {
-                const groupName = group.name ?? ''
-                const servers = serversByGroup[groupName] ?? []
-                const serverCount = servers.length
+            <RadioGroup
+              value={selectedGroup}
+              onValueChange={setSelectedGroup}
+              className="gap-0"
+            >
+              <div className="rounded-xl border">
+                {groups.map((group) => {
+                  const groupName = group.name ?? ''
+                  const servers = serversByGroup[groupName] ?? []
+                  const serverCount = servers.length
 
-                return (
-                  <div
-                    key={groupName}
-                    className="hover:bg-accent flex cursor-pointer items-start
-                      gap-3 border-b p-4 last:border-b-0"
-                    onClick={() => toggleGroup(groupName)}
-                  >
-                    <Checkbox
-                      id={groupName}
-                      className="mt-0.5"
-                      checked={selectedGroups.has(groupName)}
-                      onCheckedChange={() => toggleGroup(groupName)}
-                    />
-                    <div className="flex flex-1 flex-col gap-1">
-                      <Label
-                        htmlFor={groupName}
-                        className="cursor-pointer text-sm font-medium"
-                      >
-                        {groupName}
-                      </Label>
-                      <p className="text-muted-foreground text-xs">
-                        {serverCount === 0 ? 'No servers' : servers.join(', ')}
-                      </p>
+                  return (
+                    <div
+                      key={groupName}
+                      className="hover:bg-accent flex cursor-pointer items-start
+                        gap-3 border-b p-4 last:border-b-0"
+                      onClick={() => setSelectedGroup(groupName)}
+                    >
+                      <RadioGroupItem
+                        id={groupName}
+                        value={groupName}
+                        className="mt-0.5"
+                      />
+                      <div className="flex flex-1 flex-col gap-1">
+                        <Label
+                          htmlFor={groupName}
+                          className="cursor-pointer text-sm font-medium"
+                        >
+                          {groupName}
+                        </Label>
+                        <p className="text-muted-foreground text-xs">
+                          {serverCount === 0
+                            ? 'No servers'
+                            : servers.join(', ')}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                )
-              })}
-            </div>
+                  )
+                })}
+              </div>
+            </RadioGroup>
             <div className="mt-6 flex justify-end">
               <Button>Apply Changes</Button>
             </div>
