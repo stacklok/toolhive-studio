@@ -22,6 +22,7 @@ import {
 } from '@/common/components/ui/alert'
 import { Badge } from '@/common/components/ui/badge'
 import { TriangleAlert } from 'lucide-react'
+import type { IsFromRegistryToolDiff } from '../hooks/use-is-server-from-registry'
 
 interface Tool {
   name: string
@@ -32,11 +33,7 @@ interface Tool {
 interface CustomizeToolsTableProps {
   tools: Tool[]
   isLoading?: boolean
-  toolsDiff?: {
-    hasExactMatch: boolean
-    addedTools: string[]
-    missingTools: string[]
-  } | null
+  toolsDiff?: IsFromRegistryToolDiff | null
   onApply?: (enabledTools: Record<string, boolean>) => Promise<void>
   onReset?: () => void
   drift?: {
@@ -62,11 +59,7 @@ const getAlertMessageMap = () => {
     },
     toolsDiff: {
       title: 'Tools differ from registry',
-      description: (toolsDiff: {
-        hasExactMatch: boolean
-        addedTools: string[]
-        missingTools: string[]
-      }) => (
+      description: (toolsDiff: IsFromRegistryToolDiff) => (
         <div className="space-y-2">
           <p>
             The tools available in the running server don't fully match the

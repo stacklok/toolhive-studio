@@ -4,6 +4,12 @@ import {
 } from '@api/@tanstack/react-query.gen'
 import { useQuery } from '@tanstack/react-query'
 
+export interface IsFromRegistryToolDiff {
+  hasExactMatch: boolean
+  addedTools: string[]
+  missingTools: string[]
+}
+
 function getImageNameWithoutTag(image: string | undefined): string {
   if (!image) return ''
   const lastColonIndex = image.lastIndexOf(':')
@@ -57,11 +63,7 @@ export function useIsServerFromRegistry(serverName: string) {
 
   const getToolsDiffFromRegistry = (
     tools: string[]
-  ): {
-    hasExactMatch: boolean
-    addedTools: string[]
-    missingTools: string[]
-  } | null => {
+  ): IsFromRegistryToolDiff | null => {
     if (!matchedRegistryItem?.tools) {
       return null
     }
