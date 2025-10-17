@@ -531,4 +531,398 @@ describe('useIsServerFromRegistry', () => {
       })
     })
   })
+
+  describe('getToolsDiffFromRegistry', () => {
+    it('returns hasExactMatch true when tools match exactly in same order', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            servers: [
+              createRegistryImage({
+                image: 'ghcr.io/test/server:v1.0.0',
+                tools: ['tool1', 'tool2', 'tool3'],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(true)
+        const diff = result.current.getToolsDiffFromRegistry([
+          'tool1',
+          'tool2',
+          'tool3',
+        ])
+        expect(diff).toEqual({
+          hasExactMatch: true,
+          addedTools: [],
+          missingTools: [],
+        })
+      })
+    })
+
+    it('returns hasExactMatch true when tools match but in different order', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            servers: [
+              createRegistryImage({
+                image: 'ghcr.io/test/server:v1.0.0',
+                tools: ['tool1', 'tool2', 'tool3'],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(true)
+        const diff = result.current.getToolsDiffFromRegistry([
+          'tool3',
+          'tool1',
+          'tool2',
+        ])
+        expect(diff).toEqual({
+          hasExactMatch: true,
+          addedTools: [],
+          missingTools: [],
+        })
+      })
+    })
+
+    it('does not mutate the original tools array', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            servers: [
+              createRegistryImage({
+                image: 'ghcr.io/test/server:v1.0.0',
+                tools: ['tool1', 'tool2', 'tool3'],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(true)
+      })
+
+      const originalTools = ['tool3', 'tool1', 'tool2']
+      const originalCopy = [...originalTools]
+
+      result.current.getToolsDiffFromRegistry(originalTools)
+
+      // Verify the original array was not mutated
+      expect(originalTools).toEqual(originalCopy)
+    })
+
+    it('identifies added tools in server', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            servers: [
+              createRegistryImage({
+                image: 'ghcr.io/test/server:v1.0.0',
+                tools: ['tool1', 'tool2'],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(true)
+        const diff = result.current.getToolsDiffFromRegistry([
+          'tool1',
+          'tool2',
+          'tool3',
+          'tool4',
+        ])
+        expect(diff).toEqual({
+          hasExactMatch: false,
+          addedTools: ['tool3', 'tool4'],
+          missingTools: [],
+        })
+      })
+    })
+
+    it('identifies missing tools from server', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            servers: [
+              createRegistryImage({
+                image: 'ghcr.io/test/server:v1.0.0',
+                tools: ['tool1', 'tool2', 'tool3', 'tool4'],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(true)
+        const diff = result.current.getToolsDiffFromRegistry(['tool1', 'tool2'])
+        expect(diff).toEqual({
+          hasExactMatch: false,
+          addedTools: [],
+          missingTools: ['tool3', 'tool4'],
+        })
+      })
+    })
+
+    it('identifies both added and missing tools', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            servers: [
+              createRegistryImage({
+                image: 'ghcr.io/test/server:v1.0.0',
+                tools: ['tool1', 'tool2', 'tool3'],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(true)
+        const diff = result.current.getToolsDiffFromRegistry([
+          'tool1',
+          'tool4',
+          'tool5',
+        ])
+        expect(diff).toEqual({
+          hasExactMatch: false,
+          addedTools: ['tool4', 'tool5'],
+          missingTools: ['tool2', 'tool3'],
+        })
+      })
+    })
+
+    it('returns null when registry item has no tools', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            servers: [
+              createRegistryImage({
+                image: 'ghcr.io/test/server:v1.0.0',
+                tools: [],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(false)
+        const diff = result.current.getToolsDiffFromRegistry(['tool1'])
+        expect(diff).toBeNull()
+      })
+    })
+
+    it('returns null when server is not from registry', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createWorkload({ image: 'ghcr.io/test/different-server:v1.0.0' })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            servers: [
+              createRegistryImage({
+                image: 'ghcr.io/test/server:v1.0.0',
+                tools: ['tool1', 'tool2'],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(false)
+        const diff = result.current.getToolsDiffFromRegistry(['tool1', 'tool2'])
+        expect(diff).toBeNull()
+      })
+    })
+
+    it('handles duplicate tools correctly', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            servers: [
+              createRegistryImage({
+                image: 'ghcr.io/test/server:v1.0.0',
+                tools: ['tool1', 'tool2', 'tool2'],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(true)
+        // With duplicates, the diff uses Set logic and deduplicates
+        const diff = result.current.getToolsDiffFromRegistry([
+          'tool1',
+          'tool2',
+          'tool3',
+          'tool3',
+        ])
+        expect(diff).toEqual({
+          hasExactMatch: false,
+          addedTools: ['tool3'],
+          missingTools: [],
+        })
+      })
+    })
+
+    it('preserves order of tools in the result', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            servers: [
+              createRegistryImage({
+                image: 'ghcr.io/test/server:v1.0.0',
+                tools: ['alpha', 'beta', 'gamma'],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(true)
+        const diff = result.current.getToolsDiffFromRegistry([
+          'zebra',
+          'alpha',
+          'delta',
+        ])
+        // Should preserve the order they appear in the original arrays
+        expect(diff).toEqual({
+          hasExactMatch: false,
+          addedTools: ['zebra', 'delta'],
+          missingTools: ['beta', 'gamma'],
+        })
+      })
+    })
+  })
 })

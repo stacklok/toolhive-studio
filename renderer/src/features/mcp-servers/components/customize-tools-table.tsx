@@ -8,6 +8,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/common/components/ui/table'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/common/components/ui/tooltip'
 import { useState, useEffect, useCallback } from 'react'
 import { Skeleton } from '@/common/components/ui/skeleton'
 import {
@@ -27,6 +32,11 @@ interface Tool {
 interface CustomizeToolsTableProps {
   tools: Tool[]
   isLoading?: boolean
+  toolsDiff?: {
+    hasExactMatch: boolean
+    addedTools: string[]
+    missingTools: string[]
+  } | null
   onApply?: (enabledTools: Record<string, boolean>) => Promise<void>
   onReset?: () => void
   drift?: {
@@ -35,8 +45,53 @@ interface CustomizeToolsTableProps {
   } | null
 }
 
+const getAlertMessageMap = () => {
+  return {
+    drift: {
+      title: 'Tag drift detected',
+      description: (drift: { localTag?: string; registryTag?: string }) => (
+        <p>
+          This image has drifted from the version in the registry. <b>Local</b>{' '}
+          image tag: <Badge variant="outline">{drift?.localTag}</Badge>{' '}
+          <b>Registry</b> image tag:{' '}
+          <Badge variant="outline">{drift?.registryTag}</Badge> <br />
+          Please upgrade to the latest one. Enabled tools are up to date, but
+          some disabled tools may no longer match the current image.
+        </p>
+      ),
+    },
+    toolsDiff: {
+      title: 'Tools differ from registry',
+      description: (toolsDiff: {
+        hasExactMatch: boolean
+        addedTools: string[]
+        missingTools: string[]
+      }) => (
+        <div className="space-y-2">
+          <p>
+            The tools available in the running server don't fully match the
+            registry definition.
+            <br />
+            {toolsDiff.missingTools.length > 0 && (
+              <span className="flex items-center gap-1">
+                Missing from server:
+                {toolsDiff.missingTools.map((tool) => (
+                  <Badge key={tool} variant="outline">
+                    {tool}
+                  </Badge>
+                ))}
+              </span>
+            )}
+          </p>
+        </div>
+      ),
+    },
+  } as const
+}
+
 export function CustomizeToolsTable({
   tools,
+  toolsDiff,
   isLoading = true,
   drift,
   onApply,
@@ -115,37 +170,58 @@ export function CustomizeToolsTable({
     return <div>No tools available</div>
   }
 
+  const getAlertConfig = () => {
+    const alertMessageMap = getAlertMessageMap()
+
+    if (drift) {
+      const { title, description } = alertMessageMap.drift
+      return { title, description: description(drift) }
+    }
+
+    if (toolsDiff && toolsDiff?.missingTools?.length > 0) {
+      const { title, description } = alertMessageMap.toolsDiff
+      return { title, description: description(toolsDiff) }
+    }
+
+    return null
+  }
+
+  const renderAlert = () => {
+    const alertConfig = getAlertConfig()
+
+    if (!alertConfig || isLoading) {
+      return null
+    }
+
+    return (
+      <Alert>
+        <TriangleAlert className="size-4 stroke-orange-500" />
+        <AlertTitle className="flex items-center justify-between">
+          <b>{alertConfig.title}</b>
+        </AlertTitle>
+        <AlertDescription>{alertConfig.description}</AlertDescription>
+      </Alert>
+    )
+  }
+
   return (
-    <div className="flex max-h-full flex-col gap-5">
-      {drift && (
-        <Alert>
-          <TriangleAlert className="size-4 stroke-orange-600" />
-          <AlertTitle className="flex items-center justify-between">
-            <b>Tag drift detected</b>
-          </AlertTitle>
-          <AlertDescription>
-            <p>
-              This image has drifted from the version in the registry.{' '}
-              <b>Local</b> image tag:{' '}
-              <Badge variant="outline">{drift.localTag}</Badge> <b>Registry</b>{' '}
-              image tag: <Badge variant="outline">{drift.registryTag}</Badge>{' '}
-              <br />
-              Please upgrade to the latest one. Enabled tools are up to date,
-              but some disabled tools may no longer match the current image.
-            </p>
-          </AlertDescription>
-        </Alert>
-      )}
-      <div className="flex flex-col gap-5">
-        <div className="overflow-hidden rounded-md border">
+    <div className="flex h-full flex-col gap-5">
+      {renderAlert()}
+      <div className="flex min-h-0 flex-1 flex-col gap-5">
+        <div
+          className="max-h-full overflow-auto rounded-md border
+            [&_[data-slot=table-container]]:overflow-visible"
+        >
           <Table className="table-fixed">
             <colgroup>
               <col className="w-[60px]" />
               <col className="w-[200px]" />
               <col />
             </colgroup>
-            <TableHeader className="bg-muted/50 sticky top-0 z-10">
-              <TableRow className="border-border border-b">
+            <TableHeader>
+              <TableRow
+                className="border-border bg-muted sticky top-0 z-10 border-b"
+              >
                 <TableHead className="text-muted-foreground text-xs"></TableHead>
                 <TableHead className="text-muted-foreground text-xs">
                   Tool
@@ -155,24 +231,34 @@ export function CustomizeToolsTable({
                 </TableHead>
               </TableRow>
             </TableHeader>
+            <TableBody>{renderTableBody()}</TableBody>
           </Table>
-          <div className="max-h-[calc(100vh-350px)] overflow-auto">
-            <Table className="table-fixed">
-              <colgroup>
-                <col className="w-[60px]" />
-                <col className="w-[200px]" />
-                <col />
-              </colgroup>
-              <TableBody>{renderTableBody()}</TableBody>
-            </Table>
-          </div>
         </div>
 
-        <div className="flex gap-2">
-          <Button variant="default" onClick={handleApply} disabled={isLoading}>
-            Apply
-          </Button>
-          <Button variant="outline" onClick={handleReset} disabled={isLoading}>
+        <div className="flex flex-shrink-0 gap-2">
+          <Tooltip open={tools.length <= 1 ? undefined : false}>
+            <TooltipTrigger asChild>
+              <span className="inline-flex">
+                <Button
+                  variant="default"
+                  onClick={handleApply}
+                  disabled={isLoading || tools.length <= 1}
+                >
+                  Apply
+                </Button>
+              </span>
+            </TooltipTrigger>
+            {tools.length <= 1 && (
+              <TooltipContent>
+                Tool filtering is only available when there are multiple tools
+              </TooltipContent>
+            )}
+          </Tooltip>
+          <Button
+            variant="outline"
+            onClick={handleReset}
+            disabled={isLoading || tools.length <= 1}
+          >
             Enable all tools
           </Button>
         </div>

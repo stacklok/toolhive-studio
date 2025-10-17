@@ -50,6 +50,7 @@ export function CustomizeToolsPage() {
     isFromRegistry,
     registryTools = [],
     drift,
+    getToolsDiffFromRegistry,
   } = useIsServerFromRegistry(serverName)
 
   const { data: serverTools, isFetching: isLoadingServerTools } = useQuery({
@@ -74,26 +75,37 @@ export function CustomizeToolsPage() {
     retry: false,
   })
 
+  const toolsRegistryMap = Object.fromEntries(
+    registryTools.map((name) => [name, { name, description: '' }])
+  )
+  const serverToolsMap = serverTools
+    ? Object.fromEntries(
+        Object.entries(serverTools).map(([name, toolDef]) => [
+          name,
+          { name, description: toolDef.description },
+        ])
+      )
+    : {}
   const toolsMap = {
-    ...Object.fromEntries(
-      registryTools.map((name) => [name, { name, description: '' }])
-    ),
-    ...(serverTools
-      ? Object.fromEntries(
-          Object.entries(serverTools).map(([name, toolDef]) => [
-            name,
-            { name, description: toolDef.description },
-          ])
-        )
-      : {}),
+    ...toolsRegistryMap,
+    ...serverToolsMap,
   }
-  const completedTools = Object.values(toolsMap).map((tool) => ({
-    ...tool,
-    isInitialEnabled: !existingServerData?.tools
-      ? true
-      : existingServerData?.tools?.includes(tool.name),
-  }))
 
+  const completedTools = Object.values(toolsMap)
+    .map((tool) => ({
+      ...tool,
+      isInitialEnabled: !existingServerData?.tools
+        ? true
+        : existingServerData?.tools?.includes(tool.name),
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+
+  const toolsDiff = getToolsDiffFromRegistry(Object.keys(serverToolsMap))
+  // Show diff only when no filter is applied and tools don't match exactly
+  const showToolsDiff =
+    !existingServerData?.tools &&
+    existingServerData?.tools?.length === 0 &&
+    !toolsDiff?.hasExactMatch
   const { updateServerMutation } = useUpdateServer(serverName)
 
   const handleUpdateServer = async (tools: string[] | null) => {
@@ -177,7 +189,7 @@ export function CustomizeToolsPage() {
   if (!isFromRegistry) return null
 
   return (
-    <div className="flex max-h-full flex-col">
+    <div className="flex h-full flex-col">
       <div className="mb-2">
         <LinkViewTransition to="/group/default">
           <Button
@@ -201,6 +213,7 @@ export function CustomizeToolsPage() {
         ) : (
           <CustomizeToolsTable
             tools={completedTools || []}
+            toolsDiff={showToolsDiff ? toolsDiff : null}
             isLoading={
               isSubmitting ||
               isWorkloadLoading ||

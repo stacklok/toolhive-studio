@@ -55,14 +55,66 @@ export function useIsServerFromRegistry(serverName: string) {
       }
     : null
 
+  const getToolsDiffFromRegistry = (
+    tools: string[]
+  ): {
+    hasExactMatch: boolean
+    addedTools: string[]
+    missingTools: string[]
+  } | null => {
+    if (!matchedRegistryItem?.tools) {
+      return null
+    }
+
+    // Check for exact match first
+    if (matchedRegistryItem.tools.length === tools.length) {
+      const sortedRegistryTools = [...matchedRegistryItem.tools].sort()
+      const sortedTools = [...tools].sort()
+
+      const hasExactMatch = sortedRegistryTools.every(
+        (name, i) => sortedTools[i] === name
+      )
+
+      if (hasExactMatch) {
+        return {
+          hasExactMatch: true,
+          addedTools: [],
+          missingTools: [],
+        }
+      }
+    }
+
+    // Calculate diff if no exact match
+    const registryToolsSet = new Set(matchedRegistryItem.tools)
+    const serverToolsSet = new Set(tools)
+
+    // Tools in server but not in registry (deduplicated)
+    const addedTools = Array.from(serverToolsSet).filter(
+      (tool) => !registryToolsSet.has(tool)
+    )
+
+    // Tools in registry but not in server (deduplicated)
+    const missingTools = Array.from(registryToolsSet).filter(
+      (tool) => !serverToolsSet.has(tool)
+    )
+
+    return {
+      hasExactMatch: false,
+      addedTools,
+      missingTools,
+    }
+  }
+
   if (!isFromRegistry || !serverName)
     return {
+      getToolsDiffFromRegistry,
       isFromRegistry: false,
       registryTools: [],
       drift,
     }
 
   return {
+    getToolsDiffFromRegistry,
     isFromRegistry,
     registryTools: matchedRegistryItem.tools,
     drift,

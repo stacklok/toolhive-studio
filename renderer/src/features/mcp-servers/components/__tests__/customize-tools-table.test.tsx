@@ -392,6 +392,26 @@ describe('CustomizeToolsTable', () => {
       expect(screen.queryByText('Tag drift detected')).not.toBeInTheDocument()
     })
 
+    it('does not show alert when isLoading is true', async () => {
+      const drift = {
+        localTag: 'v1.0.0',
+        registryTag: 'v2.0.0',
+      }
+
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable tools={mockTools} isLoading={true} drift={drift} />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        const rows = screen.getAllByRole('row')
+        expect(rows.length).toBe(11) // 1 header + 10 skeleton rows
+      })
+
+      expect(screen.queryByText('Tag drift detected')).not.toBeInTheDocument()
+    })
+
     it('shows drift alert with correct tags', async () => {
       const drift = {
         localTag: 'v1.0.0',
@@ -463,6 +483,335 @@ describe('CustomizeToolsTable', () => {
       await waitFor(() => {
         expect(screen.getByText('v1.5.0-beta')).toBeInTheDocument()
         expect(screen.getByText('v2.0.0-stable')).toBeInTheDocument()
+      })
+    })
+
+    it('prioritizes drift alert over toolsDiff alert', async () => {
+      const drift = {
+        localTag: 'v1.0.0',
+        registryTag: 'v2.0.0',
+      }
+
+      const toolsDiff = {
+        hasExactMatch: false,
+        addedTools: ['new_tool'],
+        missingTools: ['old_tool'],
+      }
+
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable
+          tools={mockTools}
+          isLoading={false}
+          drift={drift}
+          toolsDiff={toolsDiff}
+        />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByText('Tag drift detected')).toBeInTheDocument()
+      })
+
+      // Should show drift, not toolsDiff
+      expect(
+        screen.queryByText('Tools differ from registry')
+      ).not.toBeInTheDocument()
+    })
+  })
+
+  describe('ToolsDiff alert', () => {
+    it('does not show alert when toolsDiff is null', async () => {
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable
+          tools={mockTools}
+          isLoading={false}
+          toolsDiff={null}
+        />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByText('read_file')).toBeInTheDocument()
+      })
+
+      expect(
+        screen.queryByText('Tools differ from registry')
+      ).not.toBeInTheDocument()
+    })
+
+    it('does not show alert when toolsDiff has exact match', async () => {
+      const toolsDiff = {
+        hasExactMatch: true,
+        addedTools: [],
+        missingTools: [],
+      }
+
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable
+          tools={mockTools}
+          isLoading={false}
+          toolsDiff={toolsDiff}
+        />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByText('read_file')).toBeInTheDocument()
+      })
+
+      expect(
+        screen.queryByText('Tools differ from registry')
+      ).not.toBeInTheDocument()
+    })
+
+    it('does not show alert when isLoading is true', async () => {
+      const toolsDiff = {
+        hasExactMatch: false,
+        addedTools: [],
+        missingTools: ['create_directory'],
+      }
+
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable
+          tools={mockTools}
+          isLoading={true}
+          toolsDiff={toolsDiff}
+        />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        const rows = screen.getAllByRole('row')
+        expect(rows.length).toBe(11) // 1 header + 10 skeleton rows
+      })
+
+      expect(
+        screen.queryByText('Tools differ from registry')
+      ).not.toBeInTheDocument()
+    })
+
+    it('shows alert when there are missing tools', async () => {
+      const toolsDiff = {
+        hasExactMatch: false,
+        addedTools: [],
+        missingTools: ['create_directory', 'move_file'],
+      }
+
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable
+          tools={mockTools}
+          isLoading={false}
+          toolsDiff={toolsDiff}
+        />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('Tools differ from registry')
+        ).toBeInTheDocument()
+      })
+
+      expect(screen.getByText('Missing from server:')).toBeInTheDocument()
+      expect(screen.getByText('create_directory')).toBeInTheDocument()
+      expect(screen.getByText('move_file')).toBeInTheDocument()
+    })
+
+    it('shows alert with single missing tool', async () => {
+      const toolsDiff = {
+        hasExactMatch: false,
+        addedTools: [],
+        missingTools: ['create_directory'],
+      }
+
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable
+          tools={mockTools}
+          isLoading={false}
+          toolsDiff={toolsDiff}
+        />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('Tools differ from registry')
+        ).toBeInTheDocument()
+      })
+
+      expect(screen.getByText('create_directory')).toBeInTheDocument()
+    })
+
+    it('does not show alert when missingTools array is empty', async () => {
+      const toolsDiff = {
+        hasExactMatch: false,
+        addedTools: ['extra_tool'],
+        missingTools: [],
+      }
+
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable
+          tools={mockTools}
+          isLoading={false}
+          toolsDiff={toolsDiff}
+        />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByText('read_file')).toBeInTheDocument()
+      })
+
+      expect(
+        screen.queryByText('Tools differ from registry')
+      ).not.toBeInTheDocument()
+    })
+
+    it('displays tools in badges', async () => {
+      const toolsDiff = {
+        hasExactMatch: false,
+        addedTools: [],
+        missingTools: ['tool_a', 'tool_b', 'tool_c'],
+      }
+
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable
+          tools={mockTools}
+          isLoading={false}
+          toolsDiff={toolsDiff}
+        />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByText('tool_a')).toBeInTheDocument()
+        expect(screen.getByText('tool_b')).toBeInTheDocument()
+        expect(screen.getByText('tool_c')).toBeInTheDocument()
+      })
+    })
+
+    it('shows correct message about tools not matching', async () => {
+      const toolsDiff = {
+        hasExactMatch: false,
+        addedTools: [],
+        missingTools: ['some_tool'],
+      }
+
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable
+          tools={mockTools}
+          isLoading={false}
+          toolsDiff={toolsDiff}
+        />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(
+            /The tools available in the running server don't fully match the registry definition/i
+          )
+        ).toBeInTheDocument()
+      })
+    })
+  })
+
+  describe('Single tool behavior', () => {
+    it('disables both buttons when only one tool', async () => {
+      const singleTool = [
+        {
+          name: 'only_tool',
+          description: 'The only tool available',
+        },
+      ]
+
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable tools={singleTool} isLoading={false} />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByText('only_tool')).toBeInTheDocument()
+      })
+
+      const applyButton = screen.getByRole('button', { name: /apply/i })
+      const resetButton = screen.getByRole('button', {
+        name: /enable all tools/i,
+      })
+
+      expect(applyButton).toBeDisabled()
+      expect(resetButton).toBeDisabled()
+    })
+
+    it('disables both buttons when no tools', async () => {
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable tools={[]} isLoading={false} />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByText('No tools available')).toBeInTheDocument()
+      })
+    })
+
+    it('enables both buttons when multiple tools', async () => {
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable tools={mockTools} isLoading={false} />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByText('read_file')).toBeInTheDocument()
+      })
+
+      const applyButton = screen.getByRole('button', { name: /apply/i })
+      const resetButton = screen.getByRole('button', {
+        name: /enable all tools/i,
+      })
+
+      expect(applyButton).not.toBeDisabled()
+      expect(resetButton).not.toBeDisabled()
+    })
+
+    it('shows tooltip on hover when only one tool', async () => {
+      const singleTool = [
+        {
+          name: 'only_tool',
+          description: 'The only tool available',
+        },
+      ]
+
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable tools={singleTool} isLoading={false} />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByText('only_tool')).toBeInTheDocument()
+      })
+
+      const applyButton = screen.getByRole('button', { name: /apply/i })
+
+      await userEvent.hover(applyButton.parentElement!)
+
+      await waitFor(() => {
+        const tooltip = screen.getByRole('tooltip')
+        expect(tooltip).toHaveTextContent(
+          /Tool filtering is only available when there are multiple tools/i
+        )
       })
     })
   })
