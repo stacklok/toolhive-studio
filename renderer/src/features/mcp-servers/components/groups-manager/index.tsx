@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react'
 import { Link, useLocation, useMatches } from '@tanstack/react-router'
+import { Sparkles } from 'lucide-react'
 import { AddGroupButton } from './add-group-button'
 import { GroupList } from './group-list'
 import { useGroups } from '../../hooks/use-groups'
@@ -29,7 +30,11 @@ export function GroupsManager(): ReactElement {
   return (
     <div className="flex flex-col gap-2">
       <Link to="/mcp-optimizer" preload="intent" onClick={handleOptimizerClick}>
-        <Group name="MCP Optimizer" isActive={isOptimizerActive} />
+        <Group
+          name="MCP Optimizer"
+          isActive={isOptimizerActive}
+          icon={Sparkles}
+        />
       </Link>
       <GroupList apiGroups={apiGroups} currentGroupName={currentGroupName} />
       <AddGroupButton apiGroups={apiGroups} />
