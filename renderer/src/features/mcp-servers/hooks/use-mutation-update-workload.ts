@@ -35,19 +35,18 @@ export const useMutationUpdateWorkload = () => {
       }
     },
     onSettled: async (_data, _error, variables, cachedResult) => {
-      const workloadDetail = await queryClient.fetchQuery(
-        getApiV1BetaWorkloadsByNameOptions({
-          path: { name: variables.path.name },
-        })
-      )
       const workloads =
         (cachedResult?.previousServersList as V1WorkloadListResponse)
           ?.workloads ?? []
-
       // Only refetch workloads without cached data, as servers may be temporarily unavailable during restart.
       if (
         !workloads.some((workload) => workload.name === variables.path.name)
       ) {
+        const workloadDetail = await queryClient.fetchQuery(
+          getApiV1BetaWorkloadsByNameOptions({
+            path: { name: variables.path.name },
+          })
+        )
         const workloadsQueryKey = getApiV1BetaWorkloadsQueryKey({
           query: { all: true, group: workloadDetail.group ?? 'default' },
         })
