@@ -23,7 +23,7 @@ export const Route = createFileRoute('/mcp-optimizer')({
   component: McpOptimizerRoute,
 })
 
-function McpOptimizerRoute() {
+export function McpOptimizerRoute() {
   const showSidebar = useFeatureFlag(featureFlagKeys.GROUPS)
   const { data: groupsData } = useGroups()
   const groups = groupsData?.groups ?? []
