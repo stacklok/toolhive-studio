@@ -1,7 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { Group } from './group'
 import { trackEvent } from '@/common/lib/analytics'
-import { useVisibleGroups } from '../../hooks/use-visible-groups'
 
 interface GroupListProps {
   apiGroups: Array<{ name?: string; registered_clients?: string[] }>
@@ -9,7 +8,7 @@ interface GroupListProps {
 }
 
 export function GroupList({ apiGroups, currentGroupName }: GroupListProps) {
-  const visibleGroups = useVisibleGroups(apiGroups)
+  const visibleGroups = apiGroups
 
   const handleGroupClick = (toGroupName: string) => {
     trackEvent('Group navigated', {

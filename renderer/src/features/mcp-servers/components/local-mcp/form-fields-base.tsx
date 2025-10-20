@@ -18,7 +18,6 @@ import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
 import { RadioGroup, RadioGroupItem } from '@/common/components/ui/radio-group'
 import { CommandArgumentsField } from '@/common/components/workload-cmd-arg/command-arguments-field'
 import type { FormSchemaLocalMcp } from '../../lib/form-schema-local-mcp'
-import { useVisibleGroups } from '../../hooks/use-visible-groups'
 
 export function FormFieldsBase({
   form,
@@ -29,7 +28,7 @@ export function FormFieldsBase({
   isEditing?: boolean
   groups: Array<{ name?: string | null }>
 }) {
-  const visibleGroups = useVisibleGroups(groups)
+  const visibleGroups = groups
   const typeValue = form.watch('type')
   const protocolValue = form.watch('protocol') ?? 'npx'
   const transportValue = form.watch('transport')

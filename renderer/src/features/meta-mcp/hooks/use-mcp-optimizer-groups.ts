@@ -2,14 +2,14 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
 import type { GroupsGroup } from '@api/types.gen'
-import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
+import { useRawGroups } from '@/features/mcp-servers/hooks/use-groups'
 
 export type GroupWithServers = GroupsGroup & {
   servers: string[]
 }
 
 export function useMcpOptimizerGroups() {
-  const { data: groupsData } = useGroups()
+  const { data: groupsData } = useRawGroups()
   const { data: workloadsData } = useQuery({
     ...getApiV1BetaWorkloadsOptions({
       query: {
