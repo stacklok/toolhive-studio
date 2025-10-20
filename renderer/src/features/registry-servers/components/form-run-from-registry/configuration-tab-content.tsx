@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/common/components/ui/select'
+import { useVisibleGroups } from '@/features/mcp-servers/hooks/use-visible-groups'
 
 interface ConfigurationTabContentProps {
   form: UseFormReturn<FormSchemaRegistryMcp>
@@ -184,7 +185,8 @@ export function ConfigurationTabContent({
   groupedEnvVars,
 }: ConfigurationTabContentProps) {
   const { data: groupsData } = useGroups()
-  const groups = groupsData?.groups ?? []
+  const allGroups = groupsData?.groups ?? []
+  const groups = useVisibleGroups(allGroups)
 
   return (
     <div className="flex-1 space-y-4 overflow-y-auto px-6">

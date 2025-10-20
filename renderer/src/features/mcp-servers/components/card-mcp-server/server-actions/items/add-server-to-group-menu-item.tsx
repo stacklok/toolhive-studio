@@ -4,6 +4,7 @@ import { usePrompt, generateSimplePrompt } from '@/common/hooks/use-prompt'
 import { useGroups } from '../../../../hooks/use-groups'
 import { useCopyServerToGroup } from '../../../../hooks/use-copy-server-to-group'
 import { trackEvent } from '@/common/lib/analytics'
+import { useVisibleGroups } from '../../../../hooks/use-visible-groups'
 
 interface AddServerToGroupMenuItemProps {
   serverName: string
@@ -16,9 +17,10 @@ export function AddServerToGroupMenuItem({
   const { data: groupsData } = useGroups()
   const { copyServerToGroup } = useCopyServerToGroup(serverName)
 
-  const handleAddToGroup = async () => {
-    const groups = groupsData?.groups ?? []
+  const allGroups = groupsData?.groups ?? []
+  const groups = useVisibleGroups(allGroups)
 
+  const handleAddToGroup = async () => {
     const groupOptions = groups
       .filter((group) => group.name)
       .map((group) => ({
