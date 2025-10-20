@@ -12,13 +12,19 @@ import { IllustrationNoConnection } from '@/common/components/illustrations/illu
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../../utils/feature-flags'
 
+const DEFAULT_REGISTRY_NAME = 'default'
+
 export const Route = createFileRoute('/(registry)/registry')({
   loader: async ({ context: { queryClient } }) => {
     const serversPromise = queryClient.ensureQueryData(
-      getApiV1BetaRegistryByNameServersOptions({ path: { name: 'default' } })
+      getApiV1BetaRegistryByNameServersOptions({
+        path: { name: DEFAULT_REGISTRY_NAME },
+      })
     )
     const registryPromise = queryClient.ensureQueryData(
-      getApiV1BetaRegistryByNameOptions({ path: { name: 'default' } })
+      getApiV1BetaRegistryByNameOptions({
+        path: { name: DEFAULT_REGISTRY_NAME },
+      })
     )
     return Promise.all([serversPromise, registryPromise])
   },
@@ -31,11 +37,15 @@ export function Registry() {
   )
 
   const { data: serversData } = useSuspenseQuery(
-    getApiV1BetaRegistryByNameServersOptions({ path: { name: 'default' } })
+    getApiV1BetaRegistryByNameServersOptions({
+      path: { name: DEFAULT_REGISTRY_NAME },
+    })
   )
 
   const { data: registryData } = useSuspenseQuery(
-    getApiV1BetaRegistryByNameOptions({ path: { name: 'default' } })
+    getApiV1BetaRegistryByNameOptions({
+      path: { name: DEFAULT_REGISTRY_NAME },
+    })
   )
 
   const { servers: serversList = [], remote_servers: remoteServersList = [] } =
@@ -46,6 +56,7 @@ export function Registry() {
     : []
 
   const servers = [...serversList, ...remoteServersList]
+  const isDefaultRegistry = registryData?.name === DEFAULT_REGISTRY_NAME
   const hasContent = servers.length > 0 || groups.length > 0
 
   return (
@@ -71,7 +82,11 @@ export function Registry() {
           illustration={IllustrationNoConnection}
         />
       ) : (
-        <GridCardsRegistry servers={servers} groups={groups} />
+        <GridCardsRegistry
+          servers={servers}
+          groups={groups}
+          isDefaultRegistry={isDefaultRegistry}
+        />
       )}
     </>
   )
