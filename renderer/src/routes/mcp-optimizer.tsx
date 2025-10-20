@@ -1,7 +1,4 @@
-import { useMemo } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
-import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
 import { TitlePage } from '@/common/components/title-page'
 import { McpServersSidebar } from '@/features/mcp-servers/components/mcp-servers-sidebar'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
@@ -18,6 +15,7 @@ import {
 import { Settings, RotateCw, Text, Edit3 } from 'lucide-react'
 import { OptimizerWarnings } from '@/features/meta-mcp/components/optimizer-warnings'
 import { GroupSelectorForm } from '@/features/meta-mcp/components/group-selector-form'
+import { useServersByGroup } from '@/features/meta-mcp/hooks/use-servers-by-group'
 
 export const Route = createFileRoute('/mcp-optimizer')({
   component: McpOptimizerRoute,
@@ -27,32 +25,7 @@ export function McpOptimizerRoute() {
   const showSidebar = useFeatureFlag(featureFlagKeys.GROUPS)
   const { data: groupsData } = useGroups()
   const groups = groupsData?.groups ?? []
-
-  // Fetch all workloads to see which servers are in each group
-  const { data: workloadsData } = useQuery({
-    ...getApiV1BetaWorkloadsOptions({
-      query: {
-        all: true,
-      },
-    }),
-  })
-
-  const workloads = workloadsData?.workloads ?? []
-
-  // Group servers by group name
-  const serversByGroup = useMemo(() => {
-    const grouped: Record<string, string[]> = {}
-    workloads.forEach((workload) => {
-      const groupName = workload.group ?? 'default'
-      if (!grouped[groupName]) {
-        grouped[groupName] = []
-      }
-      if (workload.name) {
-        grouped[groupName].push(workload.name)
-      }
-    })
-    return grouped
-  }, [workloads])
+  const serversByGroup = useServersByGroup()
 
   return (
     <div className="flex h-full gap-6">
