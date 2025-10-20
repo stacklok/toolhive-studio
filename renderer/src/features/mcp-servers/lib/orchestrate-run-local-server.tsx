@@ -85,6 +85,7 @@ export function prepareCreateWorkloadData(
     network_isolation: networkIsolation,
     permission_profile,
     volumes: getVolumes(volumes ?? []),
+    tools: data.tools || undefined,
   }
 }
 
@@ -131,6 +132,7 @@ export function convertWorkloadToFormData(
       ...baseFormData,
       type: 'docker_image',
       image: image || '',
+      tools: workload.tools || undefined,
     }
   }
 }
@@ -219,6 +221,8 @@ export function convertCreateRequestToFormData(
   } else {
     return {
       ...baseFormData,
+      // We’re keeping tool filtering available only for local images, since it’s currently supported only for images pulled from a registry.
+      tools: createRequest.tools || undefined,
       type: 'docker_image',
       image: image || '',
     }
@@ -261,5 +265,6 @@ export function prepareUpdateLocalWorkloadData(
         }
       : undefined,
     volumes: getVolumes(data.volumes ?? []),
+    tools: data.tools || undefined,
   }
 }

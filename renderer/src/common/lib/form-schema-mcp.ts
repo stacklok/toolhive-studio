@@ -86,6 +86,12 @@ const createVolumesSchema = () => {
   })
 }
 
+const createToolsSchema = () => {
+  return z.object({
+    tools: z.array(z.string()).optional().nullable(),
+  })
+}
+
 const createTransportConfigSchema = () => {
   return z.object({
     transport: z.union(
@@ -265,6 +271,7 @@ export const createMcpBaseSchema = (workloads: CoreWorkload[]) => {
   const commandArgsSchema = createCommandArgumentsSchema()
   const networkSchema = createNetworkConfigSchema()
   const volumesSchema = createVolumesSchema()
+  const toolsSchema = createToolsSchema()
 
   const commonSchema = nameSchema
     .extend(transportSchema.shape)
@@ -273,6 +280,7 @@ export const createMcpBaseSchema = (workloads: CoreWorkload[]) => {
     .extend(volumesSchema.shape)
     .extend(envVarsSchema.shape)
     .extend(secretsSchema.shape)
+    .extend(toolsSchema.shape)
     .extend({
       group: z.string(),
     })
