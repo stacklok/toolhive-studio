@@ -65,6 +65,7 @@ import {
   disableFeatureFlag,
   getAllFeatureFlags,
   type FeatureFlagKey,
+  type FeatureFlagOptions,
 } from './feature-flags'
 import {
   CHAT_PROVIDER_INFO,
@@ -615,9 +616,12 @@ ipcMain.handle('feature-flags:disable', (_event, key: FeatureFlagKey): void => {
   disableFeatureFlag(key)
 })
 
-ipcMain.handle('feature-flags:get-all', (): Record<FeatureFlagKey, boolean> => {
-  return getAllFeatureFlags()
-})
+ipcMain.handle(
+  'feature-flags:get-all',
+  (): Record<FeatureFlagKey, FeatureFlagOptions & { enabled: boolean }> => {
+    return getAllFeatureFlags()
+  }
+)
 
 // ────────────────────────────────────────────────────────────────────────────
 //  Chat IPC handlers
