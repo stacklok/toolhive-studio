@@ -69,13 +69,13 @@ export function FormDialog({
           onSubmit={form.handleSubmit(handleSubmit)}
           className="flex flex-col gap-6"
         >
-          <DialogHeader>
+          <DialogHeader className="pl-1">
             <DialogTitle>{config.title || 'Form Input'}</DialogTitle>
             <DialogDescription>{config.description || ''}</DialogDescription>
           </DialogHeader>
 
           <ScrollArea className="h-full max-h-[calc(85vh-8rem)] min-h-[40px]">
-            <div className="space-y-4 pr-4">
+            <div className="space-y-4 p-1 pr-4">
               {config.fields(form as UseFormReturn<Record<string, unknown>>)}
             </div>
           </ScrollArea>
