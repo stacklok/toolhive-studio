@@ -13,7 +13,8 @@ import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 import { Button } from '@/common/components/ui/button'
 import { useUpdateServer } from '@/features/mcp-servers/hooks/use-update-server'
 import { CustomizeToolsTable } from '@/features/mcp-servers/components/customize-tools-table'
-import { convertCreateRequestToFormData } from '@/features/mcp-servers/lib/orchestrate-run-local-server'
+import { convertCreateRequestToFormData as convertLocalServerToFormData } from '@/features/mcp-servers/lib/orchestrate-run-local-server'
+import { convertCreateRequestToFormData as convertRemoteServerToFormData } from '@/features/mcp-servers/lib/orchestrate-run-remote-server'
 import { useIsServerFromRegistry } from '../../hooks/use-is-server-from-registry'
 
 // This is only for the servers from the registry at the moment
@@ -106,17 +107,21 @@ export function CustomizeToolsPage() {
     !existingServerData?.tools &&
     existingServerData?.tools?.length === 0 &&
     !toolsDiff?.hasExactMatch
-  const { updateServerMutation } = useUpdateServer(serverName)
+
+  const isRemoteServer = !!existingServerData?.url
+  const { updateServerMutation } = useUpdateServer(serverName, {
+    isRemote: isRemoteServer,
+  })
 
   const handleUpdateServer = async (tools: string[] | null) => {
     if (!existingServerData || isExistingServerDataError) {
       throw new Error('Existing server data not available')
     }
 
-    const formData = convertCreateRequestToFormData(
-      existingServerData,
-      availableSecrets
-    )
+    // Use the appropriate converter based on whether it's a remote or local server
+    const formData = isRemoteServer
+      ? convertRemoteServerToFormData(existingServerData, availableSecrets)
+      : convertLocalServerToFormData(existingServerData, availableSecrets)
 
     updateServerMutation(
       {

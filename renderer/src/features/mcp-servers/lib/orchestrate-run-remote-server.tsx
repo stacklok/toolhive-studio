@@ -36,8 +36,9 @@ export function prepareCreateWorkloadData(
     : oauthConfig
 
   const request = {
-    ...omit(rest, 'auth_type', 'secrets'),
+    ...omit(rest, 'auth_type', 'secrets', 'tools'),
     oauth_config: transformedOAuthConfig,
+    tools: data.tools ?? undefined,
   }
 
   return request
@@ -72,8 +73,9 @@ export function prepareUpdateRemoteWorkloadData(
     : oauthConfig
 
   return {
-    ...omit(rest, 'auth_type', 'secrets'),
+    ...omit(rest, 'auth_type', 'secrets', 'tools'),
     oauth_config: transformedOAuthConfig,
+    tools: data.tools ?? undefined,
   }
 }
 
@@ -142,6 +144,7 @@ export function convertCreateRequestToFormData(
     auth_type: authType,
     secrets,
     group: createRequest.group ?? 'default',
+    tools: createRequest.tools || undefined,
   }
 
   return baseFormData

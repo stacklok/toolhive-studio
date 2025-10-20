@@ -314,6 +314,7 @@ const remoteMcpOauthConfigSchema = z.object({
 
 export const createRemoteMcpBaseSchema = (workloads: CoreWorkload[]) => {
   const nameSchema = createNameSchema(workloads)
+  const toolsSchema = createToolsSchema()
   const secretsSchema = createBasicSecretsSchema()
   const transportSchema = createTransportConfigSchema()
   const urlSchema = z.object({
@@ -329,6 +330,7 @@ export const createRemoteMcpBaseSchema = (workloads: CoreWorkload[]) => {
     .extend(secretsSchema.shape)
     .extend(urlSchema.shape)
     .extend(authTypeSchema.shape)
+    .extend(toolsSchema.shape)
     .extend({ oauth_config: remoteMcpOauthConfigSchema })
     .extend({
       group: z.string().min(1, 'Group is required'),

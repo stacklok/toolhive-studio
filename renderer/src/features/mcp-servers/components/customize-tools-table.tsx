@@ -208,7 +208,7 @@ export function CustomizeToolsTable({
           <Table className="table-fixed">
             <colgroup>
               <col className="w-[60px]" />
-              <col className="w-[200px]" />
+              <col className="w-[300px]" />
               <col />
             </colgroup>
             <TableHeader>
