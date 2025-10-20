@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   postApiV1BetaWorkloadsByNameEditMutation,
   getApiV1BetaWorkloadsQueryKey,
+  getApiV1BetaWorkloadsByNameOptions,
+  getApiV1BetaWorkloadsByNameQueryKey,
 } from '@api/@tanstack/react-query.gen'
 import type { V1WorkloadListResponse } from '@api/types.gen'
 
@@ -17,7 +19,7 @@ export const useMutationUpdateWorkload = () => {
       const previousServersList = queryClient.getQueryData(queryKey)
 
       queryClient.setQueryData(queryKey, (old: V1WorkloadListResponse) => {
-        const newWorkloads = old.workloads?.map((server) =>
+        const newWorkloads = old?.workloads?.map((server) =>
           server.name === path.name ? { ...server, status: 'updating' } : server
         )
         return {
@@ -32,11 +34,30 @@ export const useMutationUpdateWorkload = () => {
         queryClient.setQueryData(context?.queryKey, context.previousServersList)
       }
     },
-    onSettled: (_data, _error, variables) => {
-      const queryKey = getApiV1BetaWorkloadsQueryKey({
-        query: { all: true, group: variables.body.group },
-      })
-      queryClient.refetchQueries({ queryKey })
+    onSettled: async (_data, _error, variables, cachedResult) => {
+      const workloads =
+        (cachedResult?.previousServersList as V1WorkloadListResponse)
+          ?.workloads ?? []
+      // Only refetch workloads without cached data, as servers may be temporarily unavailable during restart.
+      if (
+        !workloads.some((workload) => workload.name === variables.path.name)
+      ) {
+        const workloadDetail = await queryClient.fetchQuery(
+          getApiV1BetaWorkloadsByNameOptions({
+            path: { name: variables.path.name },
+          })
+        )
+        const workloadsQueryKey = getApiV1BetaWorkloadsQueryKey({
+          query: { all: true, group: workloadDetail.group ?? 'default' },
+        })
+        const workloadDetailQueryKey = getApiV1BetaWorkloadsByNameQueryKey({
+          path: { name: variables.path.name },
+        })
+        await Promise.all([
+          queryClient.refetchQueries({ queryKey: workloadsQueryKey }),
+          queryClient.refetchQueries({ queryKey: workloadDetailQueryKey }),
+        ])
+      }
     },
   })
 

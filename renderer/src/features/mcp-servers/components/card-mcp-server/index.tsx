@@ -45,6 +45,7 @@ function CardContentMcpServer({
   const { mutateAsync: stopMutate, isPending: isStopPending } =
     useMutationStopServerList({
       name,
+      group,
     })
 
   return (
