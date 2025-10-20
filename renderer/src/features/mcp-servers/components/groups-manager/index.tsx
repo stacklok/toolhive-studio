@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { Link, useLocation, useMatches } from '@tanstack/react-router'
+import { Link, useLocation } from '@tanstack/react-router'
 import { Sparkles } from 'lucide-react'
 import { AddGroupButton } from './add-group-button'
 import { GroupList } from './group-list'
@@ -9,18 +9,17 @@ import { trackEvent } from '@/common/lib/analytics'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../../../../utils/feature-flags'
 
-export function GroupsManager(): ReactElement {
-  const location = useLocation()
-  const matches = useMatches()
+interface GroupsManagerProps {
+  currentGroupName?: string
+}
 
-  // Find the group route match and extract groupName if it exists
-  const groupMatch = matches.find(
-    (match) => match.routeId === '/group/$groupName'
-  )
-  const currentGroupName = groupMatch?.params?.groupName ?? ''
+export function GroupsManager({
+  currentGroupName = '',
+}: GroupsManagerProps): ReactElement {
+  const location = useLocation()
 
   const isOptimizerActive = location.pathname === '/mcp-optimizer'
-  const isMetaMcpEnabled = useFeatureFlag(featureFlagKeys.META_OPTIMIZER)
+  const isMetaOptimizerEnabled = useFeatureFlag(featureFlagKeys.META_OPTIMIZER)
 
   const { data } = useGroups()
 
@@ -32,7 +31,7 @@ export function GroupsManager(): ReactElement {
 
   return (
     <div className="flex flex-col gap-2">
-      {isMetaMcpEnabled ? (
+      {isMetaOptimizerEnabled ? (
         <Link
           to="/mcp-optimizer"
           preload="intent"
