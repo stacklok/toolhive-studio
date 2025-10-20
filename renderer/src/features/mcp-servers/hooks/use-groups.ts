@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import { getApiV1BetaGroups } from '@api/sdk.gen'
-import type { V1GroupListResponse } from '@api/types.gen'
 import { useMemo } from 'react'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../../../utils/feature-flags'
@@ -10,13 +9,10 @@ export function useRawGroups() {
   return useQuery({
     queryKey: ['api', 'v1beta', 'groups'],
     queryFn: async () => {
-      const response = await getApiV1BetaGroups({
-        parseAs: 'text',
+      return await getApiV1BetaGroups({
+        parseAs: 'json',
         responseStyle: 'data',
       })
-      const parsed =
-        typeof response === 'string' ? JSON.parse(response) : response
-      return parsed as V1GroupListResponse
     },
     staleTime: 5_000,
   })
