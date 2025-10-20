@@ -303,8 +303,6 @@ export interface ElectronAPI {
     getAll: () => Promise<
       Record<string, FeatureFlagOptions & { enabled: boolean }>
     >
-    enableExperimentalFeature: (key: string) => Promise<void>
-    disableExperimentalFeature: (key: string) => Promise<void>
   }
   // File/folder pickers
   selectFile: () => Promise<string | null>

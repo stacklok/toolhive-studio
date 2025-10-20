@@ -138,8 +138,6 @@ const featureFlagObject = {
           console.log(`  FeatureFlag.${flagKey}.enable()`)
           console.log(`  FeatureFlag.${flagKey}.disable()`)
           console.log(`  FeatureFlag.${flagKey}.isEnabled()`)
-          console.log(`  FeatureFlag.${flagKey}.enableExperimental()`)
-          console.log(`  FeatureFlag.${flagKey}.disableExperimental()`)
         })
       })
       .catch(console.error)
