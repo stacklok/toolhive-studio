@@ -74,7 +74,19 @@ describe('Groups in Registry', () => {
 })
 
 describe('Meta-MCP Server Filtering', () => {
-  it('hides meta-mcp server when using default registry', async () => {
+  it('hides meta-mcp server when using default registry and META_OPTIMIZER is enabled', async () => {
+    Object.defineProperty(window, 'electronAPI', {
+      value: {
+        featureFlags: {
+          get: vi.fn((key) => {
+            if (key === 'meta_optimizer') return Promise.resolve(true)
+            return Promise.resolve(false)
+          }),
+        },
+      },
+      writable: true,
+    })
+
     server.use(
       http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
         return HttpResponse.json({
@@ -102,7 +114,19 @@ describe('Meta-MCP Server Filtering', () => {
     expect(screen.queryByText(META_MCP_SERVER_NAME)).not.toBeInTheDocument()
   })
 
-  it('shows meta-mcp server when using custom registry', async () => {
+  it('shows meta-mcp server when using custom registry (even with META_OPTIMIZER enabled)', async () => {
+    Object.defineProperty(window, 'electronAPI', {
+      value: {
+        featureFlags: {
+          get: vi.fn((key) => {
+            if (key === 'meta_optimizer') return Promise.resolve(true)
+            return Promise.resolve(false)
+          }),
+        },
+      },
+      writable: true,
+    })
+
     server.use(
       http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
         return HttpResponse.json({

@@ -2,6 +2,8 @@ import { Link } from '@tanstack/react-router'
 import { Group } from './group'
 import { trackEvent } from '@/common/lib/analytics'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { featureFlagKeys } from '../../../../../../utils/feature-flags'
 
 interface GroupListProps {
   apiGroups: Array<{ name?: string; registered_clients?: string[] }>
@@ -9,6 +11,8 @@ interface GroupListProps {
 }
 
 export function GroupList({ apiGroups, currentGroupName }: GroupListProps) {
+  const isMetaOptimizerEnabled = useFeatureFlag(featureFlagKeys.META_OPTIMIZER)
+
   const handleGroupClick = (toGroupName: string) => {
     trackEvent('Group navigated', {
       from_is_default_group: String(currentGroupName === 'default'),
@@ -16,9 +20,9 @@ export function GroupList({ apiGroups, currentGroupName }: GroupListProps) {
     })
   }
 
-  const visibleGroups = apiGroups.filter(
-    (group) => group.name !== MCP_OPTIMIZER_GROUP_NAME
-  )
+  const visibleGroups = isMetaOptimizerEnabled
+    ? apiGroups.filter((group) => group.name !== MCP_OPTIMIZER_GROUP_NAME)
+    : apiGroups
 
   return (
     <div className="space-y-2">

@@ -10,6 +10,8 @@ import { useNavigate } from '@tanstack/react-router'
 import { cn } from '@/common/lib/utils'
 import type { RegistryItem } from '../types'
 import { META_MCP_SERVER_NAME } from '@/common/lib/constants'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { featureFlagKeys } from '../../../../../utils/feature-flags'
 
 export function GridCardsRegistry({
   servers,
@@ -21,10 +23,12 @@ export function GridCardsRegistry({
   isDefaultRegistry?: boolean
 }) {
   const navigate = useNavigate()
+  const isMetaOptimizerEnabled = useFeatureFlag(featureFlagKeys.META_OPTIMIZER)
 
-  const filteredServers = isDefaultRegistry
-    ? servers.filter((server) => server.name !== META_MCP_SERVER_NAME)
-    : servers
+  const filteredServers =
+    isMetaOptimizerEnabled && isDefaultRegistry
+      ? servers.filter((server) => server.name !== META_MCP_SERVER_NAME)
+      : servers
 
   const items: RegistryItem[] = [
     ...groups.map((group) => ({ ...group, type: 'group' as const })),

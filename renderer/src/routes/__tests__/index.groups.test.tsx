@@ -50,6 +50,9 @@ beforeEach(() => {
         clearShutdownHistory: vi.fn().mockResolvedValue(undefined),
       },
       onServerShutdown: vi.fn().mockReturnValue(() => {}),
+      featureFlags: {
+        get: vi.fn(() => Promise.resolve(false)),
+      },
     },
     writable: true,
   })
@@ -80,7 +83,20 @@ describe('Groups Manager in Index route (feature flagged)', () => {
     expect(groupItem).toHaveClass('flex', 'h-9', 'w-[215px]', 'px-4', 'py-2')
   })
 
-  it('hides the mcp-optimizer group from the group list', async () => {
+  it('hides the mcp-optimizer group when META_OPTIMIZER flag is enabled', async () => {
+    Object.defineProperty(window, 'electronAPI', {
+      value: {
+        ...window.electronAPI,
+        featureFlags: {
+          get: vi.fn((key) => {
+            if (key === 'meta_optimizer') return Promise.resolve(true)
+            return Promise.resolve(false)
+          }),
+        },
+      },
+      writable: true,
+    })
+
     server.use(
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({
