@@ -35,29 +35,39 @@ export function useIsServerFromRegistry(serverName: string) {
     enabled: !!serverName,
     retry: false,
   })
-  const { servers: serversList = [] } = data || {}
+  const { servers: serversList = [], remote_servers: remoteServersList = [] } =
+    data || {}
 
-  const matchedRegistryItem = workload?.image?.length
-    ? serversList.find(
-        (item) =>
-          getImageNameWithoutTag(item.image) ===
-          getImageNameWithoutTag(workload?.image)
-      )
-    : undefined
+  // If workload has a URL defined, it's a remote server - match by URL
+  const matchedRegistryItem = workload?.url
+    ? remoteServersList.find((item) => item.url === workload.url)
+    : workload?.image?.length
+      ? serversList.find(
+          (item) =>
+            getImageNameWithoutTag(item.image) ===
+            getImageNameWithoutTag(workload?.image)
+        )
+      : undefined
 
   const isFromRegistry =
     matchedRegistryItem && !!matchedRegistryItem?.tools?.length
 
+  // Only check tag drift for container servers (not remote servers)
   const registryTag =
-    matchedRegistryItem && getImageTag(matchedRegistryItem.image)
-  const localTag = getImageTag(workload?.image)
+    matchedRegistryItem && 'image' in matchedRegistryItem
+      ? getImageTag(matchedRegistryItem.image)
+      : undefined
+  const localTag = workload?.image ? getImageTag(workload.image) : undefined
 
-  const hasTagDrift = registryTag !== localTag
+  const hasTagDrift =
+    registryTag !== undefined && localTag !== undefined
+      ? registryTag !== localTag
+      : false
 
   const drift = hasTagDrift
     ? {
-        localTag,
-        registryTag,
+        localTag: localTag!,
+        registryTag: registryTag!,
       }
     : null
 

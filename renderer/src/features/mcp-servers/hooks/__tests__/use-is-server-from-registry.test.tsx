@@ -5,7 +5,12 @@ import { useIsServerFromRegistry } from '../use-is-server-from-registry'
 import { server as mswServer } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
-import type { V1CreateRequest, RegistryImageMetadata } from '@api/types.gen'
+import type {
+  V1CreateRequest,
+  RegistryImageMetadata,
+  RegistryRemoteServerMetadata,
+  CoreWorkload,
+} from '@api/types.gen'
 
 const createWorkload = (
   overrides: Partial<V1CreateRequest> = {}
@@ -28,6 +33,29 @@ const createRegistryImage = (
   tools: [],
   env_vars: [],
   args: [],
+  ...overrides,
+})
+
+const createRemoteWorkload = (
+  overrides: Partial<CoreWorkload> = {}
+): CoreWorkload => ({
+  name: 'test-remote-server',
+  url: 'https://api.example.com/mcp',
+  remote: true,
+  transport_type: 'sse',
+  tools: [],
+  ...overrides,
+})
+
+const createRegistryRemoteServer = (
+  overrides: Partial<RegistryRemoteServerMetadata> = {}
+): RegistryRemoteServerMetadata => ({
+  name: 'Test Remote Server',
+  url: 'https://api.example.com/mcp',
+  description: 'A test remote server',
+  transport: 'sse',
+  tools: [],
+  env_vars: [],
   ...overrides,
 })
 
@@ -922,6 +950,584 @@ describe('useIsServerFromRegistry', () => {
           addedTools: ['zebra', 'delta'],
           missingTools: ['beta', 'gamma'],
         })
+      })
+    })
+  })
+
+  describe('Remote servers from registry', () => {
+    it('identifies a remote server from registry with matching URL', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createRemoteWorkload({
+              url: 'https://api.example.com/mcp',
+            })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            remote_servers: [
+              createRegistryRemoteServer({
+                url: 'https://api.example.com/mcp',
+                tools: ['remote-tool1', 'remote-tool2'],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-remote-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(true)
+        expect(result.current.registryTools).toEqual([
+          'remote-tool1',
+          'remote-tool2',
+        ])
+        // Remote servers should not have drift (no image tags)
+        expect(result.current.drift).toBeNull()
+      })
+    })
+
+    it('does not match remote server when URL is different', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createRemoteWorkload({
+              url: 'https://api.different.com/mcp',
+            })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            remote_servers: [
+              createRegistryRemoteServer({
+                url: 'https://api.example.com/mcp',
+                tools: ['remote-tool1'],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-remote-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(false)
+        expect(result.current.registryTools).toEqual([])
+      })
+    })
+
+    it('finds the correct remote server among multiple registry items', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createRemoteWorkload({
+              url: 'https://api.server-b.com/mcp',
+            })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            remote_servers: [
+              createRegistryRemoteServer({
+                name: 'Remote Server A',
+                url: 'https://api.server-a.com/mcp',
+                tools: ['tool-a'],
+              }),
+              createRegistryRemoteServer({
+                name: 'Remote Server B',
+                url: 'https://api.server-b.com/mcp',
+                tools: ['tool-b1', 'tool-b2'],
+              }),
+              createRegistryRemoteServer({
+                name: 'Remote Server C',
+                url: 'https://api.server-c.com/mcp',
+                tools: ['tool-c'],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-remote-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(true)
+        expect(result.current.registryTools).toEqual(['tool-b1', 'tool-b2'])
+        expect(result.current.drift).toBeNull()
+      })
+    })
+
+    it('returns false when remote server has no tools', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createRemoteWorkload({
+              url: 'https://api.example.com/mcp',
+            })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            remote_servers: [
+              createRegistryRemoteServer({
+                url: 'https://api.example.com/mcp',
+                tools: [],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-remote-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(false)
+        expect(result.current.registryTools).toEqual([])
+        expect(result.current.drift).toBeNull()
+      })
+    })
+
+    it('works with getToolsDiffFromRegistry for remote servers', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createRemoteWorkload({
+              url: 'https://api.example.com/mcp',
+            })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            remote_servers: [
+              createRegistryRemoteServer({
+                url: 'https://api.example.com/mcp',
+                tools: ['remote-tool1', 'remote-tool2', 'remote-tool3'],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-remote-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(true)
+        const diff = result.current.getToolsDiffFromRegistry([
+          'remote-tool1',
+          'remote-tool4',
+        ])
+        expect(diff).toEqual({
+          hasExactMatch: false,
+          addedTools: ['remote-tool4'],
+          missingTools: ['remote-tool2', 'remote-tool3'],
+        })
+      })
+    })
+
+    it('handles both remote and container servers in registry', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createRemoteWorkload({
+              url: 'https://api.example.com/mcp',
+            })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            servers: [
+              createRegistryImage({
+                image: 'ghcr.io/test/server:v1.0.0',
+                tools: ['container-tool1'],
+              }),
+            ],
+            remote_servers: [
+              createRegistryRemoteServer({
+                url: 'https://api.example.com/mcp',
+                tools: ['remote-tool1'],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-remote-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(true)
+        // Should match the remote server, not the container server
+        expect(result.current.registryTools).toEqual(['remote-tool1'])
+        expect(result.current.drift).toBeNull()
+      })
+    })
+
+    it('URL match must be exact (case-sensitive)', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createRemoteWorkload({
+              url: 'https://api.Example.com/mcp',
+            })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            remote_servers: [
+              createRegistryRemoteServer({
+                url: 'https://api.example.com/mcp',
+                tools: ['remote-tool1'],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-remote-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(false)
+        expect(result.current.registryTools).toEqual([])
+      })
+    })
+  })
+
+  describe('getToolsDiffFromRegistry for remote servers', () => {
+    it('returns exact match for remote server with same tools', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createRemoteWorkload({
+              url: 'https://api.example.com/mcp',
+            })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            remote_servers: [
+              createRegistryRemoteServer({
+                url: 'https://api.example.com/mcp',
+                tools: ['remote-tool1', 'remote-tool2', 'remote-tool3'],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-remote-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(true)
+        const diff = result.current.getToolsDiffFromRegistry([
+          'remote-tool1',
+          'remote-tool2',
+          'remote-tool3',
+        ])
+        expect(diff).toEqual({
+          hasExactMatch: true,
+          addedTools: [],
+          missingTools: [],
+        })
+      })
+    })
+
+    it('returns exact match for remote server with tools in different order', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createRemoteWorkload({
+              url: 'https://api.example.com/mcp',
+            })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            remote_servers: [
+              createRegistryRemoteServer({
+                url: 'https://api.example.com/mcp',
+                tools: ['remote-tool1', 'remote-tool2', 'remote-tool3'],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-remote-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(true)
+        const diff = result.current.getToolsDiffFromRegistry([
+          'remote-tool3',
+          'remote-tool1',
+          'remote-tool2',
+        ])
+        expect(diff).toEqual({
+          hasExactMatch: true,
+          addedTools: [],
+          missingTools: [],
+        })
+      })
+    })
+
+    it('identifies added tools in remote server', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createRemoteWorkload({
+              url: 'https://api.example.com/mcp',
+            })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            remote_servers: [
+              createRegistryRemoteServer({
+                url: 'https://api.example.com/mcp',
+                tools: ['remote-tool1', 'remote-tool2'],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-remote-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(true)
+        const diff = result.current.getToolsDiffFromRegistry([
+          'remote-tool1',
+          'remote-tool2',
+          'remote-tool3',
+          'remote-tool4',
+        ])
+        expect(diff).toEqual({
+          hasExactMatch: false,
+          addedTools: ['remote-tool3', 'remote-tool4'],
+          missingTools: [],
+        })
+      })
+    })
+
+    it('identifies missing tools from remote server', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createRemoteWorkload({
+              url: 'https://api.example.com/mcp',
+            })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            remote_servers: [
+              createRegistryRemoteServer({
+                url: 'https://api.example.com/mcp',
+                tools: [
+                  'remote-tool1',
+                  'remote-tool2',
+                  'remote-tool3',
+                  'remote-tool4',
+                ],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-remote-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(true)
+        const diff = result.current.getToolsDiffFromRegistry([
+          'remote-tool1',
+          'remote-tool2',
+        ])
+        expect(diff).toEqual({
+          hasExactMatch: false,
+          addedTools: [],
+          missingTools: ['remote-tool3', 'remote-tool4'],
+        })
+      })
+    })
+
+    it('identifies both added and missing tools for remote server', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createRemoteWorkload({
+              url: 'https://api.example.com/mcp',
+            })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            remote_servers: [
+              createRegistryRemoteServer({
+                url: 'https://api.example.com/mcp',
+                tools: ['remote-tool1', 'remote-tool2', 'remote-tool3'],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-remote-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(true)
+        const diff = result.current.getToolsDiffFromRegistry([
+          'remote-tool1',
+          'remote-tool4',
+          'remote-tool5',
+        ])
+        expect(diff).toEqual({
+          hasExactMatch: false,
+          addedTools: ['remote-tool4', 'remote-tool5'],
+          missingTools: ['remote-tool2', 'remote-tool3'],
+        })
+      })
+    })
+
+    it('handles duplicate tools correctly for remote server', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createRemoteWorkload({
+              url: 'https://api.example.com/mcp',
+            })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            remote_servers: [
+              createRegistryRemoteServer({
+                url: 'https://api.example.com/mcp',
+                tools: ['remote-tool1', 'remote-tool2', 'remote-tool2'],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-remote-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(true)
+        const diff = result.current.getToolsDiffFromRegistry([
+          'remote-tool1',
+          'remote-tool2',
+          'remote-tool3',
+          'remote-tool3',
+        ])
+        expect(diff).toEqual({
+          hasExactMatch: false,
+          addedTools: ['remote-tool3'],
+          missingTools: [],
+        })
+      })
+    })
+
+    it('returns null when remote server is not from registry', async () => {
+      const wrapper = createWrapper()
+
+      mswServer.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(
+            createRemoteWorkload({
+              url: 'https://api.different.com/mcp',
+            })
+          )
+        }),
+        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+          return HttpResponse.json({
+            remote_servers: [
+              createRegistryRemoteServer({
+                url: 'https://api.example.com/mcp',
+                tools: ['remote-tool1', 'remote-tool2'],
+              }),
+            ],
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-remote-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(false)
+        const diff = result.current.getToolsDiffFromRegistry([
+          'remote-tool1',
+          'remote-tool2',
+        ])
+        expect(diff).toBeNull()
       })
     })
   })
