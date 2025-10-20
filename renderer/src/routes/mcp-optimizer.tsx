@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
@@ -8,21 +8,16 @@ import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../utils/feature-flags'
 import { ManageClientsButton } from '@/features/clients/components/manage-clients-button'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
-import { RadioGroup, RadioGroupItem } from '@/common/components/ui/radio-group'
-import { Label } from '@/common/components/ui/label'
 import { Button } from '@/common/components/ui/button'
-import {
-  Alert,
-  AlertTitle,
-  AlertDescription,
-} from '@/common/components/ui/alert'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/common/components/ui/dropdown-menu'
-import { AlertTriangle, Settings, RotateCw, Text, Edit3 } from 'lucide-react'
+import { Settings, RotateCw, Text, Edit3 } from 'lucide-react'
+import { OptimizerWarnings } from '@/features/meta-mcp/components/optimizer-warnings'
+import { GroupSelectorForm } from '@/features/meta-mcp/components/group-selector-form'
 
 export const Route = createFileRoute('/mcp-optimizer')({
   component: McpOptimizerRoute,
@@ -32,8 +27,6 @@ function McpOptimizerRoute() {
   const showSidebar = useFeatureFlag(featureFlagKeys.GROUPS)
   const { data: groupsData } = useGroups()
   const groups = groupsData?.groups ?? []
-
-  const [selectedGroup, setSelectedGroup] = useState<string>('')
 
   // Fetch all workloads to see which servers are in each group
   const { data: workloadsData } = useQuery({
@@ -98,26 +91,7 @@ function McpOptimizerRoute() {
         </TitlePage>
         <div className="p-6">
           <div className="mx-auto max-w-2xl">
-            <Alert className="mb-6">
-              <AlertTriangle />
-              <AlertTitle>Experimental Feature</AlertTitle>
-              <AlertDescription>
-                This is an experimental feature currently under development.
-              </AlertDescription>
-            </Alert>
-            <Alert variant="destructive" className="mb-6">
-              <AlertTriangle />
-              <AlertTitle>Unoptimized Access Detected</AlertTitle>
-              <AlertDescription>
-                <p>
-                  The <strong>claude</strong> client has unoptimized access to
-                  the <strong>foobar</strong> group. We recommend disabling the{' '}
-                  <strong>claude</strong> client in the <strong>foobar</strong>{' '}
-                  group and enabling optimization for the{' '}
-                  <strong>foobar</strong> group.
-                </p>
-              </AlertDescription>
-            </Alert>
+            <OptimizerWarnings />
             <div className="mb-6">
               <h2 className="text-lg font-semibold">
                 Select Groups to Optimize
@@ -128,50 +102,10 @@ function McpOptimizerRoute() {
                 and optimized.
               </p>
             </div>
-            <RadioGroup
-              value={selectedGroup}
-              onValueChange={setSelectedGroup}
-              className="gap-0"
-            >
-              <div className="rounded-xl border">
-                {groups.map((group) => {
-                  const groupName = group.name ?? ''
-                  const servers = serversByGroup[groupName] ?? []
-                  const serverCount = servers.length
-
-                  return (
-                    <div
-                      key={groupName}
-                      className="hover:bg-accent flex cursor-pointer items-start
-                        gap-3 border-b p-4 last:border-b-0"
-                      onClick={() => setSelectedGroup(groupName)}
-                    >
-                      <RadioGroupItem
-                        id={groupName}
-                        value={groupName}
-                        className="mt-0.5"
-                      />
-                      <div className="flex flex-1 flex-col gap-1">
-                        <Label
-                          htmlFor={groupName}
-                          className="cursor-pointer text-sm font-medium"
-                        >
-                          {groupName}
-                        </Label>
-                        <p className="text-muted-foreground text-xs">
-                          {serverCount === 0
-                            ? 'No servers'
-                            : servers.join(', ')}
-                        </p>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </RadioGroup>
-            <div className="mt-6 flex justify-end">
-              <Button>Apply Changes</Button>
-            </div>
+            <GroupSelectorForm
+              groups={groups}
+              serversByGroup={serversByGroup}
+            />
           </div>
         </div>
       </div>
