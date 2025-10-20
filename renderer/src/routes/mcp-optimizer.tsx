@@ -2,7 +2,6 @@ import { createFileRoute } from '@tanstack/react-router'
 import { TitlePage } from '@/common/components/title-page'
 import { McpServersSidebar } from '@/features/mcp-servers/components/mcp-servers-sidebar'
 import { ManageClientsButton } from '@/features/clients/components/manage-clients-button'
-import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
 import { Button } from '@/common/components/ui/button'
 import {
   DropdownMenu,
@@ -13,16 +12,14 @@ import {
 import { Settings, RotateCw, Text, Edit3 } from 'lucide-react'
 import { OptimizerWarnings } from '@/features/meta-mcp/components/optimizer-warnings'
 import { GroupSelectorForm } from '@/features/meta-mcp/components/group-selector-form'
-import { useServersByGroup } from '@/features/meta-mcp/hooks/use-servers-by-group'
+import { useMcpOptimizerGroups } from '@/features/meta-mcp/hooks/use-mcp-optimizer-groups'
 
 export const Route = createFileRoute('/mcp-optimizer')({
   component: McpOptimizerRoute,
 })
 
 export function McpOptimizerRoute() {
-  const { data: groupsData } = useGroups()
-  const groups = groupsData?.groups ?? []
-  const serversByGroup = useServersByGroup()
+  const groups = useMcpOptimizerGroups()
 
   return (
     <div className="flex h-full gap-6">
@@ -70,10 +67,7 @@ export function McpOptimizerRoute() {
                 and optimized.
               </p>
             </div>
-            <GroupSelectorForm
-              groups={groups}
-              serversByGroup={serversByGroup}
-            />
+            <GroupSelectorForm groups={groups} />
           </div>
         </div>
       </div>

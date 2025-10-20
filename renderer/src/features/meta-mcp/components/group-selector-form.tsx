@@ -3,19 +3,14 @@ import { useState } from 'react'
 import { RadioGroup, RadioGroupItem } from '@/common/components/ui/radio-group'
 import { Label } from '@/common/components/ui/label'
 import { Button } from '@/common/components/ui/button'
-
-interface Group {
-  name?: string
-}
+import type { GroupWithServers } from '@/features/meta-mcp/hooks/use-mcp-optimizer-groups'
 
 interface GroupSelectorFormProps {
-  groups: Group[]
-  serversByGroup: Record<string, string[]>
+  groups: GroupWithServers[]
 }
 
 export function GroupSelectorForm({
   groups,
-  serversByGroup,
 }: GroupSelectorFormProps): ReactElement {
   const [selectedGroup, setSelectedGroup] = useState<string>('')
 
@@ -29,7 +24,7 @@ export function GroupSelectorForm({
         <div className="rounded-xl border">
           {groups.map((group) => {
             const groupName = group.name ?? ''
-            const servers = serversByGroup[groupName] ?? []
+            const servers = group.servers
             const serverCount = servers.length
 
             return (

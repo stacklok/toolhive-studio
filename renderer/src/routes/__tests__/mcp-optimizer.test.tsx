@@ -12,14 +12,12 @@ const router = createTestRouter(McpOptimizerRoute, '/mcp-optimizer')
 beforeEach(() => {
   vi.clearAllMocks()
 
-  // Mock the groups API
   server.use(
     http.get(mswEndpoint('/api/v1beta/groups'), () =>
       HttpResponse.json({
         groups: [{ name: 'default' }, { name: 'production' }],
       })
     ),
-    // Mock the workloads API
     http.get(mswEndpoint('/api/v1beta/workloads'), () =>
       HttpResponse.json({
         workloads: [

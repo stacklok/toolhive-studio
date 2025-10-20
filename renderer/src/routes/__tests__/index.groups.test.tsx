@@ -83,7 +83,6 @@ describe('Groups Manager in Index route (feature flagged)', () => {
   })
 
   it('renders custom groups when provided different data (not hardcoded)', async () => {
-    // Override the default groups fixture with custom data
     server.use(
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({
@@ -98,14 +97,12 @@ describe('Groups Manager in Index route (feature flagged)', () => {
 
     renderRoute(router)
 
-    // Verify the custom groups are displayed
     await waitFor(() => {
       expect(screen.getByText('staging')).toBeVisible()
       expect(screen.getByText('production')).toBeVisible()
       expect(screen.getByText('development')).toBeVisible()
     })
 
-    // Verify the original fixture groups are NOT displayed
     expect(screen.queryByText('research')).not.toBeInTheDocument()
     expect(screen.queryByText('archive')).not.toBeInTheDocument()
   })

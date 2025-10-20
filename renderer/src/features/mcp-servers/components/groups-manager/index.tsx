@@ -5,7 +5,6 @@ import { AddGroupButton } from './add-group-button'
 import { GroupList } from './group-list'
 import { useGroups } from '../../hooks/use-groups'
 import { Group } from './group'
-import { trackEvent } from '@/common/lib/analytics'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../../../../utils/feature-flags'
 
@@ -25,18 +24,10 @@ export function GroupsManager({
 
   const apiGroups = data?.groups ?? []
 
-  const handleOptimizerClick = () => {
-    trackEvent('MCP Optimizer navigated', {})
-  }
-
   return (
     <div className="flex flex-col gap-2">
       {isMetaOptimizerEnabled ? (
-        <Link
-          to="/mcp-optimizer"
-          preload="intent"
-          onClick={handleOptimizerClick}
-        >
+        <Link to="/mcp-optimizer" preload="intent">
           <Group
             name="MCP Optimizer"
             isActive={isOptimizerActive}

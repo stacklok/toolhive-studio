@@ -5,24 +5,13 @@ import { GroupSelectorForm } from '../group-selector-form'
 
 describe('GroupSelectorForm', () => {
   const mockGroups = [
-    { name: 'default' },
-    { name: 'production' },
-    { name: 'development' },
+    { name: 'default', servers: ['server1', 'server2'] },
+    { name: 'production', servers: ['server3'] },
+    { name: 'development', servers: [] },
   ]
 
-  const mockServersByGroup = {
-    default: ['server1', 'server2'],
-    production: ['server3'],
-    development: [],
-  }
-
   it('renders all group options', () => {
-    render(
-      <GroupSelectorForm
-        groups={mockGroups}
-        serversByGroup={mockServersByGroup}
-      />
-    )
+    render(<GroupSelectorForm groups={mockGroups} />)
 
     expect(screen.getByText('default')).toBeInTheDocument()
     expect(screen.getByText('production')).toBeInTheDocument()
@@ -30,12 +19,7 @@ describe('GroupSelectorForm', () => {
   })
 
   it('displays server names for each group', () => {
-    render(
-      <GroupSelectorForm
-        groups={mockGroups}
-        serversByGroup={mockServersByGroup}
-      />
-    )
+    render(<GroupSelectorForm groups={mockGroups} />)
 
     expect(screen.getByText('server1, server2')).toBeInTheDocument()
     expect(screen.getByText('server3')).toBeInTheDocument()
@@ -43,12 +27,7 @@ describe('GroupSelectorForm', () => {
   })
 
   it('renders the Apply Changes button', () => {
-    render(
-      <GroupSelectorForm
-        groups={mockGroups}
-        serversByGroup={mockServersByGroup}
-      />
-    )
+    render(<GroupSelectorForm groups={mockGroups} />)
 
     expect(
       screen.getByRole('button', { name: /apply changes/i })
@@ -56,12 +35,7 @@ describe('GroupSelectorForm', () => {
   })
 
   it('renders radio buttons for each group', () => {
-    render(
-      <GroupSelectorForm
-        groups={mockGroups}
-        serversByGroup={mockServersByGroup}
-      />
-    )
+    render(<GroupSelectorForm groups={mockGroups} />)
 
     const radioButtons = screen.getAllByRole('radio')
     expect(radioButtons).toHaveLength(3)
@@ -70,12 +44,7 @@ describe('GroupSelectorForm', () => {
   it('allows selecting a group', async () => {
     const user = userEvent.setup()
 
-    render(
-      <GroupSelectorForm
-        groups={mockGroups}
-        serversByGroup={mockServersByGroup}
-      />
-    )
+    render(<GroupSelectorForm groups={mockGroups} />)
 
     const defaultRadio = screen.getByRole('radio', { name: /default/i })
     expect(defaultRadio).not.toBeChecked()
@@ -85,7 +54,7 @@ describe('GroupSelectorForm', () => {
   })
 
   it('handles empty groups array', () => {
-    render(<GroupSelectorForm groups={[]} serversByGroup={{}} />)
+    render(<GroupSelectorForm groups={[]} />)
 
     const radioButtons = screen.queryAllByRole('radio')
     expect(radioButtons).toHaveLength(0)
