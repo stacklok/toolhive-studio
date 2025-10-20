@@ -11,6 +11,10 @@ import {
   Outlet,
   Router,
 } from '@tanstack/react-router'
+import { server } from '@/common/mocks/node'
+import { http, HttpResponse } from 'msw'
+import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 
 function createGroupsTestRouter() {
   const rootRoute = createRootRoute({
@@ -74,5 +78,28 @@ describe('Groups Manager in Index route (feature flagged)', () => {
     expect(groupItem).toHaveClass('shadow-sm')
 
     expect(groupItem).toHaveClass('flex', 'h-9', 'w-[215px]', 'px-4', 'py-2')
+  })
+
+  it('hides the mcp-optimizer group from the group list', async () => {
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [
+            { name: 'default', registered_clients: [] },
+            { name: MCP_OPTIMIZER_GROUP_NAME, registered_clients: [] },
+            { name: 'production', registered_clients: [] },
+          ],
+        })
+      )
+    )
+
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.getByText('default')).toBeVisible()
+      expect(screen.getByText('production')).toBeVisible()
+    })
+
+    expect(screen.queryByText(MCP_OPTIMIZER_GROUP_NAME)).not.toBeInTheDocument()
   })
 })

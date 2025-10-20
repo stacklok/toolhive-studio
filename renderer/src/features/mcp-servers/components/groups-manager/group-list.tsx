@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { Group } from './group'
 import { trackEvent } from '@/common/lib/analytics'
+import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 
 interface GroupListProps {
   apiGroups: Array<{ name?: string; registered_clients?: string[] }>
@@ -15,9 +16,13 @@ export function GroupList({ apiGroups, currentGroupName }: GroupListProps) {
     })
   }
 
+  const visibleGroups = apiGroups.filter(
+    (group) => group.name !== MCP_OPTIMIZER_GROUP_NAME
+  )
+
   return (
     <div className="space-y-2">
-      {apiGroups.map((group) => (
+      {visibleGroups.map((group) => (
         <Link
           key={group.name}
           to="/group/$groupName"
