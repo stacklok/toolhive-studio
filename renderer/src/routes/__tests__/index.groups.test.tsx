@@ -25,7 +25,10 @@ function createGroupsTestRouter() {
   const groupRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/group/$groupName',
-    component: () => <GroupsManager />,
+    component: function GroupRouteComponent() {
+      const { groupName } = groupRoute.useParams()
+      return <GroupsManager currentGroupName={groupName} />
+    },
   })
 
   const router = new Router({
@@ -81,6 +84,31 @@ describe('Groups Manager in Index route (feature flagged)', () => {
     expect(groupItem).toHaveClass('shadow-sm')
 
     expect(groupItem).toHaveClass('flex', 'h-9', 'w-[215px]', 'px-4', 'py-2')
+  })
+
+  it('renders custom groups when provided different data (not hardcoded)', async () => {
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [
+            { name: 'staging', registered_clients: [] },
+            { name: 'production', registered_clients: [] },
+            { name: 'development', registered_clients: [] },
+          ],
+        })
+      )
+    )
+
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.getByText('staging')).toBeVisible()
+      expect(screen.getByText('production')).toBeVisible()
+      expect(screen.getByText('development')).toBeVisible()
+    })
+
+    expect(screen.queryByText('research')).not.toBeInTheDocument()
+    expect(screen.queryByText('archive')).not.toBeInTheDocument()
   })
 
   it('hides the mcp-optimizer group when META_OPTIMIZER flag is enabled', async () => {

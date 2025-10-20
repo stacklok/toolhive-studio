@@ -74,7 +74,7 @@ function GroupRoute() {
 
   return (
     <div className="flex h-full gap-6">
-      <McpServersSidebar />
+      <McpServersSidebar currentGroupName={groupName} />
       <div className="ml-sidebar min-w-0 flex-1">
         <TitlePage title="MCP Servers">
           <>

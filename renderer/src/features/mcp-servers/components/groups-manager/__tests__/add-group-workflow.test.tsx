@@ -33,7 +33,10 @@ function createGroupsTestRouter() {
   const groupRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/group/$groupName',
-    component: () => <GroupsManager />,
+    component: function GroupRouteComponent() {
+      const { groupName } = groupRoute.useParams()
+      return <GroupsManager currentGroupName={groupName} />
+    },
   })
 
   const router = new Router({

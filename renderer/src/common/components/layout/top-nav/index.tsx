@@ -22,7 +22,8 @@ import { useAppVersion } from '@/common/hooks/use-app-version'
 
 function TopNavLinks() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
-  const isGroupRoute = pathname.startsWith('/group/')
+  const isGroupRoute =
+    pathname.startsWith('/group/') || pathname === '/mcp-optimizer'
 
   return (
     <NavigationMenu>

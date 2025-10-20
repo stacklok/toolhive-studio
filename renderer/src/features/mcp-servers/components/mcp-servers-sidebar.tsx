@@ -1,7 +1,13 @@
 import type { ReactElement } from 'react'
 import { GroupsManager } from './groups-manager'
 
-export function McpServersSidebar(): ReactElement {
+interface McpServersSidebarProps {
+  currentGroupName?: string
+}
+
+export function McpServersSidebar({
+  currentGroupName,
+}: McpServersSidebarProps): ReactElement {
   return (
     <aside
       className="border-input bg-muted/50 text-sidebar-foreground w-sidebar
@@ -9,7 +15,7 @@ export function McpServersSidebar(): ReactElement {
         border-r px-4 pt-4 pb-4"
     >
       <div className="flex flex-col gap-3">
-        <GroupsManager />
+        <GroupsManager currentGroupName={currentGroupName} />
       </div>
     </aside>
   )
