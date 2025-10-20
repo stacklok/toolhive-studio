@@ -7,6 +7,7 @@ import type { AvailableServer, ChatUIMessage } from '../../main/src/chat/types'
 import { TOOLHIVE_VERSION } from '../../utils/constants'
 import type { UIMessage } from 'ai'
 import type { LanguageModelV2Usage } from '@ai-sdk/provider'
+import type { FeatureFlagOptions } from '../../main/src/feature-flags'
 
 // Expose auto-launch functionality to renderer
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -126,6 +127,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     enable: (key: string) => ipcRenderer.invoke('feature-flags:enable', key),
     disable: (key: string) => ipcRenderer.invoke('feature-flags:disable', key),
     getAll: () => ipcRenderer.invoke('feature-flags:get-all'),
+    enableExperimentalFeature: (key: string) =>
+      ipcRenderer.invoke('feature-flags:enable-experimental-feature', key),
+    disableExperimentalFeature: (key: string) =>
+      ipcRenderer.invoke('feature-flags:disable-experimental-feature', key),
   },
 
   // Chat functionality
@@ -299,7 +304,11 @@ export interface ElectronAPI {
     get: (key: string) => Promise<boolean>
     enable: (key: string) => Promise<void>
     disable: (key: string) => Promise<void>
-    getAll: () => Promise<Record<string, boolean>>
+    getAll: () => Promise<
+      Record<string, FeatureFlagOptions & { enabled: boolean }>
+    >
+    enableExperimentalFeature: (key: string) => Promise<void>
+    disableExperimentalFeature: (key: string) => Promise<void>
   }
   // File/folder pickers
   selectFile: () => Promise<string | null>
