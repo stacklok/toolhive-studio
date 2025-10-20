@@ -11,15 +11,13 @@ import {
   useSetAutoLaunch,
 } from '@/common/hooks/use-auto-launch'
 import { useTheme } from '@/common/hooks/use-theme'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState, useEffect } from 'react'
 import { Sun, Moon, Monitor } from 'lucide-react'
 import log from 'electron-log/renderer'
 import { trackEvent } from '@/common/lib/analytics'
 import { ExperimentalFeatures } from './components/experimental-features'
 import { WrapperField } from './components/wrapper-field'
-import { featureFlagKeys } from '../../../../../../utils/feature-flags'
-import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 
 const CONFIRM_QUIT_STORAGE_KEY = 'doNotShowAgain_confirm_quit'
 
@@ -175,60 +173,6 @@ function QuitConfirmationField() {
   )
 }
 
-function ExperimentalFeaturesMasterToggle() {
-  const queryClient = useQueryClient()
-  const isEnabled = useFeatureFlag(featureFlagKeys.EXPERIMENTAL_FEATURES)
-
-  const { mutateAsync: enableFlag, isPending: isEnabling } = useMutation({
-    mutationFn: () =>
-      window.electronAPI.featureFlags.enable(
-        featureFlagKeys.EXPERIMENTAL_FEATURES
-      ),
-    onSuccess: () => {
-      queryClient.invalidateQueries()
-    },
-  })
-
-  const { mutateAsync: disableFlag, isPending: isDisabling } = useMutation({
-    mutationFn: () =>
-      window.electronAPI.featureFlags.disable(
-        featureFlagKeys.EXPERIMENTAL_FEATURES
-      ),
-    onSuccess: () => {
-      queryClient.invalidateQueries()
-    },
-  })
-
-  const handleToggle = async () => {
-    try {
-      if (isEnabled) {
-        await disableFlag()
-      } else {
-        await enableFlag()
-      }
-    } catch (error) {
-      log.error('Failed to toggle experimental features:', error)
-    }
-  }
-
-  const isPending = isEnabling || isDisabling
-
-  return (
-    <WrapperField
-      label="Enable experimental features"
-      description="Show and enable experimental features that are under development"
-      htmlFor="experimental-features-toggle"
-    >
-      <Switch
-        id="experimental-features-toggle"
-        checked={isEnabled}
-        onCheckedChange={handleToggle}
-        disabled={isPending}
-      />
-    </WrapperField>
-  )
-}
-
 export function GeneralTab() {
   return (
     <div className="space-y-6">
@@ -239,7 +183,6 @@ export function GeneralTab() {
         <AutoLaunchField />
         <TelemetryField />
         <QuitConfirmationField />
-        <ExperimentalFeaturesMasterToggle />
         <ExperimentalFeatures />
       </div>
     </div>
