@@ -67,20 +67,20 @@ export function FormDialog({
       <DialogContent>
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
-          className="flex flex-col gap-6"
+          className="flex flex-col gap-5"
         >
-          <DialogHeader>
+          <DialogHeader className="px-1">
             <DialogTitle>{config.title || 'Form Input'}</DialogTitle>
             <DialogDescription>{config.description || ''}</DialogDescription>
           </DialogHeader>
 
           <ScrollArea className="h-full max-h-[calc(85vh-8rem)] min-h-[40px]">
-            <div className="space-y-4 pr-4">
+            <div className="space-y-4 p-1">
               {config.fields(form as UseFormReturn<Record<string, unknown>>)}
             </div>
           </ScrollArea>
 
-          <DialogFooter>
+          <DialogFooter className="px-1 pt-1">
             <Button
               variant={config.buttons?.cancelVariant ?? 'secondary'}
               onClick={handleCancel}

@@ -30,9 +30,7 @@ import {
 import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-workload-form-wrapper'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
-import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { AlertErrorFetchingEditingData } from '@/common/components/workloads/alert-error-fetching-editing-data'
-import { featureFlagKeys } from '../../../../../../utils/feature-flags'
 
 type Tab = 'configuration' | 'network-isolation'
 type CommonFields = keyof FormSchemaLocalMcp
@@ -55,6 +53,7 @@ const FIELD_TAB_MAP = {
   allowedPorts: 'network-isolation',
   networkIsolation: 'network-isolation',
   volumes: 'configuration',
+  tools: 'configuration',
 } satisfies FieldTabMapping<Tab, Field>
 
 const DEFAULT_FORM_VALUES = {
@@ -156,7 +155,6 @@ export function DialogFormLocalMcp({
 
   const { data: groupsData } = useGroups()
   const groups = groupsData?.groups ?? []
-  const isGroupsEnabled = useFeatureFlag(featureFlagKeys.GROUPS)
 
   const form = useForm<FormSchemaLocalMcp>({
     resolver: zodV4Resolver(
@@ -287,10 +285,7 @@ export function DialogFormLocalMcp({
                 <FormFieldsBase
                   form={form}
                   isEditing={isEditing}
-                  groupProps={{
-                    show: isGroupsEnabled,
-                    groups,
-                  }}
+                  groups={groups}
                 />
                 <FormFieldsArrayCustomSecrets form={form} />
                 <FormFieldsArrayCustomEnvVars form={form} />
@@ -321,7 +316,6 @@ export function DialogFormLocalMcp({
     setActiveTab,
     form,
     groups,
-    isGroupsEnabled,
     serverToEdit,
   ])
 

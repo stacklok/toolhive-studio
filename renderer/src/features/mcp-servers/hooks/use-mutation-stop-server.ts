@@ -15,10 +15,16 @@ const getMutationData = (name: string) => ({
   loadingMsg: `Stopping server ${name}...`,
 })
 
-export function useMutationStopServerList({ name }: { name: string }) {
+export function useMutationStopServerList({
+  name,
+  group = 'default',
+}: {
+  name: string
+  group?: string
+}) {
   const queryClient = useQueryClient()
   const queryKey = getApiV1BetaWorkloadsQueryKey({
-    query: { all: true, group: 'default' },
+    query: { all: true, group: group },
   })
   return useToastMutation({
     ...getMutationData(name),
@@ -40,7 +46,7 @@ export function useMutationStopServerList({ name }: { name: string }) {
             workloads: oldData.workloads?.map((server: CoreWorkload) =>
               server.name === name ? { ...server, status: 'stopping' } : server
             ),
-          } as V1WorkloadListResponse
+          }
           return updatedData
         }
       )
@@ -62,7 +68,7 @@ export function useMutationStopServerList({ name }: { name: string }) {
           return statusResponses.map((response, index) => ({
             name: names[index],
             status: response.status || 'unknown',
-          })) as CoreWorkload[]
+          }))
         },
         [name],
         'stopped'

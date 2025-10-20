@@ -86,6 +86,12 @@ const createVolumesSchema = () => {
   })
 }
 
+const createToolsSchema = () => {
+  return z.object({
+    tools: z.array(z.string()).optional().nullable(),
+  })
+}
+
 const createTransportConfigSchema = () => {
   return z.object({
     transport: z.union(
@@ -265,6 +271,7 @@ export const createMcpBaseSchema = (workloads: CoreWorkload[]) => {
   const commandArgsSchema = createCommandArgumentsSchema()
   const networkSchema = createNetworkConfigSchema()
   const volumesSchema = createVolumesSchema()
+  const toolsSchema = createToolsSchema()
 
   const commonSchema = nameSchema
     .extend(transportSchema.shape)
@@ -273,6 +280,7 @@ export const createMcpBaseSchema = (workloads: CoreWorkload[]) => {
     .extend(volumesSchema.shape)
     .extend(envVarsSchema.shape)
     .extend(secretsSchema.shape)
+    .extend(toolsSchema.shape)
     .extend({
       group: z.string(),
     })
@@ -306,6 +314,7 @@ const remoteMcpOauthConfigSchema = z.object({
 
 export const createRemoteMcpBaseSchema = (workloads: CoreWorkload[]) => {
   const nameSchema = createNameSchema(workloads)
+  const toolsSchema = createToolsSchema()
   const secretsSchema = createBasicSecretsSchema()
   const transportSchema = createTransportConfigSchema()
   const urlSchema = z.object({
@@ -321,6 +330,7 @@ export const createRemoteMcpBaseSchema = (workloads: CoreWorkload[]) => {
     .extend(secretsSchema.shape)
     .extend(urlSchema.shape)
     .extend(authTypeSchema.shape)
+    .extend(toolsSchema.shape)
     .extend({ oauth_config: remoteMcpOauthConfigSchema })
     .extend({
       group: z.string().min(1, 'Group is required'),
