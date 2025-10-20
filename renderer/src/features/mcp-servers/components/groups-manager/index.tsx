@@ -20,7 +20,7 @@ export function GroupsManager(): ReactElement {
   const currentGroupName = groupMatch?.params?.groupName ?? ''
 
   const isOptimizerActive = location.pathname === '/mcp-optimizer'
-  const isMetaMcpEnabled = useFeatureFlag(featureFlagKeys.META_MCP)
+  const isMetaMcpEnabled = useFeatureFlag(featureFlagKeys.META_OPTIMIZER)
 
   const { data } = useGroups()
 

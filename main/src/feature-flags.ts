@@ -10,6 +10,7 @@ type FeatureFlagKey = (typeof featureFlagKeys)[keyof typeof featureFlagKeys]
 interface FeatureFlagOptions {
   isDisabled?: boolean
   defaultValue?: boolean
+  isExperimental?: boolean
 }
 
 const featureFlagOptions: Record<FeatureFlagKey, FeatureFlagOptions> = {
@@ -21,9 +22,10 @@ const featureFlagOptions: Record<FeatureFlagKey, FeatureFlagOptions> = {
     isDisabled: false,
     defaultValue: false,
   },
-  [featureFlagKeys.META_MCP]: {
+  [featureFlagKeys.META_OPTIMIZER]: {
     isDisabled: false,
     defaultValue: false,
+    isExperimental: false,
   },
 }
 
