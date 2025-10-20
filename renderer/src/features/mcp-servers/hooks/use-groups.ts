@@ -5,36 +5,33 @@ import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../../../utils/feature-flags'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 
-export function useRawGroups() {
-  return useQuery({
+export function useGroups() {
+  const groupsQuery = useQuery({
     ...getApiV1BetaGroupsOptions(),
     staleTime: 5_000,
   })
-}
 
-export function useGroups() {
-  const rawGroupsQuery = useRawGroups()
   const isMetaOptimizerEnabled = useFeatureFlag(featureFlagKeys.META_OPTIMIZER)
 
   const filteredGroups = useMemo(() => {
-    if (!rawGroupsQuery.data?.groups) {
-      return rawGroupsQuery.data
+    if (!groupsQuery.data?.groups) {
+      return groupsQuery.data
     }
 
     if (!isMetaOptimizerEnabled) {
-      return rawGroupsQuery.data
+      return groupsQuery.data
     }
 
     return {
-      ...rawGroupsQuery.data,
-      groups: rawGroupsQuery.data.groups.filter(
+      ...groupsQuery.data,
+      groups: groupsQuery.data.groups.filter(
         (group) => group.name !== MCP_OPTIMIZER_GROUP_NAME
       ),
     }
-  }, [rawGroupsQuery.data, isMetaOptimizerEnabled])
+  }, [groupsQuery.data, isMetaOptimizerEnabled])
 
   return {
-    ...rawGroupsQuery,
+    ...groupsQuery,
     data: filteredGroups,
   }
 }
