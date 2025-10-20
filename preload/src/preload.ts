@@ -127,10 +127,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     enable: (key: string) => ipcRenderer.invoke('feature-flags:enable', key),
     disable: (key: string) => ipcRenderer.invoke('feature-flags:disable', key),
     getAll: () => ipcRenderer.invoke('feature-flags:get-all'),
-    enableExperimentalFeature: (key: string) =>
-      ipcRenderer.invoke('feature-flags:enable-experimental-feature', key),
-    disableExperimentalFeature: (key: string) =>
-      ipcRenderer.invoke('feature-flags:disable-experimental-feature', key),
   },
 
   // Chat functionality

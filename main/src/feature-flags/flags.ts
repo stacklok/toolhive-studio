@@ -20,6 +20,11 @@ const featureFlagOptions: Record<FeatureFlagKey, FeatureFlagOptions> = {
   [featureFlagKeys.META_OPTIMIZER]: {
     isDisabled: false,
     defaultValue: false,
+    isExperimental: true,
+  },
+  [featureFlagKeys.EXPERIMENTAL_FEATURES]: {
+    isDisabled: false,
+    defaultValue: false,
     isExperimental: false,
   },
 }
@@ -61,22 +66,6 @@ export function disableFeatureFlag(key: FeatureFlagKey): void {
   const storeKey = `${FLAG_STORE_PREFIX}${key}`
   featureFlagStore.delete(storeKey)
   log.info(`Disabled feature flag: ${key}`)
-}
-
-export function enableExperimentalFeature(key: FeatureFlagKey): void {
-  const options = featureFlagOptions[key]
-  if (options) {
-    options.isExperimental = true
-  }
-  log.info(`Marked feature flag as experimental: ${key}`)
-}
-
-export function disableExperimentalFeature(key: FeatureFlagKey): void {
-  const options = featureFlagOptions[key]
-  if (options) {
-    options.isExperimental = false
-  }
-  log.info(`Unmarked feature flag as experimental: ${key}`)
 }
 
 export function getAllFeatureFlags(): Record<

@@ -66,8 +66,6 @@ import {
   getAllFeatureFlags,
   type FeatureFlagKey,
   type FeatureFlagOptions,
-  enableExperimentalFeature,
-  disableExperimentalFeature,
 } from './feature-flags'
 import {
   CHAT_PROVIDER_INFO,
@@ -622,20 +620,6 @@ ipcMain.handle(
   'feature-flags:get-all',
   (): Record<FeatureFlagKey, FeatureFlagOptions & { enabled: boolean }> => {
     return getAllFeatureFlags()
-  }
-)
-
-ipcMain.handle(
-  'feature-flags:enable-experimental-feature',
-  (_event, key: FeatureFlagKey): void => {
-    enableExperimentalFeature(key)
-  }
-)
-
-ipcMain.handle(
-  'feature-flags:disable-experimental-feature',
-  (_event, key: FeatureFlagKey): void => {
-    disableExperimentalFeature(key)
   }
 )
 

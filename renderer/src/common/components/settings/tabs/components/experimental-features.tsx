@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
 import { WrapperField } from './wrapper-field'
 import { Switch } from '@/common/components/ui/switch'
+import { featureFlagKeys } from '../../../../../../../utils/feature-flags'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 
 function formatFeatureFlagName(key: string): string {
   return key
@@ -15,6 +17,9 @@ function formatFeatureFlagDescription(key: string): string {
 }
 
 export function ExperimentalFeatures() {
+  const isExperimentalFeaturesEnabled = useFeatureFlag(
+    featureFlagKeys.EXPERIMENTAL_FEATURES
+  )
   const queryClient = useQueryClient()
 
   const { data: allFlags, isPending: isLoadingFlags } = useQuery({
@@ -65,7 +70,7 @@ export function ExperimentalFeatures() {
     )
   }
 
-  if (!flags.length) {
+  if (!isExperimentalFeaturesEnabled) {
     return (
       <div>
         <h2 className="text-lg font-semibold">Experimental Features</h2>

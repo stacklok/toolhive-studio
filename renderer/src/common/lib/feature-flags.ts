@@ -111,16 +111,6 @@ const createSyncFeatureFlag = (key: FeatureFlagKey) => ({
       )
       .catch(console.error)
   },
-  enableExperimental: () => {
-    window.electronAPI.featureFlags
-      .enableExperimentalFeature(key)
-      .catch(console.error)
-  },
-  disableExperimental: () => {
-    window.electronAPI.featureFlags
-      .disableExperimentalFeature(key)
-      .catch(console.error)
-  },
 })
 
 // Create the feature flag object
