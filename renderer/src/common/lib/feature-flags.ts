@@ -66,7 +66,13 @@ const getAllFeatureFlags = async (): Promise<
   Record<FeatureFlagKey, boolean>
 > => {
   try {
-    return await window.electronAPI.featureFlags.getAll()
+    const flags = await window.electronAPI.featureFlags.getAll()
+    return Object.fromEntries(
+      Object.entries(flags ?? {}).map(([key, options]) => [
+        key,
+        options.enabled,
+      ])
+    ) as Record<FeatureFlagKey, boolean>
   } catch (error) {
     console.error('Failed to get all feature flags:', error)
     // Return default values on error

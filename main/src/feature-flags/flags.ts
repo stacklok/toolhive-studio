@@ -1,28 +1,28 @@
 import Store from 'electron-store'
-import log from './logger'
-import { featureFlagKeys } from '../../utils/feature-flags'
+import log from '../logger'
+import { featureFlagKeys } from '../../../utils/feature-flags'
+import type { FeatureFlagKey, FeatureFlagOptions } from './types'
 
 // Import feature flag types from renderer (shared types)
 const FLAG_STORE_PREFIX = 'feature_flag_'
-
-type FeatureFlagKey = (typeof featureFlagKeys)[keyof typeof featureFlagKeys]
-
-interface FeatureFlagOptions {
-  isDisabled?: boolean
-  defaultValue?: boolean
-  isExperimental?: boolean
-}
 
 const featureFlagOptions: Record<FeatureFlagKey, FeatureFlagOptions> = {
   [featureFlagKeys.CUSTOMIZE_TOOLS]: {
     isDisabled: false,
     defaultValue: false,
+    isExperimental: false,
   },
   [featureFlagKeys.GROUPS_IN_REGISTRY]: {
     isDisabled: false,
     defaultValue: false,
+    isExperimental: false,
   },
   [featureFlagKeys.META_OPTIMIZER]: {
+    isDisabled: false,
+    defaultValue: false,
+    isExperimental: true,
+  },
+  [featureFlagKeys.EXPERIMENTAL_FEATURES]: {
     isDisabled: false,
     defaultValue: false,
     isExperimental: false,
@@ -68,14 +68,21 @@ export function disableFeatureFlag(key: FeatureFlagKey): void {
   log.info(`Disabled feature flag: ${key}`)
 }
 
-export function getAllFeatureFlags(): Record<FeatureFlagKey, boolean> {
-  const flags: Record<string, boolean> = {}
+export function getAllFeatureFlags(): Record<
+  FeatureFlagKey,
+  FeatureFlagOptions & { enabled: boolean }
+> {
+  const flags: Record<string, FeatureFlagOptions & { enabled: boolean }> = {}
 
   Object.values(featureFlagKeys).forEach((key) => {
-    flags[key] = getFeatureFlag(key)
+    const options = featureFlagOptions[key] ?? {}
+    flags[key] = {
+      ...options,
+      enabled: getFeatureFlag(key),
+    }
   })
 
   return flags
 }
 
-export type { FeatureFlagKey }
+export type { FeatureFlagKey, FeatureFlagOptions }
