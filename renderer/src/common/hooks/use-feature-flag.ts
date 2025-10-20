@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import type { FeatureFlagKey } from '../lib/feature-flags'
+import log from 'electron-log/renderer'
 
 export function useFeatureFlag(flagKey: FeatureFlagKey): boolean {
   const { data } = useQuery({
@@ -8,7 +9,7 @@ export function useFeatureFlag(flagKey: FeatureFlagKey): boolean {
       try {
         return await window.electronAPI.featureFlags.get(flagKey)
       } catch (error) {
-        console.error(`Failed to get feature flag ${flagKey}:`, error)
+        log.error(`Failed to get feature flag ${flagKey}:`, error)
         return false
       }
     },

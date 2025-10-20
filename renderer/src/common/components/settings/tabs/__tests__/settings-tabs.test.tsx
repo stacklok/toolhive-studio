@@ -19,6 +19,11 @@ const mockElectronAPI = {
     optIn: vi.fn(),
     optOut: vi.fn(),
   },
+  featureFlags: {
+    getAll: vi.fn(),
+    enable: vi.fn(),
+    disable: vi.fn(),
+  },
 }
 
 Object.defineProperty(window, 'electronAPI', {
@@ -45,6 +50,13 @@ vi.mock('@/common/hooks/use-auto-update', () => ({
   useSetAutoUpdate: vi.fn().mockReturnValue({
     mutateAsync: vi.fn(),
     isPending: false,
+  }),
+}))
+
+vi.mock('@/common/hooks/use-theme', () => ({
+  useTheme: vi.fn().mockReturnValue({
+    theme: 'system',
+    setTheme: vi.fn().mockResolvedValue(undefined),
   }),
 }))
 
@@ -86,6 +98,9 @@ describe('SettingsTabs', () => {
     mockElectronAPI.isAutoUpdateEnabled.mockResolvedValue(false)
     mockElectronAPI.getUpdateState.mockResolvedValue('none')
     mockElectronAPI.sentry.isEnabled.mockResolvedValue(true)
+    mockElectronAPI.featureFlags.getAll.mockResolvedValue({})
+    mockElectronAPI.featureFlags.enable.mockResolvedValue(undefined)
+    mockElectronAPI.featureFlags.disable.mockResolvedValue(undefined)
 
     // Reset mock return values
     mockUseAppVersion.mockReturnValue({

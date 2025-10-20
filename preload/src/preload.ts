@@ -7,6 +7,7 @@ import type { AvailableServer, ChatUIMessage } from '../../main/src/chat/types'
 import { TOOLHIVE_VERSION } from '../../utils/constants'
 import type { UIMessage } from 'ai'
 import type { LanguageModelV2Usage } from '@ai-sdk/provider'
+import type { FeatureFlagOptions } from '../../main/src/feature-flags'
 
 // Expose auto-launch functionality to renderer
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -299,7 +300,9 @@ export interface ElectronAPI {
     get: (key: string) => Promise<boolean>
     enable: (key: string) => Promise<void>
     disable: (key: string) => Promise<void>
-    getAll: () => Promise<Record<string, boolean>>
+    getAll: () => Promise<
+      Record<string, FeatureFlagOptions & { enabled: boolean }>
+    >
   }
   // File/folder pickers
   selectFile: () => Promise<string | null>

@@ -1,4 +1,3 @@
-import { Label } from '../../ui/label'
 import { Switch } from '../../ui/switch'
 import {
   Select,
@@ -17,30 +16,10 @@ import { useState, useEffect } from 'react'
 import { Sun, Moon, Monitor } from 'lucide-react'
 import log from 'electron-log/renderer'
 import { trackEvent } from '@/common/lib/analytics'
+import { ExperimentalFeatures } from './components/experimental-features'
+import { WrapperField } from './components/wrapper-field'
 
 const CONFIRM_QUIT_STORAGE_KEY = 'doNotShowAgain_confirm_quit'
-
-function WrapperField({
-  children,
-  label,
-  description,
-  htmlFor,
-}: {
-  children: React.ReactNode
-  label: string
-  description: string
-  htmlFor: string
-}) {
-  return (
-    <div className="flex items-center justify-between">
-      <div className="space-y-0.5">
-        <Label htmlFor={htmlFor}>{label}</Label>
-        <p className="text-muted-foreground text-sm">{description}</p>
-      </div>
-      {children}
-    </div>
-  )
-}
 
 function ThemeField() {
   const { theme, setTheme } = useTheme()
@@ -204,6 +183,7 @@ export function GeneralTab() {
         <AutoLaunchField />
         <TelemetryField />
         <QuitConfirmationField />
+        <ExperimentalFeatures />
       </div>
     </div>
   )
