@@ -9,6 +9,7 @@ import {
   useSetAutoLaunch,
 } from '@/common/hooks/use-auto-launch'
 import { useTheme } from '@/common/hooks/use-theme'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 
 vi.mock('@/common/hooks/use-auto-launch', () => ({
   useAutoLaunchStatus: vi.fn(),
@@ -19,6 +20,10 @@ vi.mock('@/common/hooks/use-theme', () => ({
   useTheme: vi.fn(),
 }))
 
+vi.mock('@/common/hooks/use-feature-flag', () => ({
+  useFeatureFlag: vi.fn(),
+}))
+
 const mockElectronAPI = {
   sentry: {
     isEnabled: vi.fn(),
@@ -26,6 +31,7 @@ const mockElectronAPI = {
     optOut: vi.fn(),
   },
   featureFlags: {
+    get: vi.fn(),
     getAll: vi.fn(),
     enable: vi.fn(),
     disable: vi.fn(),
@@ -74,9 +80,12 @@ describe('GeneralTab', () => {
       setTheme: vi.fn().mockResolvedValue(undefined),
     } as unknown as ReturnType<typeof useTheme>)
 
+    vi.mocked(useFeatureFlag).mockReturnValue(true)
+
     mockElectronAPI.sentry.isEnabled.mockResolvedValue(true)
     mockElectronAPI.sentry.optIn.mockResolvedValue(true)
     mockElectronAPI.sentry.optOut.mockResolvedValue(false)
+    mockElectronAPI.featureFlags.get.mockResolvedValue(true)
     mockElectronAPI.featureFlags.getAll.mockResolvedValue({})
     mockElectronAPI.featureFlags.enable.mockResolvedValue(undefined)
     mockElectronAPI.featureFlags.disable.mockResolvedValue(undefined)
@@ -193,7 +202,8 @@ describe('GeneralTab', () => {
 
   describe('Experimental Features', () => {
     it('displays message when no experimental features are available', async () => {
-      mockElectronAPI.featureFlags.getAll.mockResolvedValue({})
+      // Override the mock to return false for experimental_features flag
+      vi.mocked(useFeatureFlag).mockReturnValue(false)
 
       renderWithProviders(<GeneralTab />)
 
@@ -252,14 +262,7 @@ describe('GeneralTab', () => {
     })
 
     it('does not display disabled experimental features', async () => {
-      mockElectronAPI.featureFlags.getAll.mockResolvedValue({
-        disabled_feature: {
-          isExperimental: true,
-          isDisabled: true,
-          defaultValue: false,
-          enabled: false,
-        },
-      })
+      vi.mocked(useFeatureFlag).mockReturnValue(false)
 
       renderWithProviders(<GeneralTab />)
 
