@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { getApiV1BetaGroups } from '@api/sdk.gen'
+import { getApiV1BetaGroupsOptions } from '@api/@tanstack/react-query.gen'
 import { useMemo } from 'react'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../../../utils/feature-flags'
@@ -7,13 +7,7 @@ import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 
 export function useRawGroups() {
   return useQuery({
-    queryKey: ['api', 'v1beta', 'groups'],
-    queryFn: async () => {
-      return await getApiV1BetaGroups({
-        parseAs: 'json',
-        responseStyle: 'data',
-      })
-    },
+    ...getApiV1BetaGroupsOptions(),
     staleTime: 5_000,
   })
 }
