@@ -28,7 +28,6 @@ export function FormFieldsBase({
   isEditing?: boolean
   groups: Array<{ name?: string | null }>
 }) {
-  const visibleGroups = groups
   const typeValue = form.watch('type')
   const protocolValue = form.watch('protocol') ?? 'npx'
   const transportValue = form.watch('transport')
@@ -111,7 +110,7 @@ export function FormFieldsBase({
                   <SelectValue placeholder="Select a group" />
                 </SelectTrigger>
                 <SelectContent>
-                  {visibleGroups
+                  {groups
                     .filter((g) => g.name)
                     .map((g) => (
                       <SelectItem key={g.name!} value={g.name!}>

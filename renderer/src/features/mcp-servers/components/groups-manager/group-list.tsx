@@ -8,8 +8,6 @@ interface GroupListProps {
 }
 
 export function GroupList({ apiGroups, currentGroupName }: GroupListProps) {
-  const visibleGroups = apiGroups
-
   const handleGroupClick = (toGroupName: string) => {
     trackEvent('Group navigated', {
       from_is_default_group: String(currentGroupName === 'default'),
@@ -19,7 +17,7 @@ export function GroupList({ apiGroups, currentGroupName }: GroupListProps) {
 
   return (
     <div className="space-y-2">
-      {visibleGroups.map((group) => (
+      {apiGroups.map((group) => (
         <Link
           key={group.name}
           to="/group/$groupName"
