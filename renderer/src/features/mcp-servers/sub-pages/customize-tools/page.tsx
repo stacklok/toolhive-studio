@@ -16,6 +16,7 @@ import { CustomizeToolsTable } from '@/features/mcp-servers/components/customize
 import { convertCreateRequestToFormData as convertLocalServerToFormData } from '@/features/mcp-servers/lib/orchestrate-run-local-server'
 import { convertCreateRequestToFormData as convertRemoteServerToFormData } from '@/features/mcp-servers/lib/orchestrate-run-remote-server'
 import { useIsServerFromRegistry } from '../../hooks/use-is-server-from-registry'
+import { trackEvent } from '@/common/lib/analytics'
 
 // This is only for the servers from the registry at the moment
 export function CustomizeToolsPage() {
@@ -155,6 +156,10 @@ export function CustomizeToolsPage() {
   }
 
   const handleApply = async (enabledTools: Record<string, boolean>) => {
+    trackEvent('Customize Tools: apply changes', {
+      server_name: serverName,
+      tools_count: Object.keys(enabledTools).length,
+    })
     if (!serverTools) {
       toast.error('Server data not loaded')
       return
@@ -181,6 +186,9 @@ export function CustomizeToolsPage() {
 
   const handleReset = () => {
     try {
+      trackEvent('Customize Tools: reset changes', {
+        server_name: serverName,
+      })
       setIsSubmitting(true)
       handleUpdateServer(null)
     } catch (error) {
