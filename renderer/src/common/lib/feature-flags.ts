@@ -66,7 +66,13 @@ const getAllFeatureFlags = async (): Promise<
   Record<FeatureFlagKey, boolean>
 > => {
   try {
-    return await window.electronAPI.featureFlags.getAll()
+    const flags = await window.electronAPI.featureFlags.getAll()
+    return Object.fromEntries(
+      Object.entries(flags ?? {}).map(([key, options]) => [
+        key,
+        options.enabled,
+      ])
+    ) as Record<FeatureFlagKey, boolean>
   } catch (error) {
     console.error('Failed to get all feature flags:', error)
     // Return default values on error
@@ -105,6 +111,16 @@ const createSyncFeatureFlag = (key: FeatureFlagKey) => ({
       )
       .catch(console.error)
   },
+  enableExperimental: () => {
+    window.electronAPI.featureFlags
+      .enableExperimentalFeature(key)
+      .catch(console.error)
+  },
+  disableExperimental: () => {
+    window.electronAPI.featureFlags
+      .disableExperimentalFeature(key)
+      .catch(console.error)
+  },
 })
 
 // Create the feature flag object
@@ -132,6 +148,7 @@ const featureFlagObject = {
           console.log(`  FeatureFlag.${flagKey}.enable()`)
           console.log(`  FeatureFlag.${flagKey}.disable()`)
           console.log(`  FeatureFlag.${flagKey}.isEnabled()`)
+          console.log(`  FeatureFlag.${flagKey}.isExperimental()`)
         })
       })
       .catch(console.error)

@@ -25,6 +25,11 @@ const mockElectronAPI = {
     optIn: vi.fn(),
     optOut: vi.fn(),
   },
+  featureFlags: {
+    getAll: vi.fn(),
+    enable: vi.fn(),
+    disable: vi.fn(),
+  },
 }
 
 Object.defineProperty(window, 'electronAPI', {
@@ -72,6 +77,9 @@ describe('GeneralTab', () => {
     mockElectronAPI.sentry.isEnabled.mockResolvedValue(true)
     mockElectronAPI.sentry.optIn.mockResolvedValue(true)
     mockElectronAPI.sentry.optOut.mockResolvedValue(false)
+    mockElectronAPI.featureFlags.getAll.mockResolvedValue({})
+    mockElectronAPI.featureFlags.enable.mockResolvedValue(undefined)
+    mockElectronAPI.featureFlags.disable.mockResolvedValue(undefined)
   })
 
   it('renders all settings sections', async () => {
@@ -181,5 +189,150 @@ describe('GeneralTab', () => {
 
     expect(quitConfirmationSwitch).not.toBeChecked()
     expect(localStorage.getItem('doNotShowAgain_confirm_quit')).toBeNull()
+  })
+
+  describe('Experimental Features', () => {
+    it('displays message when no experimental features are available', async () => {
+      mockElectronAPI.featureFlags.getAll.mockResolvedValue({})
+
+      renderWithProviders(<GeneralTab />)
+
+      await waitFor(() => {
+        expect(screen.getByText('Experimental Features')).toBeVisible()
+        expect(
+          screen.getByText('No experimental features available')
+        ).toBeVisible()
+      })
+    })
+
+    it('displays experimental features when available', async () => {
+      mockElectronAPI.featureFlags.getAll.mockResolvedValue({
+        test_feature: {
+          isExperimental: true,
+          isDisabled: false,
+          defaultValue: false,
+          enabled: false,
+        },
+      })
+
+      renderWithProviders(<GeneralTab />)
+
+      await waitFor(() => {
+        expect(screen.getByText('Experimental Features')).toBeVisible()
+        expect(screen.getByText('Test Feature')).toBeVisible()
+      })
+
+      expect(screen.getByText('Enable Test Feature feature')).toBeVisible()
+    })
+
+    it('does not display non-experimental features', async () => {
+      mockElectronAPI.featureFlags.getAll.mockResolvedValue({
+        regular_feature: {
+          isExperimental: false,
+          isDisabled: false,
+          defaultValue: false,
+          enabled: false,
+        },
+        experimental_feature: {
+          isExperimental: true,
+          isDisabled: false,
+          defaultValue: false,
+          enabled: false,
+        },
+      })
+
+      renderWithProviders(<GeneralTab />)
+
+      await waitFor(() => {
+        expect(screen.getByText('Experimental Features')).toBeVisible()
+        expect(screen.getByText('Experimental Feature')).toBeVisible()
+      })
+
+      expect(screen.queryByText('Regular Feature')).not.toBeInTheDocument()
+    })
+
+    it('does not display disabled experimental features', async () => {
+      mockElectronAPI.featureFlags.getAll.mockResolvedValue({
+        disabled_feature: {
+          isExperimental: true,
+          isDisabled: true,
+          defaultValue: false,
+          enabled: false,
+        },
+      })
+
+      renderWithProviders(<GeneralTab />)
+
+      await waitFor(() => {
+        expect(screen.getByText('Experimental Features')).toBeVisible()
+        expect(
+          screen.getByText('No experimental features available')
+        ).toBeVisible()
+      })
+
+      expect(screen.queryByText('Disabled Feature')).not.toBeInTheDocument()
+    })
+
+    it('handles enabling an experimental feature', async () => {
+      mockElectronAPI.featureFlags.getAll.mockResolvedValue({
+        test_feature: {
+          isExperimental: true,
+          isDisabled: false,
+          defaultValue: false,
+          enabled: false,
+        },
+      })
+
+      renderWithProviders(<GeneralTab />)
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Feature')).toBeVisible()
+      })
+
+      const featureSwitch = screen.getByRole('switch', {
+        name: /test feature/i,
+      })
+
+      expect(featureSwitch).not.toBeChecked()
+
+      await userEvent.click(featureSwitch)
+
+      await waitFor(() => {
+        expect(mockElectronAPI.featureFlags.enable).toHaveBeenCalledWith(
+          'test_feature'
+        )
+      })
+    })
+
+    it('handles disabling an experimental feature', async () => {
+      mockElectronAPI.featureFlags.getAll.mockResolvedValue({
+        test_feature: {
+          isExperimental: true,
+          isDisabled: false,
+          defaultValue: false,
+          enabled: true,
+        },
+      })
+
+      renderWithProviders(<GeneralTab />)
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Feature')).toBeVisible()
+      })
+
+      const featureSwitch = screen.getByRole('switch', {
+        name: /test feature/i,
+      })
+
+      expect(featureSwitch).toBeChecked()
+
+      await userEvent.click(featureSwitch)
+
+      await waitFor(() => {
+        expect(mockElectronAPI.featureFlags.disable).toHaveBeenCalledWith(
+          'test_feature'
+        )
+      })
+    })
   })
 })
