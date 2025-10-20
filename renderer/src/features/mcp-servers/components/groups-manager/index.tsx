@@ -6,6 +6,8 @@ import { GroupList } from './group-list'
 import { useGroups } from '../../hooks/use-groups'
 import { Group } from './group'
 import { trackEvent } from '@/common/lib/analytics'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { featureFlagKeys } from '../../../../../../utils/feature-flags'
 
 export function GroupsManager(): ReactElement {
   const location = useLocation()
@@ -18,6 +20,7 @@ export function GroupsManager(): ReactElement {
   const currentGroupName = groupMatch?.params?.groupName ?? ''
 
   const isOptimizerActive = location.pathname === '/mcp-optimizer'
+  const isMetaMcpEnabled = useFeatureFlag(featureFlagKeys.META_MCP)
 
   const { data } = useGroups()
 
@@ -29,13 +32,19 @@ export function GroupsManager(): ReactElement {
 
   return (
     <div className="flex flex-col gap-2">
-      <Link to="/mcp-optimizer" preload="intent" onClick={handleOptimizerClick}>
-        <Group
-          name="MCP Optimizer"
-          isActive={isOptimizerActive}
-          icon={Sparkles}
-        />
-      </Link>
+      {isMetaMcpEnabled ? (
+        <Link
+          to="/mcp-optimizer"
+          preload="intent"
+          onClick={handleOptimizerClick}
+        >
+          <Group
+            name="MCP Optimizer"
+            isActive={isOptimizerActive}
+            icon={Sparkles}
+          />
+        </Link>
+      ) : null}
       <GroupList apiGroups={apiGroups} currentGroupName={currentGroupName} />
       <AddGroupButton apiGroups={apiGroups} />
     </div>
