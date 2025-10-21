@@ -1,11 +1,12 @@
 import { useCallback, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
 import {
   getApiV1BetaWorkloadsOptions,
   getApiV1BetaWorkloadsByNameOptions,
   getApiV1BetaSecretsDefaultKeysOptions,
+  getApiV1BetaWorkloadsByNameQueryKey,
 } from '@api/@tanstack/react-query.gen'
 import { convertCreateRequestToFormData } from '../../lib/orchestrate-run-local-server'
 import { useUpdateServer } from '../../hooks/use-update-server'
@@ -97,6 +98,7 @@ export function DialogFormLocalMcp({
       defaultTab: 'configuration',
     })
   const { checkServerStatus } = useCheckServerStatus()
+  const queryClient = useQueryClient()
 
   const handleSecrets = (completedCount: number, secretsCount: number) => {
     setLoadingSecrets((prev) => ({
@@ -183,11 +185,17 @@ export function DialogFormLocalMcp({
       updateServerMutation(
         { data },
         {
-          onSuccess: () => {
+          onSuccess: async () => {
             checkServerStatus({
               serverName: data.name,
               groupName: data.group || groupName,
               isEditing,
+            })
+            // Force refetch the workload detail query to ensure fresh data immediately
+            await queryClient.refetchQueries({
+              queryKey: getApiV1BetaWorkloadsByNameQueryKey({
+                path: { name: data.name },
+              }),
             })
             closeDialog()
             form.reset()

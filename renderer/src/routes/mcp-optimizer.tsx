@@ -30,8 +30,8 @@ function McpOptimizerContent() {
   const { state, openDialog, closeDialog } = useEditServerDialog()
 
   const handleCustomizeConfiguration = () => {
-    // meta-mcp is always a local server, never remote
-    openDialog(META_MCP_SERVER_NAME, false, MCP_OPTIMIZER_GROUP_NAME)
+    const isRemote = false
+    openDialog(META_MCP_SERVER_NAME, isRemote, MCP_OPTIMIZER_GROUP_NAME)
   }
 
   return (

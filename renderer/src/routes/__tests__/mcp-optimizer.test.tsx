@@ -523,3 +523,100 @@ it('Customize Meta-MCP configuration button refetches data after editing', async
     expect(screen.getByDisplayValue('updated_value')).toBeInTheDocument()
   })
 })
+
+it('radio button selection updates after editing ALLOWED_GROUPS via Customize Configuration', async () => {
+  let currentAllowedGroups = 'default'
+
+  server.use(
+    http.get(mswEndpoint('/api/v1beta/groups'), () =>
+      HttpResponse.json({
+        groups: [{ name: 'default' }, { name: 'production' }],
+      })
+    ),
+    http.get(mswEndpoint('/api/v1beta/workloads'), () =>
+      HttpResponse.json({
+        workloads: [
+          { name: 'server1', group: 'default' },
+          { name: 'server2', group: 'production' },
+        ],
+      })
+    ),
+    http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
+      if (params.name === META_MCP_SERVER_NAME) {
+        return HttpResponse.json({
+          name: META_MCP_SERVER_NAME,
+          group: MCP_OPTIMIZER_GROUP_NAME,
+          image: 'ghcr.io/toolhive/meta-mcp:latest',
+          transport: 'stdio',
+          env_vars: { ALLOWED_GROUPS: currentAllowedGroups },
+          cmd_arguments: [],
+          secrets: [],
+          volumes: [],
+          network_isolation: false,
+        })
+      }
+      return HttpResponse.json(null, { status: 404 })
+    }),
+    http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () =>
+      HttpResponse.json({ keys: [] })
+    ),
+    http.post(
+      mswEndpoint(`/api/v1beta/workloads/${META_MCP_SERVER_NAME}/edit`),
+      async ({ request }) => {
+        const body = await request.json()
+        currentAllowedGroups = body.env_vars?.ALLOWED_GROUPS || ''
+        return HttpResponse.json({ success: true })
+      }
+    )
+  )
+
+  const user = userEvent.setup()
+  renderRoute(router)
+
+  // Verify 'default' is preselected initially
+  await waitFor(() => {
+    const defaultRadio = screen.getByRole('radio', { name: /default/i })
+    expect(defaultRadio).toBeChecked()
+  })
+
+  // Open customize dialog and change ALLOWED_GROUPS to 'production'
+  await user.click(await screen.findByRole('button', { name: /advanced/i }))
+  await user.click(
+    await screen.findByRole('menuitem', {
+      name: /customize meta-mcp configuration/i,
+    })
+  )
+
+  // Wait for dialog to open
+  await waitFor(() => {
+    expect(screen.getByText(/edit meta-mcp mcp server/i)).toBeInTheDocument()
+  })
+
+  // Find the ALLOWED_GROUPS value input by its name attribute
+  const allowedGroupsInput = screen.getByRole('textbox', {
+    name: /environment variable value 1/i,
+  })
+  expect(allowedGroupsInput).toHaveValue('default')
+  await user.clear(allowedGroupsInput)
+  await user.type(allowedGroupsInput, 'production')
+
+  await user.click(
+    await screen.findByRole('button', { name: /update server/i })
+  )
+
+  // Wait for dialog to close
+  await waitFor(() => {
+    expect(
+      screen.queryByText(/edit meta-mcp mcp server/i)
+    ).not.toBeInTheDocument()
+  })
+
+  // Verify 'production' is now selected
+  await waitFor(() => {
+    const productionRadio = screen.getByRole('radio', { name: /production/i })
+    expect(productionRadio).toBeChecked()
+
+    const defaultRadio = screen.getByRole('radio', { name: /default/i })
+    expect(defaultRadio).not.toBeChecked()
+  })
+})
