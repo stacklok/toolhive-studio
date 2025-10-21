@@ -91,7 +91,6 @@ export function useCleanupMetaOptimizer() {
   const cleanupMetaOptimizer = useCallback(async () => {
     if (!isExperimentalFeaturesEnabled || !isMetaOptimizerEnabled) return
     if (!mcpOptimizerGroup) return
-
     if (mcpOptimizerGroup && !!mcpOptimizerGroup.registered_clients?.length) {
       await removeClientsFromGroup(mcpOptimizerGroup.registered_clients!)
     }
@@ -105,7 +104,7 @@ export function useCleanupMetaOptimizer() {
     isMetaOptimizerEnabled,
     mcpOptimizerGroup,
     deleteGroup,
-    unregisterClients,
+    removeClientsFromGroup,
   ])
 
   return { cleanupMetaOptimizer }
