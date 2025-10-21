@@ -1,19 +1,37 @@
 import { useQuery } from '@tanstack/react-query'
-import { getApiV1BetaGroups } from '@api/sdk.gen'
-import type { V1GroupListResponse } from '@api/types.gen'
+import { getApiV1BetaGroupsOptions } from '@api/@tanstack/react-query.gen'
+import { useMemo } from 'react'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { featureFlagKeys } from '../../../../../utils/feature-flags'
+import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 
 export function useGroups() {
-  return useQuery({
-    queryKey: ['api', 'v1beta', 'groups'],
-    queryFn: async () => {
-      const response = await getApiV1BetaGroups({
-        parseAs: 'text',
-        responseStyle: 'data',
-      })
-      const parsed =
-        typeof response === 'string' ? JSON.parse(response) : response
-      return parsed as V1GroupListResponse
-    },
+  const groupsQuery = useQuery({
+    ...getApiV1BetaGroupsOptions(),
     staleTime: 5_000,
   })
+
+  const isMetaOptimizerEnabled = useFeatureFlag(featureFlagKeys.META_OPTIMIZER)
+
+  const filteredGroups = useMemo(() => {
+    if (!groupsQuery.data?.groups) {
+      return groupsQuery.data
+    }
+
+    if (!isMetaOptimizerEnabled) {
+      return groupsQuery.data
+    }
+
+    return {
+      ...groupsQuery.data,
+      groups: groupsQuery.data.groups.filter(
+        (group) => group.name !== MCP_OPTIMIZER_GROUP_NAME
+      ),
+    }
+  }, [groupsQuery.data, isMetaOptimizerEnabled])
+
+  return {
+    ...groupsQuery,
+    data: filteredGroups,
+  }
 }

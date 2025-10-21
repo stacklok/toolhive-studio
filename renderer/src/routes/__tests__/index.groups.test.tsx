@@ -14,6 +14,7 @@ import {
 import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 
 function createGroupsTestRouter() {
   const rootRoute = createRootRoute({
@@ -52,6 +53,9 @@ beforeEach(() => {
         clearShutdownHistory: vi.fn().mockResolvedValue(undefined),
       },
       onServerShutdown: vi.fn().mockReturnValue(() => {}),
+      featureFlags: {
+        get: vi.fn(() => Promise.resolve(false)),
+      },
     },
     writable: true,
   })
@@ -105,5 +109,41 @@ describe('Groups Manager in Index route (feature flagged)', () => {
 
     expect(screen.queryByText('research')).not.toBeInTheDocument()
     expect(screen.queryByText('archive')).not.toBeInTheDocument()
+  })
+
+  it('hides the mcp-optimizer group when META_OPTIMIZER flag is enabled', async () => {
+    Object.defineProperty(window, 'electronAPI', {
+      value: {
+        ...window.electronAPI,
+        featureFlags: {
+          get: vi.fn((key) => {
+            if (key === 'meta_optimizer') return Promise.resolve(true)
+            return Promise.resolve(false)
+          }),
+        },
+      },
+      writable: true,
+    })
+
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [
+            { name: 'default', registered_clients: [] },
+            { name: MCP_OPTIMIZER_GROUP_NAME, registered_clients: [] },
+            { name: 'production', registered_clients: [] },
+          ],
+        })
+      )
+    )
+
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.getByText('default')).toBeVisible()
+      expect(screen.getByText('production')).toBeVisible()
+    })
+
+    expect(screen.queryByText(MCP_OPTIMIZER_GROUP_NAME)).not.toBeInTheDocument()
   })
 })

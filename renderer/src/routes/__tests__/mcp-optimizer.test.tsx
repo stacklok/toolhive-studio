@@ -6,6 +6,7 @@ import { renderRoute } from '@/common/test/render-route'
 import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 
 const router = createTestRouter(McpOptimizerRoute, '/mcp-optimizer')
 
@@ -112,4 +113,36 @@ it('displays server names for each group', async () => {
   })
 
   expect(screen.getByText('server3')).toBeInTheDocument()
+})
+
+it('hides the mcp-optimizer group even when present in fixture data', async () => {
+  server.use(
+    http.get(mswEndpoint('/api/v1beta/groups'), () =>
+      HttpResponse.json({
+        groups: [
+          { name: 'default' },
+          { name: MCP_OPTIMIZER_GROUP_NAME },
+          { name: 'production' },
+        ],
+      })
+    ),
+    http.get(mswEndpoint('/api/v1beta/workloads'), () =>
+      HttpResponse.json({
+        workloads: [
+          { name: 'server1', group: 'default' },
+          { name: 'meta-mcp', group: MCP_OPTIMIZER_GROUP_NAME },
+          { name: 'server3', group: 'production' },
+        ],
+      })
+    )
+  )
+
+  renderRoute(router)
+
+  await waitFor(() => {
+    expect(screen.getAllByText('default').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('production').length).toBeGreaterThan(0)
+  })
+
+  expect(screen.queryByText(MCP_OPTIMIZER_GROUP_NAME)).not.toBeInTheDocument()
 })

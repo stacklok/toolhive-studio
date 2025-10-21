@@ -16,9 +16,9 @@ export function AddServerToGroupMenuItem({
   const { data: groupsData } = useGroups()
   const { copyServerToGroup } = useCopyServerToGroup(serverName)
 
-  const handleAddToGroup = async () => {
-    const groups = groupsData?.groups ?? []
+  const groups = groupsData?.groups ?? []
 
+  const handleAddToGroup = async () => {
     const groupOptions = groups
       .filter((group) => group.name)
       .map((group) => ({
