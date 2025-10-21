@@ -176,7 +176,6 @@ it('Manage Clients button is correctly prefilled for the mcp-optimizer group', a
     await screen.findByRole('button', { name: /manage clients/i })
   )
 
-  // Verify that the form shows the correct registered clients for mcp-optimizer group
   await waitFor(() => {
     const vscodeSwitchContainer = screen
       .getByRole('switch', { name: 'vscode' })
@@ -216,7 +215,6 @@ it('Manage Clients button sends API requests to the correct mcp-optimizer group'
   await user.click(await screen.findByRole('switch', { name: 'vscode' }))
   await user.click(await screen.findByRole('button', { name: /save/i }))
 
-  // Verify exactly one POST to register vscode for the mcp-optimizer group
   await waitFor(() =>
     expect(
       rec.recordedRequests.filter(
