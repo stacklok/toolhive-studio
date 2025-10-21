@@ -8,6 +8,7 @@ import {
 } from '@api/sdk.gen'
 import type { V1CreateRequest } from '@api/types.gen'
 import {
+  getApiV1BetaGroupsQueryKey,
   getApiV1BetaRegistryByNameServersByServerNameOptions,
   getApiV1BetaWorkloadsByNameOptions,
 } from '@api/@tanstack/react-query.gen'
@@ -39,7 +40,7 @@ async function ensureMetaOptimizerWorkload() {
 async function createMetaOptimizerWorkload() {
   try {
     const workloadDetail = await ensureMetaOptimizerWorkload()
-    if (workloadDetail) {
+    if (workloadDetail?.group === MCP_OPTIMIZER_GROUP_NAME) {
       return workloadDetail
     }
 
@@ -103,7 +104,7 @@ async function createMetaOptimizerGroup() {
   }
 
   await queryClient.invalidateQueries({
-    queryKey: ['api', 'v1beta', 'groups'],
+    queryKey: getApiV1BetaGroupsQueryKey(),
   })
 
   // Create workload after group creation succeeds
@@ -112,8 +113,8 @@ async function createMetaOptimizerGroup() {
 
 async function ensureMetaOptimizerGroup() {
   try {
-    const rawGroups = await queryClient.ensureQueryData({
-      queryKey: ['api', 'v1beta', 'groups'],
+    const rawGroups = await queryClient.fetchQuery({
+      queryKey: getApiV1BetaGroupsQueryKey(),
       queryFn: async () => {
         const response = await getApiV1BetaGroups()
 
@@ -130,11 +131,12 @@ async function ensureMetaOptimizerGroup() {
     const metaOptimizerGrp = rawGroups?.groups?.find(
       (group) => group.name === MCP_OPTIMIZER_GROUP_NAME
     )
+
     if (!metaOptimizerGrp) {
       return await createMetaOptimizerGroup()
     }
 
-    return metaOptimizerGrp
+    return await createMetaOptimizerWorkload()
   } catch (error) {
     log.error('[ensureMetaOptimizerGroup] Error checking group:', error)
     return undefined

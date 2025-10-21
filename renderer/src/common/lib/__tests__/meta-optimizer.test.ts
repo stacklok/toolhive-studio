@@ -126,7 +126,10 @@ describe('Meta Optimizer', () => {
         ),
         // Mock workload already exists
         http.get(mswEndpoint('/api/v1beta/workloads/:name'), () =>
-          HttpResponse.json({ name: META_MCP_SERVER_NAME })
+          HttpResponse.json({
+            name: META_MCP_SERVER_NAME,
+            group: MCP_OPTIMIZER_GROUP_NAME,
+          })
         )
       )
 
