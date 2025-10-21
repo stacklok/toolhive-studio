@@ -7,7 +7,6 @@ import { useGroups } from '../../hooks/use-groups'
 import { Group } from './group'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../../../../utils/feature-flags'
-import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 
 interface GroupsManagerProps {
   currentGroupName?: string
@@ -23,9 +22,7 @@ export function GroupsManager({
 
   const { data } = useGroups()
 
-  const apiGroups =
-    data?.groups?.filter((group) => group.name !== MCP_OPTIMIZER_GROUP_NAME) ??
-    []
+  const apiGroups = data?.groups ?? []
 
   return (
     <div className="flex flex-col gap-2">
