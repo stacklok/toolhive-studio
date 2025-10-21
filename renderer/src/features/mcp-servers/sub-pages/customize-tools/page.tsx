@@ -189,7 +189,7 @@ export function CustomizeToolsPage() {
   return (
     <div className="flex h-full flex-col">
       <div className="mb-2">
-        <LinkViewTransition to="/group/default">
+        <LinkViewTransition to={`/group/${workload?.group || 'default'}`}>
           <Button
             variant="ghost"
             aria-label="Back"
