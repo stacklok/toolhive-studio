@@ -5,6 +5,7 @@ import { Switch } from '@/common/components/ui/switch'
 import { featureFlagKeys } from '../../../../../../../utils/feature-flags'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { initMetaOptimizer } from '@/common/lib/meta-optimizer'
+import { useCleanupMetaOptimizer } from '@/common/hooks/use-cleanup-meta-optimizer'
 
 function formatFeatureFlagName(key: string): string {
   return key
@@ -21,6 +22,7 @@ export function ExperimentalFeatures() {
   const isExperimentalFeaturesEnabled = useFeatureFlag(
     featureFlagKeys.EXPERIMENTAL_FEATURES
   )
+  const { cleanupMetaOptimizer } = useCleanupMetaOptimizer()
   const queryClient = useQueryClient()
 
   const { data: allFlags, isPending: isLoadingFlags } = useQuery({
@@ -54,6 +56,7 @@ export function ExperimentalFeatures() {
     try {
       if (currentValue) {
         await disableFlag(flagKey)
+        cleanupMetaOptimizer()
       } else {
         await enableFlag(flagKey)
         initMetaOptimizer()
