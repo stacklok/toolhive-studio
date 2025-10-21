@@ -5,13 +5,17 @@ import { CustomizeToolsTable } from '../customize-tools-table'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
 
-// Mock the useNavigate hook
-const mockNavigate = vi.fn()
+// Mock the useRouter hook
+const mockHistoryBack = vi.fn()
 vi.mock('@tanstack/react-router', async () => {
   const actual = await vi.importActual('@tanstack/react-router')
   return {
     ...actual,
-    useNavigate: () => mockNavigate,
+    useRouter: () => ({
+      history: {
+        back: mockHistoryBack,
+      },
+    }),
   }
 })
 
@@ -39,7 +43,7 @@ const mockTools = [
 
 describe('CustomizeToolsTable', () => {
   beforeEach(() => {
-    mockNavigate.mockClear()
+    mockHistoryBack.mockClear()
   })
 
   afterEach(() => {
@@ -663,8 +667,7 @@ describe('CustomizeToolsTable', () => {
       await userEvent.click(cancelButton)
 
       await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledTimes(1)
-        expect(mockNavigate).toHaveBeenCalledWith({ to: '..' })
+        expect(mockHistoryBack).toHaveBeenCalledTimes(1)
       })
     })
 

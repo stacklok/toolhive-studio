@@ -24,7 +24,7 @@ import { Badge } from '@/common/components/ui/badge'
 import { TriangleAlert } from 'lucide-react'
 import type { IsFromRegistryToolDiff } from '../hooks/use-is-server-from-registry'
 import { trackEvent } from '@/common/lib/analytics'
-import { useNavigate } from '@tanstack/react-router'
+import { useRouter } from '@tanstack/react-router'
 
 interface Tool {
   name: string
@@ -90,7 +90,7 @@ export function CustomizeToolsTable({
   drift,
   onApply,
 }: CustomizeToolsTableProps) {
-  const navigate = useNavigate()
+  const router = useRouter()
   // State to track which tools are enabled
   const [enabledTools, setEnabledTools] = useState<Record<string, boolean>>({})
   const isAllToolsEnabled = useMemo(() => {
@@ -138,7 +138,10 @@ export function CustomizeToolsTable({
   }
 
   const handleGoBack = () => {
-    navigate({ to: '..' })
+    trackEvent('Customize Tools: Cancel click', {
+      tools_count: Object.keys(enabledTools).length,
+    })
+    router.history.back()
   }
 
   const renderTableBody = useCallback(
