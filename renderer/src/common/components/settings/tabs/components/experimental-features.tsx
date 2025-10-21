@@ -78,8 +78,8 @@ export function ExperimentalFeatures() {
   const handleToggle = async (flagKey: string, currentValue: boolean) => {
     try {
       if (currentValue) {
-        await disableFlag(flagKey)
         await cleanupMetaOptimizer()
+        await disableFlag(flagKey)
       } else {
         await enableFlag(flagKey)
         initMetaOptimizer()
@@ -89,6 +89,7 @@ export function ExperimentalFeatures() {
         const isServerReady = await pollingMetaMcpStatus()
         toast.dismiss(toastId)
         if (!isServerReady) {
+          await disableFlag(flagKey)
           toast.error('Failed to start MCP Optimizer')
           return
         }
