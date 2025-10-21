@@ -14,19 +14,10 @@ describe('OptimizerWarnings', () => {
     ).toBeInTheDocument()
   })
 
-  it('renders the unoptimized access warning', () => {
-    render(<OptimizerWarnings />)
-
-    expect(screen.getByText('Unoptimized Access Detected')).toBeInTheDocument()
-    expect(screen.getAllByText(/claude/i).length).toBeGreaterThan(0)
-    expect(screen.getAllByText(/foobar/i).length).toBeGreaterThan(0)
-  })
-
-  it('renders both alert components', () => {
+  it('renders the alert component', () => {
     const { container } = render(<OptimizerWarnings />)
 
-    // Should have 2 Alert components
     const alerts = container.querySelectorAll('[role="alert"]')
-    expect(alerts).toHaveLength(2)
+    expect(alerts).toHaveLength(1)
   })
 })
