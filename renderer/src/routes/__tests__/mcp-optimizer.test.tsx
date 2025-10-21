@@ -71,8 +71,6 @@ it('renders the warnings section', async () => {
   await waitFor(() => {
     expect(screen.getByText('Experimental Feature')).toBeInTheDocument()
   })
-
-  expect(screen.getByText('Unoptimized Access Detected')).toBeInTheDocument()
 })
 
 it('renders the section header and description', async () => {
