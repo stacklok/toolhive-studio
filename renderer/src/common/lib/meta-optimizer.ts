@@ -13,7 +13,7 @@ import {
 } from '@api/@tanstack/react-query.gen'
 import { META_MCP_SERVER_NAME, MCP_OPTIMIZER_GROUP_NAME } from './constants'
 
-async function getMetaOptimizerWorkload() {
+async function ensureMetaOptimizerWorkload() {
   try {
     const workloadDetail = await queryClient.ensureQueryData(
       getApiV1BetaWorkloadsByNameOptions({
@@ -31,14 +31,14 @@ async function getMetaOptimizerWorkload() {
     }
 
     // Log unexpected errors
-    log.error('[getMetaOptimizerWorkload] Error fetching workload:', error)
+    log.error('[ensureMetaOptimizerWorkload] Error fetching workload:', error)
     return undefined
   }
 }
 
 async function createMetaOptimizerWorkload() {
   try {
-    const workloadDetail = await getMetaOptimizerWorkload()
+    const workloadDetail = await ensureMetaOptimizerWorkload()
     if (workloadDetail) {
       return workloadDetail
     }
@@ -109,7 +109,7 @@ async function createMetaOptimizerGroup() {
   return response.data
 }
 
-async function checkMetaOptimizerGroup() {
+async function ensureMetaOptimizerGroup() {
   try {
     const rawGroups = await queryClient.ensureQueryData({
       queryKey: ['api', 'v1beta', 'groups'],
@@ -135,7 +135,7 @@ async function checkMetaOptimizerGroup() {
 
     return metaOptimizerGrp
   } catch (error) {
-    log.error('[checkMetaOptimizerGroup] Error checking group:', error)
+    log.error('[ensureMetaOptimizerGroup] Error checking group:', error)
     return undefined
   }
 }
@@ -162,7 +162,7 @@ export async function initMetaOptimizer() {
       metaOptimizerEnabled.value === true
 
     if (isExperimentalEnabled && isOptimizerEnabled) {
-      await checkMetaOptimizerGroup()
+      await ensureMetaOptimizerGroup()
       await createMetaOptimizerWorkload()
     }
   } catch (error) {

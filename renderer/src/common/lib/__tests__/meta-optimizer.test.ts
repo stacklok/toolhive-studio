@@ -149,7 +149,7 @@ describe('Meta Optimizer', () => {
       await initMetaOptimizer()
 
       expect(log.error).toHaveBeenCalledWith(
-        '[checkMetaOptimizerGroup] Error checking group:',
+        '[ensureMetaOptimizerGroup] Error checking group:',
         expect.any(Error)
       )
     })

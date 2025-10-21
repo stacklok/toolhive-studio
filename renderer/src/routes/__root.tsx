@@ -186,7 +186,7 @@ export const Route = createRootRouteWithContext<{
   },
   loader: async ({ context: { queryClient } }) => {
     await setupSecretProvider(queryClient)
-    // avoiding blocking the UI render we can init the meta optimizer in the background
+    // Similarly to how the group restart logic works, this will happen in the background and might not be immediately available
     initMetaOptimizer()
   },
 })
