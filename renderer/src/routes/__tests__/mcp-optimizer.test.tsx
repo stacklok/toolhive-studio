@@ -485,13 +485,11 @@ it('radio button updates after editing ALLOWED_GROUPS via Customize Configuratio
   const user = userEvent.setup()
   renderRoute(router)
 
-  // Verify 'default' is initially selected
   await waitFor(() => {
     const defaultRadio = screen.getByRole('radio', { name: /default/i })
     expect(defaultRadio).toBeChecked()
   })
 
-  // Open customize dialog
   await user.click(await screen.findByRole('button', { name: /advanced/i }))
   await user.click(
     await screen.findByRole('menuitem', {
@@ -503,7 +501,6 @@ it('radio button updates after editing ALLOWED_GROUPS via Customize Configuratio
     expect(screen.getByText(/edit meta-mcp mcp server/i)).toBeInTheDocument()
   })
 
-  // Change ALLOWED_GROUPS to 'production'
   const allowedGroupsInput = screen.getByRole('textbox', {
     name: /environment variable value 1/i,
   })
@@ -511,7 +508,6 @@ it('radio button updates after editing ALLOWED_GROUPS via Customize Configuratio
   await user.clear(allowedGroupsInput)
   await user.type(allowedGroupsInput, 'production')
 
-  // Save changes
   await user.click(
     await screen.findByRole('button', { name: /update server/i })
   )
@@ -522,7 +518,6 @@ it('radio button updates after editing ALLOWED_GROUPS via Customize Configuratio
     ).not.toBeInTheDocument()
   })
 
-  // Verify 'production' is now selected
   await waitFor(
     () => {
       const productionRadio = screen.getByRole('radio', {
