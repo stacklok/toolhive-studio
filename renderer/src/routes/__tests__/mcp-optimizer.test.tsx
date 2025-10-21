@@ -441,3 +441,25 @@ it('Manage Clients button sends API requests to the correct mcp-optimizer group'
     },
   ])
 })
+
+it('clicking Meta-MCP logs in Advanced menu navigates to logs page', async () => {
+  const user = userEvent.setup()
+  renderRoute(router)
+
+  // Open the Advanced dropdown menu
+  const advancedButton = await screen.findByRole('button', {
+    name: /advanced/i,
+  })
+  await user.click(advancedButton)
+
+  // Click on the "Meta-MCP logs" menu item
+  const logsMenuItem = await screen.findByText(/meta-mcp logs/i)
+  await user.click(logsMenuItem)
+
+  // Verify navigation to the logs page with correct parameters
+  await waitFor(() => {
+    expect(router.state.location.pathname).toBe(
+      `/logs/${MCP_OPTIMIZER_GROUP_NAME}/${META_MCP_SERVER_NAME}`
+    )
+  })
+})
