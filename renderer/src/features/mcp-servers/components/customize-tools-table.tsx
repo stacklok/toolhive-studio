@@ -13,7 +13,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/common/components/ui/tooltip'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Skeleton } from '@/common/components/ui/skeleton'
 import {
   Alert,
@@ -24,6 +24,7 @@ import { Badge } from '@/common/components/ui/badge'
 import { TriangleAlert } from 'lucide-react'
 import type { IsFromRegistryToolDiff } from '../hooks/use-is-server-from-registry'
 import { trackEvent } from '@/common/lib/analytics'
+import { useRouter } from '@tanstack/react-router'
 
 interface Tool {
   name: string
@@ -36,7 +37,6 @@ interface CustomizeToolsTableProps {
   isLoading?: boolean
   toolsDiff?: IsFromRegistryToolDiff | null
   onApply?: (enabledTools: Record<string, boolean>) => Promise<void>
-  onReset?: () => void
   drift?: {
     localTag?: string
     registryTag?: string
@@ -89,10 +89,16 @@ export function CustomizeToolsTable({
   isLoading = true,
   drift,
   onApply,
-  onReset,
 }: CustomizeToolsTableProps) {
+  const router = useRouter()
   // State to track which tools are enabled
   const [enabledTools, setEnabledTools] = useState<Record<string, boolean>>({})
+  const isAllToolsEnabled = useMemo(() => {
+    return Object.values(enabledTools).every((enabled) => enabled)
+  }, [enabledTools])
+  const isAllToolsDisabled = useMemo(() => {
+    return Object.values(enabledTools).every((enabled) => !enabled)
+  }, [enabledTools])
 
   // Initialize enabled tools when tools data is available
   useEffect(() => {
@@ -116,12 +122,26 @@ export function CustomizeToolsTable({
     }))
   }
 
+  const handleAllToolsToggle = (enabled: boolean) => {
+    trackEvent('Customize Tools: toggle all tools', {
+      enabled: enabled ? 'true' : 'false',
+    })
+    setEnabledTools((prev) => {
+      return Object.fromEntries(
+        Object.keys(prev).map((toolName) => [toolName, enabled])
+      )
+    })
+  }
+
   const handleApply = () => {
     onApply?.(enabledTools)
   }
 
-  const handleReset = () => {
-    onReset?.()
+  const handleGoBack = () => {
+    trackEvent('Customize Tools: Cancel click', {
+      tools_count: Object.keys(enabledTools).length,
+    })
+    router.history.back()
   }
 
   const renderTableBody = useCallback(
@@ -129,7 +149,7 @@ export function CustomizeToolsTable({
       isLoading
         ? Array.from({ length: 10 }).map((_, index) => (
             <TableRow key={`skeleton-${index}`}>
-              <TableCell className="w-[60px] px-2 py-4">
+              <TableCell className="flex w-[60px] justify-center px-2 py-4">
                 <Skeleton className="h-5 w-8 rounded" />
               </TableCell>
               <TableCell className="px-2 py-4">
@@ -142,7 +162,7 @@ export function CustomizeToolsTable({
           ))
         : tools.map((tool) => (
             <TableRow key={tool.name}>
-              <TableCell className="w-[60px] px-2 py-4">
+              <TableCell className="flex w-[60px] justify-center px-2 py-4">
                 <Switch
                   checked={enabledTools[tool.name] ?? true}
                   onCheckedChange={(checked) =>
@@ -212,35 +232,65 @@ export function CustomizeToolsTable({
         >
           <Table className="table-fixed">
             <colgroup>
-              <col className="w-[60px]" />
+              <col className="w-[60px] pl-3" />
               <col className="w-[300px]" />
               <col />
             </colgroup>
             <TableHeader>
-              <TableRow
-                className="border-border bg-muted sticky top-0 z-10 border-b"
-              >
-                <TableHead className="text-muted-foreground text-xs"></TableHead>
-                <TableHead className="text-muted-foreground text-xs">
-                  Tool
-                </TableHead>
-                <TableHead className="text-muted-foreground text-xs">
-                  Description
-                </TableHead>
-              </TableRow>
+              {isLoading ? (
+                <TableRow
+                  className="border-border bg-muted sticky top-0 z-10 border-b"
+                >
+                  <TableHead className="text-muted-foreground text-xs">
+                    <Skeleton
+                      className="bg-muted-foreground/80 ml-1 h-5 w-8 rounded"
+                    />
+                  </TableHead>
+                  <TableHead className="text-muted-foreground text-xs">
+                    <Skeleton className="bg-muted-foreground/80 h-4 w-24" />
+                  </TableHead>
+                  <TableHead className="text-muted-foreground text-xs">
+                    <Skeleton
+                      className="bg-muted-foreground/80 h-4 w-full max-w-md"
+                    />
+                  </TableHead>
+                </TableRow>
+              ) : (
+                <TableRow
+                  className="border-border bg-muted sticky top-0 z-10 border-b"
+                >
+                  <TableHead className="text-muted-foreground text-xs">
+                    <Switch
+                      className="ml-1"
+                      checked={isAllToolsEnabled}
+                      onCheckedChange={(checked) =>
+                        handleAllToolsToggle(checked)
+                      }
+                    />
+                  </TableHead>
+                  <TableHead className="text-muted-foreground text-xs">
+                    Tool
+                  </TableHead>
+                  <TableHead className="text-muted-foreground text-xs">
+                    Description
+                  </TableHead>
+                </TableRow>
+              )}
             </TableHeader>
             <TableBody>{renderTableBody()}</TableBody>
           </Table>
         </div>
 
         <div className="flex flex-shrink-0 gap-2">
-          <Tooltip open={tools.length <= 1 ? undefined : false}>
+          <Tooltip>
             <TooltipTrigger asChild>
               <span className="inline-flex">
                 <Button
                   variant="default"
                   onClick={handleApply}
-                  disabled={isLoading || tools.length <= 1}
+                  disabled={
+                    isLoading || tools.length <= 1 || isAllToolsDisabled
+                  }
                 >
                   Apply
                 </Button>
@@ -251,13 +301,18 @@ export function CustomizeToolsTable({
                 Tool filtering is only available when there are multiple tools
               </TooltipContent>
             )}
+            {isAllToolsDisabled && (
+              <TooltipContent>
+                It is not possible to disable all tools
+              </TooltipContent>
+            )}
           </Tooltip>
           <Button
             variant="outline"
-            onClick={handleReset}
+            onClick={handleGoBack}
             disabled={isLoading || tools.length <= 1}
           >
-            Enable all tools
+            Cancel
           </Button>
         </div>
       </div>

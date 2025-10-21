@@ -184,27 +184,12 @@ export function CustomizeToolsPage() {
     }
   }
 
-  const handleReset = () => {
-    try {
-      trackEvent('Customize Tools: reset changes', {
-        server_name: serverName,
-      })
-      setIsSubmitting(true)
-      handleUpdateServer(null)
-    } catch (error) {
-      setIsSubmitting(false)
-      toast.error(
-        `Failed to reset changes: ${error instanceof Error ? error.message : 'Unknown error'}`
-      )
-    }
-  }
-
   if (!isFromRegistry) return null
 
   return (
     <div className="flex h-full flex-col">
       <div className="mb-2">
-        <LinkViewTransition to="/group/default">
+        <LinkViewTransition to={`/group/${workload?.group || 'default'}`}>
           <Button
             variant="ghost"
             aria-label="Back"
@@ -234,7 +219,6 @@ export function CustomizeToolsPage() {
               isLoadingServer
             }
             onApply={handleApply}
-            onReset={handleReset}
             drift={drift}
           />
         )}
