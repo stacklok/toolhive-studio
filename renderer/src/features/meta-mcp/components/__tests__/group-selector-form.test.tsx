@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -6,7 +6,17 @@ import { http, HttpResponse } from 'msw'
 import { server } from '@/common/mocks/node'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
 import { GroupSelectorForm } from '../group-selector-form'
-import { META_MCP_SERVER_NAME } from '@/common/lib/constants'
+import {
+  META_MCP_SERVER_NAME,
+  ALLOWED_GROUPS_ENV_VAR,
+} from '@/common/lib/constants'
+import { useUpdateServer } from '@/features/mcp-servers/hooks/use-update-server'
+
+vi.mock('@tanstack/react-router', () => ({
+  useLocation: () => ({ pathname: '/mcp-optimizer' }),
+}))
+
+vi.mock('@/features/mcp-servers/hooks/use-update-server')
 
 describe('GroupSelectorForm', () => {
   const mockGroups = [
@@ -34,6 +44,11 @@ describe('GroupSelectorForm', () => {
         return HttpResponse.json(null, { status: 404 })
       })
     )
+
+    // Setup default mock for useUpdateServer
+    vi.mocked(useUpdateServer).mockReturnValue({
+      updateServerMutation: vi.fn().mockResolvedValue({}),
+    } as ReturnType<typeof useUpdateServer>)
   })
 
   const renderWithClient = (ui: React.ReactElement) => {
@@ -110,5 +125,66 @@ describe('GroupSelectorForm', () => {
         screen.getByRole('button', { name: /apply changes/i })
       ).toBeInTheDocument()
     })
+  })
+
+  it('submits form with different group and updates ALLOWED_GROUPS_ENV_VAR', async () => {
+    const user = userEvent.setup()
+    const mockUpdateServerMutation = vi.fn().mockResolvedValue({})
+
+    vi.mocked(useUpdateServer).mockReturnValue({
+      updateServerMutation: mockUpdateServerMutation,
+    } as ReturnType<typeof useUpdateServer>)
+
+    const mockMetaMcpConfig = {
+      name: META_MCP_SERVER_NAME,
+      transport: 'sse' as const,
+      env_vars: {
+        [ALLOWED_GROUPS_ENV_VAR]: 'old-group',
+        OTHER_VAR: 'other_value',
+      },
+      networkIsolation: false,
+      secrets: [],
+    }
+
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
+        if (params.name === META_MCP_SERVER_NAME) {
+          return HttpResponse.json(mockMetaMcpConfig)
+        }
+        return HttpResponse.json(null, { status: 404 })
+      })
+    )
+
+    renderWithClient(<GroupSelectorForm groups={mockGroups} />)
+
+    // Wait for the config to load
+    await waitFor(() => {
+      expect(
+        screen.getByRole('radio', { name: /default/i })
+      ).toBeInTheDocument()
+    })
+
+    const defaultRadio = screen.getByRole('radio', { name: /default/i })
+    await user.click(defaultRadio)
+
+    const submitButton = screen.getByRole('button', { name: /apply changes/i })
+    await user.click(submitButton)
+
+    await waitFor(() => {
+      expect(mockUpdateServerMutation).toHaveBeenCalled()
+    })
+
+    const callArgs = mockUpdateServerMutation.mock.calls[0]
+    const envVars = callArgs?.[0]?.data?.envVars
+    expect(envVars).toEqual([
+      { name: 'OTHER_VAR', value: 'other_value' },
+      { name: ALLOWED_GROUPS_ENV_VAR, value: 'default' },
+    ])
+    // Verify that ALLOWED_GROUPS_ENV_VAR was replaced, not duplicated
+    const allowedGroupsVars = envVars.filter(
+      (v: { name: string }) => v.name === ALLOWED_GROUPS_ENV_VAR
+    )
+    expect(allowedGroupsVars).toHaveLength(1)
+    expect(allowedGroupsVars[0].value).toBe('default')
   })
 })
