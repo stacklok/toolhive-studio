@@ -7,6 +7,11 @@ import { featureFlagKeys } from '../../../../../../../utils/feature-flags'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { initMetaOptimizer } from '@/common/lib/meta-optimizer'
 import { useCleanupMetaOptimizer } from '@/common/hooks/use-cleanup-meta-optimizer'
+import { META_MCP_SERVER_NAME } from '@/common/lib/constants'
+import { pollServerStatus } from '@/common/lib/polling'
+import { getApiV1BetaWorkloadsByNameStatusOptions } from '@api/@tanstack/react-query.gen'
+import { queryClient } from '@/common/lib/query-client'
+import { useCallback } from 'react'
 
 function formatFeatureFlagName(key: string): string {
   return key
@@ -19,7 +24,24 @@ function formatFeatureFlagDescription(key: string): string {
   return `Enable ${formatFeatureFlagName(key)} feature`
 }
 
+function useMetaOptimizerStatus() {
+  const pollingMetaMcpStatus = useCallback(async () => {
+    return pollServerStatus(
+      () =>
+        queryClient.fetchQuery(
+          getApiV1BetaWorkloadsByNameStatusOptions({
+            path: { name: META_MCP_SERVER_NAME },
+          })
+        ),
+      'running'
+    )
+  }, [])
+
+  return { pollingMetaMcpStatus }
+}
+
 export function ExperimentalFeatures() {
+  const { pollingMetaMcpStatus } = useMetaOptimizerStatus()
   const isExperimentalFeaturesEnabled = useFeatureFlag(
     featureFlagKeys.EXPERIMENTAL_FEATURES
   )
@@ -55,18 +77,24 @@ export function ExperimentalFeatures() {
 
   const handleToggle = async (flagKey: string, currentValue: boolean) => {
     try {
-      const featureName = formatFeatureFlagName(flagKey)
       if (currentValue) {
         await disableFlag(flagKey)
-        cleanupMetaOptimizer()
-        toast.success(
-          `${featureName} disabled. Cleaning up Meta Optimizer MCP and clients...`
-        )
+        await cleanupMetaOptimizer()
       } else {
         await enableFlag(flagKey)
         initMetaOptimizer()
+        const toastId = toast.loading(
+          'Starting MCP Optimizer on the default group...'
+        )
+        const isServerReady = await pollingMetaMcpStatus()
+        toast.dismiss(toastId)
+        if (!isServerReady) {
+          toast.error('Failed to start MCP Optimizer')
+          return
+        }
+
         toast.success(
-          `${featureName} enabled. Initializing Meta Optimizer MCP and clients, this may take a moment...`
+          'MCP Optimizer is now enabled and running on the default group'
         )
       }
     } catch (error) {

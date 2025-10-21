@@ -12,9 +12,9 @@ import { deleteApiV1BetaClientsByNameGroupsByGroup } from '@api/index'
 import { useCallback } from 'react'
 import { useToastMutation } from './use-toast-mutation'
 import log from 'electron-log/renderer'
+import { queryClient } from '../lib/query-client'
 
 function useDeleteGroup() {
-  const queryClient = useQueryClient()
   const { mutateAsync: deleteGroup } = useToastMutation({
     ...deleteApiV1BetaGroupsByNameMutation(),
     onError: (error, variables) => {
@@ -25,7 +25,9 @@ function useDeleteGroup() {
         queryKey: getApiV1BetaGroupsQueryKey(),
       })
     },
-    errorMsg: 'Failed to delete group',
+    errorMsg: 'Failed to delete MCP Optimizer group',
+    successMsg: 'MCP Optimizer group deleted successfully',
+    loadingMsg: 'Disabling MCP Optimizer and cleaning up...',
   })
 
   return deleteGroup
