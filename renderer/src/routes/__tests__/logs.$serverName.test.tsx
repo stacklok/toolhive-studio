@@ -112,7 +112,6 @@ describe('Logs Route', () => {
   })
 
   it('navigates back to MCP optimizer page when viewing meta-mcp logs', async () => {
-    // Add mock handler for meta-mcp server logs
     server.use(
       http.get(
         mswEndpoint('/api/v1beta/workloads/:name/logs'),
@@ -149,7 +148,6 @@ describe('Logs Route', () => {
     const backButton = screen.getByRole('button', { name: /back/i })
     expect(backButton).toBeVisible()
 
-    // The back button should navigate to /mcp-optimizer, not /group/mcp-optimizer---
     expect(backButton.closest('a')).toHaveAttribute('href', '/mcp-optimizer')
 
     await userEvent.click(backButton)
