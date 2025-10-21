@@ -106,7 +106,8 @@ async function createMetaOptimizerGroup() {
     queryKey: ['api', 'v1beta', 'groups'],
   })
 
-  return response.data
+  // Create workload after group creation succeeds
+  return await createMetaOptimizerWorkload()
 }
 
 async function ensureMetaOptimizerGroup() {
@@ -163,7 +164,6 @@ export async function initMetaOptimizer() {
 
     if (isExperimentalEnabled && isOptimizerEnabled) {
       await ensureMetaOptimizerGroup()
-      await createMetaOptimizerWorkload()
     }
   } catch (error) {
     log.error('[initMetaOptimizer] Failed to initialize meta optimizer:', error)

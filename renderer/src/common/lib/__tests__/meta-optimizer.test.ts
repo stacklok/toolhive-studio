@@ -73,17 +73,15 @@ describe('Meta Optimizer', () => {
       })
     })
 
-    it('initialize and create group and workload when it does not exist', async () => {
+    it('initialize and create group and workload when they do not exist', async () => {
       mockElectronAPI.featureFlags.get.mockResolvedValue(true)
 
       const postWorkloadsSpy = vi.spyOn(apiSdk, 'postApiV1BetaWorkloads')
 
       server.use(
-        // Mock groups check - group exists
+        // Mock groups check - group doesn't exist
         http.get(mswEndpoint('/api/v1beta/groups'), () =>
-          HttpResponse.json({
-            groups: [{ name: MCP_OPTIMIZER_GROUP_NAME }],
-          })
+          HttpResponse.json({ groups: [] })
         ),
         // Mock workload check - workload doesn't exist (404)
         http.get(mswEndpoint('/api/v1beta/workloads/:name'), () =>
@@ -154,14 +152,45 @@ describe('Meta Optimizer', () => {
       )
     })
 
+    it('not call workload creation when group creation fails', async () => {
+      mockElectronAPI.featureFlags.get.mockResolvedValue(true)
+
+      const postWorkloadsSpy = vi.spyOn(apiSdk, 'postApiV1BetaWorkloads')
+
+      server.use(
+        // Mock groups check - group doesn't exist
+        http.get(mswEndpoint('/api/v1beta/groups'), () =>
+          HttpResponse.json({ groups: [] })
+        ),
+        // Mock group creation fails
+        http.post(mswEndpoint('/api/v1beta/groups'), () =>
+          HttpResponse.json(
+            { error: 'Failed to create group' },
+            { status: 500 }
+          )
+        ),
+        // Mock workload check - workload doesn't exist (404)
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () =>
+          HttpResponse.json({ error: 'Workload not found' }, { status: 404 })
+        )
+      )
+
+      await initMetaOptimizer()
+
+      expect(postWorkloadsSpy).not.toHaveBeenCalled()
+      expect(log.error).toHaveBeenCalledWith(
+        '[createMetaOptimizerGroup] Failed to create group:',
+        expect.objectContaining({ error: 'Failed to create group' })
+      )
+    })
+
     it('handle workload creation failure', async () => {
       mockElectronAPI.featureFlags.get.mockResolvedValue(true)
 
       server.use(
+        // Mock groups check - group doesn't exist
         http.get(mswEndpoint('/api/v1beta/groups'), () =>
-          HttpResponse.json({
-            groups: [{ name: MCP_OPTIMIZER_GROUP_NAME }],
-          })
+          HttpResponse.json({ groups: [] })
         ),
         http.get(mswEndpoint('/api/v1beta/workloads/:name'), () =>
           HttpResponse.json({ error: 'Workload not found' }, { status: 404 })
@@ -196,10 +225,9 @@ describe('Meta Optimizer', () => {
       mockElectronAPI.featureFlags.get.mockResolvedValue(true)
 
       server.use(
+        // Mock groups check - group doesn't exist
         http.get(mswEndpoint('/api/v1beta/groups'), () =>
-          HttpResponse.json({
-            groups: [{ name: MCP_OPTIMIZER_GROUP_NAME }],
-          })
+          HttpResponse.json({ groups: [] })
         ),
         http.get(mswEndpoint('/api/v1beta/workloads/:name'), () =>
           HttpResponse.json({ error: 'Workload not found' }, { status: 404 })
