@@ -442,7 +442,9 @@ it('Manage Clients button sends API requests to the correct mcp-optimizer group'
   ])
 })
 
-it('Customize Meta-MCP configuration button opens edit dialog for correct server', async () => {
+it('Customize Meta-MCP configuration button refetches data after editing', async () => {
+  let currentEnvVars = { FOO: 'initial_value' }
+
   server.use(
     http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
       if (params.name === META_MCP_SERVER_NAME) {
@@ -451,7 +453,7 @@ it('Customize Meta-MCP configuration button opens edit dialog for correct server
           group: MCP_OPTIMIZER_GROUP_NAME,
           image: 'ghcr.io/toolhive/meta-mcp:latest',
           transport: 'stdio',
-          env_vars: { FOO: 'bar' },
+          env_vars: currentEnvVars,
           cmd_arguments: [],
           secrets: [],
           volumes: [],
@@ -459,7 +461,18 @@ it('Customize Meta-MCP configuration button opens edit dialog for correct server
         })
       }
       return HttpResponse.json(null, { status: 404 })
-    })
+    }),
+    http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () =>
+      HttpResponse.json({ keys: [] })
+    ),
+    http.post(
+      mswEndpoint(`/api/v1beta/workloads/${META_MCP_SERVER_NAME}/edit`),
+      async ({ request }) => {
+        const body = await request.json()
+        currentEnvVars = body.env_vars || {}
+        return HttpResponse.json({ success: true })
+      }
+    )
   )
 
   const user = userEvent.setup()
@@ -476,5 +489,37 @@ it('Customize Meta-MCP configuration button opens edit dialog for correct server
 
   await waitFor(() => {
     expect(screen.getByText(/edit meta-mcp mcp server/i)).toBeInTheDocument()
+  })
+
+  const fooInput = await screen.findByDisplayValue('initial_value')
+
+  await user.clear(fooInput)
+  await user.type(fooInput, 'updated_value')
+
+  const updateButton = await screen.findByRole('button', {
+    name: /update server/i,
+  })
+  await user.click(updateButton)
+
+  await waitFor(() => {
+    expect(
+      screen.queryByText(/edit meta-mcp mcp server/i)
+    ).not.toBeInTheDocument()
+  })
+
+  await user.click(await screen.findByRole('button', { name: /advanced/i }))
+
+  await user.click(
+    await screen.findByRole('menuitem', {
+      name: /customize meta-mcp configuration/i,
+    })
+  )
+
+  await waitFor(() => {
+    expect(screen.getByText(/edit meta-mcp mcp server/i)).toBeInTheDocument()
+  })
+
+  await waitFor(() => {
+    expect(screen.getByDisplayValue('updated_value')).toBeInTheDocument()
   })
 })

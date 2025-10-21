@@ -20,8 +20,6 @@ import {
 import { EditServerDialogProvider } from '@/features/mcp-servers/contexts/edit-server-dialog-provider'
 import { useEditServerDialog } from '@/features/mcp-servers/hooks/use-edit-server-dialog'
 import { WrapperDialogFormMcp } from '@/features/mcp-servers/components/wrapper-dialog-mcp'
-import { useQuery } from '@tanstack/react-query'
-import { getApiV1BetaWorkloadsByNameOptions } from '@api/@tanstack/react-query.gen'
 
 export const Route = createFileRoute('/mcp-optimizer')({
   component: McpOptimizerRoute,
@@ -31,17 +29,9 @@ function McpOptimizerContent() {
   const groups = useMcpOptimizerGroups()
   const { state, openDialog, closeDialog } = useEditServerDialog()
 
-  const { data: metaMcpWorkload } = useQuery({
-    ...getApiV1BetaWorkloadsByNameOptions({
-      path: { name: META_MCP_SERVER_NAME },
-    }),
-    retry: false,
-  })
-
   const handleCustomizeConfiguration = () => {
-    if (!metaMcpWorkload) return
-    const isRemote = !!metaMcpWorkload.url
-    openDialog(META_MCP_SERVER_NAME, isRemote, MCP_OPTIMIZER_GROUP_NAME)
+    // meta-mcp is always a local server, never remote
+    openDialog(META_MCP_SERVER_NAME, false, MCP_OPTIMIZER_GROUP_NAME)
   }
 
   return (
