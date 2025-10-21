@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron'
 import { existsSync, readFile } from 'node:fs'
 import path from 'node:path'
+import { homedir } from 'node:os'
 import log from './logger'
 import { delay } from '../../utils/delay'
 
@@ -32,9 +33,20 @@ export function isOfficialReleaseBuild(): boolean {
   }
 }
 
+function getToolhiveDataPath(): string {
+  const home = homedir()
+  const paths: Partial<Record<NodeJS.Platform, string>> = {
+    win32: path.join(home, 'AppData', 'Local', 'Toolhive'),
+    darwin: path.join(home, 'Library', 'Application Support', 'Toolhive'),
+    linux: path.join(home, '.local', 'share', 'toolhive'),
+  }
+
+  return paths[process.platform] || app.getPath('userData')
+}
+
 export async function getInstanceId() {
   try {
-    const userDataPath = app.getPath('userData')
+    const userDataPath = getToolhiveDataPath()
     const updatesFilePath = path.join(userDataPath, 'updates.json')
     if (!existsSync(updatesFilePath)) {
       log.warn(`Updates file does not exist: ${updatesFilePath}`)

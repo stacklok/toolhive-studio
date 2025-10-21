@@ -3,13 +3,14 @@ import { beforeEach, it, expect, vi } from 'vitest'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { McpOptimizerRoute } from '../mcp-optimizer'
 import { renderRoute } from '@/common/test/render-route'
-import { server } from '@/common/mocks/node'
+import { server, recordRequests } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
 import {
   MCP_OPTIMIZER_GROUP_NAME,
   META_MCP_SERVER_NAME,
 } from '@/common/lib/constants'
+import userEvent from '@testing-library/user-event'
 
 const router = createTestRouter(McpOptimizerRoute, '/mcp-optimizer')
 
@@ -294,4 +295,102 @@ it('shows no group selected when meta-mcp workload does not exist', async () => 
     const productionRadio = screen.getByRole('radio', { name: /production/i })
     expect(productionRadio).not.toBeChecked()
   })
+})
+
+it('Manage Clients button is correctly prefilled for the mcp-optimizer group', async () => {
+  server.use(
+    http.get(mswEndpoint('/api/v1beta/groups'), () =>
+      HttpResponse.json({
+        groups: [
+          {
+            name: MCP_OPTIMIZER_GROUP_NAME,
+            registered_clients: ['vscode', 'cursor'],
+          },
+        ],
+      })
+    ),
+    http.get(mswEndpoint('/api/v1beta/clients'), () =>
+      HttpResponse.json([
+        { name: { name: 'vscode' }, groups: [MCP_OPTIMIZER_GROUP_NAME] },
+        { name: { name: 'cursor' }, groups: [MCP_OPTIMIZER_GROUP_NAME] },
+        { name: { name: 'claude-code' }, groups: [] },
+      ])
+    )
+  )
+
+  const user = userEvent.setup()
+  renderRoute(router)
+
+  await user.click(
+    await screen.findByRole('button', { name: /manage clients/i })
+  )
+
+  await waitFor(() => {
+    const vscodeSwitchContainer = screen
+      .getByRole('switch', { name: 'vscode' })
+      .closest('button')
+    expect(vscodeSwitchContainer).toHaveAttribute('data-state', 'checked')
+
+    const cursorSwitchContainer = screen
+      .getByRole('switch', { name: /cursor/i })
+      .closest('button')
+    expect(cursorSwitchContainer).toHaveAttribute('data-state', 'checked')
+
+    const claudeCodeSwitchContainer = screen
+      .getByRole('switch', { name: /claude-code/i })
+      .closest('button')
+    expect(claudeCodeSwitchContainer).toHaveAttribute('data-state', 'unchecked')
+  })
+})
+
+it('Manage Clients button sends API requests to the correct mcp-optimizer group', async () => {
+  server.use(
+    http.get(mswEndpoint('/api/v1beta/groups'), () =>
+      HttpResponse.json({
+        groups: [{ name: MCP_OPTIMIZER_GROUP_NAME, registered_clients: [] }],
+      })
+    ),
+    http.get(mswEndpoint('/api/v1beta/clients'), () => HttpResponse.json([]))
+  )
+
+  const rec = recordRequests()
+
+  const user = userEvent.setup()
+  renderRoute(router)
+
+  await user.click(
+    await screen.findByRole('button', { name: /manage clients/i })
+  )
+  await user.click(await screen.findByRole('switch', { name: 'vscode' }))
+  await user.click(await screen.findByRole('button', { name: /save/i }))
+
+  await waitFor(() =>
+    expect(
+      rec.recordedRequests.filter(
+        (r) =>
+          r.pathname.startsWith('/api/v1beta/clients') &&
+          (r.method === 'POST' || r.method === 'DELETE')
+      )
+    ).toHaveLength(1)
+  )
+
+  const snapshot = rec.recordedRequests
+    .filter(
+      (r) =>
+        r.pathname.startsWith('/api/v1beta/clients') &&
+        (r.method === 'POST' || r.method === 'DELETE')
+    )
+    .map(({ method, pathname, payload }) => ({
+      method,
+      path: pathname,
+      body: payload,
+    }))
+
+  expect(snapshot).toEqual([
+    {
+      method: 'POST',
+      path: '/api/v1beta/clients',
+      body: { name: 'vscode', groups: [MCP_OPTIMIZER_GROUP_NAME] },
+    },
+  ])
 })
