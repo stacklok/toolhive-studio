@@ -13,6 +13,7 @@ import { Settings, RotateCw, Text, Edit3 } from 'lucide-react'
 import { OptimizerWarnings } from '@/features/meta-mcp/components/optimizer-warnings'
 import { GroupSelectorForm } from '@/features/meta-mcp/components/group-selector-form'
 import { useMcpOptimizerGroups } from '@/features/meta-mcp/hooks/use-mcp-optimizer-groups'
+import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 
 export const Route = createFileRoute('/mcp-optimizer')({
   component: McpOptimizerRoute,
@@ -50,7 +51,7 @@ export function McpOptimizerRoute() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <ManageClientsButton groupName="mcp-optimizer" />
+              <ManageClientsButton groupName={MCP_OPTIMIZER_GROUP_NAME} />
             </div>
           </>
         </TitlePage>
