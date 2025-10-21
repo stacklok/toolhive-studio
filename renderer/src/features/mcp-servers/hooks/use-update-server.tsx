@@ -70,21 +70,9 @@ export function useUpdateServer<TIsRemote extends boolean = false>(
 
         const updateRequest = prepareUpdateLocalWorkloadData(data, allSecrets)
 
-        console.log('[useUpdateServer] Sending update request:', {
-          serverName,
-          updateRequest,
-          env_vars: updateRequest.env_vars,
-          formDataEnvVars: data.envVars,
-        })
-
-        const updateResult = await updateWorkload({
+        await updateWorkload({
           path: { name: serverName },
           body: updateRequest,
-        })
-
-        console.log('[useUpdateServer] Update completed:', {
-          serverName,
-          updateResult,
         })
       }
 
