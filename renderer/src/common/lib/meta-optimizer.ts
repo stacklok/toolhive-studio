@@ -12,7 +12,11 @@ import {
   getApiV1BetaRegistryByNameServersByServerNameOptions,
   getApiV1BetaWorkloadsByNameOptions,
 } from '@api/@tanstack/react-query.gen'
-import { META_MCP_SERVER_NAME, MCP_OPTIMIZER_GROUP_NAME } from './constants'
+import {
+  META_MCP_SERVER_NAME,
+  MCP_OPTIMIZER_GROUP_NAME,
+  ALLOWED_GROUPS_ENV_VAR,
+} from './constants'
 
 async function ensureMetaOptimizerWorkload() {
   try {
@@ -61,7 +65,7 @@ async function createMetaOptimizerWorkload() {
       name: META_MCP_SERVER_NAME,
       image: server.image,
       transport: server.transport,
-      env_vars: {},
+      env_vars: { [ALLOWED_GROUPS_ENV_VAR]: 'default' },
       secrets: [],
       cmd_arguments: [],
       network_isolation: false,
