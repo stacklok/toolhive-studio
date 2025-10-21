@@ -23,6 +23,7 @@ import {
 import { Badge } from '@/common/components/ui/badge'
 import { TriangleAlert } from 'lucide-react'
 import type { IsFromRegistryToolDiff } from '../hooks/use-is-server-from-registry'
+import { trackEvent } from '@/common/lib/analytics'
 
 interface Tool {
   name: string
@@ -105,6 +106,10 @@ export function CustomizeToolsTable({
   }, [])
 
   const handleToolToggle = (toolName: string, enabled: boolean) => {
+    trackEvent('Customize Tools: toggle tool', {
+      tool_name: toolName,
+      enabled: enabled ? 'true' : 'false',
+    })
     setEnabledTools((prev) => ({
       ...prev,
       [toolName]: enabled,
