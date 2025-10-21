@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { initMetaOptimizer } from '../meta-optmizer'
+import { initMetaOptimizer } from '../meta-optimizer'
 import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
@@ -114,7 +114,7 @@ describe('Meta Optimizer', () => {
       })
     })
 
-    it('should skip workload creation if it already exists', async () => {
+    it('skip workload creation if it already exists', async () => {
       mockElectronAPI.featureFlags.get.mockResolvedValue(true)
 
       const postWorkloadsSpy = vi.spyOn(apiSdk, 'postApiV1BetaWorkloads')
@@ -137,7 +137,7 @@ describe('Meta Optimizer', () => {
       expect(postWorkloadsSpy).not.toHaveBeenCalled()
     })
 
-    it('should handle group fetch errors gracefully', async () => {
+    it('handle group fetch errors gracefully', async () => {
       mockElectronAPI.featureFlags.get.mockResolvedValue(true)
 
       server.use(
@@ -154,7 +154,7 @@ describe('Meta Optimizer', () => {
       )
     })
 
-    it('should handle workload creation failure', async () => {
+    it('handle workload creation failure', async () => {
       mockElectronAPI.featureFlags.get.mockResolvedValue(true)
 
       server.use(
@@ -192,7 +192,7 @@ describe('Meta Optimizer', () => {
       )
     })
 
-    it('should handle missing server from registry', async () => {
+    it('handle missing server from registry', async () => {
       mockElectronAPI.featureFlags.get.mockResolvedValue(true)
 
       server.use(

@@ -22,7 +22,7 @@ import '@fontsource-variable/inter/wght.css'
 import log from 'electron-log/renderer'
 import * as Sentry from '@sentry/electron/renderer'
 import { StartingToolHive } from '@/common/components/starting-toolhive'
-import { initMetaOptimizer } from '@/common/lib/meta-optmizer'
+import { initMetaOptimizer } from '@/common/lib/meta-optimizer'
 
 async function setupSecretProvider(queryClient: QueryClient) {
   const createEncryptedProvider = async () =>
