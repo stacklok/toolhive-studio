@@ -443,7 +443,7 @@ it('Manage Clients button sends API requests to the correct mcp-optimizer group'
 })
 
 it('Customize Meta-MCP configuration button refetches data after editing', async () => {
-  let currentEnvVars = { FOO: 'initial_value' }
+  let currentEnvVars: Record<string, string> = { FOO: 'initial_value' }
 
   server.use(
     http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
@@ -466,10 +466,12 @@ it('Customize Meta-MCP configuration button refetches data after editing', async
       HttpResponse.json({ keys: [] })
     ),
     http.post(
-      mswEndpoint(`/api/v1beta/workloads/${META_MCP_SERVER_NAME}/edit`),
+      mswEndpoint('/api/v1beta/workloads/:name/edit'),
       async ({ request }) => {
-        const body = await request.json()
-        currentEnvVars = body.env_vars || {}
+        const body = (await request.json()) as {
+          env_vars?: Record<string, string>
+        }
+        currentEnvVars = body?.env_vars || {}
         return HttpResponse.json({ success: true })
       }
     )
@@ -566,10 +568,12 @@ it('radio button selection updates after editing ALLOWED_GROUPS via Customize Co
       HttpResponse.json({ keys: [] })
     ),
     http.post(
-      mswEndpoint(`/api/v1beta/workloads/${META_MCP_SERVER_NAME}/edit`),
+      mswEndpoint('/api/v1beta/workloads/:name/edit'),
       async ({ request }) => {
-        const body = await request.json()
-        currentAllowedGroups = body.env_vars?.ALLOWED_GROUPS || ''
+        const body = (await request.json()) as {
+          env_vars?: { ALLOWED_GROUPS?: string }
+        }
+        currentAllowedGroups = body?.env_vars?.ALLOWED_GROUPS || ''
         console.log(
           `[TEST] POST edit: Updated ALLOWED_GROUPS to "${currentAllowedGroups}"`
         )
@@ -638,8 +642,10 @@ it('radio button selection updates after editing ALLOWED_GROUPS via Customize Co
     () => {
       const productionRadio = screen.getByRole('radio', {
         name: /production/i,
-      })
-      const defaultRadio = screen.getByRole('radio', { name: /default/i })
+      }) as HTMLInputElement
+      const defaultRadio = screen.getByRole('radio', {
+        name: /default/i,
+      }) as HTMLInputElement
 
       console.log(
         `[TEST] Step 7: Production checked: ${productionRadio.checked}, Default checked: ${defaultRadio.checked}`
