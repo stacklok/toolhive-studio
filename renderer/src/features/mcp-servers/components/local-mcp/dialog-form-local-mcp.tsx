@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
@@ -165,17 +165,37 @@ export function DialogFormLocalMcp({
     defaultValues: { ...DEFAULT_FORM_VALUES, group: groupName },
     reValidateMode: 'onChange',
     mode: 'onChange',
-    ...(editingFormData
-      ? {
-          values: {
-            ...editingFormData,
-            group: existingServer?.group ?? groupName,
-          },
-        }
-      : {}),
   })
 
+  // Reset form with editing data only once when it first loads
+  const hasInitializedRef = useCallback(() => {
+    const key = `${serverToEdit}-${isLoadingServer}`
+    return key
+  }, [serverToEdit, isLoadingServer])()
+
+  useEffect(() => {
+    if (editingFormData && !isLoadingServer) {
+      console.log('[DialogFormLocalMcp] Initializing form with editing data:', {
+        editingFormData,
+        ALLOWED_GROUPS: editingFormData.envVars?.find(
+          (v) => v.name === 'ALLOWED_GROUPS'
+        ),
+      })
+      form.reset({
+        ...editingFormData,
+        group: existingServer?.group ?? groupName,
+      })
+    }
+    // Only reset when the server changes or when loading completes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasInitializedRef])
+
   const onSubmitForm = (data: FormSchemaLocalMcp) => {
+    console.log('[DialogFormLocalMcp] onSubmitForm called with data:', {
+      name: data.name,
+      env_vars: data.envVars,
+      isEditing,
+    })
     setIsSubmitting(true)
     if (error) {
       setError(null)
@@ -191,12 +211,20 @@ export function DialogFormLocalMcp({
               groupName: data.group || groupName,
               isEditing,
             })
-            // Force refetch the workload detail query to ensure fresh data immediately
-            await queryClient.refetchQueries({
-              queryKey: getApiV1BetaWorkloadsByNameQueryKey({
-                path: { name: data.name },
-              }),
+            // Invalidate the workload detail query - refetch will happen after backend persists
+            const queryKey = getApiV1BetaWorkloadsByNameQueryKey({
+              path: { name: data.name },
             })
+            console.log('[DialogFormLocalMcp] Invalidating query key:', queryKey)
+
+            // Wait a bit for the backend to persist changes to disk
+            await new Promise((resolve) => setTimeout(resolve, 500))
+
+            await queryClient.invalidateQueries({
+              queryKey,
+              refetchType: 'active',
+            })
+            console.log('[DialogFormLocalMcp] Query invalidated, active queries will refetch')
             closeDialog()
             form.reset()
           },

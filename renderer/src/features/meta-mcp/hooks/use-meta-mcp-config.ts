@@ -3,7 +3,7 @@ import { getApiV1BetaWorkloadsByNameOptions } from '@api/@tanstack/react-query.g
 import { META_MCP_SERVER_NAME } from '@/common/lib/constants'
 
 export function useMetaMcpConfig() {
-  return useQuery({
+  const query = useQuery({
     ...getApiV1BetaWorkloadsByNameOptions({
       path: { name: META_MCP_SERVER_NAME },
     }),
@@ -11,6 +11,17 @@ export function useMetaMcpConfig() {
     staleTime: 300_000,
     refetchOnMount: true,
   })
+
+  console.log('[useMetaMcpConfig] Query state:', {
+    isLoading: query.isLoading,
+    isFetching: query.isFetching,
+    isStale: query.isStale,
+    dataUpdatedAt: query.dataUpdatedAt,
+    ALLOWED_GROUPS: query.data?.env_vars?.ALLOWED_GROUPS,
+    all_env_vars: query.data?.env_vars,
+  })
+
+  return query
 }
 
 /**

@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react'
+import { useEffect } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { z } from 'zod'
 import { RadioGroup, RadioGroupItem } from '@/common/components/ui/radio-group'
@@ -27,12 +28,29 @@ export function GroupSelectorForm({
   const { data: metaMcpConfig } = useMetaMcpConfig()
   const defaultSelectedGroup = getMetaMcpOptimizedGroup(metaMcpConfig)
 
+  console.log('[GroupSelectorForm] Render:', {
+    metaMcpConfig,
+    defaultSelectedGroup,
+    allowedGroups: metaMcpConfig?.env_vars?.ALLOWED_GROUPS,
+  })
+
   const form = useForm<FormSchema>({
     resolver: zodV4Resolver(formSchema),
-    values: {
-      selectedGroup: defaultSelectedGroup ?? '',
+    defaultValues: {
+      selectedGroup: '',
     },
   })
+
+  // Reset form when defaultSelectedGroup changes to ensure radio buttons update
+  useEffect(() => {
+    console.log('[GroupSelectorForm] useEffect: Resetting form to:', {
+      selectedGroup: defaultSelectedGroup ?? '',
+    })
+    form.reset({
+      selectedGroup: defaultSelectedGroup ?? '',
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultSelectedGroup])
 
   const onSubmit = (data: FormSchema) => {
     // TODO: Implement submit logic

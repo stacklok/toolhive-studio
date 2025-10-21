@@ -179,15 +179,23 @@ export function convertCreateRequestToFormData(
     }
   })
 
+  const envVarsArray = Object.entries(createRequest.env_vars || {}).map(
+    ([name, value]) => ({ name, value })
+  )
+
+  console.log('[convertCreateRequestToFormData] Converting env_vars:', {
+    serverName: createRequest.name,
+    env_vars_from_api: createRequest.env_vars,
+    envVarsArray,
+  })
+
   const baseFormData = {
     name: createRequest.name || '',
     transport,
     group: createRequest.group ?? 'default',
     target_port: transport === 'stdio' ? 0 : createRequest.target_port,
     cmd_arguments: createRequest.cmd_arguments || [],
-    envVars: Object.entries(createRequest.env_vars || {}).map(
-      ([name, value]) => ({ name, value })
-    ),
+    envVars: envVarsArray,
     secrets,
     networkIsolation: createRequest.network_isolation || false,
     allowedHosts:

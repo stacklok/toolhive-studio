@@ -526,6 +526,7 @@ it('Customize Meta-MCP configuration button refetches data after editing', async
 
 it('radio button selection updates after editing ALLOWED_GROUPS via Customize Configuration', async () => {
   let currentAllowedGroups = 'default'
+  let apiCallCount = 0
 
   server.use(
     http.get(mswEndpoint('/api/v1beta/groups'), () =>
@@ -543,6 +544,10 @@ it('radio button selection updates after editing ALLOWED_GROUPS via Customize Co
     ),
     http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
       if (params.name === META_MCP_SERVER_NAME) {
+        apiCallCount++
+        console.log(
+          `[TEST] API call #${apiCallCount}: Returning ALLOWED_GROUPS="${currentAllowedGroups}"`
+        )
         return HttpResponse.json({
           name: META_MCP_SERVER_NAME,
           group: MCP_OPTIMIZER_GROUP_NAME,
@@ -565,6 +570,9 @@ it('radio button selection updates after editing ALLOWED_GROUPS via Customize Co
       async ({ request }) => {
         const body = await request.json()
         currentAllowedGroups = body.env_vars?.ALLOWED_GROUPS || ''
+        console.log(
+          `[TEST] POST edit: Updated ALLOWED_GROUPS to "${currentAllowedGroups}"`
+        )
         return HttpResponse.json({ success: true })
       }
     )
@@ -573,13 +581,16 @@ it('radio button selection updates after editing ALLOWED_GROUPS via Customize Co
   const user = userEvent.setup()
   renderRoute(router)
 
+  console.log('[TEST] Step 1: Waiting for initial render...')
   // Verify 'default' is preselected initially
   await waitFor(() => {
     const defaultRadio = screen.getByRole('radio', { name: /default/i })
     expect(defaultRadio).toBeChecked()
   })
+  console.log('[TEST] Step 1: ✓ Default radio is checked')
 
   // Open customize dialog and change ALLOWED_GROUPS to 'production'
+  console.log('[TEST] Step 2: Opening Advanced menu...')
   await user.click(await screen.findByRole('button', { name: /advanced/i }))
   await user.click(
     await screen.findByRole('menuitem', {
@@ -588,35 +599,57 @@ it('radio button selection updates after editing ALLOWED_GROUPS via Customize Co
   )
 
   // Wait for dialog to open
+  console.log('[TEST] Step 3: Waiting for dialog to open...')
   await waitFor(() => {
     expect(screen.getByText(/edit meta-mcp mcp server/i)).toBeInTheDocument()
   })
+  console.log('[TEST] Step 3: ✓ Dialog is open')
 
   // Find the ALLOWED_GROUPS value input by its name attribute
+  console.log('[TEST] Step 4: Editing ALLOWED_GROUPS value...')
   const allowedGroupsInput = screen.getByRole('textbox', {
     name: /environment variable value 1/i,
   })
   expect(allowedGroupsInput).toHaveValue('default')
   await user.clear(allowedGroupsInput)
   await user.type(allowedGroupsInput, 'production')
+  console.log('[TEST] Step 4: ✓ Typed "production"')
 
+  console.log('[TEST] Step 5: Clicking Update server button...')
   await user.click(
     await screen.findByRole('button', { name: /update server/i })
   )
 
   // Wait for dialog to close
+  console.log('[TEST] Step 6: Waiting for dialog to close...')
   await waitFor(() => {
     expect(
       screen.queryByText(/edit meta-mcp mcp server/i)
     ).not.toBeInTheDocument()
   })
+  console.log('[TEST] Step 6: ✓ Dialog closed')
+
+  console.log(
+    `[TEST] Step 7: Checking if radio buttons updated (API was called ${apiCallCount} times so far)...`
+  )
 
   // Verify 'production' is now selected
-  await waitFor(() => {
-    const productionRadio = screen.getByRole('radio', { name: /production/i })
-    expect(productionRadio).toBeChecked()
+  await waitFor(
+    () => {
+      const productionRadio = screen.getByRole('radio', {
+        name: /production/i,
+      })
+      const defaultRadio = screen.getByRole('radio', { name: /default/i })
 
-    const defaultRadio = screen.getByRole('radio', { name: /default/i })
-    expect(defaultRadio).not.toBeChecked()
-  })
+      console.log(
+        `[TEST] Step 7: Production checked: ${productionRadio.checked}, Default checked: ${defaultRadio.checked}`
+      )
+
+      expect(productionRadio).toBeChecked()
+      expect(defaultRadio).not.toBeChecked()
+    },
+    { timeout: 5000 }
+  )
+  console.log('[TEST] Step 7: ✓ Radio buttons updated correctly!')
+  console.log(`[TEST] Final: Total API calls: ${apiCallCount}`)
 })
