@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
+import { toast } from 'sonner'
 import { WrapperField } from './wrapper-field'
 import { Switch } from '@/common/components/ui/switch'
 import { featureFlagKeys } from '../../../../../../../utils/feature-flags'
@@ -54,12 +55,19 @@ export function ExperimentalFeatures() {
 
   const handleToggle = async (flagKey: string, currentValue: boolean) => {
     try {
+      const featureName = formatFeatureFlagName(flagKey)
       if (currentValue) {
         await disableFlag(flagKey)
         cleanupMetaOptimizer()
+        toast.success(
+          `${featureName} disabled. Cleaning up Meta Optimizer MCP and clients...`
+        )
       } else {
         await enableFlag(flagKey)
         initMetaOptimizer()
+        toast.success(
+          `${featureName} enabled. Initializing Meta Optimizer MCP and clients, this may take a moment...`
+        )
       }
     } catch (error) {
       log.error(`Failed to toggle feature flag ${flagKey}:`, error)
