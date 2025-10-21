@@ -13,14 +13,36 @@ import { Settings, RotateCw, Text, Edit3 } from 'lucide-react'
 import { OptimizerWarnings } from '@/features/meta-mcp/components/optimizer-warnings'
 import { GroupSelectorForm } from '@/features/meta-mcp/components/group-selector-form'
 import { useMcpOptimizerGroups } from '@/features/meta-mcp/hooks/use-mcp-optimizer-groups'
-import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
+import {
+  MCP_OPTIMIZER_GROUP_NAME,
+  META_MCP_SERVER_NAME,
+} from '@/common/lib/constants'
+import { EditServerDialogProvider } from '@/features/mcp-servers/contexts/edit-server-dialog-provider'
+import { useEditServerDialog } from '@/features/mcp-servers/hooks/use-edit-server-dialog'
+import { WrapperDialogFormMcp } from '@/features/mcp-servers/components/wrapper-dialog-mcp'
+import { useQuery } from '@tanstack/react-query'
+import { getApiV1BetaWorkloadsByNameOptions } from '@api/@tanstack/react-query.gen'
 
 export const Route = createFileRoute('/mcp-optimizer')({
   component: McpOptimizerRoute,
 })
 
-export function McpOptimizerRoute() {
+function McpOptimizerContent() {
   const groups = useMcpOptimizerGroups()
+  const { state, openDialog, closeDialog } = useEditServerDialog()
+
+  const { data: metaMcpWorkload } = useQuery({
+    ...getApiV1BetaWorkloadsByNameOptions({
+      path: { name: META_MCP_SERVER_NAME },
+    }),
+    retry: false,
+  })
+
+  const handleCustomizeConfiguration = () => {
+    if (!metaMcpWorkload) return
+    const isRemote = !!metaMcpWorkload.url
+    openDialog(META_MCP_SERVER_NAME, isRemote, MCP_OPTIMIZER_GROUP_NAME)
+  }
 
   return (
     <div className="flex h-full gap-6">
@@ -45,7 +67,10 @@ export function McpOptimizerRoute() {
                     <Text className="mr-2 h-4 w-4" />
                     Meta-MCP logs
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="flex cursor-pointer items-center">
+                  <DropdownMenuItem
+                    className="flex cursor-pointer items-center"
+                    onClick={handleCustomizeConfiguration}
+                  >
                     <Edit3 className="mr-2 h-4 w-4" />
                     Customize Meta-MCP configuration
                   </DropdownMenuItem>
@@ -72,6 +97,23 @@ export function McpOptimizerRoute() {
           </div>
         </div>
       </div>
+
+      {state.isOpen && state.serverName && state.groupName && (
+        <WrapperDialogFormMcp
+          serverType={{ local: !state.isRemote, remote: state.isRemote }}
+          closeDialog={closeDialog}
+          serverToEdit={state.serverName}
+          groupName={state.groupName}
+        />
+      )}
     </div>
+  )
+}
+
+export function McpOptimizerRoute() {
+  return (
+    <EditServerDialogProvider>
+      <McpOptimizerContent />
+    </EditServerDialogProvider>
   )
 }

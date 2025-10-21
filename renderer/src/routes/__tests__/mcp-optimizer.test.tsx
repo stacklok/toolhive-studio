@@ -6,7 +6,10 @@ import { renderRoute } from '@/common/test/render-route'
 import { server, recordRequests } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
-import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
+import {
+  MCP_OPTIMIZER_GROUP_NAME,
+  META_MCP_SERVER_NAME,
+} from '@/common/lib/constants'
 import userEvent from '@testing-library/user-event'
 
 const router = createTestRouter(McpOptimizerRoute, '/mcp-optimizer')
@@ -244,4 +247,41 @@ it('Manage Clients button sends API requests to the correct mcp-optimizer group'
       body: { name: 'vscode', groups: [MCP_OPTIMIZER_GROUP_NAME] },
     },
   ])
+})
+
+it('Customize Meta-MCP configuration button opens edit dialog for correct server', async () => {
+  server.use(
+    http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
+      if (params.name === META_MCP_SERVER_NAME) {
+        return HttpResponse.json({
+          name: META_MCP_SERVER_NAME,
+          group: MCP_OPTIMIZER_GROUP_NAME,
+          image: 'ghcr.io/toolhive/meta-mcp:latest',
+          transport: 'stdio',
+          env_vars: { FOO: 'bar' },
+          cmd_arguments: [],
+          secrets: [],
+          volumes: [],
+          network_isolation: false,
+        })
+      }
+      return HttpResponse.json(null, { status: 404 })
+    })
+  )
+
+  const user = userEvent.setup()
+
+  renderRoute(router)
+
+  await user.click(await screen.findByRole('button', { name: /advanced/i }))
+
+  await user.click(
+    await screen.findByRole('menuitem', {
+      name: /customize meta-mcp configuration/i,
+    })
+  )
+
+  await waitFor(() => {
+    expect(screen.getByText(/edit meta-mcp mcp server/i)).toBeInTheDocument()
+  })
 })
