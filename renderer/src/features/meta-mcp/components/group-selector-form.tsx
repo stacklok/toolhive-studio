@@ -37,7 +37,7 @@ export function GroupSelectorForm({
   const { data: metaMcpConfig } = useMetaMcpConfig()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const defaultSelectedGroup = getMetaMcpOptimizedGroup(metaMcpConfig)
-  const { updateServerMutation } = useUpdateServer(META_MCP_SERVER_NAME || '', {
+  const { updateServerMutation } = useUpdateServer(META_MCP_SERVER_NAME, {
     onSecretError: (error, variables) => {
       log.error('onSecretError during update', error, variables)
     },
@@ -50,46 +50,54 @@ export function GroupSelectorForm({
   })
 
   const onSubmit = async (data: FormSchema) => {
-    if (!metaMcpConfig) return
-    setIsSubmitting(true)
+    try {
+      if (!metaMcpConfig) return
+      setIsSubmitting(true)
 
-    const envVars = [
-      ...Object.entries(metaMcpConfig.env_vars ?? {})
-        .filter(([name]) => name !== ALLOWED_GROUPS_ENV_VAR)
-        .map(([name, value]) => ({ name, value })),
-      { name: ALLOWED_GROUPS_ENV_VAR, value: data.selectedGroup ?? '' },
-    ]
+      const envVars = [
+        ...Object.entries(metaMcpConfig.env_vars ?? {})
+          .filter(([name]) => name !== ALLOWED_GROUPS_ENV_VAR)
+          .map(([name, value]) => ({ name, value })),
+        { name: ALLOWED_GROUPS_ENV_VAR, value: data.selectedGroup },
+      ]
 
-    const toastId = toast.loading(
-      `Setting up Meta Optimizer for ${data.selectedGroup}...`
-    )
-    await updateServerMutation(
-      {
-        data: {
-          ...metaMcpConfig,
-          type: 'docker_image',
-          envVars,
-        } as FormSchemaLocalMcp,
-      },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: getApiV1BetaWorkloadsByNameQueryKey({
-              path: { name: META_MCP_SERVER_NAME },
-            }),
-          })
+      const toastId = toast.loading(
+        `Setting up Meta Optimizer for ${data.selectedGroup} group...`
+      )
+      await updateServerMutation(
+        {
+          data: {
+            ...metaMcpConfig,
+            type: 'docker_image',
+            envVars,
+          } as FormSchemaLocalMcp,
+        },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({
+              queryKey: getApiV1BetaWorkloadsByNameQueryKey({
+                path: { name: META_MCP_SERVER_NAME },
+              }),
+            })
 
-          toast.success(`Meta Optimizer for ${data.selectedGroup} is available`)
-        },
-        onSettled: () => {
-          setIsSubmitting(false)
-          toast.dismiss(toastId)
-        },
-        onError: (error) => {
-          log.error(`Error updating ${META_MCP_SERVER_NAME}`, error)
-        },
-      }
-    )
+            toast.success(
+              `Meta Optimizer for ${data.selectedGroup} is available`
+            )
+          },
+          onSettled: () => {
+            setIsSubmitting(false)
+            toast.dismiss(toastId)
+          },
+          onError: (error) => {
+            log.error(`Error updating ${META_MCP_SERVER_NAME}`, error)
+          },
+        }
+      )
+    } catch (error) {
+      log.error(`Error submitting form for ${META_MCP_SERVER_NAME}`, error)
+      toast.error(`Error submitting form for ${META_MCP_SERVER_NAME}`)
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -102,6 +110,7 @@ export function GroupSelectorForm({
             value={field.value}
             onValueChange={field.onChange}
             className="gap-0"
+            disabled={isSubmitting}
           >
             <div className="rounded-xl border">
               {groups.map((group) => {
