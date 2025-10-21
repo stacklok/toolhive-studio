@@ -161,10 +161,10 @@ describe('Customize Tools Page - Converter Function Selection', () => {
         expect(screen.getByText('tool1')).toBeInTheDocument()
       })
 
-      const enableAllButton = screen.getByRole('button', {
-        name: /enable all tools/i,
+      const applyButton = screen.getByRole('button', {
+        name: /apply/i,
       })
-      await user.click(enableAllButton)
+      await user.click(applyButton)
 
       await waitFor(() => {
         expect(convertLocalSpy).toHaveBeenCalled()
@@ -246,10 +246,10 @@ describe('Customize Tools Page - Converter Function Selection', () => {
         expect(screen.getByText('remote-tool1')).toBeInTheDocument()
       })
 
-      const enableAllButton = screen.getByRole('button', {
-        name: /enable all tools/i,
+      const applyButton = screen.getByRole('button', {
+        name: /apply/i,
       })
-      await user.click(enableAllButton)
+      await user.click(applyButton)
 
       await waitFor(() => {
         expect(convertRemoteSpy).toHaveBeenCalled()
