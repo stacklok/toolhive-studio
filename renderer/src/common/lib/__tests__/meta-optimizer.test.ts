@@ -1,15 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import {
-  initMetaOptimizer,
-  MCP_OPTIMIZER_GROUP_NAME,
-  META_MCP_SERVER_NAME,
-} from '../meta-optmizer'
+import { initMetaOptimizer } from '../meta-optmizer'
 import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
 import log from 'electron-log/renderer'
 import { queryClient } from '../query-client'
 import * as apiSdk from '@api/sdk.gen'
+import { MCP_OPTIMIZER_GROUP_NAME, META_MCP_SERVER_NAME } from '../constants'
 
 vi.mock('electron-log/renderer', () => ({
   default: {

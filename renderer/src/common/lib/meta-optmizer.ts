@@ -11,9 +11,7 @@ import {
   getApiV1BetaRegistryByNameServersByServerNameOptions,
   getApiV1BetaWorkloadsByNameOptions,
 } from '@api/@tanstack/react-query.gen'
-
-export const MCP_OPTIMIZER_GROUP_NAME = 'mcp-optimizer---'
-export const META_MCP_SERVER_NAME = 'meta-mcp'
+import { META_MCP_SERVER_NAME, MCP_OPTIMIZER_GROUP_NAME } from './constants'
 
 async function getMetaOptimizerWorkload() {
   try {
