@@ -8,7 +8,8 @@ export function useMetaMcpConfig() {
       path: { name: META_MCP_SERVER_NAME },
     }),
     retry: false,
-    staleTime: 0, // Always refetch when navigating to the page
+    staleTime: 300_000,
+    refetchOnMount: true,
   })
 }
 

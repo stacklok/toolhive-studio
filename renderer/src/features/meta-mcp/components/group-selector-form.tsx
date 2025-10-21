@@ -29,9 +29,6 @@ export function GroupSelectorForm({
 
   const form = useForm<FormSchema>({
     resolver: zodV4Resolver(formSchema),
-    defaultValues: {
-      selectedGroup: defaultSelectedGroup ?? '',
-    },
     values: {
       selectedGroup: defaultSelectedGroup ?? '',
     },
