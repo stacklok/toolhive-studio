@@ -8,17 +8,18 @@ export function useMetaMcpConfig() {
       path: { name: META_MCP_SERVER_NAME },
     }),
     retry: false,
+    staleTime: 0, // Always refetch when navigating to the page
   })
 }
 
 /**
- * Gets the single selected group from the ALLOWED_GROUPS env var,
+ * Gets the single group being optimized by meta-mcp from the ALLOWED_GROUPS env var,
  * or undefined if:
  * - The workload doesn't exist
  * - ALLOWED_GROUPS is not set
  * - ALLOWED_GROUPS contains multiple groups (comma-separated)
  */
-export function getSelectedGroupFromConfig(
+export function getMetaMcpOptimizedGroup(
   config: { env_vars?: { [key: string]: string } } | undefined
 ): string | undefined {
   if (!config?.env_vars?.ALLOWED_GROUPS) {

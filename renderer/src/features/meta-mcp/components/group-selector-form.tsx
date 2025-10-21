@@ -7,7 +7,7 @@ import { Button } from '@/common/components/ui/button'
 import type { GroupWithServers } from '@/features/meta-mcp/hooks/use-mcp-optimizer-groups'
 import {
   useMetaMcpConfig,
-  getSelectedGroupFromConfig,
+  getMetaMcpOptimizedGroup,
 } from '@/features/meta-mcp/hooks/use-meta-mcp-config'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 
@@ -25,7 +25,7 @@ export function GroupSelectorForm({
   groups,
 }: GroupSelectorFormProps): ReactElement {
   const { data: metaMcpConfig } = useMetaMcpConfig()
-  const defaultSelectedGroup = getSelectedGroupFromConfig(metaMcpConfig)
+  const defaultSelectedGroup = getMetaMcpOptimizedGroup(metaMcpConfig)
 
   const form = useForm<FormSchema>({
     resolver: zodV4Resolver(formSchema),

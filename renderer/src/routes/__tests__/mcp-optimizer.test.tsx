@@ -297,6 +297,53 @@ it('shows no group selected when meta-mcp workload does not exist', async () => 
   })
 })
 
+it('refetches the selected group when navigating back to the page', async () => {
+  let callCount = 0
+
+  server.use(
+    http.get(mswEndpoint('/api/v1beta/groups'), () =>
+      HttpResponse.json({
+        groups: [{ name: 'default' }, { name: 'production' }],
+      })
+    ),
+    http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
+      if (params.name === META_MCP_SERVER_NAME) {
+        callCount++
+        const allowedGroups = callCount === 1 ? 'default' : 'production'
+        return HttpResponse.json({
+          name: META_MCP_SERVER_NAME,
+          group: MCP_OPTIMIZER_GROUP_NAME,
+          env_vars: { ALLOWED_GROUPS: allowedGroups },
+        })
+      }
+      return HttpResponse.json(null, { status: 404 })
+    })
+  )
+
+  const { unmount } = renderRoute(router)
+
+  await waitFor(() => {
+    const defaultRadio = screen.getByRole('radio', { name: /default/i })
+    expect(defaultRadio).toBeChecked()
+  })
+
+  expect(callCount).toBe(1)
+
+  unmount()
+
+  renderRoute(router)
+
+  await waitFor(() => {
+    const productionRadio = screen.getByRole('radio', { name: /production/i })
+    expect(productionRadio).toBeChecked()
+
+    const defaultRadio = screen.getByRole('radio', { name: /default/i })
+    expect(defaultRadio).not.toBeChecked()
+  })
+
+  expect(callCount).toBe(2)
+})
+
 it('Manage Clients button is correctly prefilled for the mcp-optimizer group', async () => {
   server.use(
     http.get(mswEndpoint('/api/v1beta/groups'), () =>

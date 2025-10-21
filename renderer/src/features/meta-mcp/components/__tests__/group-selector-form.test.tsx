@@ -26,7 +26,6 @@ describe('GroupSelectorForm', () => {
       },
     })
 
-    // Default: mock meta-mcp workload not found (404)
     server.use(
       http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
         if (params.name === META_MCP_SERVER_NAME) {
