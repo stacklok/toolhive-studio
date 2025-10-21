@@ -4,6 +4,7 @@ import { WrapperField } from './wrapper-field'
 import { Switch } from '@/common/components/ui/switch'
 import { featureFlagKeys } from '../../../../../../../utils/feature-flags'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { initMetaOptimizer } from '@/common/lib/meta-optimizer'
 
 function formatFeatureFlagName(key: string): string {
   return key
@@ -55,6 +56,7 @@ export function ExperimentalFeatures() {
         await disableFlag(flagKey)
       } else {
         await enableFlag(flagKey)
+        initMetaOptimizer()
       }
     } catch (error) {
       log.error(`Failed to toggle feature flag ${flagKey}:`, error)
