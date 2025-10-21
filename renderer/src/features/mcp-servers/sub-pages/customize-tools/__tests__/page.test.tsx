@@ -8,6 +8,9 @@ import type { CoreWorkload } from '@api/types.gen'
 import * as orchestrateRunLocalServer from '@/features/mcp-servers/lib/orchestrate-run-local-server'
 import * as orchestrateRunRemoteServer from '@/features/mcp-servers/lib/orchestrate-run-remote-server'
 import * as useUpdateServerModule from '@/features/mcp-servers/hooks/use-update-server'
+import * as useMutationRestartServerModule from '@/features/mcp-servers/hooks/use-mutation-restart-server'
+import * as analytics from '@/common/lib/analytics'
+import { toast } from 'sonner'
 import {
   createMemoryHistory,
   createRootRoute,
@@ -18,6 +21,15 @@ import {
 } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { CustomizeToolsPage } from '../page'
+
+vi.mock('sonner', () => ({
+  toast: {
+    error: vi.fn(),
+    success: vi.fn(),
+    loading: vi.fn(),
+    promise: vi.fn(),
+  },
+}))
 
 const createLocalServerWorkload = (
   overrides: Partial<CoreWorkload> = {}
@@ -281,5 +293,552 @@ describe('Customize Tools Page - Converter Function Selection', () => {
       const isRemoteServer = !!mixedWorkload.url
       expect(isRemoteServer).toBe(true) // url takes precedence
     })
+  })
+})
+
+describe('Customize Tools Page - Server Not Running', () => {
+  const mockRestartServer = vi.fn()
+  const trackEventSpy = vi.spyOn(analytics, 'trackEvent')
+
+  beforeEach(() => {
+    vi.spyOn(useUpdateServerModule, 'useUpdateServer').mockReturnValue({
+      updateServerMutation: mockUpdateServerMutation,
+      isPendingSecrets: false,
+      isErrorSecrets: false,
+    })
+
+    vi.spyOn(
+      useMutationRestartServerModule,
+      'useMutationRestartServer'
+    ).mockReturnValue({
+      mutateAsync: mockRestartServer,
+      isPending: false,
+      isIdle: true,
+      isError: false,
+      isSuccess: false,
+      status: 'idle',
+      error: null,
+      data: undefined,
+      variables: undefined,
+      reset: vi.fn(),
+      context: undefined,
+      failureCount: 0,
+      failureReason: null,
+      isPaused: false,
+      submittedAt: 0,
+    })
+  })
+
+  afterEach(() => {
+    mswServer.resetHandlers()
+    vi.clearAllMocks()
+  })
+
+  it('should show EmptyState when server status is not running', async () => {
+    const stoppedWorkload = createLocalServerWorkload({
+      status: 'stopped',
+    })
+
+    mswServer.use(
+      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
+        return HttpResponse.json({
+          workloads: [stoppedWorkload],
+        })
+      }),
+      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+        return HttpResponse.json({
+          ...stoppedWorkload,
+          image: stoppedWorkload.package,
+        })
+      }),
+      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
+        return HttpResponse.json({ keys: [] })
+      }),
+      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+        return HttpResponse.json({
+          servers: [
+            {
+              image: 'ghcr.io/test/server:latest',
+              tools: ['tool1', 'tool2'],
+            },
+          ],
+        })
+      })
+    )
+
+    const { queryClient, router } = setupRouterWithPage('test-local-server')
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('Server is not running')).toBeInTheDocument()
+    })
+
+    expect(
+      screen.getByText(
+        /We can't retrieve the running tools with their names and descriptions/i
+      )
+    ).toBeInTheDocument()
+  })
+
+  it('should show Start Server button when server is not running', async () => {
+    const stoppedWorkload = createLocalServerWorkload({
+      status: 'stopped',
+    })
+
+    mswServer.use(
+      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
+        return HttpResponse.json({
+          workloads: [stoppedWorkload],
+        })
+      }),
+      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+        return HttpResponse.json({
+          ...stoppedWorkload,
+          image: stoppedWorkload.package,
+        })
+      }),
+      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
+        return HttpResponse.json({ keys: [] })
+      }),
+      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+        return HttpResponse.json({
+          servers: [
+            {
+              image: 'ghcr.io/test/server:latest',
+              tools: ['tool1', 'tool2'],
+            },
+          ],
+        })
+      })
+    )
+
+    const { queryClient, router } = setupRouterWithPage('test-local-server')
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /Start Server/i })
+      ).toBeInTheDocument()
+    })
+  })
+
+  it('should show Cancel button when server is not running', async () => {
+    const stoppedWorkload = createLocalServerWorkload({
+      status: 'stopped',
+    })
+
+    mswServer.use(
+      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
+        return HttpResponse.json({
+          workloads: [stoppedWorkload],
+        })
+      }),
+      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+        return HttpResponse.json({
+          ...stoppedWorkload,
+          image: stoppedWorkload.package,
+        })
+      }),
+      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
+        return HttpResponse.json({ keys: [] })
+      }),
+      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+        return HttpResponse.json({
+          servers: [
+            {
+              image: 'ghcr.io/test/server:latest',
+              tools: ['tool1', 'tool2'],
+            },
+          ],
+        })
+      })
+    )
+
+    const { queryClient, router } = setupRouterWithPage('test-local-server')
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /Cancel/i })
+      ).toBeInTheDocument()
+    })
+  })
+
+  it('should call restartServer when Start Server button is clicked', async () => {
+    const stoppedWorkload = createLocalServerWorkload({
+      status: 'stopped',
+      group: 'test-group',
+    })
+
+    mswServer.use(
+      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
+        return HttpResponse.json({
+          workloads: [stoppedWorkload],
+        })
+      }),
+      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+        return HttpResponse.json({
+          ...stoppedWorkload,
+          image: stoppedWorkload.package,
+        })
+      }),
+      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
+        return HttpResponse.json({ keys: [] })
+      }),
+      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+        return HttpResponse.json({
+          servers: [
+            {
+              image: 'ghcr.io/test/server:latest',
+              tools: ['tool1', 'tool2'],
+            },
+          ],
+        })
+      })
+    )
+
+    mockRestartServer.mockImplementation((_, options) => {
+      options?.onSuccess?.()
+      return Promise.resolve()
+    })
+
+    const { queryClient, router } = setupRouterWithPage('test-local-server')
+    const user = userEvent.setup()
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /Start Server/i })
+      ).toBeInTheDocument()
+    })
+
+    const startButton = screen.getByRole('button', { name: /Start Server/i })
+    await user.click(startButton)
+
+    await waitFor(() => {
+      expect(mockRestartServer).toHaveBeenCalledWith(
+        { path: { name: 'test-local-server' } },
+        expect.objectContaining({
+          onSuccess: expect.any(Function),
+          onError: expect.any(Function),
+        })
+      )
+    })
+  })
+
+  it('should track analytics event when Start Server button is clicked', async () => {
+    const stoppedWorkload = createLocalServerWorkload({
+      status: 'stopped',
+    })
+
+    mswServer.use(
+      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
+        return HttpResponse.json({
+          workloads: [stoppedWorkload],
+        })
+      }),
+      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+        return HttpResponse.json({
+          ...stoppedWorkload,
+          image: stoppedWorkload.package,
+        })
+      }),
+      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
+        return HttpResponse.json({ keys: [] })
+      }),
+      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+        return HttpResponse.json({
+          servers: [
+            {
+              image: 'ghcr.io/test/server:latest',
+              tools: ['tool1', 'tool2'],
+            },
+          ],
+        })
+      })
+    )
+
+    const { queryClient, router } = setupRouterWithPage('test-local-server')
+    const user = userEvent.setup()
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /Start Server/i })
+      ).toBeInTheDocument()
+    })
+
+    const startButton = screen.getByRole('button', { name: /Start Server/i })
+    await user.click(startButton)
+
+    await waitFor(() => {
+      expect(trackEventSpy).toHaveBeenCalledWith(
+        'Customize Tools: Server not running click start server',
+        {
+          server_name: 'test-local-server',
+        }
+      )
+    })
+  })
+
+  it('should show error toast when server fails to start', async () => {
+    const stoppedWorkload = createLocalServerWorkload({
+      status: 'stopped',
+    })
+
+    mswServer.use(
+      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
+        return HttpResponse.json({
+          workloads: [stoppedWorkload],
+        })
+      }),
+      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+        return HttpResponse.json({
+          ...stoppedWorkload,
+          image: stoppedWorkload.package,
+        })
+      }),
+      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
+        return HttpResponse.json({ keys: [] })
+      }),
+      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+        return HttpResponse.json({
+          servers: [
+            {
+              image: 'ghcr.io/test/server:latest',
+              tools: ['tool1', 'tool2'],
+            },
+          ],
+        })
+      })
+    )
+
+    mockRestartServer.mockImplementation((_, options) => {
+      options?.onError?.()
+      return Promise.reject(new Error('Failed to start'))
+    })
+
+    const { queryClient, router } = setupRouterWithPage('test-local-server')
+    const user = userEvent.setup()
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /Start Server/i })
+      ).toBeInTheDocument()
+    })
+
+    const startButton = screen.getByRole('button', { name: /Start Server/i })
+    await user.click(startButton)
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(
+        'Failed to start server for test-local-server'
+      )
+    })
+  })
+
+  it('should disable Start Server button when isPending is true', async () => {
+    const stoppedWorkload = createLocalServerWorkload({
+      status: 'stopped',
+    })
+
+    vi.spyOn(
+      useMutationRestartServerModule,
+      'useMutationRestartServer'
+    ).mockReturnValue({
+      mutateAsync: mockRestartServer,
+      isPending: true,
+      isIdle: false,
+      isError: false,
+      isSuccess: false,
+      status: 'pending',
+      error: null,
+      data: undefined,
+      variables: { path: { name: 'test-local-server' } },
+      reset: vi.fn(),
+      context: undefined,
+      failureCount: 0,
+      failureReason: null,
+      isPaused: false,
+      submittedAt: Date.now(),
+    })
+
+    mswServer.use(
+      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
+        return HttpResponse.json({
+          workloads: [stoppedWorkload],
+        })
+      }),
+      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+        return HttpResponse.json({
+          ...stoppedWorkload,
+          image: stoppedWorkload.package,
+        })
+      }),
+      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
+        return HttpResponse.json({ keys: [] })
+      }),
+      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+        return HttpResponse.json({
+          servers: [
+            {
+              image: 'ghcr.io/test/server:latest',
+              tools: ['tool1', 'tool2'],
+            },
+          ],
+        })
+      })
+    )
+
+    const { queryClient, router } = setupRouterWithPage('test-local-server')
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      const startButton = screen.getByRole('button', { name: /Starting.../i })
+      expect(startButton).toBeInTheDocument()
+      expect(startButton).toBeDisabled()
+    })
+  })
+
+  it('should navigate to group page when Cancel button is clicked', async () => {
+    const stoppedWorkload = createLocalServerWorkload({
+      status: 'stopped',
+      group: 'test-group',
+    })
+
+    mswServer.use(
+      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
+        return HttpResponse.json({
+          workloads: [stoppedWorkload],
+        })
+      }),
+      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+        return HttpResponse.json({
+          ...stoppedWorkload,
+          image: stoppedWorkload.package,
+        })
+      }),
+      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
+        return HttpResponse.json({ keys: [] })
+      }),
+      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+        return HttpResponse.json({
+          servers: [
+            {
+              image: 'ghcr.io/test/server:latest',
+              tools: ['tool1', 'tool2'],
+            },
+          ],
+        })
+      })
+    )
+
+    const { queryClient, router } = setupRouterWithPage('test-local-server')
+    const user = userEvent.setup()
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /Cancel/i })
+      ).toBeInTheDocument()
+    })
+
+    const cancelButton = screen.getByRole('button', { name: /Cancel/i })
+    await user.click(cancelButton)
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe('/group/test-group')
+    })
+  })
+
+  it('should not show CustomizeToolsTable when server is not running', async () => {
+    const stoppedWorkload = createLocalServerWorkload({
+      status: 'stopped',
+    })
+
+    mswServer.use(
+      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
+        return HttpResponse.json({
+          workloads: [stoppedWorkload],
+        })
+      }),
+      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+        return HttpResponse.json({
+          ...stoppedWorkload,
+          image: stoppedWorkload.package,
+        })
+      }),
+      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
+        return HttpResponse.json({ keys: [] })
+      }),
+      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
+        return HttpResponse.json({
+          servers: [
+            {
+              image: 'ghcr.io/test/server:latest',
+              tools: ['tool1', 'tool2'],
+            },
+          ],
+        })
+      })
+    )
+
+    const { queryClient, router } = setupRouterWithPage('test-local-server')
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('Server is not running')).toBeInTheDocument()
+    })
+
+    // The Apply button from CustomizeToolsTable should not be present
+    expect(
+      screen.queryByRole('button', { name: /Apply/i })
+    ).not.toBeInTheDocument()
   })
 })
