@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { TitlePage } from '@/common/components/title-page'
 import { McpServersSidebar } from '@/features/mcp-servers/components/mcp-servers-sidebar'
 import { ManageClientsButton } from '@/features/clients/components/manage-clients-button'
@@ -17,6 +17,7 @@ import {
   MCP_OPTIMIZER_GROUP_NAME,
   META_MCP_SERVER_NAME,
 } from '@/common/lib/constants'
+import { LinkViewTransition } from '@/common/components/link-view-transition'
 
 export const Route = createFileRoute('/mcp-optimizer')({
   component: McpOptimizerRoute,
@@ -48,7 +49,7 @@ export function McpOptimizerRoute() {
                     asChild
                     className="flex cursor-pointer items-center"
                   >
-                    <Link
+                    <LinkViewTransition
                       to="/logs/$groupName/$serverName"
                       params={{
                         serverName: META_MCP_SERVER_NAME,
@@ -57,7 +58,7 @@ export function McpOptimizerRoute() {
                     >
                       <Text className="mr-2 h-4 w-4" />
                       Meta-MCP logs
-                    </Link>
+                    </LinkViewTransition>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="flex cursor-pointer items-center">
                     <Edit3 className="mr-2 h-4 w-4" />
