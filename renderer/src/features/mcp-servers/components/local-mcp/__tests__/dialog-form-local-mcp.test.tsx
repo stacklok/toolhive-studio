@@ -14,6 +14,7 @@ import { useUpdateServer } from '../../../hooks/use-update-server'
 import {
   MCP_OPTIMIZER_GROUP_NAME,
   META_MCP_SERVER_NAME,
+  META_MCP_IMAGE,
 } from '@/common/lib/constants'
 
 // Mock the hook
@@ -267,7 +268,7 @@ describe('DialogFormLocalMcp', () => {
             name: META_MCP_SERVER_NAME,
             type: 'docker_image',
             transport: 'stdio',
-            image: 'ghcr.io/toolhive/meta-mcp',
+            image: META_MCP_IMAGE,
             group: MCP_OPTIMIZER_GROUP_NAME,
             cmd_arguments: [],
             env_vars: [],

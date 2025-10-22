@@ -14,6 +14,7 @@ import {
 } from '@api/@tanstack/react-query.gen'
 import {
   META_MCP_SERVER_NAME,
+  META_MCP_REGISTRY_SERVER_NAME,
   MCP_OPTIMIZER_GROUP_NAME,
   ALLOWED_GROUPS_ENV_VAR,
 } from './constants'
@@ -52,7 +53,7 @@ async function createMetaOptimizerWorkload() {
       getApiV1BetaRegistryByNameServersByServerNameOptions({
         path: {
           name: 'default',
-          serverName: 'meta-mcp',
+          serverName: META_MCP_REGISTRY_SERVER_NAME,
         },
       })
     )

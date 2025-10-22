@@ -9,6 +9,7 @@ import { mswEndpoint } from '@/common/mocks/customHandlers'
 import {
   MCP_OPTIMIZER_GROUP_NAME,
   META_MCP_SERVER_NAME,
+  META_MCP_IMAGE,
 } from '@/common/lib/constants'
 import userEvent from '@testing-library/user-event'
 
@@ -132,7 +133,7 @@ it('hides the mcp-optimizer group even when present in fixture data', async () =
       HttpResponse.json({
         workloads: [
           { name: 'server1', group: 'default' },
-          { name: 'meta-mcp', group: MCP_OPTIMIZER_GROUP_NAME },
+          { name: META_MCP_SERVER_NAME, group: MCP_OPTIMIZER_GROUP_NAME },
           { name: 'server3', group: 'production' },
         ],
       })
@@ -454,7 +455,7 @@ it('radio button updates after editing ALLOWED_GROUPS via Customize Configuratio
         return HttpResponse.json({
           name: META_MCP_SERVER_NAME,
           group: MCP_OPTIMIZER_GROUP_NAME,
-          image: 'ghcr.io/toolhive/meta-mcp:latest',
+          image: META_MCP_IMAGE,
           transport: 'stdio',
           env_vars: { ALLOWED_GROUPS: currentAllowedGroups },
           cmd_arguments: [],

@@ -10,6 +10,7 @@ import {
   ALLOWED_GROUPS_ENV_VAR,
   MCP_OPTIMIZER_GROUP_NAME,
   META_MCP_SERVER_NAME,
+  META_MCP_IMAGE,
 } from '../constants'
 
 vi.mock('electron-log/renderer', () => ({
@@ -97,7 +98,7 @@ describe('Meta Optimizer', () => {
           () =>
             HttpResponse.json({
               server: {
-                image: 'ghcr.io/stackloklabs/meta-mcp:latest',
+                image: META_MCP_IMAGE,
                 transport: 'streamable-http',
               },
             })
@@ -110,7 +111,7 @@ describe('Meta Optimizer', () => {
         body: expect.objectContaining({
           name: META_MCP_SERVER_NAME,
           group: MCP_OPTIMIZER_GROUP_NAME,
-          image: 'ghcr.io/stackloklabs/meta-mcp:latest',
+          image: META_MCP_IMAGE,
           transport: 'streamable-http',
           env_vars: { [ALLOWED_GROUPS_ENV_VAR]: 'default' },
         }),
@@ -208,7 +209,7 @@ describe('Meta Optimizer', () => {
           () =>
             HttpResponse.json({
               server: {
-                image: 'ghcr.io/stackloklabs/meta-mcp:latest',
+                image: META_MCP_IMAGE,
                 transport: 'streamable-http',
               },
             })
