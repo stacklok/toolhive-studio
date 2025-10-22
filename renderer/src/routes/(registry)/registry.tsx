@@ -12,6 +12,7 @@ import { IllustrationNoConnection } from '@/common/components/illustrations/illu
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../../utils/feature-flags'
 
+const SKIP_META_MCP = 'meta-mcp'
 const DEFAULT_REGISTRY_NAME = 'default'
 
 export const Route = createFileRoute('/(registry)/registry')({
@@ -55,7 +56,11 @@ export function Registry() {
     ? registryData?.registry?.groups || []
     : []
 
-  const servers = [...serversList, ...remoteServersList]
+  const servers = [
+    ...serversList.filter((server) => server.name !== SKIP_META_MCP),
+    ...remoteServersList,
+  ]
+
   const isDefaultRegistry = registryData?.name === DEFAULT_REGISTRY_NAME
   const hasContent = servers.length > 0 || groups.length > 0
 
