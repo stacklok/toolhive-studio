@@ -440,6 +440,95 @@ it('Manage Clients button sends API requests to the correct mcp-optimizer group'
   ])
 })
 
+it('radio button updates after editing ALLOWED_GROUPS via Customize Configuration', async () => {
+  let currentAllowedGroups = 'default'
+
+  server.use(
+    http.get(mswEndpoint('/api/v1beta/groups'), () =>
+      HttpResponse.json({
+        groups: [{ name: 'default' }, { name: 'production' }],
+      })
+    ),
+    http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
+      if (params.name === META_MCP_SERVER_NAME) {
+        return HttpResponse.json({
+          name: META_MCP_SERVER_NAME,
+          group: MCP_OPTIMIZER_GROUP_NAME,
+          image: 'ghcr.io/toolhive/meta-mcp:latest',
+          transport: 'stdio',
+          env_vars: { ALLOWED_GROUPS: currentAllowedGroups },
+          cmd_arguments: [],
+          secrets: [],
+          volumes: [],
+          network_isolation: false,
+        })
+      }
+      return HttpResponse.json(null, { status: 404 })
+    }),
+    http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () =>
+      HttpResponse.json({ keys: [] })
+    ),
+    http.post(
+      mswEndpoint('/api/v1beta/workloads/:name/edit'),
+      async ({ request }) => {
+        const body = (await request.json()) as {
+          env_vars?: { ALLOWED_GROUPS?: string }
+        }
+        currentAllowedGroups = body?.env_vars?.ALLOWED_GROUPS || ''
+        return HttpResponse.json({ success: true })
+      }
+    )
+  )
+
+  const user = userEvent.setup()
+  renderRoute(router)
+
+  await waitFor(() => {
+    const defaultRadio = screen.getByRole('radio', { name: /default/i })
+    expect(defaultRadio).toBeChecked()
+  })
+
+  await user.click(await screen.findByRole('button', { name: /advanced/i }))
+  await user.click(
+    await screen.findByRole('menuitem', {
+      name: /customize meta-mcp configuration/i,
+    })
+  )
+
+  await waitFor(() => {
+    expect(screen.getByText(/edit meta-mcp mcp server/i)).toBeInTheDocument()
+  })
+
+  const allowedGroupsInput = screen.getByRole('textbox', {
+    name: /environment variable value 1/i,
+  })
+  expect(allowedGroupsInput).toHaveValue('default')
+  await user.clear(allowedGroupsInput)
+  await user.type(allowedGroupsInput, 'production')
+
+  await user.click(
+    await screen.findByRole('button', { name: /update server/i })
+  )
+
+  await waitFor(() => {
+    expect(
+      screen.queryByText(/edit meta-mcp mcp server/i)
+    ).not.toBeInTheDocument()
+  })
+
+  await waitFor(() => {
+    const productionRadio = screen.getByRole('radio', {
+      name: /production/i,
+    }) as HTMLInputElement
+    const defaultRadio = screen.getByRole('radio', {
+      name: /default/i,
+    }) as HTMLInputElement
+
+    expect(productionRadio).toBeChecked()
+    expect(defaultRadio).not.toBeChecked()
+  })
+})
+
 it('clicking Meta-MCP logs in Advanced menu navigates to logs page', async () => {
   const user = userEvent.setup()
   renderRoute(router)

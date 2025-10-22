@@ -4,6 +4,7 @@ import { pollServerStatus } from '@/common/lib/polling'
 import {
   getApiV1BetaWorkloadsByNameStatusOptions,
   getApiV1BetaWorkloadsQueryKey,
+  getApiV1BetaWorkloadsByNameQueryKey,
 } from '@api/@tanstack/react-query.gen'
 import { toast } from 'sonner'
 import { Button } from '../components/ui/button'
@@ -49,6 +50,14 @@ export function useCheckServerStatus() {
       if (isServerReady) {
         await queryClient.invalidateQueries({
           queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
+        })
+
+        // Also invalidate the specific server query to ensure form updates
+        await queryClient.invalidateQueries({
+          queryKey: getApiV1BetaWorkloadsByNameQueryKey({
+            path: { name: serverName },
+          }),
+          refetchType: 'active',
         })
 
         toast.success(

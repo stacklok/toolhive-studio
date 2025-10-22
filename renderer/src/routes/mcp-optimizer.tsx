@@ -17,14 +17,23 @@ import {
   MCP_OPTIMIZER_GROUP_NAME,
   META_MCP_SERVER_NAME,
 } from '@/common/lib/constants'
+import { EditServerDialogProvider } from '@/features/mcp-servers/contexts/edit-server-dialog-provider'
+import { useEditServerDialog } from '@/features/mcp-servers/hooks/use-edit-server-dialog'
+import { WrapperDialogFormMcp } from '@/features/mcp-servers/components/wrapper-dialog-mcp'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
 
 export const Route = createFileRoute('/mcp-optimizer')({
   component: McpOptimizerRoute,
 })
 
-export function McpOptimizerRoute() {
+function McpOptimizerContent() {
   const groups = useMcpOptimizerGroups()
+  const { state, openDialog, closeDialog } = useEditServerDialog()
+
+  const handleCustomizeConfiguration = () => {
+    const isRemote = false
+    openDialog(META_MCP_SERVER_NAME, isRemote, MCP_OPTIMIZER_GROUP_NAME)
+  }
 
   return (
     <div className="flex h-full gap-6">
@@ -56,7 +65,10 @@ export function McpOptimizerRoute() {
                       Meta-MCP logs
                     </LinkViewTransition>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="flex cursor-pointer items-center">
+                  <DropdownMenuItem
+                    className="flex cursor-pointer items-center"
+                    onClick={handleCustomizeConfiguration}
+                  >
                     <Edit3 className="mr-2 h-4 w-4" />
                     Customize Meta-MCP configuration
                   </DropdownMenuItem>
@@ -83,6 +95,23 @@ export function McpOptimizerRoute() {
           </div>
         </div>
       </div>
+
+      {state.isOpen && state.serverName && state.groupName && (
+        <WrapperDialogFormMcp
+          serverType={{ local: !state.isRemote, remote: state.isRemote }}
+          closeDialog={closeDialog}
+          serverToEdit={state.serverName}
+          groupName={state.groupName}
+        />
+      )}
     </div>
+  )
+}
+
+export function McpOptimizerRoute() {
+  return (
+    <EditServerDialogProvider>
+      <McpOptimizerContent />
+    </EditServerDialogProvider>
   )
 }

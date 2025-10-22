@@ -18,6 +18,10 @@ import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
 import { RadioGroup, RadioGroupItem } from '@/common/components/ui/radio-group'
 import { CommandArgumentsField } from '@/common/components/workload-cmd-arg/command-arguments-field'
 import type { FormSchemaLocalMcp } from '../../lib/form-schema-local-mcp'
+import {
+  MCP_OPTIMIZER_GROUP_NAME,
+  META_MCP_SERVER_NAME,
+} from '@/common/lib/constants'
 
 export function FormFieldsBase({
   form,
@@ -31,6 +35,13 @@ export function FormFieldsBase({
   const typeValue = form.watch('type')
   const protocolValue = form.watch('protocol') ?? 'npx'
   const transportValue = form.watch('transport')
+
+  // When the MCP optimizer feature is enabled, the user should not be able to change
+  // the meta-mcp server's group as it could break the optimizer logic
+  const shouldHideGroupField =
+    isEditing &&
+    form.getValues('name') === META_MCP_SERVER_NAME &&
+    form.getValues('group') === MCP_OPTIMIZER_GROUP_NAME
 
   return (
     <>
@@ -94,36 +105,38 @@ export function FormFieldsBase({
         )}
       />
 
-      <FormField
-        control={form.control}
-        name="group"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel htmlFor={field.name}>Group</FormLabel>
-            <FormControl>
-              <Select
-                onValueChange={(value) => field.onChange(value)}
-                value={field.value}
-                name={field.name}
-              >
-                <SelectTrigger id={field.name} className="w-full">
-                  <SelectValue placeholder="Select a group" />
-                </SelectTrigger>
-                <SelectContent>
-                  {groups
-                    .filter((g) => g.name)
-                    .map((g) => (
-                      <SelectItem key={g.name!} value={g.name!}>
-                        {g.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {!shouldHideGroupField && (
+        <FormField
+          control={form.control}
+          name="group"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor={field.name}>Group</FormLabel>
+              <FormControl>
+                <Select
+                  onValueChange={(value) => field.onChange(value)}
+                  value={field.value}
+                  name={field.name}
+                >
+                  <SelectTrigger id={field.name} className="w-full">
+                    <SelectValue placeholder="Select a group" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {groups
+                      .filter((g) => g.name)
+                      .map((g) => (
+                        <SelectItem key={g.name!} value={g.name!}>
+                          {g.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
       <FormField
         control={form.control}
