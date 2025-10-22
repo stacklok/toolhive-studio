@@ -113,6 +113,11 @@ describe('Meta Optimizer', () => {
           image: 'ghcr.io/stackloklabs/meta-mcp:latest',
           transport: 'streamable-http',
           env_vars: { [ALLOWED_GROUPS_ENV_VAR]: 'default' },
+          permission_profile: {
+            network: {
+              mode: 'host',
+            },
+          },
         }),
       })
     })
