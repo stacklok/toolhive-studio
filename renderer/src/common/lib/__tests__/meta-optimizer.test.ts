@@ -6,7 +6,11 @@ import { mswEndpoint } from '@/common/mocks/customHandlers'
 import log from 'electron-log/renderer'
 import { queryClient } from '../query-client'
 import * as apiSdk from '@api/sdk.gen'
-import { MCP_OPTIMIZER_GROUP_NAME, META_MCP_SERVER_NAME } from '../constants'
+import {
+  ALLOWED_GROUPS_ENV_VAR,
+  MCP_OPTIMIZER_GROUP_NAME,
+  META_MCP_SERVER_NAME,
+} from '../constants'
 
 vi.mock('electron-log/renderer', () => ({
   default: {
@@ -108,6 +112,7 @@ describe('Meta Optimizer', () => {
           group: MCP_OPTIMIZER_GROUP_NAME,
           image: 'ghcr.io/stackloklabs/meta-mcp:latest',
           transport: 'streamable-http',
+          env_vars: { [ALLOWED_GROUPS_ENV_VAR]: 'default' },
         }),
       })
     })

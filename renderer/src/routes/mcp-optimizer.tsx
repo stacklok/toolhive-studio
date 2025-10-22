@@ -20,6 +20,7 @@ import {
 import { EditServerDialogProvider } from '@/features/mcp-servers/contexts/edit-server-dialog-provider'
 import { useEditServerDialog } from '@/features/mcp-servers/hooks/use-edit-server-dialog'
 import { WrapperDialogFormMcp } from '@/features/mcp-servers/components/wrapper-dialog-mcp'
+import { LinkViewTransition } from '@/common/components/link-view-transition'
 
 export const Route = createFileRoute('/mcp-optimizer')({
   component: McpOptimizerRoute,
@@ -53,9 +54,20 @@ function McpOptimizerContent() {
                     <RotateCw className="mr-2 h-4 w-4" />
                     Restart Meta-MCP
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="flex cursor-pointer items-center">
-                    <Text className="mr-2 h-4 w-4" />
-                    Meta-MCP logs
+                  <DropdownMenuItem
+                    asChild
+                    className="flex cursor-pointer items-center"
+                  >
+                    <LinkViewTransition
+                      to="/logs/$groupName/$serverName"
+                      params={{
+                        serverName: META_MCP_SERVER_NAME,
+                        groupName: MCP_OPTIMIZER_GROUP_NAME,
+                      }}
+                    >
+                      <Text className="mr-2 h-4 w-4" />
+                      Meta-MCP logs
+                    </LinkViewTransition>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="flex cursor-pointer items-center"

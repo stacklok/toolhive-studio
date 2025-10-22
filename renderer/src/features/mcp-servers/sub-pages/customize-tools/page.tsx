@@ -17,6 +17,9 @@ import { convertCreateRequestToFormData as convertLocalServerToFormData } from '
 import { convertCreateRequestToFormData as convertRemoteServerToFormData } from '@/features/mcp-servers/lib/orchestrate-run-remote-server'
 import { useIsServerFromRegistry } from '../../hooks/use-is-server-from-registry'
 import { trackEvent } from '@/common/lib/analytics'
+import { EmptyState } from '@/common/components/empty-state'
+import { IllustrationStop } from '@/common/components/illustrations/illustration-stop'
+import { useMutationRestartServer } from '@/features/mcp-servers/hooks/use-mutation-restart-server'
 
 // This is only for the servers from the registry at the moment
 export function CustomizeToolsPage() {
@@ -25,7 +28,11 @@ export function CustomizeToolsPage() {
   const { checkServerStatus } = useCheckServerStatus()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const { data: workload, isFetching: isWorkloadLoading } = useQuery({
+  const {
+    data: workload,
+    refetch: refetchWorkload,
+    isFetching: isWorkloadLoading,
+  } = useQuery({
     queryKey: ['workload', serverName],
     queryFn: async () => {
       const { data } = await getApiV1BetaWorkloads({
@@ -114,6 +121,12 @@ export function CustomizeToolsPage() {
     isRemote: isRemoteServer,
   })
 
+  const { mutateAsync: restartServer, isPending: isRestartPending } =
+    useMutationRestartServer({
+      name: serverName,
+      group: workload?.group,
+    })
+
   const handleUpdateServer = async (tools: string[] | null) => {
     if (!existingServerData || isExistingServerDataError) {
       throw new Error('Existing server data not available')
@@ -184,6 +197,23 @@ export function CustomizeToolsPage() {
     }
   }
 
+  const handleStartServer = () => {
+    trackEvent('Customize Tools: Server not running click start server', {
+      server_name: serverName,
+    })
+    restartServer(
+      { path: { name: serverName } },
+      {
+        onSuccess: () => {
+          refetchWorkload()
+        },
+        onError: () => {
+          toast.error(`Failed to start server for ${serverName}`)
+        },
+      }
+    )
+  }
+
   if (!isFromRegistry) return null
 
   return (
@@ -207,7 +237,31 @@ export function CustomizeToolsPage() {
       </div>
       <div className="min-h-0 flex-1">
         {workload?.status !== 'running' ? (
-          <div>Server is not running</div>
+          <EmptyState
+            illustration={IllustrationStop}
+            title="Server is not running"
+            body="We can't retrieve the running tools with their names and descriptions when the server is stopped. Start the server to view and customize available tools."
+            actions={[
+              <Button
+                key="start-server"
+                onClick={() => handleStartServer()}
+                disabled={isRestartPending}
+              >
+                {isRestartPending ? 'Starting...' : 'Start server'}
+              </Button>,
+              <Button
+                key="cancel"
+                variant="outline"
+                onClick={() =>
+                  navigate({
+                    to: `/group/${workload?.group || 'default'}`,
+                  })
+                }
+              >
+                Cancel
+              </Button>,
+            ]}
+          />
         ) : (
           <CustomizeToolsTable
             tools={completedTools || []}

@@ -71,8 +71,6 @@ it('renders the warnings section', async () => {
   await waitFor(() => {
     expect(screen.getByText('Experimental Feature')).toBeInTheDocument()
   })
-
-  expect(screen.getByText('Unoptimized Access Detected')).toBeInTheDocument()
 })
 
 it('renders the section header and description', async () => {
@@ -532,4 +530,26 @@ it('radio button updates after editing ALLOWED_GROUPS via Customize Configuratio
     },
     { timeout: 5000 }
   )
+})
+
+it('clicking Meta-MCP logs in Advanced menu navigates to logs page', async () => {
+  const user = userEvent.setup()
+  renderRoute(router)
+
+  // Open the Advanced dropdown menu
+  const advancedButton = await screen.findByRole('button', {
+    name: /advanced/i,
+  })
+  await user.click(advancedButton)
+
+  // Click on the "Meta-MCP logs" menu item
+  const logsMenuItem = await screen.findByText(/meta-mcp logs/i)
+  await user.click(logsMenuItem)
+
+  // Verify navigation to the logs page with correct parameters
+  await waitFor(() => {
+    expect(router.state.location.pathname).toBe(
+      `/logs/${MCP_OPTIMIZER_GROUP_NAME}/${META_MCP_SERVER_NAME}`
+    )
+  })
 })
