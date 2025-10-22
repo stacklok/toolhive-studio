@@ -491,12 +491,12 @@ it('radio button updates after editing ALLOWED_GROUPS via Customize Configuratio
   await user.click(await screen.findByRole('button', { name: /advanced/i }))
   await user.click(
     await screen.findByRole('menuitem', {
-      name: /customize meta-mcp configuration/i,
+      name: /customize mcp optimizer configuration/i,
     })
   )
 
   await waitFor(() => {
-    expect(screen.getByText(/edit meta-mcp mcp server/i)).toBeInTheDocument()
+    expect(screen.getByText(/edit mcp optimizer server/i)).toBeInTheDocument()
   })
 
   const allowedGroupsInput = screen.getByRole('textbox', {
@@ -512,7 +512,7 @@ it('radio button updates after editing ALLOWED_GROUPS via Customize Configuratio
 
   await waitFor(() => {
     expect(
-      screen.queryByText(/edit meta-mcp mcp server/i)
+      screen.queryByText(/edit mcp optimizer server/i)
     ).not.toBeInTheDocument()
   })
 
@@ -540,7 +540,7 @@ it('clicking Meta-MCP logs in Advanced menu navigates to logs page', async () =>
   await user.click(advancedButton)
 
   // Click on the "Meta-MCP logs" menu item
-  const logsMenuItem = await screen.findByText(/meta-mcp logs/i)
+  const logsMenuItem = await screen.findByText(/mcp optimizer logs/i)
   await user.click(logsMenuItem)
 
   // Verify navigation to the logs page with correct parameters

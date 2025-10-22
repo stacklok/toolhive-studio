@@ -141,7 +141,7 @@ describe('Logs Route', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole('heading', { name: META_MCP_SERVER_NAME })
+        screen.getByRole('heading', { name: 'MCP Optimizer' })
       ).toBeVisible()
     })
 

@@ -14,6 +14,10 @@ import { queryClient } from '@/common/lib/query-client'
 import { useCallback } from 'react'
 
 function formatFeatureFlagName(key: string): string {
+  if (key === featureFlagKeys.META_OPTIMIZER) {
+    return 'MCP Optimizer'
+  }
+
   return key
     .split('_')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())

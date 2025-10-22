@@ -9,6 +9,7 @@ import {
 import { toast } from 'sonner'
 import { Button } from '../components/ui/button'
 import { Link } from '@tanstack/react-router'
+import { META_MCP_SERVER_NAME } from '../lib/constants'
 
 /**
  * Custom hook for checking server status after creation/startup.
@@ -61,7 +62,7 @@ export function useCheckServerStatus() {
         })
 
         toast.success(
-          `"${serverName}" ${isEditing ? 'updated' : 'started'} successfully.`,
+          `"${serverName === META_MCP_SERVER_NAME ? 'MCP Optimizer' : serverName}" ${isEditing ? 'updated' : 'started'} successfully.`,
           {
             id: toastIdRef.current,
             duration: 5_000, // slightly longer than default

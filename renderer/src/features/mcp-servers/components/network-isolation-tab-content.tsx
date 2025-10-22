@@ -12,6 +12,7 @@ import type {
 import { FormControl, FormField, FormItem } from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
 import type { FormSchemaLocalMcp } from '../lib/form-schema-local-mcp'
+import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 
 export function NetworkIsolationTabContent({
   form,
@@ -39,6 +40,7 @@ export function NetworkIsolationTabContent({
                 aria-label="Enable outbound network filtering"
                 checked={!!networkField.value}
                 onCheckedChange={networkField.onChange}
+                disabled={form.getValues('group') === MCP_OPTIMIZER_GROUP_NAME}
               />
               <Label htmlFor="network-isolation-switch">
                 Enable outbound network filtering

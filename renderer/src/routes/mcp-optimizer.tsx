@@ -62,7 +62,7 @@ function McpOptimizerContent() {
                       }}
                     >
                       <Text className="mr-2 h-4 w-4" />
-                      Meta-MCP logs
+                      MCP Optimizer logs
                     </LinkViewTransition>
                   </DropdownMenuItem>
                   <DropdownMenuItem
@@ -70,7 +70,7 @@ function McpOptimizerContent() {
                     onClick={handleCustomizeConfiguration}
                   >
                     <Edit3 className="mr-2 h-4 w-4" />
-                    Customize Meta-MCP configuration
+                    Customize MCP Optimizer configuration
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
