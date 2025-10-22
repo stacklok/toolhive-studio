@@ -320,6 +320,11 @@ export function DialogFormLocalMcp({
     serverToEdit,
   ])
 
+  const title =
+    serverToEdit === META_MCP_SERVER_NAME
+      ? 'MCP Optimizer server'
+      : `${serverToEdit} MCP server`
+
   return (
     <DialogWorkloadFormWrapper
       onOpenChange={closeDialog}
@@ -336,11 +341,7 @@ export function DialogFormLocalMcp({
       actionsIsEditing={isEditing}
       form={form}
       onSubmit={form.handleSubmit(onSubmitForm, activateTabWithError)}
-      title={
-        isEditing
-          ? `Edit ${serverToEdit === META_MCP_SERVER_NAME ? 'MCP Optimizer server' : `${serverToEdit} MCP server`}`
-          : 'Custom local MCP server'
-      }
+      title={isEditing ? `Edit ${title}` : 'Custom local MCP server'}
     >
       {renderContent()}
     </DialogWorkloadFormWrapper>
