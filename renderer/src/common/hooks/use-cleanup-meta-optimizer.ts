@@ -1,3 +1,4 @@
+import { queryClient } from '../lib/query-client'
 import { useFeatureFlag } from './use-feature-flag'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 import { featureFlagKeys } from '../../../../utils/feature-flags'
@@ -7,14 +8,13 @@ import {
   getApiV1BetaGroupsOptions,
   getApiV1BetaGroupsQueryKey,
 } from '@api/@tanstack/react-query.gen'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { deleteApiV1BetaClientsByNameGroupsByGroup } from '@api/index'
 import { useCallback } from 'react'
 import { useToastMutation } from './use-toast-mutation'
 import log from 'electron-log/renderer'
 
 function useDeleteGroup() {
-  const queryClient = useQueryClient()
   const { mutateAsync: deleteGroup } = useToastMutation({
     ...deleteApiV1BetaGroupsByNameMutation(),
     onError: (error, variables) => {
@@ -25,14 +25,15 @@ function useDeleteGroup() {
         queryKey: getApiV1BetaGroupsQueryKey(),
       })
     },
-    errorMsg: 'Failed to delete group',
+    errorMsg: 'Failed to delete MCP Optimizer group',
+    successMsg: 'MCP Optimizer group deleted successfully',
+    loadingMsg: 'Disabling MCP Optimizer and cleaning up...',
   })
 
   return deleteGroup
 }
 
 function useUnregisterClients() {
-  const queryClient = useQueryClient()
   const { mutateAsync: unregisterClients } = useToastMutation({
     mutationFn: async ({ clientType }: { clientType: string }) => {
       return await deleteApiV1BetaClientsByNameGroupsByGroup({

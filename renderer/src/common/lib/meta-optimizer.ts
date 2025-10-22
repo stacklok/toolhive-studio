@@ -20,7 +20,7 @@ import {
 
 async function ensureMetaOptimizerWorkload() {
   try {
-    const workloadDetail = await queryClient.ensureQueryData(
+    const workloadDetail = await queryClient.fetchQuery(
       getApiV1BetaWorkloadsByNameOptions({
         path: { name: META_MCP_SERVER_NAME },
       })
@@ -48,7 +48,7 @@ async function createMetaOptimizerWorkload() {
       return workloadDetail
     }
 
-    const { server } = await queryClient.ensureQueryData(
+    const { server } = await queryClient.fetchQuery(
       getApiV1BetaRegistryByNameServersByServerNameOptions({
         path: {
           name: 'default',
