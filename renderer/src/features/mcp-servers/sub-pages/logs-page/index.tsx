@@ -53,7 +53,12 @@ export function LogsPage() {
         </LinkViewTransition>
       </div>
       <div className="flex flex-col gap-5">
-        <h1 className="m-0 mb-0 p-0 text-3xl font-bold">{serverName}</h1>
+        <h1 className="m-0 mb-0 p-0 text-3xl font-bold">
+          {groupName === MCP_OPTIMIZER_GROUP_NAME
+            ? 'MCP Optimizer'
+            : serverName}
+        </h1>
+
         <Separator />
         <div className="mb-4 flex justify-between">
           <InputSearch
