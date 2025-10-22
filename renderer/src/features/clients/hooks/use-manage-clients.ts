@@ -33,7 +33,7 @@ export function useManageClients(groupName: string) {
   const queryClient = useQueryClient()
 
   const { data: groupsData } = useQuery({
-    queryKey: ['api', 'v1beta', 'groups'],
+    queryKey: getApiV1BetaClientsQueryKey(),
     queryFn: async () => {
       const { data: response } = await getApiV1BetaGroups()
 
