@@ -52,7 +52,7 @@ async function createMetaOptimizerWorkload() {
       getApiV1BetaRegistryByNameServersByServerNameOptions({
         path: {
           name: 'default',
-          serverName: META_MCP_SERVER_NAME,
+          serverName: 'meta-mcp',
         },
       })
     )
