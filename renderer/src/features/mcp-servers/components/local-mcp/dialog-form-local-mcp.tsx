@@ -1,12 +1,11 @@
 import { useCallback, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
 import {
   getApiV1BetaWorkloadsOptions,
   getApiV1BetaWorkloadsByNameOptions,
   getApiV1BetaSecretsDefaultKeysOptions,
-  getApiV1BetaWorkloadsByNameQueryKey,
 } from '@api/@tanstack/react-query.gen'
 import { convertCreateRequestToFormData } from '../../lib/orchestrate-run-local-server'
 import { useUpdateServer } from '../../hooks/use-update-server'
@@ -98,7 +97,6 @@ export function DialogFormLocalMcp({
       defaultTab: 'configuration',
     })
   const { checkServerStatus } = useCheckServerStatus()
-  const queryClient = useQueryClient()
 
   const handleSecrets = (completedCount: number, secretsCount: number) => {
     setLoadingSecrets((prev) => ({
@@ -185,22 +183,11 @@ export function DialogFormLocalMcp({
       updateServerMutation(
         { data },
         {
-          onSuccess: async () => {
+          onSuccess: () => {
             checkServerStatus({
               serverName: data.name,
               groupName: data.group || groupName,
               isEditing,
-            })
-            const queryKey = getApiV1BetaWorkloadsByNameQueryKey({
-              path: { name: data.name },
-            })
-
-            // Wait for the backend to persist changes before invalidating
-            await new Promise((resolve) => setTimeout(resolve, 500))
-
-            await queryClient.invalidateQueries({
-              queryKey,
-              refetchType: 'active',
             })
             closeDialog()
             form.reset()
