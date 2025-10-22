@@ -71,11 +71,6 @@ async function createMetaOptimizerWorkload() {
       network_isolation: false,
       volumes: [],
       group: MCP_OPTIMIZER_GROUP_NAME,
-      permission_profile: {
-        network: {
-          mode: 'host',
-        },
-      },
     }
 
     const response = await postApiV1BetaWorkloads({
