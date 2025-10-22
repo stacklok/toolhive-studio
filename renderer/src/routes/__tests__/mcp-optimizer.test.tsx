@@ -516,20 +516,17 @@ it('radio button updates after editing ALLOWED_GROUPS via Customize Configuratio
     ).not.toBeInTheDocument()
   })
 
-  await waitFor(
-    () => {
-      const productionRadio = screen.getByRole('radio', {
-        name: /production/i,
-      }) as HTMLInputElement
-      const defaultRadio = screen.getByRole('radio', {
-        name: /default/i,
-      }) as HTMLInputElement
+  await waitFor(() => {
+    const productionRadio = screen.getByRole('radio', {
+      name: /production/i,
+    }) as HTMLInputElement
+    const defaultRadio = screen.getByRole('radio', {
+      name: /default/i,
+    }) as HTMLInputElement
 
-      expect(productionRadio).toBeChecked()
-      expect(defaultRadio).not.toBeChecked()
-    },
-    { timeout: 5000 }
-  )
+    expect(productionRadio).toBeChecked()
+    expect(defaultRadio).not.toBeChecked()
+  })
 })
 
 it('clicking Meta-MCP logs in Advanced menu navigates to logs page', async () => {
