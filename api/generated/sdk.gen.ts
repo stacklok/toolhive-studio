@@ -60,6 +60,9 @@ import type {
   GetApiV1BetaWorkloadsByNameLogsData,
   GetApiV1BetaWorkloadsByNameLogsErrors,
   GetApiV1BetaWorkloadsByNameLogsResponses,
+  GetApiV1BetaWorkloadsByNameProxyLogsData,
+  GetApiV1BetaWorkloadsByNameProxyLogsErrors,
+  GetApiV1BetaWorkloadsByNameProxyLogsResponses,
   GetApiV1BetaWorkloadsByNameResponses,
   GetApiV1BetaWorkloadsByNameStatusData,
   GetApiV1BetaWorkloadsByNameStatusErrors,
@@ -886,6 +889,26 @@ export const getApiV1BetaWorkloadsByNameLogs = <
     ThrowOnError
   >({
     url: '/api/v1beta/workloads/{name}/logs',
+    ...options,
+  })
+}
+
+/**
+ * Get proxy logs for a specific workload
+ *
+ * Retrieve proxy logs for a specific workload by name from the file system.
+ */
+export const getApiV1BetaWorkloadsByNameProxyLogs = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<GetApiV1BetaWorkloadsByNameProxyLogsData, ThrowOnError>
+) => {
+  return (options.client ?? client).get<
+    GetApiV1BetaWorkloadsByNameProxyLogsResponses,
+    GetApiV1BetaWorkloadsByNameProxyLogsErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/workloads/{name}/proxy-logs',
     ...options,
   })
 }

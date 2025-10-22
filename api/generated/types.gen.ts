@@ -2659,6 +2659,10 @@ export type GetApiV1BetaWorkloadsByNameLogsData = {
 
 export type GetApiV1BetaWorkloadsByNameLogsErrors = {
   /**
+   * Invalid workload name
+   */
+  400: string
+  /**
    * Not Found
    */
   404: string
@@ -2676,6 +2680,42 @@ export type GetApiV1BetaWorkloadsByNameLogsResponses = {
 
 export type GetApiV1BetaWorkloadsByNameLogsResponse =
   GetApiV1BetaWorkloadsByNameLogsResponses[keyof GetApiV1BetaWorkloadsByNameLogsResponses]
+
+export type GetApiV1BetaWorkloadsByNameProxyLogsData = {
+  body?: never
+  path: {
+    /**
+     * Workload name
+     */
+    name: string
+  }
+  query?: never
+  url: '/api/v1beta/workloads/{name}/proxy-logs'
+}
+
+export type GetApiV1BetaWorkloadsByNameProxyLogsErrors = {
+  /**
+   * Invalid workload name
+   */
+  400: string
+  /**
+   * Proxy logs not found for workload
+   */
+  404: string
+}
+
+export type GetApiV1BetaWorkloadsByNameProxyLogsError =
+  GetApiV1BetaWorkloadsByNameProxyLogsErrors[keyof GetApiV1BetaWorkloadsByNameProxyLogsErrors]
+
+export type GetApiV1BetaWorkloadsByNameProxyLogsResponses = {
+  /**
+   * Proxy logs for the specified workload
+   */
+  200: string
+}
+
+export type GetApiV1BetaWorkloadsByNameProxyLogsResponse =
+  GetApiV1BetaWorkloadsByNameProxyLogsResponses[keyof GetApiV1BetaWorkloadsByNameProxyLogsResponses]
 
 export type PostApiV1BetaWorkloadsByNameRestartData = {
   body?: never
