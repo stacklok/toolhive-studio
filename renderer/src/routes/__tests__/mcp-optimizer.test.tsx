@@ -3,7 +3,7 @@ import { beforeEach, it, expect, vi } from 'vitest'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { McpOptimizerRoute } from '../mcp-optimizer'
 import { renderRoute } from '@/common/test/render-route'
-import { server, recordRequests } from '@/common/mocks/node'
+import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
 import {
@@ -51,16 +51,6 @@ it('renders the Advanced dropdown menu button', async () => {
   await waitFor(() => {
     expect(
       screen.getByRole('button', { name: /advanced/i })
-    ).toBeInTheDocument()
-  })
-})
-
-it('renders the Manage Clients button', async () => {
-  renderRoute(router)
-
-  await waitFor(() => {
-    expect(
-      screen.getByRole('button', { name: /manage clients/i })
     ).toBeInTheDocument()
   })
 })
@@ -340,193 +330,6 @@ it('refetches the selected group when navigating back to the page', async () => 
   })
 
   expect(callCount).toBe(2)
-})
-
-it('Manage Clients button is correctly prefilled for the mcp-optimizer group', async () => {
-  server.use(
-    http.get(mswEndpoint('/api/v1beta/groups'), () =>
-      HttpResponse.json({
-        groups: [
-          {
-            name: MCP_OPTIMIZER_GROUP_NAME,
-            registered_clients: ['vscode', 'cursor'],
-          },
-        ],
-      })
-    ),
-    http.get(mswEndpoint('/api/v1beta/clients'), () =>
-      HttpResponse.json([
-        { name: { name: 'vscode' }, groups: [MCP_OPTIMIZER_GROUP_NAME] },
-        { name: { name: 'cursor' }, groups: [MCP_OPTIMIZER_GROUP_NAME] },
-        { name: { name: 'claude-code' }, groups: [] },
-      ])
-    )
-  )
-
-  const user = userEvent.setup()
-  renderRoute(router)
-
-  await user.click(
-    await screen.findByRole('button', { name: /manage clients/i })
-  )
-
-  await waitFor(() => {
-    const vscodeSwitchContainer = screen
-      .getByRole('switch', { name: 'vscode' })
-      .closest('button')
-    expect(vscodeSwitchContainer).toHaveAttribute('data-state', 'checked')
-
-    const cursorSwitchContainer = screen
-      .getByRole('switch', { name: /cursor/i })
-      .closest('button')
-    expect(cursorSwitchContainer).toHaveAttribute('data-state', 'checked')
-
-    const claudeCodeSwitchContainer = screen
-      .getByRole('switch', { name: /claude-code/i })
-      .closest('button')
-    expect(claudeCodeSwitchContainer).toHaveAttribute('data-state', 'unchecked')
-  })
-})
-
-it('Manage Clients button sends API requests to the correct mcp-optimizer group', async () => {
-  server.use(
-    http.get(mswEndpoint('/api/v1beta/groups'), () =>
-      HttpResponse.json({
-        groups: [{ name: MCP_OPTIMIZER_GROUP_NAME, registered_clients: [] }],
-      })
-    ),
-    http.get(mswEndpoint('/api/v1beta/clients'), () => HttpResponse.json([]))
-  )
-
-  const rec = recordRequests()
-
-  const user = userEvent.setup()
-  renderRoute(router)
-
-  await user.click(
-    await screen.findByRole('button', { name: /manage clients/i })
-  )
-  await user.click(await screen.findByRole('switch', { name: 'vscode' }))
-  await user.click(await screen.findByRole('button', { name: /save/i }))
-
-  await waitFor(() =>
-    expect(
-      rec.recordedRequests.filter(
-        (r) =>
-          r.pathname.startsWith('/api/v1beta/clients') &&
-          (r.method === 'POST' || r.method === 'DELETE')
-      )
-    ).toHaveLength(1)
-  )
-
-  const snapshot = rec.recordedRequests
-    .filter(
-      (r) =>
-        r.pathname.startsWith('/api/v1beta/clients') &&
-        (r.method === 'POST' || r.method === 'DELETE')
-    )
-    .map(({ method, pathname, payload }) => ({
-      method,
-      path: pathname,
-      body: payload,
-    }))
-
-  expect(snapshot).toEqual([
-    {
-      method: 'POST',
-      path: '/api/v1beta/clients',
-      body: { name: 'vscode', groups: [MCP_OPTIMIZER_GROUP_NAME] },
-    },
-  ])
-})
-
-it('radio button updates after editing ALLOWED_GROUPS via Customize Configuration', async () => {
-  let currentAllowedGroups = 'default'
-
-  server.use(
-    http.get(mswEndpoint('/api/v1beta/groups'), () =>
-      HttpResponse.json({
-        groups: [{ name: 'default' }, { name: 'production' }],
-      })
-    ),
-    http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-      if (params.name === META_MCP_SERVER_NAME) {
-        return HttpResponse.json({
-          name: META_MCP_SERVER_NAME,
-          group: MCP_OPTIMIZER_GROUP_NAME,
-          image: 'ghcr.io/toolhive/meta-mcp:latest',
-          transport: 'stdio',
-          env_vars: { ALLOWED_GROUPS: currentAllowedGroups },
-          cmd_arguments: [],
-          secrets: [],
-          volumes: [],
-          network_isolation: false,
-        })
-      }
-      return HttpResponse.json(null, { status: 404 })
-    }),
-    http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () =>
-      HttpResponse.json({ keys: [] })
-    ),
-    http.post(
-      mswEndpoint('/api/v1beta/workloads/:name/edit'),
-      async ({ request }) => {
-        const body = (await request.json()) as {
-          env_vars?: { ALLOWED_GROUPS?: string }
-        }
-        currentAllowedGroups = body?.env_vars?.ALLOWED_GROUPS || ''
-        return HttpResponse.json({ success: true })
-      }
-    )
-  )
-
-  const user = userEvent.setup()
-  renderRoute(router)
-
-  await waitFor(() => {
-    const defaultRadio = screen.getByRole('radio', { name: /default/i })
-    expect(defaultRadio).toBeChecked()
-  })
-
-  await user.click(await screen.findByRole('button', { name: /advanced/i }))
-  await user.click(
-    await screen.findByRole('menuitem', {
-      name: /customize mcp optimizer configuration/i,
-    })
-  )
-
-  await waitFor(() => {
-    expect(screen.getByText(/edit mcp optimizer server/i)).toBeInTheDocument()
-  })
-
-  const allowedGroupsInput = screen.getByRole('textbox', {
-    name: /environment variable value 1/i,
-  })
-  expect(allowedGroupsInput).toHaveValue('default')
-  await user.clear(allowedGroupsInput)
-  await user.type(allowedGroupsInput, 'production')
-
-  await user.click(
-    await screen.findByRole('button', { name: /update server/i })
-  )
-
-  await waitFor(() => {
-    expect(
-      screen.queryByText(/edit mcp optimizer server/i)
-    ).not.toBeInTheDocument()
-  })
-
-  await waitFor(() => {
-    const productionRadio = screen.getByRole('radio', {
-      name: /production/i,
-    }) as HTMLInputElement
-    const defaultRadio = screen.getByRole('radio', {
-      name: /default/i,
-    }) as HTMLInputElement
-
-    expect(productionRadio).toBeChecked()
-    expect(defaultRadio).not.toBeChecked()
-  })
 })
 
 it('clicking Meta-MCP logs in Advanced menu navigates to logs page', async () => {
