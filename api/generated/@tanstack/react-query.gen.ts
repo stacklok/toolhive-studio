@@ -26,6 +26,7 @@ import {
   getApiV1BetaWorkloadsByName,
   getApiV1BetaWorkloadsByNameExport,
   getApiV1BetaWorkloadsByNameLogs,
+  getApiV1BetaWorkloadsByNameProxyLogs,
   getApiV1BetaWorkloadsByNameStatus,
   getHealth,
   type Options,
@@ -80,6 +81,7 @@ import type {
   GetApiV1BetaWorkloadsByNameData,
   GetApiV1BetaWorkloadsByNameExportData,
   GetApiV1BetaWorkloadsByNameLogsData,
+  GetApiV1BetaWorkloadsByNameProxyLogsData,
   GetApiV1BetaWorkloadsByNameStatusData,
   GetApiV1BetaWorkloadsData,
   GetHealthData,
@@ -1165,6 +1167,32 @@ export const getApiV1BetaWorkloadsByNameLogsOptions = (
       return data
     },
     queryKey: getApiV1BetaWorkloadsByNameLogsQueryKey(options),
+  })
+}
+
+export const getApiV1BetaWorkloadsByNameProxyLogsQueryKey = (
+  options: Options<GetApiV1BetaWorkloadsByNameProxyLogsData>
+) => createQueryKey('getApiV1BetaWorkloadsByNameProxyLogs', options)
+
+/**
+ * Get proxy logs for a specific workload
+ *
+ * Retrieve proxy logs for a specific workload by name from the file system.
+ */
+export const getApiV1BetaWorkloadsByNameProxyLogsOptions = (
+  options: Options<GetApiV1BetaWorkloadsByNameProxyLogsData>
+) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1BetaWorkloadsByNameProxyLogs({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: getApiV1BetaWorkloadsByNameProxyLogsQueryKey(options),
   })
 }
 
