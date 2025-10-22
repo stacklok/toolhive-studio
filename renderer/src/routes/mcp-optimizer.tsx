@@ -9,7 +9,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/common/components/ui/dropdown-menu'
-import { Settings, RotateCw, Text, Edit3 } from 'lucide-react'
+import { Settings, Text, Edit3 } from 'lucide-react'
 import { OptimizerWarnings } from '@/features/meta-mcp/components/optimizer-warnings'
 import { GroupSelectorForm } from '@/features/meta-mcp/components/group-selector-form'
 import { useMcpOptimizerGroups } from '@/features/meta-mcp/hooks/use-mcp-optimizer-groups'
@@ -41,10 +41,6 @@ export function McpOptimizerRoute() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" role="menu" className="w-56">
-                  <DropdownMenuItem className="flex cursor-pointer items-center">
-                    <RotateCw className="mr-2 h-4 w-4" />
-                    Restart Meta-MCP
-                  </DropdownMenuItem>
                   <DropdownMenuItem
                     asChild
                     className="flex cursor-pointer items-center"
