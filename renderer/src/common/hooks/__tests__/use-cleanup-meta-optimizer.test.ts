@@ -3,7 +3,10 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React, { type ReactNode } from 'react'
 import { useCleanupMetaOptimizer } from '../use-cleanup-meta-optimizer'
-import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
+import {
+  MCP_OPTIMIZER_GROUP_NAME,
+  META_MCP_SERVER_NAME,
+} from '@/common/lib/constants'
 import { recordRequests, server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 
@@ -104,9 +107,21 @@ describe('useCleanupMetaOptimizer', () => {
               name: MCP_OPTIMIZER_GROUP_NAME,
               registered_clients: ['client1', 'client2'],
             },
+            {
+              name: 'production',
+              registered_clients: [],
+            },
           ],
         })
       ),
+      http.get(`*/api/v1beta/workloads/${META_MCP_SERVER_NAME}`, () =>
+        HttpResponse.json({
+          env_vars: {
+            ALLOWED_GROUPS: 'production',
+          },
+        })
+      ),
+      http.post('*/api/v1beta/clients/register', () => HttpResponse.json([])),
       http.delete('*/api/v1beta/clients/:name/groups/:group', () =>
         HttpResponse.json({})
       ),
@@ -139,6 +154,19 @@ describe('useCleanupMetaOptimizer', () => {
       expect(deleteCalls.length).toBe(2)
     })
 
+    // Verify clients were registered to allowed group first
+    const registerCalls = rec.recordedRequests.filter(
+      (r) =>
+        r.method === 'POST' &&
+        r.pathname.includes('/api/v1beta/clients/register')
+    )
+    expect(registerCalls.length).toBe(1)
+    expect(registerCalls[0]?.payload).toEqual({
+      names: ['client1', 'client2'],
+      groups: ['production'],
+    })
+
+    // Verify clients were unregistered from optimizer group
     const deleteClientCalls = rec.recordedRequests.filter(
       (r) => r.method === 'DELETE' && r.pathname.includes('/api/v1beta/clients')
     )
