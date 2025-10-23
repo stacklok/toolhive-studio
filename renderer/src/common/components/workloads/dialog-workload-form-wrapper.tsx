@@ -42,6 +42,7 @@ export function DialogWorkloadFormWrapper<T extends FieldValues = FieldValues>({
         <DialogContent
           className="flex max-h-[95dvh] flex-col p-0 sm:max-w-2xl"
           onCloseAutoFocus={onCloseAutoFocus}
+          showCloseButton={false}
           onInteractOutside={(e) =>
             // Prevent closing the dialog when clicking outside
             e.preventDefault()
