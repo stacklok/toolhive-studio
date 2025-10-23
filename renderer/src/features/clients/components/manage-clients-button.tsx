@@ -11,6 +11,7 @@ import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { trackEvent } from '@/common/lib/analytics'
 import { useMcpOptimizerClients } from '@/features/meta-mcp/hooks/use-mcp-optimizer-clients'
 import { useIsOptimizedGroupName } from '../hooks/use-is-optimized-group-name'
+import { toast } from 'sonner'
 
 interface ManageClientsButtonProps {
   groupName: string
@@ -42,9 +43,17 @@ export function ManageClientsButton({
 
   const { mutateAsync: saveClients } = useToastMutation({
     mutationFn: reconcileGroupClients,
-    onSuccess: () => {
+    onSuccess: async () => {
       if (isOptimizedGroupName) {
-        saveGroupClients(groupName)
+        try {
+          await saveGroupClients(groupName)
+        } catch (error) {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : 'Failed to save client settings'
+          )
+        }
       }
     },
     loadingMsg: 'Saving client settings...',

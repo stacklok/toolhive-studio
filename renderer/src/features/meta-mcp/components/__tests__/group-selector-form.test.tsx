@@ -11,12 +11,32 @@ import {
   ALLOWED_GROUPS_ENV_VAR,
 } from '@/common/lib/constants'
 import { useUpdateServer } from '@/features/mcp-servers/hooks/use-update-server'
+import { toast } from 'sonner'
+import { useMcpOptimizerClients } from '@/features/meta-mcp/hooks/use-mcp-optimizer-clients'
+import { useCreateOptimizerWorkload } from '@/common/hooks/use-create-optimizer-workload'
 
 vi.mock('@tanstack/react-router', () => ({
   useLocation: () => ({ pathname: '/mcp-optimizer' }),
 }))
 
 vi.mock('@/features/mcp-servers/hooks/use-update-server')
+
+vi.mock('sonner', () => ({
+  toast: {
+    loading: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
+    dismiss: vi.fn(),
+  },
+}))
+
+vi.mock('@/features/meta-mcp/hooks/use-mcp-optimizer-clients', () => ({
+  useMcpOptimizerClients: vi.fn(),
+}))
+
+vi.mock('@/common/hooks/use-create-optimizer-workload', () => ({
+  useCreateOptimizerWorkload: vi.fn(),
+}))
 
 describe('GroupSelectorForm', () => {
   const mockGroups = [
@@ -26,6 +46,8 @@ describe('GroupSelectorForm', () => {
   ]
 
   let queryClient: QueryClient
+  let mockSaveGroupClients: ReturnType<typeof vi.fn>
+  let mockHandleCreateMetaOptimizerWorkload: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
     queryClient = new QueryClient({
@@ -34,6 +56,29 @@ describe('GroupSelectorForm', () => {
           retry: false,
         },
       },
+    })
+
+    // Clear all mocks
+    vi.clearAllMocks()
+
+    // Mock console.warn to suppress Radix UI DialogContent warnings
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    // Setup mock for saveGroupClients
+    mockSaveGroupClients = vi.fn().mockResolvedValue(undefined)
+    vi.mocked(useMcpOptimizerClients).mockReturnValue({
+      saveGroupClients: mockSaveGroupClients,
+      restoreClientsToGroup: vi.fn(),
+    } as ReturnType<typeof useMcpOptimizerClients>)
+
+    // Setup mock for handleCreateMetaOptimizerWorkload
+    mockHandleCreateMetaOptimizerWorkload = vi.fn().mockResolvedValue(undefined)
+    vi.mocked(useCreateOptimizerWorkload).mockReturnValue({
+      isNotEnabled: false,
+      isPending: false,
+      optimizerWorkloadDetail: undefined,
+      isMCPOptimizerEnabled: true,
+      handleCreateMetaOptimizerWorkload: mockHandleCreateMetaOptimizerWorkload,
     })
 
     server.use(
@@ -186,5 +231,574 @@ describe('GroupSelectorForm', () => {
     )
     expect(allowedGroupsVars).toHaveLength(1)
     expect(allowedGroupsVars[0].value).toBe('default')
+  })
+
+  describe('Toast notifications', () => {
+    const mockMetaMcpConfig = {
+      name: META_MCP_SERVER_NAME,
+      transport: 'sse' as const,
+      env_vars: {
+        [ALLOWED_GROUPS_ENV_VAR]: 'old-group',
+      },
+      networkIsolation: false,
+      secrets: [],
+    }
+
+    beforeEach(() => {
+      server.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
+          if (params.name === META_MCP_SERVER_NAME) {
+            return HttpResponse.json(mockMetaMcpConfig)
+          }
+          return HttpResponse.json(null, { status: 404 })
+        })
+      )
+    })
+
+    it('shows loading toast when submitting form', async () => {
+      const user = userEvent.setup()
+      const mockUpdateServerMutation = vi.fn().mockImplementation(() => {
+        // Don't call onSuccess immediately to keep loading state
+        return Promise.resolve()
+      })
+
+      vi.mocked(useUpdateServer).mockReturnValue({
+        updateServerMutation: mockUpdateServerMutation,
+      } as ReturnType<typeof useUpdateServer>)
+
+      renderWithClient(<GroupSelectorForm groups={mockGroups} />)
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('radio', { name: /default/i })
+        ).toBeInTheDocument()
+      })
+
+      const defaultRadio = screen.getByRole('radio', { name: /default/i })
+      await user.click(defaultRadio)
+
+      const submitButton = screen.getByRole('button', {
+        name: /apply changes/i,
+      })
+      await user.click(submitButton)
+
+      await waitFor(() => {
+        expect(toast.loading).toHaveBeenCalledWith(
+          'Setting up Meta Optimizer for default group...'
+        )
+      })
+    })
+
+    it('shows success toast when form submission succeeds', async () => {
+      const user = userEvent.setup()
+      const mockUpdateServerMutation = vi
+        .fn()
+        .mockImplementation((_, options) => {
+          options?.onSuccess?.()
+          return Promise.resolve()
+        })
+
+      vi.mocked(useUpdateServer).mockReturnValue({
+        updateServerMutation: mockUpdateServerMutation,
+      } as ReturnType<typeof useUpdateServer>)
+
+      renderWithClient(<GroupSelectorForm groups={mockGroups} />)
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('radio', { name: /default/i })
+        ).toBeInTheDocument()
+      })
+
+      const defaultRadio = screen.getByRole('radio', { name: /default/i })
+      await user.click(defaultRadio)
+
+      const submitButton = screen.getByRole('button', {
+        name: /apply changes/i,
+      })
+      await user.click(submitButton)
+
+      await waitFor(() => {
+        expect(mockSaveGroupClients).toHaveBeenCalledWith('default')
+        expect(toast.success).toHaveBeenCalledWith(
+          'Meta Optimizer for default is available'
+        )
+      })
+    })
+
+    it('dismisses loading toast when form submission finishes', async () => {
+      const user = userEvent.setup()
+      const toastId = 'test-toast-id'
+      vi.mocked(toast.loading).mockReturnValue(toastId)
+
+      const mockUpdateServerMutation = vi
+        .fn()
+        .mockImplementation((_, options) => {
+          options?.onSettled?.()
+          return Promise.resolve()
+        })
+
+      vi.mocked(useUpdateServer).mockReturnValue({
+        updateServerMutation: mockUpdateServerMutation,
+      } as ReturnType<typeof useUpdateServer>)
+
+      renderWithClient(<GroupSelectorForm groups={mockGroups} />)
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('radio', { name: /default/i })
+        ).toBeInTheDocument()
+      })
+
+      const defaultRadio = screen.getByRole('radio', { name: /default/i })
+      await user.click(defaultRadio)
+
+      const submitButtons = screen.getAllByRole('button', {
+        name: /apply changes/i,
+      })
+      await user.click(submitButtons[0] as unknown as Element)
+
+      await waitFor(() => {
+        expect(toast.dismiss).toHaveBeenCalledWith(toastId)
+      })
+    })
+
+    it('shows error toast when mutation fails', async () => {
+      const user = userEvent.setup()
+      const mockError = new Error('Mutation failed')
+      const mockUpdateServerMutation = vi
+        .fn()
+        .mockImplementation((_, options) => {
+          options?.onError?.(mockError)
+          options?.onSettled?.()
+          return Promise.reject(mockError)
+        })
+
+      vi.mocked(useUpdateServer).mockReturnValue({
+        updateServerMutation: mockUpdateServerMutation,
+      } as ReturnType<typeof useUpdateServer>)
+
+      renderWithClient(<GroupSelectorForm groups={mockGroups} />)
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('radio', { name: /default/i })
+        ).toBeInTheDocument()
+      })
+
+      const defaultRadio = screen.getByRole('radio', { name: /default/i })
+      await user.click(defaultRadio)
+
+      const submitButton = screen.getByRole('button', {
+        name: /apply changes/i,
+      })
+      await user.click(submitButton)
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith('Error updating MCP Optimizer')
+      })
+    })
+  })
+
+  describe('Error handling', () => {
+    const mockMetaMcpConfig = {
+      name: META_MCP_SERVER_NAME,
+      transport: 'sse' as const,
+      env_vars: {
+        [ALLOWED_GROUPS_ENV_VAR]: 'old-group',
+      },
+      networkIsolation: false,
+      secrets: [],
+    }
+
+    beforeEach(() => {
+      server.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
+          if (params.name === META_MCP_SERVER_NAME) {
+            return HttpResponse.json(mockMetaMcpConfig)
+          }
+          return HttpResponse.json(null, { status: 404 })
+        })
+      )
+    })
+
+    it('shows specific error toast when saveGroupClients fails', async () => {
+      const user = userEvent.setup()
+      const mockError = new Error(
+        'Failed to add servers to optimizer group: server1, server2'
+      )
+
+      // Mock saveGroupClients to reject with specific error
+      mockSaveGroupClients.mockRejectedValue(mockError)
+
+      const mockUpdateServerMutation = vi
+        .fn()
+        .mockImplementation(async (_, options) => {
+          // Simulate successful mutation, then try to save clients
+          await options?.onSuccess?.()
+          return Promise.resolve()
+        })
+
+      vi.mocked(useUpdateServer).mockReturnValue({
+        updateServerMutation: mockUpdateServerMutation,
+      } as ReturnType<typeof useUpdateServer>)
+
+      renderWithClient(<GroupSelectorForm groups={mockGroups} />)
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('radio', { name: /default/i })
+        ).toBeInTheDocument()
+      })
+
+      const defaultRadio = screen.getByRole('radio', { name: /default/i })
+      await user.click(defaultRadio)
+
+      const submitButtons = screen.getAllByRole('button', {
+        name: /apply changes/i,
+      })
+      await user.click(submitButtons[0] as unknown as Element)
+
+      await waitFor(() => {
+        expect(mockSaveGroupClients).toHaveBeenCalledWith('default')
+      })
+
+      // The error should be caught and a specific error toast should be shown
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith(
+          'Failed to add servers to optimizer group: server1, server2'
+        )
+      })
+
+      expect(toast.success).not.toHaveBeenCalled()
+    })
+
+    it('shows specific error when failing to remove servers from optimizer group', async () => {
+      const user = userEvent.setup()
+      const mockError = new Error(
+        'Failed to remove servers from optimizer group: server3, server4'
+      )
+
+      mockSaveGroupClients.mockRejectedValue(mockError)
+
+      const mockUpdateServerMutation = vi
+        .fn()
+        .mockImplementation(async (_, options) => {
+          await options?.onSuccess?.()
+          return Promise.resolve()
+        })
+
+      vi.mocked(useUpdateServer).mockReturnValue({
+        updateServerMutation: mockUpdateServerMutation,
+      } as ReturnType<typeof useUpdateServer>)
+
+      renderWithClient(<GroupSelectorForm groups={mockGroups} />)
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('radio', { name: /default/i })
+        ).toBeInTheDocument()
+      })
+
+      const defaultRadio = screen.getByRole('radio', { name: /default/i })
+      await user.click(defaultRadio)
+
+      const submitButtons = screen.getAllByRole('button', {
+        name: /apply changes/i,
+      })
+      await user.click(submitButtons[0] as unknown as Element)
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith(
+          'Failed to remove servers from optimizer group: server3, server4'
+        )
+      })
+
+      expect(toast.success).not.toHaveBeenCalled()
+    })
+
+    it('shows specific error when failing to unregister from target group', async () => {
+      const user = userEvent.setup()
+      const mockError = new Error(
+        'Failed to unregister servers from production: server1, server2'
+      )
+
+      mockSaveGroupClients.mockRejectedValue(mockError)
+
+      const mockUpdateServerMutation = vi
+        .fn()
+        .mockImplementation(async (_, options) => {
+          await options?.onSuccess?.()
+          return Promise.resolve()
+        })
+
+      vi.mocked(useUpdateServer).mockReturnValue({
+        updateServerMutation: mockUpdateServerMutation,
+      } as ReturnType<typeof useUpdateServer>)
+
+      renderWithClient(<GroupSelectorForm groups={mockGroups} />)
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('radio', { name: /production/i })
+        ).toBeInTheDocument()
+      })
+
+      const productionRadio = screen.getByRole('radio', { name: /production/i })
+      await user.click(productionRadio)
+
+      const submitButtons = screen.getAllByRole('button', {
+        name: /apply changes/i,
+      })
+      await user.click(submitButtons[0] as unknown as Element)
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith(
+          'Failed to unregister servers from production: server1, server2'
+        )
+      })
+
+      expect(toast.success).not.toHaveBeenCalled()
+    })
+
+    it('handles mutation error and shows error toast', async () => {
+      const user = userEvent.setup()
+      const mockError = new Error('API error')
+
+      const mockUpdateServerMutation = vi
+        .fn()
+        .mockImplementation((_, options) => {
+          options?.onError?.(mockError)
+          options?.onSettled?.()
+          return Promise.reject(mockError)
+        })
+
+      vi.mocked(useUpdateServer).mockReturnValue({
+        updateServerMutation: mockUpdateServerMutation,
+      } as ReturnType<typeof useUpdateServer>)
+
+      renderWithClient(<GroupSelectorForm groups={mockGroups} />)
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('radio', { name: /default/i })
+        ).toBeInTheDocument()
+      })
+
+      const defaultRadio = screen.getByRole('radio', { name: /default/i })
+      await user.click(defaultRadio)
+
+      const submitButton = screen.getByRole('button', {
+        name: /apply changes/i,
+      })
+      await user.click(submitButton)
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith('Error updating MCP Optimizer')
+        expect(mockSaveGroupClients).not.toHaveBeenCalled()
+      })
+    })
+
+    it('disables submit button when no group is selected', async () => {
+      server.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
+          if (params.name === META_MCP_SERVER_NAME) {
+            // Return config without ALLOWED_GROUPS_ENV_VAR
+            return HttpResponse.json({
+              name: META_MCP_SERVER_NAME,
+              transport: 'sse' as const,
+              env_vars: {},
+              networkIsolation: false,
+              secrets: [],
+            })
+          }
+          return HttpResponse.json(null, { status: 404 })
+        })
+      )
+
+      const mockUpdateServerMutation = vi.fn()
+
+      vi.mocked(useUpdateServer).mockReturnValue({
+        updateServerMutation: mockUpdateServerMutation,
+      } as ReturnType<typeof useUpdateServer>)
+
+      renderWithClient(<GroupSelectorForm groups={mockGroups} />)
+
+      await waitFor(() => {
+        const buttons = screen.getAllByRole('button', {
+          name: /apply changes/i,
+        })
+        expect(buttons.length).toBeGreaterThan(0)
+      })
+
+      const submitButtons = screen.getAllByRole('button', {
+        name: /apply changes/i,
+      })
+      const submitButton = submitButtons[0]
+
+      // Button should be disabled when no group is selected
+      expect(submitButton).toBeDisabled()
+
+      // Mutation should not be called
+      expect(mockUpdateServerMutation).not.toHaveBeenCalled()
+      expect(mockSaveGroupClients).not.toHaveBeenCalled()
+      expect(toast.success).not.toHaveBeenCalled()
+    })
+
+    it('handles metaMcpConfig being null', async () => {
+      const user = userEvent.setup()
+
+      server.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(null, { status: 404 })
+        })
+      )
+
+      const mockUpdateServerMutation = vi.fn()
+
+      vi.mocked(useUpdateServer).mockReturnValue({
+        updateServerMutation: mockUpdateServerMutation,
+      } as ReturnType<typeof useUpdateServer>)
+
+      renderWithClient(<GroupSelectorForm groups={mockGroups} />)
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('radio', { name: /default/i })
+        ).toBeInTheDocument()
+      })
+
+      const defaultRadio = screen.getByRole('radio', { name: /default/i })
+      await user.click(defaultRadio)
+
+      const submitButton = screen.getByRole('button', {
+        name: /apply changes/i,
+      })
+      await user.click(submitButton)
+
+      // Should not proceed with submission if metaMcpConfig is null
+      await waitFor(() => {
+        expect(mockUpdateServerMutation).not.toHaveBeenCalled()
+      })
+    })
+  })
+
+  describe('Creating Meta Optimizer (metaMcpConfig is null)', () => {
+    beforeEach(() => {
+      // Reset the mock to resolved state
+      mockHandleCreateMetaOptimizerWorkload.mockResolvedValue(undefined)
+
+      server.use(
+        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+          return HttpResponse.json(null, { status: 404 })
+        })
+      )
+    })
+
+    it('calls handleCreateMetaOptimizerWorkload when metaMcpConfig is null', async () => {
+      const user = userEvent.setup()
+
+      vi.mocked(useUpdateServer).mockReturnValue({
+        updateServerMutation: vi.fn(),
+      } as ReturnType<typeof useUpdateServer>)
+
+      renderWithClient(<GroupSelectorForm groups={mockGroups} />)
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('radio', { name: /default/i })
+        ).toBeInTheDocument()
+      })
+
+      const defaultRadio = screen.getByRole('radio', { name: /default/i })
+      await user.click(defaultRadio)
+
+      const submitButtons = screen.getAllByRole('button', {
+        name: /apply changes/i,
+      })
+      await user.click(submitButtons[0] as unknown as Element)
+
+      // Should call handleCreateMetaOptimizerWorkload when metaMcpConfig is null
+      await waitFor(() => {
+        expect(mockHandleCreateMetaOptimizerWorkload).toHaveBeenCalledWith(
+          'default'
+        )
+      })
+    })
+
+    it('shows error toast when handleCreateMetaOptimizerWorkload fails', async () => {
+      const user = userEvent.setup()
+      const mockError = new Error('Failed to create Meta Optimizer workload')
+
+      mockHandleCreateMetaOptimizerWorkload.mockRejectedValue(mockError)
+
+      vi.mocked(useUpdateServer).mockReturnValue({
+        updateServerMutation: vi.fn(),
+      } as ReturnType<typeof useUpdateServer>)
+
+      renderWithClient(<GroupSelectorForm groups={mockGroups} />)
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('radio', { name: /production/i })
+        ).toBeInTheDocument()
+      })
+
+      const productionRadio = screen.getByRole('radio', { name: /production/i })
+      await user.click(productionRadio)
+
+      const submitButtons = screen.getAllByRole('button', {
+        name: /apply changes/i,
+      })
+      await user.click(submitButtons[0] as unknown as Element)
+
+      await waitFor(() => {
+        expect(mockHandleCreateMetaOptimizerWorkload).toHaveBeenCalledWith(
+          'production'
+        )
+      })
+
+      // Should show error toast with specific message
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith(
+          'Failed to create Meta Optimizer workload'
+        )
+      })
+
+      expect(toast.success).not.toHaveBeenCalled()
+    })
+
+    it('does not call saveGroupClients when creating new optimizer', async () => {
+      const user = userEvent.setup()
+
+      vi.mocked(useUpdateServer).mockReturnValue({
+        updateServerMutation: vi.fn(),
+      } as ReturnType<typeof useUpdateServer>)
+
+      renderWithClient(<GroupSelectorForm groups={mockGroups} />)
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('radio', { name: /default/i })
+        ).toBeInTheDocument()
+      })
+
+      const defaultRadio = screen.getByRole('radio', { name: /default/i })
+      await user.click(defaultRadio)
+
+      const submitButtons = screen.getAllByRole('button', {
+        name: /apply changes/i,
+      })
+      await user.click(submitButtons[0] as unknown as Element)
+
+      await waitFor(() => {
+        expect(mockHandleCreateMetaOptimizerWorkload).toHaveBeenCalledWith(
+          'default'
+        )
+      })
+
+      // saveGroupClients should NOT be called when creating new optimizer
+      expect(mockSaveGroupClients).not.toHaveBeenCalled()
+    })
   })
 })

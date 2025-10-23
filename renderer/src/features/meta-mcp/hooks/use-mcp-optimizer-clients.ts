@@ -10,7 +10,6 @@ import {
 } from '@api/@tanstack/react-query.gen'
 import { queryClient } from '@/common/lib/query-client'
 import log from 'electron-log/renderer'
-import { toast } from 'sonner'
 import type { GroupsGroup } from '@api/types.gen'
 import {
   MCP_OPTIMIZER_GROUP_NAME,
@@ -36,7 +35,6 @@ export function useMcpOptimizerClients() {
   const { mutateAsync: registerClients } = useToastMutation({
     ...postApiV1BetaClientsRegisterMutation(),
     onError: (error) => {
-      toast.error('Error registering clients to MCP Optimizer group')
       log.error('Error registering clients', error)
     },
     onSuccess: (_, variables) => {
@@ -57,7 +55,6 @@ export function useMcpOptimizerClients() {
   const { mutateAsync: unregisterClients } = useToastMutation({
     ...postApiV1BetaClientsUnregisterMutation(),
     onError: (error) => {
-      toast.error('Error unregistering clients from MCP Optimizer group')
       log.error('Error unregistering clients', error)
     },
     onSuccess: (_, variables) => {
@@ -147,36 +144,61 @@ export function useMcpOptimizerClients() {
         )
 
         if (clientsToAdd.length > 0) {
-          await registerClients({
-            body: {
-              names: clientsToAdd,
-              groups: [MCP_OPTIMIZER_GROUP_NAME],
-            },
-          })
+          try {
+            await registerClients({
+              body: {
+                names: clientsToAdd,
+                groups: [MCP_OPTIMIZER_GROUP_NAME],
+              },
+            })
+          } catch (error) {
+            log.error(`Failed to register clients to optimizer group:`, error)
+            throw new Error(
+              `Failed to add servers to optimizer group: ${clientsToAdd.join(', ')}`
+            )
+          }
         }
 
         if (clientsToRemove.length > 0) {
-          await unregisterClients({
-            body: {
-              names: clientsToRemove,
-              groups: [MCP_OPTIMIZER_GROUP_NAME],
-            },
-          })
+          try {
+            await unregisterClients({
+              body: {
+                names: clientsToRemove,
+                groups: [MCP_OPTIMIZER_GROUP_NAME],
+              },
+            })
+          } catch (error) {
+            log.error(
+              `Failed to unregister clients from optimizer group:`,
+              error
+            )
+            throw new Error(
+              `Failed to remove servers from optimizer group: ${clientsToRemove.join(', ')}`
+            )
+          }
         }
 
         if (targetClients.length > 0) {
-          await unregisterClients({
-            body: {
-              names: targetClients,
-              groups: [groupName],
-            },
-          })
-          log.info(
-            `Removed all clients from ${groupName}: ${targetClients.join(', ')}`
-          )
+          try {
+            await unregisterClients({
+              body: {
+                names: targetClients,
+                groups: [groupName],
+              },
+            })
+            log.info(
+              `Removed all clients from ${groupName}: ${targetClients.join(', ')}`
+            )
+          } catch (error) {
+            log.error(`Failed to unregister clients from ${groupName}:`, error)
+            throw new Error(
+              `Failed to unregister servers from ${groupName}: ${targetClients.join(', ')}`
+            )
+          }
         }
       } catch (error) {
         log.error(`Error syncing clients for group ${groupName}:`, error)
+        throw error
       }
     },
     [

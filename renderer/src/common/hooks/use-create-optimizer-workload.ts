@@ -16,8 +16,10 @@ import { useToastMutation } from './use-toast-mutation'
 import type { V1CreateRequest } from '@api/types.gen'
 import { toast } from 'sonner'
 import log from 'electron-log/renderer'
+import { useMcpOptimizerClients } from '@/features/meta-mcp/hooks/use-mcp-optimizer-clients'
 
 export function useCreateOptimizerWorkload() {
+  const { saveGroupClients } = useMcpOptimizerClients()
   const isExperimentalFeaturesEnabled = useFeatureFlag(
     featureFlagKeys.EXPERIMENTAL_FEATURES
   )
@@ -47,6 +49,24 @@ export function useCreateOptimizerWorkload() {
     isPending: isPendingCreateMetaOptimizerWorkload,
   } = useToastMutation({
     ...postApiV1BetaWorkloadsMutation(),
+    onMutate: async (variables) => {
+      const groupToOptimize =
+        variables.body.env_vars?.[ALLOWED_GROUPS_ENV_VAR] ?? ''
+      if (groupToOptimize) {
+        try {
+          await saveGroupClients(groupToOptimize)
+        } catch (error) {
+          log.error('Failed to save group clients', error)
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : 'Failed to save client settings'
+          )
+
+          return
+        }
+      }
+    },
     onError: (error) => {
       toast.error('Failed to create MCP Optimizer workload')
       log.error('Failed to create MCP Optimizer workload', error)
