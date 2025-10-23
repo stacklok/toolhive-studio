@@ -27,8 +27,8 @@ export function useCreateOptimizerWorkload() {
     ...getApiV1BetaWorkloadsByNameOptions({
       path: { name: META_MCP_SERVER_NAME },
     }),
-    staleTime: 0,
-    gcTime: 0,
+    refetchOnMount: true,
+    staleTime: 5_000,
     enabled: isExperimentalFeaturesEnabled && isMetaOptimizerEnabled,
   })
 
