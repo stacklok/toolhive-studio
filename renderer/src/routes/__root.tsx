@@ -185,6 +185,5 @@ export const Route = createRootRouteWithContext<{
   },
   loader: async ({ context: { queryClient } }) => {
     await setupSecretProvider(queryClient)
-    // Similarly to how the group restart logic works, this will happen in the background and might not be immediately available
   },
 })
