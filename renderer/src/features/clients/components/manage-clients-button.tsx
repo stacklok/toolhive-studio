@@ -9,6 +9,8 @@ import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { useManageClients } from '../hooks/use-manage-clients'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { trackEvent } from '@/common/lib/analytics'
+import { useMcpOptimizerClients } from '@/features/meta-mcp/hooks/use-mcp-optimizer-clients'
+import { useIsOptimizedGroupName } from '../hooks/use-is-optimized-group-name'
 
 interface ManageClientsButtonProps {
   groupName: string
@@ -27,6 +29,8 @@ export function ManageClientsButton({
   variant = 'outline',
   className,
 }: ManageClientsButtonProps) {
+  const isOptimizedGroupName = useIsOptimizedGroupName(groupName)
+  const { saveGroupClients } = useMcpOptimizerClients()
   const promptForm = usePrompt()
 
   const {
@@ -38,6 +42,11 @@ export function ManageClientsButton({
 
   const { mutateAsync: saveClients } = useToastMutation({
     mutationFn: reconcileGroupClients,
+    onSuccess: () => {
+      if (isOptimizedGroupName) {
+        saveGroupClients(groupName)
+      }
+    },
     loadingMsg: 'Saving client settings...',
     successMsg: 'Client settings saved',
     errorMsg: 'Failed to save client settings',

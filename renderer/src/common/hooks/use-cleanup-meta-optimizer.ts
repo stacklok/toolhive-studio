@@ -1,17 +1,22 @@
 import { queryClient } from '../lib/query-client'
 import { useFeatureFlag } from './use-feature-flag'
-import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
+import {
+  MCP_OPTIMIZER_GROUP_NAME,
+  META_MCP_SERVER_NAME,
+} from '@/common/lib/constants'
 import { featureFlagKeys } from '../../../../utils/feature-flags'
 import {
   deleteApiV1BetaGroupsByNameMutation,
   getApiV1BetaDiscoveryClientsQueryKey,
   getApiV1BetaGroupsOptions,
   getApiV1BetaGroupsQueryKey,
+  getApiV1BetaWorkloadsByNameOptions,
 } from '@api/@tanstack/react-query.gen'
 import { useQuery } from '@tanstack/react-query'
 import { deleteApiV1BetaClientsByNameGroupsByGroup } from '@api/index'
 import { useCallback } from 'react'
 import { useToastMutation } from './use-toast-mutation'
+import { useMcpOptimizerClients } from '@/features/meta-mcp/hooks/use-mcp-optimizer-clients'
 import log from 'electron-log/renderer'
 
 function useDeleteGroup() {
@@ -71,10 +76,19 @@ export function useCleanupMetaOptimizer() {
   const isMetaOptimizerEnabled = useFeatureFlag(featureFlagKeys.META_OPTIMIZER)
   const deleteGroup = useDeleteGroup()
   const unregisterClients = useUnregisterClients()
+  const { restoreClientsToGroup } = useMcpOptimizerClients()
   const { data: groupsList } = useQuery({
     ...getApiV1BetaGroupsOptions(),
     staleTime: 0,
     gcTime: 0,
+  })
+  const { data: optimizerWorkloadDetail } = useQuery({
+    ...getApiV1BetaWorkloadsByNameOptions({
+      path: { name: META_MCP_SERVER_NAME },
+    }),
+    staleTime: 0,
+    gcTime: 0,
+    enabled: isExperimentalFeaturesEnabled && isMetaOptimizerEnabled,
   })
 
   const removeClientsFromGroup = async (clients: string[]) => {
@@ -92,7 +106,14 @@ export function useCleanupMetaOptimizer() {
   const cleanupMetaOptimizer = useCallback(async () => {
     if (!isExperimentalFeaturesEnabled || !isMetaOptimizerEnabled) return
     if (!mcpOptimizerGroup) return
+
+    const allowedGroup = optimizerWorkloadDetail?.env_vars?.ALLOWED_GROUPS
+
     if (mcpOptimizerGroup && !!mcpOptimizerGroup.registered_clients?.length) {
+      if (allowedGroup) {
+        await restoreClientsToGroup(allowedGroup)
+      }
+
       await removeClientsFromGroup(mcpOptimizerGroup.registered_clients!)
     }
 
@@ -104,7 +125,9 @@ export function useCleanupMetaOptimizer() {
     isExperimentalFeaturesEnabled,
     isMetaOptimizerEnabled,
     mcpOptimizerGroup,
+    optimizerWorkloadDetail,
     deleteGroup,
+    restoreClientsToGroup,
     removeClientsFromGroup,
   ])
 

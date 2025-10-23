@@ -1,7 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { TitlePage } from '@/common/components/title-page'
 import { McpServersSidebar } from '@/features/mcp-servers/components/mcp-servers-sidebar'
-import { ManageClientsButton } from '@/features/clients/components/manage-clients-button'
 import { Button } from '@/common/components/ui/button'
 import {
   DropdownMenu,
@@ -74,7 +73,6 @@ function McpOptimizerContent() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <ManageClientsButton groupName={MCP_OPTIMIZER_GROUP_NAME} />
             </div>
           </>
         </TitlePage>
