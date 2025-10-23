@@ -12,6 +12,21 @@ import { useCallback } from 'react'
 import { featureFlagKeys } from '../../../../utils/feature-flags'
 import { toast } from 'sonner'
 
+// function useMetaOptimizerStatus() {
+//     const pollingMetaMcpStatus = useCallback(async () => {
+//       return pollServerStatus(
+//         () =>
+//           queryClient.fetchQuery(
+//             getApiV1BetaWorkloadsByNameStatusOptions({
+//               path: { name: META_MCP_SERVER_NAME },
+//             })
+//           ),
+//         'running'
+//       )
+//     }, [])
+
+//     return { pollingMetaMcpStatus }
+//   }
 export function useCreateOptimizerGroup() {
   const isExperimentalFeaturesEnabled = useFeatureFlag(
     featureFlagKeys.EXPERIMENTAL_FEATURES

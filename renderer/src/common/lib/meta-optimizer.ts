@@ -115,38 +115,6 @@ async function createMetaOptimizerGroup() {
   return await createMetaOptimizerWorkload()
 }
 
-async function ensureMetaOptimizerGroup() {
-  try {
-    const rawGroups = await queryClient.fetchQuery({
-      queryKey: getApiV1BetaGroupsQueryKey(),
-      queryFn: async () => {
-        const response = await getApiV1BetaGroups()
-
-        if (response.error) {
-          throw new Error(`Failed to fetch groups: ${response.error}`)
-        }
-
-        return response.data
-      },
-      staleTime: 0,
-      gcTime: 0,
-    })
-
-    const metaOptimizerGrp = rawGroups?.groups?.find(
-      (group) => group.name === MCP_OPTIMIZER_GROUP_NAME
-    )
-
-    if (!metaOptimizerGrp) {
-      return await createMetaOptimizerGroup()
-    }
-
-    return await createMetaOptimizerWorkload()
-  } catch (error) {
-    log.error('[ensureMetaOptimizerGroup] Error checking group:', error)
-    return undefined
-  }
-}
-
 export async function initMetaOptimizer() {
   try {
     const [experimentalFeaturesEnabled, metaOptimizerEnabled] =
