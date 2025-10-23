@@ -290,6 +290,10 @@
           "inbound": {
             "$ref": "#/components/schemas/permissions.InboundNetworkPermissions"
           },
+          "mode": {
+            "description": "Mode specifies the network mode for the container (e.g., \"host\", \"bridge\", \"none\")\nWhen empty, the default container runtime network mode is used",
+            "type": "string"
+          },
           "outbound": {
             "$ref": "#/components/schemas/permissions.OutboundNetworkPermissions"
           }
@@ -928,6 +932,11 @@
       "telemetry.Config": {
         "description": "TelemetryConfig contains the OpenTelemetry configuration",
         "properties": {
+          "customAttributes": {
+            "additionalProperties": { "type": "string" },
+            "description": "CustomAttributes contains custom resource attributes to be added to all telemetry signals.\nThese are parsed from CLI flags (--otel-custom-attributes) or environment variables\n(OTEL_RESOURCE_ATTRIBUTES) as key=value pairs.\nWe use map[string]string for proper JSON serialization instead of []attribute.KeyValue\nwhich doesn't marshal/unmarshal correctly.",
+            "type": "object"
+          },
           "enablePrometheusMetricsPath": {
             "description": "EnablePrometheusMetricsPath controls whether to expose Prometheus-style /metrics endpoint\nThe metrics are served on the main transport port at /metrics\nThis is separate from OTLP metrics which are sent to the Endpoint",
             "type": "boolean"
