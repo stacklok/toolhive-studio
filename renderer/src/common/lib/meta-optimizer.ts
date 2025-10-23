@@ -48,29 +48,72 @@ async function createMetaOptimizerWorkload() {
       return workloadDetail
     }
 
-    const { server } = await queryClient.fetchQuery(
-      getApiV1BetaRegistryByNameServersByServerNameOptions({
-        path: {
-          name: 'default',
-          serverName: 'meta-mcp',
-        },
-      })
-    )
+    // Try to fetch mcp-optimizer first, fall back to meta-mcp if not found
+    let server
+    try {
+      const response = await queryClient.fetchQuery(
+        getApiV1BetaRegistryByNameServersByServerNameOptions({
+          path: {
+            name: 'default',
+            serverName: 'mcp-optimizer',
+          },
+        })
+      )
+      server = response.server
+    } catch (error) {
+      log.info(
+        '[createMetaOptimizerWorkload] mcp-optimizer not found in registry, falling back to meta-mcp'
+      )
+      // Fallback to meta-mcp registry entry
+      const response = await queryClient.fetchQuery(
+        getApiV1BetaRegistryByNameServersByServerNameOptions({
+          path: {
+            name: 'default',
+            serverName: 'meta-mcp',
+          },
+        })
+      )
+      server = response.server
+    }
+
     if (!server) {
       log.info('[createMetaOptimizerWorkload] Server not found in the registry')
       return
     }
 
+    // Get the thv serve port from the main process
+    const toolhivePort = await window.electronAPI.getToolhivePort()
+    if (!toolhivePort) {
+      log.error(
+        '[createMetaOptimizerWorkload] ToolHive port not available, cannot create workload'
+      )
+      return
+    }
+
     const body: V1CreateRequest = {
       name: META_MCP_SERVER_NAME,
-      image: server.image,
+      // Use the latest mcp-optimizer image (fixed for x86_64)
+      image: 'ghcr.io/stackloklabs/mcp-optimizer:latest',
       transport: server.transport,
-      env_vars: { [ALLOWED_GROUPS_ENV_VAR]: 'default' },
+      // Use fixed port for host networking mode (avoids thv port management bugs)
+      target_port: 50051,
+      env_vars: {
+        [ALLOWED_GROUPS_ENV_VAR]: 'default',
+        // With host networking mode, localhost refers to the host machine
+        TOOLHIVE_HOST: '127.0.0.1',
+        // Pass explicit port to avoid port scanning issues with host networking
+        TOOLHIVE_PORT: String(toolhivePort),
+      },
       secrets: [],
       cmd_arguments: [],
       network_isolation: false,
       volumes: [],
       group: MCP_OPTIMIZER_GROUP_NAME,
+      permission_profile: {
+        network: {
+          mode: 'host',
+        },
+      },
     }
 
     const response = await postApiV1BetaWorkloads({

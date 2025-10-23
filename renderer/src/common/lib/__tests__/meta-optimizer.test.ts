@@ -23,6 +23,7 @@ const mockElectronAPI = {
   featureFlags: {
     get: vi.fn(),
   },
+  getToolhivePort: vi.fn(),
 }
 
 Object.defineProperty(window, 'electronAPI', {
@@ -55,6 +56,7 @@ describe('Meta Optimizer', () => {
 
     it('initialize and create group when it does not exist', async () => {
       mockElectronAPI.featureFlags.get.mockResolvedValue(true)
+      mockElectronAPI.getToolhivePort.mockResolvedValue(50055)
 
       const postGroupsSpy = vi.spyOn(apiSdk, 'postApiV1BetaGroups')
 
@@ -79,6 +81,7 @@ describe('Meta Optimizer', () => {
 
     it('initialize and create group and workload when they do not exist', async () => {
       mockElectronAPI.featureFlags.get.mockResolvedValue(true)
+      mockElectronAPI.getToolhivePort.mockResolvedValue(50055)
 
       const postWorkloadsSpy = vi.spyOn(apiSdk, 'postApiV1BetaWorkloads')
 
@@ -91,16 +94,24 @@ describe('Meta Optimizer', () => {
         http.get(mswEndpoint('/api/v1beta/workloads/:name'), () =>
           HttpResponse.json({ error: 'Workload not found' }, { status: 404 })
         ),
-        // Mock server from registry
+        // Mock server from registry - mcp-optimizer not found, falls back to meta-mcp
         http.get(
           mswEndpoint('/api/v1beta/registry/:name/servers/:serverName'),
-          () =>
-            HttpResponse.json({
+          ({ params }) => {
+            if (params.serverName === 'mcp-optimizer') {
+              return HttpResponse.json(
+                { error: 'Server not found' },
+                { status: 404 }
+              )
+            }
+            // Fallback to meta-mcp
+            return HttpResponse.json({
               server: {
                 image: 'ghcr.io/stackloklabs/meta-mcp:latest',
                 transport: 'streamable-http',
               },
             })
+          }
         )
       )
 
@@ -110,9 +121,19 @@ describe('Meta Optimizer', () => {
         body: expect.objectContaining({
           name: META_MCP_SERVER_NAME,
           group: MCP_OPTIMIZER_GROUP_NAME,
+          // Image should come from registry (meta-mcp)
           image: 'ghcr.io/stackloklabs/meta-mcp:latest',
           transport: 'streamable-http',
-          env_vars: { [ALLOWED_GROUPS_ENV_VAR]: 'default' },
+          env_vars: {
+            [ALLOWED_GROUPS_ENV_VAR]: 'default',
+            TOOLHIVE_HOST: '127.0.0.1',
+            TOOLHIVE_PORT: '50055',
+          },
+          permission_profile: {
+            network: {
+              mode: 'host',
+            },
+          },
         }),
       })
     })
@@ -194,6 +215,7 @@ describe('Meta Optimizer', () => {
 
     it('handle workload creation failure', async () => {
       mockElectronAPI.featureFlags.get.mockResolvedValue(true)
+      mockElectronAPI.getToolhivePort.mockResolvedValue(50055)
 
       server.use(
         // Mock groups check - group doesn't exist
@@ -205,13 +227,21 @@ describe('Meta Optimizer', () => {
         ),
         http.get(
           mswEndpoint('/api/v1beta/registry/:name/servers/:serverName'),
-          () =>
-            HttpResponse.json({
+          ({ params }) => {
+            if (params.serverName === 'mcp-optimizer') {
+              return HttpResponse.json(
+                { error: 'Server not found' },
+                { status: 404 }
+              )
+            }
+            // Fallback to meta-mcp
+            return HttpResponse.json({
               server: {
                 image: 'ghcr.io/stackloklabs/meta-mcp:latest',
                 transport: 'streamable-http',
               },
             })
+          }
         ),
         http.post(mswEndpoint('/api/v1beta/workloads'), () =>
           HttpResponse.json(
@@ -231,6 +261,7 @@ describe('Meta Optimizer', () => {
 
     it('handle missing server from registry', async () => {
       mockElectronAPI.featureFlags.get.mockResolvedValue(true)
+      mockElectronAPI.getToolhivePort.mockResolvedValue(50055)
 
       server.use(
         // Mock groups check - group doesn't exist
@@ -240,9 +271,19 @@ describe('Meta Optimizer', () => {
         http.get(mswEndpoint('/api/v1beta/workloads/:name'), () =>
           HttpResponse.json({ error: 'Workload not found' }, { status: 404 })
         ),
+        // Both mcp-optimizer and meta-mcp return null (not found)
         http.get(
           mswEndpoint('/api/v1beta/registry/:name/servers/:serverName'),
-          () => HttpResponse.json({ server: null })
+          ({ params }) => {
+            if (params.serverName === 'mcp-optimizer') {
+              return HttpResponse.json(
+                { error: 'Server not found' },
+                { status: 404 }
+              )
+            }
+            // meta-mcp also returns null
+            return HttpResponse.json({ server: null })
+          }
         )
       )
 

@@ -234,11 +234,6 @@ export type PermissionsInboundNetworkPermissions = {
  */
 export type PermissionsNetworkPermissions = {
   inbound?: PermissionsInboundNetworkPermissions
-  /**
-   * Mode specifies the network mode for the container (e.g., "host", "bridge", "none")
-   * When empty, the default container runtime network mode is used
-   */
-  mode?: string
   outbound?: PermissionsOutboundNetworkPermissions
 }
 
