@@ -23,6 +23,7 @@ import log from 'electron-log/renderer'
 import * as Sentry from '@sentry/electron/renderer'
 import { StartingToolHive } from '@/common/components/starting-toolhive'
 import { initMetaOptimizer } from '@/common/lib/meta-optimizer'
+import { queryClient } from '@/common/lib/query-client'
 
 async function setupSecretProvider(queryClient: QueryClient) {
   const createEncryptedProvider = async () =>
@@ -97,7 +98,7 @@ export const Route = createRootRouteWithContext<{
   onError: (error) => {
     log.error(error)
   },
-  beforeLoad: async ({ context: { queryClient } }) => {
+  beforeLoad: async () => {
     let isUpdateInProgress = false
 
     try {

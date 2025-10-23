@@ -37,7 +37,10 @@ function useMetaOptimizerStatus() {
             path: { name: META_MCP_SERVER_NAME },
           })
         ),
-      'running'
+      'running',
+      {
+        maxAttempts: 40,
+      }
     )
   }, [])
 
