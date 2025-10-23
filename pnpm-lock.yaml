@@ -25,7 +25,7 @@ importers:
         version: 2.0.76(react@19.2.0)(zod@4.1.12)
       '@ai-sdk/xai':
         specifier: ^2.0.23
-        version: 2.0.26(zod@4.1.12)
+        version: 2.0.27(zod@4.1.12)
       '@fontsource-variable/inter':
         specifier: ^5.2.6
         version: 5.2.8
@@ -404,8 +404,8 @@ packages:
       zod:
         optional: true
 
-  '@ai-sdk/xai@2.0.26':
-    resolution: {integrity: sha512-+VtaLZSxmoKnNeJGM9bbtbZ3QMkPFlBB4N8prngbrSnvU/hG8cNdvvSBW/rIk6/DHrc2R8nFntNIBQoIRuBdQw==}
+  '@ai-sdk/xai@2.0.27':
+    resolution: {integrity: sha512-MxH3g4zT+3CrktkGaiaIbYJ1Id8V9TOY/VN2KASqiy77DsK1aO3kQt1E1xB+v5pa+Y0H0z4wk7VbCczGpQ6BMg==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -7703,7 +7703,7 @@ snapshots:
     optionalDependencies:
       zod: 4.1.12
 
-  '@ai-sdk/xai@2.0.26(zod@4.1.12)':
+  '@ai-sdk/xai@2.0.27(zod@4.1.12)':
     dependencies:
       '@ai-sdk/openai-compatible': 1.0.22(zod@4.1.12)
       '@ai-sdk/provider': 2.0.0
