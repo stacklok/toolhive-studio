@@ -1,11 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
 import { toast } from 'sonner'
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import { featureFlagKeys } from '../../../../utils/feature-flags'
 import { useFeatureFlag } from './use-feature-flag'
 import { useCleanupMetaOptimizer } from './use-cleanup-meta-optimizer'
 import { useCreateOptimizerGroup } from './use-create-optimizer-group'
+import { Button } from '../components/ui/button'
+import { Link } from '@tanstack/react-router'
+import { MCP_OPTIMIZER_GROUP_NAME } from '../lib/constants'
 
 interface FeatureFlag {
   key: string
@@ -30,6 +33,7 @@ function formatFeatureFlagDescription(key: string): string {
 }
 
 export function useExperimentalFeatures() {
+  const toastIdRef = useRef(new Date(Date.now()).toISOString())
   const { handleCreateOptimizerGroup } = useCreateOptimizerGroup()
   const isExperimentalFeaturesEnabled = useFeatureFlag(
     featureFlagKeys.EXPERIMENTAL_FEATURES
@@ -71,7 +75,39 @@ export function useExperimentalFeatures() {
         } else {
           await handleCreateOptimizerGroup()
           await enableFlag(flagKey)
-          toast.success(`${formatFeatureFlagName(flagKey)} is now enabled`)
+
+          {
+            toast.success(`MCP Optimizer enabled`, {
+              id: toastIdRef.current,
+              description: 'Go to MCP Optimizer page to apply it',
+              duration: Infinity,
+              closeButton: true,
+              classNames: {
+                toast:
+                  'group-[.toaster]:items-start group-[.toaster]:justify-start',
+                icon: 'group-[.toast]:mt-0',
+                content:
+                  'group-[.toast]:flex group-[.toast]:flex-col group-[.toast]:items-start group-[.toast]:w-full',
+                title: 'group-[.toast]:mb-0.5',
+                description: 'group-[.toast]:mb-0 group-[.toast]:mt-0.5',
+                closeButton:
+                  'group-[.toast]:absolute group-[.toast]:right-2 group-[.toast]:top-2',
+                actionButton: 'group-[.toast]:mt-3 group-[.toast]:w-auto',
+              },
+              action: (
+                <Button asChild size="xs" className="ml-auto text-xs">
+                  <Link
+                    to="/mcp-optimizer"
+                    params={{ groupName: MCP_OPTIMIZER_GROUP_NAME }}
+                    onClick={() => toast.dismiss(toastIdRef.current)}
+                    viewTransition={{ types: ['slide-left'] }}
+                  >
+                    MCP Optimizer page
+                  </Link>
+                </Button>
+              ),
+            })
+          }
         }
       } catch (error) {
         log.error(`Failed to toggle feature flag ${flagKey}:`, error)
