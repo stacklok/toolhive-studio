@@ -10,6 +10,8 @@ import { useManageClients } from '../hooks/use-manage-clients'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { trackEvent } from '@/common/lib/analytics'
 import { useMcpOptimizerClients } from '@/features/meta-mcp/hooks/use-mcp-optimizer-clients'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { featureFlagKeys } from '../../../../../utils/feature-flags'
 
 interface ManageClientsButtonProps {
   groupName: string
@@ -28,6 +30,7 @@ export function ManageClientsButton({
   variant = 'outline',
   className,
 }: ManageClientsButtonProps) {
+  const isMetaOptimizerEnabled = useFeatureFlag(featureFlagKeys.META_OPTIMIZER)
   const { saveGroupClients } = useMcpOptimizerClients()
   const promptForm = usePrompt()
 
@@ -41,7 +44,9 @@ export function ManageClientsButton({
   const { mutateAsync: saveClients } = useToastMutation({
     mutationFn: reconcileGroupClients,
     onSuccess: () => {
-      saveGroupClients(groupName)
+      if (isMetaOptimizerEnabled) {
+        saveGroupClients(groupName)
+      }
     },
     loadingMsg: 'Saving client settings...',
     successMsg: 'Client settings saved',

@@ -9,10 +9,19 @@ import { http, HttpResponse } from 'msw'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
 
+vi.mock('@/common/hooks/use-feature-flag')
+vi.mock('@/features/meta-mcp/hooks/use-mcp-optimizer-clients')
+
+const { useFeatureFlag } = await import('@/common/hooks/use-feature-flag')
+const { useMcpOptimizerClients } = await import(
+  '@/features/meta-mcp/hooks/use-mcp-optimizer-clients'
+)
+
 // Use the shared request recorder from mocks/node.ts for consistency
 
 describe('ManageClientsButton – BDD flows', () => {
   let queryClient: QueryClient
+  const saveGroupClientsMock = vi.fn()
 
   beforeEach(() => {
     queryClient = new QueryClient({
@@ -20,6 +29,10 @@ describe('ManageClientsButton – BDD flows', () => {
         queries: { retry: false },
         mutations: { retry: false },
       },
+    })
+    vi.mocked(useFeatureFlag).mockReturnValue(true)
+    vi.mocked(useMcpOptimizerClients).mockReturnValue({
+      saveGroupClients: saveGroupClientsMock,
     })
     vi.clearAllMocks()
   })
@@ -351,5 +364,46 @@ describe('ManageClientsButton – BDD flows', () => {
       )
     ).toEqual([])
     // no-op
+  })
+
+  it("doesn't sync client when meta optimizer is disabled", async () => {
+    vi.mocked(useFeatureFlag).mockReturnValue(false)
+
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [],
+        })
+      ),
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [
+            { name: 'default', registered_clients: ['vscode', 'cursor'] },
+            { name: '__mcp-optimizer__', registered_clients: [] },
+          ],
+        })
+      ),
+      http.get(mswEndpoint('/api/v1beta/clients'), () =>
+        HttpResponse.json([
+          { name: { name: 'vscode' }, groups: ['default'] },
+          { name: { name: 'cursor' }, groups: ['default'] },
+          { name: { name: 'claude-code' }, groups: [] },
+        ])
+      ),
+      http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
+        HttpResponse.json([])
+      )
+    )
+
+    renderWithProviders({ groupName: 'default' })
+    const user = userEvent.setup()
+    await user.click(
+      await screen.findByRole('button', { name: /manage clients/i })
+    )
+    await user.click(await screen.findByRole('switch', { name: 'vscode' }))
+    await user.click(await screen.findByRole('switch', { name: 'claude-code' }))
+    await user.click(await screen.findByRole('button', { name: /save/i }))
+
+    expect(saveGroupClientsMock).not.toHaveBeenCalled()
   })
 })
