@@ -56,7 +56,10 @@ export function createTransport(workload: CoreWorkload): MCPClientConfig {
       }),
     }),
     'streamable-http': () => {
-      const url = new URL(`http://localhost:${workload.port}/mcp`)
+      // Use fixed port for mcp-optimizer (host networking mode)
+      const port =
+        workload.name === 'internal---meta-mcp' ? 50051 : workload.port
+      const url = new URL(`http://localhost:${port}/mcp`)
       return {
         name: workload.name,
         transport: new StreamableHTTPClientTransport(url),
