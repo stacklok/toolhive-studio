@@ -97,27 +97,36 @@ export function useMcpOptimizerClients() {
           return
         }
 
-        await Promise.all([
-          clientsToAdd.length > 0 &&
+        const promises = []
+
+        if (clientsToAdd.length > 0) {
+          promises.push(
             registerClients({
               body: {
                 names: clientsToAdd,
                 groups: [MCP_OPTIMIZER_GROUP_NAME],
               },
-            }),
-          clientsToRemove.length > 0 &&
+            })
+          )
+        }
+
+        if (clientsToRemove.length > 0) {
+          promises.push(
             unregisterClients({
               body: {
                 names: clientsToRemove,
                 groups: [MCP_OPTIMIZER_GROUP_NAME],
               },
-            }),
-        ])
+            })
+          )
+        }
+
+        await Promise.all(promises)
       } catch (error) {
         log.error(`Error syncing clients for group ${groupName}:`, error)
       }
     },
-    [registerClients, unregisterClients]
+    [registerClients, unregisterClients, isMetaOptimizerEnabled]
   )
 
   return { saveGroupClients }
