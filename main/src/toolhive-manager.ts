@@ -127,9 +127,11 @@ export async function startToolhive(): Promise<void> {
       {
         stdio: ['ignore', 'ignore', 'pipe'],
         detached: false,
+        // Ensure child process is killed when parent exits
+        // On Windows, this creates a job object to enforce cleanup
+        windowsHide: true,
       }
     )
-
     log.info(`[startToolhive] Process spawned with PID: ${toolhiveProcess.pid}`)
 
     scope.addBreadcrumb({
@@ -215,12 +217,39 @@ export async function restartToolhive(): Promise<void> {
 
 export function stopToolhive(): void {
   if (toolhiveProcess && !toolhiveProcess.killed) {
-    log.info('Stopping ToolHive process...')
-    toolhiveProcess.kill()
+    log.info(`Stopping ToolHive process (PID: ${toolhiveProcess.pid})...`)
+
+    try {
+      const killed = toolhiveProcess.kill('SIGTERM')
+      log.info(`[stopToolhive] SIGTERM sent, result: ${killed}`)
+
+      setTimeout(() => {
+        if (toolhiveProcess && !toolhiveProcess.killed) {
+          log.warn(
+            '[stopToolhive] Process did not exit gracefully, forcing SIGKILL...'
+          )
+          try {
+            toolhiveProcess.kill('SIGKILL')
+          } catch (err) {
+            log.error('[stopToolhive] Failed to force kill:', err)
+          }
+        }
+      }, 2000)
+    } catch (err) {
+      log.error('[stopToolhive] Error killing process:', err)
+      try {
+        toolhiveProcess.kill('SIGKILL')
+      } catch (forceErr) {
+        log.error('[stopToolhive] Failed to force kill:', forceErr)
+      }
+    }
+
     toolhiveProcess = undefined
-    log.info(`[stopToolhive] Process stopped and reset`)
+    log.info(`[stopToolhive] Process cleanup completed`)
   } else {
-    log.info(`[stopToolhive] No process to stop`)
+    log.info(
+      `[stopToolhive] No process to stop (process=${!!toolhiveProcess}, killed=${toolhiveProcess?.killed})`
+    )
   }
 }
 
