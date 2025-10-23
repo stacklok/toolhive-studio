@@ -33,7 +33,8 @@ describe('ManageClientsButton – BDD flows', () => {
     vi.mocked(useFeatureFlag).mockReturnValue(true)
     vi.mocked(useMcpOptimizerClients).mockReturnValue({
       saveGroupClients: saveGroupClientsMock,
-    })
+      restoreClientsToGroup: vi.fn(),
+    } as unknown as ReturnType<typeof useMcpOptimizerClients>)
     vi.clearAllMocks()
   })
 
