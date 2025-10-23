@@ -234,6 +234,11 @@ export type PermissionsInboundNetworkPermissions = {
  */
 export type PermissionsNetworkPermissions = {
   inbound?: PermissionsInboundNetworkPermissions
+  /**
+   * Mode specifies the network mode for the container (e.g., "host", "bridge", "none")
+   * When empty, the default container runtime network mode is used
+   */
+  mode?: string
   outbound?: PermissionsOutboundNetworkPermissions
 }
 
@@ -814,6 +819,16 @@ export type SecretsSecretParameter = {
  * TelemetryConfig contains the OpenTelemetry configuration
  */
 export type TelemetryConfig = {
+  /**
+   * CustomAttributes contains custom resource attributes to be added to all telemetry signals.
+   * These are parsed from CLI flags (--otel-custom-attributes) or environment variables
+   * (OTEL_RESOURCE_ATTRIBUTES) as key=value pairs.
+   * We use map[string]string for proper JSON serialization instead of []attribute.KeyValue
+   * which doesn't marshal/unmarshal correctly.
+   */
+  customAttributes?: {
+    [key: string]: string
+  }
   /**
    * EnablePrometheusMetricsPath controls whether to expose Prometheus-style /metrics endpoint
    * The metrics are served on the main transport port at /metrics
