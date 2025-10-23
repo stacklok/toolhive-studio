@@ -29,6 +29,7 @@ let toolhiveProcess: ReturnType<typeof spawn> | undefined
 let toolhivePort: number | undefined
 let toolhiveMcpPort: number | undefined
 let isRestarting = false
+let killTimer: NodeJS.Timeout | undefined
 
 export function getToolhivePort(): number | undefined {
   return toolhivePort
@@ -215,42 +216,80 @@ export async function restartToolhive(): Promise<void> {
   }
 }
 
-export function stopToolhive(): void {
-  if (toolhiveProcess && !toolhiveProcess.killed) {
-    log.info(`Stopping ToolHive process (PID: ${toolhiveProcess.pid})...`)
+/** Attempt to kill a process, returning true on success */
+function tryKillProcess(
+  process: ReturnType<typeof spawn>,
+  signal: NodeJS.Signals,
+  logPrefix: string
+): boolean {
+  try {
+    const result = process.kill(signal)
+    log.info(`${logPrefix} ${signal} sent, result: ${result}`)
+    return result
+  } catch (err) {
+    log.error(`${logPrefix} Failed to send ${signal}:`, err)
+    return false
+  }
+}
 
-    try {
-      const killed = toolhiveProcess.kill('SIGTERM')
-      log.info(`[stopToolhive] SIGTERM sent, result: ${killed}`)
+/** Schedule delayed SIGKILL if process doesn't exit gracefully */
+function scheduleForceKill(
+  process: ReturnType<typeof spawn>,
+  pid: number
+): void {
+  killTimer = setTimeout(() => {
+    killTimer = undefined
 
-      setTimeout(() => {
-        if (toolhiveProcess && !toolhiveProcess.killed) {
-          log.warn(
-            '[stopToolhive] Process did not exit gracefully, forcing SIGKILL...'
-          )
-          try {
-            toolhiveProcess.kill('SIGKILL')
-          } catch (err) {
-            log.error('[stopToolhive] Failed to force kill:', err)
-          }
-        }
-      }, 2000)
-    } catch (err) {
-      log.error('[stopToolhive] Error killing process:', err)
-      try {
-        toolhiveProcess.kill('SIGKILL')
-      } catch (forceErr) {
-        log.error('[stopToolhive] Failed to force kill:', forceErr)
-      }
+    if (!process.killed) {
+      log.warn(
+        `[stopToolhive] Process ${pid} did not exit gracefully, forcing SIGKILL...`
+      )
+      tryKillProcess(process, 'SIGKILL', '[stopToolhive]')
     }
+  }, 2000)
+}
 
-    toolhiveProcess = undefined
-    log.info(`[stopToolhive] Process cleanup completed`)
-  } else {
+export function stopToolhive(options?: { force?: boolean }): void {
+  const force = options?.force ?? false
+
+  // Clear any pending kill timer
+  if (killTimer) {
+    clearTimeout(killTimer)
+    killTimer = undefined
+  }
+
+  // Early return if no process to stop
+  if (!toolhiveProcess || toolhiveProcess.killed) {
     log.info(
       `[stopToolhive] No process to stop (process=${!!toolhiveProcess}, killed=${toolhiveProcess?.killed})`
     )
+    return
   }
+
+  const pidToKill = toolhiveProcess.pid
+  log.info(`Stopping ToolHive process (PID: ${pidToKill})...`)
+
+  // Capture process reference before clearing global
+  const processToKill = toolhiveProcess
+  toolhiveProcess = undefined
+
+  // Attempt to kill the process
+  const signal: NodeJS.Signals = force ? 'SIGKILL' : 'SIGTERM'
+  const killed = tryKillProcess(processToKill, signal, '[stopToolhive]')
+
+  // If graceful shutdown failed, try force kill immediately
+  if (!killed) {
+    tryKillProcess(processToKill, 'SIGKILL', '[stopToolhive]')
+    log.info(`[stopToolhive] Process cleanup completed`)
+    return
+  }
+
+  // For graceful shutdown, schedule delayed force kill
+  if (!force && pidToKill !== undefined) {
+    scheduleForceKill(processToKill, pidToKill)
+  }
+
+  log.info(`[stopToolhive] Process cleanup completed`)
 }
 
 export { binPath }
