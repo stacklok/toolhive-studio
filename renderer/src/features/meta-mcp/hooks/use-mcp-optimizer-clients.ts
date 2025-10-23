@@ -6,14 +6,33 @@ import {
   getApiV1BetaGroupsOptions,
   postApiV1BetaClientsRegisterMutation,
   postApiV1BetaClientsUnregisterMutation,
+  getApiV1BetaWorkloadsByNameOptions,
 } from '@api/@tanstack/react-query.gen'
 import { queryClient } from '@/common/lib/query-client'
 import log from 'electron-log/renderer'
 import { toast } from 'sonner'
 import type { GroupsGroup } from '@api/types.gen'
-import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
+import {
+  MCP_OPTIMIZER_GROUP_NAME,
+  META_MCP_SERVER_NAME,
+} from '@/common/lib/constants'
+import { useQuery } from '@tanstack/react-query'
+import { featureFlagKeys } from '../../../../../utils/feature-flags'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 
 export function useMcpOptimizerClients() {
+  const isExperimentalFeaturesEnabled = useFeatureFlag(
+    featureFlagKeys.EXPERIMENTAL_FEATURES
+  )
+  const isMetaOptimizerEnabled = useFeatureFlag(featureFlagKeys.META_OPTIMIZER)
+  const { data: optimizerWorkloadDetail } = useQuery({
+    ...getApiV1BetaWorkloadsByNameOptions({
+      path: { name: META_MCP_SERVER_NAME },
+    }),
+    staleTime: 0,
+    gcTime: 0,
+    enabled: isExperimentalFeaturesEnabled && isMetaOptimizerEnabled,
+  })
   const { mutateAsync: registerClients } = useToastMutation({
     ...postApiV1BetaClientsRegisterMutation(),
     onError: (error) => {
@@ -56,9 +75,51 @@ export function useMcpOptimizerClients() {
     },
   })
 
+  const restoreClientsToGroup = useCallback(
+    async (targetGroupName: string) => {
+      try {
+        const groupsData = await queryClient.fetchQuery(
+          getApiV1BetaGroupsOptions()
+        )
+
+        const optimizerGroup = groupsData?.groups?.find(
+          (g: GroupsGroup) => g.name === MCP_OPTIMIZER_GROUP_NAME
+        )
+
+        if (!optimizerGroup || !optimizerGroup.registered_clients?.length) {
+          log.info('No clients to restore from MCP Optimizer group')
+          return
+        }
+
+        const clientsToRestore = optimizerGroup.registered_clients
+
+        await registerClients({
+          body: {
+            names: clientsToRestore,
+            groups: [targetGroupName],
+          },
+        })
+
+        log.info(
+          `Restored clients ${clientsToRestore.join(', ')} to ${targetGroupName} group`
+        )
+      } catch (error) {
+        log.error(`Error restoring clients to group ${targetGroupName}:`, error)
+      }
+    },
+    [registerClients]
+  )
+
   const saveGroupClients = useCallback(
     async (groupName: string) => {
       try {
+        const currentAllowedGroup =
+          optimizerWorkloadDetail?.env_vars?.ALLOWED_GROUPS
+
+        if (currentAllowedGroup && currentAllowedGroup !== groupName) {
+          await restoreClientsToGroup(currentAllowedGroup)
+        }
+
         const groupsData = await queryClient.fetchQuery(
           getApiV1BetaGroupsOptions()
         )
@@ -85,11 +146,6 @@ export function useMcpOptimizerClients() {
           (client) => !targetClients.includes(client)
         )
 
-        if (!clientsToAdd.length && !clientsToRemove.length) {
-          log.info(`No changes needed for ${MCP_OPTIMIZER_GROUP_NAME}`)
-          return
-        }
-
         if (clientsToAdd.length > 0) {
           await registerClients({
             body: {
@@ -107,12 +163,29 @@ export function useMcpOptimizerClients() {
             },
           })
         }
+
+        if (targetClients.length > 0) {
+          await unregisterClients({
+            body: {
+              names: targetClients,
+              groups: [groupName],
+            },
+          })
+          log.info(
+            `Removed all clients from ${groupName}: ${targetClients.join(', ')}`
+          )
+        }
       } catch (error) {
         log.error(`Error syncing clients for group ${groupName}:`, error)
       }
     },
-    [registerClients, unregisterClients]
+    [
+      registerClients,
+      unregisterClients,
+      restoreClientsToGroup,
+      optimizerWorkloadDetail,
+    ]
   )
 
-  return { saveGroupClients }
+  return { saveGroupClients, restoreClientsToGroup }
 }

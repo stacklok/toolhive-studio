@@ -1,13 +1,20 @@
 import { renderHook, waitFor } from '@testing-library/react'
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useMcpOptimizerClients } from '../use-mcp-optimizer-clients'
 import { server, recordRequests } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
-import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
+import {
+  MCP_OPTIMIZER_GROUP_NAME,
+  META_MCP_SERVER_NAME,
+} from '@/common/lib/constants'
 import { queryClient } from '@/common/lib/query-client'
 import { QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
+
+vi.mock('@/common/hooks/use-feature-flag', () => ({
+  useFeatureFlag: vi.fn(() => true),
+}))
 
 const wrapper = ({ children }: { children: ReactNode }) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -36,6 +43,9 @@ describe('useMcpOptimizerClients', () => {
       ),
       http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
         HttpResponse.json([])
+      ),
+      http.post(mswEndpoint('/api/v1beta/clients/unregister'), () =>
+        HttpResponse.json(null, { status: 204 })
       )
     )
 
@@ -51,11 +61,22 @@ describe('useMcpOptimizerClients', () => {
           req.method === 'POST' &&
           req.pathname === '/api/v1beta/clients/register'
       )
+      const unregisterRequests = rec.recordedRequests.filter(
+        (req) =>
+          req.method === 'POST' &&
+          req.pathname === '/api/v1beta/clients/unregister'
+      )
 
       expect(registerRequest).toBeDefined()
       expect(registerRequest?.payload).toEqual({
         names: ['vscode', 'windsurf'],
         groups: [MCP_OPTIMIZER_GROUP_NAME],
+      })
+
+      expect(unregisterRequests).toHaveLength(1)
+      expect(unregisterRequests[0]?.payload).toEqual({
+        names: ['cursor', 'vscode', 'windsurf'],
+        groups: ['test'],
       })
     })
   })
@@ -88,16 +109,20 @@ describe('useMcpOptimizerClients', () => {
     await result.current.saveGroupClients('test')
 
     await waitFor(() => {
-      const unregisterRequest = rec.recordedRequests.find(
+      const unregisterRequests = rec.recordedRequests.filter(
         (req) =>
           req.method === 'POST' &&
           req.pathname === '/api/v1beta/clients/unregister'
       )
 
-      expect(unregisterRequest).toBeDefined()
-      expect(unregisterRequest?.payload).toEqual({
+      expect(unregisterRequests).toHaveLength(2)
+      expect(unregisterRequests[0]?.payload).toEqual({
         names: ['vscode', 'windsurf'],
         groups: [MCP_OPTIMIZER_GROUP_NAME],
+      })
+      expect(unregisterRequests[1]?.payload).toEqual({
+        names: ['cursor'],
+        groups: ['test'],
       })
     })
   })
@@ -138,7 +163,7 @@ describe('useMcpOptimizerClients', () => {
           req.method === 'POST' &&
           req.pathname === '/api/v1beta/clients/register'
       )
-      const unregisterRequest = rec.recordedRequests.find(
+      const unregisterRequests = rec.recordedRequests.filter(
         (req) =>
           req.method === 'POST' &&
           req.pathname === '/api/v1beta/clients/unregister'
@@ -149,14 +174,19 @@ describe('useMcpOptimizerClients', () => {
         groups: [MCP_OPTIMIZER_GROUP_NAME],
       })
 
-      expect(unregisterRequest?.payload).toEqual({
+      expect(unregisterRequests).toHaveLength(2)
+      expect(unregisterRequests[0]?.payload).toEqual({
         names: ['vscode'],
         groups: [MCP_OPTIMIZER_GROUP_NAME],
+      })
+      expect(unregisterRequests[1]?.payload).toEqual({
+        names: ['cursor', 'claude-code'],
+        groups: ['test'],
       })
     })
   })
 
-  it('not make any requests when clients are already synced', async () => {
+  it('remove clients from source group even when already synced', async () => {
     server.use(
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({
@@ -171,6 +201,9 @@ describe('useMcpOptimizerClients', () => {
             },
           ],
         })
+      ),
+      http.post(mswEndpoint('/api/v1beta/clients/unregister'), () =>
+        HttpResponse.json(null, { status: 204 })
       )
     )
 
@@ -186,14 +219,18 @@ describe('useMcpOptimizerClients', () => {
           req.method === 'POST' &&
           req.pathname === '/api/v1beta/clients/register'
       )
-      const unregisterRequest = rec.recordedRequests.find(
+      const unregisterRequests = rec.recordedRequests.filter(
         (req) =>
           req.method === 'POST' &&
           req.pathname === '/api/v1beta/clients/unregister'
       )
 
       expect(registerRequest).toBeUndefined()
-      expect(unregisterRequest).toBeUndefined()
+      expect(unregisterRequests).toHaveLength(1)
+      expect(unregisterRequests[0]?.payload).toEqual({
+        names: ['cursor', 'vscode'],
+        groups: ['test'],
+      })
     })
   })
 
@@ -215,6 +252,9 @@ describe('useMcpOptimizerClients', () => {
       ),
       http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
         HttpResponse.json([])
+      ),
+      http.post(mswEndpoint('/api/v1beta/clients/unregister'), () =>
+        HttpResponse.json(null, { status: 204 })
       )
     )
 
@@ -230,10 +270,21 @@ describe('useMcpOptimizerClients', () => {
           req.method === 'POST' &&
           req.pathname === '/api/v1beta/clients/register'
       )
+      const unregisterRequests = rec.recordedRequests.filter(
+        (req) =>
+          req.method === 'POST' &&
+          req.pathname === '/api/v1beta/clients/unregister'
+      )
 
       expect(registerRequest?.payload).toEqual({
         names: ['cursor', 'vscode'],
         groups: [MCP_OPTIMIZER_GROUP_NAME],
+      })
+
+      expect(unregisterRequests).toHaveLength(1)
+      expect(unregisterRequests[0]?.payload).toEqual({
+        names: ['cursor', 'vscode'],
+        groups: ['test'],
       })
     })
   })
@@ -272,6 +323,149 @@ describe('useMcpOptimizerClients', () => {
 
       expect(registerRequest).toBeUndefined()
       expect(unregisterRequest).toBeUndefined()
+    })
+  })
+
+  it('should restore clients from optimizer group to target group', async () => {
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [
+            {
+              name: MCP_OPTIMIZER_GROUP_NAME,
+              registered_clients: ['cursor', 'vscode', 'windsurf'],
+            },
+            {
+              name: 'production',
+              registered_clients: [],
+            },
+          ],
+        })
+      ),
+      http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
+        HttpResponse.json([])
+      )
+    )
+
+    const rec = recordRequests()
+
+    const { result } = renderHook(() => useMcpOptimizerClients(), { wrapper })
+
+    await result.current.restoreClientsToGroup('production')
+
+    await waitFor(() => {
+      const registerRequest = rec.recordedRequests.find(
+        (req) =>
+          req.method === 'POST' &&
+          req.pathname === '/api/v1beta/clients/register'
+      )
+
+      expect(registerRequest).toBeDefined()
+      expect(registerRequest?.payload).toEqual({
+        names: ['cursor', 'vscode', 'windsurf'],
+        groups: ['production'],
+      })
+    })
+  })
+
+  it('should handle empty optimizer group when restoring clients', async () => {
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [
+            {
+              name: MCP_OPTIMIZER_GROUP_NAME,
+              registered_clients: [],
+            },
+            {
+              name: 'production',
+              registered_clients: [],
+            },
+          ],
+        })
+      )
+    )
+
+    const rec = recordRequests()
+
+    const { result } = renderHook(() => useMcpOptimizerClients(), { wrapper })
+
+    await result.current.restoreClientsToGroup('production')
+
+    await waitFor(() => {
+      const registerRequest = rec.recordedRequests.find(
+        (req) =>
+          req.method === 'POST' &&
+          req.pathname === '/api/v1beta/clients/register'
+      )
+
+      expect(registerRequest).toBeUndefined()
+    })
+  })
+
+  it('should restore clients to previous allowed group when switching groups', async () => {
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [
+            {
+              name: 'staging',
+              registered_clients: ['cursor', 'vscode'],
+            },
+            {
+              name: 'production',
+              registered_clients: [],
+            },
+            {
+              name: MCP_OPTIMIZER_GROUP_NAME,
+              registered_clients: ['cursor', 'vscode'],
+            },
+          ],
+        })
+      ),
+      http.get(`*/api/v1beta/workloads/${META_MCP_SERVER_NAME}`, () =>
+        HttpResponse.json({
+          env_vars: {
+            ALLOWED_GROUPS: 'production',
+          },
+        })
+      ),
+      http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
+        HttpResponse.json([])
+      ),
+      http.post(mswEndpoint('/api/v1beta/clients/unregister'), () =>
+        HttpResponse.json(null, { status: 204 })
+      )
+    )
+
+    const rec = recordRequests()
+
+    const { result } = renderHook(() => useMcpOptimizerClients(), { wrapper })
+
+    // Wait for workload query to complete
+    await waitFor(() => {
+      const workloadRequest = rec.recordedRequests.find(
+        (req) =>
+          req.method === 'GET' &&
+          req.pathname.includes(`/api/v1beta/workloads/${META_MCP_SERVER_NAME}`)
+      )
+      expect(workloadRequest).toBeDefined()
+    })
+
+    await result.current.saveGroupClients('staging')
+
+    await waitFor(() => {
+      const registerRequests = rec.recordedRequests.filter(
+        (req) =>
+          req.method === 'POST' &&
+          req.pathname === '/api/v1beta/clients/register'
+      )
+
+      expect(registerRequests.length).toBeGreaterThan(0)
+      expect(registerRequests[0]?.payload).toEqual({
+        names: ['cursor', 'vscode'],
+        groups: ['production'],
+      })
     })
   })
 })
