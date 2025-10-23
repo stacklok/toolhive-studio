@@ -16,7 +16,7 @@ export function LoadingStateDialog({
   onOpenChange: (open: boolean) => void
 }) {
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => onOpenChange(!open)}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogPortal>
         <DialogOverlay />
         <DialogContent
