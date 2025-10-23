@@ -13,7 +13,7 @@ export function LoadingStateDialog({
   onOpenChange,
 }: {
   isOpen: boolean
-  onOpenChange: (open: boolean) => void
+  onOpenChange?: (open: boolean) => void
 }) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
