@@ -61,7 +61,7 @@ export function useCreateOptimizerGroup() {
     )
     if (metaOptimizerGrp) return
 
-    if (!isExperimentalFeaturesEnabled || !isMetaOptimizerEnabled) return
+    if (!isExperimentalFeaturesEnabled) return
     await createOptimizerGroup()
   }, [
     isExperimentalFeaturesEnabled,
