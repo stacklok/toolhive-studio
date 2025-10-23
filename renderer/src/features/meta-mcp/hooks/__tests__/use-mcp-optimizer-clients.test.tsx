@@ -1,5 +1,5 @@
 import { renderHook, waitFor } from '@testing-library/react'
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useMcpOptimizerClients } from '../use-mcp-optimizer-clients'
 import { server, recordRequests } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
@@ -9,6 +9,10 @@ import { queryClient } from '@/common/lib/query-client'
 import { QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 
+vi.mock('@/common/hooks/use-feature-flag')
+
+const { useFeatureFlag } = await import('@/common/hooks/use-feature-flag')
+
 const wrapper = ({ children }: { children: ReactNode }) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 )
@@ -16,9 +20,28 @@ const wrapper = ({ children }: { children: ReactNode }) => (
 describe('useMcpOptimizerClients', () => {
   beforeEach(() => {
     queryClient.clear()
+    vi.mocked(useFeatureFlag).mockReturnValue(true)
   })
 
-  it('should register clients that are missing from optimizer group', async () => {
+  it("doesn't make any requests when meta optimizer is disabled", async () => {
+    vi.mocked(useFeatureFlag).mockReturnValue(false)
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [],
+        })
+      )
+    )
+    const rec = recordRequests()
+
+    const { result } = renderHook(() => useMcpOptimizerClients(), { wrapper })
+
+    await result.current.saveGroupClients('test')
+
+    expect(rec.recordedRequests).toEqual([])
+  })
+
+  it('register clients that are missing from optimizer group', async () => {
     server.use(
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({
@@ -60,7 +83,7 @@ describe('useMcpOptimizerClients', () => {
     })
   })
 
-  it('should unregister clients that are not in selected group', async () => {
+  it('unregister clients that are not in selected group', async () => {
     server.use(
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({
@@ -102,7 +125,7 @@ describe('useMcpOptimizerClients', () => {
     })
   })
 
-  it('should both register and unregister clients in same sync', async () => {
+  it('both register and unregister clients in same sync', async () => {
     server.use(
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({
@@ -156,7 +179,7 @@ describe('useMcpOptimizerClients', () => {
     })
   })
 
-  it('should not make any requests when clients are already synced', async () => {
+  it('not make any requests when clients are already synced', async () => {
     server.use(
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({
@@ -197,7 +220,7 @@ describe('useMcpOptimizerClients', () => {
     })
   })
 
-  it('should sync all clients when optimizer group is empty', async () => {
+  it('sync all clients when optimizer group is empty', async () => {
     server.use(
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({

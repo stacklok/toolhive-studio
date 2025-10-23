@@ -12,8 +12,11 @@ import log from 'electron-log/renderer'
 import { toast } from 'sonner'
 import type { GroupsGroup } from '@api/types.gen'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
+import { featureFlagKeys } from '../../../../../utils/feature-flags'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 
 export function useMcpOptimizerClients() {
+  const isMetaOptimizerEnabled = useFeatureFlag(featureFlagKeys.META_OPTIMIZER)
   const { mutateAsync: registerClients } = useToastMutation({
     ...postApiV1BetaClientsRegisterMutation(),
     onError: (error) => {
@@ -59,6 +62,10 @@ export function useMcpOptimizerClients() {
   const saveGroupClients = useCallback(
     async (groupName: string) => {
       try {
+        if (!isMetaOptimizerEnabled) {
+          return
+        }
+
         const groupsData = await queryClient.fetchQuery(
           getApiV1BetaGroupsOptions()
         )
