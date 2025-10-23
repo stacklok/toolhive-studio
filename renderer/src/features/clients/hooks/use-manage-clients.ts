@@ -10,6 +10,7 @@ import {
   getApiV1BetaDiscoveryClientsQueryKey,
   getApiV1BetaClientsQueryKey,
   postApiV1BetaClientsMutation,
+  getApiV1BetaGroupsQueryKey,
 } from '@api/@tanstack/react-query.gen'
 import {
   getApiV1BetaClients,
@@ -33,7 +34,7 @@ export function useManageClients(groupName: string) {
   const queryClient = useQueryClient()
 
   const { data: groupsData } = useQuery({
-    queryKey: getApiV1BetaClientsQueryKey(),
+    queryKey: getApiV1BetaGroupsQueryKey(),
     queryFn: async () => {
       const { data: response } = await getApiV1BetaGroups()
 
@@ -52,7 +53,7 @@ export function useManageClients(groupName: string) {
         queryKey: getApiV1BetaDiscoveryClientsQueryKey(),
       })
       queryClient.invalidateQueries({
-        queryKey: ['api', 'v1beta', 'groups'],
+        queryKey: getApiV1BetaGroupsQueryKey(),
       })
       queryClient.invalidateQueries({
         queryKey: getApiV1BetaClientsQueryKey(),
@@ -81,7 +82,7 @@ export function useManageClients(groupName: string) {
         queryKey: getApiV1BetaDiscoveryClientsQueryKey(),
       })
       queryClient.invalidateQueries({
-        queryKey: ['api', 'v1beta', 'groups'],
+        queryKey: getApiV1BetaGroupsQueryKey(),
       })
     },
   })
