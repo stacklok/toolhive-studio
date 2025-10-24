@@ -68,6 +68,11 @@ export type AuthTokenValidatorConfig = {
    */
   clientSecret?: string
   /**
+   * InsecureAllowHTTP allows HTTP (non-HTTPS) OIDC issuers for development/testing
+   * WARNING: This is insecure and should NEVER be used in production
+   */
+  insecureAllowHTTP?: boolean
+  /**
    * IntrospectionURL is the optional introspection endpoint for validating tokens
    */
   introspectionURL?: string
