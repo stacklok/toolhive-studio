@@ -41,10 +41,7 @@ async function fetchLatestRelease(): Promise<string | null> {
 }
 
 async function checkBinaryVersion(binPath: string): Promise<boolean> {
-  // DISABLED: Auto-update disabled for testing
-  return false
-
-  /* const latestTag = await fetchLatestRelease()
+  const latestTag = await fetchLatestRelease()
 
   try {
     await access(binPath)
@@ -67,7 +64,7 @@ async function checkBinaryVersion(binPath: string): Promise<boolean> {
     return shouldDownload
   } catch {
     return true
-  } */
+  }
 }
 
 async function cleanBinaryDirectory(binDir: string): Promise<void> {
