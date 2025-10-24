@@ -20,6 +20,7 @@ import type { FormSchemaLocalMcp } from '@/features/mcp-servers/lib/form-schema-
 import { getApiV1BetaWorkloadsByNameQueryKey } from '@api/@tanstack/react-query.gen'
 import { queryClient } from '@/common/lib/query-client'
 import { toast } from 'sonner'
+import { useMcpOptimizerClients } from '../hooks/use-mcp-optimizer-clients'
 
 interface GroupSelectorFormProps {
   groups: GroupWithServers[]
@@ -37,6 +38,7 @@ export function GroupSelectorForm({
   const { data: metaMcpConfig } = useMetaMcpConfig()
   const [isPending, startTransition] = useTransition()
   const defaultSelectedGroup = getMetaMcpOptimizedGroup(metaMcpConfig)
+  const { saveGroupClients } = useMcpOptimizerClients()
   const { updateServerMutation } = useUpdateServer(META_MCP_SERVER_NAME, {
     onSecretError: (error, variables) => {
       log.error('onSecretError during update', error, variables)
@@ -73,21 +75,25 @@ export function GroupSelectorForm({
             } as FormSchemaLocalMcp,
           },
           {
-            onSuccess: () => {
+            onSuccess: async () => {
               queryClient.invalidateQueries({
                 queryKey: getApiV1BetaWorkloadsByNameQueryKey({
                   path: { name: META_MCP_SERVER_NAME },
                 }),
               })
 
-              toast.success(
-                `Meta Optimizer for ${data.selectedGroup} is available`
-              )
+              if (data.selectedGroup) {
+                await saveGroupClients(data.selectedGroup)
+                toast.success(
+                  `Meta Optimizer for ${data.selectedGroup} is available`
+                )
+              }
             },
             onSettled: () => {
               toast.dismiss(toastId)
             },
             onError: (error) => {
+              toast.error('Error updating MCP Optimizer')
               log.error(`Error updating ${META_MCP_SERVER_NAME}`, error)
             },
           }

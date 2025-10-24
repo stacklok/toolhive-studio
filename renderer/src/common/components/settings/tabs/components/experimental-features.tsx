@@ -12,6 +12,7 @@ import { pollServerStatus } from '@/common/lib/polling'
 import { getApiV1BetaWorkloadsByNameStatusOptions } from '@api/@tanstack/react-query.gen'
 import { queryClient } from '@/common/lib/query-client'
 import { useCallback } from 'react'
+import { useMcpOptimizerClients } from '@/features/meta-mcp/hooks/use-mcp-optimizer-clients'
 
 function formatFeatureFlagName(key: string): string {
   if (key === featureFlagKeys.META_OPTIMIZER) {
@@ -37,7 +38,10 @@ function useMetaOptimizerStatus() {
             path: { name: META_MCP_SERVER_NAME },
           })
         ),
-      'running'
+      'running',
+      {
+        maxAttempts: 40,
+      }
     )
   }, [])
 
@@ -45,6 +49,7 @@ function useMetaOptimizerStatus() {
 }
 
 export function ExperimentalFeatures() {
+  const { saveGroupClients } = useMcpOptimizerClients()
   const { pollingMetaMcpStatus } = useMetaOptimizerStatus()
   const isExperimentalFeaturesEnabled = useFeatureFlag(
     featureFlagKeys.EXPERIMENTAL_FEATURES
@@ -97,6 +102,8 @@ export function ExperimentalFeatures() {
           toast.error('Failed to start MCP Optimizer')
           return
         }
+
+        await saveGroupClients('default')
 
         toast.success(
           'MCP Optimizer is now enabled and running on the default group'

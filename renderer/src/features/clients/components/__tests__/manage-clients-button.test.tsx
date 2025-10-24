@@ -9,10 +9,19 @@ import { http, HttpResponse } from 'msw'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
 
+vi.mock('@/common/hooks/use-feature-flag')
+vi.mock('@/features/meta-mcp/hooks/use-mcp-optimizer-clients')
+
+const { useFeatureFlag } = await import('@/common/hooks/use-feature-flag')
+const { useMcpOptimizerClients } = await import(
+  '@/features/meta-mcp/hooks/use-mcp-optimizer-clients'
+)
+
 // Use the shared request recorder from mocks/node.ts for consistency
 
 describe('ManageClientsButton – BDD flows', () => {
   let queryClient: QueryClient
+  const saveGroupClientsMock = vi.fn()
 
   beforeEach(() => {
     queryClient = new QueryClient({
@@ -21,6 +30,11 @@ describe('ManageClientsButton – BDD flows', () => {
         mutations: { retry: false },
       },
     })
+    vi.mocked(useFeatureFlag).mockReturnValue(true)
+    vi.mocked(useMcpOptimizerClients).mockReturnValue({
+      saveGroupClients: saveGroupClientsMock,
+      restoreClientsToGroup: vi.fn(),
+    } as unknown as ReturnType<typeof useMcpOptimizerClients>)
     vi.clearAllMocks()
   })
 
@@ -39,10 +53,16 @@ describe('ManageClientsButton – BDD flows', () => {
     server.use(
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({
-          groups: [{ name: 'default', registered_clients: [] }],
+          groups: [
+            { name: 'default', registered_clients: [] },
+            { name: '__mcp-optimizer__', registered_clients: [] },
+          ],
         })
       ),
-      http.get(mswEndpoint('/api/v1beta/clients'), () => HttpResponse.json([]))
+      http.get(mswEndpoint('/api/v1beta/clients'), () => HttpResponse.json([])),
+      http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
+        HttpResponse.json([])
+      )
     )
 
     const rec = recordRequests()
@@ -60,7 +80,7 @@ describe('ManageClientsButton – BDD flows', () => {
       expect(
         rec.recordedRequests.filter(
           (r) =>
-            r.pathname.startsWith('/api/v1beta/clients') &&
+            r.pathname === '/api/v1beta/clients' &&
             (r.method === 'POST' || r.method === 'DELETE')
         )
       ).toHaveLength(2)
@@ -68,7 +88,7 @@ describe('ManageClientsButton – BDD flows', () => {
     const snapshot = rec.recordedRequests
       .filter(
         (r) =>
-          r.pathname.startsWith('/api/v1beta/clients') &&
+          r.pathname === '/api/v1beta/clients' &&
           (r.method === 'POST' || r.method === 'DELETE')
       )
       .map(({ method, pathname, payload }) => ({
@@ -96,12 +116,18 @@ describe('ManageClientsButton – BDD flows', () => {
     server.use(
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({
-          groups: [{ name: 'default', registered_clients: [] }],
+          groups: [
+            { name: 'default', registered_clients: [] },
+            { name: '__mcp-optimizer__', registered_clients: [] },
+          ],
         })
       ),
       // Simulate backend returning null for current clients list
       http.get(mswEndpoint('/api/v1beta/clients'), () =>
         HttpResponse.json(null)
+      ),
+      http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
+        HttpResponse.json([])
       )
     )
 
@@ -121,7 +147,7 @@ describe('ManageClientsButton – BDD flows', () => {
       expect(
         rec.recordedRequests.filter(
           (r) =>
-            r.pathname.startsWith('/api/v1beta/clients') &&
+            r.pathname === '/api/v1beta/clients' &&
             (r.method === 'POST' || r.method === 'DELETE')
         )
       ).toHaveLength(1)
@@ -129,7 +155,7 @@ describe('ManageClientsButton – BDD flows', () => {
     const snapshot = rec.recordedRequests
       .filter(
         (r) =>
-          r.pathname.startsWith('/api/v1beta/clients') &&
+          r.pathname === '/api/v1beta/clients' &&
           (r.method === 'POST' || r.method === 'DELETE')
       )
       .map(({ method, pathname, payload }) => ({
@@ -156,8 +182,15 @@ describe('ManageClientsButton – BDD flows', () => {
               name: 'default',
               registered_clients: ['vscode', 'cursor', 'claude-code'],
             },
+            {
+              name: '__mcp-optimizer__',
+              registered_clients: [],
+            },
           ],
         })
+      ),
+      http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
+        HttpResponse.json([])
       )
     )
 
@@ -203,6 +236,7 @@ describe('ManageClientsButton – BDD flows', () => {
         HttpResponse.json({
           groups: [
             { name: 'default', registered_clients: ['vscode', 'cursor'] },
+            { name: '__mcp-optimizer__', registered_clients: [] },
           ],
         })
       ),
@@ -212,6 +246,9 @@ describe('ManageClientsButton – BDD flows', () => {
           { name: { name: 'cursor' }, groups: ['default'] },
           { name: { name: 'claude-code' }, groups: [] },
         ])
+      ),
+      http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
+        HttpResponse.json([])
       )
     )
 
@@ -237,7 +274,8 @@ describe('ManageClientsButton – BDD flows', () => {
       .filter(
         (r) =>
           r.pathname.startsWith('/api/v1beta/clients') &&
-          (r.method === 'POST' || r.method === 'DELETE')
+          (r.method === 'POST' || r.method === 'DELETE') &&
+          r.pathname !== '/api/v1beta/clients/register'
       )
       .map(({ method, pathname, payload }) => ({
         method,
@@ -265,6 +303,10 @@ describe('ManageClientsButton – BDD flows', () => {
         HttpResponse.json({
           groups: [
             { name: 'default', registered_clients: ['vscode', 'cursor'] },
+            {
+              name: '__mcp-optimizer__',
+              registered_clients: ['vscode', 'cursor'],
+            },
           ],
         })
       ),
@@ -285,15 +327,15 @@ describe('ManageClientsButton – BDD flows', () => {
     )
     await user.click(await screen.findByRole('button', { name: /save/i }))
 
-    await new Promise((r) => setTimeout(r, 10))
-    expect(
-      rec.recordedRequests.filter(
-        (r) =>
-          r.pathname.startsWith('/api/v1beta/clients') &&
-          (r.method === 'POST' || r.method === 'DELETE')
-      )
-    ).toEqual([])
-    // no-op
+    await waitFor(() => {
+      expect(
+        rec.recordedRequests.filter(
+          (r) =>
+            r.pathname === '/api/v1beta/clients' &&
+            (r.method === 'POST' || r.method === 'DELETE')
+        )
+      ).toEqual([])
+    })
   })
 
   it('cancels without issuing API calls', async () => {
@@ -323,5 +365,46 @@ describe('ManageClientsButton – BDD flows', () => {
       )
     ).toEqual([])
     // no-op
+  })
+
+  it("doesn't sync client when meta optimizer is disabled", async () => {
+    vi.mocked(useFeatureFlag).mockReturnValue(false)
+
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [],
+        })
+      ),
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [
+            { name: 'default', registered_clients: ['vscode', 'cursor'] },
+            { name: '__mcp-optimizer__', registered_clients: [] },
+          ],
+        })
+      ),
+      http.get(mswEndpoint('/api/v1beta/clients'), () =>
+        HttpResponse.json([
+          { name: { name: 'vscode' }, groups: ['default'] },
+          { name: { name: 'cursor' }, groups: ['default'] },
+          { name: { name: 'claude-code' }, groups: [] },
+        ])
+      ),
+      http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
+        HttpResponse.json([])
+      )
+    )
+
+    renderWithProviders({ groupName: 'default' })
+    const user = userEvent.setup()
+    await user.click(
+      await screen.findByRole('button', { name: /manage clients/i })
+    )
+    await user.click(await screen.findByRole('switch', { name: 'vscode' }))
+    await user.click(await screen.findByRole('switch', { name: 'claude-code' }))
+    await user.click(await screen.findByRole('button', { name: /save/i }))
+
+    expect(saveGroupClientsMock).not.toHaveBeenCalled()
   })
 })
