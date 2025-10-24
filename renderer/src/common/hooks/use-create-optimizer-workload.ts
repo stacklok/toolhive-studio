@@ -1,5 +1,6 @@
 import {
   getApiV1BetaWorkloadsByNameOptions,
+  getApiV1BetaWorkloadsByNameQueryKey,
   postApiV1BetaWorkloadsMutation,
 } from '@api/@tanstack/react-query.gen'
 import { featureFlagKeys } from '../../../../utils/feature-flags'
@@ -17,6 +18,7 @@ import type { V1CreateRequest } from '@api/types.gen'
 import { toast } from 'sonner'
 import log from 'electron-log/renderer'
 import { useMcpOptimizerClients } from '@/features/meta-mcp/hooks/use-mcp-optimizer-clients'
+import { queryClient } from '../lib/query-client'
 
 export function useCreateOptimizerWorkload() {
   const { saveGroupClients } = useMcpOptimizerClients()
@@ -72,6 +74,13 @@ export function useCreateOptimizerWorkload() {
           return
         }
       }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: getApiV1BetaWorkloadsByNameQueryKey({
+          path: { name: META_MCP_SERVER_NAME },
+        }),
+      })
     },
   })
 

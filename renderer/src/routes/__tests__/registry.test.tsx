@@ -92,7 +92,10 @@ describe('Meta-MCP Server Filtering', () => {
         return HttpResponse.json({
           servers: [
             { name: 'atlassian', description: 'Atlassian server' },
-            { name: META_MCP_SERVER_NAME, description: 'Meta MCP server' },
+            {
+              name: META_MCP_SERVER_NAME,
+              description: 'Meta MCP server',
+            },
           ],
           remote_servers: [],
         })
@@ -132,7 +135,10 @@ describe('Meta-MCP Server Filtering', () => {
         return HttpResponse.json({
           servers: [
             { name: 'atlassian', description: 'Atlassian server' },
-            { name: META_MCP_SERVER_NAME, description: 'Meta MCP server' },
+            {
+              name: META_MCP_SERVER_NAME,
+              description: 'Meta MCP server',
+            },
           ],
           remote_servers: [],
         })
