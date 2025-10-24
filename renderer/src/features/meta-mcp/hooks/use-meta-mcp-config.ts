@@ -8,8 +8,6 @@ export function useMetaMcpConfig() {
       path: { name: META_MCP_SERVER_NAME },
     }),
     retry: false,
-    staleTime: 0,
-    gcTime: 0,
   })
 }
 
