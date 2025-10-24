@@ -20,6 +20,7 @@ import { EditServerDialogProvider } from '@/features/mcp-servers/contexts/edit-s
 import { useEditServerDialog } from '@/features/mcp-servers/hooks/use-edit-server-dialog'
 import { WrapperDialogFormMcp } from '@/features/mcp-servers/components/wrapper-dialog-mcp'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
+import { useOptimizedGroupName } from '@/common/hooks/use-optimize-group-name'
 
 export const Route = createFileRoute('/mcp-optimizer')({
   component: McpOptimizerRoute,
@@ -28,6 +29,7 @@ export const Route = createFileRoute('/mcp-optimizer')({
 function McpOptimizerContent() {
   const groups = useMcpOptimizerGroups()
   const { state, openDialog, closeDialog } = useEditServerDialog()
+  const optimizedGroupName = useOptimizedGroupName()
 
   const handleCustomizeConfiguration = () => {
     const isRemote = false
@@ -64,13 +66,15 @@ function McpOptimizerContent() {
                       MCP Optimizer logs
                     </LinkViewTransition>
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="flex cursor-pointer items-center"
-                    onClick={handleCustomizeConfiguration}
-                  >
-                    <Edit3 className="mr-2 h-4 w-4" />
-                    Customize MCP Optimizer configuration
-                  </DropdownMenuItem>
+                  {optimizedGroupName ? (
+                    <DropdownMenuItem
+                      className="flex cursor-pointer items-center"
+                      onClick={handleCustomizeConfiguration}
+                    >
+                      <Edit3 className="mr-2 h-4 w-4" />
+                      Customize MCP Optimizer configuration
+                    </DropdownMenuItem>
+                  ) : null}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
