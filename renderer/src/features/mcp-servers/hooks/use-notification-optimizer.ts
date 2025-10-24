@@ -7,7 +7,7 @@ export function useNotificationOptimizer() {
   const notifyChangeWithOptimizer = (groupName: string) => {
     if (optimizedGroupName === groupName) {
       toast.success(
-        'The optimizer could take a moment to update with this change',
+        'MCP Optimizer may take up to a minute to reflect changes.',
         {
           duration: 10_000,
           closeButton: true,
