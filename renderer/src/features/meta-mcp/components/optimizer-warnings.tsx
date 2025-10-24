@@ -15,7 +15,6 @@ export function OptimizerWarnings() {
     }),
   })
 
-  console.log('optimizerGroup', optimizerGroup, optimizerGroup)
   return (
     <>
       <Alert className="mb-6">
