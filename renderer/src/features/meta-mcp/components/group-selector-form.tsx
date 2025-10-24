@@ -23,6 +23,7 @@ import { toast } from 'sonner'
 import { useMcpOptimizerClients } from '../hooks/use-mcp-optimizer-clients'
 import { LoadingStateDialog } from './loading-state-dialog'
 import { useCreateOptimizerWorkload } from '@/common/hooks/use-create-optimizer-workload'
+
 interface GroupSelectorFormProps {
   groups: GroupWithServers[]
 }
@@ -97,8 +98,6 @@ export function GroupSelectorForm({
                     `MCP Optimizer for ${data.selectedGroup} is available`
                   )
                 }
-
-                // form.reset({ selectedGroup: data.selectedGroup })
               },
               onSettled: () => {
                 toast.dismiss(toastId)
