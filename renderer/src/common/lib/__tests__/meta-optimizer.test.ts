@@ -24,6 +24,7 @@ const mockElectronAPI = {
     get: vi.fn(),
   },
   getToolhivePort: vi.fn(),
+  isLinux: true, // Tests run on Linux by default (for host networking tests)
 }
 
 Object.defineProperty(window, 'electronAPI', {
@@ -121,9 +122,10 @@ describe('Meta Optimizer', () => {
         body: expect.objectContaining({
           name: META_MCP_SERVER_NAME,
           group: MCP_OPTIMIZER_GROUP_NAME,
-          // Image should come from registry (meta-mcp)
-          image: 'ghcr.io/stackloklabs/meta-mcp:latest',
+          // Image is hardcoded to mcp-optimizer:latest
+          image: 'ghcr.io/stackloklabs/mcp-optimizer:latest',
           transport: 'streamable-http',
+          target_port: 50051,
           env_vars: {
             [ALLOWED_GROUPS_ENV_VAR]: 'default',
             TOOLHIVE_HOST: '127.0.0.1',

@@ -8,6 +8,17 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import type { CoreWorkload } from '@api/types.gen'
 import log from '../logger'
 
+/**
+ * Determines if the platform is probably using native containers.
+ * Native containers mean Docker runs directly on the host OS (Linux),
+ * as opposed to running in a VM (macOS/Windows with Docker Desktop).
+ * When native containers are used, host networking mode allows direct
+ * access to the host's network stack.
+ */
+function isProbablyUsingNativeContainers(): boolean {
+  return process.platform === 'linux'
+}
+
 export interface McpToolDefinition {
   description?: string
   inputSchema: Tool['inputSchema']
@@ -56,9 +67,12 @@ export function createTransport(workload: CoreWorkload): MCPClientConfig {
       }),
     }),
     'streamable-http': () => {
-      // Use fixed port for mcp-optimizer (host networking mode)
-      const port =
-        workload.name === 'internal---meta-mcp' ? 50051 : workload.port
+      // On platforms with native containers (Linux), use fixed port for mcp-optimizer
+      // to work around thv port management bugs in host networking mode
+      const useFixedPort =
+        isProbablyUsingNativeContainers() &&
+        workload.name === 'internal---meta-mcp'
+      const port = useFixedPort ? 50051 : workload.port
       const url = new URL(`http://localhost:${port}/mcp`)
       return {
         name: workload.name,

@@ -16,6 +16,7 @@ import {
   META_MCP_SERVER_NAME,
   MCP_OPTIMIZER_GROUP_NAME,
   ALLOWED_GROUPS_ENV_VAR,
+  isProbablyUsingNativeContainers,
 } from './constants'
 
 async function ensureMetaOptimizerWorkload() {
@@ -60,7 +61,7 @@ async function createMetaOptimizerWorkload() {
         })
       )
       server = response.server
-    } catch (error) {
+    } catch {
       log.info(
         '[createMetaOptimizerWorkload] mcp-optimizer not found in registry, falling back to meta-mcp'
       )
@@ -90,30 +91,37 @@ async function createMetaOptimizerWorkload() {
       return
     }
 
+    // On platforms with native containers (Linux), use host networking mode
+    // to allow the container to access the host's ToolHive API
+    const useHostNetworking = isProbablyUsingNativeContainers()
+
     const body: V1CreateRequest = {
       name: META_MCP_SERVER_NAME,
       // Use the latest mcp-optimizer image (fixed for x86_64)
       image: 'ghcr.io/stackloklabs/mcp-optimizer:latest',
       transport: server.transport,
-      // Use fixed port for host networking mode (avoids thv port management bugs)
-      target_port: 50051,
+      // Use fixed port for host networking mode (avoids thv port management bugs on Linux)
+      ...(useHostNetworking && { target_port: 50051 }),
       env_vars: {
         [ALLOWED_GROUPS_ENV_VAR]: 'default',
-        // With host networking mode, localhost refers to the host machine
-        TOOLHIVE_HOST: '127.0.0.1',
-        // Pass explicit port to avoid port scanning issues with host networking
-        TOOLHIVE_PORT: String(toolhivePort),
+        // With host networking mode on Linux, localhost refers to the host machine
+        ...(useHostNetworking && {
+          TOOLHIVE_HOST: '127.0.0.1',
+          TOOLHIVE_PORT: String(toolhivePort),
+        }),
       },
       secrets: [],
       cmd_arguments: [],
       network_isolation: false,
       volumes: [],
       group: MCP_OPTIMIZER_GROUP_NAME,
-      permission_profile: {
-        network: {
-          mode: 'host',
+      ...(useHostNetworking && {
+        permission_profile: {
+          network: {
+            mode: 'host',
+          },
         },
-      },
+      }),
     }
 
     const response = await postApiV1BetaWorkloads({
