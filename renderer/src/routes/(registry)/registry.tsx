@@ -11,8 +11,15 @@ import { Button } from '@/common/components/ui/button'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../../utils/feature-flags'
+import {
+  DEPRECATED_MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
+  MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
+} from '@/common/lib/constants'
 
-const SKIP_META_MCP = ['meta-mcp', 'mcp-optimizer']
+const SKIP_META_MCP = [
+  DEPRECATED_MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
+  MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
+]
 const DEFAULT_REGISTRY_NAME = 'default'
 
 export const Route = createFileRoute('/(registry)/registry')({
