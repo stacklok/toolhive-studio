@@ -89,7 +89,10 @@ export function GroupSelectorForm({
                 })
 
                 if (data.selectedGroup) {
-                  await saveGroupClients(data.selectedGroup, previousGroupName)
+                  await saveGroupClients({
+                    groupName: data.selectedGroup,
+                    previousGroupName,
+                  })
                   toast.success(
                     `MCP Optimizer for ${data.selectedGroup} is available`
                   )

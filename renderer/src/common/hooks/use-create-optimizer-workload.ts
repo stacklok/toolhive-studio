@@ -60,7 +60,7 @@ export function useCreateOptimizerWorkload() {
         variables.body.env_vars?.[ALLOWED_GROUPS_ENV_VAR] ?? ''
       if (groupToOptimize) {
         try {
-          await saveGroupClients(groupToOptimize)
+          await saveGroupClients({ groupName: groupToOptimize })
           log.info('MCP Optimizer workload created', data)
           toast.success('MCP Optimizer installed and running')
         } catch (error) {
