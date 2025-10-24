@@ -109,7 +109,7 @@ describe('OptimizerWarnings', () => {
     })
     expect(
       screen.getByText(
-        'We recommend registering clients in the selected optimized group.'
+        'Register clients in the selected group to use the optimized tools.'
       )
     ).toBeInTheDocument()
   })

@@ -88,7 +88,7 @@ export function useExperimentalFeatures() {
           await enableFlag(flagKey)
 
           {
-            toast.success(`MCP Optimizer enabled`, {
+            toast.success(`MCP Optimizer is enabled`, {
               id: toastIdRef.current,
               duration: 10_000,
               closeButton: true,
@@ -100,7 +100,7 @@ export function useExperimentalFeatures() {
                     onClick={() => toast.dismiss(toastIdRef.current)}
                     viewTransition={{ types: ['slide-left'] }}
                   >
-                    MCP Optimizer page
+                    Configure
                   </Link>
                 </Button>
               ),

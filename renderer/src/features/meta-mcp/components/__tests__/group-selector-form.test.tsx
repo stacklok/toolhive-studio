@@ -127,7 +127,7 @@ describe('GroupSelectorForm', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole('button', { name: /apply changes/i })
+        screen.getByRole('button', { name: /set optimized group/i })
       ).toBeInTheDocument()
     })
   })
@@ -167,7 +167,7 @@ describe('GroupSelectorForm', () => {
       expect(radioButtons).toHaveLength(0)
 
       expect(
-        screen.getByRole('button', { name: /apply changes/i })
+        screen.getByRole('button', { name: /set optimized group/i })
       ).toBeInTheDocument()
     })
   })
@@ -212,7 +212,9 @@ describe('GroupSelectorForm', () => {
     const defaultRadio = screen.getByRole('radio', { name: /default/i })
     await user.click(defaultRadio)
 
-    const submitButton = screen.getByRole('button', { name: /apply changes/i })
+    const submitButton = screen.getByRole('button', {
+      name: /set optimized group/i,
+    })
     await user.click(submitButton)
 
     await waitFor(() => {
@@ -278,13 +280,13 @@ describe('GroupSelectorForm', () => {
       await user.click(defaultRadio)
 
       const submitButton = screen.getByRole('button', {
-        name: /apply changes/i,
+        name: /set optimized group/i,
       })
       await user.click(submitButton)
 
       await waitFor(() => {
         expect(toast.loading).toHaveBeenCalledWith(
-          'Setting up Meta Optimizer for default group...'
+          'Setting up MCP Optimizer for default group...'
         )
       })
     })
@@ -314,7 +316,7 @@ describe('GroupSelectorForm', () => {
       await user.click(defaultRadio)
 
       const submitButton = screen.getByRole('button', {
-        name: /apply changes/i,
+        name: /set optimized group/i,
       })
       await user.click(submitButton)
 
@@ -324,7 +326,7 @@ describe('GroupSelectorForm', () => {
           'old-group'
         )
         expect(toast.success).toHaveBeenCalledWith(
-          'Meta Optimizer for default is available'
+          'MCP Optimizer for default is available'
         )
       })
     })
@@ -357,7 +359,7 @@ describe('GroupSelectorForm', () => {
       await user.click(defaultRadio)
 
       const submitButtons = screen.getAllByRole('button', {
-        name: /apply changes/i,
+        name: /set optimized group/i,
       })
       await user.click(submitButtons[0] as unknown as Element)
 
@@ -393,7 +395,7 @@ describe('GroupSelectorForm', () => {
       await user.click(defaultRadio)
 
       const submitButton = screen.getByRole('button', {
-        name: /apply changes/i,
+        name: /set optimized group/i,
       })
       await user.click(submitButton)
 
@@ -458,7 +460,7 @@ describe('GroupSelectorForm', () => {
       await user.click(defaultRadio)
 
       const submitButtons = screen.getAllByRole('button', {
-        name: /apply changes/i,
+        name: /set optimized group/i,
       })
       await user.click(submitButtons[0] as unknown as Element)
 
@@ -510,7 +512,7 @@ describe('GroupSelectorForm', () => {
       await user.click(defaultRadio)
 
       const submitButtons = screen.getAllByRole('button', {
-        name: /apply changes/i,
+        name: /set optimized group/i,
       })
       await user.click(submitButtons[0] as unknown as Element)
 
@@ -554,7 +556,7 @@ describe('GroupSelectorForm', () => {
       await user.click(productionRadio)
 
       const submitButtons = screen.getAllByRole('button', {
-        name: /apply changes/i,
+        name: /set optimized group/i,
       })
       await user.click(submitButtons[0] as unknown as Element)
 
@@ -595,7 +597,7 @@ describe('GroupSelectorForm', () => {
       await user.click(defaultRadio)
 
       const submitButton = screen.getByRole('button', {
-        name: /apply changes/i,
+        name: /set optimized group/i,
       })
       await user.click(submitButton)
 
@@ -632,13 +634,13 @@ describe('GroupSelectorForm', () => {
 
       await waitFor(() => {
         const buttons = screen.getAllByRole('button', {
-          name: /apply changes/i,
+          name: /set optimized group/i,
         })
         expect(buttons.length).toBeGreaterThan(0)
       })
 
       const submitButtons = screen.getAllByRole('button', {
-        name: /apply changes/i,
+        name: /set optimized group/i,
       })
       const submitButton = submitButtons[0]
 
@@ -678,7 +680,7 @@ describe('GroupSelectorForm', () => {
       await user.click(defaultRadio)
 
       const submitButton = screen.getByRole('button', {
-        name: /apply changes/i,
+        name: /set optimized group/i,
       })
       await user.click(submitButton)
 
@@ -689,7 +691,7 @@ describe('GroupSelectorForm', () => {
     })
   })
 
-  describe('Creating Meta Optimizer (metaMcpConfig is null)', () => {
+  describe('Creating MCP Optimizer (metaMcpConfig is null)', () => {
     beforeEach(() => {
       // Reset the mock to resolved state
       mockHandleCreateMetaOptimizerWorkload.mockResolvedValue(undefined)
@@ -720,7 +722,7 @@ describe('GroupSelectorForm', () => {
       await user.click(defaultRadio)
 
       const submitButtons = screen.getAllByRole('button', {
-        name: /apply changes/i,
+        name: /set optimized group/i,
       })
       await user.click(submitButtons[0] as unknown as Element)
 
@@ -734,7 +736,7 @@ describe('GroupSelectorForm', () => {
 
     it('shows error toast when handleCreateMetaOptimizerWorkload fails', async () => {
       const user = userEvent.setup()
-      const mockError = new Error('Failed to create Meta Optimizer workload')
+      const mockError = new Error('Failed to create MCP Optimizer workload')
 
       mockHandleCreateMetaOptimizerWorkload.mockRejectedValue(mockError)
 
@@ -754,7 +756,7 @@ describe('GroupSelectorForm', () => {
       await user.click(productionRadio)
 
       const submitButtons = screen.getAllByRole('button', {
-        name: /apply changes/i,
+        name: /set optimized group/i,
       })
       await user.click(submitButtons[0] as unknown as Element)
 
@@ -767,7 +769,7 @@ describe('GroupSelectorForm', () => {
       // Should show error toast with specific message
       await waitFor(() => {
         expect(toast.error).toHaveBeenCalledWith(
-          'Failed to create Meta Optimizer workload'
+          'Failed to create MCP Optimizer workload'
         )
       })
 
@@ -793,7 +795,7 @@ describe('GroupSelectorForm', () => {
       await user.click(defaultRadio)
 
       const submitButtons = screen.getAllByRole('button', {
-        name: /apply changes/i,
+        name: /set optimized group/i,
       })
       await user.click(submitButtons[0] as unknown as Element)
 

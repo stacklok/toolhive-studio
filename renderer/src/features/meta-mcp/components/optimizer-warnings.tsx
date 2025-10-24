@@ -30,7 +30,7 @@ export function OptimizerWarnings() {
           <InfoIcon className="size-4" />
           <AlertTitle>No clients registered</AlertTitle>
           <AlertDescription>
-            We recommend registering clients in the selected optimized group.
+            Register clients in the selected group to use the optimized tools.
           </AlertDescription>
         </Alert>
       )}

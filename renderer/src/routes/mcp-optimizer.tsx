@@ -81,12 +81,12 @@ function McpOptimizerContent() {
             <OptimizerWarnings />
             <div className="mb-6">
               <h2 className="text-lg font-semibold">
-                Select Groups to Optimize
+                Select Group to Optimize
               </h2>
               <p className="text-muted-foreground text-sm">
-                Choose which server groups should be included in optimization.
-                Selected groups will have their server configurations analyzed
-                and optimized.
+                Choose which server group to optimize. The MCP Optimizer will
+                index the tools in your selected group's servers to improve
+                performance and discoverability.
               </p>
             </div>
             <GroupSelectorForm groups={groups} />

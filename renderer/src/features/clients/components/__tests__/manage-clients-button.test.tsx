@@ -373,7 +373,7 @@ describe('ManageClientsButton – BDD flows', () => {
     // no-op
   })
 
-  it("doesn't sync client when meta optimizer is disabled", async () => {
+  it("doesn't sync client when mcp optimizer is disabled", async () => {
     vi.mocked(useFeatureFlag).mockReturnValue(false)
 
     server.use(

@@ -67,13 +67,11 @@ it('renders the section header and description', async () => {
   renderRoute(router)
 
   await waitFor(() => {
-    expect(screen.getByText('Select Groups to Optimize')).toBeInTheDocument()
+    expect(screen.getByText('Select Group to Optimize')).toBeInTheDocument()
   })
 
   expect(
-    screen.getByText(
-      /Choose which server groups should be included in optimization/i
-    )
+    screen.getByText(/Choose which server group to optimize/i)
   ).toBeInTheDocument()
 })
 
@@ -87,12 +85,12 @@ it('renders the group selector form with groups', async () => {
   expect(screen.getAllByText('production').length).toBeGreaterThan(0)
 })
 
-it('renders the Apply Changes button', async () => {
+it('renders the Set Optimized Group button', async () => {
   renderRoute(router)
 
   await waitFor(() => {
     expect(
-      screen.getByRole('button', { name: /apply changes/i })
+      screen.getByRole('button', { name: /set optimized group/i })
     ).toBeInTheDocument()
   })
 })
