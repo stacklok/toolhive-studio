@@ -20,8 +20,16 @@ import { EditServerDialogProvider } from '@/features/mcp-servers/contexts/edit-s
 import { useEditServerDialog } from '@/features/mcp-servers/hooks/use-edit-server-dialog'
 import { WrapperDialogFormMcp } from '@/features/mcp-servers/components/wrapper-dialog-mcp'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
+import { getApiV1BetaWorkloadsByNameQueryKey } from '@api/@tanstack/react-query.gen'
 
 export const Route = createFileRoute('/mcp-optimizer')({
+  beforeLoad: ({ context: { queryClient } }) => {
+    queryClient.resetQueries({
+      queryKey: getApiV1BetaWorkloadsByNameQueryKey({
+        path: { name: META_MCP_SERVER_NAME },
+      }),
+    })
+  },
   component: McpOptimizerRoute,
 })
 
