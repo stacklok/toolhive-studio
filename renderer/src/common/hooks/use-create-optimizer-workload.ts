@@ -33,6 +33,7 @@ export function useCreateOptimizerWorkload() {
     }),
     refetchOnMount: true,
     staleTime: 5_000,
+    retry: false,
     enabled: isExperimentalFeaturesEnabled && isMetaOptimizerEnabled,
   })
 
