@@ -11,6 +11,7 @@ import { trackEvent } from '@/common/lib/analytics'
 import type { FormSchemaLocalMcp } from '../lib/form-schema-local-mcp'
 import { prepareCreateWorkloadData } from '../lib/orchestrate-run-local-server'
 import { useMCPSecrets } from '@/common/hooks/use-mcp-secrets'
+import { useNotificationOptimizer } from './use-notification-optimizer'
 
 export function useRunCustomServer({
   onSecretSuccess,
@@ -29,6 +30,7 @@ export function useRunCustomServer({
     onSecretSuccess,
     onSecretError,
   })
+  const notifyChangeWithOptimizer = useNotificationOptimizer()
 
   const { mutateAsync: createWorkload } = useMutation({
     ...postApiV1BetaWorkloadsMutation(),
@@ -62,6 +64,7 @@ export function useRunCustomServer({
       await restartClientNotification({
         queryClient,
       })
+      notifyChangeWithOptimizer(data.group)
       trackEvent(`Workload ${data.name} started`, {
         workload: data.name,
         transport: data.transport,
