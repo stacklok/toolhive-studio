@@ -78,7 +78,7 @@ function McpOptimizerContent() {
         </TitlePage>
         <div className="p-6">
           <div className="mx-auto max-w-2xl">
-            <OptimizerWarnings groups={groups} />
+            <OptimizerWarnings />
             <div className="mb-6">
               <h2 className="text-lg font-semibold">
                 Select Groups to Optimize

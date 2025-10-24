@@ -1,12 +1,48 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { render, screen, waitFor } from '@testing-library/react'
 import { OptimizerWarnings } from '../optimizer-warnings'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
-import type { GroupWithServers } from '../../hooks/use-mcp-optimizer-groups'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { server } from '@/common/mocks/node'
+import { http, HttpResponse } from 'msw'
+import { mswEndpoint } from '@/common/mocks/customHandlers'
+import React from 'react'
+
+const createQueryClientWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+    },
+  })
+
+  const Wrapper = ({ children }: { children: React.ReactNode }) =>
+    React.createElement(QueryClientProvider, { client: queryClient }, children)
+
+  return { queryClient, Wrapper }
+}
 
 describe('OptimizerWarnings', () => {
-  it('renders the experimental feature warning', () => {
-    render(<OptimizerWarnings groups={[]} />)
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+  })
+
+  it('renders the experimental feature warning', async () => {
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups/:name'), () =>
+        HttpResponse.json({
+          name: MCP_OPTIMIZER_GROUP_NAME,
+          registered_clients: [],
+        })
+      )
+    )
+
+    const { Wrapper } = createQueryClientWrapper()
+    render(
+      <Wrapper>
+        <OptimizerWarnings />
+      </Wrapper>
+    )
 
     expect(screen.getByText('Experimental Feature')).toBeInTheDocument()
     expect(
@@ -16,49 +52,76 @@ describe('OptimizerWarnings', () => {
     ).toBeInTheDocument()
   })
 
-  it('renders only one alert when clients are registered', () => {
-    const groups: GroupWithServers[] = [
-      {
-        name: MCP_OPTIMIZER_GROUP_NAME,
-        registered_clients: ['vscode', 'cursor'],
-        servers: [],
-      },
-    ]
-    const { container } = render(<OptimizerWarnings groups={groups} />)
+  it('renders only one alert when clients are registered', async () => {
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups/:name'), () =>
+        HttpResponse.json({
+          name: MCP_OPTIMIZER_GROUP_NAME,
+          registered_clients: ['vscode', 'cursor'],
+        })
+      )
+    )
 
-    const alerts = container.querySelectorAll('[role="alert"]')
-    expect(alerts).toHaveLength(1)
+    const { Wrapper } = createQueryClientWrapper()
+    const { container } = render(
+      <Wrapper>
+        <OptimizerWarnings />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      const alerts = container.querySelectorAll('[role="alert"]')
+      expect(alerts).toHaveLength(1)
+    })
   })
 
-  it('renders no clients registered alert when optimizer group has no clients', () => {
-    const groups: GroupWithServers[] = [
-      {
-        name: MCP_OPTIMIZER_GROUP_NAME,
-        registered_clients: [],
-        servers: [],
-      },
-    ]
-    render(<OptimizerWarnings groups={groups} />)
+  it('renders no clients registered alert when optimizer group has no clients', async () => {
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups/:name'), () =>
+        HttpResponse.json({
+          name: MCP_OPTIMIZER_GROUP_NAME,
+          registered_clients: [],
+        })
+      )
+    )
 
-    expect(screen.getByText('No clients registered')).toBeInTheDocument()
+    const { Wrapper } = createQueryClientWrapper()
+    render(
+      <Wrapper>
+        <OptimizerWarnings />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('No clients registered')).toBeInTheDocument()
+    })
     expect(
       screen.getByText(
-        'We recommend registering clients in the MCP Optimizer group.'
+        'We recommend registering clients in the selected optimized group.'
       )
     ).toBeInTheDocument()
   })
 
-  it('renders two alerts when no clients are registered', () => {
-    const groups: GroupWithServers[] = [
-      {
-        name: MCP_OPTIMIZER_GROUP_NAME,
-        registered_clients: [],
-        servers: [],
-      },
-    ]
-    const { container } = render(<OptimizerWarnings groups={groups} />)
+  it('renders two alerts when no clients are registered', async () => {
+    server.use(
+      http.get(mswEndpoint('/api/v1beta/groups/:name'), () =>
+        HttpResponse.json({
+          name: MCP_OPTIMIZER_GROUP_NAME,
+          registered_clients: [],
+        })
+      )
+    )
 
-    const alerts = container.querySelectorAll('[role="alert"]')
-    expect(alerts).toHaveLength(2)
+    const { Wrapper } = createQueryClientWrapper()
+    const { container } = render(
+      <Wrapper>
+        <OptimizerWarnings />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      const alerts = container.querySelectorAll('[role="alert"]')
+      expect(alerts).toHaveLength(2)
+    })
   })
 })
