@@ -87,7 +87,10 @@ export function GroupSelectorForm({
                 })
 
                 if (data.selectedGroup) {
-                  await saveGroupClients(data.selectedGroup, previousGroupName)
+                  await saveGroupClients({
+                    groupName: data.selectedGroup,
+                    previousGroupName,
+                  })
                   toast.success(
                     `Meta Optimizer for ${data.selectedGroup} is available`
                   )

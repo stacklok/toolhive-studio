@@ -319,10 +319,10 @@ describe('GroupSelectorForm', () => {
       await user.click(submitButton)
 
       await waitFor(() => {
-        expect(mockSaveGroupClients).toHaveBeenCalledWith(
-          'default',
-          'old-group'
-        )
+        expect(mockSaveGroupClients).toHaveBeenCalledWith({
+          groupName: 'default',
+          previousGroupName: 'old-group',
+        })
         expect(toast.success).toHaveBeenCalledWith(
           'Meta Optimizer for default is available'
         )
@@ -463,10 +463,10 @@ describe('GroupSelectorForm', () => {
       await user.click(submitButtons[0] as unknown as Element)
 
       await waitFor(() => {
-        expect(mockSaveGroupClients).toHaveBeenCalledWith(
-          'default',
-          'old-group'
-        )
+        expect(mockSaveGroupClients).toHaveBeenCalledWith({
+          groupName: 'default',
+          previousGroupName: 'old-group',
+        })
       })
 
       // The error should be caught and a specific error toast should be shown

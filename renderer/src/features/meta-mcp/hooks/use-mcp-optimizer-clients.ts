@@ -12,6 +12,11 @@ import log from 'electron-log/renderer'
 import type { GroupsGroup } from '@api/types.gen'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 
+const getClientFieldName = (clientType: string): string =>
+  `enable${clientType
+    .charAt(0)
+    .toUpperCase()}${clientType.slice(1).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())}`
+
 export function useMcpOptimizerClients() {
   const { mutateAsync: registerClients } = useToastMutation({
     ...postApiV1BetaClientsRegisterMutation(),
@@ -89,7 +94,15 @@ export function useMcpOptimizerClients() {
   )
 
   const saveGroupClients = useCallback(
-    async (groupName: string, previousGroupName?: string) => {
+    async ({
+      groupName,
+      previousGroupName,
+      clientsStatus,
+    }: {
+      groupName: string
+      previousGroupName?: string
+      clientsStatus?: Record<string, boolean>
+    }) => {
       try {
         const isGroupChanged =
           previousGroupName && previousGroupName !== groupName
@@ -123,13 +136,13 @@ export function useMcpOptimizerClients() {
           (client) => !currentOptimizerClients.includes(client)
         )
         const clientsToRemove = currentOptimizerClients.filter(
-          (client) => !selectedGroupClients.includes(client) && isGroupChanged
+          (client) => clientsStatus?.[getClientFieldName(client)] === false
         )
         log.info(
-          `Clients to add to optimizer group: ${clientsToAdd.join(', ')}`
+          `Clients to add to optimizer group: ${clientsToAdd.join(', ') ?? 'none'}`
         )
         log.info(
-          `Clients to remove from optimizer group: ${clientsToRemove.join(', ')}`
+          `Clients to remove from optimizer group: ${clientsToRemove.join(', ') ?? 'none'}`
         )
 
         if (clientsToAdd.length > 0) {
