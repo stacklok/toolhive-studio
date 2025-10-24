@@ -124,12 +124,13 @@ function GroupRoute() {
                   <DropdownMenuRunMcpServer
                     openRunCommandDialog={setServerDialogOpen}
                   />
-                  <ManageClientsButton
-                    isOptimizedGroupName={isOptimizedGroupName}
-                    groupName={groupName}
-                  />
                 </>
               )}
+              <ManageClientsButton
+                isOptimizedGroupName={isOptimizedGroupName}
+                groupName={groupName}
+              />
+
               <GroupActionsDropdown groupName={groupName} />
             </div>
 
