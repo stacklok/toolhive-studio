@@ -1,9 +1,5 @@
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
-import {
-  useQuery,
-  useQueryClient,
-  useSuspenseQuery,
-} from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { trackEvent } from '@/common/lib/analytics'
 import {
   getApiV1BetaDiscoveryClientsOptions,
@@ -34,13 +30,16 @@ export function useManageClients(groupName: string) {
       ?.registered_clients ?? []
 
   const isOptimizedGroupName = useIsOptimizedGroupName(groupName)
-  const {
-    data: { clients = [] },
-  } = useSuspenseQuery(getApiV1BetaDiscoveryClientsOptions())
+  const { data: clientsData } = useQuery({
+    ...getApiV1BetaDiscoveryClientsOptions(),
+    staleTime: 0,
+    gcTime: 0,
+  })
 
-  const installedClients = clients.filter(
-    (client) => client.installed && client.client_type
-  )
+  const installedClients =
+    clientsData?.clients?.filter(
+      (client) => client.installed && client.client_type
+    ) ?? []
 
   const getClientFieldName = (clientType: string): string =>
     `enable${clientType

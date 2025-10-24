@@ -29,10 +29,14 @@ describe('OptimizerWarnings', () => {
 
   it('renders the experimental feature warning', async () => {
     server.use(
-      http.get(mswEndpoint('/api/v1beta/groups/:name'), () =>
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({
-          name: MCP_OPTIMIZER_GROUP_NAME,
-          registered_clients: [],
+          groups: [
+            {
+              name: MCP_OPTIMIZER_GROUP_NAME,
+              registered_clients: [],
+            },
+          ],
         })
       )
     )
@@ -54,10 +58,14 @@ describe('OptimizerWarnings', () => {
 
   it('renders only one alert when clients are registered', async () => {
     server.use(
-      http.get(mswEndpoint('/api/v1beta/groups/:name'), () =>
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({
-          name: MCP_OPTIMIZER_GROUP_NAME,
-          registered_clients: ['vscode', 'cursor'],
+          groups: [
+            {
+              name: MCP_OPTIMIZER_GROUP_NAME,
+              registered_clients: ['vscode', 'cursor'],
+            },
+          ],
         })
       )
     )
@@ -77,10 +85,14 @@ describe('OptimizerWarnings', () => {
 
   it('renders no clients registered alert when optimizer group has no clients', async () => {
     server.use(
-      http.get(mswEndpoint('/api/v1beta/groups/:name'), () =>
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({
-          name: MCP_OPTIMIZER_GROUP_NAME,
-          registered_clients: [],
+          groups: [
+            {
+              name: MCP_OPTIMIZER_GROUP_NAME,
+              registered_clients: [],
+            },
+          ],
         })
       )
     )
@@ -104,10 +116,14 @@ describe('OptimizerWarnings', () => {
 
   it('renders two alerts when no clients are registered', async () => {
     server.use(
-      http.get(mswEndpoint('/api/v1beta/groups/:name'), () =>
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({
-          name: MCP_OPTIMIZER_GROUP_NAME,
-          registered_clients: [],
+          groups: [
+            {
+              name: MCP_OPTIMIZER_GROUP_NAME,
+              registered_clients: [],
+            },
+          ],
         })
       )
     )

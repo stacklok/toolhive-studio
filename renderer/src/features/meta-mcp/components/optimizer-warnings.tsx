@@ -6,14 +6,15 @@ import {
 import { AlertTriangle, InfoIcon } from 'lucide-react'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 import { useQuery } from '@tanstack/react-query'
-import { getApiV1BetaGroupsByNameOptions } from '@api/@tanstack/react-query.gen'
+import { getApiV1BetaGroupsOptions } from '@api/@tanstack/react-query.gen'
 
 export function OptimizerWarnings() {
-  const { data: optimizerGroup } = useQuery({
-    ...getApiV1BetaGroupsByNameOptions({
-      path: { name: MCP_OPTIMIZER_GROUP_NAME },
-    }),
+  const { data: groupsData } = useQuery({
+    ...getApiV1BetaGroupsOptions({}),
   })
+  const optimizerGroup = groupsData?.groups?.find(
+    (g) => g.name === MCP_OPTIMIZER_GROUP_NAME
+  )
 
   return (
     <>

@@ -49,12 +49,18 @@ export function useCreateOptimizerWorkload() {
     isPending: isPendingCreateMetaOptimizerWorkload,
   } = useToastMutation({
     ...postApiV1BetaWorkloadsMutation(),
-    onMutate: async (variables) => {
+    onError: (error) => {
+      toast.error('Failed to create MCP Optimizer workload')
+      log.error('Failed to create MCP Optimizer workload', error)
+    },
+    onSuccess: async (data, variables) => {
       const groupToOptimize =
         variables.body.env_vars?.[ALLOWED_GROUPS_ENV_VAR] ?? ''
       if (groupToOptimize) {
         try {
           await saveGroupClients(groupToOptimize)
+          log.info('MCP Optimizer workload created', data)
+          toast.success('MCP Optimizer installed and running')
         } catch (error) {
           log.error('Failed to save group clients', error)
           toast.error(
@@ -66,14 +72,6 @@ export function useCreateOptimizerWorkload() {
           return
         }
       }
-    },
-    onError: (error) => {
-      toast.error('Failed to create MCP Optimizer workload')
-      log.error('Failed to create MCP Optimizer workload', error)
-    },
-    onSuccess: (data) => {
-      log.info('MCP Optimizer workload created', data)
-      toast.success('MCP Optimizer installed and running')
     },
   })
 

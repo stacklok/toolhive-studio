@@ -58,6 +58,8 @@ export function GroupSelectorForm({
     startTransition(async () => {
       try {
         if (metaMcpConfig) {
+          const previousGroupName =
+            metaMcpConfig?.env_vars?.[ALLOWED_GROUPS_ENV_VAR]
           const envVars = [
             ...Object.entries(metaMcpConfig?.env_vars ?? {})
               .filter(([name]) => name !== ALLOWED_GROUPS_ENV_VAR)
@@ -85,7 +87,7 @@ export function GroupSelectorForm({
                 })
 
                 if (data.selectedGroup) {
-                  await saveGroupClients(data.selectedGroup)
+                  await saveGroupClients(data.selectedGroup, previousGroupName)
                   toast.success(
                     `Meta Optimizer for ${data.selectedGroup} is available`
                   )
