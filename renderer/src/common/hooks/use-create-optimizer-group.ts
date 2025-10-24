@@ -16,7 +16,6 @@ export function useCreateOptimizerGroup() {
   const isExperimentalFeaturesEnabled = useFeatureFlag(
     featureFlagKeys.EXPERIMENTAL_FEATURES
   )
-  const isMetaOptimizerEnabled = useFeatureFlag(featureFlagKeys.META_OPTIMIZER)
   const { data: rawGroups } = useQuery({
     ...getApiV1BetaGroupsOptions(),
     staleTime: 0,
@@ -51,12 +50,7 @@ export function useCreateOptimizerGroup() {
 
     if (!isExperimentalFeaturesEnabled) return
     await createOptimizerGroup()
-  }, [
-    isExperimentalFeaturesEnabled,
-    isMetaOptimizerEnabled,
-    createOptimizerGroup,
-    rawGroups,
-  ])
+  }, [isExperimentalFeaturesEnabled, createOptimizerGroup, rawGroups])
 
   return { handleCreateOptimizerGroup, isCreatingOptimizerGroup }
 }

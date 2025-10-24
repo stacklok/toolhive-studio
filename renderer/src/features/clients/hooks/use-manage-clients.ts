@@ -7,23 +7,18 @@ import {
   getApiV1BetaClientsQueryKey,
   postApiV1BetaClientsMutation,
   getApiV1BetaGroupsQueryKey,
+  getApiV1BetaGroupsOptions,
 } from '@api/@tanstack/react-query.gen'
 import {
   getApiV1BetaClients,
   deleteApiV1BetaClientsByNameGroupsByGroup,
-  getApiV1BetaGroups,
 } from '@api/sdk.gen'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 import { useIsOptimizedGroupName } from './use-is-optimized-group-name'
 
 export function useManageClients(groupName: string) {
   const { data: groupsData } = useQuery({
-    queryKey: getApiV1BetaGroupsQueryKey(),
-    queryFn: async () => {
-      const { data: response } = await getApiV1BetaGroups()
-
-      return response
-    },
+    ...getApiV1BetaGroupsOptions(),
   })
   const optimizerClients =
     groupsData?.groups?.find((g) => g.name === MCP_OPTIMIZER_GROUP_NAME)
