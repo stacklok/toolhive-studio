@@ -26,9 +26,9 @@ beforeEach(() => {
     http.get(mswEndpoint('/api/v1beta/workloads'), () =>
       HttpResponse.json({
         workloads: [
-          { name: 'server1', group: 'default' },
-          { name: 'server2', group: 'default' },
-          { name: 'server3', group: 'production' },
+          { name: 'server1', group: 'default', status: 'running' },
+          { name: 'server2', group: 'default', status: 'running' },
+          { name: 'server3', group: 'production', status: 'running' },
         ],
       })
     )
@@ -107,6 +107,36 @@ it('displays server names for each group', async () => {
   expect(screen.getByText('server3')).toBeInTheDocument()
 })
 
+it('only displays running servers and filters out stopped ones', async () => {
+  server.use(
+    http.get(mswEndpoint('/api/v1beta/groups'), () =>
+      HttpResponse.json({
+        groups: [{ name: 'default' }, { name: 'production' }],
+      })
+    ),
+    http.get(mswEndpoint('/api/v1beta/workloads'), () =>
+      HttpResponse.json({
+        workloads: [
+          { name: 'server1', group: 'default', status: 'running' },
+          { name: 'server2', group: 'default', status: 'stopped' },
+          { name: 'server3', group: 'production', status: 'running' },
+          { name: 'server4', group: 'production', status: 'exited' },
+        ],
+      })
+    )
+  )
+
+  renderRoute(router)
+
+  await waitFor(() => {
+    expect(screen.getByText('server1')).toBeInTheDocument()
+  })
+
+  expect(screen.getByText('server3')).toBeInTheDocument()
+  expect(screen.queryByText('server2')).not.toBeInTheDocument()
+  expect(screen.queryByText('server4')).not.toBeInTheDocument()
+})
+
 it('hides the mcp-optimizer group even when present in fixture data', async () => {
   server.use(
     http.get(mswEndpoint('/api/v1beta/groups'), () =>
@@ -121,9 +151,13 @@ it('hides the mcp-optimizer group even when present in fixture data', async () =
     http.get(mswEndpoint('/api/v1beta/workloads'), () =>
       HttpResponse.json({
         workloads: [
-          { name: 'server1', group: 'default' },
-          { name: 'meta-mcp', group: MCP_OPTIMIZER_GROUP_NAME },
-          { name: 'server3', group: 'production' },
+          { name: 'server1', group: 'default', status: 'running' },
+          {
+            name: 'meta-mcp',
+            group: MCP_OPTIMIZER_GROUP_NAME,
+            status: 'running',
+          },
+          { name: 'server3', group: 'production', status: 'running' },
         ],
       })
     )

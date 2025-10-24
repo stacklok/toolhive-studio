@@ -24,15 +24,17 @@ export function useMcpOptimizerGroups() {
   const groupsWithServers = useMemo(() => {
     const serversByGroup: Record<string, string[]> = {}
 
-    workloads.forEach((workload) => {
-      const groupName = workload.group ?? 'default'
-      if (!serversByGroup[groupName]) {
-        serversByGroup[groupName] = []
-      }
-      if (workload.name) {
-        serversByGroup[groupName].push(workload.name)
-      }
-    })
+    workloads
+      .filter((workload) => workload.status === 'running')
+      .forEach((workload) => {
+        const groupName = workload.group ?? 'default'
+        if (!serversByGroup[groupName]) {
+          serversByGroup[groupName] = []
+        }
+        if (workload.name) {
+          serversByGroup[groupName].push(workload.name)
+        }
+      })
 
     return groups.map((group) => ({
       ...group,
