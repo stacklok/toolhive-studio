@@ -36,6 +36,35 @@ export const Route = createFileRoute('/group/$groupName')({
   component: GroupRoute,
 })
 
+function getPageTitle(isOptimizedGroupName: boolean) {
+  if (!isOptimizedGroupName) {
+    return 'MCP Servers'
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      MCP Servers
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="link"
+            size="icon"
+            asChild
+            aria-label="View optimizer settings"
+          >
+            <LinkViewTransition to="/mcp-optimizer">
+              <Sparkles className="size-4" />
+            </LinkViewTransition>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          This group is optimized by the MCP Optimizer
+        </TooltipContent>
+      </Tooltip>
+    </div>
+  )
+}
+
 function GroupRoute() {
   const { groupName } = Route.useParams()
   const isOptimizedGroupName = useIsOptimizedGroupName(groupName)
@@ -86,29 +115,7 @@ function GroupRoute() {
     <div className="flex h-full gap-6">
       <McpServersSidebar currentGroupName={groupName} />
       <div className="ml-sidebar min-w-0 flex-1">
-        <TitlePage
-          title={
-            isOptimizedGroupName ? (
-              <div className="flex items-center gap-2">
-                MCP Servers
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="link" size="icon" asChild>
-                      <LinkViewTransition to="/mcp-optimizer">
-                        <Sparkles className="size-4" />
-                      </LinkViewTransition>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    This group is optimized by the MCP Optimizer
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            ) : (
-              'MCP Servers'
-            )
-          }
-        >
+        <TitlePage title={getPageTitle(isOptimizedGroupName)}>
           <>
             <div className="flex gap-2 lg:ml-auto">
               {workloads.length > 0 && (
