@@ -6,37 +6,16 @@ import {
   getApiV1BetaGroupsOptions,
   postApiV1BetaClientsRegisterMutation,
   postApiV1BetaClientsUnregisterMutation,
-  getApiV1BetaWorkloadsByNameOptions,
 } from '@api/@tanstack/react-query.gen'
 import { queryClient } from '@/common/lib/query-client'
 import log from 'electron-log/renderer'
-import { toast } from 'sonner'
 import type { GroupsGroup } from '@api/types.gen'
-import {
-  MCP_OPTIMIZER_GROUP_NAME,
-  META_MCP_SERVER_NAME,
-} from '@/common/lib/constants'
-import { useQuery } from '@tanstack/react-query'
-import { featureFlagKeys } from '../../../../../utils/feature-flags'
-import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 
 export function useMcpOptimizerClients() {
-  const isExperimentalFeaturesEnabled = useFeatureFlag(
-    featureFlagKeys.EXPERIMENTAL_FEATURES
-  )
-  const isMetaOptimizerEnabled = useFeatureFlag(featureFlagKeys.META_OPTIMIZER)
-  const { data: optimizerWorkloadDetail } = useQuery({
-    ...getApiV1BetaWorkloadsByNameOptions({
-      path: { name: META_MCP_SERVER_NAME },
-    }),
-    staleTime: 0,
-    gcTime: 0,
-    enabled: isExperimentalFeaturesEnabled && isMetaOptimizerEnabled,
-  })
   const { mutateAsync: registerClients } = useToastMutation({
     ...postApiV1BetaClientsRegisterMutation(),
     onError: (error) => {
-      toast.error('Error registering clients to MCP Optimizer group')
       log.error('Error registering clients', error)
     },
     onSuccess: (_, variables) => {
@@ -45,7 +24,7 @@ export function useMcpOptimizerClients() {
       )
     },
     onSettled: async () => {
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: getApiV1BetaDiscoveryClientsQueryKey(),
       })
       await queryClient.invalidateQueries({
@@ -57,7 +36,6 @@ export function useMcpOptimizerClients() {
   const { mutateAsync: unregisterClients } = useToastMutation({
     ...postApiV1BetaClientsUnregisterMutation(),
     onError: (error) => {
-      toast.error('Error unregistering clients from MCP Optimizer group')
       log.error('Error unregistering clients', error)
     },
     onSuccess: (_, variables) => {
@@ -66,7 +44,7 @@ export function useMcpOptimizerClients() {
       )
     },
     onSettled: async () => {
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: getApiV1BetaDiscoveryClientsQueryKey(),
       })
       await queryClient.invalidateQueries({
@@ -111,13 +89,15 @@ export function useMcpOptimizerClients() {
   )
 
   const saveGroupClients = useCallback(
-    async (groupName: string) => {
+    async (groupName: string, previousGroupName?: string) => {
       try {
-        const currentAllowedGroup =
-          optimizerWorkloadDetail?.env_vars?.ALLOWED_GROUPS
-
-        if (currentAllowedGroup && currentAllowedGroup !== groupName) {
-          await restoreClientsToGroup(currentAllowedGroup)
+        const isGroupChanged =
+          previousGroupName && previousGroupName !== groupName
+        if (isGroupChanged) {
+          await restoreClientsToGroup(previousGroupName)
+          log.info(
+            `Restored clients from ${previousGroupName} to ${groupName} group`
+          )
         }
 
         const groupsData = await queryClient.fetchQuery(
@@ -133,58 +113,84 @@ export function useMcpOptimizerClients() {
           return
         }
 
-        const targetClients = selectedGroup.registered_clients ?? []
-        const currentClients =
+        const selectedGroupClients = selectedGroup.registered_clients ?? []
+        const currentOptimizerClients =
           groupsData?.groups?.find(
             (g: GroupsGroup) => g.name === MCP_OPTIMIZER_GROUP_NAME
           )?.registered_clients ?? []
 
-        const clientsToAdd = targetClients.filter(
-          (client) => !currentClients.includes(client)
+        const clientsToAdd = selectedGroupClients.filter(
+          (client) => !currentOptimizerClients.includes(client)
         )
-        const clientsToRemove = currentClients.filter(
-          (client) => !targetClients.includes(client)
+        const clientsToRemove = currentOptimizerClients.filter(
+          (client) => !selectedGroupClients.includes(client) && isGroupChanged
+        )
+        log.info(
+          `Clients to add to optimizer group: ${clientsToAdd.join(', ')}`
+        )
+        log.info(
+          `Clients to remove from optimizer group: ${clientsToRemove.join(', ')}`
         )
 
         if (clientsToAdd.length > 0) {
-          await registerClients({
-            body: {
-              names: clientsToAdd,
-              groups: [MCP_OPTIMIZER_GROUP_NAME],
-            },
-          })
+          try {
+            await registerClients({
+              body: {
+                names: clientsToAdd,
+                groups: [MCP_OPTIMIZER_GROUP_NAME],
+              },
+            })
+          } catch (error) {
+            log.error(`Failed to register clients to optimizer group:`, error)
+            throw new Error(
+              `Failed to add servers to optimizer group: ${clientsToAdd.join(', ')}`
+            )
+          }
         }
 
         if (clientsToRemove.length > 0) {
-          await unregisterClients({
-            body: {
-              names: clientsToRemove,
-              groups: [MCP_OPTIMIZER_GROUP_NAME],
-            },
-          })
+          try {
+            await unregisterClients({
+              body: {
+                names: clientsToRemove,
+                groups: [MCP_OPTIMIZER_GROUP_NAME],
+              },
+            })
+          } catch (error) {
+            log.error(
+              `Failed to unregister clients from optimizer group:`,
+              error
+            )
+            throw new Error(
+              `Failed to remove servers from optimizer group: ${clientsToRemove.join(', ')}`
+            )
+          }
         }
 
-        if (targetClients.length > 0) {
-          await unregisterClients({
-            body: {
-              names: targetClients,
-              groups: [groupName],
-            },
-          })
-          log.info(
-            `Removed all clients from ${groupName}: ${targetClients.join(', ')}`
-          )
+        if (selectedGroupClients.length > 0) {
+          try {
+            await unregisterClients({
+              body: {
+                names: selectedGroupClients,
+                groups: [groupName],
+              },
+            })
+            log.info(
+              `Removed all clients from ${groupName}: ${selectedGroupClients.join(', ')}`
+            )
+          } catch (error) {
+            log.error(`Failed to unregister clients from ${groupName}:`, error)
+            throw new Error(
+              `Failed to unregister servers from ${groupName}: ${selectedGroupClients.join(', ')}`
+            )
+          }
         }
       } catch (error) {
         log.error(`Error syncing clients for group ${groupName}:`, error)
+        throw error
       }
     },
-    [
-      registerClients,
-      unregisterClients,
-      restoreClientsToGroup,
-      optimizerWorkloadDetail,
-    ]
+    [registerClients, unregisterClients, restoreClientsToGroup]
   )
 
   return { saveGroupClients, restoreClientsToGroup }

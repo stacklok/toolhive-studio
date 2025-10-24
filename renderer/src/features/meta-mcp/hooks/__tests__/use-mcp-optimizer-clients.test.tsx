@@ -4,10 +4,7 @@ import { useMcpOptimizerClients } from '../use-mcp-optimizer-clients'
 import { server, recordRequests } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
-import {
-  MCP_OPTIMIZER_GROUP_NAME,
-  META_MCP_SERVER_NAME,
-} from '@/common/lib/constants'
+import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 import { queryClient } from '@/common/lib/query-client'
 import { QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
@@ -115,12 +112,8 @@ describe('useMcpOptimizerClients', () => {
           req.pathname === '/api/v1beta/clients/unregister'
       )
 
-      expect(unregisterRequests).toHaveLength(2)
+      expect(unregisterRequests).toHaveLength(1)
       expect(unregisterRequests[0]?.payload).toEqual({
-        names: ['vscode', 'windsurf'],
-        groups: [MCP_OPTIMIZER_GROUP_NAME],
-      })
-      expect(unregisterRequests[1]?.payload).toEqual({
         names: ['cursor'],
         groups: ['test'],
       })
@@ -174,12 +167,8 @@ describe('useMcpOptimizerClients', () => {
         groups: [MCP_OPTIMIZER_GROUP_NAME],
       })
 
-      expect(unregisterRequests).toHaveLength(2)
+      expect(unregisterRequests).toHaveLength(1)
       expect(unregisterRequests[0]?.payload).toEqual({
-        names: ['vscode'],
-        groups: [MCP_OPTIMIZER_GROUP_NAME],
-      })
-      expect(unregisterRequests[1]?.payload).toEqual({
         names: ['cursor', 'claude-code'],
         groups: ['test'],
       })
@@ -423,13 +412,6 @@ describe('useMcpOptimizerClients', () => {
           ],
         })
       ),
-      http.get(`*/api/v1beta/workloads/${META_MCP_SERVER_NAME}`, () =>
-        HttpResponse.json({
-          env_vars: {
-            ALLOWED_GROUPS: 'production',
-          },
-        })
-      ),
       http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
         HttpResponse.json([])
       ),
@@ -442,17 +424,7 @@ describe('useMcpOptimizerClients', () => {
 
     const { result } = renderHook(() => useMcpOptimizerClients(), { wrapper })
 
-    // Wait for workload query to complete
-    await waitFor(() => {
-      const workloadRequest = rec.recordedRequests.find(
-        (req) =>
-          req.method === 'GET' &&
-          req.pathname.includes(`/api/v1beta/workloads/${META_MCP_SERVER_NAME}`)
-      )
-      expect(workloadRequest).toBeDefined()
-    })
-
-    await result.current.saveGroupClients('staging')
+    await result.current.saveGroupClients('staging', 'production')
 
     await waitFor(() => {
       const registerRequests = rec.recordedRequests.filter(
