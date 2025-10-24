@@ -271,6 +271,17 @@ app.whenReady().then(async () => {
       mainWindow.webContents.once('did-finish-load', () => {
         log.info('Main window did-finish-load event triggered')
       })
+
+      // Windows-specific: Handle system shutdown/restart/logout
+      if (process.platform === 'win32') {
+        mainWindow.on('session-end', (event) => {
+          log.info(
+            `[session-end] Windows session ending (reasons: ${event.reasons.join(', ')}), forcing cleanup...`
+          )
+          stopToolhive()
+          safeTrayDestroy()
+        })
+      }
     }
   } catch (error) {
     log.error('Failed to create main window:', error)
@@ -346,9 +357,19 @@ app.on('before-quit', async (e) => {
 })
 app.on('will-quit', (e) => blockQuit('will-quit', e))
 
+app.on('quit', () => {
+  log.info('[quit event] Ensuring ToolHive cleanup...')
+  // Only cleanup if not already tearing down to avoid double cleanup
+  if (!getTearingDownState()) {
+    stopToolhive()
+    safeTrayDestroy()
+  }
+})
+
 // Docker / Ctrl-C etc.
 ;['SIGTERM', 'SIGINT'].forEach((sig) =>
-  process.on(sig as NodeJS.Signals, async () => {
+  process.on(sig, async () => {
+    log.info(`[${sig}] start...`)
     if (getTearingDownState()) return
     setTearingDownState(true)
     setQuittingState(true)
@@ -365,6 +386,12 @@ app.on('will-quit', (e) => blockQuit('will-quit', e))
     }
   })
 )
+
+process.on('exit', (code) => {
+  log.info(`[process exit] code=${code}, ensuring ToolHive is stopped...`)
+  // Note: Only synchronous operations work here, so we force immediate SIGKILL
+  stopToolhive({ force: true })
+})
 
 ipcMain.handle('dark-mode:toggle', () => {
   nativeTheme.themeSource = nativeTheme.shouldUseDarkColors ? 'light' : 'dark'

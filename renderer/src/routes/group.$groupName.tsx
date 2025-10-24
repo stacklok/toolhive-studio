@@ -13,6 +13,15 @@ import { DropdownMenuRunMcpServer } from '@/features/mcp-servers/components/drop
 import { WrapperDialogFormMcp } from '@/features/mcp-servers/components/wrapper-dialog-mcp'
 import { ManageClientsButton } from '@/features/clients/components/manage-clients-button'
 import { GroupActionsDropdown } from '@/features/mcp-servers/components/group-actions-dropdown'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/common/components/ui/tooltip'
+import { useIsOptimizedGroupName } from '@/features/clients/hooks/use-is-optimized-group-name'
+import { Button } from '@/common/components/ui/button'
+import { Sparkles } from 'lucide-react'
+import { LinkViewTransition } from '@/common/components/link-view-transition'
 
 export const Route = createFileRoute('/group/$groupName')({
   loader: ({ context: { queryClient }, params: { groupName } }) =>
@@ -27,8 +36,38 @@ export const Route = createFileRoute('/group/$groupName')({
   component: GroupRoute,
 })
 
+function getPageTitle(isOptimizedGroupName: boolean) {
+  if (!isOptimizedGroupName) {
+    return 'MCP Servers'
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      MCP Servers
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="link"
+            size="icon"
+            asChild
+            aria-label="View optimizer settings"
+          >
+            <LinkViewTransition to="/mcp-optimizer">
+              <Sparkles className="size-4" />
+            </LinkViewTransition>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          This group is optimized by the MCP Optimizer
+        </TooltipContent>
+      </Tooltip>
+    </div>
+  )
+}
+
 function GroupRoute() {
   const { groupName } = Route.useParams()
+  const isOptimizedGroupName = useIsOptimizedGroupName(groupName)
 
   const { data, refetch } = useSuspenseQuery({
     ...getApiV1BetaWorkloadsOptions({
@@ -76,7 +115,7 @@ function GroupRoute() {
     <div className="flex h-full gap-6">
       <McpServersSidebar currentGroupName={groupName} />
       <div className="ml-sidebar min-w-0 flex-1">
-        <TitlePage title="MCP Servers">
+        <TitlePage title={getPageTitle(isOptimizedGroupName)}>
           <>
             <div className="flex gap-2 lg:ml-auto">
               {workloads.length > 0 && (
@@ -85,7 +124,10 @@ function GroupRoute() {
                   <DropdownMenuRunMcpServer
                     openRunCommandDialog={setServerDialogOpen}
                   />
-                  <ManageClientsButton groupName={groupName} />
+                  <ManageClientsButton
+                    isOptimizedGroupName={isOptimizedGroupName}
+                    groupName={groupName}
+                  />
                 </>
               )}
               <GroupActionsDropdown groupName={groupName} />

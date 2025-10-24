@@ -38,12 +38,18 @@ describe('ManageClientsButton – BDD flows', () => {
     vi.clearAllMocks()
   })
 
-  const renderWithProviders = (props: { groupName: string }) =>
+  const renderWithProviders = (props: {
+    groupName: string
+    isOptimizedGroupName?: boolean
+  }) =>
     render(
       <QueryClientProvider client={queryClient}>
         <PromptProvider>
           <Suspense fallback={null}>
-            <ManageClientsButton {...props} />
+            <ManageClientsButton
+              isOptimizedGroupName={props.isOptimizedGroupName ?? false}
+              {...props}
+            />
           </Suspense>
         </PromptProvider>
       </QueryClientProvider>

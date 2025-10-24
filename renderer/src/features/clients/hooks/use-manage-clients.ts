@@ -1,9 +1,5 @@
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
-import {
-  useQuery,
-  useQueryClient,
-  useSuspenseQuery,
-} from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { trackEvent } from '@/common/lib/analytics'
 import {
   getApiV1BetaDiscoveryClientsOptions,
@@ -11,36 +7,34 @@ import {
   getApiV1BetaClientsQueryKey,
   postApiV1BetaClientsMutation,
   getApiV1BetaGroupsQueryKey,
+  getApiV1BetaGroupsOptions,
 } from '@api/@tanstack/react-query.gen'
 import {
   getApiV1BetaClients,
   deleteApiV1BetaClientsByNameGroupsByGroup,
-  getApiV1BetaGroups,
 } from '@api/sdk.gen'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 import { useIsOptimizedGroupName } from './use-is-optimized-group-name'
 
 export function useManageClients(groupName: string) {
   const { data: groupsData } = useQuery({
-    queryKey: getApiV1BetaGroupsQueryKey(),
-    queryFn: async () => {
-      const { data: response } = await getApiV1BetaGroups()
-
-      return response
-    },
+    ...getApiV1BetaGroupsOptions(),
   })
   const optimizerClients =
     groupsData?.groups?.find((g) => g.name === MCP_OPTIMIZER_GROUP_NAME)
       ?.registered_clients ?? []
 
   const isOptimizedGroupName = useIsOptimizedGroupName(groupName)
-  const {
-    data: { clients = [] },
-  } = useSuspenseQuery(getApiV1BetaDiscoveryClientsOptions())
+  const { data: clientsData } = useQuery({
+    ...getApiV1BetaDiscoveryClientsOptions(),
+    staleTime: 0,
+    gcTime: 0,
+  })
 
-  const installedClients = clients.filter(
-    (client) => client.installed && client.client_type
-  )
+  const installedClients =
+    clientsData?.clients?.filter(
+      (client) => client.installed && client.client_type
+    ) ?? []
 
   const getClientFieldName = (clientType: string): string =>
     `enable${clientType
