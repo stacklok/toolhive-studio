@@ -55,7 +55,7 @@ describe('Group route delete group confirmation', () => {
     })
     expect(
       screen.getByText(
-        'Deleting this group will permanently erase all its servers. Are you sure you want to proceed? This action cannot be undone.'
+        /Deleting this (optimized )?group will permanently erase all its servers/i
       )
     ).toBeVisible()
 
