@@ -34,7 +34,7 @@ export function LoadingStateDialog({
 
           <LoadingStateAlert
             title="Installing..."
-            description="Please wait while we download the docker image and configure the MCP Optimizer..."
+            description="Downloading docker image and configuring the MCP Optimizer..."
           />
         </DialogContent>
       </DialogPortal>

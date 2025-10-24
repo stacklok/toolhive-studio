@@ -70,7 +70,7 @@ export function GroupSelectorForm({
           ]
 
           const toastId = toast.loading(
-            `Setting up Meta Optimizer for ${data.selectedGroup} group...`
+            `Setting up MCP Optimizer for ${data.selectedGroup} group...`
           )
           await updateServerMutation(
             {
@@ -91,7 +91,7 @@ export function GroupSelectorForm({
                 if (data.selectedGroup) {
                   await saveGroupClients(data.selectedGroup, previousGroupName)
                   toast.success(
-                    `Meta Optimizer for ${data.selectedGroup} is available`
+                    `MCP Optimizer for ${data.selectedGroup} is available`
                   )
                 }
 
@@ -171,7 +171,7 @@ export function GroupSelectorForm({
             type="submit"
             disabled={isPending || !isSelectedGroup || !isDirty}
           >
-            Apply Changes
+            Set Optimized Group
           </Button>
         </div>
       </form>

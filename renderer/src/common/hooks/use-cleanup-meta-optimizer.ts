@@ -31,7 +31,7 @@ function useDeleteGroup() {
       })
     },
     errorMsg: 'Failed to delete MCP Optimizer group',
-    successMsg: 'MCP Optimizer group deleted successfully',
+    successMsg: 'MCP Optimizer is disabled',
     loadingMsg: 'Disabling MCP Optimizer and cleaning up...',
   })
 
