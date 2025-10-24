@@ -41,7 +41,7 @@ function McpOptimizerContent() {
       <McpServersSidebar />
       <div className={'ml-sidebar min-w-0 flex-1'}>
         <TitlePage title="MCP Optimizer">
-          <>
+          {optimizedGroupName ? (
             <div className="flex gap-2 lg:ml-auto">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -66,19 +66,17 @@ function McpOptimizerContent() {
                       MCP Optimizer logs
                     </LinkViewTransition>
                   </DropdownMenuItem>
-                  {optimizedGroupName ? (
-                    <DropdownMenuItem
-                      className="flex cursor-pointer items-center"
-                      onClick={handleCustomizeConfiguration}
-                    >
-                      <Edit3 className="mr-2 h-4 w-4" />
-                      Customize MCP Optimizer configuration
-                    </DropdownMenuItem>
-                  ) : null}
+                  <DropdownMenuItem
+                    className="flex cursor-pointer items-center"
+                    onClick={handleCustomizeConfiguration}
+                  >
+                    <Edit3 className="mr-2 h-4 w-4" />
+                    Customize MCP Optimizer configuration
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-          </>
+          ) : null}
         </TitlePage>
         <div className="p-6">
           <div className="mx-auto max-w-2xl">

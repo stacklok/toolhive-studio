@@ -46,6 +46,19 @@ it('renders the MCP Optimizer page title', async () => {
 })
 
 it('renders the Advanced dropdown menu button', async () => {
+  server.use(
+    http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
+      if (params.name === META_MCP_SERVER_NAME) {
+        return HttpResponse.json({
+          name: META_MCP_SERVER_NAME,
+          group: MCP_OPTIMIZER_GROUP_NAME,
+          env_vars: { ALLOWED_GROUPS: 'default' },
+        })
+      }
+      return HttpResponse.json(null, { status: 404 })
+    })
+  )
+
   renderRoute(router)
 
   await waitFor(() => {
@@ -365,6 +378,19 @@ it('refetches the selected group when navigating back to the page', async () => 
 })
 
 it('clicking Meta-MCP logs in Advanced menu navigates to logs page', async () => {
+  server.use(
+    http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
+      if (params.name === META_MCP_SERVER_NAME) {
+        return HttpResponse.json({
+          name: META_MCP_SERVER_NAME,
+          group: MCP_OPTIMIZER_GROUP_NAME,
+          env_vars: { ALLOWED_GROUPS: 'default' },
+        })
+      }
+      return HttpResponse.json(null, { status: 404 })
+    })
+  )
+
   const user = userEvent.setup()
   renderRoute(router)
 
