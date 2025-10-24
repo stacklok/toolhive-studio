@@ -91,7 +91,7 @@ export function useExperimentalFeatures() {
             toast.success(`MCP Optimizer enabled`, {
               id: toastIdRef.current,
               description: 'Go to MCP Optimizer page to apply it',
-              duration: Infinity,
+              duration: 10_000,
               closeButton: true,
               classNames: {
                 toast:
