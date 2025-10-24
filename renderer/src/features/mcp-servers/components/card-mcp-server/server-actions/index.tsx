@@ -71,7 +71,7 @@ export function ServerActionsDropdown({
         {isCustomizeToolsEnabled && (
           <CustomizeToolsMenuItem serverName={name} status={status} />
         )}
-        <RemoveServerMenuItem serverName={name} />
+        <RemoveServerMenuItem serverName={name} group={group} />
         <DropdownMenuSeparator />
         <AddServerToGroupMenuItem serverName={name} />
       </DropdownMenuContent>

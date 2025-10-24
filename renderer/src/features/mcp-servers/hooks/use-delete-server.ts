@@ -7,10 +7,18 @@ import {
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { pollServerDelete } from '@/common/lib/polling'
 import { useQueryClient } from '@tanstack/react-query'
+import { useNotificationOptimizer } from './use-notification-optimizer'
 
-export function useDeleteServer({ name }: { name: string }) {
+export function useDeleteServer({
+  name,
+  group,
+}: {
+  name: string
+  group: string
+}) {
   const queryClient = useQueryClient()
   const queryKey = getApiV1BetaWorkloadsQueryKey({ query: { all: true } })
+  const notifyChangeWithOptimizer = useNotificationOptimizer()
 
   return useToastMutation({
     successMsg: `Server ${name} deleted successfully`,
@@ -46,6 +54,7 @@ export function useDeleteServer({ name }: { name: string }) {
           })
         )
       )
+      notifyChangeWithOptimizer(group)
     },
     onSettled: () => {
       queryClient.invalidateQueries({

@@ -10,6 +10,7 @@ import { pollBatchServerStatus } from '@/common/lib/polling'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
+import { useNotificationOptimizer } from './use-notification-optimizer'
 
 const TOAST_ID = 'restart-servers-startup'
 
@@ -151,6 +152,7 @@ export function useMutationRestartServer({
   const queryKey = getApiV1BetaWorkloadsQueryKey({
     query: { all: true, group: group ?? 'default' },
   })
+  const notifyChangeWithOptimizer = useNotificationOptimizer()
 
   return useToastMutation({
     ...getMutationData(name),
@@ -196,6 +198,7 @@ export function useMutationRestartServer({
         [name],
         'running'
       )
+      notifyChangeWithOptimizer(group ?? 'default')
       queryClient.invalidateQueries({ queryKey })
     },
     onError: (_error, _variables, context) => {
