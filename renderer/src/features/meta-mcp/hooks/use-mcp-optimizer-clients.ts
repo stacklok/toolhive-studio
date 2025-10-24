@@ -139,10 +139,10 @@ export function useMcpOptimizerClients() {
           (client) => clientsStatus?.[getClientFieldName(client)] === false
         )
         log.info(
-          `Clients to add to optimizer group: ${clientsToAdd.join(', ') ?? 'none'}`
+          `Clients to add to optimizer group: ${clientsToAdd.join(', ') || 'none'}`
         )
         log.info(
-          `Clients to remove from optimizer group: ${clientsToRemove.join(', ') ?? 'none'}`
+          `Clients to remove from optimizer group: ${clientsToRemove.join(', ') || 'none'}`
         )
 
         if (clientsToAdd.length > 0) {
