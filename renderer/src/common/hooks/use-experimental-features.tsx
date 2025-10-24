@@ -34,7 +34,8 @@ function formatFeatureFlagDescription(key: string): string {
 
 export function useExperimentalFeatures() {
   const toastIdRef = useRef(new Date(Date.now()).toISOString())
-  const { handleCreateOptimizerGroup } = useCreateOptimizerGroup()
+  const { handleCreateOptimizerGroup, isCreatingOptimizerGroup } =
+    useCreateOptimizerGroup()
   const isExperimentalFeaturesEnabled = useFeatureFlag(
     featureFlagKeys.EXPERIMENTAL_FEATURES
   )
@@ -116,7 +117,7 @@ export function useExperimentalFeatures() {
     [cleanupMetaOptimizer, disableFlag, handleCreateOptimizerGroup, enableFlag]
   )
 
-  const isPending = isEnabling || isDisabling
+  const isPending = isEnabling || isDisabling || isCreatingOptimizerGroup
 
   return {
     flags,

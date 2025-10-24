@@ -12,21 +12,6 @@ import { useCallback } from 'react'
 import { featureFlagKeys } from '../../../../utils/feature-flags'
 import { toast } from 'sonner'
 
-// function useMetaOptimizerStatus() {
-//     const pollingMetaMcpStatus = useCallback(async () => {
-//       return pollServerStatus(
-//         () =>
-//           queryClient.fetchQuery(
-//             getApiV1BetaWorkloadsByNameStatusOptions({
-//               path: { name: META_MCP_SERVER_NAME },
-//             })
-//           ),
-//         'running'
-//       )
-//     }, [])
-
-//     return { pollingMetaMcpStatus }
-//   }
 export function useCreateOptimizerGroup() {
   const isExperimentalFeaturesEnabled = useFeatureFlag(
     featureFlagKeys.EXPERIMENTAL_FEATURES
@@ -38,7 +23,10 @@ export function useCreateOptimizerGroup() {
     gcTime: 0,
   })
 
-  const { mutateAsync: createOptimizerGroup } = useMutation({
+  const {
+    mutateAsync: createOptimizerGroup,
+    isPending: isCreatingOptimizerGroup,
+  } = useMutation({
     mutationFn: async () => {
       return await postApiV1BetaGroups({
         body: { name: MCP_OPTIMIZER_GROUP_NAME },
@@ -70,5 +58,5 @@ export function useCreateOptimizerGroup() {
     rawGroups,
   ])
 
-  return { handleCreateOptimizerGroup }
+  return { handleCreateOptimizerGroup, isCreatingOptimizerGroup }
 }
