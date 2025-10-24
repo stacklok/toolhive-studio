@@ -52,6 +52,8 @@ export function GroupSelectorForm({
       selectedGroup: defaultSelectedGroup ?? '',
     },
   })
+
+  const isDirty = form.formState.isDirty
   const isSelectedGroup = form.watch('selectedGroup')
 
   const onSubmit = async (data: FormSchema) => {
@@ -92,6 +94,8 @@ export function GroupSelectorForm({
                     `Meta Optimizer for ${data.selectedGroup} is available`
                   )
                 }
+
+                // form.reset({ selectedGroup: data.selectedGroup })
               },
               onSettled: () => {
                 toast.dismiss(toastId)
@@ -163,7 +167,10 @@ export function GroupSelectorForm({
           )}
         />
         <div className="mt-6 flex justify-end">
-          <Button type="submit" disabled={isPending || !isSelectedGroup}>
+          <Button
+            type="submit"
+            disabled={isPending || !isSelectedGroup || !isDirty}
+          >
             Apply Changes
           </Button>
         </div>

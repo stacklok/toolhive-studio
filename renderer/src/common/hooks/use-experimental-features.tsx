@@ -90,21 +90,8 @@ export function useExperimentalFeatures() {
           {
             toast.success(`MCP Optimizer enabled`, {
               id: toastIdRef.current,
-              description: 'Go to MCP Optimizer page to apply it',
               duration: 10_000,
               closeButton: true,
-              classNames: {
-                toast:
-                  'group-[.toaster]:items-start group-[.toaster]:justify-start',
-                icon: 'group-[.toast]:mt-0',
-                content:
-                  'group-[.toast]:flex group-[.toast]:flex-col group-[.toast]:items-start group-[.toast]:w-full',
-                title: 'group-[.toast]:mb-0.5',
-                description: 'group-[.toast]:mb-0 group-[.toast]:mt-0.5',
-                closeButton:
-                  'group-[.toast]:absolute group-[.toast]:right-2 group-[.toast]:top-2',
-                actionButton: 'group-[.toast]:mt-3 group-[.toast]:w-auto',
-              },
               action: (
                 <Button asChild size="xs" className="ml-auto text-xs">
                   <Link
