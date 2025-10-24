@@ -13,8 +13,7 @@ export function useOptimizedGroupName() {
     ...getApiV1BetaWorkloadsByNameOptions({
       path: { name: META_MCP_SERVER_NAME },
     }),
-    staleTime: 0,
-    gcTime: 0,
+    retry: false,
     enabled: isExperimentalFeaturesEnabled && isMetaOptimizerEnabled,
   })
   return optimizerWorkloadDetail?.env_vars?.ALLOWED_GROUPS
