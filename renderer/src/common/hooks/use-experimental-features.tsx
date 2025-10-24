@@ -8,7 +8,11 @@ import { useCleanupMetaOptimizer } from './use-cleanup-meta-optimizer'
 import { useCreateOptimizerGroup } from './use-create-optimizer-group'
 import { Button } from '../components/ui/button'
 import { Link } from '@tanstack/react-router'
-import { MCP_OPTIMIZER_GROUP_NAME } from '../lib/constants'
+import {
+  MCP_OPTIMIZER_GROUP_NAME,
+  META_MCP_SERVER_NAME,
+} from '../lib/constants'
+import { getApiV1BetaWorkloadsByNameQueryKey } from '@api/@tanstack/react-query.gen'
 
 interface FeatureFlag {
   key: string
@@ -59,6 +63,12 @@ export function useExperimentalFeatures() {
   const { mutateAsync: disableFlag, isPending: isDisabling } = useMutation({
     mutationFn: (key: string) => window.electronAPI.featureFlags.disable(key),
     onSuccess: () => {
+      // Remove cached data when disabling flags
+      queryClient.removeQueries({
+        queryKey: getApiV1BetaWorkloadsByNameQueryKey({
+          path: { name: META_MCP_SERVER_NAME },
+        }),
+      })
       queryClient.invalidateQueries()
     },
   })
