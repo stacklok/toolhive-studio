@@ -80,16 +80,18 @@ export function RegistryServerDetail() {
 
   return (
     <div className="flex max-h-full w-full flex-1 flex-col">
-      <LinkViewTransition to="/registry">
-        <Button
-          variant="ghost"
-          aria-label="Back"
-          className="text-muted-foreground"
-        >
-          <ChevronLeft className="size-5" />
-          Back
-        </Button>
-      </LinkViewTransition>
+      <div className="my-2">
+        <LinkViewTransition to="/registry">
+          <Button
+            variant="link"
+            aria-label="Back"
+            className="text-muted-foreground"
+          >
+            <ChevronLeft className="size-4" />
+            Back
+          </Button>
+        </LinkViewTransition>
+      </div>
 
       <div className="flex flex-col gap-3">
         <h1 className="m-0 mb-0 p-0 text-3xl font-bold">{name}</h1>
