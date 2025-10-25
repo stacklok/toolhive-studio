@@ -20,6 +20,7 @@ import { EditServerDialogProvider } from '@/features/mcp-servers/contexts/edit-s
 import { useEditServerDialog } from '@/features/mcp-servers/hooks/use-edit-server-dialog'
 import { WrapperDialogFormMcp } from '@/features/mcp-servers/components/wrapper-dialog-mcp'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
+import { useOptimizedGroupName } from '@/common/hooks/use-optimize-group-name'
 
 export const Route = createFileRoute('/mcp-optimizer')({
   component: McpOptimizerRoute,
@@ -28,6 +29,7 @@ export const Route = createFileRoute('/mcp-optimizer')({
 function McpOptimizerContent() {
   const groups = useMcpOptimizerGroups()
   const { state, openDialog, closeDialog } = useEditServerDialog()
+  const optimizedGroupName = useOptimizedGroupName()
 
   const handleCustomizeConfiguration = () => {
     const isRemote = false
@@ -39,7 +41,7 @@ function McpOptimizerContent() {
       <McpServersSidebar />
       <div className={'ml-sidebar min-w-0 flex-1'}>
         <TitlePage title="MCP Optimizer">
-          <>
+          {optimizedGroupName ? (
             <div className="flex gap-2 lg:ml-auto">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -74,7 +76,7 @@ function McpOptimizerContent() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-          </>
+          ) : null}
         </TitlePage>
         <div className="p-6">
           <div className="mx-auto max-w-2xl">
