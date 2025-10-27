@@ -101,8 +101,10 @@ export function useMutationDeleteGroup() {
     onSuccess: async (_, variables) => {
       const deletedGroupName = variables?.path?.name
       const remainingGroupsCount = (groupsNotOptimized?.length ?? 1) - 1
-      trackEvent('Group deleted', {
+      trackEvent(`Group deleted ${deletedGroupName}`, {
+        group_name: deletedGroupName,
         is_default_group: 'false',
+        is_optimizer_group: `${optimizedGroupName === deletedGroupName}`,
         remaining_groups_count: remainingGroupsCount,
       })
       if (optimizedGroupName === deletedGroupName) {
