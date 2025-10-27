@@ -37,9 +37,12 @@ type FormSchema = z.infer<typeof formSchema>
 export function GroupSelectorForm({
   groups,
 }: GroupSelectorFormProps): ReactElement {
-  const { data: metaMcpConfig } = useMetaMcpConfig()
+  const { data: metaMcpConfig, isError: isMetaMcpConfigError } =
+    useMetaMcpConfig()
   const [isPending, startTransition] = useTransition()
-  const defaultSelectedGroup = getMetaMcpOptimizedGroup(metaMcpConfig)
+  const defaultSelectedGroup = getMetaMcpOptimizedGroup(
+    isMetaMcpConfigError ? undefined : metaMcpConfig
+  )
   const { saveGroupClients } = useMcpOptimizerClients()
   const { handleCreateMetaOptimizerWorkload } = useCreateOptimizerWorkload()
   const { updateServerMutation } = useUpdateServer(META_MCP_SERVER_NAME, {
@@ -60,7 +63,7 @@ export function GroupSelectorForm({
   const onSubmit = async (data: FormSchema) => {
     startTransition(async () => {
       try {
-        if (metaMcpConfig) {
+        if (metaMcpConfig && !isMetaMcpConfigError) {
           const previousGroupName =
             metaMcpConfig?.env_vars?.[ALLOWED_GROUPS_ENV_VAR]
           const envVars = [
