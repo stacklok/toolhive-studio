@@ -11,6 +11,7 @@ import { queryClient } from '@/common/lib/query-client'
 import log from 'electron-log/renderer'
 import type { GroupsGroup } from '@api/types.gen'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
+import { trackEvent } from '@/common/lib/analytics'
 
 const getClientFieldName = (clientType: string): string =>
   `enable${clientType
@@ -24,6 +25,13 @@ export function useMcpOptimizerClients() {
       log.error('Error registering clients', error)
     },
     onSuccess: (_, variables) => {
+      trackEvent(
+        `Clients synced ${variables.body.names?.join(', ')} on ${MCP_OPTIMIZER_GROUP_NAME} group`,
+        {
+          clients: variables.body.names?.join(', '),
+          group_name: MCP_OPTIMIZER_GROUP_NAME,
+        }
+      )
       log.info(
         `Synced clients ${variables.body.names?.join(', ')} on ${MCP_OPTIMIZER_GROUP_NAME} group`
       )
@@ -44,6 +52,14 @@ export function useMcpOptimizerClients() {
       log.error('Error unregistering clients', error)
     },
     onSuccess: (_, variables) => {
+      trackEvent(
+        `Clients unsynced ${variables.body.names?.join(', ')} from ${MCP_OPTIMIZER_GROUP_NAME} group`,
+        {
+          clients: variables.body.names?.join(', '),
+          group_name: MCP_OPTIMIZER_GROUP_NAME,
+        }
+      )
+
       log.info(
         `Unsynced clients ${variables.body.names?.join(', ')} from ${MCP_OPTIMIZER_GROUP_NAME} group`
       )

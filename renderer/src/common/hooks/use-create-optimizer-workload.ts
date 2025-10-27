@@ -19,6 +19,8 @@ import { toast } from 'sonner'
 import log from 'electron-log/renderer'
 import { useMcpOptimizerClients } from '@/features/meta-mcp/hooks/use-mcp-optimizer-clients'
 import { queryClient } from '../lib/query-client'
+import { trackEvent } from '../lib/analytics'
+import { useOptimizedWorkloads } from './use-optimized-workloads'
 
 export function useCreateOptimizerWorkload() {
   const { saveGroupClients } = useMcpOptimizerClients()
@@ -26,7 +28,7 @@ export function useCreateOptimizerWorkload() {
     featureFlagKeys.EXPERIMENTAL_FEATURES
   )
   const isMetaOptimizerEnabled = useFeatureFlag(featureFlagKeys.META_OPTIMIZER)
-
+  const { getOptimizedWorkloads } = useOptimizedWorkloads()
   const { data: optimizerWorkloadDetail } = useQuery({
     ...getApiV1BetaWorkloadsByNameOptions({
       path: { name: META_MCP_SERVER_NAME },
@@ -59,6 +61,19 @@ export function useCreateOptimizerWorkload() {
     onSuccess: async (data, variables) => {
       const groupToOptimize =
         variables.body.env_vars?.[ALLOWED_GROUPS_ENV_VAR] ?? ''
+
+      const workloads = await getOptimizedWorkloads({
+        groupName: groupToOptimize,
+      })
+
+      trackEvent('MCP Optimizer workload created', {
+        optimized_group_name: groupToOptimize,
+        workload: META_MCP_SERVER_NAME,
+        image: optimizerRegistryServerDetail?.server?.image,
+        group: variables.body.group,
+        optimized_workloads: JSON.stringify(workloads),
+      })
+
       if (groupToOptimize) {
         try {
           await saveGroupClients({ groupName: groupToOptimize })

@@ -11,6 +11,12 @@ import { useMutationUpdateWorkload } from './use-mutation-update-workload'
 import { useLocation } from '@tanstack/react-router'
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
 import { useNotificationOptimizer } from './use-notification-optimizer'
+import {
+  ALLOWED_GROUPS_ENV_VAR,
+  MCP_OPTIMIZER_GROUP_NAME,
+  META_MCP_SERVER_NAME,
+} from '@/common/lib/constants'
+import { useOptimizedWorkloads } from '@/common/hooks/use-optimized-workloads'
 
 type UseUpdateServerOptions<TIsRemote extends boolean = false> = {
   isRemote?: TIsRemote
@@ -40,6 +46,7 @@ export function useUpdateServer<TIsRemote extends boolean = false>(
   })
   const notifyChangeWithOptimizer = useNotificationOptimizer()
   const updateWorkload = useMutationUpdateWorkload()
+  const { getOptimizedWorkloads } = useOptimizedWorkloads()
 
   const { mutateAsync: updateServerMutation } = useMutation({
     mutationFn: async ({
@@ -82,12 +89,25 @@ export function useUpdateServer<TIsRemote extends boolean = false>(
       })
       notifyChangeWithOptimizer(data.group)
     },
-    onMutate: ({ data }) => {
+    onMutate: async ({ data }) => {
+      const envVars = 'envVars' in data ? data.envVars : []
+      const optimizedGroupName = envVars.find(
+        (env) => env.name === ALLOWED_GROUPS_ENV_VAR
+      )?.value
+
+      const workloads = await getOptimizedWorkloads({
+        groupName: optimizedGroupName ?? '',
+        serverName,
+      })
       trackEvent(
         `Workload ${options?.isRemote ? 'remote ' : ''}${serverName} updated`,
         {
           workload: serverName,
           is_editing: 'true',
+          optimized_group_name: optimizedGroupName,
+          optimized_workloads: JSON.stringify(workloads),
+          is_mcp_optimizer: `${serverName === META_MCP_SERVER_NAME}`,
+          is_optimizer_group: `${data.group === MCP_OPTIMIZER_GROUP_NAME}`,
           remote: options?.isRemote ? 'true' : 'false',
           ...(isRemoteFormData(data, options?.isRemote)
             ? { auth_type: data.auth_type }
