@@ -8,7 +8,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/common/components/ui/dropdown-menu'
-import { Settings, Text, Edit3 } from 'lucide-react'
+import { Settings, Text, Edit3, ExternalLinkIcon } from 'lucide-react'
 import { OptimizerWarnings } from '@/features/meta-mcp/components/optimizer-warnings'
 import { GroupSelectorForm } from '@/features/meta-mcp/components/group-selector-form'
 import { useMcpOptimizerGroups } from '@/features/meta-mcp/hooks/use-mcp-optimizer-groups'
@@ -41,6 +41,27 @@ function McpOptimizerContent() {
       <McpServersSidebar />
       <div className={'ml-sidebar min-w-0 flex-1'}>
         <TitlePage title="MCP Optimizer">
+          <p className="text-muted-foreground text-sm">
+            An intelligent intermediary that provides unified access to multiple
+            MCP servers through a single endpoint. It intelligently routes
+            requests to the appropriate MCP server and filters results to reduce
+            token usage and improve performance. By using semantic search to
+            find the most relevant tools and automatically maintaining an
+            up-to-date index, it simplifies AI client configuration while
+            optimizing tool discovery and usage.
+            <span className="ml-1 inline-flex items-center gap-1">
+              Refer to the{' '}
+              <a
+                rel="noopener noreferrer"
+                className="inline-flex cursor-pointer items-center gap-1
+                  underline"
+                href="https://docs.stacklok.com/toolhive/guides-ui/toolhive/guides-ui/mcp-optimizer"
+                target="_blank"
+              >
+                documentation <ExternalLinkIcon size={12} />
+              </a>
+            </span>
+          </p>
           {optimizedGroupName ? (
             <div className="flex gap-2 lg:ml-auto">
               <DropdownMenu>
