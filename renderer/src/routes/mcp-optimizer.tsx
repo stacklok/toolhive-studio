@@ -55,7 +55,7 @@ function McpOptimizerContent() {
                 rel="noopener noreferrer"
                 className="inline-flex cursor-pointer items-center gap-1
                   underline"
-                href="https://docs.stacklok.com/toolhive/guides-ui/toolhive/guides-ui/mcp-optimizer"
+                href="https://docs.stacklok.com/toolhive/guides-ui/mcp-optimizer"
                 target="_blank"
               >
                 documentation <ExternalLinkIcon size={12} />
