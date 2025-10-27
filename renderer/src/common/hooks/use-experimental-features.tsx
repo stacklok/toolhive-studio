@@ -14,6 +14,7 @@ import {
 } from '../lib/constants'
 import { getApiV1BetaWorkloadsByNameQueryKey } from '@api/@tanstack/react-query.gen'
 import { ExternalLinkIcon } from 'lucide-react'
+import { trackEvent } from '../lib/analytics'
 
 interface FeatureFlag {
   key: string
@@ -101,9 +102,15 @@ export function useExperimentalFeatures() {
         if (currentValue) {
           await cleanupMetaOptimizer()
           await disableFlag(flagKey)
+          trackEvent('MCP Optimizer feature flag disabled', {
+            flag_key: flagKey,
+          })
         } else {
           await handleCreateOptimizerGroup()
           await enableFlag(flagKey)
+          trackEvent('MCP Optimizer feature flag enabled', {
+            flag_key: flagKey,
+          })
 
           {
             toast.success(`MCP Optimizer is enabled`, {
