@@ -13,7 +13,9 @@ export function useOptimizedWorkloads() {
       groupName: string
       serverName?: string
     }): Promise<string[]> => {
-      if (serverName !== META_MCP_SERVER_NAME) return []
+      if (serverName !== META_MCP_SERVER_NAME) {
+        return []
+      }
 
       try {
         const workloads = await queryClient.fetchQuery(
@@ -40,7 +42,7 @@ export function useOptimizedWorkloads() {
         return []
       }
     },
-    [queryClient]
+    []
   )
 
   return { getOptimizedWorkloads }

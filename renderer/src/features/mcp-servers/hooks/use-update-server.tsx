@@ -89,10 +89,11 @@ export function useUpdateServer<TIsRemote extends boolean = false>(
       })
       notifyChangeWithOptimizer(data.group)
     },
-    onMutate: async ({ data }) => {
-      const envVars = 'envVars' in data ? data.envVars : []
+    onSuccess: async (_, variables) => {
+      const envVars = 'envVars' in variables.data ? variables.data.envVars : []
       const optimizedGroupName = envVars.find(
-        (env) => env.name === ALLOWED_GROUPS_ENV_VAR
+        (env: { name: string; value: string }) =>
+          env.name === ALLOWED_GROUPS_ENV_VAR
       )?.value
 
       const workloads = await getOptimizedWorkloads({
@@ -107,12 +108,12 @@ export function useUpdateServer<TIsRemote extends boolean = false>(
           optimized_group_name: optimizedGroupName,
           optimized_workloads: JSON.stringify(workloads),
           is_mcp_optimizer: `${serverName === META_MCP_SERVER_NAME}`,
-          is_optimizer_group: `${data.group === MCP_OPTIMIZER_GROUP_NAME}`,
+          is_optimizer_group: `${variables.data.group === MCP_OPTIMIZER_GROUP_NAME}`,
           remote: options?.isRemote ? 'true' : 'false',
-          ...(isRemoteFormData(data, options?.isRemote)
-            ? { auth_type: data.auth_type }
-            : { type: data.type }),
-          transport: data.transport,
+          ...(isRemoteFormData(variables.data, options?.isRemote)
+            ? { auth_type: variables.data.auth_type }
+            : { type: variables.data.type }),
+          transport: variables.data.transport,
           'route.pathname': pathname,
         }
       )
