@@ -64,6 +64,9 @@ export function useMutationDeleteGroup() {
   const deleteWorkload = useMutation({
     ...deleteApiV1BetaWorkloadsByNameMutation(),
     onSuccess: async () => {
+      trackEvent('MCP Optimizer workload deleted on group', {
+        group_name: MCP_OPTIMIZER_GROUP_NAME,
+      })
       log.info('Optimizer workload deleted on group')
       if (optimizerGroupClients.length > 0) {
         await unregisterClients({
