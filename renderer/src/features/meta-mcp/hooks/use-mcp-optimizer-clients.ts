@@ -135,8 +135,10 @@ export function useMcpOptimizerClients() {
         const clientsToAdd = selectedGroupClients.filter(
           (client) => !currentOptimizerClients.includes(client)
         )
-        const clientsToRemove = currentOptimizerClients.filter(
-          (client) => clientsStatus?.[getClientFieldName(client)] === false
+        const clientsToRemove = currentOptimizerClients.filter((client) =>
+          clientsStatus
+            ? clientsStatus[getClientFieldName(client)] === false
+            : !selectedGroupClients.includes(client) && isGroupChanged
         )
         log.info(
           `Clients to add to optimizer group: ${clientsToAdd.join(', ') || 'none'}`

@@ -23,6 +23,7 @@ import { toast } from 'sonner'
 import { useMcpOptimizerClients } from '../hooks/use-mcp-optimizer-clients'
 import { LoadingStateDialog } from './loading-state-dialog'
 import { useCreateOptimizerWorkload } from '@/common/hooks/use-create-optimizer-workload'
+
 interface GroupSelectorFormProps {
   groups: GroupWithServers[]
 }
@@ -36,9 +37,12 @@ type FormSchema = z.infer<typeof formSchema>
 export function GroupSelectorForm({
   groups,
 }: GroupSelectorFormProps): ReactElement {
-  const { data: metaMcpConfig } = useMetaMcpConfig()
+  const { data: metaMcpConfig, isError: isMetaMcpConfigError } =
+    useMetaMcpConfig()
   const [isPending, startTransition] = useTransition()
-  const defaultSelectedGroup = getMetaMcpOptimizedGroup(metaMcpConfig)
+  const defaultSelectedGroup = getMetaMcpOptimizedGroup(
+    isMetaMcpConfigError ? undefined : metaMcpConfig
+  )
   const { saveGroupClients } = useMcpOptimizerClients()
   const { handleCreateMetaOptimizerWorkload } = useCreateOptimizerWorkload()
   const { updateServerMutation } = useUpdateServer(META_MCP_SERVER_NAME, {
@@ -59,7 +63,7 @@ export function GroupSelectorForm({
   const onSubmit = async (data: FormSchema) => {
     startTransition(async () => {
       try {
-        if (metaMcpConfig) {
+        if (metaMcpConfig && !isMetaMcpConfigError) {
           const previousGroupName =
             metaMcpConfig?.env_vars?.[ALLOWED_GROUPS_ENV_VAR]
           const envVars = [
@@ -97,8 +101,6 @@ export function GroupSelectorForm({
                     `MCP Optimizer for ${data.selectedGroup} is available`
                   )
                 }
-
-                // form.reset({ selectedGroup: data.selectedGroup })
               },
               onSettled: () => {
                 toast.dismiss(toastId)
