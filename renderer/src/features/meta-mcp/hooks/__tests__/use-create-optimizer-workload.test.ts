@@ -399,9 +399,6 @@ describe('useCreateOptimizerWorkload', () => {
       })
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith(
-          'Failed to create MCP Optimizer workload'
-        )
         expect(log.error).toHaveBeenCalledWith(
           'Failed to create MCP Optimizer workload',
           expect.any(Object)
@@ -658,9 +655,6 @@ describe('useCreateOptimizerWorkload', () => {
       })
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith(
-          'Failed to create MCP Optimizer workload'
-        )
         expect(log.error).toHaveBeenCalledWith(
           'Failed to create MCP Optimizer workload',
           expect.objectContaining({
@@ -671,6 +665,9 @@ describe('useCreateOptimizerWorkload', () => {
     })
 
     it('verifies complete payload structure with recordRequests', async () => {
+      // Initialize recordRequests first to capture all requests for this test
+      const rec = recordRequests()
+
       server.use(
         http.get(
           mswEndpoint('/api/v1beta/registry/:name/servers/:serverName'),
@@ -704,9 +701,6 @@ describe('useCreateOptimizerWorkload', () => {
         )
       )
 
-      // Initialize recordRequests after server.use to capture only this test's requests
-      const rec = recordRequests()
-
       const { Wrapper, queryClient } = createQueryClientWrapper()
       const { result } = renderHook(() => useCreateOptimizerWorkload(), {
         wrapper: Wrapper,
@@ -727,23 +721,24 @@ describe('useCreateOptimizerWorkload', () => {
       })
 
       // Verify POST request with complete payload structure
-      const postRequest = rec.recordedRequests.find(
-        (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
-      )
-
-      expect(postRequest).toBeDefined()
-      expect(postRequest?.payload).toEqual({
-        name: META_MCP_SERVER_NAME,
-        image: 'ghcr.io/stackloklabs/meta-mcp:latest',
-        transport: 'streamable-http',
-        group: MCP_OPTIMIZER_GROUP_NAME,
-        env_vars: {
-          [ALLOWED_GROUPS_ENV_VAR]: 'production',
-        },
-        secrets: [],
-        cmd_arguments: [],
-        network_isolation: false,
-        volumes: [],
+      await waitFor(() => {
+        const postRequest = rec.recordedRequests.find(
+          (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
+        )
+        expect(postRequest).toBeDefined()
+        expect(postRequest?.payload).toEqual({
+          name: META_MCP_SERVER_NAME,
+          image: 'ghcr.io/stackloklabs/meta-mcp:latest',
+          transport: 'streamable-http',
+          group: MCP_OPTIMIZER_GROUP_NAME,
+          env_vars: {
+            [ALLOWED_GROUPS_ENV_VAR]: 'production',
+          },
+          secrets: [],
+          cmd_arguments: [],
+          network_isolation: false,
+          volumes: [],
+        })
       })
     })
 

@@ -127,11 +127,6 @@ export function GroupSelectorForm({
         }
       } catch (error) {
         log.error(`Error submitting form for ${META_MCP_SERVER_NAME}`, error)
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : `Error submitting form for ${META_MCP_SERVER_NAME}`
-        toast.error(errorMessage)
       }
     })
   }

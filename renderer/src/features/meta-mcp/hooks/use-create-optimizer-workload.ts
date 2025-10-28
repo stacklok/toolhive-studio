@@ -58,8 +58,8 @@ export function useCreateOptimizerWorkload() {
     mutationFn: async ({ body }) => {
       return await postApiV1BetaWorkloads({ body, throwOnError: true })
     },
+    errorMsg: 'Failed to create MCP Optimizer workload',
     onError: (error) => {
-      toast.error('Failed to create MCP Optimizer workload')
       log.error('Failed to create MCP Optimizer workload', error)
     },
     onSuccess: async (data, variables) => {
@@ -125,7 +125,7 @@ export function useCreateOptimizerWorkload() {
         optimized_workloads,
       })
     } catch {
-      // no-op
+      // stop propagating error
     }
   }
 
