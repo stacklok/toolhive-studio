@@ -69,7 +69,7 @@ export function useCreateOptimizerWorkload() {
         image: optimizerRegistryServerDetail?.server?.image,
         group: variables.body.group,
         'custom.optimized_workloads': variables.optimized_workloads.join(','),
-        optimized_workloads: variables.optimized_workloads.length,
+        optimized_workloads_length: variables.optimized_workloads.length,
       })
 
       if (groupToOptimize) {

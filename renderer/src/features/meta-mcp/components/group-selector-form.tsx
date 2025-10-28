@@ -101,7 +101,7 @@ export function GroupSelectorForm({
                   'custom.optimized_workloads': optimized_workloads.join(','),
                   is_mcp_optimizer: 'true',
                   is_optimizer_group: 'true',
-                  optimized_workloads: optimized_workloads.length,
+                  optimized_workloads_length: optimized_workloads.length,
                 })
 
                 if (data.selectedGroup) {
