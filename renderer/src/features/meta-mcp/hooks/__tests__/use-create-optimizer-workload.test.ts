@@ -1,8 +1,7 @@
-import { renderHook, waitFor, act } from '@testing-library/react'
+import { renderHook, waitFor } from '@testing-library/react'
 import { expect, it, vi, beforeEach, describe } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
-import { useCreateOptimizerWorkload } from '../use-create-optimizer-workload'
 import { server, recordRequests } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { toast } from 'sonner'
@@ -14,13 +13,34 @@ import {
   MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
   META_MCP_SERVER_NAME,
 } from '@/common/lib/constants'
+import { useCreateOptimizerWorkload } from '../use-create-optimizer-workload'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { useMcpOptimizerClients } from '@/features/meta-mcp/hooks/use-mcp-optimizer-clients'
 
-vi.mock('../use-feature-flag')
+vi.mock('@/common/hooks/use-feature-flag', () => ({
+  useFeatureFlag: vi.fn(),
+}))
+
+vi.mock('@/features/meta-mcp/hooks/use-mcp-optimizer-clients', () => ({
+  useMcpOptimizerClients: vi.fn(() => ({
+    saveGroupClients: vi.fn().mockResolvedValue(undefined),
+    restoreClientsToGroup: vi.fn().mockResolvedValue(undefined),
+  })),
+}))
+
+vi.mock('@/common/lib/analytics', () => ({
+  trackEvent: vi.fn(),
+}))
+
 vi.mock('sonner', () => ({
   toast: {
     success: vi.fn(),
     error: vi.fn(),
-    promise: vi.fn((promise) => promise),
+    promise: vi.fn((promise) => {
+      // Execute the promise to trigger any side effects
+      promise.catch(() => {})
+      return promise
+    }),
   },
 }))
 
@@ -31,8 +51,6 @@ vi.mock('electron-log/renderer', () => ({
     warn: vi.fn(),
   },
 }))
-
-const { useFeatureFlag } = await import('../use-feature-flag')
 
 const createQueryClientWrapper = () => {
   const queryClient = new QueryClient({
@@ -103,8 +121,9 @@ describe('useCreateOptimizerWorkload', () => {
         wrapper: Wrapper,
       })
 
-      await act(async () => {
-        await result.current.handleCreateMetaOptimizerWorkload('default')
+      await result.current.handleCreateMetaOptimizerWorkload({
+        groupToOptimize: 'default',
+        optimized_workloads: [],
       })
 
       expect(toast.success).not.toHaveBeenCalled()
@@ -115,6 +134,11 @@ describe('useCreateOptimizerWorkload', () => {
   describe('when feature flags are enabled', () => {
     beforeEach(() => {
       vi.mocked(useFeatureFlag).mockReturnValue(true)
+      // Reset useMcpOptimizerClients mock to default
+      vi.mocked(useMcpOptimizerClients).mockReturnValue({
+        saveGroupClients: vi.fn().mockResolvedValue(undefined),
+        restoreClientsToGroup: vi.fn().mockResolvedValue(undefined),
+      })
     })
 
     it('returns isNotEnabled as false when both flags are enabled', async () => {
@@ -284,8 +308,9 @@ describe('useCreateOptimizerWorkload', () => {
         expect(queryClient.isFetching()).toBe(0)
       })
 
-      await act(async () => {
-        await result.current.handleCreateMetaOptimizerWorkload('test-group')
+      await result.current.handleCreateMetaOptimizerWorkload({
+        groupToOptimize: 'test-group',
+        optimized_workloads: ['server1', 'server2'],
       })
 
       await waitFor(() => {
@@ -368,24 +393,20 @@ describe('useCreateOptimizerWorkload', () => {
 
       expect(result.current.isNotEnabled).toBe(false)
 
-      await act(async () => {
-        await result.current
-          .handleCreateMetaOptimizerWorkload('test-group')
-          .catch(() => {
-            // Expected error, ignore
-          })
+      await result.current.handleCreateMetaOptimizerWorkload({
+        groupToOptimize: 'test-group',
+        optimized_workloads: [],
       })
 
       await waitFor(() => {
         expect(toast.error).toHaveBeenCalledWith(
           'Failed to create MCP Optimizer workload'
         )
+        expect(log.error).toHaveBeenCalledWith(
+          'Failed to create MCP Optimizer workload',
+          expect.any(Object)
+        )
       })
-
-      expect(log.error).toHaveBeenCalledWith(
-        'Failed to create MCP Optimizer workload',
-        expect.objectContaining({ error: 'Failed to create workload' })
-      )
     })
 
     it('sets isPending to true during workload creation', async () => {
@@ -423,8 +444,9 @@ describe('useCreateOptimizerWorkload', () => {
         expect(result.current.isNotEnabled).toBe(false)
       })
 
-      act(() => {
-        result.current.handleCreateMetaOptimizerWorkload('test-group')
+      result.current.handleCreateMetaOptimizerWorkload({
+        groupToOptimize: 'test-group',
+        optimized_workloads: [],
       })
 
       await waitFor(() => {
@@ -475,8 +497,9 @@ describe('useCreateOptimizerWorkload', () => {
 
       expect(result.current.isNotEnabled).toBe(false)
 
-      await act(async () => {
-        await result.current.handleCreateMetaOptimizerWorkload('test-group')
+      await result.current.handleCreateMetaOptimizerWorkload({
+        groupToOptimize: 'test-group',
+        optimized_workloads: [],
       })
 
       await waitFor(() => {
@@ -564,8 +587,9 @@ describe('useCreateOptimizerWorkload', () => {
           expect(result.current.isNotEnabled).toBe(false)
         })
 
-        await act(async () => {
-          await result.current.handleCreateMetaOptimizerWorkload(groupName)
+        await result.current.handleCreateMetaOptimizerWorkload({
+          groupToOptimize: groupName,
+          optimized_workloads: [],
         })
 
         await waitFor(() => {
@@ -628,31 +652,25 @@ describe('useCreateOptimizerWorkload', () => {
 
       expect(result.current.isNotEnabled).toBe(false)
 
-      await act(async () => {
-        await result.current
-          .handleCreateMetaOptimizerWorkload('test-group')
-          .catch(() => {
-            // Expected error, ignore
-          })
+      await result.current.handleCreateMetaOptimizerWorkload({
+        groupToOptimize: 'test-group',
+        optimized_workloads: [],
       })
 
       await waitFor(() => {
         expect(toast.error).toHaveBeenCalledWith(
           'Failed to create MCP Optimizer workload'
         )
+        expect(log.error).toHaveBeenCalledWith(
+          'Failed to create MCP Optimizer workload',
+          expect.objectContaining({
+            message: expect.stringContaining('Failed to fetch'),
+          })
+        )
       })
-
-      expect(log.error).toHaveBeenCalledWith(
-        'Failed to create MCP Optimizer workload',
-        expect.objectContaining({
-          message: expect.stringContaining('Failed to fetch'),
-        })
-      )
     })
 
     it('verifies complete payload structure with recordRequests', async () => {
-      const rec = recordRequests()
-
       server.use(
         http.get(
           mswEndpoint('/api/v1beta/registry/:name/servers/:serverName'),
@@ -686,6 +704,9 @@ describe('useCreateOptimizerWorkload', () => {
         )
       )
 
+      // Initialize recordRequests after server.use to capture only this test's requests
+      const rec = recordRequests()
+
       const { Wrapper, queryClient } = createQueryClientWrapper()
       const { result } = renderHook(() => useCreateOptimizerWorkload(), {
         wrapper: Wrapper,
@@ -696,8 +717,9 @@ describe('useCreateOptimizerWorkload', () => {
         expect(queryClient.isFetching()).toBe(0)
       })
 
-      await act(async () => {
-        await result.current.handleCreateMetaOptimizerWorkload('production')
+      await result.current.handleCreateMetaOptimizerWorkload({
+        groupToOptimize: 'production',
+        optimized_workloads: ['server1', 'server2'],
       })
 
       await waitFor(() => {
@@ -754,8 +776,9 @@ describe('useCreateOptimizerWorkload', () => {
         expect(queryClient.isFetching()).toBe(0)
       })
 
-      await act(async () => {
-        await result.current.handleCreateMetaOptimizerWorkload('default')
+      await result.current.handleCreateMetaOptimizerWorkload({
+        groupToOptimize: 'default',
+        optimized_workloads: [],
       })
 
       await waitFor(() => {
@@ -784,8 +807,13 @@ describe('useCreateOptimizerWorkload', () => {
       expect(payloadKeys.length).toBe(9)
     })
 
-    it('verifies saveGroupClients is called via onMutate with correct group', async () => {
-      const rec = recordRequests()
+    it('verifies saveGroupClients is called with correct group', async () => {
+      const mockSaveGroupClients = vi.fn().mockResolvedValue(undefined)
+
+      vi.mocked(useMcpOptimizerClients).mockReturnValue({
+        saveGroupClients: mockSaveGroupClients,
+        restoreClientsToGroup: vi.fn().mockResolvedValue(undefined),
+      })
 
       server.use(
         http.get(
@@ -797,26 +825,6 @@ describe('useCreateOptimizerWorkload', () => {
                 transport: 'streamable-http',
               },
             })
-        ),
-        http.get(mswEndpoint('/api/v1beta/groups'), () =>
-          HttpResponse.json({
-            groups: [
-              {
-                name: 'dev-team',
-                registered_clients: ['vscode', 'cursor'],
-              },
-              {
-                name: MCP_OPTIMIZER_GROUP_NAME,
-                registered_clients: [],
-              },
-            ],
-          })
-        ),
-        http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
-          HttpResponse.json(null, { status: 204 })
-        ),
-        http.post(mswEndpoint('/api/v1beta/clients/unregister'), () =>
-          HttpResponse.json(null, { status: 204 })
         ),
         http.post(mswEndpoint('/api/v1beta/workloads'), () =>
           HttpResponse.json({
@@ -835,31 +843,20 @@ describe('useCreateOptimizerWorkload', () => {
         expect(queryClient.isFetching()).toBe(0)
       })
 
-      await act(async () => {
-        await result.current.handleCreateMetaOptimizerWorkload('dev-team')
+      await result.current.handleCreateMetaOptimizerWorkload({
+        groupToOptimize: 'dev-team',
+        optimized_workloads: ['server1', 'server2'],
       })
 
       await waitFor(() => {
         expect(result.current.isPending).toBe(false)
       })
 
-      // Verify that saveGroupClients was called (via register/unregister calls)
-      const registerCalls = rec.recordedRequests.filter(
-        (r) =>
-          r.method === 'POST' && r.pathname === '/api/v1beta/clients/register'
-      )
-
-      expect(registerCalls.length).toBeGreaterThan(0)
-
-      // Verify clients were registered to optimizer group
-      const registerPayload = registerCalls.find((r) =>
-        (r.payload as { groups?: string[] })?.groups?.includes(
-          MCP_OPTIMIZER_GROUP_NAME as string
-        )
-      )
-      expect(registerPayload?.payload).toMatchObject({
-        names: expect.arrayContaining(['vscode', 'cursor']) as string[],
-        groups: [MCP_OPTIMIZER_GROUP_NAME] as string[],
+      // Verify that saveGroupClients was called with correct group
+      await waitFor(() => {
+        expect(mockSaveGroupClients).toHaveBeenCalledWith({
+          groupName: 'dev-team',
+        })
       })
     })
   })

@@ -1,26 +1,25 @@
 import {
   getApiV1BetaWorkloadsByNameOptions,
   getApiV1BetaWorkloadsByNameQueryKey,
-  postApiV1BetaWorkloadsMutation,
 } from '@api/@tanstack/react-query.gen'
-import { featureFlagKeys } from '../../../../utils/feature-flags'
-import { useFeatureFlag } from './use-feature-flag'
+import { postApiV1BetaWorkloads } from '@api/sdk.gen'
+import { featureFlagKeys } from '../../../../../utils/feature-flags'
+import { useFeatureFlag } from '../../../common/hooks/use-feature-flag'
 import {
   ALLOWED_GROUPS_ENV_VAR,
   MCP_OPTIMIZER_GROUP_NAME,
   MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
   META_MCP_SERVER_NAME,
-} from '../lib/constants'
+} from '../../../common/lib/constants'
 import { useQuery } from '@tanstack/react-query'
 import { getApiV1BetaRegistryByNameServersByServerNameOptions } from '@api/@tanstack/react-query.gen'
-import { useToastMutation } from './use-toast-mutation'
+import { useToastMutation } from '../../../common/hooks/use-toast-mutation'
 import type { V1CreateRequest } from '@api/types.gen'
 import { toast } from 'sonner'
 import log from 'electron-log/renderer'
 import { useMcpOptimizerClients } from '@/features/meta-mcp/hooks/use-mcp-optimizer-clients'
-import { queryClient } from '../lib/query-client'
-import { trackEvent } from '../lib/analytics'
-import { useOptimizedWorkloads } from './use-optimized-workloads'
+import { queryClient } from '../../../common/lib/query-client'
+import { trackEvent } from '../../../common/lib/analytics'
 
 export function useCreateOptimizerWorkload() {
   const { saveGroupClients } = useMcpOptimizerClients()
@@ -28,7 +27,6 @@ export function useCreateOptimizerWorkload() {
     featureFlagKeys.EXPERIMENTAL_FEATURES
   )
   const isMetaOptimizerEnabled = useFeatureFlag(featureFlagKeys.META_OPTIMIZER)
-  const { getOptimizedWorkloads } = useOptimizedWorkloads()
   const { data: optimizerWorkloadDetail } = useQuery({
     ...getApiV1BetaWorkloadsByNameOptions({
       path: { name: META_MCP_SERVER_NAME },
@@ -52,8 +50,14 @@ export function useCreateOptimizerWorkload() {
   const {
     mutateAsync: createMetaOptimizerWorkload,
     isPending: isPendingCreateMetaOptimizerWorkload,
-  } = useToastMutation({
-    ...postApiV1BetaWorkloadsMutation(),
+  } = useToastMutation<
+    Awaited<ReturnType<typeof postApiV1BetaWorkloads>>,
+    Error,
+    { body: V1CreateRequest; optimized_workloads: string[] }
+  >({
+    mutationFn: async ({ body }) => {
+      return await postApiV1BetaWorkloads({ body, throwOnError: true })
+    },
     onError: (error) => {
       toast.error('Failed to create MCP Optimizer workload')
       log.error('Failed to create MCP Optimizer workload', error)
@@ -62,16 +66,12 @@ export function useCreateOptimizerWorkload() {
       const groupToOptimize =
         variables.body.env_vars?.[ALLOWED_GROUPS_ENV_VAR] ?? ''
 
-      const workloads = await getOptimizedWorkloads({
-        groupName: groupToOptimize,
-      })
-
       trackEvent('MCP Optimizer workload created', {
         optimized_group_name: groupToOptimize,
         workload: META_MCP_SERVER_NAME,
         image: optimizerRegistryServerDetail?.server?.image,
         group: variables.body.group,
-        optimized_workloads: JSON.stringify(workloads),
+        optimized_workloads: JSON.stringify(variables.optimized_workloads),
       })
 
       if (groupToOptimize) {
@@ -100,7 +100,13 @@ export function useCreateOptimizerWorkload() {
     },
   })
 
-  const handleCreateMetaOptimizerWorkload = async (groupToOptimize: string) => {
+  const handleCreateMetaOptimizerWorkload = async ({
+    groupToOptimize,
+    optimized_workloads,
+  }: {
+    groupToOptimize: string
+    optimized_workloads: string[]
+  }) => {
     if (!isExperimentalFeaturesEnabled || !isMetaOptimizerEnabled) return
     const body: V1CreateRequest = {
       name: META_MCP_SERVER_NAME,
@@ -113,10 +119,14 @@ export function useCreateOptimizerWorkload() {
       network_isolation: false,
       volumes: [],
     }
-
-    await createMetaOptimizerWorkload({
-      body,
-    })
+    try {
+      await createMetaOptimizerWorkload({
+        body,
+        optimized_workloads,
+      })
+    } catch {
+      // no-op
+    }
   }
 
   return {
