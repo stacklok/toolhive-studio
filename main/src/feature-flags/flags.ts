@@ -22,11 +22,6 @@ const featureFlagOptions: Record<FeatureFlagKey, FeatureFlagOptions> = {
     defaultValue: false,
     isExperimental: true,
   },
-  [featureFlagKeys.EXPERIMENTAL_FEATURES]: {
-    isDisabled: false,
-    defaultValue: false,
-    isExperimental: false,
-  },
 }
 
 // Create a dedicated store for feature flags
