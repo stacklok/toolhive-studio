@@ -163,7 +163,7 @@ export function ChatInterface() {
                         animationFillMode: 'both',
                       }}
                     >
-                      <ChatMessage message={message} />
+                      <ChatMessage status={status} message={message} />
                     </div>
                   ))}
                   {isLoading && (
