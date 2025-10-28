@@ -98,9 +98,10 @@ export function GroupSelectorForm({
                   workload: META_MCP_SERVER_NAME,
                   is_editing: 'true',
                   optimized_group_name: optimizedGroupName,
-                  optimized_workloads: JSON.stringify(optimized_workloads),
+                  'custom.optimized_workloads': optimized_workloads.join(','),
                   is_mcp_optimizer: 'true',
                   is_optimizer_group: 'true',
+                  optimized_workloads: optimized_workloads.length,
                 })
 
                 if (data.selectedGroup) {
