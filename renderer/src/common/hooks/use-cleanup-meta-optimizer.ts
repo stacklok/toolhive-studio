@@ -18,12 +18,18 @@ import { useCallback } from 'react'
 import { useToastMutation } from './use-toast-mutation'
 import { useMcpOptimizerClients } from '@/features/meta-mcp/hooks/use-mcp-optimizer-clients'
 import log from 'electron-log/renderer'
+import { trackEvent } from '../lib/analytics'
 
 function useDeleteGroup() {
   const { mutateAsync: deleteGroup } = useToastMutation({
     ...deleteApiV1BetaGroupsByNameMutation(),
     onError: (error, variables) => {
       log.error(`Failed to delete group "${variables.path.name}"`, error)
+    },
+    onSuccess: (_, variables) => {
+      trackEvent(`Group deleted ${MCP_OPTIMIZER_GROUP_NAME}`, {
+        group_name: variables.path.name,
+      })
     },
     onSettled: () => {
       queryClient.invalidateQueries({

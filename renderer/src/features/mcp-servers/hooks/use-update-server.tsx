@@ -82,17 +82,17 @@ export function useUpdateServer<TIsRemote extends boolean = false>(
       })
       notifyChangeWithOptimizer(data.group)
     },
-    onMutate: ({ data }) => {
+    onSuccess: async (_, variables) => {
       trackEvent(
         `Workload ${options?.isRemote ? 'remote ' : ''}${serverName} updated`,
         {
           workload: serverName,
           is_editing: 'true',
           remote: options?.isRemote ? 'true' : 'false',
-          ...(isRemoteFormData(data, options?.isRemote)
-            ? { auth_type: data.auth_type }
-            : { type: data.type }),
-          transport: data.transport,
+          ...(isRemoteFormData(variables.data, options?.isRemote)
+            ? { auth_type: variables.data.auth_type }
+            : { type: variables.data.type }),
+          transport: variables.data.transport,
           'route.pathname': pathname,
         }
       )

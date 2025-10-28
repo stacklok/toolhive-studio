@@ -13,7 +13,7 @@ import {
 import { useUpdateServer } from '@/features/mcp-servers/hooks/use-update-server'
 import { toast } from 'sonner'
 import { useMcpOptimizerClients } from '@/features/meta-mcp/hooks/use-mcp-optimizer-clients'
-import { useCreateOptimizerWorkload } from '@/common/hooks/use-create-optimizer-workload'
+import { useCreateOptimizerWorkload } from '../../hooks/use-create-optimizer-workload'
 
 vi.mock('@tanstack/react-router', () => ({
   useLocation: () => ({ pathname: '/mcp-optimizer' }),
@@ -34,7 +34,7 @@ vi.mock('@/features/meta-mcp/hooks/use-mcp-optimizer-clients', () => ({
   useMcpOptimizerClients: vi.fn(),
 }))
 
-vi.mock('@/common/hooks/use-create-optimizer-workload', () => ({
+vi.mock('../../hooks/use-create-optimizer-workload', () => ({
   useCreateOptimizerWorkload: vi.fn(),
 }))
 
@@ -257,40 +257,6 @@ describe('GroupSelectorForm', () => {
       )
     })
 
-    it('shows loading toast when submitting form', async () => {
-      const user = userEvent.setup()
-      const mockUpdateServerMutation = vi.fn().mockImplementation(() => {
-        // Don't call onSuccess immediately to keep loading state
-        return Promise.resolve()
-      })
-
-      vi.mocked(useUpdateServer).mockReturnValue({
-        updateServerMutation: mockUpdateServerMutation,
-      } as ReturnType<typeof useUpdateServer>)
-
-      renderWithClient(<GroupSelectorForm groups={mockGroups} />)
-
-      await waitFor(() => {
-        expect(
-          screen.getByRole('radio', { name: /default/i })
-        ).toBeInTheDocument()
-      })
-
-      const defaultRadio = screen.getByRole('radio', { name: /default/i })
-      await user.click(defaultRadio)
-
-      const submitButton = screen.getByRole('button', {
-        name: /set optimized group/i,
-      })
-      await user.click(submitButton)
-
-      await waitFor(() => {
-        expect(toast.loading).toHaveBeenCalledWith(
-          'Setting up MCP Optimizer for default group...'
-        )
-      })
-    })
-
     it('shows success toast when form submission succeeds', async () => {
       const user = userEvent.setup()
       const mockUpdateServerMutation = vi
@@ -326,45 +292,8 @@ describe('GroupSelectorForm', () => {
           previousGroupName: 'old-group',
         })
         expect(toast.success).toHaveBeenCalledWith(
-          'MCP Optimizer for default is available'
+          'MCP Optimizer applied to default group'
         )
-      })
-    })
-
-    it('dismisses loading toast when form submission finishes', async () => {
-      const user = userEvent.setup()
-      const toastId = 'test-toast-id'
-      vi.mocked(toast.loading).mockReturnValue(toastId)
-
-      const mockUpdateServerMutation = vi
-        .fn()
-        .mockImplementation((_, options) => {
-          options?.onSettled?.()
-          return Promise.resolve()
-        })
-
-      vi.mocked(useUpdateServer).mockReturnValue({
-        updateServerMutation: mockUpdateServerMutation,
-      } as ReturnType<typeof useUpdateServer>)
-
-      renderWithClient(<GroupSelectorForm groups={mockGroups} />)
-
-      await waitFor(() => {
-        expect(
-          screen.getByRole('radio', { name: /default/i })
-        ).toBeInTheDocument()
-      })
-
-      const defaultRadio = screen.getByRole('radio', { name: /default/i })
-      await user.click(defaultRadio)
-
-      const submitButtons = screen.getAllByRole('button', {
-        name: /set optimized group/i,
-      })
-      await user.click(submitButtons[0] as unknown as Element)
-
-      await waitFor(() => {
-        expect(toast.dismiss).toHaveBeenCalledWith(toastId)
       })
     })
 
@@ -427,7 +356,7 @@ describe('GroupSelectorForm', () => {
       )
     })
 
-    it('shows specific error toast when saveGroupClients fails', async () => {
+    it('logs error when saveGroupClients fails', async () => {
       const user = userEvent.setup()
       const mockError = new Error(
         'Failed to add servers to optimizer group: server1, server2'
@@ -469,101 +398,6 @@ describe('GroupSelectorForm', () => {
           groupName: 'default',
           previousGroupName: 'old-group',
         })
-      })
-
-      // The error should be caught and a specific error toast should be shown
-      await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith(
-          'Failed to add servers to optimizer group: server1, server2'
-        )
-      })
-
-      expect(toast.success).not.toHaveBeenCalled()
-    })
-
-    it('shows specific error when failing to remove servers from optimizer group', async () => {
-      const user = userEvent.setup()
-      const mockError = new Error(
-        'Failed to remove servers from optimizer group: server3, server4'
-      )
-
-      mockSaveGroupClients.mockRejectedValue(mockError)
-
-      const mockUpdateServerMutation = vi
-        .fn()
-        .mockImplementation(async (_, options) => {
-          await options?.onSuccess?.()
-          return Promise.resolve()
-        })
-
-      vi.mocked(useUpdateServer).mockReturnValue({
-        updateServerMutation: mockUpdateServerMutation,
-      } as ReturnType<typeof useUpdateServer>)
-
-      renderWithClient(<GroupSelectorForm groups={mockGroups} />)
-
-      await waitFor(() => {
-        expect(
-          screen.getByRole('radio', { name: /default/i })
-        ).toBeInTheDocument()
-      })
-
-      const defaultRadio = screen.getByRole('radio', { name: /default/i })
-      await user.click(defaultRadio)
-
-      const submitButtons = screen.getAllByRole('button', {
-        name: /set optimized group/i,
-      })
-      await user.click(submitButtons[0] as unknown as Element)
-
-      await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith(
-          'Failed to remove servers from optimizer group: server3, server4'
-        )
-      })
-
-      expect(toast.success).not.toHaveBeenCalled()
-    })
-
-    it('shows specific error when failing to unregister from target group', async () => {
-      const user = userEvent.setup()
-      const mockError = new Error(
-        'Failed to unregister servers from production: server1, server2'
-      )
-
-      mockSaveGroupClients.mockRejectedValue(mockError)
-
-      const mockUpdateServerMutation = vi
-        .fn()
-        .mockImplementation(async (_, options) => {
-          await options?.onSuccess?.()
-          return Promise.resolve()
-        })
-
-      vi.mocked(useUpdateServer).mockReturnValue({
-        updateServerMutation: mockUpdateServerMutation,
-      } as ReturnType<typeof useUpdateServer>)
-
-      renderWithClient(<GroupSelectorForm groups={mockGroups} />)
-
-      await waitFor(() => {
-        expect(
-          screen.getByRole('radio', { name: /production/i })
-        ).toBeInTheDocument()
-      })
-
-      const productionRadio = screen.getByRole('radio', { name: /production/i })
-      await user.click(productionRadio)
-
-      const submitButtons = screen.getAllByRole('button', {
-        name: /set optimized group/i,
-      })
-      await user.click(submitButtons[0] as unknown as Element)
-
-      await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith(
-          'Failed to unregister servers from production: server1, server2'
-        )
       })
 
       expect(toast.success).not.toHaveBeenCalled()
@@ -728,13 +562,14 @@ describe('GroupSelectorForm', () => {
 
       // Should call handleCreateMetaOptimizerWorkload when metaMcpConfig is null
       await waitFor(() => {
-        expect(mockHandleCreateMetaOptimizerWorkload).toHaveBeenCalledWith(
-          'default'
-        )
+        expect(mockHandleCreateMetaOptimizerWorkload).toHaveBeenCalledWith({
+          groupToOptimize: 'default',
+          optimized_workloads: ['server1', 'server2', 'server3'],
+        })
       })
     })
 
-    it('shows error toast when handleCreateMetaOptimizerWorkload fails', async () => {
+    it('logs error when handleCreateMetaOptimizerWorkload fails', async () => {
       const user = userEvent.setup()
       const mockError = new Error('Failed to create MCP Optimizer workload')
 
@@ -761,16 +596,10 @@ describe('GroupSelectorForm', () => {
       await user.click(submitButtons[0] as unknown as Element)
 
       await waitFor(() => {
-        expect(mockHandleCreateMetaOptimizerWorkload).toHaveBeenCalledWith(
-          'production'
-        )
-      })
-
-      // Should show error toast with specific message
-      await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith(
-          'Failed to create MCP Optimizer workload'
-        )
+        expect(mockHandleCreateMetaOptimizerWorkload).toHaveBeenCalledWith({
+          groupToOptimize: 'production',
+          optimized_workloads: ['server1', 'server2', 'server3'],
+        })
       })
 
       expect(toast.success).not.toHaveBeenCalled()
@@ -800,9 +629,10 @@ describe('GroupSelectorForm', () => {
       await user.click(submitButtons[0] as unknown as Element)
 
       await waitFor(() => {
-        expect(mockHandleCreateMetaOptimizerWorkload).toHaveBeenCalledWith(
-          'default'
-        )
+        expect(mockHandleCreateMetaOptimizerWorkload).toHaveBeenCalledWith({
+          groupToOptimize: 'default',
+          optimized_workloads: ['server1', 'server2', 'server3'],
+        })
       })
 
       // saveGroupClients should NOT be called when creating new optimizer

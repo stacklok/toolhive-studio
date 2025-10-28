@@ -19,10 +19,12 @@ export function useMutationCreateGroup() {
         throwOnError: true,
       })
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       const existingGroupsCount = groupsData?.groups?.length ?? 0
-      trackEvent('Group created', {
+      const newGroupName = variables.body.name
+      trackEvent(`Group created: ${newGroupName}`, {
         existing_groups_count: existingGroupsCount,
+        group_name: newGroupName,
       })
       queryClient.invalidateQueries({ queryKey: getApiV1BetaGroupsQueryKey() })
     },

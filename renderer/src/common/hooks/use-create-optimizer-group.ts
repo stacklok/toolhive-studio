@@ -11,6 +11,7 @@ import { useFeatureFlag } from './use-feature-flag'
 import { useCallback } from 'react'
 import { featureFlagKeys } from '../../../../utils/feature-flags'
 import { toast } from 'sonner'
+import { trackEvent } from '../lib/analytics'
 
 export function useCreateOptimizerGroup() {
   const isExperimentalFeaturesEnabled = useFeatureFlag(
@@ -32,6 +33,9 @@ export function useCreateOptimizerGroup() {
       })
     },
     onSuccess: () => {
+      trackEvent('MCP Optimizer group created', {
+        group_name: MCP_OPTIMIZER_GROUP_NAME,
+      })
       queryClient.invalidateQueries({
         queryKey: getApiV1BetaGroupsQueryKey(),
       })

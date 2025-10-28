@@ -22,7 +22,8 @@ import { queryClient } from '@/common/lib/query-client'
 import { toast } from 'sonner'
 import { useMcpOptimizerClients } from '../hooks/use-mcp-optimizer-clients'
 import { LoadingStateDialog } from './loading-state-dialog'
-import { useCreateOptimizerWorkload } from '@/common/hooks/use-create-optimizer-workload'
+import { useCreateOptimizerWorkload } from '@/features/meta-mcp/hooks/use-create-optimizer-workload'
+import { trackEvent } from '@/common/lib/analytics'
 
 interface GroupSelectorFormProps {
   groups: GroupWithServers[]
@@ -61,6 +62,7 @@ export function GroupSelectorForm({
   const isSelectedGroup = form.watch('selectedGroup')
 
   const onSubmit = async (data: FormSchema) => {
+    const optimized_workloads = groups.flatMap((g) => g.servers)
     startTransition(async () => {
       try {
         if (metaMcpConfig && !isMetaMcpConfigError) {
@@ -73,9 +75,6 @@ export function GroupSelectorForm({
             { name: ALLOWED_GROUPS_ENV_VAR, value: data.selectedGroup },
           ]
 
-          const toastId = toast.loading(
-            `Setting up MCP Optimizer for ${data.selectedGroup} group...`
-          )
           await updateServerMutation(
             {
               data: {
@@ -92,18 +91,27 @@ export function GroupSelectorForm({
                   }),
                 })
 
+                const optimizedGroupName =
+                  envVars.find((item) => item.name === ALLOWED_GROUPS_ENV_VAR)
+                    ?.value ?? ''
+                trackEvent(`MCP Optimizer workload updated allowed groups`, {
+                  workload: META_MCP_SERVER_NAME,
+                  is_editing: 'true',
+                  optimized_group_name: optimizedGroupName,
+                  optimized_workloads: JSON.stringify(optimized_workloads),
+                  is_mcp_optimizer: 'true',
+                  is_optimizer_group: 'true',
+                })
+
                 if (data.selectedGroup) {
                   await saveGroupClients({
                     groupName: data.selectedGroup,
                     previousGroupName,
                   })
                   toast.success(
-                    `MCP Optimizer for ${data.selectedGroup} is available`
+                    `MCP Optimizer applied to ${data.selectedGroup} group`
                   )
                 }
-              },
-              onSettled: () => {
-                toast.dismiss(toastId)
               },
               onError: (error) => {
                 toast.error('Error updating MCP Optimizer')
@@ -112,15 +120,13 @@ export function GroupSelectorForm({
             }
           )
         } else {
-          await handleCreateMetaOptimizerWorkload(data.selectedGroup ?? '')
+          await handleCreateMetaOptimizerWorkload({
+            groupToOptimize: data.selectedGroup ?? '',
+            optimized_workloads,
+          })
         }
       } catch (error) {
         log.error(`Error submitting form for ${META_MCP_SERVER_NAME}`, error)
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : `Error submitting form for ${META_MCP_SERVER_NAME}`
-        toast.error(errorMessage)
       }
     })
   }

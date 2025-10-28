@@ -11,6 +11,7 @@ import { queryClient } from '@/common/lib/query-client'
 import log from 'electron-log/renderer'
 import type { GroupsGroup } from '@api/types.gen'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
+import { trackEvent } from '@/common/lib/analytics'
 
 const getClientFieldName = (clientType: string): string =>
   `enable${clientType
@@ -23,9 +24,14 @@ export function useMcpOptimizerClients() {
     onError: (error) => {
       log.error('Error registering clients', error)
     },
+    errorMsg: 'Failed to add servers to optimizer group',
     onSuccess: (_, variables) => {
+      trackEvent(`Clients synced on ${MCP_OPTIMIZER_GROUP_NAME} group`, {
+        clients: JSON.stringify(variables.body.names),
+        group_name: MCP_OPTIMIZER_GROUP_NAME,
+      })
       log.info(
-        `Synced clients ${variables.body.names?.join(', ')} on ${MCP_OPTIMIZER_GROUP_NAME} group`
+        `Synced clients ${variables.body.names} on ${MCP_OPTIMIZER_GROUP_NAME} group`
       )
     },
     onSettled: async () => {
@@ -43,9 +49,15 @@ export function useMcpOptimizerClients() {
     onError: (error) => {
       log.error('Error unregistering clients', error)
     },
+    errorMsg: 'Failed to remove servers from optimizer group',
     onSuccess: (_, variables) => {
+      trackEvent(`Clients unsynced on ${MCP_OPTIMIZER_GROUP_NAME} group`, {
+        clients: JSON.stringify(variables.body.names),
+        group_name: MCP_OPTIMIZER_GROUP_NAME,
+      })
+
       log.info(
-        `Unsynced clients ${variables.body.names?.join(', ')} from ${MCP_OPTIMIZER_GROUP_NAME} group`
+        `Unsynced clients ${variables.body.names} from ${MCP_OPTIMIZER_GROUP_NAME} group`
       )
     },
     onSettled: async () => {
@@ -148,57 +160,33 @@ export function useMcpOptimizerClients() {
         )
 
         if (clientsToAdd.length > 0) {
-          try {
-            await registerClients({
-              body: {
-                names: clientsToAdd,
-                groups: [MCP_OPTIMIZER_GROUP_NAME],
-              },
-            })
-          } catch (error) {
-            log.error(`Failed to register clients to optimizer group:`, error)
-            throw new Error(
-              `Failed to add servers to optimizer group: ${clientsToAdd.join(', ')}`
-            )
-          }
+          await registerClients({
+            body: {
+              names: clientsToAdd,
+              groups: [MCP_OPTIMIZER_GROUP_NAME],
+            },
+          })
         }
 
         if (clientsToRemove.length > 0) {
-          try {
-            await unregisterClients({
-              body: {
-                names: clientsToRemove,
-                groups: [MCP_OPTIMIZER_GROUP_NAME],
-              },
-            })
-          } catch (error) {
-            log.error(
-              `Failed to unregister clients from optimizer group:`,
-              error
-            )
-            throw new Error(
-              `Failed to remove servers from optimizer group: ${clientsToRemove.join(', ')}`
-            )
-          }
+          await unregisterClients({
+            body: {
+              names: clientsToRemove,
+              groups: [MCP_OPTIMIZER_GROUP_NAME],
+            },
+          })
         }
 
         if (selectedGroupClients.length > 0) {
-          try {
-            await unregisterClients({
-              body: {
-                names: selectedGroupClients,
-                groups: [groupName],
-              },
-            })
-            log.info(
-              `Removed all clients from ${groupName}: ${selectedGroupClients.join(', ')}`
-            )
-          } catch (error) {
-            log.error(`Failed to unregister clients from ${groupName}:`, error)
-            throw new Error(
-              `Failed to unregister servers from ${groupName}: ${selectedGroupClients.join(', ')}`
-            )
-          }
+          await unregisterClients({
+            body: {
+              names: selectedGroupClients,
+              groups: [groupName],
+            },
+          })
+          log.info(
+            `Removed all clients from ${groupName}: ${selectedGroupClients.join(', ')}`
+          )
         }
       } catch (error) {
         log.error(`Error syncing clients for group ${groupName}:`, error)
