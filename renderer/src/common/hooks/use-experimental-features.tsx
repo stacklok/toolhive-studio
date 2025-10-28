@@ -37,8 +37,8 @@ function formatFeatureFlagDescription(key: string): React.ReactNode {
   if (key === featureFlagKeys.META_OPTIMIZER) {
     return (
       <>
-        Enable MCP Optimizer feature to provide unified access to multiple MCP
-        servers with smart tool routing to reduce token usage. Refer to the{' '}
+        Access multiple MCP servers through a single endpoint with smart tool
+        routing that reduces token usage. See the{' '}
         <a
           rel="noopener noreferrer"
           className="inline-flex cursor-pointer items-center gap-1 underline"

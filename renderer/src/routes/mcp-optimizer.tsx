@@ -42,15 +42,14 @@ function McpOptimizerContent() {
       <div className={'ml-sidebar min-w-0 flex-1'}>
         <TitlePage title="MCP Optimizer">
           <p className="text-muted-foreground text-sm">
-            An intelligent intermediary that provides unified access to multiple
-            MCP servers through a single endpoint. It intelligently routes
-            requests to the appropriate MCP server and filters results to reduce
-            token usage and improve performance. By using semantic search to
-            find the most relevant tools and automatically maintaining an
-            up-to-date index, it simplifies AI client configuration while
-            optimizing tool discovery and usage.
+            MCP Optimizer provides unified access to multiple MCP servers
+            through a single endpoint. It routes requests to the appropriate
+            server and filters results to reduce token usage and improve
+            performance. Using semantic search, it finds the most relevant tools
+            and automatically maintains an up-to-date index, simplifying your
+            client configuration and optimizing tool discovery.
             <span className="ml-1 inline-flex items-center gap-1">
-              Refer to the{' '}
+              See the{' '}
               <a
                 rel="noopener noreferrer"
                 className="inline-flex cursor-pointer items-center gap-1
