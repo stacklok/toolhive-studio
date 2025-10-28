@@ -26,15 +26,12 @@ export function useMcpOptimizerClients() {
     },
     errorMsg: 'Failed to add servers to optimizer group',
     onSuccess: (_, variables) => {
-      trackEvent(
-        `Clients synced ${variables.body.names?.join(', ')} on ${MCP_OPTIMIZER_GROUP_NAME} group`,
-        {
-          clients: variables.body.names?.join(', '),
-          group_name: MCP_OPTIMIZER_GROUP_NAME,
-        }
-      )
+      trackEvent(`Clients synced on ${MCP_OPTIMIZER_GROUP_NAME} group`, {
+        clients: JSON.stringify(variables.body.names),
+        group_name: MCP_OPTIMIZER_GROUP_NAME,
+      })
       log.info(
-        `Synced clients ${variables.body.names?.join(', ')} on ${MCP_OPTIMIZER_GROUP_NAME} group`
+        `Synced clients ${variables.body.names} on ${MCP_OPTIMIZER_GROUP_NAME} group`
       )
     },
     onSettled: async () => {
@@ -54,16 +51,13 @@ export function useMcpOptimizerClients() {
     },
     errorMsg: 'Failed to remove servers from optimizer group',
     onSuccess: (_, variables) => {
-      trackEvent(
-        `Clients unsynced ${variables.body.names?.join(', ')} from ${MCP_OPTIMIZER_GROUP_NAME} group`,
-        {
-          clients: variables.body.names?.join(', '),
-          group_name: MCP_OPTIMIZER_GROUP_NAME,
-        }
-      )
+      trackEvent(`Clients unsynced on ${MCP_OPTIMIZER_GROUP_NAME} group`, {
+        clients: JSON.stringify(variables.body.names),
+        group_name: MCP_OPTIMIZER_GROUP_NAME,
+      })
 
       log.info(
-        `Unsynced clients ${variables.body.names?.join(', ')} from ${MCP_OPTIMIZER_GROUP_NAME} group`
+        `Unsynced clients ${variables.body.names} from ${MCP_OPTIMIZER_GROUP_NAME} group`
       )
     },
     onSettled: async () => {
