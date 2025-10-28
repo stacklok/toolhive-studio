@@ -13,6 +13,7 @@ import {
   META_MCP_SERVER_NAME,
 } from '../lib/constants'
 import { getApiV1BetaWorkloadsByNameQueryKey } from '@api/@tanstack/react-query.gen'
+import { ExternalLinkIcon } from 'lucide-react'
 
 interface FeatureFlag {
   key: string
@@ -32,7 +33,24 @@ function formatFeatureFlagName(key: string): string {
     .join(' ')
 }
 
-function formatFeatureFlagDescription(key: string): string {
+function formatFeatureFlagDescription(key: string): React.ReactNode {
+  if (key === featureFlagKeys.META_OPTIMIZER) {
+    return (
+      <>
+        Access multiple MCP servers through a single endpoint with smart tool
+        routing that reduces token usage. See the{' '}
+        <a
+          rel="noopener noreferrer"
+          className="inline-flex cursor-pointer items-center gap-1 underline"
+          href="https://docs.stacklok.com/toolhive/guides-ui/mcp-optimizer"
+          target="_blank"
+        >
+          documentation <ExternalLinkIcon size={12} />
+        </a>
+      </>
+    )
+  }
+
   return `Enable ${formatFeatureFlagName(key)} feature`
 }
 
