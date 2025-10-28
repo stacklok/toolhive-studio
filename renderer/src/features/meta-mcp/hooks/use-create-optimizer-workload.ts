@@ -68,7 +68,8 @@ export function useCreateOptimizerWorkload() {
         workload: META_MCP_SERVER_NAME,
         image: optimizerRegistryServerDetail?.server?.image,
         group: variables.body.group,
-        optimized_workloads: JSON.stringify(variables.optimized_workloads),
+        'custom.optimized_workloads': variables.optimized_workloads.join(','),
+        optimized_workloads_length: variables.optimized_workloads.length,
       })
 
       if (groupToOptimize) {
