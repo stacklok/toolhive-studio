@@ -91,7 +91,6 @@ export function CustomizeToolsTable({
   onApply,
 }: CustomizeToolsTableProps) {
   const router = useRouter()
-  // State to track which tools are enabled
   const [enabledTools, setEnabledTools] = useState<Record<string, boolean>>({})
   const isAllToolsEnabled = useMemo(() => {
     return Object.values(enabledTools).every((enabled) => enabled)
@@ -100,7 +99,6 @@ export function CustomizeToolsTable({
     return Object.values(enabledTools).every((enabled) => !enabled)
   }, [enabledTools])
 
-  // Initialize enabled tools when tools data is available
   useEffect(() => {
     if (tools && tools.length > 0) {
       const initialState = tools.reduce(
@@ -109,7 +107,7 @@ export function CustomizeToolsTable({
       )
       setEnabledTools(initialState)
     }
-  }, [])
+  }, [tools])
 
   const handleToolToggle = (toolName: string, enabled: boolean) => {
     trackEvent('Customize Tools: toggle tool', {
