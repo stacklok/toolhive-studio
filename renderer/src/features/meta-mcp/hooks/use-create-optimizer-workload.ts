@@ -23,9 +23,6 @@ import { trackEvent } from '../../../common/lib/analytics'
 
 export function useCreateOptimizerWorkload() {
   const { saveGroupClients } = useMcpOptimizerClients()
-  const isExperimentalFeaturesEnabled = useFeatureFlag(
-    featureFlagKeys.EXPERIMENTAL_FEATURES
-  )
   const isMetaOptimizerEnabled = useFeatureFlag(featureFlagKeys.META_OPTIMIZER)
   const { data: optimizerWorkloadDetail } = useQuery({
     ...getApiV1BetaWorkloadsByNameOptions({
@@ -34,7 +31,7 @@ export function useCreateOptimizerWorkload() {
     refetchOnMount: true,
     staleTime: 5_000,
     retry: false,
-    enabled: isExperimentalFeaturesEnabled && isMetaOptimizerEnabled,
+    enabled: isMetaOptimizerEnabled,
   })
 
   const { data: optimizerRegistryServerDetail } = useQuery({
@@ -44,7 +41,7 @@ export function useCreateOptimizerWorkload() {
         serverName: MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
       },
     }),
-    enabled: isExperimentalFeaturesEnabled && isMetaOptimizerEnabled,
+    enabled: isMetaOptimizerEnabled,
   })
 
   const {
@@ -107,7 +104,7 @@ export function useCreateOptimizerWorkload() {
     groupToOptimize: string
     optimized_workloads: string[]
   }) => {
-    if (!isExperimentalFeaturesEnabled || !isMetaOptimizerEnabled) return
+    if (!isMetaOptimizerEnabled) return
     const body: V1CreateRequest = {
       name: META_MCP_SERVER_NAME,
       image: optimizerRegistryServerDetail?.server?.image,
@@ -130,7 +127,7 @@ export function useCreateOptimizerWorkload() {
   }
 
   return {
-    isNotEnabled: !isExperimentalFeaturesEnabled || !isMetaOptimizerEnabled,
+    isNotEnabled: !isMetaOptimizerEnabled,
     isPending: isPendingCreateMetaOptimizerWorkload,
     optimizerWorkloadDetail,
     isMCPOptimizerEnabled:

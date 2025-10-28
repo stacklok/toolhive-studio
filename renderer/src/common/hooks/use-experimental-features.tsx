@@ -3,7 +3,6 @@ import log from 'electron-log/renderer'
 import { toast } from 'sonner'
 import { useCallback, useRef } from 'react'
 import { featureFlagKeys } from '../../../../utils/feature-flags'
-import { useFeatureFlag } from './use-feature-flag'
 import { useCleanupMetaOptimizer } from './use-cleanup-meta-optimizer'
 import { useCreateOptimizerGroup } from './use-create-optimizer-group'
 import { Button } from '../components/ui/button'
@@ -59,9 +58,6 @@ export function useExperimentalFeatures() {
   const toastIdRef = useRef(new Date(Date.now()).toISOString())
   const { handleCreateOptimizerGroup, isCreatingOptimizerGroup } =
     useCreateOptimizerGroup()
-  const isExperimentalFeaturesEnabled = useFeatureFlag(
-    featureFlagKeys.EXPERIMENTAL_FEATURES
-  )
   const { cleanupMetaOptimizer } = useCleanupMetaOptimizer()
   const queryClient = useQueryClient()
 
@@ -144,7 +140,6 @@ export function useExperimentalFeatures() {
   return {
     flags,
     isLoadingFlags,
-    isExperimentalFeaturesEnabled,
     isPending,
     handleToggle,
     formatFeatureFlagName,
