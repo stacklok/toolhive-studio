@@ -50,7 +50,9 @@ export function useCheckServerStatus() {
 
       if (isServerReady) {
         await queryClient.invalidateQueries({
-          queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
+          queryKey: getApiV1BetaWorkloadsQueryKey({
+            query: { all: true, group: groupName },
+          }),
         })
 
         // Also invalidate the specific server query to ensure form updates
