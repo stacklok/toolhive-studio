@@ -76,9 +76,6 @@ function useUnregisterClients() {
 }
 
 export function useCleanupMetaOptimizer() {
-  const isExperimentalFeaturesEnabled = useFeatureFlag(
-    featureFlagKeys.EXPERIMENTAL_FEATURES
-  )
   const isMetaOptimizerEnabled = useFeatureFlag(featureFlagKeys.META_OPTIMIZER)
   const deleteGroup = useDeleteGroup()
   const unregisterClients = useUnregisterClients()
@@ -95,7 +92,7 @@ export function useCleanupMetaOptimizer() {
     refetchOnMount: true,
     staleTime: 5_000,
     retry: false,
-    enabled: isExperimentalFeaturesEnabled && isMetaOptimizerEnabled,
+    enabled: isMetaOptimizerEnabled,
   })
 
   const removeClientsFromGroup = async (clients: string[]) => {
@@ -111,7 +108,7 @@ export function useCleanupMetaOptimizer() {
   )
 
   const cleanupMetaOptimizer = useCallback(async () => {
-    if (!isExperimentalFeaturesEnabled || !isMetaOptimizerEnabled) return
+    if (!isMetaOptimizerEnabled) return
     if (!mcpOptimizerGroup) return
 
     const allowedGroup = optimizerWorkloadDetail?.env_vars?.ALLOWED_GROUPS
@@ -129,7 +126,6 @@ export function useCleanupMetaOptimizer() {
       query: { 'with-workloads': true },
     })
   }, [
-    isExperimentalFeaturesEnabled,
     isMetaOptimizerEnabled,
     mcpOptimizerGroup,
     optimizerWorkloadDetail,

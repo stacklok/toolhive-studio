@@ -72,24 +72,8 @@ describe('useCreateOptimizerWorkload', () => {
   })
 
   describe('when feature flags are disabled', () => {
-    it('returns isNotEnabled as true when EXPERIMENTAL_FEATURES is disabled', async () => {
-      vi.mocked(useFeatureFlag).mockImplementation((key) => {
-        if (key === 'experimental_features') return false
-        if (key === 'meta_optimizer') return true
-        return false
-      })
-
-      const { Wrapper } = createQueryClientWrapper()
-      const { result } = renderHook(() => useCreateOptimizerWorkload(), {
-        wrapper: Wrapper,
-      })
-
-      expect(result.current.isNotEnabled).toBe(true)
-    })
-
     it('returns isNotEnabled as true when META_OPTIMIZER is disabled', async () => {
       vi.mocked(useFeatureFlag).mockImplementation((key) => {
-        if (key === 'experimental_features') return true
         if (key === 'meta_optimizer') return false
         return false
       })
