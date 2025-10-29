@@ -6,6 +6,7 @@ type Route = FileRouteTypes['fullPaths']
 const ORDERED_ROUTES: Route[] = [
   '/group/default' as Route,
   '/group/$groupName',
+  '/mcp-optimizer',
   '/logs/$groupName/$serverName',
   '/registry',
   '/playground',

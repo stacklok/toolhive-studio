@@ -5,6 +5,13 @@ import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
 import userEvent from '@testing-library/user-event'
 import { getMockLogs } from '@/common/mocks/customHandlers/fixtures/servers'
+import {
+  MCP_OPTIMIZER_GROUP_NAME,
+  META_MCP_SERVER_NAME,
+} from '@/common/lib/constants'
+import { server } from '@/common/mocks/node'
+import { http, HttpResponse } from 'msw'
+import { mswEndpoint } from '@/common/mocks/customHandlers'
 
 describe('Logs Route', () => {
   beforeEach(() => {
@@ -101,6 +108,52 @@ describe('Logs Route', () => {
       expect(
         screen.queryByText(/server .* started successfully/i)
       ).toBeVisible()
+    })
+  })
+
+  it('navigates back to MCP optimizer page when viewing meta-mcp logs', async () => {
+    server.use(
+      http.get(
+        mswEndpoint('/api/v1beta/workloads/:name/logs'),
+        ({ params }) => {
+          const { name } = params
+          if (name === META_MCP_SERVER_NAME) {
+            const logs = getMockLogs(name as string)
+            return new HttpResponse(logs, { status: 200 })
+          }
+          return HttpResponse.json(
+            { error: 'Server not found' },
+            { status: 404 }
+          )
+        }
+      )
+    )
+
+    const router = createTestRouter(LogsPage, '/logs/$groupName/$serverName')
+    router.navigate({
+      to: '/logs/$groupName/$serverName',
+      params: {
+        serverName: META_MCP_SERVER_NAME,
+        groupName: MCP_OPTIMIZER_GROUP_NAME,
+      },
+    })
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: 'MCP Optimizer' })
+      ).toBeVisible()
+    })
+
+    const backButton = screen.getByRole('button', { name: /back/i })
+    expect(backButton).toBeVisible()
+
+    expect(backButton.closest('a')).toHaveAttribute('href', '/mcp-optimizer')
+
+    await userEvent.click(backButton)
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe('/mcp-optimizer')
     })
   })
 

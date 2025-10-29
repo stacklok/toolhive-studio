@@ -1,7 +1,4 @@
-import {
-  experimental_createMCPClient as createMCPClient,
-  type experimental_MCPClient as MCPClient,
-} from 'ai'
+import { experimental_createMCPClient as createMCPClient } from '@ai-sdk/mcp'
 import type { ToolSet } from 'ai'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import { createClient } from '@api/client'
@@ -166,11 +163,11 @@ export async function getMcpServerTools(
 // Create MCP tools for AI SDK
 export async function createMcpTools(): Promise<{
   tools: ToolSet
-  clients: MCPClient[]
+  clients: Awaited<ReturnType<typeof createMCPClient>>[]
   enabledTools: Record<string, string[]>
 }> {
   const mcpTools: ToolSet = {}
-  const mcpClients: MCPClient[] = []
+  const mcpClients: Awaited<ReturnType<typeof createMCPClient>>[] = []
   let enabledTools: Record<string, string[]> = {}
 
   try {

@@ -66,6 +66,10 @@
             "description": "ClientSecret is the optional OIDC client secret for introspection",
             "type": "string"
           },
+          "insecureAllowHTTP": {
+            "description": "InsecureAllowHTTP allows HTTP (non-HTTPS) OIDC issuers for development/testing\nWARNING: This is insecure and should NEVER be used in production",
+            "type": "boolean"
+          },
           "introspectionURL": {
             "description": "IntrospectionURL is the optional introspection endpoint for validating tokens",
             "type": "string"
@@ -135,7 +139,9 @@
           "AmpVSCodeInsider",
           "AmpWindsurf",
           "LMStudio",
-          "Goose"
+          "Goose",
+          "Trae",
+          "Continue"
         ]
       },
       "client.MCPClientStatus": {
@@ -158,7 +164,9 @@
               "AmpVSCodeInsider",
               "AmpWindsurf",
               "LMStudio",
-              "Goose"
+              "Goose",
+              "Trae",
+              "Continue"
             ]
           },
           "installed": {
@@ -285,6 +293,10 @@
         "properties": {
           "inbound": {
             "$ref": "#/components/schemas/permissions.InboundNetworkPermissions"
+          },
+          "mode": {
+            "description": "Mode specifies the network mode for the container (e.g., \"host\", \"bridge\", \"none\")\nWhen empty, the default container runtime network mode is used",
+            "type": "string"
           },
           "outbound": {
             "$ref": "#/components/schemas/permissions.OutboundNetworkPermissions"
@@ -924,6 +936,11 @@
       "telemetry.Config": {
         "description": "TelemetryConfig contains the OpenTelemetry configuration",
         "properties": {
+          "customAttributes": {
+            "additionalProperties": { "type": "string" },
+            "description": "CustomAttributes contains custom resource attributes to be added to all telemetry signals.\nThese are parsed from CLI flags (--otel-custom-attributes) or environment variables\n(OTEL_RESOURCE_ATTRIBUTES) as key=value pairs.\nWe use map[string]string for proper JSON serialization instead of []attribute.KeyValue\nwhich doesn't marshal/unmarshal correctly.",
+            "type": "object"
+          },
           "enablePrometheusMetricsPath": {
             "description": "EnablePrometheusMetricsPath controls whether to expose Prometheus-style /metrics endpoint\nThe metrics are served on the main transport port at /metrics\nThis is separate from OTLP metrics which are sent to the Endpoint",
             "type": "boolean"
@@ -1063,7 +1080,9 @@
                 "AmpVSCodeInsider",
                 "AmpWindsurf",
                 "LMStudio",
-                "Goose"
+                "Goose",
+                "Trae",
+                "Continue"
               ]
             },
             "type": "array",
@@ -1123,7 +1142,9 @@
               "AmpVSCodeInsider",
               "AmpWindsurf",
               "LMStudio",
-              "Goose"
+              "Goose",
+              "Trae",
+              "Continue"
             ]
           }
         },
@@ -1155,7 +1176,9 @@
               "AmpVSCodeInsider",
               "AmpWindsurf",
               "LMStudio",
-              "Goose"
+              "Goose",
+              "Trae",
+              "Continue"
             ]
           }
         },
@@ -2956,6 +2979,12 @@
             },
             "description": "Logs for the specified workload"
           },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Invalid workload name"
+          },
           "404": {
             "content": {
               "application/json": { "schema": { "type": "string" } }
@@ -2964,6 +2993,43 @@
           }
         },
         "summary": "Get logs for a specific workload",
+        "tags": ["logs"]
+      }
+    },
+    "/api/v1beta/workloads/{name}/proxy-logs": {
+      "get": {
+        "description": "Retrieve proxy logs for a specific workload by name from the file system.",
+        "parameters": [
+          {
+            "description": "Workload name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } },
+              "text/plain": { "schema": { "type": "string" } }
+            },
+            "description": "Proxy logs for the specified workload"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Invalid workload name"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            },
+            "description": "Proxy logs not found for workload"
+          }
+        },
+        "summary": "Get proxy logs for a specific workload",
         "tags": ["logs"]
       }
     },

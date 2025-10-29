@@ -24,7 +24,8 @@ export async function restartClientNotification({
   return toast.warning(
     `Restart ${matchedClient.client_type} to activate new MCP servers.`,
     {
-      duration: Infinity,
+      duration: 5_000,
+      closeButton: true,
       id: `restart-${matchedClient.client_type}`,
     }
   )

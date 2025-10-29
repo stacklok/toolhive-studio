@@ -1,0 +1,54 @@
+import { postApiV1BetaGroups } from '@api/index'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { MCP_OPTIMIZER_GROUP_NAME } from '../lib/constants'
+import { queryClient } from '../lib/query-client'
+import {
+  getApiV1BetaGroupsOptions,
+  getApiV1BetaGroupsQueryKey,
+} from '@api/@tanstack/react-query.gen'
+import log from 'electron-log/renderer'
+import { useCallback } from 'react'
+import { toast } from 'sonner'
+import { trackEvent } from '../lib/analytics'
+
+export function useCreateOptimizerGroup() {
+  const { data: rawGroups } = useQuery({
+    ...getApiV1BetaGroupsOptions(),
+    staleTime: 0,
+    gcTime: 0,
+  })
+
+  const {
+    mutateAsync: createOptimizerGroup,
+    isPending: isCreatingOptimizerGroup,
+  } = useMutation({
+    mutationFn: async () => {
+      return await postApiV1BetaGroups({
+        body: { name: MCP_OPTIMIZER_GROUP_NAME },
+      })
+    },
+    onSuccess: () => {
+      trackEvent('MCP Optimizer group created', {
+        group_name: MCP_OPTIMIZER_GROUP_NAME,
+      })
+      queryClient.invalidateQueries({
+        queryKey: getApiV1BetaGroupsQueryKey(),
+      })
+    },
+    onError: (error) => {
+      toast.error('Failed to create MCP Optimizer group')
+      log.error('Failed to create optimizer group', error)
+    },
+  })
+
+  const handleCreateOptimizerGroup = useCallback(async () => {
+    const metaOptimizerGrp = rawGroups?.groups?.find(
+      (group) => group.name === MCP_OPTIMIZER_GROUP_NAME
+    )
+    if (metaOptimizerGrp) return
+
+    await createOptimizerGroup()
+  }, [createOptimizerGroup, rawGroups])
+
+  return { handleCreateOptimizerGroup, isCreatingOptimizerGroup }
+}

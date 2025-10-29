@@ -4,10 +4,12 @@ import { pollServerStatus } from '@/common/lib/polling'
 import {
   getApiV1BetaWorkloadsByNameStatusOptions,
   getApiV1BetaWorkloadsQueryKey,
+  getApiV1BetaWorkloadsByNameQueryKey,
 } from '@api/@tanstack/react-query.gen'
 import { toast } from 'sonner'
 import { Button } from '../components/ui/button'
 import { Link } from '@tanstack/react-router'
+import { META_MCP_SERVER_NAME } from '../lib/constants'
 
 /**
  * Custom hook for checking server status after creation/startup.
@@ -48,11 +50,21 @@ export function useCheckServerStatus() {
 
       if (isServerReady) {
         await queryClient.invalidateQueries({
-          queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
+          queryKey: getApiV1BetaWorkloadsQueryKey({
+            query: { all: true, group: groupName },
+          }),
+        })
+
+        // Also invalidate the specific server query to ensure form updates
+        await queryClient.invalidateQueries({
+          queryKey: getApiV1BetaWorkloadsByNameQueryKey({
+            path: { name: serverName },
+          }),
+          refetchType: 'active',
         })
 
         toast.success(
-          `"${serverName}" ${isEditing ? 'updated' : 'started'} successfully.`,
+          `"${serverName === META_MCP_SERVER_NAME ? 'MCP Optimizer' : serverName}" ${isEditing ? 'updated' : 'started'} successfully.`,
           {
             id: toastIdRef.current,
             duration: 5_000, // slightly longer than default

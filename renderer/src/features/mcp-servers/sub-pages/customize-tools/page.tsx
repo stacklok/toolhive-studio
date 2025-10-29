@@ -16,6 +16,10 @@ import { CustomizeToolsTable } from '@/features/mcp-servers/components/customize
 import { convertCreateRequestToFormData as convertLocalServerToFormData } from '@/features/mcp-servers/lib/orchestrate-run-local-server'
 import { convertCreateRequestToFormData as convertRemoteServerToFormData } from '@/features/mcp-servers/lib/orchestrate-run-remote-server'
 import { useIsServerFromRegistry } from '../../hooks/use-is-server-from-registry'
+import { trackEvent } from '@/common/lib/analytics'
+import { EmptyState } from '@/common/components/empty-state'
+import { IllustrationStop } from '@/common/components/illustrations/illustration-stop'
+import { useMutationRestartServer } from '@/features/mcp-servers/hooks/use-mutation-restart-server'
 
 // This is only for the servers from the registry at the moment
 export function CustomizeToolsPage() {
@@ -24,7 +28,12 @@ export function CustomizeToolsPage() {
   const { checkServerStatus } = useCheckServerStatus()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const { data: workload, isFetching: isWorkloadLoading } = useQuery({
+  const {
+    data: workload,
+    refetch: refetchWorkload,
+    isFetching: isWorkloadLoading,
+    isPending: isWorkloadPending,
+  } = useQuery({
     queryKey: ['workload', serverName],
     queryFn: async () => {
       const { data } = await getApiV1BetaWorkloads({
@@ -65,7 +74,10 @@ export function CustomizeToolsPage() {
       return results
     },
     enabled:
-      !!serverName && !isWorkloadLoading && workload?.status === 'running',
+      !!serverName &&
+      !isWorkloadLoading &&
+      !isWorkloadPending &&
+      workload?.status === 'running',
     refetchOnWindowFocus: true,
     staleTime: 0,
   })
@@ -113,6 +125,12 @@ export function CustomizeToolsPage() {
     isRemote: isRemoteServer,
   })
 
+  const { mutateAsync: restartServer, isPending: isRestartPending } =
+    useMutationRestartServer({
+      name: serverName,
+      group: workload?.group,
+    })
+
   const handleUpdateServer = async (tools: string[] | null) => {
     if (!existingServerData || isExistingServerDataError) {
       throw new Error('Existing server data not available')
@@ -155,6 +173,10 @@ export function CustomizeToolsPage() {
   }
 
   const handleApply = async (enabledTools: Record<string, boolean>) => {
+    trackEvent('Customize Tools: apply changes', {
+      server_name: serverName,
+      tools_count: Object.keys(enabledTools).length,
+    })
     if (!serverTools) {
       toast.error('Server data not loaded')
       return
@@ -179,16 +201,21 @@ export function CustomizeToolsPage() {
     }
   }
 
-  const handleReset = () => {
-    try {
-      setIsSubmitting(true)
-      handleUpdateServer(null)
-    } catch (error) {
-      setIsSubmitting(false)
-      toast.error(
-        `Failed to reset changes: ${error instanceof Error ? error.message : 'Unknown error'}`
-      )
-    }
+  const handleStartServer = () => {
+    trackEvent('Customize Tools: Server not running click start server', {
+      server_name: serverName,
+    })
+    restartServer(
+      { path: { name: serverName } },
+      {
+        onSuccess: () => {
+          refetchWorkload()
+        },
+        onError: () => {
+          toast.error(`Failed to start server for ${serverName}`)
+        },
+      }
+    )
   }
 
   if (!isFromRegistry) return null
@@ -196,7 +223,7 @@ export function CustomizeToolsPage() {
   return (
     <div className="flex h-full flex-col">
       <div className="mb-2">
-        <LinkViewTransition to="/group/default">
+        <LinkViewTransition to={`/group/${workload?.group || 'default'}`}>
           <Button
             variant="ghost"
             aria-label="Back"
@@ -209,12 +236,38 @@ export function CustomizeToolsPage() {
       </div>
       <div className="mb-5">
         <h1 className="m-0 mb-0 p-0 text-3xl font-bold">
-          Customize Tools for {serverName}
+          Customize tools for {serverName}
         </h1>
       </div>
       <div className="min-h-0 flex-1">
-        {workload?.status !== 'running' ? (
-          <div>Server is not running</div>
+        {!isWorkloadPending &&
+        !isWorkloadLoading &&
+        workload?.status !== 'running' ? (
+          <EmptyState
+            illustration={IllustrationStop}
+            title="Server is not running"
+            body="We can't retrieve the running tools with their names and descriptions when the server is stopped. Start the server to view and customize available tools."
+            actions={[
+              <Button
+                key="start-server"
+                onClick={() => handleStartServer()}
+                disabled={isRestartPending}
+              >
+                {isRestartPending ? 'Starting...' : 'Start server'}
+              </Button>,
+              <Button
+                key="cancel"
+                variant="outline"
+                onClick={() =>
+                  navigate({
+                    to: `/group/${workload?.group || 'default'}`,
+                  })
+                }
+              >
+                Cancel
+              </Button>,
+            ]}
+          />
         ) : (
           <CustomizeToolsTable
             tools={completedTools || []}
@@ -226,7 +279,6 @@ export function CustomizeToolsPage() {
               isLoadingServer
             }
             onApply={handleApply}
-            onReset={handleReset}
             drift={drift}
           />
         )}

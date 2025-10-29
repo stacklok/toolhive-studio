@@ -1,12 +1,21 @@
-import type { ReactElement } from 'react'
 import {
   Alert,
   AlertTitle,
   AlertDescription,
 } from '@/common/components/ui/alert'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, InfoIcon } from 'lucide-react'
+import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
+import { useQuery } from '@tanstack/react-query'
+import { getApiV1BetaGroupsOptions } from '@api/@tanstack/react-query.gen'
 
-export function OptimizerWarnings(): ReactElement {
+export function OptimizerWarnings() {
+  const { data: groupsData } = useQuery({
+    ...getApiV1BetaGroupsOptions({}),
+  })
+  const optimizerGroup = groupsData?.groups?.find(
+    (g) => g.name === MCP_OPTIMIZER_GROUP_NAME
+  )
+
   return (
     <>
       <Alert className="mb-6">
@@ -16,18 +25,15 @@ export function OptimizerWarnings(): ReactElement {
           This is an experimental feature currently under development.
         </AlertDescription>
       </Alert>
-      <Alert variant="destructive" className="mb-6">
-        <AlertTriangle />
-        <AlertTitle>Unoptimized Access Detected</AlertTitle>
-        <AlertDescription>
-          <p>
-            The <strong>claude</strong> client has unoptimized access to the{' '}
-            <strong>foobar</strong> group. We recommend disabling the{' '}
-            <strong>claude</strong> client in the <strong>foobar</strong> group
-            and enabling optimization for the <strong>foobar</strong> group.
-          </p>
-        </AlertDescription>
-      </Alert>
+      {!optimizerGroup?.registered_clients?.length && (
+        <Alert className="mb-6">
+          <InfoIcon className="size-4" />
+          <AlertTitle>No clients registered</AlertTitle>
+          <AlertDescription>
+            Register clients in the selected group to use the optimized tools.
+          </AlertDescription>
+        </Alert>
+      )}
     </>
   )
 }

@@ -9,8 +9,10 @@ import { MoreVertical, Trash2 } from 'lucide-react'
 import { useConfirm } from '@/common/hooks/use-confirm'
 import { useMutationDeleteGroup } from '../hooks/use-mutation-delete-group'
 import { toast } from 'sonner'
+import { useIsOptimizedGroupName } from '@/features/clients/hooks/use-is-optimized-group-name'
 
 export function GroupActionsDropdown({ groupName }: { groupName: string }) {
+  const isOptimizedGroupName = useIsOptimizedGroupName(groupName)
   const confirm = useConfirm()
   const { mutateAsync: deleteGroup } = useMutationDeleteGroup()
   return (
@@ -38,7 +40,7 @@ export function GroupActionsDropdown({ groupName }: { groupName: string }) {
               return
             }
             const confirmed = await confirm(
-              'Deleting this group will permanently erase all its servers. Are you sure you want to proceed? This action cannot be undone.',
+              `Deleting this ${isOptimizedGroupName ? 'optimized' : ''} group will permanently erase all its servers. Are you sure you want to proceed? This action cannot be undone.`,
               {
                 title: 'Delete group',
                 buttons: { yes: 'Delete', no: 'Cancel' },

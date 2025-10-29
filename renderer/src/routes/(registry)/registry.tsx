@@ -11,14 +11,28 @@ import { Button } from '@/common/components/ui/button'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../../utils/feature-flags'
+import {
+  DEPRECATED_MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
+  MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
+} from '@/common/lib/constants'
+
+const SKIP_META_MCP = [
+  DEPRECATED_MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
+  MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
+]
+const DEFAULT_REGISTRY_NAME = 'default'
 
 export const Route = createFileRoute('/(registry)/registry')({
   loader: async ({ context: { queryClient } }) => {
     const serversPromise = queryClient.ensureQueryData(
-      getApiV1BetaRegistryByNameServersOptions({ path: { name: 'default' } })
+      getApiV1BetaRegistryByNameServersOptions({
+        path: { name: DEFAULT_REGISTRY_NAME },
+      })
     )
     const registryPromise = queryClient.ensureQueryData(
-      getApiV1BetaRegistryByNameOptions({ path: { name: 'default' } })
+      getApiV1BetaRegistryByNameOptions({
+        path: { name: DEFAULT_REGISTRY_NAME },
+      })
     )
     return Promise.all([serversPromise, registryPromise])
   },
@@ -31,11 +45,15 @@ export function Registry() {
   )
 
   const { data: serversData } = useSuspenseQuery(
-    getApiV1BetaRegistryByNameServersOptions({ path: { name: 'default' } })
+    getApiV1BetaRegistryByNameServersOptions({
+      path: { name: DEFAULT_REGISTRY_NAME },
+    })
   )
 
   const { data: registryData } = useSuspenseQuery(
-    getApiV1BetaRegistryByNameOptions({ path: { name: 'default' } })
+    getApiV1BetaRegistryByNameOptions({
+      path: { name: DEFAULT_REGISTRY_NAME },
+    })
   )
 
   const { servers: serversList = [], remote_servers: remoteServersList = [] } =
@@ -45,7 +63,11 @@ export function Registry() {
     ? registryData?.registry?.groups || []
     : []
 
-  const servers = [...serversList, ...remoteServersList]
+  const servers = [...serversList, ...remoteServersList].filter(
+    (server) => !SKIP_META_MCP.includes(server.name ?? '')
+  )
+
+  const isDefaultRegistry = registryData?.name === DEFAULT_REGISTRY_NAME
   const hasContent = servers.length > 0 || groups.length > 0
 
   return (
@@ -71,7 +93,11 @@ export function Registry() {
           illustration={IllustrationNoConnection}
         />
       ) : (
-        <GridCardsRegistry servers={servers} groups={groups} />
+        <GridCardsRegistry
+          servers={servers}
+          groups={groups}
+          isDefaultRegistry={isDefaultRegistry}
+        />
       )}
     </>
   )

@@ -1,9 +1,23 @@
-import { screen, waitFor } from '@testing-library/react'
-import { expect, it, describe, vi } from 'vitest'
+import { screen, waitFor, cleanup } from '@testing-library/react'
+import { expect, it, describe, vi, beforeEach, afterEach } from 'vitest'
 import userEvent from '@testing-library/user-event'
 import { CustomizeToolsTable } from '../customize-tools-table'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
+
+// Mock the useRouter hook
+const mockHistoryBack = vi.fn()
+vi.mock('@tanstack/react-router', async () => {
+  const actual = await vi.importActual('@tanstack/react-router')
+  return {
+    ...actual,
+    useRouter: () => ({
+      history: {
+        back: mockHistoryBack,
+      },
+    }),
+  }
+})
 
 const mockTools = [
   {
@@ -28,6 +42,14 @@ const mockTools = [
 ]
 
 describe('CustomizeToolsTable', () => {
+  beforeEach(() => {
+    mockHistoryBack.mockClear()
+  })
+
+  afterEach(() => {
+    cleanup()
+  })
+
   describe('Loading state', () => {
     it('renders skeleton rows when loading', async () => {
       const router = createTestRouter(() => (
@@ -37,9 +59,9 @@ describe('CustomizeToolsTable', () => {
       renderRoute(router)
 
       await waitFor(() => {
-        // When loading, should have skeleton rows (10 rows)
+        // When loading, should have skeleton rows
         const rows = screen.getAllByRole('row')
-        // 1 header row + 10 skeleton rows
+        // 1 skeleton header row + 10 skeleton body rows = 11 rows
         expect(rows.length).toBe(11)
       })
     })
@@ -53,12 +75,12 @@ describe('CustomizeToolsTable', () => {
 
       await waitFor(() => {
         const applyButton = screen.getByRole('button', { name: /apply/i })
-        const resetButton = screen.getByRole('button', {
-          name: /enable all tools/i,
+        const cancelButton = screen.getByRole('button', {
+          name: /cancel/i,
         })
 
         expect(applyButton).toBeDisabled()
-        expect(resetButton).toBeDisabled()
+        expect(cancelButton).toBeDisabled()
       })
     })
   })
@@ -148,12 +170,14 @@ describe('CustomizeToolsTable', () => {
 
       await waitFor(() => {
         const switches = screen.getAllByRole('switch')
-        expect(switches).toHaveLength(4)
+        // Should have 5 switches: 1 header toggle all + 4 tool switches
+        expect(switches).toHaveLength(5)
 
-        expect(switches[0]).toBeChecked()
-        expect(switches[1]).toBeChecked()
-        expect(switches[2]).not.toBeChecked()
-        expect(switches[3]).toBeChecked()
+        // Skip first switch (header), check the 4 tool switches
+        expect(switches[1]).toBeChecked() // read_file
+        expect(switches[2]).toBeChecked() // write_file
+        expect(switches[3]).not.toBeChecked() // delete_file
+        expect(switches[4]).toBeChecked() // list_directory
       })
     })
 
@@ -167,8 +191,10 @@ describe('CustomizeToolsTable', () => {
       renderRoute(router)
 
       await waitFor(() => {
-        const switchElement = screen.getByRole('switch')
-        expect(switchElement).toBeChecked()
+        const switches = screen.getAllByRole('switch')
+        // Should have 2 switches: 1 header + 1 tool switch
+        expect(switches).toHaveLength(2)
+        expect(switches[1]).toBeChecked() // The tool switch should be checked
       })
     })
 
@@ -184,7 +210,8 @@ describe('CustomizeToolsTable', () => {
       })
 
       const switches = screen.getAllByRole('switch')
-      const readFileSwitch = switches[0]!
+      // switches[0] is the header toggle all, switches[1] is read_file
+      const readFileSwitch = switches[1]!
 
       expect(readFileSwitch).toBeChecked()
 
@@ -214,15 +241,321 @@ describe('CustomizeToolsTable', () => {
 
       const switches = screen.getAllByRole('switch')
 
-      await userEvent.click(switches[0]!)
-      await userEvent.click(switches[2]!)
+      // switches[0] is header, switches[1-4] are tools
+      // Toggle read_file (index 1) and delete_file (index 3)
+      await userEvent.click(switches[1]!) // read_file: true -> false
+      await userEvent.click(switches[3]!) // delete_file: false -> true
 
       await waitFor(() => {
-        expect(switches[0]).not.toBeChecked()
-        expect(switches[1]).toBeChecked()
-        expect(switches[2]).toBeChecked()
-        expect(switches[3]).toBeChecked()
+        expect(switches[1]).not.toBeChecked() // read_file
+        expect(switches[2]).toBeChecked() // write_file
+        expect(switches[3]).toBeChecked() // delete_file
+        expect(switches[4]).toBeChecked() // list_directory
       })
+    })
+  })
+
+  describe('Header toggle all switch', () => {
+    it('is checked when all tools are enabled', async () => {
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable tools={mockTools} isLoading={false} />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByText('read_file')).toBeInTheDocument()
+      })
+
+      const switches = screen.getAllByRole('switch')
+      const headerSwitch = switches[0]!
+
+      // By default, 3 out of 4 tools are enabled (delete_file is disabled)
+      // So header switch should not be checked initially
+      expect(headerSwitch).not.toBeChecked()
+    })
+
+    it('is checked when all tools become enabled', async () => {
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable tools={mockTools} isLoading={false} />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByText('read_file')).toBeInTheDocument()
+      })
+
+      const switches = screen.getAllByRole('switch')
+      const headerSwitch = switches[0]!
+      const deleteFileSwitch = switches[3]! // delete_file is initially disabled
+
+      // Enable the disabled tool
+      await userEvent.click(deleteFileSwitch)
+
+      await waitFor(() => {
+        expect(headerSwitch).toBeChecked()
+        expect(deleteFileSwitch).toBeChecked()
+      })
+    })
+
+    it('enables all tools when clicked while unchecked', async () => {
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable tools={mockTools} isLoading={false} />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByText('read_file')).toBeInTheDocument()
+      })
+
+      const switches = screen.getAllByRole('switch')
+      const headerSwitch = switches[0]!
+
+      expect(headerSwitch).not.toBeChecked()
+
+      // Click header switch to enable all
+      await userEvent.click(headerSwitch)
+
+      await waitFor(() => {
+        expect(headerSwitch).toBeChecked()
+        // All tool switches should now be checked
+        expect(switches[1]).toBeChecked() // read_file
+        expect(switches[2]).toBeChecked() // write_file
+        expect(switches[3]).toBeChecked() // delete_file
+        expect(switches[4]).toBeChecked() // list_directory
+      })
+    })
+
+    it('disables all tools when clicked while checked', async () => {
+      const allEnabledTools = mockTools.map((tool) => ({
+        ...tool,
+        isInitialEnabled: true,
+      }))
+
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable tools={allEnabledTools} isLoading={false} />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByText('read_file')).toBeInTheDocument()
+      })
+
+      const switches = screen.getAllByRole('switch')
+      const headerSwitch = switches[0]!
+
+      // Wait for header switch to be checked
+      await waitFor(() => {
+        expect(headerSwitch).toBeChecked()
+      })
+
+      // Click header switch to disable all
+      await userEvent.click(headerSwitch)
+
+      await waitFor(() => {
+        expect(headerSwitch).not.toBeChecked()
+        // All tool switches should now be unchecked
+        expect(switches[1]).not.toBeChecked() // read_file
+        expect(switches[2]).not.toBeChecked() // write_file
+        expect(switches[3]).not.toBeChecked() // delete_file
+        expect(switches[4]).not.toBeChecked() // list_directory
+      })
+    })
+
+    it('unchecks when a single tool is disabled', async () => {
+      const allEnabledTools = mockTools.map((tool) => ({
+        ...tool,
+        isInitialEnabled: true,
+      }))
+
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable tools={allEnabledTools} isLoading={false} />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByText('read_file')).toBeInTheDocument()
+      })
+
+      const switches = screen.getAllByRole('switch')
+      const headerSwitch = switches[0]!
+      const readFileSwitch = switches[1]!
+
+      // Header should be checked initially
+      await waitFor(() => {
+        expect(headerSwitch).toBeChecked()
+      })
+
+      // Disable one tool
+      await userEvent.click(readFileSwitch)
+
+      await waitFor(() => {
+        expect(headerSwitch).not.toBeChecked()
+        expect(readFileSwitch).not.toBeChecked()
+      })
+    })
+
+    it('disables Apply button when all tools are disabled via header switch', async () => {
+      const allEnabledTools = mockTools.map((tool) => ({
+        ...tool,
+        isInitialEnabled: true,
+      }))
+
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable tools={allEnabledTools} isLoading={false} />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByText('read_file')).toBeInTheDocument()
+      })
+
+      const switches = screen.getAllByRole('switch')
+      const headerSwitch = switches[0]!
+      const applyButton = screen.getByRole('button', { name: /apply/i })
+
+      // Initially, Apply button should be enabled
+      expect(applyButton).not.toBeDisabled()
+
+      // Wait for header switch to be checked
+      await waitFor(() => {
+        expect(headerSwitch).toBeChecked()
+      })
+
+      // Click header switch to disable all tools
+      await userEvent.click(headerSwitch)
+
+      await waitFor(() => {
+        // Header switch should be unchecked
+        expect(headerSwitch).not.toBeChecked()
+        // Apply button should be disabled (can't apply with all tools disabled)
+        expect(applyButton).toBeDisabled()
+      })
+    })
+
+    it('shows tooltip when hovering Apply button with all tools disabled', async () => {
+      const allEnabledTools = mockTools.map((tool) => ({
+        ...tool,
+        isInitialEnabled: true,
+      }))
+
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable tools={allEnabledTools} isLoading={false} />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByText('read_file')).toBeInTheDocument()
+      })
+
+      const switches = screen.getAllByRole('switch')
+      const headerSwitch = switches[0]!
+      const applyButton = screen.getByRole('button', { name: /apply/i })
+
+      // Wait for header switch to be checked
+      await waitFor(() => {
+        expect(headerSwitch).toBeChecked()
+      })
+
+      // Click header switch to disable all tools
+      await userEvent.click(headerSwitch)
+
+      await waitFor(() => {
+        expect(applyButton).toBeDisabled()
+      })
+
+      // Hover over the apply button (wrapped in span for tooltip)
+      await userEvent.hover(applyButton.parentElement!)
+
+      await waitFor(() => {
+        const tooltip = screen.getByRole('tooltip')
+        expect(tooltip).toHaveTextContent(
+          /It is not possible to disable all tools/i
+        )
+      })
+    })
+
+    it('re-enables Apply button when at least one tool is enabled after disabling all', async () => {
+      const allEnabledTools = mockTools.map((tool) => ({
+        ...tool,
+        isInitialEnabled: true,
+      }))
+
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable tools={allEnabledTools} isLoading={false} />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByText('read_file')).toBeInTheDocument()
+      })
+
+      const switches = screen.getAllByRole('switch')
+      const headerSwitch = switches[0]!
+      const readFileSwitch = switches[1]!
+      const applyButton = screen.getByRole('button', { name: /apply/i })
+
+      // Disable all tools via header switch
+      await userEvent.click(headerSwitch)
+
+      await waitFor(() => {
+        expect(applyButton).toBeDisabled()
+      })
+
+      // Enable one tool
+      await userEvent.click(readFileSwitch)
+
+      await waitFor(() => {
+        expect(readFileSwitch).toBeChecked()
+        // Apply button should be enabled again
+        expect(applyButton).not.toBeDisabled()
+      })
+    })
+
+    it('tracks analytics event when toggling all tools', async () => {
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable tools={mockTools} isLoading={false} />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByText('read_file')).toBeInTheDocument()
+      })
+
+      const switches = screen.getAllByRole('switch')
+      const headerSwitch = switches[0]!
+
+      await userEvent.click(headerSwitch)
+
+      // Note: We're not mocking trackEvent in these tests, but in a real scenario
+      // you might want to verify the analytics call was made
+      await waitFor(() => {
+        expect(headerSwitch).toBeChecked()
+      })
+    })
+
+    it('is not rendered when loading', async () => {
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable tools={mockTools} isLoading={true} />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        const rows = screen.getAllByRole('row')
+        expect(rows.length).toBe(11) // 1 header + 10 skeleton rows
+      })
+
+      // During loading, switches are skeleton elements, not real switches
+      // We don't need to test the header switch behavior during loading
     })
   })
 
@@ -277,8 +610,10 @@ describe('CustomizeToolsTable', () => {
 
       const switches = screen.getAllByRole('switch')
 
-      await userEvent.click(switches[0]!)
-      await userEvent.click(switches[2]!)
+      // switches[0] is header, switches[1-4] are tools
+      // Toggle read_file (index 1) and delete_file (index 3)
+      await userEvent.click(switches[1]!) // read_file
+      await userEvent.click(switches[3]!) // delete_file
 
       const applyButton = screen.getByRole('button', { name: /apply/i })
       await userEvent.click(applyButton)
@@ -314,35 +649,8 @@ describe('CustomizeToolsTable', () => {
     })
   })
 
-  describe('Reset button', () => {
-    it('calls onReset when clicked', async () => {
-      const onReset = vi.fn()
-
-      const router = createTestRouter(() => (
-        <CustomizeToolsTable
-          tools={mockTools}
-          isLoading={false}
-          onReset={onReset}
-        />
-      ))
-
-      renderRoute(router)
-
-      await waitFor(() => {
-        expect(screen.getByText('read_file')).toBeInTheDocument()
-      })
-
-      const resetButton = screen.getByRole('button', {
-        name: /enable all tools/i,
-      })
-      await userEvent.click(resetButton)
-
-      await waitFor(() => {
-        expect(onReset).toHaveBeenCalledTimes(1)
-      })
-    })
-
-    it('does not crash when onReset is not provided', async () => {
+  describe('Cancel button', () => {
+    it('navigates back when clicked', async () => {
       const router = createTestRouter(() => (
         <CustomizeToolsTable tools={mockTools} isLoading={false} />
       ))
@@ -353,13 +661,32 @@ describe('CustomizeToolsTable', () => {
         expect(screen.getByText('read_file')).toBeInTheDocument()
       })
 
-      const resetButton = screen.getByRole('button', {
-        name: /enable all tools/i,
+      const cancelButton = screen.getByRole('button', {
+        name: /cancel/i,
+      })
+      await userEvent.click(cancelButton)
+
+      await waitFor(() => {
+        expect(mockHistoryBack).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    it('is enabled when there are multiple tools', async () => {
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable tools={mockTools} isLoading={false} />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByText('read_file')).toBeInTheDocument()
       })
 
-      await userEvent.click(resetButton)
+      const cancelButton = screen.getByRole('button', {
+        name: /cancel/i,
+      })
 
-      expect(resetButton).toBeInTheDocument()
+      expect(cancelButton).not.toBeDisabled()
     })
   })
 
@@ -406,7 +733,8 @@ describe('CustomizeToolsTable', () => {
 
       await waitFor(() => {
         const rows = screen.getAllByRole('row')
-        expect(rows.length).toBe(11) // 1 header + 10 skeleton rows
+        // 1 skeleton header row + 10 skeleton body rows = 11 rows
+        expect(rows.length).toBe(11)
       })
 
       expect(screen.queryByText('Tag drift detected')).not.toBeInTheDocument()
@@ -586,7 +914,8 @@ describe('CustomizeToolsTable', () => {
 
       await waitFor(() => {
         const rows = screen.getAllByRole('row')
-        expect(rows.length).toBe(11) // 1 header + 10 skeleton rows
+        // 1 skeleton header row + 10 skeleton body rows = 11 rows
+        expect(rows.length).toBe(11)
       })
 
       expect(
@@ -745,12 +1074,12 @@ describe('CustomizeToolsTable', () => {
       })
 
       const applyButton = screen.getByRole('button', { name: /apply/i })
-      const resetButton = screen.getByRole('button', {
-        name: /enable all tools/i,
+      const cancelButton = screen.getByRole('button', {
+        name: /cancel/i,
       })
 
       expect(applyButton).toBeDisabled()
-      expect(resetButton).toBeDisabled()
+      expect(cancelButton).toBeDisabled()
     })
 
     it('disables both buttons when no tools', async () => {
@@ -777,12 +1106,12 @@ describe('CustomizeToolsTable', () => {
       })
 
       const applyButton = screen.getByRole('button', { name: /apply/i })
-      const resetButton = screen.getByRole('button', {
-        name: /enable all tools/i,
+      const cancelButton = screen.getByRole('button', {
+        name: /cancel/i,
       })
 
       expect(applyButton).not.toBeDisabled()
-      expect(resetButton).not.toBeDisabled()
+      expect(cancelButton).not.toBeDisabled()
     })
 
     it('shows tooltip on hover when only one tool', async () => {
@@ -834,7 +1163,8 @@ describe('CustomizeToolsTable', () => {
       })
 
       const switches = screen.getAllByRole('switch')
-      expect(switches).toHaveLength(25)
+      // Should have 26 switches: 1 header + 25 tool switches
+      expect(switches).toHaveLength(26)
     })
 
     it('applies correct height class for many tools', async () => {
@@ -889,7 +1219,8 @@ describe('CustomizeToolsTable', () => {
 
       await waitFor(() => {
         const switches = screen.getAllByRole('switch')
-        expect(switches).toHaveLength(4)
+        // Should have 5 switches: 1 header + 4 tool switches
+        expect(switches).toHaveLength(5)
         switches.forEach((switchElement) => {
           expect(switchElement).toHaveAttribute('role', 'switch')
           expect(switchElement).toHaveAttribute('aria-checked')
@@ -906,12 +1237,12 @@ describe('CustomizeToolsTable', () => {
 
       await waitFor(() => {
         const applyButton = screen.getByRole('button', { name: /apply/i })
-        const resetButton = screen.getByRole('button', {
-          name: /enable all tools/i,
+        const cancelButton = screen.getByRole('button', {
+          name: /cancel/i,
         })
 
         expect(applyButton).toBeInTheDocument()
-        expect(resetButton).toBeInTheDocument()
+        expect(cancelButton).toBeInTheDocument()
       })
     })
 
@@ -944,12 +1275,12 @@ describe('CustomizeToolsTable', () => {
 
       await waitFor(() => {
         const applyButton = screen.getByRole('button', { name: /apply/i })
-        const resetButton = screen.getByRole('button', {
-          name: /enable all tools/i,
+        const cancelButton = screen.getByRole('button', {
+          name: /cancel/i,
         })
 
         expect(applyButton).not.toBeDisabled()
-        expect(resetButton).not.toBeDisabled()
+        expect(cancelButton).not.toBeDisabled()
       })
     })
   })

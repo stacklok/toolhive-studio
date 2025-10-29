@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { EventEmitter } from 'node:events'
+import { vol } from 'memfs'
 import { spawn } from 'node:child_process'
-import { existsSync } from 'node:fs'
 import net from 'node:net'
 import { app } from 'electron'
-import { EventEmitter } from 'node:events'
 import {
   startToolhive,
   getToolhivePort,
@@ -11,16 +11,38 @@ import {
   isToolhiveRunning,
   stopToolhive,
   restartToolhive,
+  binPath,
 } from '../toolhive-manager'
 import { updateTrayStatus } from '../system-tray'
 import log from '../logger'
 import * as Sentry from '@sentry/electron/main'
 import { getQuittingState } from '../app-state'
 
-// Mock dependencies
-vi.mock('node:child_process')
+vi.mock('node:child_process', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:child_process')>()
+  const mockSpawnFn = vi.fn()
+  return {
+    ...actual,
+    spawn: mockSpawnFn,
+    default: {
+      ...actual,
+      spawn: mockSpawnFn,
+    },
+  }
+})
 vi.mock('node:fs')
-vi.mock('node:net')
+vi.mock('node:net', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:net')>()
+  const mockCreateServerFn = vi.fn()
+  return {
+    ...actual,
+    createServer: mockCreateServerFn,
+    default: {
+      ...actual,
+      createServer: mockCreateServerFn,
+    },
+  }
+})
 vi.mock('electron', () => ({
   app: {
     isPackaged: false,
@@ -53,12 +75,14 @@ vi.mock('electron-store', () => {
   }
 
   return {
-    default: vi.fn().mockImplementation(() => mockStoreInstance),
+    default: vi.fn(function ElectronStore() {
+      return mockStoreInstance
+    }),
   }
 })
 
+// Get mocked functions
 const mockSpawn = vi.mocked(spawn)
-const mockExistsSync = vi.mocked(existsSync)
 const mockNet = vi.mocked(net)
 const mockApp = vi.mocked(app)
 const mockUpdateTrayStatus = vi.mocked(updateTrayStatus)
@@ -70,10 +94,10 @@ const mockGetQuittingState = vi.mocked(getQuittingState)
 class MockProcess extends EventEmitter {
   pid = 12345
   killed = false
-
   kill() {
-    this.killed = true
-    this.emit('exit', 0)
+    // Don't automatically set killed - let tests control this
+    // This allows testing delayed SIGKILL scenarios
+    return true
   }
 }
 
@@ -112,16 +136,25 @@ describe('toolhive-manager', () => {
     vi.clearAllMocks()
     vi.useFakeTimers()
 
+    // Reset the in-memory file system
+    vol.reset()
+
+    // Setup the file system state - make binary exist by default
+    vol.fromJSON({
+      [binPath]: '', // Mock the binary file exists
+    })
+
     // Reset module state
     stopToolhive()
 
     // Setup mocks
     mockProcess = new MockProcess()
 
-    mockSpawn.mockReturnValue(
-      mockProcess as unknown as ReturnType<typeof spawn>
-    )
-    mockExistsSync.mockReturnValue(true)
+    mockSpawn.mockImplementation(function spawn() {
+      return mockProcess as unknown as ReturnType<
+        typeof import('node:child_process').spawn
+      >
+    })
     Object.defineProperty(mockApp, 'isPackaged', {
       value: false,
       configurable: true,
@@ -129,9 +162,9 @@ describe('toolhive-manager', () => {
     vi.mocked(mockApp.getPath).mockReturnValue('/test/userData')
 
     // Mock net.createServer to return a new MockServer instance each time
-    mockNet.createServer.mockImplementation(
-      () => new MockServer() as unknown as net.Server
-    )
+    mockNet.createServer.mockImplementation(function createServer() {
+      return new MockServer() as unknown as net.Server
+    })
 
     // Mock logger methods
     mockLog.info = vi.fn()
@@ -147,7 +180,8 @@ describe('toolhive-manager', () => {
 
   describe('startToolhive', () => {
     it('returns early if binary does not exist', async () => {
-      mockExistsSync.mockReturnValue(false)
+      // Remove the binary file from the in-memory file system
+      vol.reset()
 
       await startToolhive()
 
@@ -179,6 +213,7 @@ describe('toolhive-manager', () => {
         {
           stdio: ['ignore', 'ignore', 'pipe'],
           detached: false,
+          windowsHide: true,
         }
       )
 
@@ -236,6 +271,7 @@ describe('toolhive-manager', () => {
       await vi.advanceTimersByTimeAsync(50)
       await startPromise
 
+      mockProcess.killed = true
       mockProcess.emit('exit', 1)
 
       expect(mockLog.warn).toHaveBeenCalledWith(
@@ -256,6 +292,7 @@ describe('toolhive-manager', () => {
 
       mockCaptureMessage.mockClear()
 
+      mockProcess.killed = true
       mockProcess.emit('exit', 1)
 
       expect(mockCaptureMessage).toHaveBeenCalledWith(
@@ -274,6 +311,7 @@ describe('toolhive-manager', () => {
 
       mockCaptureMessage.mockClear()
 
+      mockProcess.killed = true
       mockProcess.emit('exit', 0)
 
       expect(mockCaptureMessage).not.toHaveBeenCalled()
@@ -299,6 +337,7 @@ describe('toolhive-manager', () => {
       const restartPromise = restartToolhive()
 
       // Let the original process exit during restart
+      mockProcess.killed = true
       mockProcess.emit('exit', 0)
 
       await vi.advanceTimersByTimeAsync(50)
@@ -368,6 +407,7 @@ describe('toolhive-manager', () => {
         {
           stdio: ['ignore', 'ignore', 'pipe'],
           detached: false,
+          windowsHide: true,
         }
       )
     })
@@ -376,28 +416,30 @@ describe('toolhive-manager', () => {
   describe('port finding with fallback', () => {
     it('falls back to random port when preferred range is unavailable', async () => {
       // Mock all ports in range to be unavailable, then allow random port
-      mockNet.createServer.mockImplementation(() => {
+      mockNet.createServer.mockImplementation(function createServer() {
         const server = new MockServer() as unknown as net.Server
         const originalListen = server.listen.bind(server)
 
-        server.listen = vi
-          .fn()
-          .mockImplementation((port: number, callback?: () => void) => {
-            if (port >= 50000 && port <= 50100) {
-              // Simulate all ports in range being unavailable
-              setTimeout(() => {
-                server.emit('error', { code: 'EADDRINUSE' })
-              }, 5)
-            } else if (port === 0) {
-              // Allow OS assignment (fallback)
-              setTimeout(() => {
-                originalListen(port, callback)
-              }, 5)
-            } else {
-              // Any other specific port
+        server.listen = vi.fn(function listen(
+          port: number,
+          callback?: () => void
+        ) {
+          if (port >= 50000 && port <= 50100) {
+            // Simulate all ports in range being unavailable
+            setTimeout(() => {
+              server.emit('error', { code: 'EADDRINUSE' })
+            }, 5)
+          } else if (port === 0) {
+            // Allow OS assignment (fallback)
+            setTimeout(() => {
               originalListen(port, callback)
-            }
-          })
+            }, 5)
+          } else {
+            // Any other specific port
+            originalListen(port, callback)
+          }
+          return server
+        }) as unknown as typeof server.listen
 
         return server
       })
@@ -414,6 +456,247 @@ describe('toolhive-manager', () => {
         )
       )
       expect(isToolhiveRunning()).toBe(true)
+    })
+  })
+
+  describe('stopToolhive', () => {
+    beforeEach(async () => {
+      // Start a process before each stop test
+      const startPromise = startToolhive()
+      await vi.advanceTimersByTimeAsync(50)
+      await startPromise
+      vi.clearAllMocks()
+    })
+
+    it('does nothing if no process is running', () => {
+      stopToolhive() // Stop once
+      vi.clearAllMocks()
+
+      stopToolhive() // Try to stop again
+
+      expect(mockLog.info).toHaveBeenCalledWith(
+        expect.stringContaining('No process to stop')
+      )
+    })
+
+    it('sends SIGTERM by default for graceful shutdown', () => {
+      const killSpy = vi.spyOn(mockProcess, 'kill')
+
+      stopToolhive()
+
+      expect(killSpy).toHaveBeenCalledWith('SIGTERM')
+      expect(mockLog.info).toHaveBeenCalledWith(
+        expect.stringContaining('SIGTERM sent, result:')
+      )
+    })
+
+    it('schedules SIGKILL after 2 seconds if process does not exit gracefully', async () => {
+      // Mock the process to not be killed immediately
+      const killSpy = vi.spyOn(mockProcess, 'kill')
+      mockProcess.killed = false
+
+      stopToolhive()
+
+      // SIGTERM should be sent immediately
+      expect(killSpy).toHaveBeenCalledWith('SIGTERM')
+      expect(killSpy).toHaveBeenCalledTimes(1)
+
+      // Advance time by less than 2 seconds - SIGKILL should not be sent yet
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(killSpy).toHaveBeenCalledTimes(1)
+
+      // Advance to 2 seconds - SIGKILL should be sent
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(killSpy).toHaveBeenCalledWith('SIGKILL')
+      expect(killSpy).toHaveBeenCalledTimes(2)
+      expect(mockLog.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Process 12345 did not exit gracefully, forcing SIGKILL'
+        )
+      )
+    })
+
+    it('does not send SIGKILL if process exits gracefully within 2 seconds', async () => {
+      const killSpy = vi.spyOn(mockProcess, 'kill')
+
+      stopToolhive()
+
+      // SIGTERM sent
+      expect(killSpy).toHaveBeenCalledWith('SIGTERM')
+
+      // Simulate process exiting gracefully
+      mockProcess.killed = true
+
+      // Advance time to when SIGKILL would have been sent
+      await vi.advanceTimersByTimeAsync(2000)
+
+      // SIGKILL should NOT be sent since process already exited
+      expect(killSpy).toHaveBeenCalledTimes(1)
+      expect(killSpy).not.toHaveBeenCalledWith('SIGKILL')
+    })
+
+    it('sends immediate SIGKILL when force option is true', () => {
+      const killSpy = vi.spyOn(mockProcess, 'kill')
+
+      stopToolhive({ force: true })
+
+      expect(killSpy).toHaveBeenCalledWith('SIGKILL')
+      expect(killSpy).toHaveBeenCalledTimes(1)
+      expect(mockLog.info).toHaveBeenCalledWith(
+        expect.stringContaining('[stopToolhive] SIGKILL sent, result:')
+      )
+    })
+
+    it('does not schedule delayed SIGKILL when force option is true', async () => {
+      const killSpy = vi.spyOn(mockProcess, 'kill')
+      mockProcess.killed = false
+
+      stopToolhive({ force: true })
+
+      // Immediate SIGKILL sent
+      expect(killSpy).toHaveBeenCalledWith('SIGKILL')
+      expect(killSpy).toHaveBeenCalledTimes(1)
+
+      // Advance time - no additional kill should occur
+      await vi.advanceTimersByTimeAsync(2000)
+      expect(killSpy).toHaveBeenCalledTimes(1)
+    })
+
+    it('clears pending kill timer when called multiple times', async () => {
+      mockProcess.killed = false
+
+      // Start first process
+      const startPromise1 = startToolhive()
+      await vi.advanceTimersByTimeAsync(50)
+      await startPromise1
+
+      const firstProcess = mockProcess
+      const firstKillSpy = vi.spyOn(firstProcess, 'kill')
+
+      stopToolhive() // First stop - schedules SIGKILL
+      expect(firstKillSpy).toHaveBeenCalledWith('SIGTERM')
+
+      // Before timer fires, start and stop again
+      await vi.advanceTimersByTimeAsync(500)
+
+      const newMockProcess = new MockProcess()
+      mockSpawn.mockReturnValue(
+        newMockProcess as unknown as ReturnType<typeof spawn>
+      )
+
+      const startPromise2 = startToolhive()
+      await vi.advanceTimersByTimeAsync(50)
+      await startPromise2
+
+      const secondKillSpy = vi.spyOn(newMockProcess, 'kill')
+
+      stopToolhive() // Second stop - should clear first timer
+
+      // Advance past when first timer would have fired
+      await vi.advanceTimersByTimeAsync(2000)
+
+      // Only the second process should get SIGKILL, not the first
+      expect(secondKillSpy).toHaveBeenCalledWith('SIGKILL')
+      expect(firstKillSpy).toHaveBeenCalledTimes(1) // Only SIGTERM, no SIGKILL
+    })
+
+    it('handles kill errors and attempts force kill as fallback', () => {
+      const killSpy = vi.spyOn(mockProcess, 'kill')
+      killSpy.mockImplementationOnce(function killImpl() {
+        throw new Error('Kill failed')
+      })
+      killSpy.mockImplementationOnce(function killImpl() {
+        return true
+      })
+
+      stopToolhive()
+
+      expect(mockLog.error).toHaveBeenCalledWith(
+        '[stopToolhive] Failed to send SIGTERM:',
+        expect.any(Error)
+      )
+      expect(killSpy).toHaveBeenCalledWith('SIGTERM')
+      expect(killSpy).toHaveBeenCalledWith('SIGKILL')
+    })
+
+    it('clears toolhiveProcess reference after stopping', () => {
+      stopToolhive()
+
+      expect(isToolhiveRunning()).toBe(false)
+      expect(mockLog.info).toHaveBeenCalledWith(
+        '[stopToolhive] Process cleanup completed'
+      )
+    })
+
+    it('uses captured process reference in timer callback', async () => {
+      const killSpy = vi.spyOn(mockProcess, 'kill')
+      mockProcess.killed = false
+
+      const capturedProcess = mockProcess
+
+      stopToolhive()
+
+      // Process reference is cleared immediately
+      expect(isToolhiveRunning()).toBe(false)
+
+      // But timer should still have access to the process
+      await vi.advanceTimersByTimeAsync(2000)
+
+      expect(killSpy).toHaveBeenCalledWith('SIGKILL')
+      expect(capturedProcess.killed).toBe(false) // Our mock doesn't auto-set this
+    })
+  })
+
+  describe('restartToolhive', () => {
+    it('stops existing process and starts a new one', async () => {
+      // Start initial process
+      const startPromise = startToolhive()
+      await vi.advanceTimersByTimeAsync(50)
+      await startPromise
+
+      const firstProcess = mockProcess
+      const firstKillSpy = vi.spyOn(firstProcess, 'kill')
+
+      vi.clearAllMocks()
+
+      // Create new mock process for restart
+      const newMockProcess = new MockProcess()
+      mockSpawn.mockReturnValue(
+        newMockProcess as unknown as ReturnType<typeof spawn>
+      )
+
+      const restartPromise = restartToolhive()
+      await vi.advanceTimersByTimeAsync(50)
+      await restartPromise
+
+      expect(firstKillSpy).toHaveBeenCalled()
+      expect(mockSpawn).toHaveBeenCalled()
+      expect(mockLog.info).toHaveBeenCalledWith(
+        'ToolHive restarted successfully'
+      )
+    })
+
+    it('prevents concurrent restarts', async () => {
+      const startPromise = startToolhive()
+      await vi.advanceTimersByTimeAsync(50)
+      await startPromise
+
+      vi.clearAllMocks()
+
+      const newMockProcess = new MockProcess()
+      mockSpawn.mockReturnValue(
+        newMockProcess as unknown as ReturnType<typeof spawn>
+      )
+
+      const restart1 = restartToolhive()
+      const restart2 = restartToolhive()
+
+      await vi.advanceTimersByTimeAsync(50)
+      await Promise.all([restart1, restart2])
+
+      expect(mockLog.info).toHaveBeenCalledWith(
+        'Restart already in progress, skipping...'
+      )
     })
   })
 })

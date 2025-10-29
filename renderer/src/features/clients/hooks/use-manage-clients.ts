@@ -1,30 +1,40 @@
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
-import {
-  useQuery,
-  useQueryClient,
-  useSuspenseQuery,
-} from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { trackEvent } from '@/common/lib/analytics'
 import {
   getApiV1BetaDiscoveryClientsOptions,
   getApiV1BetaDiscoveryClientsQueryKey,
   getApiV1BetaClientsQueryKey,
   postApiV1BetaClientsMutation,
+  getApiV1BetaGroupsQueryKey,
+  getApiV1BetaGroupsOptions,
 } from '@api/@tanstack/react-query.gen'
 import {
   getApiV1BetaClients,
   deleteApiV1BetaClientsByNameGroupsByGroup,
-  getApiV1BetaGroups,
 } from '@api/sdk.gen'
+import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
+import { useIsOptimizedGroupName } from './use-is-optimized-group-name'
 
 export function useManageClients(groupName: string) {
-  const {
-    data: { clients = [] },
-  } = useSuspenseQuery(getApiV1BetaDiscoveryClientsOptions())
+  const { data: groupsData } = useQuery({
+    ...getApiV1BetaGroupsOptions(),
+  })
+  const optimizerClients =
+    groupsData?.groups?.find((g) => g.name === MCP_OPTIMIZER_GROUP_NAME)
+      ?.registered_clients ?? []
 
-  const installedClients = clients.filter(
-    (client) => client.installed && client.client_type
-  )
+  const isOptimizedGroupName = useIsOptimizedGroupName(groupName)
+  const { data: clientsData } = useQuery({
+    ...getApiV1BetaDiscoveryClientsOptions(),
+    staleTime: 0,
+    gcTime: 0,
+  })
+
+  const installedClients =
+    clientsData?.clients?.filter(
+      (client) => client.installed && client.client_type
+    ) ?? []
 
   const getClientFieldName = (clientType: string): string =>
     `enable${clientType
@@ -32,15 +42,6 @@ export function useManageClients(groupName: string) {
       .toUpperCase()}${clientType.slice(1).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())}`
   const queryClient = useQueryClient()
 
-  const { data: groupsData } = useQuery({
-    queryKey: ['api', 'v1beta', 'groups'],
-    queryFn: async () => {
-      const { data: response } = await getApiV1BetaGroups()
-
-      return response
-    },
-    staleTime: 5_000,
-  })
   const registeredClientsInGroup =
     groupsData?.groups?.find((g) => g.name === groupName)?.registered_clients ||
     []
@@ -52,7 +53,7 @@ export function useManageClients(groupName: string) {
         queryKey: getApiV1BetaDiscoveryClientsQueryKey(),
       })
       queryClient.invalidateQueries({
-        queryKey: ['api', 'v1beta', 'groups'],
+        queryKey: getApiV1BetaGroupsQueryKey(),
       })
       queryClient.invalidateQueries({
         queryKey: getApiV1BetaClientsQueryKey(),
@@ -81,7 +82,7 @@ export function useManageClients(groupName: string) {
         queryKey: getApiV1BetaDiscoveryClientsQueryKey(),
       })
       queryClient.invalidateQueries({
-        queryKey: ['api', 'v1beta', 'groups'],
+        queryKey: getApiV1BetaGroupsQueryKey(),
       })
     },
   })
@@ -138,7 +139,10 @@ export function useManageClients(groupName: string) {
   const defaultValues: Record<string, boolean> = installedClients.reduce(
     (acc, client) => {
       const fieldName = getClientFieldName(client.client_type!)
-      acc[fieldName] = registeredClientsInGroup.includes(client.client_type!)
+      const clientsToCheck = isOptimizedGroupName
+        ? optimizerClients
+        : registeredClientsInGroup
+      acc[fieldName] = clientsToCheck.includes(client.client_type!)
       return acc
     },
     {} as Record<string, boolean>

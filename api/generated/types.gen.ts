@@ -68,6 +68,11 @@ export type AuthTokenValidatorConfig = {
    */
   clientSecret?: string
   /**
+   * InsecureAllowHTTP allows HTTP (non-HTTPS) OIDC issuers for development/testing
+   * WARNING: This is insecure and should NEVER be used in production
+   */
+  insecureAllowHTTP?: boolean
+  /**
    * IntrospectionURL is the optional introspection endpoint for validating tokens
    */
   introspectionURL?: string
@@ -234,6 +239,11 @@ export type PermissionsInboundNetworkPermissions = {
  */
 export type PermissionsNetworkPermissions = {
   inbound?: PermissionsInboundNetworkPermissions
+  /**
+   * Mode specifies the network mode for the container (e.g., "host", "bridge", "none")
+   * When empty, the default container runtime network mode is used
+   */
+  mode?: string
   outbound?: PermissionsOutboundNetworkPermissions
 }
 
@@ -814,6 +824,16 @@ export type SecretsSecretParameter = {
  * TelemetryConfig contains the OpenTelemetry configuration
  */
 export type TelemetryConfig = {
+  /**
+   * CustomAttributes contains custom resource attributes to be added to all telemetry signals.
+   * These are parsed from CLI flags (--otel-custom-attributes) or environment variables
+   * (OTEL_RESOURCE_ATTRIBUTES) as key=value pairs.
+   * We use map[string]string for proper JSON serialization instead of []attribute.KeyValue
+   * which doesn't marshal/unmarshal correctly.
+   */
+  customAttributes?: {
+    [key: string]: string
+  }
   /**
    * EnablePrometheusMetricsPath controls whether to expose Prometheus-style /metrics endpoint
    * The metrics are served on the main transport port at /metrics
@@ -2659,6 +2679,10 @@ export type GetApiV1BetaWorkloadsByNameLogsData = {
 
 export type GetApiV1BetaWorkloadsByNameLogsErrors = {
   /**
+   * Invalid workload name
+   */
+  400: string
+  /**
    * Not Found
    */
   404: string
@@ -2676,6 +2700,42 @@ export type GetApiV1BetaWorkloadsByNameLogsResponses = {
 
 export type GetApiV1BetaWorkloadsByNameLogsResponse =
   GetApiV1BetaWorkloadsByNameLogsResponses[keyof GetApiV1BetaWorkloadsByNameLogsResponses]
+
+export type GetApiV1BetaWorkloadsByNameProxyLogsData = {
+  body?: never
+  path: {
+    /**
+     * Workload name
+     */
+    name: string
+  }
+  query?: never
+  url: '/api/v1beta/workloads/{name}/proxy-logs'
+}
+
+export type GetApiV1BetaWorkloadsByNameProxyLogsErrors = {
+  /**
+   * Invalid workload name
+   */
+  400: string
+  /**
+   * Proxy logs not found for workload
+   */
+  404: string
+}
+
+export type GetApiV1BetaWorkloadsByNameProxyLogsError =
+  GetApiV1BetaWorkloadsByNameProxyLogsErrors[keyof GetApiV1BetaWorkloadsByNameProxyLogsErrors]
+
+export type GetApiV1BetaWorkloadsByNameProxyLogsResponses = {
+  /**
+   * Proxy logs for the specified workload
+   */
+  200: string
+}
+
+export type GetApiV1BetaWorkloadsByNameProxyLogsResponse =
+  GetApiV1BetaWorkloadsByNameProxyLogsResponses[keyof GetApiV1BetaWorkloadsByNameProxyLogsResponses]
 
 export type PostApiV1BetaWorkloadsByNameRestartData = {
   body?: never

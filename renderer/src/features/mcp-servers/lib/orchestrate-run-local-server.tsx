@@ -86,6 +86,7 @@ export function prepareCreateWorkloadData(
     permission_profile,
     volumes: getVolumes(volumes ?? []),
     tools: data.tools || undefined,
+    tools_override: data.tools_override || undefined,
   }
 }
 
@@ -221,8 +222,9 @@ export function convertCreateRequestToFormData(
   } else {
     return {
       ...baseFormData,
-      // We’re keeping tool filtering available only for local images, since it’s currently supported only for images pulled from a registry.
+      // We're keeping tool filtering available only for local images, since it's currently supported only for images pulled from a registry.
       tools: createRequest.tools || undefined,
+      tools_override: createRequest.tools_override || undefined,
       type: 'docker_image',
       image: image || '',
     }
@@ -266,5 +268,6 @@ export function prepareUpdateLocalWorkloadData(
       : undefined,
     volumes: getVolumes(data.volumes ?? []),
     tools: data.tools || undefined,
+    tools_override: data.tools_override || undefined,
   }
 }

@@ -183,6 +183,7 @@ export const Route = createRootRouteWithContext<{
       })
     }
   },
-  loader: async ({ context: { queryClient } }) =>
-    await setupSecretProvider(queryClient),
+  loader: async ({ context: { queryClient } }) => {
+    await setupSecretProvider(queryClient)
+  },
 })

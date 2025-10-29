@@ -19,13 +19,21 @@ import { AttachmentPreview } from './attachment-preview'
 import { useState } from 'react'
 import type { ChatUIMessage } from '../types'
 import { getProviderIconByModel } from './provider-icons'
+import type { ChatStatus } from 'ai'
 
 interface ChatMessageProps {
   message: ChatUIMessage
+  status: ChatStatus
 }
 
 // Helper function to render reasoning steps
-function ReasoningComponent({ part }: { part: ChatUIMessage['parts'][0] }) {
+function ReasoningComponent({
+  part,
+  status,
+}: {
+  part: ChatUIMessage['parts'][0]
+  status: ChatStatus
+}) {
   const [isOpen, setIsOpen] = useState(false)
 
   if (part.type !== 'reasoning') return null
@@ -59,10 +67,9 @@ function ReasoningComponent({ part }: { part: ChatUIMessage['parts'][0] }) {
           <div className="mt-2">
             <div className="bg-background rounded border p-3 text-sm">
               <Streamdown
+                isAnimating={status === 'streaming'}
                 className="prose prose-sm max-w-none"
                 remarkPlugins={[remarkGfm, remarkMath]}
-                allowedImagePrefixes={['data:']}
-                defaultOrigin="https://localhost"
               >
                 {'text' in part
                   ? part.text || 'No reasoning content'
@@ -103,7 +110,13 @@ function StepStartComponent({
 }
 
 // Helper function to render tool calls with comprehensive information
-function ToolCallComponent({ part }: { part: ChatUIMessage['parts'][0] }) {
+function ToolCallComponent({
+  part,
+  status,
+}: {
+  part: ChatUIMessage['parts'][0]
+  status: ChatStatus
+}) {
   const [isInputOpen, setIsInputOpen] = useState(false)
   const [isOutputOpen, setIsOutputOpen] = useState(false)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
@@ -274,10 +287,9 @@ function ToolCallComponent({ part }: { part: ChatUIMessage['parts'][0] }) {
                                   className="bg-background rounded border p-2 text-sm"
                                 >
                                   <Streamdown
+                                    isAnimating={status === 'streaming'}
                                     className="prose prose-sm max-w-none"
                                     remarkPlugins={[remarkGfm, remarkMath]}
-                                    allowedImagePrefixes={['data:']}
-                                    defaultOrigin="https://localhost"
                                   >
                                     {String(item.text || '')}
                                   </Streamdown>
@@ -397,7 +409,7 @@ function ToolCallComponent({ part }: { part: ChatUIMessage['parts'][0] }) {
   )
 }
 
-export function ChatMessage({ message }: ChatMessageProps) {
+export function ChatMessage({ message, status }: ChatMessageProps) {
   const isUser = message.role === 'user'
 
   const providerIcon =
@@ -416,12 +428,11 @@ export function ChatMessage({ message }: ChatMessageProps) {
             >
               <div className="break-words">
                 <Streamdown
+                  isAnimating={status === 'streaming'}
                   className="prose prose-sm max-w-none [&_code]:text-sm
                     [&_em]:italic [&_p]:mb-0 [&_p:last-child]:mb-0
                     [&_pre]:text-xs [&_strong]:font-bold"
                   remarkPlugins={[remarkGfm, remarkMath]}
-                  allowedImagePrefixes={['data:']}
-                  defaultOrigin="https://localhost"
                 >
                   {message.parts.find((p) => p.type === 'text' && 'text' in p)
                     ?.text || ''}
@@ -504,7 +515,11 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
               case 'reasoning':
                 return (
-                  <ReasoningComponent key={`reasoning-${index}`} part={part} />
+                  <ReasoningComponent
+                    key={`reasoning-${index}`}
+                    part={part}
+                    status={status}
+                  />
                 )
 
               case 'dynamic-tool':
@@ -512,6 +527,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
                   <ToolCallComponent
                     key={`dynamic-tool-${index}`}
                     part={part}
+                    status={status}
                   />
                 )
 
@@ -573,7 +589,13 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
                 // Handle all tool-* parts
                 if (part.type.startsWith('tool-')) {
-                  return <ToolCallComponent key={`tool-${index}`} part={part} />
+                  return (
+                    <ToolCallComponent
+                      key={`tool-${index}`}
+                      part={part}
+                      status={status}
+                    />
+                  )
                 }
                 // Only log truly unknown part types (exclude text, source-*, data-*, image)
                 if (
@@ -605,10 +627,9 @@ export function ChatMessage({ message }: ChatMessageProps) {
               return (
                 <div>
                   <Streamdown
+                    isAnimating={status === 'streaming'}
                     className="prose prose-sm text-foreground/80 [&_h1]:text-foreground/85 [&_h2]:text-foreground/80 [&_h3]:text-foreground/75 [&_table]:border-border [&_th]:border-border [&_th]:bg-muted/50 [&_th]:text-foreground/75 [&_td]:border-border [&_a]:text-primary [&_strong]:text-foreground/90 [&_em]:text-foreground/75 [&_blockquote]:border-muted-foreground/30 max-w-none [&_a:hover]:underline [&_blockquote]:mb-3 [&_blockquote]:border-l-4 [&_blockquote]:pl-4 [&_blockquote]:italic [&_code]:text-xs [&_em]:italic [&_h1]:mt-3 [&_h1]:mb-2 [&_h1]:text-lg [&_h1]:font-semibold [&_h1:first-child]:mt-0 [&_h2]:mt-3 [&_h2]:mb-2 [&_h2]:text-base [&_h2]:font-semibold [&_h2:first-child]:mt-0 [&_h3]:mt-2 [&_h3]:mb-1 [&_h3]:text-sm [&_h3]:font-medium [&_h3:first-child]:mt-0 [&_li]:ml-2 [&_li]:text-sm [&_ol]:mb-2 [&_ol]:list-inside [&_ol]:list-decimal [&_ol]:space-y-0.5 [&_p]:mb-2 [&_p]:leading-relaxed [&_p:last-child]:mb-0 [&_pre]:text-xs [&_strong]:font-medium [&_table]:mb-4 [&_table]:min-w-full [&_table]:rounded-md [&_table]:border [&_td]:border [&_td]:px-3 [&_td]:py-2 [&_td]:text-xs [&_th]:border [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:text-xs [&_th]:font-medium [&_ul]:mb-2 [&_ul]:list-inside [&_ul]:list-disc [&_ul]:space-y-0.5"
                     remarkPlugins={[remarkGfm, remarkMath]}
-                    allowedImagePrefixes={['data:']}
-                    defaultOrigin="https://localhost"
                   >
                     {allTextContent}
                   </Streamdown>

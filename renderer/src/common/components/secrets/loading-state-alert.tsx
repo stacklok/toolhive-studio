@@ -1,10 +1,4 @@
-import {
-  Alert,
-  AlertTitle,
-  AlertDescription,
-} from '@/common/components/ui/alert'
-import { Progress } from '@/common/components/ui/progress'
-import { Loader } from 'lucide-react'
+import { LoadingStateAlert as BaseLoadingStateAlert } from '@/common/components/ui/loading-state-alert'
 
 interface LoadingStateAlertProps {
   isPendingSecrets: boolean
@@ -19,29 +13,27 @@ export function LoadingStateAlert({
   isPendingSecrets,
   loadingSecrets,
 }: LoadingStateAlertProps) {
+  const title = isPendingSecrets
+    ? 'Creating Secrets...'
+    : 'Installing server...'
+  const description =
+    isPendingSecrets && loadingSecrets
+      ? loadingSecrets.text
+      : 'Downloading server image from the registry and installing.'
+
+  const progress =
+    isPendingSecrets && loadingSecrets
+      ? {
+          value: loadingSecrets.completedCount,
+          max: loadingSecrets.secretsCount,
+        }
+      : undefined
+
   return (
-    <div className="relative space-y-4 px-6">
-      <Alert>
-        <Loader className="size-4 animate-spin" />
-        <AlertTitle>
-          {isPendingSecrets ? 'Creating Secrets...' : 'Installing server...'}
-        </AlertTitle>
-        <AlertDescription>
-          {isPendingSecrets && loadingSecrets
-            ? loadingSecrets?.text
-            : 'Downloading server image from the registry and installing.'}
-          {isPendingSecrets && loadingSecrets && (
-            <Progress
-              value={
-                (loadingSecrets?.completedCount /
-                  loadingSecrets?.secretsCount) *
-                100
-              }
-              className="my-2 w-full"
-            />
-          )}
-        </AlertDescription>
-      </Alert>
-    </div>
+    <BaseLoadingStateAlert
+      title={title}
+      description={description}
+      progress={progress}
+    />
   )
 }

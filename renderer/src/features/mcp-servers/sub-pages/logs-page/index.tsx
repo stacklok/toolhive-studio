@@ -9,6 +9,7 @@ import { RefreshButton } from '@/common/components/refresh-button'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
 import { InputSearch } from '@/common/components/ui/input-search'
 import { highlight } from './search'
+import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 
 export function LogsPage() {
   const { serverName, groupName } = useParams({
@@ -31,10 +32,16 @@ export function LogsPage() {
       )
     : logLines
 
+  // Special handling for MCP optimizer group - navigate back to optimizer page
+  const backLink =
+    groupName === MCP_OPTIMIZER_GROUP_NAME
+      ? { to: '/mcp-optimizer' as const }
+      : { to: '/group/$groupName' as const, params: { groupName } }
+
   return (
     <div className="flex max-h-full w-full flex-1 flex-col">
       <div className="mb-2">
-        <LinkViewTransition to="/group/$groupName" params={{ groupName }}>
+        <LinkViewTransition {...backLink}>
           <Button
             variant="ghost"
             aria-label="Back"
@@ -46,7 +53,12 @@ export function LogsPage() {
         </LinkViewTransition>
       </div>
       <div className="flex flex-col gap-5">
-        <h1 className="m-0 mb-0 p-0 text-3xl font-bold">{serverName}</h1>
+        <h1 className="m-0 mb-0 p-0 text-3xl font-bold">
+          {groupName === MCP_OPTIMIZER_GROUP_NAME
+            ? 'MCP Optimizer'
+            : serverName}
+        </h1>
+
         <Separator />
         <div className="mb-4 flex justify-between">
           <InputSearch

@@ -11,6 +11,10 @@ import { useRunCustomServer } from '../../../hooks/use-run-custom-server'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 import { useUpdateServer } from '../../../hooks/use-update-server'
+import {
+  MCP_OPTIMIZER_GROUP_NAME,
+  META_MCP_SERVER_NAME,
+} from '@/common/lib/constants'
 
 // Mock the hook
 vi.mock('../../../hooks/use-run-custom-server', () => ({
@@ -253,6 +257,121 @@ describe('DialogFormLocalMcp', () => {
     const groupCombobox = await screen.findByRole('combobox', { name: 'Group' })
     expect(groupCombobox).toBeVisible()
     expect(groupCombobox).toHaveTextContent('research')
+  })
+
+  it('hides group field when editing the meta-mcp server in the meta-mcp group', async () => {
+    mswServer.use(
+      http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
+        if (params.name === META_MCP_SERVER_NAME) {
+          return HttpResponse.json({
+            name: META_MCP_SERVER_NAME,
+            type: 'docker_image',
+            transport: 'stdio',
+            image: 'ghcr.io/toolhive/meta-mcp',
+            group: MCP_OPTIMIZER_GROUP_NAME,
+            cmd_arguments: [],
+            env_vars: [],
+            secrets: [],
+            network_isolation: false,
+            allowed_hosts: [],
+            allowed_ports: [],
+            volumes: [],
+          })
+        }
+        return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
+      }),
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [
+            { name: 'default' },
+            { name: 'research' },
+            { name: MCP_OPTIMIZER_GROUP_NAME },
+          ],
+        })
+      )
+    )
+
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormLocalMcp
+          isOpen
+          closeDialog={vi.fn()}
+          serverToEdit={META_MCP_SERVER_NAME}
+          groupName={MCP_OPTIMIZER_GROUP_NAME}
+        />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    await waitFor(() => {
+      expect(screen.getByRole('textbox', { name: /name/i })).toHaveValue(
+        META_MCP_SERVER_NAME
+      )
+    })
+
+    const groupCombobox = screen.queryByRole('combobox', { name: 'Group' })
+    expect(groupCombobox).not.toBeInTheDocument()
+  })
+
+  it('shows group field when editing a different server in the meta-mcp group', async () => {
+    mswServer.use(
+      http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
+        if (params.name === 'other-server') {
+          return HttpResponse.json({
+            name: 'other-server',
+            type: 'docker_image',
+            transport: 'stdio',
+            image: 'ghcr.io/other/server',
+            group: MCP_OPTIMIZER_GROUP_NAME,
+            cmd_arguments: [],
+            env_vars: [],
+            secrets: [],
+            network_isolation: false,
+            allowed_hosts: [],
+            allowed_ports: [],
+            volumes: [],
+          })
+        }
+        return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
+      }),
+      http.get(mswEndpoint('/api/v1beta/groups'), () =>
+        HttpResponse.json({
+          groups: [
+            { name: 'default' },
+            { name: 'research' },
+            { name: MCP_OPTIMIZER_GROUP_NAME },
+          ],
+        })
+      )
+    )
+
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormLocalMcp
+          isOpen
+          closeDialog={vi.fn()}
+          serverToEdit="other-server"
+          groupName={MCP_OPTIMIZER_GROUP_NAME}
+        />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    await waitFor(() => {
+      expect(screen.getByRole('textbox', { name: /name/i })).toHaveValue(
+        'other-server'
+      )
+    })
+
+    const groupCombobox = await screen.findByRole('combobox', { name: 'Group' })
+    expect(groupCombobox).toBeVisible()
+    expect(groupCombobox).toBeInTheDocument()
   })
 
   it('submits the selected group in form data', async () => {

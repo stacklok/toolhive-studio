@@ -31,6 +31,7 @@ import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
 import { AlertErrorFetchingEditingData } from '@/common/components/workloads/alert-error-fetching-editing-data'
+import { META_MCP_SERVER_NAME } from '@/common/lib/constants'
 
 type Tab = 'configuration' | 'network-isolation'
 type CommonFields = keyof FormSchemaLocalMcp
@@ -54,6 +55,7 @@ const FIELD_TAB_MAP = {
   networkIsolation: 'network-isolation',
   volumes: 'configuration',
   tools: 'configuration',
+  tools_override: 'configuration',
 } satisfies FieldTabMapping<Tab, Field>
 
 const DEFAULT_FORM_VALUES = {
@@ -319,6 +321,11 @@ export function DialogFormLocalMcp({
     serverToEdit,
   ])
 
+  const title =
+    serverToEdit === META_MCP_SERVER_NAME
+      ? 'MCP Optimizer server'
+      : `${serverToEdit} MCP server`
+
   return (
     <DialogWorkloadFormWrapper
       onOpenChange={closeDialog}
@@ -335,11 +342,7 @@ export function DialogFormLocalMcp({
       actionsIsEditing={isEditing}
       form={form}
       onSubmit={form.handleSubmit(onSubmitForm, activateTabWithError)}
-      title={
-        isEditing
-          ? `Edit ${serverToEdit} MCP server`
-          : 'Custom local MCP server'
-      }
+      title={isEditing ? `Edit ${title}` : 'Custom local MCP server'}
     >
       {renderContent()}
     </DialogWorkloadFormWrapper>

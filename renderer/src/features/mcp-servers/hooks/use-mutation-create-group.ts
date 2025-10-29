@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { postApiV1BetaGroups } from '@api/sdk.gen'
+import { getApiV1BetaGroupsQueryKey } from '@api/@tanstack/react-query.gen'
 import type { PostApiV1BetaGroupsData } from '@api/types.gen'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { trackEvent } from '@/common/lib/analytics'
@@ -18,12 +19,14 @@ export function useMutationCreateGroup() {
         throwOnError: true,
       })
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       const existingGroupsCount = groupsData?.groups?.length ?? 0
-      trackEvent('Group created', {
+      const newGroupName = variables.body.name
+      trackEvent(`Group created: ${newGroupName}`, {
         existing_groups_count: existingGroupsCount,
+        group_name: newGroupName,
       })
-      queryClient.invalidateQueries({ queryKey: ['api', 'v1beta', 'groups'] })
+      queryClient.invalidateQueries({ queryKey: getApiV1BetaGroupsQueryKey() })
     },
     successMsg: (variables) =>
       `Group "${variables.body.name}" created successfully`,
