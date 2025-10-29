@@ -23,10 +23,12 @@ vi.mock('electron-log/renderer', () => ({
 global.URL.createObjectURL = vi.fn().mockReturnValue('blob:mock-url')
 global.URL.revokeObjectURL = vi.fn()
 
-global.Blob = vi.fn().mockImplementation((content, options) => ({
-  content,
-  options,
-})) as unknown as typeof Blob
+global.Blob = vi.fn(function Blob(content, options) {
+  return {
+    content,
+    options,
+  }
+}) as unknown as typeof Blob
 
 describe('useDownloadFile', () => {
   beforeEach(() => {

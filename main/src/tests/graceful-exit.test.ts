@@ -48,7 +48,9 @@ vi.mock('electron-store', () => {
   ).__mockStoreInstance = mockStoreInstance
 
   return {
-    default: vi.fn().mockImplementation(() => mockStoreInstance),
+    default: vi.fn(function ElectronStore() {
+      return mockStoreInstance
+    }),
   }
 })
 
