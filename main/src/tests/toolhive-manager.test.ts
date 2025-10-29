@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { EventEmitter } from 'node:events'
+import { vol } from 'memfs'
 import { spawn } from 'node:child_process'
-import { existsSync } from 'node:fs'
 import net from 'node:net'
 import { app } from 'electron'
-import { EventEmitter } from 'node:events'
 import {
   startToolhive,
   getToolhivePort,
@@ -11,16 +11,38 @@ import {
   isToolhiveRunning,
   stopToolhive,
   restartToolhive,
+  binPath,
 } from '../toolhive-manager'
 import { updateTrayStatus } from '../system-tray'
 import log from '../logger'
 import * as Sentry from '@sentry/electron/main'
 import { getQuittingState } from '../app-state'
 
-// Mock dependencies
-vi.mock('node:child_process')
+vi.mock('node:child_process', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:child_process')>()
+  const mockSpawnFn = vi.fn()
+  return {
+    ...actual,
+    spawn: mockSpawnFn,
+    default: {
+      ...actual,
+      spawn: mockSpawnFn,
+    },
+  }
+})
 vi.mock('node:fs')
-vi.mock('node:net')
+vi.mock('node:net', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:net')>()
+  const mockCreateServerFn = vi.fn()
+  return {
+    ...actual,
+    createServer: mockCreateServerFn,
+    default: {
+      ...actual,
+      createServer: mockCreateServerFn,
+    },
+  }
+})
 vi.mock('electron', () => ({
   app: {
     isPackaged: false,
@@ -53,12 +75,14 @@ vi.mock('electron-store', () => {
   }
 
   return {
-    default: vi.fn().mockImplementation(() => mockStoreInstance),
+    default: vi.fn(function ElectronStore() {
+      return mockStoreInstance
+    }),
   }
 })
 
+// Get mocked functions
 const mockSpawn = vi.mocked(spawn)
-const mockExistsSync = vi.mocked(existsSync)
 const mockNet = vi.mocked(net)
 const mockApp = vi.mocked(app)
 const mockUpdateTrayStatus = vi.mocked(updateTrayStatus)
@@ -112,16 +136,25 @@ describe('toolhive-manager', () => {
     vi.clearAllMocks()
     vi.useFakeTimers()
 
+    // Reset the in-memory file system
+    vol.reset()
+
+    // Setup the file system state - make binary exist by default
+    vol.fromJSON({
+      [binPath]: '', // Mock the binary file exists
+    })
+
     // Reset module state
     stopToolhive()
 
     // Setup mocks
     mockProcess = new MockProcess()
 
-    mockSpawn.mockReturnValue(
-      mockProcess as unknown as ReturnType<typeof spawn>
-    )
-    mockExistsSync.mockReturnValue(true)
+    mockSpawn.mockImplementation(function spawn() {
+      return mockProcess as unknown as ReturnType<
+        typeof import('node:child_process').spawn
+      >
+    })
     Object.defineProperty(mockApp, 'isPackaged', {
       value: false,
       configurable: true,
@@ -129,9 +162,9 @@ describe('toolhive-manager', () => {
     vi.mocked(mockApp.getPath).mockReturnValue('/test/userData')
 
     // Mock net.createServer to return a new MockServer instance each time
-    mockNet.createServer.mockImplementation(
-      () => new MockServer() as unknown as net.Server
-    )
+    mockNet.createServer.mockImplementation(function createServer() {
+      return new MockServer() as unknown as net.Server
+    })
 
     // Mock logger methods
     mockLog.info = vi.fn()
@@ -147,7 +180,8 @@ describe('toolhive-manager', () => {
 
   describe('startToolhive', () => {
     it('returns early if binary does not exist', async () => {
-      mockExistsSync.mockReturnValue(false)
+      // Remove the binary file from the in-memory file system
+      vol.reset()
 
       await startToolhive()
 
@@ -382,28 +416,30 @@ describe('toolhive-manager', () => {
   describe('port finding with fallback', () => {
     it('falls back to random port when preferred range is unavailable', async () => {
       // Mock all ports in range to be unavailable, then allow random port
-      mockNet.createServer.mockImplementation(() => {
+      mockNet.createServer.mockImplementation(function createServer() {
         const server = new MockServer() as unknown as net.Server
         const originalListen = server.listen.bind(server)
 
-        server.listen = vi
-          .fn()
-          .mockImplementation((port: number, callback?: () => void) => {
-            if (port >= 50000 && port <= 50100) {
-              // Simulate all ports in range being unavailable
-              setTimeout(() => {
-                server.emit('error', { code: 'EADDRINUSE' })
-              }, 5)
-            } else if (port === 0) {
-              // Allow OS assignment (fallback)
-              setTimeout(() => {
-                originalListen(port, callback)
-              }, 5)
-            } else {
-              // Any other specific port
+        server.listen = vi.fn(function listen(
+          port: number,
+          callback?: () => void
+        ) {
+          if (port >= 50000 && port <= 50100) {
+            // Simulate all ports in range being unavailable
+            setTimeout(() => {
+              server.emit('error', { code: 'EADDRINUSE' })
+            }, 5)
+          } else if (port === 0) {
+            // Allow OS assignment (fallback)
+            setTimeout(() => {
               originalListen(port, callback)
-            }
-          })
+            }, 5)
+          } else {
+            // Any other specific port
+            originalListen(port, callback)
+          }
+          return server
+        }) as unknown as typeof server.listen
 
         return server
       })
@@ -566,10 +602,12 @@ describe('toolhive-manager', () => {
 
     it('handles kill errors and attempts force kill as fallback', () => {
       const killSpy = vi.spyOn(mockProcess, 'kill')
-      killSpy.mockImplementationOnce(() => {
+      killSpy.mockImplementationOnce(function killImpl() {
         throw new Error('Kill failed')
       })
-      killSpy.mockImplementationOnce(() => true)
+      killSpy.mockImplementationOnce(function killImpl() {
+        return true
+      })
 
       stopToolhive()
 

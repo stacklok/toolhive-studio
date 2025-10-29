@@ -89,8 +89,8 @@ describe('ManageClientsButton – BDD flows', () => {
         })
       ).toBeVisible()
     })
-    await user.click(screen.getByRole('switch', { name: 'vscode' }))
-    await user.click(screen.getByRole('switch', { name: /cursor/i }))
+    await user.click(await screen.findByRole('switch', { name: 'vscode' }))
+    await user.click(await screen.findByRole('switch', { name: /cursor/i }))
     await user.click(screen.getByRole('button', { name: /save/i }))
 
     await waitFor(() =>
@@ -139,9 +139,13 @@ describe('ManageClientsButton – BDD flows', () => {
           ],
         })
       ),
-      // Simulate backend returning null for current clients list
+      // Simulate backend returning empty/null for current clients list
       http.get(mswEndpoint('/api/v1beta/clients'), () =>
-        HttpResponse.json(null)
+        HttpResponse.json([
+          { name: { name: 'vscode' }, groups: [] },
+          { name: { name: 'cursor' }, groups: [] },
+          { name: { name: 'claude-code' }, groups: [] },
+        ])
       ),
       http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
         HttpResponse.json([])
@@ -388,11 +392,6 @@ describe('ManageClientsButton – BDD flows', () => {
     vi.mocked(useFeatureFlag).mockReturnValue(false)
 
     server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [],
-        })
-      ),
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({
           groups: [

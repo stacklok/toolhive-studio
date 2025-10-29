@@ -34,12 +34,14 @@ vi.mock('@ai-sdk/react', () => ({
 }))
 
 vi.mock('../../transport/electron-ipc-chat-transport', () => ({
-  ElectronIPCChatTransport: vi.fn().mockImplementation(() => ({
-    config: {},
-    getSettingsFromQuery: vi.fn(),
-    sendMessages: vi.fn(),
-    reconnectToStream: vi.fn(),
-  })),
+  ElectronIPCChatTransport: vi.fn(function ElectronIPCChatTransport() {
+    return {
+      config: {},
+      getSettingsFromQuery: vi.fn(),
+      sendMessages: vi.fn(),
+      reconnectToStream: vi.fn(),
+    }
+  }),
 }))
 
 vi.mock('../use-thread-management', () => ({

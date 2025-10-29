@@ -22,7 +22,7 @@ const matchMediaListeners: Record<string, Set<(e: Event) => void>> = {}
 const matchMediaMatches: Record<string, boolean> = {}
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi.fn().mockImplementation((query: string) => {
+  value: vi.fn(function matchMedia(query: string) {
     matchMediaListeners[query] = matchMediaListeners[query] || new Set()
     matchMediaMatches[query] = matchMediaMatches[query] ?? false
     return {
