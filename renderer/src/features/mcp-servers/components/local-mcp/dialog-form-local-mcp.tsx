@@ -55,6 +55,7 @@ const FIELD_TAB_MAP = {
   networkIsolation: 'network-isolation',
   volumes: 'configuration',
   tools: 'configuration',
+  tools_override: 'configuration',
 } satisfies FieldTabMapping<Tab, Field>
 
 const DEFAULT_FORM_VALUES = {
