@@ -32,6 +32,7 @@ export function CustomizeToolsPage() {
     data: workload,
     refetch: refetchWorkload,
     isFetching: isWorkloadLoading,
+    isPending: isWorkloadPending,
   } = useQuery({
     queryKey: ['workload', serverName],
     queryFn: async () => {
@@ -73,7 +74,10 @@ export function CustomizeToolsPage() {
       return results
     },
     enabled:
-      !!serverName && !isWorkloadLoading && workload?.status === 'running',
+      !!serverName &&
+      !isWorkloadLoading &&
+      !isWorkloadPending &&
+      workload?.status === 'running',
     refetchOnWindowFocus: true,
     staleTime: 0,
   })
@@ -232,11 +236,13 @@ export function CustomizeToolsPage() {
       </div>
       <div className="mb-5">
         <h1 className="m-0 mb-0 p-0 text-3xl font-bold">
-          Customize Tools for {serverName}
+          Customize tools for {serverName}
         </h1>
       </div>
       <div className="min-h-0 flex-1">
-        {workload?.status !== 'running' ? (
+        {!isWorkloadPending &&
+        !isWorkloadLoading &&
+        workload?.status !== 'running' ? (
           <EmptyState
             illustration={IllustrationStop}
             title="Server is not running"
