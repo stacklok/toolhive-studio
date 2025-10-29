@@ -92,6 +92,21 @@ const createToolsSchema = () => {
   })
 }
 
+const createToolsOverrideSchema = () => {
+  return z.object({
+    tools_override: z
+      .record(
+        z.string(),
+        z.object({
+          name: z.string().optional(),
+          description: z.string().optional(),
+        })
+      )
+      .optional()
+      .nullable(),
+  })
+}
+
 const createTransportConfigSchema = () => {
   return z.object({
     transport: z.union(
@@ -248,6 +263,7 @@ export const createRegistrySchema = (
   const commandArgsSchema = createCommandArgumentsSchema()
   const networkSchema = createNetworkConfigSchema()
   const volumesSchema = createVolumesSchema()
+  const toolsOverrideSchema = createToolsOverrideSchema()
 
   return nameSchema
     .extend({
@@ -258,6 +274,7 @@ export const createRegistrySchema = (
     .extend(commandArgsSchema.shape)
     .extend(networkSchema.shape)
     .extend(volumesSchema.shape)
+    .extend(toolsOverrideSchema.shape)
     .superRefine((data, ctx) => {
       addNetworkValidation(ctx, data)
     })
@@ -272,6 +289,7 @@ export const createMcpBaseSchema = (workloads: CoreWorkload[]) => {
   const networkSchema = createNetworkConfigSchema()
   const volumesSchema = createVolumesSchema()
   const toolsSchema = createToolsSchema()
+  const toolsOverrideSchema = createToolsOverrideSchema()
 
   const commonSchema = nameSchema
     .extend(transportSchema.shape)
@@ -281,6 +299,7 @@ export const createMcpBaseSchema = (workloads: CoreWorkload[]) => {
     .extend(envVarsSchema.shape)
     .extend(secretsSchema.shape)
     .extend(toolsSchema.shape)
+    .extend(toolsOverrideSchema.shape)
     .extend({
       group: z.string(),
     })
@@ -315,6 +334,7 @@ const remoteMcpOauthConfigSchema = z.object({
 export const createRemoteMcpBaseSchema = (workloads: CoreWorkload[]) => {
   const nameSchema = createNameSchema(workloads)
   const toolsSchema = createToolsSchema()
+  const toolsOverrideSchema = createToolsOverrideSchema()
   const secretsSchema = createBasicSecretsSchema()
   const transportSchema = createTransportConfigSchema()
   const urlSchema = z.object({
@@ -331,6 +351,7 @@ export const createRemoteMcpBaseSchema = (workloads: CoreWorkload[]) => {
     .extend(urlSchema.shape)
     .extend(authTypeSchema.shape)
     .extend(toolsSchema.shape)
+    .extend(toolsOverrideSchema.shape)
     .extend({ oauth_config: remoteMcpOauthConfigSchema })
     .extend({
       group: z.string().min(1, 'Group is required'),

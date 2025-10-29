@@ -19,7 +19,7 @@ export function CustomizeToolsMenuItem({
     <DropdownMenuItem asChild className="flex cursor-pointer items-center">
       <Link to="/customize-tools/$serverName" params={{ serverName }}>
         <Edit3 className="mr-2 h-4 w-4" />
-        Customize Tools
+        Customize tools
       </Link>
     </DropdownMenuItem>
   )
