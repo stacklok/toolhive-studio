@@ -165,7 +165,7 @@ describe('Customize Tools Page - Converter Function Selection', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('Customize Tools for test-local-server')
+          screen.getByText(/Customize tools for.*test-local-server/i)
         ).toBeInTheDocument()
       })
 
@@ -250,7 +250,7 @@ describe('Customize Tools Page - Converter Function Selection', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('Customize Tools for test-remote-server')
+          screen.getByText(/Customize tools for.*test-remote-server/i)
         ).toBeInTheDocument()
       })
 
