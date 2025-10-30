@@ -906,7 +906,7 @@ describe('useCreateOptimizerWorkload', () => {
         (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
       )
 
-      // Verify permission_profile with host networking mode is included
+      // Verify permission_profile with host networking mode and TOOLHIVE_HOST are included
       expect(postRequest?.payload).toEqual({
         name: META_MCP_SERVER_NAME,
         image: 'ghcr.io/stackloklabs/meta-mcp:latest',
@@ -926,6 +926,11 @@ describe('useCreateOptimizerWorkload', () => {
           },
         },
       })
+      expect(postRequest?.payload).toHaveProperty('permission_profile')
+      expect(postRequest?.payload.env_vars).toHaveProperty(
+        'TOOLHIVE_HOST',
+        '127.0.0.1'
+      )
 
       // Reset to default
       Object.defineProperty(window, 'electronAPI', {
@@ -986,7 +991,7 @@ describe('useCreateOptimizerWorkload', () => {
         (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
       )
 
-      // Verify permission_profile is NOT included
+      // Verify permission_profile is NOT included and TOOLHIVE_HOST is NOT in env_vars
       expect(postRequest?.payload).toEqual({
         name: META_MCP_SERVER_NAME,
         image: 'ghcr.io/stackloklabs/meta-mcp:latest',
@@ -1001,6 +1006,7 @@ describe('useCreateOptimizerWorkload', () => {
         volumes: [],
       })
       expect(postRequest?.payload).not.toHaveProperty('permission_profile')
+      expect(postRequest?.payload.env_vars).not.toHaveProperty('TOOLHIVE_HOST')
     })
   })
 })
