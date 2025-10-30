@@ -20,7 +20,7 @@ function readConfig(): ThvBinaryConfig {
   try {
     const content = readFileSync(THV_BIN_CONFIG_PATH, 'utf-8')
     return JSON.parse(content)
-  } catch (error) {
+  } catch {
     console.warn('⚠️  Failed to parse .thv_bin, using defaults')
     return { mode: 'default', customPath: '' }
   }
@@ -56,7 +56,10 @@ function promptForPath(): Promise<string> {
   })
 }
 
-async function setMode(mode: ThvBinaryMode, customPath?: string): Promise<void> {
+async function setMode(
+  mode: ThvBinaryMode,
+  customPath?: string
+): Promise<void> {
   const config = readConfig()
 
   switch (mode) {
@@ -67,7 +70,7 @@ async function setMode(mode: ThvBinaryMode, customPath?: string): Promise<void> 
       console.log('✅ THV binary mode set to: default (embedded binary)')
       break
 
-    case 'global':
+    case 'global': {
       const globalPath = findGlobalThv()
       if (!globalPath) {
         console.error(
@@ -80,8 +83,9 @@ async function setMode(mode: ThvBinaryMode, customPath?: string): Promise<void> 
       writeConfig(config)
       console.log(`✅ THV binary mode set to: global (${globalPath})`)
       break
+    }
 
-    case 'custom':
+    case 'custom': {
       const path = customPath || (await promptForPath())
       if (!path) {
         console.error('❌ No path provided')
@@ -96,6 +100,7 @@ async function setMode(mode: ThvBinaryMode, customPath?: string): Promise<void> 
       writeConfig(config)
       console.log(`✅ THV binary mode set to: custom (${path})`)
       break
+    }
   }
 }
 
