@@ -7,16 +7,32 @@ import { updateTrayStatus } from './system-tray'
 import log from './logger'
 import * as Sentry from '@sentry/electron/main'
 import { getQuittingState } from './app-state'
+import { readConfig } from '../../utils/use-thv'
 
 const binName = process.platform === 'win32' ? 'thv.exe' : 'thv'
-const binPath = app.isPackaged
-  ? path.join(
+
+/**
+ * Resolves the path to the thv binary based on configuration.
+ * In production (packaged), always uses the embedded binary.
+ * In development, respects the .thv_bin configuration file.
+ */
+function resolveThvBinaryPath(): string {
+  // In production, always use embedded binary
+  if (app.isPackaged) {
+    return path.join(
       process.resourcesPath,
       'bin',
       `${process.platform}-${process.arch}`,
       binName
     )
-  : path.resolve(
+  }
+
+  // In development, check .thv_bin config
+  const config = readConfig()
+
+  if (config.mode === 'default' || !config.mode) {
+    // Use embedded binary
+    return path.resolve(
       __dirname,
       '..',
       '..',
@@ -24,6 +40,30 @@ const binPath = app.isPackaged
       `${process.platform}-${process.arch}`,
       binName
     )
+  }
+
+  // For global or custom mode, use the configured path
+  if (config.customPath && existsSync(config.customPath)) {
+    log.info(`Using ${config.mode} thv binary: ${config.customPath}`)
+    return config.customPath
+  }
+
+  // Fallback to embedded binary if config is invalid
+  log.warn(
+    `Invalid thv binary config (mode: ${config.mode}, path: ${config.customPath}), falling back to embedded binary`
+  )
+  return path.resolve(
+    __dirname,
+    '..',
+    '..',
+    'bin',
+    `${process.platform}-${process.arch}`,
+    binName
+  )
+}
+
+// Resolve binary path at runtime
+const binPath = resolveThvBinaryPath()
 
 let toolhiveProcess: ReturnType<typeof spawn> | undefined
 let toolhivePort: number | undefined
@@ -290,6 +330,33 @@ export function stopToolhive(options?: { force?: boolean }): void {
   }
 
   log.info(`[stopToolhive] Process cleanup completed`)
+}
+
+/**
+ * Returns information about the current thv binary configuration.
+ * Used by the renderer to display dev mode warnings.
+ */
+export function getThvBinaryMode(): {
+  mode: string
+  path: string
+  isDefault: boolean
+} {
+  // In production, always report default mode
+  if (app.isPackaged) {
+    return {
+      mode: 'default',
+      path: binPath,
+      isDefault: true,
+    }
+  }
+
+  // In development, read actual config
+  const config = readConfig()
+  return {
+    mode: config.mode || 'default',
+    path: binPath,
+    isDefault: config.mode === 'default' || !config.mode,
+  }
 }
 
 export { binPath }
