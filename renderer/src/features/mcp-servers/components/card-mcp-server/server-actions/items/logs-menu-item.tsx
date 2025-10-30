@@ -12,14 +12,11 @@ export function LogsMenuItem({ serverName, remote, group }: LogsMenuItemProps) {
   const groupName = group ?? 'default'
 
   return (
-    <DropdownMenuItem
-      asChild
-      className="flex cursor-pointer items-center"
-      disabled={remote}
-    >
+    <DropdownMenuItem asChild className="flex cursor-pointer items-center">
       <Link
         to="/logs/$groupName/$serverName"
         params={{ serverName, groupName }}
+        search={{ remote }}
       >
         <Text className="mr-2 h-4 w-4" />
         Logs
