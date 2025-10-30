@@ -8,7 +8,7 @@ import {
   META_MCP_SERVER_NAME,
 } from '@/common/lib/constants'
 import { server } from '@/common/mocks/node'
-import { http, HttpResponse, delay } from 'msw'
+import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
 import { getMockLogs } from '@/common/mocks/customHandlers/fixtures/servers'
 
@@ -19,7 +19,6 @@ describe('LogsPage Component', () => {
 
       server.use(
         http.get(mswEndpoint('/api/v1beta/workloads/:name/logs'), async () => {
-          await delay(200)
           return HttpResponse.text(getMockLogs('test-server'))
         })
       )
