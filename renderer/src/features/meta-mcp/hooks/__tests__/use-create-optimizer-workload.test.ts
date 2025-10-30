@@ -16,6 +16,7 @@ import {
 import { useCreateOptimizerWorkload } from '../use-create-optimizer-workload'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { useMcpOptimizerClients } from '@/features/meta-mcp/hooks/use-mcp-optimizer-clients'
+import type { V1CreateRequest } from '@api/types.gen'
 
 vi.mock('@/common/hooks/use-feature-flag', () => ({
   useFeatureFlag: vi.fn(),
@@ -925,10 +926,9 @@ describe('useCreateOptimizerWorkload', () => {
         },
       })
       expect(postRequest?.payload).toHaveProperty('permission_profile')
-      expect(postRequest?.payload.env_vars).toHaveProperty(
-        'TOOLHIVE_HOST',
-        '127.0.0.1'
-      )
+      expect(
+        (postRequest?.payload as V1CreateRequest | undefined)?.env_vars
+      ).toHaveProperty('TOOLHIVE_HOST', '127.0.0.1')
     })
 
     it('does not include permission profile on non-Linux platforms', async () => {
@@ -989,7 +989,9 @@ describe('useCreateOptimizerWorkload', () => {
         volumes: [],
       })
       expect(postRequest?.payload).not.toHaveProperty('permission_profile')
-      expect(postRequest?.payload.env_vars).not.toHaveProperty('TOOLHIVE_HOST')
+      expect(
+        (postRequest?.payload as V1CreateRequest | undefined)?.env_vars
+      ).not.toHaveProperty('TOOLHIVE_HOST')
     })
   })
 })
