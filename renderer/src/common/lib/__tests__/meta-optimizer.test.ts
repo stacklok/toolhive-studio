@@ -23,7 +23,6 @@ const mockElectronAPI = {
   featureFlags: {
     get: vi.fn(),
   },
-  getToolhivePort: vi.fn(),
   isLinux: true, // Tests run on Linux by default (for host networking tests)
 }
 
@@ -57,7 +56,6 @@ describe('Meta Optimizer', () => {
 
     it('initialize and create group when it does not exist', async () => {
       mockElectronAPI.featureFlags.get.mockResolvedValue(true)
-      mockElectronAPI.getToolhivePort.mockResolvedValue(50055)
 
       const postGroupsSpy = vi.spyOn(apiSdk, 'postApiV1BetaGroups')
 
@@ -82,7 +80,6 @@ describe('Meta Optimizer', () => {
 
     it('initialize and create group and workload when they do not exist', async () => {
       mockElectronAPI.featureFlags.get.mockResolvedValue(true)
-      mockElectronAPI.getToolhivePort.mockResolvedValue(50055)
 
       const postWorkloadsSpy = vi.spyOn(apiSdk, 'postApiV1BetaWorkloads')
 
@@ -122,14 +119,11 @@ describe('Meta Optimizer', () => {
         body: expect.objectContaining({
           name: META_MCP_SERVER_NAME,
           group: MCP_OPTIMIZER_GROUP_NAME,
-          // Image is hardcoded to mcp-optimizer:latest
-          image: 'ghcr.io/stackloklabs/mcp-optimizer:latest',
+          // Image comes from registry
+          image: 'ghcr.io/stackloklabs/meta-mcp:latest',
           transport: 'streamable-http',
-          target_port: 50051,
           env_vars: {
             [ALLOWED_GROUPS_ENV_VAR]: 'default',
-            TOOLHIVE_HOST: '127.0.0.1',
-            TOOLHIVE_PORT: '50055',
           },
           permission_profile: {
             network: {
@@ -217,7 +211,6 @@ describe('Meta Optimizer', () => {
 
     it('handle workload creation failure', async () => {
       mockElectronAPI.featureFlags.get.mockResolvedValue(true)
-      mockElectronAPI.getToolhivePort.mockResolvedValue(50055)
 
       server.use(
         // Mock groups check - group doesn't exist
@@ -263,7 +256,6 @@ describe('Meta Optimizer', () => {
 
     it('handle missing server from registry', async () => {
       mockElectronAPI.featureFlags.get.mockResolvedValue(true)
-      mockElectronAPI.getToolhivePort.mockResolvedValue(50055)
 
       server.use(
         // Mock groups check - group doesn't exist

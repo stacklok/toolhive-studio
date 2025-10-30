@@ -82,33 +82,16 @@ async function createMetaOptimizerWorkload() {
       return
     }
 
-    // Get the thv serve port from the main process
-    const toolhivePort = await window.electronAPI.getToolhivePort()
-    if (!toolhivePort) {
-      log.error(
-        '[createMetaOptimizerWorkload] ToolHive port not available, cannot create workload'
-      )
-      return
-    }
-
     // On platforms with native containers (Linux), use host networking mode
     // to allow the container to access the host's ToolHive API
     const useHostNetworking = isProbablyUsingNativeContainers()
 
     const body: V1CreateRequest = {
       name: META_MCP_SERVER_NAME,
-      // Use the latest mcp-optimizer image (fixed for x86_64)
-      image: 'ghcr.io/stackloklabs/mcp-optimizer:latest',
+      image: server.image,
       transport: server.transport,
-      // Use fixed port for host networking mode (avoids thv port management bugs on Linux)
-      ...(useHostNetworking && { target_port: 50051 }),
       env_vars: {
         [ALLOWED_GROUPS_ENV_VAR]: 'default',
-        // With host networking mode on Linux, localhost refers to the host machine
-        ...(useHostNetworking && {
-          TOOLHIVE_HOST: '127.0.0.1',
-          TOOLHIVE_PORT: String(toolhivePort),
-        }),
       },
       secrets: [],
       cmd_arguments: [],
