@@ -17,7 +17,10 @@ import { Skeleton } from '@/common/components/ui/skeleton'
 
 function SkeletonLogs() {
   return (
-    <div className="flex h-full w-full flex-1 flex-col gap-4 p-10">
+    <div
+      className="flex h-full w-full flex-1 flex-col gap-4 p-10"
+      data-testid="skeleton-logs"
+    >
       {Array.from({ length: 20 }).map((_, i) => {
         const numSkeletons = Math.floor(Math.random() * 6) + 1
         return (
