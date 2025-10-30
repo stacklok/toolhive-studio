@@ -32,7 +32,7 @@ describe('LogsPage Component', () => {
       renderRoute(router)
 
       await waitFor(() => {
-        expect(screen.queryByTestId('skeleton-logs')).not.toBeInTheDocument()
+        expect(screen.getByTestId('skeleton-logs')).toBeVisible()
       })
     })
   })
