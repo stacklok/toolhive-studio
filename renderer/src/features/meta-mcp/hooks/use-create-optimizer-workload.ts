@@ -10,6 +10,7 @@ import {
   MCP_OPTIMIZER_GROUP_NAME,
   MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
   META_MCP_SERVER_NAME,
+  isProbablyUsingNativeContainers,
 } from '../../../common/lib/constants'
 import { useQuery } from '@tanstack/react-query'
 import { getApiV1BetaRegistryByNameServersByServerNameOptions } from '@api/@tanstack/react-query.gen'
@@ -106,6 +107,11 @@ export function useCreateOptimizerWorkload() {
     optimized_workloads: string[]
   }) => {
     if (!isMetaOptimizerEnabled) return
+
+    // On platforms with native containers (Linux), use host networking mode
+    // to allow the container to access the host's ToolHive API
+    const useHostNetworking = isProbablyUsingNativeContainers()
+
     const body: V1CreateRequest = {
       name: META_MCP_SERVER_NAME,
       image: optimizerRegistryServerDetail?.server?.image,
@@ -116,6 +122,13 @@ export function useCreateOptimizerWorkload() {
       cmd_arguments: [],
       network_isolation: false,
       volumes: [],
+      ...(useHostNetworking && {
+        permission_profile: {
+          network: {
+            mode: 'host',
+          },
+        },
+      }),
     }
     try {
       await createMetaOptimizerWorkload({

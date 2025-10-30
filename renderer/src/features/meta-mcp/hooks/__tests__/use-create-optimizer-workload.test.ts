@@ -52,6 +52,15 @@ vi.mock('electron-log/renderer', () => ({
   },
 }))
 
+// Mock window.electronAPI for platform detection
+Object.defineProperty(window, 'electronAPI', {
+  value: {
+    isLinux: false, // Default to false, will be overridden in specific tests
+  },
+  writable: true,
+  configurable: true,
+})
+
 const createQueryClientWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -727,6 +736,13 @@ describe('useCreateOptimizerWorkload', () => {
     })
 
     it('verifies no extra fields are sent in payload', async () => {
+      // Ensure isLinux is false for consistent test
+      Object.defineProperty(window, 'electronAPI', {
+        value: { isLinux: false },
+        writable: true,
+        configurable: true,
+      })
+
       const rec = recordRequests()
 
       server.use(
@@ -782,7 +798,7 @@ describe('useCreateOptimizerWorkload', () => {
       expect(payloadKeys).toContain('network_isolation')
       expect(payloadKeys).toContain('volumes')
 
-      // Verify no extra fields beyond expected
+      // Verify no extra fields beyond expected (9 on non-Linux)
       expect(payloadKeys.length).toBe(9)
     })
 
@@ -837,6 +853,153 @@ describe('useCreateOptimizerWorkload', () => {
           groupName: 'dev-team',
         })
       })
+    })
+
+    it('includes host networking mode permission profile on Linux', async () => {
+      // Set isLinux to true to simulate Linux environment
+      Object.defineProperty(window, 'electronAPI', {
+        value: { isLinux: true },
+        writable: true,
+        configurable: true,
+      })
+
+      const rec = recordRequests()
+
+      server.use(
+        http.get(
+          mswEndpoint('/api/v1beta/registry/:name/servers/:serverName'),
+          () =>
+            HttpResponse.json({
+              server: {
+                image: 'ghcr.io/stackloklabs/meta-mcp:latest',
+                transport: 'streamable-http',
+              },
+            })
+        ),
+        http.post(mswEndpoint('/api/v1beta/workloads'), () =>
+          HttpResponse.json({
+            name: META_MCP_SERVER_NAME,
+            group: MCP_OPTIMIZER_GROUP_NAME,
+          })
+        )
+      )
+
+      const { Wrapper, queryClient } = createQueryClientWrapper()
+      const { result } = renderHook(() => useCreateOptimizerWorkload(), {
+        wrapper: Wrapper,
+      })
+
+      await waitFor(() => {
+        expect(queryClient.isFetching()).toBe(0)
+      })
+
+      await result.current.handleCreateMetaOptimizerWorkload({
+        groupToOptimize: 'test-group',
+        optimized_workloads: [],
+      })
+
+      await waitFor(() => {
+        expect(result.current.isPending).toBe(false)
+      })
+
+      const postRequest = rec.recordedRequests.find(
+        (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
+      )
+
+      // Verify permission_profile with host networking mode is included
+      expect(postRequest?.payload).toEqual({
+        name: META_MCP_SERVER_NAME,
+        image: 'ghcr.io/stackloklabs/meta-mcp:latest',
+        transport: 'streamable-http',
+        group: MCP_OPTIMIZER_GROUP_NAME,
+        env_vars: {
+          [ALLOWED_GROUPS_ENV_VAR]: 'test-group',
+        },
+        secrets: [],
+        cmd_arguments: [],
+        network_isolation: false,
+        volumes: [],
+        permission_profile: {
+          network: {
+            mode: 'host',
+          },
+        },
+      })
+
+      // Reset to default
+      Object.defineProperty(window, 'electronAPI', {
+        value: { isLinux: false },
+        writable: true,
+        configurable: true,
+      })
+    })
+
+    it('does not include permission profile on non-Linux platforms', async () => {
+      // Ensure isLinux is false
+      Object.defineProperty(window, 'electronAPI', {
+        value: { isLinux: false },
+        writable: true,
+        configurable: true,
+      })
+
+      const rec = recordRequests()
+
+      server.use(
+        http.get(
+          mswEndpoint('/api/v1beta/registry/:name/servers/:serverName'),
+          () =>
+            HttpResponse.json({
+              server: {
+                image: 'ghcr.io/stackloklabs/meta-mcp:latest',
+                transport: 'streamable-http',
+              },
+            })
+        ),
+        http.post(mswEndpoint('/api/v1beta/workloads'), () =>
+          HttpResponse.json({
+            name: META_MCP_SERVER_NAME,
+            group: MCP_OPTIMIZER_GROUP_NAME,
+          })
+        )
+      )
+
+      const { Wrapper, queryClient } = createQueryClientWrapper()
+      const { result } = renderHook(() => useCreateOptimizerWorkload(), {
+        wrapper: Wrapper,
+      })
+
+      await waitFor(() => {
+        expect(queryClient.isFetching()).toBe(0)
+      })
+
+      await result.current.handleCreateMetaOptimizerWorkload({
+        groupToOptimize: 'test-group',
+        optimized_workloads: [],
+      })
+
+      await waitFor(() => {
+        expect(result.current.isPending).toBe(false)
+      })
+
+      const postRequest = rec.recordedRequests.find(
+        (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
+      )
+
+      // Verify permission_profile is NOT included
+      expect(postRequest?.payload).toEqual({
+        name: META_MCP_SERVER_NAME,
+        image: 'ghcr.io/stackloklabs/meta-mcp:latest',
+        transport: 'streamable-http',
+        group: MCP_OPTIMIZER_GROUP_NAME,
+        env_vars: {
+          [ALLOWED_GROUPS_ENV_VAR]: 'test-group',
+        },
+        secrets: [],
+        cmd_arguments: [],
+        network_isolation: false,
+        volumes: [],
+      })
+      expect(postRequest?.payload).not.toHaveProperty('permission_profile')
     })
   })
 })
