@@ -52,10 +52,9 @@ vi.mock('electron-log/renderer', () => ({
   },
 }))
 
-// Mock window.electronAPI for platform detection
 Object.defineProperty(window, 'electronAPI', {
   value: {
-    isLinux: false, // Default to false, will be overridden in specific tests
+    isLinux: false,
   },
   writable: true,
   configurable: true,
@@ -78,6 +77,14 @@ const createQueryClientWrapper = () => {
 describe('useCreateOptimizerWorkload', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    Object.defineProperty(window, 'electronAPI', {
+      value: { isLinux: false },
+      writable: true,
+      configurable: true,
+    })
   })
 
   describe('when feature flags are disabled', () => {
@@ -736,13 +743,6 @@ describe('useCreateOptimizerWorkload', () => {
     })
 
     it('verifies no extra fields are sent in payload', async () => {
-      // Ensure isLinux is false for consistent test
-      Object.defineProperty(window, 'electronAPI', {
-        value: { isLinux: false },
-        writable: true,
-        configurable: true,
-      })
-
       const rec = recordRequests()
 
       server.use(
@@ -856,7 +856,6 @@ describe('useCreateOptimizerWorkload', () => {
     })
 
     it('includes host networking mode permission profile on Linux', async () => {
-      // Set isLinux to true to simulate Linux environment
       Object.defineProperty(window, 'electronAPI', {
         value: { isLinux: true },
         writable: true,
@@ -906,7 +905,6 @@ describe('useCreateOptimizerWorkload', () => {
         (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
       )
 
-      // Verify permission_profile with host networking mode and TOOLHIVE_HOST are included
       expect(postRequest?.payload).toEqual({
         name: META_MCP_SERVER_NAME,
         image: 'ghcr.io/stackloklabs/meta-mcp:latest',
@@ -931,23 +929,9 @@ describe('useCreateOptimizerWorkload', () => {
         'TOOLHIVE_HOST',
         '127.0.0.1'
       )
-
-      // Reset to default
-      Object.defineProperty(window, 'electronAPI', {
-        value: { isLinux: false },
-        writable: true,
-        configurable: true,
-      })
     })
 
     it('does not include permission profile on non-Linux platforms', async () => {
-      // Ensure isLinux is false
-      Object.defineProperty(window, 'electronAPI', {
-        value: { isLinux: false },
-        writable: true,
-        configurable: true,
-      })
-
       const rec = recordRequests()
 
       server.use(
@@ -991,7 +975,6 @@ describe('useCreateOptimizerWorkload', () => {
         (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
       )
 
-      // Verify permission_profile is NOT included and TOOLHIVE_HOST is NOT in env_vars
       expect(postRequest?.payload).toEqual({
         name: META_MCP_SERVER_NAME,
         image: 'ghcr.io/stackloklabs/meta-mcp:latest',
