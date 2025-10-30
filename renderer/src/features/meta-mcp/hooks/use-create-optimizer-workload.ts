@@ -119,7 +119,9 @@ export function useCreateOptimizerWorkload() {
       group: MCP_OPTIMIZER_GROUP_NAME,
       env_vars: {
         [ALLOWED_GROUPS_ENV_VAR]: groupToOptimize,
-        ['TOOLHIVE_HOST']: '127.0.0.1',
+        ...(useHostNetworking && {
+          TOOLHIVE_HOST: '127.0.0.1',
+        }),
       },
       secrets: [],
       cmd_arguments: [],
