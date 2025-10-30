@@ -36,6 +36,7 @@ const FIELD_TAB_MAP = {
   allowedPorts: 'network-isolation',
   networkIsolation: 'network-isolation',
   volumes: 'configuration',
+  tools_override: 'configuration',
 } as const satisfies FieldTabMapping<Tab, Field>
 
 interface FormRunFromRegistryProps {

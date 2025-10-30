@@ -7,10 +7,10 @@ function getStatusText(status: CoreWorkload['status']) {
   if (status === 'running') return 'Running'
   if (status === 'starting') return 'Starting'
   if (status === 'stopped') return 'Stopped'
+  if (status === 'stopping') return 'Stopping'
   if (status === 'error') return 'Error'
   // add it for UI purposes, the BE cannot handle it for mvp
   if (status === 'updating') return 'Updating'
-  if (status === 'stopping') return 'Stopping'
   if (status === 'deleting') return 'Deleting'
   if (status === 'restarting') return 'Restarting'
   return 'Unknown'

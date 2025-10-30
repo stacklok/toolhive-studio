@@ -22,7 +22,9 @@ import { queryClient } from '@/common/lib/query-client'
 import { toast } from 'sonner'
 import { useMcpOptimizerClients } from '../hooks/use-mcp-optimizer-clients'
 import { LoadingStateDialog } from './loading-state-dialog'
-import { useCreateOptimizerWorkload } from '@/common/hooks/use-create-optimizer-workload'
+import { useCreateOptimizerWorkload } from '@/features/meta-mcp/hooks/use-create-optimizer-workload'
+import { trackEvent } from '@/common/lib/analytics'
+
 interface GroupSelectorFormProps {
   groups: GroupWithServers[]
 }
@@ -36,9 +38,12 @@ type FormSchema = z.infer<typeof formSchema>
 export function GroupSelectorForm({
   groups,
 }: GroupSelectorFormProps): ReactElement {
-  const { data: metaMcpConfig } = useMetaMcpConfig()
+  const { data: metaMcpConfig, isError: isMetaMcpConfigError } =
+    useMetaMcpConfig()
   const [isPending, startTransition] = useTransition()
-  const defaultSelectedGroup = getMetaMcpOptimizedGroup(metaMcpConfig)
+  const defaultSelectedGroup = getMetaMcpOptimizedGroup(
+    isMetaMcpConfigError ? undefined : metaMcpConfig
+  )
   const { saveGroupClients } = useMcpOptimizerClients()
   const { handleCreateMetaOptimizerWorkload } = useCreateOptimizerWorkload()
   const { updateServerMutation } = useUpdateServer(META_MCP_SERVER_NAME, {
@@ -52,12 +57,15 @@ export function GroupSelectorForm({
       selectedGroup: defaultSelectedGroup ?? '',
     },
   })
+
+  const isDirty = form.formState.isDirty
   const isSelectedGroup = form.watch('selectedGroup')
 
   const onSubmit = async (data: FormSchema) => {
+    const optimized_workloads = groups.flatMap((g) => g.servers)
     startTransition(async () => {
       try {
-        if (metaMcpConfig) {
+        if (metaMcpConfig && !isMetaMcpConfigError) {
           const previousGroupName =
             metaMcpConfig?.env_vars?.[ALLOWED_GROUPS_ENV_VAR]
           const envVars = [
@@ -67,9 +75,6 @@ export function GroupSelectorForm({
             { name: ALLOWED_GROUPS_ENV_VAR, value: data.selectedGroup },
           ]
 
-          const toastId = toast.loading(
-            `Setting up Meta Optimizer for ${data.selectedGroup} group...`
-          )
           await updateServerMutation(
             {
               data: {
@@ -86,15 +91,28 @@ export function GroupSelectorForm({
                   }),
                 })
 
+                const optimizedGroupName =
+                  envVars.find((item) => item.name === ALLOWED_GROUPS_ENV_VAR)
+                    ?.value ?? ''
+                trackEvent(`MCP Optimizer workload updated allowed groups`, {
+                  workload: META_MCP_SERVER_NAME,
+                  is_editing: 'true',
+                  optimized_group_name: optimizedGroupName,
+                  'custom.optimized_workloads': optimized_workloads.join(','),
+                  is_mcp_optimizer: 'true',
+                  is_optimizer_group: 'true',
+                  optimized_workloads_length: optimized_workloads.length,
+                })
+
                 if (data.selectedGroup) {
-                  await saveGroupClients(data.selectedGroup, previousGroupName)
+                  await saveGroupClients({
+                    groupName: data.selectedGroup,
+                    previousGroupName,
+                  })
                   toast.success(
-                    `Meta Optimizer for ${data.selectedGroup} is available`
+                    `MCP Optimizer applied to ${data.selectedGroup} group`
                   )
                 }
-              },
-              onSettled: () => {
-                toast.dismiss(toastId)
               },
               onError: (error) => {
                 toast.error('Error updating MCP Optimizer')
@@ -103,15 +121,13 @@ export function GroupSelectorForm({
             }
           )
         } else {
-          await handleCreateMetaOptimizerWorkload(data.selectedGroup ?? '')
+          await handleCreateMetaOptimizerWorkload({
+            groupToOptimize: data.selectedGroup ?? '',
+            optimized_workloads,
+          })
         }
       } catch (error) {
         log.error(`Error submitting form for ${META_MCP_SERVER_NAME}`, error)
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : `Error submitting form for ${META_MCP_SERVER_NAME}`
-        toast.error(errorMessage)
       }
     })
   }
@@ -163,8 +179,11 @@ export function GroupSelectorForm({
           )}
         />
         <div className="mt-6 flex justify-end">
-          <Button type="submit" disabled={isPending || !isSelectedGroup}>
-            Apply Changes
+          <Button
+            type="submit"
+            disabled={isPending || !isSelectedGroup || !isDirty}
+          >
+            Set Optimized Group
           </Button>
         </div>
       </form>

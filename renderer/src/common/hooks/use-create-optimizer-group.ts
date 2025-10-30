@@ -7,15 +7,11 @@ import {
   getApiV1BetaGroupsQueryKey,
 } from '@api/@tanstack/react-query.gen'
 import log from 'electron-log/renderer'
-import { useFeatureFlag } from './use-feature-flag'
 import { useCallback } from 'react'
-import { featureFlagKeys } from '../../../../utils/feature-flags'
 import { toast } from 'sonner'
+import { trackEvent } from '../lib/analytics'
 
 export function useCreateOptimizerGroup() {
-  const isExperimentalFeaturesEnabled = useFeatureFlag(
-    featureFlagKeys.EXPERIMENTAL_FEATURES
-  )
   const { data: rawGroups } = useQuery({
     ...getApiV1BetaGroupsOptions(),
     staleTime: 0,
@@ -32,6 +28,9 @@ export function useCreateOptimizerGroup() {
       })
     },
     onSuccess: () => {
+      trackEvent('MCP Optimizer group created', {
+        group_name: MCP_OPTIMIZER_GROUP_NAME,
+      })
       queryClient.invalidateQueries({
         queryKey: getApiV1BetaGroupsQueryKey(),
       })
@@ -48,9 +47,8 @@ export function useCreateOptimizerGroup() {
     )
     if (metaOptimizerGrp) return
 
-    if (!isExperimentalFeaturesEnabled) return
     await createOptimizerGroup()
-  }, [isExperimentalFeaturesEnabled, createOptimizerGroup, rawGroups])
+  }, [createOptimizerGroup, rawGroups])
 
   return { handleCreateOptimizerGroup, isCreatingOptimizerGroup }
 }

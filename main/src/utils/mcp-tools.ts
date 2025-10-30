@@ -1,9 +1,9 @@
 import {
   experimental_createMCPClient as createMCPClient,
   type experimental_MCPClientConfig as MCPClientConfig,
-  type Tool,
-} from 'ai'
-import { Experimental_StdioMCPTransport as StdioMCPTransport } from 'ai/mcp-stdio'
+} from '@ai-sdk/mcp'
+import { type Tool } from 'ai'
+import { Experimental_StdioMCPTransport as StdioMCPTransport } from '@ai-sdk/mcp/mcp-stdio'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import type { CoreWorkload } from '@api/types.gen'
 import log from '../logger'

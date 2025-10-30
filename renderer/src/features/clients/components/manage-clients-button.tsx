@@ -43,10 +43,13 @@ export function ManageClientsButton({
 
   const { mutateAsync: saveClients } = useToastMutation({
     mutationFn: reconcileGroupClients,
-    onSuccess: async () => {
+    onSuccess: async (_, variables) => {
       if (isOptimizedGroupName) {
         try {
-          await saveGroupClients(groupName)
+          await saveGroupClients({
+            groupName,
+            clientsStatus: variables,
+          })
         } catch (error) {
           toast.error(
             error instanceof Error

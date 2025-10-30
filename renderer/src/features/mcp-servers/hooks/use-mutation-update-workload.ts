@@ -16,7 +16,8 @@ export const useMutationUpdateWorkload = () => {
         query: { all: true, group: body.group },
       })
       await queryClient.cancelQueries({ queryKey })
-      const previousServersList = queryClient.getQueryData(queryKey)
+      const previousServersList =
+        queryClient.getQueryData<V1WorkloadListResponse>(queryKey)
 
       queryClient.setQueryData(queryKey, (old: V1WorkloadListResponse) => {
         const newWorkloads = old?.workloads?.map((server) =>
@@ -29,15 +30,16 @@ export const useMutationUpdateWorkload = () => {
       })
       return { queryKey, previousServersList }
     },
-    onError: (_error, _variables, context) => {
-      if (context?.queryKey && context?.previousServersList) {
-        queryClient.setQueryData(context?.queryKey, context.previousServersList)
+    onError: (_error, _variables, onMutateResult) => {
+      if (onMutateResult?.queryKey && onMutateResult?.previousServersList) {
+        queryClient.setQueryData(
+          onMutateResult?.queryKey,
+          onMutateResult.previousServersList
+        )
       }
     },
-    onSettled: async (_data, _error, variables, cachedResult) => {
-      const workloads =
-        (cachedResult?.previousServersList as V1WorkloadListResponse)
-          ?.workloads ?? []
+    onSettled: async (_data, _error, variables, onMutateResult) => {
+      const workloads = onMutateResult?.previousServersList?.workloads ?? []
       // Only refetch workloads without cached data, as servers may be temporarily unavailable during restart.
       if (
         !workloads.some((workload) => workload.name === variables.path.name)

@@ -75,12 +75,23 @@ describe('ManageClientsButton – BDD flows', () => {
 
     const user = userEvent.setup()
     renderWithProviders({ groupName: 'default' })
-    await user.click(
-      await screen.findByRole('button', { name: /manage clients/i })
-    )
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /manage clients/i })
+      ).toBeVisible()
+    })
+    await user.click(screen.getByRole('button', { name: /manage clients/i }))
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', {
+          name: /manage clients/i,
+        })
+      ).toBeVisible()
+    })
     await user.click(await screen.findByRole('switch', { name: 'vscode' }))
     await user.click(await screen.findByRole('switch', { name: /cursor/i }))
-    await user.click(await screen.findByRole('button', { name: /save/i }))
+    await user.click(screen.getByRole('button', { name: /save/i }))
 
     await waitFor(() =>
       expect(
@@ -128,9 +139,13 @@ describe('ManageClientsButton – BDD flows', () => {
           ],
         })
       ),
-      // Simulate backend returning null for current clients list
+      // Simulate backend returning empty/null for current clients list
       http.get(mswEndpoint('/api/v1beta/clients'), () =>
-        HttpResponse.json(null)
+        HttpResponse.json([
+          { name: { name: 'vscode' }, groups: [] },
+          { name: { name: 'cursor' }, groups: [] },
+          { name: { name: 'claude-code' }, groups: [] },
+        ])
       ),
       http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
         HttpResponse.json([])
@@ -373,15 +388,10 @@ describe('ManageClientsButton – BDD flows', () => {
     // no-op
   })
 
-  it("doesn't sync client when meta optimizer is disabled", async () => {
+  it("doesn't sync client when mcp optimizer is disabled", async () => {
     vi.mocked(useFeatureFlag).mockReturnValue(false)
 
     server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [],
-        })
-      ),
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({
           groups: [

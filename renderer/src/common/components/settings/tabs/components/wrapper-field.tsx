@@ -8,7 +8,7 @@ export function WrapperField({
 }: {
   children: React.ReactNode
   label: string
-  description: string
+  description: React.ReactNode
   htmlFor: string
 }) {
   return (

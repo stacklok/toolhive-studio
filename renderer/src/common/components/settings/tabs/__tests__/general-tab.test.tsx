@@ -255,25 +255,9 @@ describe('GeneralTab', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Experimental Features')).toBeVisible()
-        expect(screen.getByText('Experimental Feature')).toBeVisible()
       })
 
       expect(screen.queryByText('Regular Feature')).not.toBeInTheDocument()
-    })
-
-    it('does not display disabled experimental features', async () => {
-      vi.mocked(useFeatureFlag).mockReturnValue(false)
-
-      renderWithProviders(<GeneralTab />)
-
-      await waitFor(() => {
-        expect(screen.getByText('Experimental Features')).toBeVisible()
-        expect(
-          screen.getByText('No experimental features available')
-        ).toBeVisible()
-      })
-
-      expect(screen.queryByText('Disabled Feature')).not.toBeInTheDocument()
     })
 
     it('handles enabling an experimental feature', async () => {

@@ -8,7 +8,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/common/components/ui/dropdown-menu'
-import { Settings, Text, Edit3 } from 'lucide-react'
+import { Settings, Text, Edit3, ExternalLinkIcon } from 'lucide-react'
 import { OptimizerWarnings } from '@/features/meta-mcp/components/optimizer-warnings'
 import { GroupSelectorForm } from '@/features/meta-mcp/components/group-selector-form'
 import { useMcpOptimizerGroups } from '@/features/meta-mcp/hooks/use-mcp-optimizer-groups'
@@ -20,6 +20,7 @@ import { EditServerDialogProvider } from '@/features/mcp-servers/contexts/edit-s
 import { useEditServerDialog } from '@/features/mcp-servers/hooks/use-edit-server-dialog'
 import { WrapperDialogFormMcp } from '@/features/mcp-servers/components/wrapper-dialog-mcp'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
+import { useOptimizedGroupName } from '@/common/hooks/use-optimize-group-name'
 
 export const Route = createFileRoute('/mcp-optimizer')({
   component: McpOptimizerRoute,
@@ -28,6 +29,7 @@ export const Route = createFileRoute('/mcp-optimizer')({
 function McpOptimizerContent() {
   const groups = useMcpOptimizerGroups()
   const { state, openDialog, closeDialog } = useEditServerDialog()
+  const optimizedGroupName = useOptimizedGroupName()
 
   const handleCustomizeConfiguration = () => {
     const isRemote = false
@@ -39,7 +41,27 @@ function McpOptimizerContent() {
       <McpServersSidebar />
       <div className={'ml-sidebar min-w-0 flex-1'}>
         <TitlePage title="MCP Optimizer">
-          <>
+          <p className="text-muted-foreground text-sm">
+            MCP Optimizer provides unified access to multiple MCP servers
+            through a single endpoint. It routes requests to the appropriate
+            server and filters results to reduce token usage and improve
+            performance. Using semantic search, it finds the most relevant tools
+            and automatically maintains an up-to-date index, simplifying your
+            client configuration and optimizing tool discovery.
+            <span className="ml-1 inline-flex items-center gap-1">
+              See the{' '}
+              <a
+                rel="noopener noreferrer"
+                className="inline-flex cursor-pointer items-center gap-1
+                  underline"
+                href="https://docs.stacklok.com/toolhive/guides-ui/mcp-optimizer"
+                target="_blank"
+              >
+                documentation <ExternalLinkIcon size={12} />
+              </a>
+            </span>
+          </p>
+          {optimizedGroupName ? (
             <div className="flex gap-2 lg:ml-auto">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -74,19 +96,19 @@ function McpOptimizerContent() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-          </>
+          ) : null}
         </TitlePage>
         <div className="p-6">
           <div className="mx-auto max-w-2xl">
             <OptimizerWarnings />
             <div className="mb-6">
               <h2 className="text-lg font-semibold">
-                Select Groups to Optimize
+                Select Group to Optimize
               </h2>
               <p className="text-muted-foreground text-sm">
-                Choose which server groups should be included in optimization.
-                Selected groups will have their server configurations analyzed
-                and optimized.
+                Choose which server group to optimize. The MCP Optimizer will
+                index the tools in your selected group's servers to improve
+                performance and discoverability.
               </p>
             </div>
             <GroupSelectorForm groups={groups} />

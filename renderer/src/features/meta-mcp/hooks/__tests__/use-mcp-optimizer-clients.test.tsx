@@ -50,7 +50,7 @@ describe('useMcpOptimizerClients', () => {
 
     const { result } = renderHook(() => useMcpOptimizerClients(), { wrapper })
 
-    await result.current.saveGroupClients('test')
+    await result.current.saveGroupClients({ groupName: 'test' })
 
     await waitFor(() => {
       const registerRequest = rec.recordedRequests.find(
@@ -78,7 +78,7 @@ describe('useMcpOptimizerClients', () => {
     })
   })
 
-  it('unregister clients that are not in selected group', async () => {
+  it('unregister clients that are disabled in clientsStatus', async () => {
     server.use(
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({
@@ -103,7 +103,13 @@ describe('useMcpOptimizerClients', () => {
 
     const { result } = renderHook(() => useMcpOptimizerClients(), { wrapper })
 
-    await result.current.saveGroupClients('test')
+    await result.current.saveGroupClients({
+      groupName: 'test',
+      clientsStatus: {
+        enableVscode: false,
+        enableWindsurf: false,
+      },
+    })
 
     await waitFor(() => {
       const unregisterRequests = rec.recordedRequests.filter(
@@ -112,8 +118,12 @@ describe('useMcpOptimizerClients', () => {
           req.pathname === '/api/v1beta/clients/unregister'
       )
 
-      expect(unregisterRequests).toHaveLength(1)
+      expect(unregisterRequests).toHaveLength(2)
       expect(unregisterRequests[0]?.payload).toEqual({
+        names: ['vscode', 'windsurf'],
+        groups: [MCP_OPTIMIZER_GROUP_NAME],
+      })
+      expect(unregisterRequests[1]?.payload).toEqual({
         names: ['cursor'],
         groups: ['test'],
       })
@@ -148,7 +158,12 @@ describe('useMcpOptimizerClients', () => {
 
     const { result } = renderHook(() => useMcpOptimizerClients(), { wrapper })
 
-    await result.current.saveGroupClients('test')
+    await result.current.saveGroupClients({
+      groupName: 'test',
+      clientsStatus: {
+        enableVscode: false,
+      },
+    })
 
     await waitFor(() => {
       const registerRequest = rec.recordedRequests.find(
@@ -167,8 +182,12 @@ describe('useMcpOptimizerClients', () => {
         groups: [MCP_OPTIMIZER_GROUP_NAME],
       })
 
-      expect(unregisterRequests).toHaveLength(1)
+      expect(unregisterRequests).toHaveLength(2)
       expect(unregisterRequests[0]?.payload).toEqual({
+        names: ['vscode'],
+        groups: [MCP_OPTIMIZER_GROUP_NAME],
+      })
+      expect(unregisterRequests[1]?.payload).toEqual({
         names: ['cursor', 'claude-code'],
         groups: ['test'],
       })
@@ -200,7 +219,7 @@ describe('useMcpOptimizerClients', () => {
 
     const { result } = renderHook(() => useMcpOptimizerClients(), { wrapper })
 
-    await result.current.saveGroupClients('test')
+    await result.current.saveGroupClients({ groupName: 'test' })
 
     await waitFor(() => {
       const registerRequest = rec.recordedRequests.find(
@@ -251,7 +270,7 @@ describe('useMcpOptimizerClients', () => {
 
     const { result } = renderHook(() => useMcpOptimizerClients(), { wrapper })
 
-    await result.current.saveGroupClients('test')
+    await result.current.saveGroupClients({ groupName: 'test' })
 
     await waitFor(() => {
       const registerRequest = rec.recordedRequests.find(
@@ -296,7 +315,7 @@ describe('useMcpOptimizerClients', () => {
 
     const { result } = renderHook(() => useMcpOptimizerClients(), { wrapper })
 
-    await result.current.saveGroupClients('non-existent')
+    await result.current.saveGroupClients({ groupName: 'non-existent' })
 
     await waitFor(() => {
       const registerRequest = rec.recordedRequests.find(
@@ -424,7 +443,10 @@ describe('useMcpOptimizerClients', () => {
 
     const { result } = renderHook(() => useMcpOptimizerClients(), { wrapper })
 
-    await result.current.saveGroupClients('staging', 'production')
+    await result.current.saveGroupClients({
+      groupName: 'staging',
+      previousGroupName: 'production',
+    })
 
     await waitFor(() => {
       const registerRequests = rec.recordedRequests.filter(

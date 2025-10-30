@@ -26,9 +26,9 @@ beforeEach(() => {
     http.get(mswEndpoint('/api/v1beta/workloads'), () =>
       HttpResponse.json({
         workloads: [
-          { name: 'server1', group: 'default' },
-          { name: 'server2', group: 'default' },
-          { name: 'server3', group: 'production' },
+          { name: 'server1', group: 'default', status: 'running' },
+          { name: 'server2', group: 'default', status: 'running' },
+          { name: 'server3', group: 'production', status: 'running' },
         ],
       })
     )
@@ -46,6 +46,19 @@ it('renders the MCP Optimizer page title', async () => {
 })
 
 it('renders the Advanced dropdown menu button', async () => {
+  server.use(
+    http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
+      if (params.name === META_MCP_SERVER_NAME) {
+        return HttpResponse.json({
+          name: META_MCP_SERVER_NAME,
+          group: MCP_OPTIMIZER_GROUP_NAME,
+          env_vars: { ALLOWED_GROUPS: 'default' },
+        })
+      }
+      return HttpResponse.json(null, { status: 404 })
+    })
+  )
+
   renderRoute(router)
 
   await waitFor(() => {
@@ -67,13 +80,11 @@ it('renders the section header and description', async () => {
   renderRoute(router)
 
   await waitFor(() => {
-    expect(screen.getByText('Select Groups to Optimize')).toBeInTheDocument()
+    expect(screen.getByText('Select Group to Optimize')).toBeInTheDocument()
   })
 
   expect(
-    screen.getByText(
-      /Choose which server groups should be included in optimization/i
-    )
+    screen.getByText(/Choose which server group to optimize/i)
   ).toBeInTheDocument()
 })
 
@@ -87,12 +98,12 @@ it('renders the group selector form with groups', async () => {
   expect(screen.getAllByText('production').length).toBeGreaterThan(0)
 })
 
-it('renders the Apply Changes button', async () => {
+it('renders the Set Optimized Group button', async () => {
   renderRoute(router)
 
   await waitFor(() => {
     expect(
-      screen.getByRole('button', { name: /apply changes/i })
+      screen.getByRole('button', { name: /set optimized group/i })
     ).toBeInTheDocument()
   })
 })
@@ -105,6 +116,36 @@ it('displays server names for each group', async () => {
   })
 
   expect(screen.getByText('server3')).toBeInTheDocument()
+})
+
+it('only displays running servers and filters out stopped ones', async () => {
+  server.use(
+    http.get(mswEndpoint('/api/v1beta/groups'), () =>
+      HttpResponse.json({
+        groups: [{ name: 'default' }, { name: 'production' }],
+      })
+    ),
+    http.get(mswEndpoint('/api/v1beta/workloads'), () =>
+      HttpResponse.json({
+        workloads: [
+          { name: 'server1', group: 'default', status: 'running' },
+          { name: 'server2', group: 'default', status: 'stopped' },
+          { name: 'server3', group: 'production', status: 'running' },
+          { name: 'server4', group: 'production', status: 'exited' },
+        ],
+      })
+    )
+  )
+
+  renderRoute(router)
+
+  await waitFor(() => {
+    expect(screen.getByText('server1')).toBeInTheDocument()
+  })
+
+  expect(screen.getByText('server3')).toBeInTheDocument()
+  expect(screen.queryByText('server2')).not.toBeInTheDocument()
+  expect(screen.queryByText('server4')).not.toBeInTheDocument()
 })
 
 it('hides the mcp-optimizer group even when present in fixture data', async () => {
@@ -121,9 +162,13 @@ it('hides the mcp-optimizer group even when present in fixture data', async () =
     http.get(mswEndpoint('/api/v1beta/workloads'), () =>
       HttpResponse.json({
         workloads: [
-          { name: 'server1', group: 'default' },
-          { name: 'meta-mcp', group: MCP_OPTIMIZER_GROUP_NAME },
-          { name: 'server3', group: 'production' },
+          { name: 'server1', group: 'default', status: 'running' },
+          {
+            name: 'meta-mcp',
+            group: MCP_OPTIMIZER_GROUP_NAME,
+            status: 'running',
+          },
+          { name: 'server3', group: 'production', status: 'running' },
         ],
       })
     )
@@ -333,6 +378,19 @@ it('refetches the selected group when navigating back to the page', async () => 
 })
 
 it('clicking Meta-MCP logs in Advanced menu navigates to logs page', async () => {
+  server.use(
+    http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
+      if (params.name === META_MCP_SERVER_NAME) {
+        return HttpResponse.json({
+          name: META_MCP_SERVER_NAME,
+          group: MCP_OPTIMIZER_GROUP_NAME,
+          env_vars: { ALLOWED_GROUPS: 'default' },
+        })
+      }
+      return HttpResponse.json(null, { status: 404 })
+    })
+  )
+
   const user = userEvent.setup()
   renderRoute(router)
 

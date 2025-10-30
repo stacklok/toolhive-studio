@@ -6,7 +6,6 @@ export function ExperimentalFeatures() {
   const {
     flags,
     isLoadingFlags,
-    isExperimentalFeaturesEnabled,
     isPending,
     handleToggle,
     formatFeatureFlagName,
@@ -22,7 +21,7 @@ export function ExperimentalFeatures() {
     )
   }
 
-  if (!isExperimentalFeaturesEnabled) {
+  if (!flags?.length) {
     return (
       <div>
         <h2 className="text-lg font-semibold">Experimental Features</h2>
@@ -37,7 +36,7 @@ export function ExperimentalFeatures() {
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">Experimental Features</h2>
 
-      {flags.map(({ key, enabled }) => {
+      {flags?.map(({ key, enabled }) => {
         const flagId = `feature-flag-${key}`
 
         return (

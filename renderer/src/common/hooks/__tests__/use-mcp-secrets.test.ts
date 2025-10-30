@@ -309,7 +309,7 @@ describe('useMCPSecrets', () => {
 
 describe('saveSecrets', () => {
   it('saves secrets serially and calls progress callbacks', async () => {
-    const mockSaveSecret = vi.fn().mockImplementation((body, options) => {
+    const mockSaveSecret = vi.fn(function mockSaveSecret(body, options) {
       // Call the onSuccess callback to simulate successful save
       options.onSuccess?.()
       return Promise.resolve({ key: body.body.key + '_KEY' })
@@ -457,7 +457,7 @@ describe('saveSecrets', () => {
 
   it('calls error callback when saveSecret fails', async () => {
     const mockError = new Error('Save failed')
-    const mockSaveSecret = vi.fn().mockImplementation((body, options) => {
+    const mockSaveSecret = vi.fn(function mockSaveSecret(body, options) {
       // Call the onError callback to simulate failed save
       options.onError?.(mockError, body)
       return Promise.reject(mockError)

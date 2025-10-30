@@ -18,6 +18,7 @@ import { useCallback } from 'react'
 import { useToastMutation } from './use-toast-mutation'
 import { useMcpOptimizerClients } from '@/features/meta-mcp/hooks/use-mcp-optimizer-clients'
 import log from 'electron-log/renderer'
+import { trackEvent } from '../lib/analytics'
 
 function useDeleteGroup() {
   const { mutateAsync: deleteGroup } = useToastMutation({
@@ -25,13 +26,18 @@ function useDeleteGroup() {
     onError: (error, variables) => {
       log.error(`Failed to delete group "${variables.path.name}"`, error)
     },
+    onSuccess: (_, variables) => {
+      trackEvent(`Group deleted ${MCP_OPTIMIZER_GROUP_NAME}`, {
+        group_name: variables.path.name,
+      })
+    },
     onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: getApiV1BetaGroupsQueryKey(),
       })
     },
     errorMsg: 'Failed to delete MCP Optimizer group',
-    successMsg: 'MCP Optimizer group deleted successfully',
+    successMsg: 'MCP Optimizer is disabled',
     loadingMsg: 'Disabling MCP Optimizer and cleaning up...',
   })
 
@@ -70,9 +76,6 @@ function useUnregisterClients() {
 }
 
 export function useCleanupMetaOptimizer() {
-  const isExperimentalFeaturesEnabled = useFeatureFlag(
-    featureFlagKeys.EXPERIMENTAL_FEATURES
-  )
   const isMetaOptimizerEnabled = useFeatureFlag(featureFlagKeys.META_OPTIMIZER)
   const deleteGroup = useDeleteGroup()
   const unregisterClients = useUnregisterClients()
@@ -88,7 +91,8 @@ export function useCleanupMetaOptimizer() {
     }),
     refetchOnMount: true,
     staleTime: 5_000,
-    enabled: isExperimentalFeaturesEnabled && isMetaOptimizerEnabled,
+    retry: false,
+    enabled: isMetaOptimizerEnabled,
   })
 
   const removeClientsFromGroup = async (clients: string[]) => {
@@ -104,7 +108,7 @@ export function useCleanupMetaOptimizer() {
   )
 
   const cleanupMetaOptimizer = useCallback(async () => {
-    if (!isExperimentalFeaturesEnabled || !isMetaOptimizerEnabled) return
+    if (!isMetaOptimizerEnabled) return
     if (!mcpOptimizerGroup) return
 
     const allowedGroup = optimizerWorkloadDetail?.env_vars?.ALLOWED_GROUPS
@@ -122,7 +126,6 @@ export function useCleanupMetaOptimizer() {
       query: { 'with-workloads': true },
     })
   }, [
-    isExperimentalFeaturesEnabled,
     isMetaOptimizerEnabled,
     mcpOptimizerGroup,
     optimizerWorkloadDetail,
