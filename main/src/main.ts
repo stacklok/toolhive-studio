@@ -120,6 +120,26 @@ const store = new Store<{
   isTelemetryEnabled: boolean
 }>({ defaults: { isTelemetryEnabled: true } })
 
+// ────────────────────────────────────────────────────────────────────────────
+//  ToolHive restart helper (debounced)
+// ────────────────────────────────────────────────────────────────────────────
+let thvRestartDebounce: NodeJS.Timeout | undefined
+function scheduleToolhiveRestart(reason: string, source?: string): void {
+  if (thvRestartDebounce) clearTimeout(thvRestartDebounce)
+  thvRestartDebounce = setTimeout(async () => {
+    const src = source ? ` on ${source}` : ''
+    log.info(`[thv-config] Detected ${reason}${src}; restarting ToolHive...`)
+    try {
+      await restartToolhive()
+    } catch (e) {
+      log.error(
+        '[thv-config] Failed to restart ToolHive after config change:',
+        e
+      )
+    }
+  }, 300)
+}
+
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
   tracesSampleRate: 1.0,
@@ -251,28 +271,10 @@ app.whenReady().then(async () => {
       const cfgPath = getThvConfigPath()
       const cfgDir = path.dirname(cfgPath)
       const cfgBase = path.basename(cfgPath)
-      let debounce: NodeJS.Timeout | undefined
-
-      const scheduleRestart = (reason: string) => {
-        if (debounce) clearTimeout(debounce)
-        debounce = setTimeout(async () => {
-          log.info(
-            `[thv-config] Detected ${reason} on ${cfgBase}; restarting ToolHive...`
-          )
-          try {
-            await restartToolhive()
-          } catch (e) {
-            log.error(
-              '[thv-config] Failed to restart ToolHive after config change:',
-              e
-            )
-          }
-        }, 300)
-      }
 
       watch(cfgDir, (eventType, filename) => {
         if (filename === cfgBase) {
-          scheduleRestart(eventType)
+          scheduleToolhiveRestart(eventType, cfgBase)
         }
       })
       log.info(`[thv-config] Watching for changes: ${cfgPath}`)

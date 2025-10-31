@@ -54,7 +54,7 @@ function RootComponent() {
   return (
     <>
       {!isShutdownRoute && <TopNav />}
-      {!isShutdownRoute && <ThvBinaryModeBanner />}
+      {!isShutdownRoute && import.meta.env.DEV && <ThvBinaryModeBanner />}
       <Main>
         <Outlet />
         <Toaster

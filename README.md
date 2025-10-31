@@ -94,6 +94,24 @@ Kubernetes Operator. Learn more in the
 
 ---
 
+## Developer notes: THV binary selection (dev only)
+
+In development, you can switch which `thv` binary the UI runs:
+
+- `pnpm useThv:default` – use the embedded binary in `bin/<os-arch>/thv`
+- `pnpm useThv:custom [path]` – use a custom path. Without `[path]`, the script
+  auto-detects `thv` from your `PATH`.
+- `pnpm useThv:show` – print the current mode and path.
+
+These commands write a `.thv_bin` config file in the project root. When that
+file changes during development, the app restarts the ToolHive subprocess
+automatically to pick up the new binary.
+
+The UI displays a small banner only in development when a non-default `thv`
+binary is in use. It shows the resolved path and the runtime version reported
+by `thv version`. Packaged (production) builds always use the embedded binary,
+do not watch `.thv_bin`, and do not show the banner.
+
 ## Privacy and Telemetry
 
 ToolHive uses [Sentry](https://sentry.io/) for error tracking and performance

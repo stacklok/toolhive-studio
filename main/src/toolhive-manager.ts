@@ -93,48 +93,46 @@ export function isToolhiveRunning(): boolean {
  * Caches the result for the lifetime of the app to avoid repeated spawns.
  */
 export async function getThvBinaryVersion(): Promise<string | null> {
-  try {
-    if (cachedBinaryVersion) return cachedBinaryVersion
-    if (!existsSync(binPath)) return null
+  if (app.isPackaged) return null
+  if (cachedBinaryVersion) return cachedBinaryVersion
+  if (!existsSync(binPath)) return null
 
-    return await new Promise((resolve) => {
+  const parseVersion = (text: string): string | null => {
+    const current = text.match(/Currently running:\s*(v?[^\s]+)/i)?.[1]
+    if (current) return current
+    return (
+      text.match(/\bv\d+\.\d+(?:\.\d+)?(?:-[0-9A-Za-z\-.]+)?\b/)?.[0] ?? null
+    )
+  }
+
+  return await new Promise((resolve) => {
+    try {
       const child = spawn(binPath, ['version'], {
         stdio: ['ignore', 'pipe', 'pipe'],
       })
 
       let combined = ''
-      child.stdout?.on('data', (data) => {
-        combined += data.toString()
-      })
-      child.stderr?.on('data', (data) => {
-        combined += data.toString()
-      })
-      child.on('error', (err) => {
-        log.warn(`Failed to read thv version: ${String(err)}`)
+      const onData = (d: unknown) => (combined += String(d))
+      child.stdout?.on('data', onData)
+      child.stderr?.on('data', onData)
+
+      const timer = setTimeout(() => {
+        child.kill('SIGKILL')
+        log.warn('thv version timed out')
         resolve(null)
-      })
+      }, 3000)
+
+      child.on('error', () => resolve(null))
       child.on('close', () => {
-        const text = combined.trim()
-        // Prefer explicit "Currently running: vX" line if present
-        const currentMatch = text.match(/Currently running:\s*(v?[^\s]+)/i)
-        let version = currentMatch?.[1] || null
-
-        // Fallback: first token that looks like a semver-ish vMAJOR.MINOR or similar
-        if (!version) {
-          const anyVersion = text.match(
-            /\bv\d+\.\d+(?:\.\d+)?(?:-[0-9A-Za-z\-.]+)?\b/
-          )
-          version = anyVersion?.[0] || null
-        }
-
+        clearTimeout(timer)
+        const version = parseVersion(combined.trim())
         if (version) cachedBinaryVersion = version
         resolve(version)
       })
-    })
-  } catch (e) {
-    log.warn(`Error getting thv version: ${String(e)}`)
-    return null
-  }
+    } catch {
+      resolve(null)
+    }
+  })
 }
 
 async function findFreePort(

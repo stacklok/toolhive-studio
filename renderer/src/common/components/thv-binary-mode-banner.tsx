@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AlertTriangle } from 'lucide-react'
+import { Alert, AlertDescription } from './ui/alert'
 
 interface ThvBinaryMode {
   mode: string
@@ -36,26 +37,19 @@ export function ThvBinaryModeBanner() {
   }
 
   return (
-    <div
-      className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2"
-      role="status"
-      aria-live="polite"
+    <Alert
+      variant="warning"
+      className="fixed bottom-4 left-1/2 z-50 max-w-[95vw] -translate-x-1/2
+        sm:max-w-xl"
     >
-      <div
-        className="flex max-w-[95vw] items-start gap-2 rounded-md border
-          border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-900
-          sm:max-w-xl dark:border-yellow-800 dark:bg-yellow-950
-          dark:text-yellow-100"
-      >
-        <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+      <AlertTriangle />
+      <AlertDescription className="flex items-start gap-2">
         <div className="min-w-0">
-          <>
-            <span> thv </span>
-            <span className="font-mono text-xs">
-              {version ?? 'Unknown version'}
-            </span>
-            <span> at </span>
-          </>
+          <span>thv </span>
+          <span className="font-mono text-xs">
+            {version ?? 'Unknown version'}
+          </span>
+          <span> at </span>
           <span
             className="rounded bg-yellow-100 px-1 py-0.5 font-mono text-[10px]
               leading-4 break-all dark:bg-yellow-900"
@@ -64,7 +58,7 @@ export function ThvBinaryModeBanner() {
             {binaryMode.path}
           </span>
         </div>
-      </div>
-    </div>
+      </AlertDescription>
+    </Alert>
   )
 }
