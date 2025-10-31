@@ -45,6 +45,7 @@ import {
   binPath,
   getToolhiveMcpPort,
   getThvBinaryMode,
+  getThvBinaryVersion,
 } from './toolhive-manager'
 import log from './logger'
 import { getInstanceId, isOfficialReleaseBuild } from './util'
@@ -453,6 +454,7 @@ ipcMain.handle('get-toolhive-port', () => getToolhivePort())
 ipcMain.handle('get-toolhive-mcp-port', () => getToolhiveMcpPort())
 ipcMain.handle('is-toolhive-running', () => isToolhiveRunning())
 ipcMain.handle('get-thv-binary-mode', () => getThvBinaryMode())
+ipcMain.handle('get-thv-binary-version', () => getThvBinaryVersion())
 
 // Window control handlers for custom title bar
 ipcMain.handle('window-minimize', () => {

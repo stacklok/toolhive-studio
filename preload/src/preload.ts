@@ -32,7 +32,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ToolHive port
   getToolhivePort: () => ipcRenderer.invoke('get-toolhive-port'),
   getToolhiveMcpPort: () => ipcRenderer.invoke('get-toolhive-mcp-port'),
-  getToolhiveVersion: () => TOOLHIVE_VERSION,
+  getToolhiveVersion: async () => {
+    try {
+      const ver = (await ipcRenderer.invoke('get-thv-binary-version')) as
+        | string
+        | null
+      return ver ?? TOOLHIVE_VERSION
+    } catch {
+      return TOOLHIVE_VERSION
+    }
+  },
   // ToolHive is running
   isToolhiveRunning: () => ipcRenderer.invoke('is-toolhive-running'),
   // ToolHive binary mode (dev only)
@@ -247,6 +256,7 @@ export interface ElectronAPI {
     path: string
     isDefault: boolean
   }>
+  getThvBinaryVersion: () => Promise<string | null>
   checkContainerEngine: () => Promise<{
     docker: boolean
     podman: boolean

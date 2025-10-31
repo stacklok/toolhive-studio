@@ -13,16 +13,20 @@ interface ThvBinaryMode {
  */
 export function ThvBinaryModeBanner() {
   const [binaryMode, setBinaryMode] = useState<ThvBinaryMode | null>(null)
+  const [version, setVersion] = useState<string | null>(null)
 
   useEffect(() => {
-    // Fetch the current thv binary mode
-    window.electronAPI
-      .getThvBinaryMode()
-      .then((mode: ThvBinaryMode) => {
-        setBinaryMode(mode)
+    // Fetch the current thv binary mode and version
+    Promise.all([
+      window.electronAPI.getThvBinaryMode(),
+      window.electronAPI.getToolhiveVersion().catch(() => null),
+    ])
+      .then(([mode, ver]) => {
+        setBinaryMode(mode as ThvBinaryMode)
+        setVersion(typeof ver === 'string' ? ver : null)
       })
       .catch((error: unknown) => {
-        console.error('Failed to get thv binary mode:', error)
+        console.error('Failed to get thv binary info:', error)
       })
   }, [])
 
@@ -45,9 +49,17 @@ export function ThvBinaryModeBanner() {
       >
         <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
         <div className="min-w-0">
-          <span>Using </span>
-          <span className="font-mono text-xs">{binaryMode.mode}</span>
-          <span> thv binary at </span>
+          {version ? (
+            <>
+              <span> thv </span>
+              <span className="font-mono text-xs">{version}</span>
+              <span> at </span>
+            </>
+          ) : (
+            <>
+              <span>Using thv binary at </span>
+            </>
+          )}
           <span
             className="rounded bg-yellow-100 px-1 py-0.5 font-mono text-[10px]
               leading-4 break-all dark:bg-yellow-900"

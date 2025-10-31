@@ -71,6 +71,7 @@ let toolhivePort: number | undefined
 let toolhiveMcpPort: number | undefined
 let isRestarting = false
 let killTimer: NodeJS.Timeout | undefined
+let cachedBinaryVersion: string | undefined
 
 export function getToolhivePort(): number | undefined {
   return toolhivePort
@@ -83,6 +84,40 @@ export function getToolhiveMcpPort(): number | undefined {
 export function isToolhiveRunning(): boolean {
   const isRunning = !!toolhiveProcess && !toolhiveProcess.killed
   return isRunning
+}
+
+/**
+ * Executes `thv version` and returns the first line of output.
+ * Caches the result for the lifetime of the app to avoid repeated spawns.
+ */
+export async function getThvBinaryVersion(): Promise<string | null> {
+  try {
+    if (cachedBinaryVersion) return cachedBinaryVersion
+    if (!existsSync(binPath)) return null
+
+    return await new Promise((resolve) => {
+      const child = spawn(binPath, ['version'], {
+        stdio: ['ignore', 'pipe', 'ignore'],
+      })
+
+      let stdout = ''
+      child.stdout?.on('data', (data) => {
+        stdout += data.toString()
+      })
+      child.on('error', (err) => {
+        log.warn(`Failed to read thv version: ${String(err)}`)
+        resolve(null)
+      })
+      child.on('close', () => {
+        const version = stdout.trim().split(/\r?\n/)[0] || null
+        if (version) cachedBinaryVersion = version
+        resolve(version)
+      })
+    })
+  } catch (e) {
+    log.warn(`Error getting thv version: ${String(e)}`)
+    return null
+  }
 }
 
 async function findFreePort(
