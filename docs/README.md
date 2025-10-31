@@ -62,8 +62,9 @@ During local development, you can switch which `thv` binary the app runs:
 - `pnpm use-thv:show` — show the current selection.
 
 Implementation details:
-- The selection is stored in a git-ignored file `.thv_bin` at the repo root as
-  a plain path (empty file means default/embedded).
+
+- The selection is stored in a git-ignored file `.thv_bin` at the repo root as a
+  plain path (empty file means default/embedded).
 - In dev, the app watches `.thv_bin` and automatically restarts the ToolHive
   process when it changes.
 - A small warning banner appears in dev when using a non-default binary and
