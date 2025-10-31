@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import net from 'node:net'
 import { app } from 'electron'
@@ -7,16 +7,39 @@ import { updateTrayStatus } from './system-tray'
 import log from './logger'
 import * as Sentry from '@sentry/electron/main'
 import { getQuittingState } from './app-state'
+function readConfiguredThvPath(): string | null {
+  try {
+    const p = path.resolve(process.cwd(), '.thv_bin')
+    if (!existsSync(p)) return null
+    const contents = readFileSync(p, 'utf-8').trim()
+    return contents.length ? contents : null
+  } catch {
+    return null
+  }
+}
 
 const binName = process.platform === 'win32' ? 'thv.exe' : 'thv'
-const binPath = app.isPackaged
-  ? path.join(
+
+/**
+ * Resolves the path to the thv binary based on configuration.
+ * In production (packaged), always uses the embedded binary.
+ * In development, respects the .thv_bin configuration file.
+ */
+function resolveThvBinaryPath(): string {
+  // In production, always use embedded binary
+  if (app.isPackaged) {
+    return path.join(
       process.resourcesPath,
       'bin',
       `${process.platform}-${process.arch}`,
       binName
     )
-  : path.resolve(
+  }
+
+  const configuredPath = readConfiguredThvPath()
+  if (!configuredPath) {
+    // Use embedded binary
+    return path.resolve(
       __dirname,
       '..',
       '..',
@@ -24,12 +47,37 @@ const binPath = app.isPackaged
       `${process.platform}-${process.arch}`,
       binName
     )
+  }
+
+  // Use configured path if valid
+  if (existsSync(configuredPath)) {
+    log.info(`Using custom thv binary: ${configuredPath}`)
+    return configuredPath
+  }
+
+  // Fallback to embedded binary if config is invalid
+  log.warn(
+    `Invalid thv binary config (path: ${configuredPath}), falling back to embedded binary`
+  )
+  return path.resolve(
+    __dirname,
+    '..',
+    '..',
+    'bin',
+    `${process.platform}-${process.arch}`,
+    binName
+  )
+}
+
+// Resolve binary path at runtime (mutable so dev config changes take effect)
+let binPath = resolveThvBinaryPath()
 
 let toolhiveProcess: ReturnType<typeof spawn> | undefined
 let toolhivePort: number | undefined
 let toolhiveMcpPort: number | undefined
 let isRestarting = false
 let killTimer: NodeJS.Timeout | undefined
+let cachedBinaryVersion: string | undefined
 
 export function getToolhivePort(): number | undefined {
   return toolhivePort
@@ -42,6 +90,66 @@ export function getToolhiveMcpPort(): number | undefined {
 export function isToolhiveRunning(): boolean {
   const isRunning = !!toolhiveProcess && !toolhiveProcess.killed
   return isRunning
+}
+
+/**
+ * Executes `thv version` and returns the first line of output.
+ * Caches the result for the lifetime of the app to avoid repeated spawns.
+ */
+export async function getThvBinaryVersion(): Promise<string | null> {
+  if (app.isPackaged) return null
+  if (cachedBinaryVersion) return cachedBinaryVersion
+  if (!existsSync(binPath)) return null
+
+  const parseVersion = (text: string): string | null => {
+    const current = text.match(/Currently running:\s*(v?[^\s]+)/i)?.[1]
+    if (current) return current
+    return (
+      text.match(/\bv\d+\.\d+(?:\.\d+)?(?:-[0-9A-Za-z\-.]+)?\b/)?.[0] ?? null
+    )
+  }
+
+  return await new Promise((resolve) => {
+    try {
+      const child = spawn(binPath, ['version'], {
+        stdio: ['ignore', 'pipe', 'pipe'],
+      })
+
+      let combined = ''
+      let settled = false
+      const onData = (d: unknown) => (combined += String(d))
+      child.stdout?.on('data', onData)
+      child.stderr?.on('data', onData)
+
+      const timer = setTimeout(() => {
+        if (!settled) {
+          settled = true
+          child.kill('SIGKILL')
+          log.warn('thv version timed out')
+          resolve(null)
+        }
+      }, 3000)
+
+      child.on('error', () => {
+        if (!settled) {
+          settled = true
+          clearTimeout(timer)
+          resolve(null)
+        }
+      })
+      child.on('close', () => {
+        if (!settled) {
+          settled = true
+          clearTimeout(timer)
+          const version = parseVersion(combined.trim())
+          if (version) cachedBinaryVersion = version
+          resolve(version)
+        }
+      })
+    } catch {
+      resolve(null)
+    }
+  })
 }
 
 async function findFreePort(
@@ -103,6 +211,10 @@ async function findFreePort(
 
 export async function startToolhive(): Promise<void> {
   Sentry.withScope<Promise<void>>(async (scope) => {
+    // Re-resolve binary path on each start to reflect latest config
+    binPath = resolveThvBinaryPath()
+    // Invalidate cached version since binary may have changed
+    cachedBinaryVersion = undefined
     if (!existsSync(binPath)) {
       log.error(`ToolHive binary not found at: ${binPath}`)
       return
@@ -290,6 +402,33 @@ export function stopToolhive(options?: { force?: boolean }): void {
   }
 
   log.info(`[stopToolhive] Process cleanup completed`)
+}
+
+/**
+ * Returns information about the current thv binary configuration.
+ * Used by the renderer to display dev mode warnings.
+ */
+export function getThvBinaryMode(): {
+  mode: string
+  path: string
+  isDefault: boolean
+} {
+  // In production, always report default mode
+  if (app.isPackaged) {
+    return {
+      mode: 'default',
+      path: binPath,
+      isDefault: true,
+    }
+  }
+
+  // In development, read actual config
+  const configuredPath = readConfiguredThvPath()
+  return {
+    mode: configuredPath ? 'custom' : 'default',
+    path: binPath,
+    isDefault: !configuredPath,
+  }
 }
 
 export { binPath }
