@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import net from 'node:net'
 import { app } from 'electron'
@@ -7,7 +7,17 @@ import { updateTrayStatus } from './system-tray'
 import log from './logger'
 import * as Sentry from '@sentry/electron/main'
 import { getQuittingState } from './app-state'
-import { readConfig } from '../../scripts/use-thv'
+// Dev-only: read plain-path config from project root .thv_bin
+function readConfiguredThvPath(): string | null {
+  try {
+    const p = path.resolve(process.cwd(), '.thv_bin')
+    if (!existsSync(p)) return null
+    const contents = readFileSync(p, 'utf-8').trim()
+    return contents.length ? contents : null
+  } catch {
+    return null
+  }
+}
 
 const binName = process.platform === 'win32' ? 'thv.exe' : 'thv'
 
@@ -27,13 +37,9 @@ function resolveThvBinaryPath(): string {
     )
   }
 
-  // In development, check .thv_bin config
-  const config = readConfig()
-  const rawMode = (config as { mode?: string }).mode
-  const mode: 'default' | 'custom' =
-    rawMode === 'custom' || rawMode === 'global' ? 'custom' : 'default'
-
-  if (mode === 'default') {
+  // In development, check .thv_bin config (plain path)
+  const configuredPath = readConfiguredThvPath()
+  if (!configuredPath) {
     // Use embedded binary
     return path.resolve(
       __dirname,
@@ -45,15 +51,15 @@ function resolveThvBinaryPath(): string {
     )
   }
 
-  // For global or custom mode, use the configured path
-  if (config.customPath && existsSync(config.customPath)) {
-    log.info(`Using ${mode} thv binary: ${config.customPath}`)
-    return config.customPath
+  // Use configured path if valid
+  if (existsSync(configuredPath)) {
+    log.info(`Using custom thv binary: ${configuredPath}`)
+    return configuredPath
   }
 
   // Fallback to embedded binary if config is invalid
   log.warn(
-    `Invalid thv binary config (mode: ${mode}, path: ${config.customPath}), falling back to embedded binary`
+    `Invalid thv binary config (path: ${configuredPath}), falling back to embedded binary`
   )
   return path.resolve(
     __dirname,
@@ -112,22 +118,35 @@ export async function getThvBinaryVersion(): Promise<string | null> {
       })
 
       let combined = ''
+      let settled = false
       const onData = (d: unknown) => (combined += String(d))
       child.stdout?.on('data', onData)
       child.stderr?.on('data', onData)
 
       const timer = setTimeout(() => {
-        child.kill('SIGKILL')
-        log.warn('thv version timed out')
-        resolve(null)
+        if (!settled) {
+          settled = true
+          child.kill('SIGKILL')
+          log.warn('thv version timed out')
+          resolve(null)
+        }
       }, 3000)
 
-      child.on('error', () => resolve(null))
+      child.on('error', () => {
+        if (!settled) {
+          settled = true
+          clearTimeout(timer)
+          resolve(null)
+        }
+      })
       child.on('close', () => {
-        clearTimeout(timer)
-        const version = parseVersion(combined.trim())
-        if (version) cachedBinaryVersion = version
-        resolve(version)
+        if (!settled) {
+          settled = true
+          clearTimeout(timer)
+          const version = parseVersion(combined.trim())
+          if (version) cachedBinaryVersion = version
+          resolve(version)
+        }
       })
     } catch {
       resolve(null)
@@ -406,14 +425,11 @@ export function getThvBinaryMode(): {
   }
 
   // In development, read actual config
-  const config = readConfig()
-  const rawMode = (config as { mode?: string }).mode
-  const mode: 'default' | 'custom' =
-    rawMode === 'custom' || rawMode === 'global' ? 'custom' : 'default'
+  const configuredPath = readConfiguredThvPath()
   return {
-    mode,
+    mode: configuredPath ? 'custom' : 'default',
     path: binPath,
-    isDefault: mode === 'default',
+    isDefault: !configuredPath,
   }
 }
 

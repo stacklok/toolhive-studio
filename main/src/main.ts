@@ -49,7 +49,6 @@ import {
 } from './toolhive-manager'
 import log from './logger'
 import { getInstanceId, isOfficialReleaseBuild } from './util'
-import { getThvConfigPath } from '../../scripts/use-thv'
 import { delay } from '../../utils/delay'
 import {
   getIsAutoUpdateEnabled,
@@ -123,7 +122,9 @@ const store = new Store<{
 // ────────────────────────────────────────────────────────────────────────────
 //  ToolHive restart helper (debounced)
 // ────────────────────────────────────────────────────────────────────────────
+const THV_RESTART_DEBOUNCE_MS = 300
 let thvRestartDebounce: NodeJS.Timeout | undefined
+let thvWatcher: ReturnType<typeof watch> | undefined
 function scheduleToolhiveRestart(reason: string, source?: string): void {
   if (thvRestartDebounce) clearTimeout(thvRestartDebounce)
   thvRestartDebounce = setTimeout(async () => {
@@ -137,7 +138,7 @@ function scheduleToolhiveRestart(reason: string, source?: string): void {
         e
       )
     }
-  }, 300)
+  }, THV_RESTART_DEBOUNCE_MS)
 }
 
 Sentry.init({
@@ -268,15 +269,16 @@ app.whenReady().then(async () => {
   // In development (unpackaged), watch .thv_bin changes and restart ToolHive when it changes
   if (!app.isPackaged) {
     try {
-      const cfgPath = getThvConfigPath()
+      const cfgPath = path.resolve(process.cwd(), '.thv_bin')
       const cfgDir = path.dirname(cfgPath)
       const cfgBase = path.basename(cfgPath)
-
-      watch(cfgDir, (eventType, filename) => {
-        if (filename === cfgBase) {
-          scheduleToolhiveRestart(eventType, cfgBase)
-        }
-      })
+      if (existsSync(cfgDir)) {
+        thvWatcher = watch(cfgDir, (eventType, filename) => {
+          if (filename === cfgBase) {
+            scheduleToolhiveRestart(eventType, cfgBase)
+          }
+        })
+      }
       log.info(`[thv-config] Watching for changes: ${cfgPath}`)
     } catch (e) {
       log.warn('[thv-config] Failed to set up watcher for .thv_bin:', e)
@@ -380,6 +382,16 @@ app.on('activate', async () => {
 
 app.on('will-finish-launching', () => {
   log.info('App will finish launching')
+})
+
+// Close dev watcher on quit
+app.on('will-quit', () => {
+  try {
+    thvWatcher?.close()
+    thvWatcher = undefined
+  } catch (e) {
+    log.warn('[thv-config] Failed to close watcher:', e)
+  }
 })
 
 app.on('before-quit', async (e) => {

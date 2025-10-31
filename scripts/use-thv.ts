@@ -3,54 +3,20 @@ import { resolve } from 'node:path'
 import { execSync } from 'node:child_process'
 import * as readline from 'node:readline'
 
-// In dev, the bundler can change __dirname. Prefer project CWD for config,
-// and fall back to resolving relative to this file for compatibility.
-const CANDIDATE_CONFIG_PATHS = [
-  resolve(process.cwd(), '.thv_bin'),
-  resolve(__dirname, '..', '.thv_bin'),
-]
+// Plain path file at project root. Empty => default (embedded)
+const CONFIG_PATH = resolve(process.cwd(), '.thv_bin')
 
-function getConfigPath(): string {
-  // Prefer the first existing candidate
-  for (const p of CANDIDATE_CONFIG_PATHS) {
-    if (existsSync(p)) return p
-  }
-  // Default to writing/reading in CWD
-  return CANDIDATE_CONFIG_PATHS[0]!
-}
-/**
- * Returns the resolved path to the .thv_bin config file location we use.
- * Exported for main-process watchers.
- */
-export function getThvConfigPath(): string {
-  return getConfigPath()
-}
-
-type ThvBinaryMode = 'default' | 'custom'
-
-interface ThvBinaryConfig {
-  mode: ThvBinaryMode
-  customPath: string
-}
-
-function readConfig(): ThvBinaryConfig {
-  const configPath = getConfigPath()
-  if (!existsSync(configPath)) {
-    return { mode: 'default', customPath: '' }
-  }
-
+function readPath(): string {
   try {
-    const content = readFileSync(configPath, 'utf-8')
-    return JSON.parse(content)
+    if (!existsSync(CONFIG_PATH)) return ''
+    return readFileSync(CONFIG_PATH, 'utf-8').trim()
   } catch {
-    console.warn('⚠️  Failed to parse .thv_bin, using defaults')
-    return { mode: 'default', customPath: '' }
+    return ''
   }
 }
 
-function writeConfig(config: ThvBinaryConfig): void {
-  const configPath = getConfigPath()
-  writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n')
+function writePath(p: string): void {
+  writeFileSync(CONFIG_PATH, (p || '') + '\n')
 }
 
 function findGlobalThv(): string | null {
@@ -79,50 +45,34 @@ function promptForPath(): Promise<string> {
   })
 }
 
-async function setMode(
-  mode: ThvBinaryMode,
-  customPath?: string
-): Promise<void> {
-  const config = readConfig()
+async function setDefault(): Promise<void> {
+  writePath('')
+  console.log('✅ THV binary set to: default (embedded binary)')
+}
 
-  switch (mode) {
-    case 'default':
-      config.mode = 'default'
-      config.customPath = ''
-      writeConfig(config)
-      console.log('✅ THV binary mode set to: default (embedded binary)')
-      break
-
-    case 'custom': {
-      // If a path is provided, use it; otherwise try to resolve from PATH, then prompt.
-      let resolvedPath = customPath || findGlobalThv()
-      if (!resolvedPath) {
-        resolvedPath = await promptForPath()
-      }
-      if (!resolvedPath) {
-        console.error('❌ No path provided')
-        process.exit(1)
-      }
-      if (!existsSync(resolvedPath)) {
-        console.error(`❌ Binary not found at: ${resolvedPath}`)
-        process.exit(1)
-      }
-      config.mode = 'custom'
-      config.customPath = resolvedPath
-      writeConfig(config)
-      console.log(`✅ THV binary mode set to: custom (${resolvedPath})`)
-      break
-    }
+async function setCustom(customPath?: string): Promise<void> {
+  let resolvedPath = customPath || findGlobalThv()
+  if (!resolvedPath) {
+    resolvedPath = await promptForPath()
   }
+  if (!resolvedPath) {
+    console.error('❌ No path provided')
+    process.exit(1)
+  }
+  if (!existsSync(resolvedPath)) {
+    console.error(`❌ Binary not found at: ${resolvedPath}`)
+    process.exit(1)
+  }
+  writePath(resolvedPath)
+  console.log(`✅ THV binary set to: ${resolvedPath}`)
 }
 
 async function showCurrentMode(): Promise<void> {
-  const config = readConfig()
+  const p = readPath()
+  const mode = p ? 'custom' : 'default'
   console.log('\n📋 Current THV Binary Configuration:')
-  console.log(`   Mode: ${config.mode}`)
-  if (config.customPath) {
-    console.log(`   Path: ${config.customPath}`)
-  }
+  console.log(`   Mode: ${mode}`)
+  if (p) console.log(`   Path: ${p}`)
   console.log()
 }
 
@@ -139,20 +89,20 @@ if (require.main === module) {
 
     if (!['default', 'custom'].includes(command)) {
       console.error('❌ Invalid command. Usage:')
-      console.error('   pnpm useThv:default')
+      console.error('   pnpm use-thv:default')
       console.error(
-        '   pnpm useThv:custom [path]  # no path => use PATH if available'
+        '   pnpm use-thv:custom [path]  # no path => use PATH if available'
       )
-      console.error('   pnpm useThv:show')
+      console.error('   pnpm use-thv:show')
       process.exit(1)
     }
 
     const customPath = args[1]
-    await setMode(command as ThvBinaryMode, customPath)
+    if (command === 'default') await setDefault()
+    else await setCustom(customPath)
   })().catch((err) => {
     console.error('❌ Error:', err.message)
     process.exit(1)
   })
 }
-
-export { readConfig, writeConfig, type ThvBinaryConfig, type ThvBinaryMode }
+// CLI-only, no exports
