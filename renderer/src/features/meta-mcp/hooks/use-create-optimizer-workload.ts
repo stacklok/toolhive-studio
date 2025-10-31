@@ -108,9 +108,18 @@ export function useCreateOptimizerWorkload() {
   }) => {
     if (!isMetaOptimizerEnabled) return
 
-    // On platforms with native containers (Linux), use host networking mode
-    // to allow the container to access the host's ToolHive API
-    const useHostNetworking = isProbablyUsingNativeContainers()
+    // Decision:
+    // - If the container engine runs natively on the same machine as ToolHive
+    //   (most Linux setups), request host networking and point TOOLHIVE_HOST to
+    //   127.0.0.1 so the optimizer can reach the local API.
+    // - If the engine runs in a VM or remotely (Docker Desktop on macOS/Windows,
+    //   cloud/remote Docker), we do NOT set host networking or TOOLHIVE_HOST; those
+    //   environments rely on `host.docker.internal` or forwarded ports instead.
+    //
+    // Note: This uses a heuristic (Linux => native) via isProbablyUsingNativeContainers().
+    // If we later detect remote engines more precisely, we can update the helper
+    // without changing call sites.
+    const needsHostNetworking = isProbablyUsingNativeContainers()
 
     const body: V1CreateRequest = {
       name: META_MCP_SERVER_NAME,
@@ -119,7 +128,7 @@ export function useCreateOptimizerWorkload() {
       group: MCP_OPTIMIZER_GROUP_NAME,
       env_vars: {
         [ALLOWED_GROUPS_ENV_VAR]: groupToOptimize,
-        ...(useHostNetworking && {
+        ...(needsHostNetworking && {
           TOOLHIVE_HOST: '127.0.0.1',
         }),
       },
@@ -127,7 +136,7 @@ export function useCreateOptimizerWorkload() {
       cmd_arguments: [],
       network_isolation: false,
       volumes: [],
-      ...(useHostNetworking && {
+      ...(needsHostNetworking && {
         permission_profile: {
           network: {
             mode: 'host',
