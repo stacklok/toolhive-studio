@@ -49,17 +49,13 @@ export function ThvBinaryModeBanner() {
       >
         <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
         <div className="min-w-0">
-          {version ? (
-            <>
-              <span> thv </span>
-              <span className="font-mono text-xs">{version}</span>
-              <span> at </span>
-            </>
-          ) : (
-            <>
-              <span>Using thv binary at </span>
-            </>
-          )}
+          <>
+            <span> thv </span>
+            <span className="font-mono text-xs">
+              {version ?? 'Unknown version'}
+            </span>
+            <span> at </span>
+          </>
           <span
             className="rounded bg-yellow-100 px-1 py-0.5 font-mono text-[10px]
               leading-4 break-all dark:bg-yellow-900"

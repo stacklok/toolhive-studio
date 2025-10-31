@@ -97,19 +97,34 @@ export async function getThvBinaryVersion(): Promise<string | null> {
 
     return await new Promise((resolve) => {
       const child = spawn(binPath, ['version'], {
-        stdio: ['ignore', 'pipe', 'ignore'],
+        stdio: ['ignore', 'pipe', 'pipe'],
       })
 
-      let stdout = ''
+      let combined = ''
       child.stdout?.on('data', (data) => {
-        stdout += data.toString()
+        combined += data.toString()
+      })
+      child.stderr?.on('data', (data) => {
+        combined += data.toString()
       })
       child.on('error', (err) => {
         log.warn(`Failed to read thv version: ${String(err)}`)
         resolve(null)
       })
       child.on('close', () => {
-        const version = stdout.trim().split(/\r?\n/)[0] || null
+        const text = combined.trim()
+        // Prefer explicit "Currently running: vX" line if present
+        const currentMatch = text.match(/Currently running:\s*(v?[^\s]+)/i)
+        let version = currentMatch?.[1] || null
+
+        // Fallback: first token that looks like a semver-ish vMAJOR.MINOR or similar
+        if (!version) {
+          const anyVersion = text.match(
+            /\bv\d+\.\d+(?:\.\d+)?(?:-[0-9A-Za-z\-.]+)?\b/
+          )
+          version = anyVersion?.[0] || null
+        }
+
         if (version) cachedBinaryVersion = version
         resolve(version)
       })

@@ -4,7 +4,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type { CoreWorkload } from '../../api/generated/types.gen'
 import type { AvailableServer, ChatUIMessage } from '../../main/src/chat/types'
-import { TOOLHIVE_VERSION } from '../../utils/constants'
 import type { UIMessage } from 'ai'
 import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 import type { FeatureFlagOptions } from '../../main/src/feature-flags'
@@ -37,9 +36,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
       const ver = (await ipcRenderer.invoke('get-thv-binary-version')) as
         | string
         | null
-      return ver ?? TOOLHIVE_VERSION
+      return ver ?? 'Unknown version'
     } catch {
-      return TOOLHIVE_VERSION
+      return 'Unknown version'
     }
   },
   // ToolHive is running

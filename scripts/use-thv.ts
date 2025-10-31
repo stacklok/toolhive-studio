@@ -155,10 +155,4 @@ if (require.main === module) {
   })
 }
 
-export {
-  readConfig,
-  writeConfig,
-  getThvConfigPath,
-  type ThvBinaryConfig,
-  type ThvBinaryMode,
-}
+export { readConfig, writeConfig, type ThvBinaryConfig, type ThvBinaryMode }
