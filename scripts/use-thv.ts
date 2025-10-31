@@ -19,7 +19,7 @@ function getConfigPath(): string {
   return CANDIDATE_CONFIG_PATHS[0]
 }
 
-type ThvBinaryMode = 'default' | 'global' | 'custom'
+type ThvBinaryMode = 'default' | 'custom'
 
 interface ThvBinaryConfig {
   mode: ThvBinaryMode
@@ -86,35 +86,24 @@ async function setMode(
       console.log('✅ THV binary mode set to: default (embedded binary)')
       break
 
-    case 'global': {
-      const globalPath = findGlobalThv()
-      if (!globalPath) {
-        console.error(
-          '❌ Could not find global thv binary. Make sure thv is installed and in your PATH.'
-        )
-        process.exit(1)
-      }
-      config.mode = 'global'
-      config.customPath = globalPath
-      writeConfig(config)
-      console.log(`✅ THV binary mode set to: global (${globalPath})`)
-      break
-    }
-
     case 'custom': {
-      const path = customPath || (await promptForPath())
-      if (!path) {
+      // If a path is provided, use it; otherwise try to resolve from PATH, then prompt.
+      let resolvedPath = customPath || findGlobalThv()
+      if (!resolvedPath) {
+        resolvedPath = await promptForPath()
+      }
+      if (!resolvedPath) {
         console.error('❌ No path provided')
         process.exit(1)
       }
-      if (!existsSync(path)) {
-        console.error(`❌ Binary not found at: ${path}`)
+      if (!existsSync(resolvedPath)) {
+        console.error(`❌ Binary not found at: ${resolvedPath}`)
         process.exit(1)
       }
       config.mode = 'custom'
-      config.customPath = path
+      config.customPath = resolvedPath
       writeConfig(config)
-      console.log(`✅ THV binary mode set to: custom (${path})`)
+      console.log(`✅ THV binary mode set to: custom (${resolvedPath})`)
       break
     }
   }
@@ -141,11 +130,12 @@ if (require.main === module) {
       return
     }
 
-    if (!['default', 'global', 'custom'].includes(command)) {
+    if (!['default', 'custom'].includes(command)) {
       console.error('❌ Invalid command. Usage:')
       console.error('   pnpm useThv:default')
-      console.error('   pnpm useThv:global')
-      console.error('   pnpm useThv:custom [path]')
+      console.error(
+        '   pnpm useThv:custom [path]  # no path => use PATH if available'
+      )
       console.error('   pnpm useThv:show')
       process.exit(1)
     }

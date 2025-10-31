@@ -9,7 +9,7 @@ interface ThvBinaryMode {
 
 /**
  * Banner that displays a warning when using a non-default thv binary in development mode.
- * Only visible when THV_BINARY_MODE is set to 'global' or 'custom' in .thv_bin config.
+ * Only visible when THV binary mode is set to 'custom' in .thv_bin config.
  */
 export function ThvBinaryModeBanner() {
   const [binaryMode, setBinaryMode] = useState<ThvBinaryMode | null>(null)
@@ -40,7 +40,7 @@ export function ThvBinaryModeBanner() {
       <div
         className="flex max-w-[95vw] items-start gap-2 rounded-md border
           border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-900
-          shadow-md sm:max-w-xl dark:border-yellow-800 dark:bg-yellow-950
+          sm:max-w-xl dark:border-yellow-800 dark:bg-yellow-950
           dark:text-yellow-100"
       >
         <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />

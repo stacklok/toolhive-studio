@@ -7,7 +7,7 @@ import { updateTrayStatus } from './system-tray'
 import log from './logger'
 import * as Sentry from '@sentry/electron/main'
 import { getQuittingState } from './app-state'
-import { readConfig } from '../../utils/use-thv'
+import { readConfig } from '../../scripts/use-thv'
 
 const binName = process.platform === 'win32' ? 'thv.exe' : 'thv'
 
@@ -29,8 +29,9 @@ function resolveThvBinaryPath(): string {
 
   // In development, check .thv_bin config
   const config = readConfig()
+  const mode = (config.mode === 'global' ? 'custom' : config.mode) || 'default'
 
-  if (config.mode === 'default' || !config.mode) {
+  if (mode === 'default') {
     // Use embedded binary
     return path.resolve(
       __dirname,
@@ -44,13 +45,13 @@ function resolveThvBinaryPath(): string {
 
   // For global or custom mode, use the configured path
   if (config.customPath && existsSync(config.customPath)) {
-    log.info(`Using ${config.mode} thv binary: ${config.customPath}`)
+    log.info(`Using ${mode} thv binary: ${config.customPath}`)
     return config.customPath
   }
 
   // Fallback to embedded binary if config is invalid
   log.warn(
-    `Invalid thv binary config (mode: ${config.mode}, path: ${config.customPath}), falling back to embedded binary`
+    `Invalid thv binary config (mode: ${mode}, path: ${config.customPath}), falling back to embedded binary`
   )
   return path.resolve(
     __dirname,
@@ -352,10 +353,11 @@ export function getThvBinaryMode(): {
 
   // In development, read actual config
   const config = readConfig()
+  const mode = (config.mode === 'global' ? 'custom' : config.mode) || 'default'
   return {
-    mode: config.mode || 'default',
+    mode,
     path: binPath,
-    isDefault: config.mode === 'default' || !config.mode,
+    isDefault: mode === 'default',
   }
 }
 
