@@ -106,16 +106,46 @@ export function useCreateOptimizerWorkload() {
     optimized_workloads: string[]
   }) => {
     if (!isMetaOptimizerEnabled) return
+
+    /*
+     * Decide if we should request host networking for the MCP Optimizer container.
+     *
+     * Context:
+     * - Native engines on the same machine (commonly Linux) share the host's network
+     *   stack. To let the container reach the local ToolHive API, we request host
+     *   networking and set TOOLHIVE_HOST to 127.0.0.1.
+     * - Engines running in a VM or remotely (Docker Desktop on macOS/Windows, cloud
+     *   runners, remote Docker hosts) should not use host networking; those setups
+     *   rely on host.docker.internal or forwarded ports to reach the host.
+     *
+     * Heuristic:
+     * - We treat Linux as a proxy for "native container engine on the same machine".
+     *   This is not perfect, but it matches the most common cases.
+     */
+    const needsHostNetworking = window.electronAPI.isLinux
+
     const body: V1CreateRequest = {
       name: META_MCP_SERVER_NAME,
       image: optimizerRegistryServerDetail?.server?.image,
       transport: optimizerRegistryServerDetail?.server?.transport,
       group: MCP_OPTIMIZER_GROUP_NAME,
-      env_vars: { [ALLOWED_GROUPS_ENV_VAR]: groupToOptimize },
+      env_vars: {
+        [ALLOWED_GROUPS_ENV_VAR]: groupToOptimize,
+        ...(needsHostNetworking && {
+          TOOLHIVE_HOST: '127.0.0.1',
+        }),
+      },
       secrets: [],
       cmd_arguments: [],
       network_isolation: false,
       volumes: [],
+      ...(needsHostNetworking && {
+        permission_profile: {
+          network: {
+            mode: 'host',
+          },
+        },
+      }),
     }
     try {
       await createMetaOptimizerWorkload({
