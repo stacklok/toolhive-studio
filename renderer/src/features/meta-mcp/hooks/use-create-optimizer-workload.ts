@@ -10,7 +10,6 @@ import {
   MCP_OPTIMIZER_GROUP_NAME,
   MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
   META_MCP_SERVER_NAME,
-  isProbablyUsingNativeContainers,
 } from '../../../common/lib/constants'
 import { useQuery } from '@tanstack/react-query'
 import { getApiV1BetaRegistryByNameServersByServerNameOptions } from '@api/@tanstack/react-query.gen'
@@ -108,18 +107,22 @@ export function useCreateOptimizerWorkload() {
   }) => {
     if (!isMetaOptimizerEnabled) return
 
-    // Decision:
-    // - If the container engine runs natively on the same machine as ToolHive
-    //   (most Linux setups), request host networking and point TOOLHIVE_HOST to
-    //   127.0.0.1 so the optimizer can reach the local API.
-    // - If the engine runs in a VM or remotely (Docker Desktop on macOS/Windows,
-    //   cloud/remote Docker), we do NOT set host networking or TOOLHIVE_HOST; those
-    //   environments rely on `host.docker.internal` or forwarded ports instead.
-    //
-    // Note: This uses a heuristic (Linux => native) via isProbablyUsingNativeContainers().
-    // If we later detect remote engines more precisely, we can update the helper
-    // without changing call sites.
-    const needsHostNetworking = isProbablyUsingNativeContainers()
+    /*
+     * Decide if we should request host networking for the MCP Optimizer container.
+     *
+     * Context:
+     * - Native engines on the same machine (commonly Linux) share the host's network
+     *   stack. To let the container reach the local ToolHive API, we request host
+     *   networking and set TOOLHIVE_HOST to 127.0.0.1.
+     * - Engines running in a VM or remotely (Docker Desktop on macOS/Windows, cloud
+     *   runners, remote Docker hosts) should not use host networking; those setups
+     *   rely on host.docker.internal or forwarded ports to reach the host.
+     *
+     * Heuristic:
+     * - We treat Linux as a proxy for "native container engine on the same machine".
+     *   This is not perfect, but it matches the most common cases.
+     */
+    const needsHostNetworking = window.electronAPI.isLinux
 
     const body: V1CreateRequest = {
       name: META_MCP_SERVER_NAME,
