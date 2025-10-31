@@ -33,21 +33,25 @@ export function ThvBinaryModeBanner() {
 
   return (
     <div
-      className="border-b border-yellow-200 bg-yellow-50 px-4 py-2
-        dark:border-yellow-800 dark:bg-yellow-950"
+      className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2"
+      role="status"
+      aria-live="polite"
     >
       <div
-        className="flex items-center gap-2 text-sm text-yellow-900
+        className="flex max-w-[95vw] items-start gap-2 rounded-md border
+          border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-900
+          shadow-md sm:max-w-xl dark:border-yellow-800 dark:bg-yellow-950
           dark:text-yellow-100"
       >
-        <AlertTriangle className="h-4 w-4 flex-shrink-0" />
-        <div className="flex-1">
-          <span className="font-semibold">Development Mode:</span> Using{' '}
-          <span className="font-mono text-xs">{binaryMode.mode}</span> thv
-          binary at{' '}
+        <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+        <div className="min-w-0">
+          <span>Using </span>
+          <span className="font-mono text-xs">{binaryMode.mode}</span>
+          <span> thv binary at </span>
           <span
-            className="rounded bg-yellow-100 px-1 py-0.5 font-mono text-xs
-              dark:bg-yellow-900"
+            className="rounded bg-yellow-100 px-1 py-0.5 font-mono text-[10px]
+              leading-4 break-all dark:bg-yellow-900"
+            title={binaryMode.path}
           >
             {binaryMode.path}
           </span>

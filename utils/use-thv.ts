@@ -3,7 +3,21 @@ import { resolve } from 'node:path'
 import { execSync } from 'node:child_process'
 import * as readline from 'node:readline'
 
-const THV_BIN_CONFIG_PATH = resolve(__dirname, '..', '.thv_bin')
+// In dev, the bundler can change __dirname. Prefer project CWD for config,
+// and fall back to resolving relative to this file for compatibility.
+const CANDIDATE_CONFIG_PATHS = [
+  resolve(process.cwd(), '.thv_bin'),
+  resolve(__dirname, '..', '.thv_bin'),
+]
+
+function getConfigPath(): string {
+  // Prefer the first existing candidate
+  for (const p of CANDIDATE_CONFIG_PATHS) {
+    if (existsSync(p)) return p
+  }
+  // Default to writing/reading in CWD
+  return CANDIDATE_CONFIG_PATHS[0]
+}
 
 type ThvBinaryMode = 'default' | 'global' | 'custom'
 
@@ -13,12 +27,13 @@ interface ThvBinaryConfig {
 }
 
 function readConfig(): ThvBinaryConfig {
-  if (!existsSync(THV_BIN_CONFIG_PATH)) {
+  const configPath = getConfigPath()
+  if (!existsSync(configPath)) {
     return { mode: 'default', customPath: '' }
   }
 
   try {
-    const content = readFileSync(THV_BIN_CONFIG_PATH, 'utf-8')
+    const content = readFileSync(configPath, 'utf-8')
     return JSON.parse(content)
   } catch {
     console.warn('⚠️  Failed to parse .thv_bin, using defaults')
@@ -27,7 +42,8 @@ function readConfig(): ThvBinaryConfig {
 }
 
 function writeConfig(config: ThvBinaryConfig): void {
-  writeFileSync(THV_BIN_CONFIG_PATH, JSON.stringify(config, null, 2) + '\n')
+  const configPath = getConfigPath()
+  writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n')
 }
 
 function findGlobalThv(): string | null {
