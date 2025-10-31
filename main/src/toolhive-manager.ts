@@ -63,8 +63,8 @@ function resolveThvBinaryPath(): string {
   )
 }
 
-// Resolve binary path at runtime
-const binPath = resolveThvBinaryPath()
+// Resolve binary path at runtime (mutable so dev config changes take effect)
+let binPath = resolveThvBinaryPath()
 
 let toolhiveProcess: ReturnType<typeof spawn> | undefined
 let toolhivePort: number | undefined
@@ -194,6 +194,10 @@ async function findFreePort(
 
 export async function startToolhive(): Promise<void> {
   Sentry.withScope<Promise<void>>(async (scope) => {
+    // Re-resolve binary path on each start to reflect latest config
+    binPath = resolveThvBinaryPath()
+    // Invalidate cached version since binary may have changed
+    cachedBinaryVersion = undefined
     if (!existsSync(binPath)) {
       log.error(`ToolHive binary not found at: ${binPath}`)
       return
