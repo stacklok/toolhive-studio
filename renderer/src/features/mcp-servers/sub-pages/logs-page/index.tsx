@@ -1,25 +1,64 @@
-import { useParams } from '@tanstack/react-router'
+import { useParams, useSearch } from '@tanstack/react-router'
 import { Button } from '@/common/components/ui/button'
 import { ChevronLeft } from 'lucide-react'
 import { Separator } from '@/common/components/ui/separator'
 import { useState } from 'react'
-import { useSuspenseQuery } from '@tanstack/react-query'
-import { getApiV1BetaWorkloadsByNameLogsOptions } from '@api/@tanstack/react-query.gen'
+import { useQuery } from '@tanstack/react-query'
+import {
+  getApiV1BetaWorkloadsByNameLogsOptions,
+  getApiV1BetaWorkloadsByNameProxyLogsOptions,
+} from '@api/@tanstack/react-query.gen'
 import { RefreshButton } from '@/common/components/refresh-button'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
 import { InputSearch } from '@/common/components/ui/input-search'
 import { highlight } from './search'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
+import { Skeleton } from '@/common/components/ui/skeleton'
+
+function SkeletonLogs() {
+  return (
+    <div
+      className="flex h-full w-full flex-1 flex-col gap-4 p-10"
+      data-testid="skeleton-logs"
+    >
+      {Array.from({ length: 20 }).map((_, i) => {
+        const numSkeletons = Math.floor(Math.random() * 6) + 1
+        return (
+          <div key={i} className="flex w-full gap-2">
+            <Skeleton className="h-4 w-12 shrink-0" />
+            {Array.from({ length: numSkeletons }).map((_, j) => (
+              <Skeleton key={j} className="h-4 flex-1" />
+            ))}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function useLogs() {
+  const { serverName, groupName } = useParams({
+    from: '/logs/$groupName/$serverName',
+  })
+  const { remote } = useSearch({ from: '/logs/$groupName/$serverName' })
+  return useQuery({
+    ...(remote
+      ? getApiV1BetaWorkloadsByNameProxyLogsOptions({
+          path: { name: serverName },
+        })
+      : getApiV1BetaWorkloadsByNameLogsOptions({ path: { name: serverName } })),
+
+    enabled: !!serverName && !!groupName,
+  })
+}
 
 export function LogsPage() {
   const { serverName, groupName } = useParams({
     from: '/logs/$groupName/$serverName',
   })
   const [search, setSearch] = useState('')
-
-  const { data: logs, refetch } = useSuspenseQuery(
-    getApiV1BetaWorkloadsByNameLogsOptions({ path: { name: serverName } })
-  )
+  const { data: logs, refetch, isFetching, isLoading } = useLogs()
+  const isLoadingState = isLoading || isFetching
 
   const logLines =
     typeof logs === 'string'
@@ -72,23 +111,27 @@ export function LogsPage() {
         </div>
       </div>
       <div className="max-h-full flex-1 overflow-auto rounded-md border">
-        <pre
-          className="text-foreground min-h-full p-5 font-mono text-[13px]
-            leading-[22px] font-normal"
-        >
-          {filteredLogs.length ? (
-            filteredLogs.map((line, i) => (
-              <span key={i}>
-                {highlight(line, search)}
-                {'\n'}
-              </span>
-            ))
-          ) : (
-            <div className="text-muted-foreground">
-              {search ? 'No logs match your search' : 'No logs available'}
-            </div>
-          )}
-        </pre>
+        {isLoadingState ? (
+          <SkeletonLogs />
+        ) : (
+          <pre
+            className="text-foreground min-h-full p-5 font-mono text-[13px]
+              leading-[22px] font-normal"
+          >
+            {filteredLogs.length ? (
+              filteredLogs.map((line, i) => (
+                <span key={i}>
+                  {highlight(line, search)}
+                  {'\n'}
+                </span>
+              ))
+            ) : (
+              <div className="text-muted-foreground">
+                {search ? 'No logs match your search' : 'No logs available'}
+              </div>
+            )}
+          </pre>
+        )}
       </div>
     </div>
   )
