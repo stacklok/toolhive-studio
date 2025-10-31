@@ -43,11 +43,11 @@ export function LogsPage() {
       <div className="mb-2">
         <LinkViewTransition {...backLink}>
           <Button
-            variant="ghost"
+            variant="link"
             aria-label="Back"
             className="text-muted-foreground"
           >
-            <ChevronLeft className="size-5" />
+            <ChevronLeft className="size-4" />
             Back
           </Button>
         </LinkViewTransition>
