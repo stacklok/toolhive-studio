@@ -7,7 +7,7 @@ import {
   dialog,
 } from 'electron'
 import path from 'node:path'
-import { existsSync, readFile } from 'node:fs'
+import { existsSync, readFile, watch } from 'node:fs'
 import started from 'electron-squirrel-startup'
 import * as Sentry from '@sentry/electron/main'
 import { initTray, updateTrayStatus, safeTrayDestroy } from './system-tray'
@@ -49,6 +49,7 @@ import {
 } from './toolhive-manager'
 import log from './logger'
 import { getInstanceId, isOfficialReleaseBuild } from './util'
+import { getThvConfigPath } from '../../scripts/use-thv'
 import { delay } from '../../utils/delay'
 import {
   getIsAutoUpdateEnabled,
@@ -243,6 +244,42 @@ app.whenReady().then(async () => {
 
   // Start ToolHive with tray reference
   await startToolhive()
+
+  // In development, watch .thv_bin changes and restart ToolHive when it changes
+  if (!app.isPackaged && process.env.NODE_ENV === 'development') {
+    try {
+      const cfgPath = getThvConfigPath()
+      const cfgDir = path.dirname(cfgPath)
+      const cfgBase = path.basename(cfgPath)
+      let debounce: NodeJS.Timeout | undefined
+
+      const scheduleRestart = (reason: string) => {
+        if (debounce) clearTimeout(debounce)
+        debounce = setTimeout(async () => {
+          log.info(
+            `[thv-config] Detected ${reason} on ${cfgBase}; restarting ToolHive...`
+          )
+          try {
+            await restartToolhive()
+          } catch (e) {
+            log.error(
+              '[thv-config] Failed to restart ToolHive after config change:',
+              e
+            )
+          }
+        }, 300)
+      }
+
+      watch(cfgDir, (eventType, filename) => {
+        if (filename === cfgBase) {
+          scheduleRestart(eventType)
+        }
+      })
+      log.info(`[thv-config] Watching for changes: ${cfgPath}`)
+    } catch (e) {
+      log.warn('[thv-config] Failed to set up watcher for .thv_bin:', e)
+    }
+  }
 
   // Create main window
   try {

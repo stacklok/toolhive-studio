@@ -18,6 +18,13 @@ function getConfigPath(): string {
   // Default to writing/reading in CWD
   return CANDIDATE_CONFIG_PATHS[0]
 }
+/**
+ * Returns the resolved path to the .thv_bin config file location we use.
+ * Exported for main-process watchers.
+ */
+export function getThvConfigPath(): string {
+  return getConfigPath()
+}
 
 type ThvBinaryMode = 'default' | 'custom'
 
@@ -148,4 +155,10 @@ if (require.main === module) {
   })
 }
 
-export { readConfig, writeConfig, type ThvBinaryConfig, type ThvBinaryMode }
+export {
+  readConfig,
+  writeConfig,
+  getThvConfigPath,
+  type ThvBinaryConfig,
+  type ThvBinaryMode,
+}
