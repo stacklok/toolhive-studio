@@ -108,9 +108,9 @@ file changes during development, the app restarts the ToolHive subprocess
 automatically to pick up the new binary.
 
 The UI displays a small banner only in development when a non-default `thv`
-binary is in use. It shows the resolved path and the runtime version reported
-by `thv version`. Packaged (production) builds always use the embedded binary,
-do not watch `.thv_bin`, and do not show the banner.
+binary is in use. It shows the resolved path and the runtime version reported by
+`thv version`. Packaged (production) builds always use the embedded binary, do
+not watch `.thv_bin`, and do not show the banner.
 
 ## Privacy and Telemetry
 
