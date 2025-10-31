@@ -43,7 +43,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   // ToolHive is running
   isToolhiveRunning: () => ipcRenderer.invoke('is-toolhive-running'),
-  // ToolHive binary mode (dev only)
   getThvBinaryMode: () =>
     ipcRenderer.invoke('get-thv-binary-mode') as Promise<{
       mode: string

@@ -7,7 +7,6 @@ import { updateTrayStatus } from './system-tray'
 import log from './logger'
 import * as Sentry from '@sentry/electron/main'
 import { getQuittingState } from './app-state'
-// Dev-only: read plain-path config from project root .thv_bin
 function readConfiguredThvPath(): string | null {
   try {
     const p = path.resolve(process.cwd(), '.thv_bin')
@@ -37,7 +36,6 @@ function resolveThvBinaryPath(): string {
     )
   }
 
-  // In development, check .thv_bin config (plain path)
   const configuredPath = readConfiguredThvPath()
   if (!configuredPath) {
     // Use embedded binary

@@ -17,7 +17,6 @@ export function ThvBinaryModeBanner() {
   const [version, setVersion] = useState<string | null>(null)
 
   useEffect(() => {
-    // Fetch the current thv binary mode and version
     Promise.all([
       window.electronAPI.getThvBinaryMode(),
       window.electronAPI.getToolhiveVersion().catch(() => null),

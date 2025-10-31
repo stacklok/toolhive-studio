@@ -119,9 +119,6 @@ const store = new Store<{
   isTelemetryEnabled: boolean
 }>({ defaults: { isTelemetryEnabled: true } })
 
-// ────────────────────────────────────────────────────────────────────────────
-//  ToolHive restart helper (debounced)
-// ────────────────────────────────────────────────────────────────────────────
 const THV_RESTART_DEBOUNCE_MS = 300
 let thvRestartDebounce: NodeJS.Timeout | undefined
 let thvWatcher: ReturnType<typeof watch> | undefined
@@ -266,7 +263,6 @@ app.whenReady().then(async () => {
   // Start ToolHive with tray reference
   await startToolhive()
 
-  // In development (unpackaged), watch .thv_bin changes and restart ToolHive when it changes
   if (!app.isPackaged) {
     try {
       const cfgPath = path.resolve(process.cwd(), '.thv_bin')
@@ -384,7 +380,6 @@ app.on('will-finish-launching', () => {
   log.info('App will finish launching')
 })
 
-// Close dev watcher on quit
 app.on('will-quit', () => {
   try {
     thvWatcher?.close()
