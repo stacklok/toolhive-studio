@@ -29,7 +29,9 @@ function resolveThvBinaryPath(): string {
 
   // In development, check .thv_bin config
   const config = readConfig()
-  const mode = (config.mode === 'global' ? 'custom' : config.mode) || 'default'
+  const rawMode = (config as { mode?: string }).mode
+  const mode: 'default' | 'custom' =
+    rawMode === 'custom' || rawMode === 'global' ? 'custom' : 'default'
 
   if (mode === 'default') {
     // Use embedded binary
@@ -407,7 +409,9 @@ export function getThvBinaryMode(): {
 
   // In development, read actual config
   const config = readConfig()
-  const mode = (config.mode === 'global' ? 'custom' : config.mode) || 'default'
+  const rawMode = (config as { mode?: string }).mode
+  const mode: 'default' | 'custom' =
+    rawMode === 'custom' || rawMode === 'global' ? 'custom' : 'default'
   return {
     mode,
     path: binPath,

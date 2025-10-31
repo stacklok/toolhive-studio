@@ -16,7 +16,7 @@ function getConfigPath(): string {
     if (existsSync(p)) return p
   }
   // Default to writing/reading in CWD
-  return CANDIDATE_CONFIG_PATHS[0]
+  return CANDIDATE_CONFIG_PATHS[0]!
 }
 /**
  * Returns the resolved path to the .thv_bin config file location we use.

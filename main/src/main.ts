@@ -245,8 +245,8 @@ app.whenReady().then(async () => {
   // Start ToolHive with tray reference
   await startToolhive()
 
-  // In development, watch .thv_bin changes and restart ToolHive when it changes
-  if (!app.isPackaged && process.env.NODE_ENV === 'development') {
+  // In development (unpackaged), watch .thv_bin changes and restart ToolHive when it changes
+  if (!app.isPackaged) {
     try {
       const cfgPath = getThvConfigPath()
       const cfgDir = path.dirname(cfgPath)
