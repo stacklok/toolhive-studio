@@ -88,6 +88,10 @@ describe('Logs Route', () => {
         expect(screen.getByRole('heading', { name: serverName })).toBeVisible()
       })
 
+      await waitFor(() => {
+        expect(screen.queryByTestId('skeleton-logs')).not.toBeInTheDocument()
+      })
+
       expect(
         screen.queryByText(/server .* started successfully/i)
       ).toBeVisible()
@@ -169,6 +173,10 @@ describe('Logs Route', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: serverName })).toBeVisible()
+    })
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('skeleton-logs')).not.toBeInTheDocument()
     })
 
     expect(screen.getByText('No logs available')).toBeVisible()
