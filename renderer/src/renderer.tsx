@@ -80,19 +80,7 @@ const router = createRouter({
   defaultViewTransition: true,
 })
 
-let hasHandledInitialRedirect = false
 router.subscribe('onLoad', (data) => {
-  // Redirect root path to default group only on initial load
-  if (!hasHandledInitialRedirect && data.toLocation.pathname === '/') {
-    hasHandledInitialRedirect = true
-    router.navigate({
-      to: '/group/$groupName',
-      params: { groupName: 'default' },
-      replace: true,
-    })
-    return
-  }
-
   trackPageView(data.toLocation.pathname, {
     'route.from': data.fromLocation?.pathname ?? '/',
     'route.pathname': data.toLocation.pathname,
