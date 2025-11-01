@@ -14,6 +14,7 @@ import { Route as SettingsRouteImport } from "./routes/settings"
 import { Route as SecretsRouteImport } from "./routes/secrets"
 import { Route as PlaygroundRouteImport } from "./routes/playground"
 import { Route as McpOptimizerRouteImport } from "./routes/mcp-optimizer"
+import { Route as IndexRouteImport } from "./routes/index"
 import { Route as GroupGroupNameRouteImport } from "./routes/group.$groupName"
 import { Route as CustomizeToolsServerNameRouteImport } from "./routes/customize-tools.$serverName"
 import { Route as registryRegistryRouteImport } from "./routes/(registry)/registry"
@@ -45,6 +46,11 @@ const McpOptimizerRoute = McpOptimizerRouteImport.update({
   path: "/mcp-optimizer",
   getParentRoute: () => rootRouteImport,
 } as any)
+const IndexRoute = IndexRouteImport.update({
+  id: "/",
+  path: "/",
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GroupGroupNameRoute = GroupGroupNameRouteImport.update({
   id: "/group/$groupName",
   path: "/group/$groupName",
@@ -73,6 +79,7 @@ const registryRegistryNameRoute = registryRegistryNameRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  "/": typeof IndexRoute
   "/mcp-optimizer": typeof McpOptimizerRoute
   "/playground": typeof PlaygroundRoute
   "/secrets": typeof SecretsRoute
@@ -85,6 +92,7 @@ export interface FileRoutesByFullPath {
   "/logs/$groupName/$serverName": typeof LogsGroupNameServerNameRoute
 }
 export interface FileRoutesByTo {
+  "/": typeof IndexRoute
   "/mcp-optimizer": typeof McpOptimizerRoute
   "/playground": typeof PlaygroundRoute
   "/secrets": typeof SecretsRoute
@@ -98,6 +106,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  "/": typeof IndexRoute
   "/mcp-optimizer": typeof McpOptimizerRoute
   "/playground": typeof PlaygroundRoute
   "/secrets": typeof SecretsRoute
@@ -112,6 +121,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | "/"
     | "/mcp-optimizer"
     | "/playground"
     | "/secrets"
@@ -124,6 +134,7 @@ export interface FileRouteTypes {
     | "/logs/$groupName/$serverName"
   fileRoutesByTo: FileRoutesByTo
   to:
+    | "/"
     | "/mcp-optimizer"
     | "/playground"
     | "/secrets"
@@ -136,6 +147,7 @@ export interface FileRouteTypes {
     | "/logs/$groupName/$serverName"
   id:
     | "__root__"
+    | "/"
     | "/mcp-optimizer"
     | "/playground"
     | "/secrets"
@@ -149,6 +161,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   McpOptimizerRoute: typeof McpOptimizerRoute
   PlaygroundRoute: typeof PlaygroundRoute
   SecretsRoute: typeof SecretsRoute
@@ -198,6 +211,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof McpOptimizerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    "/": {
+      id: "/"
+      path: "/"
+      fullPath: "/"
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     "/group/$groupName": {
       id: "/group/$groupName"
       path: "/group/$groupName"
@@ -237,6 +257,7 @@ declare module "@tanstack/react-router" {
 }
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   McpOptimizerRoute: McpOptimizerRoute,
   PlaygroundRoute: PlaygroundRoute,
   SecretsRoute: SecretsRoute,
