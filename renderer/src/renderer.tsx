@@ -1,11 +1,7 @@
 import { client } from '../../api/generated/client.gen'
 import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
-import {
-  RouterProvider,
-  createMemoryHistory,
-  createRouter,
-} from '@tanstack/react-router'
+import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { routeTree } from './route-tree.gen'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { TooltipProvider } from '@radix-ui/react-tooltip'
@@ -78,17 +74,25 @@ declare module '@tanstack/react-router' {
   }
 }
 
-const memoryHistory = createMemoryHistory({
-  initialEntries: ['/group/default'],
-})
-
 const router = createRouter({
   routeTree,
   context: { queryClient },
-  history: memoryHistory,
+  defaultViewTransition: true,
 })
 
+let hasHandledInitialRedirect = false
 router.subscribe('onLoad', (data) => {
+  // Redirect root path to default group only on initial load
+  if (!hasHandledInitialRedirect && data.toLocation.pathname === '/') {
+    hasHandledInitialRedirect = true
+    router.navigate({
+      to: '/group/$groupName',
+      params: { groupName: 'default' },
+      replace: true,
+    })
+    return
+  }
+
   trackPageView(data.toLocation.pathname, {
     'route.from': data.fromLocation?.pathname ?? '/',
     'route.pathname': data.toLocation.pathname,
