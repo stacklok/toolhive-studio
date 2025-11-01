@@ -3,7 +3,7 @@ import { defineConfig } from 'vite'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
 import react from '@vitejs/plugin-react-swc'
 import autoprefixer from 'autoprefixer'
-import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
+import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import tailwindcss from '@tailwindcss/postcss'
 
 export default defineConfig({
@@ -13,7 +13,7 @@ export default defineConfig({
     outDir: path.resolve(__dirname, '../.vite/renderer/main_window'),
   },
   plugins: [
-    TanStackRouterVite({
+    tanstackRouter({
       target: 'react',
       autoCodeSplitting: true,
       routesDirectory: path.resolve(__dirname, './src/routes'),
