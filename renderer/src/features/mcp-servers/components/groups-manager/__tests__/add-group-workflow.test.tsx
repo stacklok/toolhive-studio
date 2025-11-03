@@ -116,7 +116,7 @@ describe('Groups Manager - Add a group workflow', () => {
     const createButton = screen.getByRole('button', { name: /create/i })
     expect(createButton).toBeVisible()
 
-    const testGroupName = 'Test Group'
+    const testGroupName = 'test group'
     await userEvent.type(nameInput, testGroupName)
     expect(nameInput).toHaveValue(testGroupName)
 
@@ -163,7 +163,7 @@ describe('Groups Manager - Add a group workflow', () => {
     })
 
     const nameInput = screen.getByLabelText(/name/i)
-    const testGroupName = 'Production Environment'
+    const testGroupName = 'production environment'
     await userEvent.type(nameInput, testGroupName)
 
     const createButton = screen.getByRole('button', { name: /create/i })
@@ -172,7 +172,7 @@ describe('Groups Manager - Add a group workflow', () => {
     await waitFor(() => {
       expect(mockMutateAsync).toHaveBeenCalledWith({
         body: {
-          name: 'Production Environment',
+          name: 'production environment',
         },
       })
     })
@@ -180,7 +180,7 @@ describe('Groups Manager - Add a group workflow', () => {
     expect(mockMutateAsync).toHaveBeenCalledTimes(1)
   })
 
-  it('allows creating groups with case-sensitive names', async () => {
+  it('allows creating groups with underscore in the name', async () => {
     const mockMutateAsync = vi.fn().mockResolvedValue({})
     const mockReset = vi.fn()
 
@@ -217,7 +217,7 @@ describe('Groups Manager - Add a group workflow', () => {
 
     const nameInput = screen.getByLabelText(/name/i)
 
-    await userEvent.type(nameInput, 'Default')
+    await userEvent.type(nameInput, 'default_group')
 
     const createButton = screen.getByRole('button', { name: /create/i })
     await userEvent.click(createButton)
@@ -225,7 +225,7 @@ describe('Groups Manager - Add a group workflow', () => {
     await waitFor(() => {
       expect(mockMutateAsync).toHaveBeenCalledWith({
         body: {
-          name: 'Default',
+          name: 'default_group',
         },
       })
     })
@@ -233,7 +233,7 @@ describe('Groups Manager - Add a group workflow', () => {
     expect(mockMutateAsync).toHaveBeenCalledTimes(1)
   })
 
-  it('prevents submission when group name is empty', async () => {
+  it('prevents submission when group name is empty, button disabled', async () => {
     renderRoute(router)
 
     await waitFor(() => {
@@ -254,17 +254,67 @@ describe('Groups Manager - Add a group workflow', () => {
     ).toBeVisible()
 
     const nameInput = screen.getByLabelText(/name/i)
-    expect(nameInput).toBeVisible()
     expect(nameInput).toHaveValue('')
 
     const createButton = screen.getByRole('button', { name: /create/i })
-    expect(createButton).toBeVisible()
+    expect(createButton).toBeDisabled()
+  })
 
-    await userEvent.type(nameInput, 'test')
-    await userEvent.clear(nameInput)
+  it('prevents submission when group name contains uppercase letters', async () => {
+    renderRoute(router)
 
     await waitFor(() => {
-      expect(screen.getByText('Name is required')).toBeVisible()
+      expect(screen.getByText('default')).toBeVisible()
     })
+
+    const addGroupButton = screen.getByRole('button', { name: /add a group/i })
+    await userEvent.click(addGroupButton)
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    const nameInput = screen.getByLabelText(/name/i)
+    await userEvent.type(nameInput, 'TestGroup')
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          'Group name can only contain lowercase letters, numbers, underscores, hyphens, and spaces'
+        )
+      ).toBeVisible()
+    })
+
+    const mockMutateAsync = mockUseMutationCreateGroup().mutateAsync
+    expect(mockMutateAsync).not.toHaveBeenCalled()
+  })
+
+  it('prevents submission when group name has leading or trailing whitespace', async () => {
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.getByText('default')).toBeVisible()
+    })
+
+    const addGroupButton = screen.getByRole('button', { name: /add a group/i })
+    await userEvent.click(addGroupButton)
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    const nameInput = screen.getByLabelText(/name/i)
+    await userEvent.type(nameInput, ' test group ')
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          'Group name cannot have leading or trailing whitespace'
+        )
+      ).toBeVisible()
+    })
+
+    const mockMutateAsync = mockUseMutationCreateGroup().mutateAsync
+    expect(mockMutateAsync).not.toHaveBeenCalled()
   })
 })
