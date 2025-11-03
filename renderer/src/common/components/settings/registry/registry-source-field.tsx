@@ -10,6 +10,7 @@ import {
 } from '../../ui/form'
 import { Input } from '../../ui/input'
 import type { RegistryFormData } from './schema'
+import { FilePickerInput } from '../../ui/file-picker-input'
 
 export function RegistrySourceField({
   isPending,
@@ -61,15 +62,21 @@ export function RegistrySourceField({
               )}
             </FormDescription>
             <FormControl>
-              <Input
-                placeholder={
-                  isRemote
-                    ? 'https://domain.com/registry.json'
-                    : '/path/to/registry.json'
-                }
-                {...field}
-                disabled={isPending}
-              />
+              {isRemote ? (
+                <Input
+                  placeholder={'https://domain.com/registry.json'}
+                  {...field}
+                  disabled={isPending}
+                />
+              ) : (
+                <FilePickerInput
+                  placeholder={'/path/to/registry.json'}
+                  name={field.name}
+                  value={field.value ?? ''}
+                  onChange={({ newValue }) => field.onChange(newValue)}
+                  disabled={isPending}
+                />
+              )}
             </FormControl>
             <FormMessage />
           </FormItem>
