@@ -1,7 +1,11 @@
 import { client } from '../../api/generated/client.gen'
 import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
-import { RouterProvider, createRouter } from '@tanstack/react-router'
+import {
+  RouterProvider,
+  createRouter,
+  createHashHistory,
+} from '@tanstack/react-router'
 import { routeTree } from './route-tree.gen'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { TooltipProvider } from '@radix-ui/react-tooltip'
@@ -67,28 +71,6 @@ Sentry.init({
   },
 })
 
-// @tanstack/react-router setup
-declare module '@tanstack/react-router' {
-  interface Register {
-    router: typeof router
-  }
-}
-
-const router = createRouter({
-  routeTree,
-  context: { queryClient },
-  defaultViewTransition: true,
-})
-
-router.subscribe('onLoad', (data) => {
-  trackPageView(data.toLocation.pathname, {
-    'route.from': data.fromLocation?.pathname ?? '/',
-    'route.pathname': data.toLocation.pathname,
-    'route.search': JSON.stringify(data.toLocation.search),
-    'route.hash': data.toLocation.hash,
-  })
-})
-
 if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
   log.error('ToolHive port API not available in renderer')
 }
@@ -107,6 +89,23 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
     log.error('Failed to get ToolHive port from main process: ', e)
     throw e
   }
+
+  const hashHistory = createHashHistory()
+  const router = createRouter({
+    routeTree,
+    context: { queryClient },
+    defaultViewTransition: true,
+    history: hashHistory,
+  })
+
+  router.subscribe('onLoad', (data) => {
+    trackPageView(data.toLocation.pathname, {
+      'route.from': data.fromLocation?.pathname ?? '/',
+      'route.pathname': data.toLocation.pathname,
+      'route.search': JSON.stringify(data.toLocation.search),
+      'route.hash': data.toLocation.hash,
+    })
+  })
 
   // Listen for server shutdown event
   const cleanup = window.electronAPI.onServerShutdown(() => {
