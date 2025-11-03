@@ -131,7 +131,6 @@ export function CustomizeToolsTable({
 
   useBlocker({
     shouldBlockFn: async () => {
-      console.log('shouldBlockFn', hasAnyChanges)
       if (!hasAnyChanges) return false
       const hasConfirmedLeave = await confirm(
         'Are you sure you want to leave?',
