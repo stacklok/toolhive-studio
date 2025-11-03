@@ -61,7 +61,7 @@ describe('Registry Group Detail Route', () => {
     const rows = screen.getAllByRole('row')
     expect(rows.length).toBeGreaterThan(1)
     const atlassianRow = rows.find((row) =>
-      within(row).queryByText(/atlassian/i)
+      within(row).queryByText(/^atlassian$/i)
     )
     expect(atlassianRow).toBeTruthy()
     expect(within(atlassianRow!).getByText(/atlassian/i)).toBeVisible()
