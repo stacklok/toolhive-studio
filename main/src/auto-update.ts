@@ -559,7 +559,15 @@ export function initAutoUpdate({
         autoUpdater.removeAllListeners()
         ipcMain.removeHandler('install-update-and-restart')
 
-        updateElectronApp({ logger: log, notifyUser: false })
+        updateElectronApp({
+          logger: log,
+          notifyUser: false,
+          updateInterval: isManualUpdate ? '10 minutes' : '5 minutes',
+        })
+
+        if (isManualUpdate) {
+          autoUpdater.checkForUpdates()
+        }
 
         autoUpdater.on('update-downloaded', async (_, __, releaseName) => {
           handleUpdateDownloaded({
