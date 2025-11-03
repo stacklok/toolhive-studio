@@ -190,6 +190,16 @@ export function useCustomizeToolsTable({
     })
   }
 
+  const resetEditState = () => {
+    setEditState({
+      isOpen: false,
+      tool: null,
+      name: '',
+      description: '',
+      hasOverrideDescription: false,
+    })
+  }
+
   const handleSaveToolOverride = () => {
     const { tool } = editState
     if (!tool) return
@@ -251,26 +261,14 @@ export function useCustomizeToolsTable({
       })
     }
 
-    setEditState({
-      isOpen: false,
-      tool: null,
-      name: '',
-      description: '',
-      hasOverrideDescription: false,
-    })
+    resetEditState()
   }
 
   const handleCloseEditModal = () => {
     trackEvent('Customize Tools: close edit tool modal', {
       tool_name: editState.tool?.name || '',
     })
-    setEditState({
-      isOpen: false,
-      tool: null,
-      name: '',
-      description: '',
-      hasOverrideDescription: false,
-    })
+    resetEditState()
   }
 
   const handleNameChange = (name: string) => {

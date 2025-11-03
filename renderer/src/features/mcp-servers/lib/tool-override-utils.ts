@@ -216,30 +216,29 @@ function mergeField(
     return newValue
   }
 
-  // Field wasn't changed - preserve previous local value if it exists and differs from saved
-  // This should happen even if there are no other changes (prevLocalOverride needs to be preserved)
-  if (prevLocalValue !== undefined) {
-    const shouldPreserve = shouldPreserveField(prevLocalValue, existingValue)
-    if (shouldPreserve) {
-      return prevLocalValue
-    }
-    // If prevLocalValue is same as existingValue and there are other changes,
-    // we still need to preserve it because we're updating the override
-    // This happens when toolsOverride was initialized from overrideTools
-    if (hasAnyChanges && existingValue !== undefined) {
-      return existingValue
-    }
-    // If prevLocalValue is same as existingValue and no other changes, return undefined
-    // to avoid creating redundant override
-    return undefined
+  // Field wasn't changed - handle preservation logic
+  // No previous local value - preserve existing saved override only if there are other changes
+  if (prevLocalValue === undefined) {
+    return hasAnyChanges && existingValue !== undefined
+      ? existingValue
+      : undefined
   }
 
-  // If no previous local value but there's an existing saved override, preserve it
-  // only if there are other changes (to avoid preserving saved overrides when nothing changed)
+  // There's a previous local value - check if it should be preserved
+  const shouldPreserve = shouldPreserveField(prevLocalValue, existingValue)
+  if (shouldPreserve) {
+    return prevLocalValue
+  }
+
+  // prevLocalValue is same as existingValue
+  // If there are other changes, preserve existingValue (updating the override)
+  // This happens when toolsOverride was initialized from overrideTools
   if (hasAnyChanges && existingValue !== undefined) {
     return existingValue
   }
 
+  // No other changes and prevLocalValue matches existingValue - return undefined
+  // to avoid creating redundant override
   return undefined
 }
 
