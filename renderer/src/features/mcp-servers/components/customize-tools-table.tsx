@@ -128,7 +128,7 @@ export function CustomizeToolsTable({
     onApply,
   })
   const confirm = useConfirm()
-  console.log('disableBlocker', disableBlocker)
+
   useBlocker({
     shouldBlockFn: async () => {
       console.log('shouldBlockFn', hasAnyChanges)
