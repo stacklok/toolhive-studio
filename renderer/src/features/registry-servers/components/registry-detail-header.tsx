@@ -17,7 +17,7 @@ export function RegistryDetailHeader({
   description,
 }: RegistryDetailHeaderProps) {
   return (
-    <div className="flex max-h-full w-full flex-1 flex-col">
+    <div className="w-full">
       <div className="my-2">
         <LinkViewTransition to={backTo}>
           <Button
