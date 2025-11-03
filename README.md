@@ -94,8 +94,6 @@ Kubernetes Operator. Learn more in the
 
 ---
 
-
-
 ## Privacy and Telemetry
 
 ToolHive uses [Sentry](https://sentry.io/) for error tracking and performance
