@@ -6,6 +6,10 @@ import {
   MessageCircleMore,
   ChevronDown,
   Trash2,
+  Download,
+  FileText,
+  FileJson,
+  File,
 } from 'lucide-react'
 import { ChatMessage } from './chat-message'
 import { DialogApiKeys } from './dialog-api-keys'
@@ -15,6 +19,14 @@ import { ChatInputPrompt } from './chat-input-prompt'
 import { Separator } from '@/common/components/ui/separator'
 import { useConfirm } from '@/common/hooks/use-confirm'
 import { TitlePage } from '@/common/components/title-page'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/common/components/ui/dropdown-menu'
+import { exportChat, type ExportFormat } from '../lib/export-utils'
+import { toast } from 'sonner'
 
 export function ChatInterface() {
   const {
@@ -98,18 +110,73 @@ export function ChatInterface() {
     clearMessages()
   }, [clearMessages, confirm])
 
+  const handleExport = useCallback(
+    (format: ExportFormat) => {
+      try {
+        exportChat(messages, format)
+        const formatLabels = {
+          markdown: 'Markdown',
+          json: 'JSON',
+          text: 'Text',
+        }
+        toast(`Chat exported successfully as ${formatLabels[format]}`)
+      } catch (error) {
+        toast.error('Failed to export chat')
+        console.error('Export failed:', error)
+      }
+    },
+    [messages]
+  )
+
   return (
     <>
       <TitlePage title="Playground">
         {hasMessages && (
-          <Button
-            onClick={onClearMessages}
-            variant="outline"
-            className="cursor-pointer"
-          >
-            Clear Chat
-            <Trash2 />
-          </Button>
+          <div className="flex gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="cursor-pointer"
+                  aria-label="Export chat in different formats"
+                >
+                  Export Chat
+                  <Download />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => handleExport('markdown')}
+                  className="cursor-pointer"
+                >
+                  <FileText />
+                  Export as Markdown
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleExport('json')}
+                  className="cursor-pointer"
+                >
+                  <FileJson />
+                  Export as JSON
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleExport('text')}
+                  className="cursor-pointer"
+                >
+                  <File />
+                  Export as Text
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button
+              onClick={onClearMessages}
+              variant="outline"
+              className="cursor-pointer"
+            >
+              Clear Chat
+              <Trash2 />
+            </Button>
+          </div>
         )}
       </TitlePage>
       <div className="h-[calc(100vh-10rem)]">
