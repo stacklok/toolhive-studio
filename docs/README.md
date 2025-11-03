@@ -59,17 +59,37 @@ During development, you can test the UI with a custom `thv` binary:
 1. Start your custom `thv` binary manually:
 
    ```bash
+   # HTTP API only
    thv serve --openapi --host=127.0.0.1 --port=50000
+
+   # If you also want MCP
+   thv serve \
+     --openapi \
+     --host=127.0.0.1 --port=50000 \
+     --experimental-mcp \
+     --experimental-mcp-host=127.0.0.1 \
+     --experimental-mcp-port=50001
    ```
 
-2. Set the `THV_PORT` environment variable and start the dev server:
+2. Set the `THV_PORT` environment variable and start the dev server. Optionally
+   set `THV_MCP_PORT` if running MCP on the external `thv`:
+
    ```bash
+   # HTTP API only
    THV_PORT=50000 pnpm start
+
+   # HTTP API + MCP
+   THV_PORT=50000 THV_MCP_PORT=50001 pnpm start
    ```
 
-The UI will display a warning banner showing the HTTP address when using a
-custom port. This only works in development; packaged builds always use the
+The UI shows a banner with the HTTP address when using a custom port. MCP is
+enabled only if `THV_MCP_PORT` is provided. Packaged builds always use the
 embedded binary.
+
+> Note on MCP Optimizer When using an external `thv` with the MCP Optimizer,
+> make sure `THV_PORT` is within `50000-50100`. The application starts its
+> embedded server within this range, and the optimizer expects the ToolHive API
+> to be available there.
 
 ### Building and packaging
 

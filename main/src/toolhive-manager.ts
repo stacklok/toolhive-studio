@@ -119,7 +119,9 @@ export async function startToolhive(): Promise<void> {
         return
       }
       toolhivePort = customPort
-      toolhiveMcpPort = undefined
+      toolhiveMcpPort = process.env.THV_MCP_PORT
+        ? parseInt(process.env.THV_MCP_PORT!, 10)
+        : undefined
       log.info(`Using external ToolHive on port ${toolhivePort}`)
       return
     }
@@ -129,8 +131,8 @@ export async function startToolhive(): Promise<void> {
       return
     }
 
-    toolhivePort = await findFreePort(50000, 50100)
     toolhiveMcpPort = await findFreePort()
+    toolhivePort = await findFreePort(50000, 50100)
     log.info(
       `Starting ToolHive from: ${binPath} on port ${toolhivePort}, MCP on port ${toolhiveMcpPort}`
     )
