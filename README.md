@@ -102,10 +102,6 @@ manually:
 1. Start your custom `thv` binary with the serve command:
 
    ```bash
-   # HTTP API only
-   thv serve --openapi --host=127.0.0.1 --port=50000
-
-   # If you also want ToolHive MCP
    thv serve \
      --openapi \
      --host=127.0.0.1 --port=50000 \
@@ -114,20 +110,15 @@ manually:
      --experimental-mcp-port=50001
    ```
 
-2. Set the `THV_PORT` environment variable and start the dev server. Optionally
-   set `THV_MCP_PORT` if running MCP on the external `thv`:
+2. Set the `THV_PORT` and `THV_MCP_PORT` environment variables and start the 
+dev server.
 
    ```bash
-   # HTTP API only
-   THV_PORT=50000 pnpm start
-
-   # HTTP API + MCP
    THV_PORT=50000 THV_MCP_PORT=50001 pnpm start
    ```
 
-The UI displays a banner with the HTTP address when using a custom port. MCP is
-picked up only if `THV_MCP_PORT` is provided. This works in development mode
-only; packaged builds use the embedded binary.
+The UI displays a banner with the HTTP address when using a custom port. This 
+works in development mode only; packaged builds use the embedded binary.
 
 > Note on MCP Optimizer If you plan to use the MCP Optimizer with an external
 > `thv`, ensure `THV_PORT` is within the range `50000-50100`. The app starts its
