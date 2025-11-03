@@ -4,6 +4,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type { CoreWorkload } from '../../api/generated/types.gen'
 import type { AvailableServer, ChatUIMessage } from '../../main/src/chat/types'
+import { TOOLHIVE_VERSION } from '../../utils/constants'
 import type { UIMessage } from 'ai'
 import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 import type { FeatureFlagOptions } from '../../main/src/feature-flags'
@@ -31,24 +32,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ToolHive port
   getToolhivePort: () => ipcRenderer.invoke('get-toolhive-port'),
   getToolhiveMcpPort: () => ipcRenderer.invoke('get-toolhive-mcp-port'),
-  getToolhiveVersion: async () => {
-    try {
-      const ver = (await ipcRenderer.invoke('get-thv-binary-version')) as
-        | string
-        | null
-      return ver ?? 'Unknown version'
-    } catch {
-      return 'Unknown version'
-    }
-  },
+  getToolhiveVersion: () => TOOLHIVE_VERSION,
   // ToolHive is running
   isToolhiveRunning: () => ipcRenderer.invoke('is-toolhive-running'),
-  getThvBinaryMode: () =>
-    ipcRenderer.invoke('get-thv-binary-mode') as Promise<{
-      mode: string
-      path: string
-      isDefault: boolean
-    }>,
+  isUsingCustomPort: () => ipcRenderer.invoke('is-using-custom-port'),
 
   // Container engine check
   checkContainerEngine: () => ipcRenderer.invoke('check-container-engine'),
@@ -247,14 +234,9 @@ export interface ElectronAPI {
   quitApp: () => Promise<void>
   getToolhivePort: () => Promise<number | undefined>
   getToolhiveMcpPort: () => Promise<number | undefined>
-  getToolhiveVersion: () => Promise<string>
+  getToolhiveVersion: () => string
   isToolhiveRunning: () => Promise<boolean>
-  getThvBinaryMode: () => Promise<{
-    mode: string
-    path: string
-    isDefault: boolean
-  }>
-  getThvBinaryVersion: () => Promise<string | null>
+  isUsingCustomPort: () => Promise<boolean>
   checkContainerEngine: () => Promise<{
     docker: boolean
     podman: boolean

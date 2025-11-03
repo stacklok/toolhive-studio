@@ -94,23 +94,25 @@ Kubernetes Operator. Learn more in the
 
 ---
 
-## Developer notes: THV binary selection (dev only)
+## Developer notes: Using a custom thv binary (dev only)
 
-In development, you can switch which `thv` binary the UI runs:
+During development, you can test the UI with a custom `thv` binary by running it
+manually:
 
-- `pnpm useThv:default` – use the embedded binary in `bin/<os-arch>/thv`
-- `pnpm useThv:custom [path]` – use a custom path. Without `[path]`, the script
-  auto-detects `thv` from your `PATH`.
-- `pnpm useThv:show` – print the current mode and path.
+1. Start your custom `thv` binary with the serve command:
 
-These commands write a `.thv_bin` config file in the project root. When that
-file changes during development, the app restarts the ToolHive subprocess
-automatically to pick up the new binary.
+   ```bash
+   thv serve --openapi --host=127.0.0.1 --port=50000
+   ```
 
-The UI displays a small banner only in development when a non-default `thv`
-binary is in use. It shows the resolved path and the runtime version reported by
-`thv version`. Packaged (production) builds always use the embedded binary, do
-not watch `.thv_bin`, and do not show the banner.
+2. Set the `THV_PORT` environment variable and start the dev server:
+   ```bash
+   THV_PORT=50000 pnpm start
+   ```
+
+The UI will display a warning banner showing the HTTP address it's connecting to
+when using a custom port. This only works in development mode; packaged builds
+always use the embedded binary.
 
 ## Privacy and Telemetry
 

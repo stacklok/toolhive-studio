@@ -7,7 +7,7 @@ import {
   dialog,
 } from 'electron'
 import path from 'node:path'
-import { existsSync, readFile, watch } from 'node:fs'
+import { existsSync, readFile } from 'node:fs'
 import started from 'electron-squirrel-startup'
 import * as Sentry from '@sentry/electron/main'
 import { initTray, updateTrayStatus, safeTrayDestroy } from './system-tray'
@@ -44,8 +44,7 @@ import {
   isToolhiveRunning,
   binPath,
   getToolhiveMcpPort,
-  getThvBinaryMode,
-  getThvBinaryVersion,
+  isUsingCustomPort,
 } from './toolhive-manager'
 import log from './logger'
 import { getInstanceId, isOfficialReleaseBuild } from './util'
@@ -118,25 +117,6 @@ import type { UIMessage } from 'ai'
 const store = new Store<{
   isTelemetryEnabled: boolean
 }>({ defaults: { isTelemetryEnabled: true } })
-
-const THV_RESTART_DEBOUNCE_MS = 300
-let thvRestartDebounce: NodeJS.Timeout | undefined
-let thvWatcher: ReturnType<typeof watch> | undefined
-function scheduleToolhiveRestart(reason: string, source?: string): void {
-  if (thvRestartDebounce) clearTimeout(thvRestartDebounce)
-  thvRestartDebounce = setTimeout(async () => {
-    const src = source ? ` on ${source}` : ''
-    log.info(`[thv-config] Detected ${reason}${src}; restarting ToolHive...`)
-    try {
-      await restartToolhive()
-    } catch (e) {
-      log.error(
-        '[thv-config] Failed to restart ToolHive after config change:',
-        e
-      )
-    }
-  }, THV_RESTART_DEBOUNCE_MS)
-}
 
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
@@ -263,24 +243,6 @@ app.whenReady().then(async () => {
   // Start ToolHive with tray reference
   await startToolhive()
 
-  if (!app.isPackaged) {
-    try {
-      const cfgPath = path.resolve(process.cwd(), '.thv_bin')
-      const cfgDir = path.dirname(cfgPath)
-      const cfgBase = path.basename(cfgPath)
-      if (existsSync(cfgDir)) {
-        thvWatcher = watch(cfgDir, (eventType, filename) => {
-          if (filename === cfgBase) {
-            scheduleToolhiveRestart(eventType, cfgBase)
-          }
-        })
-      }
-      log.info(`[thv-config] Watching for changes: ${cfgPath}`)
-    } catch (e) {
-      log.warn('[thv-config] Failed to set up watcher for .thv_bin:', e)
-    }
-  }
-
   // Create main window
   try {
     const mainWindow = await createMainWindow()
@@ -378,15 +340,6 @@ app.on('activate', async () => {
 
 app.on('will-finish-launching', () => {
   log.info('App will finish launching')
-})
-
-app.on('will-quit', () => {
-  try {
-    thvWatcher?.close()
-    thvWatcher = undefined
-  } catch (e) {
-    log.warn('[thv-config] Failed to close watcher:', e)
-  }
 })
 
 app.on('before-quit', async (e) => {
@@ -499,8 +452,7 @@ ipcMain.handle('quit-app', (e) => {
 ipcMain.handle('get-toolhive-port', () => getToolhivePort())
 ipcMain.handle('get-toolhive-mcp-port', () => getToolhiveMcpPort())
 ipcMain.handle('is-toolhive-running', () => isToolhiveRunning())
-ipcMain.handle('get-thv-binary-mode', () => getThvBinaryMode())
-ipcMain.handle('get-thv-binary-version', () => getThvBinaryVersion())
+ipcMain.handle('is-using-custom-port', () => isUsingCustomPort())
 
 // Window control handlers for custom title bar
 ipcMain.handle('window-minimize', () => {

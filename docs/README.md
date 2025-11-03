@@ -54,22 +54,22 @@ Here are the most common scripts you will use during development:
 
 ### Use a custom thv binary (dev only)
 
-During local development, you can switch which `thv` binary the app runs:
+During development, you can test the UI with a custom `thv` binary:
 
-- `pnpm use-thv:default` — use the embedded binary in `bin/<os-arch>/thv`.
-- `pnpm use-thv:custom [path]` — use a custom binary. If `[path]` is omitted,
-  the script auto-detects `thv` from your `PATH`.
-- `pnpm use-thv:show` — show the current selection.
+1. Start your custom `thv` binary manually:
 
-Implementation details:
+   ```bash
+   thv serve --openapi --host=127.0.0.1 --port=50000
+   ```
 
-- The selection is stored in a git-ignored file `.thv_bin` at the repo root as a
-  plain path (empty file means default/embedded).
-- In dev, the app watches `.thv_bin` and automatically restarts the ToolHive
-  process when it changes.
-- A small warning banner appears in dev when using a non-default binary and
-  shows the detected version and path. Packaged builds always use the embedded
-  binary and never show this banner.
+2. Set the `THV_PORT` environment variable and start the dev server:
+   ```bash
+   THV_PORT=50000 pnpm start
+   ```
+
+The UI will display a warning banner showing the HTTP address when using a
+custom port. This only works in development; packaged builds always use the
+embedded binary.
 
 ### Building and packaging
 
