@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useParams } from '@tanstack/react-router'
 import { Button } from '@/common/components/ui/button'
 import { Badge } from '@/common/components/ui/badge'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
@@ -9,7 +9,7 @@ export const Route = createFileRoute('/(registry)/registry-group_/$name')({
 })
 
 export function RegistryGroupDetail() {
-  const { name } = Route.useParams()
+  const { name } = useParams({ from: '/(registry)/registry-group_/$name' })
   return (
     <div className="flex max-h-full w-full flex-1 flex-col">
       <div className="my-2">
