@@ -31,6 +31,15 @@ describe('Registry Group Detail Route', () => {
     })
   })
 
+  it('displays group description under the heading', async () => {
+    const router = createTestRouter(WrapperComponent)
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.getByText('Essential tools for development')).toBeVisible()
+    })
+  })
+
   it('has a back button that navigates to registry', async () => {
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)

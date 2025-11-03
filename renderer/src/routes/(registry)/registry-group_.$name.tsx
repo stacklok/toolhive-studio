@@ -1,15 +1,26 @@
 import { createFileRoute, useParams } from '@tanstack/react-router'
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { getApiV1BetaRegistryByNameOptions } from '@api/@tanstack/react-query.gen'
 import { Button } from '@/common/components/ui/button'
 import { Badge } from '@/common/components/ui/badge'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
 import { ChevronLeft } from 'lucide-react'
 
 export const Route = createFileRoute('/(registry)/registry-group_/$name')({
+  loader: async ({ context: { queryClient } }) => {
+    return queryClient.ensureQueryData(
+      getApiV1BetaRegistryByNameOptions({ path: { name: 'default' } })
+    )
+  },
   component: RegistryGroupDetail,
 })
 
 export function RegistryGroupDetail() {
   const { name } = useParams({ from: '/(registry)/registry-group_/$name' })
+  const { data: registryData } = useSuspenseQuery(
+    getApiV1BetaRegistryByNameOptions({ path: { name: 'default' } })
+  )
+  const group = registryData?.registry?.groups?.find((g) => g.name === name)
   return (
     <div className="flex max-h-full w-full flex-1 flex-col">
       <div className="my-2">
@@ -34,6 +45,11 @@ export function RegistryGroupDetail() {
             Group
           </Badge>
         </div>
+        {group?.description && (
+          <div className="text-muted-foreground flex-[2] select-none">
+            {group.description}
+          </div>
+        )}
       </div>
     </div>
   )
