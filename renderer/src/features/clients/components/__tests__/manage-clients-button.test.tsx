@@ -417,6 +417,7 @@ describe('ManageClientsButton – BDD flows', () => {
     await user.click(
       await screen.findByRole('button', { name: /manage clients/i })
     )
+    await screen.findByRole('heading', { name: /manage clients/i })
     await user.click(await screen.findByRole('switch', { name: 'vscode' }))
     await user.click(await screen.findByRole('switch', { name: 'claude-code' }))
     await user.click(await screen.findByRole('button', { name: /save/i }))
