@@ -110,9 +110,8 @@ async function findFreePort(
 
 export async function startToolhive(): Promise<void> {
   Sentry.withScope<Promise<void>>(async (scope) => {
-    // Check if using custom port (externally managed thv)
-    if (!app.isPackaged && process.env.THV_PORT) {
-      const customPort = parseInt(process.env.THV_PORT, 10)
+    if (isUsingCustomPort()) {
+      const customPort = parseInt(process.env.THV_PORT!, 10)
       if (isNaN(customPort)) {
         log.error(
           `Invalid THV_PORT environment variable: ${process.env.THV_PORT}`
@@ -120,7 +119,6 @@ export async function startToolhive(): Promise<void> {
         return
       }
       toolhivePort = customPort
-      // When using custom port, MCP port is managed externally
       toolhiveMcpPort = undefined
       log.info(`Using external ToolHive on port ${toolhivePort}`)
       return

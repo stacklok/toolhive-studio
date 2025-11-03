@@ -34,16 +34,16 @@ export function CustomPortBanner() {
   return (
     <Alert
       variant="warning"
-      className="fixed bottom-4 left-1/2 z-50 max-w-[95vw] -translate-x-1/2
-        sm:max-w-xl"
+      className="fixed bottom-4 left-1/2 z-50 w-auto max-w-[95vw]
+        -translate-x-1/2"
     >
       <AlertTriangle />
       <AlertDescription className="flex items-start gap-2">
-        <div className="min-w-0">
+        <div className="whitespace-nowrap">
           <span>Using external ToolHive at </span>
           <span
             className="rounded bg-yellow-100 px-1 py-0.5 font-mono text-xs
-              break-all dark:bg-yellow-900"
+              dark:bg-yellow-900"
             title={httpAddress}
           >
             {httpAddress}
