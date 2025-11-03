@@ -1,8 +1,7 @@
-import { LinkViewTransition } from '@/common/components/link-view-transition'
 import { Button } from '@/common/components/ui/button'
 import { Separator } from '@/common/components/ui/separator'
 import { createFileRoute, Link, useParams } from '@tanstack/react-router'
-import { ChevronLeft, GithubIcon, ShieldCheck, Wrench } from 'lucide-react'
+import { GithubIcon, ShieldCheck, Wrench } from 'lucide-react'
 import { getApiV1BetaRegistryByNameServersByServerNameOptions } from '@api/@tanstack/react-query.gen'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { Stars } from '@/features/registry-servers/components/stars'
@@ -20,6 +19,7 @@ import {
 import { FormRunFromRegistry } from '@/features/registry-servers/components/form-run-from-registry'
 import { trackEvent } from '@/common/lib/analytics'
 import { DialogFormRemoteRegistryMcp } from '@/features/registry-servers/components/dialog-form-remote-registry-mcp'
+import { RegistryDetailHeader } from '@/features/registry-servers/components/registry-detail-header'
 
 const statusMap = {
   deprecated: 'Deprecated',
@@ -80,47 +80,37 @@ export function RegistryServerDetail() {
 
   return (
     <div className="flex max-h-full w-full flex-1 flex-col">
-      <div className="my-2">
-        <LinkViewTransition to="/registry">
-          <Button
-            variant="link"
-            aria-label="Back"
-            className="text-muted-foreground"
-          >
-            <ChevronLeft className="size-4" />
-            Back
-          </Button>
-        </LinkViewTransition>
-      </div>
-
-      <div className="flex flex-col gap-3">
-        <h1 className="m-0 mb-0 p-0 text-3xl font-bold">{name}</h1>
-        <div className="flex items-center gap-3">
-          <Badge variant="default">{server.tier}</Badge>
-          {server.status === statusMap.deprecated && (
-            <Badge variant="outline">{server.status}</Badge>
-          )}
-          <Badge variant="secondary">{server.transport}</Badge>
-          <Stars stars={server.metadata?.stars} className="size-4" />
-          {'provenance' in server && server.provenance && (
-            <Tooltip>
-              <TooltipTrigger
-                className="text-muted-foreground flex items-center gap-2"
-              >
-                <ShieldCheck className="size-4" />
-                <span className="text-sm">Provenance signed by Sigstore</span>
-              </TooltipTrigger>
-              <TooltipContent className="w-96">
-                <p>
-                  The {name} MCP server has been cryptographically signed and
-                  its build provenance verified through Sigstore, confirming its
-                  authenticity and integrity
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-        </div>
-      </div>
+      <RegistryDetailHeader
+        title={name}
+        badges={
+          <>
+            <Badge variant="default">{server.tier}</Badge>
+            {server.status === statusMap.deprecated && (
+              <Badge variant="outline">{server.status}</Badge>
+            )}
+            <Badge variant="secondary">{server.transport}</Badge>
+            <Stars stars={server.metadata?.stars} className="size-4" />
+            {'provenance' in server && server.provenance && (
+              <Tooltip>
+                <TooltipTrigger
+                  className="text-muted-foreground flex items-center gap-2"
+                >
+                  <ShieldCheck className="size-4" />
+                  <span className="text-sm">Provenance signed by Sigstore</span>
+                </TooltipTrigger>
+                <TooltipContent className="w-96">
+                  <p>
+                    The {name} MCP server has been cryptographically signed and
+                    its build provenance verified through Sigstore, confirming
+                    its authenticity and integrity
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </>
+        }
+        description={server.description}
+      />
       <div className="my-8 flex w-3/5 flex-col gap-8">
         <div className="text-muted-foreground flex-[2] select-none">
           {server.description}
