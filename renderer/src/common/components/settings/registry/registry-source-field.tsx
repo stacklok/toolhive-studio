@@ -70,6 +70,7 @@ export function RegistrySourceField({
                 />
               ) : (
                 <FilePickerInput
+                  mode="file"
                   placeholder={'/path/to/registry.json'}
                   name={field.name}
                   value={field.value ?? ''}

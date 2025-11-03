@@ -148,7 +148,6 @@ describe('RegistryTab', () => {
       })
     )
 
-    // reset to default registry
     await userEvent.click(screen.getByRole('combobox'))
     const defaultOptions = screen.getByRole('option', {
       name: 'Default Registry',
@@ -166,5 +165,44 @@ describe('RegistryTab', () => {
         },
       })
     )
+  })
+
+  it('opens native file picker for local registry and fills the path', async () => {
+    const originalElectronAPI = window.electronAPI
+    const mockElectronAPI: typeof window.electronAPI = {
+      ...originalElectronAPI,
+      selectFile: vi.fn().mockResolvedValue('/home/user/registry.json'),
+      selectFolder: vi.fn().mockResolvedValue(null),
+    }
+    window.electronAPI = mockElectronAPI
+
+    renderWithProviders(<RegistryTab />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Save' })).toBeVisible()
+    })
+
+    await userEvent.click(screen.getByRole('combobox'))
+    await userEvent.click(
+      screen.getByRole('option', {
+        name: 'Local Registry (File Path)',
+      })
+    )
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Registry File Path/i)).toBeVisible()
+    })
+
+    await userEvent.click(screen.getByLabelText('Select path'))
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('textbox', { name: /Registry File Path/i })
+      ).toHaveValue('/home/user/registry.json')
+    })
+
+    expect(mockElectronAPI.selectFile).toHaveBeenCalled()
+    expect(mockElectronAPI.selectFolder).not.toHaveBeenCalled()
+    window.electronAPI = originalElectronAPI
   })
 })
