@@ -21,6 +21,13 @@ export function AddGroupButton({
     const validationSchema = z
       .string()
       .min(1, 'Name is required')
+      .regex(
+        /^[a-z0-9_\-\s]+$/,
+        'Group name can only contain lowercase letters, numbers, underscores, hyphens, and spaces'
+      )
+      .refine((name) => name === name.trim(), {
+        message: 'Group name cannot have leading or trailing whitespace',
+      })
       .refine((name) => !existingGroupNames.includes(name), {
         message: 'A group with this name already exists',
       })
