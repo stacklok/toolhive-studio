@@ -22,6 +22,15 @@ function WrapperComponent() {
 }
 
 describe('Registry Group Detail Route', () => {
+  it('displays group name as a page heading', async () => {
+    const router = createTestRouter(WrapperComponent)
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'dev-toolkit' })).toBeVisible()
+    })
+  })
+
   it('has a back button that navigates to registry', async () => {
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)

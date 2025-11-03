@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Button } from '@/common/components/ui/button'
+import { Badge } from '@/common/components/ui/badge'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
 import { ChevronLeft } from 'lucide-react'
 
@@ -23,8 +24,17 @@ export function RegistryGroupDetail() {
           </Button>
         </LinkViewTransition>
       </div>
-
-      <div className="mt-4 text-xl">Hello "{name}"!</div>
+      <div className="flex flex-col gap-3">
+        <h1 className="m-0 mb-0 p-0 text-3xl font-bold">{name}</h1>
+        <div className="flex items-center gap-3">
+          <Badge
+            variant="secondary"
+            className="bg-foreground/5 w-fit rounded-full px-2.5 py-0.5"
+          >
+            Group
+          </Badge>
+        </div>
+      </div>
     </div>
   )
 }
