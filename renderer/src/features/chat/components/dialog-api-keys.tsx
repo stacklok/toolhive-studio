@@ -26,6 +26,26 @@ import {
 import { ScrollArea } from '@/common/components/ui/scroll-area'
 import { trackEvent } from '@/common/lib/analytics'
 
+// Provider-specific configuration for credential input
+function getProviderCredentialConfig(providerId: string, providerName: string) {
+  if (providerId === 'ollama') {
+    return {
+      label: 'Server URL',
+      placeholder: 'http://localhost:11434',
+      isSecret: false,
+      helpText:
+        'Enter the URL of your Ollama server (default: http://localhost:11434)',
+    }
+  }
+
+  return {
+    label: 'API Key',
+    placeholder: `Enter your ${providerName} API key`,
+    isSecret: true,
+    helpText: undefined,
+  }
+}
+
 interface DialogApiKeysProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
@@ -215,73 +235,85 @@ export function DialogApiKeys({
                   </CollapsibleTrigger>
 
                   <CollapsibleContent>
-                    <div
-                      className="border-border/30 bg-muted/10 space-y-3 border-t
-                        px-4 pb-4"
-                    >
-                      <div className="space-y-2 pt-2">
-                        <div className="space-y-2">
-                          <Label
-                            htmlFor={`apikey-${pk.provider.id}`}
-                            className="text-sm font-medium"
-                          >
-                            API Key
-                          </Label>
-                          <div className="flex gap-2">
-                            <div className="relative flex-1">
-                              <Input
-                                id={`apikey-${pk.provider.id}`}
-                                type={
-                                  showApiKeys[pk.provider.id]
-                                    ? 'text'
-                                    : 'password'
-                                }
-                                value={pk.apiKey}
-                                onChange={(e) =>
-                                  handleApiKeyChange(
-                                    pk.provider.id,
-                                    e.target.value
-                                  )
-                                }
-                                placeholder={`Enter your ${pk.provider.name} API key`}
-                                className="pr-10"
-                              />
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="absolute top-0 right-0 h-full px-3
-                                  py-2 hover:bg-transparent"
-                                onClick={() => toggleShowApiKey(pk.provider.id)}
-                              >
-                                {showApiKeys[pk.provider.id] ? (
-                                  <EyeOff
-                                    className="text-muted-foreground h-4 w-4"
-                                  />
-                                ) : (
-                                  <Eye className="text-muted-foreground h-4 w-4" />
+                    {(() => {
+                      const credentialConfig = getProviderCredentialConfig(
+                        pk.provider.id,
+                        pk.provider.name
+                      )
+                      return (
+                        <div className="border-border/30 bg-muted/10 space-y-3 border-t px-4 pb-4">
+                          <div className="space-y-2 pt-2">
+                            <div className="space-y-2">
+                              <div>
+                                <Label
+                                  htmlFor={`apikey-${pk.provider.id}`}
+                                  className="text-sm font-medium"
+                                >
+                                  {credentialConfig.label}
+                                </Label>
+                                {credentialConfig.helpText && (
+                                  <p className="text-muted-foreground mt-1 text-xs">
+                                    {credentialConfig.helpText}
+                                  </p>
                                 )}
-                              </Button>
+                              </div>
+                              <div className="flex gap-2">
+                                <div className="relative flex-1">
+                                  <Input
+                                    id={`apikey-${pk.provider.id}`}
+                                    type={
+                                      credentialConfig.isSecret &&
+                                      !showApiKeys[pk.provider.id]
+                                        ? 'password'
+                                        : 'text'
+                                    }
+                                    value={pk.apiKey}
+                                    onChange={(e) =>
+                                      handleApiKeyChange(
+                                        pk.provider.id,
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder={credentialConfig.placeholder}
+                                    className="pr-10"
+                                  />
+                                  {credentialConfig.isSecret && (
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
+                                      onClick={() =>
+                                        toggleShowApiKey(pk.provider.id)
+                                      }
+                                    >
+                                      {showApiKeys[pk.provider.id] ? (
+                                        <EyeOff className="text-muted-foreground h-4 w-4" />
+                                      ) : (
+                                        <Eye className="text-muted-foreground h-4 w-4" />
+                                      )}
+                                    </Button>
+                                  )}
+                                </div>
+                                {pk.hasKey && (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      handleRemoveApiKey(pk.provider.id)
+                                    }
+                                    className="hover:bg-destructive hover:text-destructive-foreground cursor-pointer px-3"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
                             </div>
-                            {pk.hasKey && (
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  handleRemoveApiKey(pk.provider.id)
-                                }
-                                className="hover:bg-destructive
-                                  hover:text-destructive-foreground
-                                  cursor-pointer px-3"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            )}
                           </div>
                         </div>
-                      </div>
-                    </div>
+                      )
+                    })()}
                   </CollapsibleContent>
                 </Collapsible>
               ))

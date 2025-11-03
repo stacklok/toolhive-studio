@@ -3,6 +3,7 @@ import { createAnthropic } from '@ai-sdk/anthropic'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createXai } from '@ai-sdk/xai'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
+import { createOllama } from 'ai-sdk-ollama'
 import type { LanguageModel } from 'ai'
 import log from '../logger'
 
@@ -119,6 +120,11 @@ export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
     models: ['grok-4', 'grok-3', 'grok-3-mini'],
   },
   {
+    id: 'ollama',
+    name: 'Ollama',
+    models: [], // Models will be dynamically fetched from Ollama API
+  },
+  {
     id: 'openrouter',
     name: 'OpenRouter',
     models: [
@@ -229,6 +235,27 @@ export const CHAT_PROVIDERS: ChatProvider[] = [
     },
   },
   {
+    id: 'ollama',
+    name: 'Ollama',
+    models: CHAT_PROVIDER_INFO.find((p) => p.id === 'ollama')?.models || [],
+    createModel: (modelId: string, apiKey: string) => {
+      // For Ollama, the apiKey field can be used to specify a custom base URL
+      // If empty or not a URL, default to localhost:11434
+      const baseURL =
+        apiKey &&
+        (apiKey.startsWith('http://') || apiKey.startsWith('https://'))
+          ? apiKey
+          : 'http://localhost:11434'
+
+      log.info(
+        `[CHAT] Creating Ollama model: ${modelId} with baseURL: ${baseURL}`
+      )
+
+      const ollamaProvider = createOllama({ baseURL })
+      return ollamaProvider(modelId)
+    },
+  },
+  {
     id: 'openrouter',
     name: 'OpenRouter',
     models: CHAT_PROVIDER_INFO.find((p) => p.id === 'openrouter')?.models || [],
@@ -245,6 +272,58 @@ export const CHAT_PROVIDERS: ChatProvider[] = [
     },
   },
 ]
+
+// Ollama API interfaces
+interface OllamaModel {
+  name: string
+  model: string
+  modified_at: string
+  size: number
+  digest: string
+  details?: {
+    parent_model?: string
+    format?: string
+    family?: string
+    families?: string[]
+    parameter_size?: string
+    quantization_level?: string
+  }
+}
+
+interface OllamaModelsResponse {
+  models: OllamaModel[]
+}
+
+// Fetch available models from Ollama API
+export async function fetchOllamaModels(
+  baseURL = 'http://localhost:11434'
+): Promise<string[]> {
+  try {
+    const response = await fetch(`${baseURL}/api/tags`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      log.error('Failed to fetch Ollama models:', response.statusText)
+      // Return empty array if API fails (Ollama not running or unreachable)
+      return []
+    }
+
+    const data = (await response.json()) as OllamaModelsResponse
+
+    // Extract model names from the response
+    const models = data.models.map((model) => model.name)
+
+    log.info(`[CHAT] Fetched ${models.length} models from Ollama at ${baseURL}`)
+    return models
+  } catch (error) {
+    log.error('Error fetching Ollama models:', error)
+    // Return empty array if API fails (Ollama not running or network error)
+    return []
+  }
+}
 
 // Fetch available models from OpenRouter API
 export async function fetchOpenRouterModels(): Promise<string[]> {

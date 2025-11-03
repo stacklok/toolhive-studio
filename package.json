@@ -128,6 +128,7 @@
     "@tanstack/react-router": "^1.120.11",
     "@tanstack/react-router-devtools": "^1.120.11",
     "ai": "^5.0.81",
+    "ai-sdk-ollama": "^1.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

@@ -80,6 +80,7 @@ import {
   saveEnabledMcpTools,
   discoverToolSupportedModels,
   fetchOpenRouterModels,
+  fetchOllamaModels,
   getToolhiveMcpInfo,
   // Thread storage functions
   createThread,
@@ -657,6 +658,35 @@ ipcMain.handle(
 ipcMain.handle('chat:get-providers', async () => {
   // Create a copy of the provider info to avoid modifying the original
   const providers = [...CHAT_PROVIDER_INFO]
+
+  // For Ollama, fetch the locally installed models dynamically
+  const ollamaIndex = providers.findIndex((p) => p.id === 'ollama')
+  if (ollamaIndex !== -1) {
+    try {
+      const ollamaSettings = getChatSettings('ollama')
+
+      // Get the base URL (could be custom or default)
+      const baseURL =
+        ollamaSettings.apiKey &&
+        (ollamaSettings.apiKey.startsWith('http://') ||
+          ollamaSettings.apiKey.startsWith('https://'))
+          ? ollamaSettings.apiKey
+          : 'http://localhost:11434'
+
+      const ollamaModels = await fetchOllamaModels(baseURL)
+      const originalProvider = providers[ollamaIndex]
+      if (originalProvider) {
+        providers[ollamaIndex] = {
+          id: originalProvider.id,
+          name: originalProvider.name,
+          models: ollamaModels,
+        }
+      }
+    } catch (error) {
+      log.error('Failed to fetch Ollama models:', error)
+      // Keep empty array if Ollama is not running
+    }
+  }
 
   // For OpenRouter, fetch the latest models dynamically only if API key is available
   const openRouterIndex = providers.findIndex((p) => p.id === 'openrouter')
