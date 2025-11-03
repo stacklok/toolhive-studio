@@ -3,6 +3,14 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import { getApiV1BetaRegistryByNameOptions } from '@api/@tanstack/react-query.gen'
 import { Badge } from '@/common/components/ui/badge'
 import { RegistryDetailHeader } from '@/features/registry-servers/components/registry-detail-header'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/common/components/ui/table'
 
 export const Route = createFileRoute('/(registry)/registry-group_/$name')({
   loader: async ({ context: { queryClient } }) => {
@@ -33,6 +41,34 @@ export function RegistryGroupDetail() {
         }
         description={group?.description ?? undefined}
       />
+      <div className="mt-6 overflow-hidden rounded-md border">
+        <Table>
+          <TableHeader className="bg-muted/50">
+            <TableRow>
+              <TableHead className="text-muted-foreground text-xs">
+                Server
+              </TableHead>
+              <TableHead className="text-muted-foreground text-xs">
+                Description
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Object.entries(group?.servers ?? {}).map(([key, srv]) => (
+              <TableRow key={`local-${key}`}>
+                <TableCell className="text-foreground">{srv.name}</TableCell>
+                <TableCell>{srv.description}</TableCell>
+              </TableRow>
+            ))}
+            {Object.entries(group?.remote_servers ?? {}).map(([key, srv]) => (
+              <TableRow key={`remote-${key}`}>
+                <TableCell className="text-foreground">{srv.name}</TableCell>
+                <TableCell>{srv.description}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   )
 }
