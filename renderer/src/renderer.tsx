@@ -112,8 +112,6 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
     router.navigate({ to: '/shutdown' })
   })
 
-  await router.load()
-
   const rootElement = document.getElementById('root')!
   const root = ReactDOM.createRoot(rootElement)
 
