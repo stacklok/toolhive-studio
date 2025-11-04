@@ -68,17 +68,13 @@ export function GridCardsRegistry({
             key={item.name}
             item={item}
             onClick={() => {
-              if (item.type === 'group') {
-                navigate({
-                  to: '/registry-group/$name',
-                  params: { name: item.name! },
-                })
-              } else {
-                navigate({
-                  to: '/registry/$name',
-                  params: { name: item.name! },
-                })
-              }
+              navigate({
+                to:
+                  item.type === 'group'
+                    ? '/registry-group/$name'
+                    : '/registry/$name',
+                params: { name: item.name! },
+              })
             }}
           />
         ))}
