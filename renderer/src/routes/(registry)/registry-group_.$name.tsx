@@ -5,7 +5,8 @@ import { Badge } from '@/common/components/ui/badge'
 import { Button } from '@/common/components/ui/button'
 import { RegistryDetailHeader } from '@/features/registry-servers/components/registry-detail-header'
 import { Separator } from '@/common/components/ui/separator'
-import { Wrench } from 'lucide-react'
+import { Alert, AlertDescription } from '@/common/components/ui/alert'
+import { Wrench, Info } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -30,6 +31,11 @@ export function RegistryGroupDetail() {
     getApiV1BetaRegistryByNameOptions({ path: { name: 'default' } })
   )
   const group = registryData?.registry?.groups?.find((g) => g.name === name)
+
+  const hasServers =
+    Object.keys(group?.servers ?? {}).length > 0 ||
+    Object.keys(group?.remote_servers ?? {}).length > 0
+
   return (
     <div className="flex max-h-full w-full flex-1 flex-col">
       <RegistryDetailHeader
@@ -44,41 +50,58 @@ export function RegistryGroupDetail() {
         }
         description={group?.description ?? undefined}
       />
-      <div className="mt-6 overflow-hidden rounded-md border">
-        <Table>
-          <TableHeader className="bg-muted/50">
-            <TableRow>
-              <TableHead className="text-muted-foreground text-xs">
-                Server
-              </TableHead>
-              <TableHead className="text-muted-foreground text-xs">
-                Description
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Object.entries(group?.servers ?? {}).map(([key, srv]) => (
-              <TableRow key={`local-${key}`}>
-                <TableCell className="text-foreground">{srv.name}</TableCell>
-                <TableCell>{srv.description}</TableCell>
-              </TableRow>
-            ))}
-            {Object.entries(group?.remote_servers ?? {}).map(([key, srv]) => (
-              <TableRow key={`remote-${key}`}>
-                <TableCell className="text-foreground">{srv.name}</TableCell>
-                <TableCell>{srv.description}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-      <Separator className="my-6" />
-      <div className="flex gap-5">
-        <Button variant="default">
-          <Wrench className="size-4" />
-          Create group
-        </Button>
-      </div>
+      {hasServers ? (
+        <>
+          <div className="mt-6 overflow-hidden rounded-md border">
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow>
+                  <TableHead className="text-muted-foreground text-xs">
+                    Server
+                  </TableHead>
+                  <TableHead className="text-muted-foreground text-xs">
+                    Description
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Object.entries(group?.servers ?? {}).map(([key, srv]) => (
+                  <TableRow key={`local-${key}`}>
+                    <TableCell className="text-foreground">
+                      {srv.name}
+                    </TableCell>
+                    <TableCell>{srv.description}</TableCell>
+                  </TableRow>
+                ))}
+                {Object.entries(group?.remote_servers ?? {}).map(
+                  ([key, srv]) => (
+                    <TableRow key={`remote-${key}`}>
+                      <TableCell className="text-foreground">
+                        {srv.name}
+                      </TableCell>
+                      <TableCell>{srv.description}</TableCell>
+                    </TableRow>
+                  )
+                )}
+              </TableBody>
+            </Table>
+          </div>
+          <Separator className="my-6" />
+          <div className="flex gap-5">
+            <Button variant="default">
+              <Wrench className="size-4" />
+              Create group
+            </Button>
+          </div>
+        </>
+      ) : (
+        <Alert className="mt-6">
+          <Info />
+          <AlertDescription>
+            This group does not have any servers.
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   )
 }

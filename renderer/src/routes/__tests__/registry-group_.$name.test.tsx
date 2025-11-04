@@ -245,4 +245,54 @@ describe('Registry Group Detail Route', () => {
     expect(screen.getByText('huggingface-remote')).toBeVisible()
     expect(screen.getByText('HuggingFace model inference')).toBeVisible()
   })
+
+  it('shows alert banner when group has no servers and hides the button', async () => {
+    // Override the mock to return a different group name
+    mockUseParams.mockReturnValue({ name: 'empty-group' })
+
+    // Create a fixture with an empty group
+    const emptyGroupRegistry: V1GetRegistryResponse = {
+      registry: {
+        servers: {},
+        groups: [
+          {
+            name: 'empty-group',
+            description: 'A group with no servers',
+            servers: {},
+            remote_servers: {},
+          },
+        ],
+      },
+    }
+
+    // Override the API response for this test
+    server.use(
+      http.get('*/api/v1beta/registry/:name', () => {
+        return HttpResponse.json(emptyGroupRegistry)
+      })
+    )
+
+    const router = createTestRouter(WrapperComponent)
+    renderRoute(router)
+
+    // Verify the group name and description are displayed
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'empty-group' })).toBeVisible()
+    })
+    expect(screen.getByText('A group with no servers')).toBeVisible()
+
+    // Verify the alert banner is shown
+    expect(screen.getByRole('alert')).toBeVisible()
+    expect(
+      screen.getByText('This group does not have any servers.')
+    ).toBeVisible()
+
+    // Verify the table is NOT shown
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
+
+    // Verify the "Create group" button is NOT shown
+    expect(
+      screen.queryByRole('button', { name: /create group/i })
+    ).not.toBeInTheDocument()
+  })
 })
