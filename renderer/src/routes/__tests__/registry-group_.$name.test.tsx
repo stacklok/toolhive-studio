@@ -6,7 +6,7 @@ import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
 import { server } from '@/common/mocks/node'
 import userEvent from '@testing-library/user-event'
-import type { V1GetRegistryResponse } from '@api/generated/types.gen'
+import type { V1GetRegistryResponse } from '@api/types.gen'
 
 const mockUseParams = vi.fn(() => ({ name: 'dev-toolkit' }))
 
@@ -146,9 +146,6 @@ describe('Registry Group Detail Route', () => {
     // Create a custom fixture with different data
     const customRegistry: V1GetRegistryResponse = {
       registry: {
-        name: 'default',
-        local_path: '/path/to/registry',
-        url: '',
         servers: {},
         groups: [
           {

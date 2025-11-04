@@ -112,10 +112,6 @@ export function RegistryServerDetail() {
         description={server.description}
       />
       <div className="my-8 flex w-3/5 flex-col gap-8">
-        <div className="text-muted-foreground flex-[2] select-none">
-          {server.description}
-        </div>
-
         {server?.tools?.length && (
           <div className="flex w-3/5 flex-[3] flex-col gap-4">
             <p className="text-base font-bold">Tools listed</p>
