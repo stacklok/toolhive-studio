@@ -15,6 +15,7 @@ import { useUpdateServer } from '@/features/mcp-servers/hooks/use-update-server'
 import { CustomizeToolsTable } from '@/features/mcp-servers/components/customize-tools-table'
 import { convertCreateRequestToFormData as convertLocalServerToFormData } from '@/features/mcp-servers/lib/orchestrate-run-local-server'
 import { convertCreateRequestToFormData as convertRemoteServerToFormData } from '@/features/mcp-servers/lib/orchestrate-run-remote-server'
+import { buildToolsWithOverrides } from '@/features/mcp-servers/lib/build-tools-with-overrides'
 import { useIsServerFromRegistry } from '../../hooks/use-is-server-from-registry'
 import { trackEvent } from '@/common/lib/analytics'
 import { EmptyState } from '@/common/components/empty-state'
@@ -88,30 +89,23 @@ export function CustomizeToolsPage() {
     retry: false,
   })
 
-  const toolsRegistryMap = Object.fromEntries(
-    registryTools.map((name) => [name, { name, description: '' }])
-  )
+  // Build serverToolsMap for tools diff calculation
   const serverToolsMap = serverTools
     ? Object.fromEntries(
         Object.entries(serverTools).map(([name, toolDef]) => [
           name,
-          { name, description: toolDef.description },
+          { name, description: toolDef.description || '' },
         ])
       )
     : {}
-  const toolsMap = {
-    ...toolsRegistryMap,
-    ...serverToolsMap,
-  }
 
-  const completedTools = Object.values(toolsMap)
-    .map((tool) => ({
-      ...tool,
-      isInitialEnabled: !existingServerData?.tools
-        ? true
-        : existingServerData?.tools?.includes(tool.name),
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name))
+  // Build complete tools list with overrides applied
+  const completedTools = buildToolsWithOverrides({
+    registryTools,
+    serverTools: serverTools || null,
+    toolsOverride: existingServerData?.tools_override || null,
+    enabledToolsFilter: existingServerData?.tools || null,
+  })
 
   const toolsDiff = getToolsDiffFromRegistry(Object.keys(serverToolsMap))
   // Show diff only when no filter is applied and tools don't match exactly
@@ -131,7 +125,13 @@ export function CustomizeToolsPage() {
       group: workload?.group,
     })
 
-  const handleUpdateServer = async (tools: string[] | null) => {
+  const handleUpdateServer = async (
+    tools: string[] | null,
+    toolsOverride?: Record<
+      string,
+      { name?: string; description?: string }
+    > | null
+  ) => {
     if (!existingServerData || isExistingServerDataError) {
       throw new Error('Existing server data not available')
     }
@@ -146,6 +146,7 @@ export function CustomizeToolsPage() {
         data: {
           ...formData,
           tools,
+          tools_override: toolsOverride,
         },
       },
       {
@@ -172,7 +173,13 @@ export function CustomizeToolsPage() {
     )
   }
 
-  const handleApply = async (enabledTools: Record<string, boolean>) => {
+  const handleApply = async (
+    enabledTools: Record<string, boolean>,
+    toolsOverride: Record<
+      string,
+      { name?: string; description?: string }
+    > | null
+  ) => {
     trackEvent('Customize Tools: apply changes', {
       server_name: serverName,
       tools_count: Object.keys(enabledTools).length,
@@ -185,14 +192,19 @@ export function CustomizeToolsPage() {
     setIsSubmitting(true)
 
     try {
+      // Use display names directly (override names when overrides exist)
+      // The tools array should contain the final tool names as they appear in the server
       const enabledToolNames = Object.entries(enabledTools)
         .filter(([, enabled]) => enabled)
-        .map(([toolName]) => toolName)
+        .map(([displayName]) => displayName)
 
       const toolsEnabledDrift =
         enabledToolNames.length !== completedTools.length
 
-      handleUpdateServer(toolsEnabledDrift ? enabledToolNames : null)
+      handleUpdateServer(
+        toolsEnabledDrift ? enabledToolNames : null,
+        toolsOverride
+      )
     } catch (error) {
       setIsSubmitting(false)
       toast.error(
@@ -271,6 +283,7 @@ export function CustomizeToolsPage() {
         ) : (
           <CustomizeToolsTable
             tools={completedTools || []}
+            overrideTools={existingServerData?.tools_override}
             toolsDiff={showToolsDiff ? toolsDiff : null}
             isLoading={
               isSubmitting ||
