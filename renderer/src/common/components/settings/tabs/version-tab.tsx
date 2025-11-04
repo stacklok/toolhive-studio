@@ -50,6 +50,7 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
   useEffect(() => {
     if (updateState === 'not-available') {
       toast.info('Update not yet available', {
+        id: 'update-not-available',
         description:
           'The update server is still processing the latest release. Please try again in a few minutes.',
         duration: 6000,

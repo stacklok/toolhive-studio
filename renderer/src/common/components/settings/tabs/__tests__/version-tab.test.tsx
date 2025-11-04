@@ -314,6 +314,7 @@ describe('VersionTab', () => {
     expect(button).toBeDisabled()
 
     expect(toast.info).toHaveBeenCalledWith('Update not yet available', {
+      id: 'update-not-available',
       description:
         'The update server is still processing the latest release. Please try again in a few minutes.',
       duration: 6000,
