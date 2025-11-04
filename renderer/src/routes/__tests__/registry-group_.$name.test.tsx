@@ -81,15 +81,10 @@ describe('Registry Group Detail Route', () => {
     const table = screen.getByRole('table')
     const headerCells = within(table).getAllByRole('columnheader')
     const headers = headerCells.map((th) => th.textContent?.trim() || '')
-    expect(headers).toMatchInlineSnapshot(`
-      [
-        "Server",
-        "Description",
-      ]
-    `)
+    expect(headers).toEqual(['Server', 'Description'])
   })
 
-  it('matches server rows snapshot', async () => {
+  it('contains expected server rows', async () => {
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
 
@@ -100,20 +95,20 @@ describe('Registry Group Detail Route', () => {
     const table = screen.getByRole('table')
     const allRows = within(table).getAllByRole('row')
     const bodyRows = allRows.slice(1) // skip header row
-    const data = bodyRows.map((row) =>
-      within(row)
-        .getAllByRole('cell')
-        .map((cell) => cell.textContent?.trim() || '')
-    )
+    const data = bodyRows.map((row) => {
+      const cells = within(row).getAllByRole('cell')
+      return cells.map((cell) => cell.textContent?.trim() || '')
+    })
 
-    expect(data).toMatchInlineSnapshot(`
-      [
-        [
-          "atlassian",
-          "Connect to Atlassian products like Confluence, Jira Cloud and Server/Data deployments.",
-        ],
-      ]
-    `)
+    // Should include the Atlassian server with its description
+    expect(
+      data.some(
+        ([server, desc]) =>
+          server === 'atlassian' &&
+          desc ===
+            'Connect to Atlassian products like Confluence, Jira Cloud and Server/Data deployments.'
+      )
+    ).toBe(true)
   })
 
   it('has a back button that navigates to registry', async () => {

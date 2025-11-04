@@ -2,7 +2,10 @@ import { createFileRoute, useParams } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { getApiV1BetaRegistryByNameOptions } from '@api/@tanstack/react-query.gen'
 import { Badge } from '@/common/components/ui/badge'
+import { Button } from '@/common/components/ui/button'
 import { RegistryDetailHeader } from '@/features/registry-servers/components/registry-detail-header'
+import { Separator } from '@/common/components/ui/separator'
+import { Wrench } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -41,6 +44,13 @@ export function RegistryGroupDetail() {
         }
         description={group?.description ?? undefined}
       />
+      <Separator className="my-6" />
+      <div className="flex gap-5 pb-6">
+        <Button variant="default">
+          <Wrench className="size-4" />
+          Create group
+        </Button>
+      </div>
       <div className="mt-6 overflow-hidden rounded-md border">
         <Table>
           <TableHeader className="bg-muted/50">
