@@ -69,7 +69,10 @@ export function GridCardsRegistry({
             item={item}
             onClick={() => {
               navigate({
-                to: '/registry/$name',
+                to:
+                  item.type === 'group'
+                    ? '/registry-group/$name'
+                    : '/registry/$name',
                 params: { name: item.name! },
               })
             }}
