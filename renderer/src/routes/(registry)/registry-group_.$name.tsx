@@ -44,13 +44,6 @@ export function RegistryGroupDetail() {
         }
         description={group?.description ?? undefined}
       />
-      <Separator className="my-6" />
-      <div className="flex gap-5 pb-6">
-        <Button variant="default">
-          <Wrench className="size-4" />
-          Create group
-        </Button>
-      </div>
       <div className="mt-6 overflow-hidden rounded-md border">
         <Table>
           <TableHeader className="bg-muted/50">
@@ -78,6 +71,13 @@ export function RegistryGroupDetail() {
             ))}
           </TableBody>
         </Table>
+      </div>
+      <Separator className="my-6" />
+      <div className="flex gap-5">
+        <Button variant="default">
+          <Wrench className="size-4" />
+          Create group
+        </Button>
       </div>
     </div>
   )

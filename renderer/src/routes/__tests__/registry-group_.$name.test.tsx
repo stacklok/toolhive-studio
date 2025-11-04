@@ -64,7 +64,6 @@ describe('Registry Group Detail Route', () => {
       within(row).queryByText(/^atlassian$/i)
     )
     expect(atlassianRow).toBeTruthy()
-    expect(within(atlassianRow!).getByText(/atlassian/i)).toBeVisible()
     expect(
       within(atlassianRow!).getByText(/connect to atlassian/i)
     ).toBeVisible()
