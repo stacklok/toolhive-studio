@@ -10,9 +10,30 @@ import { Input } from './input'
 
 function FilePicker({
   onPick,
+  mode = 'file-or-folder',
 }: {
   onPick: (args: { pickedPath: string | null }) => void
+  mode?: 'file' | 'file-or-folder'
 }) {
+  if (mode === 'file') {
+    return (
+      <Button
+        variant="adornment"
+        aria-label="Select path"
+        onClick={async () => {
+          try {
+            const filePath = await window.electronAPI.selectFile()
+            onPick({ pickedPath: filePath })
+          } catch (err) {
+            console.error('Failed to open file picker', err)
+          }
+        }}
+      >
+        <FolderOpen className="size-4" />
+      </Button>
+    )
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -60,9 +81,11 @@ function FilePicker({
 
 function FilePickerInput({
   onChange,
+  mode = 'file-or-folder',
   ...props
 }: Omit<React.ComponentProps<'input'>, 'type' | 'onChange'> & {
   onChange: (props: { newValue: string }) => void
+  mode?: 'file' | 'file-or-folder'
 }) {
   return (
     <Input
@@ -70,6 +93,7 @@ function FilePickerInput({
       type="text"
       adornment={
         <FilePicker
+          mode={mode}
           onPick={({ pickedPath }) => {
             if (pickedPath) {
               onChange({ newValue: pickedPath })
