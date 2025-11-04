@@ -8,6 +8,7 @@ import { TOOLHIVE_VERSION } from '../../utils/constants'
 import type { UIMessage } from 'ai'
 import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 import type { FeatureFlagOptions } from '../../main/src/feature-flags'
+import type { UpdateState } from '../../main/src/auto-update'
 
 // Expose auto-launch functionality to renderer
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -288,9 +289,7 @@ export interface ElectronAPI {
   onUpdateNotAvailable: (
     callback: (_event: Electron.IpcRendererEvent) => void
   ) => () => void
-  getUpdateState: () => Promise<
-    'checking' | 'downloading' | 'downloaded' | 'installing' | 'none'
-  >
+  getUpdateState: () => Promise<UpdateState>
   manualUpdate: () => Promise<void>
   shutdownStore: {
     getLastShutdownServers: () => Promise<CoreWorkload[]>

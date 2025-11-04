@@ -16,17 +16,20 @@ import { setQuittingState, setTearingDownState } from './app-state'
 import Store from 'electron-store'
 import { fetchLatestRelease } from './utils/toolhive-version'
 
+export type UpdateState =
+  | 'checking'
+  | 'downloading'
+  | 'downloaded'
+  | 'installing'
+  | 'not-available'
+  | 'none'
+
 const store = new Store<{
   isAutoUpdateEnabled: boolean
 }>({ name: 'auto-update', defaults: { isAutoUpdateEnabled: true } })
 
 let pendingUpdateVersion: string | null = null
-let updateState:
-  | 'checking'
-  | 'downloading'
-  | 'downloaded'
-  | 'installing'
-  | 'none' = 'none'
+let updateState: UpdateState = 'none'
 
 async function safeServerShutdown(): Promise<boolean> {
   try {
@@ -154,7 +157,8 @@ function handleUpdateNotAvailable({
         return
       }
       log.info('[update] no update available')
-      updateState = 'none'
+
+      updateState = 'not-available'
 
       rootSpan.setStatus({ code: 1 })
       rootFinish()
