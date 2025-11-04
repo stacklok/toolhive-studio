@@ -95,7 +95,7 @@ export function RegistryGroupDetail() {
           </div>
         </>
       ) : (
-        <Alert className="mt-6">
+        <Alert className="mt-6 max-w-2xl">
           <Info />
           <AlertDescription>
             This group does not have any servers.
