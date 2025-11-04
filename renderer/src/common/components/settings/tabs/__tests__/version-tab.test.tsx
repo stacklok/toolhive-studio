@@ -5,6 +5,13 @@ import { PromptProvider } from '@/common/contexts/prompt/provider'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { AppVersionInfo } from '@/common/hooks/use-app-version'
 import userEvent from '@testing-library/user-event'
+import { toast } from 'sonner'
+
+vi.mock('sonner', () => ({
+  toast: {
+    info: vi.fn(),
+  },
+}))
 
 const mockElectronAPI = {
   isAutoUpdateEnabled: vi.fn(),
@@ -56,6 +63,7 @@ describe('VersionTab', () => {
     mockElectronAPI.getUpdateState.mockResolvedValue('none')
     mockElectronAPI.isLinux = false
     vi.stubGlobal('open', vi.fn())
+    vi.clearAllMocks()
   })
 
   afterEach(() => {
@@ -268,5 +276,120 @@ describe('VersionTab', () => {
     expect(
       screen.queryByRole('button', { name: 'Download' })
     ).not.toBeInTheDocument()
+  })
+
+  it('shows "Checking..." and toast notification when update state is not-available', () => {
+    import.meta.env.MODE = 'production'
+
+    const appInfoWithUpdate: AppVersionInfo = {
+      ...mockAppInfo,
+      latestVersion: '2.0.0',
+      isNewVersionAvailable: true,
+    }
+
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    })
+
+    queryClient.setQueryData(['update-state'], 'not-available')
+    queryClient.setQueryData(['auto-update-enabled'], true)
+
+    render(
+      <PromptProvider>
+        <QueryClientProvider client={queryClient}>
+          <VersionTab
+            appInfo={appInfoWithUpdate}
+            isLoading={false}
+            error={null}
+          />
+        </QueryClientProvider>
+      </PromptProvider>
+    )
+
+    const button = screen.getByRole('button', { name: /Checking/i })
+    expect(button).toBeVisible()
+    expect(button).toBeDisabled()
+
+    expect(toast.info).toHaveBeenCalledWith('Update not yet available', {
+      id: 'update-not-available',
+      description:
+        'The update server is still processing the latest release. Please try again in a few minutes.',
+      duration: 6000,
+    })
+  })
+
+  it('shows "Checking..." when update state is checking', () => {
+    import.meta.env.MODE = 'production'
+
+    const appInfoWithUpdate: AppVersionInfo = {
+      ...mockAppInfo,
+      latestVersion: '2.0.0',
+      isNewVersionAvailable: true,
+    }
+
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    })
+
+    queryClient.setQueryData(['update-state'], 'checking')
+    queryClient.setQueryData(['auto-update-enabled'], true)
+
+    render(
+      <PromptProvider>
+        <QueryClientProvider client={queryClient}>
+          <VersionTab
+            appInfo={appInfoWithUpdate}
+            isLoading={false}
+            error={null}
+          />
+        </QueryClientProvider>
+      </PromptProvider>
+    )
+
+    const button = screen.getByRole('button', { name: /Checking/i })
+    expect(button).toBeVisible()
+    expect(button).toBeDisabled()
+  })
+
+  it('shows "Downloading..." when update state is downloading', () => {
+    import.meta.env.MODE = 'production'
+
+    const appInfoWithUpdate: AppVersionInfo = {
+      ...mockAppInfo,
+      latestVersion: '2.0.0',
+      isNewVersionAvailable: true,
+    }
+
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    })
+
+    queryClient.setQueryData(['update-state'], 'downloading')
+    queryClient.setQueryData(['auto-update-enabled'], true)
+
+    render(
+      <PromptProvider>
+        <QueryClientProvider client={queryClient}>
+          <VersionTab
+            appInfo={appInfoWithUpdate}
+            isLoading={false}
+            error={null}
+          />
+        </QueryClientProvider>
+      </PromptProvider>
+    )
+
+    const button = screen.getByRole('button', { name: /Downloading/i })
+    expect(button).toBeVisible()
+    expect(button).toBeDisabled()
   })
 })

@@ -51,10 +51,18 @@ export function useAppVersion() {
   })
 }
 
+type UpdateState =
+  | 'checking'
+  | 'downloading'
+  | 'downloaded'
+  | 'installing'
+  | 'not-available'
+  | 'none'
+
 export function useCurrentUpdateState() {
   return useQuery({
     queryKey: ['update-state'],
-    queryFn: async (): Promise<string> => {
+    queryFn: async (): Promise<UpdateState> => {
       try {
         const state = await window.electronAPI.getUpdateState()
         return state
