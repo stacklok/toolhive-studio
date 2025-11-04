@@ -168,6 +168,12 @@
         }
       },
       "remote_servers": {}
+    },
+    {
+      "name": "planned-integrations",
+      "description": "Placeholder for upcoming server integrations",
+      "servers": {},
+      "remote_servers": {}
     }
   ]
 }
