@@ -566,7 +566,7 @@ export function initAutoUpdate({
         updateElectronApp({
           logger: log,
           notifyUser: false,
-          updateInterval: isManualUpdate ? '10 minutes' : '5 minutes',
+          updateInterval: isManualUpdate ? '5 minutes' : '10 minutes',
         })
 
         if (isManualUpdate) {
