@@ -48,7 +48,7 @@ export function RegistryGroupDetail() {
             Group
           </Badge>
         }
-        description={group?.description ?? undefined}
+        description={group?.description}
       />
       {hasServers ? (
         <>
