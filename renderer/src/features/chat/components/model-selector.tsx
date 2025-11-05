@@ -35,17 +35,53 @@ export function ModelSelector({
   onSettingsChange,
   onOpenSettings,
 }: ModelSelectorProps) {
-  const { providersWithApiKeys, isLoading } = useAvailableModels()
+  const { providersWithCredentials, isLoading } = useAvailableModels()
   const [searchQueries, setSearchQueries] = useState<Record<string, string>>({})
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const handleModelSelect = (providerId: string, modelId: string) => {
+  const handleModelSelect = async (providerId: string, modelId: string) => {
     trackEvent(`Playground: select model ${modelId}`, { provider: providerId })
-    onSettingsChange({
-      ...settings,
-      provider: providerId,
-      model: modelId,
-    })
+
+    // If provider is the same, just update the model (preserves credentials)
+    if (providerId === settings.provider) {
+      onSettingsChange({
+        ...settings,
+        model: modelId,
+      })
+      return
+    }
+
+    // Switching providers: fetch credentials from storage and construct proper settings
+    try {
+      const providerSettings =
+        await window.electronAPI.chat.getSettings(providerId)
+
+      // Construct new settings with fetched credentials and selected model
+      const newSettings: ChatSettings =
+        providerId === 'ollama' || providerId === 'lmstudio'
+          ? {
+              provider: providerId,
+              model: modelId,
+              endpointURL:
+                'endpointURL' in providerSettings
+                  ? providerSettings.endpointURL
+                  : providerId === 'lmstudio'
+                    ? 'http://localhost:1234'
+                    : 'http://localhost:11434',
+              enabledTools: settings.enabledTools,
+            }
+          : {
+              provider: providerId,
+              model: modelId,
+              apiKey:
+                'apiKey' in providerSettings ? providerSettings.apiKey : '',
+              enabledTools: settings.enabledTools,
+            }
+
+      onSettingsChange(newSettings)
+    } catch (error) {
+      console.error('Failed to load provider settings:', error)
+    }
   }
 
   // Filter models based on search query for each provider
@@ -94,7 +130,7 @@ export function ModelSelector({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
 
-        {providersWithApiKeys.map((provider) => {
+        {providersWithCredentials.map((provider) => {
           const filteredModels = getFilteredModels(provider)
           const hasSearch = provider.models.length > 50
 
@@ -118,7 +154,7 @@ export function ModelSelector({
                   inputRef.current?.focus()
                 }}
               >
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <DropdownMenuLabel className="text-muted-foreground text-xs">
                     {provider.name} Models
                   </DropdownMenuLabel>
@@ -179,13 +215,17 @@ export function ModelSelector({
                     <div
                       className="text-muted-foreground p-2 text-center text-sm"
                     >
-                      No models found matching "{searchQueries[provider.id]}"
+                      {provider.models.length === 0
+                        ? provider.id === 'ollama'
+                          ? 'Ollama is not running or no models available'
+                          : 'No models available'
+                        : `No models found matching "${searchQueries[provider.id]}"`}
                     </div>
                   )}
                 </div>
 
                 {hasSearch && (
-                  <div className="bg-background flex-shrink-0 border-t p-2">
+                  <div className="bg-background shrink-0 border-t p-2">
                     <p className="text-muted-foreground text-center text-xs">
                       {searchQueries[provider.id]
                         ? `${filteredModels.length} of ${provider.models.length} models`
@@ -200,7 +240,7 @@ export function ModelSelector({
 
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onOpenSettings} className="cursor-pointer">
-          Manage API Keys
+          Provider Settings
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
