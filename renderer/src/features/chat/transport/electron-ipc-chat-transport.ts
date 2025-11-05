@@ -1,6 +1,7 @@
 import type { ChatTransport, UIMessageChunk, ChatRequestOptions } from 'ai'
 import type { QueryClient } from '@tanstack/react-query'
 import type { ChatUIMessage } from '../types'
+import { isLocalServerProvider } from '../lib/utils'
 
 interface ElectronIPCChatTransportConfig {
   queryClient: QueryClient
@@ -12,12 +13,20 @@ interface ElectronIPCChatTransportConfig {
 export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
   constructor(private config: ElectronIPCChatTransportConfig) {}
 
-  private async getSettingsFromQuery(): Promise<{
-    provider: string
-    model: string
-    apiKey: string
-    enabledTools: string[]
-  }> {
+  private async getSettingsFromQuery(): Promise<
+    | {
+        provider: 'ollama' | 'lmstudio'
+        model: string
+        endpointURL: string
+        enabledTools: string[]
+      }
+    | {
+        provider: string
+        model: string
+        apiKey: string
+        enabledTools: string[]
+      }
+  > {
     // Get selected model from cache
     const selectedModel = this.config.queryClient.getQueryData<{
       provider: string
@@ -29,16 +38,41 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
     }
 
     // Get provider settings from cache
-    const providerSettings = this.config.queryClient.getQueryData<{
-      apiKey: string
-      enabledTools: string[]
-    }>(['chat', 'settings', selectedModel.provider])
+    // Settings can be either local server (with endpointURL) or cloud providers (with apiKey)
+    const providerSettings = this.config.queryClient.getQueryData<
+      | {
+          providerId: 'ollama' | 'lmstudio'
+          endpointURL: string
+          enabledTools: string[]
+        }
+      | { providerId: string; apiKey: string; enabledTools: string[] }
+    >(['chat', 'settings', selectedModel.provider])
 
-    return {
-      provider: selectedModel.provider,
-      model: selectedModel.model,
-      apiKey: providerSettings?.apiKey || '',
-      enabledTools: providerSettings?.enabledTools || [],
+    // Build discriminated union based on provider
+    if (isLocalServerProvider(selectedModel.provider)) {
+      const endpointURL =
+        providerSettings && 'endpointURL' in providerSettings
+          ? providerSettings.endpointURL || ''
+          : ''
+
+      return {
+        provider: selectedModel.provider,
+        model: selectedModel.model,
+        endpointURL,
+        enabledTools: providerSettings?.enabledTools || [],
+      }
+    } else {
+      const apiKey =
+        providerSettings && 'apiKey' in providerSettings
+          ? providerSettings.apiKey || ''
+          : ''
+
+      return {
+        provider: selectedModel.provider,
+        model: selectedModel.model,
+        apiKey,
+        enabledTools: providerSettings?.enabledTools || [],
+      }
     }
   }
 
@@ -77,31 +111,50 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
   ): Promise<ReadableStream<UIMessageChunk>> {
     const settings = await this.getSettingsFromQuery()
 
-    if (
-      !settings.provider ||
-      !settings.model ||
-      !settings.apiKey ||
-      !settings.apiKey.trim()
-    ) {
-      if (!settings.provider || !settings.model) {
-        throw new Error('Please select an AI model in the settings')
-      }
-      if (!settings.apiKey || !settings.apiKey.trim()) {
-        throw new Error('Please configure your API key in the settings')
-      }
-      throw new Error('Please configure your AI provider settings first')
+    // Validate settings based on provider type
+    if (!settings.provider || !settings.model) {
+      throw new Error('Please select an AI model in the settings')
     }
 
     // Process messages for IPC (files should already be base64)
     const processedMessages = this.processMessagesForIPC(options.messages)
 
-    const backendRequest = {
-      chatId: options.chatId,
-      messages: processedMessages,
-      provider: settings.provider,
-      model: settings.model,
-      apiKey: settings.apiKey,
-      enabledTools: settings.enabledTools || [],
+    // Build request with proper discriminated union based on provider type
+    let backendRequest
+    if (settings.provider === 'ollama' || settings.provider === 'lmstudio') {
+      // TypeScript narrows settings to local server type (Ollama/LM Studio)
+      if (
+        !('endpointURL' in settings) ||
+        !settings.endpointURL ||
+        !settings.endpointURL.trim()
+      ) {
+        throw new Error('Please configure your endpoint URL in the settings')
+      }
+      backendRequest = {
+        chatId: options.chatId,
+        messages: processedMessages,
+        provider: settings.provider,
+        model: settings.model,
+        endpointURL: settings.endpointURL,
+        enabledTools: settings.enabledTools || [],
+      }
+    } else {
+      // TypeScript narrows settings to API key type here
+      if (
+        !('apiKey' in settings) ||
+        !settings.apiKey ||
+        !settings.apiKey.trim()
+      ) {
+        throw new Error('Please configure your API key in the settings')
+      }
+      backendRequest = {
+        chatId: options.chatId,
+        messages: processedMessages,
+        provider: settings.provider,
+        model: settings.model,
+        apiKey: settings.apiKey,
+        enabledTools: settings.enabledTools || [],
+      }
     }
 
     try {
