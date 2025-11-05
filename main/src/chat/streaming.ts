@@ -13,6 +13,7 @@ import { createMcpTools } from './mcp-tools'
 import { streamUIMessagesOverIPC } from './stream-utils'
 import type { ChatRequest } from './types'
 import { updateThreadMessages } from './threads-storage'
+import { createModelFromRequest } from './utils'
 
 /**
  * Handle chat streaming request using real-time IPC events
@@ -43,8 +44,9 @@ export async function handleChatStreamRealtime(
           throw new Error(`Unknown provider: ${request.provider}`)
         }
 
-        // Create AI model
-        const model = provider.createModel(request.model, request.apiKey)
+        // Create AI model using type guards for discriminated union
+        const model = createModelFromRequest(provider, request)
+
         // Get MCP tools if enabled
         const {
           tools: mcpTools,
@@ -165,6 +167,7 @@ export async function handleChatStreamRealtime(
                 return {
                   createdAt,
                   model: request.model,
+                  providerId: request.provider,
                 }
               }
               if (part.type === 'tool-call') {
@@ -218,11 +221,16 @@ export async function handleChatStreamRealtime(
                       'streaming.end_time_timestamp': new Date(
                         endTime
                       ).toISOString(),
-                      'streaming.output_ai_t': totalUsage.outputTokens,
-                      'streaming.total_ai_t': totalUsage.totalTokens,
-                      'streaming.reasoning_ai_t': totalUsage.reasoningTokens,
-                      'streaming.cached_input_ai_t':
-                        totalUsage.cachedInputTokens,
+                      ...(totalUsage
+                        ? {
+                            'streaming.output_ai_t': totalUsage.outputTokens,
+                            'streaming.total_ai_t': totalUsage.totalTokens,
+                            'streaming.reasoning_ai_t':
+                              totalUsage.reasoningTokens,
+                            'streaming.cached_input_ai_t':
+                              totalUsage.cachedInputTokens,
+                          }
+                        : {}),
                       'streaming.response_time': responseTime,
                       'streaming.finish_reason': part.finishReason,
                     },
@@ -238,7 +246,7 @@ export async function handleChatStreamRealtime(
                 )
 
                 return {
-                  totalUsage: part.totalUsage,
+                  ...(totalUsage ? { totalUsage } : {}),
                   responseTime: endTime - startTime,
                   finishReason: part.finishReason,
                 }

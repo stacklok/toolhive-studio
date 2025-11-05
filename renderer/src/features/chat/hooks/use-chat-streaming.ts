@@ -8,6 +8,7 @@ import { useChatSettings } from './use-chat-settings'
 import { useThreadManagement } from './use-thread-management'
 import type { FileUIPart } from 'ai'
 import { trackEvent } from '@/common/lib/analytics'
+import { hasValidCredentials } from '../lib/utils'
 
 export function useChatStreaming() {
   const queryClient = useQueryClient()
@@ -144,8 +145,7 @@ export function useChatStreaming() {
       if (
         !settings.provider ||
         !settings.model ||
-        !settings.apiKey ||
-        !settings.apiKey.trim()
+        !hasValidCredentials(settings)
       ) {
         throw new Error('Please configure your AI provider settings first')
       }
