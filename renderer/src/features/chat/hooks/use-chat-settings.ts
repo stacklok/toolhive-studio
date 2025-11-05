@@ -1,12 +1,45 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useMemo } from 'react'
 import type { ChatSettings, ChatProvider } from '../types'
+import {
+  isLocalServerSettings,
+  providerHasApiKey as hasApiKey,
+} from '../lib/utils'
 
-export interface ProviderWithSettings {
+export type ProviderWithSettings =
+  | {
+      provider: ChatProvider & { id: 'ollama' | 'lmstudio' }
+      endpointURL: string
+      hasKey: boolean
+      enabledTools: string[]
+    }
+  | {
+      provider: ChatProvider & { id: string }
+      apiKey: string
+      hasKey: boolean
+      enabledTools: string[]
+    }
+
+export function isLocalServerProvider(
+  provider: ProviderWithSettings
+): provider is Extract<ProviderWithSettings, { endpointURL: string }> {
+  return (
+    (provider.provider.id === 'ollama' ||
+      provider.provider.id === 'lmstudio') &&
+    'endpointURL' in provider
+  )
+}
+
+export function getProviderCredential(provider: ProviderWithSettings): string {
+  return isLocalServerProvider(provider)
+    ? provider.endpointURL
+    : provider.apiKey
+}
+
+function isChatProviderLocalServer(
   provider: ChatProvider
-  apiKey: string
-  hasKey: boolean
-  enabledTools: string[]
+): provider is ChatProvider & { id: 'ollama' | 'lmstudio' } {
+  return provider.id === 'ollama' || provider.id === 'lmstudio'
 }
 
 // Query keys
@@ -43,25 +76,46 @@ function useAllProvidersWithSettings() {
     queryFn: async (): Promise<ProviderWithSettings[]> => {
       const allProviders = await window.electronAPI.chat.getProviders()
 
-      // Load existing API keys for each provider
       const providersWithSettings = await Promise.all(
-        allProviders.map(async (provider) => {
+        allProviders.map(async (provider): Promise<ProviderWithSettings> => {
           try {
             const settings = await window.electronAPI.chat.getSettings(
               provider.id
             )
-            return {
-              provider,
-              apiKey: settings.apiKey || '',
-              hasKey: Boolean(settings.apiKey),
-              enabledTools: settings.enabledTools || [],
+
+            if (isChatProviderLocalServer(provider)) {
+              const endpointURL =
+                'endpointURL' in settings ? settings.endpointURL || '' : ''
+              return {
+                provider,
+                endpointURL,
+                hasKey: Boolean(endpointURL),
+                enabledTools: settings.enabledTools || [],
+              }
+            } else {
+              const apiKey = hasApiKey(settings) ? settings.apiKey || '' : ''
+              return {
+                provider,
+                apiKey,
+                hasKey: Boolean(apiKey),
+                enabledTools: settings.enabledTools || [],
+              }
             }
           } catch {
-            return {
-              provider,
-              apiKey: '',
-              hasKey: false,
-              enabledTools: [],
+            if (isChatProviderLocalServer(provider)) {
+              return {
+                provider,
+                endpointURL: '',
+                hasKey: false,
+                enabledTools: [],
+              }
+            } else {
+              return {
+                provider,
+                apiKey: '',
+                hasKey: false,
+                enabledTools: [],
+              }
             }
           }
         })
@@ -84,6 +138,7 @@ export function useChatSettings() {
   const {
     data: allProvidersWithSettings,
     isLoading: isAllProviderWithSettingsLoading,
+    refetch: refetchProviders,
   } = useAllProvidersWithSettings()
 
   // Query for enabled MCP servers (this is what the UI uses)
@@ -123,17 +178,39 @@ export function useChatSettings() {
     const providerTools = providerSettings?.enabledTools || []
     const allEnabledTools = [...providerTools, ...mcpToolNames]
 
-    return {
-      provider: selectedModel?.provider || '',
-      model: selectedModel?.model || '',
-      apiKey: providerSettings?.apiKey || '',
-      enabledTools: allEnabledTools,
+    // Build settings with proper discriminated union
+    if (
+      selectedModel?.provider === 'ollama' ||
+      selectedModel?.provider === 'lmstudio'
+    ) {
+      const endpointURL =
+        providerSettings && 'endpointURL' in providerSettings
+          ? providerSettings.endpointURL || ''
+          : ''
+
+      return {
+        provider: selectedModel.provider,
+        model: selectedModel.model || '',
+        endpointURL,
+        enabledTools: allEnabledTools,
+      }
+    } else {
+      const apiKey =
+        providerSettings && hasApiKey(providerSettings)
+          ? providerSettings.apiKey || ''
+          : ''
+
+      return {
+        provider: selectedModel?.provider || '',
+        model: selectedModel?.model || '',
+        apiKey,
+        enabledTools: allEnabledTools,
+      }
     }
   }, [
     selectedModel?.provider,
     selectedModel?.model,
-    providerSettings?.apiKey,
-    providerSettings?.enabledTools,
+    providerSettings,
     enabledMcpTools,
     enabledMcpServers,
   ])
@@ -156,15 +233,25 @@ export function useChatSettings() {
       settings: newSettings,
     }: {
       provider: string
-      settings: { apiKey: string; enabledTools: string[] }
+      settings:
+        | { apiKey: string; enabledTools: string[] }
+        | { endpointURL: string; enabledTools: string[] }
     }) => {
-      if (newSettings.apiKey.trim()) {
-        // Save API key with settings
-        return window.electronAPI.chat.saveSettings(provider, newSettings)
-      } else {
-        // Clear/remove API key when empty
-        return window.electronAPI.chat.clearSettings(provider)
-      }
+      const settingsToSave =
+        provider === 'ollama' || provider === 'lmstudio'
+          ? 'endpointURL' in newSettings
+            ? {
+                endpointURL: newSettings.endpointURL,
+                enabledTools: newSettings.enabledTools,
+              }
+            : { endpointURL: '', enabledTools: newSettings.enabledTools }
+          : 'apiKey' in newSettings
+            ? {
+                apiKey: newSettings.apiKey,
+                enabledTools: newSettings.enabledTools,
+              }
+            : { apiKey: '', enabledTools: newSettings.enabledTools }
+      return window.electronAPI.chat.saveSettings(provider, settingsToSave)
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
@@ -212,10 +299,17 @@ export function useChatSettings() {
 
         await updateProviderSettingsMutation.mutateAsync({
           provider: selectedModel.provider,
-          settings: {
-            apiKey: currentProviderSettings.apiKey || '',
-            enabledTools: tools,
-          },
+          settings: isLocalServerSettings(currentProviderSettings)
+            ? {
+                endpointURL: currentProviderSettings.endpointURL || '',
+                enabledTools: tools,
+              }
+            : {
+                apiKey: hasApiKey(currentProviderSettings)
+                  ? currentProviderSettings.apiKey || ''
+                  : '',
+                enabledTools: tools,
+              },
         })
       } catch (error) {
         console.error('Failed to update enabled tools:', error)
@@ -272,6 +366,7 @@ export function useChatSettings() {
       allProvidersWithSettings: allProvidersWithSettings || [],
       isLoadingProviders: isAllProviderWithSettingsLoading,
       isLoading: combinedIsLoading,
+      refetchProviders,
     }),
     [
       settings,
@@ -282,6 +377,7 @@ export function useChatSettings() {
       allProvidersWithSettings,
       isAllProviderWithSettingsLoading,
       combinedIsLoading,
+      refetchProviders,
     ]
   )
 
