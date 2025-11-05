@@ -472,7 +472,7 @@ describe('useChatSettings', () => {
       })
     })
 
-    it('clears settings when API key is empty', async () => {
+    it('saves empty settings when API key is empty', async () => {
       const { Wrapper } = createTestUtils()
       const { result } = renderHook(() => useChatSettings(), {
         wrapper: Wrapper,
@@ -490,10 +490,13 @@ describe('useChatSettings', () => {
         },
       })
 
-      expect(mockChatAPI.clearSettings).toHaveBeenCalledWith('openai')
+      expect(mockChatAPI.saveSettings).toHaveBeenCalledWith('openai', {
+        apiKey: '',
+        enabledTools: [],
+      })
     })
 
-    it('clears settings when API key is only whitespace', async () => {
+    it('saves whitespace settings when API key is only whitespace', async () => {
       const { Wrapper } = createTestUtils()
       const { result } = renderHook(() => useChatSettings(), {
         wrapper: Wrapper,
@@ -511,7 +514,10 @@ describe('useChatSettings', () => {
         },
       })
 
-      expect(mockChatAPI.clearSettings).toHaveBeenCalledWith('openai')
+      expect(mockChatAPI.saveSettings).toHaveBeenCalledWith('openai', {
+        apiKey: '   ',
+        enabledTools: [],
+      })
     })
   })
 
