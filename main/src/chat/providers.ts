@@ -8,7 +8,12 @@ import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import type { LanguageModel } from 'ai'
 import log from '../logger'
 import { getChatSettings } from './settings-storage'
-import { CHAT_PROVIDER_INFO, type ChatProviderInfo } from './constants'
+import {
+  CHAT_PROVIDER_INFO,
+  DEFAULT_OLLAMA_URL,
+  DEFAULT_LMSTUDIO_URL,
+  type ChatProviderInfo,
+} from './constants'
 
 // OpenRouter API interfaces
 interface OpenRouterModel {
@@ -92,14 +97,14 @@ export const CHAT_PROVIDERS: ChatProvider[] = [
     models: CHAT_PROVIDER_INFO.find((p) => p.id === 'ollama')?.models || [],
     createModel: (modelId: string, endpointURL: string) => {
       // For Ollama, endpointURL comes from ChatSettingsProvider.endpointURL
-      // If empty or not a valid URL, default to localhost:11434
+      // If empty or not a valid URL, default to DEFAULT_OLLAMA_URL
       const baseURL =
         endpointURL &&
         endpointURL.trim() &&
         (endpointURL.startsWith('http://') ||
           endpointURL.startsWith('https://'))
           ? endpointURL.trim()
-          : 'http://localhost:11434'
+          : DEFAULT_OLLAMA_URL
 
       log.info(
         `[CHAT] Creating Ollama model: ${modelId} with endpointURL: ${baseURL}`
@@ -115,14 +120,14 @@ export const CHAT_PROVIDERS: ChatProvider[] = [
     models: CHAT_PROVIDER_INFO.find((p) => p.id === 'lmstudio')?.models || [],
     createModel: (modelId: string, endpointURL: string) => {
       // For LM Studio, endpointURL comes from ChatSettingsProvider.endpointURL
-      // If empty or not a valid URL, default to localhost:1234
+      // If empty or not a valid URL, default to DEFAULT_LMSTUDIO_URL
       let rawURL =
         endpointURL &&
         endpointURL.trim() &&
         (endpointURL.startsWith('http://') ||
           endpointURL.startsWith('https://'))
           ? endpointURL.trim()
-          : 'http://localhost:1234'
+          : DEFAULT_LMSTUDIO_URL
 
       // Remove trailing slash if present
       rawURL = rawURL.replace(/\/$/, '')
@@ -182,7 +187,7 @@ interface OllamaModelsResponse {
 
 // Fetch available models from Ollama API
 async function fetchOllamaModels(
-  baseURL = 'http://localhost:11434'
+  baseURL = DEFAULT_OLLAMA_URL
 ): Promise<string[]> {
   try {
     const response = await fetch(`${baseURL}/api/tags`, {
@@ -247,7 +252,7 @@ interface LMStudioModelsResponse {
 
 // Fetch available models from LM Studio API
 async function fetchLMStudioModels(
-  baseURL = 'http://localhost:1234'
+  baseURL = DEFAULT_LMSTUDIO_URL
 ): Promise<string[]> {
   try {
     const response = await fetch(`${baseURL}/api/v1/models`, {
@@ -355,7 +360,7 @@ export async function fetchProviderModelsHandler(
       const baseURL =
         tempCredential && tempCredential.trim()
           ? tempCredential.trim()
-          : 'http://localhost:11434'
+          : DEFAULT_OLLAMA_URL
 
       const models = await fetchOllamaModels(baseURL)
       return {
@@ -374,7 +379,7 @@ export async function fetchProviderModelsHandler(
       const baseURL =
         tempCredential && tempCredential.trim()
           ? tempCredential.trim()
-          : 'http://localhost:1234'
+          : DEFAULT_LMSTUDIO_URL
 
       const models = await fetchLMStudioModels(baseURL)
       return {
@@ -404,7 +409,7 @@ export async function getAllProvidersHandler(): Promise<
       const baseURL =
         'endpointURL' in ollamaSettings
           ? ollamaSettings.endpointURL
-          : 'http://localhost:11434'
+          : DEFAULT_OLLAMA_URL
 
       const ollamaModels = await fetchOllamaModels(baseURL)
       const originalProvider = providers[ollamaIndex]
@@ -428,7 +433,7 @@ export async function getAllProvidersHandler(): Promise<
       const baseURL =
         'endpointURL' in lmstudioSettings
           ? lmstudioSettings.endpointURL
-          : 'http://localhost:1234'
+          : DEFAULT_LMSTUDIO_URL
 
       const lmstudioModels = await fetchLMStudioModels(baseURL)
       const originalProvider = providers[lmstudioIndex]
@@ -450,9 +455,8 @@ export async function getAllProvidersHandler(): Promise<
       const openRouterSettings = getChatSettings('openrouter')
 
       if (
-        openRouterSettings.providerId !== 'ollama' &&
         'apiKey' in openRouterSettings &&
-        openRouterSettings.apiKey &&
+        typeof openRouterSettings.apiKey === 'string' &&
         openRouterSettings.apiKey.trim() !== ''
       ) {
         const openRouterModels = await fetchOpenRouterModels()

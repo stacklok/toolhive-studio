@@ -65,9 +65,7 @@ export function ModelSelector({
               endpointURL:
                 'endpointURL' in providerSettings
                   ? providerSettings.endpointURL
-                  : providerId === 'lmstudio'
-                    ? 'http://localhost:1234'
-                    : 'http://localhost:11434',
+                  : '',
               enabledTools: settings.enabledTools,
             }
           : {

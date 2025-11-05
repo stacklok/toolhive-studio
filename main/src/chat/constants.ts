@@ -1,3 +1,7 @@
+// Default endpoint URLs for local server providers
+export const DEFAULT_OLLAMA_URL = 'http://localhost:11434'
+export const DEFAULT_LMSTUDIO_URL = 'http://localhost:1234'
+
 // Provider configuration for IPC (serializable)
 export interface ChatProviderInfo {
   id: string
