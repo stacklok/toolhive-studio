@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import type { ChatProvider } from '../types'
+import { hasValidCredentials } from '../lib/utils'
 
 interface AvailableProvider extends ChatProvider {
-  hasApiKey: boolean
+  hasCredentials: boolean
 }
 
 export function useAvailableModels() {
@@ -12,45 +13,41 @@ export function useAvailableModels() {
   >({
     queryKey: ['chat', 'availableModels'],
     queryFn: async () => {
-      // Get all providers
       const providers: ChatProvider[] =
         await window.electronAPI.chat.getProviders()
 
-      // Check which providers have API keys
-      const providersWithApiKeys = await Promise.all(
+      const providersWithCredentials = await Promise.all(
         providers.map(async (provider) => {
           try {
             const settings = await window.electronAPI.chat.getSettings(
               provider.id
             )
+
             return {
               ...provider,
-              hasApiKey: Boolean(settings.apiKey),
+              hasCredentials: hasValidCredentials(settings),
             }
           } catch {
             return {
               ...provider,
-              hasApiKey: false,
+              hasCredentials: false,
             }
           }
         })
       )
 
-      return providersWithApiKeys
+      return providersWithCredentials
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: false,
   })
 
-  // Filter to only providers with API keys
-  const providersWithApiKeys = useMemo(
-    () => availableProviders.filter((provider) => provider.hasApiKey),
+  const providersWithCredentials = useMemo(
+    () => availableProviders.filter((provider) => provider.hasCredentials),
     [availableProviders]
   )
 
   return {
     availableProviders,
-    providersWithApiKeys,
+    providersWithCredentials,
     isLoading,
   }
 }
