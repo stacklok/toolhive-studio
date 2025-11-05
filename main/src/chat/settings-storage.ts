@@ -8,12 +8,23 @@ import { getHeaders } from '../headers'
 import { getTearingDownState } from '../app-state'
 import { getToolhiveMcpInfo } from './mcp-tools'
 import { TOOLHIVE_MCP_SERVER_NAME } from '../utils/constants'
+import { CHAT_PROVIDER_INFO } from './constants'
 
-// Chat store types
-interface ChatSettingsProvider {
-  apiKey: string
-  enabledTools: string[]
-}
+// Extract provider IDs from CHAT_PROVIDER_INFO
+type ProviderId = (typeof CHAT_PROVIDER_INFO)[number]['id']
+
+// Chat store types - discriminated union for provider settings
+type ChatSettingsProvider =
+  | {
+      providerId: 'ollama' | 'lmstudio'
+      endpointURL: string
+      enabledTools: string[]
+    }
+  | {
+      providerId: Exclude<ProviderId, 'ollama' | 'lmstudio'>
+      apiKey: string
+      enabledTools: string[]
+    }
 
 interface ChatSettingsSelectedModel {
   provider: string
@@ -21,7 +32,7 @@ interface ChatSettingsSelectedModel {
 }
 
 interface ChatSettings {
-  providers: Record<string, ChatSettingsProvider>
+  providers: Record<ProviderId, ChatSettingsProvider>
   selectedModel: ChatSettingsSelectedModel
   enabledMcpTools: Record<string, string[]> // serverName -> [toolName1, toolName2]
 }
@@ -37,12 +48,16 @@ function isStringArray(value: unknown): value is string[] {
 
 function isProvidersRecord(value: unknown): value is ChatSettings['providers'] {
   if (!isRecord(value)) return false
-  return Object.values(value).every(
-    (item) =>
-      isRecord(item) &&
-      typeof item.apiKey === 'string' &&
-      isStringArray(item.enabledTools)
-  )
+  return Object.entries(value).every(([providerId, item]) => {
+    if (!isRecord(item) || !isStringArray(item.enabledTools)) return false
+
+    // Check if it's a local server provider (with endpointURL) or cloud provider (with apiKey)
+    if (providerId === 'ollama' || providerId === 'lmstudio') {
+      return typeof item.endpointURL === 'string'
+    } else {
+      return typeof item.apiKey === 'string'
+    }
+  })
 }
 
 function isToolsRecord(
@@ -76,28 +91,98 @@ const chatStore = new Store<ChatSettings>({
 })
 
 // Get chat settings for a provider
-export function getChatSettings(providerId: string): ChatSettingsProvider {
+export function getChatSettings(providerId: ProviderId): ChatSettingsProvider {
   try {
     const providers = chatStore.get('providers')
     if (isProvidersRecord(providers)) {
-      return providers[providerId] || { apiKey: '', enabledTools: [] }
+      const existing = providers[providerId]
+      if (existing) return existing
+
+      // Return default based on provider type
+      if (providerId === 'ollama' || providerId === 'lmstudio') {
+        return {
+          providerId,
+          endpointURL: '',
+          enabledTools: [],
+        }
+      } else {
+        return {
+          providerId: providerId as Exclude<ProviderId, 'ollama' | 'lmstudio'>,
+          apiKey: '',
+          enabledTools: [],
+        }
+      }
     }
-    return { apiKey: '', enabledTools: [] }
+
+    // Fallback defaults
+    if (providerId === 'ollama' || providerId === 'lmstudio') {
+      return {
+        providerId,
+        endpointURL: '',
+        enabledTools: [],
+      }
+    } else {
+      return {
+        providerId: providerId as Exclude<ProviderId, 'ollama' | 'lmstudio'>,
+        apiKey: '',
+        enabledTools: [],
+      }
+    }
   } catch (error) {
     log.error('Failed to get chat settings:', error)
-    return { apiKey: '', enabledTools: [] }
+    // Fallback defaults
+    if (providerId === 'ollama' || providerId === 'lmstudio') {
+      return {
+        providerId,
+        endpointURL: '',
+        enabledTools: [],
+      }
+    } else {
+      return {
+        providerId: providerId as Exclude<ProviderId, 'ollama' | 'lmstudio'>,
+        apiKey: '',
+        enabledTools: [],
+      }
+    }
   }
 }
 
 // Save chat settings for a provider
-export function saveChatSettings(
-  providerId: string,
+function saveChatSettings(
+  providerId: ProviderId,
   settings: ChatSettingsProvider
 ): { success: boolean; error?: string } {
   try {
+    // Ensure providerId matches the settings type
+    const settingsWithProviderId: ChatSettingsProvider =
+      providerId === 'ollama' || providerId === 'lmstudio'
+        ? {
+            providerId,
+            endpointURL:
+              (settings.providerId === 'ollama' ||
+                settings.providerId === 'lmstudio') &&
+              'endpointURL' in settings
+                ? settings.endpointURL
+                : '',
+            enabledTools: settings.enabledTools,
+          }
+        : {
+            providerId: providerId as Exclude<
+              ProviderId,
+              'ollama' | 'lmstudio'
+            >,
+            apiKey:
+              settings.providerId !== 'ollama' &&
+              settings.providerId !== 'lmstudio' &&
+              'apiKey' in settings
+                ? settings.apiKey
+                : '',
+            enabledTools: settings.enabledTools,
+          }
+
     const providers = chatStore.get('providers')
     const typedProviders = isProvidersRecord(providers) ? providers : {}
-    typedProviders[providerId] = settings
+    typedProviders[providerId] = settingsWithProviderId
     chatStore.set('providers', typedProviders)
     return { success: true }
   } catch (error) {
@@ -113,7 +198,7 @@ export function saveChatSettings(
 }
 
 // Clear chat settings for a provider
-export function clearChatSettings(providerId?: string): {
+export function clearChatSettings(providerId?: ProviderId): {
   success: boolean
   error?: string
 } {
@@ -289,4 +374,44 @@ export async function getEnabledMcpServersFromTools(): Promise<string[]> {
     log.error('Failed to get enabled MCP servers from tools:', error)
     return []
   }
+}
+
+// Handler for IPC save settings - handles conversion and validation
+export function handleSaveSettings(
+  providerId: string,
+  settings:
+    | { apiKey: string; enabledTools: string[] }
+    | { endpointURL: string; enabledTools: string[] }
+): { success: boolean; error?: string } {
+  const providerIdTyped = providerId as ProviderId
+
+  const credentialValue =
+    providerIdTyped === 'ollama' || providerIdTyped === 'lmstudio'
+      ? 'endpointURL' in settings
+        ? settings.endpointURL
+        : ''
+      : 'apiKey' in settings
+        ? settings.apiKey
+        : ''
+
+  if (!credentialValue || !credentialValue.trim()) {
+    return clearChatSettings(providerIdTyped)
+  }
+
+  const chatSettingsProvider: ChatSettingsProvider =
+    providerIdTyped === 'ollama' || providerIdTyped === 'lmstudio'
+      ? {
+          providerId: providerIdTyped,
+          endpointURL: credentialValue,
+          enabledTools: settings.enabledTools,
+        }
+      : {
+          providerId: providerIdTyped as Exclude<
+            ProviderId,
+            'ollama' | 'lmstudio'
+          >,
+          apiKey: credentialValue,
+          enabledTools: settings.enabledTools,
+        }
+  return saveChatSettings(providerIdTyped, chatSettingsProvider)
 }
