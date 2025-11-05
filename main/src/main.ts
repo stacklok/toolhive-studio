@@ -68,18 +68,22 @@ import {
   type FeatureFlagOptions,
 } from './feature-flags'
 import {
-  CHAT_PROVIDER_INFO,
+  discoverToolSupportedModels,
+  fetchProviderModelsHandler,
+  getAllProvidersHandler,
+} from './chat/providers'
+import {
   getChatSettings,
-  saveChatSettings,
   clearChatSettings,
   getSelectedModel,
   saveSelectedModel,
-  getMcpServerTools,
   getEnabledMcpTools,
   getEnabledMcpServersFromTools,
   saveEnabledMcpTools,
-  discoverToolSupportedModels,
-  fetchOpenRouterModels,
+  handleSaveSettings,
+} from './chat/settings-storage'
+import {
+  getMcpServerTools,
   getToolhiveMcpInfo,
   // Thread storage functions
   createThread,
@@ -654,40 +658,13 @@ ipcMain.handle(
 //  Chat IPC handlers
 // ────────────────────────────────────────────────────────────────────────────
 
-ipcMain.handle('chat:get-providers', async () => {
-  // Create a copy of the provider info to avoid modifying the original
-  const providers = [...CHAT_PROVIDER_INFO]
+ipcMain.handle(
+  'chat:fetch-provider-models',
+  (_, providerId: string, tempCredential?: string) =>
+    fetchProviderModelsHandler(providerId, tempCredential)
+)
 
-  // For OpenRouter, fetch the latest models dynamically only if API key is available
-  const openRouterIndex = providers.findIndex((p) => p.id === 'openrouter')
-  if (openRouterIndex !== -1) {
-    try {
-      const openRouterSettings = getChatSettings('openrouter')
-
-      // Only fetch models if user has provided an API key
-      if (
-        openRouterSettings.apiKey &&
-        openRouterSettings.apiKey.trim() !== ''
-      ) {
-        const openRouterModels = await fetchOpenRouterModels()
-        const originalProvider = providers[openRouterIndex]
-        if (originalProvider) {
-          providers[openRouterIndex] = {
-            id: originalProvider.id,
-            name: originalProvider.name,
-            models: openRouterModels,
-          }
-        }
-      }
-      // If no API key, keep the original hardcoded models as fallback
-    } catch (error) {
-      log.error('Failed to fetch OpenRouter models, using fallback:', error)
-      // Keep the original hardcoded models as fallback
-    }
-  }
-
-  return providers
-})
+ipcMain.handle('chat:get-providers', () => getAllProvidersHandler())
 
 // Chat streaming endpoint - uses real-time IPC events
 ipcMain.handle('chat:stream', async (event, request: ChatRequest) => {
@@ -702,18 +679,20 @@ ipcMain.handle('chat:stream', async (event, request: ChatRequest) => {
 
 // Chat settings store handlers
 ipcMain.handle('chat:get-settings', (_, providerId: string) =>
-  getChatSettings(providerId)
+  getChatSettings(providerId as Parameters<typeof getChatSettings>[0])
 )
 ipcMain.handle(
   'chat:save-settings',
   (
     _,
     providerId: string,
-    settings: { apiKey: string; enabledTools: string[] }
-  ) => saveChatSettings(providerId, settings)
+    settings:
+      | { apiKey: string; enabledTools: string[] }
+      | { endpointURL: string; enabledTools: string[] }
+  ) => handleSaveSettings(providerId, settings)
 )
 ipcMain.handle('chat:clear-settings', (_, providerId?: string) =>
-  clearChatSettings(providerId)
+  clearChatSettings(providerId as Parameters<typeof clearChatSettings>[0])
 )
 ipcMain.handle('chat:discover-models', () => discoverToolSupportedModels())
 
