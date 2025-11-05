@@ -186,9 +186,11 @@ interface OllamaModelsResponse {
 }
 
 // Fetch available models from Ollama API
-async function fetchOllamaModels(
-  baseURL = DEFAULT_OLLAMA_URL
-): Promise<string[]> {
+async function fetchOllamaModels(baseURL?: string): Promise<string[]> {
+  if (!baseURL || !baseURL.trim()) {
+    return []
+  }
+
   try {
     const response = await fetch(`${baseURL}/api/tags`, {
       headers: {
@@ -251,9 +253,11 @@ interface LMStudioModelsResponse {
 }
 
 // Fetch available models from LM Studio API
-async function fetchLMStudioModels(
-  baseURL = DEFAULT_LMSTUDIO_URL
-): Promise<string[]> {
+async function fetchLMStudioModels(baseURL?: string): Promise<string[]> {
+  if (!baseURL || !baseURL.trim()) {
+    return []
+  }
+
   try {
     const response = await fetch(`${baseURL}/api/v1/models`, {
       headers: {
