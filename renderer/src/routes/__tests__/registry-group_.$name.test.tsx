@@ -368,6 +368,112 @@ describe('Registry Group Detail Route', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('shows Finish button on the last server in wizard', async () => {
+    // Override the mock to use a group with 2 servers
+    mockUseParams.mockReturnValue({ name: 'two-server-group' })
+
+    // Create a fixture with exactly 2 servers
+    const twoServerRegistry: V1GetRegistryResponse = {
+      registry: {
+        servers: {},
+        groups: [
+          {
+            name: 'two-server-group',
+            description: 'A group with two servers',
+            servers: {
+              'first-server': {
+                name: 'first-server',
+                image: 'ghcr.io/example/first:latest',
+                description: 'First server',
+                tier: 'Official',
+                status: 'Active',
+                transport: 'stdio',
+                permissions: {},
+                tools: ['tool1'],
+                env_vars: [],
+                args: [],
+                metadata: {
+                  stars: 100,
+                  pulls: 1000,
+                  last_updated: '2025-01-01T00:00:00Z',
+                },
+                repository_url: 'https://github.com/example/first',
+                tags: ['test'],
+              },
+              'second-server': {
+                name: 'second-server',
+                image: 'ghcr.io/example/second:latest',
+                description: 'Second server',
+                tier: 'Official',
+                status: 'Active',
+                transport: 'stdio',
+                permissions: {},
+                tools: ['tool2'],
+                env_vars: [],
+                args: [],
+                metadata: {
+                  stars: 200,
+                  pulls: 2000,
+                  last_updated: '2025-01-02T00:00:00Z',
+                },
+                repository_url: 'https://github.com/example/second',
+                tags: ['test'],
+              },
+            },
+            remote_servers: {},
+          },
+        ],
+      },
+    }
+
+    // Override the API response for this test
+    server.use(
+      http.get('*/api/v1beta/registry/:name', () => {
+        return HttpResponse.json(twoServerRegistry)
+      })
+    )
+
+    const router = createTestRouter(WrapperComponent)
+    renderRoute(router)
+
+    // Wait for page to load
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: 'two-server-group' })
+      ).toBeVisible()
+    })
+
+    // Click "Install group" button
+    const installButton = screen.getByRole('button', { name: /install group/i })
+    await userEvent.click(installButton)
+
+    // Wait for first server's form
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: /configure first-server/i })
+      ).toBeVisible()
+    })
+
+    // First server should show "Next" button
+    expect(screen.getByRole('button', { name: /^next$/i })).toBeVisible()
+
+    // Click Next to go to second (last) server
+    await userEvent.click(screen.getByRole('button', { name: /^next$/i }))
+
+    // Wait for second server's form
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: /configure second-server/i })
+      ).toBeVisible()
+    })
+
+    // Last server should show "Finish" button, not "Next"
+    expect(screen.getByRole('button', { name: /^finish$/i })).toBeVisible()
+    expect(
+      screen.queryByRole('button', { name: /^next$/i })
+    ).not.toBeInTheDocument()
+  })
+
   it('resets form with correct server names when navigating between servers', async () => {
     // Override the mock to use a group with multiple servers
     mockUseParams.mockReturnValue({ name: 'multi-server-group' })

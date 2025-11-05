@@ -169,7 +169,13 @@ export function DialogFormRemoteRegistryMcp({
       }}
       actionsOnCancel={closeDialog}
       actionsIsDisabled={isLoading}
-      actionsSubmitLabel={wizardContext?.hasMoreServers ? 'Next' : undefined}
+      actionsSubmitLabel={
+        wizardContext
+          ? wizardContext.hasMoreServers
+            ? 'Next'
+            : 'Finish'
+          : undefined
+      }
       form={form}
       onSubmit={form.handleSubmit(onSubmitForm)}
       title={`Add ${server?.name} remote MCP server`}

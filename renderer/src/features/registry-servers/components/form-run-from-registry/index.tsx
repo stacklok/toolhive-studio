@@ -188,7 +188,13 @@ export function FormRunFromRegistry({
         setActiveTab('configuration')
       }}
       actionsIsDisabled={isSubmitting}
-      actionsSubmitLabel={wizardContext?.hasMoreServers ? 'Next' : undefined}
+      actionsSubmitLabel={
+        wizardContext
+          ? wizardContext.hasMoreServers
+            ? 'Next'
+            : 'Finish'
+          : undefined
+      }
       form={form}
       onSubmit={form.handleSubmit(onSubmitForm, activateTabWithError)}
       title={`Configure ${server.name}`}
