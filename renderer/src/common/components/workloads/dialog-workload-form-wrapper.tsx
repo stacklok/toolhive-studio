@@ -20,6 +20,7 @@ export function DialogWorkloadFormWrapper<T extends FieldValues = FieldValues>({
   actionsIsDisabled = false,
   actionsIsEditing = false,
   actionsOnCancel,
+  actionsSubmitLabel,
   form,
   onSubmit,
   title,
@@ -30,6 +31,7 @@ export function DialogWorkloadFormWrapper<T extends FieldValues = FieldValues>({
   title: string
   actionsIsDisabled?: boolean
   actionsIsEditing?: boolean
+  actionsSubmitLabel?: string
   onSubmit: () => void
   onOpenChange: (open: boolean) => void
   onCloseAutoFocus: () => void
@@ -71,7 +73,8 @@ export function DialogWorkloadFormWrapper<T extends FieldValues = FieldValues>({
                   Cancel
                 </Button>
                 <Button disabled={actionsIsDisabled} type="submit">
-                  {actionsIsEditing ? 'Update server' : 'Install server'}
+                  {actionsSubmitLabel ??
+                    (actionsIsEditing ? 'Update server' : 'Install server')}
                 </Button>
               </DialogFooter>
             </form>

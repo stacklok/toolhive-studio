@@ -15,6 +15,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/common/components/ui/table'
+import { MultiServerInstallWizard } from '@/features/registry-servers/components/multi-server-install-wizard'
+import { useState } from 'react'
 
 export const Route = createFileRoute('/(registry)/registry-group_/$name')({
   loader: async ({ context: { queryClient } }) => {
@@ -31,6 +33,7 @@ export function RegistryGroupDetail() {
     getApiV1BetaRegistryByNameOptions({ path: { name: 'default' } })
   )
   const group = registryData?.registry?.groups?.find((g) => g.name === name)
+  const [isWizardOpen, setIsWizardOpen] = useState(false)
 
   const hasServers =
     Object.keys(group?.servers ?? {}).length > 0 ||
@@ -88,9 +91,9 @@ export function RegistryGroupDetail() {
           </div>
           <Separator className="my-6" />
           <div className="flex gap-5">
-            <Button variant="default">
+            <Button variant="default" onClick={() => setIsWizardOpen(true)}>
               <Wrench className="size-4" />
-              Create group
+              Install group
             </Button>
           </div>
         </>
@@ -102,6 +105,11 @@ export function RegistryGroupDetail() {
           </AlertDescription>
         </Alert>
       )}
+      <MultiServerInstallWizard
+        group={group}
+        isOpen={isWizardOpen}
+        onClose={() => setIsWizardOpen(false)}
+      />
     </div>
   )
 }

@@ -43,11 +43,16 @@ interface FormRunFromRegistryProps {
   server: RegistryImageMetadata | null
   isOpen: boolean
   onOpenChange: (open: boolean) => void
+  wizardContext?: {
+    onNext: () => void
+    hasMoreServers: boolean
+  }
 }
 
 export function FormRunFromRegistry({
   server,
   isOpen,
+  wizardContext,
   onOpenChange,
 }: FormRunFromRegistryProps) {
   const [error, setError] = useState<string | null>(null)
@@ -147,8 +152,13 @@ export function FormRunFromRegistry({
             serverName: data.name,
             groupName: data.group,
           })
-          onOpenChange(false)
-          setActiveTab('configuration')
+          if (wizardContext?.hasMoreServers) {
+            wizardContext.onNext()
+            setActiveTab('configuration')
+          } else {
+            onOpenChange(false)
+            setActiveTab('configuration')
+          }
         },
         onSettled: (_, error) => {
           setIsSubmitting(false)
@@ -178,6 +188,7 @@ export function FormRunFromRegistry({
         setActiveTab('configuration')
       }}
       actionsIsDisabled={isSubmitting}
+      actionsSubmitLabel={wizardContext?.hasMoreServers ? 'Next' : undefined}
       form={form}
       onSubmit={form.handleSubmit(onSubmitForm, activateTabWithError)}
       title={`Configure ${server.name}`}

@@ -246,6 +246,136 @@ describe('Registry Group Detail Route', () => {
     expect(screen.getByText('HuggingFace model inference')).toBeVisible()
   })
 
+  it('opens install wizard when clicking Install group button', async () => {
+    const router = createTestRouter(WrapperComponent)
+    renderRoute(router)
+
+    // Wait for page to load
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'dev-toolkit' })).toBeVisible()
+    })
+
+    // Find and click the "Install group" button
+    const installButton = screen.getByRole('button', { name: /install group/i })
+    expect(installButton).toBeVisible()
+
+    await userEvent.click(installButton)
+
+    // Verify the install wizard dialog opens with the first server's form
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: /configure atlassian/i })
+      ).toBeVisible()
+    })
+
+    // Verify the form tabs are visible
+    expect(screen.getByRole('tab', { name: /configuration/i })).toBeVisible()
+    expect(
+      screen.getByRole('tab', { name: /network isolation/i })
+    ).toBeVisible()
+  })
+
+  it('shows Next button in wizard and navigates to second server on click', async () => {
+    // Override the mock to use a group with multiple servers
+    mockUseParams.mockReturnValue({ name: 'multi-server-group' })
+
+    // Create a fixture with a group containing 2 servers
+    const multiServerRegistry: V1GetRegistryResponse = {
+      registry: {
+        servers: {},
+        groups: [
+          {
+            name: 'multi-server-group',
+            description: 'A group with multiple servers',
+            servers: {
+              'server-one': {
+                name: 'server-one',
+                image: 'ghcr.io/example/server-one:latest',
+                description: 'First server in the group',
+                tier: 'Official',
+                status: 'Active',
+                transport: 'stdio',
+                permissions: {},
+                tools: ['tool1'],
+                env_vars: [],
+                args: [],
+                metadata: {
+                  stars: 100,
+                  pulls: 1000,
+                  last_updated: '2025-01-01T00:00:00Z',
+                },
+                repository_url: 'https://github.com/example/server-one',
+                tags: ['test'],
+              },
+              'server-two': {
+                name: 'server-two',
+                image: 'ghcr.io/example/server-two:latest',
+                description: 'Second server in the group',
+                tier: 'Official',
+                status: 'Active',
+                transport: 'stdio',
+                permissions: {},
+                tools: ['tool2'],
+                env_vars: [],
+                args: [],
+                metadata: {
+                  stars: 200,
+                  pulls: 2000,
+                  last_updated: '2025-01-02T00:00:00Z',
+                },
+                repository_url: 'https://github.com/example/server-two',
+                tags: ['test'],
+              },
+            },
+            remote_servers: {},
+          },
+        ],
+      },
+    }
+
+    // Override the API response for this test
+    server.use(
+      http.get('*/api/v1beta/registry/:name', () => {
+        return HttpResponse.json(multiServerRegistry)
+      })
+    )
+
+    const router = createTestRouter(WrapperComponent)
+    renderRoute(router)
+
+    // Wait for page to load
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: 'multi-server-group' })
+      ).toBeVisible()
+    })
+
+    // Click the "Install group" button
+    const installButton = screen.getByRole('button', { name: /install group/i })
+    await userEvent.click(installButton)
+
+    // Wait for first server's form to appear
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: /configure server-one/i })
+      ).toBeVisible()
+    })
+
+    // Look for the "Next" button (should exist when there are more servers)
+    const nextButton = screen.getByRole('button', { name: /next/i })
+    expect(nextButton).toBeVisible()
+
+    // Click the Next button
+    await userEvent.click(nextButton)
+
+    // Verify we moved to the second server's form
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: /configure server-two/i })
+      ).toBeVisible()
+    })
+  })
+
   it('shows alert banner when group has no servers and hides the button', async () => {
     // Override the mock to return a different group name
     mockUseParams.mockReturnValue({ name: 'empty-group' })
@@ -290,9 +420,9 @@ describe('Registry Group Detail Route', () => {
     // Verify the table is NOT shown
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
 
-    // Verify the "Create group" button is NOT shown
+    // Verify the "Install group" button is NOT shown
     expect(
-      screen.queryByRole('button', { name: /create group/i })
+      screen.queryByRole('button', { name: /install group/i })
     ).not.toBeInTheDocument()
   })
 })
