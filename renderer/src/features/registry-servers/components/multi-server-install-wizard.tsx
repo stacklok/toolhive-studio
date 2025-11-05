@@ -61,6 +61,7 @@ export function MultiServerInstallWizard({
   if (isRemoteServer(currentServer)) {
     return (
       <DialogFormRemoteRegistryMcp
+        key={currentServer.name}
         server={currentServer}
         isOpen={isOpen}
         closeDialog={onClose}
@@ -70,6 +71,7 @@ export function MultiServerInstallWizard({
 
   return (
     <FormRunFromRegistry
+      key={currentServer.name}
       server={currentServer}
       isOpen={isOpen}
       onOpenChange={onClose}

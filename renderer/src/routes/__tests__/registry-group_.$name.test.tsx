@@ -376,6 +376,112 @@ describe('Registry Group Detail Route', () => {
     })
   })
 
+  it('resets form with correct server names when navigating between servers', async () => {
+    // Override the mock to use a group with multiple servers
+    mockUseParams.mockReturnValue({ name: 'multi-server-group' })
+
+    // Create a fixture with a group containing 2 servers with distinct names
+    const multiServerRegistry: V1GetRegistryResponse = {
+      registry: {
+        servers: {},
+        groups: [
+          {
+            name: 'multi-server-group',
+            description: 'A group with multiple servers',
+            servers: {
+              fetch: {
+                name: 'fetch',
+                image: 'ghcr.io/example/fetch:latest',
+                description: 'Fetch server',
+                tier: 'Official',
+                status: 'Active',
+                transport: 'stdio',
+                permissions: {},
+                tools: ['fetch'],
+                env_vars: [],
+                args: [],
+                metadata: {
+                  stars: 100,
+                  pulls: 1000,
+                  last_updated: '2025-01-01T00:00:00Z',
+                },
+                repository_url: 'https://github.com/example/fetch',
+                tags: ['test'],
+              },
+              filesystem: {
+                name: 'filesystem',
+                image: 'ghcr.io/example/filesystem:latest',
+                description: 'Filesystem server',
+                tier: 'Official',
+                status: 'Active',
+                transport: 'stdio',
+                permissions: {},
+                tools: ['read_file', 'write_file'],
+                env_vars: [],
+                args: [],
+                metadata: {
+                  stars: 200,
+                  pulls: 2000,
+                  last_updated: '2025-01-02T00:00:00Z',
+                },
+                repository_url: 'https://github.com/example/filesystem',
+                tags: ['test'],
+              },
+            },
+            remote_servers: {},
+          },
+        ],
+      },
+    }
+
+    // Override the API response for this test
+    server.use(
+      http.get('*/api/v1beta/registry/:name', () => {
+        return HttpResponse.json(multiServerRegistry)
+      })
+    )
+
+    const router = createTestRouter(WrapperComponent)
+    renderRoute(router)
+
+    // Wait for page to load
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: 'multi-server-group' })
+      ).toBeVisible()
+    })
+
+    // Click the "Install group" button
+    const installButton = screen.getByRole('button', { name: /install group/i })
+    await userEvent.click(installButton)
+
+    // Wait for first server's form to appear
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: /configure fetch/i })
+      ).toBeVisible()
+    })
+
+    // Verify the server name field has "fetch" as the default value
+    const firstServerNameInput = screen.getByLabelText(/server name/i)
+    expect(firstServerNameInput).toHaveValue('fetch')
+
+    // Click the Next button
+    const nextButton = screen.getByRole('button', { name: /next/i })
+    await userEvent.click(nextButton)
+
+    // Wait for second server's form to appear
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: /configure filesystem/i })
+      ).toBeVisible()
+    })
+
+    // Verify the server name field has been reset to "filesystem"
+    const secondServerNameInput = screen.getByLabelText(/server name/i)
+    expect(secondServerNameInput).toHaveValue('filesystem')
+  })
+
   it('shows alert banner when group has no servers and hides the button', async () => {
     // Override the mock to return a different group name
     mockUseParams.mockReturnValue({ name: 'empty-group' })
