@@ -3,8 +3,12 @@ import { createAnthropic } from '@ai-sdk/anthropic'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createXai } from '@ai-sdk/xai'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
+import { createOllama } from 'ai-sdk-ollama'
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import type { LanguageModel } from 'ai'
 import log from '../logger'
+import { getChatSettings } from './settings-storage'
+import { CHAT_PROVIDER_INFO, type ChatProviderInfo } from './constants'
 
 // OpenRouter API interfaces
 interface OpenRouterModel {
@@ -32,163 +36,17 @@ interface OpenRouterModelsResponse {
   data: OpenRouterModel[]
 }
 
-// Provider configuration for IPC (serializable)
-interface ChatProviderInfo {
-  id: string
-  name: string
-  models: string[]
-}
-
 // Internal provider configuration with functions
-interface ChatProvider extends ChatProviderInfo {
-  createModel: (modelId: string, apiKey: string) => LanguageModel
-}
-
-// Serializable provider info for the renderer
-export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
-  {
-    id: 'openai',
-    name: 'OpenAI',
-    models: [
-      // GPT series
-      'gpt-5',
-      'gpt-5-nano',
-      'gpt-5-mini',
-      'gpt-5-reasoning',
-      'gpt-4o',
-      'gpt-4o-mini',
-      'gpt-4.1',
-      'gpt-4.1-mini',
-      'gpt-4.1-nano',
-      'gpt-oss-20b',
-      'gpt-oss-120b',
-      'gpt-imagegen',
-      // O-series reasoning models
-      'o3',
-      'o3-mini',
-      'o3-pro',
-      'o4-mini',
-    ],
-  },
-  {
-    id: 'anthropic',
-    name: 'Anthropic',
-    models: [
-      // Claude 4 models (newest)
-      'claude-sonnet-4-5',
-      'claude-opus-4-1',
-      'claude-sonnet-4-0',
-      'claude-opus-4-0',
-
-      // Claude 3.7 models
-      'claude-3-7-sonnet-latest',
-      'claude-3-7-sonnet-20250219',
-
-      // Claude 3.5 models (current generation)
-      'claude-3-5-sonnet-latest',
-      'claude-3-5-sonnet-20241022',
-      'claude-3-5-sonnet-20240620',
-      'claude-3-5-haiku-latest',
-      'claude-3-5-haiku-20241022',
-
-      // Claude 3 models (previous generation)
-      'claude-3-opus-latest',
-      'claude-3-opus-20240229',
-      'claude-3-sonnet-20240229',
-      'claude-3-haiku-20240307',
-    ],
-  },
-  {
-    id: 'google',
-    name: 'Google',
-    models: [
-      'gemini-2.5-pro',
-      'gemini-2.5-flash',
-      'gemini-2.5-flash-lite',
-      'gemini-2.0-flash',
-      'gemini-2.0-flash-lite',
-      'gemini-2.5-flash-thinking',
-      'gemini-2.5-flash-lite-thinking',
-      'gemini-imagen-4',
-      'gemini-imagen-4-ultra',
-    ],
-  },
-  {
-    id: 'xai',
-    name: 'xAI',
-    models: ['grok-4', 'grok-3', 'grok-3-mini'],
-  },
-  {
-    id: 'openrouter',
-    name: 'OpenRouter',
-    models: [
-      // This will be dynamically populated from the API including all providers
-      // Fallback models for when API is unavailable:
-
-      // OpenAI models via OpenRouter
-      'openai/gpt-5-chat',
-      'openai/gpt-5-mini',
-      'openai/gpt-4o',
-      'openai/gpt-4o-mini',
-      'openai/gpt-4.1',
-      'openai/gpt-4.1-mini',
-      'openai/gpt-4.1-nano',
-      'openai/o3',
-      'openai/o3-mini',
-      'openai/o3-pro',
-      'openai/o4-mini',
-
-      // Anthropic models via OpenRouter
-      'anthropic/claude-3.5-sonnet:beta',
-      'anthropic/claude-3-5-sonnet-20241022',
-      'anthropic/claude-3-5-haiku-20241022',
-      'anthropic/claude-3-opus-20240229',
-      'anthropic/claude-3-sonnet-20240229',
-      'anthropic/claude-3-haiku-20240307',
-
-      // Google models via OpenRouter
-      'google/gemini-2.5-pro',
-      'google/gemini-2.5-flash',
-      'google/gemini-2.5-flash-lite',
-      'google/gemini-2.0-flash',
-      'google/gemini-2.0-flash-lite',
-      'google/gemini-2.5-flash-thinking',
-      'google/gemini-2.5-flash-lite-thinking',
-
-      // xAI models via OpenRouter
-      'xai/grok-4',
-      'xai/grok-3',
-      'xai/grok-3-mini',
-
-      // Meta (Llama) models
-      'meta-llama/llama-3.3-70b-instruct',
-      'meta-llama/llama-4-scout',
-      'meta-llama/llama-4-maverick',
-
-      // DeepSeek models
-      'deepseek/deepseek-r1-llama-distilled',
-      'deepseek/deepseek-v3-fireworks',
-      'deepseek/deepseek-v3-0324',
-      'deepseek/deepseek-r1-openrouter',
-      'deepseek/deepseek-r1-0528',
-      'deepseek/deepseek-r1-qwen-distilled',
-
-      // Alibaba (Qwen) models
-      'qwen/qwen-2.5-32b-instruct',
-      'qwen/qwen3-32b',
-      'qwen/qwen3-235b-thinking',
-      'qwen/qwen3-235b',
-      'qwen/qwen3-coder',
-
-      // Moonshot AI (Kimi) models
-      'moonshot/kimi-k2',
-
-      // Zhipu AI (GLM) models
-      'zhipuai/glm-4.5',
-      'zhipuai/glm-4.5-thinking',
-    ],
-  },
-]
+// Discriminated union: Ollama and LM Studio use endpointURL, others use apiKey
+type ChatProvider =
+  | (ChatProviderInfo & {
+      id: 'ollama' | 'lmstudio'
+      createModel: (modelId: string, endpointURL: string) => LanguageModel
+    })
+  | (ChatProviderInfo & {
+      id: Exclude<string, 'ollama' | 'lmstudio'>
+      createModel: (modelId: string, apiKey: string) => LanguageModel
+    })
 
 // Internal provider configurations with model creation functions
 export const CHAT_PROVIDERS: ChatProvider[] = [
@@ -229,6 +87,61 @@ export const CHAT_PROVIDERS: ChatProvider[] = [
     },
   },
   {
+    id: 'ollama',
+    name: 'Ollama',
+    models: CHAT_PROVIDER_INFO.find((p) => p.id === 'ollama')?.models || [],
+    createModel: (modelId: string, endpointURL: string) => {
+      // For Ollama, endpointURL comes from ChatSettingsProvider.endpointURL
+      // If empty or not a valid URL, default to localhost:11434
+      const baseURL =
+        endpointURL &&
+        endpointURL.trim() &&
+        (endpointURL.startsWith('http://') ||
+          endpointURL.startsWith('https://'))
+          ? endpointURL.trim()
+          : 'http://localhost:11434'
+
+      log.info(
+        `[CHAT] Creating Ollama model: ${modelId} with endpointURL: ${baseURL}`
+      )
+
+      const ollamaProvider = createOllama({ baseURL })
+      return ollamaProvider(modelId)
+    },
+  },
+  {
+    id: 'lmstudio',
+    name: 'LM Studio',
+    models: CHAT_PROVIDER_INFO.find((p) => p.id === 'lmstudio')?.models || [],
+    createModel: (modelId: string, endpointURL: string) => {
+      // For LM Studio, endpointURL comes from ChatSettingsProvider.endpointURL
+      // If empty or not a valid URL, default to localhost:1234
+      let rawURL =
+        endpointURL &&
+        endpointURL.trim() &&
+        (endpointURL.startsWith('http://') ||
+          endpointURL.startsWith('https://'))
+          ? endpointURL.trim()
+          : 'http://localhost:1234'
+
+      // Remove trailing slash if present
+      rawURL = rawURL.replace(/\/$/, '')
+
+      // LM Studio's OpenAI-compatible API is at /v1
+      const baseURL = `${rawURL}/v1`
+
+      log.info(
+        `[CHAT] Creating LM Studio model: ${modelId} with baseURL: ${baseURL}`
+      )
+
+      const lmstudioProvider = createOpenAICompatible({
+        name: 'lmstudio',
+        baseURL,
+      })
+      return lmstudioProvider(modelId)
+    },
+  },
+  {
     id: 'openrouter',
     name: 'OpenRouter',
     models: CHAT_PROVIDER_INFO.find((p) => p.id === 'openrouter')?.models || [],
@@ -246,8 +159,127 @@ export const CHAT_PROVIDERS: ChatProvider[] = [
   },
 ]
 
+// Ollama API interfaces
+interface OllamaModel {
+  name: string
+  model: string
+  modified_at: string
+  size: number
+  digest: string
+  details?: {
+    parent_model?: string
+    format?: string
+    family?: string
+    families?: string[]
+    parameter_size?: string
+    quantization_level?: string
+  }
+}
+
+interface OllamaModelsResponse {
+  models: OllamaModel[]
+}
+
+// Fetch available models from Ollama API
+async function fetchOllamaModels(
+  baseURL = 'http://localhost:11434'
+): Promise<string[]> {
+  try {
+    const response = await fetch(`${baseURL}/api/tags`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      log.error('Failed to fetch Ollama models:', response.statusText)
+      // Return empty array if API fails (Ollama not running or unreachable)
+      return []
+    }
+
+    const data = (await response.json()) as OllamaModelsResponse
+
+    // Extract model names from the response
+    const models = data.models.map((model) => model.name)
+
+    log.info(`[CHAT] Fetched ${models.length} models from Ollama at ${baseURL}`)
+    return models
+  } catch (error) {
+    log.error('Error fetching Ollama models:', error)
+    // Return empty array if API fails (Ollama not running or network error)
+    return []
+  }
+}
+
+// LM Studio API v1 interfaces
+interface LMStudioModel {
+  type: string
+  publisher: string
+  key: string
+  display_name: string
+  architecture?: string
+  quantization?: {
+    name: string
+    bits_per_weight: number
+  }
+  size_bytes: number
+  params_string?: string | null
+  loaded_instances: Array<{
+    id: string
+    config: {
+      context_length: number
+    }
+  }>
+  max_context_length: number
+  format: string
+  capabilities?: {
+    vision: boolean
+    trained_for_tool_use: boolean
+  }
+  description?: string | null
+  variants?: string[]
+  selected_variant?: string
+}
+
+interface LMStudioModelsResponse {
+  models: LMStudioModel[]
+}
+
+// Fetch available models from LM Studio API
+async function fetchLMStudioModels(
+  baseURL = 'http://localhost:1234'
+): Promise<string[]> {
+  try {
+    const response = await fetch(`${baseURL}/api/v1/models`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      log.error('Failed to fetch LM Studio models:', response.statusText)
+      return []
+    }
+
+    const data = (await response.json()) as LMStudioModelsResponse
+
+    // Extract model keys from the response (filter out embedding models for chat)
+    const models = data.models
+      .filter((model) => model.type === 'llm' || model.type === 'vlm')
+      .map((model) => model.key)
+
+    log.info(
+      `[CHAT] Fetched ${models.length} models from LM Studio at ${baseURL}`
+    )
+    return models
+  } catch (error) {
+    log.error('Error fetching LM Studio models:', error)
+    return []
+  }
+}
+
 // Fetch available models from OpenRouter API
-export async function fetchOpenRouterModels(): Promise<string[]> {
+async function fetchOpenRouterModels(): Promise<string[]> {
   try {
     const response = await fetch('https://openrouter.ai/api/v1/models', {
       headers: {
@@ -312,4 +344,131 @@ export function discoverToolSupportedModels(): {
       models: provider.models,
     })),
   }
+}
+
+export async function fetchProviderModelsHandler(
+  providerId: string,
+  tempCredential?: string
+): Promise<{ id: string; name: string; models: string[] } | null> {
+  if (providerId === 'ollama') {
+    try {
+      const baseURL =
+        tempCredential && tempCredential.trim()
+          ? tempCredential.trim()
+          : 'http://localhost:11434'
+
+      const models = await fetchOllamaModels(baseURL)
+      return {
+        id: 'ollama',
+        name: 'Ollama',
+        models,
+      }
+    } catch (error) {
+      log.error('Failed to fetch Ollama models:', error)
+      return null
+    }
+  }
+
+  if (providerId === 'lmstudio') {
+    try {
+      const baseURL =
+        tempCredential && tempCredential.trim()
+          ? tempCredential.trim()
+          : 'http://localhost:1234'
+
+      const models = await fetchLMStudioModels(baseURL)
+      return {
+        id: 'lmstudio',
+        name: 'LM Studio',
+        models,
+      }
+    } catch (error) {
+      log.error('Failed to fetch LM Studio models:', error)
+      return null
+    }
+  }
+
+  return null
+}
+
+export async function getAllProvidersHandler(): Promise<
+  Array<{ id: string; name: string; models: string[] }>
+> {
+  const providers = [...CHAT_PROVIDER_INFO]
+
+  const ollamaIndex = providers.findIndex((p) => p.id === 'ollama')
+  if (ollamaIndex !== -1) {
+    try {
+      const ollamaSettings = getChatSettings('ollama')
+
+      const baseURL =
+        'endpointURL' in ollamaSettings
+          ? ollamaSettings.endpointURL
+          : 'http://localhost:11434'
+
+      const ollamaModels = await fetchOllamaModels(baseURL)
+      const originalProvider = providers[ollamaIndex]
+      if (originalProvider) {
+        providers[ollamaIndex] = {
+          id: originalProvider.id,
+          name: originalProvider.name,
+          models: ollamaModels,
+        }
+      }
+    } catch (error) {
+      log.error('Failed to fetch Ollama models:', error)
+    }
+  }
+
+  const lmstudioIndex = providers.findIndex((p) => p.id === 'lmstudio')
+  if (lmstudioIndex !== -1) {
+    try {
+      const lmstudioSettings = getChatSettings('lmstudio')
+
+      const baseURL =
+        'endpointURL' in lmstudioSettings
+          ? lmstudioSettings.endpointURL
+          : 'http://localhost:1234'
+
+      const lmstudioModels = await fetchLMStudioModels(baseURL)
+      const originalProvider = providers[lmstudioIndex]
+      if (originalProvider) {
+        providers[lmstudioIndex] = {
+          id: originalProvider.id,
+          name: originalProvider.name,
+          models: lmstudioModels,
+        }
+      }
+    } catch (error) {
+      log.error('Failed to fetch LM Studio models:', error)
+    }
+  }
+
+  const openRouterIndex = providers.findIndex((p) => p.id === 'openrouter')
+  if (openRouterIndex !== -1) {
+    try {
+      const openRouterSettings = getChatSettings('openrouter')
+
+      if (
+        openRouterSettings.providerId !== 'ollama' &&
+        'apiKey' in openRouterSettings &&
+        openRouterSettings.apiKey &&
+        openRouterSettings.apiKey.trim() !== ''
+      ) {
+        const openRouterModels = await fetchOpenRouterModels()
+        const originalProvider = providers[openRouterIndex]
+        if (originalProvider) {
+          providers[openRouterIndex] = {
+            id: originalProvider.id,
+            name: originalProvider.name,
+            models: openRouterModels,
+          }
+        }
+      }
+    } catch (error) {
+      log.error('Failed to fetch OpenRouter models, using fallback:', error)
+    }
+  }
+
+  return providers
 }
