@@ -191,31 +191,27 @@ async function fetchOllamaModels(baseURL?: string): Promise<string[]> {
     return []
   }
 
-  try {
-    const response = await fetch(`${baseURL}/api/tags`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
+  const response = await fetch(`${baseURL}/api/tags`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
 
-    if (!response.ok) {
-      log.error('Failed to fetch Ollama models:', response.statusText)
-      // Return empty array if API fails (Ollama not running or unreachable)
-      return []
-    }
-
-    const data = (await response.json()) as OllamaModelsResponse
-
-    // Extract model names from the response
-    const models = data.models.map((model) => model.name)
-
-    log.info(`[CHAT] Fetched ${models.length} models from Ollama at ${baseURL}`)
-    return models
-  } catch (error) {
-    log.error('Error fetching Ollama models:', error)
-    // Return empty array if API fails (Ollama not running or network error)
-    return []
+  if (!response.ok) {
+    const error = new Error(
+      `Failed to fetch Ollama models: ${response.statusText}`
+    )
+    log.error(error.message)
+    throw error
   }
+
+  const data = (await response.json()) as OllamaModelsResponse
+
+  // Extract model names from the response
+  const models = data.models.map((model) => model.name)
+
+  log.info(`[CHAT] Fetched ${models.length} models from Ollama at ${baseURL}`)
+  return models
 }
 
 // LM Studio API v1 interfaces
@@ -258,33 +254,31 @@ async function fetchLMStudioModels(baseURL?: string): Promise<string[]> {
     return []
   }
 
-  try {
-    const response = await fetch(`${baseURL}/api/v1/models`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
+  const response = await fetch(`${baseURL}/api/v1/models`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
 
-    if (!response.ok) {
-      log.error('Failed to fetch LM Studio models:', response.statusText)
-      return []
-    }
-
-    const data = (await response.json()) as LMStudioModelsResponse
-
-    // Extract model keys from the response (filter out embedding models for chat)
-    const models = data.models
-      .filter((model) => model.type === 'llm' || model.type === 'vlm')
-      .map((model) => model.key)
-
-    log.info(
-      `[CHAT] Fetched ${models.length} models from LM Studio at ${baseURL}`
+  if (!response.ok) {
+    const error = new Error(
+      `Failed to fetch LM Studio models: ${response.statusText}`
     )
-    return models
-  } catch (error) {
-    log.error('Error fetching LM Studio models:', error)
-    return []
+    log.error(error.message)
+    throw error
   }
+
+  const data = (await response.json()) as LMStudioModelsResponse
+
+  // Extract model keys from the response (filter out embedding models for chat)
+  const models = data.models
+    .filter((model) => model.type === 'llm' || model.type === 'vlm')
+    .map((model) => model.key)
+
+  log.info(
+    `[CHAT] Fetched ${models.length} models from LM Studio at ${baseURL}`
+  )
+  return models
 }
 
 // Fetch available models from OpenRouter API
