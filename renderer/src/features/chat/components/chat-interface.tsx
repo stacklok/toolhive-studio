@@ -8,13 +8,14 @@ import {
   Trash2,
 } from 'lucide-react'
 import { ChatMessage } from './chat-message'
-import { DialogApiKeys } from './dialog-api-keys'
+import { DialogProviderSettings } from './dialog-provider-settings'
 import { ErrorAlert } from './error-alert'
 import { useChatStreaming } from '../hooks/use-chat-streaming'
 import { ChatInputPrompt } from './chat-input-prompt'
 import { Separator } from '@/common/components/ui/separator'
 import { useConfirm } from '@/common/hooks/use-confirm'
 import { TitlePage } from '@/common/components/title-page'
+import { hasCredentials } from '../lib/utils'
 
 export function ChatInterface() {
   const {
@@ -82,7 +83,7 @@ export function ChatInterface() {
   }, [checkScrollPosition])
 
   const hasProviderAndModel =
-    !!settings.provider && !!settings.model && !!settings.apiKey
+    !!settings.provider && !!settings.model && hasCredentials(settings)
   const hasMessages = messages.length > 0
 
   const onClearMessages = useCallback(async () => {
@@ -300,8 +301,8 @@ export function ChatInterface() {
             </div>
           )}
 
-          {/* API Keys Modal */}
-          <DialogApiKeys
+          {/* Provider Settings Modal */}
+          <DialogProviderSettings
             isOpen={isSettingsOpen}
             onOpenChange={setIsSettingsOpen}
           />
