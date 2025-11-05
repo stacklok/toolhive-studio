@@ -166,4 +166,4 @@ export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
       'zhipuai/glm-4.5-thinking',
     ],
   },
-]
+] as const satisfies ChatProviderInfo[]
