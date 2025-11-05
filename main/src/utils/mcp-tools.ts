@@ -8,15 +8,12 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import type { CoreWorkload } from '@api/types.gen'
 import log from '../logger'
 
-export interface McpToolDefinition {
-  description?: string
-  inputSchema: Tool['inputSchema']
-}
+export type McpToolDefinition = Tool
 
-export function isMcpToolDefinition(obj: Tool): obj is McpToolDefinition {
+export function isMcpToolDefinition(obj: unknown): obj is Tool {
   if (!obj || typeof obj !== 'object' || obj === null) return false
 
-  const tool = obj
+  const tool = obj as Record<string, unknown>
 
   // Description should be string if present
   if (
@@ -95,7 +92,9 @@ export function createTransport(workload: CoreWorkload): MCPClientConfig {
 }
 
 // Get available tools from a workload
-export async function getWorkloadAvailableTools(workload: CoreWorkload) {
+export async function getWorkloadAvailableTools(
+  workload: CoreWorkload
+): Promise<Record<string, McpToolDefinition> | null> {
   if (!workload.name) return null
 
   try {
@@ -105,20 +104,17 @@ export async function getWorkloadAvailableTools(workload: CoreWorkload) {
       const mcpClient = await createMCPClient(config)
       const rawTools = await mcpClient.tools<'automatic'>()
 
-      // Filter and validate tools using type guard, creating serializable copies
-      const serverMcpTools = Object.entries(rawTools)
-        .filter(([, defTool]) => isMcpToolDefinition(defTool))
-        .reduce<Record<string, McpToolDefinition>>((prev, [name, def]) => {
-          if (!def || !name) return prev
-          prev[name] = {
-            description: def.description ?? '',
-            inputSchema: def.inputSchema ?? undefined,
-          }
-          return prev
-        }, {})
+      // Filter and validate tools using type guard
+      const serverMcpTools: Record<string, McpToolDefinition> = {}
+      for (const [name, def] of Object.entries(rawTools)) {
+        if (name && def && isMcpToolDefinition(def)) {
+          serverMcpTools[name] = def
+        }
+      }
       await mcpClient.close()
       return serverMcpTools
     }
+    return null
   } catch (error) {
     log.error(`Failed to discover tools for ${workload.name}:`, error)
     throw error
