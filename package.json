@@ -94,7 +94,7 @@
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.41 ",
     "@ai-sdk/google": "^2.0.28",
-    "@ai-sdk/mcp": "^0.0.3",
+    "@ai-sdk/mcp": "^0.0.7",
     "@ai-sdk/openai": "^2.0.62",
     "@ai-sdk/openai-compatible": "^1.0.26",
     "@ai-sdk/provider": "^2.0.0",
