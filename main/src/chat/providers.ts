@@ -5,15 +5,14 @@ import { createXai } from '@ai-sdk/xai'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { createOllama } from 'ai-sdk-ollama'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
-import type { LanguageModel } from 'ai'
 import log from '../logger'
 import { getChatSettings } from './settings-storage'
 import {
   CHAT_PROVIDER_INFO,
   DEFAULT_OLLAMA_URL,
   DEFAULT_LMSTUDIO_URL,
-  type ChatProviderInfo,
 } from './constants'
+import type { ChatProvider } from './types'
 
 // OpenRouter API interfaces
 interface OpenRouterModel {
@@ -40,18 +39,6 @@ interface OpenRouterModel {
 interface OpenRouterModelsResponse {
   data: OpenRouterModel[]
 }
-
-// Internal provider configuration with functions
-// Discriminated union: Ollama and LM Studio use endpointURL, others use apiKey
-type ChatProvider =
-  | (ChatProviderInfo & {
-      id: 'ollama' | 'lmstudio'
-      createModel: (modelId: string, endpointURL: string) => LanguageModel
-    })
-  | (ChatProviderInfo & {
-      id: Exclude<string, 'ollama' | 'lmstudio'>
-      createModel: (modelId: string, apiKey: string) => LanguageModel
-    })
 
 // Internal provider configurations with model creation functions
 export const CHAT_PROVIDERS: ChatProvider[] = [

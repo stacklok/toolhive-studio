@@ -13,7 +13,7 @@ import { createMcpTools } from './mcp-tools'
 import { streamUIMessagesOverIPC } from './stream-utils'
 import type { ChatRequest } from './types'
 import { updateThreadMessages } from './threads-storage'
-import { isLocalServerRequest, hasApiKey } from './utils'
+import { createModelFromRequest } from './utils'
 
 /**
  * Handle chat streaming request using real-time IPC events
@@ -45,13 +45,7 @@ export async function handleChatStreamRealtime(
         }
 
         // Create AI model using type guards for discriminated union
-        const model = isLocalServerRequest(request)
-          ? provider.createModel(request.model, request.endpointURL)
-          : hasApiKey(request)
-            ? provider.createModel(request.model, request.apiKey)
-            : (() => {
-                throw new Error('Invalid request: missing credentials')
-              })()
+        const model = createModelFromRequest(provider, request)
 
         // Get MCP tools if enabled
         const {

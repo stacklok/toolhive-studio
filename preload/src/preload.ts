@@ -3,7 +3,11 @@
 
 import { contextBridge, ipcRenderer } from 'electron'
 import type { CoreWorkload } from '../../api/generated/types.gen'
-import type { AvailableServer, ChatUIMessage } from '../../main/src/chat/types'
+import type {
+  AvailableServer,
+  ChatUIMessage,
+  ChatRequest,
+} from '../../main/src/chat/types'
 import { TOOLHIVE_VERSION } from '../../utils/constants'
 import type { UIMessage } from 'ai'
 import type { LanguageModelV2Usage } from '@ai-sdk/provider'
@@ -139,25 +143,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         providerId,
         tempCredential
       ),
-    stream: (
-      request:
-        | {
-            chatId: string
-            messages: ChatUIMessage[]
-            provider: 'ollama' | 'lmstudio'
-            model: string
-            endpointURL: string
-            enabledTools?: string[]
-          }
-        | {
-            chatId: string
-            messages: ChatUIMessage[]
-            provider: string
-            model: string
-            apiKey: string
-            enabledTools?: string[]
-          }
-    ) =>
+    stream: (request: ChatRequest) =>
       ipcRenderer.invoke('chat:stream', request) as Promise<{
         streamId: string
       }>,

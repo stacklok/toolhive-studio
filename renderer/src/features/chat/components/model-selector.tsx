@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import log from 'electron-log/renderer'
 import { Bot, ChevronDown, Check, Search } from 'lucide-react'
 import { Button } from '@/common/components/ui/button'
 import { Input } from '@/common/components/ui/input'
@@ -78,7 +79,7 @@ export function ModelSelector({
 
       onSettingsChange(newSettings)
     } catch (error) {
-      console.error('Failed to load provider settings:', error)
+      log.error('Failed to load provider settings:', error)
     }
   }
 

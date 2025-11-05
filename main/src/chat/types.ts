@@ -1,5 +1,6 @@
 import type { LanguageModelV2Usage } from '@ai-sdk/provider'
-import type { UIMessage } from 'ai'
+import type { UIMessage, LanguageModel } from 'ai'
+import type { LocalProviderId, ChatProviderInfo } from './constants'
 
 // Define message metadata schema for type safety
 interface MessageMetadata {
@@ -14,24 +15,36 @@ interface MessageMetadata {
 // Create a typed UIMessage with our metadata
 export type ChatUIMessage = UIMessage<MessageMetadata>
 
+// Base chat request with common fields
+type BaseChatRequest = {
+  chatId: string
+  messages: ChatUIMessage[]
+  model: string
+  enabledTools?: string[]
+}
+
 // Chat request interface - discriminated union for different provider types
 export type ChatRequest =
-  | {
-      chatId: string
-      messages: ChatUIMessage[]
-      provider: 'ollama' | 'lmstudio'
-      model: string
+  | (BaseChatRequest & {
+      provider: LocalProviderId
       endpointURL: string
-      enabledTools?: string[]
-    }
-  | {
-      chatId: string
-      messages: ChatUIMessage[]
-      provider: string
-      model: string
+    })
+  | (BaseChatRequest & {
+      provider: Exclude<string, LocalProviderId>
       apiKey: string
-      enabledTools?: string[]
-    }
+    })
+
+// Chat provider configuration with functions
+// Discriminated union: Ollama and LM Studio use endpointURL, others use apiKey
+export type ChatProvider =
+  | (ChatProviderInfo & {
+      id: 'ollama' | 'lmstudio'
+      createModel: (modelId: string, endpointURL: string) => LanguageModel
+    })
+  | (ChatProviderInfo & {
+      id: Exclude<string, 'ollama' | 'lmstudio'>
+      createModel: (modelId: string, apiKey: string) => LanguageModel
+    })
 
 export interface AvailableServer {
   serverName: string

@@ -8,10 +8,18 @@ import { getHeaders } from '../headers'
 import { getTearingDownState } from '../app-state'
 import { getToolhiveMcpInfo } from './mcp-tools'
 import { TOOLHIVE_MCP_SERVER_NAME } from '../utils/constants'
-import { CHAT_PROVIDER_INFO } from './constants'
+import {
+  CHAT_PROVIDER_INFO,
+  LOCAL_PROVIDER_IDS,
+  type LocalProviderId,
+} from './constants'
 
 // Extract provider IDs from CHAT_PROVIDER_INFO
 type ProviderId = (typeof CHAT_PROVIDER_INFO)[number]['id']
+
+// Helper to check if a provider is a local server
+const isLocalProvider = (providerId: string): providerId is LocalProviderId =>
+  LOCAL_PROVIDER_IDS.includes(providerId as LocalProviderId)
 
 // Chat store types - discriminated union for provider settings
 type ChatSettingsProvider =
@@ -52,7 +60,7 @@ function isProvidersRecord(value: unknown): value is ChatSettings['providers'] {
     if (!isRecord(item) || !isStringArray(item.enabledTools)) return false
 
     // Check if it's a local server provider (with endpointURL) or cloud provider (with apiKey)
-    if (providerId === 'ollama' || providerId === 'lmstudio') {
+    if (isLocalProvider(providerId)) {
       return typeof item.endpointURL === 'string'
     } else {
       return typeof item.apiKey === 'string'
@@ -99,7 +107,7 @@ export function getChatSettings(providerId: ProviderId): ChatSettingsProvider {
       if (existing) return existing
 
       // Return default based on provider type
-      if (providerId === 'ollama' || providerId === 'lmstudio') {
+      if (isLocalProvider(providerId)) {
         return {
           providerId,
           endpointURL: '',
@@ -107,7 +115,7 @@ export function getChatSettings(providerId: ProviderId): ChatSettingsProvider {
         }
       } else {
         return {
-          providerId: providerId as Exclude<ProviderId, 'ollama' | 'lmstudio'>,
+          providerId,
           apiKey: '',
           enabledTools: [],
         }
@@ -115,7 +123,7 @@ export function getChatSettings(providerId: ProviderId): ChatSettingsProvider {
     }
 
     // Fallback defaults
-    if (providerId === 'ollama' || providerId === 'lmstudio') {
+    if (isLocalProvider(providerId)) {
       return {
         providerId,
         endpointURL: '',
@@ -123,7 +131,7 @@ export function getChatSettings(providerId: ProviderId): ChatSettingsProvider {
       }
     } else {
       return {
-        providerId: providerId as Exclude<ProviderId, 'ollama' | 'lmstudio'>,
+        providerId,
         apiKey: '',
         enabledTools: [],
       }
@@ -131,7 +139,7 @@ export function getChatSettings(providerId: ProviderId): ChatSettingsProvider {
   } catch (error) {
     log.error('Failed to get chat settings:', error)
     // Fallback defaults
-    if (providerId === 'ollama' || providerId === 'lmstudio') {
+    if (isLocalProvider(providerId)) {
       return {
         providerId,
         endpointURL: '',
@@ -139,7 +147,7 @@ export function getChatSettings(providerId: ProviderId): ChatSettingsProvider {
       }
     } else {
       return {
-        providerId: providerId as Exclude<ProviderId, 'ollama' | 'lmstudio'>,
+        providerId,
         apiKey: '',
         enabledTools: [],
       }
@@ -149,15 +157,12 @@ export function getChatSettings(providerId: ProviderId): ChatSettingsProvider {
 
 // Helper functions for extracting credentials
 const extractEndpointURL = (settings: ChatSettingsProvider): string =>
-  (settings.providerId === 'ollama' || settings.providerId === 'lmstudio') &&
-  'endpointURL' in settings
+  isLocalProvider(settings.providerId) && 'endpointURL' in settings
     ? settings.endpointURL
     : ''
 
 const extractApiKey = (settings: ChatSettingsProvider): string =>
-  settings.providerId !== 'ollama' &&
-  settings.providerId !== 'lmstudio' &&
-  'apiKey' in settings
+  !isLocalProvider(settings.providerId) && 'apiKey' in settings
     ? settings.apiKey
     : ''
 
@@ -168,18 +173,19 @@ function saveChatSettings(
 ): { success: boolean; error?: string } {
   try {
     // Ensure providerId matches the settings type
-    const settingsWithProviderId: ChatSettingsProvider =
-      providerId === 'ollama' || providerId === 'lmstudio'
-        ? {
-            providerId,
-            endpointURL: extractEndpointURL(settings),
-            enabledTools: settings.enabledTools,
-          }
-        : {
-            providerId,
-            apiKey: extractApiKey(settings),
-            enabledTools: settings.enabledTools,
-          }
+    const settingsWithProviderId: ChatSettingsProvider = isLocalProvider(
+      providerId
+    )
+      ? {
+          providerId,
+          endpointURL: extractEndpointURL(settings),
+          enabledTools: settings.enabledTools,
+        }
+      : {
+          providerId,
+          apiKey: extractApiKey(settings),
+          enabledTools: settings.enabledTools,
+        }
 
     const providers = chatStore.get('providers')
     const typedProviders = isProvidersRecord(providers) ? providers : {}

@@ -2,6 +2,10 @@
 export const DEFAULT_OLLAMA_URL = 'http://localhost:11434'
 export const DEFAULT_LMSTUDIO_URL = 'http://localhost:1234'
 
+// Local server provider IDs
+export const LOCAL_PROVIDER_IDS = ['ollama', 'lmstudio'] as const
+export type LocalProviderId = (typeof LOCAL_PROVIDER_IDS)[number]
+
 // Provider configuration for IPC (serializable)
 export interface ChatProviderInfo {
   id: string
