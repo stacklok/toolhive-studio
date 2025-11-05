@@ -147,6 +147,20 @@ export function getChatSettings(providerId: ProviderId): ChatSettingsProvider {
   }
 }
 
+// Helper functions for extracting credentials
+const extractEndpointURL = (settings: ChatSettingsProvider): string =>
+  (settings.providerId === 'ollama' || settings.providerId === 'lmstudio') &&
+  'endpointURL' in settings
+    ? settings.endpointURL
+    : ''
+
+const extractApiKey = (settings: ChatSettingsProvider): string =>
+  settings.providerId !== 'ollama' &&
+  settings.providerId !== 'lmstudio' &&
+  'apiKey' in settings
+    ? settings.apiKey
+    : ''
+
 // Save chat settings for a provider
 function saveChatSettings(
   providerId: ProviderId,
@@ -158,25 +172,12 @@ function saveChatSettings(
       providerId === 'ollama' || providerId === 'lmstudio'
         ? {
             providerId,
-            endpointURL:
-              (settings.providerId === 'ollama' ||
-                settings.providerId === 'lmstudio') &&
-              'endpointURL' in settings
-                ? settings.endpointURL
-                : '',
+            endpointURL: extractEndpointURL(settings),
             enabledTools: settings.enabledTools,
           }
         : {
-            providerId: providerId as Exclude<
-              ProviderId,
-              'ollama' | 'lmstudio'
-            >,
-            apiKey:
-              settings.providerId !== 'ollama' &&
-              settings.providerId !== 'lmstudio' &&
-              'apiKey' in settings
-                ? settings.apiKey
-                : '',
+            providerId,
+            apiKey: extractApiKey(settings),
             enabledTools: settings.enabledTools,
           }
 
