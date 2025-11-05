@@ -459,7 +459,10 @@ export function DialogProviderSettings({
                             )}
                             {pk.hasKey &&
                               pk.provider.models.length === 0 &&
-                              !validationStatus[pk.provider.id] && (
+                              !validationStatus[pk.provider.id] &&
+                              (isLocalServerProvider(pk)
+                                ? pk.endpointURL.trim() !== ''
+                                : true) && (
                                 <div className="rounded-md border border-yellow-500/20 bg-yellow-500/10 p-3">
                                   <p className="text-sm text-yellow-600 dark:text-yellow-500">
                                     {pk.provider.id === 'ollama' ||
