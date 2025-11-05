@@ -5,6 +5,7 @@ import type { UIMessage } from 'ai'
 interface MessageMetadata {
   createdAt?: number
   model?: string
+  providerId?: string
   totalUsage?: LanguageModelV2Usage
   responseTime?: number
   finishReason?: string
@@ -13,15 +14,24 @@ interface MessageMetadata {
 // Create a typed UIMessage with our metadata
 export type ChatUIMessage = UIMessage<MessageMetadata>
 
-// Chat request interface
-export interface ChatRequest {
-  chatId: string
-  messages: ChatUIMessage[]
-  provider: string
-  model: string
-  apiKey: string
-  enabledTools?: string[]
-}
+// Chat request interface - discriminated union for different provider types
+export type ChatRequest =
+  | {
+      chatId: string
+      messages: ChatUIMessage[]
+      provider: 'ollama' | 'lmstudio'
+      model: string
+      endpointURL: string
+      enabledTools?: string[]
+    }
+  | {
+      chatId: string
+      messages: ChatUIMessage[]
+      provider: string
+      model: string
+      apiKey: string
+      enabledTools?: string[]
+    }
 
 export interface AvailableServer {
   serverName: string
