@@ -44,7 +44,7 @@ interface FormRunFromRegistryProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   wizardContext?: {
-    onNext: () => void
+    onNext: (groupName: string) => void
     hasMoreServers: boolean
   }
 }
@@ -153,9 +153,10 @@ export function FormRunFromRegistry({
             groupName: data.group,
           })
           if (wizardContext?.hasMoreServers) {
-            wizardContext.onNext()
+            wizardContext.onNext(data.group)
             setActiveTab('configuration')
           } else {
+            wizardContext?.onNext(data.group)
             onOpenChange(false)
             setActiveTab('configuration')
           }

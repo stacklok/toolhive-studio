@@ -60,7 +60,7 @@ interface FormRunFromRegistryProps {
   isOpen: boolean
   closeDialog: () => void
   wizardContext?: {
-    onNext: () => void
+    onNext: (groupName: string) => void
     hasMoreServers: boolean
   }
 }
@@ -136,8 +136,9 @@ export function DialogFormRemoteRegistryMcp({
             groupName: data.group || 'default',
           })
           if (wizardContext?.hasMoreServers) {
-            wizardContext.onNext()
+            wizardContext.onNext(data.group || 'default')
           } else {
+            wizardContext?.onNext(data.group || 'default')
             closeDialog()
           }
           form.reset()

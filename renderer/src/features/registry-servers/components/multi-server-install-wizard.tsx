@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import type {
   RegistryImageMetadata,
   RegistryRemoteServerMetadata,
@@ -34,11 +35,14 @@ export function MultiServerInstallWizard({
 }: MultiServerInstallWizardProps) {
   const servers = getGroupServers(group)
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [groupName, setGroupName] = useState<string | null>(null)
+  const navigate = useNavigate()
 
   // Reset wizard when dialog closes
   useEffect(() => {
     if (!isOpen) {
       setCurrentIndex(0)
+      setGroupName(null)
     }
   }, [isOpen])
 
@@ -49,15 +53,22 @@ export function MultiServerInstallWizard({
 
   const hasMoreServers = currentIndex < servers.length - 1
 
-  const handleNext = () => {
+  const handleNext = (installedGroupName: string) => {
+    // Track the group name from the first installation
+    if (!groupName) {
+      setGroupName(installedGroupName)
+    }
+
     if (hasMoreServers) {
       setCurrentIndex((prev) => prev + 1)
     } else {
+      // Navigate to the group page
+      navigate({ to: '/group/$name', params: { name: installedGroupName } })
       onClose()
     }
   }
 
-  // For now, just render the first server's form
+  // Render the appropriate form based on server type
   if (isRemoteServer(currentServer)) {
     return (
       <DialogFormRemoteRegistryMcp
