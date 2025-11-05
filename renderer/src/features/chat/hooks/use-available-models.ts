@@ -38,6 +38,8 @@ export function useAvailableModels() {
 
       return providersWithCredentials
     },
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    refetchOnWindowFocus: true,
   })
 
   const providersWithCredentials = useMemo(
