@@ -60,8 +60,9 @@ interface FormRunFromRegistryProps {
   isOpen: boolean
   closeDialog: () => void
   wizardContext?: {
-    onNext: (groupName: string) => void
+    onNext: () => void
     hasMoreServers: boolean
+    registryGroupName: string
   }
 }
 
@@ -125,20 +126,25 @@ export function DialogFormRemoteRegistryMcp({
     setIsSubmitting(true)
     if (error) setError(null)
 
+    // When in wizard mode, use the registry group name
+    const submissionData = wizardContext
+      ? { ...data, group: wizardContext.registryGroupName }
+      : data
+
     installServerMutation(
       {
-        data,
+        data: submissionData,
       },
       {
         onSuccess: () => {
           checkServerStatus({
-            serverName: data.name,
-            groupName: data.group || 'default',
+            serverName: submissionData.name,
+            groupName: submissionData.group || 'default',
           })
           if (wizardContext?.hasMoreServers) {
-            wizardContext.onNext(data.group || 'default')
+            wizardContext.onNext()
           } else {
-            wizardContext?.onNext(data.group || 'default')
+            wizardContext?.onNext()
             closeDialog()
           }
           form.reset()

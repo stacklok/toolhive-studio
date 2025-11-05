@@ -35,35 +35,28 @@ export function MultiServerInstallWizard({
 }: MultiServerInstallWizardProps) {
   const servers = getGroupServers(group)
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [groupName, setGroupName] = useState<string | null>(null)
   const navigate = useNavigate()
 
   // Reset wizard when dialog closes
   useEffect(() => {
     if (!isOpen) {
       setCurrentIndex(0)
-      setGroupName(null)
     }
   }, [isOpen])
 
-  if (!isOpen || servers.length === 0) return null
+  if (!isOpen || servers.length === 0 || !group?.name) return null
 
   const currentServer = servers[currentIndex]
   if (!currentServer) return null
 
   const hasMoreServers = currentIndex < servers.length - 1
 
-  const handleNext = (installedGroupName: string) => {
-    // Track the group name from the first installation
-    if (!groupName) {
-      setGroupName(installedGroupName)
-    }
-
+  const handleNext = () => {
     if (hasMoreServers) {
       setCurrentIndex((prev) => prev + 1)
     } else {
-      // Navigate to the group page
-      navigate({ to: '/group/$name', params: { name: installedGroupName } })
+      // Navigate to the group page using the registry group name
+      navigate({ to: '/group/$name', params: { name: group.name } })
       onClose()
     }
   }
@@ -79,6 +72,7 @@ export function MultiServerInstallWizard({
         wizardContext={{
           onNext: handleNext,
           hasMoreServers,
+          registryGroupName: group.name,
         }}
       />
     )
@@ -93,6 +87,7 @@ export function MultiServerInstallWizard({
       wizardContext={{
         onNext: handleNext,
         hasMoreServers,
+        registryGroupName: group.name,
       }}
     />
   )

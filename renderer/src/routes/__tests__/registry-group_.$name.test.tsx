@@ -585,16 +585,22 @@ describe('Registry Group Detail Route', () => {
     // Click Finish on second server
     await userEvent.click(screen.getByRole('button', { name: /^finish$/i }))
 
-    // Verify both API calls were made
+    // Verify both API calls were made with correct group name
     await waitFor(() => {
       expect(workloadCalls).toHaveLength(2)
     })
-    expect(workloadCalls[0].name).toBe('first-server')
-    expect(workloadCalls[1].name).toBe('second-server')
+    expect(workloadCalls[0]).toEqual({
+      name: 'first-server',
+      group: 'two-server-group',
+    })
+    expect(workloadCalls[1]).toEqual({
+      name: 'second-server',
+      group: 'two-server-group',
+    })
 
-    // Verify navigation to the group page (default group)
+    // Verify navigation to the registry group page
     await waitFor(() => {
-      expect(router.state.location.pathname).toBe('/group/default')
+      expect(router.state.location.pathname).toBe('/group/two-server-group')
     })
   })
 

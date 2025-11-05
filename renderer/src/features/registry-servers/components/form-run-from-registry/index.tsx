@@ -44,8 +44,9 @@ interface FormRunFromRegistryProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   wizardContext?: {
-    onNext: (groupName: string) => void
+    onNext: () => void
     hasMoreServers: boolean
+    registryGroupName: string
   }
 }
 
@@ -139,24 +140,27 @@ export function FormRunFromRegistry({
     setIsSubmitting(true)
     if (error) setError(null)
 
+    // When in wizard mode, use the registry group name
+    const groupName = wizardContext?.registryGroupName ?? data.group
+
     // Use the dedicated function to prepare the API payload
     installServerMutation(
       {
         server,
         data,
-        groupName: data.group,
+        groupName,
       },
       {
         onSuccess: () => {
           checkServerStatus({
             serverName: data.name,
-            groupName: data.group,
+            groupName,
           })
           if (wizardContext?.hasMoreServers) {
-            wizardContext.onNext(data.group)
+            wizardContext.onNext()
             setActiveTab('configuration')
           } else {
-            wizardContext?.onNext(data.group)
+            wizardContext?.onNext()
             onOpenChange(false)
             setActiveTab('configuration')
           }
