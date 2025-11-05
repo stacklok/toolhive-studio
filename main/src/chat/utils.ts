@@ -2,7 +2,7 @@ import type { LanguageModel } from 'ai'
 import type { ChatRequest, ChatProvider } from './types'
 import { LOCAL_PROVIDER_IDS, type LocalProviderId } from './constants'
 
-export function isLocalServerRequest(
+function isLocalServerRequest(
   request: ChatRequest
 ): request is Extract<ChatRequest, { provider: LocalProviderId }> {
   return (
@@ -11,7 +11,7 @@ export function isLocalServerRequest(
   )
 }
 
-export function hasApiKey(
+function hasApiKey(
   request: ChatRequest
 ): request is Extract<ChatRequest, { apiKey: string }> {
   return 'apiKey' in request
