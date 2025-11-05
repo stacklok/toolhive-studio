@@ -65,6 +65,10 @@ export function MultiServerInstallWizard({
         server={currentServer}
         isOpen={isOpen}
         closeDialog={onClose}
+        wizardContext={{
+          onNext: handleNext,
+          hasMoreServers,
+        }}
       />
     )
   }

@@ -59,12 +59,17 @@ interface FormRunFromRegistryProps {
   server: RegistryRemoteServerMetadata | null
   isOpen: boolean
   closeDialog: () => void
+  wizardContext?: {
+    onNext: () => void
+    hasMoreServers: boolean
+  }
 }
 
 export function DialogFormRemoteRegistryMcp({
   server,
   isOpen,
   closeDialog,
+  wizardContext,
 }: FormRunFromRegistryProps) {
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -130,7 +135,11 @@ export function DialogFormRemoteRegistryMcp({
             serverName: data.name,
             groupName: data.group || 'default',
           })
-          closeDialog()
+          if (wizardContext?.hasMoreServers) {
+            wizardContext.onNext()
+          } else {
+            closeDialog()
+          }
           form.reset()
         },
         onSettled: (_, error) => {
@@ -160,6 +169,7 @@ export function DialogFormRemoteRegistryMcp({
       }}
       actionsOnCancel={closeDialog}
       actionsIsDisabled={isLoading}
+      actionsSubmitLabel={wizardContext?.hasMoreServers ? 'Next' : undefined}
       form={form}
       onSubmit={form.handleSubmit(onSubmitForm)}
       title={`Add ${server?.name} remote MCP server`}

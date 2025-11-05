@@ -26,21 +26,29 @@
         }
       }
     },
-    "filesystem": {
-      "name": "filesystem",
-      "description": "Provides access to filesystem operations",
-      "tier": "Official",
+    "content-fetcher": {
+      "name": "content-fetcher",
+      "description": "Alternative fetch server for content retrieval",
+      "tier": "Community",
       "status": "Active",
-      "transport": "stdio",
-      "tools": ["read_file", "write_file", "list_directory"],
+      "transport": "streamable-http",
+      "tools": ["fetch"],
       "metadata": {
-        "stars": 125,
-        "pulls": 45000,
-        "last_updated": "2025-09-10T12:00:00Z"
+        "stars": 17,
+        "pulls": 12390,
+        "last_updated": "2025-09-05T02:29:06Z"
       },
-      "repository_url": "https://github.com/modelcontextprotocol/servers",
-      "tags": ["filesystem", "files"],
-      "image": "ghcr.io/modelcontextprotocol/filesystem:latest"
+      "repository_url": "https://github.com/stackloklabs/gofetch",
+      "tags": ["content", "html", "markdown", "fetch"],
+      "image": "ghcr.io/stackloklabs/gofetch/server:0.0.6",
+      "permissions": {
+        "network": {
+          "outbound": {
+            "insecure_allow_all": true,
+            "allow_port": [443]
+          }
+        }
+      }
     }
   },
   "remote_servers": {
@@ -95,22 +103,6 @@
               }
             }
           }
-        },
-        "filesystem": {
-          "name": "filesystem",
-          "description": "Provides access to filesystem operations",
-          "tier": "Official",
-          "status": "Active",
-          "transport": "stdio",
-          "tools": ["read_file", "write_file", "list_directory"],
-          "metadata": {
-            "stars": 125,
-            "pulls": 45000,
-            "last_updated": "2025-09-10T12:00:00Z"
-          },
-          "repository_url": "https://github.com/modelcontextprotocol/servers",
-          "tags": ["filesystem", "files"],
-          "image": "ghcr.io/modelcontextprotocol/filesystem:latest"
         }
       },
       "remote_servers": {
@@ -135,6 +127,20 @@
             "scopes": ["repo", "user:email"],
             "use_pkce": true
           }
+        },
+        "content-fetcher": {
+          "name": "content-fetcher",
+          "description": "Alternative fetch server for content retrieval",
+          "tier": "Community",
+          "status": "Active",
+          "tools": ["fetch"],
+          "metadata": {
+            "stars": 17,
+            "last_updated": "2025-09-05T02:29:06Z"
+          },
+          "repository_url": "https://github.com/stackloklabs/gofetch",
+          "tags": ["content", "html", "markdown", "fetch"],
+          "url": "https://example.com/content-fetcher-remote"
         }
       }
     },

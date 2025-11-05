@@ -275,11 +275,11 @@ describe('Registry Group Detail Route', () => {
     ).toBeVisible()
   })
 
-  it('shows Next button in wizard and navigates to second server on click', async () => {
+  it('shows Next button for groups with both local and remote servers', async () => {
     // Override the mock to use a group with multiple servers
     mockUseParams.mockReturnValue({ name: 'multi-server-group' })
 
-    // Create a fixture with a group containing 2 servers
+    // Create a fixture with a group containing 1 local and 1 remote server
     const multiServerRegistry: V1GetRegistryResponse = {
       registry: {
         servers: {},
@@ -288,10 +288,10 @@ describe('Registry Group Detail Route', () => {
             name: 'multi-server-group',
             description: 'A group with multiple servers',
             servers: {
-              'server-one': {
-                name: 'server-one',
-                image: 'ghcr.io/example/server-one:latest',
-                description: 'First server in the group',
+              'local-server': {
+                name: 'local-server',
+                image: 'ghcr.io/example/local-server:latest',
+                description: 'Local server in the group',
                 tier: 'Official',
                 status: 'Active',
                 transport: 'stdio',
@@ -304,30 +304,26 @@ describe('Registry Group Detail Route', () => {
                   pulls: 1000,
                   last_updated: '2025-01-01T00:00:00Z',
                 },
-                repository_url: 'https://github.com/example/server-one',
-                tags: ['test'],
-              },
-              'server-two': {
-                name: 'server-two',
-                image: 'ghcr.io/example/server-two:latest',
-                description: 'Second server in the group',
-                tier: 'Official',
-                status: 'Active',
-                transport: 'stdio',
-                permissions: {},
-                tools: ['tool2'],
-                env_vars: [],
-                args: [],
-                metadata: {
-                  stars: 200,
-                  pulls: 2000,
-                  last_updated: '2025-01-02T00:00:00Z',
-                },
-                repository_url: 'https://github.com/example/server-two',
+                repository_url: 'https://github.com/example/local-server',
                 tags: ['test'],
               },
             },
-            remote_servers: {},
+            remote_servers: {
+              'remote-server': {
+                name: 'remote-server',
+                description: 'Remote server in the group',
+                url: 'https://api.example.com/mcp',
+                tier: 'Official',
+                status: 'Active',
+                tools: ['tool2'],
+                metadata: {
+                  stars: 200,
+                  last_updated: '2025-01-02T00:00:00Z',
+                },
+                repository_url: 'https://github.com/example/remote-server',
+                tags: ['test'],
+              },
+            },
           },
         ],
       },
@@ -354,26 +350,22 @@ describe('Registry Group Detail Route', () => {
     const installButton = screen.getByRole('button', { name: /install group/i })
     await userEvent.click(installButton)
 
-    // Wait for first server's form to appear
+    // Wait for first server's form to appear (local server)
     await waitFor(() => {
       expect(
-        screen.getByRole('heading', { name: /configure server-one/i })
+        screen.getByRole('heading', { name: /configure local-server/i })
       ).toBeVisible()
     })
 
-    // Look for the "Next" button (should exist when there are more servers)
+    // Verify Configuration tab exists (local server form)
+    expect(screen.getByRole('tab', { name: /configuration/i })).toBeVisible()
+
+    // Verify the "Next" button exists (not "Install server") when there are more servers
     const nextButton = screen.getByRole('button', { name: /next/i })
     expect(nextButton).toBeVisible()
-
-    // Click the Next button
-    await userEvent.click(nextButton)
-
-    // Verify we moved to the second server's form
-    await waitFor(() => {
-      expect(
-        screen.getByRole('heading', { name: /configure server-two/i })
-      ).toBeVisible()
-    })
+    expect(
+      screen.queryByRole('button', { name: /install server/i })
+    ).not.toBeInTheDocument()
   })
 
   it('resets form with correct server names when navigating between servers', async () => {
