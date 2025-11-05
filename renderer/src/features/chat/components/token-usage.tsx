@@ -18,7 +18,7 @@ export function TokenUsage({
   responseTime,
   providerId,
 }: TokenUsageProps) {
-  const safeNumber = (value: number | undefined): number => {
+  const safeNumber = (value: number | undefined | null): number => {
     if (
       value === undefined ||
       value === null ||
