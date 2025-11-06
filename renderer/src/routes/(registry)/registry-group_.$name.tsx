@@ -49,6 +49,11 @@ export function RegistryGroupDetail() {
 
   // Compute install error message (if any)
   const installError = useMemo(() => {
+    // Skip validation while wizard is open (group/servers are being created)
+    if (isWizardOpen) {
+      return null
+    }
+
     // Pre-flight validation: check if group already exists
     const existingGroups = groupsData?.groups ?? []
     const groupExists = existingGroups.some((g) => g.name === name)
@@ -108,7 +113,7 @@ export function RegistryGroupDetail() {
     }
 
     return null
-  }, [groupsData?.groups, workloadsData?.workloads, name, group])
+  }, [groupsData?.groups, workloadsData?.workloads, name, group, isWizardOpen])
 
   return (
     <div className="flex max-h-full w-full flex-1 flex-col">

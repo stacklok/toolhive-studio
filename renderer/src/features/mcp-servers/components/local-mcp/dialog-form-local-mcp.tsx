@@ -339,7 +339,7 @@ export function DialogFormLocalMcp({
         setActiveTab('configuration')
       }}
       actionsIsDisabled={isLoading || isExistingServerDataError}
-      actionsIsEditing={isEditing}
+      actionsSubmitLabel={isEditing ? 'Update server' : 'Install server'}
       form={form}
       onSubmit={form.handleSubmit(onSubmitForm, activateTabWithError)}
       title={isEditing ? `Edit ${title}` : 'Custom local MCP server'}

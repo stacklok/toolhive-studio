@@ -456,7 +456,7 @@ export function DialogFormRemoteMcp({
       }}
       actionsOnCancel={closeDialog}
       actionsIsDisabled={isLoading || isExistingServerDataError}
-      actionsIsEditing={isEditing}
+      actionsSubmitLabel={isEditing ? 'Update server' : 'Install server'}
       form={form}
       onSubmit={form.handleSubmit(onSubmitForm)}
       title={

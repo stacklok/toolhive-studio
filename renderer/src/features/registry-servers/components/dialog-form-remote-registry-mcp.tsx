@@ -198,7 +198,7 @@ export function DialogFormRemoteRegistryMcp({
           ? wizardContext.hasMoreServers
             ? 'Next'
             : 'Finish'
-          : undefined
+          : 'Install server'
       }
       form={form}
       onSubmit={form.handleSubmit(onSubmitForm)}
