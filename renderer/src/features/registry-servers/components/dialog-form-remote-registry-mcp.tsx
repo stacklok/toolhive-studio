@@ -148,10 +148,8 @@ export function DialogFormRemoteRegistryMcp({
               serverName: submissionData.name,
               groupName: submissionData.group || 'default',
             })
-            if (wizardContext?.hasMoreServers) {
-              wizardContext.onNext()
-            } else {
-              wizardContext?.onNext()
+            wizardContext?.onNext()
+            if (!wizardContext?.hasMoreServers) {
               closeDialog()
             }
             form.reset()

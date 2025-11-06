@@ -163,14 +163,11 @@ export function FormRunFromRegistry({
               serverName: data.name,
               groupName,
             })
-            if (wizardContext?.hasMoreServers) {
-              wizardContext.onNext()
-              setActiveTab('configuration')
-            } else {
-              wizardContext?.onNext()
+            wizardContext?.onNext()
+            if (!wizardContext?.hasMoreServers) {
               onOpenChange(false)
-              setActiveTab('configuration')
             }
+            setActiveTab('configuration')
           },
           onSettled: (_, error) => {
             setIsSubmitting(false)
