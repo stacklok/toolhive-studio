@@ -1,15 +1,11 @@
-import { createFileRoute, useParams, Link } from '@tanstack/react-router'
-import { useSuspenseQuery, useQuery } from '@tanstack/react-query'
-import {
-  getApiV1BetaRegistryByNameOptions,
-  getApiV1BetaWorkloadsOptions,
-} from '@api/@tanstack/react-query.gen'
+import { createFileRoute, useParams } from '@tanstack/react-router'
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { getApiV1BetaRegistryByNameOptions } from '@api/@tanstack/react-query.gen'
 import { Badge } from '@/common/components/ui/badge'
-import { Button } from '@/common/components/ui/button'
 import { RegistryDetailHeader } from '@/features/registry-servers/components/registry-detail-header'
 import { Separator } from '@/common/components/ui/separator'
 import { Alert, AlertDescription } from '@/common/components/ui/alert'
-import { Wrench, Info } from 'lucide-react'
+import { Info } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -18,9 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/common/components/ui/table'
-import { MultiServerInstallWizard } from '@/features/registry-servers/components/multi-server-install-wizard'
-import { useState, useMemo } from 'react'
-import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
+import { InstallGroupButton } from '@/features/registry-servers/components/install-group-button'
 
 export const Route = createFileRoute('/(registry)/registry-group_/$name')({
   loader: async ({ context: { queryClient } }) => {
@@ -36,84 +30,11 @@ export function RegistryGroupDetail() {
   const { data: registryData } = useSuspenseQuery(
     getApiV1BetaRegistryByNameOptions({ path: { name: 'default' } })
   )
-  const { data: groupsData } = useGroups()
-  const { data: workloadsData } = useQuery(
-    getApiV1BetaWorkloadsOptions({ query: { all: true } })
-  )
   const group = registryData?.registry?.groups?.find((g) => g.name === name)
-  const [isWizardOpen, setIsWizardOpen] = useState(false)
 
   const hasServers =
     Object.keys(group?.servers ?? {}).length > 0 ||
     Object.keys(group?.remote_servers ?? {}).length > 0
-
-  // Compute install error message (if any)
-  const installError = useMemo(() => {
-    // Skip validation while wizard is open (group/servers are being created)
-    if (isWizardOpen) {
-      return null
-    }
-
-    // Pre-flight validation: check if group already exists
-    const existingGroups = groupsData?.groups ?? []
-    const groupExists = existingGroups.some((g) => g.name === name)
-
-    if (groupExists) {
-      return (
-        <>
-          A group named "{name}" already exists. Please{' '}
-          <Link to="/group/$name" params={{ name }} className="underline">
-            delete it
-          </Link>{' '}
-          first or choose a different group.
-        </>
-      )
-    }
-
-    // Pre-flight validation: check if any server names conflict with existing servers
-    const existingWorkloads = workloadsData?.workloads ?? []
-
-    // Get all server names from the registry group (both local and remote)
-    const groupServerNames = [
-      ...Object.keys(group?.servers ?? {}),
-      ...Object.keys(group?.remote_servers ?? {}),
-    ]
-
-    // Find the first conflicting server (fail fast)
-    const firstConflict = groupServerNames.find((serverName) =>
-      existingWorkloads.some((w) => w.name === serverName)
-    )
-
-    if (firstConflict) {
-      // Find which group this server belongs to
-      const conflictingWorkload = existingWorkloads.find(
-        (w) => w.name === firstConflict
-      )
-      const groupName = conflictingWorkload?.group
-
-      return (
-        <>
-          Server "{firstConflict}" already exists. Please{' '}
-          {groupName ? (
-            <Link
-              to="/group/$name"
-              params={{ name: groupName }}
-              className="underline"
-            >
-              delete it
-            </Link>
-          ) : (
-            <Link to="/groups" className="underline">
-              delete it
-            </Link>
-          )}{' '}
-          first or choose a different group.
-        </>
-      )
-    }
-
-    return null
-  }, [groupsData?.groups, workloadsData?.workloads, name, group, isWizardOpen])
 
   return (
     <div className="flex max-h-full w-full flex-1 flex-col">
@@ -166,21 +87,7 @@ export function RegistryGroupDetail() {
             </Table>
           </div>
           <Separator className="my-6" />
-          <div className="flex flex-col gap-2">
-            <div>
-              <Button
-                variant="default"
-                onClick={() => setIsWizardOpen(true)}
-                disabled={!!installError}
-              >
-                <Wrench className="size-4" />
-                Install group
-              </Button>
-            </div>
-            {installError && (
-              <p className="text-destructive text-sm">{installError}</p>
-            )}
-          </div>
+          <InstallGroupButton groupName={name} group={group} />
         </>
       ) : (
         <Alert className="mt-6 max-w-2xl">
@@ -190,11 +97,6 @@ export function RegistryGroupDetail() {
           </AlertDescription>
         </Alert>
       )}
-      <MultiServerInstallWizard
-        group={group}
-        isOpen={isWizardOpen}
-        onClose={() => setIsWizardOpen(false)}
-      />
     </div>
   )
 }
