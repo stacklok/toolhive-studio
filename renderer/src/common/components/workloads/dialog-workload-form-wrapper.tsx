@@ -24,11 +24,13 @@ export function DialogWorkloadFormWrapper<T extends FieldValues = FieldValues>({
   form,
   onSubmit,
   title,
+  description,
 }: {
   isOpen?: boolean
   form: UseFormReturn<T>
   children: React.ReactNode
   title: string
+  description?: string
   actionsIsDisabled?: boolean
   actionsIsEditing?: boolean
   actionsSubmitLabel?: string
@@ -54,11 +56,15 @@ export function DialogWorkloadFormWrapper<T extends FieldValues = FieldValues>({
             <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col">
               <DialogHeader className="flex-shrink-0 p-6 pb-4">
                 <DialogTitle>{title}</DialogTitle>
-                <DialogDescription className="sr-only">
-                  ToolHive allows you to securely run a remote MCP server or a
-                  custom local MCP server from a Docker image or a package
-                  manager.
-                </DialogDescription>
+                {description ? (
+                  <DialogDescription>{description}</DialogDescription>
+                ) : (
+                  <DialogDescription className="sr-only">
+                    ToolHive allows you to securely run a remote MCP server or a
+                    custom local MCP server from a Docker image or a package
+                    manager.
+                  </DialogDescription>
+                )}
               </DialogHeader>
 
               {children}

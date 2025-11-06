@@ -93,6 +93,8 @@ export function MultiServerInstallWizard({
           hasMoreServers,
           registryGroupName: group.name,
           ensureGroupCreated,
+          currentServerIndex: currentIndex + 1,
+          totalServers: servers.length,
         }}
       />
     )
@@ -109,6 +111,8 @@ export function MultiServerInstallWizard({
         hasMoreServers,
         registryGroupName: group.name,
         ensureGroupCreated,
+        currentServerIndex: currentIndex + 1,
+        totalServers: servers.length,
       }}
     />
   )

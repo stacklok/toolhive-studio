@@ -48,6 +48,8 @@ interface FormRunFromRegistryProps {
     hasMoreServers: boolean
     registryGroupName: string
     ensureGroupCreated: () => Promise<void>
+    currentServerIndex: number
+    totalServers: number
   }
 }
 
@@ -217,6 +219,11 @@ export function FormRunFromRegistry({
       form={form}
       onSubmit={form.handleSubmit(onSubmitForm, activateTabWithError)}
       title={`Configure ${server.name}`}
+      description={
+        wizardContext
+          ? `Installing server ${wizardContext.currentServerIndex} of ${wizardContext.totalServers}`
+          : undefined
+      }
     >
       {isSubmitting && (
         <LoadingStateAlert

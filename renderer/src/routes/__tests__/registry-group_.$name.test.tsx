@@ -594,6 +594,9 @@ describe('Registry Group Detail Route', () => {
       ).toBeVisible()
     })
 
+    // Verify wizard progress description for first server
+    expect(screen.getByText('Installing server 1 of 2')).toBeInTheDocument()
+
     // Click Next on first server (form submits with default values)
     await userEvent.click(screen.getByRole('button', { name: /^next$/i }))
 
@@ -603,6 +606,9 @@ describe('Registry Group Detail Route', () => {
         screen.getByRole('heading', { name: /configure second-server/i })
       ).toBeVisible()
     })
+
+    // Verify wizard progress description for second server
+    expect(screen.getByText('Installing server 2 of 2')).toBeInTheDocument()
 
     // Click Finish on second server
     await userEvent.click(screen.getByRole('button', { name: /^finish$/i }))
@@ -722,6 +728,9 @@ describe('Registry Group Detail Route', () => {
       ).toBeVisible()
     })
 
+    // Verify wizard progress description for first server
+    expect(screen.getByText('Installing server 1 of 2')).toBeInTheDocument()
+
     // Verify the server name field has "fetch" as the default value
     const firstServerNameInput = screen.getByLabelText(/server name/i)
     expect(firstServerNameInput).toHaveValue('fetch')
@@ -736,6 +745,9 @@ describe('Registry Group Detail Route', () => {
         screen.getByRole('heading', { name: /configure filesystem/i })
       ).toBeVisible()
     })
+
+    // Verify wizard progress description for second server
+    expect(screen.getByText('Installing server 2 of 2')).toBeInTheDocument()
 
     // Verify the server name field has been reset to "filesystem"
     const secondServerNameInput = screen.getByLabelText(/server name/i)

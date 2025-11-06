@@ -64,6 +64,8 @@ interface FormRunFromRegistryProps {
     hasMoreServers: boolean
     registryGroupName: string
     ensureGroupCreated: () => Promise<void>
+    currentServerIndex: number
+    totalServers: number
   }
 }
 
@@ -201,6 +203,11 @@ export function DialogFormRemoteRegistryMcp({
       form={form}
       onSubmit={form.handleSubmit(onSubmitForm)}
       title={`Add ${server?.name} remote MCP server`}
+      description={
+        wizardContext
+          ? `Installing server ${wizardContext.currentServerIndex} of ${wizardContext.totalServers}`
+          : undefined
+      }
     >
       {isLoading && (
         <LoadingStateAlert
