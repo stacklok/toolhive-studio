@@ -43,21 +43,24 @@ interface FormRunFromRegistryProps {
   server: RegistryImageMetadata | null
   isOpen: boolean
   onOpenChange: (open: boolean) => void
-  multiStepContext?: {
-    onNext: () => void
-    hasMoreServers: boolean
-    registryGroupName: string
-    ensureGroupCreated: () => Promise<void>
-    currentServerIndex: number
-    totalServers: number
-  }
+  onBeforeSubmit?: () => Promise<void>
+  onSubmitSuccess?: () => void
+  groupNameOverride?: string
+  keepOpenAfterSubmit?: boolean
+  actionsSubmitLabel: string
+  description?: string
 }
 
 export function FormRunFromRegistry({
   server,
   isOpen,
-  multiStepContext,
   onOpenChange,
+  onBeforeSubmit,
+  onSubmitSuccess,
+  groupNameOverride,
+  keepOpenAfterSubmit = false,
+  actionsSubmitLabel,
+  description,
 }: FormRunFromRegistryProps) {
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -144,13 +147,13 @@ export function FormRunFromRegistry({
     if (error) setError(null)
 
     try {
-      // When in wizard mode, create the group first before installing servers
-      if (multiStepContext) {
-        await multiStepContext.ensureGroupCreated()
+      // Call pre-submit hook if provided
+      if (onBeforeSubmit) {
+        await onBeforeSubmit()
       }
 
-      // When in wizard mode, use the registry group name
-      const groupName = multiStepContext?.registryGroupName ?? data.group
+      // Override group name if provided
+      const groupName = groupNameOverride ?? data.group
 
       // Use the dedicated function to prepare the API payload
       installServerMutation(
@@ -165,8 +168,8 @@ export function FormRunFromRegistry({
               serverName: data.name,
               groupName,
             })
-            multiStepContext?.onNext()
-            if (!multiStepContext?.hasMoreServers) {
+            onSubmitSuccess?.()
+            if (!keepOpenAfterSubmit) {
               onOpenChange(false)
             }
             setActiveTab('configuration')
@@ -209,21 +212,11 @@ export function FormRunFromRegistry({
         setActiveTab('configuration')
       }}
       actionsIsDisabled={isSubmitting}
-      actionsSubmitLabel={
-        multiStepContext
-          ? multiStepContext.hasMoreServers
-            ? 'Next'
-            : 'Finish'
-          : 'Install server'
-      }
+      actionsSubmitLabel={actionsSubmitLabel}
       form={form}
       onSubmit={form.handleSubmit(onSubmitForm, activateTabWithError)}
       title={`Configure ${server.name}`}
-      description={
-        multiStepContext
-          ? `Installing server ${multiStepContext.currentServerIndex} of ${multiStepContext.totalServers}`
-          : undefined
-      }
+      description={description}
     >
       {isSubmitting && (
         <LoadingStateAlert

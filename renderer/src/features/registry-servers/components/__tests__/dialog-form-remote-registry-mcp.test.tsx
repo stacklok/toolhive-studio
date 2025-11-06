@@ -97,6 +97,7 @@ describe('DialogFormRemoteRegistryMcp', () => {
           server={mockServer}
           isOpen
           closeDialog={vi.fn()}
+          actionsSubmitLabel="Install server"
         />
       </Wrapper>
     )
@@ -139,6 +140,7 @@ describe('DialogFormRemoteRegistryMcp', () => {
           server={mockServer}
           isOpen
           closeDialog={vi.fn()}
+          actionsSubmitLabel="Install server"
         />
       </Wrapper>
     )
@@ -184,6 +186,7 @@ describe('DialogFormRemoteRegistryMcp', () => {
           server={mockServer}
           isOpen
           closeDialog={vi.fn()}
+          actionsSubmitLabel="Install server"
         />
       </Wrapper>
     )
@@ -292,6 +295,7 @@ describe('DialogFormRemoteRegistryMcp', () => {
           server={mockServer}
           isOpen
           closeDialog={vi.fn()}
+          actionsSubmitLabel="Install server"
         />
       </Wrapper>
     )
@@ -320,6 +324,7 @@ describe('DialogFormRemoteRegistryMcp', () => {
           server={mockServer}
           isOpen
           closeDialog={mockCloseDialog}
+          actionsSubmitLabel="Install server"
         />
       </Wrapper>
     )
@@ -341,6 +346,7 @@ describe('DialogFormRemoteRegistryMcp', () => {
           server={mockServer}
           isOpen
           closeDialog={vi.fn()}
+          actionsSubmitLabel="Install server"
         />
       </Wrapper>
     )
@@ -383,6 +389,7 @@ describe('DialogFormRemoteRegistryMcp', () => {
           server={mockServer}
           isOpen
           closeDialog={vi.fn()}
+          actionsSubmitLabel="Install server"
         />
       </Wrapper>
     )

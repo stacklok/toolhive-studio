@@ -59,21 +59,24 @@ interface FormRunFromRegistryProps {
   server: RegistryRemoteServerMetadata | null
   isOpen: boolean
   closeDialog: () => void
-  multiStepContext?: {
-    onNext: () => void
-    hasMoreServers: boolean
-    registryGroupName: string
-    ensureGroupCreated: () => Promise<void>
-    currentServerIndex: number
-    totalServers: number
-  }
+  onBeforeSubmit?: () => Promise<void>
+  onSubmitSuccess?: () => void
+  groupNameOverride?: string
+  keepOpenAfterSubmit?: boolean
+  actionsSubmitLabel: string
+  description?: string
 }
 
 export function DialogFormRemoteRegistryMcp({
   server,
   isOpen,
   closeDialog,
-  multiStepContext,
+  onBeforeSubmit,
+  onSubmitSuccess,
+  groupNameOverride,
+  keepOpenAfterSubmit = false,
+  actionsSubmitLabel,
+  description,
 }: FormRunFromRegistryProps) {
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -130,14 +133,14 @@ export function DialogFormRemoteRegistryMcp({
     if (error) setError(null)
 
     try {
-      // When in wizard mode, create the group first before installing servers
-      if (multiStepContext) {
-        await multiStepContext.ensureGroupCreated()
+      // Call pre-submit hook if provided
+      if (onBeforeSubmit) {
+        await onBeforeSubmit()
       }
 
-      // When in wizard mode, use the registry group name
-      const submissionData = multiStepContext
-        ? { ...data, group: multiStepContext.registryGroupName }
+      // Override group name if provided
+      const submissionData = groupNameOverride
+        ? { ...data, group: groupNameOverride }
         : data
 
       installServerMutation(
@@ -150,8 +153,8 @@ export function DialogFormRemoteRegistryMcp({
               serverName: submissionData.name,
               groupName: submissionData.group || 'default',
             })
-            multiStepContext?.onNext()
-            if (!multiStepContext?.hasMoreServers) {
+            onSubmitSuccess?.()
+            if (!keepOpenAfterSubmit) {
               closeDialog()
             }
             form.reset()
@@ -193,21 +196,11 @@ export function DialogFormRemoteRegistryMcp({
       }}
       actionsOnCancel={closeDialog}
       actionsIsDisabled={isLoading}
-      actionsSubmitLabel={
-        multiStepContext
-          ? multiStepContext.hasMoreServers
-            ? 'Next'
-            : 'Finish'
-          : 'Install server'
-      }
+      actionsSubmitLabel={actionsSubmitLabel}
       form={form}
       onSubmit={form.handleSubmit(onSubmitForm)}
       title={`Add ${server?.name} remote MCP server`}
-      description={
-        multiStepContext
-          ? `Installing server ${multiStepContext.currentServerIndex} of ${multiStepContext.totalServers}`
-          : undefined
-      }
+      description={description}
     >
       {isLoading && (
         <LoadingStateAlert

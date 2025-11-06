@@ -119,6 +119,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -153,6 +154,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -185,6 +187,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -226,6 +229,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={mockOnOpenChange}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
     await waitFor(() => {
@@ -284,7 +288,12 @@ describe('FormRunFromRegistry', () => {
     server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
     renderWithProviders(
-      <FormRunFromRegistry isOpen onOpenChange={vi.fn()} server={server} />
+      <FormRunFromRegistry
+        isOpen
+        onOpenChange={vi.fn()}
+        server={server}
+        actionsSubmitLabel="Install server"
+      />
     )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -330,6 +339,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
     await waitFor(() => {
@@ -387,6 +397,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
     await waitFor(() => {
@@ -445,6 +456,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -500,6 +512,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -559,6 +572,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -608,6 +622,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -653,7 +668,12 @@ describe('FormRunFromRegistry', () => {
     server.env_vars = ENV_VARS_OPTIONAL
 
     renderWithProviders(
-      <FormRunFromRegistry isOpen onOpenChange={vi.fn()} server={server} />
+      <FormRunFromRegistry
+        isOpen
+        onOpenChange={vi.fn()}
+        server={server}
+        actionsSubmitLabel="Install server"
+      />
     )
     await waitFor(() => expect(screen.getByRole('dialog')).toBeVisible())
 
@@ -702,7 +722,12 @@ describe('FormRunFromRegistry', () => {
     server.env_vars = ENV_VARS_OPTIONAL
 
     renderWithProviders(
-      <FormRunFromRegistry isOpen onOpenChange={vi.fn()} server={server} />
+      <FormRunFromRegistry
+        isOpen
+        onOpenChange={vi.fn()}
+        server={server}
+        actionsSubmitLabel="Install server"
+      />
     )
 
     await waitFor(() => {
@@ -740,6 +765,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -810,6 +836,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={mockOnOpenChange}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -863,6 +890,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -917,6 +945,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
     await waitFor(() => {
@@ -962,6 +991,7 @@ describe('Allowed Hosts field', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
     await waitFor(() => {
@@ -993,6 +1023,7 @@ describe('Allowed Hosts field', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
     await waitFor(() => {
@@ -1031,6 +1062,7 @@ describe('Allowed Hosts field', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
     await waitFor(() => {
@@ -1099,6 +1131,7 @@ describe('Allowed Hosts field', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
     await waitFor(() => {
@@ -1151,6 +1184,7 @@ describe('Allowed Hosts field', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
     await waitFor(() => {
@@ -1189,6 +1223,7 @@ describe('Allowed Hosts field', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
     await waitFor(() => {
@@ -1278,6 +1313,7 @@ describe('Network Isolation Tab Activation', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -1322,6 +1358,7 @@ describe('Network Isolation Tab Activation', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -1361,6 +1398,7 @@ describe('CommandArgumentsField', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -1385,6 +1423,7 @@ describe('CommandArgumentsField', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -1409,6 +1448,7 @@ describe('CommandArgumentsField', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -1443,6 +1483,7 @@ describe('CommandArgumentsField', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -1465,6 +1506,7 @@ describe('CommandArgumentsField', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -1489,6 +1531,7 @@ describe('CommandArgumentsField', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -1519,6 +1562,7 @@ describe('Storage Volumes', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={{ ...REGISTRY_SERVER }}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -1597,6 +1641,7 @@ describe('Storage Volumes', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={{ ...REGISTRY_SERVER }}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -1629,6 +1674,7 @@ describe('Storage Volumes', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={{ ...REGISTRY_SERVER }}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -1662,6 +1708,7 @@ describe('Storage Volumes', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={{ ...REGISTRY_SERVER }}
+        actionsSubmitLabel="Install server"
       />
     )
 

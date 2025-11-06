@@ -88,14 +88,12 @@ export function MultiServerInstallWizard({
         server={currentServer}
         isOpen={isOpen}
         closeDialog={onClose}
-        multiStepContext={{
-          onNext: handleNext,
-          hasMoreServers,
-          registryGroupName: group.name,
-          ensureGroupCreated,
-          currentServerIndex: currentIndex + 1,
-          totalServers: servers.length,
-        }}
+        onBeforeSubmit={ensureGroupCreated}
+        onSubmitSuccess={handleNext}
+        groupNameOverride={group.name}
+        keepOpenAfterSubmit={hasMoreServers}
+        actionsSubmitLabel={hasMoreServers ? 'Next' : 'Finish'}
+        description={`Installing server ${currentIndex + 1} of ${servers.length}`}
       />
     )
   }
@@ -106,14 +104,12 @@ export function MultiServerInstallWizard({
       server={currentServer}
       isOpen={isOpen}
       onOpenChange={onClose}
-      multiStepContext={{
-        onNext: handleNext,
-        hasMoreServers,
-        registryGroupName: group.name,
-        ensureGroupCreated,
-        currentServerIndex: currentIndex + 1,
-        totalServers: servers.length,
-      }}
+      onBeforeSubmit={ensureGroupCreated}
+      onSubmitSuccess={handleNext}
+      groupNameOverride={group.name}
+      keepOpenAfterSubmit={hasMoreServers}
+      actionsSubmitLabel={hasMoreServers ? 'Next' : 'Finish'}
+      description={`Installing server ${currentIndex + 1} of ${servers.length}`}
     />
   )
 }
