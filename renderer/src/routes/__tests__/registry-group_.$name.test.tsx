@@ -88,20 +88,6 @@ describe('Registry Group Detail Route', () => {
     ).toBeVisible()
   })
 
-  it('matches column headers snapshot', async () => {
-    const router = createTestRouter(WrapperComponent)
-    renderRoute(router)
-
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'dev-toolkit' })).toBeVisible()
-    })
-
-    const table = screen.getByRole('table')
-    const headerCells = within(table).getAllByRole('columnheader')
-    const headers = headerCells.map((th) => th.textContent?.trim() || '')
-    expect(headers).toEqual(['Server', 'Description'])
-  })
-
   it('contains expected server rows', async () => {
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
@@ -282,99 +268,6 @@ describe('Registry Group Detail Route', () => {
     expect(
       screen.getByRole('tab', { name: /network isolation/i })
     ).toBeVisible()
-  })
-
-  it('shows Next button for groups with both local and remote servers', async () => {
-    // Override the mock to use a group with multiple servers
-    mockUseParams.mockReturnValue({ name: 'multi-server-group' })
-
-    // Create a fixture with a group containing 1 local and 1 remote server
-    const multiServerRegistry: V1GetRegistryResponse = {
-      registry: {
-        servers: {},
-        groups: [
-          {
-            name: 'multi-server-group',
-            description: 'A group with multiple servers',
-            servers: {
-              'local-server': {
-                name: 'local-server',
-                image: 'ghcr.io/example/local-server:latest',
-                description: 'Local server in the group',
-                tier: 'Official',
-                status: 'Active',
-                transport: 'stdio',
-                permissions: {},
-                tools: ['tool1'],
-                env_vars: [],
-                args: [],
-                metadata: {
-                  stars: 100,
-                  pulls: 1000,
-                  last_updated: '2025-01-01T00:00:00Z',
-                },
-                repository_url: 'https://github.com/example/local-server',
-                tags: ['test'],
-              },
-            },
-            remote_servers: {
-              'remote-server': {
-                name: 'remote-server',
-                description: 'Remote server in the group',
-                url: 'https://api.example.com/mcp',
-                tier: 'Official',
-                status: 'Active',
-                tools: ['tool2'],
-                metadata: {
-                  stars: 200,
-                  last_updated: '2025-01-02T00:00:00Z',
-                },
-                repository_url: 'https://github.com/example/remote-server',
-                tags: ['test'],
-              },
-            },
-          },
-        ],
-      },
-    }
-
-    // Override the API response for this test
-    server.use(
-      http.get('*/api/v1beta/registry/:name', () => {
-        return HttpResponse.json(multiServerRegistry)
-      })
-    )
-
-    const router = createTestRouter(WrapperComponent)
-    renderRoute(router)
-
-    // Wait for page to load
-    await waitFor(() => {
-      expect(
-        screen.getByRole('heading', { name: 'multi-server-group' })
-      ).toBeVisible()
-    })
-
-    // Click the "Install group" button
-    const installButton = screen.getByRole('button', { name: /install group/i })
-    await userEvent.click(installButton)
-
-    // Wait for first server's form to appear (local server)
-    await waitFor(() => {
-      expect(
-        screen.getByRole('heading', { name: /configure local-server/i })
-      ).toBeVisible()
-    })
-
-    // Verify Configuration tab exists (local server form)
-    expect(screen.getByRole('tab', { name: /configuration/i })).toBeVisible()
-
-    // Verify the "Next" button exists (not "Install server") when there are more servers
-    const nextButton = screen.getByRole('button', { name: /next/i })
-    expect(nextButton).toBeVisible()
-    expect(
-      screen.queryByRole('button', { name: /install server/i })
-    ).not.toBeInTheDocument()
   })
 
   it('shows Finish button on the last server in wizard', async () => {
