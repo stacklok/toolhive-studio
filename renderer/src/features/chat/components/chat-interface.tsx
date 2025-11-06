@@ -243,7 +243,7 @@ export function ChatInterface() {
                           onClick={() => setIsSettingsOpen(true)}
                           className="mt-6"
                         >
-                          <Plus /> Configure your API Keys
+                          <Plus /> Configure your providers
                         </Button>
                       </>
                     )}
