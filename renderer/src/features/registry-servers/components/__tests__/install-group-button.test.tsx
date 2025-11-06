@@ -1,52 +1,12 @@
 import { render, screen, waitFor } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import {
-  QueryClient,
-  QueryClientProvider,
-  type UseQueryResult,
-} from '@tanstack/react-query'
+import { describe, it, expect } from 'vitest'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { InstallGroupButton } from '../install-group-button'
-import type {
-  RegistryGroup,
-  V1GroupListResponse,
-  V1WorkloadListResponse,
-} from '@api/types.gen'
-import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
-import { useQuery } from '@tanstack/react-query'
-
-vi.mock('@/features/mcp-servers/hooks/use-groups')
-vi.mock('@tanstack/react-query', async () => {
-  const actual = await vi.importActual('@tanstack/react-query')
-  return {
-    ...actual,
-    useQuery: vi.fn(),
-  }
-})
-
-vi.mock('../multi-server-install-wizard', () => ({
-  MultiServerInstallWizard: () => null,
-}))
-
-vi.mock('@tanstack/react-router', () => ({
-  Link: ({
-    to,
-    params,
-    className,
-    children,
-  }: {
-    to: string
-    params?: { name: string }
-    className?: string
-    children: React.ReactNode
-  }) => (
-    <a href={to.replace('$name', params?.name || '')} className={className}>
-      {children}
-    </a>
-  ),
-}))
-
-const mockUseGroups = vi.mocked(useGroups)
-const mockUseQuery = vi.mocked(useQuery)
+import type { RegistryGroup } from '@api/types.gen'
+import { server } from '@/common/mocks/node'
+import { http, HttpResponse } from 'msw'
+import { createTestRouter } from '@/common/test/create-test-router'
+import { RouterProvider } from '@tanstack/react-router'
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -58,9 +18,13 @@ const renderWithProviders = (component: React.ReactElement) => {
     },
   })
 
+  const WrapperComponent = () => component
+
+  const router = createTestRouter(WrapperComponent)
+
   return render(
     <QueryClientProvider client={queryClient}>
-      <div>{component}</div>
+      <RouterProvider router={router} />
     </QueryClientProvider>
   )
 }
@@ -93,37 +57,28 @@ const mockGroup: RegistryGroup = {
 }
 
 describe('InstallGroupButton', () => {
-  beforeEach(() => {
-    mockUseGroups.mockReturnValue({
-      data: { groups: [] },
-      isLoading: false,
-      error: null,
-    } as UseQueryResult<V1GroupListResponse, Error>)
-
-    mockUseQuery.mockReturnValue({
-      data: { workloads: [] },
-      isLoading: false,
-      error: null,
-    } as UseQueryResult<V1WorkloadListResponse, Error>)
-  })
-
   it('shows error when trying to install a group that already exists', async () => {
-    mockUseGroups.mockReturnValue({
-      data: {
-        groups: [
-          {
-            name: 'dev-toolkit',
-            description: 'Existing group',
-          },
-          {
-            name: 'other-group',
-            description: 'Another group',
-          },
-        ],
-      },
-      isLoading: false,
-      error: null,
-    } as UseQueryResult<V1GroupListResponse, Error>)
+    server.use(
+      http.get('*/api/v1beta/groups', () => {
+        return HttpResponse.json({
+          groups: [
+            {
+              name: 'dev-toolkit',
+              description: 'Existing group',
+            },
+            {
+              name: 'other-group',
+              description: 'Another group',
+            },
+          ],
+        })
+      }),
+      http.get('*/api/v1beta/workloads', () => {
+        return HttpResponse.json({
+          workloads: [],
+        })
+      })
+    )
 
     renderWithProviders(
       <InstallGroupButton groupName="dev-toolkit" group={mockGroup} />
@@ -146,24 +101,29 @@ describe('InstallGroupButton', () => {
   })
 
   it('shows error when trying to install a group with servers that conflict with existing servers', async () => {
-    mockUseQuery.mockReturnValue({
-      data: {
-        workloads: [
-          {
-            name: 'atlassian',
-            group: 'default',
-            status: 'running',
-          },
-          {
-            name: 'other-server',
-            group: 'default',
-            status: 'running',
-          },
-        ],
-      },
-      isLoading: false,
-      error: null,
-    } as UseQueryResult<V1WorkloadListResponse, Error>)
+    server.use(
+      http.get('*/api/v1beta/groups', () => {
+        return HttpResponse.json({
+          groups: [],
+        })
+      }),
+      http.get('*/api/v1beta/workloads', () => {
+        return HttpResponse.json({
+          workloads: [
+            {
+              name: 'atlassian',
+              group: 'default',
+              status: 'running',
+            },
+            {
+              name: 'other-server',
+              group: 'default',
+              status: 'running',
+            },
+          ],
+        })
+      })
+    )
 
     renderWithProviders(
       <InstallGroupButton groupName="dev-toolkit" group={mockGroup} />
@@ -186,6 +146,25 @@ describe('InstallGroupButton', () => {
   })
 
   it('shows error with link to specific group when server conflict exists in a named group', async () => {
+    server.use(
+      http.get('*/api/v1beta/groups', () => {
+        return HttpResponse.json({
+          groups: [],
+        })
+      }),
+      http.get('*/api/v1beta/workloads', () => {
+        return HttpResponse.json({
+          workloads: [
+            {
+              name: 'fetch',
+              group: 'my-existing-group',
+              status: 'running',
+            },
+          ],
+        })
+      })
+    )
+
     const customGroup: RegistryGroup = {
       name: 'dev-toolkit',
       description: 'Dev toolkit with fetch',
@@ -213,20 +192,6 @@ describe('InstallGroupButton', () => {
       remote_servers: {},
     }
 
-    mockUseQuery.mockReturnValue({
-      data: {
-        workloads: [
-          {
-            name: 'fetch',
-            group: 'my-existing-group',
-            status: 'running',
-          },
-        ],
-      },
-      isLoading: false,
-      error: null,
-    } as UseQueryResult<V1WorkloadListResponse, Error>)
-
     renderWithProviders(
       <InstallGroupButton groupName="dev-toolkit" group={customGroup} />
     )
@@ -248,6 +213,30 @@ describe('InstallGroupButton', () => {
   })
 
   it('shows error with link to first conflicting server group (fail fast pattern)', async () => {
+    server.use(
+      http.get('*/api/v1beta/groups', () => {
+        return HttpResponse.json({
+          groups: [],
+        })
+      }),
+      http.get('*/api/v1beta/workloads', () => {
+        return HttpResponse.json({
+          workloads: [
+            {
+              name: 'fetch',
+              group: 'group-a',
+              status: 'running',
+            },
+            {
+              name: 'atlassian',
+              group: 'group-b',
+              status: 'running',
+            },
+          ],
+        })
+      })
+    )
+
     const customGroup: RegistryGroup = {
       name: 'dev-toolkit',
       description: 'Dev toolkit with multiple servers',
@@ -293,25 +282,6 @@ describe('InstallGroupButton', () => {
       },
       remote_servers: {},
     }
-
-    mockUseQuery.mockReturnValue({
-      data: {
-        workloads: [
-          {
-            name: 'fetch',
-            group: 'group-a',
-            status: 'running',
-          },
-          {
-            name: 'atlassian',
-            group: 'group-b',
-            status: 'running',
-          },
-        ],
-      },
-      isLoading: false,
-      error: null,
-    } as UseQueryResult<V1WorkloadListResponse, Error>)
 
     renderWithProviders(
       <InstallGroupButton groupName="dev-toolkit" group={customGroup} />
