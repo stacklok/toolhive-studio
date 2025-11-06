@@ -74,7 +74,6 @@ export function MultiServerInstallWizard({
     await createGroupMutation.mutateAsync({
       body: {
         name: group.name,
-        description: group.description,
       },
     })
 

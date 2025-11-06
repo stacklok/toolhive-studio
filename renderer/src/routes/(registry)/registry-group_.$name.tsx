@@ -19,9 +19,8 @@ import {
   TableRow,
 } from '@/common/components/ui/table'
 import { MultiServerInstallWizard } from '@/features/registry-servers/components/multi-server-install-wizard'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
-import { toast } from 'sonner'
 
 export const Route = createFileRoute('/(registry)/registry-group_/$name')({
   loader: async ({ context: { queryClient } }) => {
@@ -48,16 +47,14 @@ export function RegistryGroupDetail() {
     Object.keys(group?.servers ?? {}).length > 0 ||
     Object.keys(group?.remote_servers ?? {}).length > 0
 
-  const handleInstallClick = () => {
+  // Compute install error message (if any)
+  const installError = useMemo(() => {
     // Pre-flight validation: check if group already exists
     const existingGroups = groupsData?.groups ?? []
     const groupExists = existingGroups.some((g) => g.name === name)
 
     if (groupExists) {
-      toast.error(
-        `A group named "${name}" already exists. Please delete it first or choose a different group.`
-      )
-      return
+      return `A group named "${name}" already exists. Please delete it first or choose a different group.`
     }
 
     // Pre-flight validation: check if any server names conflict with existing servers
@@ -78,15 +75,11 @@ export function RegistryGroupDetail() {
 
     if (conflictingServers.length > 0) {
       const serverList = conflictingServers.join(', ')
-      toast.error(
-        `The following server${conflictingServers.length > 1 ? 's' : ''} already exist${conflictingServers.length === 1 ? 's' : ''}: ${serverList}. Please delete ${conflictingServers.length > 1 ? 'them' : 'it'} first or choose a different group.`
-      )
-      return
+      return `The following server${conflictingServers.length > 1 ? 's' : ''} already exist${conflictingServers.length === 1 ? 's' : ''}: ${serverList}. Please delete ${conflictingServers.length > 1 ? 'them' : 'it'} first or choose a different group.`
     }
 
-    // Open wizard
-    setIsWizardOpen(true)
-  }
+    return null
+  }, [groupsData?.groups, workloadsData?.workloads, name, group])
 
   return (
     <div className="flex max-h-full w-full flex-1 flex-col">
@@ -139,11 +132,20 @@ export function RegistryGroupDetail() {
             </Table>
           </div>
           <Separator className="my-6" />
-          <div className="flex gap-5">
-            <Button variant="default" onClick={handleInstallClick}>
-              <Wrench className="size-4" />
-              Install group
-            </Button>
+          <div className="flex flex-col gap-2">
+            <div>
+              <Button
+                variant="default"
+                onClick={() => setIsWizardOpen(true)}
+                disabled={!!installError}
+              >
+                <Wrench className="size-4" />
+                Install group
+              </Button>
+            </div>
+            {installError && (
+              <p className="text-destructive text-sm">{installError}</p>
+            )}
           </div>
         </>
       ) : (
