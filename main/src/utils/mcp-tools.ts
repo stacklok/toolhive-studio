@@ -13,7 +13,7 @@ export interface McpToolDefinition {
   inputSchema: Tool['inputSchema']
 }
 
-export function isMcpToolDefinition(obj: Tool): obj is McpToolDefinition {
+export function isMcpToolDefinition(obj: unknown): obj is McpToolDefinition {
   if (!obj || typeof obj !== 'object' || obj === null) return false
 
   const tool = obj
@@ -113,8 +113,8 @@ export async function getWorkloadAvailableTools(
         .reduce<Record<string, McpToolDefinition>>((prev, [name, def]) => {
           if (!def || !name) return prev
           prev[name] = {
-            description: def.description ?? '',
-            inputSchema: def.inputSchema ?? undefined,
+            description: def.description,
+            inputSchema: def.inputSchema,
           }
           return prev
         }, {})
