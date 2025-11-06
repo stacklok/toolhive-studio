@@ -785,4 +785,144 @@ describe('Registry Group Detail Route', () => {
       screen.queryByRole('button', { name: /install group/i })
     ).not.toBeInTheDocument()
   })
+
+  it('shows error when trying to install a group that already exists and does not create any servers', async () => {
+    // Track API calls to verify NONE are made
+    const groupCalls: Array<{ name: string }> = []
+    const workloadCalls: Array<{ name: string }> = []
+
+    // Override the mock to use a group with servers
+    mockUseParams.mockReturnValue({ name: 'dev-toolkit' })
+
+    // Mock the groups API to return that dev-toolkit already exists
+    server.use(
+      http.get('*/api/v1beta/groups', () => {
+        return HttpResponse.json({
+          groups: [
+            {
+              name: 'dev-toolkit',
+              description: 'Existing group',
+            },
+            {
+              name: 'other-group',
+              description: 'Another group',
+            },
+          ],
+        })
+      }),
+      http.post('*/api/v1beta/groups', async ({ request }) => {
+        const body = (await request.json()) as { name: string }
+        groupCalls.push({ name: body.name })
+        return HttpResponse.json({
+          name: body.name,
+        })
+      }),
+      http.post('*/api/v1beta/workloads', async ({ request }) => {
+        const body = (await request.json()) as { name: string }
+        workloadCalls.push({ name: body.name })
+        return HttpResponse.json({
+          name: body.name,
+          status: 'running',
+        })
+      })
+    )
+
+    const router = createTestRouter(WrapperComponent)
+    renderRoute(router)
+
+    // Wait for page to load
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'dev-toolkit' })).toBeVisible()
+    })
+
+    // Click "Install group" button
+    const installButton = screen.getByRole('button', { name: /install group/i })
+    await userEvent.click(installButton)
+
+    // Verify error dialog/alert appears
+    await waitFor(() => {
+      expect(screen.getByText(/group.*already exists/i)).toBeVisible()
+    })
+
+    // Verify NO API calls were made
+    expect(groupCalls).toHaveLength(0)
+    expect(workloadCalls).toHaveLength(0)
+
+    // Verify wizard did not open (no server form dialogs)
+    expect(
+      screen.queryByRole('heading', { name: /configure/i })
+    ).not.toBeInTheDocument()
+  })
+
+  it('shows error when trying to install a group with servers that conflict with existing servers and does not create any servers', async () => {
+    // Track API calls to verify NONE are made
+    const groupCalls: Array<{ name: string }> = []
+    const workloadCalls: Array<{ name: string }> = []
+
+    // Override the mock to use a group with servers
+    mockUseParams.mockReturnValue({ name: 'dev-toolkit' })
+
+    // Mock the workloads API to return existing servers that conflict
+    server.use(
+      http.get('*/api/v1beta/workloads', () => {
+        return HttpResponse.json({
+          workloads: [
+            {
+              name: 'atlassian', // Conflicts with a server in dev-toolkit
+              group: 'default',
+              status: 'running',
+            },
+            {
+              name: 'other-server',
+              group: 'default',
+              status: 'running',
+            },
+          ],
+        })
+      }),
+      http.post('*/api/v1beta/groups', async ({ request }) => {
+        const body = (await request.json()) as { name: string }
+        groupCalls.push({ name: body.name })
+        return HttpResponse.json({
+          name: body.name,
+        })
+      }),
+      http.post('*/api/v1beta/workloads', async ({ request }) => {
+        const body = (await request.json()) as { name: string }
+        workloadCalls.push({ name: body.name })
+        return HttpResponse.json({
+          name: body.name,
+          status: 'running',
+        })
+      })
+    )
+
+    const router = createTestRouter(WrapperComponent)
+    renderRoute(router)
+
+    // Wait for page to load
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'dev-toolkit' })).toBeVisible()
+    })
+
+    // Click "Install group" button
+    const installButton = screen.getByRole('button', { name: /install group/i })
+    await userEvent.click(installButton)
+
+    // Verify error message appears mentioning the conflicting server
+    await waitFor(() => {
+      expect(
+        screen.getByText(/server.*already exists.*atlassian/i)
+      ).toBeVisible()
+    })
+
+    // Verify NO API calls were made
+    expect(groupCalls).toHaveLength(0)
+    expect(workloadCalls).toHaveLength(0)
+
+    // Verify wizard did not open (no server form dialogs)
+    expect(
+      screen.queryByRole('heading', { name: /configure/i })
+    ).not.toBeInTheDocument()
+  })
 })

@@ -1,12 +1,15 @@
 import { createFileRoute, useParams } from '@tanstack/react-router'
-import { useSuspenseQuery } from '@tanstack/react-query'
-import { getApiV1BetaRegistryByNameOptions } from '@api/@tanstack/react-query.gen'
+import { useSuspenseQuery, useQuery } from '@tanstack/react-query'
+import {
+  getApiV1BetaRegistryByNameOptions,
+  getApiV1BetaWorkloadsOptions,
+} from '@api/@tanstack/react-query.gen'
 import { Badge } from '@/common/components/ui/badge'
 import { Button } from '@/common/components/ui/button'
 import { RegistryDetailHeader } from '@/features/registry-servers/components/registry-detail-header'
 import { Separator } from '@/common/components/ui/separator'
 import { Alert, AlertDescription } from '@/common/components/ui/alert'
-import { Wrench, Info } from 'lucide-react'
+import { Wrench, Info, AlertCircle } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -17,6 +20,7 @@ import {
 } from '@/common/components/ui/table'
 import { MultiServerInstallWizard } from '@/features/registry-servers/components/multi-server-install-wizard'
 import { useState } from 'react'
+import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
 
 export const Route = createFileRoute('/(registry)/registry-group_/$name')({
   loader: async ({ context: { queryClient } }) => {
@@ -32,12 +36,58 @@ export function RegistryGroupDetail() {
   const { data: registryData } = useSuspenseQuery(
     getApiV1BetaRegistryByNameOptions({ path: { name: 'default' } })
   )
+  const { data: groupsData } = useGroups()
+  const { data: workloadsData } = useQuery(
+    getApiV1BetaWorkloadsOptions({ query: { all: true } })
+  )
   const group = registryData?.registry?.groups?.find((g) => g.name === name)
   const [isWizardOpen, setIsWizardOpen] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const hasServers =
     Object.keys(group?.servers ?? {}).length > 0 ||
     Object.keys(group?.remote_servers ?? {}).length > 0
+
+  const handleInstallClick = () => {
+    // Pre-flight validation: check if group already exists
+    const existingGroups = groupsData?.groups ?? []
+    const groupExists = existingGroups.some((g) => g.name === name)
+
+    if (groupExists) {
+      setError(
+        `A group named "${name}" already exists. Please delete it first or choose a different group.`
+      )
+      return
+    }
+
+    // Pre-flight validation: check if any server names conflict with existing servers
+    const existingWorkloads = workloadsData?.workloads ?? []
+    const existingServerNames = new Set(
+      existingWorkloads.map((w) => w.name).filter(Boolean)
+    )
+
+    // Get all server names from the registry group (both local and remote)
+    const groupServerNames = [
+      ...Object.keys(group?.servers ?? {}),
+      ...Object.keys(group?.remote_servers ?? {}),
+    ]
+
+    const conflictingServers = groupServerNames.filter((serverName) =>
+      existingServerNames.has(serverName)
+    )
+
+    if (conflictingServers.length > 0) {
+      const serverList = conflictingServers.join(', ')
+      setError(
+        `The following server${conflictingServers.length > 1 ? 's' : ''} already exist${conflictingServers.length === 1 ? 's' : ''}: ${serverList}. Please delete ${conflictingServers.length > 1 ? 'them' : 'it'} first or choose a different group.`
+      )
+      return
+    }
+
+    // Clear any previous errors and open wizard
+    setError(null)
+    setIsWizardOpen(true)
+  }
 
   return (
     <div className="flex max-h-full w-full flex-1 flex-col">
@@ -90,8 +140,14 @@ export function RegistryGroupDetail() {
             </Table>
           </div>
           <Separator className="my-6" />
+          {error && (
+            <Alert variant="destructive" className="mb-6 max-w-2xl">
+              <AlertCircle className="size-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
           <div className="flex gap-5">
-            <Button variant="default" onClick={() => setIsWizardOpen(true)}>
+            <Button variant="default" onClick={handleInstallClick}>
               <Wrench className="size-4" />
               Install group
             </Button>
