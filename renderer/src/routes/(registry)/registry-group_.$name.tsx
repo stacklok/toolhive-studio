@@ -67,9 +67,6 @@ export function RegistryGroupDetail() {
 
     // Pre-flight validation: check if any server names conflict with existing servers
     const existingWorkloads = workloadsData?.workloads ?? []
-    const existingServerNames = new Set(
-      existingWorkloads.map((w) => w.name).filter(Boolean)
-    )
 
     // Get all server names from the registry group (both local and remote)
     const groupServerNames = [
@@ -77,41 +74,34 @@ export function RegistryGroupDetail() {
       ...Object.keys(group?.remote_servers ?? {}),
     ]
 
-    const conflictingServers = groupServerNames.filter((serverName) =>
-      existingServerNames.has(serverName)
+    // Find the first conflicting server (fail fast)
+    const firstConflict = groupServerNames.find((serverName) =>
+      existingWorkloads.some((w) => w.name === serverName)
     )
 
-    if (conflictingServers.length > 0) {
-      const serverList = conflictingServers.join(', ')
-      const plural = conflictingServers.length > 1
-      const serverWord = plural ? 'servers' : 'server'
-      const existVerb = plural ? 'exist' : 'exists'
-      const deleteWord = plural ? 'them' : 'it'
-
-      // Find which groups the conflicting servers belong to
-      const conflictingServerGroups = new Set(
-        existingWorkloads
-          .filter((w) => conflictingServers.includes(w.name!))
-          .map((w) => w.group)
-          .filter(Boolean)
+    if (firstConflict) {
+      // Find which group this server belongs to
+      const conflictingWorkload = existingWorkloads.find(
+        (w) => w.name === firstConflict
       )
-
-      // If all conflicting servers are in the same group, link to that group
-      // Otherwise, link to the groups list
-      const singleGroup =
-        conflictingServerGroups.size === 1
-          ? Array.from(conflictingServerGroups)[0]
-          : null
-
-      const linkTo = singleGroup ? '/group/$name' : '/groups'
-      const linkParams = singleGroup ? { name: singleGroup } : undefined
+      const groupName = conflictingWorkload?.group
 
       return (
         <>
-          The following {serverWord} already {existVerb}: {serverList}. Please{' '}
-          <Link to={linkTo} params={linkParams} className="underline">
-            delete {deleteWord}
-          </Link>{' '}
+          Server "{firstConflict}" already exists. Please{' '}
+          {groupName ? (
+            <Link
+              to="/group/$name"
+              params={{ name: groupName }}
+              className="underline"
+            >
+              delete it
+            </Link>
+          ) : (
+            <Link to="/groups" className="underline">
+              delete it
+            </Link>
+          )}{' '}
           first or choose a different group.
         </>
       )

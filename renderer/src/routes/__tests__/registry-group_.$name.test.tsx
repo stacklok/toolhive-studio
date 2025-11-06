@@ -926,11 +926,10 @@ describe('Registry Group Detail Route', () => {
 
     // Verify error message is displayed mentioning the conflicting server
     expect(
-      screen.getByText(/server.*already exist.*atlassian/i)
+      screen.getByText(/server.*"atlassian".*already exists/i)
     ).toBeInTheDocument()
 
     // Verify "delete it" link is present and points to the default group page
-    // (since all conflicting servers are in the "default" group)
     const deleteLink = screen.getByRole('link', { name: /delete it/i })
     expect(deleteLink).toBeInTheDocument()
     expect(deleteLink).toHaveAttribute('href', '/group/default')
@@ -1045,7 +1044,7 @@ describe('Registry Group Detail Route', () => {
 
     // Verify error message is displayed mentioning the conflicting server
     expect(
-      screen.getByText(/server.*already exist.*fetch/i)
+      screen.getByText(/server.*"fetch".*already exists/i)
     ).toBeInTheDocument()
 
     // Verify "delete it" link points to the specific group where the server exists
@@ -1063,7 +1062,7 @@ describe('Registry Group Detail Route', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('shows error with link to groups page when server conflicts exist in multiple different groups', async () => {
+  it('shows error with link to first conflicting server group (fail fast pattern)', async () => {
     // Track API calls to verify NONE are made
     const groupCalls: Array<{ name: string }> = []
     const workloadCalls: Array<{ name: string }> = []
@@ -1177,16 +1176,16 @@ describe('Registry Group Detail Route', () => {
       expect(installButton).toBeDisabled()
     })
 
-    // Verify error message is displayed mentioning the conflicting servers (plural)
+    // Verify error message shows only the FIRST conflicting server (fail fast)
+    // Even though both "fetch" and "atlassian" conflict, we only show "fetch"
     expect(
-      screen.getByText(/servers.*already exist.*fetch.*atlassian/i)
+      screen.getByText(/server.*"fetch".*already exists/i)
     ).toBeInTheDocument()
 
-    // Verify "delete them" link points to the groups page (not a specific group)
-    // because the conflicting servers are in different groups
-    const deleteLink = screen.getByRole('link', { name: /delete them/i })
+    // Verify "delete it" link points to the group where "fetch" exists (group-a)
+    const deleteLink = screen.getByRole('link', { name: /delete it/i })
     expect(deleteLink).toBeInTheDocument()
-    expect(deleteLink).toHaveAttribute('href', '/groups')
+    expect(deleteLink).toHaveAttribute('href', '/group/group-a')
 
     // Verify NO API calls were made
     expect(groupCalls).toHaveLength(0)
