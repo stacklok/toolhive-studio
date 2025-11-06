@@ -63,6 +63,7 @@ interface FormRunFromRegistryProps {
     onNext: () => void
     hasMoreServers: boolean
     registryGroupName: string
+    ensureGroupCreated: () => Promise<void>
   }
 }
 
@@ -120,46 +121,62 @@ export function DialogFormRemoteRegistryMcp({
       : {}),
   })
 
-  const onSubmitForm = (data: FormSchemaRemoteMcp) => {
+  const onSubmitForm = async (data: FormSchemaRemoteMcp) => {
     if (!server) return
 
     setIsSubmitting(true)
     if (error) setError(null)
 
-    // When in wizard mode, use the registry group name
-    const submissionData = wizardContext
-      ? { ...data, group: wizardContext.registryGroupName }
-      : data
-
-    installServerMutation(
-      {
-        data: submissionData,
-      },
-      {
-        onSuccess: () => {
-          checkServerStatus({
-            serverName: submissionData.name,
-            groupName: submissionData.group || 'default',
-          })
-          if (wizardContext?.hasMoreServers) {
-            wizardContext.onNext()
-          } else {
-            wizardContext?.onNext()
-            closeDialog()
-          }
-          form.reset()
-        },
-        onSettled: (_, error) => {
-          setIsSubmitting(false)
-          if (!error) {
-            form.reset()
-          }
-        },
-        onError: (error) => {
-          setError(typeof error === 'string' ? error : error.message)
-        },
+    try {
+      // When in wizard mode, create the group first before installing servers
+      if (wizardContext) {
+        await wizardContext.ensureGroupCreated()
       }
-    )
+
+      // When in wizard mode, use the registry group name
+      const submissionData = wizardContext
+        ? { ...data, group: wizardContext.registryGroupName }
+        : data
+
+      installServerMutation(
+        {
+          data: submissionData,
+        },
+        {
+          onSuccess: () => {
+            checkServerStatus({
+              serverName: submissionData.name,
+              groupName: submissionData.group || 'default',
+            })
+            if (wizardContext?.hasMoreServers) {
+              wizardContext.onNext()
+            } else {
+              wizardContext?.onNext()
+              closeDialog()
+            }
+            form.reset()
+          },
+          onSettled: (_, error) => {
+            setIsSubmitting(false)
+            if (!error) {
+              form.reset()
+            }
+          },
+          onError: (error) => {
+            setError(typeof error === 'string' ? error : error.message)
+          },
+        }
+      )
+    } catch (error) {
+      setIsSubmitting(false)
+      setError(
+        typeof error === 'string'
+          ? error
+          : error instanceof Error
+            ? error.message
+            : 'Failed to create group'
+      )
+    }
   }
 
   if (!server) return null

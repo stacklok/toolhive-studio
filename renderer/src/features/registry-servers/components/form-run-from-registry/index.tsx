@@ -47,6 +47,7 @@ interface FormRunFromRegistryProps {
     onNext: () => void
     hasMoreServers: boolean
     registryGroupName: string
+    ensureGroupCreated: () => Promise<void>
   }
 }
 
@@ -134,48 +135,64 @@ export function FormRunFromRegistry({
     mode: 'onChange',
   })
 
-  const onSubmitForm = (data: FormSchemaRegistryMcp) => {
+  const onSubmitForm = async (data: FormSchemaRegistryMcp) => {
     if (!server) return
 
     setIsSubmitting(true)
     if (error) setError(null)
 
-    // When in wizard mode, use the registry group name
-    const groupName = wizardContext?.registryGroupName ?? data.group
-
-    // Use the dedicated function to prepare the API payload
-    installServerMutation(
-      {
-        server,
-        data,
-        groupName,
-      },
-      {
-        onSuccess: () => {
-          checkServerStatus({
-            serverName: data.name,
-            groupName,
-          })
-          if (wizardContext?.hasMoreServers) {
-            wizardContext.onNext()
-            setActiveTab('configuration')
-          } else {
-            wizardContext?.onNext()
-            onOpenChange(false)
-            setActiveTab('configuration')
-          }
-        },
-        onSettled: (_, error) => {
-          setIsSubmitting(false)
-          if (!error) {
-            form.reset()
-          }
-        },
-        onError: (error) => {
-          setError(typeof error === 'string' ? error : error.message)
-        },
+    try {
+      // When in wizard mode, create the group first before installing servers
+      if (wizardContext) {
+        await wizardContext.ensureGroupCreated()
       }
-    )
+
+      // When in wizard mode, use the registry group name
+      const groupName = wizardContext?.registryGroupName ?? data.group
+
+      // Use the dedicated function to prepare the API payload
+      installServerMutation(
+        {
+          server,
+          data,
+          groupName,
+        },
+        {
+          onSuccess: () => {
+            checkServerStatus({
+              serverName: data.name,
+              groupName,
+            })
+            if (wizardContext?.hasMoreServers) {
+              wizardContext.onNext()
+              setActiveTab('configuration')
+            } else {
+              wizardContext?.onNext()
+              onOpenChange(false)
+              setActiveTab('configuration')
+            }
+          },
+          onSettled: (_, error) => {
+            setIsSubmitting(false)
+            if (!error) {
+              form.reset()
+            }
+          },
+          onError: (error) => {
+            setError(typeof error === 'string' ? error : error.message)
+          },
+        }
+      )
+    } catch (error) {
+      setIsSubmitting(false)
+      setError(
+        typeof error === 'string'
+          ? error
+          : error instanceof Error
+            ? error.message
+            : 'Failed to create group'
+      )
+    }
   }
 
   if (!server) return null

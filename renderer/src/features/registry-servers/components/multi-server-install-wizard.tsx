@@ -7,6 +7,7 @@ import type {
 } from '@api/types.gen'
 import { FormRunFromRegistry } from './form-run-from-registry'
 import { DialogFormRemoteRegistryMcp } from './dialog-form-remote-registry-mcp'
+import { useMutationCreateGroup } from '@/features/mcp-servers/hooks/use-mutation-create-group'
 
 interface MultiServerInstallWizardProps {
   group: RegistryGroup | undefined
@@ -35,12 +36,15 @@ export function MultiServerInstallWizard({
 }: MultiServerInstallWizardProps) {
   const servers = getGroupServers(group)
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [isGroupCreated, setIsGroupCreated] = useState(false)
   const navigate = useNavigate()
+  const createGroupMutation = useMutationCreateGroup()
 
   // Reset wizard when dialog closes
   useEffect(() => {
     if (!isOpen) {
       setCurrentIndex(0)
+      setIsGroupCreated(false)
     }
   }, [isOpen])
 
@@ -61,6 +65,22 @@ export function MultiServerInstallWizard({
     }
   }
 
+  // Function to create the group (called before first server installation)
+  const ensureGroupCreated = async (): Promise<void> => {
+    if (isGroupCreated) {
+      return // Group already created, skip
+    }
+
+    await createGroupMutation.mutateAsync({
+      body: {
+        name: group.name,
+        description: group.description,
+      },
+    })
+
+    setIsGroupCreated(true)
+  }
+
   // Render the appropriate form based on server type
   if (isRemoteServer(currentServer)) {
     return (
@@ -73,6 +93,7 @@ export function MultiServerInstallWizard({
           onNext: handleNext,
           hasMoreServers,
           registryGroupName: group.name,
+          ensureGroupCreated,
         }}
       />
     )
@@ -88,6 +109,7 @@ export function MultiServerInstallWizard({
         onNext: handleNext,
         hasMoreServers,
         registryGroupName: group.name,
+        ensureGroupCreated,
       }}
     />
   )

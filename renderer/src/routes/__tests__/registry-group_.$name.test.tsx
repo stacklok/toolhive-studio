@@ -475,8 +475,10 @@ describe('Registry Group Detail Route', () => {
   })
 
   it('makes API calls and navigates to group page after installing all servers', async () => {
-    // Track API calls
+    // Track API calls and their order
+    const groupCalls: Array<{ name: string; description?: string }> = []
     const workloadCalls: Array<{ name: string; group: string }> = []
+    const apiCallOrder: Array<'group' | 'workload'> = []
 
     // Override the mock to use a group with 2 servers
     mockUseParams.mockReturnValue({ name: 'two-server-group' })
@@ -535,14 +537,27 @@ describe('Registry Group Detail Route', () => {
       },
     }
 
-    // Mock the workload creation API
+    // Mock the group creation and workload creation APIs
     server.use(
       http.get('*/api/v1beta/registry/:name', () => {
         return HttpResponse.json(twoServerRegistry)
       }),
+      http.post('*/api/v1beta/groups', async ({ request }) => {
+        const body = (await request.json()) as {
+          name: string
+          description?: string
+        }
+        groupCalls.push({ name: body.name, description: body.description })
+        apiCallOrder.push('group')
+        return HttpResponse.json({
+          name: body.name,
+          description: body.description,
+        })
+      }),
       http.post('*/api/v1beta/workloads', async ({ request }) => {
         const body = (await request.json()) as { name: string; group: string }
         workloadCalls.push({ name: body.name, group: body.group })
+        apiCallOrder.push('workload')
         return HttpResponse.json({
           name: body.name,
           group: body.group,
@@ -585,10 +600,17 @@ describe('Registry Group Detail Route', () => {
     // Click Finish on second server
     await userEvent.click(screen.getByRole('button', { name: /^finish$/i }))
 
-    // Verify both API calls were made with correct group name
+    // Verify group creation was called exactly once with correct data
     await waitFor(() => {
-      expect(workloadCalls).toHaveLength(2)
+      expect(groupCalls).toHaveLength(1)
     })
+    expect(groupCalls[0]).toEqual({
+      name: 'two-server-group',
+      description: 'A group with two servers',
+    })
+
+    // Verify both workload API calls were made with correct group name
+    expect(workloadCalls).toHaveLength(2)
     expect(workloadCalls[0]).toEqual({
       name: 'first-server',
       group: 'two-server-group',
@@ -597,6 +619,10 @@ describe('Registry Group Detail Route', () => {
       name: 'second-server',
       group: 'two-server-group',
     })
+
+    // Verify API call order: group creation MUST happen before any workload creation
+    expect(apiCallOrder).toEqual(['group', 'workload', 'workload'])
+    expect(apiCallOrder[0]).toBe('group')
 
     // Verify navigation to the registry group page
     await waitFor(() => {
