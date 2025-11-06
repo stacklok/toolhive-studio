@@ -852,6 +852,11 @@ describe('Registry Group Detail Route', () => {
       screen.getByText(/group.*dev-toolkit.*already exists/i)
     ).toBeInTheDocument()
 
+    // Verify "delete it" link is present and points to the group page
+    const deleteLink = screen.getByRole('link', { name: /delete it/i })
+    expect(deleteLink).toBeInTheDocument()
+    expect(deleteLink).toHaveAttribute('href', '/group/dev-toolkit')
+
     // Verify NO API calls were made
     expect(groupCalls).toHaveLength(0)
     expect(workloadCalls).toHaveLength(0)
@@ -923,6 +928,11 @@ describe('Registry Group Detail Route', () => {
     expect(
       screen.getByText(/server.*already exist.*atlassian/i)
     ).toBeInTheDocument()
+
+    // Verify "delete it" link is present and points to the groups page
+    const deleteLink = screen.getByRole('link', { name: /delete it/i })
+    expect(deleteLink).toBeInTheDocument()
+    expect(deleteLink).toHaveAttribute('href', '/groups')
 
     // Verify NO API calls were made
     expect(groupCalls).toHaveLength(0)

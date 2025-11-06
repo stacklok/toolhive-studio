@@ -1,4 +1,4 @@
-import { createFileRoute, useParams } from '@tanstack/react-router'
+import { createFileRoute, useParams, Link } from '@tanstack/react-router'
 import { useSuspenseQuery, useQuery } from '@tanstack/react-query'
 import {
   getApiV1BetaRegistryByNameOptions,
@@ -54,7 +54,15 @@ export function RegistryGroupDetail() {
     const groupExists = existingGroups.some((g) => g.name === name)
 
     if (groupExists) {
-      return `A group named "${name}" already exists. Please delete it first or choose a different group.`
+      return (
+        <>
+          A group named "{name}" already exists. Please{' '}
+          <Link to="/group/$name" params={{ name }} className="underline">
+            delete it
+          </Link>{' '}
+          first or choose a different group.
+        </>
+      )
     }
 
     // Pre-flight validation: check if any server names conflict with existing servers
@@ -75,7 +83,17 @@ export function RegistryGroupDetail() {
 
     if (conflictingServers.length > 0) {
       const serverList = conflictingServers.join(', ')
-      return `The following server${conflictingServers.length > 1 ? 's' : ''} already exist${conflictingServers.length === 1 ? 's' : ''}: ${serverList}. Please delete ${conflictingServers.length > 1 ? 'them' : 'it'} first or choose a different group.`
+      const plural = conflictingServers.length > 1
+      return (
+        <>
+          The following server{plural ? 's' : ''} already exist
+          {plural ? '' : 's'}: {serverList}. Please{' '}
+          <Link to="/groups" className="underline">
+            delete {plural ? 'them' : 'it'}
+          </Link>{' '}
+          first or choose a different group.
+        </>
+      )
     }
 
     return null
