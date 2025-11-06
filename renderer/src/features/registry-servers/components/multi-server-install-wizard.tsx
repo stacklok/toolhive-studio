@@ -88,7 +88,7 @@ export function MultiServerInstallWizard({
         server={currentServer}
         isOpen={isOpen}
         closeDialog={onClose}
-        wizardContext={{
+        multiStepContext={{
           onNext: handleNext,
           hasMoreServers,
           registryGroupName: group.name,
@@ -106,7 +106,7 @@ export function MultiServerInstallWizard({
       server={currentServer}
       isOpen={isOpen}
       onOpenChange={onClose}
-      wizardContext={{
+      multiStepContext={{
         onNext: handleNext,
         hasMoreServers,
         registryGroupName: group.name,

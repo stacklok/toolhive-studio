@@ -43,7 +43,7 @@ interface FormRunFromRegistryProps {
   server: RegistryImageMetadata | null
   isOpen: boolean
   onOpenChange: (open: boolean) => void
-  wizardContext?: {
+  multiStepContext?: {
     onNext: () => void
     hasMoreServers: boolean
     registryGroupName: string
@@ -56,7 +56,7 @@ interface FormRunFromRegistryProps {
 export function FormRunFromRegistry({
   server,
   isOpen,
-  wizardContext,
+  multiStepContext,
   onOpenChange,
 }: FormRunFromRegistryProps) {
   const [error, setError] = useState<string | null>(null)
@@ -145,12 +145,12 @@ export function FormRunFromRegistry({
 
     try {
       // When in wizard mode, create the group first before installing servers
-      if (wizardContext) {
-        await wizardContext.ensureGroupCreated()
+      if (multiStepContext) {
+        await multiStepContext.ensureGroupCreated()
       }
 
       // When in wizard mode, use the registry group name
-      const groupName = wizardContext?.registryGroupName ?? data.group
+      const groupName = multiStepContext?.registryGroupName ?? data.group
 
       // Use the dedicated function to prepare the API payload
       installServerMutation(
@@ -165,8 +165,8 @@ export function FormRunFromRegistry({
               serverName: data.name,
               groupName,
             })
-            wizardContext?.onNext()
-            if (!wizardContext?.hasMoreServers) {
+            multiStepContext?.onNext()
+            if (!multiStepContext?.hasMoreServers) {
               onOpenChange(false)
             }
             setActiveTab('configuration')
@@ -210,8 +210,8 @@ export function FormRunFromRegistry({
       }}
       actionsIsDisabled={isSubmitting}
       actionsSubmitLabel={
-        wizardContext
-          ? wizardContext.hasMoreServers
+        multiStepContext
+          ? multiStepContext.hasMoreServers
             ? 'Next'
             : 'Finish'
           : 'Install server'
@@ -220,8 +220,8 @@ export function FormRunFromRegistry({
       onSubmit={form.handleSubmit(onSubmitForm, activateTabWithError)}
       title={`Configure ${server.name}`}
       description={
-        wizardContext
-          ? `Installing server ${wizardContext.currentServerIndex} of ${wizardContext.totalServers}`
+        multiStepContext
+          ? `Installing server ${multiStepContext.currentServerIndex} of ${multiStepContext.totalServers}`
           : undefined
       }
     >
