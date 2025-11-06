@@ -1,68 +1,68 @@
 {
-  "tag": "v0.13.0",
+  "tag": "v0.13.1",
   "prerelease": false,
-  "published_at": "2025-11-06T09:48:19Z",
+  "published_at": "2025-11-06T13:46:43Z",
   "base_url": "https://stacklok.github.io/toolhive-studio",
   "assets": [
     {
       "name": "io.github.stacklok.toolhive_studio_stable_x86_64.flatpak",
-      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.0/io.github.stacklok.toolhive_studio_stable_x86_64.flatpak",
-      "size": 113890016
+      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.1/io.github.stacklok.toolhive_studio_stable_x86_64.flatpak",
+      "size": 113756600
     },
     {
       "name": "RELEASES",
-      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.0/RELEASES",
+      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.1/RELEASES",
       "size": 80
     },
     {
-      "name": "ToolHive-0.13.0-1.x86_64.rpm",
-      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.0/ToolHive-0.13.0-1.x86_64.rpm",
-      "size": 124507081
+      "name": "ToolHive-0.13.1-1.x86_64.rpm",
+      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.1/ToolHive-0.13.1-1.x86_64.rpm",
+      "size": 124507637
     },
     {
-      "name": "ToolHive-0.13.0-full.nupkg",
-      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.0/ToolHive-0.13.0-full.nupkg",
-      "size": 175094030
+      "name": "ToolHive-0.13.1-full.nupkg",
+      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.1/ToolHive-0.13.1-full.nupkg",
+      "size": 175095324
     },
     {
       "name": "ToolHive-arm64.dmg",
-      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.0/ToolHive-arm64.dmg",
-      "size": 155479124
+      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.1/ToolHive-arm64.dmg",
+      "size": 155480292
     },
     {
-      "name": "ToolHive-darwin-arm64-0.13.0.zip",
-      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.0/ToolHive-darwin-arm64-0.13.0.zip",
-      "size": 153796191
+      "name": "ToolHive-darwin-arm64-0.13.1.zip",
+      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.1/ToolHive-darwin-arm64-0.13.1.zip",
+      "size": 153796667
     },
     {
-      "name": "ToolHive-darwin-x64-0.13.0.zip",
-      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.0/ToolHive-darwin-x64-0.13.0.zip",
-      "size": 163605598
+      "name": "ToolHive-darwin-x64-0.13.1.zip",
+      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.1/ToolHive-darwin-x64-0.13.1.zip",
+      "size": 163606077
     },
     {
       "name": "toolhive-studio-linux-x64.tar.gz",
-      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.0/toolhive-studio-linux-x64.tar.gz",
-      "size": 159954488
+      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.1/toolhive-studio-linux-x64.tar.gz",
+      "size": 159955228
     },
     {
-      "name": "ToolHive-win32-x64-0.13.0.zip",
-      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.0/ToolHive-win32-x64-0.13.0.zip",
-      "size": 181200637
+      "name": "ToolHive-win32-x64-0.13.1.zip",
+      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.1/ToolHive-win32-x64-0.13.1.zip",
+      "size": 181201794
     },
     {
       "name": "ToolHive-x64.dmg",
-      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.0/ToolHive-x64.dmg",
-      "size": 165165054
+      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.1/ToolHive-x64.dmg",
+      "size": 165158292
     },
     {
       "name": "ToolHive.Setup.exe",
-      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.0/ToolHive.Setup.exe",
-      "size": 175981752
+      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.1/ToolHive.Setup.exe",
+      "size": 175983800
     },
     {
-      "name": "toolhive_0.13.0_amd64.deb",
-      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.0/toolhive_0.13.0_amd64.deb",
-      "size": 118901188
+      "name": "toolhive_0.13.1_amd64.deb",
+      "url": "https://github.com/stacklok/toolhive-studio/releases/download/v0.13.1/toolhive_0.13.1_amd64.deb",
+      "size": 118939164
     }
   ]
 }
