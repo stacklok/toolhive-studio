@@ -8,12 +8,15 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import type { CoreWorkload } from '@api/types.gen'
 import log from '../logger'
 
-export type McpToolDefinition = Tool
+export interface McpToolDefinition {
+  description?: string
+  inputSchema: Tool['inputSchema']
+}
 
-export function isMcpToolDefinition(obj: unknown): obj is Tool {
+export function isMcpToolDefinition(obj: Tool): obj is McpToolDefinition {
   if (!obj || typeof obj !== 'object' || obj === null) return false
 
-  const tool = obj as Record<string, unknown>
+  const tool = obj
 
   // Description should be string if present
   if (
@@ -105,12 +108,16 @@ export async function getWorkloadAvailableTools(
       const rawTools = await mcpClient.tools<'automatic'>()
 
       // Filter and validate tools using type guard
-      const serverMcpTools: Record<string, McpToolDefinition> = {}
-      for (const [name, def] of Object.entries(rawTools)) {
-        if (name && def && isMcpToolDefinition(def)) {
-          serverMcpTools[name] = def
-        }
-      }
+      const serverMcpTools = Object.entries(rawTools)
+        .filter(([, defTool]) => isMcpToolDefinition(defTool))
+        .reduce<Record<string, McpToolDefinition>>((prev, [name, def]) => {
+          if (!def || !name) return prev
+          prev[name] = {
+            description: def.description ?? '',
+            inputSchema: def.inputSchema ?? undefined,
+          }
+          return prev
+        }, {})
       await mcpClient.close()
       return serverMcpTools
     }
