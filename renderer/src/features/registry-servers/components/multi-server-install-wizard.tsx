@@ -59,16 +59,14 @@ export function MultiServerInstallWizard({
     if (hasMoreServers) {
       setCurrentIndex((prev) => prev + 1)
     } else {
-      // Navigate to the group page using the registry group name
       navigate({ to: '/group/$name', params: { name: group.name } })
       onClose()
     }
   }
 
-  // Function to create the group (called before first server installation)
   const ensureGroupCreated = async (): Promise<void> => {
     if (isGroupCreated) {
-      return // Group already created, skip
+      return
     }
 
     await createGroupMutation.mutateAsync({
@@ -80,7 +78,6 @@ export function MultiServerInstallWizard({
     setIsGroupCreated(true)
   }
 
-  // Render the appropriate form based on server type
   if (isRemoteServer(currentServer)) {
     return (
       <DialogFormRemoteRegistryMcp

@@ -133,12 +133,10 @@ export function DialogFormRemoteRegistryMcp({
     if (error) setError(null)
 
     try {
-      // Call pre-submit hook if provided
       if (onBeforeSubmit) {
         await onBeforeSubmit()
       }
 
-      // Override group name if provided
       const submissionData = groupNameOverride
         ? { ...data, group: groupNameOverride }
         : data

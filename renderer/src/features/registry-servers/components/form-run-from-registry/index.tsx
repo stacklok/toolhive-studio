@@ -147,15 +147,12 @@ export function FormRunFromRegistry({
     if (error) setError(null)
 
     try {
-      // Call pre-submit hook if provided
       if (onBeforeSubmit) {
         await onBeforeSubmit()
       }
 
-      // Override group name if provided
       const groupName = groupNameOverride ?? data.group
 
-      // Use the dedicated function to prepare the API payload
       installServerMutation(
         {
           server,

@@ -11,7 +11,6 @@ import type { V1GetRegistryResponse } from '@api/types.gen'
 const mockUseParams = vi.fn(() => ({ name: 'dev-toolkit' }))
 
 afterEach(() => {
-  // Reset the mock to default value after each test
   mockUseParams.mockReturnValue({ name: 'dev-toolkit' })
 })
 
@@ -63,12 +62,10 @@ describe('Registry Group Detail Route', () => {
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
 
-    // Ensure page is rendered
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'dev-toolkit' })).toBeVisible()
     })
 
-    // Verify table structure
     const table = screen.getByRole('table')
     expect(table).toBeVisible()
     expect(screen.getByRole('columnheader', { name: /server/i })).toBeVisible()
@@ -76,7 +73,6 @@ describe('Registry Group Detail Route', () => {
       screen.getByRole('columnheader', { name: /description/i })
     ).toBeVisible()
 
-    // Verify at least one server row exists and contains expected data
     const rows = screen.getAllByRole('row')
     expect(rows.length).toBeGreaterThan(1)
     const atlassianRow = rows.find((row) =>
@@ -98,13 +94,12 @@ describe('Registry Group Detail Route', () => {
 
     const table = screen.getByRole('table')
     const allRows = within(table).getAllByRole('row')
-    const bodyRows = allRows.slice(1) // skip header row
+    const bodyRows = allRows.slice(1)
     const data = bodyRows.map((row) => {
       const cells = within(row).getAllByRole('cell')
       return cells.map((cell) => cell.textContent?.trim() || '')
     })
 
-    // Should include the Atlassian server with its description
     expect(
       data.some(
         ([server, desc]) =>
@@ -135,10 +130,8 @@ describe('Registry Group Detail Route', () => {
   })
 
   it('renders a different group with multiple servers (proves component is dynamic)', async () => {
-    // Override the mock to return a different group name
     mockUseParams.mockReturnValue({ name: 'ai-tools' })
 
-    // Create a custom fixture with different data
     const customRegistry: V1GetRegistryResponse = {
       registry: {
         servers: {},
@@ -207,7 +200,6 @@ describe('Registry Group Detail Route', () => {
       },
     }
 
-    // Override the API response for this test
     server.use(
       http.get('*/api/v1beta/registry/:name', () => {
         return HttpResponse.json(customRegistry)
@@ -217,20 +209,17 @@ describe('Registry Group Detail Route', () => {
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
 
-    // Verify the correct group name and description are displayed
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'ai-tools' })).toBeVisible()
     })
     expect(screen.getByText('AI and machine learning tools')).toBeVisible()
 
-    // Verify all three servers are rendered (2 local + 1 remote)
     const table = screen.getByRole('table')
     const allRows = within(table).getAllByRole('row')
     const bodyRows = allRows.slice(1) // skip header row
 
     expect(bodyRows).toHaveLength(3)
 
-    // Verify each server's data
     expect(screen.getByText('openai-server')).toBeVisible()
     expect(screen.getByText('OpenAI API integration for Claude')).toBeVisible()
 
@@ -245,25 +234,21 @@ describe('Registry Group Detail Route', () => {
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
 
-    // Wait for page to load
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'dev-toolkit' })).toBeVisible()
     })
 
-    // Find and click the "Install group" button
     const installButton = screen.getByRole('button', { name: /install group/i })
     expect(installButton).toBeVisible()
 
     await userEvent.click(installButton)
 
-    // Verify the install wizard dialog opens with the first server's form
     await waitFor(() => {
       expect(
         screen.getByRole('heading', { name: /configure atlassian/i })
       ).toBeVisible()
     })
 
-    // Verify the form tabs are visible
     expect(screen.getByRole('tab', { name: /configuration/i })).toBeVisible()
     expect(
       screen.getByRole('tab', { name: /network isolation/i })
@@ -271,10 +256,8 @@ describe('Registry Group Detail Route', () => {
   })
 
   it('shows Finish button on the last server in wizard', async () => {
-    // Override the mock to use a group with 2 servers
     mockUseParams.mockReturnValue({ name: 'two-server-group' })
 
-    // Create a fixture with exactly 2 servers
     const twoServerRegistry: V1GetRegistryResponse = {
       registry: {
         servers: {},
@@ -328,7 +311,6 @@ describe('Registry Group Detail Route', () => {
       },
     }
 
-    // Override the API response for this test
     server.use(
       http.get('*/api/v1beta/registry/:name', () => {
         return HttpResponse.json(twoServerRegistry)
@@ -338,38 +320,31 @@ describe('Registry Group Detail Route', () => {
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
 
-    // Wait for page to load
     await waitFor(() => {
       expect(
         screen.getByRole('heading', { name: 'two-server-group' })
       ).toBeVisible()
     })
 
-    // Click "Install group" button
     const installButton = screen.getByRole('button', { name: /install group/i })
     await userEvent.click(installButton)
 
-    // Wait for first server's form
     await waitFor(() => {
       expect(
         screen.getByRole('heading', { name: /configure first-server/i })
       ).toBeVisible()
     })
 
-    // First server should show "Next" button
     expect(screen.getByRole('button', { name: /^next$/i })).toBeVisible()
 
-    // Click Next to go to second (last) server
     await userEvent.click(screen.getByRole('button', { name: /^next$/i }))
 
-    // Wait for second server's form
     await waitFor(() => {
       expect(
         screen.getByRole('heading', { name: /configure second-server/i })
       ).toBeVisible()
     })
 
-    // Last server should show "Finish" button, not "Next"
     expect(screen.getByRole('button', { name: /^finish$/i })).toBeVisible()
     expect(
       screen.queryByRole('button', { name: /^next$/i })
@@ -377,15 +352,12 @@ describe('Registry Group Detail Route', () => {
   })
 
   it('makes API calls and navigates to group page after installing all servers', async () => {
-    // Track API calls and their order
     const groupCalls: Array<{ name: string }> = []
     const workloadCalls: Array<{ name: string; group: string }> = []
     const apiCallOrder: Array<'group' | 'workload'> = []
 
-    // Override the mock to use a group with 2 servers
     mockUseParams.mockReturnValue({ name: 'two-server-group' })
 
-    // Create a fixture with exactly 2 servers
     const twoServerRegistry: V1GetRegistryResponse = {
       registry: {
         servers: {},
@@ -439,7 +411,6 @@ describe('Registry Group Detail Route', () => {
       },
     }
 
-    // Mock the group creation and workload creation APIs
     server.use(
       http.get('*/api/v1beta/registry/:name', () => {
         return HttpResponse.json(twoServerRegistry)
@@ -469,44 +440,35 @@ describe('Registry Group Detail Route', () => {
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
 
-    // Wait for page to load
     await waitFor(() => {
       expect(
         screen.getByRole('heading', { name: 'two-server-group' })
       ).toBeVisible()
     })
 
-    // Click "Install group" button
     const installButton = screen.getByRole('button', { name: /install group/i })
     await userEvent.click(installButton)
 
-    // Wait for first server's form
     await waitFor(() => {
       expect(
         screen.getByRole('heading', { name: /configure first-server/i })
       ).toBeVisible()
     })
 
-    // Verify wizard progress description for first server
     expect(screen.getByText('Installing server 1 of 2')).toBeInTheDocument()
 
-    // Click Next on first server (form submits with default values)
     await userEvent.click(screen.getByRole('button', { name: /^next$/i }))
 
-    // Wait for second server's form
     await waitFor(() => {
       expect(
         screen.getByRole('heading', { name: /configure second-server/i })
       ).toBeVisible()
     })
 
-    // Verify wizard progress description for second server
     expect(screen.getByText('Installing server 2 of 2')).toBeInTheDocument()
 
-    // Click Finish on second server
     await userEvent.click(screen.getByRole('button', { name: /^finish$/i }))
 
-    // Verify group creation was called exactly once with correct data
     await waitFor(() => {
       expect(groupCalls).toHaveLength(1)
     })
@@ -514,7 +476,6 @@ describe('Registry Group Detail Route', () => {
       name: 'two-server-group',
     })
 
-    // Verify both workload API calls were made with correct group name
     expect(workloadCalls).toHaveLength(2)
     expect(workloadCalls[0]).toEqual({
       name: 'first-server',
@@ -529,17 +490,14 @@ describe('Registry Group Detail Route', () => {
     expect(apiCallOrder).toEqual(['group', 'workload', 'workload'])
     expect(apiCallOrder[0]).toBe('group')
 
-    // Verify navigation to the registry group page
     await waitFor(() => {
       expect(router.state.location.pathname).toBe('/group/two-server-group')
     })
   })
 
   it('resets form with correct server names when navigating between servers', async () => {
-    // Override the mock to use a group with multiple servers
     mockUseParams.mockReturnValue({ name: 'multi-server-group' })
 
-    // Create a fixture with a group containing 2 servers with distinct names
     const multiServerRegistry: V1GetRegistryResponse = {
       registry: {
         servers: {},
@@ -593,7 +551,6 @@ describe('Registry Group Detail Route', () => {
       },
     }
 
-    // Override the API response for this test
     server.use(
       http.get('*/api/v1beta/registry/:name', () => {
         return HttpResponse.json(multiServerRegistry)
@@ -603,55 +560,44 @@ describe('Registry Group Detail Route', () => {
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
 
-    // Wait for page to load
     await waitFor(() => {
       expect(
         screen.getByRole('heading', { name: 'multi-server-group' })
       ).toBeVisible()
     })
 
-    // Click the "Install group" button
     const installButton = screen.getByRole('button', { name: /install group/i })
     await userEvent.click(installButton)
 
-    // Wait for first server's form to appear
     await waitFor(() => {
       expect(
         screen.getByRole('heading', { name: /configure fetch/i })
       ).toBeVisible()
     })
 
-    // Verify wizard progress description for first server
     expect(screen.getByText('Installing server 1 of 2')).toBeInTheDocument()
 
-    // Verify the server name field has "fetch" as the default value
     const firstServerNameInput = screen.getByLabelText(/server name/i)
     expect(firstServerNameInput).toHaveValue('fetch')
 
-    // Click the Next button
     const nextButton = screen.getByRole('button', { name: /next/i })
     await userEvent.click(nextButton)
 
-    // Wait for second server's form to appear
     await waitFor(() => {
       expect(
         screen.getByRole('heading', { name: /configure filesystem/i })
       ).toBeVisible()
     })
 
-    // Verify wizard progress description for second server
     expect(screen.getByText('Installing server 2 of 2')).toBeInTheDocument()
 
-    // Verify the server name field has been reset to "filesystem"
     const secondServerNameInput = screen.getByLabelText(/server name/i)
     expect(secondServerNameInput).toHaveValue('filesystem')
   })
 
   it('shows alert banner when group has no servers and hides the button', async () => {
-    // Override the mock to return a different group name
     mockUseParams.mockReturnValue({ name: 'empty-group' })
 
-    // Create a fixture with an empty group
     const emptyGroupRegistry: V1GetRegistryResponse = {
       registry: {
         servers: {},
@@ -666,7 +612,6 @@ describe('Registry Group Detail Route', () => {
       },
     }
 
-    // Override the API response for this test
     server.use(
       http.get('*/api/v1beta/registry/:name', () => {
         return HttpResponse.json(emptyGroupRegistry)
@@ -676,36 +621,29 @@ describe('Registry Group Detail Route', () => {
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
 
-    // Verify the group name and description are displayed
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'empty-group' })).toBeVisible()
     })
     expect(screen.getByText('A group with no servers')).toBeVisible()
 
-    // Verify the alert banner is shown
     expect(screen.getByRole('alert')).toBeVisible()
     expect(
       screen.getByText('This group does not have any servers.')
     ).toBeVisible()
 
-    // Verify the table is NOT shown
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
 
-    // Verify the "Install group" button is NOT shown
     expect(
       screen.queryByRole('button', { name: /install group/i })
     ).not.toBeInTheDocument()
   })
 
   it('shows error when trying to install a group that already exists and does not create any servers', async () => {
-    // Track API calls to verify NONE are made
     const groupCalls: Array<{ name: string }> = []
     const workloadCalls: Array<{ name: string }> = []
 
-    // Override the mock to use a group with servers
     mockUseParams.mockReturnValue({ name: 'dev-toolkit' })
 
-    // Mock the groups API to return that dev-toolkit already exists
     server.use(
       http.get('*/api/v1beta/groups', () => {
         return HttpResponse.json({
@@ -741,46 +679,37 @@ describe('Registry Group Detail Route', () => {
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
 
-    // Wait for page to load
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'dev-toolkit' })).toBeVisible()
     })
 
-    // Wait for validation to complete and button to be disabled
     const installButton = screen.getByRole('button', { name: /install group/i })
     await waitFor(() => {
       expect(installButton).toBeDisabled()
     })
 
-    // Verify error message is displayed
     expect(
       screen.getByText(/group.*dev-toolkit.*already exists/i)
     ).toBeInTheDocument()
 
-    // Verify "delete it" link is present and points to the group page
     const deleteLink = screen.getByRole('link', { name: /delete it/i })
     expect(deleteLink).toBeInTheDocument()
     expect(deleteLink).toHaveAttribute('href', '/group/dev-toolkit')
 
-    // Verify NO API calls were made
     expect(groupCalls).toHaveLength(0)
     expect(workloadCalls).toHaveLength(0)
 
-    // Verify wizard did not open (no server form dialogs)
     expect(
       screen.queryByRole('heading', { name: /configure/i })
     ).not.toBeInTheDocument()
   })
 
   it('shows error when trying to install a group with servers that conflict with existing servers and does not create any servers', async () => {
-    // Track API calls to verify NONE are made
     const groupCalls: Array<{ name: string }> = []
     const workloadCalls: Array<{ name: string }> = []
 
-    // Override the mock to use a group with servers
     mockUseParams.mockReturnValue({ name: 'dev-toolkit' })
 
-    // Mock the workloads API to return existing servers that conflict
     server.use(
       http.get('*/api/v1beta/workloads', () => {
         return HttpResponse.json({
@@ -818,46 +747,37 @@ describe('Registry Group Detail Route', () => {
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
 
-    // Wait for page to load
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'dev-toolkit' })).toBeVisible()
     })
 
-    // Wait for validation to complete and button to be disabled
     const installButton = screen.getByRole('button', { name: /install group/i })
     await waitFor(() => {
       expect(installButton).toBeDisabled()
     })
 
-    // Verify error message is displayed mentioning the conflicting server
     expect(
       screen.getByText(/server.*"atlassian".*already exists/i)
     ).toBeInTheDocument()
 
-    // Verify "delete it" link is present and points to the default group page
     const deleteLink = screen.getByRole('link', { name: /delete it/i })
     expect(deleteLink).toBeInTheDocument()
     expect(deleteLink).toHaveAttribute('href', '/group/default')
 
-    // Verify NO API calls were made
     expect(groupCalls).toHaveLength(0)
     expect(workloadCalls).toHaveLength(0)
 
-    // Verify wizard did not open (no server form dialogs)
     expect(
       screen.queryByRole('heading', { name: /configure/i })
     ).not.toBeInTheDocument()
   })
 
   it('shows error with link to specific group when server conflict exists in a named group', async () => {
-    // Track API calls to verify NONE are made
     const groupCalls: Array<{ name: string }> = []
     const workloadCalls: Array<{ name: string }> = []
 
-    // Override the mock to use a group with servers
     mockUseParams.mockReturnValue({ name: 'dev-toolkit' })
 
-    // Create a custom registry with dev-toolkit group containing a "fetch" server
     const customRegistry: V1GetRegistryResponse = {
       registry: {
         servers: {},
@@ -892,7 +812,6 @@ describe('Registry Group Detail Route', () => {
       },
     }
 
-    // Mock the APIs
     server.use(
       http.get('*/api/v1beta/registry/:name', () => {
         return HttpResponse.json(customRegistry)
@@ -936,46 +855,37 @@ describe('Registry Group Detail Route', () => {
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
 
-    // Wait for page to load
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'dev-toolkit' })).toBeVisible()
     })
 
-    // Wait for validation to complete and button to be disabled
     const installButton = screen.getByRole('button', { name: /install group/i })
     await waitFor(() => {
       expect(installButton).toBeDisabled()
     })
 
-    // Verify error message is displayed mentioning the conflicting server
     expect(
       screen.getByText(/server.*"fetch".*already exists/i)
     ).toBeInTheDocument()
 
-    // Verify "delete it" link points to the specific group where the server exists
     const deleteLink = screen.getByRole('link', { name: /delete it/i })
     expect(deleteLink).toBeInTheDocument()
     expect(deleteLink).toHaveAttribute('href', '/group/my-existing-group')
 
-    // Verify NO API calls were made
     expect(groupCalls).toHaveLength(0)
     expect(workloadCalls).toHaveLength(0)
 
-    // Verify wizard did not open (no server form dialogs)
     expect(
       screen.queryByRole('heading', { name: /configure/i })
     ).not.toBeInTheDocument()
   })
 
   it('shows error with link to first conflicting server group (fail fast pattern)', async () => {
-    // Track API calls to verify NONE are made
     const groupCalls: Array<{ name: string }> = []
     const workloadCalls: Array<{ name: string }> = []
 
-    // Override the mock to use a group with servers
     mockUseParams.mockReturnValue({ name: 'dev-toolkit' })
 
-    // Create a custom registry with dev-toolkit group containing multiple servers
     const customRegistry: V1GetRegistryResponse = {
       registry: {
         servers: {},
@@ -1029,7 +939,6 @@ describe('Registry Group Detail Route', () => {
       },
     }
 
-    // Mock workloads API to return servers in DIFFERENT groups
     server.use(
       http.get('*/api/v1beta/registry/:name', () => {
         return HttpResponse.json(customRegistry)
@@ -1070,12 +979,10 @@ describe('Registry Group Detail Route', () => {
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
 
-    // Wait for page to load
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'dev-toolkit' })).toBeVisible()
     })
 
-    // Wait for validation to complete and button to be disabled
     const installButton = screen.getByRole('button', { name: /install group/i })
     await waitFor(() => {
       expect(installButton).toBeDisabled()
@@ -1087,33 +994,27 @@ describe('Registry Group Detail Route', () => {
       screen.getByText(/server.*"fetch".*already exists/i)
     ).toBeInTheDocument()
 
-    // Verify "delete it" link points to the group where "fetch" exists (group-a)
     const deleteLink = screen.getByRole('link', { name: /delete it/i })
     expect(deleteLink).toBeInTheDocument()
     expect(deleteLink).toHaveAttribute('href', '/group/group-a')
 
-    // Verify NO API calls were made
     expect(groupCalls).toHaveLength(0)
     expect(workloadCalls).toHaveLength(0)
 
-    // Verify wizard did not open (no server form dialogs)
     expect(
       screen.queryByRole('heading', { name: /configure/i })
     ).not.toBeInTheDocument()
   })
 
   it('allows configuring env vars and secrets during wizard flow', async () => {
-    // Track workload API calls to verify env vars and secrets are included
     const workloadCalls: Array<{
       name: string
       env_vars?: Record<string, string>
       secrets?: Array<{ name: string; target: string }>
     }> = []
 
-    // Override the mock to use a group with a server that has env vars and secrets
     mockUseParams.mockReturnValue({ name: 'config-test-group' })
 
-    // Create a fixture with a server that has env_vars and secrets
     const configTestRegistry: V1GetRegistryResponse = {
       registry: {
         servers: {},
@@ -1162,7 +1063,6 @@ describe('Registry Group Detail Route', () => {
       },
     }
 
-    // Mock the APIs
     server.use(
       http.get('*/api/v1beta/registry/:name', () => {
         return HttpResponse.json(configTestRegistry)
@@ -1199,54 +1099,41 @@ describe('Registry Group Detail Route', () => {
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
 
-    // Wait for page to load
     await waitFor(() => {
       expect(
         screen.getByRole('heading', { name: 'config-test-group' })
       ).toBeVisible()
     })
 
-    // Click "Install group" button
     const installButton = screen.getByRole('button', { name: /install group/i })
     await userEvent.click(installButton)
 
-    // Wait for form to appear
     await waitFor(() => {
       expect(
         screen.getByRole('heading', { name: /configure config-server/i })
       ).toBeVisible()
     })
 
-    // Verify env var field is present and configurable
     const apiEndpointInput = screen.getByLabelText(/API_ENDPOINT value/i)
     expect(apiEndpointInput).toBeVisible()
     expect(apiEndpointInput).toHaveValue('https://default.example.com')
 
-    // Verify secret field is present and configurable
     const apiKeyInput = screen.getByLabelText(/API_KEY value/i)
     expect(apiKeyInput).toBeVisible()
 
-    // Submit the form with default/filled values
     await userEvent.click(screen.getByRole('button', { name: /^finish$/i }))
 
-    // Verify workload was created
     await waitFor(() => {
       expect(workloadCalls).toHaveLength(1)
     })
 
-    // Verify env vars were included (verifies they can be configured)
     expect(workloadCalls[0]?.env_vars).toBeDefined()
     expect(workloadCalls[0]?.env_vars?.API_ENDPOINT).toBe(
       'https://default.example.com'
     )
-
-    // Note: This test verifies that env vars and secrets fields are present
-    // and can be configured during the wizard flow. The fields are rendered,
-    // accessible, and their values are submitted with the workload.
   })
 
   it('allows configuring network isolation during wizard flow', async () => {
-    // Track workload API calls to verify network isolation settings
     const workloadCalls: Array<{
       name: string
       network_isolation?: boolean
@@ -1261,10 +1148,8 @@ describe('Registry Group Detail Route', () => {
       }
     }> = []
 
-    // Override the mock to use a group with a server that has network permissions
     mockUseParams.mockReturnValue({ name: 'network-test-group' })
 
-    // Create a fixture with a server that has network permissions
     const networkTestRegistry: V1GetRegistryResponse = {
       registry: {
         servers: {},
@@ -1307,7 +1192,6 @@ describe('Registry Group Detail Route', () => {
       },
     }
 
-    // Mock the APIs
     server.use(
       http.get('*/api/v1beta/registry/:name', () => {
         return HttpResponse.json(networkTestRegistry)
@@ -1345,61 +1229,47 @@ describe('Registry Group Detail Route', () => {
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
 
-    // Wait for page to load
     await waitFor(() => {
       expect(
         screen.getByRole('heading', { name: 'network-test-group' })
       ).toBeVisible()
     })
 
-    // Click "Install group" button
     const installButton = screen.getByRole('button', { name: /install group/i })
     await userEvent.click(installButton)
 
-    // Wait for form to appear
     await waitFor(() => {
       expect(
         screen.getByRole('heading', { name: /configure network-server/i })
       ).toBeVisible()
     })
 
-    // Navigate to Network Isolation tab
     const networkIsolationTab = screen.getByRole('tab', {
       name: /network isolation/i,
     })
     await userEvent.click(networkIsolationTab)
 
-    // Verify network isolation fields are present
     await waitFor(() => {
       expect(
         screen.getByText(/enable outbound network filtering/i)
       ).toBeInTheDocument()
     })
 
-    // Submit the form (network isolation settings from registry should be used)
     await userEvent.click(screen.getByRole('button', { name: /^finish$/i }))
 
-    // Verify workload was created
     await waitFor(() => {
       expect(workloadCalls).toHaveLength(1)
     })
-
-    // Note: This test verifies that network isolation tab and fields are present
-    // and accessible during the wizard flow, allowing users to configure
-    // network isolation settings for servers.
   })
 
   it('allows configuring storage volumes during wizard flow', async () => {
-    // Track workload API calls to verify volume configuration
     const workloadCalls: Array<{
       name: string
       volumes?: Array<{ host: string; container: string; mode?: string }>
     }> = []
 
-    // Override the mock to use a group with a server
     mockUseParams.mockReturnValue({ name: 'volume-test-group' })
 
-    // Create a fixture with a server (volumes can be configured for any server)
     const volumeTestRegistry: V1GetRegistryResponse = {
       registry: {
         servers: {},
@@ -1434,7 +1304,6 @@ describe('Registry Group Detail Route', () => {
       },
     }
 
-    // Mock the APIs
     server.use(
       http.get('*/api/v1beta/registry/:name', () => {
         return HttpResponse.json(volumeTestRegistry)
@@ -1462,39 +1331,29 @@ describe('Registry Group Detail Route', () => {
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
 
-    // Wait for page to load
     await waitFor(() => {
       expect(
         screen.getByRole('heading', { name: 'volume-test-group' })
       ).toBeVisible()
     })
 
-    // Click "Install group" button
     const installButton = screen.getByRole('button', { name: /install group/i })
     await userEvent.click(installButton)
 
-    // Wait for form to appear
     await waitFor(() => {
       expect(
         screen.getByRole('heading', { name: /configure volume-server/i })
       ).toBeVisible()
     })
 
-    // Verify storage volumes section is present (it's on the Configuration tab)
     await waitFor(() => {
       expect(screen.getByText(/storage volumes/i)).toBeInTheDocument()
     })
 
-    // Submit the form
     await userEvent.click(screen.getByRole('button', { name: /^finish$/i }))
 
-    // Verify workload was created
     await waitFor(() => {
       expect(workloadCalls).toHaveLength(1)
     })
-
-    // Note: This test verifies that storage volumes fields are present
-    // and accessible during the wizard flow, allowing users to configure
-    // volume mounts for servers.
   })
 })

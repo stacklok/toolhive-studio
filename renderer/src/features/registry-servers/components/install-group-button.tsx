@@ -23,14 +23,12 @@ export function InstallGroupButton({
     getApiV1BetaWorkloadsOptions({ query: { all: true } })
   )
 
-  // Compute install error message (if any)
   const installError = useMemo(() => {
     // Skip validation while wizard is open (group/servers are being created)
     if (isWizardOpen) {
       return null
     }
 
-    // Pre-flight validation: check if group already exists
     const existingGroups = groupsData?.groups ?? []
     const groupExists = existingGroups.some((g) => g.name === groupName)
 
@@ -50,10 +48,8 @@ export function InstallGroupButton({
       )
     }
 
-    // Pre-flight validation: check if any server names conflict with existing servers
     const existingWorkloads = workloadsData?.workloads ?? []
 
-    // Get all server names from the registry group (both local and remote)
     const groupServerNames = [
       ...Object.keys(group?.servers ?? {}),
       ...Object.keys(group?.remote_servers ?? {}),
@@ -65,7 +61,6 @@ export function InstallGroupButton({
     )
 
     if (firstConflict) {
-      // Find which group this server belongs to
       const conflictingWorkload = existingWorkloads.find(
         (w) => w.name === firstConflict
       )
