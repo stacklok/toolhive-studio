@@ -84,13 +84,39 @@ export function RegistryGroupDetail() {
     if (conflictingServers.length > 0) {
       const serverList = conflictingServers.join(', ')
       const plural = conflictingServers.length > 1
+
+      // Find which groups the conflicting servers belong to
+      const conflictingServerGroups = new Set(
+        existingWorkloads
+          .filter((w) => conflictingServers.includes(w.name!))
+          .map((w) => w.group)
+          .filter(Boolean)
+      )
+
+      // If all conflicting servers are in the same group, link to that group
+      // Otherwise, link to the groups list
+      const singleGroup =
+        conflictingServerGroups.size === 1
+          ? Array.from(conflictingServerGroups)[0]
+          : null
+
       return (
         <>
           The following server{plural ? 's' : ''} already exist
           {plural ? '' : 's'}: {serverList}. Please{' '}
-          <Link to="/groups" className="underline">
-            delete {plural ? 'them' : 'it'}
-          </Link>{' '}
+          {singleGroup ? (
+            <Link
+              to="/group/$name"
+              params={{ name: singleGroup }}
+              className="underline"
+            >
+              delete {plural ? 'them' : 'it'}
+            </Link>
+          ) : (
+            <Link to="/groups" className="underline">
+              delete {plural ? 'them' : 'it'}
+            </Link>
+          )}{' '}
           first or choose a different group.
         </>
       )

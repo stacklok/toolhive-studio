@@ -929,8 +929,262 @@ describe('Registry Group Detail Route', () => {
       screen.getByText(/server.*already exist.*atlassian/i)
     ).toBeInTheDocument()
 
-    // Verify "delete it" link is present and points to the groups page
+    // Verify "delete it" link is present and points to the default group page
+    // (since all conflicting servers are in the "default" group)
     const deleteLink = screen.getByRole('link', { name: /delete it/i })
+    expect(deleteLink).toBeInTheDocument()
+    expect(deleteLink).toHaveAttribute('href', '/group/default')
+
+    // Verify NO API calls were made
+    expect(groupCalls).toHaveLength(0)
+    expect(workloadCalls).toHaveLength(0)
+
+    // Verify wizard did not open (no server form dialogs)
+    expect(
+      screen.queryByRole('heading', { name: /configure/i })
+    ).not.toBeInTheDocument()
+  })
+
+  it('shows error with link to specific group when server conflict exists in a named group', async () => {
+    // Track API calls to verify NONE are made
+    const groupCalls: Array<{ name: string }> = []
+    const workloadCalls: Array<{ name: string }> = []
+
+    // Override the mock to use a group with servers
+    mockUseParams.mockReturnValue({ name: 'dev-toolkit' })
+
+    // Create a custom registry with dev-toolkit group containing a "fetch" server
+    const customRegistry: V1GetRegistryResponse = {
+      registry: {
+        servers: {},
+        groups: [
+          {
+            name: 'dev-toolkit',
+            description: 'Dev toolkit with fetch',
+            servers: {
+              fetch: {
+                name: 'fetch',
+                image: 'ghcr.io/example/fetch:latest',
+                description: 'Fetch server',
+                tier: 'Community',
+                status: 'Active',
+                transport: 'stdio',
+                permissions: {},
+                tools: ['fetch'],
+                env_vars: [],
+                args: [],
+                metadata: {
+                  stars: 100,
+                  pulls: 1000,
+                  last_updated: '2025-01-01T00:00:00Z',
+                },
+                repository_url: 'https://github.com/example/fetch',
+                tags: ['test'],
+              },
+            },
+            remote_servers: {},
+          },
+        ],
+      },
+    }
+
+    // Mock the APIs
+    server.use(
+      http.get('*/api/v1beta/registry/:name', () => {
+        return HttpResponse.json(customRegistry)
+      }),
+      http.get('*/api/v1beta/groups', () => {
+        return HttpResponse.json({
+          groups: [
+            {
+              name: 'my-existing-group',
+              description: 'Existing group with fetch server',
+            },
+          ],
+        })
+      }),
+      http.get('*/api/v1beta/workloads', () => {
+        return HttpResponse.json({
+          workloads: [
+            {
+              name: 'fetch', // Conflicts with a server in dev-toolkit
+              group: 'my-existing-group', // Server exists in this specific group
+              status: 'running',
+            },
+          ],
+        })
+      }),
+      http.post('*/api/v1beta/groups', async ({ request }) => {
+        const body = (await request.json()) as { name: string }
+        groupCalls.push({ name: body.name })
+        return HttpResponse.json({ name: body.name })
+      }),
+      http.post('*/api/v1beta/workloads', async ({ request }) => {
+        const body = (await request.json()) as { name: string }
+        workloadCalls.push({ name: body.name })
+        return HttpResponse.json({
+          name: body.name,
+          status: 'running',
+        })
+      })
+    )
+
+    const router = createTestRouter(WrapperComponent)
+    renderRoute(router)
+
+    // Wait for page to load
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'dev-toolkit' })).toBeVisible()
+    })
+
+    // Wait for validation to complete and button to be disabled
+    const installButton = screen.getByRole('button', { name: /install group/i })
+    await waitFor(() => {
+      expect(installButton).toBeDisabled()
+    })
+
+    // Verify error message is displayed mentioning the conflicting server
+    expect(
+      screen.getByText(/server.*already exist.*fetch/i)
+    ).toBeInTheDocument()
+
+    // Verify "delete it" link points to the specific group where the server exists
+    const deleteLink = screen.getByRole('link', { name: /delete it/i })
+    expect(deleteLink).toBeInTheDocument()
+    expect(deleteLink).toHaveAttribute('href', '/group/my-existing-group')
+
+    // Verify NO API calls were made
+    expect(groupCalls).toHaveLength(0)
+    expect(workloadCalls).toHaveLength(0)
+
+    // Verify wizard did not open (no server form dialogs)
+    expect(
+      screen.queryByRole('heading', { name: /configure/i })
+    ).not.toBeInTheDocument()
+  })
+
+  it('shows error with link to groups page when server conflicts exist in multiple different groups', async () => {
+    // Track API calls to verify NONE are made
+    const groupCalls: Array<{ name: string }> = []
+    const workloadCalls: Array<{ name: string }> = []
+
+    // Override the mock to use a group with servers
+    mockUseParams.mockReturnValue({ name: 'dev-toolkit' })
+
+    // Create a custom registry with dev-toolkit group containing multiple servers
+    const customRegistry: V1GetRegistryResponse = {
+      registry: {
+        servers: {},
+        groups: [
+          {
+            name: 'dev-toolkit',
+            description: 'Dev toolkit with multiple servers',
+            servers: {
+              fetch: {
+                name: 'fetch',
+                image: 'ghcr.io/example/fetch:latest',
+                description: 'Fetch server',
+                tier: 'Community',
+                status: 'Active',
+                transport: 'stdio',
+                permissions: {},
+                tools: ['fetch'],
+                env_vars: [],
+                args: [],
+                metadata: {
+                  stars: 100,
+                  pulls: 1000,
+                  last_updated: '2025-01-01T00:00:00Z',
+                },
+                repository_url: 'https://github.com/example/fetch',
+                tags: ['test'],
+              },
+              atlassian: {
+                name: 'atlassian',
+                image: 'ghcr.io/example/atlassian:latest',
+                description: 'Atlassian server',
+                tier: 'Community',
+                status: 'Active',
+                transport: 'stdio',
+                permissions: {},
+                tools: ['atlassian'],
+                env_vars: [],
+                args: [],
+                metadata: {
+                  stars: 200,
+                  pulls: 2000,
+                  last_updated: '2025-01-01T00:00:00Z',
+                },
+                repository_url: 'https://github.com/example/atlassian',
+                tags: ['test'],
+              },
+            },
+            remote_servers: {},
+          },
+        ],
+      },
+    }
+
+    // Mock workloads API to return servers in DIFFERENT groups
+    server.use(
+      http.get('*/api/v1beta/registry/:name', () => {
+        return HttpResponse.json(customRegistry)
+      }),
+      http.get('*/api/v1beta/workloads', () => {
+        return HttpResponse.json({
+          workloads: [
+            {
+              name: 'fetch',
+              group: 'group-a', // Server exists in group-a
+              status: 'running',
+            },
+            {
+              name: 'atlassian',
+              group: 'group-b', // Server exists in group-b (different group)
+              status: 'running',
+            },
+          ],
+        })
+      }),
+      http.post('*/api/v1beta/groups', async ({ request }) => {
+        const body = (await request.json()) as { name: string }
+        groupCalls.push({ name: body.name })
+        return HttpResponse.json({
+          name: body.name,
+        })
+      }),
+      http.post('*/api/v1beta/workloads', async ({ request }) => {
+        const body = (await request.json()) as { name: string }
+        workloadCalls.push({ name: body.name })
+        return HttpResponse.json({
+          name: body.name,
+          status: 'running',
+        })
+      })
+    )
+
+    const router = createTestRouter(WrapperComponent)
+    renderRoute(router)
+
+    // Wait for page to load
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'dev-toolkit' })).toBeVisible()
+    })
+
+    // Wait for validation to complete and button to be disabled
+    const installButton = screen.getByRole('button', { name: /install group/i })
+    await waitFor(() => {
+      expect(installButton).toBeDisabled()
+    })
+
+    // Verify error message is displayed mentioning the conflicting servers (plural)
+    expect(
+      screen.getByText(/servers.*already exist.*fetch.*atlassian/i)
+    ).toBeInTheDocument()
+
+    // Verify "delete them" link points to the groups page (not a specific group)
+    // because the conflicting servers are in different groups
+    const deleteLink = screen.getByRole('link', { name: /delete them/i })
     expect(deleteLink).toBeInTheDocument()
     expect(deleteLink).toHaveAttribute('href', '/groups')
 
