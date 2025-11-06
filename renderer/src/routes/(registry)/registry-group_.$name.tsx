@@ -84,6 +84,9 @@ export function RegistryGroupDetail() {
     if (conflictingServers.length > 0) {
       const serverList = conflictingServers.join(', ')
       const plural = conflictingServers.length > 1
+      const serverWord = plural ? 'servers' : 'server'
+      const existVerb = plural ? 'exist' : 'exists'
+      const deleteWord = plural ? 'them' : 'it'
 
       // Find which groups the conflicting servers belong to
       const conflictingServerGroups = new Set(
@@ -100,23 +103,15 @@ export function RegistryGroupDetail() {
           ? Array.from(conflictingServerGroups)[0]
           : null
 
+      const linkTo = singleGroup ? '/group/$name' : '/groups'
+      const linkParams = singleGroup ? { name: singleGroup } : undefined
+
       return (
         <>
-          The following server{plural ? 's' : ''} already exist
-          {plural ? '' : 's'}: {serverList}. Please{' '}
-          {singleGroup ? (
-            <Link
-              to="/group/$name"
-              params={{ name: singleGroup }}
-              className="underline"
-            >
-              delete {plural ? 'them' : 'it'}
-            </Link>
-          ) : (
-            <Link to="/groups" className="underline">
-              delete {plural ? 'them' : 'it'}
-            </Link>
-          )}{' '}
+          The following {serverWord} already {existVerb}: {serverList}. Please{' '}
+          <Link to={linkTo} params={linkParams} className="underline">
+            delete {deleteWord}
+          </Link>{' '}
           first or choose a different group.
         </>
       )
