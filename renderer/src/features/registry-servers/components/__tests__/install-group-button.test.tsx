@@ -6,7 +6,11 @@ import {
   type UseQueryResult,
 } from '@tanstack/react-query'
 import { InstallGroupButton } from '../install-group-button'
-import type { RegistryGroup } from '@api/types.gen'
+import type {
+  RegistryGroup,
+  V1GroupListResponse,
+  V1WorkloadListResponse,
+} from '@api/types.gen'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
 import { useQuery } from '@tanstack/react-query'
 
@@ -94,13 +98,13 @@ describe('InstallGroupButton', () => {
       data: { groups: [] },
       isLoading: false,
       error: null,
-    } as Partial<UseQueryResult> as UseQueryResult)
+    } as UseQueryResult<V1GroupListResponse, Error>)
 
     mockUseQuery.mockReturnValue({
       data: { workloads: [] },
       isLoading: false,
       error: null,
-    } as Partial<UseQueryResult> as UseQueryResult)
+    } as UseQueryResult<V1WorkloadListResponse, Error>)
   })
 
   it('shows error when trying to install a group that already exists', async () => {
@@ -119,7 +123,7 @@ describe('InstallGroupButton', () => {
       },
       isLoading: false,
       error: null,
-    } as Partial<UseQueryResult> as UseQueryResult)
+    } as UseQueryResult<V1GroupListResponse, Error>)
 
     renderWithProviders(
       <InstallGroupButton groupName="dev-toolkit" group={mockGroup} />
@@ -159,7 +163,7 @@ describe('InstallGroupButton', () => {
       },
       isLoading: false,
       error: null,
-    } as Partial<UseQueryResult> as UseQueryResult)
+    } as UseQueryResult<V1WorkloadListResponse, Error>)
 
     renderWithProviders(
       <InstallGroupButton groupName="dev-toolkit" group={mockGroup} />
@@ -221,7 +225,7 @@ describe('InstallGroupButton', () => {
       },
       isLoading: false,
       error: null,
-    } as Partial<UseQueryResult> as UseQueryResult)
+    } as UseQueryResult<V1WorkloadListResponse, Error>)
 
     renderWithProviders(
       <InstallGroupButton groupName="dev-toolkit" group={customGroup} />
@@ -307,7 +311,7 @@ describe('InstallGroupButton', () => {
       },
       isLoading: false,
       error: null,
-    } as Partial<UseQueryResult> as UseQueryResult)
+    } as UseQueryResult<V1WorkloadListResponse, Error>)
 
     renderWithProviders(
       <InstallGroupButton groupName="dev-toolkit" group={customGroup} />
