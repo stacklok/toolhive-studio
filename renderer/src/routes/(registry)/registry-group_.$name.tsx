@@ -9,7 +9,7 @@ import { Button } from '@/common/components/ui/button'
 import { RegistryDetailHeader } from '@/features/registry-servers/components/registry-detail-header'
 import { Separator } from '@/common/components/ui/separator'
 import { Alert, AlertDescription } from '@/common/components/ui/alert'
-import { Wrench, Info, AlertCircle } from 'lucide-react'
+import { Wrench, Info } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -21,6 +21,7 @@ import {
 import { MultiServerInstallWizard } from '@/features/registry-servers/components/multi-server-install-wizard'
 import { useState } from 'react'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
+import { toast } from 'sonner'
 
 export const Route = createFileRoute('/(registry)/registry-group_/$name')({
   loader: async ({ context: { queryClient } }) => {
@@ -42,7 +43,6 @@ export function RegistryGroupDetail() {
   )
   const group = registryData?.registry?.groups?.find((g) => g.name === name)
   const [isWizardOpen, setIsWizardOpen] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   const hasServers =
     Object.keys(group?.servers ?? {}).length > 0 ||
@@ -54,7 +54,7 @@ export function RegistryGroupDetail() {
     const groupExists = existingGroups.some((g) => g.name === name)
 
     if (groupExists) {
-      setError(
+      toast.error(
         `A group named "${name}" already exists. Please delete it first or choose a different group.`
       )
       return
@@ -78,14 +78,13 @@ export function RegistryGroupDetail() {
 
     if (conflictingServers.length > 0) {
       const serverList = conflictingServers.join(', ')
-      setError(
+      toast.error(
         `The following server${conflictingServers.length > 1 ? 's' : ''} already exist${conflictingServers.length === 1 ? 's' : ''}: ${serverList}. Please delete ${conflictingServers.length > 1 ? 'them' : 'it'} first or choose a different group.`
       )
       return
     }
 
-    // Clear any previous errors and open wizard
-    setError(null)
+    // Open wizard
     setIsWizardOpen(true)
   }
 
@@ -140,12 +139,6 @@ export function RegistryGroupDetail() {
             </Table>
           </div>
           <Separator className="my-6" />
-          {error && (
-            <Alert variant="destructive" className="mb-6 max-w-2xl">
-              <AlertCircle className="size-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
           <div className="flex gap-5">
             <Button variant="default" onClick={handleInstallClick}>
               <Wrench className="size-4" />

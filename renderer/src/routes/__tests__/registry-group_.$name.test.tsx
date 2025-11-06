@@ -7,6 +7,7 @@ import { renderRoute } from '@/common/test/render-route'
 import { server } from '@/common/mocks/node'
 import userEvent from '@testing-library/user-event'
 import type { V1GetRegistryResponse } from '@api/types.gen'
+import { toast } from 'sonner'
 
 const mockUseParams = vi.fn(() => ({ name: 'dev-toolkit' }))
 
@@ -22,6 +23,15 @@ vi.mock('@tanstack/react-router', async () => {
     useParams: () => mockUseParams(),
   }
 })
+
+vi.mock('sonner', () => ({
+  toast: {
+    error: vi.fn(),
+    success: vi.fn(),
+    loading: vi.fn(),
+    promise: vi.fn(),
+  },
+}))
 
 function WrapperComponent() {
   return (
@@ -839,9 +849,11 @@ describe('Registry Group Detail Route', () => {
     const installButton = screen.getByRole('button', { name: /install group/i })
     await userEvent.click(installButton)
 
-    // Verify error dialog/alert appears
+    // Verify error toast was shown
     await waitFor(() => {
-      expect(screen.getByText(/group.*already exists/i)).toBeVisible()
+      expect(toast.error).toHaveBeenCalledWith(
+        expect.stringMatching(/group.*dev-toolkit.*already exists/i)
+      )
     })
 
     // Verify NO API calls were made
@@ -909,11 +921,11 @@ describe('Registry Group Detail Route', () => {
     const installButton = screen.getByRole('button', { name: /install group/i })
     await userEvent.click(installButton)
 
-    // Verify error message appears mentioning the conflicting server
+    // Verify error toast was shown mentioning the conflicting server
     await waitFor(() => {
-      expect(
-        screen.getByText(/server.*already exists.*atlassian/i)
-      ).toBeVisible()
+      expect(toast.error).toHaveBeenCalledWith(
+        expect.stringMatching(/server.*already exist.*atlassian/i)
+      )
     })
 
     // Verify NO API calls were made
