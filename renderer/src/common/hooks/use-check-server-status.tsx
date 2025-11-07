@@ -71,10 +71,6 @@ export function useCheckServerStatus() {
           refetchType: 'active',
         })
 
-        // Add a 2-second artificial delay to keep the loading screen visible
-        // This stops jarring flashes when the workload is created too fast, and lets the user understand that they saw a loading screen
-        await new Promise((resolve) => setTimeout(resolve, 2000))
-
         if (!quietly) {
           const successMessage =
             customSuccessMessage ||

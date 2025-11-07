@@ -174,10 +174,14 @@ export function FormRunFromRegistry({
           setActiveTab('configuration')
         },
         onSettled: (_, error) => {
-          setIsSubmitting(false)
-          if (!error) {
-            form.reset()
-          }
+          // Add a 2-second delay before hiding the loading screen
+          // This stops jarring flashes when the workload is created too fast, and lets the user understand that they saw a loading screen
+          setTimeout(() => {
+            setIsSubmitting(false)
+            if (!error) {
+              form.reset()
+            }
+          }, 2000)
         },
         onError: (error) => {
           setError(typeof error === 'string' ? error : error.message)

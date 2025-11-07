@@ -513,18 +513,14 @@ describe('Registry Group Detail Route', () => {
     })
 
     // Check toast.success was called for the group creation
-    // We need a longer timeout here because of the 2-second artificial delay in checkServerStatus
-    await waitFor(
-      () => {
-        expect(toast.success).toHaveBeenCalledWith(
-          'Group "two-server-group" created successfully',
-          expect.objectContaining({
-            duration: 5_000,
-          })
-        )
-      },
-      { timeout: 5000 }
-    )
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalledWith(
+        'Group "two-server-group" created successfully',
+        expect.objectContaining({
+          duration: 5_000,
+        })
+      )
+    })
 
     expect(workloadCalls).toHaveLength(2)
     expect(workloadCalls[0]).toEqual({
