@@ -49,6 +49,7 @@ interface FormRunFromRegistryProps {
   description?: string
   quietly?: boolean
   customSuccessMessage?: string
+  customLoadingMessage?: string
 }
 
 export function FormRunFromRegistry({
@@ -61,6 +62,7 @@ export function FormRunFromRegistry({
   description,
   quietly = false,
   customSuccessMessage,
+  customLoadingMessage,
 }: FormRunFromRegistryProps) {
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -162,6 +164,7 @@ export function FormRunFromRegistry({
             groupName,
             quietly,
             customSuccessMessage,
+            customLoadingMessage,
           })
           if (onSubmitSuccess) {
             onSubmitSuccess(() => onOpenChange(false))

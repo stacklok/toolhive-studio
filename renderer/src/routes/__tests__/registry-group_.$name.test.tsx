@@ -501,11 +501,11 @@ describe('Registry Group Detail Route', () => {
       })
     expect(hasGroupCreationToast).toBe(false)
 
-    // For the LAST server only, toasts SHOULD be shown
+    // For the LAST server only, toasts SHOULD be shown with custom messages
     // Wait for the async checkServerStatus to complete
     await waitFor(() => {
       expect(toast.loading).toHaveBeenCalledWith(
-        'Starting "second-server"...',
+        'Creating "two-server-group" group...',
         expect.objectContaining({
           duration: 30_000,
         })
@@ -513,14 +513,18 @@ describe('Registry Group Detail Route', () => {
     })
 
     // Check toast.success was called for the group creation
-    await waitFor(() => {
-      expect(toast.success).toHaveBeenCalledWith(
-        'Group "two-server-group" created successfully',
-        expect.objectContaining({
-          duration: 5_000,
-        })
-      )
-    })
+    // We need a longer timeout here because of the 2-second artificial delay in checkServerStatus
+    await waitFor(
+      () => {
+        expect(toast.success).toHaveBeenCalledWith(
+          'Group "two-server-group" created successfully',
+          expect.objectContaining({
+            duration: 5_000,
+          })
+        )
+      },
+      { timeout: 5000 }
+    )
 
     expect(workloadCalls).toHaveLength(2)
     expect(workloadCalls[0]).toEqual({
@@ -536,9 +540,9 @@ describe('Registry Group Detail Route', () => {
     expect(apiCallOrder).toEqual(['group', 'workload', 'workload'])
     expect(apiCallOrder[0]).toBe('group')
 
-    await waitFor(() => {
-      expect(router.state.location.pathname).toBe('/group/two-server-group')
-    })
+    // The wizard should NOT automatically navigate to the group
+    // User should use the View button in the toast instead
+    expect(router.state.location.pathname).not.toBe('/group/two-server-group')
   })
 
   it('resets form with correct server names when navigating between servers', async () => {

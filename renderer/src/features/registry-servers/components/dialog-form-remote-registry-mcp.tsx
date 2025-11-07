@@ -65,6 +65,7 @@ interface FormRunFromRegistryProps {
   description?: string
   quietly?: boolean
   customSuccessMessage?: string
+  customLoadingMessage?: string
 }
 
 export function DialogFormRemoteRegistryMcp({
@@ -77,6 +78,7 @@ export function DialogFormRemoteRegistryMcp({
   description,
   quietly = false,
   customSuccessMessage,
+  customLoadingMessage,
 }: FormRunFromRegistryProps) {
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -148,6 +150,7 @@ export function DialogFormRemoteRegistryMcp({
             groupName: submissionData.group || 'default',
             quietly,
             customSuccessMessage,
+            customLoadingMessage,
           })
           if (onSubmitSuccess) {
             onSubmitSuccess(closeDialog)

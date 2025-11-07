@@ -27,21 +27,23 @@ export function useCheckServerStatus() {
       isEditing = false,
       quietly = false,
       customSuccessMessage,
+      customLoadingMessage,
     }: {
       serverName: string
       groupName: string
       isEditing?: boolean
       quietly?: boolean
       customSuccessMessage?: string
+      customLoadingMessage?: string
     }): Promise<boolean> => {
       if (!quietly) {
-        toast.loading(
-          `${isEditing ? 'Updating' : 'Starting'} "${serverName}"...`,
-          {
-            duration: 30_000,
-            id: toastIdRef.current,
-          }
-        )
+        const loadingMessage =
+          customLoadingMessage ||
+          `${isEditing ? 'Updating' : 'Starting'} "${serverName}"...`
+        toast.loading(loadingMessage, {
+          duration: 30_000,
+          id: toastIdRef.current,
+        })
       }
 
       const isServerReady = await pollServerStatus(
@@ -68,6 +70,10 @@ export function useCheckServerStatus() {
           }),
           refetchType: 'active',
         })
+
+        // Add a 2-second artificial delay to keep the loading screen visible
+        // This stops jarring flashes when the workload is created too fast, and lets the user understand that they saw a loading screen
+        await new Promise((resolve) => setTimeout(resolve, 2000))
 
         if (!quietly) {
           const successMessage =

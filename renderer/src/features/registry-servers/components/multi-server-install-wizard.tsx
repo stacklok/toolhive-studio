@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from '@tanstack/react-router'
 import type {
   RegistryImageMetadata,
   RegistryRemoteServerMetadata,
@@ -39,7 +38,6 @@ export function MultiServerInstallWizard({
     currentIndex: 0,
     isGroupCreated: false,
   })
-  const navigate = useNavigate()
   const createGroupMutation = useMutationCreateGroup({ successMsg: null })
 
   useEffect(() => {
@@ -76,7 +74,6 @@ export function MultiServerInstallWizard({
   const handleNext = (closeDialog: () => void) => {
     if (!hasMoreServers) {
       closeDialog()
-      navigate({ to: '/group/$name', params: { name: group.name } })
       onClose()
       return
     }
@@ -104,6 +101,9 @@ export function MultiServerInstallWizard({
             ? undefined
             : `Group "${group.name}" created successfully`
         }
+        customLoadingMessage={
+          hasMoreServers ? undefined : `Creating "${group.name}" group...`
+        }
       />
     )
   }
@@ -123,6 +123,9 @@ export function MultiServerInstallWizard({
         hasMoreServers
           ? undefined
           : `Group "${group.name}" created successfully`
+      }
+      customLoadingMessage={
+        hasMoreServers ? undefined : `Creating "${group.name}" group...`
       }
     />
   )

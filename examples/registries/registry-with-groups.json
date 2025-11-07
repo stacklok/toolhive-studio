@@ -80,9 +80,9 @@
       "name": "dev-toolkit",
       "description": "Essential tools for software development teams",
       "servers": {
-        "fetch": {
-          "name": "fetch",
-          "description": "Allows you to fetch content from the web",
+        "content-fetcher": {
+          "name": "content-fetcher",
+          "description": "Alternative fetch server for content retrieval",
           "tier": "Community",
           "status": "Active",
           "transport": "streamable-http",
@@ -128,9 +128,9 @@
             "use_pkce": true
           }
         },
-        "content-fetcher": {
-          "name": "content-fetcher",
-          "description": "Alternative fetch server for content retrieval",
+        "fetch": {
+          "name": "fetch",
+          "description": "Allows you to fetch content from the web",
           "tier": "Community",
           "status": "Active",
           "tools": ["fetch"],
@@ -140,7 +140,7 @@
           },
           "repository_url": "https://github.com/stackloklabs/gofetch",
           "tags": ["content", "html", "markdown", "fetch"],
-          "url": "https://example.com/content-fetcher-remote"
+          "url": "https://example.com/fetch-remote"
         }
       }
     },
