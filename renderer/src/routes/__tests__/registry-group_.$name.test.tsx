@@ -426,6 +426,17 @@ describe('Registry Group Detail Route', () => {
           group: body.group,
           status: 'running',
         })
+      }),
+      http.get('*/api/v1beta/discovery/clients', () => {
+        return HttpResponse.json({
+          clients: [
+            {
+              client_type: 'claude-code',
+              installed: true,
+              registered: true,
+            },
+          ],
+        })
       })
     )
 
@@ -479,6 +490,13 @@ describe('Registry Group Detail Route', () => {
         )
       })
     expect(hasGroupCreationToast).toBe(false)
+
+    // Verify that server creation toasts are also NOT shown while dialog is open
+    // Check toast.warning (for restart client notification)
+    expect(toast.warning).not.toHaveBeenCalled()
+
+    // Check toast.success (for optimizer notification - may not apply to all groups)
+    expect(toast.success).not.toHaveBeenCalled()
 
     expect(workloadCalls).toHaveLength(2)
     expect(workloadCalls[0]).toEqual({

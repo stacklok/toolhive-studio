@@ -47,6 +47,7 @@ interface FormRunFromRegistryProps {
   hardcodedGroup?: string
   actionsSubmitLabel: string
   description?: string
+  quietly?: boolean
 }
 
 export function FormRunFromRegistry({
@@ -57,6 +58,7 @@ export function FormRunFromRegistry({
   hardcodedGroup,
   actionsSubmitLabel,
   description,
+  quietly = false,
 }: FormRunFromRegistryProps) {
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -83,6 +85,7 @@ export function FormRunFromRegistry({
       onSecretError: (error, variables) => {
         log.error('onSecretError', error, variables)
       },
+      quietly,
     })
   const { activeTab, setActiveTab, activateTabWithError, resetTab } =
     useFormTabState<Tab, Field>({
@@ -155,6 +158,7 @@ export function FormRunFromRegistry({
           checkServerStatus({
             serverName: data.name,
             groupName,
+            quietly,
           })
           if (onSubmitSuccess) {
             onSubmitSuccess(() => onOpenChange(false))

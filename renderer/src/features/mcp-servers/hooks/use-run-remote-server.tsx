@@ -16,12 +16,14 @@ interface UseRunRemoteServerProps {
     error: string,
     variables: Options<PostApiV1BetaSecretsDefaultKeysData>
   ) => void
+  quietly?: boolean
 }
 
 export function useRunRemoteServer({
   pageName,
   onSecretSuccess,
   onSecretError,
+  quietly = false,
 }: UseRunRemoteServerProps) {
   const queryClient = useQueryClient()
   const { handleSecrets, isPendingSecrets, isErrorSecrets } = useMCPSecrets({
@@ -52,8 +54,9 @@ export function useRunRemoteServer({
       })
       await restartClientNotification({
         queryClient,
+        quietly,
       })
-      notifyChangeWithOptimizer(data.group)
+      notifyChangeWithOptimizer(data.group, quietly)
       trackEvent(`Workload remote ${data.name} started`, {
         remote: 'true',
         auth_type: data.auth_type,

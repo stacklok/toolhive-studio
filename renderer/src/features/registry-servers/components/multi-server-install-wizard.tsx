@@ -93,6 +93,7 @@ export function MultiServerInstallWizard({
         hardcodedGroup={group.name}
         actionsSubmitLabel={hasMoreServers ? 'Next' : 'Finish'}
         description={`Installing server ${wizardState.currentIndex + 1} of ${servers.length}`}
+        quietly
       />
     )
   }
@@ -107,6 +108,7 @@ export function MultiServerInstallWizard({
       hardcodedGroup={group.name}
       actionsSubmitLabel={hasMoreServers ? 'Next' : 'Finish'}
       description={`Installing server ${wizardState.currentIndex + 1} of ${servers.length}`}
+      quietly
     />
   )
 }

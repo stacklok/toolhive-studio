@@ -4,7 +4,12 @@ import { toast } from 'sonner'
 export function useNotificationOptimizer() {
   const optimizedGroupName = useOptimizedGroupName()
 
-  const notifyChangeWithOptimizer = (groupName: string) => {
+  const notifyChangeWithOptimizer = (
+    groupName: string,
+    quietly: boolean = false
+  ) => {
+    if (quietly) return
+
     if (optimizedGroupName === groupName) {
       toast.success(
         'MCP Optimizer may take up to a minute to reflect changes.',

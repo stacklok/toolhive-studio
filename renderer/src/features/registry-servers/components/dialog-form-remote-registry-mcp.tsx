@@ -63,6 +63,7 @@ interface FormRunFromRegistryProps {
   hardcodedGroup?: string
   actionsSubmitLabel: string
   description?: string
+  quietly?: boolean
 }
 
 export function DialogFormRemoteRegistryMcp({
@@ -73,6 +74,7 @@ export function DialogFormRemoteRegistryMcp({
   hardcodedGroup,
   actionsSubmitLabel,
   description,
+  quietly = false,
 }: FormRunFromRegistryProps) {
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -98,6 +100,7 @@ export function DialogFormRemoteRegistryMcp({
       onSecretError: (error, variables) => {
         log.error('onSecretError', error, variables)
       },
+      quietly,
     })
 
   const { data } = useQuery({
@@ -141,6 +144,7 @@ export function DialogFormRemoteRegistryMcp({
           checkServerStatus({
             serverName: submissionData.name,
             groupName: submissionData.group || 'default',
+            quietly,
           })
           if (onSubmitSuccess) {
             onSubmitSuccess(closeDialog)

@@ -25,18 +25,22 @@ export function useCheckServerStatus() {
       serverName,
       groupName,
       isEditing = false,
+      quietly = false,
     }: {
       serverName: string
       groupName: string
       isEditing?: boolean
+      quietly?: boolean
     }): Promise<boolean> => {
-      toast.loading(
-        `${isEditing ? 'Updating' : 'Starting'} "${serverName}"...`,
-        {
-          duration: 30_000,
-          id: toastIdRef.current,
-        }
-      )
+      if (!quietly) {
+        toast.loading(
+          `${isEditing ? 'Updating' : 'Starting'} "${serverName}"...`,
+          {
+            duration: 30_000,
+            id: toastIdRef.current,
+          }
+        )
+      }
 
       const isServerReady = await pollServerStatus(
         () =>
@@ -63,35 +67,39 @@ export function useCheckServerStatus() {
           refetchType: 'active',
         })
 
-        toast.success(
-          `"${serverName === META_MCP_SERVER_NAME ? 'MCP Optimizer' : serverName}" ${isEditing ? 'updated' : 'started'} successfully.`,
-          {
-            id: toastIdRef.current,
-            duration: 5_000, // slightly longer than default
-            action: (
-              <Button asChild>
-                <Link
-                  to="/group/$groupName"
-                  params={{ groupName }}
-                  search={{ newServerName: serverName }}
-                  onClick={() => toast.dismiss(toastIdRef.current)}
-                  viewTransition={{ types: ['slide-left'] }}
-                  className="ml-auto"
-                >
-                  View
-                </Link>
-              </Button>
-            ),
-          }
-        )
+        if (!quietly) {
+          toast.success(
+            `"${serverName === META_MCP_SERVER_NAME ? 'MCP Optimizer' : serverName}" ${isEditing ? 'updated' : 'started'} successfully.`,
+            {
+              id: toastIdRef.current,
+              duration: 5_000, // slightly longer than default
+              action: (
+                <Button asChild>
+                  <Link
+                    to="/group/$groupName"
+                    params={{ groupName }}
+                    search={{ newServerName: serverName }}
+                    onClick={() => toast.dismiss(toastIdRef.current)}
+                    viewTransition={{ types: ['slide-left'] }}
+                    className="ml-auto"
+                  >
+                    View
+                  </Link>
+                </Button>
+              ),
+            }
+          )
+        }
       } else {
-        toast.warning(
-          `Server "${serverName}" was ${isEditing ? 'updated' : 'created'} but may still be starting up. Check the servers list to monitor its status.`,
-          {
-            id: toastIdRef.current,
-            duration: 5_000,
-          }
-        )
+        if (!quietly) {
+          toast.warning(
+            `Server "${serverName}" was ${isEditing ? 'updated' : 'created'} but may still be starting up. Check the servers list to monitor its status.`,
+            {
+              id: toastIdRef.current,
+              duration: 5_000,
+            }
+          )
+        }
       }
 
       return isServerReady
