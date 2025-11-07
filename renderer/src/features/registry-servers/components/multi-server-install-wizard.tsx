@@ -35,29 +35,32 @@ export function MultiServerInstallWizard({
   onClose,
 }: MultiServerInstallWizardProps) {
   const servers = getGroupServers(group)
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isGroupCreated, setIsGroupCreated] = useState(false)
+  const [wizardState, setWizardState] = useState({
+    currentIndex: 0,
+    isGroupCreated: false,
+  })
   const navigate = useNavigate()
   const createGroupMutation = useMutationCreateGroup()
 
-  // Reset wizard when dialog closes
   useEffect(() => {
     if (!isOpen) {
-      setCurrentIndex(0)
-      setIsGroupCreated(false)
+      setWizardState({ currentIndex: 0, isGroupCreated: false })
     }
   }, [isOpen])
 
   if (!isOpen || servers.length === 0 || !group?.name) return null
 
-  const currentServer = servers[currentIndex]
+  const currentServer = servers[wizardState.currentIndex]
   if (!currentServer) return null
 
-  const hasMoreServers = currentIndex < servers.length - 1
+  const hasMoreServers = wizardState.currentIndex < servers.length - 1
 
   const handleNext = () => {
     if (hasMoreServers) {
-      setCurrentIndex((prev) => prev + 1)
+      setWizardState((prev) => ({
+        ...prev,
+        currentIndex: prev.currentIndex + 1,
+      }))
     } else {
       navigate({ to: '/group/$name', params: { name: group.name } })
       onClose()
@@ -65,7 +68,7 @@ export function MultiServerInstallWizard({
   }
 
   const ensureGroupCreated = async (): Promise<void> => {
-    if (isGroupCreated) {
+    if (wizardState.isGroupCreated) {
       return
     }
 
@@ -75,7 +78,7 @@ export function MultiServerInstallWizard({
       },
     })
 
-    setIsGroupCreated(true)
+    setWizardState((prev) => ({ ...prev, isGroupCreated: true }))
   }
 
   if (isRemoteServer(currentServer)) {
@@ -87,10 +90,10 @@ export function MultiServerInstallWizard({
         closeDialog={onClose}
         onBeforeSubmit={ensureGroupCreated}
         onSubmitSuccess={handleNext}
-        groupNameOverride={group.name}
+        hardcodedGroup={group.name}
         keepOpenAfterSubmit={hasMoreServers}
         actionsSubmitLabel={hasMoreServers ? 'Next' : 'Finish'}
-        description={`Installing server ${currentIndex + 1} of ${servers.length}`}
+        description={`Installing server ${wizardState.currentIndex + 1} of ${servers.length}`}
       />
     )
   }
@@ -103,10 +106,10 @@ export function MultiServerInstallWizard({
       onOpenChange={onClose}
       onBeforeSubmit={ensureGroupCreated}
       onSubmitSuccess={handleNext}
-      groupNameOverride={group.name}
+      hardcodedGroup={group.name}
       keepOpenAfterSubmit={hasMoreServers}
       actionsSubmitLabel={hasMoreServers ? 'Next' : 'Finish'}
-      description={`Installing server ${currentIndex + 1} of ${servers.length}`}
+      description={`Installing server ${wizardState.currentIndex + 1} of ${servers.length}`}
     />
   )
 }

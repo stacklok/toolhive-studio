@@ -61,7 +61,7 @@ interface FormRunFromRegistryProps {
   closeDialog: () => void
   onBeforeSubmit?: () => Promise<void>
   onSubmitSuccess?: () => void
-  groupNameOverride?: string
+  hardcodedGroup?: string
   keepOpenAfterSubmit?: boolean
   actionsSubmitLabel: string
   description?: string
@@ -73,7 +73,7 @@ export function DialogFormRemoteRegistryMcp({
   closeDialog,
   onBeforeSubmit,
   onSubmitSuccess,
-  groupNameOverride,
+  hardcodedGroup,
   keepOpenAfterSubmit = false,
   actionsSubmitLabel,
   description,
@@ -137,8 +137,8 @@ export function DialogFormRemoteRegistryMcp({
         await onBeforeSubmit()
       }
 
-      const submissionData = groupNameOverride
-        ? { ...data, group: groupNameOverride }
+      const submissionData = hardcodedGroup
+        ? { ...data, group: hardcodedGroup }
         : data
 
       installServerMutation(
