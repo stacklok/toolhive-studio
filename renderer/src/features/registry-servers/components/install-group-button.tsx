@@ -1,11 +1,8 @@
-import { useState, useMemo } from 'react'
-import { Link } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
-import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
+import { useState } from 'react'
 import type { RegistryGroup } from '@api/types.gen'
 import { Button } from '@/common/components/ui/button'
 import { Wrench } from 'lucide-react'
-import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
+import { useGroupInstallValidation } from '../hooks/use-group-install-validation'
 import { MultiServerInstallWizard } from './multi-server-install-wizard'
 
 interface InstallGroupButtonProps {
@@ -18,83 +15,11 @@ export function InstallGroupButton({
   group,
 }: InstallGroupButtonProps) {
   const [isWizardOpen, setIsWizardOpen] = useState(false)
-  const { data: groupsData } = useGroups()
-  const { data: workloadsData } = useQuery(
-    getApiV1BetaWorkloadsOptions({ query: { all: true } })
-  )
-
-  const installError = useMemo(() => {
-    // Skip validation while wizard is open (group/servers are being created)
-    if (isWizardOpen) {
-      return null
-    }
-
-    const existingGroups = groupsData?.groups ?? []
-    const groupExists = existingGroups.some((g) => g.name === groupName)
-
-    if (groupExists) {
-      return (
-        <>
-          A group named "{groupName}" already exists. Please{' '}
-          <Link
-            to="/group/$name"
-            params={{ name: groupName }}
-            className="underline"
-          >
-            delete it
-          </Link>{' '}
-          first or choose a different group.
-        </>
-      )
-    }
-
-    const existingWorkloads = workloadsData?.workloads ?? []
-
-    const groupServerNames = [
-      ...Object.keys(group?.servers ?? {}),
-      ...Object.keys(group?.remote_servers ?? {}),
-    ]
-
-    // Find the first conflicting server (fail fast)
-    const firstConflict = groupServerNames.find((serverName) =>
-      existingWorkloads.some((w) => w.name === serverName)
-    )
-
-    if (firstConflict) {
-      const conflictingWorkload = existingWorkloads.find(
-        (w) => w.name === firstConflict
-      )
-      const groupNameConflict = conflictingWorkload?.group
-
-      return (
-        <>
-          Server "{firstConflict}" already exists. Please{' '}
-          {groupNameConflict ? (
-            <Link
-              to="/group/$name"
-              params={{ name: groupNameConflict }}
-              className="underline"
-            >
-              delete it
-            </Link>
-          ) : (
-            <Link to="/groups" className="underline">
-              delete it
-            </Link>
-          )}{' '}
-          first or choose a different group.
-        </>
-      )
-    }
-
-    return null
-  }, [
-    groupsData?.groups,
-    workloadsData?.workloads,
+  const { error: installError } = useGroupInstallValidation({
     groupName,
     group,
-    isWizardOpen,
-  ])
+    skipValidation: isWizardOpen,
+  })
 
   return (
     <>

@@ -45,8 +45,21 @@ export function MultiServerInstallWizard({
   useEffect(() => {
     if (!isOpen) {
       setWizardState({ currentIndex: 0, isGroupCreated: false })
+    } else if (isOpen && !wizardState.isGroupCreated && group?.name) {
+      createGroupMutation
+        .mutateAsync({
+          body: {
+            name: group.name,
+          },
+        })
+        .then(() => {
+          setWizardState((prev) => ({ ...prev, isGroupCreated: true }))
+        })
+        .catch(() => {
+          onClose()
+        })
     }
-  }, [isOpen])
+  }, [isOpen, wizardState.isGroupCreated, group?.name])
 
   if (!isOpen || servers.length === 0 || !group?.name) return null
 
@@ -55,30 +68,17 @@ export function MultiServerInstallWizard({
 
   const hasMoreServers = wizardState.currentIndex < servers.length - 1
 
-  const handleNext = () => {
+  const handleNext = (closeDialog: () => void) => {
     if (hasMoreServers) {
       setWizardState((prev) => ({
         ...prev,
         currentIndex: prev.currentIndex + 1,
       }))
     } else {
+      closeDialog()
       navigate({ to: '/group/$name', params: { name: group.name } })
       onClose()
     }
-  }
-
-  const ensureGroupCreated = async (): Promise<void> => {
-    if (wizardState.isGroupCreated) {
-      return
-    }
-
-    await createGroupMutation.mutateAsync({
-      body: {
-        name: group.name,
-      },
-    })
-
-    setWizardState((prev) => ({ ...prev, isGroupCreated: true }))
   }
 
   if (isRemoteServer(currentServer)) {
@@ -88,10 +88,8 @@ export function MultiServerInstallWizard({
         server={currentServer}
         isOpen={isOpen}
         closeDialog={onClose}
-        onBeforeSubmit={ensureGroupCreated}
         onSubmitSuccess={handleNext}
         hardcodedGroup={group.name}
-        keepOpenAfterSubmit={hasMoreServers}
         actionsSubmitLabel={hasMoreServers ? 'Next' : 'Finish'}
         description={`Installing server ${wizardState.currentIndex + 1} of ${servers.length}`}
       />
@@ -104,10 +102,8 @@ export function MultiServerInstallWizard({
       server={currentServer}
       isOpen={isOpen}
       onOpenChange={onClose}
-      onBeforeSubmit={ensureGroupCreated}
       onSubmitSuccess={handleNext}
       hardcodedGroup={group.name}
-      keepOpenAfterSubmit={hasMoreServers}
       actionsSubmitLabel={hasMoreServers ? 'Next' : 'Finish'}
       description={`Installing server ${wizardState.currentIndex + 1} of ${servers.length}`}
     />

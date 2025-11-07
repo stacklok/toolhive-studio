@@ -59,10 +59,8 @@ interface FormRunFromRegistryProps {
   server: RegistryRemoteServerMetadata | null
   isOpen: boolean
   closeDialog: () => void
-  onBeforeSubmit?: () => Promise<void>
-  onSubmitSuccess?: () => void
+  onSubmitSuccess?: (closeModal: () => void) => void
   hardcodedGroup?: string
-  keepOpenAfterSubmit?: boolean
   actionsSubmitLabel: string
   description?: string
 }
@@ -71,10 +69,8 @@ export function DialogFormRemoteRegistryMcp({
   server,
   isOpen,
   closeDialog,
-  onBeforeSubmit,
   onSubmitSuccess,
   hardcodedGroup,
-  keepOpenAfterSubmit = false,
   actionsSubmitLabel,
   description,
 }: FormRunFromRegistryProps) {
@@ -133,10 +129,6 @@ export function DialogFormRemoteRegistryMcp({
     if (error) setError(null)
 
     try {
-      if (onBeforeSubmit) {
-        await onBeforeSubmit()
-      }
-
       const submissionData = hardcodedGroup
         ? { ...data, group: hardcodedGroup }
         : data
@@ -151,8 +143,9 @@ export function DialogFormRemoteRegistryMcp({
               serverName: submissionData.name,
               groupName: submissionData.group || 'default',
             })
-            onSubmitSuccess?.()
-            if (!keepOpenAfterSubmit) {
+            if (onSubmitSuccess) {
+              onSubmitSuccess(closeDialog)
+            } else {
               closeDialog()
             }
             form.reset()

@@ -43,10 +43,8 @@ interface FormRunFromRegistryProps {
   server: RegistryImageMetadata | null
   isOpen: boolean
   onOpenChange: (open: boolean) => void
-  onBeforeSubmit?: () => Promise<void>
-  onSubmitSuccess?: () => void
+  onSubmitSuccess?: (closeModal: () => void) => void
   hardcodedGroup?: string
-  keepOpenAfterSubmit?: boolean
   actionsSubmitLabel: string
   description?: string
 }
@@ -55,10 +53,8 @@ export function FormRunFromRegistry({
   server,
   isOpen,
   onOpenChange,
-  onBeforeSubmit,
   onSubmitSuccess,
   hardcodedGroup,
-  keepOpenAfterSubmit = false,
   actionsSubmitLabel,
   description,
 }: FormRunFromRegistryProps) {
@@ -147,10 +143,6 @@ export function FormRunFromRegistry({
     if (error) setError(null)
 
     try {
-      if (onBeforeSubmit) {
-        await onBeforeSubmit()
-      }
-
       const groupName = hardcodedGroup ?? data.group
 
       installServerMutation(
@@ -165,8 +157,9 @@ export function FormRunFromRegistry({
               serverName: data.name,
               groupName,
             })
-            onSubmitSuccess?.()
-            if (!keepOpenAfterSubmit) {
+            if (onSubmitSuccess) {
+              onSubmitSuccess(() => onOpenChange(false))
+            } else {
               onOpenChange(false)
             }
             setActiveTab('configuration')
