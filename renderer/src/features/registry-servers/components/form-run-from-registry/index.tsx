@@ -158,20 +158,14 @@ export function FormRunFromRegistry({
         groupName,
       },
       {
-        onSuccess: () => {
-          checkServerStatus({
+        onSuccess: async () => {
+          await checkServerStatus({
             serverName: data.name,
             groupName,
             quietly,
             customSuccessMessage,
             customLoadingMessage,
           })
-          if (onSubmitSuccess) {
-            onSubmitSuccess(() => onOpenChange(false))
-          } else {
-            onOpenChange(false)
-          }
-          setActiveTab('configuration')
         },
         onSettled: (_, error) => {
           // Add a 2-second delay before hiding the loading screen
@@ -181,6 +175,12 @@ export function FormRunFromRegistry({
             if (!error) {
               form.reset()
             }
+            if (onSubmitSuccess) {
+              onSubmitSuccess(() => onOpenChange(false))
+            } else {
+              onOpenChange(false)
+            }
+            setActiveTab('configuration')
           }, 2000)
         },
         onError: (error) => {

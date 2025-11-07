@@ -629,11 +629,15 @@ describe('Registry Group Detail Route', () => {
     const nextButton = screen.getByRole('button', { name: /next/i })
     await userEvent.click(nextButton)
 
-    await waitFor(() => {
-      expect(
-        screen.getByRole('heading', { name: /configure filesystem/i })
-      ).toBeVisible()
-    })
+    // Wait for the 2-second loading delay before the next form appears
+    await waitFor(
+      () => {
+        expect(
+          screen.getByRole('heading', { name: /configure filesystem/i })
+        ).toBeVisible()
+      },
+      { timeout: 5000 }
+    )
 
     expect(screen.getByText('Installing server 2 of 2')).toBeInTheDocument()
 

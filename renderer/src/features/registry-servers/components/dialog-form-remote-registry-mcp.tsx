@@ -144,20 +144,14 @@ export function DialogFormRemoteRegistryMcp({
         data: submissionData,
       },
       {
-        onSuccess: () => {
-          checkServerStatus({
+        onSuccess: async () => {
+          await checkServerStatus({
             serverName: submissionData.name,
             groupName: submissionData.group || 'default',
             quietly,
             customSuccessMessage,
             customLoadingMessage,
           })
-          if (onSubmitSuccess) {
-            onSubmitSuccess(closeDialog)
-          } else {
-            closeDialog()
-          }
-          form.reset()
         },
         onSettled: (_, error) => {
           // Add a 2-second delay before hiding the loading screen
@@ -166,6 +160,11 @@ export function DialogFormRemoteRegistryMcp({
             setIsSubmitting(false)
             if (!error) {
               form.reset()
+            }
+            if (onSubmitSuccess) {
+              onSubmitSuccess(closeDialog)
+            } else {
+              closeDialog()
             }
           }, 2000)
         },
