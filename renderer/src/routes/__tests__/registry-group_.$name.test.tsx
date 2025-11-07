@@ -22,15 +22,6 @@ vi.mock('@tanstack/react-router', async () => {
   }
 })
 
-vi.mock('sonner', () => ({
-  toast: {
-    error: vi.fn(),
-    success: vi.fn(),
-    loading: vi.fn(),
-    promise: vi.fn(),
-  },
-}))
-
 function WrapperComponent() {
   return (
     <>
