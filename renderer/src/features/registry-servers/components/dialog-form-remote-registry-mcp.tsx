@@ -128,49 +128,38 @@ export function DialogFormRemoteRegistryMcp({
     setIsSubmitting(true)
     if (error) setError(null)
 
-    try {
-      const submissionData = hardcodedGroup
-        ? { ...data, group: hardcodedGroup }
-        : data
+    const submissionData = hardcodedGroup
+      ? { ...data, group: hardcodedGroup }
+      : data
 
-      installServerMutation(
-        {
-          data: submissionData,
+    installServerMutation(
+      {
+        data: submissionData,
+      },
+      {
+        onSuccess: () => {
+          checkServerStatus({
+            serverName: submissionData.name,
+            groupName: submissionData.group || 'default',
+          })
+          if (onSubmitSuccess) {
+            onSubmitSuccess(closeDialog)
+          } else {
+            closeDialog()
+          }
+          form.reset()
         },
-        {
-          onSuccess: () => {
-            checkServerStatus({
-              serverName: submissionData.name,
-              groupName: submissionData.group || 'default',
-            })
-            if (onSubmitSuccess) {
-              onSubmitSuccess(closeDialog)
-            } else {
-              closeDialog()
-            }
+        onSettled: (_, error) => {
+          setIsSubmitting(false)
+          if (!error) {
             form.reset()
-          },
-          onSettled: (_, error) => {
-            setIsSubmitting(false)
-            if (!error) {
-              form.reset()
-            }
-          },
-          onError: (error) => {
-            setError(typeof error === 'string' ? error : error.message)
-          },
-        }
-      )
-    } catch (error) {
-      setIsSubmitting(false)
-      setError(
-        typeof error === 'string'
-          ? error
-          : error instanceof Error
-            ? error.message
-            : 'An unexpected error occurred'
-      )
-    }
+          }
+        },
+        onError: (error) => {
+          setError(typeof error === 'string' ? error : error.message)
+        },
+      }
+    )
   }
 
   if (!server) return null

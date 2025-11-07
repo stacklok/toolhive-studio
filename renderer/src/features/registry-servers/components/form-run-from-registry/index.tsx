@@ -142,49 +142,38 @@ export function FormRunFromRegistry({
     setIsSubmitting(true)
     if (error) setError(null)
 
-    try {
-      const groupName = hardcodedGroup ?? data.group
+    const groupName = hardcodedGroup ?? data.group
 
-      installServerMutation(
-        {
-          server,
-          data,
-          groupName,
+    installServerMutation(
+      {
+        server,
+        data,
+        groupName,
+      },
+      {
+        onSuccess: () => {
+          checkServerStatus({
+            serverName: data.name,
+            groupName,
+          })
+          if (onSubmitSuccess) {
+            onSubmitSuccess(() => onOpenChange(false))
+          } else {
+            onOpenChange(false)
+          }
+          setActiveTab('configuration')
         },
-        {
-          onSuccess: () => {
-            checkServerStatus({
-              serverName: data.name,
-              groupName,
-            })
-            if (onSubmitSuccess) {
-              onSubmitSuccess(() => onOpenChange(false))
-            } else {
-              onOpenChange(false)
-            }
-            setActiveTab('configuration')
-          },
-          onSettled: (_, error) => {
-            setIsSubmitting(false)
-            if (!error) {
-              form.reset()
-            }
-          },
-          onError: (error) => {
-            setError(typeof error === 'string' ? error : error.message)
-          },
-        }
-      )
-    } catch (error) {
-      setIsSubmitting(false)
-      setError(
-        typeof error === 'string'
-          ? error
-          : error instanceof Error
-            ? error.message
-            : 'An unexpected error occurred'
-      )
-    }
+        onSettled: (_, error) => {
+          setIsSubmitting(false)
+          if (!error) {
+            form.reset()
+          }
+        },
+        onError: (error) => {
+          setError(typeof error === 'string' ? error : error.message)
+        },
+      }
+    )
   }
 
   if (!server) return null
