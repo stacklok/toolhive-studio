@@ -69,16 +69,17 @@ export function MultiServerInstallWizard({
   const hasMoreServers = wizardState.currentIndex < servers.length - 1
 
   const handleNext = (closeDialog: () => void) => {
-    if (hasMoreServers) {
-      setWizardState((prev) => ({
-        ...prev,
-        currentIndex: prev.currentIndex + 1,
-      }))
-    } else {
+    if (!hasMoreServers) {
       closeDialog()
       navigate({ to: '/group/$name', params: { name: group.name } })
       onClose()
+      return
     }
+
+    setWizardState((prev) => ({
+      ...prev,
+      currentIndex: prev.currentIndex + 1,
+    }))
   }
 
   if (isRemoteServer(currentServer)) {
