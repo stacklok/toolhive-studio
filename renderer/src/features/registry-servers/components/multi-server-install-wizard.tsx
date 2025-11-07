@@ -40,7 +40,7 @@ export function MultiServerInstallWizard({
     isGroupCreated: false,
   })
   const navigate = useNavigate()
-  const createGroupMutation = useMutationCreateGroup()
+  const createGroupMutation = useMutationCreateGroup({ successMsg: null })
 
   useEffect(() => {
     if (!isOpen) {

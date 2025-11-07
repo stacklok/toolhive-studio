@@ -20,7 +20,7 @@ export function useToastMutation<
   toastId,
   ...options
 }: UseMutationOptions<TData, TError, TVariables, TContext> & {
-  successMsg?: ((variables: TVariables) => string) | string
+  successMsg?: ((variables: TVariables) => string | null) | string | null
   loadingMsg?: string
   errorMsg?: string
   toastId?: string
@@ -40,30 +40,34 @@ export function useToastMutation<
     ) => {
       const promise = originalMutateAsync(variables, options)
 
-      toast.promise(promise, {
-        success:
-          typeof successMsg === 'function' ? successMsg(variables) : successMsg,
-        loading: loadingMsg ?? 'Loading...',
-        error: (e: TError) => {
-          if (errorMsg) return errorMsg
+      const resolvedSuccessMsg =
+        typeof successMsg === 'function' ? successMsg(variables) : successMsg
 
-          if (typeof e.detail == 'string') {
-            return e.detail ?? 'An error occurred'
-          }
+      if (resolvedSuccessMsg !== null) {
+        toast.promise(promise, {
+          success: resolvedSuccessMsg,
+          loading: loadingMsg ?? 'Loading...',
+          error: (e: TError) => {
+            if (errorMsg) return errorMsg
 
-          if (Array.isArray(e.detail)) {
-            const err = e.detail
-              ?.map((item) => `${item.msg} - ${item.loc}`)
-              .filter(Boolean)
-              .join(', ')
+            if (typeof e.detail == 'string') {
+              return e.detail ?? 'An error occurred'
+            }
 
-            return err ?? 'An error occurred'
-          }
+            if (Array.isArray(e.detail)) {
+              const err = e.detail
+                ?.map((item) => `${item.msg} - ${item.loc}`)
+                .filter(Boolean)
+                .join(', ')
 
-          return 'An error occurred'
-        },
-        ...(toastId ? { id: toastId } : {}),
-      })
+              return err ?? 'An error occurred'
+            }
+
+            return 'An error occurred'
+          },
+          ...(toastId ? { id: toastId } : {}),
+        })
+      }
 
       return promise
     },

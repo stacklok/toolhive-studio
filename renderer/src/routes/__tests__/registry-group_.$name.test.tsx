@@ -7,6 +7,7 @@ import { renderRoute } from '@/common/test/render-route'
 import { server } from '@/common/mocks/node'
 import userEvent from '@testing-library/user-event'
 import type { V1GetRegistryResponse } from '@api/types.gen'
+import { toast } from 'sonner'
 
 const mockUseParams = vi.fn(() => ({ name: 'dev-toolkit' }))
 
@@ -466,6 +467,18 @@ describe('Registry Group Detail Route', () => {
     expect(groupCalls[0]).toEqual({
       name: 'two-server-group',
     })
+
+    // Verify that the group creation success toast is NOT shown while dialog is open
+    // The toast is shown via toast.promise, so check that the success message is NOT in any call
+    const hasGroupCreationToast = vi
+      .mocked(toast.promise)
+      .mock.calls.some((call) => {
+        const options = call[1] as { success?: string }
+        return (
+          options?.success === 'Group "two-server-group" created successfully'
+        )
+      })
+    expect(hasGroupCreationToast).toBe(false)
 
     expect(workloadCalls).toHaveLength(2)
     expect(workloadCalls[0]).toEqual({
