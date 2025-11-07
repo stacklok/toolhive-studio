@@ -45,7 +45,7 @@ export function MultiServerInstallWizard({
   useEffect(() => {
     if (!isOpen) {
       setWizardState({ currentIndex: 0, isGroupCreated: false })
-    } else if (isOpen && !wizardState.isGroupCreated && group?.name) {
+    } else if (!wizardState.isGroupCreated && group?.name) {
       createGroupMutation
         .mutateAsync({
           body: {
