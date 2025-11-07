@@ -182,7 +182,7 @@ export function FormRunFromRegistry({
           ? error
           : error instanceof Error
             ? error.message
-            : 'Failed to create group'
+            : 'An unexpected error occurred'
       )
     }
   }

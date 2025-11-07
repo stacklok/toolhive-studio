@@ -168,7 +168,7 @@ export function DialogFormRemoteRegistryMcp({
           ? error
           : error instanceof Error
             ? error.message
-            : 'Failed to create group'
+            : 'An unexpected error occurred'
       )
     }
   }
