@@ -427,6 +427,11 @@ describe('Registry Group Detail Route', () => {
           status: 'running',
         })
       }),
+      http.get('*/api/v1beta/workloads/:name/status', () => {
+        return HttpResponse.json({
+          status: 'running',
+        })
+      }),
       http.get('*/api/v1beta/discovery/clients', () => {
         return HttpResponse.json({
           clients: [
@@ -470,6 +475,11 @@ describe('Registry Group Detail Route', () => {
 
     expect(screen.getByText('Installing server 2 of 2')).toBeInTheDocument()
 
+    // Clear any previous toast calls before the final server
+    vi.mocked(toast.warning).mockClear()
+    vi.mocked(toast.success).mockClear()
+    vi.mocked(toast.loading).mockClear()
+
     await userEvent.click(screen.getByRole('button', { name: /^finish$/i }))
 
     await waitFor(() => {
@@ -491,12 +501,26 @@ describe('Registry Group Detail Route', () => {
       })
     expect(hasGroupCreationToast).toBe(false)
 
-    // Verify that server creation toasts are also NOT shown while dialog is open
-    // Check toast.warning (for restart client notification)
-    expect(toast.warning).not.toHaveBeenCalled()
+    // For the LAST server only, toasts SHOULD be shown
+    // Wait for the async checkServerStatus to complete
+    await waitFor(() => {
+      expect(toast.loading).toHaveBeenCalledWith(
+        'Starting "second-server"...',
+        expect.objectContaining({
+          duration: 30_000,
+        })
+      )
+    })
 
-    // Check toast.success (for optimizer notification - may not apply to all groups)
-    expect(toast.success).not.toHaveBeenCalled()
+    // Check toast.success was called for the group creation
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalledWith(
+        'Group "two-server-group" created successfully',
+        expect.objectContaining({
+          duration: 5_000,
+        })
+      )
+    })
 
     expect(workloadCalls).toHaveLength(2)
     expect(workloadCalls[0]).toEqual({

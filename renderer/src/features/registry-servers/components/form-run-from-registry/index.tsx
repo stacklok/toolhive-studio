@@ -48,6 +48,7 @@ interface FormRunFromRegistryProps {
   actionsSubmitLabel: string
   description?: string
   quietly?: boolean
+  customSuccessMessage?: string
 }
 
 export function FormRunFromRegistry({
@@ -59,6 +60,7 @@ export function FormRunFromRegistry({
   actionsSubmitLabel,
   description,
   quietly = false,
+  customSuccessMessage,
 }: FormRunFromRegistryProps) {
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -159,6 +161,7 @@ export function FormRunFromRegistry({
             serverName: data.name,
             groupName,
             quietly,
+            customSuccessMessage,
           })
           if (onSubmitSuccess) {
             onSubmitSuccess(() => onOpenChange(false))

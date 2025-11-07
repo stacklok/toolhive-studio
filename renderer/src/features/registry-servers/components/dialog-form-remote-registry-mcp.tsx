@@ -64,6 +64,7 @@ interface FormRunFromRegistryProps {
   actionsSubmitLabel: string
   description?: string
   quietly?: boolean
+  customSuccessMessage?: string
 }
 
 export function DialogFormRemoteRegistryMcp({
@@ -75,6 +76,7 @@ export function DialogFormRemoteRegistryMcp({
   actionsSubmitLabel,
   description,
   quietly = false,
+  customSuccessMessage,
 }: FormRunFromRegistryProps) {
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -145,6 +147,7 @@ export function DialogFormRemoteRegistryMcp({
             serverName: submissionData.name,
             groupName: submissionData.group || 'default',
             quietly,
+            customSuccessMessage,
           })
           if (onSubmitSuccess) {
             onSubmitSuccess(closeDialog)

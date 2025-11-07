@@ -68,6 +68,11 @@ export function MultiServerInstallWizard({
 
   const hasMoreServers = wizardState.currentIndex < servers.length - 1
 
+  // It is sufficient to only check the status of the last server because:
+  // 1. All servers have been installed and will appear in the group
+  // 2. Users can monitor the progress of all servers in the group view
+  // 3. The group is not yet activated in any clients, so there's no expectation
+  //    that all servers are immediately ready for use
   const handleNext = (closeDialog: () => void) => {
     if (!hasMoreServers) {
       closeDialog()
@@ -93,7 +98,12 @@ export function MultiServerInstallWizard({
         hardcodedGroup={group.name}
         actionsSubmitLabel={hasMoreServers ? 'Next' : 'Finish'}
         description={`Installing server ${wizardState.currentIndex + 1} of ${servers.length}`}
-        quietly
+        quietly={hasMoreServers}
+        customSuccessMessage={
+          hasMoreServers
+            ? undefined
+            : `Group "${group.name}" created successfully`
+        }
       />
     )
   }
@@ -108,7 +118,12 @@ export function MultiServerInstallWizard({
       hardcodedGroup={group.name}
       actionsSubmitLabel={hasMoreServers ? 'Next' : 'Finish'}
       description={`Installing server ${wizardState.currentIndex + 1} of ${servers.length}`}
-      quietly
+      quietly={hasMoreServers}
+      customSuccessMessage={
+        hasMoreServers
+          ? undefined
+          : `Group "${group.name}" created successfully`
+      }
     />
   )
 }

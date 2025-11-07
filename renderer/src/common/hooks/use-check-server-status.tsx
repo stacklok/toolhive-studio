@@ -26,11 +26,13 @@ export function useCheckServerStatus() {
       groupName,
       isEditing = false,
       quietly = false,
+      customSuccessMessage,
     }: {
       serverName: string
       groupName: string
       isEditing?: boolean
       quietly?: boolean
+      customSuccessMessage?: string
     }): Promise<boolean> => {
       if (!quietly) {
         toast.loading(
@@ -68,27 +70,28 @@ export function useCheckServerStatus() {
         })
 
         if (!quietly) {
-          toast.success(
-            `"${serverName === META_MCP_SERVER_NAME ? 'MCP Optimizer' : serverName}" ${isEditing ? 'updated' : 'started'} successfully.`,
-            {
-              id: toastIdRef.current,
-              duration: 5_000, // slightly longer than default
-              action: (
-                <Button asChild>
-                  <Link
-                    to="/group/$groupName"
-                    params={{ groupName }}
-                    search={{ newServerName: serverName }}
-                    onClick={() => toast.dismiss(toastIdRef.current)}
-                    viewTransition={{ types: ['slide-left'] }}
-                    className="ml-auto"
-                  >
-                    View
-                  </Link>
-                </Button>
-              ),
-            }
-          )
+          const successMessage =
+            customSuccessMessage ||
+            `"${serverName === META_MCP_SERVER_NAME ? 'MCP Optimizer' : serverName}" ${isEditing ? 'updated' : 'started'} successfully.`
+
+          toast.success(successMessage, {
+            id: toastIdRef.current,
+            duration: 5_000, // slightly longer than default
+            action: (
+              <Button asChild>
+                <Link
+                  to="/group/$groupName"
+                  params={{ groupName }}
+                  search={{ newServerName: serverName }}
+                  onClick={() => toast.dismiss(toastIdRef.current)}
+                  viewTransition={{ types: ['slide-left'] }}
+                  className="ml-auto"
+                >
+                  View
+                </Link>
+              </Button>
+            ),
+          })
         }
       } else {
         if (!quietly) {
