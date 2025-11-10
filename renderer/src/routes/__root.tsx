@@ -54,9 +54,7 @@ function RootComponent() {
   return (
     <>
       {!isShutdownRoute && <TopNav />}
-      {!isShutdownRoute &&
-        import.meta.env.DEV &&
-        !!import.meta.env.THV_PORT && <CustomPortBanner />}
+      {!isShutdownRoute && import.meta.env.DEV && <CustomPortBanner />}
       <Main>
         <Outlet />
         <Toaster

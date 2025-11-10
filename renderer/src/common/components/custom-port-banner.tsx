@@ -34,9 +34,9 @@ export function CustomPortBanner() {
 
   return (
     <Alert
-      variant="warning"
       className="fixed bottom-4 left-1/2 z-50 w-auto max-w-[95vw]
-        -translate-x-1/2"
+        -translate-x-1/2 border-yellow-200 bg-yellow-50 text-yellow-900
+        dark:border-yellow-800 dark:bg-yellow-950 dark:text-yellow-100"
     >
       <AlertTriangle />
       <AlertDescription className="flex items-start gap-2">
