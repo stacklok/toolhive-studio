@@ -144,15 +144,6 @@ export function DialogFormRemoteRegistryMcp({
         data: submissionData,
       },
       {
-        onSuccess: async () => {
-          await checkServerStatus({
-            serverName: submissionData.name,
-            groupName: submissionData.group || 'default',
-            quietly,
-            customSuccessMessage,
-            customLoadingMessage,
-          })
-        },
         onSettled: (_, error) => {
           // Add a 2-second delay before hiding the loading screen
           // This stops jarring flashes when the workload is created too fast, and lets the user understand that they saw a loading screen
@@ -165,6 +156,17 @@ export function DialogFormRemoteRegistryMcp({
               onSubmitSuccess(closeDialog)
             } else {
               closeDialog()
+            }
+
+            // Show readiness toast only after closing, and only on final step
+            if (!error && !quietly) {
+              void checkServerStatus({
+                serverName: submissionData.name,
+                groupName: submissionData.group || 'default',
+                quietly,
+                customSuccessMessage,
+                customLoadingMessage,
+              })
             }
           }, 2000)
         },

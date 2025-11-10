@@ -158,15 +158,6 @@ export function FormRunFromRegistry({
         groupName,
       },
       {
-        onSuccess: async () => {
-          await checkServerStatus({
-            serverName: data.name,
-            groupName,
-            quietly,
-            customSuccessMessage,
-            customLoadingMessage,
-          })
-        },
         onSettled: (_, error) => {
           // Add a 2-second delay before hiding the loading screen
           // This stops jarring flashes when the workload is created too fast, and lets the user understand that they saw a loading screen
@@ -181,6 +172,17 @@ export function FormRunFromRegistry({
               onOpenChange(false)
             }
             setActiveTab('configuration')
+
+            // Show readiness toast only after closing, and only on final step
+            if (!error && !quietly) {
+              void checkServerStatus({
+                serverName: data.name,
+                groupName,
+                quietly,
+                customSuccessMessage,
+                customLoadingMessage,
+              })
+            }
           }, 2000)
         },
         onError: (error) => {
