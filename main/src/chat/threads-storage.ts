@@ -158,6 +158,7 @@ export function addMessageToThread(
   message: UIMessage<{
     createdAt?: number
     model?: string
+    providerId?: string
     totalUsage?: LanguageModelV2Usage
     responseTime?: number
     finishReason?: string

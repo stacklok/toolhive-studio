@@ -5,6 +5,7 @@ import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 interface MessageMetadata {
   createdAt?: number
   model?: string
+  providerId?: string
   totalUsage?: LanguageModelV2Usage
   responseTime?: number
   finishReason?: string
@@ -19,12 +20,20 @@ export interface ChatProvider {
   models: string[]
 }
 
-export interface ChatSettings {
-  provider: string
-  model: string
-  apiKey: string
-  enabledTools?: string[]
-}
+// Chat settings - discriminated union for different provider types
+export type ChatSettings =
+  | {
+      provider: 'ollama' | 'lmstudio'
+      model: string
+      endpointURL: string
+      enabledTools?: string[]
+    }
+  | {
+      provider: string
+      model: string
+      apiKey: string
+      enabledTools?: string[]
+    }
 
 export interface ChatMcpServer {
   id: string

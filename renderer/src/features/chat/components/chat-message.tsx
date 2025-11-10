@@ -413,7 +413,8 @@ export function ChatMessage({ message, status }: ChatMessageProps) {
   const isUser = message.role === 'user'
 
   const providerIcon =
-    message.metadata?.model && getProviderIconByModel(message.metadata?.model)
+    message.metadata?.model &&
+    getProviderIconByModel(message.metadata.model, message.metadata.providerId)
 
   if (isUser) {
     // User message with bubble styling
@@ -660,10 +661,17 @@ export function ChatMessage({ message, status }: ChatMessageProps) {
           </div>
 
           {/* Show token usage for assistant messages */}
-          {message.role === 'assistant' && message.metadata?.totalUsage && (
+          {message.role === 'assistant' && (
             <TokenUsage
-              usage={message.metadata.totalUsage}
-              responseTime={message.metadata.responseTime}
+              usage={
+                message.metadata?.totalUsage || {
+                  inputTokens: 0,
+                  outputTokens: 0,
+                  totalTokens: 0,
+                }
+              }
+              responseTime={message.metadata?.responseTime}
+              providerId={message.metadata?.providerId}
             />
           )}
         </div>
