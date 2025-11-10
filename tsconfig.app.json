@@ -22,7 +22,8 @@
     "noUncheckedIndexedAccess": true,
     "paths": {
       "@/*": ["./renderer/src/*"],
-      "@api/*": ["./api/generated/*"]
+      "@api/*": ["./api/generated/*"],
+      "@utils/*": ["./utils/*"]
     },
     "types": ["vitest/globals", "@testing-library/jest-dom/vitest"]
   },
