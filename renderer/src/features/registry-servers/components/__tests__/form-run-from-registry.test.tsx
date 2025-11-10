@@ -1,6 +1,6 @@
 import type { RegistryEnvVar, RegistryImageMetadata } from '@api/types.gen'
 import { render, screen, waitFor, act, within } from '@testing-library/react'
-import { it, expect, vi, describe, beforeEach } from 'vitest'
+import { it, expect, vi, describe, beforeEach, afterEach } from 'vitest'
 import { FormRunFromRegistry } from '../form-run-from-registry'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -9,6 +9,10 @@ import { http, HttpResponse } from 'msw'
 import { useRunFromRegistry } from '../../hooks/use-run-from-registry'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
+// Speed up wizard/form transitions by mocking the 2s delay to resolve immediately
+vi.mock('../../../../../../utils/delay', () => ({
+  delay: () => Promise.resolve(),
+}))
 
 // Mock the hook
 vi.mock('../../hooks/use-run-from-registry.tsx', () => ({
@@ -107,6 +111,11 @@ beforeEach(() => {
   mockUseCheckServerStatus.mockReturnValue({
     checkServerStatus: vi.fn(),
   })
+})
+
+// Always restore real timers after each test to avoid leaks when a test fails early
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 describe('FormRunFromRegistry', () => {
@@ -701,8 +710,11 @@ describe('FormRunFromRegistry', () => {
     const firstArgs = mockInstallServerMutation.mock.calls[0]?.[0]
     expect(firstArgs?.groupName).toBe('research')
 
-    const onSuccess = mockInstallServerMutation.mock.calls[0]?.[1]?.onSuccess
-    onSuccess?.()
+    // The success flow now runs in onSettled after a short (mocked) delay
+    const onSettled = mockInstallServerMutation.mock.calls[0]?.[1]?.onSettled
+    await act(async () => {
+      onSettled?.(undefined, undefined)
+    })
     await waitFor(() => {
       expect(mockCheckServerStatus).toHaveBeenCalledWith(
         expect.objectContaining({ groupName: 'research' })
@@ -863,15 +875,16 @@ describe('FormRunFromRegistry', () => {
       expect(mockInstallServerMutation).toHaveBeenCalled()
     })
 
-    // Simulate successful submission
-    const onSuccessCallback =
-      mockInstallServerMutation.mock.calls[0]?.[1]?.onSuccess
-    onSuccessCallback?.()
+    // Simulate success via onSettled (delay mocked to 0)
+    const onSettled = mockInstallServerMutation.mock.calls[0]?.[1]?.onSettled
+    await act(async () => {
+      onSettled?.(undefined, undefined)
+    })
 
     await waitFor(() => {
       expect(mockCheckServerStatus).toHaveBeenCalled()
+      expect(mockOnOpenChange).toHaveBeenCalledWith(false)
     })
-    expect(mockOnOpenChange).toHaveBeenCalledWith(false)
   })
 
   it('includes command arguments in form data', async () => {

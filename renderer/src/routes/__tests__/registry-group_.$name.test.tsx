@@ -1,4 +1,62 @@
-import { screen, waitFor, within } from '@testing-library/react'
+// Speed up wizard transitions by mocking the 2s delay to resolve immediately
+vi.mock('../../../../../utils/delay', () => ({ delay: () => Promise.resolve() }))
+// Also mock the path used by FormRunFromRegistry (local servers wizard)
+vi.mock('../../../../../../utils/delay', () => ({ delay: () => Promise.resolve() }))
+
+// Ensure toast API is mocked so we can assert calls deterministically
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    loading: vi.fn(),
+    warning: vi.fn(),
+    promise: vi.fn(),
+    dismiss: vi.fn(),
+  },
+}))
+
+// Mock server readiness polling to remove background delays while preserving toasts
+vi.mock('@/common/hooks/use-check-server-status', () => {
+  return {
+    useCheckServerStatus: () => ({
+      checkServerStatus: async ({
+        quietly = false,
+        customLoadingMessage,
+        customSuccessMessage,
+        serverName,
+        groupName,
+        isEditing,
+      }: {
+        serverName: string
+        groupName: string
+        isEditing?: boolean
+        quietly?: boolean
+        customSuccessMessage?: string
+        customLoadingMessage?: string
+      }): Promise<boolean> => {
+        return (async () => {
+          if (!quietly) {
+            const { toast } = await import('sonner')
+            if (customLoadingMessage) {
+              toast.loading(customLoadingMessage, { duration: 30_000, id: 'wizard-status' })
+            }
+            if (customSuccessMessage) {
+              toast.success(customSuccessMessage, { duration: 5_000, id: 'wizard-status' })
+            }
+          }
+          return true
+        })()
+      },
+    }),
+  }
+})
+
+import {
+  screen,
+  waitFor,
+  within,
+  act,
+  waitForElementToBeRemoved,
+} from '@testing-library/react'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { RegistryGroupDetail } from '@/routes/(registry)/registry-group_.$name'
@@ -13,6 +71,8 @@ const mockUseParams = vi.fn(() => ({ name: 'dev-toolkit' }))
 
 afterEach(() => {
   mockUseParams.mockReturnValue({ name: 'dev-toolkit' })
+  // Ensure timers are reset even if a test fails early
+  vi.useRealTimers()
 })
 
 vi.mock('@tanstack/react-router', async () => {
@@ -306,6 +366,19 @@ describe('Registry Group Detail Route', () => {
     server.use(
       http.get('*/api/v1beta/registry/:name', () => {
         return HttpResponse.json(twoServerRegistry)
+      }),
+      http.post('*/api/v1beta/groups', async ({ request }) => {
+        const body = (await request.json()) as { name: string }
+        return HttpResponse.json({ name: body.name })
+      }),
+      // Allow form submission to succeed and advance to next step
+      http.post('*/api/v1beta/workloads', async ({ request }) => {
+        const body = (await request.json()) as { name: string; group?: string }
+        return HttpResponse.json({
+          name: body.name,
+          group: body.group ?? 'two-server-group',
+          status: 'running',
+        })
       })
     )
 
@@ -330,12 +403,15 @@ describe('Registry Group Detail Route', () => {
     expect(screen.getByRole('button', { name: /^next$/i })).toBeVisible()
 
     await userEvent.click(screen.getByRole('button', { name: /^next$/i }))
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole('heading', { name: /configure second-server/i })
-      ).toBeVisible()
+    // Wait for the first server dialog title to unmount before asserting the next one
+    await waitForElementToBeRemoved(
+      () => screen.queryByRole('heading', { name: /configure first-server/i }),
+      { timeout: 10000 }
+    )
+    const secondServerHeading = await screen.findByRole('heading', {
+      name: /configure second-server/i,
     })
+    expect(secondServerHeading).toBeVisible()
 
     expect(screen.getByRole('button', { name: /^finish$/i })).toBeVisible()
     expect(
@@ -466,12 +542,14 @@ describe('Registry Group Detail Route', () => {
     expect(screen.getByText('Installing server 1 of 2')).toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('button', { name: /^next$/i }))
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole('heading', { name: /configure second-server/i })
-      ).toBeVisible()
+    await waitForElementToBeRemoved(
+      () => screen.queryByRole('heading', { name: /configure first-server/i }),
+      { timeout: 10000 }
+    )
+    const secondServerHeading2 = await screen.findByRole('heading', {
+      name: /configure second-server/i,
     })
+    expect(secondServerHeading2).toBeVisible()
 
     expect(screen.getByText('Installing server 2 of 2')).toBeInTheDocument()
 
@@ -481,6 +559,11 @@ describe('Registry Group Detail Route', () => {
     vi.mocked(toast.loading).mockClear()
 
     await userEvent.click(screen.getByRole('button', { name: /^finish$/i }))
+    // The wizard closes the dialog before emitting readiness toasts
+    await waitForElementToBeRemoved(
+      () => screen.queryByRole('dialog'),
+      { timeout: 10000 }
+    )
 
     await waitFor(() => {
       expect(groupCalls).toHaveLength(1)

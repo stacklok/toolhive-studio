@@ -22,6 +22,7 @@ import {
 import { AlertErrorFormSubmission } from '@/common/components/workloads/alert-error-form-submission'
 import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-workload-form-wrapper'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
+import { delay } from '../../../../../../utils/delay'
 
 type Tab = 'configuration' | 'network-isolation'
 type Field = keyof FormSchemaRegistryMcp
@@ -159,9 +160,10 @@ export function FormRunFromRegistry({
       },
       {
         onSettled: (_, error) => {
-          // Add a 2-second delay before hiding the loading screen
-          // This stops jarring flashes when the workload is created too fast, and lets the user understand that they saw a loading screen
-          setTimeout(() => {
+          void (async () => {
+            // Add a 2-second delay before hiding the loading screen
+            // This stops jarring flashes when the workload is created too fast, and lets the user understand that they saw a loading screen
+            await delay(2000)
             setIsSubmitting(false)
             if (!error) {
               form.reset()
@@ -183,7 +185,7 @@ export function FormRunFromRegistry({
                 customLoadingMessage,
               })
             }
-          }, 2000)
+          })()
         },
         onError: (error) => {
           setError(typeof error === 'string' ? error : error.message)
