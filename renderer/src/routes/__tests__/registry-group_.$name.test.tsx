@@ -1,7 +1,11 @@
 // Speed up wizard transitions by mocking the 2s delay to resolve immediately
-vi.mock('../../../../../utils/delay', () => ({ delay: () => Promise.resolve() }))
+vi.mock('../../../../../utils/delay', () => ({
+  delay: () => Promise.resolve(),
+}))
 // Also mock the path used by FormRunFromRegistry (local servers wizard)
-vi.mock('../../../../../../utils/delay', () => ({ delay: () => Promise.resolve() }))
+vi.mock('../../../../../../utils/delay', () => ({
+  delay: () => Promise.resolve(),
+}))
 
 // Ensure toast API is mocked so we can assert calls deterministically
 vi.mock('sonner', () => ({
@@ -15,46 +19,41 @@ vi.mock('sonner', () => ({
 }))
 
 // Mock server readiness polling to remove background delays while preserving toasts
-vi.mock('@/common/hooks/use-check-server-status', () => {
-  return {
-    useCheckServerStatus: () => ({
-      checkServerStatus: async ({
-        quietly = false,
-        customLoadingMessage,
-        customSuccessMessage,
-        serverName,
-        groupName,
-        isEditing,
-      }: {
-        serverName: string
-        groupName: string
-        isEditing?: boolean
-        quietly?: boolean
-        customSuccessMessage?: string
-        customLoadingMessage?: string
-      }): Promise<boolean> => {
-        return (async () => {
-          if (!quietly) {
-            const { toast } = await import('sonner')
-            if (customLoadingMessage) {
-              toast.loading(customLoadingMessage, { duration: 30_000, id: 'wizard-status' })
-            }
-            if (customSuccessMessage) {
-              toast.success(customSuccessMessage, { duration: 5_000, id: 'wizard-status' })
-            }
-          }
-          return true
-        })()
-      },
-    }),
-  }
-})
+vi.mock('@/common/hooks/use-check-server-status', () => ({
+  useCheckServerStatus: () => ({
+    checkServerStatus: async ({
+      quietly = false,
+      customLoadingMessage,
+      customSuccessMessage,
+    }: {
+      quietly?: boolean
+      customSuccessMessage?: string
+      customLoadingMessage?: string
+    }): Promise<boolean> => {
+      if (!quietly) {
+        const { toast } = await import('sonner')
+        if (customLoadingMessage) {
+          toast.loading(customLoadingMessage, {
+            duration: 30_000,
+            id: 'wizard-status',
+          })
+        }
+        if (customSuccessMessage) {
+          toast.success(customSuccessMessage, {
+            duration: 5_000,
+            id: 'wizard-status',
+          })
+        }
+      }
+      return true
+    },
+  }),
+}))
 
 import {
   screen,
   waitFor,
   within,
-  act,
   waitForElementToBeRemoved,
 } from '@testing-library/react'
 import { describe, it, expect, vi, afterEach } from 'vitest'
@@ -560,10 +559,9 @@ describe('Registry Group Detail Route', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /^finish$/i }))
     // The wizard closes the dialog before emitting readiness toasts
-    await waitForElementToBeRemoved(
-      () => screen.queryByRole('dialog'),
-      { timeout: 10000 }
-    )
+    await waitForElementToBeRemoved(() => screen.queryByRole('dialog'), {
+      timeout: 10000,
+    })
 
     await waitFor(() => {
       expect(groupCalls).toHaveLength(1)
