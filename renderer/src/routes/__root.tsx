@@ -22,6 +22,7 @@ import '@fontsource-variable/inter/wght.css'
 import log from 'electron-log/renderer'
 import * as Sentry from '@sentry/electron/renderer'
 import { StartingToolHive } from '@/common/components/starting-toolhive'
+import { CustomPortBanner } from '@/common/components/custom-port-banner'
 
 async function setupSecretProvider(queryClient: QueryClient) {
   const createEncryptedProvider = async () =>
@@ -53,6 +54,7 @@ function RootComponent() {
   return (
     <>
       {!isShutdownRoute && <TopNav />}
+      {!isShutdownRoute && import.meta.env.DEV && <CustomPortBanner />}
       <Main>
         <Outlet />
         <Toaster

@@ -102,6 +102,37 @@ it as `VITE_API_URL` in the `.env` file (locally) or in the CI environment.
 | `SENTRY_ORG`                | `false`  | `true`     | `false`  | Sentry organization. Used for sourcemap uploads at build-time to enable readable stacktraces.         |
 | `SENTRY_PROJECT`            | `false`  | `true`     | `false`  | Sentry project name. Used for sourcemap uploads at build-time to enable readable stacktraces.         |
 
+## Developer notes: Using a custom thv binary (dev only)
+
+During development, you can test the UI with a custom `thv` binary by running it
+manually:
+
+1. Start your custom `thv` binary with the serve command:
+
+   ```bash
+   thv serve \
+     --openapi \
+     --host=127.0.0.1 --port=50000 \
+     --experimental-mcp \
+     --experimental-mcp-host=127.0.0.1 \
+     --experimental-mcp-port=50001
+   ```
+
+2. Set the `THV_PORT` and `THV_MCP_PORT` environment variables and start the dev
+   server.
+
+   ```bash
+   THV_PORT=50000 THV_MCP_PORT=50001 pnpm start
+   ```
+
+The UI displays a banner with the HTTP address when using a custom port. This
+works in development mode only; packaged builds use the embedded binary.
+
+> Note on MCP Optimizer If you plan to use the MCP Optimizer with an external
+> `thv`, ensure `THV_PORT` is within the range `50000-50100`. The app starts its
+> embedded server in this range, and the optimizer expects the ToolHive API to
+> be reachable there.
+
 ## Code signing
 
 Supports both macOS and Windows code signing. macOS uses Apple certificates,

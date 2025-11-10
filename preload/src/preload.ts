@@ -40,6 +40,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getToolhiveVersion: () => TOOLHIVE_VERSION,
   // ToolHive is running
   isToolhiveRunning: () => ipcRenderer.invoke('is-toolhive-running'),
+  isUsingCustomPort: () => ipcRenderer.invoke('is-using-custom-port'),
 
   // Container engine check
   checkContainerEngine: () => ipcRenderer.invoke('check-container-engine'),
@@ -240,8 +241,9 @@ export interface ElectronAPI {
   quitApp: () => Promise<void>
   getToolhivePort: () => Promise<number | undefined>
   getToolhiveMcpPort: () => Promise<number | undefined>
-  getToolhiveVersion: () => Promise<string>
+  getToolhiveVersion: () => string
   isToolhiveRunning: () => Promise<boolean>
+  isUsingCustomPort: () => Promise<boolean>
   checkContainerEngine: () => Promise<{
     docker: boolean
     podman: boolean

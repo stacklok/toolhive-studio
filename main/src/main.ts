@@ -44,6 +44,7 @@ import {
   isToolhiveRunning,
   binPath,
   getToolhiveMcpPort,
+  isUsingCustomPort,
 } from './toolhive-manager'
 import log from './logger'
 import { getInstanceId, isOfficialReleaseBuild } from './util'
@@ -455,6 +456,7 @@ ipcMain.handle('quit-app', (e) => {
 ipcMain.handle('get-toolhive-port', () => getToolhivePort())
 ipcMain.handle('get-toolhive-mcp-port', () => getToolhiveMcpPort())
 ipcMain.handle('is-toolhive-running', () => isToolhiveRunning())
+ipcMain.handle('is-using-custom-port', () => isUsingCustomPort())
 
 // Window control handlers for custom title bar
 ipcMain.handle('window-minimize', () => {

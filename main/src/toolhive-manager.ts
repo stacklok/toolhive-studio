@@ -44,6 +44,13 @@ export function isToolhiveRunning(): boolean {
   return isRunning
 }
 
+/**
+ * Returns whether the app is using a custom ToolHive port (externally managed thv).
+ */
+export function isUsingCustomPort(): boolean {
+  return !app.isPackaged && !!process.env.THV_PORT
+}
+
 async function findFreePort(
   minPort?: number,
   maxPort?: number
@@ -103,13 +110,29 @@ async function findFreePort(
 
 export async function startToolhive(): Promise<void> {
   Sentry.withScope<Promise<void>>(async (scope) => {
+    if (isUsingCustomPort()) {
+      const customPort = parseInt(process.env.THV_PORT!, 10)
+      if (isNaN(customPort)) {
+        log.error(
+          `Invalid THV_PORT environment variable: ${process.env.THV_PORT}`
+        )
+        return
+      }
+      toolhivePort = customPort
+      toolhiveMcpPort = process.env.THV_MCP_PORT
+        ? parseInt(process.env.THV_MCP_PORT!, 10)
+        : undefined
+      log.info(`Using external ToolHive on port ${toolhivePort}`)
+      return
+    }
+
     if (!existsSync(binPath)) {
       log.error(`ToolHive binary not found at: ${binPath}`)
       return
     }
 
-    toolhivePort = await findFreePort(50000, 50100)
     toolhiveMcpPort = await findFreePort()
+    toolhivePort = await findFreePort(50000, 50100)
     log.info(
       `Starting ToolHive from: ${binPath} on port ${toolhivePort}, MCP on port ${toolhiveMcpPort}`
     )
