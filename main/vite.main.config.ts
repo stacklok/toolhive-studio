@@ -10,6 +10,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@api': path.resolve(__dirname, '../api/generated'),
+      '@utils': path.resolve(__dirname, '../utils'),
     },
   },
   plugins: [

@@ -2,11 +2,10 @@ import { createFileRoute, useParams } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { getApiV1BetaRegistryByNameOptions } from '@api/@tanstack/react-query.gen'
 import { Badge } from '@/common/components/ui/badge'
-import { Button } from '@/common/components/ui/button'
 import { RegistryDetailHeader } from '@/features/registry-servers/components/registry-detail-header'
 import { Separator } from '@/common/components/ui/separator'
 import { Alert, AlertDescription } from '@/common/components/ui/alert'
-import { Wrench, Info } from 'lucide-react'
+import { Info } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -15,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/common/components/ui/table'
+import { InstallGroupButton } from '@/features/registry-servers/components/install-group-button'
 
 export const Route = createFileRoute('/(registry)/registry-group_/$name')({
   loader: async ({ context: { queryClient } }) => {
@@ -87,12 +87,7 @@ export function RegistryGroupDetail() {
             </Table>
           </div>
           <Separator className="my-6" />
-          <div className="flex gap-5">
-            <Button variant="default">
-              <Wrench className="size-4" />
-              Create group
-            </Button>
-          </div>
+          <InstallGroupButton groupName={name} group={group} />
         </>
       ) : (
         <Alert className="mt-6 max-w-2xl">

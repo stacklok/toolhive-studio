@@ -19,7 +19,8 @@
     "noUncheckedSideEffectImports": true,
     "noUncheckedIndexedAccess": true,
     "paths": {
-      "@api/*": ["./api/generated/*"]
+      "@api/*": ["./api/generated/*"],
+      "@utils/*": ["./utils/*"]
     }
   },
   "include": ["vite.config.ts", "main/src", "preload/src", "forge.env.d.ts"],

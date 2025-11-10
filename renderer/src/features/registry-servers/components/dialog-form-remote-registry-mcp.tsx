@@ -9,6 +9,7 @@ import { LoadingStateAlert } from '../../../common/components/secrets/loading-st
 import { AlertErrorFormSubmission } from '@/common/components/workloads/alert-error-form-submission'
 import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-workload-form-wrapper'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
+import { delay } from '@utils/delay'
 import {
   getFormSchemaRemoteMcp,
   type FormSchemaRemoteMcp,
@@ -59,12 +60,26 @@ interface FormRunFromRegistryProps {
   server: RegistryRemoteServerMetadata | null
   isOpen: boolean
   closeDialog: () => void
+  onSubmitSuccess?: (closeModal: () => void) => void
+  hardcodedGroup?: string
+  actionsSubmitLabel: string
+  description?: string
+  quietly?: boolean
+  customSuccessMessage?: string
+  customLoadingMessage?: string
 }
 
 export function DialogFormRemoteRegistryMcp({
   server,
   isOpen,
   closeDialog,
+  onSubmitSuccess,
+  hardcodedGroup,
+  actionsSubmitLabel,
+  description,
+  quietly = false,
+  customSuccessMessage,
+  customLoadingMessage,
 }: FormRunFromRegistryProps) {
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -90,6 +105,7 @@ export function DialogFormRemoteRegistryMcp({
       onSecretError: (error, variables) => {
         log.error('onSecretError', error, variables)
       },
+      quietly,
     })
 
   const { data } = useQuery({
@@ -114,30 +130,47 @@ export function DialogFormRemoteRegistryMcp({
       : {}),
   })
 
-  const onSubmitForm = (data: FormSchemaRemoteMcp) => {
+  const onSubmitForm = async (data: FormSchemaRemoteMcp) => {
     if (!server) return
 
     setIsSubmitting(true)
     if (error) setError(null)
 
+    const submissionData = hardcodedGroup
+      ? { ...data, group: hardcodedGroup }
+      : data
+
     installServerMutation(
       {
-        data,
+        data: submissionData,
       },
       {
-        onSuccess: () => {
-          checkServerStatus({
-            serverName: data.name,
-            groupName: data.group || 'default',
-          })
-          closeDialog()
-          form.reset()
-        },
         onSettled: (_, error) => {
-          setIsSubmitting(false)
-          if (!error) {
-            form.reset()
-          }
+          void (async () => {
+            // Add a 2-second delay before hiding the loading screen
+            // This stops jarring flashes when the workload is created too fast, and lets the user understand that they saw a loading screen
+            await delay(2000)
+            setIsSubmitting(false)
+            if (!error) {
+              form.reset()
+            }
+            if (onSubmitSuccess) {
+              onSubmitSuccess(closeDialog)
+            } else {
+              closeDialog()
+            }
+
+            // Show readiness toast only after closing, and only on final step
+            if (!error && !quietly) {
+              void checkServerStatus({
+                serverName: submissionData.name,
+                groupName: submissionData.group || 'default',
+                quietly,
+                customSuccessMessage,
+                customLoadingMessage,
+              })
+            }
+          })()
         },
         onError: (error) => {
           setError(typeof error === 'string' ? error : error.message)
@@ -160,9 +193,11 @@ export function DialogFormRemoteRegistryMcp({
       }}
       actionsOnCancel={closeDialog}
       actionsIsDisabled={isLoading}
+      actionsSubmitLabel={actionsSubmitLabel}
       form={form}
       onSubmit={form.handleSubmit(onSubmitForm)}
       title={`Add ${server?.name} remote MCP server`}
+      description={description}
     >
       {isLoading && (
         <LoadingStateAlert

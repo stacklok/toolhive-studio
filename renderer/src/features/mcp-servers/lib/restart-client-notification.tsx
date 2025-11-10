@@ -6,8 +6,10 @@ const CLIENTS_TO_RESTART = ['claude-code']
 
 export async function restartClientNotification({
   queryClient,
+  quietly = false,
 }: {
   queryClient: QueryClient
+  quietly?: boolean
 }) {
   const { clients = [] } = await queryClient.ensureQueryData(
     getApiV1BetaDiscoveryClientsOptions()
@@ -20,6 +22,8 @@ export async function restartClientNotification({
     )!
 
   if (!matchedClient) return
+
+  if (quietly) return
 
   return toast.warning(
     `Restart ${matchedClient.client_type} to activate new MCP servers.`,

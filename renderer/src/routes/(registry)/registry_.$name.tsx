@@ -165,6 +165,7 @@ export function RegistryServerDetail() {
           server={selectedServer}
           isOpen={isModalOpen}
           closeDialog={() => setIsModalOpen(false)}
+          actionsSubmitLabel="Install server"
         />
       ) : (
         <FormRunFromRegistry
@@ -172,6 +173,7 @@ export function RegistryServerDetail() {
           server={selectedServer}
           isOpen={isModalOpen}
           onOpenChange={setIsModalOpen}
+          actionsSubmitLabel="Install server"
         />
       )}
     </div>

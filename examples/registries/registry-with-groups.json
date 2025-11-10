@@ -26,21 +26,29 @@
         }
       }
     },
-    "filesystem": {
-      "name": "filesystem",
-      "description": "Provides access to filesystem operations",
-      "tier": "Official",
+    "content-fetcher": {
+      "name": "content-fetcher",
+      "description": "Alternative fetch server for content retrieval",
+      "tier": "Community",
       "status": "Active",
-      "transport": "stdio",
-      "tools": ["read_file", "write_file", "list_directory"],
+      "transport": "streamable-http",
+      "tools": ["fetch"],
       "metadata": {
-        "stars": 125,
-        "pulls": 45000,
-        "last_updated": "2025-09-10T12:00:00Z"
+        "stars": 17,
+        "pulls": 12390,
+        "last_updated": "2025-09-05T02:29:06Z"
       },
-      "repository_url": "https://github.com/modelcontextprotocol/servers",
-      "tags": ["filesystem", "files"],
-      "image": "ghcr.io/modelcontextprotocol/filesystem:latest"
+      "repository_url": "https://github.com/stackloklabs/gofetch",
+      "tags": ["content", "html", "markdown", "fetch"],
+      "image": "ghcr.io/stackloklabs/gofetch/server:0.0.6",
+      "permissions": {
+        "network": {
+          "outbound": {
+            "insecure_allow_all": true,
+            "allow_port": [443]
+          }
+        }
+      }
     }
   },
   "remote_servers": {
@@ -72,9 +80,9 @@
       "name": "dev-toolkit",
       "description": "Essential tools for software development teams",
       "servers": {
-        "fetch": {
-          "name": "fetch",
-          "description": "Allows you to fetch content from the web",
+        "fetch-1": {
+          "name": "fetch-1",
+          "description": "First fetch server for content retrieval",
           "tier": "Community",
           "status": "Active",
           "transport": "streamable-http",
@@ -96,47 +104,56 @@
             }
           }
         },
-        "filesystem": {
-          "name": "filesystem",
-          "description": "Provides access to filesystem operations",
-          "tier": "Official",
-          "status": "Active",
-          "transport": "stdio",
-          "tools": ["read_file", "write_file", "list_directory"],
-          "metadata": {
-            "stars": 125,
-            "pulls": 45000,
-            "last_updated": "2025-09-10T12:00:00Z"
-          },
-          "repository_url": "https://github.com/modelcontextprotocol/servers",
-          "tags": ["filesystem", "files"],
-          "image": "ghcr.io/modelcontextprotocol/filesystem:latest"
-        }
-      },
-      "remote_servers": {
-        "github-remote": {
-          "name": "github-remote",
-          "description": "GitHub's official MCP server for repositories, issues, PRs, and actions",
-          "tier": "Official",
+        "fetch-2": {
+          "name": "fetch-2",
+          "description": "Second fetch server for content retrieval",
+          "tier": "Community",
           "status": "Active",
           "transport": "streamable-http",
-          "tools": ["create_issue", "list_issues", "get_pull_request"],
+          "tools": ["fetch"],
           "metadata": {
-            "stars": 22439,
-            "pulls": 0,
-            "last_updated": "2025-09-10T02:27:19Z"
+            "stars": 17,
+            "pulls": 12390,
+            "last_updated": "2025-09-05T02:29:06Z"
           },
-          "repository_url": "https://github.com/github/github-mcp-server",
-          "tags": ["remote", "github", "git"],
-          "url": "https://api.githubcopilot.com/mcp",
-          "oauth_config": {
-            "authorize_url": "https://github.com/login/oauth/authorize",
-            "token_url": "https://github.com/login/oauth/access_token",
-            "scopes": ["repo", "user:email"],
-            "use_pkce": true
+          "repository_url": "https://github.com/stackloklabs/gofetch",
+          "tags": ["content", "html", "markdown", "fetch"],
+          "image": "ghcr.io/stackloklabs/gofetch/server:0.0.6",
+          "permissions": {
+            "network": {
+              "outbound": {
+                "insecure_allow_all": true,
+                "allow_port": [443]
+              }
+            }
+          }
+        },
+        "fetch-3": {
+          "name": "fetch-3",
+          "description": "Third fetch server for content retrieval",
+          "tier": "Community",
+          "status": "Active",
+          "transport": "streamable-http",
+          "tools": ["fetch"],
+          "metadata": {
+            "stars": 17,
+            "pulls": 12390,
+            "last_updated": "2025-09-05T02:29:06Z"
+          },
+          "repository_url": "https://github.com/stackloklabs/gofetch",
+          "tags": ["content", "html", "markdown", "fetch"],
+          "image": "ghcr.io/stackloklabs/gofetch/server:0.0.6",
+          "permissions": {
+            "network": {
+              "outbound": {
+                "insecure_allow_all": true,
+                "allow_port": [443]
+              }
+            }
           }
         }
-      }
+      },
+      "remote_servers": {}
     },
     {
       "name": "web-scraping",

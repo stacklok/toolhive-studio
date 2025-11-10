@@ -22,6 +22,7 @@ import {
 import { AlertErrorFormSubmission } from '@/common/components/workloads/alert-error-form-submission'
 import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-workload-form-wrapper'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
+import { delay } from '@utils/delay'
 
 type Tab = 'configuration' | 'network-isolation'
 type Field = keyof FormSchemaRegistryMcp
@@ -43,12 +44,26 @@ interface FormRunFromRegistryProps {
   server: RegistryImageMetadata | null
   isOpen: boolean
   onOpenChange: (open: boolean) => void
+  onSubmitSuccess?: (closeModal: () => void) => void
+  hardcodedGroup?: string
+  actionsSubmitLabel: string
+  description?: string
+  quietly?: boolean
+  customSuccessMessage?: string
+  customLoadingMessage?: string
 }
 
 export function FormRunFromRegistry({
   server,
   isOpen,
   onOpenChange,
+  onSubmitSuccess,
+  hardcodedGroup,
+  actionsSubmitLabel,
+  description,
+  quietly = false,
+  customSuccessMessage,
+  customLoadingMessage,
 }: FormRunFromRegistryProps) {
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -75,6 +90,7 @@ export function FormRunFromRegistry({
       onSecretError: (error, variables) => {
         log.error('onSecretError', error, variables)
       },
+      quietly,
     })
   const { activeTab, setActiveTab, activateTabWithError, resetTab } =
     useFormTabState<Tab, Field>({
@@ -128,33 +144,48 @@ export function FormRunFromRegistry({
     mode: 'onChange',
   })
 
-  const onSubmitForm = (data: FormSchemaRegistryMcp) => {
+  const onSubmitForm = async (data: FormSchemaRegistryMcp) => {
     if (!server) return
 
     setIsSubmitting(true)
     if (error) setError(null)
 
-    // Use the dedicated function to prepare the API payload
+    const groupName = hardcodedGroup ?? data.group
+
     installServerMutation(
       {
         server,
         data,
-        groupName: data.group,
+        groupName,
       },
       {
-        onSuccess: () => {
-          checkServerStatus({
-            serverName: data.name,
-            groupName: data.group,
-          })
-          onOpenChange(false)
-          setActiveTab('configuration')
-        },
         onSettled: (_, error) => {
-          setIsSubmitting(false)
-          if (!error) {
-            form.reset()
-          }
+          void (async () => {
+            // Add a 2-second delay before hiding the loading screen
+            // This stops jarring flashes when the workload is created too fast, and lets the user understand that they saw a loading screen
+            await delay(2000)
+            setIsSubmitting(false)
+            if (!error) {
+              form.reset()
+            }
+            if (onSubmitSuccess) {
+              onSubmitSuccess(() => onOpenChange(false))
+            } else {
+              onOpenChange(false)
+            }
+            setActiveTab('configuration')
+
+            // Show readiness toast only after closing, and only on final step
+            if (!error && !quietly) {
+              void checkServerStatus({
+                serverName: data.name,
+                groupName,
+                quietly,
+                customSuccessMessage,
+                customLoadingMessage,
+              })
+            }
+          })()
         },
         onError: (error) => {
           setError(typeof error === 'string' ? error : error.message)
@@ -178,9 +209,11 @@ export function FormRunFromRegistry({
         setActiveTab('configuration')
       }}
       actionsIsDisabled={isSubmitting}
+      actionsSubmitLabel={actionsSubmitLabel}
       form={form}
       onSubmit={form.handleSubmit(onSubmitForm, activateTabWithError)}
       title={`Configure ${server.name}`}
+      description={description}
     >
       {isSubmitting && (
         <LoadingStateAlert

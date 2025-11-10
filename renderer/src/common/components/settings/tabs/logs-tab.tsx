@@ -1,7 +1,7 @@
 import { Button } from '../../ui/button'
 import { useState, useEffect } from 'react'
 import { Copy, Check, Download } from 'lucide-react'
-import { delay } from '../../../../../../utils/delay'
+import { delay } from '@utils/delay'
 import { useDownloadFile } from '../../../hooks/use-download-file'
 import log from 'electron-log/renderer'
 

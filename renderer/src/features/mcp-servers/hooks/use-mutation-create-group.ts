@@ -6,7 +6,12 @@ import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { trackEvent } from '@/common/lib/analytics'
 import { useGroups } from './use-groups'
 
-export function useMutationCreateGroup() {
+export function useMutationCreateGroup(options?: {
+  successMsg?:
+    | ((variables: Pick<PostApiV1BetaGroupsData, 'body'>) => string | null)
+    | string
+    | null
+}) {
   const queryClient = useQueryClient()
   const { data: groupsData } = useGroups()
 
@@ -28,8 +33,10 @@ export function useMutationCreateGroup() {
       })
       queryClient.invalidateQueries({ queryKey: getApiV1BetaGroupsQueryKey() })
     },
-    successMsg: (variables) =>
-      `Group "${variables.body.name}" created successfully`,
+    successMsg:
+      options?.successMsg !== undefined
+        ? options.successMsg
+        : (variables) => `Group "${variables.body.name}" created successfully`,
     loadingMsg: 'Creating group...',
   })
 }

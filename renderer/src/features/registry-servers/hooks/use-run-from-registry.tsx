@@ -17,12 +17,14 @@ import { useNotificationOptimizer } from '@/features/mcp-servers/hooks/use-notif
 export function useRunFromRegistry({
   onSecretSuccess,
   onSecretError,
+  quietly = false,
 }: {
   onSecretSuccess: (completedCount: number, secretsCount: number) => void
   onSecretError: (
     error: string,
     variables: Options<PostApiV1BetaSecretsDefaultKeysData>
   ) => void
+  quietly?: boolean
 }) {
   const queryClient = useQueryClient()
   const { handleSecrets, isPendingSecrets, isErrorSecrets } = useMCPSecrets({
@@ -36,9 +38,10 @@ export function useRunFromRegistry({
     onSuccess: async (data, variables) => {
       await restartClientNotification({
         queryClient,
+        quietly,
       })
       const groupName = variables.body.group || 'default'
-      notifyChangeWithOptimizer(groupName)
+      notifyChangeWithOptimizer(groupName, quietly)
       trackEvent(`Workload ${data.name} started`, {
         workload: data.name,
         is_default_group: String(groupName === 'default'),

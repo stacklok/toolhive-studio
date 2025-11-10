@@ -25,18 +25,26 @@ export function useCheckServerStatus() {
       serverName,
       groupName,
       isEditing = false,
+      quietly = false,
+      customSuccessMessage,
+      customLoadingMessage,
     }: {
       serverName: string
       groupName: string
       isEditing?: boolean
+      quietly?: boolean
+      customSuccessMessage?: string
+      customLoadingMessage?: string
     }): Promise<boolean> => {
-      toast.loading(
-        `${isEditing ? 'Updating' : 'Starting'} "${serverName}"...`,
-        {
+      if (!quietly) {
+        const loadingMessage =
+          customLoadingMessage ||
+          `${isEditing ? 'Updating' : 'Starting'} "${serverName}"...`
+        toast.loading(loadingMessage, {
           duration: 30_000,
           id: toastIdRef.current,
-        }
-      )
+        })
+      }
 
       const isServerReady = await pollServerStatus(
         () =>
@@ -63,9 +71,12 @@ export function useCheckServerStatus() {
           refetchType: 'active',
         })
 
-        toast.success(
-          `"${serverName === META_MCP_SERVER_NAME ? 'MCP Optimizer' : serverName}" ${isEditing ? 'updated' : 'started'} successfully.`,
-          {
+        if (!quietly) {
+          const successMessage =
+            customSuccessMessage ||
+            `"${serverName === META_MCP_SERVER_NAME ? 'MCP Optimizer' : serverName}" ${isEditing ? 'updated' : 'started'} successfully.`
+
+          toast.success(successMessage, {
             id: toastIdRef.current,
             duration: 5_000, // slightly longer than default
             action: (
@@ -82,16 +93,18 @@ export function useCheckServerStatus() {
                 </Link>
               </Button>
             ),
-          }
-        )
+          })
+        }
       } else {
-        toast.warning(
-          `Server "${serverName}" was ${isEditing ? 'updated' : 'created'} but may still be starting up. Check the servers list to monitor its status.`,
-          {
-            id: toastIdRef.current,
-            duration: 5_000,
-          }
-        )
+        if (!quietly) {
+          toast.warning(
+            `Server "${serverName}" was ${isEditing ? 'updated' : 'created'} but may still be starting up. Check the servers list to monitor its status.`,
+            {
+              id: toastIdRef.current,
+              duration: 5_000,
+            }
+          )
+        }
       }
 
       return isServerReady

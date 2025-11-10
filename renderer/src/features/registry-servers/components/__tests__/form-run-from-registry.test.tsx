@@ -1,6 +1,6 @@
 import type { RegistryEnvVar, RegistryImageMetadata } from '@api/types.gen'
 import { render, screen, waitFor, act, within } from '@testing-library/react'
-import { it, expect, vi, describe, beforeEach } from 'vitest'
+import { it, expect, vi, describe, beforeEach, afterEach } from 'vitest'
 import { FormRunFromRegistry } from '../form-run-from-registry'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -109,6 +109,11 @@ beforeEach(() => {
   })
 })
 
+// Always restore real timers after each test to avoid leaks when a test fails early
+afterEach(() => {
+  vi.useRealTimers()
+})
+
 describe('FormRunFromRegistry', () => {
   it('renders form fields correctly', async () => {
     const server = { ...REGISTRY_SERVER }
@@ -119,6 +124,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -153,6 +159,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -185,6 +192,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -226,6 +234,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={mockOnOpenChange}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
     await waitFor(() => {
@@ -284,7 +293,12 @@ describe('FormRunFromRegistry', () => {
     server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
     renderWithProviders(
-      <FormRunFromRegistry isOpen onOpenChange={vi.fn()} server={server} />
+      <FormRunFromRegistry
+        isOpen
+        onOpenChange={vi.fn()}
+        server={server}
+        actionsSubmitLabel="Install server"
+      />
     )
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
@@ -330,6 +344,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
     await waitFor(() => {
@@ -387,6 +402,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
     await waitFor(() => {
@@ -445,6 +461,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -500,6 +517,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -559,6 +577,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -608,6 +627,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -653,7 +673,12 @@ describe('FormRunFromRegistry', () => {
     server.env_vars = ENV_VARS_OPTIONAL
 
     renderWithProviders(
-      <FormRunFromRegistry isOpen onOpenChange={vi.fn()} server={server} />
+      <FormRunFromRegistry
+        isOpen
+        onOpenChange={vi.fn()}
+        server={server}
+        actionsSubmitLabel="Install server"
+      />
     )
     await waitFor(() => expect(screen.getByRole('dialog')).toBeVisible())
 
@@ -681,8 +706,11 @@ describe('FormRunFromRegistry', () => {
     const firstArgs = mockInstallServerMutation.mock.calls[0]?.[0]
     expect(firstArgs?.groupName).toBe('research')
 
-    const onSuccess = mockInstallServerMutation.mock.calls[0]?.[1]?.onSuccess
-    onSuccess?.()
+    // The success flow now runs in onSettled after a short (mocked) delay
+    const onSettled = mockInstallServerMutation.mock.calls[0]?.[1]?.onSettled
+    await act(async () => {
+      onSettled?.(undefined, undefined)
+    })
     await waitFor(() => {
       expect(mockCheckServerStatus).toHaveBeenCalledWith(
         expect.objectContaining({ groupName: 'research' })
@@ -702,7 +730,12 @@ describe('FormRunFromRegistry', () => {
     server.env_vars = ENV_VARS_OPTIONAL
 
     renderWithProviders(
-      <FormRunFromRegistry isOpen onOpenChange={vi.fn()} server={server} />
+      <FormRunFromRegistry
+        isOpen
+        onOpenChange={vi.fn()}
+        server={server}
+        actionsSubmitLabel="Install server"
+      />
     )
 
     await waitFor(() => {
@@ -740,6 +773,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -810,6 +844,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={mockOnOpenChange}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -836,15 +871,16 @@ describe('FormRunFromRegistry', () => {
       expect(mockInstallServerMutation).toHaveBeenCalled()
     })
 
-    // Simulate successful submission
-    const onSuccessCallback =
-      mockInstallServerMutation.mock.calls[0]?.[1]?.onSuccess
-    onSuccessCallback?.()
+    // Simulate success via onSettled (delay mocked to 0)
+    const onSettled = mockInstallServerMutation.mock.calls[0]?.[1]?.onSettled
+    await act(async () => {
+      onSettled?.(undefined, undefined)
+    })
 
     await waitFor(() => {
       expect(mockCheckServerStatus).toHaveBeenCalled()
+      expect(mockOnOpenChange).toHaveBeenCalledWith(false)
     })
-    expect(mockOnOpenChange).toHaveBeenCalledWith(false)
   })
 
   it('includes command arguments in form data', async () => {
@@ -863,6 +899,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -917,6 +954,7 @@ describe('FormRunFromRegistry', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
     await waitFor(() => {
@@ -962,6 +1000,7 @@ describe('Allowed Hosts field', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
     await waitFor(() => {
@@ -993,6 +1032,7 @@ describe('Allowed Hosts field', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
     await waitFor(() => {
@@ -1031,6 +1071,7 @@ describe('Allowed Hosts field', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
     await waitFor(() => {
@@ -1099,6 +1140,7 @@ describe('Allowed Hosts field', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
     await waitFor(() => {
@@ -1151,6 +1193,7 @@ describe('Allowed Hosts field', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
     await waitFor(() => {
@@ -1189,6 +1232,7 @@ describe('Allowed Hosts field', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
     await waitFor(() => {
@@ -1278,6 +1322,7 @@ describe('Network Isolation Tab Activation', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -1322,6 +1367,7 @@ describe('Network Isolation Tab Activation', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -1361,6 +1407,7 @@ describe('CommandArgumentsField', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -1385,6 +1432,7 @@ describe('CommandArgumentsField', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -1409,6 +1457,7 @@ describe('CommandArgumentsField', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -1443,6 +1492,7 @@ describe('CommandArgumentsField', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -1465,6 +1515,7 @@ describe('CommandArgumentsField', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -1489,6 +1540,7 @@ describe('CommandArgumentsField', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={server}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -1519,6 +1571,7 @@ describe('Storage Volumes', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={{ ...REGISTRY_SERVER }}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -1597,6 +1650,7 @@ describe('Storage Volumes', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={{ ...REGISTRY_SERVER }}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -1629,6 +1683,7 @@ describe('Storage Volumes', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={{ ...REGISTRY_SERVER }}
+        actionsSubmitLabel="Install server"
       />
     )
 
@@ -1662,6 +1717,7 @@ describe('Storage Volumes', () => {
         isOpen={true}
         onOpenChange={vi.fn()}
         server={{ ...REGISTRY_SERVER }}
+        actionsSubmitLabel="Install server"
       />
     )
 
