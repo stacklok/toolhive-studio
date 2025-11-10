@@ -560,9 +560,10 @@ describe('Registry Group Detail Route', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /^finish$/i }))
     // The wizard closes the dialog before emitting readiness toasts
-    await waitForElementToBeRemoved(() => screen.queryByRole('dialog'), {
-      timeout: 10000,
-    })
+    const dialog = screen.queryByRole('dialog')
+    if (dialog) {
+      await waitForElementToBeRemoved(dialog, { timeout: 10000 })
+    }
 
     await waitFor(() => {
       expect(groupCalls).toHaveLength(1)
