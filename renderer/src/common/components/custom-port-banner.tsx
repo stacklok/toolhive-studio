@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { Alert, AlertDescription } from './ui/alert'
+import log from 'electron-log/renderer'
 
 /**
  * Banner that displays a warning when using a custom ToolHive port in development mode.
@@ -20,7 +21,7 @@ export function CustomPortBanner() {
         setPort(toolhivePort)
       })
       .catch((error: unknown) => {
-        console.error('Failed to get custom port info:', error)
+        log.error('Failed to get custom port info:', error)
       })
   }, [])
 
