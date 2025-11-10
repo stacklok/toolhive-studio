@@ -12,6 +12,8 @@ import { Button } from '../../ui/button'
 import { Alert, AlertDescription } from '../../ui/alert'
 import { AlertCircleIcon, Download } from 'lucide-react'
 import { trackEvent } from '@/common/lib/analytics'
+import { useEffect } from 'react'
+import { toast } from 'sonner'
 
 interface VersionTabProps {
   appInfo: AppVersionInfo | undefined
@@ -34,12 +36,27 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
   const isProduction = import.meta.env.MODE === 'production'
   const { data: updateState, isLoading: isUpdateStateLoading } =
     useCurrentUpdateState()
-  const isDownloading = isUpdateStateLoading || updateState === 'downloading'
+  const isCheckingOrDownloading =
+    isUpdateStateLoading ||
+    updateState === 'checking' ||
+    updateState === 'not-available' ||
+    updateState === 'downloading'
 
   const { data: isAutoUpdateEnabled, isLoading: isAutoUpdateEnabledLoading } =
     useAutoUpdateStatus()
   const { mutateAsync: setAutoUpdate, isPending: isSetAutoUpdatePending } =
     useSetAutoUpdate()
+
+  useEffect(() => {
+    if (updateState === 'not-available') {
+      toast.info('Update not yet available', {
+        id: 'update-not-available',
+        description:
+          'The update server is still processing the latest release. Please try again in a few minutes.',
+        duration: 6000,
+      })
+    }
+  }, [updateState])
 
   if (isLoading) {
     return (
@@ -79,6 +96,16 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
       'current.version': appInfo.currentVersion,
       'is.new.version.available': appInfo?.isNewVersionAvailable,
     })
+  }
+
+  const getButtonText = () => {
+    if (updateState === 'checking' || updateState === 'not-available') {
+      return 'Checking...'
+    }
+    if (updateState === 'downloading') {
+      return 'Downloading...'
+    }
+    return 'Download'
   }
 
   return (
@@ -132,13 +159,12 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
                   </div>
                   <Button
                     variant="outline"
-                    disabled={isDownloading}
+                    disabled={isCheckingOrDownloading}
                     onClick={() => {
                       handleManualUpdate()
                     }}
                   >
-                    <Download className="size-4" />{' '}
-                    {isDownloading ? 'Downloading...' : 'Download'}
+                    <Download className="size-4" /> {getButtonText()}
                   </Button>
                 </div>
               </AlertDescription>

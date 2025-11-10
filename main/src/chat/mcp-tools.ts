@@ -248,9 +248,12 @@ export async function createMcpTools(): Promise<{
         // Add only the enabled tools from this server
         let addedToolsCount = 0
         for (const toolName of toolNames) {
-          if (serverMcpTools[toolName]) {
-            mcpTools[toolName] = serverMcpTools[toolName]
+          const tool = serverMcpTools[toolName]
+          if (tool && isMcpToolDefinition(tool)) {
+            mcpTools[toolName] = tool
             addedToolsCount++
+          } else if (tool) {
+            log.warn(`Tool ${toolName} from ${serverName} failed validation`)
           } else {
             log.warn(`Tool ${toolName} not found in server ${serverName}`)
           }

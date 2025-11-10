@@ -1,4 +1,4 @@
-import { Zap, ArrowRight, Hash } from 'lucide-react'
+import { Zap, ArrowRight, Hash, Info } from 'lucide-react'
 import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 import {
   Tooltip,
@@ -10,74 +10,116 @@ import {
 interface TokenUsageProps {
   usage: LanguageModelV2Usage
   responseTime?: number
+  providerId?: string
 }
 
-export function TokenUsage({ usage, responseTime }: TokenUsageProps) {
-  const formatTime = (ms: number) => {
-    if (ms < 1000) return `${ms}ms`
-    return `${(ms / 1000).toFixed(1)}s`
+export function TokenUsage({
+  usage,
+  responseTime,
+  providerId,
+}: TokenUsageProps) {
+  const safeNumber = (value: number | undefined | null): number => {
+    if (
+      value === undefined ||
+      value === null ||
+      isNaN(value) ||
+      !isFinite(value)
+    ) {
+      return 0
+    }
+    return Math.max(0, Math.floor(value))
   }
+
+  const formatTime = (ms: number) => {
+    const safeMs = safeNumber(ms)
+    if (safeMs < 1000) return `${safeMs}ms`
+    return `${(safeMs / 1000).toFixed(1)}s`
+  }
+
+  const inputTokens = safeNumber(usage.inputTokens)
+  const outputTokens = safeNumber(usage.outputTokens)
+  const totalTokens = safeNumber(usage.totalTokens)
+  const reasoningTokens = safeNumber(usage.reasoningTokens)
+  const cachedInputTokens = safeNumber(usage.cachedInputTokens)
+
+  const hasUsageData = totalTokens > 0 || inputTokens > 0 || outputTokens > 0
+  const isLMStudio = providerId === 'lmstudio'
 
   return (
     <TooltipProvider>
       <div className="text-muted-foreground flex items-center gap-2 text-xs">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="flex cursor-help items-center gap-1">
-              <Hash className="h-3 w-3" />
-              <span>{usage.inputTokens || 0}</span>
-              <ArrowRight className="h-3 w-3" />
-              <span>{usage.outputTokens || 0}</span>
-              <span className="text-foreground font-medium">
-                = {usage.totalTokens || 0}
-              </span>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="max-w-xs">
-            <div className="space-y-1">
-              <div className="font-medium">Token Usage Breakdown</div>
-              <div className="space-y-0.5 text-xs">
-                <div>
-                  <strong>Input tokens:</strong>{' '}
-                  {(usage.inputTokens || 0).toLocaleString()} (your message +
-                  context)
+        {isLMStudio && !hasUsageData ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex cursor-help items-center gap-1">
+                <Info className="h-3 w-3" />
+                <span>No token usage data</span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs">
+              <div className="space-y-1">
+                <div className="font-medium">Token Usage Unavailable</div>
+                <div className="text-xs">
+                  LM Studio doesn't currently provide token usage metrics in its
+                  API responses. This is a known limitation of LM Studio's
+                  current implementation.
                 </div>
-                <div>
-                  <strong>Output tokens:</strong>{' '}
-                  {(usage.outputTokens || 0).toLocaleString()} (AI response)
-                </div>
-                {usage.reasoningTokens &&
-                  !isNaN(usage.reasoningTokens) &&
-                  usage.reasoningTokens > 0 && (
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex cursor-help items-center gap-1">
+                <Hash className="h-3 w-3" />
+                <span>{inputTokens}</span>
+                <ArrowRight className="h-3 w-3" />
+                <span>{outputTokens}</span>
+                <span className="text-foreground font-medium">
+                  = {totalTokens}
+                </span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs">
+              <div className="space-y-1">
+                <div className="font-medium">Token Usage Breakdown</div>
+                <div className="space-y-0.5 text-xs">
+                  <div>
+                    <strong>Input tokens:</strong>{' '}
+                    {inputTokens.toLocaleString()} (your message + context)
+                  </div>
+                  <div>
+                    <strong>Output tokens:</strong>{' '}
+                    {outputTokens.toLocaleString()} (AI response)
+                  </div>
+                  {reasoningTokens > 0 && (
                     <div>
                       <strong>Reasoning tokens:</strong>{' '}
-                      {usage.reasoningTokens.toLocaleString()} (internal
-                      reasoning)
+                      {reasoningTokens.toLocaleString()} (internal reasoning)
                     </div>
                   )}
-                {usage.cachedInputTokens &&
-                  !isNaN(usage.cachedInputTokens) &&
-                  usage.cachedInputTokens > 0 && (
+                  {cachedInputTokens > 0 && (
                     <div>
                       <strong>Cached input tokens:</strong>{' '}
-                      {usage.cachedInputTokens.toLocaleString()} (cached from
-                      previous requests)
+                      {cachedInputTokens.toLocaleString()} (cached from previous
+                      requests)
                     </div>
                   )}
-                <div className="border-t pt-1">
-                  <strong>Total tokens:</strong>{' '}
-                  {(usage.totalTokens || 0).toLocaleString()}
+                  <div className="border-t pt-1">
+                    <strong>Total tokens:</strong>{' '}
+                    {totalTokens.toLocaleString()}
+                  </div>
+                </div>
+                <div className="text-muted-foreground border-t pt-1 text-xs">
+                  Tokens are units of text that AI models process. More tokens =
+                  higher cost.
                 </div>
               </div>
-              <div className="text-muted-foreground border-t pt-1 text-xs">
-                Tokens are units of text that AI models process. More tokens =
-                higher cost.
-              </div>
-            </div>
-          </TooltipContent>
-        </Tooltip>
+            </TooltipContent>
+          </Tooltip>
+        )}
 
-        {responseTime && (
+        {responseTime && !isNaN(responseTime) && isFinite(responseTime) && (
           <>
             <span>•</span>
             <Tooltip>

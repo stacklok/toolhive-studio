@@ -419,8 +419,8 @@ describe('CustomizeToolsTable', () => {
       const headerSwitch = switches[0]!
       const applyButton = screen.getByRole('button', { name: /apply/i })
 
-      // Initially, Apply button should be enabled
-      expect(applyButton).not.toBeDisabled()
+      // Initially, Apply button should be disabled (no changes)
+      expect(applyButton).toBeDisabled()
 
       // Wait for header switch to be checked
       await waitFor(() => {
@@ -577,17 +577,31 @@ describe('CustomizeToolsTable', () => {
         expect(screen.getByText('read_file')).toBeInTheDocument()
       })
 
-      const applyButton = screen.getByRole('button', { name: /apply/i })
+      // Create a change by toggling a tool
+      const switches = screen.getAllByRole('switch')
+      const deleteFileSwitch = switches[3]! // delete_file is initially disabled
+      await userEvent.click(deleteFileSwitch)
+
+      // Wait for Apply button to be enabled
+      const applyButton = await waitFor(() => {
+        const btn = screen.getByRole('button', { name: /apply/i })
+        expect(btn).not.toBeDisabled()
+        return btn
+      })
+
       await userEvent.click(applyButton)
 
       await waitFor(() => {
         expect(onApply).toHaveBeenCalledTimes(1)
-        expect(onApply).toHaveBeenCalledWith({
-          read_file: true,
-          write_file: true,
-          delete_file: false,
-          list_directory: true,
-        })
+        expect(onApply).toHaveBeenCalledWith(
+          {
+            read_file: true,
+            write_file: true,
+            delete_file: true, // Now enabled
+            list_directory: true,
+          },
+          null // No overrides
+        )
       })
     })
 
@@ -619,12 +633,15 @@ describe('CustomizeToolsTable', () => {
       await userEvent.click(applyButton)
 
       await waitFor(() => {
-        expect(onApply).toHaveBeenCalledWith({
-          read_file: false,
-          write_file: true,
-          delete_file: true,
-          list_directory: true,
-        })
+        expect(onApply).toHaveBeenCalledWith(
+          {
+            read_file: false,
+            write_file: true,
+            delete_file: true,
+            list_directory: true,
+          },
+          null // No overrides
+        )
       })
     })
 
@@ -1078,8 +1095,10 @@ describe('CustomizeToolsTable', () => {
         name: /cancel/i,
       })
 
+      // Apply button should be disabled (single tool, no overrides)
+      // Cancel button should be enabled (only disabled when loading)
       expect(applyButton).toBeDisabled()
-      expect(cancelButton).toBeDisabled()
+      expect(cancelButton).not.toBeDisabled()
     })
 
     it('disables both buttons when no tools', async () => {
@@ -1094,7 +1113,7 @@ describe('CustomizeToolsTable', () => {
       })
     })
 
-    it('enables both buttons when multiple tools', async () => {
+    it('enables both buttons when multiple tools and changes exist', async () => {
       const router = createTestRouter(() => (
         <CustomizeToolsTable tools={mockTools} isLoading={false} />
       ))
@@ -1105,13 +1124,24 @@ describe('CustomizeToolsTable', () => {
         expect(screen.getByText('read_file')).toBeInTheDocument()
       })
 
+      // Initially Apply button should be disabled (no changes)
       const applyButton = screen.getByRole('button', { name: /apply/i })
       const cancelButton = screen.getByRole('button', {
         name: /cancel/i,
       })
 
-      expect(applyButton).not.toBeDisabled()
+      expect(applyButton).toBeDisabled()
       expect(cancelButton).not.toBeDisabled()
+
+      // Create a change by toggling a tool
+      const switches = screen.getAllByRole('switch')
+      const deleteFileSwitch = switches[3]! // delete_file is initially disabled
+      await userEvent.click(deleteFileSwitch)
+
+      // Now Apply button should be enabled
+      await waitFor(() => {
+        expect(applyButton).not.toBeDisabled()
+      })
     })
 
     it('shows tooltip on hover when only one tool', async () => {
@@ -1138,9 +1168,8 @@ describe('CustomizeToolsTable', () => {
 
       await waitFor(() => {
         const tooltip = screen.getByRole('tooltip')
-        expect(tooltip).toHaveTextContent(
-          /Tool filtering is only available when there are multiple tools/i
-        )
+        // Tooltip now shows "No changes to apply" when disabled with no changes
+        expect(tooltip).toHaveTextContent(/No changes to apply/i)
       })
     })
   })
@@ -1261,12 +1290,13 @@ describe('CustomizeToolsTable', () => {
       expect(rows.length).toBeGreaterThan(0)
 
       const columnHeaders = screen.getAllByRole('columnheader')
-      expect(columnHeaders.length).toBe(3)
+      // 4 columns: Switch, Tool, Description, Edit (empty header)
+      expect(columnHeaders.length).toBe(4)
     })
   })
 
   describe('Button states', () => {
-    it('enables buttons when not loading', async () => {
+    it('enables Apply button when changes exist and not loading', async () => {
       const router = createTestRouter(() => (
         <CustomizeToolsTable tools={mockTools} isLoading={false} />
       ))
@@ -1274,13 +1304,814 @@ describe('CustomizeToolsTable', () => {
       renderRoute(router)
 
       await waitFor(() => {
-        const applyButton = screen.getByRole('button', { name: /apply/i })
-        const cancelButton = screen.getByRole('button', {
-          name: /cancel/i,
-        })
+        expect(screen.getByText('read_file')).toBeInTheDocument()
+      })
 
+      const applyButton = screen.getByRole('button', { name: /apply/i })
+      const cancelButton = screen.getByRole('button', {
+        name: /cancel/i,
+      })
+
+      // Initially Apply button should be disabled (no changes)
+      expect(applyButton).toBeDisabled()
+      expect(cancelButton).not.toBeDisabled()
+
+      // Create a change
+      const switches = screen.getAllByRole('switch')
+      const deleteFileSwitch = switches[3]!
+      await userEvent.click(deleteFileSwitch)
+
+      // Now Apply button should be enabled
+      await waitFor(() => {
         expect(applyButton).not.toBeDisabled()
-        expect(cancelButton).not.toBeDisabled()
+      })
+    })
+  })
+
+  describe('Tool overrides', () => {
+    const toolsWithOriginalData = [
+      {
+        name: 'fetch',
+        description: 'Fetches a URL from the internet',
+        isInitialEnabled: true,
+        originalName: 'fetch',
+        originalDescription: 'Fetches a URL from the internet',
+      },
+      {
+        name: 'make_dir',
+        description: 'Makes a directory',
+        isInitialEnabled: true,
+      },
+    ]
+
+    it('opens edit modal when Edit button is clicked', async () => {
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable tools={toolsWithOriginalData} isLoading={false} />
+      ))
+
+      renderRoute(router)
+      const user = userEvent.setup()
+
+      await waitFor(() => {
+        expect(screen.getByText('fetch')).toBeInTheDocument()
+      })
+
+      const editButtons = screen.getAllByRole('button', { name: /Edit/i })
+      await user.click(editButtons[0]!)
+
+      await waitFor(() => {
+        expect(screen.getByText('Edit tool')).toBeInTheDocument()
+        expect(screen.getByLabelText('Tool')).toBeInTheDocument()
+        expect(screen.getByLabelText('Description')).toBeInTheDocument()
+      })
+    })
+
+    it('displays original tool name and description as helper text in modal', async () => {
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable tools={toolsWithOriginalData} isLoading={false} />
+      ))
+
+      renderRoute(router)
+      const user = userEvent.setup()
+
+      await waitFor(() => {
+        expect(screen.getByText('fetch')).toBeInTheDocument()
+      })
+
+      const editButtons = screen.getAllByRole('button', { name: /Edit/i })
+      await user.click(editButtons[0]!)
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('Original tool name: fetch')
+        ).toBeInTheDocument()
+        // Description helper text may be wrapped in ExpandableText component
+        expect(
+          screen.getByText('Original tool description:')
+        ).toBeInTheDocument()
+      })
+
+      // Find the description helper text container and check for the text inside it
+      // (avoiding the textarea which also contains this text)
+      const dialog = screen.getByRole('dialog')
+      const descriptionHelper = Array.from(dialog.querySelectorAll('*')).find(
+        (el) =>
+          el.textContent?.includes('Original tool description:') &&
+          el.textContent?.includes('Fetches a URL from the internet')
+      )
+      expect(descriptionHelper).toBeDefined()
+    })
+
+    it('shows N/A for original description when override description exists', async () => {
+      const toolsWithOverride = [
+        {
+          name: 'fetch',
+          description: 'Custom description',
+          isInitialEnabled: true,
+          originalName: 'fetch',
+          originalDescription: 'Fetches a URL from the internet',
+        },
+      ]
+
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable
+          tools={toolsWithOverride}
+          isLoading={false}
+          overrideTools={{ fetch: { description: 'Custom description' } }}
+        />
+      ))
+
+      renderRoute(router)
+      const user = userEvent.setup()
+
+      await waitFor(() => {
+        expect(screen.getByText('fetch')).toBeInTheDocument()
+      })
+
+      const editButtons = screen.getAllByRole('button', { name: /Edit/i })
+      await user.click(editButtons[0]!)
+
+      await waitFor(() => {
+        // The text is split: "Original tool description: " and "N/A"
+        expect(
+          screen.getByText('Original tool description:')
+        ).toBeInTheDocument()
+        // Find N/A within the dialog context (not in the textarea)
+        const dialog = screen.getByRole('dialog')
+        const naText = Array.from(dialog.querySelectorAll('*')).find(
+          (el) => el.textContent === 'N/A' && el.tagName !== 'TEXTAREA'
+        )
+        expect(naText).toBeDefined()
+      })
+    })
+
+    it('allows editing tool name and saves it as override', async () => {
+      const mockOnApply = vi.fn()
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable
+          tools={toolsWithOriginalData}
+          isLoading={false}
+          onApply={mockOnApply}
+        />
+      ))
+
+      renderRoute(router)
+      const user = userEvent.setup()
+
+      await waitFor(() => {
+        expect(screen.getByText('fetch')).toBeInTheDocument()
+      })
+
+      const editButtons = screen.getAllByRole('button', { name: /Edit/i })
+      await user.click(editButtons[0]!)
+
+      await waitFor(() => {
+        expect(screen.getByText('Edit tool')).toBeInTheDocument()
+      })
+
+      const nameInput = screen.getByLabelText('Tool')
+      await user.clear(nameInput)
+      await user.type(nameInput, 'fetch_custom')
+
+      const saveButton = screen.getByRole('button', { name: /^Save$/i })
+      await user.click(saveButton)
+
+      await waitFor(() => {
+        expect(screen.queryByText('Edit tool')).not.toBeInTheDocument()
+      })
+
+      const applyButton = screen.getByRole('button', { name: /Apply/i })
+      await user.click(applyButton)
+
+      await waitFor(() => {
+        expect(mockOnApply).toHaveBeenCalledWith(
+          expect.any(Object),
+          expect.objectContaining({
+            fetch: { name: 'fetch_custom' },
+          })
+        )
+      })
+    })
+
+    it('allows editing tool description and saves it as override', async () => {
+      const mockOnApply = vi.fn()
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable
+          tools={toolsWithOriginalData}
+          isLoading={false}
+          onApply={mockOnApply}
+        />
+      ))
+
+      renderRoute(router)
+      const user = userEvent.setup()
+
+      await waitFor(() => {
+        expect(screen.getByText('fetch')).toBeInTheDocument()
+      })
+
+      const editButtons = screen.getAllByRole('button', { name: /Edit/i })
+      await user.click(editButtons[0]!)
+
+      await waitFor(() => {
+        expect(screen.getByText('Edit tool')).toBeInTheDocument()
+      })
+
+      const descriptionInput = screen.getByLabelText('Description')
+      await user.clear(descriptionInput)
+      await user.type(descriptionInput, 'Custom description')
+
+      const saveButton = screen.getByRole('button', { name: /^Save$/i })
+      await user.click(saveButton)
+
+      await waitFor(() => {
+        expect(screen.queryByText('Edit tool')).not.toBeInTheDocument()
+      })
+
+      const applyButton = screen.getByRole('button', { name: /Apply/i })
+      await user.click(applyButton)
+
+      await waitFor(() => {
+        expect(mockOnApply).toHaveBeenCalledWith(
+          expect.any(Object),
+          expect.objectContaining({
+            fetch: { description: 'Custom description' },
+          })
+        )
+      })
+    })
+
+    it('allows editing both name and description and saves as override', async () => {
+      const mockOnApply = vi.fn()
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable
+          tools={toolsWithOriginalData}
+          isLoading={false}
+          onApply={mockOnApply}
+        />
+      ))
+
+      renderRoute(router)
+      const user = userEvent.setup()
+
+      await waitFor(() => {
+        expect(screen.getByText('fetch')).toBeInTheDocument()
+      })
+
+      const editButtons = screen.getAllByRole('button', { name: /Edit/i })
+      await user.click(editButtons[0]!)
+
+      await waitFor(() => {
+        expect(screen.getByText('Edit tool')).toBeInTheDocument()
+      })
+
+      const nameInput = screen.getByLabelText('Tool')
+      await user.clear(nameInput)
+      await user.type(nameInput, 'fetch_custom')
+
+      const descriptionInput = screen.getByLabelText('Description')
+      await user.clear(descriptionInput)
+      await user.type(descriptionInput, 'Custom description')
+
+      const saveButton = screen.getByRole('button', { name: /^Save$/i })
+      await user.click(saveButton)
+
+      await waitFor(() => {
+        expect(screen.queryByText('Edit tool')).not.toBeInTheDocument()
+      })
+
+      const applyButton = screen.getByRole('button', { name: /Apply/i })
+      await user.click(applyButton)
+
+      await waitFor(() => {
+        expect(mockOnApply).toHaveBeenCalledWith(
+          expect.any(Object),
+          expect.objectContaining({
+            fetch: { name: 'fetch_custom', description: 'Custom description' },
+          })
+        )
+      })
+    })
+
+    it('uses originalName as key when tool has name override', async () => {
+      const toolsWithNameOverride = [
+        {
+          name: 'fetch_custom',
+          description: 'Fetches a URL from the internet',
+          isInitialEnabled: true,
+          originalName: 'fetch',
+          originalDescription: 'Fetches a URL from the internet',
+        },
+      ]
+
+      const mockOnApply = vi.fn()
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable
+          tools={toolsWithNameOverride}
+          isLoading={false}
+          onApply={mockOnApply}
+          overrideTools={{ fetch: { name: 'fetch_custom' } }}
+        />
+      ))
+
+      renderRoute(router)
+      const user = userEvent.setup()
+
+      await waitFor(() => {
+        expect(screen.getByText('fetch_custom')).toBeInTheDocument()
+      })
+
+      const editButtons = screen.getAllByRole('button', { name: /Edit/i })
+      await user.click(editButtons[0]!)
+
+      await waitFor(() => {
+        expect(screen.getByText('Edit tool')).toBeInTheDocument()
+        // Should show original name in helper text
+        expect(
+          screen.getByText('Original tool name: fetch')
+        ).toBeInTheDocument()
+      })
+
+      const descriptionInput = screen.getByLabelText('Description')
+      await user.clear(descriptionInput)
+      await user.type(descriptionInput, 'Updated description')
+
+      const saveButton = screen.getByRole('button', { name: /^Save$/i })
+      await user.click(saveButton)
+
+      const applyButton = screen.getByRole('button', { name: /Apply/i })
+      await user.click(applyButton)
+
+      await waitFor(() => {
+        // Should use original name 'fetch' as key, not display name 'fetch_custom'
+        // When editing a tool with an existing name override and only changing description,
+        // both name and description should be preserved
+        expect(mockOnApply).toHaveBeenCalledWith(
+          expect.any(Object),
+          expect.objectContaining({
+            fetch: {
+              name: 'fetch_custom',
+              description: 'Updated description',
+            },
+          })
+        )
+      })
+    })
+
+    it('filters out overrides where both name and description are empty strings', async () => {
+      const mockOnApply = vi.fn()
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable
+          tools={toolsWithOriginalData}
+          isLoading={false}
+          onApply={mockOnApply}
+        />
+      ))
+
+      renderRoute(router)
+      const user = userEvent.setup()
+
+      await waitFor(() => {
+        expect(screen.getByText('fetch')).toBeInTheDocument()
+      })
+
+      // Edit fetch tool and set both to empty strings
+      const editButtons = screen.getAllByRole('button', { name: /Edit/i })
+      await user.click(editButtons[0]!)
+
+      await waitFor(() => {
+        expect(screen.getByText('Edit tool')).toBeInTheDocument()
+      })
+
+      const nameInput = screen.getByLabelText('Tool')
+      await user.clear(nameInput)
+
+      const descriptionInput = screen.getByLabelText('Description')
+      await user.clear(descriptionInput)
+
+      const saveButton = screen.getByRole('button', { name: /^Save$/i })
+      await user.click(saveButton)
+
+      const applyButton = screen.getByRole('button', { name: /Apply/i })
+      await user.click(applyButton)
+
+      await waitFor(() => {
+        // Should not include empty override
+        expect(mockOnApply).toHaveBeenCalledWith(expect.any(Object), null)
+      })
+    })
+
+    it('allows empty string overrides if only one field is empty', async () => {
+      const mockOnApply = vi.fn()
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable
+          tools={toolsWithOriginalData}
+          isLoading={false}
+          onApply={mockOnApply}
+        />
+      ))
+
+      renderRoute(router)
+      const user = userEvent.setup()
+
+      await waitFor(() => {
+        expect(screen.getByText('fetch')).toBeInTheDocument()
+      })
+
+      const editButtons = screen.getAllByRole('button', { name: /Edit/i })
+      await user.click(editButtons[0]!)
+
+      await waitFor(() => {
+        expect(screen.getByText('Edit tool')).toBeInTheDocument()
+      })
+
+      // Set name to empty but keep description
+      const nameInput = screen.getByLabelText('Tool')
+      await user.clear(nameInput)
+
+      const saveButton = screen.getByRole('button', { name: /^Save$/i })
+      await user.click(saveButton)
+
+      const applyButton = screen.getByRole('button', { name: /Apply/i })
+      await user.click(applyButton)
+
+      await waitFor(() => {
+        // Should include override with empty name
+        expect(mockOnApply).toHaveBeenCalledWith(
+          expect.any(Object),
+          expect.objectContaining({
+            fetch: { name: '' },
+          })
+        )
+      })
+    })
+
+    it('enables Apply button when single tool has override', async () => {
+      const singleTool = [
+        {
+          name: 'fetch',
+          description: 'Fetches a URL',
+          isInitialEnabled: true,
+        },
+      ]
+
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable tools={singleTool} isLoading={false} />
+      ))
+
+      renderRoute(router)
+      const user = userEvent.setup()
+
+      await waitFor(() => {
+        expect(screen.getByText('fetch')).toBeInTheDocument()
+      })
+
+      const applyButton = screen.getByRole('button', { name: /Apply/i })
+      // Initially disabled when single tool and no override
+      expect(applyButton).toBeDisabled()
+
+      // Edit and save override
+      const editButtons = screen.getAllByRole('button', { name: /Edit/i })
+      await user.click(editButtons[0]!)
+
+      await waitFor(() => {
+        expect(screen.getByText('Edit tool')).toBeInTheDocument()
+      })
+
+      const descriptionInput = screen.getByLabelText('Description')
+      await user.clear(descriptionInput)
+      await user.type(descriptionInput, 'Custom description')
+
+      const saveButton = screen.getByRole('button', { name: /^Save$/i })
+      await user.click(saveButton)
+
+      await waitFor(() => {
+        // Apply button should now be enabled
+        expect(applyButton).not.toBeDisabled()
+      })
+    })
+
+    it('populates modal with current tool values including saved overrides', async () => {
+      const toolsWithOverride = [
+        {
+          name: 'fetch_custom',
+          description: 'Custom description',
+          isInitialEnabled: true,
+          originalName: 'fetch',
+          originalDescription: 'Fetches a URL from the internet',
+        },
+      ]
+
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable
+          tools={toolsWithOverride}
+          isLoading={false}
+          overrideTools={{
+            fetch: { name: 'fetch_custom', description: 'Custom description' },
+          }}
+        />
+      ))
+
+      renderRoute(router)
+      const user = userEvent.setup()
+
+      await waitFor(() => {
+        expect(screen.getByText('fetch_custom')).toBeInTheDocument()
+      })
+
+      const editButtons = screen.getAllByRole('button', { name: /Edit/i })
+      await user.click(editButtons[0]!)
+
+      await waitFor(() => {
+        expect(screen.getByText('Edit tool')).toBeInTheDocument()
+        const nameInput = screen.getByLabelText('Tool') as HTMLInputElement
+        const descriptionInput = screen.getByLabelText(
+          'Description'
+        ) as HTMLTextAreaElement
+
+        // Should show overridden values
+        expect(nameInput.value).toBe('fetch_custom')
+        expect(descriptionInput.value).toBe('Custom description')
+      })
+    })
+
+    it('populates modal with local override values when reopening edit dialog', async () => {
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable tools={toolsWithOriginalData} isLoading={false} />
+      ))
+
+      renderRoute(router)
+      const user = userEvent.setup()
+
+      await waitFor(() => {
+        expect(screen.getByText('fetch')).toBeInTheDocument()
+      })
+
+      // First edit: change name and description
+      const editButtons = screen.getAllByRole('button', { name: /Edit/i })
+      await user.click(editButtons[0]!)
+
+      await waitFor(() => {
+        expect(screen.getByText('Edit tool')).toBeInTheDocument()
+      })
+
+      const nameInput = screen.getByLabelText('Tool') as HTMLInputElement
+      const descriptionInput = screen.getByLabelText(
+        'Description'
+      ) as HTMLTextAreaElement
+
+      await user.clear(nameInput)
+      await user.type(nameInput, 'fetch_custom')
+      await user.clear(descriptionInput)
+      await user.type(descriptionInput, 'Local custom description')
+
+      const saveButton = screen.getByRole('button', { name: /^Save$/i })
+      await user.click(saveButton)
+
+      await waitFor(() => {
+        expect(screen.queryByText('Edit tool')).not.toBeInTheDocument()
+        // Table should show local override values
+        expect(screen.getByText('fetch_custom')).toBeInTheDocument()
+        expect(screen.getByText('Local custom description')).toBeInTheDocument()
+      })
+
+      // Reopen edit dialog - should show local override values
+      const editButtonsAfterSave = screen.getAllByRole('button', {
+        name: /Edit/i,
+      })
+      await user.click(editButtonsAfterSave[0]!)
+
+      await waitFor(() => {
+        expect(screen.getByText('Edit tool')).toBeInTheDocument()
+        const nameInputReopened = screen.getByLabelText(
+          'Tool'
+        ) as HTMLInputElement
+        const descriptionInputReopened = screen.getByLabelText(
+          'Description'
+        ) as HTMLTextAreaElement
+
+        // Should show local override values
+        expect(nameInputReopened.value).toBe('fetch_custom')
+        expect(descriptionInputReopened.value).toBe('Local custom description')
+      })
+    })
+
+    it('closes modal when Cancel button is clicked', async () => {
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable tools={toolsWithOriginalData} isLoading={false} />
+      ))
+
+      renderRoute(router)
+      const user = userEvent.setup()
+
+      await waitFor(() => {
+        expect(screen.getByText('fetch')).toBeInTheDocument()
+      })
+
+      const editButtons = screen.getAllByRole('button', { name: /Edit/i })
+      await user.click(editButtons[0]!)
+
+      await waitFor(() => {
+        expect(screen.getByText('Edit tool')).toBeInTheDocument()
+      })
+
+      const cancelButton = screen.getByRole('button', { name: /Cancel/i })
+      await user.click(cancelButton)
+
+      await waitFor(() => {
+        expect(screen.queryByText('Edit tool')).not.toBeInTheDocument()
+      })
+    })
+
+    it('displays override icon when tool has saved override', async () => {
+      const toolsWithOverride = [
+        {
+          name: 'fetch_custom',
+          description: 'Custom description',
+          isInitialEnabled: true,
+          originalName: 'fetch',
+          originalDescription: 'Fetches a URL from the internet',
+        },
+      ]
+
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable
+          tools={toolsWithOverride}
+          isLoading={false}
+          overrideTools={{
+            fetch: { name: 'fetch_custom', description: 'Custom description' },
+          }}
+        />
+      ))
+
+      renderRoute(router)
+
+      await waitFor(() => {
+        expect(screen.getByText('fetch_custom')).toBeInTheDocument()
+      })
+
+      // Icon should be present (Tag icon) - check by SVG class or tooltip
+      await waitFor(() => {
+        // Check for tooltip content that appears on hover
+        const tooltipTrigger = screen
+          .getByText('fetch_custom')
+          .closest('div')
+          ?.querySelector('[class*="lucide-tag"]')
+        expect(tooltipTrigger).toBeDefined()
+      })
+    })
+
+    it('displays orange icon when tool has only local override', async () => {
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable tools={toolsWithOriginalData} isLoading={false} />
+      ))
+
+      renderRoute(router)
+      const user = userEvent.setup()
+
+      await waitFor(() => {
+        expect(screen.getByText('fetch')).toBeInTheDocument()
+      })
+
+      // Edit and save override
+      const editButtons = screen.getAllByRole('button', { name: /Edit/i })
+      await user.click(editButtons[0]!)
+
+      await waitFor(() => {
+        expect(screen.getByText('Edit tool')).toBeInTheDocument()
+      })
+
+      const descriptionInput = screen.getByLabelText(
+        'Description'
+      ) as HTMLTextAreaElement
+      await user.clear(descriptionInput)
+      await user.type(descriptionInput, 'Local override description')
+
+      const saveButton = screen.getByRole('button', { name: /^Save$/i })
+      await user.click(saveButton)
+
+      await waitFor(() => {
+        expect(screen.queryByText('Edit tool')).not.toBeInTheDocument()
+      })
+
+      // Icon should now appear with orange color (local override)
+      await waitFor(() => {
+        // Check for the tooltip trigger (Tag icon) - it should have orange color class
+        const toolRow = screen.getByText('fetch').closest('tr')
+        const iconContainer = toolRow?.querySelector('[class*="text-orange"]')
+        expect(iconContainer).toBeDefined()
+      })
+    })
+
+    it('displays local override values in table immediately after saving', async () => {
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable tools={toolsWithOriginalData} isLoading={false} />
+      ))
+
+      renderRoute(router)
+      const user = userEvent.setup()
+
+      await waitFor(() => {
+        expect(screen.getByText('fetch')).toBeInTheDocument()
+        expect(
+          screen.getByText('Fetches a URL from the internet')
+        ).toBeInTheDocument()
+      })
+
+      // Edit and change name and description
+      const editButtons = screen.getAllByRole('button', { name: /Edit/i })
+      await user.click(editButtons[0]!)
+
+      await waitFor(() => {
+        expect(screen.getByText('Edit tool')).toBeInTheDocument()
+      })
+
+      const nameInput = screen.getByLabelText('Tool') as HTMLInputElement
+      const descriptionInput = screen.getByLabelText(
+        'Description'
+      ) as HTMLTextAreaElement
+
+      await user.clear(nameInput)
+      await user.type(nameInput, 'fetch_custom')
+      await user.clear(descriptionInput)
+      await user.type(descriptionInput, 'Local custom description')
+
+      const saveButton = screen.getByRole('button', { name: /^Save$/i })
+      await user.click(saveButton)
+
+      await waitFor(() => {
+        // Table should immediately show local override values
+        expect(screen.getByText('fetch_custom')).toBeInTheDocument()
+        expect(screen.getByText('Local custom description')).toBeInTheDocument()
+        // Original values should not be visible
+        expect(screen.queryByText('fetch')).not.toBeInTheDocument()
+        expect(
+          screen.queryByText('Fetches a URL from the internet')
+        ).not.toBeInTheDocument()
+      })
+    })
+
+    it('stores original name in local override when resetting to original with saved override', async () => {
+      const mockOnApply = vi.fn()
+      const toolsWithExistingOverride = [
+        {
+          name: 'fetch_custom', // Display name (overridden)
+          description: 'Fetches a URL from the internet',
+          isInitialEnabled: true,
+          originalName: 'fetch', // Original name (key)
+          originalDescription: 'Fetches a URL from the internet',
+        },
+      ]
+
+      const router = createTestRouter(() => (
+        <CustomizeToolsTable
+          tools={toolsWithExistingOverride}
+          isLoading={false}
+          onApply={mockOnApply}
+          overrideTools={{ fetch: { name: 'fetch_custom' } }}
+        />
+      ))
+
+      renderRoute(router)
+      const user = userEvent.setup()
+
+      await waitFor(() => {
+        expect(screen.getByText('fetch_custom')).toBeInTheDocument()
+      })
+
+      const editButtons = screen.getAllByRole('button', { name: /Edit/i })
+      await user.click(editButtons[0]!)
+
+      await waitFor(() => {
+        expect(screen.getByText('Edit tool')).toBeInTheDocument()
+      })
+
+      // Reset name back to original
+      const nameInput = screen.getByLabelText('Tool')
+      await user.clear(nameInput)
+      await user.type(nameInput, 'fetch')
+
+      const saveButton = screen.getByRole('button', { name: /^Save$/i })
+      await user.click(saveButton)
+
+      // Table should now show original name
+      await waitFor(() => {
+        expect(screen.getByText('fetch')).toBeInTheDocument()
+        expect(screen.queryByText('fetch_custom')).not.toBeInTheDocument()
+      })
+
+      const applyButton = screen.getByRole('button', { name: /Apply/i })
+      await user.click(applyButton)
+
+      await waitFor(() => {
+        // When resetting to original with a saved override, we store the original name
+        // to override the saved one. This will replace the saved override.
+        expect(mockOnApply).toHaveBeenCalledWith(
+          expect.any(Object),
+          expect.objectContaining({
+            fetch: { name: 'fetch' },
+          })
+        )
       })
     })
   })

@@ -3,11 +3,16 @@
 
 import { contextBridge, ipcRenderer } from 'electron'
 import type { CoreWorkload } from '../../api/generated/types.gen'
-import type { AvailableServer, ChatUIMessage } from '../../main/src/chat/types'
+import type {
+  AvailableServer,
+  ChatUIMessage,
+  ChatRequest,
+} from '../../main/src/chat/types'
 import { TOOLHIVE_VERSION } from '../../utils/constants'
 import type { UIMessage } from 'ai'
 import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 import type { FeatureFlagOptions } from '../../main/src/feature-flags'
+import type { UpdateState } from '../../main/src/auto-update'
 
 // Expose auto-launch functionality to renderer
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -133,13 +138,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Chat functionality
   chat: {
     getProviders: () => ipcRenderer.invoke('chat:get-providers'),
-    stream: (request: {
-      messages: ChatUIMessage[]
-      provider: string
-      model: string
-      apiKey: string
-      enabledTools?: string[]
-    }) =>
+    fetchProviderModels: (providerId: string, tempCredential?: string) =>
+      ipcRenderer.invoke(
+        'chat:fetch-provider-models',
+        providerId,
+        tempCredential
+      ),
+    stream: (request: ChatRequest) =>
       ipcRenderer.invoke('chat:stream', request) as Promise<{
         streamId: string
       }>,
@@ -147,7 +152,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('chat:get-settings', providerId),
     saveSettings: (
       providerId: string,
-      settings: { apiKey: string; enabledTools: string[] }
+      settings:
+        | { apiKey: string; enabledTools: string[] }
+        | { endpointURL: string; enabledTools: string[] }
     ) => ipcRenderer.invoke('chat:save-settings', providerId, settings),
     clearSettings: (providerId?: string) =>
       ipcRenderer.invoke('chat:clear-settings', providerId),
@@ -290,9 +297,7 @@ export interface ElectronAPI {
   onUpdateNotAvailable: (
     callback: (_event: Electron.IpcRendererEvent) => void
   ) => () => void
-  getUpdateState: () => Promise<
-    'checking' | 'downloading' | 'downloaded' | 'installing' | 'none'
-  >
+  getUpdateState: () => Promise<UpdateState>
   manualUpdate: () => Promise<void>
   shutdownStore: {
     getLastShutdownServers: () => Promise<CoreWorkload[]>
@@ -314,19 +319,42 @@ export interface ElectronAPI {
     getProviders: () => Promise<
       Array<{ id: string; name: string; models: string[] }>
     >
-    stream: (request: {
-      messages: ChatUIMessage[]
-      provider: string
-      model: string
-      apiKey: string
-      enabledTools?: string[]
-    }) => Promise<{ streamId: string }>
-    getSettings: (
-      providerId: string
-    ) => Promise<{ apiKey: string; enabledTools: string[] }>
+    fetchProviderModels: (
+      providerId: string,
+      tempCredential?: string
+    ) => Promise<{ id: string; name: string; models: string[] } | null>
+    stream: (
+      request:
+        | {
+            chatId: string
+            messages: ChatUIMessage[]
+            provider: 'ollama' | 'lmstudio'
+            model: string
+            endpointURL: string
+            enabledTools?: string[]
+          }
+        | {
+            chatId: string
+            messages: ChatUIMessage[]
+            provider: string
+            model: string
+            apiKey: string
+            enabledTools?: string[]
+          }
+    ) => Promise<{ streamId: string }>
+    getSettings: (providerId: string) => Promise<
+      | {
+          providerId: 'ollama' | 'lmstudio'
+          endpointURL: string
+          enabledTools: string[]
+        }
+      | { providerId: string; apiKey: string; enabledTools: string[] }
+    >
     saveSettings: (
       providerId: string,
-      settings: { apiKey: string; enabledTools: string[] }
+      settings:
+        | { apiKey: string; enabledTools: string[] }
+        | { endpointURL: string; enabledTools: string[] }
     ) => Promise<{ success: boolean; error?: string }>
     clearSettings: (
       providerId?: string

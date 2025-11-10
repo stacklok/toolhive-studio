@@ -95,18 +95,6 @@ function InputWithAttachments({
 
   const getPlaceholder = () => {
     if (!hasProviderAndModel) return 'Select an AI model to get started'
-    if (settings.model) {
-      const modelName = settings.model.includes('claude')
-        ? 'Claude'
-        : settings.model.includes('gpt')
-          ? 'ChatGPT'
-          : settings.model.includes('gemini')
-            ? 'Gemini'
-            : settings.model.includes('grok')
-              ? 'Grok'
-              : 'AI'
-      return `Message ${modelName}...`
-    }
     return 'Type your message...'
   }
 
