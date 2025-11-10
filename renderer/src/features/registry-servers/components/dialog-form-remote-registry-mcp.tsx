@@ -9,7 +9,7 @@ import { LoadingStateAlert } from '../../../common/components/secrets/loading-st
 import { AlertErrorFormSubmission } from '@/common/components/workloads/alert-error-form-submission'
 import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-workload-form-wrapper'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
-import { delay } from '../../../../../utils/delay'
+import { delay } from '@utils/delay'
 import {
   getFormSchemaRemoteMcp,
   type FormSchemaRemoteMcp,

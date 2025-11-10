@@ -1,11 +1,4 @@
-// Speed up wizard transitions by mocking the 2s delay to resolve immediately
-vi.mock('../../../../../utils/delay', () => ({
-  delay: () => Promise.resolve(),
-}))
-// Also mock the path used by FormRunFromRegistry (local servers wizard)
-vi.mock('../../../../../../utils/delay', () => ({
-  delay: () => Promise.resolve(),
-}))
+// Delay is globally mocked in vitest.setup.ts via @utils/delay
 
 // Ensure toast API is mocked so we can assert calls deterministically
 vi.mock('sonner', () => ({
@@ -403,10 +396,14 @@ describe('Registry Group Detail Route', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /^next$/i }))
     // Wait for the first server dialog title to unmount before asserting the next one
-    await waitForElementToBeRemoved(
-      () => screen.queryByRole('heading', { name: /configure first-server/i }),
-      { timeout: 10000 }
-    )
+    {
+      const h = screen.queryByRole('heading', {
+        name: /configure first-server/i,
+      })
+      if (h) {
+        await waitForElementToBeRemoved(h, { timeout: 10000 })
+      }
+    }
     const secondServerHeading = await screen.findByRole('heading', {
       name: /configure second-server/i,
     })
@@ -541,10 +538,14 @@ describe('Registry Group Detail Route', () => {
     expect(screen.getByText('Installing server 1 of 2')).toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('button', { name: /^next$/i }))
-    await waitForElementToBeRemoved(
-      () => screen.queryByRole('heading', { name: /configure first-server/i }),
-      { timeout: 10000 }
-    )
+    {
+      const h2 = screen.queryByRole('heading', {
+        name: /configure first-server/i,
+      })
+      if (h2) {
+        await waitForElementToBeRemoved(h2, { timeout: 10000 })
+      }
+    }
     const secondServerHeading2 = await screen.findByRole('heading', {
       name: /configure second-server/i,
     })

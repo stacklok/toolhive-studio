@@ -36,6 +36,12 @@ beforeAll(() => {
     fetch,
   })
 
+  // Globally reduce UI delays to a negligible amount in tests
+  vi.mock('@utils/delay', () => ({
+    delay: (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, Math.min(ms, 10))),
+  }))
+
   vi.mock('electron-log/renderer', () => ({
     default: new Proxy(
       {},

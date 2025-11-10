@@ -10,7 +10,7 @@ import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { useEffect } from 'react'
 import { registryFormSchema, type RegistryFormData } from './schema'
 import { RegistryForm } from './registry-form'
-import { delay } from '../../../../../../utils/delay'
+import { delay } from '@utils/delay'
 import { trackEvent } from '@/common/lib/analytics'
 
 export function RegistryTab() {

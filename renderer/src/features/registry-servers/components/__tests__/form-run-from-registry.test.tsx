@@ -9,10 +9,6 @@ import { http, HttpResponse } from 'msw'
 import { useRunFromRegistry } from '../../hooks/use-run-from-registry'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
-// Speed up wizard/form transitions by mocking the 2s delay to resolve immediately
-vi.mock('../../../../../../utils/delay', () => ({
-  delay: () => Promise.resolve(),
-}))
 
 // Mock the hook
 vi.mock('../../hooks/use-run-from-registry.tsx', () => ({
