@@ -32,6 +32,7 @@ import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
 import { AlertErrorFetchingEditingData } from '@/common/components/workloads/alert-error-fetching-editing-data'
 import { META_MCP_SERVER_NAME } from '@/common/lib/constants'
+import { delay } from '@utils/delay'
 
 type Tab = 'configuration' | 'network-isolation'
 type CommonFields = keyof FormSchemaLocalMcp
@@ -175,6 +176,18 @@ export function DialogFormLocalMcp({
       : {}),
   })
 
+  const finishAfterDelay = async (
+    error: unknown,
+    opts: { clearSecrets?: boolean } = {}
+  ) => {
+    await delay(2000)
+    setIsSubmitting(false)
+    if (opts.clearSecrets) setLoadingSecrets(null)
+    if (!error) {
+      form.reset()
+    }
+  }
+
   const onSubmitForm = (data: FormSchemaLocalMcp) => {
     setIsSubmitting(true)
     if (error) {
@@ -194,16 +207,9 @@ export function DialogFormLocalMcp({
             closeDialog()
             form.reset()
           },
-          onSettled: (_, error) => {
-            // Add a 2-second delay before hiding the loading screen
-            // This stops jarring flashes when the workload is created too fast, and lets the user understand that they saw a loading screen
-            setTimeout(() => {
-              setIsSubmitting(false)
-              setLoadingSecrets(null)
-              if (!error) {
-                form.reset()
-              }
-            }, 2000)
+          onSettled: async (_, error) => {
+            // Delay to avoid jarring flashes and communicate progress
+            await finishAfterDelay(error, { clearSecrets: true })
           },
           onError: (error) => {
             setError(typeof error === 'string' ? error : error.message)
@@ -221,15 +227,9 @@ export function DialogFormLocalMcp({
             })
             closeDialog()
           },
-          onSettled: (_, error) => {
-            // Add a 2-second delay before hiding the loading screen
-            // This stops jarring flashes when the workload is created too fast, and lets the user understand that they saw a loading screen
-            setTimeout(() => {
-              setIsSubmitting(false)
-              if (!error) {
-                form.reset()
-              }
-            }, 2000)
+          onSettled: async (_, error) => {
+            // Delay to avoid jarring flashes and communicate progress
+            await finishAfterDelay(error)
           },
           onError: (error) => {
             setError(typeof error === 'string' ? error : error.message)

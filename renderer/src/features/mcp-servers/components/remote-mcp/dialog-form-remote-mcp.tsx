@@ -39,6 +39,7 @@ import {
 import { ExternalLinkIcon } from 'lucide-react'
 import { useGroups } from '../../hooks/use-groups'
 import { AlertErrorFetchingEditingData } from '@/common/components/workloads/alert-error-fetching-editing-data'
+import { delay } from '@utils/delay'
 
 const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
   name: '',
@@ -156,6 +157,18 @@ export function DialogFormRemoteMcp({
       : {}),
   })
 
+  const finishAfterDelay = async (
+    error: unknown,
+    opts: { clearSecrets?: boolean } = {}
+  ) => {
+    await delay(2000)
+    setIsSubmitting(false)
+    if (opts.clearSecrets) setLoadingSecrets(null)
+    if (!error) {
+      form.reset()
+    }
+  }
+
   const onSubmitForm = (data: FormSchemaRemoteMcp) => {
     setIsSubmitting(true)
     if (error) {
@@ -174,16 +187,9 @@ export function DialogFormRemoteMcp({
             closeDialog()
             form.reset()
           },
-          onSettled: (_, error) => {
-            // Add a 2-second delay before hiding the loading screen
-            // This stops jarring flashes when the workload is created too fast, and lets the user understand that they saw a loading screen
-            setTimeout(() => {
-              setIsSubmitting(false)
-              setLoadingSecrets(null)
-              if (!error) {
-                form.reset()
-              }
-            }, 2000)
+          onSettled: async (_, error) => {
+            // Delay to avoid jarring flashes and communicate progress
+            await finishAfterDelay(error, { clearSecrets: true })
           },
           onError: (error) => {
             setError(typeof error === 'string' ? error : error.message)
@@ -201,15 +207,9 @@ export function DialogFormRemoteMcp({
             })
             closeDialog()
           },
-          onSettled: (_, error) => {
-            // Add a 2-second delay before hiding the loading screen
-            // This stops jarring flashes when the workload is created too fast, and lets the user understand that they saw a loading screen
-            setTimeout(() => {
-              setIsSubmitting(false)
-              if (!error) {
-                form.reset()
-              }
-            }, 2000)
+          onSettled: async (_, error) => {
+            // Delay to avoid jarring flashes and communicate progress
+            await finishAfterDelay(error)
           },
           onError: (error) => {
             setError(typeof error === 'string' ? error : error.message)
