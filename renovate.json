@@ -1,23 +1,14 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    "helpers:pinGitHubActionDigests"
-  ],
-  "labels": [
-    "dependencies"
-  ],
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "labels": ["dependencies"],
   "prConcurrentLimit": 3,
   "timezone": "Europe/London",
-  "schedule": [
-    "after 01:00 and before 07:00 every weekday"
-  ],
+  "schedule": ["after 01:00 and before 07:00 every weekday"],
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": [
-        "^renderer/src/common/lib/constants\\.ts$"
-      ],
+      "fileMatch": ["^renderer/src/common/lib/constants\\.ts$"],
       "matchStrings": [
         "renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?\\s*\\*/\\s*export const MCP_OPTIMIZER_IMAGE_VERSION = '(?<currentValue>.*?)'"
       ],
