@@ -496,6 +496,10 @@ export type RegistryOAuthConfig = {
     [key: string]: string
   }
   /**
+   * Resource is the OAuth 2.0 resource indicator (RFC 8707)
+   */
+  resource?: string
+  /**
    * Scopes are the OAuth scopes to request
    * If not specified, defaults to ["openid", "profile", "email"] for OIDC
    */
@@ -627,7 +631,7 @@ export type RegistryVerifiedAttestation = {
 /**
  * RemoteAuthConfig contains OAuth configuration for remote MCP servers
  */
-export type RunnerRemoteAuthConfig = {
+export type RemoteConfig = {
   authorize_url?: string
   callback_port?: number
   client_id?: string
@@ -651,6 +655,10 @@ export type RunnerRemoteAuthConfig = {
   oauth_params?: {
     [key: string]: string
   }
+  /**
+   * Resource is the OAuth 2.0 resource indicator (RFC 8707).
+   */
+  resource?: string
   scopes?: Array<string>
   skip_browser?: boolean
   timeout?: string
@@ -747,7 +755,7 @@ export type RunnerRunConfig = {
    */
   port?: number
   proxy_mode?: TypesProxyMode
-  remote_auth_config?: RunnerRemoteAuthConfig
+  remote_auth_config?: RemoteConfig
   /**
    * RemoteURL is the URL of the remote MCP server (if running remotely)
    */
@@ -1347,6 +1355,10 @@ export type V1RemoteOAuthConfig = {
   oauth_params?: {
     [key: string]: string
   }
+  /**
+   * OAuth 2.0 resource indicator (RFC 8707)
+   */
+  resource?: string
   /**
    * OAuth scopes to request
    */
