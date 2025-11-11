@@ -30,6 +30,7 @@ export default {
     'renderer/src/types/global.d.ts',
     'main/src/vite-env.d.ts',
     'renderer/src/features/meta-mcp/components/loading-state-dialog.tsx',
+    'renderer/src/common/lib/constants.ts',
   ],
   ignoreDependencies: [
     '@electron-forge/maker-dmg', // Used indirectly in MakerDMGWithArch
