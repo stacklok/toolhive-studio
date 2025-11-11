@@ -556,6 +556,10 @@
             "description": "OAuthParams contains additional OAuth parameters to include in the authorization request\nThese are server-specific parameters like \"prompt\", \"response_mode\", etc.",
             "type": "object"
           },
+          "resource": {
+            "description": "Resource is the OAuth 2.0 resource indicator (RFC 8707)",
+            "type": "string"
+          },
           "scopes": {
             "description": "Scopes are the OAuth scopes to request\nIf not specified, defaults to [\"openid\", \"profile\", \"email\"] for OIDC",
             "items": { "type": "string" },
@@ -696,7 +700,7 @@
         },
         "type": "object"
       },
-      "runner.RemoteAuthConfig": {
+      "remote.Config": {
         "description": "RemoteAuthConfig contains OAuth configuration for remote MCP servers",
         "properties": {
           "authorize_url": { "type": "string" },
@@ -724,6 +728,10 @@
             "additionalProperties": { "type": "string" },
             "description": "OAuth parameters for server-specific customization",
             "type": "object"
+          },
+          "resource": {
+            "description": "Resource is the OAuth 2.0 resource indicator (RFC 8707).",
+            "type": "string"
           },
           "scopes": {
             "items": { "type": "string" },
@@ -832,7 +840,7 @@
           },
           "proxy_mode": { "$ref": "#/components/schemas/types.ProxyMode" },
           "remote_auth_config": {
-            "$ref": "#/components/schemas/runner.RemoteAuthConfig"
+            "$ref": "#/components/schemas/remote.Config"
           },
           "remote_url": {
             "description": "RemoteURL is the URL of the remote MCP server (if running remotely)",
@@ -923,7 +931,8 @@
           "WorkloadStatusStopping",
           "WorkloadStatusUnhealthy",
           "WorkloadStatusRemoving",
-          "WorkloadStatusUnknown"
+          "WorkloadStatusUnknown",
+          "WorkloadStatusUnauthenticated"
         ]
       },
       "secrets.SecretParameter": {
@@ -1545,6 +1554,10 @@
             "description": "Additional OAuth parameters for server-specific customization",
             "type": "object"
           },
+          "resource": {
+            "description": "OAuth 2.0 resource indicator (RFC 8707)",
+            "type": "string"
+          },
           "scopes": {
             "description": "OAuth scopes to request",
             "items": { "type": "string" },
@@ -1753,7 +1766,8 @@
               "WorkloadStatusStopping",
               "WorkloadStatusUnhealthy",
               "WorkloadStatusRemoving",
-              "WorkloadStatusUnknown"
+              "WorkloadStatusUnknown",
+              "WorkloadStatusUnauthenticated"
             ]
           }
         },
