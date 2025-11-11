@@ -66,7 +66,7 @@ export function useCreateOptimizerWorkload() {
       trackEvent('MCP Optimizer workload created', {
         optimized_group_name: groupToOptimize,
         workload: META_MCP_SERVER_NAME,
-        image: optimizerRegistryServerDetail?.server?.image,
+        image: variables.body.image,
         group: variables.body.group,
         'custom.optimized_workloads': variables.optimized_workloads.join(','),
         optimized_workloads_length: variables.optimized_workloads.length,
