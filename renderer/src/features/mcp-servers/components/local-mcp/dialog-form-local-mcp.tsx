@@ -31,7 +31,10 @@ import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
 import { AlertErrorFetchingEditingData } from '@/common/components/workloads/alert-error-fetching-editing-data'
-import { META_MCP_SERVER_NAME } from '@/common/lib/constants'
+import {
+  META_MCP_SERVER_NAME,
+  UI_POST_SUBMIT_DELAY_MS,
+} from '@/common/lib/constants'
 import { delay } from '@utils/delay'
 
 type Tab = 'configuration' | 'network-isolation'
@@ -180,7 +183,7 @@ export function DialogFormLocalMcp({
     error: unknown,
     opts: { clearSecrets?: boolean } = {}
   ) => {
-    await delay(2000)
+    await delay(UI_POST_SUBMIT_DELAY_MS)
     setIsSubmitting(false)
     if (opts.clearSecrets) setLoadingSecrets(null)
     if (!error) {

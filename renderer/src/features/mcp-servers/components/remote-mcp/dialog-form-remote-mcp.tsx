@@ -39,6 +39,7 @@ import {
 import { ExternalLinkIcon } from 'lucide-react'
 import { useGroups } from '../../hooks/use-groups'
 import { AlertErrorFetchingEditingData } from '@/common/components/workloads/alert-error-fetching-editing-data'
+import { UI_POST_SUBMIT_DELAY_MS } from '@/common/lib/constants'
 import { delay } from '@utils/delay'
 
 const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
@@ -161,7 +162,7 @@ export function DialogFormRemoteMcp({
     error: unknown,
     opts: { clearSecrets?: boolean } = {}
   ) => {
-    await delay(2000)
+    await delay(UI_POST_SUBMIT_DELAY_MS)
     setIsSubmitting(false)
     if (opts.clearSecrets) setLoadingSecrets(null)
     if (!error) {
