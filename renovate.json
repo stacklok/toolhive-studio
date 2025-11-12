@@ -5,6 +5,14 @@
   "prConcurrentLimit": 3,
   "timezone": "Europe/London",
   "schedule": ["after 01:00 and before 07:00 every weekday"],
+  "packageRules": [
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/stackloklabs/mcp-optimizer"],
+      "prPriority": 10,
+      "schedule": []
+    }
+  ],
   "customManagers": [
     {
       "customType": "regex",
