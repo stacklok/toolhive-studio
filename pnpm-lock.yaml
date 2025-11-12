@@ -329,7 +329,7 @@ importers:
         version: 3.6.2
       prettier-plugin-classnames:
         specifier: ^0.8.0
-        version: 0.8.4(prettier@3.6.2)
+        version: 0.8.5(prettier@3.6.2)
       prettier-plugin-merge:
         specifier: ^0.8.0
         version: 0.8.0(prettier@3.6.2)
@@ -5157,8 +5157,8 @@ packages:
     resolution: {integrity: sha512-6xwYfHbajpoF0xLW+iwLkhwgvLoZDfjYfoFNu8ftMoXINzwuymNLd9u/KmwtdT2GbR+/Cz66otEGEVVUHX9QLQ==}
     engines: {node: '>=10.13.0'}
 
-  ip-address@10.0.1:
-    resolution: {integrity: sha512-NWv9YLW4PoW2B7xtzaS3NCot75m6nK7Icdv0o3lfMceJVRfSoQwqD4wEH5rLwoKJwUiZ/rfpiVBhnaF0FK4HoA==}
+  ip-address@10.1.0:
+    resolution: {integrity: sha512-XXADHxXmvT9+CRxhXg56LJovE+bmWnEWB78LB83VZTprKTmaC5QfruXocxzTZ2Kl0DNwKuBdlIhjL8LeY8Sf8Q==}
     engines: {node: '>= 12'}
 
   ipaddr.js@1.9.1:
@@ -6444,8 +6444,8 @@ packages:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
 
-  prettier-plugin-classnames@0.8.4:
-    resolution: {integrity: sha512-OJNxf0Qu4lDNxgfa9kNClj3MWg7noz8F/m/Cg0/nB2J5hhSpH5NsN23URzXVIAzdCTZX/6bjBqbAbgrJUGWZ3g==}
+  prettier-plugin-classnames@0.8.5:
+    resolution: {integrity: sha512-vPNrshyJ+DXbDMLpHmxthafXsA7H1D0RuBQWmfWE3GhyLIQutu1MRMn/gUs3SlIa24Zl/FsY5NxE6jbOejuzjA==}
     engines: {node: '>=18'}
     peerDependencies:
       prettier: ^3
@@ -13549,7 +13549,7 @@ snapshots:
 
   interpret@3.1.1: {}
 
-  ip-address@10.0.1: {}
+  ip-address@10.1.0: {}
 
   ipaddr.js@1.9.1: {}
 
@@ -15084,7 +15084,7 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier-plugin-classnames@0.8.4(prettier@3.6.2):
+  prettier-plugin-classnames@0.8.5(prettier@3.6.2):
     dependencies:
       prettier: 3.6.2
       zod: 3.22.4
@@ -15756,7 +15756,7 @@ snapshots:
 
   socks@2.8.7:
     dependencies:
-      ip-address: 10.0.1
+      ip-address: 10.1.0
       smart-buffer: 4.2.0
 
   solid-js@1.9.9:
