@@ -11,6 +11,12 @@
       "matchPackageNames": ["ghcr.io/stackloklabs/mcp-optimizer"],
       "prPriority": 10,
       "schedule": []
+    },
+    {
+      "matchDatasources": ["github-releases"],
+      "matchPackageNames": ["stacklok/toolhive"],
+      "prPriority": 10,
+      "schedule": []
     }
   ],
   "customManagers": [
@@ -23,6 +29,16 @@
       "datasourceTemplate": "{{datasource}}",
       "depNameTemplate": "{{depName}}",
       "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}docker{{/if}}"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^utils/constants\\.ts$"],
+      "matchStrings": [
+        "renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?\\s*\\*/\\s*export const TOOLHIVE_VERSION = process\\.env\\.THV_VERSION \\?\\? '(?<currentValue>.*?)'"
+      ],
+      "datasourceTemplate": "{{datasource}}",
+      "depNameTemplate": "{{depName}}",
+      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
     }
   ]
 }
