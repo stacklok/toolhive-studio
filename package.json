@@ -19,7 +19,7 @@
     "publish": "electron-forge publish",
     "type-check": "tsc --noEmit -p ./tsconfig.app.json && tsc --noEmit -p ./tsconfig.node.json",
     "prepare": "husky install",
-    "thv": "ts-node ./utils/fetch-thv.ts --run",
+    "thv": "rm -rf bin/ && ts-node ./utils/fetch-thv.ts --run",
     "test": "vitest",
     "test:nonInteractive": "vitest run",
     "test:coverage": "vitest run --coverage",
