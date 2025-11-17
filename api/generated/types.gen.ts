@@ -295,339 +295,6 @@ export type PermissionsProfile = {
   write?: Array<string>
 }
 
-export type RegistryEnvVar = {
-  /**
-   * Default is the value to use if the environment variable is not explicitly provided
-   * Only used for non-required variables
-   */
-  default?: string
-  /**
-   * Description is a human-readable explanation of the variable's purpose
-   */
-  description?: string
-  /**
-   * Name is the environment variable name (e.g., API_KEY)
-   */
-  name?: string
-  /**
-   * Required indicates whether this environment variable must be provided
-   * If true and not provided via command line or secrets, the user will be prompted for a value
-   */
-  required?: boolean
-  /**
-   * Secret indicates whether this environment variable contains sensitive information
-   * If true, the value will be stored as a secret rather than as a plain environment variable
-   */
-  secret?: boolean
-}
-
-export type RegistryGroup = {
-  /**
-   * Description is a human-readable description of the group's purpose and functionality
-   */
-  description?: string
-  /**
-   * Name is the identifier for the group, used when referencing the group in commands
-   */
-  name?: string
-  /**
-   * RemoteServers is a map of server names to their corresponding remote server definitions within this group
-   */
-  remote_servers?: {
-    [key: string]: RegistryRemoteServerMetadata
-  }
-  /**
-   * Servers is a map of server names to their corresponding server definitions within this group
-   */
-  servers?: {
-    [key: string]: RegistryImageMetadata
-  }
-}
-
-export type RegistryHeader = {
-  /**
-   * Choices provides a list of valid values for the header (optional)
-   */
-  choices?: Array<string>
-  /**
-   * Default is the value to use if the header is not explicitly provided
-   * Only used for non-required headers
-   */
-  default?: string
-  /**
-   * Description is a human-readable explanation of the header's purpose
-   */
-  description?: string
-  /**
-   * Name is the header name (e.g., X-API-Key, Authorization)
-   */
-  name?: string
-  /**
-   * Required indicates whether this header must be provided
-   * If true and not provided via command line or secrets, the user will be prompted for a value
-   */
-  required?: boolean
-  /**
-   * Secret indicates whether this header contains sensitive information
-   * If true, the value will be stored as a secret rather than as plain text
-   */
-  secret?: boolean
-}
-
-/**
- * Container server details (if it's a container server)
- */
-export type RegistryImageMetadata = {
-  /**
-   * Args are the default command-line arguments to pass to the MCP server container.
-   * These arguments will be used only if no command-line arguments are provided by the user.
-   * If the user provides arguments, they will override these defaults.
-   */
-  args?: Array<string>
-  /**
-   * CustomMetadata allows for additional user-defined metadata
-   */
-  custom_metadata?: {
-    [key: string]: unknown
-  }
-  /**
-   * Description is a human-readable description of the server's purpose and functionality
-   */
-  description?: string
-  /**
-   * DockerTags lists the available Docker tags for this server image
-   */
-  docker_tags?: Array<string>
-  /**
-   * EnvVars defines environment variables that can be passed to the server
-   */
-  env_vars?: Array<RegistryEnvVar>
-  /**
-   * Image is the Docker image reference for the MCP server
-   */
-  image?: string
-  metadata?: RegistryMetadata
-  /**
-   * Name is the identifier for the MCP server, used when referencing the server in commands
-   * If not provided, it will be auto-generated from the registry key
-   */
-  name?: string
-  permissions?: PermissionsProfile
-  provenance?: RegistryProvenance
-  /**
-   * RepositoryURL is the URL to the source code repository for the server
-   */
-  repository_url?: string
-  /**
-   * Status indicates whether the server is currently active or deprecated
-   */
-  status?: string
-  /**
-   * Tags are categorization labels for the server to aid in discovery and filtering
-   */
-  tags?: Array<string>
-  /**
-   * TargetPort is the port for the container to expose (only applicable to SSE and Streamable HTTP transports)
-   */
-  target_port?: number
-  /**
-   * Tier represents the tier classification level of the server, e.g., "Official" or "Community"
-   */
-  tier?: string
-  /**
-   * Tools is a list of tool names provided by this MCP server
-   */
-  tools?: Array<string>
-  /**
-   * Transport defines the communication protocol for the server
-   * For containers: stdio, sse, or streamable-http
-   * For remote servers: sse or streamable-http (stdio not supported)
-   */
-  transport?: string
-}
-
-/**
- * Metadata contains additional information about the server such as popularity metrics
- */
-export type RegistryMetadata = {
-  /**
-   * LastUpdated is the timestamp when the server was last updated, in RFC3339 format
-   */
-  last_updated?: string
-  /**
-   * Pulls indicates how many times the server image has been downloaded
-   */
-  pulls?: number
-  /**
-   * Stars represents the popularity rating or number of stars for the server
-   */
-  stars?: number
-}
-
-/**
- * OAuthConfig provides OAuth/OIDC configuration for authentication to the remote server
- * Used with the thv proxy command's --remote-auth flags
- */
-export type RegistryOAuthConfig = {
-  /**
-   * AuthorizeURL is the OAuth authorization endpoint URL
-   * Used for non-OIDC OAuth flows when issuer is not provided
-   */
-  authorize_url?: string
-  /**
-   * CallbackPort is the specific port to use for the OAuth callback server
-   * If not specified, a random available port will be used
-   */
-  callback_port?: number
-  /**
-   * ClientID is the OAuth client ID for authentication
-   */
-  client_id?: string
-  /**
-   * Issuer is the OAuth/OIDC issuer URL (e.g., https://accounts.google.com)
-   * Used for OIDC discovery to find authorization and token endpoints
-   */
-  issuer?: string
-  /**
-   * OAuthParams contains additional OAuth parameters to include in the authorization request
-   * These are server-specific parameters like "prompt", "response_mode", etc.
-   */
-  oauth_params?: {
-    [key: string]: string
-  }
-  /**
-   * Resource is the OAuth 2.0 resource indicator (RFC 8707)
-   */
-  resource?: string
-  /**
-   * Scopes are the OAuth scopes to request
-   * If not specified, defaults to ["openid", "profile", "email"] for OIDC
-   */
-  scopes?: Array<string>
-  /**
-   * TokenURL is the OAuth token endpoint URL
-   * Used for non-OIDC OAuth flows when issuer is not provided
-   */
-  token_url?: string
-  /**
-   * UsePKCE indicates whether to use PKCE for the OAuth flow
-   * Defaults to true for enhanced security
-   */
-  use_pkce?: boolean
-}
-
-/**
- * Provenance contains verification and signing metadata
- */
-export type RegistryProvenance = {
-  attestation?: RegistryVerifiedAttestation
-  cert_issuer?: string
-  repository_ref?: string
-  repository_uri?: string
-  runner_environment?: string
-  signer_identity?: string
-  sigstore_url?: string
-}
-
-/**
- * Full registry data
- */
-export type RegistryRegistry = {
-  /**
-   * Groups is a slice of group definitions containing related MCP servers
-   */
-  groups?: Array<RegistryGroup>
-  /**
-   * LastUpdated is the timestamp when the registry was last updated, in RFC3339 format
-   */
-  last_updated?: string
-  /**
-   * RemoteServers is a map of server names to their corresponding remote server definitions
-   * These are MCP servers accessed via HTTP/HTTPS using the thv proxy command
-   */
-  remote_servers?: {
-    [key: string]: RegistryRemoteServerMetadata
-  }
-  /**
-   * Servers is a map of server names to their corresponding server definitions
-   */
-  servers?: {
-    [key: string]: RegistryImageMetadata
-  }
-  /**
-   * Version is the schema version of the registry
-   */
-  version?: string
-}
-
-/**
- * Remote server details (if it's a remote server)
- */
-export type RegistryRemoteServerMetadata = {
-  /**
-   * CustomMetadata allows for additional user-defined metadata
-   */
-  custom_metadata?: {
-    [key: string]: unknown
-  }
-  /**
-   * Description is a human-readable description of the server's purpose and functionality
-   */
-  description?: string
-  /**
-   * EnvVars defines environment variables that can be passed to configure the client
-   * These might be needed for client-side configuration when connecting to the remote server
-   */
-  env_vars?: Array<RegistryEnvVar>
-  /**
-   * Headers defines HTTP headers that can be passed to the remote server for authentication
-   * These are used with the thv proxy command's authentication features
-   */
-  headers?: Array<RegistryHeader>
-  metadata?: RegistryMetadata
-  /**
-   * Name is the identifier for the MCP server, used when referencing the server in commands
-   * If not provided, it will be auto-generated from the registry key
-   */
-  name?: string
-  oauth_config?: RegistryOAuthConfig
-  /**
-   * RepositoryURL is the URL to the source code repository for the server
-   */
-  repository_url?: string
-  /**
-   * Status indicates whether the server is currently active or deprecated
-   */
-  status?: string
-  /**
-   * Tags are categorization labels for the server to aid in discovery and filtering
-   */
-  tags?: Array<string>
-  /**
-   * Tier represents the tier classification level of the server, e.g., "Official" or "Community"
-   */
-  tier?: string
-  /**
-   * Tools is a list of tool names provided by this MCP server
-   */
-  tools?: Array<string>
-  /**
-   * Transport defines the communication protocol for the server
-   * For containers: stdio, sse, or streamable-http
-   * For remote servers: sse or streamable-http (stdio not supported)
-   */
-  transport?: string
-  /**
-   * URL is the endpoint URL for the remote MCP server (e.g., https://api.example.com/mcp)
-   */
-  url?: string
-}
-
-export type RegistryVerifiedAttestation = {
-  predicate?: unknown
-  predicate_type?: string
-}
-
 /**
  * RemoteAuthConfig contains OAuth configuration for remote MCP servers
  */
@@ -640,11 +307,11 @@ export type RemoteConfig = {
   /**
    * Environment variables for the client
    */
-  env_vars?: Array<RegistryEnvVar>
+  env_vars?: Array<TypesEnvVar>
   /**
    * Headers for HTTP requests
    */
-  headers?: Array<RegistryHeader>
+  headers?: Array<TypesHeader>
   /**
    * OAuth endpoint configuration (from registry)
    */
@@ -782,6 +449,7 @@ export type RunnerRunConfig = {
    * ThvCABundle is the path to the CA certificate bundle for ToolHive HTTP operations
    */
   thv_ca_bundle?: string
+  token_exchange_config?: TokenexchangeConfig
   /**
    * ToolsFilter is the list of tools to filter
    */
@@ -895,6 +563,216 @@ export type TelemetryConfig = {
   tracingEnabled?: boolean
 }
 
+/**
+ * TokenExchangeConfig contains token exchange configuration for external authentication
+ */
+export type TokenexchangeConfig = {
+  /**
+   * Audience is the target audience for the exchanged token
+   */
+  audience?: string
+  /**
+   * ClientID is the OAuth 2.0 client identifier
+   */
+  client_id?: string
+  /**
+   * ClientSecret is the OAuth 2.0 client secret
+   */
+  client_secret?: string
+  /**
+   * ExternalTokenHeaderName is the name of the custom header to use when HeaderStrategy is "custom"
+   */
+  external_token_header_name?: string
+  /**
+   * HeaderStrategy determines how to inject the token
+   * Valid values: HeaderStrategyReplace (default), HeaderStrategyCustom
+   */
+  header_strategy?: string
+  /**
+   * Scopes is the list of scopes to request for the exchanged token
+   */
+  scopes?: Array<string>
+  /**
+   * SubjectTokenType specifies the type of the subject token being exchanged.
+   * Common values: tokenTypeAccessToken (default), tokenTypeIDToken, tokenTypeJWT.
+   * If empty, defaults to tokenTypeAccessToken.
+   */
+  subject_token_type?: string
+  /**
+   * TokenURL is the OAuth 2.0 token endpoint URL
+   */
+  token_url?: string
+}
+
+export type TypesEnvVar = {
+  /**
+   * Default is the value to use if the environment variable is not explicitly provided
+   * Only used for non-required variables
+   */
+  default?: string
+  /**
+   * Description is a human-readable explanation of the variable's purpose
+   */
+  description?: string
+  /**
+   * Name is the environment variable name (e.g., API_KEY)
+   */
+  name?: string
+  /**
+   * Required indicates whether this environment variable must be provided
+   * If true and not provided via command line or secrets, the user will be prompted for a value
+   */
+  required?: boolean
+  /**
+   * Secret indicates whether this environment variable contains sensitive information
+   * If true, the value will be stored as a secret rather than as a plain environment variable
+   */
+  secret?: boolean
+}
+
+export type TypesGroup = {
+  /**
+   * Description is a human-readable description of the group's purpose and functionality
+   */
+  description?: string
+  /**
+   * Name is the identifier for the group, used when referencing the group in commands
+   */
+  name?: string
+  /**
+   * RemoteServers is a map of server names to their corresponding remote server definitions within this group
+   */
+  remote_servers?: {
+    [key: string]: TypesRemoteServerMetadata
+  }
+  /**
+   * Servers is a map of server names to their corresponding server definitions within this group
+   */
+  servers?: {
+    [key: string]: TypesImageMetadata
+  }
+}
+
+export type TypesHeader = {
+  /**
+   * Choices provides a list of valid values for the header (optional)
+   */
+  choices?: Array<string>
+  /**
+   * Default is the value to use if the header is not explicitly provided
+   * Only used for non-required headers
+   */
+  default?: string
+  /**
+   * Description is a human-readable explanation of the header's purpose
+   */
+  description?: string
+  /**
+   * Name is the header name (e.g., X-API-Key, Authorization)
+   */
+  name?: string
+  /**
+   * Required indicates whether this header must be provided
+   * If true and not provided via command line or secrets, the user will be prompted for a value
+   */
+  required?: boolean
+  /**
+   * Secret indicates whether this header contains sensitive information
+   * If true, the value will be stored as a secret rather than as plain text
+   */
+  secret?: boolean
+}
+
+/**
+ * Container server details (if it's a container server)
+ */
+export type TypesImageMetadata = {
+  /**
+   * Args are the default command-line arguments to pass to the MCP server container.
+   * These arguments will be used only if no command-line arguments are provided by the user.
+   * If the user provides arguments, they will override these defaults.
+   */
+  args?: Array<string>
+  /**
+   * CustomMetadata allows for additional user-defined metadata
+   */
+  custom_metadata?: {
+    [key: string]: unknown
+  }
+  /**
+   * Description is a human-readable description of the server's purpose and functionality
+   */
+  description?: string
+  /**
+   * DockerTags lists the available Docker tags for this server image
+   */
+  docker_tags?: Array<string>
+  /**
+   * EnvVars defines environment variables that can be passed to the server
+   */
+  env_vars?: Array<TypesEnvVar>
+  /**
+   * Image is the Docker image reference for the MCP server
+   */
+  image?: string
+  metadata?: TypesMetadata
+  /**
+   * Name is the identifier for the MCP server, used when referencing the server in commands
+   * If not provided, it will be auto-generated from the registry key
+   */
+  name?: string
+  permissions?: PermissionsProfile
+  provenance?: TypesProvenance
+  /**
+   * RepositoryURL is the URL to the source code repository for the server
+   */
+  repository_url?: string
+  /**
+   * Status indicates whether the server is currently active or deprecated
+   */
+  status?: string
+  /**
+   * Tags are categorization labels for the server to aid in discovery and filtering
+   */
+  tags?: Array<string>
+  /**
+   * TargetPort is the port for the container to expose (only applicable to SSE and Streamable HTTP transports)
+   */
+  target_port?: number
+  /**
+   * Tier represents the tier classification level of the server, e.g., "Official" or "Community"
+   */
+  tier?: string
+  /**
+   * Tools is a list of tool names provided by this MCP server
+   */
+  tools?: Array<string>
+  /**
+   * Transport defines the communication protocol for the server
+   * For containers: stdio, sse, or streamable-http
+   * For remote servers: sse or streamable-http (stdio not supported)
+   */
+  transport?: string
+}
+
+/**
+ * Metadata contains additional information about the server such as popularity metrics
+ */
+export type TypesMetadata = {
+  /**
+   * LastUpdated is the timestamp when the server was last updated, in RFC3339 format
+   */
+  last_updated?: string
+  /**
+   * Pulls indicates how many times the server image has been downloaded
+   */
+  pulls?: number
+  /**
+   * Stars represents the popularity rating or number of stars for the server
+   */
+  stars?: number
+}
+
 export type TypesMiddlewareConfig = {
   /**
    * Parameters is a JSON object containing the middleware parameters.
@@ -910,14 +788,178 @@ export type TypesMiddlewareConfig = {
 }
 
 /**
+ * OAuthConfig provides OAuth/OIDC configuration for authentication to the remote server
+ * Used with the thv proxy command's --remote-auth flags
+ */
+export type TypesOAuthConfig = {
+  /**
+   * AuthorizeURL is the OAuth authorization endpoint URL
+   * Used for non-OIDC OAuth flows when issuer is not provided
+   */
+  authorize_url?: string
+  /**
+   * CallbackPort is the specific port to use for the OAuth callback server
+   * If not specified, a random available port will be used
+   */
+  callback_port?: number
+  /**
+   * ClientID is the OAuth client ID for authentication
+   */
+  client_id?: string
+  /**
+   * Issuer is the OAuth/OIDC issuer URL (e.g., https://accounts.google.com)
+   * Used for OIDC discovery to find authorization and token endpoints
+   */
+  issuer?: string
+  /**
+   * OAuthParams contains additional OAuth parameters to include in the authorization request
+   * These are server-specific parameters like "prompt", "response_mode", etc.
+   */
+  oauth_params?: {
+    [key: string]: string
+  }
+  /**
+   * Resource is the OAuth 2.0 resource indicator (RFC 8707)
+   */
+  resource?: string
+  /**
+   * Scopes are the OAuth scopes to request
+   * If not specified, defaults to ["openid", "profile", "email"] for OIDC
+   */
+  scopes?: Array<string>
+  /**
+   * TokenURL is the OAuth token endpoint URL
+   * Used for non-OIDC OAuth flows when issuer is not provided
+   */
+  token_url?: string
+  /**
+   * UsePKCE indicates whether to use PKCE for the OAuth flow
+   * Defaults to true for enhanced security
+   */
+  use_pkce?: boolean
+}
+
+/**
+ * Provenance contains verification and signing metadata
+ */
+export type TypesProvenance = {
+  attestation?: TypesVerifiedAttestation
+  cert_issuer?: string
+  repository_ref?: string
+  repository_uri?: string
+  runner_environment?: string
+  signer_identity?: string
+  sigstore_url?: string
+}
+
+/**
  * ProxyMode is the proxy mode for stdio transport ("sse" or "streamable-http")
  */
 export type TypesProxyMode = string
 
 /**
+ * Full registry data
+ */
+export type TypesRegistry = {
+  /**
+   * Groups is a slice of group definitions containing related MCP servers
+   */
+  groups?: Array<TypesGroup>
+  /**
+   * LastUpdated is the timestamp when the registry was last updated, in RFC3339 format
+   */
+  last_updated?: string
+  /**
+   * RemoteServers is a map of server names to their corresponding remote server definitions
+   * These are MCP servers accessed via HTTP/HTTPS using the thv proxy command
+   */
+  remote_servers?: {
+    [key: string]: TypesRemoteServerMetadata
+  }
+  /**
+   * Servers is a map of server names to their corresponding server definitions
+   */
+  servers?: {
+    [key: string]: TypesImageMetadata
+  }
+  /**
+   * Version is the schema version of the registry
+   */
+  version?: string
+}
+
+/**
+ * Remote server details (if it's a remote server)
+ */
+export type TypesRemoteServerMetadata = {
+  /**
+   * CustomMetadata allows for additional user-defined metadata
+   */
+  custom_metadata?: {
+    [key: string]: unknown
+  }
+  /**
+   * Description is a human-readable description of the server's purpose and functionality
+   */
+  description?: string
+  /**
+   * EnvVars defines environment variables that can be passed to configure the client
+   * These might be needed for client-side configuration when connecting to the remote server
+   */
+  env_vars?: Array<TypesEnvVar>
+  /**
+   * Headers defines HTTP headers that can be passed to the remote server for authentication
+   * These are used with the thv proxy command's authentication features
+   */
+  headers?: Array<TypesHeader>
+  metadata?: TypesMetadata
+  /**
+   * Name is the identifier for the MCP server, used when referencing the server in commands
+   * If not provided, it will be auto-generated from the registry key
+   */
+  name?: string
+  oauth_config?: TypesOAuthConfig
+  /**
+   * RepositoryURL is the URL to the source code repository for the server
+   */
+  repository_url?: string
+  /**
+   * Status indicates whether the server is currently active or deprecated
+   */
+  status?: string
+  /**
+   * Tags are categorization labels for the server to aid in discovery and filtering
+   */
+  tags?: Array<string>
+  /**
+   * Tier represents the tier classification level of the server, e.g., "Official" or "Community"
+   */
+  tier?: string
+  /**
+   * Tools is a list of tool names provided by this MCP server
+   */
+  tools?: Array<string>
+  /**
+   * Transport defines the communication protocol for the server
+   * For containers: stdio, sse, or streamable-http
+   * For remote servers: sse or streamable-http (stdio not supported)
+   */
+  transport?: string
+  /**
+   * URL is the endpoint URL for the remote MCP server (e.g., https://api.example.com/mcp)
+   */
+  url?: string
+}
+
+/**
  * TransportType is the type of transport used for this workload.
  */
 export type TypesTransportType = string
+
+export type TypesVerifiedAttestation = {
+  predicate?: unknown
+  predicate_type?: string
+}
 
 /**
  * Type of registry (file, url, or default)
@@ -929,9 +971,13 @@ export type V1RegistryType = string
  */
 export type V1UpdateRegistryRequest = {
   /**
-   * Allow private IP addresses for registry URL
+   * Allow private IP addresses for registry URL or API URL
    */
   allow_private_ip?: boolean
+  /**
+   * MCP Registry API URL
+   */
+  api_url?: string
   /**
    * Local registry file path
    */
@@ -1040,7 +1086,7 @@ export type V1CreateRequest = {
    * Group name this workload belongs to
    */
   group?: string
-  headers?: Array<RegistryHeader>
+  headers?: Array<TypesHeader>
   /**
    * Host to bind to
    */
@@ -1158,7 +1204,7 @@ export type V1GetRegistryResponse = {
    * Name of the registry
    */
   name?: string
-  registry?: RegistryRegistry
+  registry?: TypesRegistry
   /**
    * Number of servers in the registry
    */
@@ -1200,8 +1246,8 @@ export type V1GetServerResponse = {
    * Indicates if this is a remote server
    */
   is_remote?: boolean
-  remote_server?: RegistryRemoteServerMetadata
-  server?: RegistryImageMetadata
+  remote_server?: TypesRemoteServerMetadata
+  server?: TypesImageMetadata
 }
 
 export type V1GroupListResponse = {
@@ -1228,11 +1274,11 @@ export type V1ListServersResponse = {
   /**
    * List of remote servers in the registry (if any)
    */
-  remote_servers?: Array<RegistryRemoteServerMetadata>
+  remote_servers?: Array<TypesRemoteServerMetadata>
   /**
    * List of container servers in the registry
    */
-  servers?: Array<RegistryImageMetadata>
+  servers?: Array<TypesImageMetadata>
 }
 
 /**
@@ -1456,7 +1502,7 @@ export type V1UpdateRequest = {
    * Group name this workload belongs to
    */
   group?: string
-  headers?: Array<RegistryHeader>
+  headers?: Array<TypesHeader>
   /**
    * Host to bind to
    */
