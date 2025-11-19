@@ -141,7 +141,10 @@
           "LMStudio",
           "Goose",
           "Trae",
-          "Continue"
+          "Continue",
+          "OpenCode",
+          "Kiro",
+          "Antigravity"
         ]
       },
       "client.MCPClientStatus": {
@@ -166,7 +169,10 @@
               "LMStudio",
               "Goose",
               "Trae",
-              "Continue"
+              "Continue",
+              "OpenCode",
+              "Kiro",
+              "Antigravity"
             ]
           },
           "installed": {
@@ -871,6 +877,9 @@
             "description": "ThvCABundle is the path to the CA certificate bundle for ToolHive HTTP operations",
             "type": "string"
           },
+          "token_exchange_config": {
+            "$ref": "#/components/schemas/tokenexchange.Config"
+          },
           "tools_filter": {
             "description": "ToolsFilter is the list of tools to filter",
             "items": { "type": "string" },
@@ -996,6 +1005,46 @@
         },
         "type": "object"
       },
+      "tokenexchange.Config": {
+        "description": "TokenExchangeConfig contains token exchange configuration for external authentication",
+        "properties": {
+          "audience": {
+            "description": "Audience is the target audience for the exchanged token",
+            "type": "string"
+          },
+          "client_id": {
+            "description": "ClientID is the OAuth 2.0 client identifier",
+            "type": "string"
+          },
+          "client_secret": {
+            "description": "ClientSecret is the OAuth 2.0 client secret",
+            "type": "string"
+          },
+          "external_token_header_name": {
+            "description": "ExternalTokenHeaderName is the name of the custom header to use when HeaderStrategy is \"custom\"",
+            "type": "string"
+          },
+          "header_strategy": {
+            "description": "HeaderStrategy determines how to inject the token\nValid values: HeaderStrategyReplace (default), HeaderStrategyCustom",
+            "type": "string"
+          },
+          "scopes": {
+            "description": "Scopes is the list of scopes to request for the exchanged token",
+            "items": { "type": "string" },
+            "type": "array",
+            "uniqueItems": false
+          },
+          "subject_token_type": {
+            "description": "SubjectTokenType specifies the type of the subject token being exchanged.\nCommon values: tokenTypeAccessToken (default), tokenTypeIDToken, tokenTypeJWT.\nIf empty, defaults to tokenTypeAccessToken.",
+            "type": "string"
+          },
+          "token_url": {
+            "description": "TokenURL is the OAuth 2.0 token endpoint URL",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "types.MiddlewareConfig": {
         "properties": {
           "parameters": {
@@ -1030,6 +1079,7 @@
         "x-enum-varnames": [
           "RegistryTypeFile",
           "RegistryTypeURL",
+          "RegistryTypeAPI",
           "RegistryTypeDefault"
         ]
       },
@@ -1037,8 +1087,12 @@
         "description": "Request containing registry configuration updates",
         "properties": {
           "allow_private_ip": {
-            "description": "Allow private IP addresses for registry URL",
+            "description": "Allow private IP addresses for registry URL or API URL",
             "type": "boolean"
+          },
+          "api_url": {
+            "description": "MCP Registry API URL",
+            "type": "string"
           },
           "local_path": {
             "description": "Local registry file path",
@@ -1091,7 +1145,10 @@
                 "LMStudio",
                 "Goose",
                 "Trae",
-                "Continue"
+                "Continue",
+                "OpenCode",
+                "Kiro",
+                "Antigravity"
               ]
             },
             "type": "array",
@@ -1153,7 +1210,10 @@
               "LMStudio",
               "Goose",
               "Trae",
-              "Continue"
+              "Continue",
+              "OpenCode",
+              "Kiro",
+              "Antigravity"
             ]
           }
         },
@@ -1187,7 +1247,10 @@
               "LMStudio",
               "Goose",
               "Trae",
-              "Continue"
+              "Continue",
+              "OpenCode",
+              "Kiro",
+              "Antigravity"
             ]
           }
         },
@@ -1360,6 +1423,7 @@
             "x-enum-varnames": [
               "RegistryTypeFile",
               "RegistryTypeURL",
+              "RegistryTypeAPI",
               "RegistryTypeDefault"
             ]
           },

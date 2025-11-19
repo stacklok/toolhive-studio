@@ -782,6 +782,7 @@ export type RunnerRunConfig = {
    * ThvCABundle is the path to the CA certificate bundle for ToolHive HTTP operations
    */
   thv_ca_bundle?: string
+  token_exchange_config?: TokenexchangeConfig
   /**
    * ToolsFilter is the list of tools to filter
    */
@@ -895,6 +896,47 @@ export type TelemetryConfig = {
   tracingEnabled?: boolean
 }
 
+/**
+ * TokenExchangeConfig contains token exchange configuration for external authentication
+ */
+export type TokenexchangeConfig = {
+  /**
+   * Audience is the target audience for the exchanged token
+   */
+  audience?: string
+  /**
+   * ClientID is the OAuth 2.0 client identifier
+   */
+  client_id?: string
+  /**
+   * ClientSecret is the OAuth 2.0 client secret
+   */
+  client_secret?: string
+  /**
+   * ExternalTokenHeaderName is the name of the custom header to use when HeaderStrategy is "custom"
+   */
+  external_token_header_name?: string
+  /**
+   * HeaderStrategy determines how to inject the token
+   * Valid values: HeaderStrategyReplace (default), HeaderStrategyCustom
+   */
+  header_strategy?: string
+  /**
+   * Scopes is the list of scopes to request for the exchanged token
+   */
+  scopes?: Array<string>
+  /**
+   * SubjectTokenType specifies the type of the subject token being exchanged.
+   * Common values: tokenTypeAccessToken (default), tokenTypeIDToken, tokenTypeJWT.
+   * If empty, defaults to tokenTypeAccessToken.
+   */
+  subject_token_type?: string
+  /**
+   * TokenURL is the OAuth 2.0 token endpoint URL
+   */
+  token_url?: string
+}
+
 export type TypesMiddlewareConfig = {
   /**
    * Parameters is a JSON object containing the middleware parameters.
@@ -929,9 +971,13 @@ export type V1RegistryType = string
  */
 export type V1UpdateRegistryRequest = {
   /**
-   * Allow private IP addresses for registry URL
+   * Allow private IP addresses for registry URL or API URL
    */
   allow_private_ip?: boolean
+  /**
+   * MCP Registry API URL
+   */
+  api_url?: string
   /**
    * Local registry file path
    */
