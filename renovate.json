@@ -6,8 +6,8 @@
   "timezone": "Europe/London",
   "schedule": ["after 01:00 and before 07:00 every weekday"],
   "allowedPostUpgradeCommands": [
-    "^pnpm run thv",
-    "^pnpm run generate-client"
+    "/^pnpm run thv$/",
+    "/^pnpm run generate-client$/"
   ],
   "packageRules": [
     {
