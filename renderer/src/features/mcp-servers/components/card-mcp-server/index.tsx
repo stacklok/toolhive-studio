@@ -11,9 +11,10 @@ import { useMutationRestartServer } from '../../hooks/use-mutation-restart-serve
 import { useMutationStopServerList } from '../../hooks/use-mutation-stop-server'
 
 import { useSearch } from '@tanstack/react-router'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { trackEvent } from '@/common/lib/analytics'
+import { delay } from '@utils/delay'
 import {
   Tooltip,
   TooltipTrigger,
@@ -110,25 +111,29 @@ export function CardMcpServer({
     strict: false,
   })
   const [isNewServer, setIsNewServer] = useState(false)
-  const [lastNewServerName, setLastNewServerName] = useState<string | null>(
-    null
-  )
-
-  // Check if the server is new by looking for a specific search parameter
   const searchNewServerName =
     'newServerName' in search ? search.newServerName : null
-  if (searchNewServerName !== lastNewServerName) {
-    setLastNewServerName(searchNewServerName)
+
+  useEffect(() => {
+    // Check if the server is new by looking for a specific search parameter
     if (searchNewServerName === name) {
-      setIsNewServer(true)
-      // clear state after 2 seconds
-      setTimeout(() => {
-        setIsNewServer(false)
-      }, 2000)
-    } else {
-      setIsNewServer(false)
+      let cancelled = false
+
+      const showNewServerAnimation = async () => {
+        setIsNewServer(true)
+        await delay(2000)
+        if (!cancelled) {
+          setIsNewServer(false)
+        }
+      }
+
+      showNewServerAnimation()
+
+      return () => {
+        cancelled = true
+      }
     }
-  }
+  }, [name, searchNewServerName])
 
   // Check if the server is in deleting state
   const isDeleting = status === 'deleting'
@@ -136,16 +141,32 @@ export function CardMcpServer({
     status === 'starting' || status === 'stopping' || status === 'restarting'
   const isStopped = status === 'stopped' || status === 'stopping'
   const [hadRecentStatusChange, setHadRecentStatusChange] = useState(false)
-  const [prevStatus, setPrevStatus] = useState<CoreWorkload['status']>(status)
+  const prevStatusRef = useRef<CoreWorkload['status']>(status)
 
-  // show a brief animation for status transitions that are immediate
-  if (prevStatus !== status) {
-    setPrevStatus(status)
-    if (['running'].includes(status ?? '')) {
-      setHadRecentStatusChange(true)
-      setTimeout(() => setHadRecentStatusChange(false), 2500)
+  useEffect(() => {
+    // Show a brief animation for status transitions
+    if (
+      prevStatusRef.current !== status &&
+      ['running'].includes(status ?? '')
+    ) {
+      let cancelled = false
+
+      const showStatusChangeAnimation = async () => {
+        setHadRecentStatusChange(true)
+        await delay(2500)
+        if (!cancelled) {
+          setHadRecentStatusChange(false)
+        }
+      }
+
+      showStatusChangeAnimation()
+
+      return () => {
+        cancelled = true
+      }
     }
-  }
+    prevStatusRef.current = status
+  }, [status])
 
   return (
     <Card
