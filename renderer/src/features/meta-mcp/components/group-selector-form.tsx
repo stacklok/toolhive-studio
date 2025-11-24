@@ -1,5 +1,5 @@
 import { useTransition, type ReactElement } from 'react'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, Controller, useWatch } from 'react-hook-form'
 import { z } from 'zod'
 import { RadioGroup, RadioGroupItem } from '@/common/components/ui/radio-group'
 import { Label } from '@/common/components/ui/label'
@@ -59,7 +59,10 @@ export function GroupSelectorForm({
   })
 
   const isDirty = form.formState.isDirty
-  const isSelectedGroup = form.watch('selectedGroup')
+  const isSelectedGroup = useWatch({
+    control: form.control,
+    name: 'selectedGroup',
+  })
 
   const onSubmit = async (data: FormSchema) => {
     const optimized_workloads = groups.flatMap((g) => g.servers)

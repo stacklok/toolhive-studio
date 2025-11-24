@@ -15,23 +15,26 @@ import { highlight } from './search'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 import { Skeleton } from '@/common/components/ui/skeleton'
 
+// Generate skeleton counts once to avoid calling Math.random during render
+const SKELETON_COUNTS = Array.from(
+  { length: 20 },
+  () => Math.floor(Math.random() * 6) + 1
+)
+
 function SkeletonLogs() {
   return (
     <div
       className="flex h-full w-full flex-1 flex-col gap-4 p-10"
       data-testid="skeleton-logs"
     >
-      {Array.from({ length: 20 }).map((_, i) => {
-        const numSkeletons = Math.floor(Math.random() * 6) + 1
-        return (
-          <div key={i} className="flex w-full gap-2">
-            <Skeleton className="h-4 w-12 shrink-0" />
-            {Array.from({ length: numSkeletons }).map((_, j) => (
-              <Skeleton key={j} className="h-4 flex-1" />
-            ))}
-          </div>
-        )
-      })}
+      {SKELETON_COUNTS.map((numSkeletons, i) => (
+        <div key={i} className="flex w-full gap-2">
+          <Skeleton className="h-4 w-12 shrink-0" />
+          {Array.from({ length: numSkeletons }).map((_, j) => (
+            <Skeleton key={j} className="h-4 flex-1" />
+          ))}
+        </div>
+      ))}
     </div>
   )
 }

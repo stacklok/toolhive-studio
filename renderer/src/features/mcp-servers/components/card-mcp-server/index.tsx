@@ -11,7 +11,7 @@ import { useMutationRestartServer } from '../../hooks/use-mutation-restart-serve
 import { useMutationStopServerList } from '../../hooks/use-mutation-stop-server'
 
 import { useSearch } from '@tanstack/react-router'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { trackEvent } from '@/common/lib/analytics'
 import {
@@ -110,11 +110,16 @@ export function CardMcpServer({
     strict: false,
   })
   const [isNewServer, setIsNewServer] = useState(false)
+  const [lastNewServerName, setLastNewServerName] = useState<string | null>(
+    null
+  )
 
-  useEffect(() => {
-    // Check if the server is new by looking for a specific search parameter
-    // This could be a query parameter or any other condition that indicates a new server
-    if ('newServerName' in search && search.newServerName === name) {
+  // Check if the server is new by looking for a specific search parameter
+  const searchNewServerName =
+    'newServerName' in search ? search.newServerName : null
+  if (searchNewServerName !== lastNewServerName) {
+    setLastNewServerName(searchNewServerName)
+    if (searchNewServerName === name) {
       setIsNewServer(true)
       // clear state after 2 seconds
       setTimeout(() => {
@@ -123,11 +128,7 @@ export function CardMcpServer({
     } else {
       setIsNewServer(false)
     }
-
-    return () => {
-      setIsNewServer(false)
-    }
-  }, [name, search])
+  }
 
   // Check if the server is in deleting state
   const isDeleting = status === 'deleting'
@@ -137,15 +138,14 @@ export function CardMcpServer({
   const [hadRecentStatusChange, setHadRecentStatusChange] = useState(false)
   const [prevStatus, setPrevStatus] = useState<CoreWorkload['status']>(status)
 
-  useEffect(() => {
-    // show a brief animation for status transitions that are immediate
-    if (prevStatus !== status && ['running'].includes(status ?? '')) {
-      setHadRecentStatusChange(true)
-      const timeout = setTimeout(() => setHadRecentStatusChange(false), 2500)
-      return () => clearTimeout(timeout)
-    }
+  // show a brief animation for status transitions that are immediate
+  if (prevStatus !== status) {
     setPrevStatus(status)
-  }, [status, prevStatus])
+    if (['running'].includes(status ?? '')) {
+      setHadRecentStatusChange(true)
+      setTimeout(() => setHadRecentStatusChange(false), 2500)
+    }
+  }
 
   return (
     <Card

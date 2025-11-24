@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
 import type { RegistryRemoteServerMetadata } from '@api/types.gen'
@@ -180,10 +180,10 @@ export function DialogFormRemoteRegistryMcp({
     )
   }
 
-  if (!server) return null
-
-  const authType = form.watch('auth_type')
+  const authType = useWatch({ control: form.control, name: 'auth_type' })
   const isLoading = isSubmitting
+
+  if (!server) return null
 
   return (
     <DialogWorkloadFormWrapper

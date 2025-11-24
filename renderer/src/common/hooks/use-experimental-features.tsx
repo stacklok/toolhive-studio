@@ -55,7 +55,7 @@ function formatFeatureFlagDescription(key: string): React.ReactNode {
 }
 
 export function useExperimentalFeatures() {
-  const toastIdRef = useRef(new Date(Date.now()).toISOString())
+  const toastIdRef = useRef(new Date().getTime())
   const { handleCreateOptimizerGroup, isCreatingOptimizerGroup } =
     useCreateOptimizerGroup()
   const { cleanupMetaOptimizer } = useCleanupMetaOptimizer()

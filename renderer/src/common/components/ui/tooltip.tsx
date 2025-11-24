@@ -71,7 +71,10 @@ const TooltipTrigger = React.forwardRef<
   const setRefs = React.useCallback(
     (node: HTMLButtonElement | null) => {
       // internal: keep track for truncation measurement
-      if (ctx) ctx.triggerRef.current = node
+      if (ctx) {
+        const triggerRef = ctx.triggerRef
+        triggerRef.current = node
+      }
       // forward to consumer
       if (typeof forwardedRef === 'function') {
         forwardedRef(node)

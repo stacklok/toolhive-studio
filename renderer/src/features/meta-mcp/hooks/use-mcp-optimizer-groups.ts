@@ -18,10 +18,10 @@ export function useMcpOptimizerGroups() {
     }),
   })
 
-  const groups = groupsData?.groups ?? []
-  const workloads = workloadsData?.workloads ?? []
-
   const groupsWithServers = useMemo(() => {
+    const groups = groupsData?.groups ?? []
+    const workloads = workloadsData?.workloads ?? []
+
     const serversByGroup: Record<string, string[]> = {}
 
     workloads
@@ -40,7 +40,7 @@ export function useMcpOptimizerGroups() {
       ...group,
       servers: serversByGroup[group.name ?? ''] ?? [],
     }))
-  }, [groups, workloads])
+  }, [groupsData, workloadsData])
 
   return groupsWithServers
 }

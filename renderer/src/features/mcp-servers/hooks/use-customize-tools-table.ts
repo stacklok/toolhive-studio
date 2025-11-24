@@ -29,6 +29,7 @@ export function useCustomizeToolsTable({
 }: UseCustomizeToolsTableProps) {
   const [enabledTools, setEnabledTools] = useState<Record<string, boolean>>({})
   const [toolsOverride, setToolsOverride] = useState<ToolOverrides>({})
+  const [lastOverrideTools, setLastOverrideTools] = useState(overrideTools)
   const [editState, setEditState] = useState<EditState>({
     isOpen: false,
     tool: null,
@@ -38,6 +39,14 @@ export function useCustomizeToolsTable({
   })
   const toolsInitializedRef = useRef(false)
   const previousToolNamesRef = useRef<string>('')
+
+  // Sync toolsOverride with overrideTools when it changes
+  if (overrideTools !== lastOverrideTools) {
+    setLastOverrideTools(overrideTools)
+    if (overrideTools) {
+      setToolsOverride(overrideTools)
+    }
+  }
 
   const isAllToolsEnabled = useMemo(() => {
     return Object.values(enabledTools).every((enabled) => enabled)
@@ -128,12 +137,6 @@ export function useCustomizeToolsTable({
       }
     }
   }, [tools])
-
-  useEffect(() => {
-    if (overrideTools) {
-      setToolsOverride(overrideTools)
-    }
-  }, [overrideTools])
 
   const handleToolToggle = (toolName: string, enabled: boolean) => {
     trackEvent('Customize Tools: toggle tool', {

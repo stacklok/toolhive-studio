@@ -95,13 +95,16 @@ export function useCleanupMetaOptimizer() {
     enabled: isMetaOptimizerEnabled,
   })
 
-  const removeClientsFromGroup = async (clients: string[]) => {
-    for (const clientType of clients) {
-      await unregisterClients({
-        clientType,
-      })
-    }
-  }
+  const removeClientsFromGroup = useCallback(
+    async (clients: string[]) => {
+      for (const clientType of clients) {
+        await unregisterClients({
+          clientType,
+        })
+      }
+    },
+    [unregisterClients]
+  )
 
   const mcpOptimizerGroup = groupsList?.groups?.find(
     (g) => g.name === MCP_OPTIMIZER_GROUP_NAME

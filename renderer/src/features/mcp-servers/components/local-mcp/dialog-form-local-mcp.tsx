@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
@@ -161,7 +161,7 @@ export function DialogFormLocalMcp({
     convertCreateRequestToFormData(existingServer, availableSecrets)
 
   const { data: groupsData } = useGroups()
-  const groups = groupsData?.groups ?? []
+  const groups = useMemo(() => groupsData?.groups ?? [], [groupsData])
 
   const form = useForm<FormSchemaLocalMcp>({
     resolver: zodV4Resolver(
@@ -283,7 +283,7 @@ export function DialogFormLocalMcp({
               )}
             </div>
             <Tabs
-              className="mb-6 w-full flex-shrink-0 px-6"
+              className="mb-6 w-full shrink-0 px-6"
               value={activeTab}
               onValueChange={(value: string) => setActiveTab(value as Tab)}
             >

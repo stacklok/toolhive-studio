@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Dialog,
@@ -48,6 +48,9 @@ export function McpToolsModal({
 }: McpToolsModalProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [localEnabledTools, setLocalEnabledTools] = useState<string[]>([])
+  const [lastInitializedServer, setLastInitializedServer] = useState<
+    string | null
+  >(null)
   const queryClient = useQueryClient()
 
   // Fetch tools for the specific server
@@ -66,16 +69,14 @@ export function McpToolsModal({
     refetchOnMount: true, // Always refetch when component mounts
   })
 
-  // Initialize local state when data loads
-  useEffect(() => {
-    if (serverTools?.tools) {
-      const enabledTools = serverTools.tools
-        .filter((tool) => tool.enabled)
-        .map((tool) => tool.name)
-
-      setLocalEnabledTools(enabledTools)
-    }
-  }, [serverTools, serverName])
+  // Initialize local state when server or tools change
+  if (serverTools?.tools && lastInitializedServer !== serverName) {
+    const enabledTools = serverTools.tools
+      .filter((tool) => tool.enabled)
+      .map((tool) => tool.name)
+    setLocalEnabledTools(enabledTools)
+    setLastInitializedServer(serverName)
+  }
 
   // Save tools mutation
   const saveToolsMutation = useMutation({

@@ -16,7 +16,7 @@ import { META_MCP_SERVER_NAME } from '../lib/constants'
  * Returns a function that polls server status and invalidates queries when ready.
  */
 export function useCheckServerStatus() {
-  const toastIdRef = useRef(new Date(Date.now()).toISOString())
+  const toastIdRef = useRef(new Date().getTime())
 
   const queryClient = useQueryClient()
 
