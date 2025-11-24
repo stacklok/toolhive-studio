@@ -217,7 +217,7 @@ describe('DialogFormRemoteMcp', () => {
 
     await user.type(
       screen.getByRole('textbox', {
-        name: /url/i,
+        name: /server url/i,
       }),
       'https://api.example.com/mcp'
     )
@@ -264,6 +264,95 @@ describe('DialogFormRemoteMcp', () => {
       expect(mockOnOpenChange).toHaveBeenCalled()
     })
   })
+
+  it.each([
+    ['Dynamic Client Registration', 'none'],
+    ['OIDC', 'oidc'],
+  ])(
+    'submits Issuer URL when auth type is %s',
+    async (authOptionLabel, expectedAuthType) => {
+      const user = userEvent.setup({ delay: null })
+      const mockInstallServerMutation = vi.fn()
+
+      mockUseRunRemoteServer.mockReturnValue({
+        installServerMutation: mockInstallServerMutation,
+        isErrorSecrets: false,
+        isPendingSecrets: false,
+      })
+
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormRemoteMcp
+            isOpen
+            closeDialog={vi.fn()}
+            groupName="default"
+          />
+        </Wrapper>
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      await user.type(
+        screen.getByRole('textbox', {
+          name: /server name/i,
+        }),
+        'issuer-enabled-server'
+      )
+
+      await user.type(
+        screen.getByRole('textbox', {
+          name: /server url/i,
+        }),
+        'https://api.example.com/mcp'
+      )
+
+      await user.type(screen.getByLabelText('Callback port'), '7777')
+
+      await user.click(screen.getByLabelText('Authorization method'))
+      await user.click(
+        screen.getByRole('option', {
+          name: authOptionLabel,
+        })
+      )
+
+      const issuerValue =
+        expectedAuthType === 'none'
+          ? 'https://issuer.example.com/none'
+          : 'https://issuer.example.com/oidc'
+
+      const issuerInput = screen.getByPlaceholderText(
+        'e.g. https://auth.example.com/'
+      )
+      await user.clear(issuerInput)
+      await user.type(issuerInput, issuerValue)
+
+      if (expectedAuthType === 'oidc') {
+        const clientIdInput = screen.getByPlaceholderText(
+          'e.g. 00000000-0000-0000-0000-000000000000'
+        )
+        await user.clear(clientIdInput)
+        await user.type(clientIdInput, 'oidc-client-id')
+      }
+
+      await user.click(screen.getByRole('button', { name: 'Install server' }))
+
+      await waitFor(() => {
+        expect(mockInstallServerMutation).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({
+              auth_type: expectedAuthType,
+              oauth_config: expect.objectContaining({
+                issuer: issuerValue,
+              }),
+            }),
+          }),
+          expect.any(Object)
+        )
+      })
+    }
+  )
 
   it('can cancel and close dialog', async () => {
     const user = userEvent.setup({ delay: null })
@@ -335,12 +424,12 @@ describe('DialogFormRemoteMcp', () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByRole('textbox', { name: /url/i })).toHaveValue(
+      expect(screen.getByRole('textbox', { name: /server url/i })).toHaveValue(
         'https://old-api.example.com'
       )
     })
 
-    const urlInput = screen.getByRole('textbox', { name: /url/i })
+    const urlInput = screen.getByRole('textbox', { name: /server url/i })
     await user.clear(urlInput)
     await user.type(urlInput, 'https://new-api.example.com')
 

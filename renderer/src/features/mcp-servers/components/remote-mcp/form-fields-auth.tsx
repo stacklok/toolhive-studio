@@ -185,7 +185,7 @@ export function FormFieldsAuth({
         )}
       />
 
-      {authType === 'oidc' && (
+      {authType !== 'oauth2' && (
         <>
           <FormField
             control={form.control}
