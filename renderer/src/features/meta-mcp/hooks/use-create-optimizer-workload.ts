@@ -7,12 +7,12 @@ import { featureFlagKeys } from '../../../../../utils/feature-flags'
 import { useFeatureFlag } from '../../../common/hooks/use-feature-flag'
 import {
   ALLOWED_GROUPS_ENV_VAR,
+  MCP_OPTIMIZER_BASE_IMAGE,
   MCP_OPTIMIZER_GROUP_NAME,
-  MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
+  MCP_OPTIMIZER_IMAGE_VERSION,
   META_MCP_SERVER_NAME,
 } from '../../../common/lib/constants'
 import { useQuery } from '@tanstack/react-query'
-import { getApiV1BetaRegistryByNameServersByServerNameOptions } from '@api/@tanstack/react-query.gen'
 import { useToastMutation } from '../../../common/hooks/use-toast-mutation'
 import type { V1CreateRequest } from '@api/types.gen'
 import { toast } from 'sonner'
@@ -31,16 +31,6 @@ export function useCreateOptimizerWorkload() {
     refetchOnMount: true,
     staleTime: 5_000,
     retry: false,
-    enabled: isMetaOptimizerEnabled,
-  })
-
-  const { data: optimizerRegistryServerDetail } = useQuery({
-    ...getApiV1BetaRegistryByNameServersByServerNameOptions({
-      path: {
-        name: 'default',
-        serverName: MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
-      },
-    }),
     enabled: isMetaOptimizerEnabled,
   })
 
@@ -126,8 +116,8 @@ export function useCreateOptimizerWorkload() {
 
     const body: V1CreateRequest = {
       name: META_MCP_SERVER_NAME,
-      image: optimizerRegistryServerDetail?.server?.image,
-      transport: optimizerRegistryServerDetail?.server?.transport,
+      image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
+      transport: 'streamable-http',
       group: MCP_OPTIMIZER_GROUP_NAME,
       env_vars: {
         [ALLOWED_GROUPS_ENV_VAR]: groupToOptimize,
