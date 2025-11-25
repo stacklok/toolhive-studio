@@ -8,6 +8,7 @@ import {
 } from '@api/types.gen'
 import { getVolumes, mapEnvVars } from '@/common/lib/utils'
 import type { FormSchemaLocalMcp } from './form-schema-local-mcp'
+import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 
 /**
  * Transforms the type specific (e.g. docker vs package manager) data from the
@@ -209,6 +210,7 @@ export function convertCreateRequestToFormData(
           accessMode: (parts[2] as 'ro' | 'rw') || 'rw',
         }
       }) || [],
+    permission_profile: createRequest.permission_profile,
   }
 
   if (isPackageManager) {
@@ -244,6 +246,11 @@ export function prepareUpdateLocalWorkloadData(
       ? data.image
       : `${data.protocol}://${data.package_name}`
 
+  const permissionProfile =
+    data.group === MCP_OPTIMIZER_GROUP_NAME
+      ? data.permission_profile
+      : undefined
+
   return {
     image,
     transport: data.transport,
@@ -265,7 +272,7 @@ export function prepareUpdateLocalWorkloadData(
             } as PermissionsOutboundNetworkPermissions,
           },
         }
-      : undefined,
+      : permissionProfile,
     volumes: getVolumes(data.volumes ?? []),
     tools: data.tools || undefined,
     tools_override: data.tools_override || undefined,

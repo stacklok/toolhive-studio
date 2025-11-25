@@ -9,7 +9,9 @@ import { mswEndpoint } from '@/common/mocks/customHandlers'
 import log from 'electron-log/renderer'
 import {
   ALLOWED_GROUPS_ENV_VAR,
+  MCP_OPTIMIZER_BASE_IMAGE,
   MCP_OPTIMIZER_GROUP_NAME,
+  MCP_OPTIMIZER_IMAGE_VERSION,
   MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
   META_MCP_SERVER_NAME,
 } from '@/common/lib/constants'
@@ -159,7 +161,7 @@ describe('useCreateOptimizerWorkload', () => {
             return HttpResponse.json({
               name: META_MCP_SERVER_NAME,
               group: MCP_OPTIMIZER_GROUP_NAME,
-              image: 'ghcr.io/stackloklabs/meta-mcp:latest',
+              image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
               status: 'running',
               env_vars: {
                 [ALLOWED_GROUPS_ENV_VAR]: 'default',
@@ -267,7 +269,7 @@ describe('useCreateOptimizerWorkload', () => {
             if (serverName === MCP_OPTIMIZER_REGISTRY_SERVER_NAME) {
               return HttpResponse.json({
                 server: {
-                  image: 'ghcr.io/stackloklabs/meta-mcp:latest',
+                  image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
                   transport: 'streamable-http',
                 },
               })
@@ -332,7 +334,7 @@ describe('useCreateOptimizerWorkload', () => {
 
       expect(postRequest?.payload).toEqual({
         name: META_MCP_SERVER_NAME,
-        image: 'ghcr.io/stackloklabs/meta-mcp:latest',
+        image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
         transport: 'streamable-http',
         group: MCP_OPTIMIZER_GROUP_NAME,
         env_vars: {
@@ -360,7 +362,7 @@ describe('useCreateOptimizerWorkload', () => {
           () =>
             HttpResponse.json({
               server: {
-                image: 'ghcr.io/stackloklabs/meta-mcp:latest',
+                image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
                 transport: 'streamable-http',
               },
             })
@@ -419,7 +421,7 @@ describe('useCreateOptimizerWorkload', () => {
           () =>
             HttpResponse.json({
               server: {
-                image: 'ghcr.io/stackloklabs/meta-mcp:latest',
+                image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
                 transport: 'streamable-http',
               },
             })
@@ -458,84 +460,6 @@ describe('useCreateOptimizerWorkload', () => {
       })
     })
 
-    it('handles missing registry server details gracefully', async () => {
-      const rec = recordRequests()
-
-      server.use(
-        http.get(
-          mswEndpoint('/api/v1beta/registry/:name/servers/:serverName'),
-          () => HttpResponse.json({ server: null })
-        ),
-        http.get(mswEndpoint('/api/v1beta/groups'), () =>
-          HttpResponse.json({
-            groups: [
-              {
-                name: 'test-group',
-                registered_clients: [],
-              },
-              {
-                name: MCP_OPTIMIZER_GROUP_NAME,
-                registered_clients: [],
-              },
-            ],
-          })
-        ),
-        http.post(mswEndpoint('/api/v1beta/workloads'), () => {
-          return HttpResponse.json({
-            name: META_MCP_SERVER_NAME,
-            group: MCP_OPTIMIZER_GROUP_NAME,
-          })
-        })
-      )
-
-      const { Wrapper } = createQueryClientWrapper()
-      const { result } = renderHook(() => useCreateOptimizerWorkload(), {
-        wrapper: Wrapper,
-      })
-
-      expect(result.current.isNotEnabled).toBe(false)
-
-      await result.current.handleCreateMetaOptimizerWorkload({
-        groupToOptimize: 'test-group',
-        optimized_workloads: [],
-      })
-
-      await waitFor(() => {
-        expect(result.current.isPending).toBe(false)
-      })
-
-      // Verify the POST request was made with undefined image/transport
-      await waitFor(() => {
-        const postRequest = rec.recordedRequests.find(
-          (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
-        )
-        expect(postRequest).toBeDefined()
-      })
-
-      const postRequest = rec.recordedRequests.find(
-        (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
-      )
-
-      // Should still create workload but with undefined image/transport
-      expect(postRequest?.payload).toMatchObject({
-        name: META_MCP_SERVER_NAME,
-        group: MCP_OPTIMIZER_GROUP_NAME,
-        env_vars: {
-          [ALLOWED_GROUPS_ENV_VAR]: 'test-group',
-        },
-      })
-      expect(
-        (postRequest?.payload as { image?: string })?.image
-      ).toBeUndefined()
-      expect(
-        (postRequest?.payload as { transport?: string })?.transport
-      ).toBeUndefined()
-
-      expect(toast.success).toHaveBeenCalledWith(
-        'MCP Optimizer installed and running'
-      )
-    })
-
     it('passes correct group name in env_vars when creating workload', async () => {
       const testGroups = ['default', 'research', 'production']
 
@@ -549,7 +473,7 @@ describe('useCreateOptimizerWorkload', () => {
             () =>
               HttpResponse.json({
                 server: {
-                  image: 'ghcr.io/stackloklabs/meta-mcp:latest',
+                  image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
                   transport: 'streamable-http',
                 },
               })
@@ -619,7 +543,7 @@ describe('useCreateOptimizerWorkload', () => {
           () =>
             HttpResponse.json({
               server: {
-                image: 'ghcr.io/stackloklabs/meta-mcp:latest',
+                image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
                 transport: 'streamable-http',
               },
             })
@@ -675,7 +599,7 @@ describe('useCreateOptimizerWorkload', () => {
           () =>
             HttpResponse.json({
               server: {
-                image: 'ghcr.io/stackloklabs/meta-mcp:latest',
+                image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
                 transport: 'streamable-http',
               },
             })
@@ -729,7 +653,7 @@ describe('useCreateOptimizerWorkload', () => {
         expect(postRequest).toBeDefined()
         expect(postRequest?.payload).toEqual({
           name: META_MCP_SERVER_NAME,
-          image: 'ghcr.io/stackloklabs/meta-mcp:latest',
+          image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
           transport: 'streamable-http',
           group: MCP_OPTIMIZER_GROUP_NAME,
           env_vars: {
@@ -817,7 +741,7 @@ describe('useCreateOptimizerWorkload', () => {
           () =>
             HttpResponse.json({
               server: {
-                image: 'ghcr.io/stackloklabs/meta-mcp:latest',
+                image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
                 transport: 'streamable-http',
               },
             })
@@ -871,7 +795,7 @@ describe('useCreateOptimizerWorkload', () => {
           () =>
             HttpResponse.json({
               server: {
-                image: 'ghcr.io/stackloklabs/meta-mcp:latest',
+                image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
                 transport: 'streamable-http',
               },
             })
@@ -908,7 +832,7 @@ describe('useCreateOptimizerWorkload', () => {
 
       expect(postRequest?.payload).toEqual({
         name: META_MCP_SERVER_NAME,
-        image: 'ghcr.io/stackloklabs/meta-mcp:latest',
+        image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
         transport: 'streamable-http',
         group: MCP_OPTIMIZER_GROUP_NAME,
         env_vars: {
@@ -940,7 +864,7 @@ describe('useCreateOptimizerWorkload', () => {
           () =>
             HttpResponse.json({
               server: {
-                image: 'ghcr.io/stackloklabs/meta-mcp:latest',
+                image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
                 transport: 'streamable-http',
               },
             })
@@ -977,7 +901,7 @@ describe('useCreateOptimizerWorkload', () => {
 
       expect(postRequest?.payload).toEqual({
         name: META_MCP_SERVER_NAME,
-        image: 'ghcr.io/stackloklabs/meta-mcp:latest',
+        image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
         transport: 'streamable-http',
         group: MCP_OPTIMIZER_GROUP_NAME,
         env_vars: {

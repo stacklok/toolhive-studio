@@ -1,4 +1,4 @@
-import type { CoreWorkload } from '@api/types.gen'
+import type { CoreWorkload, PermissionsProfile } from '@api/types.gen'
 import { z } from 'zod/v4'
 
 const createNameSchema = (workloads: CoreWorkload[]) => {
@@ -70,6 +70,36 @@ const createNetworkConfigSchema = () => {
       )
       .optional(),
   })
+}
+
+const createPermissionProfileSchema = () => {
+  const inboundSchema = z.object({
+    allow_host: z.array(z.string()).optional(),
+  })
+
+  const outboundSchema = z.object({
+    allow_host: z.array(z.string()).optional(),
+    allow_port: z.array(z.number()).optional(),
+    insecure_allow_all: z.boolean().optional(),
+  })
+
+  const networkSchema = z.object({
+    inbound: inboundSchema.optional(),
+    mode: z.string().optional(),
+    outbound: outboundSchema.optional(),
+  })
+
+  const schema: z.ZodType<PermissionsProfile> = z
+    .object({
+      name: z.string().optional(),
+      network: networkSchema.optional(),
+      privileged: z.boolean().optional(),
+      read: z.array(z.string()).optional(),
+      write: z.array(z.string()).optional(),
+    })
+    .partial()
+
+  return schema
 }
 
 const createVolumesSchema = () => {
@@ -290,6 +320,7 @@ export const createMcpBaseSchema = (workloads: CoreWorkload[]) => {
   const volumesSchema = createVolumesSchema()
   const toolsSchema = createToolsSchema()
   const toolsOverrideSchema = createToolsOverrideSchema()
+  const permissionProfileSchema = createPermissionProfileSchema()
 
   const commonSchema = nameSchema
     .extend(transportSchema.shape)
@@ -302,6 +333,7 @@ export const createMcpBaseSchema = (workloads: CoreWorkload[]) => {
     .extend(toolsOverrideSchema.shape)
     .extend({
       group: z.string(),
+      permission_profile: permissionProfileSchema.optional(),
     })
 
   return commonSchema

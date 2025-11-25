@@ -12,6 +12,7 @@ import type {
   V1CreateRequest,
   V1ListSecretsResponse,
 } from '@api/types.gen'
+import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 
 describe('prepareCreateWorkloadData', () => {
   it('prepares data for docker image type', () => {
@@ -961,5 +962,32 @@ describe('prepareUpdateLocalWorkloadData', () => {
     const result = prepareUpdateLocalWorkloadData(data)
 
     expect(result.tools).toEqual(['tool1', 'tool2'])
+  })
+
+  it('returns optimizer permission profile when group matches optimizer', () => {
+    const optimizerPermissionProfile = {
+      name: 'optimizer-profile',
+      network: { mode: 'host' },
+    }
+
+    const data: FormSchemaLocalMcp = {
+      name: 'optimizer',
+      transport: 'stdio',
+      type: 'docker_image',
+      group: MCP_OPTIMIZER_GROUP_NAME,
+      image: 'optimizer-image',
+      cmd_arguments: [],
+      envVars: [],
+      secrets: [],
+      networkIsolation: false,
+      allowedHosts: [],
+      allowedPorts: [],
+      volumes: [],
+      permission_profile: optimizerPermissionProfile,
+    }
+
+    const result = prepareUpdateLocalWorkloadData(data)
+
+    expect(result.permission_profile).toEqual(optimizerPermissionProfile)
   })
 })
