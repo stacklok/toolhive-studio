@@ -11,3 +11,4 @@ export const UI_POST_SUBMIT_DELAY_MS = 1000
  * renovate: datasource=docker depName=ghcr.io/stackloklabs/mcp-optimizer versioning=docker
  */
 export const MCP_OPTIMIZER_IMAGE_VERSION = '0.1.1'
+export const MCP_OPTIMIZER_BASE_IMAGE = 'ghcr.io/stackloklabs/mcp-optimizer'
