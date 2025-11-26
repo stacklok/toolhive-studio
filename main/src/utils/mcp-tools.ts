@@ -114,7 +114,7 @@ export async function getWorkloadAvailableTools(
           if (!def || !name) return prev
           prev[name] = {
             description: def.description,
-            inputSchema: def.inputSchema,
+            inputSchema: def.inputSchema as Tool['inputSchema'],
           }
           return prev
         }, {})
