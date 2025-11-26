@@ -37,14 +37,12 @@ const AUTH_FIELD_MATRIX = {
 type AuthFieldName =
   (typeof AUTH_FIELD_MATRIX)[keyof typeof AUTH_FIELD_MATRIX][number]
 
-const shouldShowField = (
-  authType: string | undefined,
-  fieldName: AuthFieldName
-) => {
-  if (!authType) return false
-  const fields = AUTH_FIELD_MATRIX[authType as keyof typeof AUTH_FIELD_MATRIX]
-  return (fields as readonly AuthFieldName[])?.includes(fieldName) ?? false
-}
+const shouldShowField =
+  (authType: string | undefined) => (fieldName: AuthFieldName) => {
+    if (!authType) return false
+    const fields = AUTH_FIELD_MATRIX[authType as keyof typeof AUTH_FIELD_MATRIX]
+    return (fields as readonly AuthFieldName[])?.includes(fieldName) ?? false
+  }
 
 export function FormFieldsAuth({
   authType,
@@ -53,9 +51,11 @@ export function FormFieldsAuth({
   authType: string | undefined
   form: UseFormReturn<FormSchemaRemoteMcp>
 }) {
+  const showField = shouldShowField(authType)
+
   return (
     <>
-      {shouldShowField(authType, 'callback_port') && (
+      {showField('callback_port') && (
         <FormField
           control={form.control}
           name="oauth_config.callback_port"
@@ -91,7 +91,7 @@ export function FormFieldsAuth({
         />
       )}
 
-      {shouldShowField(authType, 'issuer') && (
+      {showField('issuer') && (
         <FormField
           control={form.control}
           name="oauth_config.issuer"
@@ -121,7 +121,7 @@ export function FormFieldsAuth({
         />
       )}
 
-      {shouldShowField(authType, 'authorize_url') && (
+      {showField('authorize_url') && (
         <FormField
           control={form.control}
           name="oauth_config.authorize_url"
@@ -152,7 +152,7 @@ export function FormFieldsAuth({
         />
       )}
 
-      {shouldShowField(authType, 'token_url') && (
+      {showField('token_url') && (
         <FormField
           control={form.control}
           name="oauth_config.token_url"
@@ -183,7 +183,7 @@ export function FormFieldsAuth({
         />
       )}
 
-      {shouldShowField(authType, 'client_id') && (
+      {showField('client_id') && (
         <FormField
           control={form.control}
           name="oauth_config.client_id"
@@ -214,7 +214,7 @@ export function FormFieldsAuth({
         />
       )}
 
-      {shouldShowField(authType, 'client_secret') && (
+      {showField('client_secret') && (
         <FormField
           control={form.control}
           name="oauth_config.client_secret"
@@ -312,7 +312,7 @@ export function FormFieldsAuth({
         />
       )}
 
-      {shouldShowField(authType, 'scopes') && (
+      {showField('scopes') && (
         <FormField
           control={form.control}
           name="oauth_config.scopes"
@@ -343,7 +343,7 @@ export function FormFieldsAuth({
         />
       )}
 
-      {shouldShowField(authType, 'use_pkce') && (
+      {showField('use_pkce') && (
         <FormField
           control={form.control}
           name="oauth_config.use_pkce"
