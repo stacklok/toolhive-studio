@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import type {
   RegistryImageMetadata,
   RegistryRemoteServerMetadata,
@@ -40,10 +40,19 @@ export function MultiServerInstallWizard({
   })
   const createGroupMutation = useMutationCreateGroup({ successMsg: null })
 
+  const handleClose = useCallback(() => {
+    setWizardState({ currentIndex: 0, isGroupCreated: false })
+    onClose()
+  }, [onClose])
+
+  // Create group when dialog opens and group hasn't been created yet
   useEffect(() => {
-    if (!isOpen) {
-      setWizardState({ currentIndex: 0, isGroupCreated: false })
-    } else if (!wizardState.isGroupCreated && group?.name) {
+    if (
+      isOpen &&
+      !wizardState.isGroupCreated &&
+      !createGroupMutation.isPending &&
+      group?.name
+    ) {
       createGroupMutation
         .mutateAsync({
           body: {
@@ -54,10 +63,16 @@ export function MultiServerInstallWizard({
           setWizardState((prev) => ({ ...prev, isGroupCreated: true }))
         })
         .catch(() => {
-          onClose()
+          handleClose()
         })
     }
-  }, [isOpen, wizardState.isGroupCreated, group?.name])
+  }, [
+    isOpen,
+    wizardState.isGroupCreated,
+    group?.name,
+    createGroupMutation,
+    handleClose,
+  ])
 
   if (!isOpen || servers.length === 0 || !group?.name) return null
 
@@ -74,7 +89,7 @@ export function MultiServerInstallWizard({
   const handleNext = (closeDialog: () => void) => {
     if (!hasMoreServers) {
       closeDialog()
-      onClose()
+      handleClose()
       return
     }
 
@@ -90,7 +105,7 @@ export function MultiServerInstallWizard({
         key={currentServer.name}
         server={currentServer}
         isOpen={isOpen}
-        closeDialog={onClose}
+        closeDialog={handleClose}
         onSubmitSuccess={handleNext}
         hardcodedGroup={group.name}
         actionsSubmitLabel={hasMoreServers ? 'Next' : 'Finish'}
@@ -113,7 +128,7 @@ export function MultiServerInstallWizard({
       key={currentServer.name}
       server={currentServer}
       isOpen={isOpen}
-      onOpenChange={onClose}
+      onOpenChange={handleClose}
       onSubmitSuccess={handleNext}
       hardcodedGroup={group.name}
       actionsSubmitLabel={hasMoreServers ? 'Next' : 'Finish'}

@@ -12,7 +12,7 @@ import {
 } from '@/common/hooks/use-auto-launch'
 import { useTheme } from '@/common/hooks/use-theme'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Sun, Moon, Monitor } from 'lucide-react'
 import log from 'electron-log/renderer'
 import { trackEvent } from '@/common/lib/analytics'
@@ -138,14 +138,9 @@ function AutoLaunchField() {
 }
 
 function QuitConfirmationField() {
-  const [skipQuitConfirmation, setSkipQuitConfirmation] =
-    useState<boolean>(false)
-
-  useEffect(() => {
-    const quitConfirmationDisabled =
-      localStorage.getItem(CONFIRM_QUIT_STORAGE_KEY) === 'true'
-    setSkipQuitConfirmation(quitConfirmationDisabled)
-  }, [])
+  const [skipQuitConfirmation, setSkipQuitConfirmation] = useState<boolean>(
+    () => localStorage.getItem(CONFIRM_QUIT_STORAGE_KEY) === 'true'
+  )
 
   const handleQuitConfirmationToggle = () => {
     const newValue = !skipQuitConfirmation

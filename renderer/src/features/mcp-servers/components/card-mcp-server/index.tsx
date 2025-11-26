@@ -14,6 +14,7 @@ import { useSearch } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { trackEvent } from '@/common/lib/analytics'
+import { delay } from '@utils/delay'
 import {
   Tooltip,
   TooltipTrigger,
@@ -110,24 +111,29 @@ export function CardMcpServer({
     strict: false,
   })
   const [isNewServer, setIsNewServer] = useState(false)
+  const searchNewServerName =
+    'newServerName' in search ? search.newServerName : null
 
   useEffect(() => {
     // Check if the server is new by looking for a specific search parameter
-    // This could be a query parameter or any other condition that indicates a new server
-    if ('newServerName' in search && search.newServerName === name) {
-      setIsNewServer(true)
-      // clear state after 2 seconds
-      setTimeout(() => {
-        setIsNewServer(false)
-      }, 2000)
-    } else {
-      setIsNewServer(false)
-    }
+    if (searchNewServerName === name) {
+      let cancelled = false
 
-    return () => {
-      setIsNewServer(false)
+      const showNewServerAnimation = async () => {
+        setIsNewServer(true)
+        await delay(2000)
+        if (!cancelled) {
+          setIsNewServer(false)
+        }
+      }
+
+      showNewServerAnimation()
+
+      return () => {
+        cancelled = true
+      }
     }
-  }, [name, search])
+  }, [name, searchNewServerName])
 
   // Check if the server is in deleting state
   const isDeleting = status === 'deleting'
@@ -135,17 +141,32 @@ export function CardMcpServer({
     status === 'starting' || status === 'stopping' || status === 'restarting'
   const isStopped = status === 'stopped' || status === 'stopping'
   const [hadRecentStatusChange, setHadRecentStatusChange] = useState(false)
-  const [prevStatus, setPrevStatus] = useState<CoreWorkload['status']>(status)
+  const prevStatusRef = useRef<CoreWorkload['status']>(status)
 
   useEffect(() => {
-    // show a brief animation for status transitions that are immediate
-    if (prevStatus !== status && ['running'].includes(status ?? '')) {
-      setHadRecentStatusChange(true)
-      const timeout = setTimeout(() => setHadRecentStatusChange(false), 2500)
-      return () => clearTimeout(timeout)
+    // Show a brief animation for status transitions
+    if (
+      prevStatusRef.current !== status &&
+      ['running'].includes(status ?? '')
+    ) {
+      let cancelled = false
+
+      const showStatusChangeAnimation = async () => {
+        setHadRecentStatusChange(true)
+        await delay(2500)
+        if (!cancelled) {
+          setHadRecentStatusChange(false)
+        }
+      }
+
+      showStatusChangeAnimation()
+
+      return () => {
+        cancelled = true
+      }
     }
-    setPrevStatus(status)
-  }, [status, prevStatus])
+    prevStatusRef.current = status
+  }, [status])
 
   return (
     <Card

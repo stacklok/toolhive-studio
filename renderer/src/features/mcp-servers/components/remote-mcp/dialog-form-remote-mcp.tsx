@@ -8,7 +8,7 @@ import {
 import { Input } from '@/common/components/ui/input'
 import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import {
   Select,
   SelectTrigger,
@@ -19,7 +19,7 @@ import {
 import { FormFieldsAuth } from './form-fields-auth'
 import { useRunRemoteServer } from '../../hooks/use-run-remote-server'
 import log from 'electron-log/renderer'
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useMemo } from 'react'
 import { useUpdateServer } from '../../hooks/use-update-server'
 import {
   getApiV1BetaSecretsDefaultKeysOptions,
@@ -139,7 +139,7 @@ export function DialogFormRemoteMcp({
     convertCreateRequestToFormData(existingServer, availableSecrets)
 
   const { data: groupsData } = useGroups()
-  const groups = groupsData?.groups ?? []
+  const groups = useMemo(() => groupsData?.groups ?? [], [groupsData])
 
   const form = useForm<FormSchemaRemoteMcp>({
     resolver: zodV4Resolver(
@@ -220,7 +220,7 @@ export function DialogFormRemoteMcp({
     }
   }
 
-  const authType = form.watch('auth_type')
+  const authType = useWatch({ control: form.control, name: 'auth_type' })
   const isLoading = isSubmitting || (isEditing && isLoadingServer)
 
   const renderContent = useCallback(() => {

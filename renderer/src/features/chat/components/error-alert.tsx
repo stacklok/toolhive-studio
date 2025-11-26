@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { X, AlertTriangle } from 'lucide-react'
 import {
   Alert,
@@ -14,16 +14,10 @@ interface ErrorAlertProps {
 }
 
 export function ErrorAlert({ error, className = '' }: ErrorAlertProps) {
-  const [isDismissed, setIsDismissed] = useState(false)
+  const [dismissedError, setDismissedError] = useState<string | null>(null)
 
-  // Reset dismissed state when a new error occurs
-  useEffect(() => {
-    if (error) {
-      setIsDismissed(false)
-    }
-  }, [error])
-
-  if (!error || isDismissed) {
+  // Show alert only if there's an error and it hasn't been dismissed
+  if (!error || error === dismissedError) {
     return null
   }
 
@@ -50,7 +44,7 @@ export function ErrorAlert({ error, className = '' }: ErrorAlertProps) {
           variant="ghost"
           size="sm"
           className="hover:bg-destructive/20 absolute top-2 right-2 h-6 w-6 p-0"
-          onClick={() => setIsDismissed(true)}
+          onClick={() => setDismissedError(error)}
         >
           <X className="h-3 w-3" />
           <span className="sr-only">Dismiss error</span>

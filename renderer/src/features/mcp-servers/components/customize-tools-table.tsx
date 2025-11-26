@@ -251,6 +251,8 @@ export function CustomizeToolsTable({
       toolsOverride,
       overrideTools,
       expandableText,
+      handleToolToggle,
+      handleEditTool,
     ]
   )
 

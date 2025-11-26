@@ -401,7 +401,7 @@ describe('Registry Group Detail Route', () => {
         name: /configure first-server/i,
       })
       if (h) {
-        await waitForElementToBeRemoved(h, { timeout: 10000 })
+        await waitForElementToBeRemoved(h)
       }
     }
     const secondServerHeading = await screen.findByRole('heading', {
@@ -543,7 +543,7 @@ describe('Registry Group Detail Route', () => {
         name: /configure first-server/i,
       })
       if (h2) {
-        await waitForElementToBeRemoved(h2, { timeout: 10000 })
+        await waitForElementToBeRemoved(h2)
       }
     }
     const secondServerHeading2 = await screen.findByRole('heading', {
@@ -562,7 +562,7 @@ describe('Registry Group Detail Route', () => {
     // The wizard closes the dialog before emitting readiness toasts
     const dialog = screen.queryByRole('dialog')
     if (dialog) {
-      await waitForElementToBeRemoved(dialog, { timeout: 10000 })
+      await waitForElementToBeRemoved(dialog)
     }
 
     await waitFor(() => {

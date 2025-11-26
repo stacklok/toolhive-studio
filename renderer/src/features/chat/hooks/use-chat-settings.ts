@@ -207,13 +207,7 @@ export function useChatSettings() {
         enabledTools: allEnabledTools,
       }
     }
-  }, [
-    selectedModel?.provider,
-    selectedModel?.model,
-    providerSettings,
-    enabledMcpTools,
-    enabledMcpServers,
-  ])
+  }, [selectedModel, providerSettings, enabledMcpTools, enabledMcpServers])
 
   // Mutation to update selected model
   const updateSelectedModelMutation = useMutation({
@@ -285,7 +279,7 @@ export function useChatSettings() {
         throw error
       }
     },
-    [selectedModel?.provider, selectedModel?.model, updateSelectedModelMutation]
+    [selectedModel, updateSelectedModelMutation]
   )
 
   // Update only enabled tools
@@ -316,7 +310,7 @@ export function useChatSettings() {
         throw error
       }
     },
-    [selectedModel?.provider, updateProviderSettingsMutation]
+    [selectedModel, updateProviderSettingsMutation]
   )
 
   // Load persisted settings for a provider
