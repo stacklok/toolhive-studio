@@ -28,7 +28,9 @@ export function useCustomizeToolsTable({
   onApply,
 }: UseCustomizeToolsTableProps) {
   const [enabledTools, setEnabledTools] = useState<Record<string, boolean>>({})
-  const [toolsOverride, setToolsOverride] = useState<ToolOverrides>({})
+  const [toolsOverride, setToolsOverride] = useState<ToolOverrides>(
+    overrideTools ?? {}
+  )
   const [lastOverrideTools, setLastOverrideTools] = useState(overrideTools)
   const [editState, setEditState] = useState<EditState>({
     isOpen: false,
