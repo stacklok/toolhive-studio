@@ -66,6 +66,14 @@ describe('ManageClientsButton – BDD flows', () => {
         })
       ),
       http.get(mswEndpoint('/api/v1beta/clients'), () => HttpResponse.json([])),
+      http.get(mswEndpoint('/api/v1beta/discovery/clients'), () =>
+        HttpResponse.json({
+          clients: [
+            { client_type: 'vscode', installed: true },
+            { client_type: 'cursor', installed: true },
+          ],
+        })
+      ),
       http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
         HttpResponse.json([])
       )
@@ -75,12 +83,9 @@ describe('ManageClientsButton – BDD flows', () => {
 
     const user = userEvent.setup()
     renderWithProviders({ groupName: 'default' })
-    await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: /manage clients/i })
-      ).toBeVisible()
-    })
-    await user.click(screen.getByRole('button', { name: /manage clients/i }))
+    await user.click(
+      await screen.findByRole('button', { name: /manage clients/i })
+    )
 
     await waitFor(() => {
       expect(
@@ -147,6 +152,15 @@ describe('ManageClientsButton – BDD flows', () => {
           { name: { name: 'claude-code' }, groups: [] },
         ])
       ),
+      http.get(mswEndpoint('/api/v1beta/discovery/clients'), () =>
+        HttpResponse.json({
+          clients: [
+            { client_type: 'vscode', installed: true },
+            { client_type: 'cursor', installed: true },
+            { client_type: 'claude-code', installed: true },
+          ],
+        })
+      ),
       http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
         HttpResponse.json([])
       )
@@ -210,6 +224,15 @@ describe('ManageClientsButton – BDD flows', () => {
           ],
         })
       ),
+      http.get(mswEndpoint('/api/v1beta/discovery/clients'), () =>
+        HttpResponse.json({
+          clients: [
+            { client_type: 'vscode', installed: true },
+            { client_type: 'cursor', installed: true },
+            { client_type: 'claude-code', installed: true },
+          ],
+        })
+      ),
       http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
         HttpResponse.json([])
       )
@@ -267,6 +290,15 @@ describe('ManageClientsButton – BDD flows', () => {
           { name: { name: 'cursor' }, groups: ['default'] },
           { name: { name: 'claude-code' }, groups: [] },
         ])
+      ),
+      http.get(mswEndpoint('/api/v1beta/discovery/clients'), () =>
+        HttpResponse.json({
+          clients: [
+            { client_type: 'vscode', installed: true },
+            { client_type: 'cursor', installed: true },
+            { client_type: 'claude-code', installed: true },
+          ],
+        })
       ),
       http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
         HttpResponse.json([])
@@ -336,6 +368,14 @@ describe('ManageClientsButton – BDD flows', () => {
           { name: { name: 'vscode' }, groups: ['default'] },
           { name: { name: 'cursor' }, groups: ['default'] },
         ])
+      ),
+      http.get(mswEndpoint('/api/v1beta/discovery/clients'), () =>
+        HttpResponse.json({
+          clients: [
+            { client_type: 'vscode', installed: true },
+            { client_type: 'cursor', installed: true },
+          ],
+        })
       )
     )
 
@@ -364,6 +404,14 @@ describe('ManageClientsButton – BDD flows', () => {
       http.get(mswEndpoint('/api/v1beta/groups'), () =>
         HttpResponse.json({
           groups: [{ name: 'default', registered_clients: [] }],
+        })
+      ),
+      http.get(mswEndpoint('/api/v1beta/discovery/clients'), () =>
+        HttpResponse.json({
+          clients: [
+            { client_type: 'vscode', installed: true },
+            { client_type: 'cursor', installed: true },
+          ],
         })
       )
     )
@@ -406,6 +454,15 @@ describe('ManageClientsButton – BDD flows', () => {
           { name: { name: 'cursor' }, groups: ['default'] },
           { name: { name: 'claude-code' }, groups: [] },
         ])
+      ),
+      http.get(mswEndpoint('/api/v1beta/discovery/clients'), () =>
+        HttpResponse.json({
+          clients: [
+            { client_type: 'vscode', installed: true },
+            { client_type: 'cursor', installed: true },
+            { client_type: 'claude-code', installed: true },
+          ],
+        })
       ),
       http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
         HttpResponse.json([])
