@@ -138,7 +138,7 @@
     "electron-log": "^5.4.1",
     "electron-squirrel-startup": "^1.0.1",
     "electron-store": "10.1.0",
-    "lucide-react": "^0.548.0",
+    "lucide-react": "^0.555.0",
     "nanoid": "^5.1.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
