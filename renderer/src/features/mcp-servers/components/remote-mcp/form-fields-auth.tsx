@@ -15,7 +15,14 @@ import { Checkbox } from '@/common/components/ui/checkbox'
 
 const AUTH_FIELD_MATRIX = {
   none: ['callback_port', 'issuer'],
-  oidc: ['callback_port', 'issuer', 'client_id', 'client_secret', 'use_pkce'],
+  oidc: [
+    'callback_port',
+    'issuer',
+    'client_id',
+    'client_secret',
+    'use_pkce',
+    'scopes',
+  ],
   oauth2: [
     'callback_port',
     'authorize_url',
