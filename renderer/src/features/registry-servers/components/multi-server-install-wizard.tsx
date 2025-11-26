@@ -47,7 +47,12 @@ export function MultiServerInstallWizard({
 
   // Create group when dialog opens and group hasn't been created yet
   useEffect(() => {
-    if (isOpen && !wizardState.isGroupCreated && group?.name) {
+    if (
+      isOpen &&
+      !wizardState.isGroupCreated &&
+      !createGroupMutation.isPending &&
+      group?.name
+    ) {
       createGroupMutation
         .mutateAsync({
           body: {
