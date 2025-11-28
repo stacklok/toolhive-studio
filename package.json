@@ -159,5 +159,11 @@
       "prettier --write",
       "eslint --max-warnings 0 --no-warn-ignored"
     ]
+  },
+  "pnpm": {
+    "overrides": {
+      "@sentry/electron>@sentry/node": "^10.27.0",
+      "@sentry/electron>@sentry/node-core": "^10.27.0"
+    }
   }
 }
