@@ -7,16 +7,6 @@ import type { FeatureFlagKey, FeatureFlagOptions } from './types'
 const FLAG_STORE_PREFIX = 'feature_flag_'
 
 const featureFlagOptions: Record<FeatureFlagKey, FeatureFlagOptions> = {
-  [featureFlagKeys.CUSTOMIZE_TOOLS]: {
-    isDisabled: false,
-    defaultValue: false,
-    isExperimental: false,
-  },
-  [featureFlagKeys.GROUPS_IN_REGISTRY]: {
-    isDisabled: false,
-    defaultValue: false,
-    isExperimental: false,
-  },
   [featureFlagKeys.META_OPTIMIZER]: {
     isDisabled: false,
     defaultValue: false,
