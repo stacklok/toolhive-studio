@@ -6,8 +6,6 @@ import {
   DropdownMenuContent,
   DropdownMenuSeparator,
 } from '@/common/components/ui/dropdown-menu'
-import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
-import { featureFlagKeys } from '../../../../../../../utils/feature-flags'
 import { useServerDetails } from '../../../hooks/use-server-details'
 import { ServerUrl } from './items/server-url'
 import { EditConfigurationMenuItem } from './items/edit-configuration-menu-item'
@@ -32,10 +30,6 @@ export function ServerActionsDropdown({
   remote,
   group,
 }: ServerActionsDropdownProps) {
-  const isCustomizeToolsEnabled = useFeatureFlag(
-    featureFlagKeys.CUSTOMIZE_TOOLS
-  )
-
   const { data: serverDetails } = useServerDetails(name)
 
   const repositoryUrl = serverDetails?.server?.repository_url
@@ -68,9 +62,7 @@ export function ServerActionsDropdown({
           <GithubRepositoryMenuItem repositoryUrl={repositoryUrl} />
         )}
         <LogsMenuItem serverName={name} remote={remote} group={group} />
-        {isCustomizeToolsEnabled && (
-          <CustomizeToolsMenuItem serverName={name} status={status} />
-        )}
+        <CustomizeToolsMenuItem serverName={name} status={status} />
         <RemoveServerMenuItem serverName={name} group={group} />
         <DropdownMenuSeparator />
         <AddServerToGroupMenuItem serverName={name} />

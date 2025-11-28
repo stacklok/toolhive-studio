@@ -9,8 +9,6 @@ import { EmptyState } from '@/common/components/empty-state'
 import { ExternalLinkIcon } from 'lucide-react'
 import { Button } from '@/common/components/ui/button'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
-import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
-import { featureFlagKeys } from '../../../../utils/feature-flags'
 import {
   DEPRECATED_MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
   MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
@@ -40,10 +38,6 @@ export const Route = createFileRoute('/(registry)/registry')({
 })
 
 export function Registry() {
-  const isGroupsInRegistryEnabled = useFeatureFlag(
-    featureFlagKeys.GROUPS_IN_REGISTRY
-  )
-
   const { data: serversData } = useSuspenseQuery(
     getApiV1BetaRegistryByNameServersOptions({
       path: { name: DEFAULT_REGISTRY_NAME },
@@ -59,9 +53,7 @@ export function Registry() {
   const { servers: serversList = [], remote_servers: remoteServersList = [] } =
     serversData || {}
 
-  const groups = isGroupsInRegistryEnabled
-    ? registryData?.registry?.groups || []
-    : []
+  const groups = registryData?.registry?.groups || []
 
   const servers = [...serversList, ...remoteServersList].filter(
     (server) => !SKIP_META_MCP.includes(server.name ?? '')
