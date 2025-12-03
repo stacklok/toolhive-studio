@@ -14,6 +14,7 @@ ToolHive's [developer guide](./docs/README.md).
   - [Using GitHub Issues](#using-github-issues)
   - [Not sure how to start contributing?](#not-sure-how-to-start-contributing)
   - [Pull request process](#pull-request-process)
+    - [Pull request size guidelines](#pull-request-size-guidelines)
   - [Contributing to docs](#contributing-to-docs)
   - [Commit message guidelines](#commit-message-guidelines)
 
@@ -69,6 +70,26 @@ are a great place to start!
   merging.
 - Once approved, all of your commits will be squashed into a single commit with
   your PR title.
+
+#### Pull request size guidelines
+
+To improve code review efficiency, PRs are automatically labeled based on their
+size (total lines changed = additions + deletions):
+
+| Label   | Lines Changed |
+| ------- | ------------- |
+| size/XS | < 100         |
+| size/S  | 100-299       |
+| size/M  | 300-599       |
+| size/L  | 600-999       |
+| size/XL | ≥ 1000        |
+
+**Best practices:**
+
+- Keep PRs small and focused when possible (size/XS or size/S are ideal)
+- Break large features into smaller, reviewable chunks
+- If you need to create a large PR (size/XL), consider splitting it into
+  multiple PRs or add a comment explaining why it needs to be large
 
 ### Contributing to docs
 
