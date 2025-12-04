@@ -1,11 +1,11 @@
 import { test, expect } from './fixtures/electron'
 
 test('app starts and stops properly', async ({ window }) => {
-  const header = window.getByRole('heading', {
-    name: /add your first mcp server/i,
+  const navItem = window.getByRole('link', {
+    name: /mcp servers/i,
   })
-  await header.waitFor()
-  await expect(header).toBeVisible()
+  await navItem.waitFor()
+  await expect(navItem).toBeVisible()
 })
 
 test.skip('install & uninstall server', async ({ window }) => {

@@ -10,9 +10,8 @@
   },
   "scripts": {
     "start": "electron-forge start",
-    "e2e": "playwright test",
-    "e2e:local": "pnpm package && pnpm e2e",
-    "e2e:build": "sh -c \"tsc -b --clean && tsc -b && electron-forge package && playwright test\"",
+    "e2e": "pnpm package && pnpm e2e:prebuilt",
+    "e2e:prebuilt": "playwright test",
     "package": "tsc -b --clean && tsc -b && electron-forge package",
     "make": "tsc -b --clean && tsc -b && electron-forge make",
     "prettier": "prettier . --check",
