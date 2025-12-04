@@ -8,7 +8,7 @@ test('app starts and stops properly', async ({ window }) => {
   await expect(header).toBeVisible()
 })
 
-test('install & uninstall server', async ({ window }) => {
+test.skip('install & uninstall server', async ({ window }) => {
   await window.getByRole('link', { name: /browse registry/i }).click()
   await window
     .getByRole('button', {

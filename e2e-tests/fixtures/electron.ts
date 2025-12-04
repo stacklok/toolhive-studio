@@ -1,3 +1,4 @@
+import path from 'path'
 import {
   test as base,
   _electron as electron,
@@ -10,25 +11,39 @@ type ElectronFixtures = {
   window: Page
 }
 
+function getExecutablePath(): string {
+  const platform = process.platform
+  const arch = process.arch
+  const basePath = path.join(__dirname, '..', '..', 'out')
+
+  if (platform === 'darwin') {
+    return path.join(
+      basePath,
+      `ToolHive-darwin-${arch}`,
+      'ToolHive.app',
+      'Contents',
+      'MacOS',
+      'ToolHive'
+    )
+  } else if (platform === 'win32') {
+    return path.join(basePath, `ToolHive-win32-${arch}`, 'ToolHive.exe')
+  } else {
+    return path.join(basePath, `ToolHive-linux-${arch}`, 'ToolHive')
+  }
+}
+
 export const test = base.extend<ElectronFixtures>({
   // eslint-disable-next-line no-empty-pattern
   electronApp: async ({}, use) => {
     const app = await electron.launch({
-      args: ['.'],
+      executablePath: getExecutablePath(),
       recordVideo: { dir: 'test-videos' },
+      args: ['--no-sandbox'],
     })
 
     await use(app)
 
-    const window = await app.firstWindow()
-    await window.evaluate(() => {
-      // mock confirm quit
-      localStorage.setItem('doNotShowAgain_confirm_quit', 'true')
-    })
-
-    // Ensure app is closed and video is recorded
-    const appToClose = app.close()
-    await appToClose
+    await app.close()
   },
 
   window: async ({ electronApp }, use) => {

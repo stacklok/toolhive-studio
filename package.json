@@ -10,7 +10,9 @@
   },
   "scripts": {
     "start": "electron-forge start",
-    "e2e": "env CI=true sh -c \"tsc -b --clean && tsc -b && electron-forge package && playwright test\"",
+    "e2e": "playwright test",
+    "e2e:local": "pnpm package && pnpm e2e",
+    "e2e:build": "sh -c \"tsc -b --clean && tsc -b && electron-forge package && playwright test\"",
     "package": "tsc -b --clean && tsc -b && electron-forge package",
     "make": "tsc -b --clean && tsc -b && electron-forge make",
     "prettier": "prettier . --check",
@@ -28,7 +30,8 @@
     "generate-client:nofetch": "cd api && openapi-ts",
     "generate-icons": "ts-node scripts/generate-icons.ts",
     "knip": "knip",
-    "playwright": "playwright"
+    "playwright": "playwright",
+    "playwright:ui": "playwright test --ui"
   },
   "keywords": [],
   "license": "Apache-2.0",
