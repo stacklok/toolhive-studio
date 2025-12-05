@@ -1,4 +1,5 @@
 import path from 'path'
+import { execSync } from 'child_process'
 import {
   test as base,
   _electron as electron,
@@ -10,6 +11,8 @@ type ElectronFixtures = {
   electronApp: ElectronApplication
   window: Page
 }
+
+const TEST_GROUP_NAME = 'playwright-automated-test-fixture'
 
 function getExecutablePath(): string {
   const platform = process.platform
@@ -32,9 +35,50 @@ function getExecutablePath(): string {
   }
 }
 
+function getThvPath(): string {
+  const platform = process.platform
+  const arch = process.arch
+  const binName = platform === 'win32' ? 'thv.exe' : 'thv'
+  return path.join(__dirname, '..', '..', 'bin', `${platform}-${arch}`, binName)
+}
+
+function deleteTestGroupViaCli(): void {
+  const thvPath = getThvPath()
+  try {
+    execSync(`"${thvPath}" group rm "${TEST_GROUP_NAME}"`, {
+      stdio: 'ignore',
+    })
+  } catch {
+    // Group doesn't exist, which is fine
+  }
+}
+
+async function createTestGroup(window: Page): Promise<void> {
+  // Click "Add a group" button
+  const addGroupButton = window.getByRole('button', { name: /add a group/i })
+  await addGroupButton.click()
+
+  // Wait for dialog to appear
+  await window.getByRole('dialog').waitFor()
+
+  // Fill in the group name
+  const nameInput = window.getByLabel(/name/i)
+  await nameInput.fill(TEST_GROUP_NAME)
+
+  // Click Create button
+  const createButton = window.getByRole('button', { name: /create/i })
+  await createButton.click()
+
+  // Wait for dialog to close
+  await window.getByRole('dialog').waitFor({ state: 'hidden' })
+}
+
 export const test = base.extend<ElectronFixtures>({
   // eslint-disable-next-line no-empty-pattern
   electronApp: async ({}, use) => {
+    // Clean up any leftover test group from previous runs
+    deleteTestGroupViaCli()
+
     const app = await electron.launch({
       executablePath: getExecutablePath(),
       recordVideo: { dir: 'test-videos' },
@@ -54,7 +98,16 @@ export const test = base.extend<ElectronFixtures>({
 
   window: async ({ electronApp }, use) => {
     const window = await electronApp.firstWindow()
+
+    // Wait for app to be ready
+    await window.getByRole('link', { name: /mcp servers/i }).waitFor()
+
+    // Create the test group
+    await createTestGroup(window)
+
     await use(window)
+
+    // Cleanup is handled by deleteTestGroupViaCli() on next run
   },
 })
 
