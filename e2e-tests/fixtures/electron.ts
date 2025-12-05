@@ -14,6 +14,12 @@ type ElectronFixtures = {
 
 const TEST_GROUP_NAME = 'playwright-automated-test-fixture'
 
+/** Default timeout for most operations (10 seconds) */
+export const DEFAULT_TIMEOUT = 10_000
+
+/** Long timeout for operations that may take a while, like server installation (60 seconds) */
+export const LONG_TIMEOUT = 60_000
+
 function getExecutablePath(): string {
   const platform = process.platform
   const arch = process.arch

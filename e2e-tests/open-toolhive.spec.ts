@@ -40,7 +40,7 @@ test('install and uninstall server from registry', async ({ window }) => {
   // Wait for installation to complete - a success toast appears with a "View" button
   // The View button is a Link inside a Button, so we look for the link text
   const viewButton = window.getByRole('link', { name: /^view$/i })
-  await viewButton.waitFor({ timeout: 60000 })
+  await viewButton.waitFor()
   await viewButton.click()
 
   // Now we should be on the server view page, verify the server is running
