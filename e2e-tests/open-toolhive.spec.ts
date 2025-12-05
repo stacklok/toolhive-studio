@@ -37,9 +37,14 @@ test('install and uninstall server from registry', async ({ window }) => {
   // Click "Install server" in the dialog to start installation
   await window.getByRole('button', { name: /install server/i }).click()
 
-  // Wait for installation to complete - dialog shows progress then closes
-  // After success, we should be navigated to the server view
-  await window.getByText('Running').waitFor({ timeout: 60000 })
+  // Wait for installation to complete - a success toast appears with a "View" button
+  // The View button is a Link inside a Button, so we look for the link text
+  const viewButton = window.getByRole('link', { name: /^view$/i })
+  await viewButton.waitFor({ timeout: 60000 })
+  await viewButton.click()
+
+  // Now we should be on the server view page, verify the server is running
+  await window.getByText('Running').waitFor()
 
   // Open the options menu
   await window.getByRole('button', { name: /more options/i }).click()
