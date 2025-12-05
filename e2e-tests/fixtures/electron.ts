@@ -43,6 +43,12 @@ export const test = base.extend<ElectronFixtures>({
 
     await use(app)
 
+    // Disable quit confirmation dialog before closing
+    const window = await app.firstWindow()
+    await window.evaluate(() => {
+      localStorage.setItem('doNotShowAgain_confirm_quit', 'true')
+    })
+
     await app.close()
   },
 
