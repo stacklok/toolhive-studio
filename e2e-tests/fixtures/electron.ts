@@ -61,29 +61,12 @@ function deleteTestGroupViaCli(): void {
 }
 
 async function createAndActivateTestGroup(window: Page): Promise<void> {
-  // Click "Add a group" button
-  const addGroupButton = window.getByRole('button', { name: /add a group/i })
-  await addGroupButton.click()
-
-  // Wait for dialog to appear
+  await window.getByRole('button', { name: /add a group/i }).click()
   await window.getByRole('dialog').waitFor()
-
-  // Fill in the group name
-  const nameInput = window.getByLabel(/name/i)
-  await nameInput.fill(TEST_GROUP_NAME)
-
-  // Click Create button
-  const createButton = window.getByRole('button', { name: /create/i })
-  await createButton.click()
-
-  // Wait for dialog to close
+  await window.getByLabel(/name/i).fill(TEST_GROUP_NAME)
+  await window.getByRole('button', { name: /create/i }).click()
   await window.getByRole('dialog').waitFor({ state: 'hidden' })
-
-  // Click on the test group to activate it
-  const groupLink = window.getByRole('link', { name: TEST_GROUP_NAME })
-  await groupLink.click()
-
-  // Wait for the empty state heading to appear (new group has no servers)
+  await window.getByRole('link', { name: TEST_GROUP_NAME }).click()
   await window
     .getByRole('heading', { name: /add your first mcp server/i })
     .waitFor()
@@ -92,7 +75,6 @@ async function createAndActivateTestGroup(window: Page): Promise<void> {
 export const test = base.extend<ElectronFixtures>({
   // eslint-disable-next-line no-empty-pattern
   electronApp: async ({}, use) => {
-    // Clean up any leftover test group from previous runs
     deleteTestGroupViaCli()
 
     const app = await electron.launch({
@@ -103,7 +85,7 @@ export const test = base.extend<ElectronFixtures>({
 
     await use(app)
 
-    // Disable quit confirmation dialog before closing
+    // Disable quit confirmation dialog to prevent hang on close
     const window = await app.firstWindow()
     await window.evaluate(() => {
       localStorage.setItem('doNotShowAgain_confirm_quit', 'true')
@@ -115,20 +97,16 @@ export const test = base.extend<ElectronFixtures>({
   window: async ({ electronApp }, use) => {
     const window = await electronApp.firstWindow()
 
-    // Disable quit confirmation dialog early
+    // Disable quit confirmation dialog to prevent hang on close
     await window.evaluate(() => {
       localStorage.setItem('doNotShowAgain_confirm_quit', 'true')
     })
 
-    // Wait for app to be ready
     await window.getByRole('link', { name: /mcp servers/i }).waitFor()
-
-    // Create and activate the test group
     await createAndActivateTestGroup(window)
 
     await use(window)
 
-    // Clean up test group (also runs before next test in case this fails)
     deleteTestGroupViaCli()
   },
 })

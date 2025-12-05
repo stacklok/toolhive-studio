@@ -28,9 +28,7 @@
     "generate-client": "pnpm run update-api && cd api && openapi-ts",
     "generate-client:nofetch": "cd api && openapi-ts",
     "generate-icons": "ts-node scripts/generate-icons.ts",
-    "knip": "knip",
-    "playwright": "playwright",
-    "playwright:ui": "playwright test --ui"
+    "knip": "knip"
   },
   "keywords": [],
   "license": "Apache-2.0",

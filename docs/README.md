@@ -52,6 +52,15 @@ Here are the most common scripts you will use during development:
 - `pnpm run test:coverage`: Runs tests with coverage.
 - `pnpm run thv`: Run the same `thv` binary that the dev server uses
 
+### End-to-end tests
+
+E2E tests use Playwright to test the packaged Electron application.
+
+- `pnpm run e2e`: Packages the app and runs e2e tests. Use this for a full test
+  run from scratch.
+- `pnpm run e2e:prebuilt`: Runs e2e tests against an already packaged app in
+  `out/`. Use this when iterating on tests without rebuilding.
+
 ### Building and packaging
 
 - `pnpm run package`: Packages the application for the current platform.
