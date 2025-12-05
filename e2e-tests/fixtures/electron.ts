@@ -107,7 +107,8 @@ export const test = base.extend<ElectronFixtures>({
 
     await use(window)
 
-    // Cleanup is handled by deleteTestGroupViaCli() on next run
+    // Clean up test group (also runs before next test in case this fails)
+    deleteTestGroupViaCli()
   },
 })
 
