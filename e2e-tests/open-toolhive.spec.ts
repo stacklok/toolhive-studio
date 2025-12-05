@@ -8,6 +8,7 @@ test('app starts and stops properly', async ({ window }) => {
   await expect(navItem).toBeVisible()
 })
 
+// TODO: Update this test to match current UI - selectors are outdated
 test.skip('install & uninstall server', async ({ window }) => {
   await window.getByRole('link', { name: /browse registry/i }).click()
   await window
