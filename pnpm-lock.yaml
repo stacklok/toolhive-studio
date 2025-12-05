@@ -235,7 +235,7 @@ importers:
         specifier: 0.85.2
         version: 0.85.2(magicast@0.3.5)(typescript@5.9.3)
       '@playwright/test':
-        specifier: ^1.54.1
+        specifier: ^1.57.0
         version: 1.57.0
       '@tailwindcss/postcss':
         specifier: ^4.1.10

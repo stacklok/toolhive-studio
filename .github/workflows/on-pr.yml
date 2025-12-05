@@ -22,8 +22,7 @@ jobs:
     uses: ./.github/workflows/_unit-tests.yml
     secrets: inherit
 
-  # The e2e tests are currently flaky, so we're disabling them for now, needs to be investigated
-  # e2e-tests:
-  #   name: End-to-end tests
-  #   uses: ./.github/workflows/_e2e.yml
-  #   secrets: inherit
+  e2e-tests:
+    name: End-to-end tests
+    uses: ./.github/workflows/_e2e.yml
+    secrets: inherit

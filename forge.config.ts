@@ -204,7 +204,9 @@ const config: ForgeConfig = {
       [FuseV1Options.RunAsNode]: false,
       [FuseV1Options.EnableCookieEncryption]: true,
       [FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
-      [FuseV1Options.EnableNodeCliInspectArguments]: false,
+      // Enable for e2e tests (Playwright requires this), disable for production releases
+      [FuseV1Options.EnableNodeCliInspectArguments]:
+        !process.env.PRODUCTION_BUILD,
       [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
       [FuseV1Options.OnlyLoadAppFromAsar]: true,
     }),

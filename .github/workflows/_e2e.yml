@@ -44,18 +44,15 @@ jobs:
           sudo systemctl start docker
           sudo systemctl status docker
 
-      - name: Pre-build app
-        run: |
-          pnpm tsc -b --clean 
-          pnpm electron-forge package
+      - name: Package app
+        run: pnpm package
 
       - name: Install ffmpeg for video recording
-        run: |
-          npx playwright install ffmpeg
+        run: npx playwright install ffmpeg
 
       - name: Start & unlock keyring
         run: |
-          export $(dbus-launch)              
+          export $(dbus-launch)
           echo "ci-passphrase" | \
             gnome-keyring-daemon --unlock \
                                    --components=secrets,ssh,pkcs11 &
@@ -69,8 +66,7 @@ jobs:
       - name: Run tests
         env:
           ELECTRON_DISABLE_SANDBOX: 'true'
-        run: |
-          xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" pnpm run playwright test
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" pnpm e2e:prebuilt
 
       - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         if: ${{ always() }}
