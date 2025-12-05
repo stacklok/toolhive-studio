@@ -1,97 +1,59 @@
 import { test, expect } from './fixtures/electron'
 
-test('app starts and stops properly', async ({ window }) => {
-  const navItem = window.getByRole('link', {
-    name: /mcp servers/i,
+test('app starts and shows test group', async ({ window }) => {
+  // Verify the test group was created by the fixture
+  const groupLink = window.getByRole('link', {
+    name: /playwright-automated-test-fixture/i,
   })
-  await navItem.waitFor()
-  await expect(navItem).toBeVisible()
+  await expect(groupLink).toBeVisible()
 })
 
-// TODO: Update this test to match current UI - selectors are outdated
-test.skip('install & uninstall server', async ({ window }) => {
-  await window.getByRole('link', { name: /browse registry/i }).click()
+test('install and uninstall server from registry', async ({ window }) => {
+  // Click "Add an MCP server" button to open the dropdown menu
+  await window.getByRole('button', { name: /add an mcp server/i }).click()
+
+  // Click "Add from registry" in the dropdown menu
+  await window.getByRole('menuitem', { name: /from the registry/i }).click()
+
+  // On the registry page, click on the "everything" server card to navigate to detail page
+  await window.getByText('everything').click()
+
+  // On the detail page, click "Install server" button to open the dialog
+  await window.getByRole('button', { name: /install server/i }).click()
+
+  // Wait for the dialog to appear
+  await window.getByRole('dialog').waitFor()
+
+  // Change the server name to avoid conflicts with existing servers
+  const serverNameInput = window.getByLabel('Server name')
+  await serverNameInput.fill('e2e-test-server')
+
+  // Select our test group instead of default
+  await window.getByRole('combobox', { name: 'Group' }).click()
   await window
-    .getByRole('button', {
-      name: /everything/i,
-    })
-    .click()
-  await window
-    .getByRole('button', {
-      name: /install server/i,
-    })
-    .click()
-
-  await window.getByRole('tab', { name: /network isolation/i }).click()
-
-  await window
-    .getByRole('switch', { name: /enable outbound network filtering/i })
-    .click()
-
-  await window.getByRole('button', { name: /add a host/i }).click()
-  await window.getByRole('textbox', { name: /host 1/i }).fill('wikipedia.org')
-
-  await window.getByRole('button', { name: /add a host/i }).click()
-  await window.getByRole('textbox', { name: /host 2/i }).fill('google.com')
-
-  await window.getByRole('textbox', { name: /host 2/i }).fill('google')
-  await expect(window.getByText(/invalid host format/i)).toBeVisible()
-
-  await window.getByRole('textbox', { name: /host 2/i }).fill('google.com')
-  await expect(window.getByText(/invalid host format/i)).not.toBeVisible()
-
-  await window.getByRole('textbox', { name: /host 2/i }).fill('google')
-  await expect(window.getByText(/invalid host format/i)).toBeVisible()
-
-  await window.getByRole('tab', { name: /configuration/i }).click()
-
-  await window
-    .getByRole('button', {
-      name: /install server/i,
-    })
+    .getByRole('option', { name: 'playwright-automated-test-fixture' })
     .click()
 
-  await expect(window.getByText(/invalid host format/i)).toBeVisible()
+  // Click "Install server" in the dialog to start installation
+  await window.getByRole('button', { name: /install server/i }).click()
 
-  await window.getByRole('textbox', { name: /host 2/i }).fill('google.com')
-  await expect(window.getByText(/invalid host format/i)).not.toBeVisible()
+  // Wait for installation to complete - dialog shows progress then closes
+  // After success, we should be navigated to the server view
+  await window.getByText('Running').waitFor({ timeout: 60000 })
 
-  await window.getByRole('textbox', { name: /host 2/i }).fill('google')
-  await expect(window.getByText(/invalid host format/i)).toBeVisible()
+  // Open the options menu
+  await window.getByRole('button', { name: /more options/i }).click()
 
-  await window.getByRole('textbox', { name: /host 2/i }).fill('google.com')
-  await expect(window.getByText(/invalid.*/i)).not.toBeVisible()
+  // Click remove
+  await window.getByRole('menuitem', { name: /remove/i }).click()
 
-  await window
-    .getByRole('button', {
-      name: /install server/i,
-    })
-    .click()
+  // Confirm removal
+  await window.getByRole('button', { name: /remove/i }).click()
 
-  await window
-    .getByRole('link', {
-      name: /view/i,
-    })
-    .click()
-  await window.getByText('Running').waitFor()
-  await window
-    .getByRole('button', {
-      name: /more options/i,
-    })
-    .click()
-  await window
-    .getByRole('menuitem', {
-      name: /remove/i,
-    })
-    .click()
-  await window
-    .getByRole('button', {
-      name: /remove/i,
-    })
-    .click()
-  const header = window.getByRole('heading', {
+  // Verify we're back to empty state (in our test group)
+  const emptyState = window.getByRole('heading', {
     name: /add your first mcp server/i,
   })
-  await header.waitFor()
-  await expect(header).toBeVisible()
+  await emptyState.waitFor()
+  await expect(emptyState).toBeVisible()
 })

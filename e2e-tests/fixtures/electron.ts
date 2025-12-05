@@ -45,15 +45,16 @@ function getThvPath(): string {
 function deleteTestGroupViaCli(): void {
   const thvPath = getThvPath()
   try {
-    execSync(`"${thvPath}" group rm "${TEST_GROUP_NAME}"`, {
-      stdio: 'ignore',
+    execSync(`"${thvPath}" group rm "${TEST_GROUP_NAME}" --with-workloads`, {
+      input: 'y\n',
+      stdio: ['pipe', 'ignore', 'ignore'],
     })
   } catch {
     // Group doesn't exist, which is fine
   }
 }
 
-async function createTestGroup(window: Page): Promise<void> {
+async function createAndActivateTestGroup(window: Page): Promise<void> {
   // Click "Add a group" button
   const addGroupButton = window.getByRole('button', { name: /add a group/i })
   await addGroupButton.click()
@@ -71,6 +72,15 @@ async function createTestGroup(window: Page): Promise<void> {
 
   // Wait for dialog to close
   await window.getByRole('dialog').waitFor({ state: 'hidden' })
+
+  // Click on the test group to activate it
+  const groupLink = window.getByRole('link', { name: TEST_GROUP_NAME })
+  await groupLink.click()
+
+  // Wait for the empty state heading to appear (new group has no servers)
+  await window
+    .getByRole('heading', { name: /add your first mcp server/i })
+    .waitFor()
 }
 
 export const test = base.extend<ElectronFixtures>({
@@ -99,11 +109,16 @@ export const test = base.extend<ElectronFixtures>({
   window: async ({ electronApp }, use) => {
     const window = await electronApp.firstWindow()
 
+    // Disable quit confirmation dialog early
+    await window.evaluate(() => {
+      localStorage.setItem('doNotShowAgain_confirm_quit', 'true')
+    })
+
     // Wait for app to be ready
     await window.getByRole('link', { name: /mcp servers/i }).waitFor()
 
-    // Create the test group
-    await createTestGroup(window)
+    // Create and activate the test group
+    await createAndActivateTestGroup(window)
 
     await use(window)
 
