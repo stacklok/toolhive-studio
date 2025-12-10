@@ -3,7 +3,7 @@ import { expect, it, beforeEach } from 'vitest'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
 import userEvent from '@testing-library/user-event'
-import { server } from '@/common/mocks/node'
+import { server, recordRequests } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import {
   createRootRoute,
@@ -15,8 +15,6 @@ import { createMemoryHistory } from '@tanstack/react-router'
 import { CardMcpServer } from '../card-mcp-server/index'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
 import { EditServerDialogProvider } from '../../contexts/edit-server-dialog-provider'
-
-let capturedCreateWorkloadPayload: unknown = null
 
 function createCardMcpServerTestRouter() {
   const rootRoute = createRootRoute({
@@ -55,18 +53,6 @@ const router = createCardMcpServerTestRouter() as unknown as ReturnType<
 
 beforeEach(() => {
   router.navigate({ to: '/group/$groupName', params: { groupName: 'default' } })
-
-  // Reset captured payload
-  capturedCreateWorkloadPayload = null
-
-  // Override the existing MSW handler to capture the payload
-  server.use(
-    http.post(mswEndpoint('/api/v1beta/workloads'), async ({ request }) => {
-      const payload = await request.json()
-      capturedCreateWorkloadPayload = payload
-      return HttpResponse.json({ name: 'test-server-copied' })
-    })
-  )
 })
 
 it('navigates to logs page when logs menu item is clicked', async () => {
@@ -89,6 +75,7 @@ it('navigates to logs page when logs menu item is clicked', async () => {
 })
 
 it('shows "Copy server to a group" menu item and handles the complete workflow', async () => {
+  const rec = recordRequests()
   renderRoute(router)
 
   await waitFor(() => {
@@ -131,33 +118,35 @@ it('shows "Copy server to a group" menu item and handles the complete workflow',
   })
 
   await waitFor(() => {
-    expect(capturedCreateWorkloadPayload).toBeTruthy()
+    const createCall = rec.recordedRequests.find(
+      (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
+    )
+    expect(createCall).toBeDefined()
+    expect(createCall?.payload).toMatchInlineSnapshot(`
+      {
+        "cmd_arguments": [],
+        "env_vars": {},
+        "group": "default",
+        "host": "127.0.0.1",
+        "image": "ghcr.io/postgres/postgres-mcp-server:latest",
+        "name": "postgres-db-default",
+        "network_isolation": false,
+        "secrets": [],
+        "target_port": 28135,
+        "transport": "stdio",
+        "volumes": [],
+      }
+    `)
   })
-  expect(capturedCreateWorkloadPayload).toMatchInlineSnapshot(`
-    {
-      "cmd_arguments": [],
-      "env_vars": {},
-      "group": "default",
-      "host": "127.0.0.1",
-      "image": "ghcr.io/postgres/postgres-mcp-server:latest",
-      "name": "postgres-db-default",
-      "network_isolation": false,
-      "secrets": [],
-      "target_port": 28135,
-      "transport": "stdio",
-      "volumes": [],
-    }
-  `)
 })
 
 it('shows validation error and re-prompts when API returns 409 conflict', async () => {
+  const rec = recordRequests()
   let attemptCount = 0
-  const capturedNames: string[] = []
 
   server.use(
     http.post(mswEndpoint('/api/v1beta/workloads'), async ({ request }) => {
       const payload = (await request.json()) as { name: string }
-      capturedNames.push(payload.name)
       attemptCount++
 
       // First two attempts return 409 conflict (plain text, like real API)
@@ -255,8 +244,12 @@ it('shows validation error and re-prompts when API returns 409 conflict', async 
   await waitFor(() => {
     expect(screen.queryByText('Copy server to a group')).not.toBeInTheDocument()
   })
-  expect(attemptCount).toBe(3)
-  expect(capturedNames).toEqual([
+
+  const createCalls = rec.recordedRequests.filter(
+    (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
+  )
+  expect(createCalls).toHaveLength(3)
+  expect(createCalls.map((c) => (c.payload as { name: string }).name)).toEqual([
     'postgres-db-my-group',
     'postgres-db-attempt2',
     'postgres-db-final',
