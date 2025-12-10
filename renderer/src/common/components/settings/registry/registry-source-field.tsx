@@ -12,6 +12,57 @@ import { Input } from '../../ui/input'
 import type { RegistryFormData } from './schema'
 import { FilePickerInput } from '../../ui/file-picker-input'
 
+function renderDescription(type: RegistryFormData['type']) {
+  if (type === 'url') {
+    return (
+      <>
+        Provide the HTTPS url of a remote registry (
+        <Button asChild variant="link" size="sm" className="h-auto p-0">
+          <a
+            href="https://raw.githubusercontent.com/stacklok/toolhive/refs/heads/main/pkg/registry/data/registry.json"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            official ToolHive registry
+          </a>
+        </Button>
+        ).
+      </>
+    )
+  }
+
+  if (type === 'local_path') {
+    return 'Provide the absolute path to a local registry JSON file on your system.'
+  }
+
+  if (type === 'api_url') {
+    return 'Provide the HTTPS url of a registry server API.'
+  }
+
+  return null
+}
+
+const REGISTRY_SOURCE_CONFIG = {
+  local_path: {
+    label: 'Registry File Path',
+    placeholder: '/path/to/registry.json',
+    useFilePicker: true,
+  },
+  url: {
+    label: 'Registry URL',
+    placeholder: 'https://domain.com/registry.json',
+    useFilePicker: false,
+  },
+  api_url: {
+    label: 'Registry Server API URL',
+    placeholder: 'http://domain.com:8080/api/registry',
+    useFilePicker: false,
+  },
+} as const satisfies Record<
+  Exclude<RegistryFormData['type'], 'default'>,
+  { label: string; placeholder: string; useFilePicker: boolean }
+>
+
 export function RegistrySourceField({
   isPending,
   form,
@@ -25,56 +76,32 @@ export function RegistrySourceField({
     return null
   }
 
+  const config =
+    REGISTRY_SOURCE_CONFIG[registryType as keyof typeof REGISTRY_SOURCE_CONFIG]
+
   return (
     <FormField
       control={form.control}
       name="source"
       render={({ field }) => {
-        const isRemote = registryType === 'url'
-
         return (
           <FormItem className="w-full">
-            <FormLabel required>
-              {isRemote ? 'Registry URL' : 'Registry File Path'}
-            </FormLabel>
-            <FormDescription>
-              {isRemote ? (
-                <>
-                  Provide the HTTPS url of a remote registry (
-                  <Button
-                    asChild
-                    variant="link"
-                    size="sm"
-                    className="h-auto p-0"
-                  >
-                    <a
-                      href="https://raw.githubusercontent.com/stacklok/toolhive/refs/heads/main/pkg/registry/data/registry.json"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      official ToolHive registry
-                    </a>
-                  </Button>
-                  ).
-                </>
-              ) : (
-                'Provide the absolute path to a local registry JSON file on your system.'
-              )}
-            </FormDescription>
+            <FormLabel required>{config.label}</FormLabel>
+            <FormDescription>{renderDescription(registryType)}</FormDescription>
             <FormControl>
-              {isRemote ? (
-                <Input
-                  placeholder={'https://domain.com/registry.json'}
-                  {...field}
-                  disabled={isPending}
-                />
-              ) : (
+              {config.useFilePicker ? (
                 <FilePickerInput
                   mode="file"
-                  placeholder={'/path/to/registry.json'}
+                  placeholder={config.placeholder}
                   name={field.name}
                   value={field.value ?? ''}
                   onChange={({ newValue }) => field.onChange(newValue)}
+                  disabled={isPending}
+                />
+              ) : (
+                <Input
+                  placeholder={config.placeholder}
+                  {...field}
                   disabled={isPending}
                 />
               )}

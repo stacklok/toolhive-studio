@@ -8,10 +8,21 @@ import {
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { useEffect } from 'react'
-import { registryFormSchema, type RegistryFormData } from './schema'
+import {
+  REGISTRY_TYPES,
+  registryFormSchema,
+  type RegistryFormData,
+} from './schema'
 import { RegistryForm } from './registry-form'
 import { delay } from '@utils/delay'
 import { trackEvent } from '@/common/lib/analytics'
+
+function isValidRegistryType(type: unknown): type is RegistryFormData['type'] {
+  return (
+    typeof type === 'string' &&
+    REGISTRY_TYPES.includes(type as RegistryFormData['type'])
+  )
+}
 
 export function RegistryTab() {
   const { isPending: isPendingRegistry, data: registry } = useQuery({
@@ -28,10 +39,13 @@ export function RegistryTab() {
   const { mutateAsync: updateRegistry, isPending: isPendingUpdate } =
     useToastMutation({
       mutationFn: async (data: RegistryFormData) => {
-        const body =
-          data.type === 'url'
-            ? { url: data.source?.trim() }
-            : { local_path: data.source?.trim() }
+        const source = data.source?.trim()
+        const type = data.type
+        const body = {
+          [type]: source,
+          ...(type === 'api_url' ? { allow_private_ip: true } : {}),
+        }
+
         await delay(500)
         return putApiV1BetaRegistryByName({
           path: {
@@ -49,7 +63,9 @@ export function RegistryTab() {
   const form = useForm<RegistryFormData>({
     resolver: zodV4Resolver(registryFormSchema),
     defaultValues: {
-      type: (registryData?.type as RegistryFormData['type']) ?? 'default',
+      type: isValidRegistryType(registryData?.type)
+        ? registryData.type
+        : 'default',
       source: registryData?.source ?? '',
     },
     mode: 'onChange',
@@ -57,10 +73,10 @@ export function RegistryTab() {
   })
 
   useEffect(() => {
-    form.setValue(
-      'type',
-      (registryData?.type as RegistryFormData['type']) ?? 'default'
-    )
+    const validType = isValidRegistryType(registryData?.type)
+      ? registryData.type
+      : 'default'
+    form.setValue('type', validType)
     form.setValue('source', registryData?.source ?? '')
     form.trigger(['type', 'source'])
   }, [form, registryData])

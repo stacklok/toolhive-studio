@@ -1,13 +1,24 @@
 import { z } from 'zod/v4'
 
+export const REGISTRY_TYPES = [
+  'local_path',
+  'url',
+  'default',
+  'api_url',
+] as const
 export const registryFormSchema = z
   .object({
-    type: z.enum(['file', 'url', 'default']).default('default'),
+    type: z.enum(REGISTRY_TYPES).default('default'),
     source: z.string().optional(),
+    allow_private_ip: z.boolean().optional(),
   })
   .refine(
     (data) => {
-      if (data.type === 'url' || data.type === 'file') {
+      if (
+        data.type === 'local_path' ||
+        data.type === 'url' ||
+        data.type === 'api_url'
+      ) {
         return data.source && data.source.trim().length > 0
       }
       return true
@@ -19,7 +30,7 @@ export const registryFormSchema = z
   )
   .refine(
     (data) => {
-      if (data.type === 'file') {
+      if (data.type === 'local_path' || data.type === 'url') {
         return data.source?.endsWith('.json')
       }
       return true

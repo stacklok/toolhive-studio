@@ -37,7 +37,8 @@ export function RegistryTypeField({
           <FormLabel>Registry Type</FormLabel>
           <FormDescription>
             Choose between ToolHive default registry, a custom remote registry
-            HTTPS url, or a custom local registry file.
+            JSON URL, a custom local registry JSON file, or a custom registry
+            server API URL.
           </FormDescription>
           <Select
             onValueChange={(value) => {
@@ -60,8 +61,11 @@ export function RegistryTypeField({
             </FormControl>
             <SelectContent>
               <SelectItem value="default">Default Registry</SelectItem>
-              <SelectItem value="url">Remote Registry (URL)</SelectItem>
-              <SelectItem value="file">Local Registry (File Path)</SelectItem>
+              <SelectItem value="url">Remote Registry (JSON url)</SelectItem>
+              <SelectItem value="local_path">
+                Local Registry (JSON File Path)
+              </SelectItem>
+              <SelectItem value="api_url">Registry Server API</SelectItem>
             </SelectContent>
           </Select>
           <FormMessage />
