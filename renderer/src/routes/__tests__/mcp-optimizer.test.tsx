@@ -3,7 +3,7 @@ import { beforeEach, it, expect, vi } from 'vitest'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { McpOptimizerRoute } from '../mcp-optimizer'
 import { renderRoute } from '@/common/test/render-route'
-import { server } from '@/common/mocks/node'
+import { server, recordRequests } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
 import {
@@ -331,6 +331,7 @@ it('shows no group selected when meta-mcp workload does not exist', async () => 
 })
 
 it('refetches the selected group when navigating back to the page', async () => {
+  const rec = recordRequests()
   let callCount = 0
 
   server.use(
@@ -360,7 +361,13 @@ it('refetches the selected group when navigating back to the page', async () => 
     expect(defaultRadio).toBeChecked()
   })
 
-  expect(callCount).toBe(1)
+  const metaMcpCalls = () =>
+    rec.recordedRequests.filter(
+      (r) =>
+        r.method === 'GET' &&
+        r.pathname === `/api/v1beta/workloads/${META_MCP_SERVER_NAME}`
+    )
+  expect(metaMcpCalls()).toHaveLength(1)
 
   unmount()
 
@@ -374,7 +381,7 @@ it('refetches the selected group when navigating back to the page', async () => 
     expect(defaultRadio).not.toBeChecked()
   })
 
-  expect(callCount).toBe(2)
+  expect(metaMcpCalls()).toHaveLength(2)
 })
 
 it('clicking Meta-MCP logs in Advanced menu navigates to logs page', async () => {
