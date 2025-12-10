@@ -1,6 +1,8 @@
 import type { PostApiV1BetaWorkloadsResponse } from '@api/types.gen'
+import { AutoAPIMock } from '@mocks'
 
-export default {
-  name: 'fake-workload-name',
-  port: 54454,
-} satisfies PostApiV1BetaWorkloadsResponse
+export const mockedPostApiV1BetaWorkloads =
+  AutoAPIMock<PostApiV1BetaWorkloadsResponse>({
+    name: 'fake-workload-name',
+    port: 54454,
+  })

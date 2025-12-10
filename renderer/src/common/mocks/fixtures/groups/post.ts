@@ -1,5 +1,7 @@
 import type { PostApiV1BetaGroupsResponse } from '@api/types.gen'
+import { AutoAPIMock } from '@mocks'
 
-export default {
-  name: 'fake-group-name',
-} satisfies PostApiV1BetaGroupsResponse
+export const mockedPostApiV1BetaGroups =
+  AutoAPIMock<PostApiV1BetaGroupsResponse>({
+    name: 'fake-group-name',
+  })

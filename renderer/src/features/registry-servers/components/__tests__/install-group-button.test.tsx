@@ -6,7 +6,7 @@ import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
-import defaultGroups from '@/common/mocks/fixtures/groups/get'
+import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'
 
 const mockServer: RegistryImageMetadata = {
   name: 'atlassian',
@@ -37,6 +37,8 @@ const mockGroup: RegistryGroup = {
   remote_servers: {},
 }
 
+const defaultGroups = mockedGetApiV1BetaGroups.defaultValue
+
 describe('InstallGroupButton', () => {
   it('shows error when trying to install a group that already exists', async () => {
     server.use(
@@ -44,7 +46,7 @@ describe('InstallGroupButton', () => {
         return HttpResponse.json({
           ...defaultGroups,
           groups: [
-            ...defaultGroups.groups,
+            ...(defaultGroups.groups ?? []),
             { name: 'dev-toolkit', registered_clients: [] },
           ],
         })

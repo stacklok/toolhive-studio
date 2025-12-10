@@ -1,3 +1,5 @@
 import type { DeleteApiV1BetaGroupsByNameResponse } from '@api/types.gen'
+import { AutoAPIMock } from '@mocks'
 
-export default '' satisfies DeleteApiV1BetaGroupsByNameResponse
+export const mockedDeleteApiV1BetaGroupsByName =
+  AutoAPIMock<DeleteApiV1BetaGroupsByNameResponse>('')
