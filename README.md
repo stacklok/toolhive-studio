@@ -14,6 +14,7 @@
 </p>
 
 [![Release][release-img]][release] [![Build status][ci-img]][ci]
+[![Coverage Status][coverage-img]][coverage]
 [![License: Apache 2.0][license-img]][license]
 [![Discord][discord-img]][discord]
 
@@ -142,6 +143,8 @@ This project is licensed under the [Apache 2.0 License](./LICENSE).
 [release]: https://github.com/stacklok/toolhive-studio/releases/latest
 [ci-img]: https://img.shields.io/github/actions/workflow/status/stacklok/toolhive-studio/on-main.yml?style=flat&logo=github&label=Build
 [ci]: https://github.com/stacklok/toolhive-studio/actions/workflows/on-main.yml
+[coverage-img]: https://coveralls.io/repos/github/stacklok/toolhive-studio/badge.svg?branch=main
+[coverage]: https://coveralls.io/github/stacklok/toolhive-studio?branch=main
 [license-img]: https://img.shields.io/badge/License-Apache2.0-blue.svg?style=flat
 [license]: https://opensource.org/licenses/Apache-2.0
 [discord-img]: https://img.shields.io/discord/1184987096302239844?style=flat&logo=discord&logoColor=white&label=Discord
