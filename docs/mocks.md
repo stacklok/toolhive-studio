@@ -1,6 +1,7 @@
 # MSW Auto-Mocker
 
 > **Source files:** The mocking system is implemented in `renderer/src/common/mocks/`. See the source files directly for implementation details:
+>
 > - `autoAPIMock.ts` - The `AutoAPIMock` wrapper implementation
 > - `mocker.ts` - Auto-generation of fixtures from OpenAPI schema
 > - `node.ts` - MSW server setup and request recording
@@ -45,12 +46,14 @@ Generated fixtures use named exports with a consistent naming convention:
 import type { GetApiV1BetaGroupsResponse } from '@api/types.gen'
 import { AutoAPIMock } from '@mocks'
 
-export const mockedGetApiV1BetaGroups = AutoAPIMock<GetApiV1BetaGroupsResponse>({
-  groups: [
-    { name: 'default', registered_clients: ['client-a'] },
-    { name: 'research', registered_clients: ['client-b'] },
-  ],
-})
+export const mockedGetApiV1BetaGroups = AutoAPIMock<GetApiV1BetaGroupsResponse>(
+  {
+    groups: [
+      { name: 'default', registered_clients: ['client-a'] },
+      { name: 'research', registered_clients: ['client-b'] },
+    ],
+  }
+)
 ```
 
 ### Overriding in Tests
@@ -104,11 +107,11 @@ import type { GetApiV1BetaGroupsResponse } from '@api/types.gen'
 import { AutoAPIMock } from '@mocks'
 import { HttpResponse } from 'msw'
 
-export const mockedGetApiV1BetaGroups = AutoAPIMock<GetApiV1BetaGroupsResponse>({
-  groups: [
-    { name: 'default', registered_clients: ['client-a'] },
-  ],
-})
+export const mockedGetApiV1BetaGroups = AutoAPIMock<GetApiV1BetaGroupsResponse>(
+  {
+    groups: [{ name: 'default', registered_clients: ['client-a'] }],
+  }
+)
   .scenario('empty', (self) =>
     self.override(() => ({
       groups: [],
@@ -196,6 +199,7 @@ it('sends correct payload when creating a group', async () => {
 ```
 
 Each recorded request contains:
+
 - `pathname` - The URL path (e.g., `/api/v1beta/groups`)
 - `method` - HTTP method (e.g., `GET`, `POST`)
 - `payload` - Parsed JSON body (if present)
