@@ -6,7 +6,7 @@ import {
   useMutationRestartServerAtStartup,
   useMutationRestartServer,
 } from '../use-mutation-restart-server'
-import { server } from '@/common/mocks/node'
+import { server, recordRequests } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { toast } from 'sonner'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
@@ -61,9 +61,9 @@ beforeEach(() => {
 
 describe('useMutationRestartServerAtStartup', () => {
   it('successfully restarts servers from shutdown list', async () => {
+    const rec = recordRequests()
     const { Wrapper, queryClient } = createQueryClientWrapper()
 
-    // Use MSW to simulate servers becoming 'running' after restart for polling
     server.use(
       http.get(
         mswEndpoint('/api/v1beta/workloads/:name/status'),
@@ -74,7 +74,6 @@ describe('useMutationRestartServerAtStartup', () => {
               status: 'running',
             })
           }
-          // Fall back to default behavior for other servers
           return HttpResponse.json({
             status: 'stopped',
           })
@@ -96,7 +95,12 @@ describe('useMutationRestartServerAtStartup', () => {
       expect(result.current.isSuccess).toBe(true)
     })
 
-    // After successful restart, shutdown history should be cleared
+    const restartCall = rec.recordedRequests.find(
+      (r) =>
+        r.method === 'POST' && r.pathname === '/api/v1beta/workloads/restart'
+    )
+    expect(restartCall?.payload).toEqual({ names: ['postgres-db', 'github'] })
+
     expect(
       window.electronAPI.shutdownStore.clearShutdownHistory
     ).toHaveBeenCalled()
@@ -182,6 +186,7 @@ describe('useMutationRestartServerAtStartup', () => {
 
 describe('useMutationRestartServer', () => {
   it('successfully restarts a single server', async () => {
+    const rec = recordRequests()
     const { Wrapper } = createQueryClientWrapper()
     const serverName = 'vscode-server'
 
@@ -195,6 +200,13 @@ describe('useMutationRestartServer', () => {
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true)
     })
+
+    const restartCall = rec.recordedRequests.find(
+      (r) =>
+        r.method === 'POST' &&
+        r.pathname === `/api/v1beta/workloads/${serverName}/restart`
+    )
+    expect(restartCall).toBeDefined()
   })
 
   it('handles API error for single server restart', async () => {
