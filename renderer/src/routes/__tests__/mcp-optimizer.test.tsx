@@ -354,6 +354,13 @@ it('refetches the selected group when navigating back to the page', async () => 
     })
   )
 
+  const metaMcpCalls = () =>
+    rec.recordedRequests.filter(
+      (r) =>
+        r.method === 'GET' &&
+        r.pathname === `/api/v1beta/workloads/${META_MCP_SERVER_NAME}`
+    )
+
   const { unmount } = renderRoute(router)
 
   await waitFor(() => {
@@ -361,12 +368,6 @@ it('refetches the selected group when navigating back to the page', async () => 
     expect(defaultRadio).toBeChecked()
   })
 
-  const metaMcpCalls = () =>
-    rec.recordedRequests.filter(
-      (r) =>
-        r.method === 'GET' &&
-        r.pathname === `/api/v1beta/workloads/${META_MCP_SERVER_NAME}`
-    )
   expect(metaMcpCalls()).toHaveLength(1)
 
   unmount()
