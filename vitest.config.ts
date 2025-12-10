@@ -51,7 +51,7 @@ export default defineConfig({
       ],
       enabled: false,
       provider: 'istanbul',
-      reporter: ['text', 'lcov'],
+      reporter: ['text', 'lcov', 'json-summary'],
     },
   },
 })
