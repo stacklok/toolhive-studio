@@ -37,7 +37,7 @@ jobs:
           - os: macos-latest
             arch: arm64
     env:
-      NODE_OPTIONS: "--max_old_space_size=4096"
+      NODE_OPTIONS: '--max_old_space_size=4096'
     steps:
       - name: Checkout Repository
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
