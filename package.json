@@ -62,7 +62,6 @@
     "@types/unzipper": "^0.10.11",
     "@vitejs/plugin-react-swc": "^4.0.0",
     "@vitest/coverage-istanbul": "^4.0.0",
-    "ajv": "^8.17.1",
     "autoprefixer": "^10.4.21",
     "dotenv": "^17.0.0",
     "electron": "39.0.0",

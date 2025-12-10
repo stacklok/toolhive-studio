@@ -276,9 +276,6 @@ importers:
       '@vitest/coverage-istanbul':
         specifier: ^4.0.0
         version: 4.0.4(vitest@4.0.4(@types/debug@4.1.12)(@types/node@22.19.1)(jiti@2.6.1)(jsdom@27.2.0)(lightningcss@1.30.2)(msw@2.12.3(@types/node@22.19.1)(typescript@5.9.3))(terser@5.44.0)(tsx@4.21.0)(yaml@2.8.1))
-      ajv:
-        specifier: ^8.17.1
-        version: 8.17.1
       autoprefixer:
         specifier: ^10.4.21
         version: 10.4.22(postcss@8.5.6)
