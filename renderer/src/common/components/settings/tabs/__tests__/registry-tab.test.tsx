@@ -68,7 +68,7 @@ describe('RegistryTab', () => {
     await userEvent.click(selectTrigger)
 
     const remoteOptions = screen.getByRole('option', {
-      name: 'Remote Registry (JSON url)',
+      name: 'Remote Registry (JSON URL)',
     })
     expect(remoteOptions).toBeVisible()
 
@@ -107,7 +107,7 @@ describe('RegistryTab', () => {
     await userEvent.click(selectTrigger)
 
     const remoteOptions = screen.getByRole('option', {
-      name: 'Remote Registry (JSON url)',
+      name: 'Remote Registry (JSON URL)',
     })
     await userEvent.click(remoteOptions)
 
@@ -145,7 +145,7 @@ describe('RegistryTab', () => {
     await userEvent.click(selectTrigger)
 
     const remoteOptions = screen.getByRole('option', {
-      name: 'Remote Registry (JSON url)',
+      name: 'Remote Registry (JSON URL)',
     })
     await userEvent.click(remoteOptions)
 
@@ -241,9 +241,7 @@ describe('RegistryTab', () => {
           req.pathname === '/api/v1beta/registry/default'
       )
       const lastRequest = putRequests[putRequests.length - 1]
-      expect(lastRequest?.payload).toEqual({
-        local_path: undefined,
-      })
+      expect(lastRequest?.payload).toEqual({})
     })
   })
 
