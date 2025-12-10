@@ -54,7 +54,7 @@ import { http, HttpResponse } from 'msw'
 import { RegistryGroupDetail } from '@/routes/(registry)/registry-group_.$name'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
-import { server } from '@/common/mocks/node'
+import { server, recordRequests } from '@/common/mocks/node'
 import userEvent from '@testing-library/user-event'
 import type { V1GetRegistryResponse } from '@api/types.gen'
 import { toast } from 'sonner'
@@ -416,9 +416,7 @@ describe('Registry Group Detail Route', () => {
   })
 
   it('makes API calls and navigates to group page after installing all servers', async () => {
-    const groupCalls: Array<{ name: string }> = []
-    const workloadCalls: Array<{ name: string; group: string }> = []
-    const apiCallOrder: Array<'group' | 'workload'> = []
+    const rec = recordRequests()
 
     mockUseParams.mockReturnValue({ name: 'two-server-group' })
 
@@ -480,19 +478,11 @@ describe('Registry Group Detail Route', () => {
         return HttpResponse.json(twoServerRegistry)
       }),
       http.post('*/api/v1beta/groups', async ({ request }) => {
-        const body = (await request.json()) as {
-          name: string
-        }
-        groupCalls.push({ name: body.name })
-        apiCallOrder.push('group')
-        return HttpResponse.json({
-          name: body.name,
-        })
+        const body = (await request.json()) as { name: string }
+        return HttpResponse.json({ name: body.name })
       }),
       http.post('*/api/v1beta/workloads', async ({ request }) => {
         const body = (await request.json()) as { name: string; group: string }
-        workloadCalls.push({ name: body.name, group: body.group })
-        apiCallOrder.push('workload')
         return HttpResponse.json({
           name: body.name,
           group: body.group,
@@ -565,12 +555,17 @@ describe('Registry Group Detail Route', () => {
       await waitForElementToBeRemoved(dialog)
     }
 
+    const groupCalls = rec.recordedRequests.filter(
+      (r) => r.method === 'POST' && r.pathname === '/api/v1beta/groups'
+    )
+    const workloadCalls = rec.recordedRequests.filter(
+      (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
+    )
+
     await waitFor(() => {
       expect(groupCalls).toHaveLength(1)
     })
-    expect(groupCalls[0]).toEqual({
-      name: 'two-server-group',
-    })
+    expect(groupCalls[0]?.payload).toEqual({ name: 'two-server-group' })
 
     // Verify that the group creation success toast is NOT shown while dialog is open
     // The toast is shown via toast.promise, so check that the success message is NOT in any call
@@ -606,18 +601,24 @@ describe('Registry Group Detail Route', () => {
     })
 
     expect(workloadCalls).toHaveLength(2)
-    expect(workloadCalls[0]).toEqual({
+    expect(workloadCalls[0]?.payload).toMatchObject({
       name: 'first-server',
       group: 'two-server-group',
     })
-    expect(workloadCalls[1]).toEqual({
+    expect(workloadCalls[1]?.payload).toMatchObject({
       name: 'second-server',
       group: 'two-server-group',
     })
 
     // Verify API call order: group creation MUST happen before any workload creation
-    expect(apiCallOrder).toEqual(['group', 'workload', 'workload'])
-    expect(apiCallOrder[0]).toBe('group')
+    const postRequests = rec.recordedRequests.filter((r) => r.method === 'POST')
+    const groupIndex = postRequests.findIndex((r) =>
+      r.pathname.includes('/groups')
+    )
+    const firstWorkloadIndex = postRequests.findIndex((r) =>
+      r.pathname.includes('/workloads')
+    )
+    expect(groupIndex).toBeLessThan(firstWorkloadIndex)
 
     // The wizard should NOT automatically navigate to the group
     // User should use the View button in the toast instead

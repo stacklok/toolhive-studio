@@ -3,7 +3,7 @@ import { it, expect, vi, describe, beforeEach } from 'vitest'
 import { DialogFormRemoteMcp } from '../dialog-form-remote-mcp'
 import userEvent from '@testing-library/user-event'
 import { Dialog } from '@/common/components/ui/dialog'
-import { server as mswServer } from '@/common/mocks/node'
+import { server as mswServer, recordRequests } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
@@ -166,15 +166,14 @@ describe('DialogFormRemoteMcp', () => {
     const user = userEvent.setup({ delay: null })
     const mockCheckServerStatus = vi.fn()
     const mockOnOpenChange = vi.fn()
-    let recordedRequest: Request | null = null
+    const rec = recordRequests()
 
     mockUseCheckServerStatus.mockReturnValue({
       checkServerStatus: mockCheckServerStatus,
     })
 
     mswServer.use(
-      http.post(mswEndpoint('/api/v1beta/workloads'), async ({ request }) => {
-        recordedRequest = request.clone()
+      http.post(mswEndpoint('/api/v1beta/workloads'), () => {
         return HttpResponse.json(
           { name: 'test-remote-server', status: 'running' },
           { status: 201 }
@@ -216,30 +215,30 @@ describe('DialogFormRemoteMcp', () => {
     await user.click(screen.getByRole('button', { name: 'Install server' }))
 
     await waitFor(() => {
-      expect(recordedRequest).not.toBeNull()
+      const workloadCall = rec.recordedRequests.find(
+        (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
+      )
+      expect(workloadCall).toBeDefined()
+      expect(workloadCall?.payload).toEqual(
+        expect.objectContaining({
+          url: 'https://api.example.com/mcp',
+          name: 'test-remote-server',
+          oauth_config: expect.objectContaining({
+            authorize_url: '',
+            callback_port: 8888,
+            client_id: '',
+            issuer: '',
+            oauth_params: {},
+            scopes: [],
+            skip_browser: false,
+            token_url: '',
+            use_pkce: true,
+          }),
+          transport: 'streamable-http',
+          group: 'default',
+        })
+      )
     })
-
-    expect(recordedRequest).not.toBeNull()
-    const requestBody = await recordedRequest!.json()
-    expect(requestBody).toEqual(
-      expect.objectContaining({
-        url: 'https://api.example.com/mcp',
-        name: 'test-remote-server',
-        oauth_config: expect.objectContaining({
-          authorize_url: '',
-          callback_port: 8888,
-          client_id: '',
-          issuer: '',
-          oauth_params: {},
-          scopes: [],
-          skip_browser: false,
-          token_url: '',
-          use_pkce: true,
-        }),
-        transport: 'streamable-http',
-        group: 'default',
-      })
-    )
 
     await waitFor(() => {
       expect(mockCheckServerStatus).toHaveBeenCalled()
@@ -254,11 +253,10 @@ describe('DialogFormRemoteMcp', () => {
     'submits Issuer URL when auth type is %s',
     async (authOptionLabel, expectedAuthType) => {
       const user = userEvent.setup({ delay: null })
-      let recordedRequest: Request | null = null
+      const rec = recordRequests()
 
       mswServer.use(
-        http.post(mswEndpoint('/api/v1beta/workloads'), async ({ request }) => {
-          recordedRequest = request.clone()
+        http.post(mswEndpoint('/api/v1beta/workloads'), () => {
           return HttpResponse.json(
             { name: 'issuer-enabled-server', status: 'running' },
             { status: 201 }
@@ -325,32 +323,31 @@ describe('DialogFormRemoteMcp', () => {
       await user.click(screen.getByRole('button', { name: 'Install server' }))
 
       await waitFor(() => {
-        expect(recordedRequest).not.toBeNull()
-      })
-
-      expect(recordedRequest).not.toBeNull()
-      const requestBody = await recordedRequest!.json()
-      expect(requestBody).toEqual(
-        expect.objectContaining({
-          name: 'issuer-enabled-server',
-          url: 'https://api.example.com/mcp',
-          transport: 'streamable-http',
-          group: 'default',
-          oauth_config: expect.objectContaining({
-            issuer: issuerValue,
-            callback_port: 7777,
-            scopes: [],
-          }),
-        })
-      )
-
-      // Verify client_id is set for OIDC
-      if (expectedAuthType === 'oidc') {
-        expect(requestBody.oauth_config).toHaveProperty(
-          'client_id',
-          'oidc-client-id'
+        const workloadCall = rec.recordedRequests.find(
+          (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
         )
-      }
+        expect(workloadCall).toBeDefined()
+        expect(workloadCall?.payload).toEqual(
+          expect.objectContaining({
+            name: 'issuer-enabled-server',
+            url: 'https://api.example.com/mcp',
+            transport: 'streamable-http',
+            group: 'default',
+            oauth_config: expect.objectContaining({
+              issuer: issuerValue,
+              callback_port: 7777,
+              scopes: [],
+            }),
+          })
+        )
+
+        if (expectedAuthType === 'oidc') {
+          expect(
+            (workloadCall?.payload as { oauth_config: { client_id: string } })
+              .oauth_config
+          ).toHaveProperty('client_id', 'oidc-client-id')
+        }
+      })
     }
   )
 
@@ -383,7 +380,7 @@ describe('DialogFormRemoteMcp', () => {
     const user = userEvent.setup({ delay: null })
     const mockCheckServerStatus = vi.fn()
     const mockOnOpenChange = vi.fn()
-    let recordedRequest: Request | null = null
+    const rec = recordRequests()
 
     mockUseCheckServerStatus.mockReturnValue({
       checkServerStatus: mockCheckServerStatus,
@@ -409,16 +406,12 @@ describe('DialogFormRemoteMcp', () => {
           group: 'default',
         })
       }),
-      http.patch(
-        mswEndpoint('/api/v1beta/workloads/:name'),
-        async ({ request }) => {
-          recordedRequest = request.clone()
-          return HttpResponse.json({
-            name: 'existing-server',
-            status: 'running',
-          })
-        }
-      )
+      http.patch(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+        return HttpResponse.json({
+          name: 'existing-server',
+          status: 'running',
+        })
+      })
     )
 
     renderWithProviders(
@@ -449,18 +442,18 @@ describe('DialogFormRemoteMcp', () => {
     await user.click(screen.getByRole('button', { name: /update server/i }))
 
     await waitFor(() => {
-      expect(recordedRequest).not.toBeNull()
+      const patchCall = rec.recordedRequests.find(
+        (r) => r.method === 'PATCH' && r.pathname.includes('/workloads/')
+      )
+      expect(patchCall).toBeDefined()
+      expect(patchCall?.payload).toEqual(
+        expect.objectContaining({
+          name: 'existing-server',
+          url: 'https://new-api.example.com',
+          transport: 'streamable-http',
+        })
+      )
     })
-
-    expect(recordedRequest).not.toBeNull()
-    const requestBody = await recordedRequest!.json()
-    expect(requestBody).toEqual(
-      expect.objectContaining({
-        name: 'existing-server',
-        url: 'https://new-api.example.com',
-        transport: 'streamable-http',
-      })
-    )
 
     await waitFor(() => {
       expect(mockCheckServerStatus).toHaveBeenCalled()
