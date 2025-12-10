@@ -61,7 +61,7 @@ export function RegistryTypeField({
             </FormControl>
             <SelectContent>
               <SelectItem value="default">Default Registry</SelectItem>
-              <SelectItem value="url">Remote Registry (JSON url)</SelectItem>
+              <SelectItem value="url">Remote Registry (JSON URL)</SelectItem>
               <SelectItem value="local_path">
                 Local Registry (JSON File Path)
               </SelectItem>

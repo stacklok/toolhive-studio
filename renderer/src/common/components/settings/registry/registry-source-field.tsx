@@ -16,7 +16,7 @@ function renderDescription(type: RegistryFormData['type']) {
   if (type === 'url') {
     return (
       <>
-        Provide the HTTPS url of a remote registry (
+        Provide the HTTPS URL of a remote registry (
         <Button asChild variant="link" size="sm" className="h-auto p-0">
           <a
             href="https://raw.githubusercontent.com/stacklok/toolhive/refs/heads/main/pkg/registry/data/registry.json"
@@ -36,7 +36,7 @@ function renderDescription(type: RegistryFormData['type']) {
   }
 
   if (type === 'api_url') {
-    return 'Provide the HTTPS url of a registry server API.'
+    return 'Provide the HTTPS URL of a registry server API.'
   }
 
   return null
@@ -55,7 +55,7 @@ const REGISTRY_SOURCE_CONFIG = {
   },
   api_url: {
     label: 'Registry Server API URL',
-    placeholder: 'http://domain.com:8080/api/registry',
+    placeholder: 'https://domain.com:8080/api/registry',
     useFilePicker: false,
   },
 } as const satisfies Record<

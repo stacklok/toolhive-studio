@@ -41,10 +41,13 @@ export function RegistryTab() {
       mutationFn: async (data: RegistryFormData) => {
         const source = data.source?.trim()
         const type = data.type
-        const body = {
-          [type]: source,
-          ...(type === 'api_url' ? { allow_private_ip: true } : {}),
-        }
+        const body =
+          type === 'default'
+            ? {}
+            : {
+                [type]: source,
+                ...(type === 'api_url' ? { allow_private_ip: true } : {}),
+              }
 
         await delay(500)
         return putApiV1BetaRegistryByName({
