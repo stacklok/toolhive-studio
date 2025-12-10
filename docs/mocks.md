@@ -1,5 +1,10 @@
 # MSW Auto-Mocker
 
+> **Source files:** The mocking system is implemented in `renderer/src/common/mocks/`. See the source files directly for implementation details:
+> - `autoAPIMock.ts` - The `AutoAPIMock` wrapper implementation
+> - `mocker.ts` - Auto-generation of fixtures from OpenAPI schema
+> - `node.ts` - MSW server setup and request recording
+
 - Handlers: `renderer/src/common/mocks/handlers.ts` combines custom handlers and auto-generated mocks.
 - Custom handlers: add hand-written handlers in `renderer/src/common/mocks/customHandlers/index.ts`. These take precedence over schema-based mocks.
 - Auto-generated: `renderer/src/common/mocks/mocker.ts` reads `api/openapi.json` and creates fixtures under `renderer/src/common/mocks/fixtures` on first run.
@@ -167,3 +172,33 @@ describe('error handling', () => {
 ```
 
 Scenario names are defined in `renderer/src/common/mocks/scenarioNames.ts` via the `MockScenarios` object, which provides autocomplete and JSDoc documentation. Global scenarios are automatically reset before each test via `resetAllAutoAPIMocks()` in the test setup.
+
+## Request Recording
+
+Use `recordRequests()` from `@/common/mocks/node` to capture API requests for assertions. This is the preferred way to verify that your code sends the correct API calls.
+
+```typescript
+import { recordRequests } from '@/common/mocks/node'
+
+it('sends correct payload when creating a group', async () => {
+  const rec = recordRequests()
+
+  // ... perform actions that trigger API calls ...
+
+  const request = rec.recordedRequests.find(
+    (r) => r.method === 'POST' && r.pathname === '/api/v1beta/groups'
+  )
+  expect(request).toBeDefined()
+  expect(request?.payload).toMatchObject({
+    name: 'my-group',
+  })
+})
+```
+
+Each recorded request contains:
+- `pathname` - The URL path (e.g., `/api/v1beta/groups`)
+- `method` - HTTP method (e.g., `GET`, `POST`)
+- `payload` - Parsed JSON body (if present)
+- `search` - Query parameters as key-value pairs
+
+Calling `recordRequests()` clears previous recordings, so each test starts fresh.
