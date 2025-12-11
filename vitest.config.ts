@@ -10,6 +10,7 @@ export default defineConfig({
       '@': path.resolve(__dirname, './renderer/src'),
       '@api': path.resolve(__dirname, './api/generated'),
       '@utils': path.resolve(__dirname, './utils'),
+      '@mocks': path.resolve(__dirname, './renderer/src/common/mocks'),
     },
   },
   test: {

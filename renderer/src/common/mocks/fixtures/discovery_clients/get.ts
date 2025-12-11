@@ -1,12 +1,14 @@
 import type { GetApiV1BetaDiscoveryClientsResponse } from '@api/types.gen'
+import { AutoAPIMock } from '@mocks'
 
-export default {
-  clients: [
-    { client_type: 'roo-code', installed: false, registered: false },
-    { client_type: 'cline', installed: true, registered: false },
-    { client_type: 'vscode-insider', installed: true, registered: false },
-    { client_type: 'vscode', installed: true, registered: false },
-    { client_type: 'cursor', installed: true, registered: false },
-    { client_type: 'claude-code', installed: true, registered: false },
-  ],
-} satisfies GetApiV1BetaDiscoveryClientsResponse
+export const mockedGetApiV1BetaDiscoveryClients =
+  AutoAPIMock<GetApiV1BetaDiscoveryClientsResponse>({
+    clients: [
+      { client_type: 'roo-code', installed: false, registered: false },
+      { client_type: 'cline', installed: true, registered: false },
+      { client_type: 'vscode-insider', installed: true, registered: false },
+      { client_type: 'vscode', installed: true, registered: false },
+      { client_type: 'cursor', installed: true, registered: false },
+      { client_type: 'claude-code', installed: true, registered: false },
+    ],
+  })

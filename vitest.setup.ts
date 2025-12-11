@@ -1,13 +1,18 @@
 import * as testingLibraryMatchers from '@testing-library/jest-dom/matchers'
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
-import { afterEach, expect, beforeAll, vi, afterAll } from 'vitest'
+import { afterEach, expect, beforeAll, beforeEach, vi, afterAll } from 'vitest'
 import failOnConsole from 'vitest-fail-on-console'
 import { client } from './api/generated/client.gen'
+import { resetAllAutoAPIMocks } from './renderer/src/common/mocks/autoAPIMock'
 import { server } from './renderer/src/common/mocks/node'
 import type { ElectronAPI } from './preload/src/preload'
 
 expect.extend(testingLibraryMatchers)
+
+beforeEach(() => {
+  resetAllAutoAPIMocks()
+})
 
 afterEach(() => {
   cleanup()

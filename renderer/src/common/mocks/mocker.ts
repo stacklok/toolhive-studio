@@ -5,20 +5,13 @@
 // @ts-nocheck
 
 import openapi from '../../../../api/openapi.json'
-import Ajv from 'ajv'
 import fs from 'fs'
 import { JSONSchemaFaker as jsf } from 'json-schema-faker'
 import { http, HttpResponse } from 'msw'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { buildMockModule } from './mockTemplate'
-
-const ajv = new Ajv({ strict: true })
-// Ignore vendor extensions present in the OpenAPI schema
-// to prevent strict mode errors during validation
-// e.g., x-enum-varnames is a common extension for enum labels
-
-;(ajv as any).addKeyword('x-enum-varnames')
+import type { AutoAPIMockInstance } from './autoAPIMock'
+import { buildMockModule, deriveMockName } from './mockTemplate'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -74,13 +67,20 @@ function opResponseTypeName(method: string, rawPath: string): string {
   return opResponsesTypeName(method, rawPath).replace(/Responses$/, 'Response')
 }
 
+function getFixtureRelPath(safePath: string, method: string): string {
+  return `./fixtures/${safePath}/${method}.${FIXTURE_EXT}`
+}
+
 function autoGenerateHandlers() {
   const result = []
   // Use a glob map so Vitest/Vite can track these files for watch/HMR.
-  // We'll still import per-request to get latest contents.
+  // Note: We don't use { import: 'default' } since fixtures now use named exports
   const fixtureImporters: Record<string, () => Promise<unknown>> =
     // @ts-ignore - vite-specific API available in vitest/vite runtime
-    import.meta.glob('./fixtures/**', { import: 'default' })
+    typeof import.meta.glob === 'function'
+      ? import.meta.glob('./fixtures/**')
+      : {}
+
   const specPaths = Object.entries(
     ((openapi as any).paths ?? {}) as Record<string, any>
   )
@@ -95,7 +95,7 @@ function autoGenerateHandlers() {
       const mswPath = `*/${rawPath.replace(/^\//, '').replace(/\{([^}]+)\}/g, ':$1')}`
 
       result.push(
-        http[method](mswPath, async () => {
+        http[method](mswPath, async (info) => {
           const successStatus = pickSuccessStatus(operation.responses || {})
 
           // Shorten noisy prefixes in fixture filenames.
@@ -111,7 +111,6 @@ function autoGenerateHandlers() {
           const fileBase = `${safePath}/${method}.${FIXTURE_EXT}`
           const fixtureFileName = `${FIXTURES_PATH}/${fileBase}`
 
-          let data: any = undefined
           if (!fs.existsSync(path.dirname(fixtureFileName))) {
             fs.mkdirSync(path.dirname(fixtureFileName), { recursive: true })
           }
@@ -150,7 +149,7 @@ function autoGenerateHandlers() {
             const opType = successStatus
               ? opResponseTypeName(method, rawPath)
               : undefined
-            const tsModule = buildMockModule(payload, { opType })
+            const tsModule = buildMockModule(payload, opType)
             fs.writeFileSync(fixtureFileName, tsModule)
             // After generating, rely on live import below so that
             // behavior matches pre-existing fixtures.
@@ -160,41 +159,44 @@ function autoGenerateHandlers() {
             return new HttpResponse(null, { status: 204 })
           }
 
-          if (data === undefined) {
-            const relPath = `./fixtures/${fileBase}`
-            try {
-              const importer = fixtureImporters[relPath]
-              if (importer) {
-                const mod: any = await importer()
-                data = mod?.default ?? mod
-              } else {
-                // Fall back to dynamic import for freshly generated files
-                const mod: any = await import(relPath)
-                data = mod?.default ?? mod
-              }
-            } catch (e) {
-              return new HttpResponse(
-                `Missing mock fixture: ${relPath}. ${e instanceof Error ? e.message : ''}`,
-                { status: 500 }
-              )
+          const relPath = getFixtureRelPath(safePath, method)
+          const opType = successStatus
+            ? opResponseTypeName(method, rawPath)
+            : undefined
+          const mockName = opType ? deriveMockName(opType) : 'mockedResponse'
+
+          let fixture: AutoAPIMockInstance<unknown> | unknown
+          try {
+            const importer = fixtureImporters?.[relPath]
+            if (importer) {
+              const mod = (await importer()) as Record<string, unknown>
+              // Try new format (named export) first, fall back to old format (default export)
+              fixture = mod[mockName] ?? mod.default ?? mod
+            } else {
+              // Fall back to dynamic import for freshly generated files
+              const mod = (await import(relPath)) as Record<string, unknown>
+              fixture = mod[mockName] ?? mod.default ?? mod
             }
-          }
-          const schema =
-            operation.responses?.[successStatus ?? '200']?.content?.[
-              'application/json'
-            ]?.schema
-          if (schema) {
-            const resolved = derefSchema(schema)
-            const isValid = ajv.validate(resolved, data)
-            if (!isValid) {
-              console.error('Invalid mock response', {
-                fixtureFileName,
-                errors: ajv.errors,
-              })
-            }
+          } catch (e) {
+            return new HttpResponse(
+              `[auto-mocker] Missing mock fixture: ${relPath}. ${e instanceof Error ? e.message : ''}`,
+              { status: 500 }
+            )
           }
 
-          return HttpResponse.json(data, {
+          // Check if fixture is an AutoAPIMock instance (new format)
+          if (
+            fixture &&
+            typeof (fixture as AutoAPIMockInstance<unknown>)
+              .generatedHandler === 'function'
+          ) {
+            return (fixture as AutoAPIMockInstance<unknown>).generatedHandler(
+              info
+            )
+          }
+
+          // Old format: plain data object (backward compatibility)
+          return HttpResponse.json(fixture, {
             status: successStatus ? Number(successStatus) : 200,
           })
         })

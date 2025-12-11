@@ -23,7 +23,9 @@
     "paths": {
       "@/*": ["./renderer/src/*"],
       "@api/*": ["./api/generated/*"],
-      "@utils/*": ["./utils/*"]
+      "@utils/*": ["./utils/*"],
+      "@mocks": ["./renderer/src/common/mocks"],
+      "@mocks/*": ["./renderer/src/common/mocks/*"]
     },
     "types": ["vitest/globals", "@testing-library/jest-dom/vitest"]
   },

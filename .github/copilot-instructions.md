@@ -44,6 +44,39 @@ src
         +-- component-b.ts
 ```
 
+### API Mocking
+
+API responses are mocked using MSW with `AutoAPIMock` fixtures. See `docs/mocks.md` for full documentation and `renderer/src/common/mocks/` for implementation.
+
+- Fixtures are in `renderer/src/common/mocks/fixtures/` and use named exports
+- Override responses in tests with `.override()` or `.overrideHandler()`
+- Overrides reset automatically before each test
+- Use `recordRequests()` from `@/common/mocks/node` to assert on API calls
+
+```typescript
+import { mockedGetApiV1BetaGroups } from '@mocks/fixtures/groups/get'
+import { recordRequests } from '@/common/mocks/node'
+import { HttpResponse } from 'msw'
+
+// Override data (type-safe)
+mockedGetApiV1BetaGroups.override(() => ({ groups: [] }))
+
+// Return errors
+mockedGetApiV1BetaGroups.overrideHandler(() =>
+  HttpResponse.json({ error: 'Server error' }, { status: 500 })
+)
+
+// Access default data
+const defaultData = mockedGetApiV1BetaGroups.defaultValue
+
+// Record and assert on requests
+const rec = recordRequests()
+// ... actions ...
+expect(rec.recordedRequests).toContainEqual(
+  expect.objectContaining({ method: 'POST', pathname: '/api/v1beta/groups' })
+)
+```
+
 ## Project structure
 
 Most of the code lives in the `src/` folder and looks something like this:
