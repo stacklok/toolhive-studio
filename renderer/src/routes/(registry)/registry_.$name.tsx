@@ -63,7 +63,6 @@ export function RegistryServerDetail() {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   if (!server) return null
-  console.log('server', server)
 
   const handleCardClick = (
     server: RegistryImageMetadata | RegistryRemoteServerMetadata
