@@ -13,8 +13,7 @@ export const REGISTRY_FORM_TYPES = [
  * Response types returned by GET /registry endpoint.
  * These are the values in V1RegistryInfo.type field.
  */
-export const REGISTRY_RESPONSE_TYPES = ['file', 'url', 'default'] as const
-export type RegistryResponseType = (typeof REGISTRY_RESPONSE_TYPES)[number]
+export type RegistryResponseType = 'file' | 'url' | 'default' | 'api'
 
 /**
  * Maps GET response type to form type for populating the form from API data.
