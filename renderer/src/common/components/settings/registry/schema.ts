@@ -1,14 +1,9 @@
 import { z } from 'zod/v4'
+import { REGISTRY_FORM_TYPES } from './utils'
 
-export const REGISTRY_TYPES = [
-  'local_path',
-  'url',
-  'default',
-  'api_url',
-] as const
 export const registryFormSchema = z
   .object({
-    type: z.enum(REGISTRY_TYPES).default('default'),
+    type: z.enum(REGISTRY_FORM_TYPES).default('default'),
     source: z.string().optional(),
     allow_private_ip: z.boolean().optional(),
   })

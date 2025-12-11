@@ -8,21 +8,12 @@ import {
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { useEffect } from 'react'
-import {
-  REGISTRY_TYPES,
-  registryFormSchema,
-  type RegistryFormData,
-} from './schema'
+import { registryFormSchema, type RegistryFormData } from './schema'
+import { mapResponseTypeToFormType } from './utils'
 import { RegistryForm } from './registry-form'
 import { delay } from '@utils/delay'
 import { trackEvent } from '@/common/lib/analytics'
-
-function isValidRegistryType(type: unknown): type is RegistryFormData['type'] {
-  return (
-    typeof type === 'string' &&
-    REGISTRY_TYPES.includes(type as RegistryFormData['type'])
-  )
-}
+import { queryClient } from '@/common/lib/query-client'
 
 export function RegistryTab() {
   const { isPending: isPendingRegistry, data: registry } = useQuery({
@@ -57,6 +48,11 @@ export function RegistryTab() {
           body,
         })
       },
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ['registry'],
+        })
+      },
       successMsg: 'Registry updated successfully',
       errorMsg: 'Failed to update registry',
       loadingMsg: 'Updating registry...',
@@ -66,9 +62,7 @@ export function RegistryTab() {
   const form = useForm<RegistryFormData>({
     resolver: zodV4Resolver(registryFormSchema),
     defaultValues: {
-      type: isValidRegistryType(registryData?.type)
-        ? registryData.type
-        : 'default',
+      type: mapResponseTypeToFormType(registryData?.type),
       source: registryData?.source ?? '',
     },
     mode: 'onChange',
@@ -76,10 +70,8 @@ export function RegistryTab() {
   })
 
   useEffect(() => {
-    const validType = isValidRegistryType(registryData?.type)
-      ? registryData.type
-      : 'default'
-    form.setValue('type', validType)
+    const formType = mapResponseTypeToFormType(registryData?.type)
+    form.setValue('type', formType)
     form.setValue('source', registryData?.source ?? '')
     form.trigger(['type', 'source'])
   }, [form, registryData])
