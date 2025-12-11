@@ -1,6 +1,7 @@
 name: Unit Tests
 permissions:
-  contents: write
+  contents: read
+  pull-requests: write
 on:
   workflow_call:
 jobs:
