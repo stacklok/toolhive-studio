@@ -39,7 +39,7 @@ export function StartingToolHive() {
   }, [isChecking, error, navigate, hasError])
 
   if (hasError) {
-    return <GenericError error={error as Error} />
+    return <GenericError />
   }
 
   return (
