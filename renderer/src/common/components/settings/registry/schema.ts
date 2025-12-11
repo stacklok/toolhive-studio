@@ -12,22 +12,23 @@ export const registryFormSchema = z
     source: z.string().optional(),
     allow_private_ip: z.boolean().optional(),
   })
-  .refine(
-    (data) => {
-      if (
-        data.type === 'local_path' ||
-        data.type === 'url' ||
-        data.type === 'api_url'
-      ) {
-        return data.source && data.source.trim().length > 0
-      }
-      return true
-    },
-    {
-      message: 'Registry URL or file path is required',
-      path: ['source'],
+  .superRefine((data, ctx) => {
+    const requiresSource =
+      data.type === 'local_path' ||
+      data.type === 'url' ||
+      data.type === 'api_url'
+
+    if (requiresSource && (!data.source || data.source.trim().length === 0)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['source'],
+        message:
+          data.type === 'local_path'
+            ? 'File path is required'
+            : 'Registry URL is required',
+      })
     }
-  )
+  })
   .refine(
     (data) => {
       if (data.type === 'local_path' || data.type === 'url') {
