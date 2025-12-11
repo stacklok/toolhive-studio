@@ -63,6 +63,7 @@ export function RegistryServerDetail() {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   if (!server) return null
+  console.log('server', server)
 
   const handleCardClick = (
     server: RegistryImageMetadata | RegistryRemoteServerMetadata
@@ -75,7 +76,9 @@ export function RegistryServerDetail() {
     ? server.tools
     : server.tools?.slice(0, INITIAL_TOOLS_LIMIT)
 
+  const hasTools = server.tools && server.tools.length > 0
   const hasMoreTools = server.tools && server.tools.length > INITIAL_TOOLS_LIMIT
+  const hasProvenance = 'provenance' in server && server.provenance
   const repositoryUrl = server.repository_url
 
   return (
@@ -84,13 +87,13 @@ export function RegistryServerDetail() {
         title={name}
         badges={
           <>
-            <Badge variant="default">{server.tier}</Badge>
+            {server.tier && <Badge variant="default">{server.tier}</Badge>}
             {server.status === statusMap.deprecated && (
               <Badge variant="outline">{server.status}</Badge>
             )}
             <Badge variant="secondary">{server.transport}</Badge>
             <Stars stars={server.metadata?.stars} className="size-4" />
-            {'provenance' in server && server.provenance && (
+            {hasProvenance && (
               <Tooltip>
                 <TooltipTrigger
                   className="text-muted-foreground flex items-center gap-2"
@@ -111,8 +114,8 @@ export function RegistryServerDetail() {
         }
         description={server.description}
       />
-      <div className="my-8 flex w-3/5 flex-col gap-8">
-        {server?.tools?.length && (
+      {hasTools && (
+        <div className="my-8 flex w-3/5 flex-col gap-8">
           <div className="flex w-3/5 flex-[3] flex-col gap-4">
             <p className="text-base font-bold">Tools listed</p>
             <div className="flex flex-wrap gap-2">
@@ -140,8 +143,8 @@ export function RegistryServerDetail() {
               )}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <Separator className="my-6" />
       <div className="flex gap-5 pb-10">
