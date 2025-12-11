@@ -408,4 +408,44 @@ describe('RegistryTab', () => {
     )
     expect(putRequests).toHaveLength(0)
   })
+
+  it('shows validation error for invalid API URL format', async () => {
+    const rec = recordRequests()
+
+    renderWithProviders(<RegistryTab />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Save' })).toBeVisible()
+    })
+
+    const selectTrigger = screen.getByRole('combobox')
+    await userEvent.click(selectTrigger)
+
+    const apiUrlOption = screen.getByRole('option', {
+      name: 'Registry Server API',
+    })
+    await userEvent.click(apiUrlOption)
+
+    await waitFor(() => {
+      expect(screen.getByText('Registry Server API URL')).toBeVisible()
+    })
+
+    const apiUrlInput = screen.getByLabelText(/Registry Server API URL/i)
+    await userEvent.type(apiUrlInput, 'not-a-valid-url')
+
+    const saveButton = screen.getByText('Save')
+    await userEvent.click(saveButton)
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Registry Server API must be a valid URL')
+      ).toBeVisible()
+    })
+
+    const putRequests = rec.recordedRequests.filter(
+      (req) =>
+        req.method === 'PUT' && req.pathname === '/api/v1beta/registry/default'
+    )
+    expect(putRequests).toHaveLength(0)
+  })
 })

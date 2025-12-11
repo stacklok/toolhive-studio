@@ -61,5 +61,22 @@ export const registryFormSchema = z
       path: ['source'],
     }
   )
+  .refine(
+    (data) => {
+      if (data.type === 'api_url' && data.source) {
+        try {
+          new URL(data.source)
+          return true
+        } catch {
+          return false
+        }
+      }
+      return true
+    },
+    {
+      message: 'Registry Server API must be a valid URL',
+      path: ['source'],
+    }
+  )
 
 export type RegistryFormData = z.infer<typeof registryFormSchema>
