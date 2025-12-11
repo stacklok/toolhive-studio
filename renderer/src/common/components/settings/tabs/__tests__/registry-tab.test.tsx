@@ -399,9 +399,7 @@ describe('RegistryTab', () => {
     await userEvent.click(saveButton)
 
     await waitFor(() => {
-      expect(
-        screen.getByText('Registry URL or file path is required')
-      ).toBeVisible()
+      expect(screen.getByText('Registry URL is required')).toBeVisible()
     })
 
     const putRequests = rec.recordedRequests.filter(
