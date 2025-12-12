@@ -31,7 +31,7 @@ importers:
         version: 2.0.109(react@19.2.1)(zod@4.1.13)
       '@ai-sdk/xai':
         specifier: ^2.0.38
-        version: 2.0.39(zod@4.1.13)
+        version: 2.0.40(zod@4.1.13)
       '@fontsource-variable/inter':
         specifier: ^5.2.6
         version: 5.2.8
@@ -399,6 +399,12 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
+  '@ai-sdk/openai-compatible@1.0.29':
+    resolution: {integrity: sha512-cZUppWzxjfpNaH1oVZ6U8yDLKKsdGbC9X0Pex8cG9CXhKWSoVLLnW1rKr6tu9jDISK5okjBIW/O1ZzfnbUrtEw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
   '@ai-sdk/openai@2.0.85':
     resolution: {integrity: sha512-3pzr7qVhsOXwjPAfmvFNZz3sRWCuyMOc3GgLHe7sWY0t8J4hA5mwQ4LISTKYI3iIr8IXzAQn9MUrC8Hiji9RpA==}
     engines: {node: '>=18'}
@@ -431,8 +437,8 @@ packages:
       zod:
         optional: true
 
-  '@ai-sdk/xai@2.0.39':
-    resolution: {integrity: sha512-EtRRHpPb3J6qY8y9C9p1g3FdF8dl6SocmfyS418g+PesK9/bIAbJYWQStdWpJXF/d9VfzeoOp1IhcBgKotAn+A==}
+  '@ai-sdk/xai@2.0.40':
+    resolution: {integrity: sha512-IrYgLXFyIVuzUpRkI2FKG/fb5uupuDY/85qY3A6rcYATcHloKFbS+QhTJc4W613ACYOdXFYH+gJNLCvNlr8ggg==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -8010,6 +8016,12 @@ snapshots:
       '@ai-sdk/provider-utils': 3.0.18(zod@4.1.13)
       zod: 4.1.13
 
+  '@ai-sdk/openai-compatible@1.0.29(zod@4.1.13)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0
+      '@ai-sdk/provider-utils': 3.0.19(zod@4.1.13)
+      zod: 4.1.13
+
   '@ai-sdk/openai@2.0.85(zod@4.1.13)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
@@ -8044,11 +8056,11 @@ snapshots:
     optionalDependencies:
       zod: 4.1.13
 
-  '@ai-sdk/xai@2.0.39(zod@4.1.13)':
+  '@ai-sdk/xai@2.0.40(zod@4.1.13)':
     dependencies:
-      '@ai-sdk/openai-compatible': 1.0.28(zod@4.1.13)
+      '@ai-sdk/openai-compatible': 1.0.29(zod@4.1.13)
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.18(zod@4.1.13)
+      '@ai-sdk/provider-utils': 3.0.19(zod@4.1.13)
       zod: 4.1.13
 
   '@alloc/quick-lru@5.2.0': {}
