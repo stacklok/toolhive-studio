@@ -88,6 +88,11 @@ export type AuthTokenValidatorConfig = {
    * ResourceURL is the explicit resource URL for OAuth discovery (RFC 9728)
    */
   resourceURL?: string
+  /**
+   * Scopes is the list of OAuth scopes to advertise in the well-known endpoint (RFC 9728)
+   * If empty, defaults to ["openid"]
+   */
+  scopes?: Array<string>
 }
 
 /**
@@ -189,11 +194,6 @@ export type CoreWorkload = {
    * The exact meaning is determined by the status and the underlying runtime.
    */
   status_context?: string
-  /**
-   * ToolType is the type of tool this workload represents.
-   * For now, it will always be "mcp" - representing an MCP server.
-   */
-  tool_type?: string
   /**
    * ToolsFilter is the filter on tools applied to the workload.
    */
@@ -1309,6 +1309,10 @@ export type V1OidcOptions = {
    * JWKS URL for key verification
    */
   jwks_url?: string
+  /**
+   * OAuth scopes to advertise in well-known endpoint (RFC 9728)
+   */
+  scopes?: Array<string>
 }
 
 /**

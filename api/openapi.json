@@ -85,6 +85,11 @@
           "resourceURL": {
             "description": "ResourceURL is the explicit resource URL for OAuth discovery (RFC 9728)",
             "type": "string"
+          },
+          "scopes": {
+            "description": "Scopes is the list of OAuth scopes to advertise in the well-known endpoint (RFC 9728)\nIf empty, defaults to [\"openid\"]",
+            "items": { "type": "string" },
+            "type": "array"
           }
         },
         "type": "object"
@@ -237,10 +242,6 @@
           "status": { "$ref": "#/components/schemas/runtime.WorkloadStatus" },
           "status_context": {
             "description": "StatusContext provides additional context about the workload's status.\nThe exact meaning is determined by the status and the underlying runtime.",
-            "type": "string"
-          },
-          "tool_type": {
-            "description": "ToolType is the type of tool this workload represents.\nFor now, it will always be \"mcp\" - representing an MCP server.",
             "type": "string"
           },
           "tools": {
@@ -1530,6 +1531,12 @@
           "jwks_url": {
             "description": "JWKS URL for key verification",
             "type": "string"
+          },
+          "scopes": {
+            "description": "OAuth scopes to advertise in well-known endpoint (RFC 9728)",
+            "items": { "type": "string" },
+            "type": "array",
+            "uniqueItems": false
           }
         },
         "type": "object"
