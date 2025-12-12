@@ -1,5 +1,4 @@
-import type { UseFormReturn } from 'react-hook-form'
-import { Button } from '../../ui/button'
+import type { ControllerRenderProps, UseFormReturn } from 'react-hook-form'
 import {
   FormField,
   FormItem,
@@ -11,6 +10,40 @@ import {
 import { Input } from '../../ui/input'
 import type { RegistryFormData } from './schema'
 import { FilePickerInput } from '../../ui/file-picker-input'
+import { REGISTRY_INPUT_CONFIG } from './utils'
+
+function RegistryFormControl({
+  useFilePicker,
+  placeholder,
+  field,
+  disabled,
+}: {
+  useFilePicker: boolean
+  placeholder: string
+  field: ControllerRenderProps<RegistryFormData, 'source'>
+  disabled: boolean
+}) {
+  if (useFilePicker) {
+    return (
+      <FormControl>
+        <FilePickerInput
+          mode="file"
+          placeholder={placeholder}
+          name={field.name}
+          value={field.value ?? ''}
+          onChange={({ newValue }) => field.onChange(newValue)}
+          disabled={disabled}
+        />
+      </FormControl>
+    )
+  }
+
+  return (
+    <FormControl>
+      <Input placeholder={placeholder} {...field} disabled={disabled} />
+    </FormControl>
+  )
+}
 
 export function RegistrySourceField({
   isPending,
@@ -25,60 +58,24 @@ export function RegistrySourceField({
     return null
   }
 
+  const sourceType = registryType as keyof typeof REGISTRY_INPUT_CONFIG
+  const config = REGISTRY_INPUT_CONFIG[sourceType]
+
   return (
     <FormField
       control={form.control}
       name="source"
       render={({ field }) => {
-        const isRemote = registryType === 'url'
-
         return (
           <FormItem className="w-full">
-            <FormLabel required>
-              {isRemote ? 'Registry URL' : 'Registry File Path'}
-            </FormLabel>
-            <FormDescription>
-              {isRemote ? (
-                <>
-                  Provide the HTTPS url of a remote registry (
-                  <Button
-                    asChild
-                    variant="link"
-                    size="sm"
-                    className="h-auto p-0"
-                  >
-                    <a
-                      href="https://raw.githubusercontent.com/stacklok/toolhive/refs/heads/main/pkg/registry/data/registry.json"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      official ToolHive registry
-                    </a>
-                  </Button>
-                  ).
-                </>
-              ) : (
-                'Provide the absolute path to a local registry JSON file on your system.'
-              )}
-            </FormDescription>
-            <FormControl>
-              {isRemote ? (
-                <Input
-                  placeholder={'https://domain.com/registry.json'}
-                  {...field}
-                  disabled={isPending}
-                />
-              ) : (
-                <FilePickerInput
-                  mode="file"
-                  placeholder={'/path/to/registry.json'}
-                  name={field.name}
-                  value={field.value ?? ''}
-                  onChange={({ newValue }) => field.onChange(newValue)}
-                  disabled={isPending}
-                />
-              )}
-            </FormControl>
+            <FormLabel required>{config.label}</FormLabel>
+            <FormDescription>{config.description}</FormDescription>
+            <RegistryFormControl
+              useFilePicker={config.useFilePicker}
+              placeholder={config.placeholder}
+              field={field}
+              disabled={isPending}
+            />
             <FormMessage />
           </FormItem>
         )

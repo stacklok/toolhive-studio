@@ -9,9 +9,11 @@ import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { useEffect } from 'react'
 import { registryFormSchema, type RegistryFormData } from './schema'
+import { mapResponseTypeToFormType } from './utils'
 import { RegistryForm } from './registry-form'
 import { delay } from '@utils/delay'
 import { trackEvent } from '@/common/lib/analytics'
+import { queryClient } from '@/common/lib/query-client'
 
 export function RegistryTab() {
   const { isPending: isPendingRegistry, data: registry } = useQuery({
@@ -28,16 +30,28 @@ export function RegistryTab() {
   const { mutateAsync: updateRegistry, isPending: isPendingUpdate } =
     useToastMutation({
       mutationFn: async (data: RegistryFormData) => {
+        const source = data.source?.trim()
+        const type = data.type
         const body =
-          data.type === 'url'
-            ? { url: data.source?.trim() }
-            : { local_path: data.source?.trim() }
+          type === 'default'
+            ? {}
+            : {
+                [type]: source,
+                //  Allow private IP addresses for API URL
+                ...(type === 'api_url' ? { allow_private_ip: true } : {}),
+              }
+
         await delay(500)
         return putApiV1BetaRegistryByName({
           path: {
             name: 'default',
           },
           body,
+        })
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ['registry'],
         })
       },
       successMsg: 'Registry updated successfully',
@@ -49,7 +63,7 @@ export function RegistryTab() {
   const form = useForm<RegistryFormData>({
     resolver: zodV4Resolver(registryFormSchema),
     defaultValues: {
-      type: (registryData?.type as RegistryFormData['type']) ?? 'default',
+      type: mapResponseTypeToFormType(registryData?.type),
       source: registryData?.source ?? '',
     },
     mode: 'onChange',
@@ -57,10 +71,8 @@ export function RegistryTab() {
   })
 
   useEffect(() => {
-    form.setValue(
-      'type',
-      (registryData?.type as RegistryFormData['type']) ?? 'default'
-    )
+    const formType = mapResponseTypeToFormType(registryData?.type)
+    form.setValue('type', formType)
     form.setValue('source', registryData?.source ?? '')
     form.trigger(['type', 'source'])
   }, [form, registryData])

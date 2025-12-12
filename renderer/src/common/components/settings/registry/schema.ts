@@ -1,25 +1,32 @@
 import { z } from 'zod/v4'
+import { REGISTRY_FORM_TYPES } from './utils'
 
 export const registryFormSchema = z
   .object({
-    type: z.enum(['file', 'url', 'default']).default('default'),
+    type: z.enum(REGISTRY_FORM_TYPES).default('default'),
     source: z.string().optional(),
+    allow_private_ip: z.boolean().optional(),
+  })
+  .superRefine((data, ctx) => {
+    const requiresSource =
+      data.type === 'local_path' ||
+      data.type === 'url' ||
+      data.type === 'api_url'
+
+    if (requiresSource && (!data.source || data.source.trim().length === 0)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['source'],
+        message:
+          data.type === 'local_path'
+            ? 'File path is required'
+            : 'Registry URL is required',
+      })
+    }
   })
   .refine(
     (data) => {
-      if (data.type === 'url' || data.type === 'file') {
-        return data.source && data.source.trim().length > 0
-      }
-      return true
-    },
-    {
-      message: 'Registry URL or file path is required',
-      path: ['source'],
-    }
-  )
-  .refine(
-    (data) => {
-      if (data.type === 'file') {
+      if (data.type === 'local_path' || data.type === 'url') {
         return data.source?.endsWith('.json')
       }
       return true
@@ -46,6 +53,23 @@ export const registryFormSchema = z
     },
     {
       message: 'Remote registry must be a valid HTTPS URL',
+      path: ['source'],
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.type === 'api_url' && data.source) {
+        try {
+          new URL(data.source)
+          return true
+        } catch {
+          return false
+        }
+      }
+      return true
+    },
+    {
+      message: 'Registry Server API must be a valid URL',
       path: ['source'],
     }
   )
