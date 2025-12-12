@@ -1,6 +1,8 @@
 name: Unit Tests
 permissions:
-  contents: write
+  contents: read
+  pull-requests: write
+  checks: write
 on:
   workflow_call:
 jobs:
@@ -17,8 +19,13 @@ jobs:
       - name: Run tests
         run: pnpm run test:coverage
 
-      # NOTE: The StacklokLabs organisation is not onboarded into Coveralls
-      # - name: Send coverage to Coveralls
-      #   uses: coverallsapp/github-action@648a8eb78e6d50909eff900e4ec85cab4524a45b #v2.3.6
-      #   with:
-      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Report Coverage
+        uses: davelosert/vitest-coverage-report-action@5b6122e3a819a3be7b27fc961b7faafb3bf00e4d # v2.9.0
+
+      - name: Send coverage to Coveralls
+        uses: coverallsapp/github-action@648a8eb78e6d50909eff900e4ec85cab4524a45b # v2.3.6
+        with:
+          file: ./coverage/lcov.info
+          github-token: ${{ github.token }}
+          fail-on-error: false
+          debug: true
