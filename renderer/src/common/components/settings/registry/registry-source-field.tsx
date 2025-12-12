@@ -1,5 +1,4 @@
 import type { ControllerRenderProps, UseFormReturn } from 'react-hook-form'
-import { Button } from '../../ui/button'
 import {
   FormField,
   FormItem,
@@ -12,27 +11,6 @@ import { Input } from '../../ui/input'
 import type { RegistryFormData } from './schema'
 import { FilePickerInput } from '../../ui/file-picker-input'
 import { REGISTRY_INPUT_CONFIG } from './utils'
-
-const REGISTRY_SOURCE_DESCRIPTION = {
-  local_path:
-    'Provide the absolute path to a local registry JSON file on your system.',
-  url: (
-    <>
-      Provide the HTTPS URL of a remote registry (
-      <Button asChild variant="link" size="sm" className="h-auto p-0">
-        <a
-          href="https://raw.githubusercontent.com/stacklok/toolhive/refs/heads/main/pkg/registry/data/registry.json"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          official ToolHive registry
-        </a>
-      </Button>
-      ).
-    </>
-  ),
-  api_url: 'Provide the HTTPS URL of a registry server API.',
-} as const satisfies Record<keyof typeof REGISTRY_INPUT_CONFIG, React.ReactNode>
 
 function RegistryFormControl({
   useFilePicker,
@@ -82,7 +60,6 @@ export function RegistrySourceField({
 
   const sourceType = registryType as keyof typeof REGISTRY_INPUT_CONFIG
   const config = REGISTRY_INPUT_CONFIG[sourceType]
-  const description = REGISTRY_SOURCE_DESCRIPTION[sourceType]
 
   return (
     <FormField
@@ -92,7 +69,7 @@ export function RegistrySourceField({
         return (
           <FormItem className="w-full">
             <FormLabel required>{config.label}</FormLabel>
-            <FormDescription>{description}</FormDescription>
+            <FormDescription>{config.description}</FormDescription>
             <RegistryFormControl
               useFilePicker={config.useFilePicker}
               placeholder={config.placeholder}
