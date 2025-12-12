@@ -15,8 +15,8 @@ importers:
         specifier: ^2.0.28
         version: 2.0.44(zod@4.1.13)
       '@ai-sdk/mcp':
-        specifier: ^0.0.11
-        version: 0.0.11(zod@4.1.13)
+        specifier: ^0.0.12
+        version: 0.0.12(zod@4.1.13)
       '@ai-sdk/openai':
         specifier: ^2.0.62
         version: 2.0.85(zod@4.1.13)
@@ -387,8 +387,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/mcp@0.0.11':
-    resolution: {integrity: sha512-n0oZsxhPdMaXhAn6LrpMpxABufmeSatfhR3epbrCjJcLEHPOucKwQciwE8CTgIGgwBxHNy1FFLZmcFI77JmJfg==}
+  '@ai-sdk/mcp@0.0.12':
+    resolution: {integrity: sha512-hyf31U2CmgGexqOLgLfno525pjbqidJLu9pU+XcEwW/PkMcfTFuRq1iD3wbqtAmURRW0qJITiKV+in1B4I23gA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -6399,10 +6399,6 @@ packages:
     resolution: {integrity: sha512-udgsAY+fTnvv7kI7aaxbqwWNb0AHiB0qBO89PZKPkoTmGOgdbrHDKD+0B2X4uTfJ/FT1R09r9gTsjUjNJotuog==}
     engines: {node: '>=0.10.0'}
 
-  pkce-challenge@5.0.0:
-    resolution: {integrity: sha512-ueGLflrrnvwB3xuo/uGob5pd5FN7l0MsLf0Z87o/UQmRtwjvfylfc9MurIxRAWywCYTgrvpXBcqjV4OfCYGCIQ==}
-    engines: {node: '>=16.20.0'}
-
   pkce-challenge@5.0.1:
     resolution: {integrity: sha512-wQ0b/W4Fr01qtpHlqSqspcj3EhBvimsdh0KlHhH8HRZnMsEa0ea2fTULOXOS9ccQr3om+GcGRk4e+isrZWV8qQ==}
     engines: {node: '>=16.20.0'}
@@ -7997,11 +7993,11 @@ snapshots:
       '@ai-sdk/provider-utils': 3.0.18(zod@4.1.13)
       zod: 4.1.13
 
-  '@ai-sdk/mcp@0.0.11(zod@4.1.13)':
+  '@ai-sdk/mcp@0.0.12(zod@4.1.13)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.18(zod@4.1.13)
-      pkce-challenge: 5.0.0
+      '@ai-sdk/provider-utils': 3.0.19(zod@4.1.13)
+      pkce-challenge: 5.0.1
       zod: 4.1.13
 
   '@ai-sdk/openai-compatible@1.0.28(zod@4.1.13)':
@@ -15019,8 +15015,6 @@ snapshots:
   pidtree@0.6.0: {}
 
   pify@2.3.0: {}
-
-  pkce-challenge@5.0.0: {}
 
   pkce-challenge@5.0.1: {}
 
