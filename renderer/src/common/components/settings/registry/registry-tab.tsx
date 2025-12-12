@@ -37,6 +37,7 @@ export function RegistryTab() {
             ? {}
             : {
                 [type]: source,
+                //  Allow private IP addresses for API URL
                 ...(type === 'api_url' ? { allow_private_ip: true } : {}),
               }
 

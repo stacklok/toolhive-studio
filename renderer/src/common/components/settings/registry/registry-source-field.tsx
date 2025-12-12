@@ -1,4 +1,4 @@
-import type { UseFormReturn } from 'react-hook-form'
+import type { ControllerRenderProps, UseFormReturn } from 'react-hook-form'
 import { Button } from '../../ui/button'
 import {
   FormField,
@@ -11,57 +11,61 @@ import {
 import { Input } from '../../ui/input'
 import type { RegistryFormData } from './schema'
 import { FilePickerInput } from '../../ui/file-picker-input'
+import { REGISTRY_INPUT_CONFIG } from './utils'
 
-function renderDescription(type: RegistryFormData['type']) {
-  if (type === 'url') {
+const REGISTRY_SOURCE_DESCRIPTION = {
+  local_path:
+    'Provide the absolute path to a local registry JSON file on your system.',
+  url: (
+    <>
+      Provide the HTTPS URL of a remote registry (
+      <Button asChild variant="link" size="sm" className="h-auto p-0">
+        <a
+          href="https://raw.githubusercontent.com/stacklok/toolhive/refs/heads/main/pkg/registry/data/registry.json"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          official ToolHive registry
+        </a>
+      </Button>
+      ).
+    </>
+  ),
+  api_url: 'Provide the HTTPS URL of a registry server API.',
+} as const satisfies Record<keyof typeof REGISTRY_INPUT_CONFIG, React.ReactNode>
+
+function RegistryFormControl({
+  useFilePicker,
+  placeholder,
+  field,
+  disabled,
+}: {
+  useFilePicker: boolean
+  placeholder: string
+  field: ControllerRenderProps<RegistryFormData, 'source'>
+  disabled: boolean
+}) {
+  if (useFilePicker) {
     return (
-      <>
-        Provide the HTTPS URL of a remote registry (
-        <Button asChild variant="link" size="sm" className="h-auto p-0">
-          <a
-            href="https://raw.githubusercontent.com/stacklok/toolhive/refs/heads/main/pkg/registry/data/registry.json"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            official ToolHive registry
-          </a>
-        </Button>
-        ).
-      </>
+      <FormControl>
+        <FilePickerInput
+          mode="file"
+          placeholder={placeholder}
+          name={field.name}
+          value={field.value ?? ''}
+          onChange={({ newValue }) => field.onChange(newValue)}
+          disabled={disabled}
+        />
+      </FormControl>
     )
   }
 
-  if (type === 'local_path') {
-    return 'Provide the absolute path to a local registry JSON file on your system.'
-  }
-
-  if (type === 'api_url') {
-    return 'Provide the HTTPS URL of a registry server API.'
-  }
-
-  return null
+  return (
+    <FormControl>
+      <Input placeholder={placeholder} {...field} disabled={disabled} />
+    </FormControl>
+  )
 }
-
-const REGISTRY_SOURCE_CONFIG = {
-  local_path: {
-    label: 'Registry File Path',
-    placeholder: '/path/to/registry.json',
-    useFilePicker: true,
-  },
-  url: {
-    label: 'Registry URL',
-    placeholder: 'https://domain.com/registry.json',
-    useFilePicker: false,
-  },
-  api_url: {
-    label: 'Registry Server API URL',
-    placeholder: 'https://domain.com:8080/api/registry',
-    useFilePicker: false,
-  },
-} as const satisfies Record<
-  Exclude<RegistryFormData['type'], 'default'>,
-  { label: string; placeholder: string; useFilePicker: boolean }
->
 
 export function RegistrySourceField({
   isPending,
@@ -76,8 +80,9 @@ export function RegistrySourceField({
     return null
   }
 
-  const config =
-    REGISTRY_SOURCE_CONFIG[registryType as keyof typeof REGISTRY_SOURCE_CONFIG]
+  const sourceType = registryType as keyof typeof REGISTRY_INPUT_CONFIG
+  const config = REGISTRY_INPUT_CONFIG[sourceType]
+  const description = REGISTRY_SOURCE_DESCRIPTION[sourceType]
 
   return (
     <FormField
@@ -87,25 +92,13 @@ export function RegistrySourceField({
         return (
           <FormItem className="w-full">
             <FormLabel required>{config.label}</FormLabel>
-            <FormDescription>{renderDescription(registryType)}</FormDescription>
-            <FormControl>
-              {config.useFilePicker ? (
-                <FilePickerInput
-                  mode="file"
-                  placeholder={config.placeholder}
-                  name={field.name}
-                  value={field.value ?? ''}
-                  onChange={({ newValue }) => field.onChange(newValue)}
-                  disabled={isPending}
-                />
-              ) : (
-                <Input
-                  placeholder={config.placeholder}
-                  {...field}
-                  disabled={isPending}
-                />
-              )}
-            </FormControl>
+            <FormDescription>{description}</FormDescription>
+            <RegistryFormControl
+              useFilePicker={config.useFilePicker}
+              placeholder={config.placeholder}
+              field={field}
+              disabled={isPending}
+            />
             <FormMessage />
           </FormItem>
         )

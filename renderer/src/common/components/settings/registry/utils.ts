@@ -9,6 +9,41 @@ export const REGISTRY_FORM_TYPES = [
   'api_url',
 ] as const
 
+export type RegistryFormType = (typeof REGISTRY_FORM_TYPES)[number]
+
+export const REGISTRY_TYPE_OPTIONS = [
+  { value: 'default', label: 'Default Registry' },
+  { value: 'url', label: 'Remote Registry (JSON URL)' },
+  { value: 'local_path', label: 'Local Registry (JSON File Path)' },
+  { value: 'api_url', label: 'Registry Server API' },
+] as const satisfies ReadonlyArray<{
+  value: RegistryFormType
+  label: string
+}>
+
+type RegistryInputType = Exclude<RegistryFormType, 'default'>
+
+export const REGISTRY_INPUT_CONFIG = {
+  local_path: {
+    label: 'Registry File Path',
+    placeholder: '/path/to/registry.json',
+    useFilePicker: true,
+  },
+  url: {
+    label: 'Registry URL',
+    placeholder: 'https://domain.com/registry.json',
+    useFilePicker: false,
+  },
+  api_url: {
+    label: 'Registry Server API URL',
+    placeholder: 'https://domain.com:8080/api/registry',
+    useFilePicker: false,
+  },
+} as const satisfies Record<
+  RegistryInputType,
+  { label: string; placeholder: string; useFilePicker: boolean }
+>
+
 /**
  * Maps GET response type to form type for populating the form from API data.
  */

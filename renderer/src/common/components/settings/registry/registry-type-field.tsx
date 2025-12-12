@@ -15,6 +15,7 @@ import {
   FormMessage,
 } from '../../ui/form'
 import type { RegistryFormData } from './schema'
+import { REGISTRY_TYPE_OPTIONS } from './utils'
 
 export function RegistryTypeField({
   isPending,
@@ -60,12 +61,11 @@ export function RegistryTypeField({
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              <SelectItem value="default">Default Registry</SelectItem>
-              <SelectItem value="url">Remote Registry (JSON URL)</SelectItem>
-              <SelectItem value="local_path">
-                Local Registry (JSON File Path)
-              </SelectItem>
-              <SelectItem value="api_url">Registry Server API</SelectItem>
+              {REGISTRY_TYPE_OPTIONS.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <FormMessage />
