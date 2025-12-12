@@ -24,10 +24,10 @@ export function Error({ error }: ErrorProps = {}) {
     error?.toString().includes('ENOTFOUND') ||
     error?.toString().includes('Network Error') ||
     error?.message?.includes('failed to ping Docker server') ||
-    !error?.cause?.containerEngineAvailable
+    error?.cause?.containerEngineAvailable === false
   ) {
     return <ConnectionRefusedError />
   }
 
-  return <GenericError error={error} />
+  return <GenericError />
 }

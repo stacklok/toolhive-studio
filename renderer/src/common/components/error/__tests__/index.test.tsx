@@ -90,7 +90,9 @@ describe('Error', () => {
     )
 
     expect(screen.getByText('Oops, something went wrong')).toBeVisible()
-    expect(screen.getByText('OS keyring is not available')).toBeVisible()
+    expect(
+      screen.getByText(/We're sorry, but something unexpected happened/)
+    ).toBeVisible()
 
     // Verify that the CUSTOM keyring error is NOT shown
     expect(
@@ -119,6 +121,8 @@ describe('Error', () => {
     )
 
     expect(screen.getByText('Oops, something went wrong')).toBeVisible()
-    expect(screen.getByText('Something unexpected happened')).toBeVisible()
+    expect(
+      screen.getByText(/We're sorry, but something unexpected happened/)
+    ).toBeVisible()
   })
 })
