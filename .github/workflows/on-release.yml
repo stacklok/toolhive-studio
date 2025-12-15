@@ -5,6 +5,8 @@ on:
 
 permissions:
   contents: write # Required for GitHub publisher to upload release assets
+  checks: write # Required for unit tests workflow
+  pull-requests: write # Required for unit tests workflow
 
 jobs:
   security:
@@ -19,7 +21,6 @@ jobs:
   unit-tests:
     name: Unit Tests
     uses: ./.github/workflows/_unit-tests.yml
-    secrets: inherit
 
   build-and-release:
     name: Build and Release on ${{ matrix.os }}
@@ -37,7 +38,7 @@ jobs:
           - os: macos-latest
             arch: arm64
     env:
-      NODE_OPTIONS: '--max_old_space_size=4096'
+      NODE_OPTIONS: "--max_old_space_size=4096"
     steps:
       - name: Checkout Repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
