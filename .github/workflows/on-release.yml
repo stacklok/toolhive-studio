@@ -5,6 +5,8 @@ on:
 
 permissions:
   contents: write # Required for GitHub publisher to upload release assets
+  checks: write # Required for unit tests workflow
+  pull-requests: write # Required for unit tests workflow
 
 jobs:
   security:
@@ -19,7 +21,6 @@ jobs:
   unit-tests:
     name: Unit Tests
     uses: ./.github/workflows/_unit-tests.yml
-    secrets: inherit
 
   build-and-release:
     name: Build and Release on ${{ matrix.os }}
