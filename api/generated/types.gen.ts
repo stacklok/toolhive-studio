@@ -953,6 +953,7 @@ export type TypesMiddlewareConfig = {
 
 /**
  * ProxyMode is the proxy mode for stdio transport ("sse" or "streamable-http")
+ * Note: "sse" is deprecated; use "streamable-http" instead.
  */
 export type TypesProxyMode = string
 
