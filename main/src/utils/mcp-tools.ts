@@ -56,35 +56,43 @@ export function createTransport(workload: CoreWorkload): MCPClientConfig {
       }),
     }),
     'streamable-http': () => {
-      const url = new URL(`http://localhost:${workload.port}/mcp`)
+      console.log('workload', workload)
+      // ToolHive provides the correct URL with path in workload.url
+      // Fallback to /mcp for local containers if url is missing
+      const urlString = workload.url || `http://localhost:${workload.port}/mcp`
       return {
         name: workload.name,
-        transport: new StreamableHTTPClientTransport(url),
+        transport: new StreamableHTTPClientTransport(new URL(urlString)),
       }
     },
     sse: () => ({
       name: workload.name,
       transport: {
         type: 'sse' as const,
-        url: `${`http://localhost:${workload.port}/sse#${workload.name}`}`,
+        url: `http://localhost:${workload.port}/sse#${workload.name}`,
       },
     }),
     default: () => ({
       name: workload.name,
       transport: {
         type: 'sse' as const,
-        url: `${`http://localhost:${workload.port}/sse#${workload.name}`}`,
+        url: `http://localhost:${workload.port}/sse#${workload.name}`,
       },
     }),
   }
 
-  // Check if transport_type is stdio but URL suggests SSE
+  // For stdio transport, ToolHive exposes the server via a proxy (SSE or streamable-http)
+  // Check proxy_mode or URL pattern to determine the actual transport to use
   let transportType = workload.transport_type as keyof typeof transportConfigs
 
-  if (transportType === 'stdio' && workload.url) {
-    // If URL contains /sse or #, use SSE transport instead
-    if (workload.url.includes('/sse')) {
-      // Override stdio to SSE based on URL pattern
+  if (transportType === 'stdio') {
+    // Use proxy_mode if available, otherwise check URL pattern
+    if (workload.proxy_mode === 'streamable-http') {
+      transportType = 'streamable-http'
+    } else if (
+      workload.proxy_mode === 'sse' ||
+      workload.url?.includes('/sse')
+    ) {
       transportType = 'sse'
     }
   }
