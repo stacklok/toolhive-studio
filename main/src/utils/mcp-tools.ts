@@ -56,7 +56,6 @@ export function createTransport(workload: CoreWorkload): MCPClientConfig {
       }),
     }),
     'streamable-http': () => {
-      console.log('workload', workload)
       // ToolHive provides the correct URL with path in workload.url
       // Fallback to /mcp for local containers if url is missing
       const urlString = workload.url || `http://localhost:${workload.port}/mcp`
