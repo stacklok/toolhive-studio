@@ -6,10 +6,6 @@ import { Route } from './settings'
 export default function SettingsRouteComponent() {
   const { tab } = useSearch({ from: Route.id })
 
-  if (typeof window === 'undefined' || !window.electronAPI) {
-    return null
-  }
-
   return (
     <>
       <TitlePage title="Settings" />
