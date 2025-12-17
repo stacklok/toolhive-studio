@@ -28,7 +28,11 @@ const tabs: TabItem[] = [
   },
 ] as const satisfies TabItem[]
 
-export function SettingsTabs() {
+interface SettingsTabsProps {
+  defaultTab?: Tab
+}
+
+export function SettingsTabs({ defaultTab }: SettingsTabsProps) {
   const { data: appInfo, isLoading, error } = useAppVersion()
   const isProduction = import.meta.env.MODE === 'production'
   const isNewVersionAvailable = appInfo?.isNewVersionAvailable && isProduction
@@ -36,7 +40,7 @@ export function SettingsTabs() {
   return (
     <>
       <Tabs
-        defaultValue="general"
+        defaultValue={defaultTab || 'general'}
         orientation="vertical"
         className="flex flex-row items-start gap-10"
       >

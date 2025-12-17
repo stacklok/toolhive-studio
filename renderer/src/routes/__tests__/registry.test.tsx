@@ -4,12 +4,12 @@ import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
-import { Registry } from '../(registry)/registry'
+import RegistryRouteComponent from '../(registry)/registry.route'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
 import { DEFAULT_REGISTRY } from '@/common/mocks/customHandlers/fixtures/default_registry'
 import { META_MCP_SERVER_NAME } from '@/common/lib/constants'
 
-const router = createTestRouter(Registry)
+const router = createTestRouter(RegistryRouteComponent)
 
 beforeEach(() => {
   // Reset mocks before each test
