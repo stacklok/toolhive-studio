@@ -1,20 +1,19 @@
-import { TitlePage } from '@/common/components/title-page'
 import { createFileRoute } from '@tanstack/react-router'
-import { SettingsTabs } from '@/common/components/settings/tabs/settings-tabs'
+import SettingsRouteComponent from './settings.route'
+
+interface SettingsSearch {
+  tab?: 'general' | 'registry' | 'version' | 'logs'
+}
 
 export const Route = createFileRoute('/settings')({
-  component: RouteComponent,
+  validateSearch: (search: Record<string, unknown>): SettingsSearch => ({
+    tab:
+      search.tab === 'general' ||
+      search.tab === 'registry' ||
+      search.tab === 'version' ||
+      search.tab === 'logs'
+        ? search.tab
+        : undefined,
+  }),
+  component: SettingsRouteComponent,
 })
-
-function RouteComponent() {
-  if (typeof window === 'undefined' || !window.electronAPI) {
-    return null
-  }
-
-  return (
-    <>
-      <TitlePage title="Settings" />
-      <SettingsTabs />
-    </>
-  )
-}
