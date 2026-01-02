@@ -40,6 +40,7 @@ import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
 const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
   name: '',
   transport: 'streamable-http',
+  proxy_mode: 'streamable-http',
   auth_type: 'none',
   oauth_config: {
     authorize_url: '',

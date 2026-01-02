@@ -31,6 +31,7 @@ describe('prepareCreateWorkloadData', () => {
       name: 'oauth-server',
       url: 'https://api.example.com',
       transport: 'sse',
+      proxy_mode: 'streamable-http',
       auth_type: 'oauth2',
       oauth_config: {
         authorize_url: 'https://oauth.example.com/authorize',
@@ -66,6 +67,7 @@ describe('prepareCreateWorkloadData', () => {
       name: 'oauth-server',
       url: 'https://api.example.com',
       transport: 'sse',
+      proxy_mode: 'streamable-http',
       oauth_config: {
         authorize_url: 'https://oauth.example.com/authorize',
         token_url: 'https://oauth.example.com/token',
@@ -91,6 +93,7 @@ describe('prepareCreateWorkloadData', () => {
       name: 'no-scopes-server',
       url: 'https://api.example.com',
       transport: 'sse',
+      proxy_mode: 'streamable-http',
       auth_type: 'oauth2',
       oauth_config: {
         authorize_url: 'https://oauth.example.com/authorize',
@@ -117,6 +120,7 @@ describe('prepareUpdateRemoteWorkloadData', () => {
       name: 'updated-oauth-server',
       url: 'https://api.updated.com',
       transport: 'streamable-http',
+      proxy_mode: 'streamable-http',
       auth_type: 'oauth2',
       oauth_config: {
         authorize_url: 'https://oauth.updated.com/authorize',
@@ -152,6 +156,7 @@ describe('prepareUpdateRemoteWorkloadData', () => {
       name: 'updated-oauth-server',
       url: 'https://api.updated.com',
       transport: 'streamable-http',
+      proxy_mode: 'streamable-http',
       oauth_config: {
         authorize_url: 'https://oauth.updated.com/authorize',
         token_url: 'https://oauth.updated.com/token',
@@ -179,6 +184,7 @@ describe('convertCreateRequestToFormData', () => {
       name: 'oauth-server',
       url: 'https://api.example.com',
       transport: 'sse',
+      proxy_mode: 'streamable-http',
       oauth_config: {
         authorize_url: 'https://oauth.example.com/authorize',
         token_url: 'https://oauth.example.com/token',
@@ -209,6 +215,7 @@ describe('convertCreateRequestToFormData', () => {
       name: 'oauth-server',
       url: 'https://api.example.com',
       transport: 'sse',
+      proxy_mode: 'streamable-http',
       auth_type: 'oauth2',
       oauth_config: {
         authorize_url: 'https://oauth.example.com/authorize',
@@ -238,6 +245,7 @@ describe('convertCreateRequestToFormData', () => {
       name: 'NEW_SECRET-server',
       url: 'https://api.example.com',
       transport: 'sse',
+      proxy_mode: 'streamable-http',
       oauth_config: {
         authorize_url: 'https://oauth.example.com/authorize',
         token_url: 'https://oauth.example.com/token',
@@ -275,6 +283,7 @@ describe('convertCreateRequestToFormData', () => {
       name: 'no-secrets-server',
       url: 'https://api.example.com',
       transport: 'sse',
+      proxy_mode: 'streamable-http',
     }
 
     const result = convertCreateRequestToFormData(createRequest)

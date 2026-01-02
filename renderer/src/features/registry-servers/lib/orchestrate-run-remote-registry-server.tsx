@@ -21,6 +21,7 @@ export function convertCreateRequestToFormData(
     name: createRequest.name || '',
     url: createRequest.url || '',
     transport: createRequest.transport as 'sse' | 'streamable-http',
+    proxy_mode: 'streamable-http',
     oauth_config: {
       skip_browser: false,
       use_pkce: createRequest.oauth_config?.use_pkce ?? true,
