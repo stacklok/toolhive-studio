@@ -74,6 +74,7 @@ describe('useUpdateServer', () => {
         name: 'test-remote-server',
         url: 'https://api.example.com',
         transport: 'streamable-http',
+        proxy_mode: 'streamable-http',
         auth_type: 'none',
         oauth_config: {
           authorize_url: '',
@@ -134,6 +135,7 @@ describe('useUpdateServer', () => {
         name: 'test-oauth-server',
         url: 'https://api.example.com',
         transport: 'streamable-http',
+        proxy_mode: 'streamable-http',
         auth_type: 'oauth2',
         oauth_config: {
           authorize_url: 'https://oauth.example.com/authorize',
@@ -463,6 +465,7 @@ describe('useUpdateServer', () => {
       const formData: FormSchemaLocalMcp = {
         name: 'test-local-server',
         transport: 'stdio',
+        proxy_mode: 'streamable-http',
         type: 'docker_image',
         image: 'test/image:latest',
         cmd_arguments: ['server.js'],
@@ -510,6 +513,7 @@ describe('useUpdateServer', () => {
           image: 'test/image:latest',
           group: 'development',
           transport: 'stdio',
+          proxy_mode: 'streamable-http',
         })
       })
     })
@@ -540,6 +544,7 @@ describe('useUpdateServer', () => {
       const formData: FormSchemaLocalMcp = {
         name: 'test-npm-server',
         transport: 'stdio',
+        proxy_mode: 'streamable-http',
         type: 'package_manager',
         protocol: 'npx',
         package_name: '@modelcontextprotocol/server-example',
@@ -569,6 +574,7 @@ describe('useUpdateServer', () => {
           image: 'npx://@modelcontextprotocol/server-example',
           group: 'testing',
           transport: 'stdio',
+          proxy_mode: 'streamable-http',
         })
       })
     })
@@ -599,6 +605,7 @@ describe('useUpdateServer', () => {
       const formData: FormSchemaLocalMcp = {
         name: 'test-no-secrets',
         transport: 'stdio',
+        proxy_mode: 'streamable-http',
         type: 'docker_image',
         image: 'test/image:latest',
         cmd_arguments: [],
