@@ -132,10 +132,24 @@ export function convertCreateRequestToFormData(
 
   const authType = getAuthType(createRequest.oauth_config)
 
+  // Validate and safely cast proxy_mode value
+  const validProxyModes = ['sse', 'streamable-http'] as const
+  type ValidProxyMode = (typeof validProxyModes)[number]
+  const isValidProxyMode = (
+    value: string | undefined
+  ): value is ValidProxyMode =>
+    Boolean(value && validProxyModes.includes(value as ValidProxyMode))
+
+  const proxy_mode = isValidProxyMode(createRequest.proxy_mode)
+    ? createRequest.proxy_mode
+    : 'streamable-http'
+
   const baseFormData: FormSchemaRemoteMcp = {
     name: createRequest.name || '',
     url: createRequest.url || '',
     transport: createRequest.transport as 'sse' | 'streamable-http',
+    proxy_mode,
+    proxy_port: createRequest.proxy_port,
     oauth_config: {
       skip_browser: createRequest.oauth_config?.skip_browser ?? false,
       use_pkce: createRequest.oauth_config?.use_pkce ?? true,
