@@ -88,6 +88,8 @@ export function prepareCreateWorkloadData(
     volumes: getVolumes(volumes ?? []),
     tools: data.tools || undefined,
     tools_override: data.tools_override || undefined,
+    proxy_mode: data.proxy_mode,
+    proxy_port: data.proxy_port,
   }
 }
 
@@ -181,9 +183,23 @@ export function convertCreateRequestToFormData(
     }
   })
 
+  // Validate and safely cast proxy_mode value
+  const validProxyModes = ['sse', 'streamable-http'] as const
+  type ValidProxyMode = (typeof validProxyModes)[number]
+  const isValidProxyMode = (
+    value: string | undefined
+  ): value is ValidProxyMode =>
+    Boolean(value && validProxyModes.includes(value as ValidProxyMode))
+
+  const proxy_mode = isValidProxyMode(createRequest.proxy_mode)
+    ? createRequest.proxy_mode
+    : 'streamable-http'
+
   const baseFormData = {
     name: createRequest.name || '',
     transport,
+    proxy_mode,
+    proxy_port: createRequest.proxy_port,
     group: createRequest.group ?? 'default',
     target_port: transport === 'stdio' ? 0 : createRequest.target_port,
     cmd_arguments: createRequest.cmd_arguments || [],
@@ -254,6 +270,8 @@ export function prepareUpdateLocalWorkloadData(
   return {
     image,
     transport: data.transport,
+    proxy_mode: data.proxy_mode,
+    proxy_port: data.proxy_port,
     group: data.group,
     target_port: data.target_port,
     cmd_arguments: data.cmd_arguments || [],
