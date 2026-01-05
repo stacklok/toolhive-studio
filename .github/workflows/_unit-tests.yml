@@ -26,4 +26,6 @@ jobs:
         uses: coverallsapp/github-action@5cbfd81b66ca5d10c19b062c04de0199c215fb6e # v2
         with:
           file: ./coverage/lcov.info
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           debug: true
+          fail-on-error: false
