@@ -16,12 +16,7 @@
       "matchDatasources": ["github-releases"],
       "matchPackageNames": ["stacklok/toolhive"],
       "prPriority": 10,
-      "schedule": [],
-      "postUpgradeTasks": {
-        "commands": ["pnpm run thv", "pnpm run generate-client"],
-        "fileFilters": ["bin/**", "api/generated/**"],
-        "executionMode": "update"
-      }
+      "schedule": []
     }
   ],
   "customManagers": [
