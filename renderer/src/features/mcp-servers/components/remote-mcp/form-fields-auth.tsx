@@ -12,6 +12,7 @@ import { SecretStoreCombobox } from '@/common/components/secrets/secret-store-co
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
 import { cn } from '@/common/lib/utils'
 import { Checkbox } from '@/common/components/ui/checkbox'
+import { useDebouncedCallback } from '@/common/hooks/use-debounced-callback'
 
 const AUTH_FIELD_MATRIX = {
   none: ['callback_port', 'issuer'],
@@ -44,6 +45,8 @@ const shouldShowField =
     return (fields as readonly AuthFieldName[])?.includes(fieldName) ?? false
   }
 
+const DEBOUNCE_DELAY_MS = 500
+
 export function FormFieldsAuth({
   authType,
   form,
@@ -52,6 +55,10 @@ export function FormFieldsAuth({
   form: UseFormReturn<FormSchemaRemoteMcp>
 }) {
   const showField = shouldShowField(authType)
+  const debouncedTrigger = useDebouncedCallback(
+    () => form.trigger(),
+    DEBOUNCE_DELAY_MS
+  )
 
   return (
     <>
@@ -77,10 +84,10 @@ export function FormFieldsAuth({
                   data-1p-ignore
                   placeholder="e.g. 50051"
                   value={field.value || ''}
-                  onChange={async (e) => {
+                  onChange={(e) => {
                     const value = e.target.value
                     field.onChange(value === '' ? '' : parseInt(value, 10))
-                    await form.trigger()
+                    debouncedTrigger()
                   }}
                   name={field.name}
                 />
@@ -111,7 +118,10 @@ export function FormFieldsAuth({
                   data-1p-ignore
                   placeholder="e.g. https://auth.example.com/"
                   value={field.value}
-                  onChange={(e) => field.onChange(e.target.value)}
+                  onChange={(e) => {
+                    field.onChange(e.target.value)
+                    debouncedTrigger()
+                  }}
                   name={field.name}
                 />
               </FormControl>
@@ -142,7 +152,10 @@ export function FormFieldsAuth({
                   data-1p-ignore
                   placeholder="e.g. https://auth.example.com/oauth/authorize"
                   value={field.value}
-                  onChange={(e) => field.onChange(e.target.value)}
+                  onChange={(e) => {
+                    field.onChange(e.target.value)
+                    debouncedTrigger()
+                  }}
                   name={field.name}
                 />
               </FormControl>
@@ -173,7 +186,10 @@ export function FormFieldsAuth({
                   data-1p-ignore
                   placeholder="e.g. https://auth.example.com/oauth/token"
                   value={field.value}
-                  onChange={(e) => field.onChange(e.target.value)}
+                  onChange={(e) => {
+                    field.onChange(e.target.value)
+                    debouncedTrigger()
+                  }}
                   name={field.name}
                 />
               </FormControl>
@@ -204,7 +220,10 @@ export function FormFieldsAuth({
                   data-1p-ignore
                   placeholder="e.g. 00000000-0000-0000-0000-000000000000"
                   value={field.value}
-                  onChange={(e) => field.onChange(e.target.value)}
+                  onChange={(e) => {
+                    field.onChange(e.target.value)
+                    debouncedTrigger()
+                  }}
                   name={field.name}
                 />
               </FormControl>
