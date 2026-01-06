@@ -1,24 +1,19 @@
-## Note: This is an experimental project that is actively being developed and tested - features may change without notice
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/toolhive-byline-white.svg">
+  <img src="docs/images/toolhive-byline-black.svg" alt="ToolHive logo" width="500"/>
+</picture>
 
-<p float="left">
-  <picture>
-    <img src="./icons/source-files/app-icons/mac/512.png" alt="ToolHive logo" height="100" align="middle" />
-  </picture>
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/images/toolhive-wordmark-white.png">
-    <img src="docs/images/toolhive-wordmark-black.png" alt="ToolHive wordmark" width="500" align="middle" hspace="20" />
-  </picture>
-  <picture>
-    <img src="docs/images/toolhive.png" alt="ToolHive mascot" width="125" align="middle"/>
-  </picture>
-</p>
+<br>
 
 [![Release][release-img]][release] [![Build status][ci-img]][ci]
 [![Coverage Status][coverage-img]][coverage]
 [![License: Apache 2.0][license-img]][license]
 [![Discord][discord-img]][discord]
 
-# ToolHive - simplify and secure MCP servers
+# ToolHive Desktop UI
+
+> [!NOTE] This is an experimental project that is under active development and
+> testing. Features may change without notice.
 
 **Run any Model Context Protocol (MCP) server — securely, instantly, anywhere.**
 
@@ -95,7 +90,7 @@ Kubernetes Operator. Learn more in the
 
 ---
 
-## Privacy and Telemetry
+## Privacy and telemetry
 
 ToolHive uses [Sentry](https://sentry.io/) for error tracking and performance
 monitoring to help us identify and fix issues, improve stability, and enhance
@@ -119,6 +114,8 @@ You can easily disable telemetry at any time:
 
 ---
 
+<table><tr><td>
+
 ## Contributing
 
 We welcome contributions and feedback from the community!
@@ -130,6 +127,15 @@ We welcome contributions and feedback from the community!
 
 If you have ideas, suggestions, or want to get involved, check out our
 contributing guide or open an issue. Join us in making ToolHive even better!
+
+</td>
+<td>
+
+<picture>
+  <img src="docs/images/toolhive-mascot.png" alt="ToolHive mascot" width="250" align="middle"/>
+</picture>
+
+</td></tr></table>
 
 ---
 
