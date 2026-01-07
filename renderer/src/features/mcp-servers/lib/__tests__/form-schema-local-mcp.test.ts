@@ -896,3 +896,182 @@ it('passes when name is unique even with editingServerName set', () => {
   expect(result.success, `${result.error}`).toBe(true)
   expect(result.data?.name).toBe('brand-new-server')
 })
+
+it('passes with valid proxy_port at lower boundary (1024)', () => {
+  const validInput = {
+    name: 'test-server',
+    transport: 'stdio',
+    type: 'docker_image',
+    group: 'default',
+    image: 'ghcr.io/test/server',
+    proxy_port: 1024,
+    cmd_arguments: [],
+    envVars: [],
+    secrets: [],
+    networkIsolation: false,
+    allowedHosts: [],
+    allowedPorts: [],
+  }
+
+  const result = getFormSchemaLocalMcp([]).safeParse(validInput)
+  expect(result.success, `${result.error}`).toBe(true)
+  expect(result.data?.proxy_port).toBe(1024)
+})
+
+it('passes with valid proxy_port at upper boundary (65535)', () => {
+  const validInput = {
+    name: 'test-server',
+    transport: 'stdio',
+    type: 'docker_image',
+    group: 'default',
+    image: 'ghcr.io/test/server',
+    proxy_port: 65535,
+    cmd_arguments: [],
+    envVars: [],
+    secrets: [],
+    networkIsolation: false,
+    allowedHosts: [],
+    allowedPorts: [],
+  }
+
+  const result = getFormSchemaLocalMcp([]).safeParse(validInput)
+  expect(result.success, `${result.error}`).toBe(true)
+  expect(result.data?.proxy_port).toBe(65535)
+})
+
+it('fails when proxy_port is below 1024', () => {
+  const invalidInput = {
+    name: 'test-server',
+    transport: 'stdio',
+    type: 'docker_image',
+    group: 'default',
+    image: 'ghcr.io/test/server',
+    proxy_port: 1000,
+    cmd_arguments: [],
+    envVars: [],
+    secrets: [],
+    networkIsolation: false,
+    allowedHosts: [],
+    allowedPorts: [],
+  }
+
+  const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
+  expect(result.success).toBe(false)
+  expect(z.treeifyError(result.error!)).toStrictEqual(
+    expect.objectContaining({
+      properties: expect.objectContaining({
+        proxy_port: { errors: ['Port must be between 1024 and 65535'] },
+      }),
+    })
+  )
+})
+
+it('fails when proxy_port is above 65535', () => {
+  const invalidInput = {
+    name: 'test-server',
+    transport: 'stdio',
+    type: 'docker_image',
+    group: 'default',
+    image: 'ghcr.io/test/server',
+    proxy_port: 70000,
+    cmd_arguments: [],
+    envVars: [],
+    secrets: [],
+    networkIsolation: false,
+    allowedHosts: [],
+    allowedPorts: [],
+  }
+
+  const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
+  expect(result.success).toBe(false)
+  expect(z.treeifyError(result.error!)).toStrictEqual(
+    expect.objectContaining({
+      properties: expect.objectContaining({
+        proxy_port: { errors: ['Port must be between 1024 and 65535'] },
+      }),
+    })
+  )
+})
+
+it('passes when proxy_port is undefined (optional)', () => {
+  const validInput = {
+    name: 'test-server',
+    transport: 'stdio',
+    type: 'docker_image',
+    group: 'default',
+    image: 'ghcr.io/test/server',
+    proxy_port: undefined,
+    cmd_arguments: [],
+    envVars: [],
+    secrets: [],
+    networkIsolation: false,
+    allowedHosts: [],
+    allowedPorts: [],
+  }
+
+  const result = getFormSchemaLocalMcp([]).safeParse(validInput)
+  expect(result.success, `${result.error}`).toBe(true)
+  expect(result.data?.proxy_port).toBeUndefined()
+})
+
+it('passes with valid proxy_mode sse', () => {
+  const validInput = {
+    name: 'test-server',
+    transport: 'stdio',
+    type: 'docker_image',
+    group: 'default',
+    image: 'ghcr.io/test/server',
+    proxy_mode: 'sse',
+    cmd_arguments: [],
+    envVars: [],
+    secrets: [],
+    networkIsolation: false,
+    allowedHosts: [],
+    allowedPorts: [],
+  }
+
+  const result = getFormSchemaLocalMcp([]).safeParse(validInput)
+  expect(result.success, `${result.error}`).toBe(true)
+  expect(result.data?.proxy_mode).toBe('sse')
+})
+
+it('passes with valid proxy_mode streamable-http', () => {
+  const validInput = {
+    name: 'test-server',
+    transport: 'stdio',
+    type: 'docker_image',
+    group: 'default',
+    image: 'ghcr.io/test/server',
+    proxy_mode: 'streamable-http',
+    cmd_arguments: [],
+    envVars: [],
+    secrets: [],
+    networkIsolation: false,
+    allowedHosts: [],
+    allowedPorts: [],
+  }
+
+  const result = getFormSchemaLocalMcp([]).safeParse(validInput)
+  expect(result.success, `${result.error}`).toBe(true)
+  expect(result.data?.proxy_mode).toBe('streamable-http')
+})
+
+it('defaults proxy_mode to streamable-http when not provided', () => {
+  const validInput = {
+    name: 'test-server',
+    transport: 'stdio',
+    type: 'docker_image',
+    group: 'default',
+    image: 'ghcr.io/test/server',
+    cmd_arguments: [],
+    envVars: [],
+    secrets: [],
+    networkIsolation: false,
+    allowedHosts: [],
+    allowedPorts: [],
+  }
+
+  const result = getFormSchemaLocalMcp([]).safeParse(validInput)
+  expect(result.success, `${result.error}`).toBe(true)
+  expect(result.data?.proxy_mode).toBe('streamable-http')
+})
