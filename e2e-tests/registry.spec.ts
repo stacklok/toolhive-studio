@@ -1,11 +1,10 @@
 import { test, expect } from './fixtures/electron'
 
-test('app starts and shows test group', async ({ window }) => {
-  // Verify the test group was created by the fixture
-  const groupLink = window.getByRole('link', {
-    name: /playwright-automated-test-fixture/i,
-  })
-  await expect(groupLink).toBeVisible()
+test('navigates to Registry tab', async ({ window }) => {
+  await window.getByRole('link', { name: 'Registry' }).click()
+  await expect(
+    window.getByRole('heading', { name: 'Registry', level: 1 })
+  ).toBeVisible()
 })
 
 test('install and uninstall server from registry', async ({ window }) => {
