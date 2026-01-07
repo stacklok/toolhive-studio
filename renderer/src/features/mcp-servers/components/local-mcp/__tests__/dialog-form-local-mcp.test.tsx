@@ -463,6 +463,7 @@ describe('DialogFormLocalMcp', () => {
           data: expect.objectContaining({
             name: 'test-server',
             transport: 'stdio',
+            proxy_mode: 'streamable-http',
             image: 'ghcr.io/test/server',
             type: 'docker_image',
             envVars: [],
@@ -540,6 +541,7 @@ describe('DialogFormLocalMcp', () => {
           data: expect.objectContaining({
             name: 'npm-server',
             transport: 'sse',
+            proxy_mode: 'streamable-http',
             target_port: 8080,
             protocol: 'npx',
             package_name: '@test/package',
