@@ -13,6 +13,7 @@ type ElectronFixtures = {
 }
 
 const TEST_GROUP_NAME = 'playwright-automated-test-fixture'
+export const TEST_SECRET_NAME = 'E2E_TEST_SECRET'
 
 /** Default timeout for most operations (10 seconds) */
 export const DEFAULT_TIMEOUT = 10_000
@@ -57,6 +58,17 @@ function deleteTestGroupViaCli(): void {
     })
   } catch {
     // Group doesn't exist, which is fine
+  }
+}
+
+export function deleteTestSecretViaCli(): void {
+  const thvPath = getThvPath()
+  try {
+    execSync(`"${thvPath}" secret delete "${TEST_SECRET_NAME}"`, {
+      stdio: ['pipe', 'ignore', 'ignore'],
+    })
+  } catch {
+    // Secret doesn't exist, which is fine
   }
 }
 
