@@ -29,6 +29,9 @@ export default defineConfig({
     ],
     css: false,
     coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov', 'json-summary', 'json'],
+      reportsDirectory: './coverage',
       include: ['renderer/src/**/*.{js,jsx}', 'renderer/src/**/*.{ts,tsx}'],
       exclude: [
         'coverage/**',
@@ -50,9 +53,6 @@ export default defineConfig({
         'renderer/src/**/*stories.tsx',
         'renderer/src/types/**/*.{ts,tsx}',
       ],
-      enabled: false,
-      provider: 'istanbul',
-      reporter: ['text', 'lcov', 'json-summary', 'json'],
     },
   },
 })
