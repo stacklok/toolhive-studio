@@ -244,8 +244,10 @@ export function FormFieldsAuth({
               value: { secret: string; isFromStore: boolean }
             }
 
-            const defaultSecretName = mcpName
-              ? `OAUTH_CLIENT_SECRET_${mcpName.toUpperCase()}`
+            const sanitizedMcpName = mcpName?.replaceAll('-', '_').toUpperCase()
+
+            const defaultSecretName = sanitizedMcpName
+              ? `OAUTH_CLIENT_SECRET_${sanitizedMcpName}`
               : 'OAUTH_CLIENT_SECRET'
 
             const currentValue =

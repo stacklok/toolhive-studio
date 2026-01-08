@@ -264,7 +264,7 @@ describe('DialogFormRemoteRegistryMcp', () => {
               callback_port: 8888,
               client_id: 'client_id',
               client_secret: {
-                name: 'OAUTH_CLIENT_SECRET_TEST-REGISTRY-SERVER',
+                name: 'OAUTH_CLIENT_SECRET_TEST_REGISTRY_SERVER',
                 value: {
                   isFromStore: true,
                   secret: 'SECRET_FROM_STORE',
