@@ -181,11 +181,10 @@ export function DialogProviderSettings({
             setProviderKeys((prev) =>
               prev.map((pk) => {
                 if (pk.provider.id !== provider.provider.id) return pk
-                // Use type assertion since we know this is a local server provider
                 return {
                   ...pk,
                   provider: { ...pk.provider, models: result.models },
-                } as typeof pk
+                } as ProviderWithSettings
               })
             )
             setValidationStatus((prev) => ({
