@@ -10,7 +10,7 @@ export default defineConfig({
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  workers: 1, // Electron app only supports a single instance
   reporter: 'html',
   use: {
     trace: 'on-first-retry',

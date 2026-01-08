@@ -181,7 +181,12 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
             {appVersion?.isNewVersionAvailable && isProduction ? (
               <Tooltip>
                 <TooltipTrigger asChild autoFocus={false}>
-                  <Button variant="ghost" size="sm" className="cursor-pointer">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="cursor-pointer"
+                    aria-label="Settings"
+                  >
                     <div className="relative inline-flex items-center">
                       <SettingsIcon className="text-muted-foreground size-4" />
                       <div className="absolute -top-1 -right-1">
@@ -195,7 +200,12 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
                 <TooltipContent>New update available</TooltipContent>
               </Tooltip>
             ) : (
-              <Button variant="ghost" size="sm" className="cursor-pointer">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="cursor-pointer"
+                aria-label="Settings"
+              >
                 <SettingsIcon className="text-muted-foreground size-4" />
               </Button>
             )}
