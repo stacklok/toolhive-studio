@@ -35,9 +35,8 @@ jobs:
       - name: Install Ollama
         if: steps.cache-ollama.outputs.cache-hit != 'true'
         run: |
-          curl -fsSL -o ollama "https://github.com/ollama/ollama/releases/download/v${{ env.OLLAMA_VERSION }}/ollama-linux-amd64"
-          chmod +x ollama
-          sudo mv ollama /usr/local/bin/ollama
+          curl -fsSL "https://github.com/ollama/ollama/releases/download/v${{ env.OLLAMA_VERSION }}/ollama-linux-amd64.tgz" | tar -xz
+          sudo mv bin/ollama /usr/local/bin/ollama
 
       - name: Start Ollama server
         run: |
