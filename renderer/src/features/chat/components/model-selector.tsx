@@ -100,6 +100,7 @@ export function ModelSelector({
           variant="ghost"
           className="h-10 justify-between"
           disabled={isLoading}
+          data-testid="model-selector"
         >
           <div className="flex min-w-0 items-center gap-2">
             {getProviderIcon(settings.provider)}

@@ -20,38 +20,31 @@ async function warmupOllamaModel(): Promise<void> {
   }
 }
 
-async function openProviderSettingsDialog(window: Page): Promise<boolean> {
-  // Try "Configure your providers" button first (shown when no provider is configured)
+async function waitForPlaygroundReady(window: Page): Promise<void> {
+  // Wait for loading state to complete
+  const loadingText = window.getByText(/loading chat history/i)
+  await loadingText.waitFor({ state: 'hidden', timeout: 10_000 }).catch(() => {
+    // Loading text might never appear if already loaded
+  })
+}
+
+async function openProviderSettingsDialog(window: Page): Promise<void> {
+  await waitForPlaygroundReady(window)
+
+  // Check if "Configure your providers" button exists (no provider configured)
   const configureButton = window.getByRole('button', {
     name: /configure your providers/i,
   })
   if (await configureButton.isVisible().catch(() => false)) {
     await configureButton.click()
     await window.getByRole('dialog').waitFor()
-    return true
+    return
   }
 
-  // Try model selector dropdown → "Provider Settings" (shown when provider is configured)
-  const modelSelectorButton = window.getByRole('button', {
-    name: /select ai model/i,
-  })
-  if (await modelSelectorButton.isVisible().catch(() => false)) {
-    await modelSelectorButton.click()
-    await window.getByRole('menuitem', { name: /provider settings/i }).click()
-    await window.getByRole('dialog').waitFor()
-    return true
-  }
-
-  // Also check if a model is already selected (button shows model name)
-  const modelButton = window.locator('button:has-text("qwen")').first()
-  if (await modelButton.isVisible().catch(() => false)) {
-    await modelButton.click()
-    await window.getByRole('menuitem', { name: /provider settings/i }).click()
-    await window.getByRole('dialog').waitFor()
-    return true
-  }
-
-  return false
+  // Otherwise use model selector dropdown → "Provider Settings"
+  await window.getByTestId('model-selector').click()
+  await window.getByRole('menuitem', { name: /provider settings/i }).click()
+  await window.getByRole('dialog').waitFor()
 }
 
 async function clearOllamaProviderViaUI(window: Page): Promise<void> {
@@ -60,10 +53,17 @@ async function clearOllamaProviderViaUI(window: Page): Promise<void> {
     window.getByRole('heading', { name: 'Playground', level: 1 })
   ).toBeVisible()
 
-  const dialogOpened = await openProviderSettingsDialog(window)
-  if (!dialogOpened) {
-    return // Nothing to clear
+  await waitForPlaygroundReady(window)
+
+  // Clear existing chat if present
+  const clearChatButton = window.getByRole('button', { name: /clear chat/i })
+  if (await clearChatButton.isVisible().catch(() => false)) {
+    await clearChatButton.click()
+    // Confirm the deletion dialog
+    await window.getByRole('button', { name: /delete/i }).click()
   }
+
+  await openProviderSettingsDialog(window)
 
   // Expand Ollama section
   const ollamaButton = window.getByRole('button', { name: /ollama/i })
@@ -120,9 +120,8 @@ test.describe('Playground chat with Ollama', () => {
       window.getByRole('heading', { name: 'Playground', level: 1 })
     ).toBeVisible()
 
-    // Open provider settings (handle both unconfigured and configured states)
-    const dialogOpened = await openProviderSettingsDialog(window)
-    expect(dialogOpened).toBe(true)
+    // Open provider settings
+    await openProviderSettingsDialog(window)
 
     // Configure Ollama
     await window.getByRole('button', { name: /ollama/i }).click()
