@@ -21,17 +21,17 @@ async function warmupOllamaModel(): Promise<void> {
 }
 
 async function waitForPlaygroundReady(window: Page): Promise<void> {
-  // Wait for loading state to complete
   const loadingText = window.getByText(/loading chat history/i)
-  await loadingText.waitFor({ state: 'hidden', timeout: 10_000 }).catch(() => {
-    // Loading text might never appear if already loaded
-  })
+  // May never appear if already loaded
+  await loadingText
+    .waitFor({ state: 'hidden', timeout: 10_000 })
+    .catch(() => {})
 }
 
 async function openProviderSettingsDialog(window: Page): Promise<void> {
   await waitForPlaygroundReady(window)
 
-  // Check if "Configure your providers" button exists (no provider configured)
+  // Two paths: "Configure your providers" button (no provider) or model selector menu
   const configureButton = window.getByRole('button', {
     name: /configure your providers/i,
   })
@@ -41,7 +41,6 @@ async function openProviderSettingsDialog(window: Page): Promise<void> {
     return
   }
 
-  // Otherwise use model selector dropdown → "Provider Settings"
   await window.getByTestId('model-selector').click()
   await window.getByRole('menuitem', { name: /provider settings/i }).click()
   await window.getByRole('dialog').waitFor()
@@ -51,17 +50,11 @@ async function removeOllamaProvider(window: Page): Promise<void> {
   await openProviderSettingsDialog(window)
 
   const dialog = window.getByRole('dialog')
+  await dialog.getByRole('button', { name: /ollama/i }).click()
 
-  // Expand Ollama section (button is inside the dialog)
-  const ollamaSection = dialog.getByRole('button', { name: /ollama/i })
-  await ollamaSection.click()
-
-  // Find the trash button within the expanded Ollama section
   const trashButton = dialog.locator('button').filter({
     has: window.locator('svg.lucide-trash-2'),
   })
-
-  // Only click trash if it exists (provider is configured)
   if (await trashButton.isVisible().catch(() => false)) {
     await trashButton.click()
   }
@@ -78,7 +71,6 @@ async function clearPlaygroundState(window: Page): Promise<void> {
 
   await waitForPlaygroundReady(window)
 
-  // Clear existing chat if present
   const clearChatButton = window.getByRole('button', { name: /clear chat/i })
   if (await clearChatButton.isVisible().catch(() => false)) {
     await clearChatButton.click()
@@ -112,23 +104,18 @@ test.describe('Playground chat with Ollama', () => {
   test('configures Ollama provider and sends chat message', async ({
     window,
   }) => {
-    // Clean up before test
     await clearPlaygroundState(window)
 
-    // Navigate back to Playground after cleanup
     await window.getByRole('link', { name: 'Playground' }).click()
     await expect(
       window.getByRole('heading', { name: 'Playground', level: 1 })
     ).toBeVisible()
 
-    // Open provider settings - should now show "Configure your providers" since we cleared Ollama
     await openProviderSettingsDialog(window)
 
-    // Configure Ollama
     await window.getByRole('button', { name: /ollama/i }).click()
     await window.getByPlaceholder('http://localhost:11434').fill(OLLAMA_URL)
 
-    // Click refresh to test connection
     const ollamaSection = window.locator('[data-state="open"]').filter({
       has: window.getByPlaceholder('http://localhost:11434'),
     })
@@ -144,12 +131,11 @@ test.describe('Playground chat with Ollama', () => {
     await window.getByRole('button', { name: 'Save' }).click()
     await window.getByRole('dialog').waitFor({ state: 'hidden' })
 
-    // After saving, Ollama should be auto-selected with its first model
+    // Chat input visible means provider was auto-selected successfully
     await expect(window.getByPlaceholder(/type your message/i)).toBeVisible({
       timeout: 10_000,
     })
 
-    // Send a chat message
     const testId = `test_${Date.now()}`
     await window
       .getByPlaceholder(/type your message/i)
@@ -160,7 +146,6 @@ test.describe('Playground chat with Ollama', () => {
       timeout: 120_000,
     })
 
-    // Clean up after test
     await clearPlaygroundState(window)
   })
 })
