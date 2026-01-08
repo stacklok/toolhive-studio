@@ -144,21 +144,7 @@ test.describe('Playground chat with Ollama', () => {
     await window.getByRole('button', { name: 'Save' }).click()
     await window.getByRole('dialog').waitFor({ state: 'hidden' })
 
-    // In CI (fresh environment), the dialog's local state doesn't have models cached,
-    // so auto-selection sets model to empty string. We need to reopen dialog -
-    // the models will now be available after the previous refresh.
-    const configureButton = window.getByRole('button', {
-      name: /configure your providers/i,
-    })
-    if (await configureButton.isVisible().catch(() => false)) {
-      await configureButton.click()
-      await window.getByRole('dialog').waitFor()
-
-      // Ollama should now have models available - just save to trigger auto-selection
-      await window.getByRole('button', { name: 'Save' }).click()
-      await window.getByRole('dialog').waitFor({ state: 'hidden' })
-    }
-
+    // After saving, Ollama should be auto-selected with its first model
     await expect(window.getByPlaceholder(/type your message/i)).toBeVisible({
       timeout: 10_000,
     })

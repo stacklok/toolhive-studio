@@ -176,13 +176,31 @@ export function DialogProviderSettings({
             credential
           )
 
-          setValidationStatus((prev) => ({
-            ...prev,
-            [provider.provider.id]:
-              result && result.models
-                ? { valid: true, modelCount: result.models.length }
-                : { valid: false, modelCount: 0 },
-          }))
+          if (result && result.models) {
+            // Update local state with fetched models so they're available when saving
+            setProviderKeys((prev) =>
+              prev.map((pk) => {
+                if (pk.provider.id !== provider.provider.id) return pk
+                // Use type assertion since we know this is a local server provider
+                return {
+                  ...pk,
+                  provider: { ...pk.provider, models: result.models },
+                } as typeof pk
+              })
+            )
+            setValidationStatus((prev) => ({
+              ...prev,
+              [provider.provider.id]: {
+                valid: true,
+                modelCount: result.models.length,
+              },
+            }))
+          } else {
+            setValidationStatus((prev) => ({
+              ...prev,
+              [provider.provider.id]: { valid: false, modelCount: 0 },
+            }))
+          }
         }
 
         await refetchProviders()
