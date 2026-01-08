@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'utils/constants.ts'
+      - 'package.json'
 
 permissions:
   contents: write
@@ -12,52 +13,57 @@ permissions:
 
 jobs:
   regenerate-artifacts:
-    name: Regenerate THV Binary and API Client
+    name: Regenerate Artifacts
     runs-on: ubuntu-latest
-    # Only run for Renovate PRs
     if: github.actor == 'renovate[bot]'
     steps:
+      - name: Check what was updated
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DIFF=$(gh pr diff ${{ github.event.pull_request.number }} --repo ${{ github.repository }}) || exit 1
+          echo "toolhive=$(echo "$DIFF" | grep -q 'TOOLHIVE_VERSION' && echo true || echo false)" >> $GITHUB_OUTPUT
+          echo "heyapi=$(echo "$DIFF" | grep -q '@hey-api/openapi-ts' && echo true || echo false)" >> $GITHUB_OUTPUT
+
       - name: Checkout PR branch
+        if: steps.check.outputs.toolhive == 'true' || steps.check.outputs.heyapi == 'true'
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
           ref: ${{ github.head_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install pnpm
+      - name: Setup pnpm and Node.js
+        if: steps.check.outputs.toolhive == 'true' || steps.check.outputs.heyapi == 'true'
         uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
         with:
           version: '10.27.0'
-          run_install: false
 
-      - name: Install Node.js
+      - name: Setup Node.js
+        if: steps.check.outputs.toolhive == 'true' || steps.check.outputs.heyapi == 'true'
         uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6
         with:
           node-version: 22
           cache: 'pnpm'
 
       - name: Install dependencies
+        if: steps.check.outputs.toolhive == 'true' || steps.check.outputs.heyapi == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Download THV binary
+        if: steps.check.outputs.toolhive == 'true'
         run: pnpm run thv
 
       - name: Generate API Client
+        if: steps.check.outputs.toolhive == 'true' || steps.check.outputs.heyapi == 'true'
         run: pnpm run generate-client
 
-      - name: Check for changes
-        id: changes
-        run: |
-          if [[ -n $(git status --porcelain) ]]; then
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Commit and push changes
-        if: steps.changes.outputs.has_changes == 'true'
+        if: steps.check.outputs.toolhive == 'true' || steps.check.outputs.heyapi == 'true'
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git diff --quiet && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add bin/ api/generated/
-          git commit -m "chore: regenerate artifacts for updated toolhive version"
+          git commit -m "chore: regenerate artifacts after dependency update"
           git push
