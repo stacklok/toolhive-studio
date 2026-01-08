@@ -17,6 +17,14 @@
       "matchPackageNames": ["stacklok/toolhive"],
       "prPriority": 10,
       "schedule": []
+    },
+    {
+      "matchPackageNames": ["@hey-api/openapi-ts"],
+      "postUpgradeTasks": {
+        "commands": ["pnpm generate-client"],
+        "fileFilters": ["api/generated/**"],
+        "executionMode": "branch"
+      }
     }
   ],
   "customManagers": [
