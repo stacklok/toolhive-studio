@@ -31,7 +31,6 @@ async function waitForPlaygroundReady(window: Page): Promise<void> {
 async function openProviderSettingsDialog(window: Page): Promise<void> {
   await waitForPlaygroundReady(window)
 
-  // Two paths: "Configure your providers" button (no provider) or model selector menu
   const configureButton = window.getByRole('button', {
     name: /configure your providers/i,
   })
