@@ -144,7 +144,14 @@ test.describe('Playground chat with Ollama', () => {
     await window.getByRole('button', { name: 'Save' }).click()
     await window.getByRole('dialog').waitFor({ state: 'hidden' })
 
-    // After saving Ollama config, it auto-selects Ollama with its first model
+    // After saving, we need to select Ollama model via the model selector
+    // The auto-selection might not work if the models weren't cached in the dialog state
+    await window.getByTestId('model-selector').click()
+    await window.getByRole('menuitem', { name: /ollama/i }).hover()
+    await window
+      .getByRole('menuitem', { name: new RegExp(OLLAMA_MODEL, 'i') })
+      .click()
+
     await expect(window.getByPlaceholder(/type your message/i)).toBeVisible({
       timeout: 10_000,
     })
