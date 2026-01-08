@@ -1,6 +1,12 @@
 name: End-to-end tests
 on:
   workflow_call:
+
+env:
+  OLLAMA_MODELS: /home/runner/.ollama/models
+  OLLAMA_BASE_URL: http://localhost:11434
+  OLLAMA_MODEL: qwen2.5:0.5b
+
 jobs:
   test:
     timeout-minutes: 60
@@ -11,6 +17,32 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+
+      - name: Cache Ollama binary
+        id: cache-ollama
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
+        with:
+          path: /usr/local/bin/ollama
+          key: ollama-binary-v0.9
+
+      - name: Cache Ollama models
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
+        with:
+          path: /home/runner/.ollama/models
+          key: ollama-${{ env.OLLAMA_MODEL }}-v1
+
+      - name: Install Ollama
+        if: steps.cache-ollama.outputs.cache-hit != 'true'
+        run: curl -fsSL https://ollama.com/install.sh | sh
+
+      - name: Start Ollama server
+        run: |
+          sudo systemctl stop ollama 2>/dev/null || true
+          OLLAMA_MODELS=/home/runner/.ollama/models ollama serve &
+          sleep 3
+
+      - name: Pull Ollama model
+        run: OLLAMA_MODELS=/home/runner/.ollama/models ollama pull ${{ env.OLLAMA_MODEL }}
 
       - name: Cache Playwright special dependencies
         uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
