@@ -5,7 +5,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 import { DialogProviderSettings } from '../dialog-provider-settings'
 
-// Mock electron API
+// Mock analytics (not in global setup)
+vi.mock('@/common/lib/analytics', () => ({
+  trackEvent: vi.fn(),
+}))
+
+// Mock electron API chat methods
 const mockChatAPI = {
   getSelectedModel: vi.fn(),
   getSettings: vi.fn(),
@@ -16,15 +21,11 @@ const mockChatAPI = {
   fetchProviderModels: vi.fn(),
 }
 
+// Extend the existing window.electronAPI with chat methods
 Object.defineProperty(window, 'electronAPI', {
-  value: { chat: mockChatAPI },
+  value: { ...window.electronAPI, chat: mockChatAPI },
   writable: true,
 })
-
-// Mock analytics
-vi.mock('@/common/lib/analytics', () => ({
-  trackEvent: vi.fn(),
-}))
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -40,8 +41,6 @@ const createWrapper = () => {
 
 describe('DialogProviderSettings', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-
     // Default: Ollama provider with no models initially
     mockChatAPI.getProviders.mockResolvedValue([
       {
