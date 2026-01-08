@@ -1,7 +1,7 @@
 import { Loader } from 'lucide-react'
 import { IllustrationPackage } from './illustrations/illustration-package'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
-import { getHealth } from '@api/sdk.gen'
+import { getHealthOptions } from '@api/@tanstack/react-query.gen'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import log from 'electron-log/renderer'
@@ -12,8 +12,7 @@ export function StartingToolHive() {
   const navigate = useNavigate()
 
   const { isLoading: isChecking, error } = useQuery({
-    queryKey: ['health'],
-    queryFn: () => getHealth(),
+    ...getHealthOptions(),
     staleTime: 0,
     gcTime: 0,
     retry: 10,
