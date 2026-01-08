@@ -3,7 +3,7 @@ on:
   workflow_call:
 
 env:
-  OLLAMA_VERSION: '0.5.13'
+  OLLAMA_VERSION: '0.13.5'
   OLLAMA_MODELS: /home/runner/.ollama/models
   OLLAMA_BASE_URL: http://localhost:11434
   OLLAMA_MODEL: qwen2.5:0.5b
