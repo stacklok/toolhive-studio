@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -45,7 +45,11 @@ describe('GroupSelectorForm', () => {
 
   let queryClient: QueryClient
   let mockSaveGroupClients: ReturnType<typeof vi.fn>
-  let mockHandleCreateMetaOptimizerWorkload: ReturnType<typeof vi.fn>
+  let mockHandleCreateMetaOptimizerWorkload: Mock<
+    ReturnType<
+      typeof useCreateOptimizerWorkload
+    >['handleCreateMetaOptimizerWorkload']
+  >
 
   beforeEach(() => {
     queryClient = new QueryClient({
