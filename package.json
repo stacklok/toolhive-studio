@@ -47,7 +47,7 @@
     "@electron-forge/shared-types": "^7.8.1",
     "@electron/fuses": "^2.0.0",
     "@eslint/js": "^9.25.0",
-    "@hey-api/openapi-ts": "0.85.2",
+    "@hey-api/openapi-ts": "0.90.2",
     "@playwright/test": "^1.57.0",
     "@tailwindcss/postcss": "^4.1.10",
     "@tanstack/router-plugin": "^1.120.11",
