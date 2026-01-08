@@ -68,6 +68,13 @@ const isSecretValue = (value: unknown): value is SecretValue =>
   'value' in value &&
   isSecretValueObj(value.value)
 
+const getDefaultSecretName = (mcpName: string | undefined): string => {
+  const sanitizedMcpName = mcpName?.replaceAll('-', '_').toUpperCase()
+  return sanitizedMcpName
+    ? `OAUTH_CLIENT_SECRET_${sanitizedMcpName}`
+    : 'OAUTH_CLIENT_SECRET'
+}
+
 const buildClientSecretValue = (
   fieldValue: unknown,
   mcpName: string | undefined
@@ -76,13 +83,8 @@ const buildClientSecretValue = (
     return fieldValue
   }
 
-  const sanitizedMcpName = mcpName?.replaceAll('-', '_').toUpperCase()
-  const defaultSecretName = sanitizedMcpName
-    ? `OAUTH_CLIENT_SECRET_${sanitizedMcpName}`
-    : 'OAUTH_CLIENT_SECRET'
-
   return {
-    name: defaultSecretName,
+    name: getDefaultSecretName(mcpName),
     value: { secret: '', isFromStore: false },
   }
 }
@@ -350,6 +352,7 @@ export function FormFieldsAuth({
                           onChange={(e) =>
                             field.onChange({
                               ...currentValue,
+                              name: getDefaultSecretName(mcpName),
                               value: {
                                 secret: e.target.value,
                                 isFromStore: false,
@@ -362,6 +365,7 @@ export function FormFieldsAuth({
                           onChange={(secretKey) =>
                             field.onChange({
                               ...currentValue,
+                              name: secretKey,
                               value: {
                                 secret: secretKey,
                                 isFromStore: true,

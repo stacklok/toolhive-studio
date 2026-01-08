@@ -460,4 +460,59 @@ describe('DialogFormRemoteMcp', () => {
       expect(mockOnOpenChange).toHaveBeenCalled()
     })
   })
+
+  it('resets secret key name to default when user types a new value after selecting from store', async () => {
+    const user = userEvent.setup({ delay: null })
+
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRemoteMcp isOpen closeDialog={vi.fn()} groupName="default" />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Fill required fields
+    await user.type(
+      screen.getByRole('textbox', { name: /server name/i }),
+      'my-test-server'
+    )
+    await user.type(
+      screen.getByRole('textbox', { name: /server url/i }),
+      'https://api.example.com'
+    )
+
+    // Select OAuth2 auth type
+    await user.click(screen.getByLabelText('Authorization method'))
+    await user.click(screen.getByRole('option', { name: 'OAuth 2.0' }))
+
+    // Wait for OAuth fields to appear and verify default secret name
+    const secretNameInput =
+      await screen.findByPlaceholderText('e.g. CLIENT_SECRET')
+    expect(secretNameInput).toHaveValue('OAUTH_CLIENT_SECRET_MY_TEST_SERVER')
+
+    // Select a secret from the store
+    await user.click(
+      screen.getByRole('combobox', { name: /use a secret from the store/i })
+    )
+    await user.click(screen.getByRole('option', { name: /secret_from_store/i }))
+
+    // Verify secret name changed to the selected one
+    await waitFor(() => {
+      expect(secretNameInput).toHaveValue('SECRET_FROM_STORE')
+    })
+
+    // Now type a new value in the Value input
+    const valueInput = screen.getByPlaceholderText(
+      'e.g. secret_123_ABC_789_XYZ'
+    )
+    await user.type(valueInput, 'my-new-secret-value')
+
+    // Verify secret name is reset to the default
+    await waitFor(() => {
+      expect(secretNameInput).toHaveValue('OAUTH_CLIENT_SECRET_MY_TEST_SERVER')
+    })
+  })
 })
