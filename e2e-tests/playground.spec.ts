@@ -144,23 +144,11 @@ test.describe('Playground chat with Ollama', () => {
     await window.getByRole('button', { name: 'Save' }).click()
     await window.getByRole('dialog').waitFor({ state: 'hidden' })
 
-    // Select an Ollama model
-    const modelSelector = window
-      .locator('button')
-      .filter({
-        has: window.locator('svg'),
-      })
-      .filter({ hasText: /select ai model|ollama/i })
-      .first()
-    await modelSelector.click()
-
-    // Hover over Ollama submenu to see models
-    await window.getByRole('menuitem', { name: /ollama/i }).hover()
-    await window
-      .getByRole('menuitem', { name: new RegExp(OLLAMA_MODEL) })
-      .click()
-
-    await expect(window.getByPlaceholder(/type your message/i)).toBeVisible()
+    // After saving Ollama config, it auto-selects Ollama with its first model
+    // Chat input should now be visible
+    await expect(window.getByPlaceholder(/type your message/i)).toBeVisible({
+      timeout: 10_000,
+    })
 
     const testId = `test_${Date.now()}`
     await window
