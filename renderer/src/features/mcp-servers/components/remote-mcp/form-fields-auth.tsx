@@ -314,15 +314,10 @@ export function FormFieldsAuth({
                         autoCorrect="off"
                         autoComplete="off"
                         data-1p-ignore
+                        disabled
                         className="font-mono"
                         placeholder="e.g. CLIENT_SECRET"
                         value={currentValue.name}
-                        onChange={(e) =>
-                          field.onChange({
-                            ...currentValue,
-                            name: e.target.value,
-                          })
-                        }
                       />
                     </div>
                     <div>

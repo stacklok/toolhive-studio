@@ -177,6 +177,255 @@ describe('useUpdateServer', () => {
         })
       })
     })
+
+    it('creates a new secret when client_secret isFromStore is false', async () => {
+      const rec = recordRequests()
+      const onSecretSuccess = vi.fn()
+      const wrapper = createWrapper('development')
+
+      mswServer.use(
+        http.post(
+          mswEndpoint('/api/v1beta/secrets/default/keys'),
+          async ({ request }) => {
+            const body = (await request.json()) as { key: string }
+            return HttpResponse.json({ key: body.key })
+          }
+        ),
+        http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
+          return HttpResponse.json({ keys: [] })
+        }),
+        http.post(mswEndpoint('/api/v1beta/workloads/:name/edit'), () => {
+          return HttpResponse.json({
+            name: 'test-oauth-new-secret',
+            port: 8080,
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () =>
+          useUpdateServer('test-oauth-new-secret', {
+            isRemote: true,
+            onSecretSuccess,
+            onSecretError: vi.fn(),
+          }),
+        { wrapper }
+      )
+
+      const formData: FormSchemaRemoteMcp = {
+        name: 'test-oauth-new-secret',
+        url: 'https://api.example.com',
+        transport: 'streamable-http',
+        auth_type: 'oauth2',
+        oauth_config: {
+          authorize_url: 'https://oauth.example.com/authorize',
+          callback_port: 8080,
+          client_id: 'test-client-id',
+          client_secret: {
+            name: 'OAUTH_CLIENT_SECRET_NEW',
+            value: {
+              secret: 'my-new-secret-value',
+              isFromStore: false,
+            },
+          },
+          issuer: '',
+          oauth_params: {},
+          scopes: 'read write',
+          skip_browser: false,
+          token_url: 'https://oauth.example.com/token',
+          use_pkce: true,
+        },
+        secrets: [],
+        group: 'development',
+      }
+
+      await act(async () => {
+        await result.current.updateServerMutation({ data: formData })
+      })
+
+      await waitFor(() => {
+        const secretRequest = rec.recordedRequests.find(
+          (r) =>
+            r.method === 'POST' &&
+            r.pathname === '/api/v1beta/secrets/default/keys'
+        )
+
+        expect(secretRequest).toBeDefined()
+        expect(onSecretSuccess).toHaveBeenCalled()
+      })
+
+      await waitFor(() => {
+        const workloadRequest = rec.recordedRequests.find(
+          (r) =>
+            r.method === 'POST' &&
+            r.pathname === '/api/v1beta/workloads/test-oauth-new-secret/edit'
+        )
+
+        expect(workloadRequest).toBeDefined()
+      })
+    })
+
+    it('uses actual secret name from store when there is a naming collision', async () => {
+      const rec = recordRequests()
+      const wrapper = createWrapper('development')
+
+      // Mock that simulates a naming collision:
+      // User requests "OAUTH_CLIENT_SECRET" but store creates "OAUTH_CLIENT_SECRET_2"
+      mswServer.use(
+        http.post(
+          mswEndpoint('/api/v1beta/secrets/default/keys'),
+          async ({ request }) => {
+            const body = (await request.json()) as { key: string }
+            // Simulate collision: return with _2 suffix
+            return HttpResponse.json({ key: `${body.key}_2` })
+          }
+        ),
+        http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
+          return HttpResponse.json({ keys: [] })
+        }),
+        http.post(mswEndpoint('/api/v1beta/workloads/:name/edit'), () => {
+          return HttpResponse.json({
+            name: 'test-oauth-collision',
+            port: 8080,
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () =>
+          useUpdateServer('test-oauth-collision', {
+            isRemote: true,
+            onSecretSuccess: vi.fn(),
+            onSecretError: vi.fn(),
+          }),
+        { wrapper }
+      )
+
+      const formData: FormSchemaRemoteMcp = {
+        name: 'test-oauth-collision',
+        url: 'https://api.example.com',
+        transport: 'streamable-http',
+        auth_type: 'oauth2',
+        oauth_config: {
+          authorize_url: 'https://oauth.example.com/authorize',
+          callback_port: 8080,
+          client_id: 'test-client-id',
+          client_secret: {
+            name: 'OAUTH_CLIENT_SECRET',
+            value: {
+              secret: 'my-secret-value',
+              isFromStore: false,
+            },
+          },
+          issuer: '',
+          oauth_params: {},
+          scopes: 'read',
+          skip_browser: false,
+          token_url: 'https://oauth.example.com/token',
+          use_pkce: true,
+        },
+        secrets: [],
+        group: 'development',
+      }
+
+      await act(async () => {
+        await result.current.updateServerMutation({ data: formData })
+      })
+
+      await waitFor(() => {
+        const workloadRequest = rec.recordedRequests.find(
+          (r) =>
+            r.method === 'POST' &&
+            r.pathname === '/api/v1beta/workloads/test-oauth-collision/edit'
+        )
+
+        expect(workloadRequest).toBeDefined()
+
+        // The workload should use the ACTUAL secret name with _2 suffix
+        expect(workloadRequest?.payload).toMatchObject({
+          oauth_config: expect.objectContaining({
+            client_secret: {
+              name: 'OAUTH_CLIENT_SECRET_2',
+              target: 'OAUTH_CLIENT_SECRET_2',
+            },
+          }),
+        })
+      })
+    })
+
+    it('does not create a secret when client_secret isFromStore is true', async () => {
+      const rec = recordRequests()
+      const wrapper = createWrapper('development')
+
+      mswServer.use(
+        http.post(mswEndpoint('/api/v1beta/workloads/:name/edit'), () => {
+          return HttpResponse.json({
+            name: 'test-oauth-existing-secret',
+            port: 8080,
+          })
+        })
+      )
+
+      const { result } = renderHook(
+        () =>
+          useUpdateServer('test-oauth-existing-secret', {
+            isRemote: true,
+            onSecretSuccess: vi.fn(),
+            onSecretError: vi.fn(),
+          }),
+        { wrapper }
+      )
+
+      const formData: FormSchemaRemoteMcp = {
+        name: 'test-oauth-existing-secret',
+        url: 'https://api.example.com',
+        transport: 'streamable-http',
+        auth_type: 'oauth2',
+        oauth_config: {
+          authorize_url: 'https://oauth.example.com/authorize',
+          callback_port: 8080,
+          client_id: 'test-client-id',
+          client_secret: {
+            name: 'OAUTH_CLIENT_SECRET_EXISTING',
+            value: {
+              secret: 'existing-secret-from-store',
+              isFromStore: true,
+            },
+          },
+          issuer: '',
+          oauth_params: {},
+          scopes: 'read write',
+          skip_browser: false,
+          token_url: 'https://oauth.example.com/token',
+          use_pkce: true,
+        },
+        secrets: [],
+        group: 'development',
+      }
+
+      await act(async () => {
+        await result.current.updateServerMutation({ data: formData })
+      })
+
+      await waitFor(() => {
+        const workloadRequest = rec.recordedRequests.find(
+          (r) =>
+            r.method === 'POST' &&
+            r.pathname ===
+              '/api/v1beta/workloads/test-oauth-existing-secret/edit'
+        )
+
+        expect(workloadRequest).toBeDefined()
+
+        // Should NOT have posted any secrets since isFromStore is true
+        const secretRequests = rec.recordedRequests.filter(
+          (r) =>
+            r.method === 'POST' &&
+            r.pathname === '/api/v1beta/secrets/default/keys'
+        )
+        expect(secretRequests).toHaveLength(0)
+      })
+    })
   })
 
   describe('Local Server', () => {
