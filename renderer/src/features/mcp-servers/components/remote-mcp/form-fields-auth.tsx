@@ -273,10 +273,7 @@ export function FormFieldsAuth({
                   All secrets are encrypted and securely stored by ToolHive.
                 </p>
                 <FormControl>
-                  <div
-                    className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]
-                      gap-2"
-                  >
+                  <div className="grid grid-cols-2 gap-2">
                     <div>
                       <FormLabel
                         htmlFor="oauth_config.client_secret.name"
