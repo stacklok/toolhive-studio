@@ -10,9 +10,12 @@ import { omit } from '@/common/lib/utils'
 /**
  * Combines the registry server definition, the form fields, and the newly
  * created secrets from the secret store into a single request object.
+ * If newlyCreatedSecrets is provided, uses the actual secret name from the store
+ * (handles naming collisions where secret_key becomes secret_key_2).
  */
 export function prepareCreateWorkloadData(
-  data: FormSchemaRemoteMcp
+  data: FormSchemaRemoteMcp,
+  newlyCreatedSecrets?: SecretsSecretParameter[]
 ): V1CreateRequest {
   const { oauth_config, ...rest } = data
 
@@ -22,16 +25,22 @@ export function prepareCreateWorkloadData(
       ? oauth_config.scopes.split(',').map((s: string) => s.trim())
       : [],
   }
+
+  // Use the actual secret name from store if available (handles naming collisions)
+  const secretName =
+    newlyCreatedSecrets?.[0]?.name ?? oauth_config.client_secret?.name
+
   // Transform client_secret from object to SecretsSecretParameter if it exists
   const transformedOAuthConfig = oauthConfig
     ? {
         ...oauthConfig,
-        client_secret: oauth_config.client_secret
-          ? ({
-              name: oauth_config.client_secret.value.secret,
-              target: oauth_config.client_secret.value.secret,
-            } as SecretsSecretParameter)
-          : undefined,
+        client_secret:
+          oauth_config.client_secret && secretName
+            ? ({
+                name: secretName,
+                target: secretName,
+              } as SecretsSecretParameter)
+            : undefined,
       }
     : oauthConfig
 
@@ -46,10 +55,13 @@ export function prepareCreateWorkloadData(
 }
 
 /**
- * Transforms form data into an update request object
+ * Transforms form data into an update request object.
+ * If newlyCreatedSecrets is provided, uses the actual secret name from the store
+ * (handles naming collisions where secret_key becomes secret_key_2).
  */
 export function prepareUpdateRemoteWorkloadData(
-  data: FormSchemaRemoteMcp
+  data: FormSchemaRemoteMcp,
+  newlyCreatedSecrets?: SecretsSecretParameter[]
 ): V1UpdateRequest {
   const { oauth_config, ...rest } = data
 
@@ -60,16 +72,21 @@ export function prepareUpdateRemoteWorkloadData(
       : [],
   }
 
+  // Use the actual secret name from store if available (handles naming collisions)
+  const secretName =
+    newlyCreatedSecrets?.[0]?.name ?? oauth_config.client_secret?.value.secret
+
   // Transform client_secret from string to SecretsSecretParameter if it exists
   const transformedOAuthConfig = oauthConfig
     ? {
         ...oauthConfig,
-        client_secret: oauth_config.client_secret
-          ? ({
-              name: oauth_config.client_secret.value.secret,
-              target: oauth_config.client_secret.value.secret,
-            } as SecretsSecretParameter)
-          : undefined,
+        client_secret:
+          oauth_config.client_secret && secretName
+            ? ({
+                name: secretName,
+                target: secretName,
+              } as SecretsSecretParameter)
+            : undefined,
       }
     : oauthConfig
 

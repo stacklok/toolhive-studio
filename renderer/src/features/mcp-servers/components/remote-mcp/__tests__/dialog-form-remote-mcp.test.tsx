@@ -74,10 +74,6 @@ beforeEach(() => {
       )
     }),
 
-    http.patch(mswEndpoint('/api/v1beta/workloads/:name'), async () => {
-      return HttpResponse.json({ name: 'test-server', status: 'running' })
-    }),
-
     http.post(mswEndpoint('/api/v1beta/secrets/default/keys'), async () => {
       return HttpResponse.json({ success: true }, { status: 201 })
     })
@@ -374,17 +370,9 @@ describe('DialogFormRemoteMcp', () => {
     expect(mockOnOpenChange).toHaveBeenCalled()
   })
 
-  // Test skipped: requires complex setup for useUpdateServer hook
-  // The other tests already cover HTTP request payload verification
-  it.skip('updates an existing remote server', async () => {
+  it('updates an existing remote server', async () => {
     const user = userEvent.setup({ delay: null })
-    const mockCheckServerStatus = vi.fn()
-    const mockOnOpenChange = vi.fn()
     const rec = recordRequests()
-
-    mockUseCheckServerStatus.mockReturnValue({
-      checkServerStatus: mockCheckServerStatus,
-    })
 
     mswServer.use(
       http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
@@ -406,11 +394,14 @@ describe('DialogFormRemoteMcp', () => {
           group: 'default',
         })
       }),
-      http.patch(mswEndpoint('/api/v1beta/workloads/:name'), () => {
+      http.post(mswEndpoint('/api/v1beta/workloads/:name/edit'), () => {
         return HttpResponse.json({
           name: 'existing-server',
           status: 'running',
         })
+      }),
+      http.get(mswEndpoint('/api/v1beta/discovery/clients'), () => {
+        return HttpResponse.json({ clients: [] })
       })
     )
 
@@ -418,7 +409,7 @@ describe('DialogFormRemoteMcp', () => {
       <Wrapper>
         <DialogFormRemoteMcp
           isOpen
-          closeDialog={mockOnOpenChange}
+          closeDialog={vi.fn()}
           groupName="default"
           serverToEdit="existing-server"
         />
@@ -442,11 +433,14 @@ describe('DialogFormRemoteMcp', () => {
     await user.click(screen.getByRole('button', { name: /update server/i }))
 
     await waitFor(() => {
-      const patchCall = rec.recordedRequests.find(
-        (r) => r.method === 'PATCH' && r.pathname.includes('/workloads/')
+      const editCall = rec.recordedRequests.find(
+        (r) =>
+          r.method === 'POST' &&
+          r.pathname.includes('/workloads/') &&
+          r.pathname.includes('/edit')
       )
-      expect(patchCall).toBeDefined()
-      expect(patchCall?.payload).toEqual(
+      expect(editCall).toBeDefined()
+      expect(editCall?.payload).toEqual(
         expect.objectContaining({
           name: 'existing-server',
           url: 'https://new-api.example.com',
@@ -454,10 +448,60 @@ describe('DialogFormRemoteMcp', () => {
         })
       )
     })
+  })
+
+  it('resets secret key name to default when user types a new value after selecting from store', async () => {
+    const user = userEvent.setup({ delay: null })
+
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRemoteMcp isOpen closeDialog={vi.fn()} groupName="default" />
+      </Wrapper>
+    )
 
     await waitFor(() => {
-      expect(mockCheckServerStatus).toHaveBeenCalled()
-      expect(mockOnOpenChange).toHaveBeenCalled()
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Fill required fields
+    await user.type(
+      screen.getByRole('textbox', { name: /server name/i }),
+      'my-test-server'
+    )
+    await user.type(
+      screen.getByRole('textbox', { name: /server url/i }),
+      'https://api.example.com'
+    )
+
+    // Select OAuth2 auth type
+    await user.click(screen.getByLabelText('Authorization method'))
+    await user.click(screen.getByRole('option', { name: 'OAuth 2.0' }))
+
+    // Wait for OAuth fields to appear and verify default secret name
+    const secretNameInput =
+      await screen.findByPlaceholderText('e.g. CLIENT_SECRET')
+    expect(secretNameInput).toHaveValue('OAUTH_CLIENT_SECRET_MY_TEST_SERVER')
+
+    // Select a secret from the store
+    await user.click(
+      screen.getByRole('combobox', { name: /use a secret from the store/i })
+    )
+    await user.click(screen.getByRole('option', { name: /secret_from_store/i }))
+
+    // Verify secret name changed to the selected one
+    await waitFor(() => {
+      expect(secretNameInput).toHaveValue('SECRET_FROM_STORE')
+    })
+
+    // Now type a new value in the Value input
+    const valueInput = screen.getByPlaceholderText(
+      'e.g. secret_123_ABC_789_XYZ'
+    )
+    await user.type(valueInput, 'my-new-secret-value')
+
+    // Verify secret name is reset to the default
+    await waitFor(() => {
+      expect(secretNameInput).toHaveValue('OAUTH_CLIENT_SECRET_MY_TEST_SERVER')
     })
   })
 })

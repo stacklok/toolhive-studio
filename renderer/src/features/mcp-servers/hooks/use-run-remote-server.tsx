@@ -45,9 +45,9 @@ export function useRunRemoteServer({
           ? [data.oauth_config.client_secret]
           : []
 
-      await handleSecrets(secrets)
+      const { newlyCreatedSecrets } = await handleSecrets(secrets)
 
-      const preparedData = prepareCreateWorkloadData(data)
+      const preparedData = prepareCreateWorkloadData(data, newlyCreatedSecrets)
 
       await createWorkload({
         body: preparedData,

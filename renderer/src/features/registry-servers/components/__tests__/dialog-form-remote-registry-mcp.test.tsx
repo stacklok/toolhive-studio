@@ -264,7 +264,7 @@ describe('DialogFormRemoteRegistryMcp', () => {
               callback_port: 8888,
               client_id: 'client_id',
               client_secret: {
-                name: 'CLIENT_SECRET',
+                name: 'SECRET_FROM_STORE',
                 value: {
                   isFromStore: true,
                   secret: 'SECRET_FROM_STORE',

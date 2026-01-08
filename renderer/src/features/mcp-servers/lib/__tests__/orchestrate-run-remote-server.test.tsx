@@ -62,6 +62,7 @@ describe('prepareCreateWorkloadData', () => {
 
     const result = prepareCreateWorkloadData(data)
 
+    // Uses client_secret.name (the prefilled key name), not value.secret
     expect(result).toEqual({
       name: 'oauth-server',
       url: 'https://api.example.com',
@@ -71,8 +72,8 @@ describe('prepareCreateWorkloadData', () => {
         token_url: 'https://oauth.example.com/token',
         client_id: 'my-client-id',
         client_secret: {
-          name: 'MY_SECRET_123',
-          target: 'MY_SECRET_123',
+          name: 'oauth-secret',
+          target: 'oauth-secret',
         },
         scopes: ['read', 'write', 'admin'],
         use_pkce: true,
@@ -80,6 +81,8 @@ describe('prepareCreateWorkloadData', () => {
         callback_port: 8080,
       },
       group: 'production',
+      tools: undefined,
+      tools_override: undefined,
     })
 
     expect(result).not.toHaveProperty('auth_type')

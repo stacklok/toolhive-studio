@@ -48,8 +48,25 @@ export function useUpdateServer<TIsRemote extends boolean = false>(
       data: TIsRemote extends true ? FormSchemaRemoteMcp : FormSchemaLocalMcp
     }) => {
       if (isRemoteFormData(data, options?.isRemote)) {
-        // Remote server update - no secrets handling
-        const updateRequest = prepareUpdateRemoteWorkloadData(data)
+        // Remote server update - handle secrets not in store
+        const isDefaultAuthType = data.auth_type === 'none'
+        const secrets = isDefaultAuthType
+          ? data.secrets
+          : data.oauth_config.client_secret
+            ? [data.oauth_config.client_secret]
+            : []
+
+        const hasNewSecrets = secrets.some((s) => !s.value?.isFromStore)
+
+        // Handle secrets and get actual names (handles naming collisions)
+        const newlyCreatedSecrets = hasNewSecrets
+          ? (await handleSecrets(secrets)).newlyCreatedSecrets
+          : undefined
+
+        const updateRequest = prepareUpdateRemoteWorkloadData(
+          data,
+          newlyCreatedSecrets
+        )
 
         await updateWorkload({
           path: { name: serverName },
