@@ -47,7 +47,30 @@ async function openProviderSettingsDialog(window: Page): Promise<void> {
   await window.getByRole('dialog').waitFor()
 }
 
-async function clearOllamaProviderViaUI(window: Page): Promise<void> {
+async function removeOllamaProvider(window: Page): Promise<void> {
+  await openProviderSettingsDialog(window)
+
+  const dialog = window.getByRole('dialog')
+
+  // Expand Ollama section (button is inside the dialog)
+  const ollamaSection = dialog.getByRole('button', { name: /ollama/i })
+  await ollamaSection.click()
+
+  // Find the trash button within the expanded Ollama section
+  const trashButton = dialog.locator('button').filter({
+    has: window.locator('svg.lucide-trash-2'),
+  })
+
+  // Only click trash if it exists (provider is configured)
+  if (await trashButton.isVisible().catch(() => false)) {
+    await trashButton.click()
+  }
+
+  await dialog.getByRole('button', { name: 'Save' }).click()
+  await dialog.waitFor({ state: 'hidden' })
+}
+
+async function clearPlaygroundState(window: Page): Promise<void> {
   await window.getByRole('link', { name: 'Playground' }).click()
   await expect(
     window.getByRole('heading', { name: 'Playground', level: 1 })
@@ -59,34 +82,10 @@ async function clearOllamaProviderViaUI(window: Page): Promise<void> {
   const clearChatButton = window.getByRole('button', { name: /clear chat/i })
   if (await clearChatButton.isVisible().catch(() => false)) {
     await clearChatButton.click()
-    // Confirm the deletion dialog
     await window.getByRole('button', { name: /delete/i }).click()
   }
 
-  await openProviderSettingsDialog(window)
-
-  // Expand Ollama section
-  const ollamaButton = window.getByRole('button', { name: /ollama/i })
-  if (!(await ollamaButton.isVisible().catch(() => false))) {
-    await window.getByRole('button', { name: 'Cancel' }).click()
-    return
-  }
-
-  await ollamaButton.click()
-
-  // Check if there's a "Configured" badge indicating existing config
-  const configuredBadge = window.getByText('Configured')
-  if (!(await configuredBadge.isVisible().catch(() => false))) {
-    await window.getByRole('button', { name: 'Cancel' }).click()
-    return
-  }
-
-  // Clear the server URL input
-  const serverUrlInput = window.getByPlaceholder('http://localhost:11434')
-  await serverUrlInput.clear()
-
-  await window.getByRole('button', { name: 'Save' }).click()
-  await window.getByRole('dialog').waitFor({ state: 'hidden' })
+  await removeOllamaProvider(window)
 }
 
 test('navigates to Playground tab', async ({ window }) => {
@@ -113,21 +112,23 @@ test.describe('Playground chat with Ollama', () => {
   test('configures Ollama provider and sends chat message', async ({
     window,
   }) => {
-    await clearOllamaProviderViaUI(window)
+    // Clean up before test
+    await clearPlaygroundState(window)
 
+    // Navigate back to Playground after cleanup
     await window.getByRole('link', { name: 'Playground' }).click()
     await expect(
       window.getByRole('heading', { name: 'Playground', level: 1 })
     ).toBeVisible()
 
-    // Open provider settings
+    // Open provider settings - should now show "Configure your providers" since we cleared Ollama
     await openProviderSettingsDialog(window)
 
     // Configure Ollama
     await window.getByRole('button', { name: /ollama/i }).click()
     await window.getByPlaceholder('http://localhost:11434').fill(OLLAMA_URL)
 
-    // Click refresh to test connection (find button within Ollama's collapsible content)
+    // Click refresh to test connection
     const ollamaSection = window.locator('[data-state="open"]').filter({
       has: window.getByPlaceholder('http://localhost:11434'),
     })
@@ -144,11 +145,11 @@ test.describe('Playground chat with Ollama', () => {
     await window.getByRole('dialog').waitFor({ state: 'hidden' })
 
     // After saving Ollama config, it auto-selects Ollama with its first model
-    // Chat input should now be visible
     await expect(window.getByPlaceholder(/type your message/i)).toBeVisible({
       timeout: 10_000,
     })
 
+    // Send a chat message
     const testId = `test_${Date.now()}`
     await window
       .getByPlaceholder(/type your message/i)
@@ -158,5 +159,8 @@ test.describe('Playground chat with Ollama', () => {
     await expect(window.getByText(new RegExp(testId))).toBeVisible({
       timeout: 120_000,
     })
+
+    // Clean up after test
+    await clearPlaygroundState(window)
   })
 })
