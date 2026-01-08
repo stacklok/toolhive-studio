@@ -52,9 +52,7 @@ async function removeOllamaProvider(window: Page): Promise<void> {
   const dialog = window.getByRole('dialog')
   await dialog.getByRole('button', { name: /ollama/i }).click()
 
-  const trashButton = dialog.locator('button').filter({
-    has: window.locator('svg.lucide-trash-2'),
-  })
+  const trashButton = dialog.getByTestId('remove-credentials-button')
   if (await trashButton.isVisible().catch(() => false)) {
     await trashButton.click()
   }
@@ -116,13 +114,7 @@ test.describe('Playground chat with Ollama', () => {
     await window.getByRole('button', { name: /ollama/i }).click()
     await window.getByPlaceholder('http://localhost:11434').fill(OLLAMA_URL)
 
-    const ollamaSection = window.locator('[data-state="open"]').filter({
-      has: window.getByPlaceholder('http://localhost:11434'),
-    })
-    await ollamaSection
-      .locator('button')
-      .filter({ has: window.locator('svg.lucide-refresh-cw') })
-      .click()
+    await window.getByTestId('refresh-models-button').click()
 
     await expect(window.getByText(/connection successful/i)).toBeVisible({
       timeout: 30_000,

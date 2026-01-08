@@ -418,6 +418,7 @@ export function DialogProviderSettings({
                                             !getProviderCredential(pk).trim())
                                       }
                                       className="px-3"
+                                      data-testid="refresh-models-button"
                                     >
                                       <RefreshCw
                                         className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
@@ -447,6 +448,7 @@ export function DialogProviderSettings({
                                       handleRemoveApiKey(pk.provider.id)
                                     }
                                     className="hover:bg-destructive hover:text-destructive-foreground cursor-pointer px-3"
+                                    data-testid="remove-credentials-button"
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>

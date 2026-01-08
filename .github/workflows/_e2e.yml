@@ -3,6 +3,7 @@ on:
   workflow_call:
 
 env:
+  OLLAMA_VERSION: '0.5.13'
   OLLAMA_MODELS: /home/runner/.ollama/models
   OLLAMA_BASE_URL: http://localhost:11434
   OLLAMA_MODEL: qwen2.5:0.5b
@@ -23,7 +24,7 @@ jobs:
         uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
         with:
           path: /usr/local/bin/ollama
-          key: ollama-binary-v0.9
+          key: ollama-binary-${{ env.OLLAMA_VERSION }}
 
       - name: Cache Ollama models
         uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
@@ -33,13 +34,19 @@ jobs:
 
       - name: Install Ollama
         if: steps.cache-ollama.outputs.cache-hit != 'true'
-        run: curl -fsSL https://ollama.com/install.sh | sh
+        run: |
+          curl -fsSL -o ollama "https://github.com/ollama/ollama/releases/download/v${{ env.OLLAMA_VERSION }}/ollama-linux-amd64"
+          chmod +x ollama
+          sudo mv ollama /usr/local/bin/ollama
 
       - name: Start Ollama server
         run: |
           sudo systemctl stop ollama 2>/dev/null || true
           OLLAMA_MODELS=/home/runner/.ollama/models ollama serve &
-          sleep 3
+          for i in {1..30}; do
+            curl -sf http://localhost:11434/api/tags && break
+            sleep 1
+          done
 
       - name: Pull Ollama model
         run: OLLAMA_MODELS=/home/runner/.ollama/models ollama pull ${{ env.OLLAMA_MODEL }}
