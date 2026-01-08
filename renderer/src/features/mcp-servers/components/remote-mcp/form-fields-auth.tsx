@@ -284,8 +284,8 @@ export function FormFieldsAuth({
                       >
                         Client secret name
                         <TooltipInfoIcon className="m-w-90">
-                          The name of the secret key that proves your
-                          application's identity.
+                          The key name under which this secret will be stored
+                          and accessible.
                         </TooltipInfoIcon>
                       </FormLabel>
                       <Input
