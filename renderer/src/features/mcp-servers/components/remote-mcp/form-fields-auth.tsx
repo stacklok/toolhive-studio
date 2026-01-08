@@ -47,6 +47,46 @@ const shouldShowField =
 
 const DEBOUNCE_DELAY_MS = 500
 
+type SecretValueData = { secret: string; isFromStore: boolean }
+
+type SecretValue = {
+  name: string
+  value: SecretValueData
+}
+
+const isSecretValueObj = (value: unknown): value is SecretValueData =>
+  typeof value === 'object' &&
+  value !== null &&
+  'secret' in value &&
+  'isFromStore' in value
+
+const isSecretValue = (value: unknown): value is SecretValue =>
+  typeof value === 'object' &&
+  value !== null &&
+  'name' in value &&
+  typeof value.name === 'string' &&
+  'value' in value &&
+  isSecretValueObj(value.value)
+
+const buildClientSecretValue = (
+  fieldValue: unknown,
+  mcpName: string | undefined
+): SecretValue => {
+  if (isSecretValue(fieldValue)) {
+    return fieldValue
+  }
+
+  const sanitizedMcpName = mcpName?.replaceAll('-', '_').toUpperCase()
+  const defaultSecretName = sanitizedMcpName
+    ? `OAUTH_CLIENT_SECRET_${sanitizedMcpName}`
+    : 'OAUTH_CLIENT_SECRET'
+
+  return {
+    name: defaultSecretName,
+    value: { secret: '', isFromStore: false },
+  }
+}
+
 export function FormFieldsAuth({
   authType,
   form,
@@ -239,28 +279,7 @@ export function FormFieldsAuth({
           control={form.control}
           name="oauth_config.client_secret"
           render={({ field }) => {
-            type SecretValue = {
-              name: string
-              value: { secret: string; isFromStore: boolean }
-            }
-
-            const sanitizedMcpName = mcpName?.replaceAll('-', '_').toUpperCase()
-
-            const defaultSecretName = sanitizedMcpName
-              ? `OAUTH_CLIENT_SECRET_${sanitizedMcpName}`
-              : 'OAUTH_CLIENT_SECRET'
-
-            const currentValue =
-              field.value &&
-              typeof field.value === 'object' &&
-              field.value !== null &&
-              'name' in field.value &&
-              'value' in field.value
-                ? (field.value as SecretValue)
-                : ({
-                    name: defaultSecretName,
-                    value: { secret: '', isFromStore: false },
-                  } as SecretValue)
+            const currentValue = buildClientSecretValue(field.value, mcpName)
 
             return (
               <FormItem className="pb-8">
