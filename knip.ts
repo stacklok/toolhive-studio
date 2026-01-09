@@ -10,8 +10,9 @@ export default {
     'renderer/src/**/__tests__/**/*.{ts,tsx}',
     'renderer/src/common/test/**/*.{ts,tsx}',
     'renderer/src/common/mocks/**/*.{ts,tsx}',
+    'e2e-tests/**/*.ts',
   ],
-  project: ['renderer/src/**', 'main/src/**', 'preload/src/**'],
+  project: ['renderer/src/**', 'main/src/**', 'preload/src/**', 'e2e-tests/**'],
   paths: {
     '@/*': ['renderer/src/*'],
   },
