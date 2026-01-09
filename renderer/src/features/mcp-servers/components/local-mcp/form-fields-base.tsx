@@ -17,6 +17,7 @@ import {
 import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
 import { RadioGroup, RadioGroupItem } from '@/common/components/ui/radio-group'
 import { CommandArgumentsField } from '@/common/components/workload-cmd-arg/command-arguments-field'
+import { FormFieldsProxy } from '@/common/components/workloads/form-fields-proxy'
 import type { FormSchemaLocalMcp } from '../../lib/form-schema-local-mcp'
 import {
   MCP_OPTIMIZER_GROUP_NAME,
@@ -212,6 +213,8 @@ export function FormFieldsBase({
           )}
         />
       )}
+
+      <FormFieldsProxy control={form.control} />
 
       {typeValue === 'docker_image' ? (
         <FormField

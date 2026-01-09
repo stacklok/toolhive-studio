@@ -36,10 +36,13 @@ import {
 } from '@/common/components/ui/select'
 import { ExternalLinkIcon } from 'lucide-react'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
+import { FormFieldsProxy } from '@/common/components/workloads/form-fields-proxy'
 
 const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
   name: '',
   transport: 'streamable-http',
+  proxy_mode: 'streamable-http',
+  proxy_port: undefined,
   auth_type: 'none',
   oauth_config: {
     authorize_url: '',
@@ -308,6 +311,8 @@ export function DialogFormRemoteRegistryMcp({
                 </FormItem>
               )}
             />
+
+            <FormFieldsProxy control={form.control} />
 
             <FormField
               control={form.control}

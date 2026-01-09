@@ -7,6 +7,7 @@ import {
   type V1ListSecretsResponse,
 } from '@api/types.gen'
 import { getVolumes, mapEnvVars } from '@/common/lib/utils'
+import { getProxyModeOrDefault } from '@/common/lib/proxy-mode'
 import type { FormSchemaLocalMcp } from './form-schema-local-mcp'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 
@@ -88,6 +89,8 @@ export function prepareCreateWorkloadData(
     volumes: getVolumes(volumes ?? []),
     tools: data.tools || undefined,
     tools_override: data.tools_override || undefined,
+    proxy_mode: data.proxy_mode,
+    proxy_port: data.proxy_port,
   }
 }
 
@@ -110,6 +113,8 @@ export function convertWorkloadToFormData(
       | 'sse'
       | 'stdio'
       | 'streamable-http',
+    proxy_mode: getProxyModeOrDefault(workload.proxy_mode),
+    proxy_port: workload.port,
     group: 'default',
     target_port: workload.port,
     cmd_arguments: [],
@@ -181,9 +186,13 @@ export function convertCreateRequestToFormData(
     }
   })
 
+  const proxy_mode = getProxyModeOrDefault(createRequest.proxy_mode)
+
   const baseFormData = {
     name: createRequest.name || '',
     transport,
+    proxy_mode,
+    proxy_port: createRequest.proxy_port,
     group: createRequest.group ?? 'default',
     target_port: transport === 'stdio' ? 0 : createRequest.target_port,
     cmd_arguments: createRequest.cmd_arguments || [],
@@ -254,6 +263,8 @@ export function prepareUpdateLocalWorkloadData(
   return {
     image,
     transport: data.transport,
+    proxy_mode: data.proxy_mode,
+    proxy_port: data.proxy_port,
     group: data.group,
     target_port: data.target_port,
     cmd_arguments: data.cmd_arguments || [],

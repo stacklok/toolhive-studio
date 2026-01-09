@@ -42,6 +42,8 @@ export function prepareCreateWorkloadData(
     name: data.name,
     image: server.image,
     transport: server.transport,
+    proxy_mode: data.proxy_mode,
+    proxy_port: data.proxy_port,
     env_vars: mapEnvVars(data.envVars),
     secrets,
     cmd_arguments: data.cmd_arguments || [],
@@ -49,6 +51,5 @@ export function prepareCreateWorkloadData(
     network_isolation: networkIsolation,
     permission_profile,
     volumes,
-    // ...rest does not include the omitted fields
   }
 }

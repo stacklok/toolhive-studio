@@ -39,12 +39,15 @@ import {
 import { ExternalLinkIcon } from 'lucide-react'
 import { useGroups } from '../../hooks/use-groups'
 import { AlertErrorFetchingEditingData } from '@/common/components/workloads/alert-error-fetching-editing-data'
+import { FormFieldsProxy } from '@/common/components/workloads/form-fields-proxy'
 import { UI_POST_SUBMIT_DELAY_MS } from '@/common/lib/constants'
 import { delay } from '@utils/delay'
 
 const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
   name: '',
   transport: 'streamable-http',
+  proxy_mode: 'streamable-http',
+  proxy_port: undefined,
   auth_type: 'none',
   oauth_config: {
     authorize_url: '',
@@ -384,6 +387,8 @@ export function DialogFormRemoteMcp({
                   </FormItem>
                 )}
               />
+
+              <FormFieldsProxy control={form.control} />
 
               <FormField
                 control={form.control}

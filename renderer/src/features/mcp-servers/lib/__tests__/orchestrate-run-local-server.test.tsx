@@ -20,6 +20,7 @@ describe('prepareCreateWorkloadData', () => {
       image: 'ghcr.io/github/github-mcp-server',
       name: 'foo-bar',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       type: 'docker_image',
       group: 'default',
       envVars: [
@@ -44,6 +45,7 @@ describe('prepareCreateWorkloadData', () => {
       name: 'foo-bar',
       image: 'ghcr.io/github/github-mcp-server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       cmd_arguments: ['--debug', '--port', '8080'],
       env_vars: { DEBUG: 'true', PORT: '8080' },
       secrets: [{ name: 'secret-key', target: 'API_TOKEN' }],
@@ -59,6 +61,7 @@ describe('prepareCreateWorkloadData', () => {
       protocol: 'npx',
       name: 'npm-server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       type: 'package_manager',
       group: 'default',
       envVars: [],
@@ -76,6 +79,7 @@ describe('prepareCreateWorkloadData', () => {
       name: 'npm-server',
       image: 'npx://my-package',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       cmd_arguments: [],
       env_vars: {},
       secrets: [],
@@ -90,6 +94,7 @@ describe('prepareCreateWorkloadData', () => {
       image: 'test-image',
       name: 'test-server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       type: 'docker_image',
       group: 'default',
       envVars: [
@@ -116,6 +121,7 @@ describe('prepareCreateWorkloadData', () => {
       image: 'test-image',
       name: 'test-server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       type: 'docker_image',
       group: 'default',
       envVars: [
@@ -155,6 +161,7 @@ describe('prepareCreateWorkloadData', () => {
       image: 'test-image',
       name: 'test-server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       type: 'docker_image',
       group: 'default',
       envVars: [],
@@ -176,6 +183,7 @@ describe('prepareCreateWorkloadData', () => {
       image: 'test-image',
       name: 'test-server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       type: 'docker_image',
       group: 'default',
       envVars: [],
@@ -201,6 +209,7 @@ describe('prepareCreateWorkloadData', () => {
       image: 'test-image',
       name: 'test-server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       type: 'docker_image',
       group: 'default',
       envVars: [],
@@ -222,6 +231,7 @@ describe('prepareCreateWorkloadData', () => {
       image: 'test-image',
       name: 'test-server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       type: 'docker_image',
       group: 'default',
       envVars: [],
@@ -252,6 +262,7 @@ describe('prepareCreateWorkloadData', () => {
       image: 'test-image',
       name: 'test-server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       type: 'docker_image',
       group: 'default',
       envVars: [],
@@ -274,6 +285,7 @@ describe('prepareCreateWorkloadData', () => {
       image: 'test-image',
       name: 'test-server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       type: 'docker_image',
       group: 'default',
       envVars: [],
@@ -298,6 +310,7 @@ describe('prepareCreateWorkloadData', () => {
       image: 'test-image',
       name: 'test-server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       type: 'docker_image',
       group: 'default',
       envVars: [],
@@ -320,6 +333,7 @@ describe('prepareCreateWorkloadData', () => {
       image: 'test-image',
       name: 'test-server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       type: 'docker_image',
       group: 'default',
       envVars: [],
@@ -341,6 +355,7 @@ describe('prepareCreateWorkloadData', () => {
       image: 'test-image',
       name: 'test-server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       type: 'docker_image',
       group: 'default',
       envVars: [],
@@ -372,6 +387,7 @@ describe('convertWorkloadToFormData', () => {
     expect(result).toEqual({
       name: 'docker-server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       group: 'default',
       target_port: undefined,
       cmd_arguments: [],
@@ -399,6 +415,8 @@ describe('convertWorkloadToFormData', () => {
     expect(result).toEqual({
       name: 'npm-server',
       transport: 'sse',
+      proxy_mode: 'streamable-http',
+      proxy_port: 8080,
       group: 'default',
       target_port: 8080,
       cmd_arguments: [],
@@ -491,6 +509,7 @@ describe('convertCreateRequestToFormData', () => {
       name: 'docker-server',
       image: 'ghcr.io/test/server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       cmd_arguments: ['--debug'],
       env_vars: { DEBUG: 'true', PORT: '8080' },
       secrets: [{ name: 'secret-key', target: 'API_TOKEN' }],
@@ -508,6 +527,7 @@ describe('convertCreateRequestToFormData', () => {
     expect(result).toEqual({
       name: 'docker-server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       group: 'default',
       target_port: 0,
       cmd_arguments: ['--debug'],
@@ -535,6 +555,7 @@ describe('convertCreateRequestToFormData', () => {
       name: 'npm-server',
       image: 'npx://my-package',
       transport: 'sse',
+      proxy_mode: 'streamable-http',
       target_port: 3000,
     }
 
@@ -543,6 +564,7 @@ describe('convertCreateRequestToFormData', () => {
     expect(result).toEqual({
       name: 'npm-server',
       transport: 'sse',
+      proxy_mode: 'streamable-http',
       group: 'default',
       target_port: 3000,
       cmd_arguments: [],
@@ -659,6 +681,7 @@ describe('convertCreateRequestToFormData', () => {
       name: 'docker-server',
       image: 'test-image',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       tools: ['tool1', 'tool2', 'tool3'],
     }
 
@@ -673,6 +696,7 @@ describe('convertCreateRequestToFormData', () => {
       name: 'docker-server',
       image: 'test-image',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
     }
 
     const result = convertCreateRequestToFormData(createRequest)
@@ -685,6 +709,7 @@ describe('convertCreateRequestToFormData', () => {
       name: 'docker-server',
       image: 'test-image',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       tools: [],
     }
 
@@ -698,6 +723,7 @@ describe('convertCreateRequestToFormData', () => {
       name: 'npm-server',
       image: 'npx://my-package',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       tools: ['tool1', 'tool2'],
     }
 
@@ -714,6 +740,7 @@ describe('prepareUpdateLocalWorkloadData', () => {
     const data: FormSchemaLocalMcp = {
       name: 'updated-server',
       transport: 'sse',
+      proxy_mode: 'streamable-http',
       target_port: 3000,
       type: 'docker_image',
       group: 'production',
@@ -739,6 +766,7 @@ describe('prepareUpdateLocalWorkloadData', () => {
     expect(result).toEqual({
       image: 'ghcr.io/test/updated-server',
       transport: 'sse',
+      proxy_mode: 'streamable-http',
       group: 'production',
       target_port: 3000,
       cmd_arguments: ['--verbose'],
@@ -754,6 +782,7 @@ describe('prepareUpdateLocalWorkloadData', () => {
     const data: FormSchemaLocalMcp = {
       name: 'npm-updated',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       type: 'package_manager',
       group: 'default',
       protocol: 'uvx',
@@ -777,6 +806,7 @@ describe('prepareUpdateLocalWorkloadData', () => {
     const data: FormSchemaLocalMcp = {
       name: 'test-server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       type: 'docker_image',
       group: 'default',
       image: 'test-image',
@@ -807,6 +837,7 @@ describe('prepareUpdateLocalWorkloadData', () => {
     const data: FormSchemaLocalMcp = {
       name: 'test-server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       type: 'docker_image',
       group: 'default',
       image: 'test-image',
@@ -832,6 +863,7 @@ describe('prepareUpdateLocalWorkloadData', () => {
     const data: FormSchemaLocalMcp = {
       name: 'test-server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       type: 'docker_image',
       group: 'default',
       image: 'test-image',
@@ -859,6 +891,7 @@ describe('prepareUpdateLocalWorkloadData', () => {
     const data: FormSchemaLocalMcp = {
       name: 'test-server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       type: 'docker_image',
       group: 'default',
       image: 'test-image',
@@ -880,6 +913,7 @@ describe('prepareUpdateLocalWorkloadData', () => {
     const data: FormSchemaLocalMcp = {
       name: 'test-server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       type: 'docker_image',
       group: 'default',
       image: 'test-image',
@@ -902,6 +936,7 @@ describe('prepareUpdateLocalWorkloadData', () => {
     const data: FormSchemaLocalMcp = {
       name: 'test-server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       type: 'docker_image',
       group: 'default',
       image: 'test-image',
@@ -923,6 +958,7 @@ describe('prepareUpdateLocalWorkloadData', () => {
     const data: FormSchemaLocalMcp = {
       name: 'test-server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       type: 'docker_image',
       group: 'default',
       image: 'test-image',
@@ -945,6 +981,7 @@ describe('prepareUpdateLocalWorkloadData', () => {
     const data: FormSchemaLocalMcp = {
       name: 'npm-server',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       type: 'package_manager',
       group: 'default',
       protocol: 'npx',
@@ -973,6 +1010,7 @@ describe('prepareUpdateLocalWorkloadData', () => {
     const data: FormSchemaLocalMcp = {
       name: 'optimizer',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
       type: 'docker_image',
       group: MCP_OPTIMIZER_GROUP_NAME,
       image: 'optimizer-image',

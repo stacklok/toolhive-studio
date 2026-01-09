@@ -147,6 +147,20 @@ const createTransportConfigSchema = () => {
   })
 }
 
+const createProxyConfigSchema = () => {
+  return z.object({
+    proxy_mode: z
+      .union([z.literal('sse'), z.literal('streamable-http')])
+      .default('streamable-http'),
+    proxy_port: z
+      .number()
+      .refine((val) => val >= 1024 && val <= 65535, {
+        message: 'Port must be between 1024 and 65535',
+      })
+      .optional(),
+  })
+}
+
 export const addNetworkValidation = (ctx: z.RefinementCtx, data: unknown) => {
   const networkData = data as {
     networkIsolation?: boolean
@@ -294,6 +308,7 @@ export const createRegistrySchema = (
   const networkSchema = createNetworkConfigSchema()
   const volumesSchema = createVolumesSchema()
   const toolsOverrideSchema = createToolsOverrideSchema()
+  const proxyConfigSchema = createProxyConfigSchema()
 
   return nameSchema
     .extend({
@@ -305,6 +320,7 @@ export const createRegistrySchema = (
     .extend(networkSchema.shape)
     .extend(volumesSchema.shape)
     .extend(toolsOverrideSchema.shape)
+    .extend(proxyConfigSchema.shape)
     .superRefine((data, ctx) => {
       addNetworkValidation(ctx, data)
     })
@@ -315,6 +331,7 @@ export const createMcpBaseSchema = (workloads: CoreWorkload[]) => {
   const envVarsSchema = createBasicEnvVarsSchema()
   const secretsSchema = createBasicSecretsSchema()
   const transportSchema = createTransportConfigSchema()
+  const proxyConfigSchema = createProxyConfigSchema()
   const commandArgsSchema = createCommandArgumentsSchema()
   const networkSchema = createNetworkConfigSchema()
   const volumesSchema = createVolumesSchema()
@@ -324,6 +341,7 @@ export const createMcpBaseSchema = (workloads: CoreWorkload[]) => {
 
   const commonSchema = nameSchema
     .extend(transportSchema.shape)
+    .extend(proxyConfigSchema.shape)
     .extend(commandArgsSchema.shape)
     .extend(networkSchema.shape)
     .extend(volumesSchema.shape)
@@ -369,6 +387,7 @@ export const createRemoteMcpBaseSchema = (workloads: CoreWorkload[]) => {
   const toolsOverrideSchema = createToolsOverrideSchema()
   const secretsSchema = createBasicSecretsSchema()
   const transportSchema = createTransportConfigSchema()
+  const proxyConfigSchema = createProxyConfigSchema()
   const urlSchema = z.object({
     url: z.string().nonempty('The MCP server URL is required'),
   })
@@ -379,6 +398,7 @@ export const createRemoteMcpBaseSchema = (workloads: CoreWorkload[]) => {
   const commonSchema = nameSchema
     .extend(urlSchema.shape)
     .extend(transportSchema.shape)
+    .extend(proxyConfigSchema.shape)
     .extend(secretsSchema.shape)
     .extend(urlSchema.shape)
     .extend(authTypeSchema.shape)

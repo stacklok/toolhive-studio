@@ -16,6 +16,7 @@ import { SecretStoreCombobox } from '@/common/components/secrets/secret-store-co
 import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
 import { CommandArgumentsField } from '@/common/components/workload-cmd-arg/command-arguments-field'
 import { FormFieldsArrayVolumes } from '@/features/mcp-servers/components/form-fields-array-custom-volumes'
+import { FormFieldsProxy } from '@/common/components/workloads/form-fields-proxy'
 import type { FormSchemaRegistryMcp } from '../../lib/form-schema-registry-mcp'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
 import {
@@ -239,6 +240,8 @@ export function ConfigurationTabContent({
           </FormItem>
         )}
       />
+
+      <FormFieldsProxy control={form.control} />
 
       <CommandArgumentsField<FormSchemaRegistryMcp>
         getValues={(name) => form.getValues(name)}
