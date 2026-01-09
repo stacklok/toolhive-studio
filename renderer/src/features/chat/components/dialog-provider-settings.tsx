@@ -176,13 +176,30 @@ export function DialogProviderSettings({
             credential
           )
 
-          setValidationStatus((prev) => ({
-            ...prev,
-            [provider.provider.id]:
-              result && result.models
-                ? { valid: true, modelCount: result.models.length }
-                : { valid: false, modelCount: 0 },
-          }))
+          if (result && result.models) {
+            // Update local state with fetched models so they're available when saving
+            setProviderKeys((prev) =>
+              prev.map((pk) => {
+                if (pk.provider.id !== provider.provider.id) return pk
+                return {
+                  ...pk,
+                  provider: { ...pk.provider, models: result.models },
+                } as ProviderWithSettings
+              })
+            )
+            setValidationStatus((prev) => ({
+              ...prev,
+              [provider.provider.id]: {
+                valid: true,
+                modelCount: result.models.length,
+              },
+            }))
+          } else {
+            setValidationStatus((prev) => ({
+              ...prev,
+              [provider.provider.id]: { valid: false, modelCount: 0 },
+            }))
+          }
         }
 
         await refetchProviders()
@@ -401,6 +418,7 @@ export function DialogProviderSettings({
                                             !getProviderCredential(pk).trim())
                                       }
                                       className="px-3"
+                                      data-testid="refresh-models-button"
                                     >
                                       <RefreshCw
                                         className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
@@ -430,6 +448,7 @@ export function DialogProviderSettings({
                                       handleRemoveApiKey(pk.provider.id)
                                     }
                                     className="hover:bg-destructive hover:text-destructive-foreground cursor-pointer px-3"
+                                    data-testid="remove-credentials-button"
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
