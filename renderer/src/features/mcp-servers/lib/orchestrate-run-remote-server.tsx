@@ -6,6 +6,7 @@ import {
 } from '@api/types.gen'
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
 import { omit } from '@/common/lib/utils'
+import { getProxyModeOrDefault } from '@/common/lib/proxy-mode'
 
 /**
  * Combines the registry server definition, the form fields, and the newly
@@ -132,17 +133,7 @@ export function convertCreateRequestToFormData(
 
   const authType = getAuthType(createRequest.oauth_config)
 
-  // Validate and safely cast proxy_mode value
-  const validProxyModes = ['sse', 'streamable-http'] as const
-  type ValidProxyMode = (typeof validProxyModes)[number]
-  const isValidProxyMode = (
-    value: string | undefined
-  ): value is ValidProxyMode =>
-    Boolean(value && validProxyModes.includes(value as ValidProxyMode))
-
-  const proxy_mode = isValidProxyMode(createRequest.proxy_mode)
-    ? createRequest.proxy_mode
-    : 'streamable-http'
+  const proxy_mode = getProxyModeOrDefault(createRequest.proxy_mode)
 
   const baseFormData: FormSchemaRemoteMcp = {
     name: createRequest.name || '',

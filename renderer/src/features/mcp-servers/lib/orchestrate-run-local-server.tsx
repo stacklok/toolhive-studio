@@ -7,6 +7,7 @@ import {
   type V1ListSecretsResponse,
 } from '@api/types.gen'
 import { getVolumes, mapEnvVars } from '@/common/lib/utils'
+import { getProxyModeOrDefault } from '@/common/lib/proxy-mode'
 import type { FormSchemaLocalMcp } from './form-schema-local-mcp'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 
@@ -186,17 +187,7 @@ export function convertCreateRequestToFormData(
     }
   })
 
-  // Validate and safely cast proxy_mode value
-  const validProxyModes = ['sse', 'streamable-http'] as const
-  type ValidProxyMode = (typeof validProxyModes)[number]
-  const isValidProxyMode = (
-    value: string | undefined
-  ): value is ValidProxyMode =>
-    Boolean(value && validProxyModes.includes(value as ValidProxyMode))
-
-  const proxy_mode = isValidProxyMode(createRequest.proxy_mode)
-    ? createRequest.proxy_mode
-    : 'streamable-http'
+  const proxy_mode = getProxyModeOrDefault(createRequest.proxy_mode)
 
   const baseFormData = {
     name: createRequest.name || '',
