@@ -22,18 +22,18 @@ function generateSimpleCode(): string {
   return `${word}${num}`
 }
 
-export interface MockMcpServer {
+export interface TestMcpServer {
   port: number
   secretCode: string
   url: string
   stop: () => Promise<void>
 }
 
-export async function startMockMcpServer(): Promise<MockMcpServer> {
+export async function startTestMcpServer(): Promise<TestMcpServer> {
   const secretCode = generateSimpleCode()
 
   const server = new McpServer({
-    name: 'e2e-test-mock-server',
+    name: 'e2e-test-server',
     version: '1.0.0',
   })
 

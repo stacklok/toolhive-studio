@@ -1,9 +1,9 @@
 import { test, expect } from './fixtures/electron'
 import type { Page } from '@playwright/test'
 import {
-  startMockMcpServer,
-  type MockMcpServer,
-} from './helpers/mock-mcp-server'
+  startTestMcpServer,
+  type TestMcpServer,
+} from './helpers/test-mcp-server'
 
 const OLLAMA_URL = process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434'
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'qwen2.5:0.5b'
@@ -178,23 +178,23 @@ async function enableMcpServerTools(
 test.describe('Playground with MCP tool calling', () => {
   test.slow()
 
-  let mockServer: MockMcpServer
+  let testServer: TestMcpServer
 
   test.beforeAll(async () => {
     console.log('Warming up Ollama model...')
     await warmupOllamaModel()
     console.log('Ollama warmup complete')
 
-    console.log('Starting mock MCP server...')
-    mockServer = await startMockMcpServer()
-    console.log(`Mock MCP server running on port ${mockServer.port}`)
-    console.log(`Expected secret code: ${mockServer.secretCode}`)
+    console.log('Starting test MCP server...')
+    testServer = await startTestMcpServer()
+    console.log(`Test MCP server running on port ${testServer.port}`)
+    console.log(`Expected secret code: ${testServer.secretCode}`)
   })
 
   test.afterAll(async () => {
-    if (mockServer) {
-      console.log('Stopping mock MCP server...')
-      await mockServer.stop()
+    if (testServer) {
+      console.log('Stopping test MCP server...')
+      await testServer.stop()
     }
   })
 
@@ -208,7 +208,7 @@ test.describe('Playground with MCP tool calling', () => {
     await window.getByRole('link', { name: 'Playground' }).click()
     await configureOllamaProvider(window)
 
-    await addRemoteMcpServer(window, serverName, mockServer.url)
+    await addRemoteMcpServer(window, serverName, testServer.url)
 
     await enableMcpServerTools(window, serverName)
 
@@ -221,7 +221,7 @@ test.describe('Playground with MCP tool calling', () => {
 
     // Wait for response containing the secret code (word + 2 digits like "apple82")
     await expect(
-      window.getByText(new RegExp(mockServer.secretCode, 'i'))
+      window.getByText(new RegExp(testServer.secretCode, 'i'))
     ).toBeVisible({
       timeout: 120_000,
     })
