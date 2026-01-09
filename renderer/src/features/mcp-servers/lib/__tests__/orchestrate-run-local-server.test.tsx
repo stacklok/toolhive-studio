@@ -416,6 +416,7 @@ describe('convertWorkloadToFormData', () => {
       name: 'npm-server',
       transport: 'sse',
       proxy_mode: 'streamable-http',
+      proxy_port: 8080,
       group: 'default',
       target_port: 8080,
       cmd_arguments: [],

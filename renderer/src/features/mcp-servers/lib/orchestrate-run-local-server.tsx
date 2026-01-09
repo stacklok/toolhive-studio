@@ -113,9 +113,8 @@ export function convertWorkloadToFormData(
       | 'sse'
       | 'stdio'
       | 'streamable-http',
-    proxy_mode: (workload.proxy_mode || 'streamable-http') as
-      | 'sse'
-      | 'streamable-http',
+    proxy_mode: getProxyModeOrDefault(workload.proxy_mode),
+    proxy_port: workload.port,
     group: 'default',
     target_port: workload.port,
     cmd_arguments: [],
