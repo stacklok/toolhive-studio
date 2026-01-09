@@ -66,6 +66,29 @@ export async function startTestMcpServer(): Promise<TestMcpServer> {
     await transport.handleRequest(req, res, req.body)
   })
 
+  // GET for SSE streaming (needed for tool call responses)
+  app.get('/mcp', async (req, res) => {
+    const sessionId = req.headers['mcp-session-id'] as string
+    const transport = sessions.get(sessionId)
+    if (!transport) {
+      res.status(400).send('No session found')
+      return
+    }
+    await transport.handleRequest(req, res)
+  })
+
+  // DELETE for session cleanup
+  app.delete('/mcp', async (req, res) => {
+    const sessionId = req.headers['mcp-session-id'] as string
+    const transport = sessions.get(sessionId)
+    if (transport) {
+      await transport.handleRequest(req, res)
+      sessions.delete(sessionId)
+    } else {
+      res.status(400).send('No session found')
+    }
+  })
+
   return new Promise((resolve) => {
     const httpServer: Server = app.listen(0, () => {
       const address = httpServer.address()
