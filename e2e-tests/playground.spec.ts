@@ -207,10 +207,13 @@ test.describe('Playground with MCP tool calling', () => {
 
   let testServer: TestMcpServer
 
-  test.beforeAll(async () => {
-    await warmupOllamaModel()
-    testServer = await startTestMcpServer()
-  })
+  test.beforeAll(
+    async () => {
+      await warmupOllamaModel()
+      testServer = await startTestMcpServer()
+    },
+    { timeout: 120_000 }
+  )
 
   test.afterAll(async () => {
     await testServer?.stop()
@@ -232,6 +235,28 @@ test.describe('Playground with MCP tool calling', () => {
     const messageInput = window.getByPlaceholder(/type your message/i)
     await expect(messageInput).toBeVisible({ timeout: 10_000 })
 
+    const testId = `test_${Date.now()}`
+    await messageInput.fill(`Reply with exactly: "${testId}"`)
+    await window.keyboard.press('Enter')
+
+    await expect(window.getByText(new RegExp(testId))).toBeVisible({
+      timeout: 120_000,
+    })
+  })
+
+  test('model responds with tools enabled', async ({ window }) => {
+    const serverName = `e2e-test-${Date.now()}`
+
+    await clearPlaygroundState(window)
+    await configureOllamaProvider(window)
+
+    await addRemoteMcpServer(window, serverName, testServer.url)
+    await enableMcpServerTools(window, serverName)
+
+    const messageInput = window.getByPlaceholder(/type your message/i)
+    await expect(messageInput).toBeVisible({ timeout: 10_000 })
+
+    // Simple prompt that doesn't require tool calling - just test model responds
     const testId = `test_${Date.now()}`
     await messageInput.fill(`Reply with exactly: "${testId}"`)
     await window.keyboard.press('Enter')
