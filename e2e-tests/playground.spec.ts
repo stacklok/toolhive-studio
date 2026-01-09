@@ -268,7 +268,7 @@ test.describe('Playground with MCP tool calling', () => {
 
   test('calls MCP tool and receives secret code in response', async ({
     window,
-  }) => {
+  }, testInfo) => {
     const serverName = `e2e-test-${Date.now()}`
 
     await clearPlaygroundState(window)
@@ -284,8 +284,21 @@ test.describe('Playground with MCP tool calling', () => {
     )
     await window.keyboard.press('Enter')
 
-    await expect(
-      window.getByText(new RegExp(testServer.secretCode, 'i'))
-    ).toBeVisible({ timeout: 120_000 })
+    try {
+      await expect(
+        window.getByText(new RegExp(testServer.secretCode, 'i'))
+      ).toBeVisible({ timeout: 120_000 })
+    } catch (error) {
+      // Print MCP server logs for debugging
+      const logs = await testServer.getLogs()
+      console.log('=== MCP Server Logs ===')
+      logs.forEach((log) => console.log(log))
+      console.log('=======================')
+      testInfo.attach('mcp-server-logs', {
+        body: logs.join('\n'),
+        contentType: 'text/plain',
+      })
+      throw error
+    }
   })
 })

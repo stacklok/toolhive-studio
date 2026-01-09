@@ -27,10 +27,14 @@ export interface TestMcpServer {
   secretCode: string
   url: string
   stop: () => Promise<void>
+  getLogs: () => Promise<string[]>
 }
 
 export async function startTestMcpServer(): Promise<TestMcpServer> {
   const secretCode = generateSimpleCode()
+  const logs: string[] = []
+
+  const log = (msg: string) => logs.push(`${new Date().toISOString()} ${msg}`)
 
   const mcpServer = new McpServer({
     name: 'e2e-test-server',
@@ -41,13 +45,29 @@ export async function startTestMcpServer(): Promise<TestMcpServer> {
     'get_secret_code',
     'Returns a secret code for testing',
     {},
-    async () => ({
-      content: [{ type: 'text', text: secretCode }],
-    })
+    async () => {
+      log(`Tool called! Returning secret: ${secretCode}`)
+      return {
+        content: [{ type: 'text', text: secretCode }],
+      }
+    }
   )
 
   const app = express()
   app.use(express.json())
+
+  // Log all requests for debugging
+  app.use((req, _res, next) => {
+    log(
+      `${req.method} ${req.path} session=${req.headers['mcp-session-id'] ?? 'none'}`
+    )
+    next()
+  })
+
+  // Endpoint to retrieve logs
+  app.get('/logs', (_req, res) => {
+    res.json(logs)
+  })
 
   const sessions = new Map<string, StreamableHTTPServerTransport>()
 
@@ -103,6 +123,10 @@ export async function startTestMcpServer(): Promise<TestMcpServer> {
             sessions.forEach((t) => t.close())
             httpServer.close(() => res())
           }),
+        getLogs: async () => {
+          const resp = await fetch(`http://localhost:${port}/logs`)
+          return resp.json()
+        },
       })
     })
   })
