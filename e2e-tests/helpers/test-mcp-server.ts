@@ -32,12 +32,12 @@ export interface TestMcpServer {
 export async function startTestMcpServer(): Promise<TestMcpServer> {
   const secretCode = generateSimpleCode()
 
-  const server = new McpServer({
+  const mcpServer = new McpServer({
     name: 'e2e-test-server',
     version: '1.0.0',
   })
 
-  server.tool(
+  mcpServer.tool(
     'get_secret_code',
     'Returns a secret code for testing',
     {},
@@ -49,46 +49,21 @@ export async function startTestMcpServer(): Promise<TestMcpServer> {
   const app = express()
   app.use(express.json())
 
-  const transports = new Map<string, StreamableHTTPServerTransport>()
+  const sessions = new Map<string, StreamableHTTPServerTransport>()
 
   app.post('/mcp', async (req, res) => {
     const sessionId = req.headers['mcp-session-id'] as string | undefined
-    let transport: StreamableHTTPServerTransport
+    let transport = sessionId ? sessions.get(sessionId) : undefined
 
-    if (sessionId && transports.has(sessionId)) {
-      transport = transports.get(sessionId)!
-    } else {
+    if (!transport) {
       transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: () => crypto.randomUUID(),
-        onsessioninitialized: (id) => {
-          transports.set(id, transport)
-        },
+        onsessioninitialized: (id) => sessions.set(id, transport!),
       })
-      await server.connect(transport)
+      await mcpServer.connect(transport)
     }
 
     await transport.handleRequest(req, res, req.body)
-  })
-
-  app.get('/mcp', async (req, res) => {
-    const sessionId = req.headers['mcp-session-id'] as string
-    const transport = transports.get(sessionId)
-    if (!transport) {
-      res.status(400).send('No session found')
-      return
-    }
-    await transport.handleRequest(req, res)
-  })
-
-  app.delete('/mcp', async (req, res) => {
-    const sessionId = req.headers['mcp-session-id'] as string
-    const transport = transports.get(sessionId)
-    if (transport) {
-      await transport.handleRequest(req, res)
-      transports.delete(sessionId)
-    } else {
-      res.status(400).send('No session found')
-    }
   })
 
   return new Promise((resolve) => {
@@ -102,7 +77,7 @@ export async function startTestMcpServer(): Promise<TestMcpServer> {
         url: `http://localhost:${port}/mcp`,
         stop: () =>
           new Promise<void>((res) => {
-            transports.forEach((t) => t.close())
+            sessions.forEach((t) => t.close())
             httpServer.close(() => res())
           }),
       })

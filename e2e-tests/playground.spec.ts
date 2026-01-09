@@ -33,13 +33,19 @@ async function waitForPlaygroundReady(window: Page): Promise<void> {
     .catch(() => {})
 }
 
+async function isVisible(
+  locator: ReturnType<Page['getByRole']>
+): Promise<boolean> {
+  return locator.isVisible().catch(() => false)
+}
+
 async function openProviderSettingsDialog(window: Page): Promise<void> {
   await waitForPlaygroundReady(window)
 
   const configureButton = window.getByRole('button', {
     name: /configure your providers/i,
   })
-  if (await configureButton.isVisible().catch(() => false)) {
+  if (await isVisible(configureButton)) {
     await configureButton.click()
     await window.getByRole('dialog').waitFor()
     return
@@ -57,7 +63,7 @@ async function removeOllamaProvider(window: Page): Promise<void> {
   await dialog.getByRole('button', { name: /ollama/i }).click()
 
   const trashButton = dialog.getByTestId('remove-credentials-button')
-  if (await trashButton.isVisible().catch(() => false)) {
+  if (await isVisible(trashButton)) {
     await trashButton.click()
   }
 
@@ -74,20 +80,13 @@ async function clearPlaygroundState(window: Page): Promise<void> {
   await waitForPlaygroundReady(window)
 
   const clearChatButton = window.getByRole('button', { name: /clear chat/i })
-  if (await clearChatButton.isVisible().catch(() => false)) {
+  if (await isVisible(clearChatButton)) {
     await clearChatButton.click()
     await window.getByRole('button', { name: /delete/i }).click()
   }
 
   await removeOllamaProvider(window)
 }
-
-test('navigates to Playground tab', async ({ window }) => {
-  await window.getByRole('link', { name: 'Playground' }).click()
-  await expect(
-    window.getByRole('heading', { name: 'Playground', level: 1 })
-  ).toBeVisible()
-})
 
 async function configureOllamaProvider(window: Page): Promise<void> {
   await openProviderSettingsDialog(window)
@@ -130,7 +129,6 @@ async function addRemoteMcpServer(
 
   await window.getByRole('combobox', { name: /authorization/i }).click()
   await window.getByRole('option', { name: /dynamic client/i }).click()
-
   await window.getByLabel(/callback port/i).fill('8888')
 
   await window.getByRole('button', { name: /install server/i }).click()
@@ -153,7 +151,7 @@ async function enableMcpServerTools(
   const serverCheckbox = window.getByRole('menuitemcheckbox', {
     name: new RegExp(serverName, 'i'),
   })
-  await expect(serverCheckbox).toBeVisible({ timeout: 10_000 })
+  await expect(serverCheckbox).toBeEnabled({ timeout: 30_000 })
   await serverCheckbox.click()
   await expect(serverCheckbox).toBeChecked({ timeout: 10_000 })
 
@@ -161,17 +159,19 @@ async function enableMcpServerTools(
 
   // Ensure Ollama is the selected provider - re-select if needed
   const modelSelector = window.getByTestId('model-selector')
-  const hasOllama = await modelSelector
-    .getByText(/qwen/i)
-    .isVisible()
-    .catch(() => false)
-
-  if (!hasOllama) {
+  if (!(await isVisible(modelSelector.getByText(/qwen/i)))) {
     await modelSelector.click()
     await window.getByRole('menuitem', { name: /ollama/i }).click()
     await window.getByRole('menuitem', { name: /qwen/i }).first().click()
   }
 }
+
+test('navigates to Playground tab', async ({ window }) => {
+  await window.getByRole('link', { name: 'Playground' }).click()
+  await expect(
+    window.getByRole('heading', { name: 'Playground', level: 1 })
+  ).toBeVisible()
+})
 
 test.describe('Playground with MCP tool calling', () => {
   test.slow()
@@ -179,51 +179,33 @@ test.describe('Playground with MCP tool calling', () => {
   let testServer: TestMcpServer
 
   test.beforeAll(async () => {
-    console.log('Warming up Ollama model...')
     await warmupOllamaModel()
-    console.log('Ollama warmup complete')
-
-    console.log('Starting test MCP server...')
     testServer = await startTestMcpServer()
-    console.log(`Test MCP server running on port ${testServer.port}`)
-    console.log(`Expected secret code: ${testServer.secretCode}`)
   })
 
   test.afterAll(async () => {
-    if (testServer) {
-      console.log('Stopping test MCP server...')
-      await testServer.stop()
-    }
+    await testServer?.stop()
   })
 
   test('calls MCP tool and receives secret code in response', async ({
     window,
   }) => {
-    const serverName = `e2e-mock-${Date.now()}`
+    const serverName = `e2e-test-${Date.now()}`
 
     await clearPlaygroundState(window)
-
-    await window.getByRole('link', { name: 'Playground' }).click()
     await configureOllamaProvider(window)
 
     await addRemoteMcpServer(window, serverName, testServer.url)
-
     await enableMcpServerTools(window, serverName)
 
-    await expect(window.getByPlaceholder(/type your message/i)).toBeVisible()
-
-    await window
-      .getByPlaceholder(/type your message/i)
-      .fill(`Call get_secret_code tool now and tell me what it returns.`)
+    const messageInput = window.getByPlaceholder(/type your message/i)
+    await messageInput.fill(
+      'Call get_secret_code tool now and tell me what it returns.'
+    )
     await window.keyboard.press('Enter')
 
-    // Wait for response containing the secret code (word + 2 digits like "apple82")
     await expect(
       window.getByText(new RegExp(testServer.secretCode, 'i'))
-    ).toBeVisible({
-      timeout: 120_000,
-    })
-
-    await clearPlaygroundState(window)
+    ).toBeVisible({ timeout: 120_000 })
   })
 })
