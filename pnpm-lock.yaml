@@ -322,17 +322,17 @@ importers:
         specifier: ^2.8.4
         version: 2.12.7(@types/node@22.19.3)(typescript@5.9.3)
       prettier:
-        specifier: 3.6.2
-        version: 3.6.2
+        specifier: 3.7.4
+        version: 3.7.4
       prettier-plugin-classnames:
         specifier: ^0.8.0
-        version: 0.8.6(prettier@3.6.2)
+        version: 0.8.6(prettier@3.7.4)
       prettier-plugin-merge:
         specifier: ^0.8.0
-        version: 0.8.0(prettier@3.6.2)
+        version: 0.8.0(prettier@3.7.4)
       prettier-plugin-tailwindcss:
         specifier: ^0.7.0
-        version: 0.7.2(prettier@3.6.2)
+        version: 0.7.2(prettier@3.7.4)
       rimraf:
         specifier: ^6.1.0
         version: 6.1.2
@@ -6401,8 +6401,8 @@ packages:
       prettier-plugin-svelte:
         optional: true
 
-  prettier@3.6.2:
-    resolution: {integrity: sha512-I7AIg5boAr5R0FFtJ6rCfD+LFsWHp81dolrFD8S79U9tb8Az2nGrJncnMSnys+bpQJfRUzqs9hnA81OAA3hCuQ==}
+  prettier@3.7.4:
+    resolution: {integrity: sha512-v6UNi1+3hSlVvv8fSaoUbggEM5VErKmmpGA7Pl3HF8V6uKY7rvClBOJlH6yNwQtfTueNkGVpOv/mtWL9L4bgRA==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -8523,7 +8523,7 @@ snapshots:
       junk: 3.1.0
       parse-author: 2.0.0
       plist: 3.1.0
-      prettier: 3.6.2
+      prettier: 3.7.4
       resedit: 2.0.3
       resolve: 1.22.10
       semver: 7.7.3
@@ -10604,7 +10604,7 @@ snapshots:
       '@tanstack/router-core': 1.141.2
       '@tanstack/router-utils': 1.141.0
       '@tanstack/virtual-file-routes': 1.141.0
-      prettier: 3.6.2
+      prettier: 3.7.4
       recast: 0.23.11
       source-map: 0.7.6
       tsx: 4.21.0
@@ -14804,21 +14804,21 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier-plugin-classnames@0.8.6(prettier@3.6.2):
+  prettier-plugin-classnames@0.8.6(prettier@3.7.4):
     dependencies:
-      prettier: 3.6.2
+      prettier: 3.7.4
       zod: 3.22.4
 
-  prettier-plugin-merge@0.8.0(prettier@3.6.2):
+  prettier-plugin-merge@0.8.0(prettier@3.7.4):
     dependencies:
       diff: 5.1.0
-      prettier: 3.6.2
+      prettier: 3.7.4
 
-  prettier-plugin-tailwindcss@0.7.2(prettier@3.6.2):
+  prettier-plugin-tailwindcss@0.7.2(prettier@3.7.4):
     dependencies:
-      prettier: 3.6.2
+      prettier: 3.7.4
 
-  prettier@3.6.2: {}
+  prettier@3.7.4: {}
 
   pretty-format@27.5.1:
     dependencies:
