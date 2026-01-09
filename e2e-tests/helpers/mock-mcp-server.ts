@@ -1,0 +1,109 @@
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
+import express from 'express'
+import type { Server } from 'http'
+
+const WORDS = [
+  'apple',
+  'banana',
+  'cherry',
+  'dragon',
+  'eagle',
+  'forest',
+  'guitar',
+  'hammer',
+]
+
+function generateSimpleCode(): string {
+  const word = WORDS[Math.floor(Math.random() * WORDS.length)]
+  const num = Math.floor(Math.random() * 90) + 10 // 10-99
+  return `${word}${num}`
+}
+
+export interface MockMcpServer {
+  port: number
+  secretCode: string
+  url: string
+  stop: () => Promise<void>
+}
+
+export async function startMockMcpServer(): Promise<MockMcpServer> {
+  const secretCode = generateSimpleCode()
+
+  const server = new McpServer({
+    name: 'e2e-test-mock-server',
+    version: '1.0.0',
+  })
+
+  server.tool(
+    'get_secret_code',
+    'Returns a secret code for testing',
+    {},
+    async () => ({
+      content: [{ type: 'text', text: secretCode }],
+    })
+  )
+
+  const app = express()
+  app.use(express.json())
+
+  const transports = new Map<string, StreamableHTTPServerTransport>()
+
+  app.post('/mcp', async (req, res) => {
+    const sessionId = req.headers['mcp-session-id'] as string | undefined
+    let transport: StreamableHTTPServerTransport
+
+    if (sessionId && transports.has(sessionId)) {
+      transport = transports.get(sessionId)!
+    } else {
+      transport = new StreamableHTTPServerTransport({
+        sessionIdGenerator: () => crypto.randomUUID(),
+        onsessioninitialized: (id) => {
+          transports.set(id, transport)
+        },
+      })
+      await server.connect(transport)
+    }
+
+    await transport.handleRequest(req, res, req.body)
+  })
+
+  app.get('/mcp', async (req, res) => {
+    const sessionId = req.headers['mcp-session-id'] as string
+    const transport = transports.get(sessionId)
+    if (!transport) {
+      res.status(400).send('No session found')
+      return
+    }
+    await transport.handleRequest(req, res)
+  })
+
+  app.delete('/mcp', async (req, res) => {
+    const sessionId = req.headers['mcp-session-id'] as string
+    const transport = transports.get(sessionId)
+    if (transport) {
+      await transport.handleRequest(req, res)
+      transports.delete(sessionId)
+    } else {
+      res.status(400).send('No session found')
+    }
+  })
+
+  return new Promise((resolve) => {
+    const httpServer: Server = app.listen(0, () => {
+      const address = httpServer.address()
+      const port = typeof address === 'object' && address ? address.port : 0
+
+      resolve({
+        port,
+        secretCode,
+        url: `http://localhost:${port}/mcp`,
+        stop: () =>
+          new Promise<void>((res) => {
+            transports.forEach((t) => t.close())
+            httpServer.close(() => res())
+          }),
+      })
+    })
+  })
+}
