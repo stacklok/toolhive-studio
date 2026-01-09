@@ -8,31 +8,31 @@
             "description": "Component is the component name to use in audit events",
             "type": "string"
           },
-          "event_types": {
+          "eventTypes": {
             "description": "EventTypes specifies which event types to audit. If empty, all events are audited.",
             "items": { "type": "string" },
             "type": "array",
             "uniqueItems": false
           },
-          "exclude_event_types": {
+          "excludeEventTypes": {
             "description": "ExcludeEventTypes specifies which event types to exclude from auditing.\nThis takes precedence over EventTypes.",
             "items": { "type": "string" },
             "type": "array",
             "uniqueItems": false
           },
-          "include_request_data": {
+          "includeRequestData": {
             "description": "IncludeRequestData determines whether to include request data in audit logs",
             "type": "boolean"
           },
-          "include_response_data": {
+          "includeResponseData": {
             "description": "IncludeResponseData determines whether to include response data in audit logs",
             "type": "boolean"
           },
-          "log_file": {
+          "logFile": {
             "description": "LogFile specifies the file path for audit logs. If empty, logs to stdout.",
             "type": "string"
           },
-          "max_data_size": {
+          "maxDataSize": {
             "description": "MaxDataSize limits the size of request/response data included in audit logs (in bytes)",
             "type": "integer"
           }
@@ -713,6 +713,11 @@
         "description": "RemoteAuthConfig contains OAuth configuration for remote MCP servers",
         "properties": {
           "authorize_url": { "type": "string" },
+          "bearer_token": {
+            "description": "Bearer token configuration (alternative to OAuth)",
+            "type": "string"
+          },
+          "bearer_token_file": { "type": "string" },
           "callback_port": { "type": "integer" },
           "client_id": { "type": "string" },
           "client_secret": { "type": "string" },
@@ -788,6 +793,10 @@
           "debug": {
             "description": "Debug indicates whether debug mode is enabled",
             "type": "boolean"
+          },
+          "endpoint_prefix": {
+            "description": "EndpointPrefix is an explicit prefix to prepend to SSE endpoint URLs.\nThis is used to handle path-based ingress routing scenarios.",
+            "type": "string"
           },
           "env_file_dir": {
             "description": "EnvFileDir is the directory path to load environment files from",
@@ -948,6 +957,7 @@
         ]
       },
       "secrets.SecretParameter": {
+        "description": "Bearer token for authentication (alternative to OAuth)",
         "properties": {
           "name": { "type": "string" },
           "target": { "type": "string" }
@@ -990,8 +1000,8 @@
             "type": "boolean"
           },
           "samplingRate": {
-            "description": "SamplingRate is the trace sampling rate (0.0-1.0)\nOnly used when TracingEnabled is true",
-            "type": "number"
+            "description": "SamplingRate is the trace sampling rate (0.0-1.0) as a string.\nOnly used when TracingEnabled is true.\nExample: \"0.05\" for 5% sampling.",
+            "type": "string"
           },
           "serviceName": {
             "description": "ServiceName is the service name for telemetry",
@@ -1609,6 +1619,9 @@
           "authorize_url": {
             "description": "OAuth authorization endpoint URL (alternative to issuer for non-OIDC OAuth)",
             "type": "string"
+          },
+          "bearer_token": {
+            "$ref": "#/components/schemas/secrets.SecretParameter"
           },
           "callback_port": {
             "description": "Specific port for OAuth callback server",

@@ -15,28 +15,28 @@ export type AuditConfig = {
   /**
    * EventTypes specifies which event types to audit. If empty, all events are audited.
    */
-  event_types?: Array<string>
+  eventTypes?: Array<string>
   /**
    * ExcludeEventTypes specifies which event types to exclude from auditing.
    * This takes precedence over EventTypes.
    */
-  exclude_event_types?: Array<string>
+  excludeEventTypes?: Array<string>
   /**
    * IncludeRequestData determines whether to include request data in audit logs
    */
-  include_request_data?: boolean
+  includeRequestData?: boolean
   /**
    * IncludeResponseData determines whether to include response data in audit logs
    */
-  include_response_data?: boolean
+  includeResponseData?: boolean
   /**
    * LogFile specifies the file path for audit logs. If empty, logs to stdout.
    */
-  log_file?: string
+  logFile?: string
   /**
    * MaxDataSize limits the size of request/response data included in audit logs (in bytes)
    */
-  max_data_size?: number
+  maxDataSize?: number
 }
 
 /**
@@ -633,6 +633,11 @@ export type RegistryVerifiedAttestation = {
  */
 export type RemoteConfig = {
   authorize_url?: string
+  /**
+   * Bearer token configuration (alternative to OAuth)
+   */
+  bearer_token?: string
+  bearer_token_file?: string
   callback_port?: number
   client_id?: string
   client_secret?: string
@@ -699,6 +704,11 @@ export type RunnerRunConfig = {
    * Debug indicates whether debug mode is enabled
    */
   debug?: boolean
+  /**
+   * EndpointPrefix is an explicit prefix to prepend to SSE endpoint URLs.
+   * This is used to handle path-based ingress routing scenarios.
+   */
+  endpoint_prefix?: string
   /**
    * EnvFileDir is the directory path to load environment files from
    */
@@ -824,6 +834,9 @@ export type RunnerToolOverride = {
  */
 export type RuntimeWorkloadStatus = string
 
+/**
+ * Bearer token for authentication (alternative to OAuth)
+ */
 export type SecretsSecretParameter = {
   name?: string
   target?: string
@@ -877,10 +890,11 @@ export type TelemetryConfig = {
    */
   metricsEnabled?: boolean
   /**
-   * SamplingRate is the trace sampling rate (0.0-1.0)
-   * Only used when TracingEnabled is true
+   * SamplingRate is the trace sampling rate (0.0-1.0) as a string.
+   * Only used when TracingEnabled is true.
+   * Example: "0.05" for 5% sampling.
    */
-  samplingRate?: number
+  samplingRate?: string
   /**
    * ServiceName is the service name for telemetry
    */
@@ -1387,6 +1401,7 @@ export type V1RemoteOAuthConfig = {
    * OAuth authorization endpoint URL (alternative to issuer for non-OIDC OAuth)
    */
   authorize_url?: string
+  bearer_token?: SecretsSecretParameter
   /**
    * Specific port for OAuth callback server
    */
