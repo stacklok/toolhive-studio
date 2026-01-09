@@ -16,6 +16,7 @@ import { SecretStoreCombobox } from '@/common/components/secrets/secret-store-co
 import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
 import { CommandArgumentsField } from '@/common/components/workload-cmd-arg/command-arguments-field'
 import { FormFieldsArrayVolumes } from '@/features/mcp-servers/components/form-fields-array-custom-volumes'
+import { FormFieldsProxy } from '@/common/components/workloads/form-fields-proxy'
 import type { FormSchemaRegistryMcp } from '../../lib/form-schema-registry-mcp'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
 import {
@@ -240,71 +241,7 @@ export function ConfigurationTabContent({
         )}
       />
 
-      <FormField
-        control={form.control}
-        name="proxy_mode"
-        render={({ field }) => (
-          <FormItem>
-            <div className="flex items-center gap-1">
-              <FormLabel htmlFor={field.name}>Proxy Mode</FormLabel>
-              <TooltipInfoIcon>
-                The proxy mode that clients should use to connect.
-              </TooltipInfoIcon>
-            </div>
-            <FormControl>
-              <Select
-                onValueChange={(value) => field.onChange(value)}
-                value={field.value}
-                name={field.name}
-              >
-                <SelectTrigger id={field.name} className="w-full">
-                  <SelectValue placeholder="e.g. SSE, Streamable HTTP" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sse">SSE</SelectItem>
-                  <SelectItem value="streamable-http">
-                    Streamable HTTP
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="proxy_port"
-        render={({ field }) => (
-          <FormItem>
-            <div className="flex items-center gap-1">
-              <FormLabel htmlFor={field.name}>Proxy Port</FormLabel>
-              <TooltipInfoIcon className="max-w-72">
-                Port for the HTTP proxy to listen on. If not specified, ToolHive
-                will automatically assign a random port.
-              </TooltipInfoIcon>
-            </div>
-            <FormControl>
-              <Input
-                id={field.name}
-                autoCorrect="off"
-                autoComplete="off"
-                type="number"
-                data-1p-ignore
-                placeholder="Leave empty for random port"
-                value={field.value ?? ''}
-                onChange={(e) => {
-                  const value = e.target.value
-                  field.onChange(value === '' ? undefined : parseInt(value, 10))
-                }}
-                name={field.name}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <FormFieldsProxy control={form.control} />
 
       <CommandArgumentsField<FormSchemaRegistryMcp>
         getValues={(name) => form.getValues(name)}
