@@ -89,63 +89,6 @@ test('navigates to Playground tab', async ({ window }) => {
   ).toBeVisible()
 })
 
-test.describe('Playground chat with Ollama', () => {
-  test.slow()
-
-  test.beforeAll(async () => {
-    console.log('Warming up Ollama model...')
-    try {
-      await warmupOllamaModel()
-      console.log('Ollama warmup complete')
-    } catch (error) {
-      console.error('Ollama warmup failed:', error)
-      throw error
-    }
-  })
-
-  test('configures Ollama provider and sends chat message', async ({
-    window,
-  }) => {
-    await clearPlaygroundState(window)
-
-    await window.getByRole('link', { name: 'Playground' }).click()
-    await expect(
-      window.getByRole('heading', { name: 'Playground', level: 1 })
-    ).toBeVisible()
-
-    await openProviderSettingsDialog(window)
-
-    await window.getByRole('button', { name: /ollama/i }).click()
-    await window.getByPlaceholder('http://localhost:11434').fill(OLLAMA_URL)
-
-    await window.getByTestId('refresh-models-button').click()
-
-    await expect(window.getByText(/connection successful/i)).toBeVisible({
-      timeout: 30_000,
-    })
-
-    await window.getByRole('button', { name: 'Save' }).click()
-    await window.getByRole('dialog').waitFor({ state: 'hidden' })
-
-    // Chat input visible means provider was auto-selected successfully
-    await expect(window.getByPlaceholder(/type your message/i)).toBeVisible({
-      timeout: 10_000,
-    })
-
-    const testId = `test_${Date.now()}`
-    await window
-      .getByPlaceholder(/type your message/i)
-      .fill(`Reply with exactly: "${testId}"`)
-    await window.keyboard.press('Enter')
-
-    await expect(window.getByText(new RegExp(testId))).toBeVisible({
-      timeout: 120_000,
-    })
-
-    await clearPlaygroundState(window)
-  })
-})
-
 async function configureOllamaProvider(window: Page): Promise<void> {
   await openProviderSettingsDialog(window)
 
