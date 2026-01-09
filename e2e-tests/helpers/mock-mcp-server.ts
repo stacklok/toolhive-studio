@@ -3,6 +3,8 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import express from 'express'
 import type { Server } from 'http'
 
+// Simple word+number format (e.g. "apple42") - hard to guess randomly but simple enough
+// to avoid hallucination when testing with small models for performance.
 const WORDS = [
   'apple',
   'banana',
@@ -16,7 +18,7 @@ const WORDS = [
 
 function generateSimpleCode(): string {
   const word = WORDS[Math.floor(Math.random() * WORDS.length)]
-  const num = Math.floor(Math.random() * 90) + 10 // 10-99
+  const num = Math.floor(Math.random() * 90) + 10
   return `${word}${num}`
 }
 
