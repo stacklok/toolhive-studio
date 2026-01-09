@@ -31,6 +31,8 @@ type Field = keyof FormSchemaRegistryMcp
 const FIELD_TAB_MAP = {
   name: 'configuration',
   group: 'configuration',
+  proxy_mode: 'configuration',
+  proxy_port: 'configuration',
   cmd_arguments: 'configuration',
   secrets: 'configuration',
   envVars: 'configuration',
@@ -119,6 +121,8 @@ export function FormRunFromRegistry({
     defaultValues: {
       name: server?.name || '',
       group: 'default',
+      proxy_mode: 'streamable-http',
+      proxy_port: undefined,
       cmd_arguments,
       volumes: [{ host: '', container: '', accessMode: 'rw' }],
       secrets: groupedEnvVars.secrets.map((s) => ({

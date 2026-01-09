@@ -308,6 +308,7 @@ export const createRegistrySchema = (
   const networkSchema = createNetworkConfigSchema()
   const volumesSchema = createVolumesSchema()
   const toolsOverrideSchema = createToolsOverrideSchema()
+  const proxyConfigSchema = createProxyConfigSchema()
 
   return nameSchema
     .extend({
@@ -319,6 +320,7 @@ export const createRegistrySchema = (
     .extend(networkSchema.shape)
     .extend(volumesSchema.shape)
     .extend(toolsOverrideSchema.shape)
+    .extend(proxyConfigSchema.shape)
     .superRefine((data, ctx) => {
       addNetworkValidation(ctx, data)
     })

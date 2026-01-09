@@ -31,6 +31,7 @@ describe('prepareCreateWorkloadData', () => {
 
   it('prepares workload data with all fields', () => {
     const data: FormSchemaRegistryMcp = {
+      proxy_mode: 'streamable-http',
       name: 'Test Server',
       group: 'default',
       envVars: [
@@ -58,6 +59,8 @@ describe('prepareCreateWorkloadData', () => {
       name: 'Test Server',
       image: 'test-image',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
+      proxy_port: undefined,
       env_vars: { DEBUG: 'true', PORT: '8080' },
       secrets,
       cmd_arguments: ['--debug', '--port', '8080'],
@@ -69,6 +72,7 @@ describe('prepareCreateWorkloadData', () => {
 
   it('handles empty env vars and secrets', () => {
     const data: FormSchemaRegistryMcp = {
+      proxy_mode: 'streamable-http',
       name: 'Test Server',
       group: 'default',
       envVars: [],
@@ -85,6 +89,8 @@ describe('prepareCreateWorkloadData', () => {
       name: 'Test Server',
       image: 'test-image',
       transport: 'stdio',
+      proxy_mode: 'streamable-http',
+      proxy_port: undefined,
       env_vars: {},
       secrets: [],
       cmd_arguments: [],
@@ -96,6 +102,7 @@ describe('prepareCreateWorkloadData', () => {
 
   it('handles empty cmd_arguments', () => {
     const data: FormSchemaRegistryMcp = {
+      proxy_mode: 'streamable-http',
       name: 'Test Server',
       group: 'default',
       envVars: [],
@@ -114,6 +121,7 @@ describe('prepareCreateWorkloadData', () => {
 
   it('handles undefined cmd_arguments', () => {
     const data: FormSchemaRegistryMcp = {
+      proxy_mode: 'streamable-http',
       name: 'Test Server',
       group: 'default',
       envVars: [],
@@ -138,6 +146,7 @@ describe('prepareCreateWorkloadData', () => {
     }
 
     const data: FormSchemaRegistryMcp = {
+      proxy_mode: 'streamable-http',
       name: 'Test Server',
       group: 'default',
       envVars: [],
@@ -155,6 +164,7 @@ describe('prepareCreateWorkloadData', () => {
 
   it('filters out environment variables with empty values', () => {
     const data: FormSchemaRegistryMcp = {
+      proxy_mode: 'streamable-http',
       name: 'Test Server',
       group: 'default',
       envVars: [
@@ -185,6 +195,7 @@ describe('prepareCreateWorkloadData', () => {
 
   it('includes network isolation data when enabled', () => {
     const data: FormSchemaRegistryMcp = {
+      proxy_mode: 'streamable-http',
       name: 'test-server',
       group: 'default',
       cmd_arguments: [],
@@ -212,6 +223,7 @@ describe('prepareCreateWorkloadData', () => {
 
   it('excludes network isolation data when disabled', () => {
     const data: FormSchemaRegistryMcp = {
+      proxy_mode: 'streamable-http',
       name: 'test-server',
       group: 'default',
       cmd_arguments: [],
