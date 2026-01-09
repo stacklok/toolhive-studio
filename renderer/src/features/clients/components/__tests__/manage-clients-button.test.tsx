@@ -13,9 +13,8 @@ vi.mock('@/common/hooks/use-feature-flag')
 vi.mock('@/features/meta-mcp/hooks/use-mcp-optimizer-clients')
 
 const { useFeatureFlag } = await import('@/common/hooks/use-feature-flag')
-const { useMcpOptimizerClients } = await import(
-  '@/features/meta-mcp/hooks/use-mcp-optimizer-clients'
-)
+const { useMcpOptimizerClients } =
+  await import('@/features/meta-mcp/hooks/use-mcp-optimizer-clients')
 
 // Use the shared request recorder from mocks/node.ts for consistency
 
