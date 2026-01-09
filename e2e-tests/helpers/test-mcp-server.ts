@@ -69,21 +69,47 @@ export async function startTestMcpServer(): Promise<TestMcpServer> {
     res.json(logs)
   })
 
+  // Handle OAuth discovery - return 404 to indicate no auth required
+  app.get('/.well-known/oauth-protected-resource', (_req, res) => {
+    log('OAuth discovery requested - returning 404 (no auth)')
+    res.status(404).send('Not found')
+  })
+  app.get('/.well-known/oauth-protected-resource/mcp', (_req, res) => {
+    log('OAuth discovery for /mcp requested - returning 404 (no auth)')
+    res.status(404).send('Not found')
+  })
+
+  // Health check endpoint (app polls this)
+  app.get('/', (_req, res) => {
+    res.json({ status: 'ok' })
+  })
+
   const sessions = new Map<string, StreamableHTTPServerTransport>()
 
   app.post('/mcp', async (req, res) => {
     const sessionId = req.headers['mcp-session-id'] as string | undefined
     let transport = sessionId ? sessions.get(sessionId) : undefined
 
+    // Log request body for debugging
+    const bodyStr = JSON.stringify(req.body)
+    log(
+      `POST /mcp body: ${bodyStr.substring(0, 200)}${bodyStr.length > 200 ? '...' : ''}`
+    )
+
     if (!transport) {
+      log(`Creating new transport for session`)
       transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: () => crypto.randomUUID(),
-        onsessioninitialized: (id) => sessions.set(id, transport!),
+        onsessioninitialized: (id) => {
+          log(`Session initialized: ${id}`)
+          sessions.set(id, transport!)
+        },
       })
       await mcpServer.connect(transport)
     }
 
     await transport.handleRequest(req, res, req.body)
+    log(`POST /mcp completed`)
   })
 
   // GET for SSE streaming (needed for tool call responses)
@@ -117,7 +143,7 @@ export async function startTestMcpServer(): Promise<TestMcpServer> {
       resolve({
         port,
         secretCode,
-        url: `http://localhost:${port}/mcp`,
+        url: `http://127.0.0.1:${port}/mcp`,
         stop: () =>
           new Promise<void>((res) => {
             sessions.forEach((t) => t.close())
