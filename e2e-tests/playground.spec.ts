@@ -156,6 +156,8 @@ async function enableMcpServerTools(
   await expect(serverCheckbox).toBeChecked({ timeout: 10_000 })
 
   await window.keyboard.press('Escape')
+  // Wait for dropdown to close
+  await expect(serverCheckbox).not.toBeVisible({ timeout: 5_000 })
 
   // Ensure Ollama is the selected provider - re-select if needed
   const modelSelector = window.getByTestId('model-selector')
@@ -171,6 +173,30 @@ test('navigates to Playground tab', async ({ window }) => {
   await expect(
     window.getByRole('heading', { name: 'Playground', level: 1 })
   ).toBeVisible()
+})
+
+test.describe('Playground chat with Ollama', () => {
+  test.slow()
+
+  test.beforeAll(async () => {
+    await warmupOllamaModel()
+  })
+
+  test('sends message and receives response', async ({ window }) => {
+    await clearPlaygroundState(window)
+    await configureOllamaProvider(window)
+
+    const messageInput = window.getByPlaceholder(/type your message/i)
+    await expect(messageInput).toBeVisible({ timeout: 10_000 })
+
+    const testId = `test_${Date.now()}`
+    await messageInput.fill(`Reply with exactly: "${testId}"`)
+    await window.keyboard.press('Enter')
+
+    await expect(window.getByText(new RegExp(testId))).toBeVisible({
+      timeout: 120_000,
+    })
+  })
 })
 
 test.describe('Playground with MCP tool calling', () => {
@@ -199,6 +225,7 @@ test.describe('Playground with MCP tool calling', () => {
     await enableMcpServerTools(window, serverName)
 
     const messageInput = window.getByPlaceholder(/type your message/i)
+    await expect(messageInput).toBeVisible({ timeout: 10_000 })
     await messageInput.fill(
       'Call get_secret_code tool now and tell me what it returns.'
     )
