@@ -218,6 +218,7 @@ describe('useUpdateServer', () => {
         name: 'test-oauth-new-secret',
         url: 'https://api.example.com',
         transport: 'streamable-http',
+        proxy_mode: 'streamable-http',
         auth_type: 'oauth2',
         oauth_config: {
           authorize_url: 'https://oauth.example.com/authorize',
@@ -307,6 +308,7 @@ describe('useUpdateServer', () => {
         name: 'test-oauth-collision',
         url: 'https://api.example.com',
         transport: 'streamable-http',
+        proxy_mode: 'streamable-http',
         auth_type: 'oauth2',
         oauth_config: {
           authorize_url: 'https://oauth.example.com/authorize',
@@ -382,6 +384,7 @@ describe('useUpdateServer', () => {
         name: 'test-oauth-existing-secret',
         url: 'https://api.example.com',
         transport: 'streamable-http',
+        proxy_mode: 'streamable-http',
         auth_type: 'oauth2',
         oauth_config: {
           authorize_url: 'https://oauth.example.com/authorize',
