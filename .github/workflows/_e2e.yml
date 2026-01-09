@@ -6,9 +6,7 @@ env:
   OLLAMA_VERSION: '0.13.5'
   OLLAMA_MODELS: /home/runner/.ollama/models
   OLLAMA_BASE_URL: http://localhost:11434
-  # NOTE: qwen2.5:0.5b is too small for reliable tool calling in CI
-  # Using 1.5b for more consistent tool-calling behavior
-  OLLAMA_MODEL: qwen2.5:1.5b
+  OLLAMA_MODEL: qwen2.5:0.5b
 
 jobs:
   test:

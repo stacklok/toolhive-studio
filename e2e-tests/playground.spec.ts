@@ -6,8 +6,7 @@ import {
 } from './helpers/test-mcp-server'
 
 const OLLAMA_URL = process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434'
-// qwen2.5:1.5b is the minimum recommended for reliable tool calling
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'qwen2.5:1.5b'
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'qwen2.5:0.5b'
 const TEST_GROUP_NAME = 'playwright-automated-test-fixture'
 
 async function warmupOllamaModel(): Promise<void> {
@@ -135,9 +134,19 @@ async function addRemoteMcpServer(
   await window.getByRole('button', { name: /install server/i }).click()
   await window.getByRole('dialog').waitFor({ state: 'hidden' })
 
+  // Wait for server to appear AND have "Running" status
+  // The server card shows the name and status text
   await expect(window.getByText(new RegExp(serverName))).toBeVisible({
     timeout: 30_000,
   })
+  // Verify the server is actually running (not starting/stopped/error)
+  // Find the card containing the server name and verify it shows "Running" status
+  await expect(
+    window
+      .locator('[data-slot="card"]')
+      .filter({ hasText: serverName })
+      .getByText('Running')
+  ).toBeVisible({ timeout: 30_000 })
 }
 
 async function enableMcpServerTools(
@@ -155,6 +164,11 @@ async function enableMcpServerTools(
   await expect(serverCheckbox).toBeEnabled({ timeout: 30_000 })
   await serverCheckbox.click()
   await expect(serverCheckbox).toBeChecked({ timeout: 10_000 })
+
+  // Wait for tools to be actually discovered and enabled (badge shows "X tools")
+  // This ensures the backend has saved the enabled tools
+  const toolsBadge = window.getByText(/\d+ tools?/)
+  await expect(toolsBadge).toBeVisible({ timeout: 30_000 })
 
   await window.keyboard.press('Escape')
   // Wait for dropdown to close
