@@ -155,6 +155,7 @@ async function enableMcpServerTools(
   })
   await expect(serverCheckbox).toBeVisible({ timeout: 10_000 })
   await serverCheckbox.click()
+  await expect(serverCheckbox).toBeChecked({ timeout: 10_000 })
 
   await window.keyboard.press('Escape')
 
@@ -170,9 +171,6 @@ async function enableMcpServerTools(
     await window.getByRole('menuitem', { name: /ollama/i }).click()
     await window.getByRole('menuitem', { name: /qwen/i }).first().click()
   }
-
-  // Wait for tools to be fully loaded
-  await window.waitForTimeout(2000)
 }
 
 test.describe('Playground with MCP tool calling', () => {
