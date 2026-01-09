@@ -6,7 +6,8 @@ import {
 } from './helpers/test-mcp-server'
 
 const OLLAMA_URL = process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434'
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'qwen2.5:0.5b'
+// qwen2.5:1.5b is the minimum recommended for reliable tool calling
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'qwen2.5:1.5b'
 const TEST_GROUP_NAME = 'playwright-automated-test-fixture'
 
 async function warmupOllamaModel(): Promise<void> {
