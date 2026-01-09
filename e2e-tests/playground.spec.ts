@@ -166,6 +166,9 @@ async function enableMcpServerTools(
     await window.getByRole('menuitem', { name: /ollama/i }).click()
     await window.getByRole('menuitem', { name: /qwen/i }).first().click()
   }
+
+  // Verify model is selected
+  await expect(modelSelector.getByText(/qwen/i)).toBeVisible({ timeout: 5_000 })
 }
 
 test('navigates to Playground tab', async ({ window }) => {
@@ -211,6 +214,31 @@ test.describe('Playground with MCP tool calling', () => {
 
   test.afterAll(async () => {
     await testServer?.stop()
+  })
+
+  test('chat still works after adding remote MCP server', async ({
+    window,
+  }) => {
+    const serverName = `e2e-test-${Date.now()}`
+
+    await clearPlaygroundState(window)
+    await configureOllamaProvider(window)
+    await addRemoteMcpServer(window, serverName, testServer.url)
+
+    // Go back to playground WITHOUT enabling tools - just test chat works
+    await window.getByRole('link', { name: 'Playground' }).click()
+    await waitForPlaygroundReady(window)
+
+    const messageInput = window.getByPlaceholder(/type your message/i)
+    await expect(messageInput).toBeVisible({ timeout: 10_000 })
+
+    const testId = `test_${Date.now()}`
+    await messageInput.fill(`Reply with exactly: "${testId}"`)
+    await window.keyboard.press('Enter')
+
+    await expect(window.getByText(new RegExp(testId))).toBeVisible({
+      timeout: 120_000,
+    })
   })
 
   test('calls MCP tool and receives secret code in response', async ({
