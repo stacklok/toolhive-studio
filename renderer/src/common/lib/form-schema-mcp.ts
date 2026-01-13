@@ -11,7 +11,7 @@ export const REMOTE_MCP_AUTH_TYPES = {
 export type RemoteMcpAuthType =
   (typeof REMOTE_MCP_AUTH_TYPES)[keyof typeof REMOTE_MCP_AUTH_TYPES]
 
-export const remoteMcpAuthTypeSchema = z.enum([
+const remoteMcpAuthTypeSchema = z.enum([
   REMOTE_MCP_AUTH_TYPES.None,
   REMOTE_MCP_AUTH_TYPES.OAuth2,
   REMOTE_MCP_AUTH_TYPES.OIDC,
