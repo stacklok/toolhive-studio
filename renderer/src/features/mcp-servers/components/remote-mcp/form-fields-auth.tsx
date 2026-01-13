@@ -142,7 +142,7 @@ export function FormFieldsAuth({
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <FormLabel
-                        htmlFor="oauth_config.client_secret.name"
+                        htmlFor="oauth_config.bearer_token.name"
                         className={cn(
                           `text-muted-foreground border-input! h-full
                           items-center font-mono ring-0!`
