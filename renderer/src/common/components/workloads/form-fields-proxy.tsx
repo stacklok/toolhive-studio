@@ -34,6 +34,9 @@ interface FormFieldsProxyProps<T extends FieldValues & ProxyFields> {
 export function FormFieldsProxy<T extends FieldValues & ProxyFields>({
   control,
 }: FormFieldsProxyProps<T>) {
+  // For BearerToken auth, the MCP client connects directly to the remote server.
+  // proxy_mode always matches the transport value and is not configurable.
+
   const authType = useWatch({ control, name: 'auth_type' as Path<T> })
 
   return (
