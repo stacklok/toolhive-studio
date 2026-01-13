@@ -22,16 +22,9 @@ import {
 } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
 import { useGroups } from '../../hooks/use-groups'
 import { AlertErrorFetchingEditingData } from '@/common/components/workloads/alert-error-fetching-editing-data'
-import { FormFieldsProxy } from '@/common/components/workloads/form-fields-proxy'
 import { UI_POST_SUBMIT_DELAY_MS } from '@/common/lib/constants'
 import { delay } from '@utils/delay'
-import {
-  FromFieldRemoteAuthType,
-  FromFieldRemoteGroup,
-  FromFieldRemoteServerName,
-  FromFieldRemoteTransport,
-  FromFieldRemoteUrl,
-} from '@/common/components/workloads/form-fields-remote-mcp'
+import { FormFieldsRemoteMcp } from '@/common/components/workloads/form-fields-remote-mcp'
 import { REMOTE_MCP_AUTH_TYPES } from '@/common/lib/form-schema-mcp'
 
 const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
@@ -257,15 +250,11 @@ export function DialogFormRemoteMcp({
               )}
             </div>
             <div className="flex-1 space-y-4 overflow-y-auto px-6">
-              <FromFieldRemoteServerName
+              <FormFieldsRemoteMcp
                 control={form.control}
+                groups={groups}
                 isEditing={isEditing}
               />
-              <FromFieldRemoteGroup control={form.control} groups={groups} />
-              <FromFieldRemoteUrl control={form.control} />
-              <FromFieldRemoteTransport control={form.control} />
-              <FormFieldsProxy control={form.control} />
-              <FromFieldRemoteAuthType control={form.control} />
               <FormFieldsAuth authType={authType} form={form} />
             </div>
           </div>

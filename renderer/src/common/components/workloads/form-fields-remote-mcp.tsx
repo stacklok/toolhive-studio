@@ -19,8 +19,9 @@ import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-sch
 import type { GroupsGroup } from '@api/types.gen'
 import { Input } from '../ui/input'
 import { REMOTE_MCP_AUTH_TYPES } from '@/common/lib/form-schema-mcp'
+import { FormFieldsProxy } from './form-fields-proxy'
 
-export function FromFieldRemoteAuthType({
+function FormFieldRemoteAuthType({
   control,
 }: {
   control: Control<FormSchemaRemoteMcp>
@@ -76,7 +77,7 @@ export function FromFieldRemoteAuthType({
   )
 }
 
-export function FromFieldRemoteGroup({
+function FormFieldRemoteGroup({
   control,
   groups,
 }: {
@@ -117,7 +118,7 @@ export function FromFieldRemoteGroup({
   )
 }
 
-export function FromFieldRemoteUrl({
+function FormFieldRemoteUrl({
   control,
 }: {
   control: Control<FormSchemaRemoteMcp>
@@ -151,7 +152,7 @@ export function FromFieldRemoteUrl({
   )
 }
 
-export function FromFieldRemoteTransport({
+function FormFieldRemoteTransport({
   control,
 }: {
   control: Control<FormSchemaRemoteMcp>
@@ -191,7 +192,7 @@ export function FromFieldRemoteTransport({
   )
 }
 
-export function FromFieldRemoteServerName({
+function FormFieldRemoteServerName({
   control,
   isEditing,
 }: {
@@ -227,5 +228,26 @@ export function FromFieldRemoteServerName({
         </FormItem>
       )}
     />
+  )
+}
+
+export function FormFieldsRemoteMcp({
+  control,
+  groups,
+  isEditing,
+}: {
+  control: Control<FormSchemaRemoteMcp>
+  groups: GroupsGroup[]
+  isEditing: boolean
+}) {
+  return (
+    <>
+      <FormFieldRemoteServerName control={control} isEditing={isEditing} />
+      <FormFieldRemoteGroup control={control} groups={groups} />
+      <FormFieldRemoteUrl control={control} />
+      <FormFieldRemoteTransport control={control} />
+      <FormFieldsProxy control={control} />
+      <FormFieldRemoteAuthType control={control} />
+    </>
   )
 }

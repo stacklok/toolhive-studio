@@ -19,14 +19,7 @@ import { convertCreateRequestToFormData } from '../lib/orchestrate-run-remote-re
 import { useRunRemoteServer } from '@/features/mcp-servers/hooks/use-run-remote-server'
 import { FormFieldsAuth } from '@/features/mcp-servers/components/remote-mcp/form-fields-auth'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
-import { FormFieldsProxy } from '@/common/components/workloads/form-fields-proxy'
-import {
-  FromFieldRemoteAuthType,
-  FromFieldRemoteGroup,
-  FromFieldRemoteServerName,
-  FromFieldRemoteTransport,
-  FromFieldRemoteUrl,
-} from '@/common/components/workloads/form-fields-remote-mcp'
+import { FormFieldsRemoteMcp } from '@/common/components/workloads/form-fields-remote-mcp'
 import { REMOTE_MCP_AUTH_TYPES } from '@/common/lib/form-schema-mcp'
 
 const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
@@ -213,15 +206,11 @@ export function DialogFormRemoteRegistryMcp({
             )}
           </div>
           <div className="flex-1 space-y-4 overflow-y-auto px-6">
-            <FromFieldRemoteServerName
+            <FormFieldsRemoteMcp
               control={form.control}
+              groups={groups}
               isEditing={isSubmitting}
             />
-            <FromFieldRemoteUrl control={form.control} />
-            <FromFieldRemoteTransport control={form.control} />
-            <FormFieldsProxy control={form.control} />
-            <FromFieldRemoteGroup control={form.control} groups={groups} />
-            <FromFieldRemoteAuthType control={form.control} />
             <FormFieldsAuth authType={authType} form={form} />
           </div>
         </div>
