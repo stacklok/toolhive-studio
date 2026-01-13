@@ -3,10 +3,8 @@ on:
   workflow_call:
 
 env:
-  OLLAMA_VERSION: '0.13.5'
-  OLLAMA_MODELS: /home/runner/.ollama/models
   OLLAMA_BASE_URL: http://localhost:11434
-  OLLAMA_MODEL: qwen2.5:0.5b
+  OLLAMA_MODEL: qwen2.5:1.5b
 
 jobs:
   test:
@@ -19,36 +17,36 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
-      - name: Cache Ollama binary
-        id: cache-ollama
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
-        with:
-          path: /usr/local/bin/ollama
-          key: ollama-binary-${{ env.OLLAMA_VERSION }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Start Docker
+        run: |
+          sudo systemctl start docker
+          sudo systemctl status docker
 
       - name: Cache Ollama models
         uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
         with:
           path: /home/runner/.ollama/models
-          key: ollama-${{ env.OLLAMA_MODEL }}-v1
+          key: ollama-${{ env.OLLAMA_MODEL }}-v2
 
-      - name: Install Ollama
-        if: steps.cache-ollama.outputs.cache-hit != 'true'
+      - name: Start Ollama via Docker
         run: |
-          curl -fsSL "https://github.com/ollama/ollama/releases/download/v${{ env.OLLAMA_VERSION }}/ollama-linux-amd64.tgz" | tar -xz
-          sudo mv bin/ollama /usr/local/bin/ollama
-
-      - name: Start Ollama server
-        run: |
-          sudo systemctl stop ollama 2>/dev/null || true
-          OLLAMA_MODELS=/home/runner/.ollama/models ollama serve &
+          mkdir -p /home/runner/.ollama/models
+          docker run -d \
+            -v /home/runner/.ollama/models:/root/.ollama/models \
+            -p 11434:11434 \
+            --name ollama \
+            ollama/ollama
+          # Wait for Ollama to be ready
           for i in {1..30}; do
             curl -sf http://localhost:11434/api/tags && break
             sleep 1
           done
 
       - name: Pull Ollama model
-        run: OLLAMA_MODELS=/home/runner/.ollama/models ollama pull ${{ env.OLLAMA_MODEL }}
+        run: docker exec ollama ollama pull ${{ env.OLLAMA_MODEL }}
 
       - name: Cache Playwright special dependencies
         uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
@@ -73,14 +71,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             dbus dbus-x11 gnome-keyring libsecret-1-0 libsecret-1-dev
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
-
-      - name: Start Docker
-        run: |
-          sudo systemctl start docker
-          sudo systemctl status docker
 
       - name: Package app
         run: pnpm package

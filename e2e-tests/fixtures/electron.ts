@@ -12,7 +12,7 @@ type ElectronFixtures = {
   window: Page
 }
 
-const TEST_GROUP_NAME = 'playwright-automated-test-fixture'
+export const TEST_GROUP_NAME = 'playwright-automated-test-fixture'
 export const TEST_SECRET_NAME = 'E2E_TEST_SECRET'
 
 /** Default timeout for most operations (10 seconds) */
