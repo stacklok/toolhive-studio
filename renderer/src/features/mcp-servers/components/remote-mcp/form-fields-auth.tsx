@@ -13,9 +13,14 @@ import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-sch
 import { cn } from '@/common/lib/utils'
 import { Checkbox } from '@/common/components/ui/checkbox'
 import { useDebouncedCallback } from '@/common/hooks/use-debounced-callback'
+import {
+  REMOTE_MCP_AUTH_TYPES,
+  type RemoteMcpAuthType,
+} from '@/common/lib/form-schema-mcp'
 
 const AUTH_FIELD_MATRIX = {
   none: ['callback_port', 'issuer'],
+  bearer_token: ['bearer_token'],
   oidc: [
     'callback_port',
     'issuer',
@@ -39,7 +44,7 @@ type AuthFieldName =
   (typeof AUTH_FIELD_MATRIX)[keyof typeof AUTH_FIELD_MATRIX][number]
 
 const shouldShowField =
-  (authType: string | undefined) => (fieldName: AuthFieldName) => {
+  (authType: RemoteMcpAuthType | undefined) => (fieldName: AuthFieldName) => {
     if (!authType) return false
     const fields = AUTH_FIELD_MATRIX[authType as keyof typeof AUTH_FIELD_MATRIX]
     return (fields as readonly AuthFieldName[])?.includes(fieldName) ?? false
@@ -68,23 +73,29 @@ const isSecretValue = (value: unknown): value is SecretValue =>
   'value' in value &&
   isSecretValueObj(value.value)
 
-const getDefaultSecretName = (mcpName: string | undefined): string => {
+const getDefaultSecretName = (
+  mcpName: string | undefined,
+  prefix: string
+): string => {
   const sanitizedMcpName = mcpName?.replaceAll('-', '_').toUpperCase()
-  return sanitizedMcpName
-    ? `OAUTH_CLIENT_SECRET_${sanitizedMcpName}`
-    : 'OAUTH_CLIENT_SECRET'
+  return sanitizedMcpName ? `${prefix}_${sanitizedMcpName}` : `${prefix}`
 }
 
-const buildClientSecretValue = (
-  fieldValue: unknown,
+const buildSecretValue = ({
+  fieldValue,
+  mcpName,
+  prefix,
+}: {
+  fieldValue: unknown
   mcpName: string | undefined
-): SecretValue => {
+  prefix: string
+}): SecretValue => {
   if (isSecretValue(fieldValue)) {
     return fieldValue
   }
 
   return {
-    name: getDefaultSecretName(mcpName),
+    name: getDefaultSecretName(mcpName, prefix),
     value: { secret: '', isFromStore: false },
   }
 }
@@ -93,7 +104,7 @@ export function FormFieldsAuth({
   authType,
   form,
 }: {
-  authType: string | undefined
+  authType: RemoteMcpAuthType | undefined
   form: UseFormReturn<FormSchemaRemoteMcp>
 }) {
   const showField = shouldShowField(authType)
@@ -105,6 +116,120 @@ export function FormFieldsAuth({
 
   return (
     <>
+      {showField(REMOTE_MCP_AUTH_TYPES.BearerToken) && (
+        <FormField
+          control={form.control}
+          name="oauth_config.bearer_token"
+          render={({ field }) => {
+            const currentValue = buildSecretValue({
+              fieldValue: field.value,
+              mcpName,
+              prefix: 'BEARER_TOKEN',
+            })
+
+            return (
+              <FormItem className="pb-8">
+                <div className="flex items-center gap-1">
+                  <FormLabel>Bearer Token</FormLabel>
+                  <TooltipInfoIcon>
+                    The bearer token for the authentication.
+                  </TooltipInfoIcon>
+                </div>
+                <p className="text-muted-foreground text-sm">
+                  The bearer token is stored securely by ToolHive.
+                </p>
+                <FormControl>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <FormLabel
+                        htmlFor="oauth_config.client_secret.name"
+                        className={cn(
+                          `text-muted-foreground border-input! h-full
+                          items-center font-mono ring-0!`
+                        )}
+                      >
+                        Bearer token name
+                        <TooltipInfoIcon className="m-w-90">
+                          The key name under which this bearer token will be
+                          stored and accessible.
+                        </TooltipInfoIcon>
+                      </FormLabel>
+                      <Input
+                        id="oauth_config.bearer_token.name"
+                        autoCorrect="off"
+                        autoComplete="off"
+                        data-1p-ignore
+                        disabled
+                        className="font-mono"
+                        placeholder="e.g. BEARER_TOKEN"
+                        value={currentValue.name}
+                      />
+                    </div>
+                    <div>
+                      <FormLabel
+                        htmlFor="oauth_config.bearer_token.value"
+                        className={cn(
+                          `text-muted-foreground border-input! h-full
+                          items-center font-mono ring-0!`
+                        )}
+                      >
+                        Value
+                        <TooltipInfoIcon className="m-w-90">
+                          The bearer token value that proves your application's
+                          identity.
+                        </TooltipInfoIcon>
+                      </FormLabel>
+                      <div
+                        className="grid grid-cols-[auto_calc(var(--spacing)*9)]"
+                      >
+                        <Input
+                          id="oauth_config.bearer_token.value"
+                          autoCorrect="off"
+                          autoComplete="off"
+                          type="password"
+                          data-1p-ignore
+                          className="rounded-tr-none rounded-br-none border-r-0
+                            font-mono focus-visible:z-10"
+                          placeholder="e.g. token_123_ABC_789_XYZ"
+                          value={currentValue.value.secret}
+                          onChange={(e) =>
+                            field.onChange({
+                              ...currentValue,
+                              name: getDefaultSecretName(
+                                mcpName,
+                                'BEARER_TOKEN'
+                              ),
+                              value: {
+                                secret: e.target.value,
+                                isFromStore: false,
+                              },
+                            })
+                          }
+                        />
+                        <SecretStoreCombobox
+                          value={currentValue.value.secret}
+                          onChange={(secretKey) =>
+                            field.onChange({
+                              ...currentValue,
+                              name: secretKey,
+                              value: {
+                                secret: secretKey,
+                                isFromStore: true,
+                              },
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )
+          }}
+        />
+      )}
+
       {showField('callback_port') && (
         <FormField
           control={form.control}
@@ -281,7 +406,11 @@ export function FormFieldsAuth({
           control={form.control}
           name="oauth_config.client_secret"
           render={({ field }) => {
-            const currentValue = buildClientSecretValue(field.value, mcpName)
+            const currentValue = buildSecretValue({
+              fieldValue: field.value,
+              mcpName,
+              prefix: 'OAUTH_CLIENT_SECRET',
+            })
 
             return (
               <FormItem className="pb-8">
@@ -352,7 +481,10 @@ export function FormFieldsAuth({
                           onChange={(e) =>
                             field.onChange({
                               ...currentValue,
-                              name: getDefaultSecretName(mcpName),
+                              name: getDefaultSecretName(
+                                mcpName,
+                                'OAUTH_CLIENT_SECRET'
+                              ),
                               value: {
                                 secret: e.target.value,
                                 isFromStore: false,

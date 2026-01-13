@@ -1,22 +1,11 @@
-import {
-  type RegistryRemoteServerMetadata,
-  type V1CreateRequest,
-} from '@api/types.gen'
+import { type RegistryRemoteServerMetadata } from '@api/types.gen'
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
-
-const getAuthType = (
-  oauthConfig?: V1CreateRequest['oauth_config']
-): 'oauth2' | 'oidc' | 'none' => {
-  if (!oauthConfig) return 'none'
-  if (oauthConfig.authorize_url) return 'oauth2'
-  if (oauthConfig.issuer) return 'oidc'
-  return 'none'
-}
+import { getRemoteAuthFieldType } from '@/common/lib/workloads/remote/form-fields-util-remote'
 
 export function convertCreateRequestToFormData(
   createRequest: RegistryRemoteServerMetadata
 ): FormSchemaRemoteMcp {
-  const authType = getAuthType(createRequest.oauth_config)
+  const authType = getRemoteAuthFieldType(createRequest.oauth_config)
   const baseFormData: FormSchemaRemoteMcp = {
     name: createRequest.name || '',
     url: createRequest.url || '',
@@ -30,6 +19,7 @@ export function convertCreateRequestToFormData(
       callback_port: createRequest.oauth_config?.callback_port,
       client_id: createRequest.oauth_config?.client_id ?? '',
       client_secret: undefined,
+      bearer_token: undefined,
       issuer: createRequest.oauth_config?.issuer ?? '',
       oauth_params: undefined,
       scopes: Array.isArray(createRequest.oauth_config?.scopes)

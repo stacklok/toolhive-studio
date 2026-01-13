@@ -1,21 +1,5 @@
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from '@/common/components/ui/form'
-import { Input } from '@/common/components/ui/input'
-import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { useForm, useWatch } from 'react-hook-form'
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@/common/components/ui/select'
 import { FormFieldsAuth } from './form-fields-auth'
 import { useRunRemoteServer } from '../../hooks/use-run-remote-server'
 import log from 'electron-log/renderer'
@@ -36,23 +20,31 @@ import {
   getFormSchemaRemoteMcp,
   type FormSchemaRemoteMcp,
 } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
-import { ExternalLinkIcon } from 'lucide-react'
 import { useGroups } from '../../hooks/use-groups'
 import { AlertErrorFetchingEditingData } from '@/common/components/workloads/alert-error-fetching-editing-data'
 import { FormFieldsProxy } from '@/common/components/workloads/form-fields-proxy'
 import { UI_POST_SUBMIT_DELAY_MS } from '@/common/lib/constants'
 import { delay } from '@utils/delay'
+import {
+  FromFieldRemoteAuthType,
+  FromFieldRemoteGroup,
+  FromFieldRemoteServerName,
+  FromFieldRemoteTransport,
+  FromFieldRemoteUrl,
+} from '@/common/components/workloads/form-fields-remote-mcp'
+import { REMOTE_MCP_AUTH_TYPES } from '@/common/lib/form-schema-mcp'
 
 const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
   name: '',
   transport: 'streamable-http',
   proxy_mode: 'streamable-http',
   proxy_port: undefined,
-  auth_type: 'none',
+  auth_type: REMOTE_MCP_AUTH_TYPES.None,
   oauth_config: {
     authorize_url: '',
     client_id: '',
     client_secret: undefined,
+    bearer_token: undefined,
     issuer: '',
     oauth_params: {},
     scopes: '',
@@ -265,179 +257,15 @@ export function DialogFormRemoteMcp({
               )}
             </div>
             <div className="flex-1 space-y-4 overflow-y-auto px-6">
-              <FormField
+              <FromFieldRemoteServerName
                 control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center gap-1">
-                      <FormLabel>Server name</FormLabel>
-                      <TooltipInfoIcon>
-                        The human-readable name you will use to identify this
-                        server.
-                      </TooltipInfoIcon>
-                    </div>
-                    <FormControl>
-                      <Input
-                        autoCorrect="off"
-                        autoComplete="off"
-                        autoFocus
-                        data-1p-ignore
-                        placeholder="e.g. my-awesome-server"
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.target.value)}
-                        name={field.name}
-                        disabled={isEditing}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                isEditing={isEditing}
               />
-
-              <FormField
-                control={form.control}
-                name="group"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel htmlFor={field.name}>Group</FormLabel>
-                    <FormControl>
-                      <Select
-                        onValueChange={(value) => field.onChange(value)}
-                        value={field.value}
-                        name={field.name}
-                      >
-                        <SelectTrigger id={field.name} className="w-full">
-                          <SelectValue placeholder="Select a group" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {groups
-                            .filter((g) => g.name)
-                            .map((g) => (
-                              <SelectItem key={g.name!} value={g.name!}>
-                                {g.name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="url"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center gap-1">
-                      <FormLabel>Server URL</FormLabel>
-                      <TooltipInfoIcon>
-                        The URL of the MCP server.
-                      </TooltipInfoIcon>
-                    </div>
-                    <FormControl>
-                      <Input
-                        autoCorrect="off"
-                        autoComplete="off"
-                        autoFocus
-                        data-1p-ignore
-                        placeholder="e.g. https://example.com/mcp"
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.target.value)}
-                        name={field.name}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="transport"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center gap-1">
-                      <FormLabel htmlFor={field.name}>Transport</FormLabel>
-                      <TooltipInfoIcon>
-                        The transport protocol the MCP server uses to
-                        communicate with clients.
-                      </TooltipInfoIcon>
-                    </div>
-                    <FormControl>
-                      <Select
-                        onValueChange={(value) => field.onChange(value)}
-                        value={field.value}
-                        name={field.name}
-                      >
-                        <SelectTrigger id={field.name} className="w-full">
-                          <SelectValue placeholder="e.g. SSE, Streamable HTTP" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="sse">SSE</SelectItem>
-                          <SelectItem value="streamable-http">
-                            Streamable HTTP
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
+              <FromFieldRemoteGroup control={form.control} groups={groups} />
+              <FromFieldRemoteUrl control={form.control} />
+              <FromFieldRemoteTransport control={form.control} />
               <FormFieldsProxy control={form.control} />
-
-              <FormField
-                control={form.control}
-                name="auth_type"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center gap-1">
-                      <FormLabel htmlFor={field.name}>
-                        Authorization method
-                      </FormLabel>
-                      <TooltipInfoIcon
-                        className="flex flex-wrap items-center gap-1"
-                      >
-                        The authorization method the MCP server uses to
-                        authenticate clients. Refer to the{' '}
-                        <a
-                          rel="noopener noreferrer"
-                          className="flex cursor-pointer items-center gap-1
-                            underline"
-                          href="https://docs.stacklok.com/toolhive/guides-ui/run-mcp-servers?custom-type=custom_remote#install-a-custom-mcp-server"
-                          target="_blank"
-                        >
-                          documentation <ExternalLinkIcon size={12} />
-                        </a>
-                      </TooltipInfoIcon>
-                    </div>
-                    <FormControl>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value || ''}
-                        name={field.name}
-                      >
-                        <SelectTrigger id={field.name} className="w-full">
-                          <SelectValue placeholder="Select authorization method" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">
-                            Dynamic Client Registration
-                          </SelectItem>
-                          <SelectItem value="oauth2">OAuth 2.0</SelectItem>
-                          <SelectItem value="oidc">OIDC</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
+              <FromFieldRemoteAuthType control={form.control} />
               <FormFieldsAuth authType={authType} form={form} />
             </div>
           </div>
