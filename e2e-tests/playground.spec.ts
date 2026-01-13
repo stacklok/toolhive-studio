@@ -153,9 +153,6 @@ test.describe('Playground chat with Ollama', () => {
     }
   })
 
-  // Disable retries - if Ollama fails, retries won't help and just timeout
-  test.describe.configure({ retries: 0 })
-
   test('configures Ollama provider and sends chat message', async ({
     window,
   }) => {
