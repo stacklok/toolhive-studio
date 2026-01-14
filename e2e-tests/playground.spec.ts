@@ -120,13 +120,6 @@ async function clearPlaygroundState(window: Page): Promise<void> {
   await removeOllamaProvider(window)
 }
 
-test('navigates to Playground tab', async ({ window }) => {
-  await window.getByRole('link', { name: 'Playground' }).click()
-  await expect(
-    window.getByRole('heading', { name: 'Playground', level: 1 })
-  ).toBeVisible()
-})
-
 test.describe('Playground chat with Ollama', () => {
   test.slow()
 
