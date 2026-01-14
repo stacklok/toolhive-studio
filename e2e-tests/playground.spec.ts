@@ -5,33 +5,21 @@ import {
   TEST_GROUP_NAME,
 } from './fixtures/electron'
 import type { Page } from '@playwright/test'
+import {
+  startTestMcpServer,
+  type TestMcpServer,
+} from './helpers/test-mcp-server'
 
 const OLLAMA_URL = process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434'
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'qwen2.5:1.5b'
 
 function generateRandomServerName(): string {
   const randomId = Math.floor(Math.random() * 100000000)
-  return `fetch-${randomId}`
+  return `e2e-mcp-${randomId}`
 }
 
-async function installFetchServer(
-  window: Page,
-  serverName: string
-): Promise<void> {
-  await window.getByRole('link', { name: 'MCP Servers' }).click()
-  await window.getByRole('button', { name: /add an mcp server/i }).click()
-  await window.getByRole('menuitem', { name: /from the registry/i }).click()
-  await window.getByText('fetch', { exact: true }).click()
-  await window.getByRole('button', { name: /install server/i }).click()
-  await window.getByRole('dialog').waitFor()
-
-  await window.getByLabel('Server name').fill(serverName)
-  await window.getByRole('combobox', { name: 'Group' }).click()
-  await window.getByRole('option', { name: TEST_GROUP_NAME }).click()
-  await window.getByRole('button', { name: /install server/i }).click()
-
-  await window.getByRole('link', { name: /^view$/i }).click()
-  await window.getByText('Running').first().waitFor({ timeout: LONG_TIMEOUT })
+async function setupTestMcpServer(): Promise<TestMcpServer> {
+  return startTestMcpServer()
 }
 
 async function warmupOllamaModel(): Promise<void> {
@@ -142,6 +130,8 @@ test('navigates to Playground tab', async ({ window }) => {
 test.describe('Playground chat with Ollama', () => {
   test.slow()
 
+  let testServer: TestMcpServer
+
   test.beforeAll(async () => {
     console.log('Warming up Ollama model...')
     try {
@@ -151,6 +141,12 @@ test.describe('Playground chat with Ollama', () => {
       console.error('Ollama warmup failed:', error)
       throw error
     }
+
+    testServer = await setupTestMcpServer()
+  })
+
+  test.afterAll(async () => {
+    await testServer?.stop()
   })
 
   test('configures Ollama provider and sends chat message', async ({
@@ -158,8 +154,46 @@ test.describe('Playground chat with Ollama', () => {
   }) => {
     await clearPlaygroundState(window)
 
-    const fetchServerName = generateRandomServerName()
-    await installFetchServer(window, fetchServerName)
+    const serverName = generateRandomServerName()
+
+    await window.getByRole('link', { name: 'MCP Servers' }).click()
+    await expect(
+      window.getByRole('heading', { name: 'MCP Servers', level: 1 })
+    ).toBeVisible()
+
+    await window.getByRole('button', { name: /add an mcp server/i }).click()
+    await window.getByRole('menuitem', { name: /remote mcp server/i }).click()
+    await window.getByRole('dialog').waitFor()
+
+    await window.getByPlaceholder('e.g. my-awesome-server').fill(serverName)
+
+    await window.getByRole('combobox', { name: /group/i }).click()
+    await window.getByRole('option', { name: TEST_GROUP_NAME }).click()
+
+    await window
+      .getByPlaceholder('e.g. https://example.com/mcp')
+      .fill(testServer.url)
+
+    await window.getByRole('combobox', { name: /transport/i }).click()
+    await window.getByRole('option', { name: /streamable http/i }).click()
+
+    await window.getByRole('combobox', { name: /authorization/i }).click()
+    await window.getByRole('option', { name: /dynamic client/i }).click()
+    await window.getByLabel(/callback port/i).fill('8888')
+
+    await window.getByRole('button', { name: /install server/i }).click()
+    await window.getByRole('dialog').waitFor({ state: 'hidden' })
+
+    await window.getByRole('link', { name: TEST_GROUP_NAME }).click()
+    await expect(window.getByText(new RegExp(serverName))).toBeVisible({
+      timeout: 30_000,
+    })
+    await expect(
+      window
+        .locator('[data-slot="card"]')
+        .filter({ hasText: serverName })
+        .getByText('Running')
+    ).toBeVisible({ timeout: 30_000 })
 
     await window.getByRole('link', { name: 'Playground' }).click()
     await expect(
@@ -186,19 +220,16 @@ test.describe('Playground chat with Ollama', () => {
       timeout: 10_000,
     })
 
-    await enableMcpServer(window, fetchServerName)
+    await enableMcpServer(window, serverName)
 
-    const secretCodeUrl =
-      'https://gist.githubusercontent.com/kantord/c9d7cd71e5a6f26d5dbf229ff0b7cdf2/raw/327ce7d875a933b4d4c2bc674460de017c42cbb0/gistfile1.txt'
     await window
       .getByPlaceholder(/type your message/i)
-      .fill(
-        `Use the fetch tool to retrieve the content from ${secretCodeUrl} and tell me the secret code contained in it.`
-      )
+      .fill('Call the get_secret_code tool and tell me the code it returns.')
     await window.keyboard.press('Enter')
 
-    // The model should use the fetch tool to get the secret code "potato42"
-    await expect(window.getByText(/potato42/i)).toBeVisible({
+    await expect(
+      window.getByText(new RegExp(testServer.secretCode, 'i'))
+    ).toBeVisible({
       timeout: LONG_TIMEOUT,
     })
 
