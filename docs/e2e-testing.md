@@ -17,13 +17,16 @@ end.
   - `pnpm run e2e:prebuilt`
   - Use this when you haven’t changed the app build and want faster test runs.
 
+## Coverage philosophy
+
+- E2E scenarios focus on happy paths and core workflows.
+- Edge cases and destructive flows are covered by unit/integration tests.
+
 ## Coverage
 
 ### MCP registry installs
 
 - **Tested**: install/uninstall a server from the registry.
-- **Notes**: focuses on the happy path; the registry list is not exhaustively
-  validated.
 
 ### Remote MCP servers + tool calling
 
@@ -58,8 +61,6 @@ may still persist across runs.
   auto-updates, or platform-dependent behaviors.
 - Features that rely on native OS dialogs (such as file pickers) are not fully
   tested without mocks.
-- Scenarios are happy-path oriented; destructive cases and edge-case matrices are
-  intentionally handled elsewhere to keep E2E runtime manageable.
 - Feature-specific constraints are documented in each section above.
 
 ## Troubleshooting
