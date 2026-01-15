@@ -30,7 +30,6 @@ it('passes with valid docker image', () => {
   expect(result.data).toStrictEqual({
     name: 'github',
     transport: 'stdio',
-    proxy_mode: 'streamable-http',
     group: 'default',
     type: 'docker_image',
     image: 'ghcr.io/github/github-mcp-server',
@@ -85,7 +84,6 @@ it('passes with valid npx command', () => {
   expect(result.data).toStrictEqual({
     name: 'server-everything',
     transport: 'stdio',
-    proxy_mode: 'streamable-http',
     group: 'default',
     type: 'package_manager',
     protocol: 'npx',
@@ -137,7 +135,6 @@ it('passes with valid uvx command', () => {
   expect(result.data).toStrictEqual({
     name: 'fetch',
     transport: 'stdio',
-    proxy_mode: 'streamable-http',
     group: 'default',
     type: 'package_manager',
     protocol: 'uvx',
@@ -1056,7 +1053,7 @@ it('passes with valid proxy_mode streamable-http', () => {
   expect(result.data?.proxy_mode).toBe('streamable-http')
 })
 
-it('defaults proxy_mode to streamable-http when not provided', () => {
+it('proxy_mode is undefined when not provided', () => {
   const validInput = {
     name: 'test-server',
     transport: 'stdio',
@@ -1073,5 +1070,5 @@ it('defaults proxy_mode to streamable-http when not provided', () => {
 
   const result = getFormSchemaLocalMcp([]).safeParse(validInput)
   expect(result.success, `${result.error}`).toBe(true)
-  expect(result.data?.proxy_mode).toBe('streamable-http')
+  expect(result.data?.proxy_mode).toBeUndefined()
 })
