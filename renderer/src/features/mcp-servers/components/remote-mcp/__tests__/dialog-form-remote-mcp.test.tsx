@@ -231,7 +231,6 @@ describe('DialogFormRemoteMcp', () => {
             use_pkce: true,
           }),
           transport: 'streamable-http',
-          proxy_mode: 'streamable-http',
           group: 'default',
         })
       )

@@ -82,6 +82,8 @@ export function prepareCreateWorkloadData(
       }
     : undefined
 
+  const sendProxyMode = data.transport === 'stdio'
+
   return {
     ...request,
     network_isolation: networkIsolation,
@@ -89,7 +91,7 @@ export function prepareCreateWorkloadData(
     volumes: getVolumes(volumes ?? []),
     tools: data.tools || undefined,
     tools_override: data.tools_override || undefined,
-    proxy_mode: data.proxy_mode,
+    proxy_mode: sendProxyMode ? data.proxy_mode : undefined,
     proxy_port: data.proxy_port,
   }
 }
@@ -107,13 +109,18 @@ export function convertWorkloadToFormData(
     image.includes('://') &&
     ['npx://', 'uvx://', 'go://'].some((protocol) => image.startsWith(protocol))
 
+  // Show proxy mode for stdio transport only
+  const showProxyMode = workload.transport_type === 'stdio'
+
   const baseFormData = {
     name: workload.name || '',
     transport: (workload.transport_type || 'stdio') as
       | 'sse'
       | 'stdio'
       | 'streamable-http',
-    proxy_mode: getProxyModeOrDefault(workload.proxy_mode),
+    proxy_mode: showProxyMode
+      ? getProxyModeOrDefault(workload.proxy_mode)
+      : undefined,
     proxy_port: workload.port,
     group: 'default',
     target_port: workload.port,
@@ -186,7 +193,10 @@ export function convertCreateRequestToFormData(
     }
   })
 
-  const proxy_mode = getProxyModeOrDefault(createRequest.proxy_mode)
+  const showProxyMode = transport === 'stdio'
+  const proxy_mode = showProxyMode
+    ? getProxyModeOrDefault(createRequest.proxy_mode)
+    : undefined
 
   const baseFormData = {
     name: createRequest.name || '',
@@ -259,11 +269,12 @@ export function prepareUpdateLocalWorkloadData(
     data.group === MCP_OPTIMIZER_GROUP_NAME
       ? data.permission_profile
       : undefined
+  const sendProxyMode = data.transport === 'stdio'
 
   return {
     image,
     transport: data.transport,
-    proxy_mode: data.proxy_mode,
+    proxy_mode: sendProxyMode ? data.proxy_mode : undefined,
     proxy_port: data.proxy_port,
     group: data.group,
     target_port: data.target_port,
