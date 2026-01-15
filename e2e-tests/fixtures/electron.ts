@@ -109,6 +109,10 @@ export const test = base.extend<ElectronFixtures>({
   window: async ({ electronApp }, use) => {
     const window = await electronApp.firstWindow()
 
+    await window.route('https://*.sentry.io/**', (route) => {
+      throw new Error(`Sentry request blocked: ${route.request().url()}`)
+    })
+
     // Disable quit confirmation dialog to prevent hang on close
     await window.evaluate(() => {
       localStorage.setItem('doNotShowAgain_confirm_quit', 'true')
