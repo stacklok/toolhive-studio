@@ -1,7 +1,8 @@
 # End-to-end testing
 
-ToolHive’s E2E suite uses Playwright to run the packaged Electron app and verify
-critical flows (MCP servers, secrets, registry installs, and chat tool calls).
+ToolHive’s E2E suite uses Playwright to run the packaged Electron app. Tests are
+executed against the prebuilt app in `out/`, mirroring real user flows end to
+end.
 
 ## Prerequisites
 
@@ -16,23 +17,47 @@ critical flows (MCP servers, secrets, registry installs, and chat tool calls).
 - Tests only (reuse `out/`):
   - `pnpm run e2e:prebuilt`
 
-## Environment variables
+## Coverage
 
-- `OLLAMA_BASE_URL`: Override the Ollama URL (default `http://localhost:11434`).
-- `OLLAMA_MODEL`: Override the model used for the test (default `qwen2.5:1.5b`).
-- `TOOLHIVE_E2E`: When `true`, disables telemetry/Sentry in the main process.
+### MCP registry installs
 
-## Telemetry safeguards
+- **Tested**: install/uninstall a server from the registry.
+- **Notes**: focuses on the happy path; the registry list is not exhaustively
+  validated.
 
-During E2E runs, the suite:
+### Remote MCP servers + tool calling
 
-- Sets `TOOLHIVE_E2E=true` for the Electron main process.
-- Blocks any outbound requests to `*.sentry.io` in the renderer.
-- Fails fast if a Sentry DSN is detected.
+- **Tested**: add a remote MCP server, enable its tools, and verify the model
+  calls a test tool in the Playground.
+- **Notes**: uses a local mock MCP server to avoid external dependencies.
 
-This ensures no telemetry is sent during automated tests.
+### Secrets
+
+- **Tested**: create and delete a secret through the UI.
+- **Notes**: only validates CRUD; does not assert secrets inside server runtime.
+
+### Settings
+
+- **Tested**: version tab shows the ToolHive binary version.
+- **Notes**: other settings are covered by unit tests or manual QA.
+
+## Test isolation
+
+Test isolation is imperfect because the app stores state on disk and runs real
+workloads. We mitigate this by creating a dedicated test group and cleaning it
+up via the `thv` CLI before and after each run. Some state (like local caches)
+may still persist across runs.
+
+## Limitations
+
+- E2E runs only on GitHub Actions Linux runners for performance. macOS and
+  Windows runners are significantly slower and are not part of the default
+  E2E matrix.
+- Feature-specific constraints are documented in each section above.
 
 ## Troubleshooting
 
-- Artifacts are written to `test-results/` and `test-videos/`.
-- For UI debugging, use Playwright’s tracing or set `PWDEBUG=1`.
+- CI artifacts (screenshots, traces, videos) are attached to GitHub Actions
+  runs. See GitHub’s documentation for downloading artifacts:
+  - https://docs.github.com/en/actions/managing-workflow-runs/downloading-workflow-artifacts
+- For local UI debugging, use Playwright’s tracing or set `PWDEBUG=1`.
