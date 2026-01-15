@@ -5,41 +5,60 @@ export type ClientOptions = {
 }
 
 /**
+ * DEPRECATED: Middleware configuration.
  * AuditConfig contains the audit logging configuration
  */
 export type AuditConfig = {
   /**
-   * Component is the component name to use in audit events
+   * Component is the component name to use in audit events.
+   * +optional
    */
   component?: string
   /**
+   * Enabled controls whether audit logging is enabled.
+   * When true, enables audit logging with the configured options.
+   * +kubebuilder:default=false
+   * +optional
+   */
+  enabled?: boolean
+  /**
    * EventTypes specifies which event types to audit. If empty, all events are audited.
+   * +optional
    */
   eventTypes?: Array<string>
   /**
    * ExcludeEventTypes specifies which event types to exclude from auditing.
    * This takes precedence over EventTypes.
+   * +optional
    */
   excludeEventTypes?: Array<string>
   /**
-   * IncludeRequestData determines whether to include request data in audit logs
+   * IncludeRequestData determines whether to include request data in audit logs.
+   * +kubebuilder:default=false
+   * +optional
    */
   includeRequestData?: boolean
   /**
-   * IncludeResponseData determines whether to include response data in audit logs
+   * IncludeResponseData determines whether to include response data in audit logs.
+   * +kubebuilder:default=false
+   * +optional
    */
   includeResponseData?: boolean
   /**
    * LogFile specifies the file path for audit logs. If empty, logs to stdout.
+   * +optional
    */
   logFile?: string
   /**
-   * MaxDataSize limits the size of request/response data included in audit logs (in bytes)
+   * MaxDataSize limits the size of request/response data included in audit logs (in bytes).
+   * +kubebuilder:default=1024
+   * +optional
    */
   maxDataSize?: number
 }
 
 /**
+ * DEPRECATED: Middleware configuration.
  * OIDCConfig contains OIDC configuration
  */
 export type AuthTokenValidatorConfig = {
@@ -96,26 +115,14 @@ export type AuthTokenValidatorConfig = {
 }
 
 /**
- * Cedar is the Cedar-specific configuration.
- * This is only used when Type is ConfigTypeCedarV1.
- */
-export type AuthzCedarConfig = {
-  /**
-   * EntitiesJSON is the JSON string representing Cedar entities
-   */
-  entities_json?: string
-  /**
-   * Policies is a list of Cedar policy strings
-   */
-  policies?: Array<string>
-}
-
-/**
+ * DEPRECATED: Middleware configuration.
  * AuthzConfig contains the authorization configuration
  */
 export type AuthzConfig = {
-  cedar?: AuthzCedarConfig
-  type?: AuthzConfigType
+  /**
+   * Type is the type of authorization configuration (e.g., "cedarv1").
+   */
+  type?: string
   /**
    * Version is the version of the configuration format.
    */
@@ -123,17 +130,33 @@ export type AuthzConfig = {
 }
 
 /**
- * Type is the type of authorization configuration.
+ * ClientType is the type of MCP client
  */
-export type AuthzConfigType = string
-
-export type ClientMcpClient = string
+export type ClientMcpClient =
+  | 'roo-code'
+  | 'cline'
+  | 'cursor'
+  | 'vscode-insider'
+  | 'vscode'
+  | 'claude-code'
+  | 'windsurf'
+  | 'windsurf-jetbrains'
+  | 'amp-cli'
+  | 'amp-vscode'
+  | 'amp-cursor'
+  | 'amp-vscode-insider'
+  | 'amp-windsurf'
+  | 'lm-studio'
+  | 'goose'
+  | 'trae'
+  | 'continue'
+  | 'opencode'
+  | 'kiro'
+  | 'antigravity'
+  | 'zed'
 
 export type ClientMcpClientStatus = {
-  /**
-   * ClientType is the type of MCP client
-   */
-  client_type?: string
+  client_type?: ClientMcpClient
   /**
    * Installed indicates whether the client is installed on the system
    */
@@ -385,16 +408,6 @@ export type RegistryImageMetadata = {
    */
   args?: Array<string>
   /**
-   * CustomMetadata allows for additional user-defined metadata
-   */
-  custom_metadata?: {
-    [key: string]: unknown
-  }
-  /**
-   * Description is a human-readable description of the server's purpose and functionality
-   */
-  description?: string
-  /**
    * DockerTags lists the available Docker tags for this server image
    */
   docker_tags?: Array<string>
@@ -406,62 +419,12 @@ export type RegistryImageMetadata = {
    * Image is the Docker image reference for the MCP server
    */
   image?: string
-  metadata?: RegistryMetadata
-  /**
-   * Name is the identifier for the MCP server, used when referencing the server in commands
-   * If not provided, it will be auto-generated from the registry key
-   */
-  name?: string
   permissions?: PermissionsProfile
   provenance?: RegistryProvenance
-  /**
-   * RepositoryURL is the URL to the source code repository for the server
-   */
-  repository_url?: string
-  /**
-   * Status indicates whether the server is currently active or deprecated
-   */
-  status?: string
-  /**
-   * Tags are categorization labels for the server to aid in discovery and filtering
-   */
-  tags?: Array<string>
   /**
    * TargetPort is the port for the container to expose (only applicable to SSE and Streamable HTTP transports)
    */
   target_port?: number
-  /**
-   * Tier represents the tier classification level of the server, e.g., "Official" or "Community"
-   */
-  tier?: string
-  /**
-   * Tools is a list of tool names provided by this MCP server
-   */
-  tools?: Array<string>
-  /**
-   * Transport defines the communication protocol for the server
-   * For containers: stdio, sse, or streamable-http
-   * For remote servers: sse or streamable-http (stdio not supported)
-   */
-  transport?: string
-}
-
-/**
- * Metadata contains additional information about the server such as popularity metrics
- */
-export type RegistryMetadata = {
-  /**
-   * LastUpdated is the timestamp when the server was last updated, in RFC3339 format
-   */
-  last_updated?: string
-  /**
-   * Pulls indicates how many times the server image has been downloaded
-   */
-  pulls?: number
-  /**
-   * Stars represents the popularity rating or number of stars for the server
-   */
-  stars?: number
 }
 
 /**
@@ -565,16 +528,6 @@ export type RegistryRegistry = {
  */
 export type RegistryRemoteServerMetadata = {
   /**
-   * CustomMetadata allows for additional user-defined metadata
-   */
-  custom_metadata?: {
-    [key: string]: unknown
-  }
-  /**
-   * Description is a human-readable description of the server's purpose and functionality
-   */
-  description?: string
-  /**
    * EnvVars defines environment variables that can be passed to configure the client
    * These might be needed for client-side configuration when connecting to the remote server
    */
@@ -584,39 +537,7 @@ export type RegistryRemoteServerMetadata = {
    * These are used with the thv proxy command's authentication features
    */
   headers?: Array<RegistryHeader>
-  metadata?: RegistryMetadata
-  /**
-   * Name is the identifier for the MCP server, used when referencing the server in commands
-   * If not provided, it will be auto-generated from the registry key
-   */
-  name?: string
   oauth_config?: RegistryOAuthConfig
-  /**
-   * RepositoryURL is the URL to the source code repository for the server
-   */
-  repository_url?: string
-  /**
-   * Status indicates whether the server is currently active or deprecated
-   */
-  status?: string
-  /**
-   * Tags are categorization labels for the server to aid in discovery and filtering
-   */
-  tags?: Array<string>
-  /**
-   * Tier represents the tier classification level of the server, e.g., "Official" or "Community"
-   */
-  tier?: string
-  /**
-   * Tools is a list of tool names provided by this MCP server
-   */
-  tools?: Array<string>
-  /**
-   * Transport defines the communication protocol for the server
-   * For containers: stdio, sse, or streamable-http
-   * For remote servers: sse or streamable-http (stdio not supported)
-   */
-  transport?: string
   /**
    * URL is the endpoint URL for the remote MCP server (e.g., https://api.example.com/mcp)
    */
@@ -674,11 +595,13 @@ export type RemoteConfig = {
 export type RunnerRunConfig = {
   audit_config?: AuditConfig
   /**
+   * DEPRECATED: Middleware configuration.
    * AuditConfigPath is the path to the audit configuration file
    */
   audit_config_path?: string
   authz_config?: AuthzConfig
   /**
+   * DEPRECATED: Middleware configuration.
    * AuthzConfigPath is the path to the authorization configuration file
    */
   authz_config_path?: string
@@ -710,6 +633,7 @@ export type RunnerRunConfig = {
    */
   endpoint_prefix?: string
   /**
+   * DEPRECATED: No longer appears to be used.
    * EnvFileDir is the directory path to load environment files from
    */
   env_file_dir?: string
@@ -737,6 +661,7 @@ export type RunnerRunConfig = {
    */
   isolate_network?: boolean
   /**
+   * DEPRECATED: No longer appears to be used.
    * JWKSAuthTokenFile is the path to file containing auth token for JWKS/OIDC requests
    */
   jwks_auth_token_file?: string
@@ -789,24 +714,24 @@ export type RunnerRunConfig = {
   target_port?: number
   telemetry_config?: TelemetryConfig
   /**
+   * DEPRECATED: No longer appears to be used.
    * ThvCABundle is the path to the CA certificate bundle for ToolHive HTTP operations
    */
   thv_ca_bundle?: string
   token_exchange_config?: TokenexchangeConfig
   /**
+   * DEPRECATED: Middleware configuration.
    * ToolsFilter is the list of tools to filter
    */
   tools_filter?: Array<string>
   /**
+   * DEPRECATED: Middleware configuration.
    * ToolsOverride is a map from an actual tool to its overridden name and/or description
    */
   tools_override?: {
     [key: string]: RunnerToolOverride
   }
-  /**
-   * Transport is the transport mode (stdio, sse, or streamable-http)
-   */
-  transport?: string
+  transport?: TypesTransportType
   /**
    * TrustProxyHeaders indicates whether to trust X-Forwarded-* headers from reverse proxies
    */
@@ -830,9 +755,18 @@ export type RunnerToolOverride = {
 }
 
 /**
- * Status is the current status of the workload.
+ * Current status of the workload
  */
-export type RuntimeWorkloadStatus = string
+export type RuntimeWorkloadStatus =
+  | 'running'
+  | 'stopped'
+  | 'error'
+  | 'starting'
+  | 'stopping'
+  | 'unhealthy'
+  | 'removing'
+  | 'unknown'
+  | 'unauthenticated'
 
 /**
  * Bearer token for authentication (alternative to OAuth)
@@ -843,6 +777,7 @@ export type SecretsSecretParameter = {
 }
 
 /**
+ * DEPRECATED: Middleware configuration.
  * TelemetryConfig contains the OpenTelemetry configuration
  */
 export type TelemetryConfig = {
@@ -850,62 +785,78 @@ export type TelemetryConfig = {
    * CustomAttributes contains custom resource attributes to be added to all telemetry signals.
    * These are parsed from CLI flags (--otel-custom-attributes) or environment variables
    * (OTEL_RESOURCE_ATTRIBUTES) as key=value pairs.
-   * We use map[string]string for proper JSON serialization instead of []attribute.KeyValue
-   * which doesn't marshal/unmarshal correctly.
+   * +optional
    */
   customAttributes?: {
     [key: string]: string
   }
   /**
-   * EnablePrometheusMetricsPath controls whether to expose Prometheus-style /metrics endpoint
-   * The metrics are served on the main transport port at /metrics
-   * This is separate from OTLP metrics which are sent to the Endpoint
+   * EnablePrometheusMetricsPath controls whether to expose Prometheus-style /metrics endpoint.
+   * The metrics are served on the main transport port at /metrics.
+   * This is separate from OTLP metrics which are sent to the Endpoint.
+   * +kubebuilder:default=false
+   * +optional
    */
   enablePrometheusMetricsPath?: boolean
   /**
    * Endpoint is the OTLP endpoint URL
+   * +optional
    */
   endpoint?: string
   /**
    * EnvironmentVariables is a list of environment variable names that should be
    * included in telemetry spans as attributes. Only variables in this list will
    * be read from the host machine and included in spans for observability.
-   * Example: []string{"NODE_ENV", "DEPLOYMENT_ENV", "SERVICE_VERSION"}
+   * Example: ["NODE_ENV", "DEPLOYMENT_ENV", "SERVICE_VERSION"]
+   * +optional
    */
   environmentVariables?: Array<string>
   /**
-   * Headers contains authentication headers for the OTLP endpoint
+   * Headers contains authentication headers for the OTLP endpoint.
+   * +optional
    */
   headers?: {
     [key: string]: string
   }
   /**
-   * Insecure indicates whether to use HTTP instead of HTTPS for the OTLP endpoint
+   * Insecure indicates whether to use HTTP instead of HTTPS for the OTLP endpoint.
+   * +kubebuilder:default=false
+   * +optional
    */
   insecure?: boolean
   /**
-   * MetricsEnabled controls whether OTLP metrics are enabled
-   * When false, OTLP metrics are not sent even if an endpoint is configured
-   * This is independent of EnablePrometheusMetricsPath
+   * MetricsEnabled controls whether OTLP metrics are enabled.
+   * When false, OTLP metrics are not sent even if an endpoint is configured.
+   * This is independent of EnablePrometheusMetricsPath.
+   * +kubebuilder:default=false
+   * +optional
    */
   metricsEnabled?: boolean
   /**
    * SamplingRate is the trace sampling rate (0.0-1.0) as a string.
    * Only used when TracingEnabled is true.
    * Example: "0.05" for 5% sampling.
+   * +kubebuilder:default="0.05"
+   * +optional
    */
   samplingRate?: string
   /**
-   * ServiceName is the service name for telemetry
+   * ServiceName is the service name for telemetry.
+   * When omitted, defaults to the server name (e.g., VirtualMCPServer name).
+   * +optional
    */
   serviceName?: string
   /**
-   * ServiceVersion is the service version for telemetry
+   * ServiceVersion is the service version for telemetry.
+   * When omitted, defaults to the ToolHive version.
+   * +optional
    */
   serviceVersion?: string
   /**
-   * TracingEnabled controls whether distributed tracing is enabled
-   * When false, no tracer provider is created even if an endpoint is configured
+   * TracingEnabled controls whether distributed tracing is enabled.
+   * When false, no tracer provider is created even if an endpoint is configured.
+   * +kubebuilder:default=false
+   * +optional
    */
   tracingEnabled?: boolean
 }
@@ -969,17 +920,21 @@ export type TypesMiddlewareConfig = {
  * ProxyMode is the proxy mode for stdio transport ("sse" or "streamable-http")
  * Note: "sse" is deprecated; use "streamable-http" instead.
  */
-export type TypesProxyMode = string
+export type TypesProxyMode = 'sse' | 'streamable-http'
 
 /**
- * TransportType is the type of transport used for this workload.
+ * Transport is the transport mode (stdio, sse, or streamable-http)
  */
-export type TypesTransportType = string
+export type TypesTransportType =
+  | 'stdio'
+  | 'sse'
+  | 'streamable-http'
+  | 'inspector'
 
 /**
  * Type of registry (file, url, or default)
  */
-export type V1RegistryType = string
+export type V1RegistryType = 'file' | 'url' | 'api' | 'default'
 
 /**
  * Request containing registry configuration updates
@@ -1025,7 +980,7 @@ export type V1BulkClientRequest = {
   /**
    * Names is the list of client names to operate on.
    */
-  names?: Array<string>
+  names?: Array<ClientMcpClient>
 }
 
 export type V1BulkOperationRequest = {
@@ -1048,10 +1003,7 @@ export type V1CreateClientRequest = {
    * Groups is the list of groups configured on the client.
    */
   groups?: Array<string>
-  /**
-   * Name is the type of the client to register.
-   */
-  name?: string
+  name?: ClientMcpClient
 }
 
 export type V1CreateClientResponse = {
@@ -1059,10 +1011,7 @@ export type V1CreateClientResponse = {
    * Groups is the list of groups configured on the client.
    */
   groups?: Array<string>
-  /**
-   * Name is the type of the client that was registered.
-   */
-  name?: string
+  name?: ClientMcpClient
 }
 
 export type V1CreateGroupRequest = {
@@ -1228,10 +1177,7 @@ export type V1GetRegistryResponse = {
    * Source of the registry (URL, file path, or empty string for built-in)
    */
   source?: string
-  /**
-   * Type of registry (file, url, or default)
-   */
-  type?: string
+  type?: V1RegistryType
   /**
    * Version of the registry schema
    */
@@ -1624,10 +1570,7 @@ export type V1WorkloadListResponse = {
  * Response containing workload status information
  */
 export type V1WorkloadStatusResponse = {
-  /**
-   * Current status of the workload
-   */
-  status?: string
+  status?: RuntimeWorkloadStatus
 }
 
 export type GetApiOpenapiJsonData = {
@@ -1670,7 +1613,11 @@ export type PostApiV1BetaClientsData = {
   /**
    * Client to register
    */
-  body: V1CreateClientRequest
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | V1CreateClientRequest
   path?: never
   query?: never
   url: '/api/v1beta/clients'
@@ -1700,7 +1647,11 @@ export type PostApiV1BetaClientsRegisterData = {
   /**
    * Clients to register
    */
-  body: V1BulkClientRequest
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | V1BulkClientRequest
   path?: never
   query?: never
   url: '/api/v1beta/clients/register'
@@ -1730,7 +1681,11 @@ export type PostApiV1BetaClientsUnregisterData = {
   /**
    * Clients to unregister
    */
-  body: V1BulkClientRequest
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | V1BulkClientRequest
   path?: never
   query?: never
   url: '/api/v1beta/clients/unregister'
@@ -1876,7 +1831,11 @@ export type PostApiV1BetaGroupsData = {
   /**
    * Group creation request
    */
-  body: V1CreateGroupRequest
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | V1CreateGroupRequest
   path?: never
   query?: never
   url: '/api/v1beta/groups'
@@ -2091,7 +2050,11 @@ export type PutApiV1BetaRegistryByNameData = {
   /**
    * Registry configuration
    */
-  body: V1UpdateRegistryRequest
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | V1UpdateRegistryRequest
   path: {
     /**
      * Registry name (must be 'default')
@@ -2198,7 +2161,11 @@ export type PostApiV1BetaSecretsData = {
   /**
    * Setup secrets provider request
    */
-  body: V1SetupSecretsRequest
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | V1SetupSecretsRequest
   path?: never
   query?: never
   url: '/api/v1beta/secrets'
@@ -2298,7 +2265,11 @@ export type PostApiV1BetaSecretsDefaultKeysData = {
   /**
    * Create secret request
    */
-  body: V1CreateSecretRequest
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | V1CreateSecretRequest
   path?: never
   query?: never
   url: '/api/v1beta/secrets/default/keys'
@@ -2384,7 +2355,11 @@ export type PutApiV1BetaSecretsDefaultKeysByKeyData = {
   /**
    * Update secret request
    */
-  body: V1UpdateSecretRequest
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | V1UpdateSecretRequest
   path: {
     /**
      * Secret key
@@ -2484,7 +2459,11 @@ export type PostApiV1BetaWorkloadsData = {
   /**
    * Create workload request
    */
-  body: V1CreateRequest
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | V1CreateRequest
   path?: never
   query?: never
   url: '/api/v1beta/workloads'
@@ -2518,7 +2497,11 @@ export type PostApiV1BetaWorkloadsDeleteData = {
   /**
    * Bulk delete request (names or group)
    */
-  body: V1BulkOperationRequest
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | V1BulkOperationRequest
   path?: never
   query?: never
   url: '/api/v1beta/workloads/delete'
@@ -2548,7 +2531,11 @@ export type PostApiV1BetaWorkloadsRestartData = {
   /**
    * Bulk restart request (names or group)
    */
-  body: V1BulkOperationRequest
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | V1BulkOperationRequest
   path?: never
   query?: never
   url: '/api/v1beta/workloads/restart'
@@ -2578,7 +2565,11 @@ export type PostApiV1BetaWorkloadsStopData = {
   /**
    * Bulk stop request (names or group)
    */
-  body: V1BulkOperationRequest
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | V1BulkOperationRequest
   path?: never
   query?: never
   url: '/api/v1beta/workloads/stop'
@@ -2676,7 +2667,11 @@ export type PostApiV1BetaWorkloadsByNameEditData = {
   /**
    * Update workload request
    */
-  body: V1UpdateRequest
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | V1UpdateRequest
   path: {
     /**
      * Workload name
