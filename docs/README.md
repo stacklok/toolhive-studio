@@ -60,6 +60,7 @@ E2E tests use Playwright to test the packaged Electron application.
   run from scratch.
 - `pnpm run e2e:prebuilt`: Runs e2e tests against an already packaged app in
   `out/`. Use this when iterating on tests without rebuilding.
+- Detailed E2E guide: `docs/e2e-testing.md`
 
 ### Building and packaging
 
