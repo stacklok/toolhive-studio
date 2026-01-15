@@ -22,6 +22,25 @@ end.
 - E2E scenarios focus on happy paths and core workflows.
 - Edge cases and destructive flows are covered by unit/integration tests.
 
+## Test isolation
+
+Test isolation is imperfect because the app stores state on disk and runs real
+workloads. We mitigate this by creating a dedicated test group and cleaning it
+up via the `thv` CLI before and after each run. Some state (like local caches)
+may still persist across runs.
+
+## Limitations
+
+- E2E runs only on GitHub Actions Linux runners for performance. macOS and
+  Windows runners are significantly slower and are not part of the default
+  E2E matrix.
+- Tests focus on daily user interactions (full end-to-end flows with backend
+  services and Playground). We do not cover OS-specific install/uninstall flows,
+  auto-updates, or platform-dependent behaviors.
+- Features that rely on native OS dialogs (such as file pickers) are not fully
+  tested without mocks.
+- Feature-specific constraints are documented in each section above.
+
 ## Coverage
 
 ### MCP registry installs
@@ -42,26 +61,9 @@ end.
 ### Settings
 
 - **Tested**: version tab shows the ToolHive binary version.
-- **Notes**: other settings are covered by unit tests or manual QA.
-
-## Test isolation
-
-Test isolation is imperfect because the app stores state on disk and runs real
-workloads. We mitigate this by creating a dedicated test group and cleaning it
-up via the `thv` CLI before and after each run. Some state (like local caches)
-may still persist across runs.
-
-## Limitations
-
-- E2E runs only on GitHub Actions Linux runners for performance. macOS and
-  Windows runners are significantly slower and are not part of the default
-  E2E matrix.
-- Tests focus on daily user interactions (full end-to-end flows with backend
-  services and Playground). We do not cover OS-specific install/uninstall flows,
-  auto-updates, or platform-dependent behaviors.
-- Features that rely on native OS dialogs (such as file pickers) are not fully
-  tested without mocks.
-- Feature-specific constraints are documented in each section above.
+- **Notes**: other settings are intentionally avoided because test isolation is
+  limited. Mutating settings can bleed across runs or affect a developer’s local
+  ToolHive environment.
 
 ## Troubleshooting
 
