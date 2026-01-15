@@ -280,6 +280,27 @@ describe('prepareCreateWorkloadData', () => {
     expect(result.permission_profile).toBeUndefined()
   })
 
+  it('sends proxy mode for stdio transport', () => {
+    const data: FormSchemaLocalMcp = {
+      image: 'test-image',
+      name: 'test-server',
+      transport: 'stdio',
+      proxy_mode: 'sse',
+      type: 'docker_image',
+      group: 'default',
+      envVars: [],
+      secrets: [],
+      cmd_arguments: [],
+      networkIsolation: false,
+      allowedHosts: [{ value: 'example.com' }],
+      allowedPorts: [{ value: '8080' }],
+      volumes: [],
+    }
+
+    const result = prepareCreateWorkloadData(data)
+    expect(result.proxy_mode).toBe('sse')
+  })
+
   it('ignores invalid allowedHosts and allowedPorts when network isolation is disabled', () => {
     const data: FormSchemaLocalMcp = {
       image: 'test-image',
@@ -415,7 +436,6 @@ describe('convertWorkloadToFormData', () => {
     expect(result).toEqual({
       name: 'npm-server',
       transport: 'sse',
-      proxy_mode: 'streamable-http',
       proxy_port: 8080,
       group: 'default',
       target_port: 8080,
@@ -555,7 +575,6 @@ describe('convertCreateRequestToFormData', () => {
       name: 'npm-server',
       image: 'npx://my-package',
       transport: 'sse',
-      proxy_mode: 'streamable-http',
       target_port: 3000,
     }
 
@@ -564,7 +583,6 @@ describe('convertCreateRequestToFormData', () => {
     expect(result).toEqual({
       name: 'npm-server',
       transport: 'sse',
-      proxy_mode: 'streamable-http',
       group: 'default',
       target_port: 3000,
       cmd_arguments: [],
@@ -740,7 +758,6 @@ describe('prepareUpdateLocalWorkloadData', () => {
     const data: FormSchemaLocalMcp = {
       name: 'updated-server',
       transport: 'sse',
-      proxy_mode: 'streamable-http',
       target_port: 3000,
       type: 'docker_image',
       group: 'production',
@@ -766,7 +783,6 @@ describe('prepareUpdateLocalWorkloadData', () => {
     expect(result).toEqual({
       image: 'ghcr.io/test/updated-server',
       transport: 'sse',
-      proxy_mode: 'streamable-http',
       group: 'production',
       target_port: 3000,
       cmd_arguments: ['--verbose'],

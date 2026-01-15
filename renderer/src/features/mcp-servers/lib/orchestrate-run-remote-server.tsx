@@ -7,7 +7,6 @@ import {
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
 import { omit } from '@/common/lib/utils'
 import { getRemoteAuthFieldType } from '@/common/lib/workloads/remote/form-fields-util-remote'
-import { getProxyModeOrDefault } from '@/common/lib/proxy-mode'
 import { REMOTE_MCP_AUTH_TYPES } from '@/common/lib/form-schema-mcp'
 
 function getOAuthConfig(
@@ -72,10 +71,6 @@ export function prepareCreateWorkloadData(
   const request = {
     ...omit({ ...data }, 'auth_type', 'secrets', 'tools', 'tools_override'),
     oauth_config: oauthConfig,
-    proxy_mode:
-      data.auth_type === REMOTE_MCP_AUTH_TYPES.BearerToken
-        ? data.transport
-        : data.proxy_mode,
     tools: data.tools ?? undefined,
     tools_override: data.tools_override ?? undefined,
   }
@@ -100,10 +95,6 @@ export function prepareUpdateRemoteWorkloadData(
 
   return {
     ...omit({ ...data }, 'auth_type', 'secrets', 'tools', 'tools_override'),
-    proxy_mode:
-      data.auth_type === REMOTE_MCP_AUTH_TYPES.BearerToken
-        ? data.transport
-        : data.proxy_mode,
     oauth_config: oauthConfig,
     tools: data.tools ?? undefined,
     tools_override: data.tools_override ?? undefined,
@@ -134,13 +125,11 @@ export function convertCreateRequestToFormData(
   })
 
   const authType = getRemoteAuthFieldType(createRequest.oauth_config)
-  const proxy_mode = getProxyModeOrDefault(createRequest.proxy_mode)
 
-  const baseFormData: FormSchemaRemoteMcp = {
+  const baseFormData: Omit<FormSchemaRemoteMcp, 'proxy_mode'> = {
     name: createRequest.name || '',
     url: createRequest.url || '',
     transport: createRequest.transport as 'sse' | 'streamable-http',
-    proxy_mode,
     proxy_port: createRequest.proxy_port,
     oauth_config: {
       skip_browser: createRequest.oauth_config?.skip_browser ?? false,

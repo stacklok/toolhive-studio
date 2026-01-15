@@ -31,7 +31,6 @@ describe('prepareCreateWorkloadData', () => {
       name: 'oauth-server',
       url: 'https://api.example.com',
       transport: 'sse',
-      proxy_mode: 'streamable-http',
       auth_type: 'oauth2',
       oauth_config: {
         authorize_url: 'https://oauth.example.com/authorize',
@@ -96,7 +95,6 @@ describe('prepareCreateWorkloadData', () => {
       name: 'no-scopes-server',
       url: 'https://api.example.com',
       transport: 'sse',
-      proxy_mode: 'streamable-http',
       auth_type: 'oauth2',
       oauth_config: {
         authorize_url: 'https://oauth.example.com/authorize',
@@ -121,7 +119,6 @@ describe('prepareCreateWorkloadData', () => {
       name: 'bearer-server',
       url: 'https://api.example.com',
       transport: 'sse',
-      proxy_mode: 'streamable-http',
       auth_type: 'bearer_token',
       oauth_config: {
         bearer_token: {
@@ -155,7 +152,6 @@ describe('prepareUpdateRemoteWorkloadData', () => {
       name: 'updated-oauth-server',
       url: 'https://api.updated.com',
       transport: 'streamable-http',
-      proxy_mode: 'streamable-http',
       auth_type: 'oauth2',
       oauth_config: {
         authorize_url: 'https://oauth.updated.com/authorize',

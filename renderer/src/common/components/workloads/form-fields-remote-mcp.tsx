@@ -246,7 +246,7 @@ export function FormFieldsRemoteMcp({
       <FormFieldRemoteGroup control={control} groups={groups} />
       <FormFieldRemoteUrl control={control} />
       <FormFieldRemoteTransport control={control} />
-      <FormFieldsProxy control={control} />
+      <FormFieldsProxy<FormSchemaRemoteMcp> control={control} />
       <FormFieldRemoteAuthType control={control} />
     </>
   )

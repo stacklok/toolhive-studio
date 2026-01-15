@@ -531,6 +531,8 @@ describe('DialogFormLocalMcp', () => {
     await userEvent.type(screen.getByLabelText('Package name'), '@test/package')
     await userEvent.type(screen.getByLabelText('Command arguments'), '--debug')
 
+    expect(screen.queryByLabelText(/proxy mode/i)).not.toBeInTheDocument()
+
     await userEvent.click(
       screen.getByRole('button', { name: 'Install server' })
     )
@@ -579,6 +581,7 @@ describe('DialogFormLocalMcp', () => {
     )
     await userEvent.click(screen.getByLabelText('Transport'))
     await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
+    expect(screen.getByLabelText(/proxy mode/i)).toBeVisible()
     await userEvent.type(
       screen.getByRole('textbox', { name: 'Docker image' }),
       'ghcr.io/test/server'
