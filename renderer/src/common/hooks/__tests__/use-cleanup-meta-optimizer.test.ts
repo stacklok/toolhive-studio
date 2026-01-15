@@ -15,8 +15,9 @@ vi.mock('../use-feature-flag')
 vi.mock('@/features/mcp-servers/hooks/use-mutation-delete-group')
 
 const { useFeatureFlag } = await import('../use-feature-flag')
-const { useMutationDeleteGroup } =
-  await import('@/features/mcp-servers/hooks/use-mutation-delete-group')
+const { useMutationDeleteGroup } = await import(
+  '@/features/mcp-servers/hooks/use-mutation-delete-group'
+)
 
 function createWrapper() {
   const queryClient = new QueryClient({

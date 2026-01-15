@@ -13,10 +13,8 @@ export interface Tool {
   originalDescription?: string
 }
 
-export interface ToolWithMetadata extends Omit<
-  Tool,
-  'description' | 'isInitialEnabled'
-> {
+export interface ToolWithMetadata
+  extends Omit<Tool, 'description' | 'isInitialEnabled'> {
   description: string
   isInitialEnabled: boolean
   originalName?: string
