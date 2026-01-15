@@ -20,7 +20,7 @@ interface UseRunRemoteServerProps {
   quietly?: boolean
 }
 
-const getSecrets = (data: FormSchemaRemoteMcp) => {
+const buildAuthSecret = (data: FormSchemaRemoteMcp) => {
   const isDefaultAuthType = data.auth_type === REMOTE_MCP_AUTH_TYPES.None
   const isBearerAuth = data.auth_type === REMOTE_MCP_AUTH_TYPES.BearerToken
   if (isDefaultAuthType) return data.secrets
@@ -51,7 +51,7 @@ export function useRunRemoteServer({
 
   const { mutate: installServerMutation } = useMutation({
     mutationFn: async ({ data }: { data: FormSchemaRemoteMcp }) => {
-      const secrets = getSecrets(data)
+      const secrets = buildAuthSecret(data)
       const { newlyCreatedSecrets } = await handleSecrets(secrets)
 
       const preparedData = prepareCreateWorkloadData(data, newlyCreatedSecrets)
