@@ -47,9 +47,7 @@ export {
 export type {
   AuditConfig,
   AuthTokenValidatorConfig,
-  AuthzCedarConfig,
   AuthzConfig,
-  AuthzConfigType,
   ClientMcpClient,
   ClientMcpClientStatus,
   ClientOptions,
@@ -256,7 +254,6 @@ export type {
   RegistryGroup,
   RegistryHeader,
   RegistryImageMetadata,
-  RegistryMetadata,
   RegistryOAuthConfig,
   RegistryProvenance,
   RegistryRegistry,
