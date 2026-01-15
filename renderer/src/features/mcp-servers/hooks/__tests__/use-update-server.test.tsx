@@ -465,6 +465,7 @@ describe('useUpdateServer', () => {
         transport: 'stdio',
         type: 'docker_image',
         image: 'test/image:latest',
+        proxy_mode: 'streamable-http',
         cmd_arguments: ['server.js'],
         envVars: [],
         secrets: [
@@ -541,6 +542,7 @@ describe('useUpdateServer', () => {
       const formData: FormSchemaLocalMcp = {
         name: 'test-npm-server',
         transport: 'stdio',
+        proxy_mode: 'streamable-http',
         type: 'package_manager',
         protocol: 'npx',
         package_name: '@modelcontextprotocol/server-example',

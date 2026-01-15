@@ -269,7 +269,7 @@ export function prepareUpdateLocalWorkloadData(
   return {
     image,
     transport: data.transport,
-    proxy_mode: sendProxyMode ? data.proxy_mode : undefined,
+    ...(sendProxyMode ? { proxy_mode: data.proxy_mode } : {}),
     proxy_port: data.proxy_port,
     group: data.group,
     target_port: data.target_port,
