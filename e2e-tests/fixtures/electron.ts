@@ -93,6 +93,10 @@ export const test = base.extend<ElectronFixtures>({
       executablePath: getExecutablePath(),
       recordVideo: { dir: 'test-videos' },
       args: ['--no-sandbox'],
+      env: {
+        ...process.env,
+        TOOLHIVE_E2E: '1',
+      },
     })
 
     await use(app)
@@ -112,6 +116,23 @@ export const test = base.extend<ElectronFixtures>({
     await window.route('https://*.sentry.io/**', (route) => {
       throw new Error(`Sentry request blocked: ${route.request().url()}`)
     })
+
+    const sentryDsn = await electronApp.evaluate(async () => {
+      try {
+        const Sentry = (await import('@sentry/electron/main')) as {
+          getCurrentHub?: () => {
+            getClient?: () => { getOptions?: () => { dsn?: string | null } }
+          }
+        }
+        const client = Sentry.getCurrentHub?.().getClient?.()
+        return client?.getOptions?.().dsn ?? null
+      } catch {
+        return null
+      }
+    })
+    if (sentryDsn) {
+      throw new Error(`Expected empty Sentry DSN during E2E, got: ${sentryDsn}`)
+    }
 
     // Disable quit confirmation dialog to prevent hang on close
     await window.evaluate(() => {
