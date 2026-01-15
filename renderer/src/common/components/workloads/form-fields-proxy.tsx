@@ -14,7 +14,13 @@ import {
   SelectValue,
 } from '@/common/components/ui/select'
 import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
-import type { Control, FieldValues, Path } from 'react-hook-form'
+import {
+  useWatch,
+  type Control,
+  type FieldValues,
+  type Path,
+} from 'react-hook-form'
+import { REMOTE_MCP_AUTH_TYPES } from '@/common/lib/form-schema-mcp'
 
 type ProxyFields = {
   proxy_mode: 'sse' | 'streamable-http'
@@ -28,41 +34,48 @@ interface FormFieldsProxyProps<T extends FieldValues & ProxyFields> {
 export function FormFieldsProxy<T extends FieldValues & ProxyFields>({
   control,
 }: FormFieldsProxyProps<T>) {
+  // For BearerToken auth, the MCP client connects directly to the remote server.
+  // proxy_mode always matches the transport value and is not configurable.
+
+  const authType = useWatch({ control, name: 'auth_type' as Path<T> })
+
   return (
     <>
-      <FormField
-        control={control}
-        name={'proxy_mode' as Path<T>}
-        render={({ field }) => (
-          <FormItem>
-            <div className="flex items-center gap-1">
-              <FormLabel htmlFor={field.name}>Proxy mode</FormLabel>
-              <TooltipInfoIcon>
-                The proxy transport mode that clients should use to connect to
-                this server.
-              </TooltipInfoIcon>
-            </div>
-            <FormControl>
-              <Select
-                onValueChange={field.onChange}
-                value={field.value}
-                name={field.name}
-              >
-                <SelectTrigger id={field.name} className="w-full">
-                  <SelectValue placeholder="Select proxy mode" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sse">SSE</SelectItem>
-                  <SelectItem value="streamable-http">
-                    Streamable HTTP
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {authType !== REMOTE_MCP_AUTH_TYPES.BearerToken && (
+        <FormField
+          control={control}
+          name={'proxy_mode' as Path<T>}
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex items-center gap-1">
+                <FormLabel htmlFor={field.name}>Proxy mode</FormLabel>
+                <TooltipInfoIcon>
+                  The proxy transport mode that clients should use to connect to
+                  this server.
+                </TooltipInfoIcon>
+              </div>
+              <FormControl>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  name={field.name}
+                >
+                  <SelectTrigger id={field.name} className="w-full">
+                    <SelectValue placeholder="Select proxy mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sse">SSE</SelectItem>
+                    <SelectItem value="streamable-http">
+                      Streamable HTTP
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
       <FormField
         control={control}

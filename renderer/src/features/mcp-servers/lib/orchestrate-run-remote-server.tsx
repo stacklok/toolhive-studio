@@ -6,8 +6,53 @@ import {
 } from '@api/types.gen'
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
 import { omit } from '@/common/lib/utils'
+import { getRemoteAuthFieldType } from '@/common/lib/workloads/remote/form-fields-util-remote'
 import { getProxyModeOrDefault } from '@/common/lib/proxy-mode'
+import { REMOTE_MCP_AUTH_TYPES } from '@/common/lib/form-schema-mcp'
 
+function getOAuthConfig(
+  data: FormSchemaRemoteMcp,
+  newlyCreatedSecrets?: SecretsSecretParameter[],
+  clientSecretFallback?: string
+) {
+  const { oauth_config, auth_type } = data
+
+  // Use the actual secret name from store if available (handles naming collisions)
+  // For bearer_token auth, the secret is in bearer_token field
+  // For oauth2/oidc auth, the secret is in client_secret field
+  const isBearerAuth = auth_type === REMOTE_MCP_AUTH_TYPES.BearerToken
+  const secretName = isBearerAuth
+    ? (newlyCreatedSecrets?.[0]?.name ?? oauth_config.bearer_token?.name)
+    : (newlyCreatedSecrets?.[0]?.name ?? clientSecretFallback)
+
+  const oauthConfig = {
+    ...oauth_config,
+    scopes: oauth_config.scopes
+      ? oauth_config.scopes.split(',').map((s: string) => s.trim())
+      : [],
+  }
+
+  // Transform secrets from object to SecretsSecretParameter if they exist
+  return oauthConfig
+    ? {
+        ...oauthConfig,
+        client_secret:
+          !isBearerAuth && oauth_config.client_secret && secretName
+            ? ({
+                name: secretName,
+                target: secretName,
+              } as SecretsSecretParameter)
+            : undefined,
+        bearer_token:
+          isBearerAuth && oauth_config.bearer_token && secretName
+            ? ({
+                name: secretName,
+                target: secretName,
+              } as SecretsSecretParameter)
+            : undefined,
+      }
+    : oauthConfig
+}
 /**
  * Combines the registry server definition, the form fields, and the newly
  * created secrets from the secret store into a single request object.
@@ -18,36 +63,19 @@ export function prepareCreateWorkloadData(
   data: FormSchemaRemoteMcp,
   newlyCreatedSecrets?: SecretsSecretParameter[]
 ): V1CreateRequest {
-  const { oauth_config, ...rest } = data
-
-  const oauthConfig = {
-    ...oauth_config,
-    scopes: oauth_config.scopes
-      ? oauth_config.scopes.split(',').map((s: string) => s.trim())
-      : [],
-  }
-
-  // Use the actual secret name from store if available (handles naming collisions)
-  const secretName =
-    newlyCreatedSecrets?.[0]?.name ?? oauth_config.client_secret?.name
-
-  // Transform client_secret from object to SecretsSecretParameter if it exists
-  const transformedOAuthConfig = oauthConfig
-    ? {
-        ...oauthConfig,
-        client_secret:
-          oauth_config.client_secret && secretName
-            ? ({
-                name: secretName,
-                target: secretName,
-              } as SecretsSecretParameter)
-            : undefined,
-      }
-    : oauthConfig
+  const oauthConfig = getOAuthConfig(
+    data,
+    newlyCreatedSecrets,
+    data.oauth_config.client_secret?.name
+  )
 
   const request = {
-    ...omit(rest, 'auth_type', 'secrets', 'tools', 'tools_override'),
-    oauth_config: transformedOAuthConfig,
+    ...omit({ ...data }, 'auth_type', 'secrets', 'tools', 'tools_override'),
+    oauth_config: oauthConfig,
+    proxy_mode:
+      data.auth_type === REMOTE_MCP_AUTH_TYPES.BearerToken
+        ? data.transport
+        : data.proxy_mode,
     tools: data.tools ?? undefined,
     tools_override: data.tools_override ?? undefined,
   }
@@ -64,48 +92,22 @@ export function prepareUpdateRemoteWorkloadData(
   data: FormSchemaRemoteMcp,
   newlyCreatedSecrets?: SecretsSecretParameter[]
 ): V1UpdateRequest {
-  const { oauth_config, ...rest } = data
-
-  const oauthConfig = {
-    ...oauth_config,
-    scopes: oauth_config.scopes
-      ? oauth_config.scopes.split(',').map((s: string) => s.trim())
-      : [],
-  }
-
-  // Use the actual secret name from store if available (handles naming collisions)
-  const secretName =
-    newlyCreatedSecrets?.[0]?.name ?? oauth_config.client_secret?.value.secret
-
-  // Transform client_secret from string to SecretsSecretParameter if it exists
-  const transformedOAuthConfig = oauthConfig
-    ? {
-        ...oauthConfig,
-        client_secret:
-          oauth_config.client_secret && secretName
-            ? ({
-                name: secretName,
-                target: secretName,
-              } as SecretsSecretParameter)
-            : undefined,
-      }
-    : oauthConfig
+  const oauthConfig = getOAuthConfig(
+    data,
+    newlyCreatedSecrets,
+    data.oauth_config.client_secret?.value.secret
+  )
 
   return {
-    ...omit(rest, 'auth_type', 'secrets', 'tools', 'tools_override'),
-    oauth_config: transformedOAuthConfig,
+    ...omit({ ...data }, 'auth_type', 'secrets', 'tools', 'tools_override'),
+    proxy_mode:
+      data.auth_type === REMOTE_MCP_AUTH_TYPES.BearerToken
+        ? data.transport
+        : data.proxy_mode,
+    oauth_config: oauthConfig,
     tools: data.tools ?? undefined,
     tools_override: data.tools_override ?? undefined,
   }
-}
-
-const getAuthType = (
-  oauthConfig?: V1CreateRequest['oauth_config']
-): 'oauth2' | 'oidc' | 'none' => {
-  if (!oauthConfig) return 'none'
-  if (oauthConfig.authorize_url) return 'oauth2'
-  if (oauthConfig.issuer) return 'oidc'
-  return 'none'
 }
 
 // The type of the GET is V1CreateRequest
@@ -131,8 +133,7 @@ export function convertCreateRequestToFormData(
     }
   })
 
-  const authType = getAuthType(createRequest.oauth_config)
-
+  const authType = getRemoteAuthFieldType(createRequest.oauth_config)
   const proxy_mode = getProxyModeOrDefault(createRequest.proxy_mode)
 
   const baseFormData: FormSchemaRemoteMcp = {
@@ -154,6 +155,17 @@ export function convertCreateRequestToFormData(
               secret: createRequest.oauth_config.client_secret.target || '',
               isFromStore: availableSecretKeys.has(
                 createRequest.oauth_config.client_secret.target || ''
+              ),
+            },
+          }
+        : undefined,
+      bearer_token: createRequest.oauth_config?.bearer_token
+        ? {
+            name: createRequest.oauth_config.bearer_token.name || '',
+            value: {
+              secret: createRequest.oauth_config.bearer_token.target || '',
+              isFromStore: availableSecretKeys.has(
+                createRequest.oauth_config.bearer_token.target || ''
               ),
             },
           }

@@ -11,6 +11,7 @@ import { useMutationUpdateWorkload } from './use-mutation-update-workload'
 import { useLocation } from '@tanstack/react-router'
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
 import { useNotificationOptimizer } from './use-notification-optimizer'
+import { REMOTE_MCP_AUTH_TYPES } from '@/common/lib/form-schema-mcp'
 
 type UseUpdateServerOptions<TIsRemote extends boolean = false> = {
   isRemote?: TIsRemote
@@ -49,12 +50,18 @@ export function useUpdateServer<TIsRemote extends boolean = false>(
     }) => {
       if (isRemoteFormData(data, options?.isRemote)) {
         // Remote server update - handle secrets not in store
-        const isDefaultAuthType = data.auth_type === 'none'
+        const isDefaultAuthType = data.auth_type === REMOTE_MCP_AUTH_TYPES.None
+        const isBearerAuth =
+          data.auth_type === REMOTE_MCP_AUTH_TYPES.BearerToken
         const secrets = isDefaultAuthType
           ? data.secrets
-          : data.oauth_config.client_secret
-            ? [data.oauth_config.client_secret]
-            : []
+          : isBearerAuth
+            ? data.oauth_config.bearer_token
+              ? [data.oauth_config.bearer_token]
+              : []
+            : data.oauth_config.client_secret
+              ? [data.oauth_config.client_secret]
+              : []
 
         const hasNewSecrets = secrets.some((s) => !s.value?.isFromStore)
 

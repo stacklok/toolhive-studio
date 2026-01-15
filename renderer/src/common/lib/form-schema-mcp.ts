@@ -1,6 +1,23 @@
 import type { CoreWorkload, PermissionsProfile } from '@api/types.gen'
 import { z } from 'zod/v4'
 
+export const REMOTE_MCP_AUTH_TYPES = {
+  None: 'none',
+  OAuth2: 'oauth2',
+  OIDC: 'oidc',
+  BearerToken: 'bearer_token',
+} as const
+
+export type RemoteMcpAuthType =
+  (typeof REMOTE_MCP_AUTH_TYPES)[keyof typeof REMOTE_MCP_AUTH_TYPES]
+
+const remoteMcpAuthTypeSchema = z.enum([
+  REMOTE_MCP_AUTH_TYPES.None,
+  REMOTE_MCP_AUTH_TYPES.OAuth2,
+  REMOTE_MCP_AUTH_TYPES.OIDC,
+  REMOTE_MCP_AUTH_TYPES.BearerToken,
+])
+
 const createNameSchema = (workloads: CoreWorkload[]) => {
   const nameValidation = z
     .union([z.string(), z.undefined()])
@@ -364,6 +381,15 @@ const remoteMcpOauthConfigSchema = z.object({
   authorize_url: z.string().optional(),
   callback_port: z.number().optional(),
   client_id: z.string().optional(),
+  bearer_token: z
+    .object({
+      name: z.string(),
+      value: z.object({
+        secret: z.string(),
+        isFromStore: z.boolean(),
+      }),
+    })
+    .optional(),
   client_secret: z
     .object({
       name: z.string(),
@@ -391,8 +417,8 @@ export const createRemoteMcpBaseSchema = (workloads: CoreWorkload[]) => {
   const urlSchema = z.object({
     url: z.string().nonempty('The MCP server URL is required'),
   })
-  const authTypeSchema = z.object({
-    auth_type: z.enum(['none', 'oauth2', 'oidc']).default('none'),
+  const authTypeObjSchema = z.object({
+    auth_type: remoteMcpAuthTypeSchema.default('none'),
   })
 
   const commonSchema = nameSchema
@@ -401,7 +427,7 @@ export const createRemoteMcpBaseSchema = (workloads: CoreWorkload[]) => {
     .extend(proxyConfigSchema.shape)
     .extend(secretsSchema.shape)
     .extend(urlSchema.shape)
-    .extend(authTypeSchema.shape)
+    .extend(authTypeObjSchema.shape)
     .extend(toolsSchema.shape)
     .extend(toolsOverrideSchema.shape)
     .extend({ oauth_config: remoteMcpOauthConfigSchema })

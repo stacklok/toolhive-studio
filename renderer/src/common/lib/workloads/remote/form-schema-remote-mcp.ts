@@ -1,6 +1,9 @@
 import z from 'zod/v4'
 import type { CoreWorkload } from '@api/types.gen'
-import { createRemoteMcpBaseSchema } from '@/common/lib/form-schema-mcp'
+import {
+  createRemoteMcpBaseSchema,
+  REMOTE_MCP_AUTH_TYPES,
+} from '@/common/lib/form-schema-mcp'
 
 const OAUTH_VALIDATION_RULES = {
   oauth2: [
@@ -32,12 +35,19 @@ const OAUTH_VALIDATION_RULES = {
       path: ['oauth_config', 'client_id'],
     },
   ],
+  bearer_token: [
+    {
+      field: 'bearer_token',
+      message: 'Bearer token is required for Bearer authentication',
+      path: ['oauth_config', 'bearer_token'],
+    },
+  ],
 }
 
 const validateOAuthField = (value: string | undefined): boolean =>
   Boolean(value && value.trim() !== '')
 
-const validateClientSecretField = (
+const validateSecretField = (
   value:
     | { name: string; value: { secret: string; isFromStore: boolean } }
     | undefined
@@ -86,8 +96,11 @@ export const getFormSchemaRemoteMcp = (
         const fieldValue = (oauth_config as Record<string, unknown>)[field]
 
         let isValid = false
-        if (field === 'client_secret') {
-          isValid = validateClientSecretField(
+        if (
+          field === 'client_secret' ||
+          auth_type === REMOTE_MCP_AUTH_TYPES.BearerToken
+        ) {
+          isValid = validateSecretField(
             fieldValue as
               | {
                   name: string

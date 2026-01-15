@@ -451,6 +451,88 @@ describe('DialogFormRemoteMcp', () => {
     })
   })
 
+  it('submits bearer token auth with correct oauth_config', async () => {
+    const user = userEvent.setup({ delay: null })
+    const rec = recordRequests()
+
+    mswServer.use(
+      http.post(
+        mswEndpoint('/api/v1beta/secrets/default/keys'),
+        async ({ request }) => {
+          const { key, value } = (await request.json()) as {
+            key: string
+            value: string
+          }
+          return HttpResponse.json({ key, value }, { status: 201 })
+        }
+      ),
+      http.post(mswEndpoint('/api/v1beta/workloads'), () => {
+        return HttpResponse.json(
+          { name: 'bearer-auth-server', status: 'running' },
+          { status: 201 }
+        )
+      })
+    )
+
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRemoteMcp isOpen closeDialog={vi.fn()} groupName="default" />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    await user.type(
+      screen.getByRole('textbox', { name: /server name/i }),
+      'bearer-auth-server'
+    )
+
+    await user.type(
+      screen.getByRole('textbox', { name: /server url/i }),
+      'https://api.example.com/mcp'
+    )
+
+    // Select Bearer Token auth type
+    await user.click(screen.getByLabelText('Authorization method'))
+    await user.click(screen.getByRole('option', { name: 'Bearer Token' }))
+
+    // Wait for bearer token field and fill it
+    const bearerTokenInput = await screen.findByPlaceholderText(
+      'e.g. token_123_ABC_789_XYZ'
+    )
+    await user.type(bearerTokenInput, 'my-secret-bearer-token')
+
+    await user.click(screen.getByRole('button', { name: 'Install server' }))
+
+    await waitFor(() => {
+      const workloadCall = rec.recordedRequests.find(
+        (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
+      )
+      expect(workloadCall).toBeDefined()
+      expect(workloadCall?.payload).toEqual(
+        expect.objectContaining({
+          name: 'bearer-auth-server',
+          url: 'https://api.example.com/mcp',
+          transport: 'streamable-http',
+          group: 'default',
+          oauth_config: expect.objectContaining({
+            bearer_token: {
+              name: 'BEARER_TOKEN_BEARER_AUTH_SERVER',
+              target: 'BEARER_TOKEN_BEARER_AUTH_SERVER',
+            },
+          }),
+        })
+      )
+      // client_secret should be undefined for bearer auth
+      expect(
+        (workloadCall?.payload as { oauth_config: { client_secret?: unknown } })
+          .oauth_config.client_secret
+      ).toBeUndefined()
+    })
+  })
+
   it('resets secret key name to default when user types a new value after selecting from store', async () => {
     const user = userEvent.setup({ delay: null })
 

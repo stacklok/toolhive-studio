@@ -115,6 +115,38 @@ describe('prepareCreateWorkloadData', () => {
     expect(result.oauth_config?.scopes).toEqual([])
     expect(result.oauth_config?.client_secret).toBeUndefined()
   })
+
+  it('transforms bearer_token auth and sets client_secret to undefined', () => {
+    const data: FormSchemaRemoteMcp = {
+      name: 'bearer-server',
+      url: 'https://api.example.com',
+      transport: 'sse',
+      proxy_mode: 'streamable-http',
+      auth_type: 'bearer_token',
+      oauth_config: {
+        bearer_token: {
+          name: 'BEARER_TOKEN_BEARER_SERVER',
+          value: {
+            secret: 'my-bearer-token-value',
+            isFromStore: true,
+          },
+        },
+        use_pkce: false,
+        skip_browser: false,
+      },
+      secrets: [],
+      group: 'default',
+    }
+
+    const result = prepareCreateWorkloadData(data)
+
+    expect(result.oauth_config?.bearer_token).toEqual({
+      name: 'BEARER_TOKEN_BEARER_SERVER',
+      target: 'BEARER_TOKEN_BEARER_SERVER',
+    })
+    expect(result.oauth_config?.client_secret).toBeUndefined()
+    expect(result).not.toHaveProperty('auth_type')
+  })
 })
 
 describe('prepareUpdateRemoteWorkloadData', () => {
