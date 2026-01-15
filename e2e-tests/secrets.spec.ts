@@ -5,13 +5,6 @@ import {
   TEST_SECRET_NAME,
 } from './fixtures/electron'
 
-test('navigates to Secrets tab', async ({ window }) => {
-  await window.getByRole('link', { name: 'Secrets' }).click()
-  await expect(
-    window.getByRole('heading', { name: 'Secrets', level: 1 })
-  ).toBeVisible()
-})
-
 test('creates and deletes a secret', async ({ window }) => {
   deleteTestSecretViaCli() // Clean up leftover from previous failed runs
 

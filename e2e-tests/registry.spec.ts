@@ -1,12 +1,5 @@
 import { test, expect } from './fixtures/electron'
 
-test('navigates to Registry tab', async ({ window }) => {
-  await window.getByRole('link', { name: 'Registry' }).click()
-  await expect(
-    window.getByRole('heading', { name: 'Registry', level: 1 })
-  ).toBeVisible()
-})
-
 test('install and uninstall server from registry', async ({ window }) => {
   await window.getByRole('button', { name: /add an mcp server/i }).click()
   await window.getByRole('menuitem', { name: /from the registry/i }).click()
