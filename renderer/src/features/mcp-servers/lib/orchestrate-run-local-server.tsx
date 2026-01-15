@@ -109,16 +109,17 @@ export function convertWorkloadToFormData(
     image.includes('://') &&
     ['npx://', 'uvx://', 'go://'].some((protocol) => image.startsWith(protocol))
 
+  const proxyMode = getProxyModeOrDefault(
+    workload.proxy_mode,
+    workload.transport_type
+  )
   const baseFormData = {
     name: workload.name || '',
     transport: (workload.transport_type || 'stdio') as
       | 'sse'
       | 'stdio'
       | 'streamable-http',
-    proxy_mode: getProxyModeOrDefault(
-      workload.proxy_mode,
-      workload.transport_type
-    ),
+    ...(proxyMode ? { proxy_mode: proxyMode } : {}),
     proxy_port: workload.port,
     group: 'default',
     target_port: workload.port,
@@ -191,10 +192,11 @@ export function convertCreateRequestToFormData(
     }
   })
 
+  const proxyMode = getProxyModeOrDefault(createRequest.proxy_mode, transport)
   const baseFormData = {
     name: createRequest.name || '',
     transport,
-    proxy_mode: getProxyModeOrDefault(createRequest.proxy_mode, transport),
+    ...(proxyMode ? { proxy_mode: proxyMode } : {}),
     proxy_port: createRequest.proxy_port,
     group: createRequest.group ?? 'default',
     target_port: transport === 'stdio' ? 0 : createRequest.target_port,
