@@ -53,6 +53,13 @@ may still persist across runs.
 - E2E runs only on GitHub Actions Linux runners for performance. macOS and
   Windows runners are significantly slower and are not part of the default
   E2E matrix.
+- Tests focus on daily user interactions (full end-to-end flows with backend
+  services and Playground). We do not cover OS-specific install/uninstall flows,
+  auto-updates, or platform-dependent behaviors.
+- Features that rely on native OS dialogs (such as file pickers) are not fully
+  tested without mocks.
+- Scenarios are happy-path oriented; destructive cases and edge-case matrices are
+  intentionally handled elsewhere to keep E2E runtime manageable.
 - Feature-specific constraints are documented in each section above.
 
 ## Troubleshooting
