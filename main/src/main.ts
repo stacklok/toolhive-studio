@@ -118,7 +118,7 @@ import {
 } from './app-state'
 import type { UIMessage } from 'ai'
 
-const isE2E = process.env.TOOLHIVE_E2E === '1'
+const isE2E = process.env.TOOLHIVE_E2E === 'true'
 
 const store = new Store<{
   isTelemetryEnabled: boolean

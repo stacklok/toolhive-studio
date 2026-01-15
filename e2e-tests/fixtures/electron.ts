@@ -95,7 +95,7 @@ export const test = base.extend<ElectronFixtures>({
       args: ['--no-sandbox'],
       env: {
         ...process.env,
-        TOOLHIVE_E2E: '1',
+        TOOLHIVE_E2E: 'true',
       },
     })
 
