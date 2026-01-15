@@ -408,7 +408,7 @@ describe('convertWorkloadToFormData', () => {
     expect(result).toEqual({
       name: 'docker-server',
       transport: 'stdio',
-      proxy_mode: 'streamable-http',
+      proxy_port: undefined,
       group: 'default',
       target_port: undefined,
       cmd_arguments: [],
@@ -420,6 +420,7 @@ describe('convertWorkloadToFormData', () => {
       volumes: [],
       type: 'docker_image',
       image: 'ghcr.io/test/server',
+      tools: undefined,
     })
   })
 
@@ -436,6 +437,7 @@ describe('convertWorkloadToFormData', () => {
     expect(result).toEqual({
       name: 'npm-server',
       transport: 'sse',
+      proxy_mode: 'streamable-http',
       proxy_port: 8080,
       group: 'default',
       target_port: 8080,
@@ -547,7 +549,8 @@ describe('convertCreateRequestToFormData', () => {
     expect(result).toEqual({
       name: 'docker-server',
       transport: 'stdio',
-      proxy_mode: 'streamable-http',
+      proxy_port: undefined,
+      permission_profile: undefined,
       group: 'default',
       target_port: 0,
       cmd_arguments: ['--debug'],
@@ -567,6 +570,8 @@ describe('convertCreateRequestToFormData', () => {
       volumes: [],
       type: 'docker_image',
       image: 'ghcr.io/test/server',
+      tools: undefined,
+      tools_override: undefined,
     })
   })
 
@@ -583,6 +588,9 @@ describe('convertCreateRequestToFormData', () => {
     expect(result).toEqual({
       name: 'npm-server',
       transport: 'sse',
+      proxy_mode: 'streamable-http',
+      proxy_port: undefined,
+      permission_profile: undefined,
       group: 'default',
       target_port: 3000,
       cmd_arguments: [],
