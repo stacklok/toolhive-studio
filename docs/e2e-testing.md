@@ -20,14 +20,17 @@ end.
 ## Coverage philosophy
 
 - E2E scenarios focus on happy paths and core workflows.
+- We prioritize scenarios that deliver high value without introducing flaky,
+  costly-to-maintain test infrastructure.
 - Edge cases and destructive flows are covered by unit/integration tests.
 
 ## Test isolation
 
 Test isolation is imperfect because the app stores state on disk and runs real
 workloads. We mitigate this by creating a dedicated test group and cleaning it
-up via the `thv` CLI before and after each run. Some state (like local caches)
-may still persist across runs.
+up via the `thv` CLI before and after each run. This limits coverage (for
+example, we avoid tests that rely on the default group) and some state (like
+local caches) may still persist across runs.
 
 ## Limitations
 
