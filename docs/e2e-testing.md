@@ -23,6 +23,9 @@ end.
 - We prioritize scenarios that deliver high value without introducing flaky,
   costly-to-maintain test infrastructure, and that can be run locally without
   disrupting a developer’s ToolHive setup.
+- Not every feature has a dedicated test case; some are intentionally covered
+  by broader flows to keep the suite small and fast.
+- Tests exercise real backend behavior rather than mocked integrations.
 - Edge cases and destructive flows are covered by unit/integration tests.
 
 ## Test isolation
@@ -30,8 +33,9 @@ end.
 Test isolation is imperfect because the app stores state on disk and runs real
 workloads. We mitigate this by creating a dedicated test group and cleaning it
 up via the `thv` CLI before and after each run. This limits coverage (for
-example, we avoid tests that rely on the default group) and some state (like
-local caches) may still persist across runs.
+example, we avoid tests that rely on the default group), prevents reliable
+parallel execution on a single machine, and some state (like local caches) may
+still persist across runs.
 
 ## Limitations
 
