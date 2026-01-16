@@ -21,7 +21,8 @@ end.
 
 - E2E scenarios focus on happy paths and core workflows.
 - We prioritize scenarios that deliver high value without introducing flaky,
-  costly-to-maintain test infrastructure.
+  costly-to-maintain test infrastructure, and that can be run locally without
+  disrupting a developer’s ToolHive setup.
 - Edge cases and destructive flows are covered by unit/integration tests.
 
 ## Test isolation
@@ -40,21 +41,25 @@ local caches) may still persist across runs.
 - Tests focus on daily user interactions (full end-to-end flows with backend
   services and Playground). We do not cover OS-specific install/uninstall flows,
   auto-updates, or platform-dependent behaviors.
-- Features that rely on native OS dialogs (such as file pickers) are not fully
-  tested without mocks.
-- Feature-specific constraints are documented in each section above.
+- Features that rely on native OS dialogs (such as file pickers) are not
+  currently E2E tested.
+- Feature-specific constraints are documented in each section below.
 
 ## Coverage
 
-### MCP registry installs
+### Install and manage MCPs (Registry + Remote)
 
-- **Tested**: install/uninstall a server from the registry.
+- **Tested**: install/uninstall a server from the default registry and add a
+  remote MCP server, then enable its tools in the UI.
+- **Notes**: due to test isolation constraints, we only use the default registry.
+  Remote server authentication flows are not fully tested end-to-end. The server
+  is a local test MCP instance (not a separate machine) and is not managed by
+  ToolHive—only registered as a remote endpoint.
 
-### Remote MCP servers + tool calling
+### Playground tool calling
 
-- **Tested**: add a remote MCP server, enable its tools, and verify the model
-  calls a test tool in the Playground.
-- **Notes**: uses a local mock MCP server to avoid external dependencies.
+- **Tested**: verify the Playground can invoke an MCP tool and return a response.
+- **Notes**: uses a local test MCP server for deterministic behavior.
 
 ### Secrets
 
