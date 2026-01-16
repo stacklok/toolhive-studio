@@ -82,6 +82,8 @@ export function prepareCreateWorkloadData(
       }
     : undefined
 
+  const sendProxyMode = data.transport === 'stdio'
+
   return {
     ...request,
     network_isolation: networkIsolation,
@@ -89,7 +91,7 @@ export function prepareCreateWorkloadData(
     volumes: getVolumes(volumes ?? []),
     tools: data.tools || undefined,
     tools_override: data.tools_override || undefined,
-    proxy_mode: data.proxy_mode,
+    proxy_mode: sendProxyMode ? data.proxy_mode : undefined,
     proxy_port: data.proxy_port,
   }
 }
@@ -107,13 +109,17 @@ export function convertWorkloadToFormData(
     image.includes('://') &&
     ['npx://', 'uvx://', 'go://'].some((protocol) => image.startsWith(protocol))
 
+  const proxyMode = getProxyModeOrDefault(
+    workload.proxy_mode,
+    workload.transport_type
+  )
   const baseFormData = {
     name: workload.name || '',
     transport: (workload.transport_type || 'stdio') as
       | 'sse'
       | 'stdio'
       | 'streamable-http',
-    proxy_mode: getProxyModeOrDefault(workload.proxy_mode),
+    ...(proxyMode ? { proxy_mode: proxyMode } : {}),
     proxy_port: workload.port,
     group: 'default',
     target_port: workload.port,
@@ -186,12 +192,11 @@ export function convertCreateRequestToFormData(
     }
   })
 
-  const proxy_mode = getProxyModeOrDefault(createRequest.proxy_mode)
-
+  const proxyMode = getProxyModeOrDefault(createRequest.proxy_mode, transport)
   const baseFormData = {
     name: createRequest.name || '',
     transport,
-    proxy_mode,
+    ...(proxyMode ? { proxy_mode: proxyMode } : {}),
     proxy_port: createRequest.proxy_port,
     group: createRequest.group ?? 'default',
     target_port: transport === 'stdio' ? 0 : createRequest.target_port,
@@ -259,11 +264,12 @@ export function prepareUpdateLocalWorkloadData(
     data.group === MCP_OPTIMIZER_GROUP_NAME
       ? data.permission_profile
       : undefined
+  const sendProxyMode = data.transport === 'stdio'
 
   return {
     image,
     transport: data.transport,
-    proxy_mode: data.proxy_mode,
+    ...(sendProxyMode ? { proxy_mode: data.proxy_mode } : {}),
     proxy_port: data.proxy_port,
     group: data.group,
     target_port: data.target_port,

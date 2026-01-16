@@ -23,7 +23,7 @@ import {
 import { REMOTE_MCP_AUTH_TYPES } from '@/common/lib/form-schema-mcp'
 
 type ProxyFields = {
-  proxy_mode: 'sse' | 'streamable-http'
+  proxy_mode?: 'sse' | 'streamable-http'
   proxy_port?: number
 }
 
@@ -34,14 +34,18 @@ interface FormFieldsProxyProps<T extends FieldValues & ProxyFields> {
 export function FormFieldsProxy<T extends FieldValues & ProxyFields>({
   control,
 }: FormFieldsProxyProps<T>) {
-  // For BearerToken auth, the MCP client connects directly to the remote server.
-  // proxy_mode always matches the transport value and is not configurable.
+  // proxy_mode is only configurable for stdio transport (non-BearerToken auth).
+  // For other transports, proxy_mode matches the transport value automatically.
 
   const authType = useWatch({ control, name: 'auth_type' as Path<T> })
+  const transport = useWatch({ control, name: 'transport' as Path<T> })
+
+  const showProxyMode =
+    authType !== REMOTE_MCP_AUTH_TYPES.BearerToken && transport === 'stdio'
 
   return (
     <>
-      {authType !== REMOTE_MCP_AUTH_TYPES.BearerToken && (
+      {showProxyMode && (
         <FormField
           control={control}
           name={'proxy_mode' as Path<T>}

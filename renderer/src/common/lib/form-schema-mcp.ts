@@ -168,7 +168,7 @@ const createProxyConfigSchema = () => {
   return z.object({
     proxy_mode: z
       .union([z.literal('sse'), z.literal('streamable-http')])
-      .default('streamable-http'),
+      .optional(),
     proxy_port: z
       .number()
       .refine((val) => val >= 1024 && val <= 65535, {

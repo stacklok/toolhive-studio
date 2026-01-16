@@ -280,6 +280,27 @@ describe('prepareCreateWorkloadData', () => {
     expect(result.permission_profile).toBeUndefined()
   })
 
+  it('sends proxy mode for stdio transport', () => {
+    const data: FormSchemaLocalMcp = {
+      image: 'test-image',
+      name: 'test-server',
+      transport: 'stdio',
+      proxy_mode: 'sse',
+      type: 'docker_image',
+      group: 'default',
+      envVars: [],
+      secrets: [],
+      cmd_arguments: [],
+      networkIsolation: false,
+      allowedHosts: [{ value: 'example.com' }],
+      allowedPorts: [{ value: '8080' }],
+      volumes: [],
+    }
+
+    const result = prepareCreateWorkloadData(data)
+    expect(result.proxy_mode).toBe('sse')
+  })
+
   it('ignores invalid allowedHosts and allowedPorts when network isolation is disabled', () => {
     const data: FormSchemaLocalMcp = {
       image: 'test-image',
@@ -387,7 +408,7 @@ describe('convertWorkloadToFormData', () => {
     expect(result).toEqual({
       name: 'docker-server',
       transport: 'stdio',
-      proxy_mode: 'streamable-http',
+      proxy_port: undefined,
       group: 'default',
       target_port: undefined,
       cmd_arguments: [],
@@ -399,6 +420,7 @@ describe('convertWorkloadToFormData', () => {
       volumes: [],
       type: 'docker_image',
       image: 'ghcr.io/test/server',
+      tools: undefined,
     })
   })
 
@@ -527,7 +549,8 @@ describe('convertCreateRequestToFormData', () => {
     expect(result).toEqual({
       name: 'docker-server',
       transport: 'stdio',
-      proxy_mode: 'streamable-http',
+      proxy_port: undefined,
+      permission_profile: undefined,
       group: 'default',
       target_port: 0,
       cmd_arguments: ['--debug'],
@@ -547,6 +570,8 @@ describe('convertCreateRequestToFormData', () => {
       volumes: [],
       type: 'docker_image',
       image: 'ghcr.io/test/server',
+      tools: undefined,
+      tools_override: undefined,
     })
   })
 
@@ -555,7 +580,6 @@ describe('convertCreateRequestToFormData', () => {
       name: 'npm-server',
       image: 'npx://my-package',
       transport: 'sse',
-      proxy_mode: 'streamable-http',
       target_port: 3000,
     }
 
@@ -565,6 +589,8 @@ describe('convertCreateRequestToFormData', () => {
       name: 'npm-server',
       transport: 'sse',
       proxy_mode: 'streamable-http',
+      proxy_port: undefined,
+      permission_profile: undefined,
       group: 'default',
       target_port: 3000,
       cmd_arguments: [],
@@ -740,7 +766,6 @@ describe('prepareUpdateLocalWorkloadData', () => {
     const data: FormSchemaLocalMcp = {
       name: 'updated-server',
       transport: 'sse',
-      proxy_mode: 'streamable-http',
       target_port: 3000,
       type: 'docker_image',
       group: 'production',
@@ -766,7 +791,6 @@ describe('prepareUpdateLocalWorkloadData', () => {
     expect(result).toEqual({
       image: 'ghcr.io/test/updated-server',
       transport: 'sse',
-      proxy_mode: 'streamable-http',
       group: 'production',
       target_port: 3000,
       cmd_arguments: ['--verbose'],

@@ -124,6 +124,7 @@ export const getFormSchemaRemoteMcp = (
   )
 }
 
-export type FormSchemaRemoteMcp = z.infer<
-  ReturnType<typeof getFormSchemaRemoteMcp>
+export type FormSchemaRemoteMcp = Omit<
+  z.infer<ReturnType<typeof getFormSchemaRemoteMcp>>,
+  'proxy_mode'
 >

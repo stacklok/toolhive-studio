@@ -31,7 +31,6 @@ describe('prepareCreateWorkloadData', () => {
       name: 'oauth-server',
       url: 'https://api.example.com',
       transport: 'sse',
-      proxy_mode: 'streamable-http',
       auth_type: 'oauth2',
       oauth_config: {
         authorize_url: 'https://oauth.example.com/authorize',
@@ -68,7 +67,6 @@ describe('prepareCreateWorkloadData', () => {
       name: 'oauth-server',
       url: 'https://api.example.com',
       transport: 'sse',
-      proxy_mode: 'streamable-http',
       oauth_config: {
         authorize_url: 'https://oauth.example.com/authorize',
         token_url: 'https://oauth.example.com/token',
@@ -77,6 +75,7 @@ describe('prepareCreateWorkloadData', () => {
           name: 'oauth-secret',
           target: 'oauth-secret',
         },
+        bearer_token: undefined,
         scopes: ['read', 'write', 'admin'],
         use_pkce: true,
         skip_browser: false,
@@ -96,7 +95,6 @@ describe('prepareCreateWorkloadData', () => {
       name: 'no-scopes-server',
       url: 'https://api.example.com',
       transport: 'sse',
-      proxy_mode: 'streamable-http',
       auth_type: 'oauth2',
       oauth_config: {
         authorize_url: 'https://oauth.example.com/authorize',
@@ -121,7 +119,6 @@ describe('prepareCreateWorkloadData', () => {
       name: 'bearer-server',
       url: 'https://api.example.com',
       transport: 'sse',
-      proxy_mode: 'streamable-http',
       auth_type: 'bearer_token',
       oauth_config: {
         bearer_token: {
@@ -155,7 +152,6 @@ describe('prepareUpdateRemoteWorkloadData', () => {
       name: 'updated-oauth-server',
       url: 'https://api.updated.com',
       transport: 'streamable-http',
-      proxy_mode: 'streamable-http',
       auth_type: 'oauth2',
       oauth_config: {
         authorize_url: 'https://oauth.updated.com/authorize',
@@ -191,7 +187,6 @@ describe('prepareUpdateRemoteWorkloadData', () => {
       name: 'updated-oauth-server',
       url: 'https://api.updated.com',
       transport: 'streamable-http',
-      proxy_mode: 'streamable-http',
       oauth_config: {
         authorize_url: 'https://oauth.updated.com/authorize',
         token_url: 'https://oauth.updated.com/token',
@@ -200,12 +195,15 @@ describe('prepareUpdateRemoteWorkloadData', () => {
           name: 'UPDATED_SECRET_KEY',
           target: 'UPDATED_SECRET_KEY',
         },
+        bearer_token: undefined,
         scopes: ['read', 'write'],
         use_pkce: false,
         skip_browser: true,
         callback_port: 9090,
       },
       group: 'staging',
+      tools: undefined,
+      tools_override: undefined,
     })
 
     expect(result).not.toHaveProperty('auth_type')
@@ -250,7 +248,7 @@ describe('convertCreateRequestToFormData', () => {
       name: 'oauth-server',
       url: 'https://api.example.com',
       transport: 'sse',
-      proxy_mode: 'streamable-http',
+      proxy_port: undefined,
       auth_type: 'oauth2',
       oauth_config: {
         authorize_url: 'https://oauth.example.com/authorize',
@@ -263,6 +261,7 @@ describe('convertCreateRequestToFormData', () => {
             isFromStore: true,
           },
         },
+        bearer_token: undefined,
         scopes: 'read,write,admin',
         use_pkce: true,
         skip_browser: false,
@@ -272,6 +271,8 @@ describe('convertCreateRequestToFormData', () => {
       },
       secrets: [],
       group: 'production',
+      tools: undefined,
+      tools_override: undefined,
     })
   })
 
