@@ -43,6 +43,8 @@ local caches) may still persist across runs.
   auto-updates, or platform-dependent behaviors.
 - Features that rely on native OS dialogs (such as file pickers) are not
   currently E2E tested.
+- The client sync feature is intentionally excluded; it adds significant E2E
+  complexity while being better validated by backend-focused tests.
 - Feature-specific constraints are documented in each section below.
 
 ## Coverage
@@ -73,9 +75,14 @@ local caches) may still persist across runs.
   limited. Mutating settings can bleed across runs or affect a developer’s local
   ToolHive environment.
 
+### Client sync
+
+- **Not tested**: intentionally excluded from E2E coverage.
+- **Notes**: adds significant E2E complexity while providing limited UI value;
+  the backend owns most of the correctness guarantees.
+
 ## Troubleshooting
 
 - CI artifacts (screenshots, traces, videos) are attached to GitHub Actions
-  runs. See GitHub’s documentation for downloading artifacts:
-  - https://docs.github.com/en/actions/managing-workflow-runs/downloading-workflow-artifacts
+  runs. See GitHub’s documentation for downloading artifacts: https://docs.github.com/en/actions/managing-workflow-runs/downloading-workflow-artifacts
 - For local UI debugging, use Playwright’s tracing or set `PWDEBUG=1`.
