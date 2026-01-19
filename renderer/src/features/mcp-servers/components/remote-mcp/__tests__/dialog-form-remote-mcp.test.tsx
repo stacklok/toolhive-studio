@@ -7,6 +7,10 @@ import { server as mswServer, recordRequests } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'
+import { mockedPostApiV1BetaWorkloads } from '@/common/mocks/fixtures/workloads/post'
+import { mockedGetApiV1BetaWorkloadsByName } from '@/common/mocks/fixtures/workloads_name/get'
+import { mockedGetApiV1BetaDiscoveryClients } from '@/common/mocks/fixtures/discovery_clients/get'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 
 vi.mock('@/common/hooks/use-check-server-status', () => ({
@@ -49,6 +53,16 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => (
 beforeEach(() => {
   vi.clearAllMocks()
 
+  mockedGetApiV1BetaGroups.override((data) => ({
+    ...data,
+    groups: [{ name: 'default', registered_clients: [] }],
+  }))
+
+  mockedPostApiV1BetaWorkloads.override(() => ({
+    name: 'test-server',
+    port: 0,
+  }))
+
   mswServer.use(
     http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
       return HttpResponse.json({
@@ -62,16 +76,6 @@ beforeEach(() => {
 
     http.get(mswEndpoint('/api/v1beta/workloads'), () => {
       return HttpResponse.json({ workloads: [] })
-    }),
-    http.get(mswEndpoint('/api/v1beta/groups'), () => {
-      return HttpResponse.json({ groups: [{ name: 'default' }] })
-    }),
-
-    http.post(mswEndpoint('/api/v1beta/workloads'), async () => {
-      return HttpResponse.json(
-        { name: 'test-server', status: 'running' },
-        { status: 201 }
-      )
     }),
 
     http.post(mswEndpoint('/api/v1beta/secrets/default/keys'), async () => {
@@ -168,14 +172,10 @@ describe('DialogFormRemoteMcp', () => {
       checkServerStatus: mockCheckServerStatus,
     })
 
-    mswServer.use(
-      http.post(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json(
-          { name: 'test-remote-server', status: 'running' },
-          { status: 201 }
-        )
-      })
-    )
+    mockedPostApiV1BetaWorkloads.override(() => ({
+      name: 'test-remote-server',
+      port: 0,
+    }))
 
     renderWithProviders(
       <Wrapper>
@@ -251,14 +251,10 @@ describe('DialogFormRemoteMcp', () => {
       const user = userEvent.setup({ delay: null })
       const rec = recordRequests()
 
-      mswServer.use(
-        http.post(mswEndpoint('/api/v1beta/workloads'), () => {
-          return HttpResponse.json(
-            { name: 'issuer-enabled-server', status: 'running' },
-            { status: 201 }
-          )
-        })
-      )
+      mockedPostApiV1BetaWorkloads.override(() => ({
+        name: 'issuer-enabled-server',
+        port: 0,
+      }))
 
       renderWithProviders(
         <Wrapper>
@@ -374,34 +370,36 @@ describe('DialogFormRemoteMcp', () => {
     const user = userEvent.setup({ delay: null })
     const rec = recordRequests()
 
+    mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+      ...data,
+      name: 'existing-server',
+      url: 'https://old-api.example.com',
+      transport: 'streamable-http',
+      oauth_config: {
+        callback_port: 8080,
+        authorize_url: '',
+        token_url: '',
+        client_id: '',
+        issuer: '',
+        scopes: [],
+        skip_browser: false,
+        use_pkce: true,
+        oauth_params: {},
+      },
+      group: 'default',
+    }))
+
+    mockedGetApiV1BetaDiscoveryClients.override((data) => ({
+      ...data,
+      clients: [],
+    }))
+
     mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json({
-          name: 'existing-server',
-          url: 'https://old-api.example.com',
-          transport: 'streamable-http',
-          oauth_config: {
-            callback_port: 8080,
-            authorize_url: '',
-            token_url: '',
-            client_id: '',
-            issuer: '',
-            scopes: [],
-            skip_browser: false,
-            use_pkce: true,
-            oauth_params: {},
-          },
-          group: 'default',
-        })
-      }),
       http.post(mswEndpoint('/api/v1beta/workloads/:name/edit'), () => {
         return HttpResponse.json({
           name: 'existing-server',
           status: 'running',
         })
-      }),
-      http.get(mswEndpoint('/api/v1beta/discovery/clients'), () => {
-        return HttpResponse.json({ clients: [] })
       })
     )
 
@@ -454,6 +452,11 @@ describe('DialogFormRemoteMcp', () => {
     const user = userEvent.setup({ delay: null })
     const rec = recordRequests()
 
+    mockedPostApiV1BetaWorkloads.override(() => ({
+      name: 'bearer-auth-server',
+      port: 0,
+    }))
+
     mswServer.use(
       http.post(
         mswEndpoint('/api/v1beta/secrets/default/keys'),
@@ -464,13 +467,7 @@ describe('DialogFormRemoteMcp', () => {
           }
           return HttpResponse.json({ key, value }, { status: 201 })
         }
-      ),
-      http.post(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json(
-          { name: 'bearer-auth-server', status: 'running' },
-          { status: 201 }
-        )
-      })
+      )
     )
 
     renderWithProviders(
