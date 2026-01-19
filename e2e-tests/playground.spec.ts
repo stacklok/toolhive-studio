@@ -171,8 +171,10 @@ test.describe('Playground chat with Ollama', () => {
     await window.getByRole('option', { name: /streamable http/i }).click()
 
     await window.getByRole('combobox', { name: /authorization/i }).click()
-    await window.getByRole('option', { name: /dynamic client/i }).click()
-    await window.getByLabel(/callback port/i).fill('8888')
+    await window.getByRole('option', { name: /bearer token/i }).click()
+    await window
+      .getByPlaceholder('e.g. token_123_ABC_789_XYZ')
+      .fill(testServer.bearerToken)
 
     await window.getByRole('button', { name: /install server/i }).click()
     await window.getByRole('dialog').waitFor({ state: 'hidden' })
