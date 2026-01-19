@@ -10,6 +10,7 @@ import { server, recordRequests } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { toast } from 'sonner'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { mockedPostApiV1BetaWorkloadsRestart } from '@/common/mocks/fixtures/workloads_restart/post'
 
 vi.mock('sonner', () => ({
   toast: {
@@ -137,20 +138,8 @@ describe('useMutationRestartServerAtStartup', () => {
     })
 
     // Force API error for non-existent server by overriding the endpoint
-    server.use(
-      http.post(
-        mswEndpoint('/api/v1beta/workloads/restart'),
-        async ({ request }) => {
-          const { names } = (await request.json()) as { names: string[] }
-          if (names.includes('non-existent-server')) {
-            return HttpResponse.json(
-              { error: 'Server not found' },
-              { status: 404 }
-            )
-          }
-          return new HttpResponse(null, { status: 202 })
-        }
-      )
+    mockedPostApiV1BetaWorkloadsRestart.overrideHandler(() =>
+      HttpResponse.json({ error: 'Server not found' }, { status: 404 })
     )
 
     // Execute mutation with non-existent server name (overridden MSW handler returns 404)
