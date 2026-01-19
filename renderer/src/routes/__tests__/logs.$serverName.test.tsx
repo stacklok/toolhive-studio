@@ -9,9 +9,8 @@ import {
   MCP_OPTIMIZER_GROUP_NAME,
   META_MCP_SERVER_NAME,
 } from '@/common/lib/constants'
-import { server } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
-import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { HttpResponse } from 'msw'
+import { mockedGetApiV1BetaWorkloadsByName } from '@/common/mocks/fixtures/workloads_name/get'
 
 describe('Logs Route', () => {
   beforeEach(() => {
@@ -116,22 +115,14 @@ describe('Logs Route', () => {
   })
 
   it('navigates back to MCP optimizer page when viewing meta-mcp logs', async () => {
-    server.use(
-      http.get(
-        mswEndpoint('/api/v1beta/workloads/:name/logs'),
-        ({ params }) => {
-          const { name } = params
-          if (name === META_MCP_SERVER_NAME) {
-            const logs = getMockLogs(name as string)
-            return new HttpResponse(logs, { status: 200 })
-          }
-          return HttpResponse.json(
-            { error: 'Server not found' },
-            { status: 404 }
-          )
-        }
-      )
-    )
+    mockedGetApiV1BetaWorkloadsByName.overrideHandler((_, info) => {
+      const { name } = info.params
+      if (name === META_MCP_SERVER_NAME) {
+        const logs = getMockLogs(name as string)
+        return new HttpResponse(logs, { status: 200 })
+      }
+      return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
+    })
 
     const router = createTestRouter(LogsPage, '/logs/$groupName/$serverName')
     router.navigate({

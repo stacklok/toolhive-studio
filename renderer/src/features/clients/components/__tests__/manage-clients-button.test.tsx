@@ -8,6 +8,9 @@ import { server, recordRequests } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'
+import { mockedGetApiV1BetaDiscoveryClients } from '@/common/mocks/fixtures/discovery_clients/get'
+import { mockedPostApiV1BetaClientsRegister } from '@/common/mocks/fixtures/clients_register/post'
 
 vi.mock('@/common/hooks/use-feature-flag')
 vi.mock('@/features/meta-mcp/hooks/use-mcp-optimizer-clients')
@@ -55,27 +58,26 @@ describe('ManageClientsButton – BDD flows', () => {
     )
 
   it('enables multiple clients for a group', async () => {
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        { name: 'default', registered_clients: [] },
+        { name: '__mcp-optimizer__', registered_clients: [] },
+      ],
+    }))
+
+    mockedGetApiV1BetaDiscoveryClients.override((data) => ({
+      ...data,
+      clients: [
+        { client_type: 'vscode', installed: true },
+        { client_type: 'cursor', installed: true },
+      ],
+    }))
+
+    mockedPostApiV1BetaClientsRegister.override(() => [])
+
     server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [
-            { name: 'default', registered_clients: [] },
-            { name: '__mcp-optimizer__', registered_clients: [] },
-          ],
-        })
-      ),
-      http.get(mswEndpoint('/api/v1beta/clients'), () => HttpResponse.json([])),
-      http.get(mswEndpoint('/api/v1beta/discovery/clients'), () =>
-        HttpResponse.json({
-          clients: [
-            { client_type: 'vscode', installed: true },
-            { client_type: 'cursor', installed: true },
-          ],
-        })
-      ),
-      http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
-        HttpResponse.json([])
-      )
+      http.get(mswEndpoint('/api/v1beta/clients'), () => HttpResponse.json([]))
     )
 
     const rec = recordRequests()
@@ -134,15 +136,26 @@ describe('ManageClientsButton – BDD flows', () => {
 
   it('enables a single client when none are enabled (clients API returns null)', async () => {
     // Given: no clients are registered in the group
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        { name: 'default', registered_clients: [] },
+        { name: '__mcp-optimizer__', registered_clients: [] },
+      ],
+    }))
+
+    mockedGetApiV1BetaDiscoveryClients.override((data) => ({
+      ...data,
+      clients: [
+        { client_type: 'vscode', installed: true },
+        { client_type: 'cursor', installed: true },
+        { client_type: 'claude-code', installed: true },
+      ],
+    }))
+
+    mockedPostApiV1BetaClientsRegister.override(() => [])
+
     server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [
-            { name: 'default', registered_clients: [] },
-            { name: '__mcp-optimizer__', registered_clients: [] },
-          ],
-        })
-      ),
       // Simulate backend returning empty/null for current clients list
       http.get(mswEndpoint('/api/v1beta/clients'), () =>
         HttpResponse.json([
@@ -150,18 +163,6 @@ describe('ManageClientsButton – BDD flows', () => {
           { name: { name: 'cursor' }, groups: [] },
           { name: { name: 'claude-code' }, groups: [] },
         ])
-      ),
-      http.get(mswEndpoint('/api/v1beta/discovery/clients'), () =>
-        HttpResponse.json({
-          clients: [
-            { client_type: 'vscode', installed: true },
-            { client_type: 'cursor', installed: true },
-            { client_type: 'claude-code', installed: true },
-          ],
-        })
-      ),
-      http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
-        HttpResponse.json([])
       )
     )
 
@@ -208,34 +209,30 @@ describe('ManageClientsButton – BDD flows', () => {
   })
 
   it('disables clients from a group', async () => {
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [
-            {
-              name: 'default',
-              registered_clients: ['vscode', 'cursor', 'claude-code'],
-            },
-            {
-              name: '__mcp-optimizer__',
-              registered_clients: [],
-            },
-          ],
-        })
-      ),
-      http.get(mswEndpoint('/api/v1beta/discovery/clients'), () =>
-        HttpResponse.json({
-          clients: [
-            { client_type: 'vscode', installed: true },
-            { client_type: 'cursor', installed: true },
-            { client_type: 'claude-code', installed: true },
-          ],
-        })
-      ),
-      http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
-        HttpResponse.json([])
-      )
-    )
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        {
+          name: 'default',
+          registered_clients: ['vscode', 'cursor', 'claude-code'],
+        },
+        {
+          name: '__mcp-optimizer__',
+          registered_clients: [],
+        },
+      ],
+    }))
+
+    mockedGetApiV1BetaDiscoveryClients.override((data) => ({
+      ...data,
+      clients: [
+        { client_type: 'vscode', installed: true },
+        { client_type: 'cursor', installed: true },
+        { client_type: 'claude-code', installed: true },
+      ],
+    }))
+
+    mockedPostApiV1BetaClientsRegister.override(() => [])
 
     const rec = recordRequests()
 
@@ -274,33 +271,32 @@ describe('ManageClientsButton – BDD flows', () => {
   })
 
   it('handles mixed enable and disable changes', async () => {
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        { name: 'default', registered_clients: ['vscode', 'cursor'] },
+        { name: '__mcp-optimizer__', registered_clients: [] },
+      ],
+    }))
+
+    mockedGetApiV1BetaDiscoveryClients.override((data) => ({
+      ...data,
+      clients: [
+        { client_type: 'vscode', installed: true },
+        { client_type: 'cursor', installed: true },
+        { client_type: 'claude-code', installed: true },
+      ],
+    }))
+
+    mockedPostApiV1BetaClientsRegister.override(() => [])
+
     server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [
-            { name: 'default', registered_clients: ['vscode', 'cursor'] },
-            { name: '__mcp-optimizer__', registered_clients: [] },
-          ],
-        })
-      ),
       http.get(mswEndpoint('/api/v1beta/clients'), () =>
         HttpResponse.json([
           { name: { name: 'vscode' }, groups: ['default'] },
           { name: { name: 'cursor' }, groups: ['default'] },
           { name: { name: 'claude-code' }, groups: [] },
         ])
-      ),
-      http.get(mswEndpoint('/api/v1beta/discovery/clients'), () =>
-        HttpResponse.json({
-          clients: [
-            { client_type: 'vscode', installed: true },
-            { client_type: 'cursor', installed: true },
-            { client_type: 'claude-code', installed: true },
-          ],
-        })
-      ),
-      http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
-        HttpResponse.json([])
       )
     )
 
@@ -350,31 +346,31 @@ describe('ManageClientsButton – BDD flows', () => {
   })
 
   it('makes no calls when nothing changes', async () => {
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        { name: 'default', registered_clients: ['vscode', 'cursor'] },
+        {
+          name: '__mcp-optimizer__',
+          registered_clients: ['vscode', 'cursor'],
+        },
+      ],
+    }))
+
+    mockedGetApiV1BetaDiscoveryClients.override((data) => ({
+      ...data,
+      clients: [
+        { client_type: 'vscode', installed: true },
+        { client_type: 'cursor', installed: true },
+      ],
+    }))
+
     server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [
-            { name: 'default', registered_clients: ['vscode', 'cursor'] },
-            {
-              name: '__mcp-optimizer__',
-              registered_clients: ['vscode', 'cursor'],
-            },
-          ],
-        })
-      ),
       http.get(mswEndpoint('/api/v1beta/clients'), () =>
         HttpResponse.json([
           { name: { name: 'vscode' }, groups: ['default'] },
           { name: { name: 'cursor' }, groups: ['default'] },
         ])
-      ),
-      http.get(mswEndpoint('/api/v1beta/discovery/clients'), () =>
-        HttpResponse.json({
-          clients: [
-            { client_type: 'vscode', installed: true },
-            { client_type: 'cursor', installed: true },
-          ],
-        })
       )
     )
 
@@ -399,21 +395,18 @@ describe('ManageClientsButton – BDD flows', () => {
   })
 
   it('cancels without issuing API calls', async () => {
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [{ name: 'default', registered_clients: [] }],
-        })
-      ),
-      http.get(mswEndpoint('/api/v1beta/discovery/clients'), () =>
-        HttpResponse.json({
-          clients: [
-            { client_type: 'vscode', installed: true },
-            { client_type: 'cursor', installed: true },
-          ],
-        })
-      )
-    )
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [{ name: 'default', registered_clients: [] }],
+    }))
+
+    mockedGetApiV1BetaDiscoveryClients.override((data) => ({
+      ...data,
+      clients: [
+        { client_type: 'vscode', installed: true },
+        { client_type: 'cursor', installed: true },
+      ],
+    }))
 
     const rec = recordRequests()
 
@@ -438,33 +431,32 @@ describe('ManageClientsButton – BDD flows', () => {
   it("doesn't sync client when mcp optimizer is disabled", async () => {
     vi.mocked(useFeatureFlag).mockReturnValue(false)
 
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        { name: 'default', registered_clients: ['vscode', 'cursor'] },
+        { name: '__mcp-optimizer__', registered_clients: [] },
+      ],
+    }))
+
+    mockedGetApiV1BetaDiscoveryClients.override((data) => ({
+      ...data,
+      clients: [
+        { client_type: 'vscode', installed: true },
+        { client_type: 'cursor', installed: true },
+        { client_type: 'claude-code', installed: true },
+      ],
+    }))
+
+    mockedPostApiV1BetaClientsRegister.override(() => [])
+
     server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [
-            { name: 'default', registered_clients: ['vscode', 'cursor'] },
-            { name: '__mcp-optimizer__', registered_clients: [] },
-          ],
-        })
-      ),
       http.get(mswEndpoint('/api/v1beta/clients'), () =>
         HttpResponse.json([
           { name: { name: 'vscode' }, groups: ['default'] },
           { name: { name: 'cursor' }, groups: ['default'] },
           { name: { name: 'claude-code' }, groups: [] },
         ])
-      ),
-      http.get(mswEndpoint('/api/v1beta/discovery/clients'), () =>
-        HttpResponse.json({
-          clients: [
-            { client_type: 'vscode', installed: true },
-            { client_type: 'cursor', installed: true },
-            { client_type: 'claude-code', installed: true },
-          ],
-        })
-      ),
-      http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
-        HttpResponse.json([])
       )
     )
 
