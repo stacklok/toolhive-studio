@@ -214,7 +214,7 @@ export function FormFieldsBase({
         />
       )}
 
-      <FormFieldsProxy control={form.control} />
+      <FormFieldsProxy<FormSchemaLocalMcp> control={form.control} />
 
       {typeValue === 'docker_image' ? (
         <FormField

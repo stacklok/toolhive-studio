@@ -241,7 +241,7 @@ export function ConfigurationTabContent({
         )}
       />
 
-      <FormFieldsProxy control={form.control} />
+      <FormFieldsProxy<FormSchemaRegistryMcp> control={form.control} />
 
       <CommandArgumentsField<FormSchemaRegistryMcp>
         getValues={(name) => form.getValues(name)}
