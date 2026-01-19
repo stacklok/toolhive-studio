@@ -25,12 +25,14 @@ function generateSimpleCode(): string {
 export interface TestMcpServer {
   port: number
   secretCode: string
+  bearerToken: string
   url: string
   stop: () => Promise<void>
 }
 
 export async function startTestMcpServer(): Promise<TestMcpServer> {
   const secretCode = generateSimpleCode()
+  const bearerToken = `token-${generateSimpleCode()}`
 
   const mcpServer = new McpServer({
     name: 'e2e-test-server',
@@ -68,6 +70,14 @@ export async function startTestMcpServer(): Promise<TestMcpServer> {
   })
 
   app.all('/mcp', async (req, res) => {
+    if (req.method !== 'OPTIONS') {
+      const authHeader = req.headers.authorization
+      if (authHeader !== `Bearer ${bearerToken}`) {
+        res.status(401).send('Unauthorized')
+        return
+      }
+    }
+
     await transport.handleRequest(req, res, req.body)
   })
 
@@ -79,6 +89,7 @@ export async function startTestMcpServer(): Promise<TestMcpServer> {
       resolve({
         port,
         secretCode,
+        bearerToken,
         url: `http://127.0.0.1:${port}/mcp`,
         stop: async () => {
           await transport.close()
