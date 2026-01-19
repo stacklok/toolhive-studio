@@ -158,5 +158,10 @@
       "prettier --write",
       "eslint --max-warnings 0 --no-warn-ignored"
     ]
+  },
+  "pnpm": {
+    "overrides": {
+      "hono": ">=4.11.4"
+    }
   }
 }
