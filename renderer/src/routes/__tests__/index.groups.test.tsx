@@ -1,6 +1,5 @@
-import { vi } from 'vitest'
 import { screen, waitFor } from '@testing-library/react'
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { GroupsManager } from '@/features/mcp-servers/components/groups-manager'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
@@ -11,9 +10,7 @@ import {
   Outlet,
   Router,
 } from '@tanstack/react-router'
-import { server } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
-import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 
 function createGroupsTestRouter() {
@@ -87,17 +84,14 @@ describe('Groups Manager in Index route (feature flagged)', () => {
   })
 
   it('renders custom groups when provided different data (not hardcoded)', async () => {
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [
-            { name: 'staging', registered_clients: [] },
-            { name: 'production', registered_clients: [] },
-            { name: 'development', registered_clients: [] },
-          ],
-        })
-      )
-    )
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        { name: 'staging', registered_clients: [] },
+        { name: 'production', registered_clients: [] },
+        { name: 'development', registered_clients: [] },
+      ],
+    }))
 
     renderRoute(router)
 
@@ -125,17 +119,14 @@ describe('Groups Manager in Index route (feature flagged)', () => {
       writable: true,
     })
 
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [
-            { name: 'default', registered_clients: [] },
-            { name: MCP_OPTIMIZER_GROUP_NAME, registered_clients: [] },
-            { name: 'production', registered_clients: [] },
-          ],
-        })
-      )
-    )
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        { name: 'default', registered_clients: [] },
+        { name: MCP_OPTIMIZER_GROUP_NAME, registered_clients: [] },
+        { name: 'production', registered_clients: [] },
+      ],
+    }))
 
     renderRoute(router)
 
