@@ -9,6 +9,8 @@ import {
 } from '@/common/lib/constants'
 import { recordRequests, server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
+import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'
+import { mockedGetApiV1BetaWorkloadsByName } from '@/common/mocks/fixtures/workloads_name/get'
 
 // Mock dependencies
 vi.mock('../use-feature-flag')
@@ -73,13 +75,10 @@ describe('useCleanupMetaOptimizer', () => {
   it('does not cleanup when group has no registered clients', async () => {
     vi.mocked(useFeatureFlag).mockReturnValue(true)
 
-    server.use(
-      http.get('*/api/v1beta/groups', () =>
-        HttpResponse.json({
-          groups: [{ name: MCP_OPTIMIZER_GROUP_NAME, registered_clients: [] }],
-        })
-      )
-    )
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [{ name: MCP_OPTIMIZER_GROUP_NAME, registered_clients: [] }],
+    }))
 
     const { result } = renderHook(() => useCleanupMetaOptimizer(), {
       wrapper: createWrapper(),
@@ -98,28 +97,29 @@ describe('useCleanupMetaOptimizer', () => {
     const rec = recordRequests()
     vi.mocked(useFeatureFlag).mockReturnValue(true)
 
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        {
+          name: MCP_OPTIMIZER_GROUP_NAME,
+          registered_clients: ['client1', 'client2'],
+        },
+        {
+          name: 'production',
+          registered_clients: [],
+        },
+      ],
+    }))
+
+    mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+      ...data,
+      name: META_MCP_SERVER_NAME,
+      env_vars: {
+        ALLOWED_GROUPS: 'production',
+      },
+    }))
+
     server.use(
-      http.get('*/api/v1beta/groups', () =>
-        HttpResponse.json({
-          groups: [
-            {
-              name: MCP_OPTIMIZER_GROUP_NAME,
-              registered_clients: ['client1', 'client2'],
-            },
-            {
-              name: 'production',
-              registered_clients: [],
-            },
-          ],
-        })
-      ),
-      http.get(`*/api/v1beta/workloads/${META_MCP_SERVER_NAME}`, () =>
-        HttpResponse.json({
-          env_vars: {
-            ALLOWED_GROUPS: 'production',
-          },
-        })
-      ),
       http.post('*/api/v1beta/clients/register', () => HttpResponse.json([])),
       http.delete('*/api/v1beta/clients/:name/groups/:group', () =>
         HttpResponse.json({})
