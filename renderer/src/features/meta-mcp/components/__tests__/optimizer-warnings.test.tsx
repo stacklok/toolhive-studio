@@ -3,9 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { OptimizerWarnings } from '../optimizer-warnings'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { server } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
-import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'
 import React from 'react'
 
 const createQueryClientWrapper = () => {
@@ -28,18 +26,15 @@ describe('OptimizerWarnings', () => {
   })
 
   it('renders the experimental feature warning', async () => {
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [
-            {
-              name: MCP_OPTIMIZER_GROUP_NAME,
-              registered_clients: [],
-            },
-          ],
-        })
-      )
-    )
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        {
+          name: MCP_OPTIMIZER_GROUP_NAME,
+          registered_clients: [],
+        },
+      ],
+    }))
 
     const { Wrapper } = createQueryClientWrapper()
     render(
@@ -57,18 +52,15 @@ describe('OptimizerWarnings', () => {
   })
 
   it('renders only one alert when clients are registered', async () => {
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [
-            {
-              name: MCP_OPTIMIZER_GROUP_NAME,
-              registered_clients: ['vscode', 'cursor'],
-            },
-          ],
-        })
-      )
-    )
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        {
+          name: MCP_OPTIMIZER_GROUP_NAME,
+          registered_clients: ['vscode', 'cursor'],
+        },
+      ],
+    }))
 
     const { Wrapper } = createQueryClientWrapper()
     const { container } = render(
@@ -84,18 +76,15 @@ describe('OptimizerWarnings', () => {
   })
 
   it('renders no clients registered alert when optimizer group has no clients', async () => {
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [
-            {
-              name: MCP_OPTIMIZER_GROUP_NAME,
-              registered_clients: [],
-            },
-          ],
-        })
-      )
-    )
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        {
+          name: MCP_OPTIMIZER_GROUP_NAME,
+          registered_clients: [],
+        },
+      ],
+    }))
 
     const { Wrapper } = createQueryClientWrapper()
     render(
@@ -115,18 +104,15 @@ describe('OptimizerWarnings', () => {
   })
 
   it('renders two alerts when no clients are registered', async () => {
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [
-            {
-              name: MCP_OPTIMIZER_GROUP_NAME,
-              registered_clients: [],
-            },
-          ],
-        })
-      )
-    )
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        {
+          name: MCP_OPTIMIZER_GROUP_NAME,
+          registered_clients: [],
+        },
+      ],
+    }))
 
     const { Wrapper } = createQueryClientWrapper()
     const { container } = render(

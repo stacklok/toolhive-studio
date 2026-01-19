@@ -4,6 +4,8 @@ import { useMcpOptimizerClients } from '../use-mcp-optimizer-clients'
 import { server, recordRequests } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
 import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'
+import { mockedPostApiV1BetaClientsRegister } from '@/common/mocks/fixtures/clients_register/post'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 import { queryClient } from '@/common/lib/query-client'
 import { QueryClientProvider } from '@tanstack/react-query'
@@ -23,24 +25,23 @@ describe('useMcpOptimizerClients', () => {
   })
 
   it('register clients that are missing from optimizer group', async () => {
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        {
+          name: 'test',
+          registered_clients: ['cursor', 'vscode', 'windsurf'],
+        },
+        {
+          name: MCP_OPTIMIZER_GROUP_NAME,
+          registered_clients: ['cursor'],
+        },
+      ],
+    }))
+
+    mockedPostApiV1BetaClientsRegister.override(() => [])
+
     server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [
-            {
-              name: 'test',
-              registered_clients: ['cursor', 'vscode', 'windsurf'],
-            },
-            {
-              name: MCP_OPTIMIZER_GROUP_NAME,
-              registered_clients: ['cursor'],
-            },
-          ],
-        })
-      ),
-      http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
-        HttpResponse.json([])
-      ),
       http.post(mswEndpoint('/api/v1beta/clients/unregister'), () =>
         HttpResponse.json(null, { status: 204 })
       )
@@ -79,21 +80,21 @@ describe('useMcpOptimizerClients', () => {
   })
 
   it('unregister clients that are disabled in clientsStatus', async () => {
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        {
+          name: 'test',
+          registered_clients: ['cursor'],
+        },
+        {
+          name: MCP_OPTIMIZER_GROUP_NAME,
+          registered_clients: ['cursor', 'vscode', 'windsurf'],
+        },
+      ],
+    }))
+
     server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [
-            {
-              name: 'test',
-              registered_clients: ['cursor'],
-            },
-            {
-              name: MCP_OPTIMIZER_GROUP_NAME,
-              registered_clients: ['cursor', 'vscode', 'windsurf'],
-            },
-          ],
-        })
-      ),
       http.post(mswEndpoint('/api/v1beta/clients/unregister'), () =>
         HttpResponse.json(null, { status: 204 })
       )
@@ -131,24 +132,23 @@ describe('useMcpOptimizerClients', () => {
   })
 
   it('both register and unregister clients in same sync', async () => {
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        {
+          name: 'test',
+          registered_clients: ['cursor', 'claude-code'],
+        },
+        {
+          name: MCP_OPTIMIZER_GROUP_NAME,
+          registered_clients: ['cursor', 'vscode'],
+        },
+      ],
+    }))
+
+    mockedPostApiV1BetaClientsRegister.override(() => [])
+
     server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [
-            {
-              name: 'test',
-              registered_clients: ['cursor', 'claude-code'],
-            },
-            {
-              name: MCP_OPTIMIZER_GROUP_NAME,
-              registered_clients: ['cursor', 'vscode'],
-            },
-          ],
-        })
-      ),
-      http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
-        HttpResponse.json([])
-      ),
       http.post(mswEndpoint('/api/v1beta/clients/unregister'), () =>
         HttpResponse.json(null, { status: 204 })
       )
