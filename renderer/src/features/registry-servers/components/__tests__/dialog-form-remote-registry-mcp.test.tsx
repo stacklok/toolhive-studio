@@ -277,7 +277,6 @@ describe('DialogFormRemoteRegistryMcp', () => {
               token_url: 'https://api.example.com/token',
               use_pkce: true,
             },
-            proxy_mode: 'streamable-http',
             secrets: [],
             transport: 'streamable-http',
             url: 'https://api.example.com/mcp',

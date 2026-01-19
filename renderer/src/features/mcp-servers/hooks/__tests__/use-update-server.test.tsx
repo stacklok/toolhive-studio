@@ -74,7 +74,6 @@ describe('useUpdateServer', () => {
         name: 'test-remote-server',
         url: 'https://api.example.com',
         transport: 'streamable-http',
-        proxy_mode: 'streamable-http',
         auth_type: 'none',
         oauth_config: {
           authorize_url: '',
@@ -135,7 +134,6 @@ describe('useUpdateServer', () => {
         name: 'test-oauth-server',
         url: 'https://api.example.com',
         transport: 'streamable-http',
-        proxy_mode: 'streamable-http',
         auth_type: 'oauth2',
         oauth_config: {
           authorize_url: 'https://oauth.example.com/authorize',
@@ -218,7 +216,6 @@ describe('useUpdateServer', () => {
         name: 'test-oauth-new-secret',
         url: 'https://api.example.com',
         transport: 'streamable-http',
-        proxy_mode: 'streamable-http',
         auth_type: 'oauth2',
         oauth_config: {
           authorize_url: 'https://oauth.example.com/authorize',
@@ -308,7 +305,6 @@ describe('useUpdateServer', () => {
         name: 'test-oauth-collision',
         url: 'https://api.example.com',
         transport: 'streamable-http',
-        proxy_mode: 'streamable-http',
         auth_type: 'oauth2',
         oauth_config: {
           authorize_url: 'https://oauth.example.com/authorize',
@@ -384,7 +380,6 @@ describe('useUpdateServer', () => {
         name: 'test-oauth-existing-secret',
         url: 'https://api.example.com',
         transport: 'streamable-http',
-        proxy_mode: 'streamable-http',
         auth_type: 'oauth2',
         oauth_config: {
           authorize_url: 'https://oauth.example.com/authorize',
@@ -468,9 +463,9 @@ describe('useUpdateServer', () => {
       const formData: FormSchemaLocalMcp = {
         name: 'test-local-server',
         transport: 'stdio',
-        proxy_mode: 'streamable-http',
         type: 'docker_image',
         image: 'test/image:latest',
+        proxy_mode: 'streamable-http',
         cmd_arguments: ['server.js'],
         envVars: [],
         secrets: [
@@ -608,7 +603,6 @@ describe('useUpdateServer', () => {
       const formData: FormSchemaLocalMcp = {
         name: 'test-no-secrets',
         transport: 'stdio',
-        proxy_mode: 'streamable-http',
         type: 'docker_image',
         image: 'test/image:latest',
         cmd_arguments: [],
