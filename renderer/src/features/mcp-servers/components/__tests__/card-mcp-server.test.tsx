@@ -3,8 +3,9 @@ import { expect, it, beforeEach } from 'vitest'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
 import userEvent from '@testing-library/user-event'
-import { server, recordRequests } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
+import { recordRequests } from '@/common/mocks/node'
+import { HttpResponse } from 'msw'
+import { mockedPostApiV1BetaWorkloads } from '@/common/mocks/fixtures/workloads/post'
 import {
   createRootRoute,
   createRoute,
@@ -13,7 +14,6 @@ import {
 } from '@tanstack/react-router'
 import { createMemoryHistory } from '@tanstack/react-router'
 import { CardMcpServer } from '../card-mcp-server/index'
-import { mswEndpoint } from '@/common/mocks/customHandlers'
 import { EditServerDialogProvider } from '../../contexts/edit-server-dialog-provider'
 
 function createCardMcpServerTestRouter() {
@@ -144,28 +144,22 @@ it('shows validation error and re-prompts when API returns 409 conflict', async 
   const rec = recordRequests()
   let attemptCount = 0
 
-  server.use(
-    http.post(mswEndpoint('/api/v1beta/workloads'), async ({ request }) => {
-      const payload = (await request.json()) as { name: string }
-      attemptCount++
+  mockedPostApiV1BetaWorkloads.overrideHandler(() => {
+    attemptCount++
 
-      // First two attempts return 409 conflict (plain text, like real API)
-      if (attemptCount <= 2) {
-        return new HttpResponse(
-          `Workload with name ${payload.name} already exists`,
-          {
-            status: 409,
-            headers: {
-              'Content-Type': 'text/plain; charset=utf-8',
-            },
-          }
-        )
-      }
+    // First two attempts return 409 conflict (plain text, like real API)
+    if (attemptCount <= 2) {
+      return new HttpResponse('Workload with name already exists', {
+        status: 409,
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+        },
+      })
+    }
 
-      // Third attempt succeeds
-      return HttpResponse.json({ name: payload.name })
-    })
-  )
+    // Third attempt succeeds
+    return HttpResponse.json({ name: 'postgres-db-final' })
+  })
 
   renderRoute(router)
 

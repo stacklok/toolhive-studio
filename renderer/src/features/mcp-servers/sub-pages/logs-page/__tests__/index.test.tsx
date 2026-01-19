@@ -7,20 +7,17 @@ import {
   MCP_OPTIMIZER_GROUP_NAME,
   META_MCP_SERVER_NAME,
 } from '@/common/lib/constants'
-import { server } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
-import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { HttpResponse } from 'msw'
 import { getMockLogs } from '@/common/mocks/customHandlers/fixtures/servers'
+import { mockedGetApiV1BetaWorkloadsByName } from '@/common/mocks/fixtures/workloads_name/get'
 
 describe('LogsPage Component', () => {
   describe('Loading State - Skeleton', () => {
     it('displays skeleton while loading logs', async () => {
       vi.spyOn(console, 'error').mockImplementation(() => {})
 
-      server.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name/logs'), async () => {
-          return HttpResponse.text(getMockLogs('test-server'))
-        })
+      mockedGetApiV1BetaWorkloadsByName.overrideHandler(() =>
+        HttpResponse.text(getMockLogs('test-server'))
       )
 
       const router = createTestRouter(LogsPage, '/logs/$groupName/$serverName')
