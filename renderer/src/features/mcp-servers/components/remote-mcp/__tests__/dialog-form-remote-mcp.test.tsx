@@ -3,14 +3,14 @@ import { it, expect, vi, describe, beforeEach } from 'vitest'
 import { DialogFormRemoteMcp } from '../dialog-form-remote-mcp'
 import userEvent from '@testing-library/user-event'
 import { Dialog } from '@/common/components/ui/dialog'
-import { server as mswServer, recordRequests } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
+import { recordRequests } from '@/common/mocks/node'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { mswEndpoint } from '@/common/mocks/customHandlers'
 import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'
 import { mockedPostApiV1BetaWorkloads } from '@/common/mocks/fixtures/workloads/post'
 import { mockedGetApiV1BetaWorkloadsByName } from '@/common/mocks/fixtures/workloads_name/get'
-import { mockedGetApiV1BetaDiscoveryClients } from '@/common/mocks/fixtures/discovery_clients/get'
+import { mockedPostApiV1BetaWorkloadsByNameEdit } from '@/common/mocks/fixtures/workloads_name_edit/post'
+import { mockedGetApiV1BetaSecretsDefaultKeys } from '@/common/mocks/fixtures/secrets_default_keys/get'
+import { mockedPostApiV1BetaSecretsDefaultKeys } from '@/common/mocks/fixtures/secrets_default_keys/post'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 
 vi.mock('@/common/hooks/use-check-server-status', () => ({
@@ -63,25 +63,13 @@ beforeEach(() => {
     port: 0,
   }))
 
-  mswServer.use(
-    http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-      return HttpResponse.json({
-        keys: [
-          { key: 'SECRET_FROM_STORE' },
-          { key: 'GITHUB_TOKEN' },
-          { key: 'API_KEY' },
-        ],
-      })
-    }),
+  mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({
+    keys: [{ key: 'SECRET_FROM_STORE' }],
+  }))
 
-    http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-      return HttpResponse.json({ workloads: [] })
-    }),
-
-    http.post(mswEndpoint('/api/v1beta/secrets/default/keys'), async () => {
-      return HttpResponse.json({ success: true }, { status: 201 })
-    })
-  )
+  mockedPostApiV1BetaSecretsDefaultKeys.override(() => ({
+    key: 'SECRET_FROM_STORE',
+  }))
 
   mockUseCheckServerStatus.mockReturnValue({
     checkServerStatus: vi.fn(),
@@ -389,19 +377,10 @@ describe('DialogFormRemoteMcp', () => {
       group: 'default',
     }))
 
-    mockedGetApiV1BetaDiscoveryClients.override((data) => ({
-      ...data,
-      clients: [],
+    mockedPostApiV1BetaWorkloadsByNameEdit.override(() => ({
+      name: 'existing-server',
+      port: 0,
     }))
-
-    mswServer.use(
-      http.post(mswEndpoint('/api/v1beta/workloads/:name/edit'), () => {
-        return HttpResponse.json({
-          name: 'existing-server',
-          status: 'running',
-        })
-      })
-    )
 
     renderWithProviders(
       <Wrapper>
@@ -457,19 +436,6 @@ describe('DialogFormRemoteMcp', () => {
       port: 0,
     }))
 
-    mswServer.use(
-      http.post(
-        mswEndpoint('/api/v1beta/secrets/default/keys'),
-        async ({ request }) => {
-          const { key, value } = (await request.json()) as {
-            key: string
-            value: string
-          }
-          return HttpResponse.json({ key, value }, { status: 201 })
-        }
-      )
-    )
-
     renderWithProviders(
       <Wrapper>
         <DialogFormRemoteMcp isOpen closeDialog={vi.fn()} groupName="default" />
@@ -500,6 +466,8 @@ describe('DialogFormRemoteMcp', () => {
     )
     await user.type(bearerTokenInput, 'my-secret-bearer-token')
 
+    const bearerTokenStoreName = 'SECRET_FROM_STORE'
+
     await user.click(screen.getByRole('button', { name: 'Install server' }))
 
     await waitFor(() => {
@@ -515,8 +483,8 @@ describe('DialogFormRemoteMcp', () => {
           group: 'default',
           oauth_config: expect.objectContaining({
             bearer_token: {
-              name: 'BEARER_TOKEN_BEARER_AUTH_SERVER',
-              target: 'BEARER_TOKEN_BEARER_AUTH_SERVER',
+              name: bearerTokenStoreName,
+              target: bearerTokenStoreName,
             },
           }),
         })

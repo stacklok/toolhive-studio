@@ -9,8 +9,10 @@ import {
   useMCPSecrets,
 } from '../use-mcp-secrets'
 import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
-import { recordRequests, server } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
+import { recordRequests } from '@/common/mocks/node'
+import { HttpResponse } from 'msw'
+import { mockedGetApiV1BetaSecretsDefaultKeys } from '@/common/mocks/fixtures/secrets_default_keys/get'
+import { mockedPostApiV1BetaSecretsDefaultKeys } from '@/common/mocks/fixtures/secrets_default_keys/post'
 import type { FormSchemaLocalMcp } from '@/features/mcp-servers/lib/form-schema-local-mcp'
 
 /**
@@ -55,6 +57,14 @@ describe('useMCPSecrets', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+
+    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({
+      keys: [{ key: 'SECRET_FROM_STORE' }],
+    }))
+
+    mockedPostApiV1BetaSecretsDefaultKeys.override(() => ({
+      key: 'SECRET_FROM_STORE',
+    }))
   })
 
   it('returns the expected interface', () => {
@@ -76,21 +86,13 @@ describe('useMCPSecrets', () => {
   it('processes secrets correctly and makes proper API calls', async () => {
     const rec = recordRequests()
 
-    // Mock API responses
-    server.use(
-      // Mock GET /api/v1beta/secrets/default/keys - fetch existing secrets
-      http.get('*/api/v1beta/secrets/default/keys', () =>
-        HttpResponse.json({
-          keys: [{ key: 'EXISTING_SECRET' }],
-        })
-      ),
-      // Mock POST /api/v1beta/secrets/default/keys - create new secret
-      http.post('*/api/v1beta/secrets/default/keys', () =>
-        HttpResponse.json({
-          key: 'API_KEY',
-        })
-      )
-    )
+    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({
+      keys: [{ key: 'EXISTING_SECRET' }],
+    }))
+
+    mockedPostApiV1BetaSecretsDefaultKeys.override(() => ({
+      key: 'API_KEY',
+    }))
 
     const mockDefinedSecrets: DefinedSecret[] = [
       {
@@ -165,11 +167,9 @@ describe('useMCPSecrets', () => {
   it('handles empty secrets array', async () => {
     const rec = recordRequests()
 
-    server.use(
-      http.get('*/api/v1beta/secrets/default/keys', () =>
-        HttpResponse.json({ keys: [] })
-      )
-    )
+    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({
+      keys: [],
+    }))
 
     const { result } = renderHook(
       () =>
@@ -210,11 +210,13 @@ describe('useMCPSecrets', () => {
   })
 
   it('handles API errors', async () => {
-    server.use(
-      http.get('*/api/v1beta/secrets/default/keys', () =>
-        HttpResponse.json({ error: 'API Error' }, { status: 500 })
-      )
+    mockedGetApiV1BetaSecretsDefaultKeys.overrideHandler(() =>
+      HttpResponse.json({ error: 'API Error' }, { status: 500 })
     )
+
+    mockedPostApiV1BetaSecretsDefaultKeys.override(() => ({
+      key: 'API_KEY',
+    }))
 
     const { result } = renderHook(
       () =>
@@ -233,21 +235,13 @@ describe('useMCPSecrets', () => {
   it('handles secret name collision by creating secret with _2 suffix', async () => {
     const rec = recordRequests()
 
-    // Mock API responses - existing secret with same name
-    server.use(
-      // Mock GET /api/v1beta/secrets/default/keys - return existing secret with same name
-      http.get('*/api/v1beta/secrets/default/keys', () =>
-        HttpResponse.json({
-          keys: [{ key: 'API_KEY' }, { key: 'OTHER_SECRET' }],
-        })
-      ),
-      // Mock POST /api/v1beta/secrets/default/keys - create new secret with _2 suffix
-      http.post('*/api/v1beta/secrets/default/keys', () =>
-        HttpResponse.json({
-          key: 'API_KEY_2',
-        })
-      )
-    )
+    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({
+      keys: [{ key: 'API_KEY' }, { key: 'OTHER_SECRET' }],
+    }))
+
+    mockedPostApiV1BetaSecretsDefaultKeys.override(() => ({
+      key: 'API_KEY_2',
+    }))
 
     const mockDefinedSecrets: DefinedSecret[] = [
       {

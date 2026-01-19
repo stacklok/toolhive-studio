@@ -5,14 +5,12 @@ import {
   workloadListFixture,
   getMockLogs,
 } from './fixtures/servers'
-import type {
-  V1CreateSecretRequest,
-  V1UpdateRegistryRequest,
-} from '../../../../../api/generated/types.gen'
+import type { V1UpdateRegistryRequest } from '../../../../../api/generated/types.gen'
 import { registryServerFixture } from './fixtures/registry_server'
 import { MOCK_REGISTRY_RESPONSE } from './fixtures/registry'
-import { secretsListFixture } from './fixtures/secrets'
 import { DEFAULT_REGISTRY } from './fixtures/default_registry'
+import { mockedGetApiV1BetaSecretsDefaultKeys } from '../fixtures/secrets_default_keys/get'
+import { mockedPostApiV1BetaSecretsDefaultKeys } from '../fixtures/secrets_default_keys/post'
 
 /**
  * OpenAPI spec uses curly braces to denote path parameters
@@ -247,40 +245,14 @@ export const customHandlers = [
     }
   ),
 
-  http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-    return HttpResponse.json(secretsListFixture)
+  http.get('*/api/v1beta/secrets/default/keys', (info) => {
+    return mockedGetApiV1BetaSecretsDefaultKeys.generatedHandler(info)
   }),
 
-  http.post(
-    mswEndpoint('/api/v1beta/secrets/default/keys'),
-    async ({ request }) => {
-      const { key, value } = (await request.json()) as V1CreateSecretRequest
+  http.post('*/api/v1beta/secrets/default/keys', (info) => {
+    return mockedPostApiV1BetaSecretsDefaultKeys.generatedHandler(info)
+  }),
 
-      try {
-        return HttpResponse.json({ key, value }, { status: 201 })
-      } catch {
-        return HttpResponse.json(
-          { error: 'Invalid request body' },
-          { status: 400 }
-        )
-      }
-    }
-  ),
-  http.put(
-    mswEndpoint('/api/v1beta/secrets/default/keys/:key'),
-    async ({ request }) => {
-      const { value } = (await request.json()) as V1CreateSecretRequest
-
-      try {
-        return HttpResponse.json({ value }, { status: 201 })
-      } catch {
-        return HttpResponse.json(
-          { error: 'Invalid request body' },
-          { status: 400 }
-        )
-      }
-    }
-  ),
   http.delete(
     mswEndpoint('/api/v1beta/secrets/default/keys/:key'),
     async () => new HttpResponse(null, { status: 204 })

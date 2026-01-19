@@ -30,7 +30,7 @@ it('renders the table with secrets', async () => {
   expect(screen.getByText('Jira')).toBeInTheDocument()
 
   const dropdownTriggers = screen.getAllByLabelText('Secret options')
-  expect(dropdownTriggers).toHaveLength(4)
+  expect(dropdownTriggers).toHaveLength(5)
 
   await userEvent.click(dropdownTriggers[0]!)
 

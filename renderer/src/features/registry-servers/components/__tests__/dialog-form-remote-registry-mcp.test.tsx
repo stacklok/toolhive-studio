@@ -3,13 +3,12 @@ import { it, expect, vi, describe, beforeEach } from 'vitest'
 import { DialogFormRemoteRegistryMcp } from '../dialog-form-remote-registry-mcp'
 import userEvent from '@testing-library/user-event'
 import { Dialog } from '@/common/components/ui/dialog'
-import { server as mswServer } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { mswEndpoint } from '@/common/mocks/customHandlers'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 import type { RegistryRemoteServerMetadata } from '@api/types.gen'
 import { useRunRemoteServer } from '@/features/mcp-servers/hooks/use-run-remote-server'
+import { mockedGetApiV1BetaSecretsDefaultKeys } from '@/common/mocks/fixtures/secrets_default_keys/get'
+import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'
 
 // Mock the hooks
 vi.mock('@/features/mcp-servers/hooks/use-run-remote-server', () => ({
@@ -64,18 +63,9 @@ const mockServer: RegistryRemoteServerMetadata = {
 beforeEach(() => {
   vi.clearAllMocks()
 
-  // Setup MSW with default secrets
-  mswServer.use(
-    http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-      return HttpResponse.json({
-        keys: [{ key: 'SECRET_FROM_STORE' }, { key: 'GITHUB_TOKEN' }],
-      })
-    }),
-    // Mock empty workloads by default
-    http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-      return HttpResponse.json({ workloads: [] })
-    })
-  )
+  mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({
+    keys: [{ key: 'SECRET_FROM_STORE' }, { key: 'GITHUB_TOKEN' }],
+  }))
 
   // Default mock implementation
   mockUseRunRemoteServer.mockReturnValue({
@@ -371,17 +361,13 @@ describe('DialogFormRemoteRegistryMcp', () => {
   })
 
   it('displays group selector', async () => {
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () => {
-        return HttpResponse.json({
-          groups: [
-            { name: 'default' },
-            { name: 'production' },
-            { name: 'staging' },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaGroups.override(() => ({
+      groups: [
+        { name: 'default' },
+        { name: 'production' },
+        { name: 'staging' },
+      ],
+    }))
 
     renderWithProviders(
       <Wrapper>
