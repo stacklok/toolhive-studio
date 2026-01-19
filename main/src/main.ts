@@ -118,12 +118,14 @@ import {
 } from './app-state'
 import type { UIMessage } from 'ai'
 
+const isE2E = process.env.TOOLHIVE_E2E === 'true'
+
 const store = new Store<{
   isTelemetryEnabled: boolean
-}>({ defaults: { isTelemetryEnabled: true } })
+}>({ defaults: { isTelemetryEnabled: !isE2E } })
 
 Sentry.init({
-  dsn: import.meta.env.VITE_SENTRY_DSN,
+  dsn: isE2E ? undefined : import.meta.env.VITE_SENTRY_DSN,
   tracesSampleRate: 1.0,
   // It will send errors, exceptions and captured messages to Sentry only if the user has enabled telemetry
   beforeSend: (event) => (store.get('isTelemetryEnabled', true) ? event : null),
