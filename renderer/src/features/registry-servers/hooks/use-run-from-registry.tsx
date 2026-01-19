@@ -40,7 +40,8 @@ export function useRunFromRegistry({
         queryClient,
         quietly,
       })
-      const groupName = variables.body.group || 'default'
+      const body: V1CreateRequest = variables.body
+      const groupName = body.group || 'default'
       notifyChangeWithOptimizer(groupName, quietly)
       trackEvent(`Workload ${data.name} started`, {
         workload: data.name,

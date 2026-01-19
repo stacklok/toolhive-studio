@@ -1,4 +1,8 @@
-import type { V1WorkloadListResponse, CoreWorkload } from '@api/types.gen'
+import type {
+  V1WorkloadListResponse,
+  CoreWorkload,
+  V1BulkOperationRequest,
+} from '@api/types.gen'
 import {
   postApiV1BetaWorkloadsByNameRestartMutation,
   getApiV1BetaWorkloadsQueryKey,
@@ -39,7 +43,8 @@ export function useMutationRestartServerAtStartup() {
     toastId: TOAST_ID,
     ...postApiV1BetaWorkloadsRestartMutation(),
     onMutate: async (variables) => {
-      const serverNames = variables.body.names
+      const body: V1BulkOperationRequest = variables.body
+      const serverNames = body.names ?? []
 
       if (!serverNames || serverNames.length === 0) {
         return
@@ -100,7 +105,8 @@ export function useMutationRestartServerAtStartup() {
       return { previousData }
     },
     onSuccess: async (_data, variables) => {
-      const serverNames = variables.body.names
+      const body: V1BulkOperationRequest = variables.body
+      const serverNames = body.names ?? []
 
       if (!serverNames || serverNames.length === 0) {
         return

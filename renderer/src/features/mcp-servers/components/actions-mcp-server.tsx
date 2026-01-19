@@ -1,7 +1,7 @@
 import type { CoreWorkload } from '@api/types.gen'
 import { Switch } from '@/common/components/ui/switch'
 
-function getStatusText(status: CoreWorkload['status']) {
+function getStatusText(status: CoreWorkload['status'] | unknown) {
   // There is an issue with openAPI generator in BE - https://github.com/stacklok/toolhive/issues/780
   // I am using the enum defined directly here https://github.com/stacklok/toolhive/blob/main/pkg/workloads/models.go#L15
   if (status === 'running') return 'Running'
@@ -10,8 +10,7 @@ function getStatusText(status: CoreWorkload['status']) {
   if (status === 'stopping') return 'Stopping'
   if (status === 'error') return 'Error'
   // add it for UI purposes, the BE cannot handle it for mvp
-  if (status === 'updating') return 'Updating'
-  if (status === 'deleting') return 'Deleting'
+  if (status === 'removing') return 'Deleting'
   if (status === 'restarting') return 'Restarting'
   return 'Unknown'
 }

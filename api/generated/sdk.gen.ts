@@ -145,12 +145,16 @@ export type Options<
  */
 export const getApiOpenapiJson = <ThrowOnError extends boolean = false>(
   options?: Options<GetApiOpenapiJsonData, ThrowOnError>
-) =>
-  (options?.client ?? client).get<
+) => {
+  return (options?.client ?? client).get<
     GetApiOpenapiJsonResponses,
     unknown,
     ThrowOnError
-  >({ url: '/api/openapi.json', ...options })
+  >({
+    url: '/api/openapi.json',
+    ...options,
+  })
+}
 
 /**
  * List all clients
@@ -159,12 +163,16 @@ export const getApiOpenapiJson = <ThrowOnError extends boolean = false>(
  */
 export const getApiV1BetaClients = <ThrowOnError extends boolean = false>(
   options?: Options<GetApiV1BetaClientsData, ThrowOnError>
-) =>
-  (options?.client ?? client).get<
+) => {
+  return (options?.client ?? client).get<
     GetApiV1BetaClientsResponses,
     unknown,
     ThrowOnError
-  >({ url: '/api/v1beta/clients', ...options })
+  >({
+    url: '/api/v1beta/clients',
+    ...options,
+  })
+}
 
 /**
  * Register a new client
@@ -173,8 +181,8 @@ export const getApiV1BetaClients = <ThrowOnError extends boolean = false>(
  */
 export const postApiV1BetaClients = <ThrowOnError extends boolean = false>(
   options: Options<PostApiV1BetaClientsData, ThrowOnError>
-) =>
-  (options.client ?? client).post<
+) => {
+  return (options.client ?? client).post<
     PostApiV1BetaClientsResponses,
     PostApiV1BetaClientsErrors,
     ThrowOnError
@@ -186,6 +194,7 @@ export const postApiV1BetaClients = <ThrowOnError extends boolean = false>(
       ...options.headers,
     },
   })
+}
 
 /**
  * Register multiple clients
@@ -196,8 +205,8 @@ export const postApiV1BetaClientsRegister = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<PostApiV1BetaClientsRegisterData, ThrowOnError>
-) =>
-  (options.client ?? client).post<
+) => {
+  return (options.client ?? client).post<
     PostApiV1BetaClientsRegisterResponses,
     PostApiV1BetaClientsRegisterErrors,
     ThrowOnError
@@ -209,6 +218,7 @@ export const postApiV1BetaClientsRegister = <
       ...options.headers,
     },
   })
+}
 
 /**
  * Unregister multiple clients
@@ -219,8 +229,8 @@ export const postApiV1BetaClientsUnregister = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<PostApiV1BetaClientsUnregisterData, ThrowOnError>
-) =>
-  (options.client ?? client).post<
+) => {
+  return (options.client ?? client).post<
     PostApiV1BetaClientsUnregisterResponses,
     PostApiV1BetaClientsUnregisterErrors,
     ThrowOnError
@@ -232,6 +242,7 @@ export const postApiV1BetaClientsUnregister = <
       ...options.headers,
     },
   })
+}
 
 /**
  * Unregister a client
@@ -242,12 +253,16 @@ export const deleteApiV1BetaClientsByName = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<DeleteApiV1BetaClientsByNameData, ThrowOnError>
-) =>
-  (options.client ?? client).delete<
+) => {
+  return (options.client ?? client).delete<
     DeleteApiV1BetaClientsByNameResponses,
     DeleteApiV1BetaClientsByNameErrors,
     ThrowOnError
-  >({ url: '/api/v1beta/clients/{name}', ...options })
+  >({
+    url: '/api/v1beta/clients/{name}',
+    ...options,
+  })
+}
 
 /**
  * Unregister a client from a specific group
@@ -258,12 +273,16 @@ export const deleteApiV1BetaClientsByNameGroupsByGroup = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<DeleteApiV1BetaClientsByNameGroupsByGroupData, ThrowOnError>
-) =>
-  (options.client ?? client).delete<
+) => {
+  return (options.client ?? client).delete<
     DeleteApiV1BetaClientsByNameGroupsByGroupResponses,
     DeleteApiV1BetaClientsByNameGroupsByGroupErrors,
     ThrowOnError
-  >({ url: '/api/v1beta/clients/{name}/groups/{group}', ...options })
+  >({
+    url: '/api/v1beta/clients/{name}/groups/{group}',
+    ...options,
+  })
+}
 
 /**
  * List all clients status
@@ -274,12 +293,16 @@ export const getApiV1BetaDiscoveryClients = <
   ThrowOnError extends boolean = false,
 >(
   options?: Options<GetApiV1BetaDiscoveryClientsData, ThrowOnError>
-) =>
-  (options?.client ?? client).get<
+) => {
+  return (options?.client ?? client).get<
     GetApiV1BetaDiscoveryClientsResponses,
     unknown,
     ThrowOnError
-  >({ url: '/api/v1beta/discovery/clients', ...options })
+  >({
+    url: '/api/v1beta/discovery/clients',
+    ...options,
+  })
+}
 
 /**
  * List all groups
@@ -288,12 +311,16 @@ export const getApiV1BetaDiscoveryClients = <
  */
 export const getApiV1BetaGroups = <ThrowOnError extends boolean = false>(
   options?: Options<GetApiV1BetaGroupsData, ThrowOnError>
-) =>
-  (options?.client ?? client).get<
+) => {
+  return (options?.client ?? client).get<
     GetApiV1BetaGroupsResponses,
     GetApiV1BetaGroupsErrors,
     ThrowOnError
-  >({ url: '/api/v1beta/groups', ...options })
+  >({
+    url: '/api/v1beta/groups',
+    ...options,
+  })
+}
 
 /**
  * Create a new group
@@ -302,8 +329,8 @@ export const getApiV1BetaGroups = <ThrowOnError extends boolean = false>(
  */
 export const postApiV1BetaGroups = <ThrowOnError extends boolean = false>(
   options: Options<PostApiV1BetaGroupsData, ThrowOnError>
-) =>
-  (options.client ?? client).post<
+) => {
+  return (options.client ?? client).post<
     PostApiV1BetaGroupsResponses,
     PostApiV1BetaGroupsErrors,
     ThrowOnError
@@ -315,6 +342,7 @@ export const postApiV1BetaGroups = <ThrowOnError extends boolean = false>(
       ...options.headers,
     },
   })
+}
 
 /**
  * Delete a group
@@ -325,12 +353,16 @@ export const deleteApiV1BetaGroupsByName = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<DeleteApiV1BetaGroupsByNameData, ThrowOnError>
-) =>
-  (options.client ?? client).delete<
+) => {
+  return (options.client ?? client).delete<
     DeleteApiV1BetaGroupsByNameResponses,
     DeleteApiV1BetaGroupsByNameErrors,
     ThrowOnError
-  >({ url: '/api/v1beta/groups/{name}', ...options })
+  >({
+    url: '/api/v1beta/groups/{name}',
+    ...options,
+  })
+}
 
 /**
  * Get group details
@@ -339,12 +371,16 @@ export const deleteApiV1BetaGroupsByName = <
  */
 export const getApiV1BetaGroupsByName = <ThrowOnError extends boolean = false>(
   options: Options<GetApiV1BetaGroupsByNameData, ThrowOnError>
-) =>
-  (options.client ?? client).get<
+) => {
+  return (options.client ?? client).get<
     GetApiV1BetaGroupsByNameResponses,
     GetApiV1BetaGroupsByNameErrors,
     ThrowOnError
-  >({ url: '/api/v1beta/groups/{name}', ...options })
+  >({
+    url: '/api/v1beta/groups/{name}',
+    ...options,
+  })
+}
 
 /**
  * List registries
@@ -353,12 +389,16 @@ export const getApiV1BetaGroupsByName = <ThrowOnError extends boolean = false>(
  */
 export const getApiV1BetaRegistry = <ThrowOnError extends boolean = false>(
   options?: Options<GetApiV1BetaRegistryData, ThrowOnError>
-) =>
-  (options?.client ?? client).get<
+) => {
+  return (options?.client ?? client).get<
     GetApiV1BetaRegistryResponses,
     unknown,
     ThrowOnError
-  >({ url: '/api/v1beta/registry', ...options })
+  >({
+    url: '/api/v1beta/registry',
+    ...options,
+  })
+}
 
 /**
  * Add a registry
@@ -367,8 +407,8 @@ export const getApiV1BetaRegistry = <ThrowOnError extends boolean = false>(
  */
 export const postApiV1BetaRegistry = <ThrowOnError extends boolean = false>(
   options?: Options<PostApiV1BetaRegistryData, ThrowOnError>
-) =>
-  (options?.client ?? client).post<
+) => {
+  return (options?.client ?? client).post<
     unknown,
     PostApiV1BetaRegistryErrors,
     ThrowOnError
@@ -380,6 +420,7 @@ export const postApiV1BetaRegistry = <ThrowOnError extends boolean = false>(
       ...options?.headers,
     },
   })
+}
 
 /**
  * Remove a registry
@@ -390,12 +431,16 @@ export const deleteApiV1BetaRegistryByName = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<DeleteApiV1BetaRegistryByNameData, ThrowOnError>
-) =>
-  (options.client ?? client).delete<
+) => {
+  return (options.client ?? client).delete<
     DeleteApiV1BetaRegistryByNameResponses,
     DeleteApiV1BetaRegistryByNameErrors,
     ThrowOnError
-  >({ url: '/api/v1beta/registry/{name}', ...options })
+  >({
+    url: '/api/v1beta/registry/{name}',
+    ...options,
+  })
+}
 
 /**
  * Get a registry
@@ -406,12 +451,16 @@ export const getApiV1BetaRegistryByName = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<GetApiV1BetaRegistryByNameData, ThrowOnError>
-) =>
-  (options.client ?? client).get<
+) => {
+  return (options.client ?? client).get<
     GetApiV1BetaRegistryByNameResponses,
     GetApiV1BetaRegistryByNameErrors,
     ThrowOnError
-  >({ url: '/api/v1beta/registry/{name}', ...options })
+  >({
+    url: '/api/v1beta/registry/{name}',
+    ...options,
+  })
+}
 
 /**
  * Update registry configuration
@@ -422,8 +471,8 @@ export const putApiV1BetaRegistryByName = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<PutApiV1BetaRegistryByNameData, ThrowOnError>
-) =>
-  (options.client ?? client).put<
+) => {
+  return (options.client ?? client).put<
     PutApiV1BetaRegistryByNameResponses,
     PutApiV1BetaRegistryByNameErrors,
     ThrowOnError
@@ -435,6 +484,7 @@ export const putApiV1BetaRegistryByName = <
       ...options.headers,
     },
   })
+}
 
 /**
  * List servers in a registry
@@ -445,12 +495,16 @@ export const getApiV1BetaRegistryByNameServers = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<GetApiV1BetaRegistryByNameServersData, ThrowOnError>
-) =>
-  (options.client ?? client).get<
+) => {
+  return (options.client ?? client).get<
     GetApiV1BetaRegistryByNameServersResponses,
     GetApiV1BetaRegistryByNameServersErrors,
     ThrowOnError
-  >({ url: '/api/v1beta/registry/{name}/servers', ...options })
+  >({
+    url: '/api/v1beta/registry/{name}/servers',
+    ...options,
+  })
+}
 
 /**
  * Get a server from a registry
@@ -464,12 +518,16 @@ export const getApiV1BetaRegistryByNameServersByServerName = <
     GetApiV1BetaRegistryByNameServersByServerNameData,
     ThrowOnError
   >
-) =>
-  (options.client ?? client).get<
+) => {
+  return (options.client ?? client).get<
     GetApiV1BetaRegistryByNameServersByServerNameResponses,
     GetApiV1BetaRegistryByNameServersByServerNameErrors,
     ThrowOnError
-  >({ url: '/api/v1beta/registry/{name}/servers/{serverName}', ...options })
+  >({
+    url: '/api/v1beta/registry/{name}/servers/{serverName}',
+    ...options,
+  })
+}
 
 /**
  * Setup or reconfigure secrets provider
@@ -478,8 +536,8 @@ export const getApiV1BetaRegistryByNameServersByServerName = <
  */
 export const postApiV1BetaSecrets = <ThrowOnError extends boolean = false>(
   options: Options<PostApiV1BetaSecretsData, ThrowOnError>
-) =>
-  (options.client ?? client).post<
+) => {
+  return (options.client ?? client).post<
     PostApiV1BetaSecretsResponses,
     PostApiV1BetaSecretsErrors,
     ThrowOnError
@@ -491,6 +549,7 @@ export const postApiV1BetaSecrets = <ThrowOnError extends boolean = false>(
       ...options.headers,
     },
   })
+}
 
 /**
  * Get secrets provider details
@@ -501,12 +560,16 @@ export const getApiV1BetaSecretsDefault = <
   ThrowOnError extends boolean = false,
 >(
   options?: Options<GetApiV1BetaSecretsDefaultData, ThrowOnError>
-) =>
-  (options?.client ?? client).get<
+) => {
+  return (options?.client ?? client).get<
     GetApiV1BetaSecretsDefaultResponses,
     GetApiV1BetaSecretsDefaultErrors,
     ThrowOnError
-  >({ url: '/api/v1beta/secrets/default', ...options })
+  >({
+    url: '/api/v1beta/secrets/default',
+    ...options,
+  })
+}
 
 /**
  * List secrets
@@ -517,12 +580,16 @@ export const getApiV1BetaSecretsDefaultKeys = <
   ThrowOnError extends boolean = false,
 >(
   options?: Options<GetApiV1BetaSecretsDefaultKeysData, ThrowOnError>
-) =>
-  (options?.client ?? client).get<
+) => {
+  return (options?.client ?? client).get<
     GetApiV1BetaSecretsDefaultKeysResponses,
     GetApiV1BetaSecretsDefaultKeysErrors,
     ThrowOnError
-  >({ url: '/api/v1beta/secrets/default/keys', ...options })
+  >({
+    url: '/api/v1beta/secrets/default/keys',
+    ...options,
+  })
+}
 
 /**
  * Create a new secret
@@ -533,8 +600,8 @@ export const postApiV1BetaSecretsDefaultKeys = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<PostApiV1BetaSecretsDefaultKeysData, ThrowOnError>
-) =>
-  (options.client ?? client).post<
+) => {
+  return (options.client ?? client).post<
     PostApiV1BetaSecretsDefaultKeysResponses,
     PostApiV1BetaSecretsDefaultKeysErrors,
     ThrowOnError
@@ -546,6 +613,7 @@ export const postApiV1BetaSecretsDefaultKeys = <
       ...options.headers,
     },
   })
+}
 
 /**
  * Delete a secret
@@ -556,12 +624,16 @@ export const deleteApiV1BetaSecretsDefaultKeysByKey = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<DeleteApiV1BetaSecretsDefaultKeysByKeyData, ThrowOnError>
-) =>
-  (options.client ?? client).delete<
+) => {
+  return (options.client ?? client).delete<
     DeleteApiV1BetaSecretsDefaultKeysByKeyResponses,
     DeleteApiV1BetaSecretsDefaultKeysByKeyErrors,
     ThrowOnError
-  >({ url: '/api/v1beta/secrets/default/keys/{key}', ...options })
+  >({
+    url: '/api/v1beta/secrets/default/keys/{key}',
+    ...options,
+  })
+}
 
 /**
  * Update a secret
@@ -572,8 +644,8 @@ export const putApiV1BetaSecretsDefaultKeysByKey = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<PutApiV1BetaSecretsDefaultKeysByKeyData, ThrowOnError>
-) =>
-  (options.client ?? client).put<
+) => {
+  return (options.client ?? client).put<
     PutApiV1BetaSecretsDefaultKeysByKeyResponses,
     PutApiV1BetaSecretsDefaultKeysByKeyErrors,
     ThrowOnError
@@ -585,6 +657,7 @@ export const putApiV1BetaSecretsDefaultKeysByKey = <
       ...options.headers,
     },
   })
+}
 
 /**
  * Get server version
@@ -593,12 +666,16 @@ export const putApiV1BetaSecretsDefaultKeysByKey = <
  */
 export const getApiV1BetaVersion = <ThrowOnError extends boolean = false>(
   options?: Options<GetApiV1BetaVersionData, ThrowOnError>
-) =>
-  (options?.client ?? client).get<
+) => {
+  return (options?.client ?? client).get<
     GetApiV1BetaVersionResponses,
     unknown,
     ThrowOnError
-  >({ url: '/api/v1beta/version', ...options })
+  >({
+    url: '/api/v1beta/version',
+    ...options,
+  })
+}
 
 /**
  * List all workloads
@@ -607,12 +684,16 @@ export const getApiV1BetaVersion = <ThrowOnError extends boolean = false>(
  */
 export const getApiV1BetaWorkloads = <ThrowOnError extends boolean = false>(
   options?: Options<GetApiV1BetaWorkloadsData, ThrowOnError>
-) =>
-  (options?.client ?? client).get<
+) => {
+  return (options?.client ?? client).get<
     GetApiV1BetaWorkloadsResponses,
     GetApiV1BetaWorkloadsErrors,
     ThrowOnError
-  >({ url: '/api/v1beta/workloads', ...options })
+  >({
+    url: '/api/v1beta/workloads',
+    ...options,
+  })
+}
 
 /**
  * Create a new workload
@@ -621,8 +702,8 @@ export const getApiV1BetaWorkloads = <ThrowOnError extends boolean = false>(
  */
 export const postApiV1BetaWorkloads = <ThrowOnError extends boolean = false>(
   options: Options<PostApiV1BetaWorkloadsData, ThrowOnError>
-) =>
-  (options.client ?? client).post<
+) => {
+  return (options.client ?? client).post<
     PostApiV1BetaWorkloadsResponses,
     PostApiV1BetaWorkloadsErrors,
     ThrowOnError
@@ -634,6 +715,7 @@ export const postApiV1BetaWorkloads = <ThrowOnError extends boolean = false>(
       ...options.headers,
     },
   })
+}
 
 /**
  * Delete workloads in bulk
@@ -644,8 +726,8 @@ export const postApiV1BetaWorkloadsDelete = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<PostApiV1BetaWorkloadsDeleteData, ThrowOnError>
-) =>
-  (options.client ?? client).post<
+) => {
+  return (options.client ?? client).post<
     PostApiV1BetaWorkloadsDeleteResponses,
     PostApiV1BetaWorkloadsDeleteErrors,
     ThrowOnError
@@ -657,6 +739,7 @@ export const postApiV1BetaWorkloadsDelete = <
       ...options.headers,
     },
   })
+}
 
 /**
  * Restart workloads in bulk
@@ -667,8 +750,8 @@ export const postApiV1BetaWorkloadsRestart = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<PostApiV1BetaWorkloadsRestartData, ThrowOnError>
-) =>
-  (options.client ?? client).post<
+) => {
+  return (options.client ?? client).post<
     PostApiV1BetaWorkloadsRestartResponses,
     PostApiV1BetaWorkloadsRestartErrors,
     ThrowOnError
@@ -680,6 +763,7 @@ export const postApiV1BetaWorkloadsRestart = <
       ...options.headers,
     },
   })
+}
 
 /**
  * Stop workloads in bulk
@@ -690,8 +774,8 @@ export const postApiV1BetaWorkloadsStop = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<PostApiV1BetaWorkloadsStopData, ThrowOnError>
-) =>
-  (options.client ?? client).post<
+) => {
+  return (options.client ?? client).post<
     PostApiV1BetaWorkloadsStopResponses,
     PostApiV1BetaWorkloadsStopErrors,
     ThrowOnError
@@ -703,6 +787,7 @@ export const postApiV1BetaWorkloadsStop = <
       ...options.headers,
     },
   })
+}
 
 /**
  * Delete a workload
@@ -713,12 +798,16 @@ export const deleteApiV1BetaWorkloadsByName = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<DeleteApiV1BetaWorkloadsByNameData, ThrowOnError>
-) =>
-  (options.client ?? client).delete<
+) => {
+  return (options.client ?? client).delete<
     DeleteApiV1BetaWorkloadsByNameResponses,
     DeleteApiV1BetaWorkloadsByNameErrors,
     ThrowOnError
-  >({ url: '/api/v1beta/workloads/{name}', ...options })
+  >({
+    url: '/api/v1beta/workloads/{name}',
+    ...options,
+  })
+}
 
 /**
  * Get workload details
@@ -729,12 +818,16 @@ export const getApiV1BetaWorkloadsByName = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<GetApiV1BetaWorkloadsByNameData, ThrowOnError>
-) =>
-  (options.client ?? client).get<
+) => {
+  return (options.client ?? client).get<
     GetApiV1BetaWorkloadsByNameResponses,
     GetApiV1BetaWorkloadsByNameErrors,
     ThrowOnError
-  >({ url: '/api/v1beta/workloads/{name}', ...options })
+  >({
+    url: '/api/v1beta/workloads/{name}',
+    ...options,
+  })
+}
 
 /**
  * Update workload
@@ -745,8 +838,8 @@ export const postApiV1BetaWorkloadsByNameEdit = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<PostApiV1BetaWorkloadsByNameEditData, ThrowOnError>
-) =>
-  (options.client ?? client).post<
+) => {
+  return (options.client ?? client).post<
     PostApiV1BetaWorkloadsByNameEditResponses,
     PostApiV1BetaWorkloadsByNameEditErrors,
     ThrowOnError
@@ -758,6 +851,7 @@ export const postApiV1BetaWorkloadsByNameEdit = <
       ...options.headers,
     },
   })
+}
 
 /**
  * Export workload configuration
@@ -768,44 +862,56 @@ export const getApiV1BetaWorkloadsByNameExport = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<GetApiV1BetaWorkloadsByNameExportData, ThrowOnError>
-) =>
-  (options.client ?? client).get<
+) => {
+  return (options.client ?? client).get<
     GetApiV1BetaWorkloadsByNameExportResponses,
     GetApiV1BetaWorkloadsByNameExportErrors,
     ThrowOnError
-  >({ url: '/api/v1beta/workloads/{name}/export', ...options })
+  >({
+    url: '/api/v1beta/workloads/{name}/export',
+    ...options,
+  })
+}
 
 /**
  * Get logs for a specific workload
  *
- * Retrieve at most 100 lines of logs for a specific workload by name.
+ * Retrieve at most 1000 lines of logs for a specific workload by name.
  */
 export const getApiV1BetaWorkloadsByNameLogs = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<GetApiV1BetaWorkloadsByNameLogsData, ThrowOnError>
-) =>
-  (options.client ?? client).get<
+) => {
+  return (options.client ?? client).get<
     GetApiV1BetaWorkloadsByNameLogsResponses,
     GetApiV1BetaWorkloadsByNameLogsErrors,
     ThrowOnError
-  >({ url: '/api/v1beta/workloads/{name}/logs', ...options })
+  >({
+    url: '/api/v1beta/workloads/{name}/logs',
+    ...options,
+  })
+}
 
 /**
  * Get proxy logs for a specific workload
  *
- * Retrieve proxy logs for a specific workload by name from the file system.
+ * Retrieve at most 1000 lines of proxy logs for a specific workload by name from the file system.
  */
 export const getApiV1BetaWorkloadsByNameProxyLogs = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<GetApiV1BetaWorkloadsByNameProxyLogsData, ThrowOnError>
-) =>
-  (options.client ?? client).get<
+) => {
+  return (options.client ?? client).get<
     GetApiV1BetaWorkloadsByNameProxyLogsResponses,
     GetApiV1BetaWorkloadsByNameProxyLogsErrors,
     ThrowOnError
-  >({ url: '/api/v1beta/workloads/{name}/proxy-logs', ...options })
+  >({
+    url: '/api/v1beta/workloads/{name}/proxy-logs',
+    ...options,
+  })
+}
 
 /**
  * Restart a workload
@@ -816,12 +922,16 @@ export const postApiV1BetaWorkloadsByNameRestart = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<PostApiV1BetaWorkloadsByNameRestartData, ThrowOnError>
-) =>
-  (options.client ?? client).post<
+) => {
+  return (options.client ?? client).post<
     PostApiV1BetaWorkloadsByNameRestartResponses,
     PostApiV1BetaWorkloadsByNameRestartErrors,
     ThrowOnError
-  >({ url: '/api/v1beta/workloads/{name}/restart', ...options })
+  >({
+    url: '/api/v1beta/workloads/{name}/restart',
+    ...options,
+  })
+}
 
 /**
  * Get workload status
@@ -832,12 +942,16 @@ export const getApiV1BetaWorkloadsByNameStatus = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<GetApiV1BetaWorkloadsByNameStatusData, ThrowOnError>
-) =>
-  (options.client ?? client).get<
+) => {
+  return (options.client ?? client).get<
     GetApiV1BetaWorkloadsByNameStatusResponses,
     GetApiV1BetaWorkloadsByNameStatusErrors,
     ThrowOnError
-  >({ url: '/api/v1beta/workloads/{name}/status', ...options })
+  >({
+    url: '/api/v1beta/workloads/{name}/status',
+    ...options,
+  })
+}
 
 /**
  * Stop a workload
@@ -848,12 +962,16 @@ export const postApiV1BetaWorkloadsByNameStop = <
   ThrowOnError extends boolean = false,
 >(
   options: Options<PostApiV1BetaWorkloadsByNameStopData, ThrowOnError>
-) =>
-  (options.client ?? client).post<
+) => {
+  return (options.client ?? client).post<
     PostApiV1BetaWorkloadsByNameStopResponses,
     PostApiV1BetaWorkloadsByNameStopErrors,
     ThrowOnError
-  >({ url: '/api/v1beta/workloads/{name}/stop', ...options })
+  >({
+    url: '/api/v1beta/workloads/{name}/stop',
+    ...options,
+  })
+}
 
 /**
  * Health check
@@ -862,8 +980,13 @@ export const postApiV1BetaWorkloadsByNameStop = <
  */
 export const getHealth = <ThrowOnError extends boolean = false>(
   options?: Options<GetHealthData, ThrowOnError>
-) =>
-  (options?.client ?? client).get<GetHealthResponses, unknown, ThrowOnError>({
+) => {
+  return (options?.client ?? client).get<
+    GetHealthResponses,
+    unknown,
+    ThrowOnError
+  >({
     url: '/health',
     ...options,
   })
+}
