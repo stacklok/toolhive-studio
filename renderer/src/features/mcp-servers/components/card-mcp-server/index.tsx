@@ -136,9 +136,8 @@ export function CardMcpServer({
   }, [name, searchNewServerName])
 
   // Check if the server is in deleting state
-  const isDeleting = status === 'deleting'
-  const isTransitioning =
-    status === 'starting' || status === 'stopping' || status === 'restarting'
+  const isDeleting = status === 'removing'
+  const isTransitioning = status === 'starting' || status === 'stopping'
   const isStopped = status === 'stopped' || status === 'stopping'
   const [hadRecentStatusChange, setHadRecentStatusChange] = useState(false)
   const prevStatusRef = useRef<CoreWorkload['status']>(status)

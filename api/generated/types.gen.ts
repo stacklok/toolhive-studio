@@ -408,6 +408,16 @@ export type RegistryImageMetadata = {
    */
   args?: Array<string>
   /**
+   * CustomMetadata allows for additional user-defined metadata
+   */
+  custom_metadata?: {
+    [key: string]: unknown
+  }
+  /**
+   * Description is a human-readable description of the server's purpose and functionality
+   */
+  description?: string
+  /**
    * DockerTags lists the available Docker tags for this server image
    */
   docker_tags?: Array<string>
@@ -419,12 +429,67 @@ export type RegistryImageMetadata = {
    * Image is the Docker image reference for the MCP server
    */
   image?: string
+  metadata?: RegistryMetadata
+  /**
+   * Name is the identifier for the MCP server, used when referencing the server in commands
+   * If not provided, it will be auto-generated from the registry key
+   */
+  name?: string
   permissions?: PermissionsProfile
   provenance?: RegistryProvenance
+  /**
+   * ProxyPort is the port for the HTTP proxy to listen on (host port)
+   * If not specified, a random available port will be assigned
+   */
+  proxy_port?: number
+  /**
+   * RepositoryURL is the URL to the source code repository for the server
+   */
+  repository_url?: string
+  /**
+   * Status indicates whether the server is currently active or deprecated
+   */
+  status?: string
+  /**
+   * Tags are categorization labels for the server to aid in discovery and filtering
+   */
+  tags?: Array<string>
   /**
    * TargetPort is the port for the container to expose (only applicable to SSE and Streamable HTTP transports)
    */
   target_port?: number
+  /**
+   * Tier represents the tier classification level of the server, e.g., "Official" or "Community"
+   */
+  tier?: string
+  /**
+   * Tools is a list of tool names provided by this MCP server
+   */
+  tools?: Array<string>
+  /**
+   * Transport defines the communication protocol for the server
+   * For containers: stdio, sse, or streamable-http
+   * For remote servers: sse or streamable-http (stdio not supported)
+   */
+  transport?: string
+}
+
+/**
+ * Metadata contains additional information about the server such as popularity metrics
+ */
+export type RegistryMetadata = {
+  /**
+   * LastUpdated is the timestamp when the server was last updated, in RFC3339 format
+   */
+  last_updated?: string
+  /**
+   * Pulls indicates how many times the server image has been downloaded
+   */
+  pulls?: number
+  /**
+   * Stars represents the popularity rating or number of stars for the server
+   */
+  stars?: number
 }
 
 /**
@@ -528,6 +593,16 @@ export type RegistryRegistry = {
  */
 export type RegistryRemoteServerMetadata = {
   /**
+   * CustomMetadata allows for additional user-defined metadata
+   */
+  custom_metadata?: {
+    [key: string]: unknown
+  }
+  /**
+   * Description is a human-readable description of the server's purpose and functionality
+   */
+  description?: string
+  /**
    * EnvVars defines environment variables that can be passed to configure the client
    * These might be needed for client-side configuration when connecting to the remote server
    */
@@ -537,7 +612,39 @@ export type RegistryRemoteServerMetadata = {
    * These are used with the thv proxy command's authentication features
    */
   headers?: Array<RegistryHeader>
+  metadata?: RegistryMetadata
+  /**
+   * Name is the identifier for the MCP server, used when referencing the server in commands
+   * If not provided, it will be auto-generated from the registry key
+   */
+  name?: string
   oauth_config?: RegistryOAuthConfig
+  /**
+   * RepositoryURL is the URL to the source code repository for the server
+   */
+  repository_url?: string
+  /**
+   * Status indicates whether the server is currently active or deprecated
+   */
+  status?: string
+  /**
+   * Tags are categorization labels for the server to aid in discovery and filtering
+   */
+  tags?: Array<string>
+  /**
+   * Tier represents the tier classification level of the server, e.g., "Official" or "Community"
+   */
+  tier?: string
+  /**
+   * Tools is a list of tool names provided by this MCP server
+   */
+  tools?: Array<string>
+  /**
+   * Transport defines the communication protocol for the server
+   * For containers: stdio, sse, or streamable-http
+   * For remote servers: sse or streamable-http (stdio not supported)
+   */
+  transport?: string
   /**
    * URL is the endpoint URL for the remote MCP server (e.g., https://api.example.com/mcp)
    */

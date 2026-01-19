@@ -14,7 +14,8 @@ import type { Middleware } from './utils.gen'
 export type ResponseStyle = 'data' | 'fields'
 
 export interface Config<T extends ClientOptions = ClientOptions>
-  extends Omit<RequestInit, 'body' | 'headers' | 'method'>, CoreConfig {
+  extends Omit<RequestInit, 'body' | 'headers' | 'method'>,
+    CoreConfig {
   /**
    * Base URL for all requests made by this client.
    */
@@ -68,9 +69,7 @@ export interface RequestOptions<
   TResponseStyle extends ResponseStyle = 'fields',
   ThrowOnError extends boolean = boolean,
   Url extends string = string,
->
-  extends
-    Config<{
+> extends Config<{
       responseStyle: TResponseStyle
       throwOnError: ThrowOnError
     }>,
@@ -195,7 +194,7 @@ type BuildUrlFn = <
     url: string
   },
 >(
-  options: TData & Options<TData>
+  options: Pick<TData, 'url'> & Options<TData>
 ) => string
 
 export type Client = CoreClient<
@@ -239,4 +238,31 @@ export type Options<
   RequestOptions<TResponse, TResponseStyle, ThrowOnError>,
   'body' | 'path' | 'query' | 'url'
 > &
-  ([TData] extends [never] ? unknown : Omit<TData, 'url'>)
+  Omit<TData, 'url'>
+
+export type OptionsLegacyParser<
+  TData = unknown,
+  ThrowOnError extends boolean = boolean,
+  TResponseStyle extends ResponseStyle = 'fields',
+> = TData extends { body?: any }
+  ? TData extends { headers?: any }
+    ? OmitKeys<
+        RequestOptions<unknown, TResponseStyle, ThrowOnError>,
+        'body' | 'headers' | 'url'
+      > &
+        TData
+    : OmitKeys<
+        RequestOptions<unknown, TResponseStyle, ThrowOnError>,
+        'body' | 'url'
+      > &
+        TData &
+        Pick<RequestOptions<unknown, TResponseStyle, ThrowOnError>, 'headers'>
+  : TData extends { headers?: any }
+    ? OmitKeys<
+        RequestOptions<unknown, TResponseStyle, ThrowOnError>,
+        'headers' | 'url'
+      > &
+        TData &
+        Pick<RequestOptions<unknown, TResponseStyle, ThrowOnError>, 'body'>
+    : OmitKeys<RequestOptions<unknown, TResponseStyle, ThrowOnError>, 'url'> &
+        TData

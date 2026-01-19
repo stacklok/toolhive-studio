@@ -32,7 +32,7 @@ function createCardMcpServerTestRouter() {
           status="running"
           statusContext={undefined}
           url="http://localhost:8080"
-          transport="http"
+          transport="streamable-http"
           group="default"
         />
       </EditServerDialogProvider>
@@ -274,7 +274,7 @@ it('stays on the same group page after deleting a server', async () => {
           status="running"
           statusContext={undefined}
           url="http://localhost:8080"
-          transport="http"
+          transport="streamable-http"
           group="g1"
         />
       </EditServerDialogProvider>
