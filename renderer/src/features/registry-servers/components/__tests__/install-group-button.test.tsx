@@ -37,20 +37,17 @@ const mockGroup: RegistryGroup = {
   remote_servers: {},
 }
 
-const defaultGroups = mockedGetApiV1BetaGroups.defaultValue
-
 describe('InstallGroupButton', () => {
   it('shows error when trying to install a group that already exists', async () => {
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        ...(data.groups ?? []),
+        { name: 'dev-toolkit', registered_clients: [] },
+      ],
+    }))
+
     server.use(
-      http.get('*/api/v1beta/groups', () => {
-        return HttpResponse.json({
-          ...defaultGroups,
-          groups: [
-            ...(defaultGroups.groups ?? []),
-            { name: 'dev-toolkit', registered_clients: [] },
-          ],
-        })
-      }),
       http.get('*/api/v1beta/workloads', () => {
         return HttpResponse.json({ workloads: [] })
       })
@@ -79,9 +76,6 @@ describe('InstallGroupButton', () => {
 
   it('shows error when trying to install a group with servers that conflict with existing servers', async () => {
     server.use(
-      http.get('*/api/v1beta/groups', () => {
-        return HttpResponse.json(defaultGroups)
-      }),
       http.get('*/api/v1beta/workloads', () => {
         return HttpResponse.json({
           workloads: [
@@ -115,9 +109,6 @@ describe('InstallGroupButton', () => {
 
   it('shows error with link to specific group when server conflict exists in a named group', async () => {
     server.use(
-      http.get('*/api/v1beta/groups', () => {
-        return HttpResponse.json(defaultGroups)
-      }),
       http.get('*/api/v1beta/workloads', () => {
         return HttpResponse.json({
           workloads: [
