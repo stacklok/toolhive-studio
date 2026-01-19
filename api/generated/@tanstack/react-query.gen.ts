@@ -1247,7 +1247,7 @@ export const getApiV1BetaWorkloadsByNameLogsQueryKey = (
 /**
  * Get logs for a specific workload
  *
- * Retrieve at most 100 lines of logs for a specific workload by name.
+ * Retrieve at most 1000 lines of logs for a specific workload by name.
  */
 export const getApiV1BetaWorkloadsByNameLogsOptions = (
   options: Options<GetApiV1BetaWorkloadsByNameLogsData>
@@ -1277,7 +1277,7 @@ export const getApiV1BetaWorkloadsByNameProxyLogsQueryKey = (
 /**
  * Get proxy logs for a specific workload
  *
- * Retrieve proxy logs for a specific workload by name from the file system.
+ * Retrieve at most 1000 lines of proxy logs for a specific workload by name from the file system.
  */
 export const getApiV1BetaWorkloadsByNameProxyLogsOptions = (
   options: Options<GetApiV1BetaWorkloadsByNameProxyLogsData>

@@ -5,13 +5,19 @@ import {
   getApiV1BetaWorkloadsByNameOptions,
   getApiV1BetaWorkloadsByNameQueryKey,
 } from '@api/@tanstack/react-query.gen'
-import type { V1WorkloadListResponse } from '@api/types.gen'
+import type { V1UpdateRequest, V1WorkloadListResponse } from '@api/types.gen'
 
 export const useMutationUpdateWorkload = () => {
   const queryClient = useQueryClient()
   const { mutateAsync: updateWorkload } = useMutation({
     ...postApiV1BetaWorkloadsByNameEditMutation(),
-    onMutate: async ({ path, body }) => {
+    onMutate: async ({
+      path,
+      body,
+    }: {
+      path: { name: string }
+      body: V1UpdateRequest
+    }) => {
       const queryKey = getApiV1BetaWorkloadsQueryKey({
         query: { all: true, group: body.group },
       })

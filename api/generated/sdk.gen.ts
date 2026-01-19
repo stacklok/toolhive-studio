@@ -778,7 +778,7 @@ export const getApiV1BetaWorkloadsByNameExport = <
 /**
  * Get logs for a specific workload
  *
- * Retrieve at most 100 lines of logs for a specific workload by name.
+ * Retrieve at most 1000 lines of logs for a specific workload by name.
  */
 export const getApiV1BetaWorkloadsByNameLogs = <
   ThrowOnError extends boolean = false,
@@ -794,7 +794,7 @@ export const getApiV1BetaWorkloadsByNameLogs = <
 /**
  * Get proxy logs for a specific workload
  *
- * Retrieve proxy logs for a specific workload by name from the file system.
+ * Retrieve at most 1000 lines of proxy logs for a specific workload by name from the file system.
  */
 export const getApiV1BetaWorkloadsByNameProxyLogs = <
   ThrowOnError extends boolean = false,
