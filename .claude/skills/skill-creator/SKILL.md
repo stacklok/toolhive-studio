@@ -30,12 +30,11 @@ Create AI agent skills that work across Claude Code, Codex, and Cursor.
 
 ```yaml
 ---
-name: skill-name                    # Required: lowercase, hyphens, max 64 chars
-description: What it does...        # Required: triggers auto-selection by agent
-allowed-tools: Read, Grep, Bash     # Optional: Claude-specific (ignored by others)
-model: claude-opus-4-5-20251101     # Optional: Claude-specific (ignored by others)
+name: skill-name # Required: lowercase, hyphens, max 64 chars
+description: What it does... # Required: triggers auto-selection by agent
+allowed-tools: Read, Grep, Bash # Optional: Claude-specific (ignored by others)
+model: claude-opus-4-5-20251101 # Optional: Claude-specific (ignored by others)
 ---
-
 # Skill Title
 
 Instructions in markdown...

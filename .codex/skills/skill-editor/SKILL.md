@@ -16,11 +16,13 @@ Edit existing AI agent skills while keeping Claude, Codex, and Cursor in sync.
 ## Finding Existing Skills
 
 List all skills:
+
 ```bash
 ls -la .claude/skills/
 ```
 
 Read a skill:
+
 ```bash
 cat .claude/skills/<name>/SKILL.md
 ```
@@ -38,6 +40,7 @@ cat .claude/skills/<name>/SKILL.md
 ## Verification
 
 Always verify sync after editing:
+
 ```bash
 diff .claude/skills/<name>/SKILL.md .codex/skills/<name>/SKILL.md
 diff .claude/skills/<name>/SKILL.md .cursor/skills/<name>/SKILL.md
@@ -55,6 +58,7 @@ No output means files are identical.
 ## Deleting a Skill
 
 Remove from all three locations:
+
 ```bash
 rm -rf .claude/skills/<name> .codex/skills/<name> .cursor/skills/<name>
 ```
