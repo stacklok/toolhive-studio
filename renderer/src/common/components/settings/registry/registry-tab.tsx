@@ -1,10 +1,15 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 
 import {
   getApiV1BetaRegistryByName,
   putApiV1BetaRegistryByName,
 } from '@api/sdk.gen'
+import { getApiV1BetaRegistryByNameServersQueryKey } from '@api/@tanstack/react-query.gen'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { registryFormSchema, type RegistryFormData } from './schema'
@@ -12,9 +17,9 @@ import { mapResponseTypeToFormType, mapFormTypeToResponseType } from './utils'
 import { RegistryForm } from './registry-form'
 import { delay } from '@utils/delay'
 import { trackEvent } from '@/common/lib/analytics'
-import { queryClient } from '@/common/lib/query-client'
 
 export function RegistryTab() {
+  const queryClient = useQueryClient()
   const {
     isPending: isPendingRegistry,
     data: registry,
@@ -56,15 +61,24 @@ export function RegistryTab() {
         })
       },
       onSuccess: (_, variables) => {
+        const normalizedSource = variables.source?.trim() ?? ''
+
         queryClient.setQueryData(['registry'], {
           data: {
             type: mapFormTypeToResponseType(variables.type),
-            source: variables.source ?? '',
+            source: normalizedSource,
           },
         })
 
         queryClient.invalidateQueries({
           queryKey: ['registry'],
+        })
+
+        // Remove registry servers query to force fresh fetch
+        queryClient.removeQueries({
+          queryKey: getApiV1BetaRegistryByNameServersQueryKey({
+            path: { name: 'default' },
+          }),
         })
       },
       successMsg: 'Registry updated successfully',

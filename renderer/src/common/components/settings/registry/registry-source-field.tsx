@@ -133,8 +133,8 @@ export function RegistrySourceField({
             />
             {hasRegistryError ? (
               <p className="text-destructive text-sm">
-                Failed to load registry servers. The registry URL may be
-                misconfigured or unavailable.
+                Failed to load registry configuration. The registry source may
+                be misconfigured or unavailable.
               </p>
             ) : (
               <FormMessage />
