@@ -88,6 +88,37 @@ jobs:
             core.setOutput('pr_number', pr.data.number);
             core.setOutput('pr_sha', pr.data.head.sha);
             core.setOutput('pr_ref', pr.data.head.ref);
+            core.setOutput('base_ref', pr.data.base.ref);
+
+      - name: Check if branch is up-to-date with base
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const baseBranch = '${{ steps.pr-info.outputs.base_ref }}';
+            const headSha = '${{ steps.pr-info.outputs.pr_sha }}';
+            const prNumber = ${{ steps.pr-info.outputs.pr_number }};
+
+            // Compare base branch with PR head
+            const comparison = await github.rest.repos.compareCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              base: headSha,
+              head: baseBranch
+            });
+
+            // If base is ahead of the PR branch, it needs a rebase
+            if (comparison.data.ahead_by > 0) {
+              const behindCount = comparison.data.ahead_by;
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: `⚠️ This branch is **${behindCount} commit${behindCount > 1 ? 's' : ''} behind \`${baseBranch}\`**. Please rebase before running \`/build-test\` to ensure artifacts are built on the latest code.\n\n\`\`\`bash\ngit fetch origin ${baseBranch}\ngit rebase origin/${baseBranch}\ngit push --force-with-lease\n\`\`\``
+              });
+              core.setFailed(`Branch is ${behindCount} commits behind ${baseBranch}. Rebase required.`);
+            } else {
+              core.info(`✅ Branch is up-to-date with ${baseBranch}`);
+            }
 
   build:
     name: Build on ${{ matrix.os }}${{ matrix.arch && format(' ({0})', matrix.arch) || '' }}
