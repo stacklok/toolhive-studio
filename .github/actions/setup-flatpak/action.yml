@@ -4,7 +4,6 @@ runs:
   using: 'composite'
   steps:
     - name: Install Flatpak tool-chain
-      if: runner.os == 'Linux'
       shell: bash
       run: |
         sudo apt-get update
