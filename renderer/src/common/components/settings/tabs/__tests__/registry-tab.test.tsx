@@ -1,21 +1,13 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+import { HttpResponse } from 'msw'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RegistryTab } from '../../registry/registry-tab'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
 import { recordRequests, server } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
-
-// Default mock response for registry settings
-const defaultRegistrySettingsMock = http.get(
-  '*/api/v1beta/registry/default',
-  () =>
-    HttpResponse.json({
-      type: 'default',
-      source: '',
-    })
-)
+import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { http } from 'msw'
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -45,11 +37,6 @@ Object.defineProperty(Element.prototype, 'setPointerCapture', {
 })
 
 describe('RegistryTab', () => {
-  beforeEach(() => {
-    // Set up the default mock for registry settings endpoint
-    server.use(defaultRegistrySettingsMock)
-  })
-
   it('renders registry settings with default state', async () => {
     renderWithProviders(<RegistryTab />)
 
@@ -65,7 +52,7 @@ describe('RegistryTab', () => {
     const url = 'https://domain.com/registry.json'
 
     server.use(
-      http.put('*/api/v1beta/registry/default', () =>
+      http.put(mswEndpoint('/api/v1beta/registry/:name'), () =>
         HttpResponse.json({
           message: 'Registry updated successfully',
           type: 'remote',
@@ -191,7 +178,7 @@ describe('RegistryTab', () => {
     const rec = recordRequests()
 
     server.use(
-      http.put('*/api/v1beta/registry/default', () =>
+      http.put(mswEndpoint('/api/v1beta/registry/:name'), () =>
         HttpResponse.json({
           message: 'Registry updated successfully',
           type: 'local',
@@ -342,7 +329,7 @@ describe('RegistryTab', () => {
     const apiUrl = 'http://localhost:8080/api/registry'
 
     server.use(
-      http.put('*/api/v1beta/registry/default', () =>
+      http.put(mswEndpoint('/api/v1beta/registry/:name'), () =>
         HttpResponse.json({
           message: 'Registry updated successfully',
           type: 'api',
@@ -466,7 +453,7 @@ describe('RegistryTab', () => {
 
   it('shows error message when GET API returns 500', async () => {
     server.use(
-      http.get('*/api/v1beta/registry/default', () =>
+      http.get(mswEndpoint('/api/v1beta/registry/:name'), () =>
         HttpResponse.json({ error: 'Internal server error' }, { status: 500 })
       )
     )
@@ -494,7 +481,7 @@ describe('RegistryTab', () => {
 
   it('populates form with existing registry data from API', async () => {
     server.use(
-      http.get('*/api/v1beta/registry/default', () =>
+      http.get(mswEndpoint('/api/v1beta/registry/:name'), () =>
         HttpResponse.json({
           type: 'api',
           source: 'http://localhost:8080/api/registry',
@@ -518,13 +505,7 @@ describe('RegistryTab', () => {
     const apiUrl = 'http://localhost:8080/api/registry'
 
     server.use(
-      http.get('*/api/v1beta/registry/default', () =>
-        HttpResponse.json({
-          type: 'default',
-          source: '',
-        })
-      ),
-      http.put('*/api/v1beta/registry/default', () =>
+      http.put(mswEndpoint('/api/v1beta/registry/:name'), () =>
         HttpResponse.json({
           message: 'Registry updated successfully',
           type: 'api',
