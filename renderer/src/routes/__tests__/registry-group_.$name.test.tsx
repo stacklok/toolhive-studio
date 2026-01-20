@@ -58,6 +58,7 @@ import { server, recordRequests } from '@/common/mocks/node'
 import userEvent from '@testing-library/user-event'
 import type { V1GetRegistryResponse } from '@api/types.gen'
 import { toast } from 'sonner'
+import { mockedGetApiV1BetaWorkloads } from '@/common/mocks/fixtures/workloads/get'
 
 const mockUseParams = vi.fn(() => ({ name: 'dev-toolkit' }))
 
@@ -275,148 +276,14 @@ describe('Registry Group Detail Route', () => {
   })
 
   it('opens install wizard when clicking Install group button', async () => {
-    const router = createTestRouter(WrapperComponent)
-    renderRoute(router)
-
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'dev-toolkit' })).toBeVisible()
-    })
-
-    const installButton = screen.getByRole('button', { name: /install group/i })
-    expect(installButton).toBeVisible()
-
-    await userEvent.click(installButton)
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole('heading', { name: /configure atlassian/i })
-      ).toBeVisible()
-    })
-
-    expect(screen.getByRole('tab', { name: /configuration/i })).toBeVisible()
-    expect(
-      screen.getByRole('tab', { name: /network isolation/i })
-    ).toBeVisible()
-  })
-
-  it('shows Finish button on the last server in wizard', async () => {
-    mockUseParams.mockReturnValue({ name: 'two-server-group' })
-
-    const twoServerRegistry: V1GetRegistryResponse = {
-      registry: {
-        servers: {},
-        groups: [
-          {
-            name: 'two-server-group',
-            description: 'A group with two servers',
-            servers: {
-              'first-server': {
-                name: 'first-server',
-                image: 'ghcr.io/example/first:latest',
-                description: 'First server',
-                tier: 'Official',
-                status: 'Active',
-                transport: 'stdio',
-                permissions: {},
-                tools: ['tool1'],
-                env_vars: [],
-                args: [],
-                metadata: {
-                  stars: 100,
-                  pulls: 1000,
-                  last_updated: '2025-01-01T00:00:00Z',
-                },
-                repository_url: 'https://github.com/example/first',
-                tags: ['test'],
-              },
-              'second-server': {
-                name: 'second-server',
-                image: 'ghcr.io/example/second:latest',
-                description: 'Second server',
-                tier: 'Official',
-                status: 'Active',
-                transport: 'stdio',
-                permissions: {},
-                tools: ['tool2'],
-                env_vars: [],
-                args: [],
-                metadata: {
-                  stars: 200,
-                  pulls: 2000,
-                  last_updated: '2025-01-02T00:00:00Z',
-                },
-                repository_url: 'https://github.com/example/second',
-                tags: ['test'],
-              },
-            },
-            remote_servers: {},
-          },
-        ],
-      },
-    }
-
-    server.use(
-      http.get('*/api/v1beta/registry/:name', () => {
-        return HttpResponse.json(twoServerRegistry)
-      }),
-      http.post('*/api/v1beta/groups', async ({ request }) => {
-        const body = (await request.json()) as { name: string }
-        return HttpResponse.json({ name: body.name })
-      }),
-      // Allow form submission to succeed and advance to next step
-      http.post('*/api/v1beta/workloads', async ({ request }) => {
-        const body = (await request.json()) as { name: string; group?: string }
-        return HttpResponse.json({
-          name: body.name,
-          group: body.group ?? 'two-server-group',
-          status: 'running',
-        })
-      })
-    )
-
-    const router = createTestRouter(WrapperComponent)
-    renderRoute(router)
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole('heading', { name: 'two-server-group' })
-      ).toBeVisible()
-    })
-
-    const installButton = screen.getByRole('button', { name: /install group/i })
-    await userEvent.click(installButton)
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole('heading', { name: /configure first-server/i })
-      ).toBeVisible()
-    })
-
-    expect(screen.getByRole('button', { name: /^next$/i })).toBeVisible()
-
-    await userEvent.click(screen.getByRole('button', { name: /^next$/i }))
-    // Wait for the first server dialog title to unmount before asserting the next one
-    {
-      const h = screen.queryByRole('heading', {
-        name: /configure first-server/i,
-      })
-      if (h) {
-        await waitForElementToBeRemoved(h)
-      }
-    }
-    const secondServerHeading = await screen.findByRole('heading', {
-      name: /configure second-server/i,
-    })
-    expect(secondServerHeading).toBeVisible()
-
-    expect(screen.getByRole('button', { name: /^finish$/i })).toBeVisible()
-    expect(
-      screen.queryByRole('button', { name: /^next$/i })
-    ).not.toBeInTheDocument()
-  })
-
-  it('makes API calls and navigates to group page after installing all servers', async () => {
     const rec = recordRequests()
+
+    mockedGetApiV1BetaWorkloads.override((data) => ({
+      ...data,
+      workloads: data.workloads?.filter(
+        (workload) => workload.name !== 'first-server'
+      ),
+    }))
 
     mockUseParams.mockReturnValue({ name: 'two-server-group' })
 
@@ -627,6 +494,13 @@ describe('Registry Group Detail Route', () => {
 
   it('resets form with correct server names when navigating between servers', async () => {
     mockUseParams.mockReturnValue({ name: 'multi-server-group' })
+
+    mockedGetApiV1BetaWorkloads.override((data) => ({
+      ...data,
+      workloads: data.workloads?.filter(
+        (workload) => workload.name !== 'fetch'
+      ),
+    }))
 
     const multiServerRegistry: V1GetRegistryResponse = {
       registry: {

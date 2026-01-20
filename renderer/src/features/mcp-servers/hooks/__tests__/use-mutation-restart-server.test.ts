@@ -6,10 +6,11 @@ import {
   useMutationRestartServerAtStartup,
   useMutationRestartServer,
 } from '../use-mutation-restart-server'
-import { server, recordRequests } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
+import { recordRequests } from '@/common/mocks/node'
+import { HttpResponse } from 'msw'
 import { toast } from 'sonner'
-import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { mockedPostApiV1BetaWorkloadsRestart } from '@/common/mocks/fixtures/workloads_restart/post'
+import { mockedGetApiV1BetaWorkloadsByNameStatus } from '@/common/mocks/fixtures/workloads_name_status/get'
 
 vi.mock('sonner', () => ({
   toast: {
@@ -64,22 +65,17 @@ describe('useMutationRestartServerAtStartup', () => {
     const rec = recordRequests()
     const { Wrapper, queryClient } = createQueryClientWrapper()
 
-    server.use(
-      http.get(
-        mswEndpoint('/api/v1beta/workloads/:name/status'),
-        ({ params }) => {
-          const { name } = params
-          if (name === 'postgres-db' || name === 'github') {
-            return HttpResponse.json({
-              status: 'running',
-            })
-          }
-          return HttpResponse.json({
-            status: 'stopped',
-          })
+    mockedGetApiV1BetaWorkloadsByNameStatus.override((_data, info) => {
+      const name = info.params.name
+      if (name === 'postgres-db' || name === 'github') {
+        return {
+          status: 'running',
         }
-      )
-    )
+      }
+      return {
+        status: 'stopped',
+      }
+    })
 
     const { result } = renderHook(() => useMutationRestartServerAtStartup(), {
       wrapper: Wrapper,
@@ -137,20 +133,8 @@ describe('useMutationRestartServerAtStartup', () => {
     })
 
     // Force API error for non-existent server by overriding the endpoint
-    server.use(
-      http.post(
-        mswEndpoint('/api/v1beta/workloads/restart'),
-        async ({ request }) => {
-          const { names } = (await request.json()) as { names: string[] }
-          if (names.includes('non-existent-server')) {
-            return HttpResponse.json(
-              { error: 'Server not found' },
-              { status: 404 }
-            )
-          }
-          return new HttpResponse(null, { status: 202 })
-        }
-      )
+    mockedPostApiV1BetaWorkloadsRestart.overrideHandler(() =>
+      HttpResponse.json({ error: 'Server not found' }, { status: 404 })
     )
 
     // Execute mutation with non-existent server name (overridden MSW handler returns 404)

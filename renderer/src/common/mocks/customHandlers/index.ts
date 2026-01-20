@@ -1,17 +1,9 @@
 import { http, HttpResponse } from 'msw'
 import type json from '../../../../../api/openapi.json'
-import {
-  getWorkloadByName,
-  workloadListFixture,
-  getMockLogs,
-} from './fixtures/servers'
-import type {
-  V1CreateSecretRequest,
-  V1UpdateRegistryRequest,
-} from '../../../../../api/generated/types.gen'
+import { getWorkloadByName, getMockLogs } from './fixtures/servers'
+import type { V1UpdateRegistryRequest } from '../../../../../api/generated/types.gen'
 import { registryServerFixture } from './fixtures/registry_server'
 import { MOCK_REGISTRY_RESPONSE } from './fixtures/registry'
-import { secretsListFixture } from './fixtures/secrets'
 import { DEFAULT_REGISTRY } from './fixtures/default_registry'
 
 /**
@@ -49,21 +41,6 @@ export const customHandlers = [
     return new HttpResponse(null, {
       status: 204,
     })
-  }),
-
-  http.get(mswEndpoint('/api/v1beta/workloads'), ({ request }) => {
-    const url = new URL(request.url)
-    const group = (url.searchParams.get('group') || 'default').toLowerCase()
-    const examples: Record<string, string[]> = {
-      default: ['postgres-db', 'vscode-server', 'osv-2', 'osv'],
-      research: ['github', 'fetch'],
-      archive: [],
-    }
-    const names = examples[group] ?? examples.default
-    const filtered = (workloadListFixture.workloads ?? []).filter((w) =>
-      (names ?? []).includes(w.name || '')
-    )
-    return HttpResponse.json({ workloads: filtered })
   }),
 
   http.delete(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
@@ -247,40 +224,6 @@ export const customHandlers = [
     }
   ),
 
-  http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-    return HttpResponse.json(secretsListFixture)
-  }),
-
-  http.post(
-    mswEndpoint('/api/v1beta/secrets/default/keys'),
-    async ({ request }) => {
-      const { key, value } = (await request.json()) as V1CreateSecretRequest
-
-      try {
-        return HttpResponse.json({ key, value }, { status: 201 })
-      } catch {
-        return HttpResponse.json(
-          { error: 'Invalid request body' },
-          { status: 400 }
-        )
-      }
-    }
-  ),
-  http.put(
-    mswEndpoint('/api/v1beta/secrets/default/keys/:key'),
-    async ({ request }) => {
-      const { value } = (await request.json()) as V1CreateSecretRequest
-
-      try {
-        return HttpResponse.json({ value }, { status: 201 })
-      } catch {
-        return HttpResponse.json(
-          { error: 'Invalid request body' },
-          { status: 400 }
-        )
-      }
-    }
-  ),
   http.delete(
     mswEndpoint('/api/v1beta/secrets/default/keys/:key'),
     async () => new HttpResponse(null, { status: 204 })

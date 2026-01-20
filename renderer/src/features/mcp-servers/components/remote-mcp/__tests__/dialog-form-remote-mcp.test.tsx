@@ -3,10 +3,14 @@ import { it, expect, vi, describe, beforeEach } from 'vitest'
 import { DialogFormRemoteMcp } from '../dialog-form-remote-mcp'
 import userEvent from '@testing-library/user-event'
 import { Dialog } from '@/common/components/ui/dialog'
-import { server as mswServer, recordRequests } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
+import { recordRequests } from '@/common/mocks/node'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'
+import { mockedPostApiV1BetaWorkloads } from '@/common/mocks/fixtures/workloads/post'
+import { mockedGetApiV1BetaWorkloadsByName } from '@/common/mocks/fixtures/workloads_name/get'
+import { mockedPostApiV1BetaWorkloadsByNameEdit } from '@/common/mocks/fixtures/workloads_name_edit/post'
+import { mockedGetApiV1BetaSecretsDefaultKeys } from '@/common/mocks/fixtures/secrets_default_keys/get'
+import { mockedPostApiV1BetaSecretsDefaultKeys } from '@/common/mocks/fixtures/secrets_default_keys/post'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 
 vi.mock('@/common/hooks/use-check-server-status', () => ({
@@ -49,35 +53,23 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => (
 beforeEach(() => {
   vi.clearAllMocks()
 
-  mswServer.use(
-    http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-      return HttpResponse.json({
-        keys: [
-          { key: 'SECRET_FROM_STORE' },
-          { key: 'GITHUB_TOKEN' },
-          { key: 'API_KEY' },
-        ],
-      })
-    }),
+  mockedGetApiV1BetaGroups.override((data) => ({
+    ...data,
+    groups: [{ name: 'default', registered_clients: [] }],
+  }))
 
-    http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-      return HttpResponse.json({ workloads: [] })
-    }),
-    http.get(mswEndpoint('/api/v1beta/groups'), () => {
-      return HttpResponse.json({ groups: [{ name: 'default' }] })
-    }),
+  mockedPostApiV1BetaWorkloads.override(() => ({
+    name: 'test-server',
+    port: 0,
+  }))
 
-    http.post(mswEndpoint('/api/v1beta/workloads'), async () => {
-      return HttpResponse.json(
-        { name: 'test-server', status: 'running' },
-        { status: 201 }
-      )
-    }),
+  mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({
+    keys: [{ key: 'SECRET_FROM_STORE' }],
+  }))
 
-    http.post(mswEndpoint('/api/v1beta/secrets/default/keys'), async () => {
-      return HttpResponse.json({ success: true }, { status: 201 })
-    })
-  )
+  mockedPostApiV1BetaSecretsDefaultKeys.override(() => ({
+    key: 'SECRET_FROM_STORE',
+  }))
 
   mockUseCheckServerStatus.mockReturnValue({
     checkServerStatus: vi.fn(),
@@ -168,14 +160,10 @@ describe('DialogFormRemoteMcp', () => {
       checkServerStatus: mockCheckServerStatus,
     })
 
-    mswServer.use(
-      http.post(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json(
-          { name: 'test-remote-server', status: 'running' },
-          { status: 201 }
-        )
-      })
-    )
+    mockedPostApiV1BetaWorkloads.override(() => ({
+      name: 'test-remote-server',
+      port: 0,
+    }))
 
     renderWithProviders(
       <Wrapper>
@@ -251,14 +239,10 @@ describe('DialogFormRemoteMcp', () => {
       const user = userEvent.setup({ delay: null })
       const rec = recordRequests()
 
-      mswServer.use(
-        http.post(mswEndpoint('/api/v1beta/workloads'), () => {
-          return HttpResponse.json(
-            { name: 'issuer-enabled-server', status: 'running' },
-            { status: 201 }
-          )
-        })
-      )
+      mockedPostApiV1BetaWorkloads.override(() => ({
+        name: 'issuer-enabled-server',
+        port: 0,
+      }))
 
       renderWithProviders(
         <Wrapper>
@@ -374,36 +358,29 @@ describe('DialogFormRemoteMcp', () => {
     const user = userEvent.setup({ delay: null })
     const rec = recordRequests()
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json({
-          name: 'existing-server',
-          url: 'https://old-api.example.com',
-          transport: 'streamable-http',
-          oauth_config: {
-            callback_port: 8080,
-            authorize_url: '',
-            token_url: '',
-            client_id: '',
-            issuer: '',
-            scopes: [],
-            skip_browser: false,
-            use_pkce: true,
-            oauth_params: {},
-          },
-          group: 'default',
-        })
-      }),
-      http.post(mswEndpoint('/api/v1beta/workloads/:name/edit'), () => {
-        return HttpResponse.json({
-          name: 'existing-server',
-          status: 'running',
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/discovery/clients'), () => {
-        return HttpResponse.json({ clients: [] })
-      })
-    )
+    mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+      ...data,
+      name: 'existing-server',
+      url: 'https://old-api.example.com',
+      transport: 'streamable-http',
+      oauth_config: {
+        callback_port: 8080,
+        authorize_url: '',
+        token_url: '',
+        client_id: '',
+        issuer: '',
+        scopes: [],
+        skip_browser: false,
+        use_pkce: true,
+        oauth_params: {},
+      },
+      group: 'default',
+    }))
+
+    mockedPostApiV1BetaWorkloadsByNameEdit.override(() => ({
+      name: 'existing-server',
+      port: 0,
+    }))
 
     renderWithProviders(
       <Wrapper>
@@ -454,24 +431,10 @@ describe('DialogFormRemoteMcp', () => {
     const user = userEvent.setup({ delay: null })
     const rec = recordRequests()
 
-    mswServer.use(
-      http.post(
-        mswEndpoint('/api/v1beta/secrets/default/keys'),
-        async ({ request }) => {
-          const { key, value } = (await request.json()) as {
-            key: string
-            value: string
-          }
-          return HttpResponse.json({ key, value }, { status: 201 })
-        }
-      ),
-      http.post(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json(
-          { name: 'bearer-auth-server', status: 'running' },
-          { status: 201 }
-        )
-      })
-    )
+    mockedPostApiV1BetaWorkloads.override(() => ({
+      name: 'bearer-auth-server',
+      port: 0,
+    }))
 
     renderWithProviders(
       <Wrapper>
@@ -503,6 +466,8 @@ describe('DialogFormRemoteMcp', () => {
     )
     await user.type(bearerTokenInput, 'my-secret-bearer-token')
 
+    const bearerTokenStoreName = 'SECRET_FROM_STORE'
+
     await user.click(screen.getByRole('button', { name: 'Install server' }))
 
     await waitFor(() => {
@@ -518,8 +483,8 @@ describe('DialogFormRemoteMcp', () => {
           group: 'default',
           oauth_config: expect.objectContaining({
             bearer_token: {
-              name: 'BEARER_TOKEN_BEARER_AUTH_SERVER',
-              target: 'BEARER_TOKEN_BEARER_AUTH_SERVER',
+              name: bearerTokenStoreName,
+              target: bearerTokenStoreName,
             },
           }),
         })

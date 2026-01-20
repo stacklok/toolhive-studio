@@ -2,9 +2,9 @@ import { renderHook, waitFor, act } from '@testing-library/react'
 import { describe, it, expect, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useCopyServerToGroup } from '../use-copy-server-to-group'
-import { server as mswServer, recordRequests } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
-import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { recordRequests } from '@/common/mocks/node'
+import { mockedGetApiV1BetaWorkloadsByName } from '@/common/mocks/fixtures/workloads_name/get'
+import { mockedPostApiV1BetaWorkloads } from '@/common/mocks/fixtures/workloads/post'
 import type { V1CreateRequest } from '@api/types.gen'
 import userEvent from '@testing-library/user-event'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
@@ -56,17 +56,15 @@ describe('useCopyServerToGroup', () => {
       network_isolation: false,
     }
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json(remoteServerConfig)
-      }),
-      http.post(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json(
-          { name: 'mcp-shell-test-group', port: 64341 },
-          { status: 201 }
-        )
-      })
-    )
+    mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+      ...data,
+      ...remoteServerConfig,
+    }))
+
+    mockedPostApiV1BetaWorkloads.override(() => ({
+      name: 'mcp-shell-test-group',
+      port: 64341,
+    }))
 
     const { result } = renderHook(() => useCopyServerToGroup('mcp-shell'), {
       wrapper,
