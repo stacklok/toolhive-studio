@@ -1,9 +1,11 @@
 ---
 name: testing-with-api-mocks
-description: Write tests for code that calls API endpoints. Use when writing tests that need API mocks, testing components that fetch data, or when tests fail due to missing API responses.
+description: Start here for all API mocking in tests. Covers auto-generation, fixtures, and when to use other skills. Required reading before creating, refactoring, or modifying any test involving API calls.
 ---
 
 # Testing with API Mocks
+
+**This is the starting point for all API mocking in tests.** Read this skill first before working on any test that involves API calls.
 
 This project uses MSW (Mock Service Worker) with auto-generated schema-based mocks. When writing tests for code that calls API endpoints, mocks are created automatically.
 
@@ -132,6 +134,27 @@ import { AutoAPIMock } from '@mocks'
 // Fixture mocks (for test-scoped overrides, see: testing-api-overrides skill)
 import { mockedGetApiV1BetaGroups } from '@mocks/fixtures/groups/get'
 ```
+
+## Custom Mocks (Rare)
+
+For endpoints defined in the OpenAPI schema, always use `AutoAPIMock` fixtures. The related skills below cover all the ways to customize mock behavior for different test scenarios.
+
+**Custom mocks are only needed for endpoints with no schema at all** - for example, third-party APIs or non-standard endpoints not defined in `api/openapi.json`. In these rare cases, add handlers to `renderer/src/common/mocks/customHandlers/index.ts`.
+
+Note: Some existing handlers in `customHandlers` predate the `AutoAPIMock` system. These are legacy patterns - new code should use fixtures with the techniques described in the related skills.
+
+## Migrating from Custom Handlers to AutoAPIMock
+
+When refactoring tests that use `server.use()` overrides, you may find that the endpoint has a legacy custom handler in `customHandlers/index.ts` instead of an `AutoAPIMock` fixture.
+
+To migrate:
+
+1. **Remove the custom handler** from `renderer/src/common/mocks/customHandlers/index.ts`
+2. **Run the tests** - this triggers auto-generation of the fixture
+3. **Verify the fixture** was created in `renderer/src/common/mocks/fixtures/<endpoint>/<method>.ts`
+4. **Refactor tests** to use `.override()` or `.conditionalOverride()` instead of `server.use()`
+
+This workflow ensures fixtures are generated from the OpenAPI schema rather than manually copied from legacy code.
 
 ## Related Skills
 

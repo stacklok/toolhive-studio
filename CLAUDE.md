@@ -18,3 +18,7 @@ Understanding the auto-generation behavior is essential - fixtures are created a
 - **`/testing-api-overrides`** - For **read operations** (GET). Verify your code sends correct query params by setting up conditional mocks that return different data based on the request. Test the UI shows expected results.
 
 - **`/testing-api-assertions`** - For **write operations** (POST/PUT/DELETE). Verify your code sends correct payloads by recording requests and asserting on them.
+
+## Editing Skills
+
+**REQUIRED**: Always use `/skill-editor` when modifying any skill files in `.claude/skills/`. Never edit skill files directly - the skill-editor ensures changes are synced to `.codex/skills/` and `.cursor/skills/`.
