@@ -6,9 +6,14 @@ Project-specific guidance for AI agents working on this codebase.
 
 This project uses MSW with typed `AutoAPIMock` fixtures.
 
-**REQUIRED**: Before modifying or creating any test file, invoke `/testing-with-api-mocks` first. These skills contain fixture naming conventions and patterns not documented elsewhere in the codebase.
+**REQUIRED**: Invoke `/testing-with-api-mocks` first whenever you are:
+- Creating new tests that involve API calls
+- Refactoring existing tests
+- Modifying test files in any way that affects or might affect API mocking
 
-- **`/testing-with-api-mocks`** - Start here. How fixtures work, auto-generation, basic usage.
+Understanding the auto-generation behavior is essential - fixtures are created automatically when tests run, and this affects how mocks work throughout the test suite.
+
+- **`/testing-with-api-mocks`** - Start here. Covers fixture auto-generation, naming conventions, and basic usage patterns.
 
 - **`/testing-api-overrides`** - For **read operations** (GET). Verify your code sends correct query params by setting up conditional mocks that return different data based on the request. Test the UI shows expected results.
 
