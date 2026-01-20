@@ -1,8 +1,4 @@
-import {
-  keepPreviousData,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 
 import {
@@ -34,7 +30,6 @@ export function RegistryTab() {
         throwOnError: true,
       }),
     retry: false,
-    placeholderData: keepPreviousData,
   })
   const registryData = registry?.data
 
