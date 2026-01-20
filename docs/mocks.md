@@ -43,7 +43,10 @@ Generated fixtures use named exports with a consistent naming convention:
 
 ```typescript
 // renderer/src/common/mocks/fixtures/groups/get.ts
-import type { GetApiV1BetaGroupsResponse, GetApiV1BetaGroupsData } from '@api/types.gen'
+import type {
+  GetApiV1BetaGroupsResponse,
+  GetApiV1BetaGroupsData,
+} from '@api/types.gen'
 import { AutoAPIMock } from '@mocks'
 
 export const mockedGetApiV1BetaGroups = AutoAPIMock<
@@ -124,7 +127,10 @@ Define named scenarios in your fixture for commonly used test states:
 
 ```typescript
 // renderer/src/common/mocks/fixtures/groups/get.ts
-import type { GetApiV1BetaGroupsResponse, GetApiV1BetaGroupsData } from '@api/types.gen'
+import type {
+  GetApiV1BetaGroupsResponse,
+  GetApiV1BetaGroupsData,
+} from '@api/types.gen'
 import { AutoAPIMock } from '@mocks'
 import { HttpResponse } from 'msw'
 
