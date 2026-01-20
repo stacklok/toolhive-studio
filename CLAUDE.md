@@ -4,7 +4,9 @@ Project-specific guidance for AI agents working on this codebase.
 
 ## Testing with API Mocks
 
-This project uses MSW with typed `AutoAPIMock` fixtures. When working on tests:
+This project uses MSW with typed `AutoAPIMock` fixtures.
+
+**REQUIRED**: Before modifying or creating any test file, invoke `/testing-with-api-mocks` first. These skills contain fixture naming conventions and patterns not documented elsewhere in the codebase.
 
 - **`/testing-with-api-mocks`** - Start here. How fixtures work, auto-generation, basic usage.
 

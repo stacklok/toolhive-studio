@@ -4,8 +4,8 @@ import { describe, it, expect, vi } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RegistryTab } from '../../registry/registry-tab'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
-import { recordRequests, server } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
+import { recordRequests } from '@/common/mocks/node'
+import { mockedPutApiV1BetaRegistryByName } from '@/common/mocks/fixtures/registry_name/put'
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -49,14 +49,10 @@ describe('RegistryTab', () => {
     const rec = recordRequests()
     const url = 'https://domain.com/registry.json'
 
-    server.use(
-      http.put('*/api/v1beta/registry/default', () =>
-        HttpResponse.json({
-          message: 'Registry updated successfully',
-          type: 'remote',
-        })
-      )
-    )
+    mockedPutApiV1BetaRegistryByName.override(() => ({
+      message: 'Registry updated successfully',
+      type: 'remote',
+    }))
 
     renderWithProviders(<RegistryTab />)
 
@@ -175,14 +171,10 @@ describe('RegistryTab', () => {
   it('handles local registry configuration', async () => {
     const rec = recordRequests()
 
-    server.use(
-      http.put('*/api/v1beta/registry/default', () =>
-        HttpResponse.json({
-          message: 'Registry updated successfully',
-          type: 'local',
-        })
-      )
-    )
+    mockedPutApiV1BetaRegistryByName.override(() => ({
+      message: 'Registry updated successfully',
+      type: 'local',
+    }))
 
     renderWithProviders(<RegistryTab />)
 
@@ -326,14 +318,10 @@ describe('RegistryTab', () => {
     const rec = recordRequests()
     const apiUrl = 'http://localhost:8080/api/registry'
 
-    server.use(
-      http.put('*/api/v1beta/registry/default', () =>
-        HttpResponse.json({
-          message: 'Registry updated successfully',
-          type: 'api',
-        })
-      )
-    )
+    mockedPutApiV1BetaRegistryByName.override(() => ({
+      message: 'Registry updated successfully',
+      type: 'api',
+    }))
 
     renderWithProviders(<RegistryTab />)
 
