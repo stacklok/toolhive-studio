@@ -39,10 +39,11 @@ cat .claude/skills/<name>/SKILL.md
 
 Always verify sync after editing:
 ```bash
-md5sum .claude/skills/<name>/SKILL.md .codex/skills/<name>/SKILL.md .cursor/skills/<name>/SKILL.md
+diff .claude/skills/<name>/SKILL.md .codex/skills/<name>/SKILL.md
+diff .claude/skills/<name>/SKILL.md .cursor/skills/<name>/SKILL.md
 ```
 
-All three should have identical hashes.
+No output means files are identical.
 
 ## Common Edits
 
