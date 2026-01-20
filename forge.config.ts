@@ -11,6 +11,7 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses'
 import { ensureThv } from './utils/fetch-thv'
 import MakerTarGz from './utils/forge-makers/MakerTarGz'
 import MakerDMGWithArch from './utils/forge-makers/MakerDMGWithArch'
+import { isPrerelease } from './utils/pre-release'
 
 function isValidPlatform(platform: string): platform is NodeJS.Platform {
   return ['win32', 'darwin', 'linux'].includes(platform)
@@ -88,7 +89,7 @@ const config: ForgeConfig = {
           name: 'toolhive-studio',
         },
         draft: false,
-        prerelease: false,
+        prerelease: isPrerelease(),
       },
     },
   ],

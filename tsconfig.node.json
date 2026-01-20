@@ -23,6 +23,13 @@
       "@utils/*": ["./utils/*"]
     }
   },
-  "include": ["vite.config.ts", "main/src", "preload/src", "forge.env.d.ts"],
+  "include": [
+    "vite.config.ts",
+    "forge.config.ts",
+    "main/src",
+    "preload/src",
+    "forge.env.d.ts",
+    "utils"
+  ],
   "exclude": ["node_modules"]
 }

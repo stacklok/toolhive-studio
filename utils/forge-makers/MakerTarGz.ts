@@ -3,7 +3,7 @@ import { promises as fs } from 'node:fs'
 import * as tar from 'tar'
 import os from 'node:os'
 
-import { MakerBase, MakerOptions } from '@electron-forge/maker-base'
+import { MakerBase, type MakerOptions } from '@electron-forge/maker-base'
 import type { ForgePlatform } from '@electron-forge/shared-types'
 
 /**
