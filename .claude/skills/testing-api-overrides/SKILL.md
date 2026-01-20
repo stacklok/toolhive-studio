@@ -52,16 +52,19 @@ mockedGetApiV1BetaWorkloads.conditionalOverride(
 
 ### Predicate Function
 
-The predicate receives parsed request info with easy access to query params, path params, and headers:
+The predicate receives parsed request info with easy access to query params, path params, body, and headers:
 
 ```typescript
-;({ query, params, headers }) => {
+;({ query, path, body, headers }) => {
   // Query parameters (pre-parsed)
   query.group // '?group=archive' -> 'archive'
   query.status // '?status=running' -> 'running'
 
-  // Path parameters (from MSW route like /workloads/:name)
-  params.name // for /workloads/:name
+  // Path parameters (from route like /workloads/:name)
+  path.name // for /workloads/:name
+
+  // Request body (for POST/PUT/DELETE)
+  body?.name // parsed JSON body
 
   // Headers
   headers.get('Authorization')

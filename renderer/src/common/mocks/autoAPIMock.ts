@@ -10,8 +10,8 @@ type ResponseResolverInfo = Parameters<HttpResponseResolver>[0]
 export interface ParsedRequestInfo {
   /** Query parameters as key-value pairs */
   query: Record<string, string | null>
-  /** Path parameters from MSW (e.g., :name -> params.name) */
-  params: Record<string, string | readonly string[] | undefined>
+  /** Path parameters (e.g., /groups/:name -> path.name) */
+  path: Record<string, string | readonly string[] | undefined>
   /** Request body (parsed JSON) */
   body: unknown
   /** Request headers */
@@ -168,7 +168,6 @@ export function AutoAPIMock<TResponse, TRequest>(
         const parsed = {
           query,
           path: info.params,
-          params: info.params,
           body,
           headers: info.request.headers,
           request: info.request,
