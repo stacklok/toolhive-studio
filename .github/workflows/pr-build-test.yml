@@ -1,0 +1,220 @@
+name: PR Build Test
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  actions: read
+
+jobs:
+  # Gate job to check if we should run the build
+  check-trigger:
+    name: Check Trigger
+    runs-on: ubuntu-latest
+    if: github.event.issue.pull_request && contains(github.event.comment.body, '/build-test')
+    outputs:
+      pr_number: ${{ steps.pr-info.outputs.pr_number }}
+      pr_sha: ${{ steps.pr-info.outputs.pr_sha }}
+      pr_ref: ${{ steps.pr-info.outputs.pr_ref }}
+    steps:
+      - name: Check org membership
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const commenter = context.payload.comment.user.login;
+            const org = 'stacklok';
+
+            try {
+              await github.rest.orgs.checkMembershipForUser({
+                org: org,
+                username: commenter
+              });
+              core.info(`✅ ${commenter} is a member of ${org}`);
+            } catch (error) {
+              if (error.status === 404) {
+                core.setFailed(`❌ ${commenter} is not a member of the ${org} organization. Only org members can trigger builds.`);
+              } else {
+                core.setFailed(`Failed to check org membership: ${error.message}`);
+              }
+            }
+
+      - name: React to comment
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'eyes'
+            });
+
+      - name: Get PR info
+        id: pr-info
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            const isFork = pr.data.head.repo.full_name !== `${context.repo.owner}/${context.repo.repo}`;
+            if (isFork) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.data.number,
+                body: '❌ `/build-test` is disabled for forked PRs to protect signing secrets. Please open a PR from a branch in this repository if you need a build.'
+              });
+              core.setFailed('❌ /build-test is disabled for forked PRs to protect signing secrets.');
+              return;
+            }
+            core.setOutput('pr_number', pr.data.number);
+            core.setOutput('pr_sha', pr.data.head.sha);
+            core.setOutput('pr_ref', pr.data.head.ref);
+
+  build:
+    name: Build on ${{ matrix.os }}${{ matrix.arch && format(' ({0})', matrix.arch) || '' }}
+    needs: check-trigger
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x64
+            platform: linux
+          - os: windows-latest
+            arch: x64
+            platform: win32
+          - os: macos-15-intel
+            arch: x64
+            platform: darwin
+          - os: macos-latest
+            arch: arm64
+            platform: darwin
+    env:
+      NODE_OPTIONS: '--max_old_space_size=4096'
+      PR_NUMBER: ${{ needs.check-trigger.outputs.pr_number }}
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          ref: ${{ needs.check-trigger.outputs.pr_sha }}
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Set version
+        id: version
+        shell: bash
+        run: |
+          VERSION="pr-${{ env.PR_NUMBER }}"
+          echo "Setting version to: $VERSION"
+          npm version $VERSION --no-git-tag-version --allow-same-version
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "artifact_prefix=ToolHive-$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Setup macOS code signing
+        uses: ./.github/actions/setup-macos-codesign
+        if: runner.os == 'macOS'
+        with:
+          apple-certificate: ${{ secrets.APPLE_CERTIFICATE }}
+          apple-certificate-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          keychain-password: ${{ secrets.KEYCHAIN_PASSWORD }}
+          apple-api-key: ${{ secrets.APPLE_API_KEY }}
+          apple-issuer-id: ${{ secrets.APPLE_ISSUER_ID }}
+          apple-key-id: ${{ secrets.APPLE_KEY_ID }}
+    
+      - name: Setup Flatpak (Linux only)
+        uses: ./.github/actions/setup-flatpak
+        if: runner.os == 'Linux'
+
+      - name: Build App
+        run: pnpm run make -- --arch=${{ matrix.arch }}
+        env:
+          npm_config_target_platform: ${{ matrix.platform }}
+          # macOS signing (set by composite action)
+          APPLE_API_KEY: ${{ env.APPLE_API_KEY_PATH }}
+          APPLE_ISSUER_ID: ${{ env.APPLE_ISSUER_ID }}
+          APPLE_KEY_ID: ${{ env.APPLE_KEY_ID }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: ${{ steps.version.outputs.artifact_prefix }}-${{ matrix.platform }}-${{ matrix.arch }}
+          path: |
+            out/make/**/*.dmg
+            out/make/**/*.zip
+            out/make/**/*.exe
+            out/make/**/*.deb
+            out/make/**/*.rpm
+            out/make/**/*.tar.gz
+            out/make/**/*.flatpak
+          retention-days: 7
+          if-no-files-found: error
+
+  post-comment:
+    name: Post Download Links
+    needs: [check-trigger, build]
+    runs-on: ubuntu-latest
+    if: always() && needs.check-trigger.result == 'success'
+    steps:
+      - name: Get workflow run URL
+        id: run-url
+        run: |
+          echo "url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
+
+      - name: Post comment with results
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const prNumber = ${{ needs.check-trigger.outputs.pr_number }};
+            const version = `pr-${prNumber}`;
+            const runUrl = `${{ steps.run-url.outputs.url }}`;
+            const buildResult = '${{ needs.build.result }}';
+            const triggeredBy = '${{ github.event.comment.user.login }}';
+
+            let body;
+            if (buildResult === 'success') {
+              body = `## Build Artifacts for PR #${prNumber}
+
+            | Platform | Architecture | Status |
+            |----------|--------------|--------|
+            | macOS | arm64 | :white_check_mark: Ready |
+            | macOS | x64 | :white_check_mark: Ready |
+            | Windows | x64 | :white_check_mark: Ready |
+            | Linux | x64 | :white_check_mark: Ready |
+
+            **[Download artifacts from workflow run](${runUrl})**
+
+            *Version: \`${version}\` | Artifacts expire in 7 days | Triggered by @${triggeredBy}*
+
+            > **Note:** macOS builds are signed and notarized. Windows and Linux builds are unsigned.`;
+            } else {
+              body = `## Build Failed for PR #${prNumber}
+
+            The build encountered errors. Please check the [workflow run](${runUrl}) for details.
+
+            *Triggered by @${triggeredBy}*`;
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: body
+            });
+
+            // Add rocket reaction to original comment on success
+            if (buildResult === 'success') {
+              await github.rest.reactions.createForIssueComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: context.payload.comment.id,
+                content: 'rocket'
+              });
+            }

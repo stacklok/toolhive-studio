@@ -41,14 +41,9 @@ jobs:
           apple-issuer-id: ${{ secrets.APPLE_ISSUER_ID }}
           apple-key-id: ${{ secrets.APPLE_KEY_ID }}
 
-      - name: Install Flatpak tool-chain (Linux only)
+      - name: Setup Flatpak (Linux only)
+        uses: ./.github/actions/setup-flatpak
         if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          # flatpak itself isn't strictly required to *build*, but it's good to have.
-          sudo apt-get install -y --no-install-recommends \
-               flatpak flatpak-builder elfutils
-          flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
       - name: Build App
         run: pnpm run make -- --arch=${{ matrix.arch }}

@@ -1,0 +1,14 @@
+name: 'Setup Flatpak'
+description: 'Installs Flatpak tool-chain for building Flatpak packages on Linux'
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Flatpak tool-chain
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        sudo apt-get update
+        # flatpak itself isn't strictly required to *build*, but it's good to have.
+        sudo apt-get install -y --no-install-recommends \
+             flatpak flatpak-builder elfutils
+        flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
