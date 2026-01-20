@@ -40,7 +40,10 @@ Generated fixtures use the `AutoAPIMock` wrapper with types from the OpenAPI sch
 
 ```typescript
 // renderer/src/common/mocks/fixtures/groups/get.ts
-import type { GetApiV1BetaGroupsResponse, GetApiV1BetaGroupsData } from '@api/types.gen'
+import type {
+  GetApiV1BetaGroupsResponse,
+  GetApiV1BetaGroupsData,
+} from '@api/types.gen'
 import { AutoAPIMock } from '@mocks'
 
 export const mockedGetApiV1BetaGroups = AutoAPIMock<
@@ -118,7 +121,10 @@ pnpm test -- --run <test-file>
 
 ```typescript
 // Types for API responses and request parameters
-import type { GetApiV1BetaGroupsResponse, GetApiV1BetaGroupsData } from '@api/types.gen'
+import type {
+  GetApiV1BetaGroupsResponse,
+  GetApiV1BetaGroupsData,
+} from '@api/types.gen'
 
 // AutoAPIMock wrapper
 import { AutoAPIMock } from '@mocks'
