@@ -18,7 +18,20 @@ jobs:
       pr_number: ${{ steps.pr-info.outputs.pr_number }}
       pr_sha: ${{ steps.pr-info.outputs.pr_sha }}
       pr_ref: ${{ steps.pr-info.outputs.pr_ref }}
+      sign_windows: ${{ steps.parse-flags.outputs.sign_windows }}
     steps:
+      - name: Parse command flags
+        id: parse-flags
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const comment = context.payload.comment.body;
+            const signWindows = comment.includes('--sign-windows');
+            core.setOutput('sign_windows', signWindows ? 'true' : 'false');
+            if (signWindows) {
+              core.info('🔐 Windows signing enabled via --sign-windows flag');
+            }
+
       - name: Check org membership
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
@@ -129,6 +142,16 @@ jobs:
           apple-issuer-id: ${{ secrets.APPLE_ISSUER_ID }}
           apple-key-id: ${{ secrets.APPLE_KEY_ID }}
     
+      - name: Setup Windows code signing
+        uses: ./.github/actions/setup-windows-codesign
+        if: runner.os == 'Windows' && needs.check-trigger.outputs.sign_windows == 'true'
+        with:
+          sm-host: ${{ secrets.SM_HOST }}
+          sm-api-key: ${{ secrets.SM_API_KEY }}
+          sm-client-cert-file-b64: ${{ secrets.SM_CLIENT_CERT_FILE_B64 }}
+          sm-client-cert-password: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+          sm-code-signing-cert-sha1-hash: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
+
       - name: Setup Flatpak (Linux only)
         uses: ./.github/actions/setup-flatpak
         if: runner.os == 'Linux'
@@ -177,6 +200,11 @@ jobs:
             const runUrl = `${{ steps.run-url.outputs.url }}`;
             const buildResult = '${{ needs.build.result }}';
             const triggeredBy = '${{ github.event.comment.user.login }}';
+            const signWindows = '${{ needs.check-trigger.outputs.sign_windows }}' === 'true';
+
+            const windowsSignedNote = signWindows
+              ? 'macOS and Windows builds are signed. Linux builds are unsigned.'
+              : 'macOS builds are signed and notarized. Windows and Linux builds are unsigned.';
 
             let body;
             if (buildResult === 'success') {
@@ -186,14 +214,14 @@ jobs:
             |----------|--------------|--------|
             | macOS | arm64 | :white_check_mark: Ready |
             | macOS | x64 | :white_check_mark: Ready |
-            | Windows | x64 | :white_check_mark: Ready |
+            | Windows | x64 | :white_check_mark: Ready${signWindows ? ' (signed)' : ''} |
             | Linux | x64 | :white_check_mark: Ready |
 
             **[Download artifacts from workflow run](${runUrl})**
 
             *Version: \`${version}\` | Artifacts expire in 7 days | Triggered by @${triggeredBy}*
 
-            > **Note:** macOS builds are signed and notarized. Windows and Linux builds are unsigned.`;
+            > **Note:** ${windowsSignedNote}`;
             } else {
               body = `## Build Failed for PR #${prNumber}
 
