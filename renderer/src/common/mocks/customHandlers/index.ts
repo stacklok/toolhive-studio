@@ -9,8 +9,6 @@ import type { V1UpdateRegistryRequest } from '../../../../../api/generated/types
 import { registryServerFixture } from './fixtures/registry_server'
 import { MOCK_REGISTRY_RESPONSE } from './fixtures/registry'
 import { DEFAULT_REGISTRY } from './fixtures/default_registry'
-import { mockedGetApiV1BetaSecretsDefaultKeys } from '../fixtures/secrets_default_keys/get'
-import { mockedPostApiV1BetaSecretsDefaultKeys } from '../fixtures/secrets_default_keys/post'
 
 /**
  * OpenAPI spec uses curly braces to denote path parameters
@@ -244,14 +242,6 @@ export const customHandlers = [
       return HttpResponse.json({ ...registryServerFixture, name })
     }
   ),
-
-  http.get('*/api/v1beta/secrets/default/keys', (info) => {
-    return mockedGetApiV1BetaSecretsDefaultKeys.generatedHandler(info)
-  }),
-
-  http.post('*/api/v1beta/secrets/default/keys', (info) => {
-    return mockedPostApiV1BetaSecretsDefaultKeys.generatedHandler(info)
-  }),
 
   http.delete(
     mswEndpoint('/api/v1beta/secrets/default/keys/:key'),
