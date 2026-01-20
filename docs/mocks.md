@@ -86,6 +86,28 @@ mockedGetApiV1BetaGroups.overrideHandler(() => HttpResponse.error())
 
 Overrides are automatically reset before each test via `resetAllAutoAPIMocks()` in `vitest.setup.ts`.
 
+### Conditional Overrides (Request-Aware)
+
+Sometimes you need the response to depend on query params or headers (for example, to verify the query param is sent). Prefer `overrideHandler` in the specific test that needs this behavior instead of making it the default across the suite, so the intent remains explicit.
+
+```typescript
+import { HttpResponse } from 'msw'
+import { mockedGetApiV1BetaWorkloads } from '@mocks/fixtures/workloads/get'
+
+// Scoped override: ensure group filtering is triggered by query params
+mockedGetApiV1BetaWorkloads.overrideHandler((data, info) => {
+  const url = new URL(info.request.url)
+  const group = url.searchParams.get('group')
+  const filtered = data.workloads?.filter((workload) =>
+    group ? workload.group === group : true
+  )
+  return HttpResponse.json({
+    ...data,
+    workloads: filtered,
+  })
+})
+```
+
 ### Accessing Default Data
 
 Use `.defaultValue` to access the fixture's default data:

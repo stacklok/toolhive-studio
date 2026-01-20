@@ -8,6 +8,7 @@ import { PromptProvider } from '@/common/contexts/prompt/provider'
 import { Route as GroupGroupNameRouteImport } from '@/routes/group.$groupName'
 import { toast } from 'sonner'
 import { createFileRouteTestRouter } from '@/common/test/create-file-route-test-router'
+import { mockedGetApiV1BetaWorkloads } from '@/common/mocks/fixtures/workloads/get'
 
 describe('Group route delete group confirmation', () => {
   beforeEach(() => {
@@ -178,6 +179,13 @@ describe('Group route delete group confirmation', () => {
     })
     recordRequests()
 
+    mockedGetApiV1BetaWorkloads.override((data) => ({
+      ...data,
+      workloads: data.workloads?.filter(
+        (workload) => workload.group !== 'archive'
+      ),
+    }))
+
     const router = createFileRouteTestRouter(
       GroupGroupNameRouteImport,
       '/group/$groupName',
@@ -193,13 +201,12 @@ describe('Group route delete group confirmation', () => {
       </PromptProvider>
     )
 
-    await screen.findByText(/add your first mcp server/i)
-
     const recFlow = recordRequests()
 
-    await userEvent.click(
-      await screen.findByRole('button', { name: /options/i })
-    )
+    const optionsButtons = await screen.findAllByRole('button', {
+      name: /options/i,
+    })
+    await userEvent.click(optionsButtons[0] as HTMLElement)
     await userEvent.click(
       await screen.findByRole('menuitem', { name: /delete group/i })
     )

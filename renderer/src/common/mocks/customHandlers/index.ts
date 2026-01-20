@@ -1,10 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import type json from '../../../../../api/openapi.json'
-import {
-  getWorkloadByName,
-  workloadListFixture,
-  getMockLogs,
-} from './fixtures/servers'
+import { getWorkloadByName, getMockLogs } from './fixtures/servers'
 import type { V1UpdateRegistryRequest } from '../../../../../api/generated/types.gen'
 import { registryServerFixture } from './fixtures/registry_server'
 import { MOCK_REGISTRY_RESPONSE } from './fixtures/registry'
@@ -45,21 +41,6 @@ export const customHandlers = [
     return new HttpResponse(null, {
       status: 204,
     })
-  }),
-
-  http.get(mswEndpoint('/api/v1beta/workloads'), ({ request }) => {
-    const url = new URL(request.url)
-    const group = (url.searchParams.get('group') || 'default').toLowerCase()
-    const examples: Record<string, string[]> = {
-      default: ['postgres-db', 'vscode-server', 'osv-2', 'osv'],
-      research: ['github', 'fetch'],
-      archive: [],
-    }
-    const names = examples[group] ?? examples.default
-    const filtered = (workloadListFixture.workloads ?? []).filter((w) =>
-      (names ?? []).includes(w.name || '')
-    )
-    return HttpResponse.json({ workloads: filtered })
   }),
 
   http.delete(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
