@@ -1,7 +1,12 @@
-import type { PostApiV1BetaSecretsDefaultKeysResponse } from '@api/types.gen'
+import type {
+  PostApiV1BetaSecretsDefaultKeysResponse,
+  PostApiV1BetaSecretsDefaultKeysData,
+} from '@api/types.gen'
 import { AutoAPIMock } from '@mocks'
 
-export const mockedPostApiV1BetaSecretsDefaultKeys =
-  AutoAPIMock<PostApiV1BetaSecretsDefaultKeysResponse>({
-    key: 'SECRET_FROM_STORE',
-  })
+export const mockedPostApiV1BetaSecretsDefaultKeys = AutoAPIMock<
+  PostApiV1BetaSecretsDefaultKeysResponse,
+  PostApiV1BetaSecretsDefaultKeysData
+>({
+  key: 'SECRET_FROM_STORE',
+})

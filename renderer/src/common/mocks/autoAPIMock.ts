@@ -6,60 +6,104 @@ const SCENARIO_HEADER = 'x-mock-scenario'
 
 type ResponseResolverInfo = Parameters<HttpResponseResolver>[0]
 
-type OverrideHandlerFn<T> = (data: T, info: ResponseResolverInfo) => Response
+/** Generic parsed request info (used when TRequest is not provided) */
+export interface ParsedRequestInfo {
+  /** Query parameters as key-value pairs */
+  query: Record<string, string | null>
+  /** Path parameters (e.g., /groups/:name -> path.name) */
+  path: Record<string, string | readonly string[] | undefined>
+  /** Request body (parsed JSON) */
+  body: unknown
+  /** Request headers */
+  headers: Headers
+  /** Original request object */
+  request: Request
+}
+
+/**
+ * Extracts typed request info from API-generated request types.
+ * Falls back to ParsedRequestInfo when TRequest is unknown.
+ */
+type TypedRequestInfo<TRequest> = unknown extends TRequest
+  ? ParsedRequestInfo
+  : {
+      query: TRequest extends { query?: infer Q } ? Q : undefined
+      path: TRequest extends { path?: infer P } ? P : undefined
+      body: TRequest extends { body?: infer B } ? B : undefined
+      headers: Headers
+      request: Request
+    }
+
+type OverrideHandlerFn<T> = (
+  data: T,
+  info: ResponseResolverInfo
+) => Response | Promise<Response>
 type OverrideFn<T> = (data: T, info: ResponseResolverInfo) => T
-type ScenarioFn<T> = (
-  instance: AutoAPIMockInstance<T>
-) => AutoAPIMockInstance<T>
+type ScenarioFn<TResponse, TRequest> = (
+  instance: AutoAPIMockInstance<TResponse, TRequest>
+) => AutoAPIMockInstance<TResponse, TRequest>
 
 export interface ActivateScenarioOptions {
   /** If true, silently falls back to default when scenario doesn't exist. Default: false (throws) */
   fallbackToDefault?: boolean
 }
 
-export interface AutoAPIMockInstance<T> {
+export interface AutoAPIMockInstance<TResponse, TRequest> {
   /** MSW handler to use in handler registration. Respects overrides and scenarios. */
   generatedHandler: HttpResponseResolver
 
   /** Override response data with type safety. Preferred for simple data changes. */
-  override: (fn: OverrideFn<T>) => AutoAPIMockInstance<T>
+  override: (
+    fn: OverrideFn<TResponse>
+  ) => AutoAPIMockInstance<TResponse, TRequest>
 
   /** Override the full handler. Use for errors, network failures, or invalid data. */
-  overrideHandler: (fn: OverrideHandlerFn<T>) => AutoAPIMockInstance<T>
+  overrideHandler: (
+    fn: OverrideHandlerFn<TResponse>
+  ) => AutoAPIMockInstance<TResponse, TRequest>
 
   /** Conditionally override response data based on request details. */
   conditionalOverride: (
-    predicate: (info: ResponseResolverInfo) => boolean,
-    fn: OverrideFn<T>
-  ) => AutoAPIMockInstance<T>
+    predicate: (info: TypedRequestInfo<TRequest>) => boolean,
+    fn: OverrideFn<TResponse>
+  ) => AutoAPIMockInstance<TResponse, TRequest>
 
   /** Define a reusable named scenario for this mock. */
   scenario: (
     name: MockScenarioName,
-    fn: ScenarioFn<T>
-  ) => AutoAPIMockInstance<T>
+    fn: ScenarioFn<TResponse, TRequest>
+  ) => AutoAPIMockInstance<TResponse, TRequest>
 
   /** Activate a named scenario for the current test. */
   activateScenario: (
     name: MockScenarioName,
     options?: ActivateScenarioOptions
-  ) => AutoAPIMockInstance<T>
+  ) => AutoAPIMockInstance<TResponse, TRequest>
 
   /** Reset to default behavior. Called automatically before each test. */
-  reset: () => AutoAPIMockInstance<T>
+  reset: () => AutoAPIMockInstance<TResponse, TRequest>
 
   /** The default fixture data. */
-  defaultValue: T
+  defaultValue: TResponse
 }
 
 // Registry to track all instances for bulk reset
-const registry: Set<AutoAPIMockInstance<unknown>> = new Set()
+const registry: Set<AutoAPIMockInstance<unknown, unknown>> = new Set()
 
-export function AutoAPIMock<T>(defaultValue: T): AutoAPIMockInstance<T> {
-  let overrideHandlerFn: OverrideHandlerFn<T> | null = null
-  const scenarios = new Map<MockScenarioName, ScenarioFn<T>>()
+// Force both type parameters to be explicitly provided
+type RequireBothTypeParams<T, U> = [T, U] extends [infer R, infer Q]
+  ? unknown extends Q
+    ? 'Error: TRequest type parameter is required'
+    : AutoAPIMockInstance<R, Q>
+  : never
 
-  const instance: AutoAPIMockInstance<T> = {
+export function AutoAPIMock<TResponse, TRequest>(
+  defaultValue: TResponse
+): RequireBothTypeParams<TResponse, TRequest> {
+  let overrideHandlerFn: OverrideHandlerFn<TResponse> | null = null
+  const scenarios = new Map<MockScenarioName, ScenarioFn<TResponse, TRequest>>()
+
+  const instance: AutoAPIMockInstance<TResponse, TRequest> = {
     defaultValue,
 
     generatedHandler(info: ResponseResolverInfo) {
@@ -86,24 +130,50 @@ export function AutoAPIMock<T>(defaultValue: T): AutoAPIMockInstance<T> {
       return HttpResponse.json(defaultValue as JsonBodyType)
     },
 
-    override(fn: OverrideFn<T>) {
+    override(fn: OverrideFn<TResponse>) {
       return instance.overrideHandler((data, info) =>
         HttpResponse.json(fn(data, info) as JsonBodyType)
       )
     },
 
-    overrideHandler(fn: OverrideHandlerFn<T>) {
+    overrideHandler(fn: OverrideHandlerFn<TResponse>) {
       overrideHandlerFn = fn
       return instance
     },
 
     conditionalOverride(
-      predicate: (info: ResponseResolverInfo) => boolean,
-      fn: OverrideFn<T>
+      predicate: (info: TypedRequestInfo<TRequest>) => boolean,
+      fn: OverrideFn<TResponse>
     ) {
       const previousHandler = overrideHandlerFn
-      overrideHandlerFn = (data, info) => {
-        if (predicate(info)) {
+      overrideHandlerFn = async (data, info) => {
+        // Parse request into a cleaner format
+        const url = new URL(info.request.url)
+        const query: Record<string, string | null> = {}
+        url.searchParams.forEach((value, key) => {
+          query[key] = value
+        })
+
+        // Parse body if present (clone request to allow re-reading)
+        let body: unknown = undefined
+        const contentType = info.request.headers.get('content-type')
+        if (contentType?.includes('application/json')) {
+          try {
+            body = await info.request.clone().json()
+          } catch {
+            // Body parsing failed, leave as undefined
+          }
+        }
+
+        const parsed = {
+          query,
+          path: info.params,
+          body,
+          headers: info.request.headers,
+          request: info.request,
+        } as unknown as TypedRequestInfo<TRequest>
+
+        if (predicate(parsed)) {
           return HttpResponse.json(fn(data, info) as JsonBodyType)
         }
         if (previousHandler) {
@@ -114,7 +184,7 @@ export function AutoAPIMock<T>(defaultValue: T): AutoAPIMockInstance<T> {
       return instance
     },
 
-    scenario(name: MockScenarioName, fn: ScenarioFn<T>) {
+    scenario(name: MockScenarioName, fn: ScenarioFn<TResponse, TRequest>) {
       scenarios.set(name, fn)
       return instance
     },
@@ -141,9 +211,9 @@ export function AutoAPIMock<T>(defaultValue: T): AutoAPIMockInstance<T> {
     },
   }
 
-  registry.add(instance as AutoAPIMockInstance<unknown>)
+  registry.add(instance as AutoAPIMockInstance<unknown, unknown>)
 
-  return instance
+  return instance as unknown as RequireBothTypeParams<TResponse, TRequest>
 }
 
 export function resetAllAutoAPIMocks(): void {
