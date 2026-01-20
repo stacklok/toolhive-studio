@@ -172,7 +172,7 @@ jobs:
           apple-api-key: ${{ secrets.APPLE_API_KEY }}
           apple-issuer-id: ${{ secrets.APPLE_ISSUER_ID }}
           apple-key-id: ${{ secrets.APPLE_KEY_ID }}
-    
+
       - name: Setup Windows code signing
         uses: ./.github/actions/setup-windows-codesign
         if: runner.os == 'Windows' && needs.check-trigger.outputs.sign_windows == 'true'
