@@ -40,18 +40,21 @@ Generated fixtures use the `AutoAPIMock` wrapper with types from the OpenAPI sch
 
 ```typescript
 // renderer/src/common/mocks/fixtures/groups/get.ts
-import type { GetApiV1BetaGroupsResponse } from '@api/types.gen'
+import type { GetApiV1BetaGroupsResponse, GetApiV1BetaGroupsData } from '@api/types.gen'
 import { AutoAPIMock } from '@mocks'
 
-export const mockedGetApiV1BetaGroups = AutoAPIMock<GetApiV1BetaGroupsResponse>(
-  {
-    groups: [
-      { name: 'default', registered_clients: ['client-a'] },
-      { name: 'research', registered_clients: ['client-b'] },
-    ],
-  }
-)
+export const mockedGetApiV1BetaGroups = AutoAPIMock<
+  GetApiV1BetaGroupsResponse,
+  GetApiV1BetaGroupsData
+>({
+  groups: [
+    { name: 'default', registered_clients: ['client-a'] },
+    { name: 'research', registered_clients: ['client-b'] },
+  ],
+})
 ```
+
+The second type parameter (`*Data`) provides typed access to request parameters (query, path, body) for conditional overrides.
 
 ### Naming Convention
 
@@ -85,14 +88,15 @@ If the auto-generated data doesn't suit your test, edit the fixture file directl
 
 ```typescript
 // renderer/src/common/mocks/fixtures/groups/get.ts
-export const mockedGetApiV1BetaGroups = AutoAPIMock<GetApiV1BetaGroupsResponse>(
-  {
-    groups: [
-      { name: 'production', registered_clients: ['claude-code'] }, // Custom data
-      { name: 'staging', registered_clients: [] },
-    ],
-  }
-)
+export const mockedGetApiV1BetaGroups = AutoAPIMock<
+  GetApiV1BetaGroupsResponse,
+  GetApiV1BetaGroupsData
+>({
+  groups: [
+    { name: 'production', registered_clients: ['claude-code'] }, // Custom data
+    { name: 'staging', registered_clients: [] },
+  ],
+})
 ```
 
 This becomes the new default for all tests using this endpoint.
@@ -113,8 +117,8 @@ pnpm test -- --run <test-file>
 ## Key Imports
 
 ```typescript
-// Types for API responses
-import type { GetApiV1BetaGroupsResponse } from '@api/types.gen'
+// Types for API responses and request parameters
+import type { GetApiV1BetaGroupsResponse, GetApiV1BetaGroupsData } from '@api/types.gen'
 
 // AutoAPIMock wrapper
 import { AutoAPIMock } from '@mocks'

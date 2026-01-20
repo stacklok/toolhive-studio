@@ -30,12 +30,12 @@
 
 ## Types
 
-- Fixtures use strict types via the `AutoAPIMock` wrapper. Generated modules import response types from `@api/types.gen` and pass them as generic parameters to `AutoAPIMock<T>` for type safety.
+- Fixtures use strict types via the `AutoAPIMock` wrapper. Generated modules import response and request types from `@api/types.gen` and pass them as generic parameters to `AutoAPIMock<TResponse, TRequest>` for type safety.
 - The `@mocks` path alias points to `renderer/src/common/mocks`.
 
 ## Test-Scoped Overrides with AutoAPIMock
 
-Each fixture is wrapped in `AutoAPIMock<T>`, which provides test-scoped override capabilities.
+Each fixture is wrapped in `AutoAPIMock<TResponse, TRequest>`, which provides test-scoped override capabilities with typed request parameters.
 
 ### Fixture Structure
 
@@ -43,17 +43,18 @@ Generated fixtures use named exports with a consistent naming convention:
 
 ```typescript
 // renderer/src/common/mocks/fixtures/groups/get.ts
-import type { GetApiV1BetaGroupsResponse } from '@api/types.gen'
+import type { GetApiV1BetaGroupsResponse, GetApiV1BetaGroupsData } from '@api/types.gen'
 import { AutoAPIMock } from '@mocks'
 
-export const mockedGetApiV1BetaGroups = AutoAPIMock<GetApiV1BetaGroupsResponse>(
-  {
-    groups: [
-      { name: 'default', registered_clients: ['client-a'] },
-      { name: 'research', registered_clients: ['client-b'] },
-    ],
-  }
-)
+export const mockedGetApiV1BetaGroups = AutoAPIMock<
+  GetApiV1BetaGroupsResponse,
+  GetApiV1BetaGroupsData
+>({
+  groups: [
+    { name: 'default', registered_clients: ['client-a'] },
+    { name: 'research', registered_clients: ['client-b'] },
+  ],
+})
 ```
 
 ### Overriding in Tests
@@ -88,19 +89,21 @@ Overrides are automatically reset before each test via `resetAllAutoAPIMocks()` 
 
 ### Conditional Overrides (Request-Aware)
 
-Sometimes you need the response to depend on query params or headers (for example, to verify the query param is sent). Prefer a test-scoped conditional override instead of making it the default across the suite.
+Sometimes you need the response to depend on query params, path params, or body (for example, to verify the query param is sent). Prefer a test-scoped conditional override instead of making it the default across the suite.
 
 ```typescript
 import { mockedGetApiV1BetaWorkloads } from '@mocks/fixtures/workloads/get'
 
 mockedGetApiV1BetaWorkloads.conditionalOverride(
-  (info) => new URL(info.request.url).searchParams.get('group') === 'archive',
+  ({ query }) => query.group === 'archive',
   (data) => ({
     ...data,
     workloads: [],
   })
 )
 ```
+
+The predicate receives typed request info with `query`, `path`, `body`, `headers`, and `request`. All parameters are typed based on the `TRequest` type parameter.
 
 You can call `conditionalOverride` multiple times in a test. Each call wraps the current handler and only applies when its predicate matches.
 
@@ -121,15 +124,16 @@ Define named scenarios in your fixture for commonly used test states:
 
 ```typescript
 // renderer/src/common/mocks/fixtures/groups/get.ts
-import type { GetApiV1BetaGroupsResponse } from '@api/types.gen'
+import type { GetApiV1BetaGroupsResponse, GetApiV1BetaGroupsData } from '@api/types.gen'
 import { AutoAPIMock } from '@mocks'
 import { HttpResponse } from 'msw'
 
-export const mockedGetApiV1BetaGroups = AutoAPIMock<GetApiV1BetaGroupsResponse>(
-  {
-    groups: [{ name: 'default', registered_clients: ['client-a'] }],
-  }
-)
+export const mockedGetApiV1BetaGroups = AutoAPIMock<
+  GetApiV1BetaGroupsResponse,
+  GetApiV1BetaGroupsData
+>({
+  groups: [{ name: 'default', registered_clients: ['client-a'] }],
+})
   .scenario('empty', (self) =>
     self.override(() => ({
       groups: [],
