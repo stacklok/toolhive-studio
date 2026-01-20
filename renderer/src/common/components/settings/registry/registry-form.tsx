@@ -9,9 +9,15 @@ interface RegistryFormProps {
   form: UseFormReturn<RegistryFormData>
   onSubmit: (data: RegistryFormData) => void
   isLoading: boolean
+  hasRegistryError: boolean
 }
 
-export function RegistryForm({ form, onSubmit, isLoading }: RegistryFormProps) {
+export function RegistryForm({
+  form,
+  onSubmit,
+  isLoading,
+  hasRegistryError,
+}: RegistryFormProps) {
   return (
     <Form {...form}>
       <form
@@ -19,7 +25,11 @@ export function RegistryForm({ form, onSubmit, isLoading }: RegistryFormProps) {
         onSubmit={form.handleSubmit(onSubmit)}
       >
         <RegistryTypeField isPending={isLoading} form={form} />
-        <RegistrySourceField isPending={isLoading} form={form} />
+        <RegistrySourceField
+          isPending={isLoading}
+          form={form}
+          hasRegistryError={hasRegistryError}
+        />
         <Button type="submit" disabled={isLoading}>
           {isLoading ? 'Saving...' : 'Save'}
         </Button>

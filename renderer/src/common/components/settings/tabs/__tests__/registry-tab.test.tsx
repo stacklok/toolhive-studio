@@ -1,11 +1,21 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RegistryTab } from '../../registry/registry-tab'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
 import { recordRequests, server } from '@/common/mocks/node'
 import { http, HttpResponse } from 'msw'
+
+// Default mock response for registry settings
+const defaultRegistrySettingsMock = http.get(
+  '*/api/v1beta/registry/default',
+  () =>
+    HttpResponse.json({
+      type: 'default',
+      source: '',
+    })
+)
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -35,6 +45,11 @@ Object.defineProperty(Element.prototype, 'setPointerCapture', {
 })
 
 describe('RegistryTab', () => {
+  beforeEach(() => {
+    // Set up the default mock for registry settings endpoint
+    server.use(defaultRegistrySettingsMock)
+  })
+
   it('renders registry settings with default state', async () => {
     renderWithProviders(<RegistryTab />)
 
@@ -447,5 +462,110 @@ describe('RegistryTab', () => {
         req.method === 'PUT' && req.pathname === '/api/v1beta/registry/default'
     )
     expect(putRequests).toHaveLength(0)
+  })
+
+  it('shows error message when GET API returns 500', async () => {
+    server.use(
+      http.get('*/api/v1beta/registry/default', () =>
+        HttpResponse.json({ error: 'Internal server error' }, { status: 500 })
+      )
+    )
+
+    renderWithProviders(<RegistryTab />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Save' })).toBeVisible()
+    })
+
+    // Select a type that shows the source field to see the error message
+    await userEvent.click(screen.getByRole('combobox'))
+    await userEvent.click(
+      screen.getByRole('option', { name: 'Registry Server API' })
+    )
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          'Failed to load registry servers. The registry URL may be misconfigured or unavailable.'
+        )
+      ).toBeVisible()
+    })
+  })
+
+  it('populates form with existing registry data from API', async () => {
+    server.use(
+      http.get('*/api/v1beta/registry/default', () =>
+        HttpResponse.json({
+          type: 'api',
+          source: 'http://localhost:8080/api/registry',
+        })
+      )
+    )
+
+    renderWithProviders(<RegistryTab />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('combobox')).toHaveTextContent(
+        'Registry Server API'
+      )
+    })
+
+    const apiUrlInput = screen.getByLabelText(/Registry Server API URL/i)
+    expect(apiUrlInput).toHaveValue('http://localhost:8080/api/registry')
+  })
+
+  it('updates cache with correct type mapping after mutation', async () => {
+    const apiUrl = 'http://localhost:8080/api/registry'
+
+    server.use(
+      http.get('*/api/v1beta/registry/default', () =>
+        HttpResponse.json({
+          type: 'default',
+          source: '',
+        })
+      ),
+      http.put('*/api/v1beta/registry/default', () =>
+        HttpResponse.json({
+          message: 'Registry updated successfully',
+          type: 'api',
+          source: apiUrl,
+        })
+      )
+    )
+
+    renderWithProviders(<RegistryTab />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Save' })).toBeVisible()
+    })
+
+    // Change to API URL type
+    await userEvent.click(screen.getByRole('combobox'))
+    await userEvent.click(
+      screen.getByRole('option', { name: 'Registry Server API' })
+    )
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Registry Server API URL/i)).toBeVisible()
+    })
+
+    // Enter API URL
+    const apiUrlInput = screen.getByLabelText(/Registry Server API URL/i)
+    await userEvent.type(apiUrlInput, apiUrl)
+
+    // Submit
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    // After mutation, form should still show the submitted values (not flash to default)
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Registry Server API URL/i)).toHaveValue(
+        apiUrl
+      )
+    })
+
+    // Verify the select still shows the correct type
+    expect(screen.getByRole('combobox')).toHaveTextContent(
+      'Registry Server API'
+    )
   })
 })
