@@ -88,25 +88,21 @@ Overrides are automatically reset before each test via `resetAllAutoAPIMocks()` 
 
 ### Conditional Overrides (Request-Aware)
 
-Sometimes you need the response to depend on query params or headers (for example, to verify the query param is sent). Prefer `overrideHandler` in the specific test that needs this behavior instead of making it the default across the suite, so the intent remains explicit.
+Sometimes you need the response to depend on query params or headers (for example, to verify the query param is sent). Prefer a test-scoped conditional override instead of making it the default across the suite.
 
 ```typescript
-import { HttpResponse } from 'msw'
 import { mockedGetApiV1BetaWorkloads } from '@mocks/fixtures/workloads/get'
 
-// Scoped override: ensure group filtering is triggered by query params
-mockedGetApiV1BetaWorkloads.overrideHandler((data, info) => {
-  const url = new URL(info.request.url)
-  const group = url.searchParams.get('group')
-  const filtered = data.workloads?.filter((workload) =>
-    group ? workload.group === group : true
-  )
-  return HttpResponse.json({
+mockedGetApiV1BetaWorkloads.conditionalOverride(
+  (info) => new URL(info.request.url).searchParams.get('group') === 'archive',
+  (data) => ({
     ...data,
-    workloads: filtered,
+    workloads: [],
   })
-})
+)
 ```
+
+You can call `conditionalOverride` multiple times in a test. Each call wraps the current handler and only applies when its predicate matches.
 
 ### Accessing Default Data
 

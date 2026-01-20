@@ -179,12 +179,14 @@ describe('Group route delete group confirmation', () => {
     })
     recordRequests()
 
-    mockedGetApiV1BetaWorkloads.override((data) => ({
-      ...data,
-      workloads: data.workloads?.filter(
-        (workload) => workload.group !== 'archive'
-      ),
-    }))
+    mockedGetApiV1BetaWorkloads.conditionalOverride(
+      (info) =>
+        new URL(info.request.url).searchParams.get('group') === 'archive',
+      (data) => ({
+        ...data,
+        workloads: [],
+      })
+    )
 
     const router = createFileRouteTestRouter(
       GroupGroupNameRouteImport,

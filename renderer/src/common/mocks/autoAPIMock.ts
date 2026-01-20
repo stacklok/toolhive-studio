@@ -27,6 +27,12 @@ export interface AutoAPIMockInstance<T> {
   /** Override the full handler. Use for errors, network failures, or invalid data. */
   overrideHandler: (fn: OverrideHandlerFn<T>) => AutoAPIMockInstance<T>
 
+  /** Conditionally override response data based on request details. */
+  conditionalOverride: (
+    predicate: (info: ResponseResolverInfo) => boolean,
+    fn: OverrideFn<T>
+  ) => AutoAPIMockInstance<T>
+
   /** Define a reusable named scenario for this mock. */
   scenario: (
     name: MockScenarioName,
@@ -88,6 +94,23 @@ export function AutoAPIMock<T>(defaultValue: T): AutoAPIMockInstance<T> {
 
     overrideHandler(fn: OverrideHandlerFn<T>) {
       overrideHandlerFn = fn
+      return instance
+    },
+
+    conditionalOverride(
+      predicate: (info: ResponseResolverInfo) => boolean,
+      fn: OverrideFn<T>
+    ) {
+      const previousHandler = overrideHandlerFn
+      overrideHandlerFn = (data, info) => {
+        if (predicate(info)) {
+          return HttpResponse.json(fn(data, info) as JsonBodyType)
+        }
+        if (previousHandler) {
+          return previousHandler(data, info)
+        }
+        return HttpResponse.json(data as JsonBodyType)
+      }
       return instance
     },
 
