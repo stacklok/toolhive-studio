@@ -13,7 +13,7 @@ This project uses MSW with typed `AutoAPIMock` fixtures.
 
 Understanding the auto-generation behavior is essential - fixtures are created automatically when tests run, and this affects how mocks work throughout the test suite.
 
-- **`/testing-with-api-mocks`** - Start here. Covers fixture auto-generation, naming conventions, and basic usage patterns.
+- **`/testing-with-api-mocks`** - **Start here.** Covers fixture auto-generation, naming conventions, basic usage, and when to use the other skills.
 
 - **`/testing-api-overrides`** - For **read operations** (GET). Verify your code sends correct query params by setting up conditional mocks that return different data based on the request. Test the UI shows expected results.
 
