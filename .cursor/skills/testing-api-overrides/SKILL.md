@@ -12,10 +12,12 @@ Test that your code sends correct API parameters by using conditional overrides 
 **Good tests verify what users see, not implementation details.**
 
 Instead of:
+
 1. ❌ Recording the request and checking query params
 2. ❌ Asserting on internal function calls
 
 Do this:
+
 1. ✅ Set up conditional mocks that respond based on params
 2. ✅ Verify the component renders the expected data
 
@@ -43,7 +45,7 @@ mockedGetApiV1BetaWorkloads.conditionalOverride(
   // Transform: what data to return?
   (data) => ({
     ...data,
-    workloads: [],  // Archive group is empty
+    workloads: [], // Archive group is empty
   })
 )
 ```
@@ -53,18 +55,18 @@ mockedGetApiV1BetaWorkloads.conditionalOverride(
 The predicate receives parsed request info with easy access to query params, path params, and headers:
 
 ```typescript
-({ query, params, headers }) => {
+;({ query, params, headers }) => {
   // Query parameters (pre-parsed)
-  query.group      // '?group=archive' -> 'archive'
-  query.status     // '?status=running' -> 'running'
+  query.group // '?group=archive' -> 'archive'
+  query.status // '?status=running' -> 'running'
 
   // Path parameters (from MSW route like /workloads/:name)
-  params.name      // for /workloads/:name
+  params.name // for /workloads/:name
 
   // Headers
   headers.get('Authorization')
 
-  return true  // or false
+  return true // or false
 }
 ```
 
@@ -73,10 +75,11 @@ The predicate receives parsed request info with easy access to query params, pat
 The transform receives default data and returns modified data:
 
 ```typescript
-(data) => ({
-  ...data,                           // Spread defaults
-  workloads: data.workloads?.filter( // Modify as needed
-    w => w.status === 'running'
+;(data) => ({
+  ...data, // Spread defaults
+  workloads: data.workloads?.filter(
+    // Modify as needed
+    (w) => w.status === 'running'
   ),
 })
 ```

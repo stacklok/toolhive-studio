@@ -43,12 +43,14 @@ Generated fixtures use the `AutoAPIMock` wrapper with types from the OpenAPI sch
 import type { GetApiV1BetaGroupsResponse } from '@api/types.gen'
 import { AutoAPIMock } from '@mocks'
 
-export const mockedGetApiV1BetaGroups = AutoAPIMock<GetApiV1BetaGroupsResponse>({
-  groups: [
-    { name: 'default', registered_clients: ['client-a'] },
-    { name: 'research', registered_clients: ['client-b'] },
-  ],
-})
+export const mockedGetApiV1BetaGroups = AutoAPIMock<GetApiV1BetaGroupsResponse>(
+  {
+    groups: [
+      { name: 'default', registered_clients: ['client-a'] },
+      { name: 'research', registered_clients: ['client-b'] },
+    ],
+  }
+)
 ```
 
 ### Naming Convention
@@ -83,12 +85,14 @@ If the auto-generated data doesn't suit your test, edit the fixture file directl
 
 ```typescript
 // renderer/src/common/mocks/fixtures/groups/get.ts
-export const mockedGetApiV1BetaGroups = AutoAPIMock<GetApiV1BetaGroupsResponse>({
-  groups: [
-    { name: 'production', registered_clients: ['claude-code'] },  // Custom data
-    { name: 'staging', registered_clients: [] },
-  ],
-})
+export const mockedGetApiV1BetaGroups = AutoAPIMock<GetApiV1BetaGroupsResponse>(
+  {
+    groups: [
+      { name: 'production', registered_clients: ['claude-code'] }, // Custom data
+      { name: 'staging', registered_clients: [] },
+    ],
+  }
+)
 ```
 
 This becomes the new default for all tests using this endpoint.

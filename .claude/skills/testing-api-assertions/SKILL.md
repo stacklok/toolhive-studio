@@ -10,12 +10,14 @@ Verify that your code sends the correct API requests for operations with side ef
 ## When to Use Request Assertions
 
 **DO use** for operations with side effects:
+
 - Creating resources (POST)
 - Updating resources (PUT/PATCH)
 - Deleting resources (DELETE)
 - Any mutation that changes backend state
 
 **DON'T use** for read operations:
+
 - Fetching data (GET)
 - For these, just verify the component displays the data correctly
 - The mock API is not stateful, so verifying GET requests adds no value
@@ -83,7 +85,8 @@ const rec = recordRequests()
 // ... trigger delete action ...
 
 const deleteRequest = rec.recordedRequests.find(
-  (r) => r.method === 'DELETE' && r.pathname === '/api/v1beta/workloads/my-server'
+  (r) =>
+    r.method === 'DELETE' && r.pathname === '/api/v1beta/workloads/my-server'
 )
 expect(deleteRequest).toBeDefined()
 ```
@@ -97,7 +100,9 @@ const rec = recordRequests()
 
 const postRequests = rec.recordedRequests.filter((r) => r.method === 'POST')
 const groupIndex = postRequests.findIndex((r) => r.pathname.includes('/groups'))
-const workloadIndex = postRequests.findIndex((r) => r.pathname.includes('/workloads'))
+const workloadIndex = postRequests.findIndex((r) =>
+  r.pathname.includes('/workloads')
+)
 
 // Group must be created before workload
 expect(groupIndex).toBeLessThan(workloadIndex)
@@ -111,7 +116,8 @@ const rec = recordRequests()
 // ... trigger batch action ...
 
 const deleteRequests = rec.recordedRequests.filter(
-  (r) => r.method === 'DELETE' && r.pathname.startsWith('/api/v1beta/workloads/')
+  (r) =>
+    r.method === 'DELETE' && r.pathname.startsWith('/api/v1beta/workloads/')
 )
 expect(deleteRequests).toHaveLength(3)
 ```
