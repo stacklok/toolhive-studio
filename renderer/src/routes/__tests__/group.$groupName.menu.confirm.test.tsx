@@ -180,8 +180,7 @@ describe('Group route delete group confirmation', () => {
     recordRequests()
 
     mockedGetApiV1BetaWorkloads.conditionalOverride(
-      (info) =>
-        new URL(info.request.url).searchParams.get('group') === 'archive',
+      ({ query }) => query.group === 'archive',
       (data) => ({
         ...data,
         workloads: [],

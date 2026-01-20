@@ -39,7 +39,7 @@ import { mockedGetApiV1BetaWorkloads } from '@mocks/fixtures/workloads/get'
 
 mockedGetApiV1BetaWorkloads.conditionalOverride(
   // Predicate: when should this override apply?
-  (info) => new URL(info.request.url).searchParams.get('group') === 'archive',
+  ({ query }) => query.group === 'archive',
   // Transform: what data to return?
   (data) => ({
     ...data,
@@ -50,21 +50,19 @@ mockedGetApiV1BetaWorkloads.conditionalOverride(
 
 ### Predicate Function
 
-The predicate receives `info` with access to the full request:
+The predicate receives parsed request info with easy access to query params, path params, and headers:
 
 ```typescript
-(info) => {
-  const url = new URL(info.request.url)
+({ query, params, headers }) => {
+  // Query parameters (pre-parsed)
+  query.group      // '?group=archive' -> 'archive'
+  query.status     // '?status=running' -> 'running'
 
-  // Check query parameters
-  url.searchParams.get('group')      // '?group=archive'
-  url.searchParams.get('status')     // '?status=running'
+  // Path parameters (from MSW route like /workloads/:name)
+  params.name      // for /workloads/:name
 
-  // Check headers
-  info.request.headers.get('Authorization')
-
-  // Check path parameters (from MSW)
-  info.params.name                   // for /workloads/:name
+  // Headers
+  headers.get('Authorization')
 
   return true  // or false
 }
@@ -92,7 +90,7 @@ it('shows only workloads from the selected group', async () => {
   // Default mock returns workloads from multiple groups
   // Add conditional override for 'production' group
   mockedGetApiV1BetaWorkloads.conditionalOverride(
-    (info) => new URL(info.request.url).searchParams.get('group') === 'production',
+    ({ query }) => query.group === 'production',
     (data) => ({
       ...data,
       workloads: [
@@ -121,7 +119,7 @@ it('shows only workloads from the selected group', async () => {
 ```typescript
 it('shows empty message when group has no workloads', async () => {
   mockedGetApiV1BetaWorkloads.conditionalOverride(
-    (info) => new URL(info.request.url).searchParams.get('group') === 'empty-group',
+    ({ query }) => query.group === 'empty-group',
     () => ({ workloads: [] })
   )
 
@@ -140,11 +138,11 @@ Chain multiple overrides for different conditions:
 ```typescript
 mockedGetApiV1BetaWorkloads
   .conditionalOverride(
-    (info) => new URL(info.request.url).searchParams.get('group') === 'production',
+    ({ query }) => query.group === 'production',
     () => ({ workloads: productionWorkloads })
   )
   .conditionalOverride(
-    (info) => new URL(info.request.url).searchParams.get('group') === 'staging',
+    ({ query }) => query.group === 'staging',
     () => ({ workloads: stagingWorkloads })
   )
 ```

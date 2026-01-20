@@ -6,6 +6,18 @@ const SCENARIO_HEADER = 'x-mock-scenario'
 
 type ResponseResolverInfo = Parameters<HttpResponseResolver>[0]
 
+/** Parsed request info passed to conditionalOverride predicates */
+export interface ParsedRequestInfo {
+  /** Query parameters as key-value pairs */
+  query: Record<string, string | null>
+  /** Path parameters from MSW (e.g., :name -> params.name) */
+  params: Record<string, string | readonly string[] | undefined>
+  /** Request headers */
+  headers: Headers
+  /** Original request object */
+  request: Request
+}
+
 type OverrideHandlerFn<T> = (data: T, info: ResponseResolverInfo) => Response
 type OverrideFn<T> = (data: T, info: ResponseResolverInfo) => T
 type ScenarioFn<T> = (
@@ -29,7 +41,7 @@ export interface AutoAPIMockInstance<T> {
 
   /** Conditionally override response data based on request details. */
   conditionalOverride: (
-    predicate: (info: ResponseResolverInfo) => boolean,
+    predicate: (info: ParsedRequestInfo) => boolean,
     fn: OverrideFn<T>
   ) => AutoAPIMockInstance<T>
 
@@ -98,12 +110,26 @@ export function AutoAPIMock<T>(defaultValue: T): AutoAPIMockInstance<T> {
     },
 
     conditionalOverride(
-      predicate: (info: ResponseResolverInfo) => boolean,
+      predicate: (info: ParsedRequestInfo) => boolean,
       fn: OverrideFn<T>
     ) {
       const previousHandler = overrideHandlerFn
       overrideHandlerFn = (data, info) => {
-        if (predicate(info)) {
+        // Parse request into a cleaner format
+        const url = new URL(info.request.url)
+        const query: Record<string, string | null> = {}
+        url.searchParams.forEach((value, key) => {
+          query[key] = value
+        })
+
+        const parsed: ParsedRequestInfo = {
+          query,
+          params: info.params,
+          headers: info.request.headers,
+          request: info.request,
+        }
+
+        if (predicate(parsed)) {
           return HttpResponse.json(fn(data, info) as JsonBodyType)
         }
         if (previousHandler) {
