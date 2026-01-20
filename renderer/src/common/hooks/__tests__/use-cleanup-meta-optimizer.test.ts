@@ -7,10 +7,13 @@ import {
   MCP_OPTIMIZER_GROUP_NAME,
   META_MCP_SERVER_NAME,
 } from '@/common/lib/constants'
-import { recordRequests, server } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
+import { recordRequests } from '@/common/mocks/node'
 import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'
 import { mockedGetApiV1BetaWorkloadsByName } from '@/common/mocks/fixtures/workloads_name/get'
+import { mockedPostApiV1BetaClientsRegister } from '@/common/mocks/fixtures/clients_register/post'
+import { mockedDeleteApiV1BetaClientsByNameGroupsByGroup } from '@/common/mocks/fixtures/clients_name_groups_group/delete'
+import { mockedDeleteApiV1BetaGroupsByName } from '@/common/mocks/fixtures/groups_name/delete'
+import { mockedGetApiV1BetaDiscoveryClients } from '@/common/mocks/fixtures/discovery_clients/get'
 
 // Mock dependencies
 vi.mock('../use-feature-flag')
@@ -119,18 +122,12 @@ describe('useCleanupMetaOptimizer', () => {
       },
     }))
 
-    server.use(
-      http.post('*/api/v1beta/clients/register', () => HttpResponse.json([])),
-      http.delete('*/api/v1beta/clients/:name/groups/:group', () =>
-        HttpResponse.json({})
-      ),
-      http.delete(`*/api/v1beta/groups/${MCP_OPTIMIZER_GROUP_NAME}`, () =>
-        HttpResponse.json({})
-      ),
-      http.get('*/api/v1beta/discovery/clients', () =>
-        HttpResponse.json({ clients: [] })
-      )
+    mockedPostApiV1BetaClientsRegister.override(() => [])
+    mockedDeleteApiV1BetaClientsByNameGroupsByGroup.override(
+      () => undefined as unknown as void
     )
+    mockedDeleteApiV1BetaGroupsByName.override(() => '')
+    mockedGetApiV1BetaDiscoveryClients.override(() => ({ clients: [] }))
 
     const { result } = renderHook(() => useCleanupMetaOptimizer(), {
       wrapper: createWrapper(),
