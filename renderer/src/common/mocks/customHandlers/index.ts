@@ -37,12 +37,6 @@ export function mswEndpoint(endpoint: Endpoint) {
 }
 
 export const customHandlers = [
-  http.get(mswEndpoint('/health'), () => {
-    return new HttpResponse(null, {
-      status: 204,
-    })
-  }),
-
   http.delete(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
     const { name } = params
 

@@ -2,8 +2,8 @@ import { render, screen, cleanup, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { StartingToolHive } from '../starting-toolhive'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { http, HttpResponse } from 'msw'
-import { server } from '../../mocks/node'
+import { HttpResponse } from 'msw'
+import { mockedGetHealth } from '../../mocks/fixtures/health/get'
 
 const mockNavigate = vi.fn()
 
@@ -63,11 +63,7 @@ describe('StartingToolHive', () => {
   })
 
   it('should throw error when health check fails', async () => {
-    server.use(
-      http.get('*/health', () => {
-        return HttpResponse.error()
-      })
-    )
+    mockedGetHealth.overrideHandler(() => HttpResponse.error())
 
     render(
       <QueryClientProvider client={queryClient}>
