@@ -551,4 +551,105 @@ describe('DialogFormRemoteMcp', () => {
       expect(secretNameInput).toHaveValue('OAUTH_CLIENT_SECRET_MY_TEST_SERVER')
     })
   })
+
+  it('syncs bearer token secret key name with server name when typing custom value', async () => {
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRemoteMcp isOpen closeDialog={vi.fn()} groupName="default" />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Fill required fields
+    await userEvent.type(
+      screen.getByRole('textbox', { name: /server name/i }),
+      'my-test-server'
+    )
+    await userEvent.type(
+      screen.getByRole('textbox', { name: /server url/i }),
+      'https://api.example.com'
+    )
+
+    // Select Bearer Token auth type
+    await userEvent.click(screen.getByLabelText('Authorization method'))
+    await userEvent.click(screen.getByRole('option', { name: 'Bearer Token' }))
+
+    // Wait for bearer token fields to appear and verify default secret name
+    const secretNameInput =
+      await screen.findByPlaceholderText('e.g. BEARER_TOKEN')
+    expect(secretNameInput).toHaveValue('BEARER_TOKEN_MY_TEST_SERVER')
+
+    // Select a secret from the store
+    await userEvent.click(
+      screen.getByRole('combobox', { name: /use a secret from the store/i })
+    )
+    await userEvent.click(
+      screen.getByRole('option', { name: /secret_from_store/i })
+    )
+
+    // Verify secret name changed to the selected one
+    await waitFor(() => {
+      expect(secretNameInput).toHaveValue('SECRET_FROM_STORE')
+    })
+
+    // Now clear and type a new custom value in the Value input
+    const valueInput = screen.getByPlaceholderText('e.g. token_123_ABC_789_XYZ')
+    await userEvent.clear(valueInput)
+    await userEvent.type(valueInput, 'my-new-bearer-token')
+
+    // Verify secret name is reset to the default (synced with server name)
+    await waitFor(() => {
+      expect(secretNameInput).toHaveValue('BEARER_TOKEN_MY_TEST_SERVER')
+    })
+  })
+
+  it('updates bearer token secret key when server name changes after typing custom value', async () => {
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRemoteMcp isOpen closeDialog={vi.fn()} groupName="default" />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Fill required fields
+    const serverNameInput = screen.getByRole('textbox', {
+      name: /server name/i,
+    })
+    await userEvent.type(serverNameInput, 'my-test-server')
+    await userEvent.type(
+      screen.getByRole('textbox', { name: /server url/i }),
+      'https://api.example.com'
+    )
+
+    // Select Bearer Token auth type
+    await userEvent.click(screen.getByLabelText('Authorization method'))
+    await userEvent.click(screen.getByRole('option', { name: 'Bearer Token' }))
+
+    // Wait for bearer token fields to appear and verify default secret name
+    const secretNameInput =
+      await screen.findByPlaceholderText('e.g. BEARER_TOKEN')
+    expect(secretNameInput).toHaveValue('BEARER_TOKEN_MY_TEST_SERVER')
+
+    // Type a custom bearer token value
+    const valueInput = screen.getByPlaceholderText('e.g. token_123_ABC_789_XYZ')
+    await userEvent.type(valueInput, 'my-custom-token')
+
+    // Verify secret name is synced with server name
+    expect(secretNameInput).toHaveValue('BEARER_TOKEN_MY_TEST_SERVER')
+
+    // Now modify the server name
+    await userEvent.clear(serverNameInput)
+    await userEvent.type(serverNameInput, 'new-server-name')
+
+    // Verify secret name updates to reflect the new server name
+    await waitFor(() => {
+      expect(secretNameInput).toHaveValue('BEARER_TOKEN_NEW_SERVER_NAME')
+    })
+  })
 })

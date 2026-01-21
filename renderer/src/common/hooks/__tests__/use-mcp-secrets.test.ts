@@ -3,12 +3,12 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React, { type ReactNode } from 'react'
 import {
-  getMCPDefinedSecrets,
-  groupMCPDefinedSecrets,
+  getMCPSecretFieldValues,
+  groupMCPSecretFieldValues,
   saveMCPSecrets,
   useMCPSecrets,
 } from '../use-mcp-secrets'
-import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
+import type { SecretFieldValue, PreparedSecret } from '@/common/types/secrets'
 import { recordRequests } from '@/common/mocks/node'
 import { HttpResponse } from 'msw'
 import { mockedGetApiV1BetaSecretsDefaultKeys } from '@/common/mocks/fixtures/secrets_default_keys/get'
@@ -94,7 +94,7 @@ describe('useMCPSecrets', () => {
       key: 'API_KEY',
     }))
 
-    const mockDefinedSecrets: DefinedSecret[] = [
+    const mockSecretFieldValues: SecretFieldValue[] = [
       {
         name: 'API_KEY',
         value: { secret: 'secret-value', isFromStore: false },
@@ -119,7 +119,7 @@ describe('useMCPSecrets', () => {
     )
 
     const handleSecretsResult = await waitFor(async () => {
-      return await result.current.handleSecrets(mockDefinedSecrets)
+      return await result.current.handleSecrets(mockSecretFieldValues)
     })
 
     // Wait for API calls to complete
@@ -243,7 +243,7 @@ describe('useMCPSecrets', () => {
       key: 'API_KEY_2',
     }))
 
-    const mockDefinedSecrets: DefinedSecret[] = [
+    const mockSecretFieldValues: SecretFieldValue[] = [
       {
         name: 'API_KEY',
         value: { secret: 'secret-value', isFromStore: false },
@@ -260,7 +260,7 @@ describe('useMCPSecrets', () => {
     )
 
     const handleSecretsResult = await waitFor(async () => {
-      return await result.current.handleSecrets(mockDefinedSecrets)
+      return await result.current.handleSecrets(mockSecretFieldValues)
     })
 
     // Wait for API calls to complete
@@ -569,9 +569,9 @@ describe('saveSecrets', () => {
   })
 })
 
-describe('groupMCPDefinedSecrets', () => {
+describe('groupMCPSecretFieldValues', () => {
   it('separates new and existing secrets correctly', () => {
-    const secrets: DefinedSecret[] = [
+    const secrets: SecretFieldValue[] = [
       {
         name: 'NEW_SECRET',
         value: { isFromStore: false, secret: 'new-value' },
@@ -586,7 +586,7 @@ describe('groupMCPDefinedSecrets', () => {
       },
     ]
 
-    const result = groupMCPDefinedSecrets(secrets)
+    const result = groupMCPSecretFieldValues(secrets)
 
     expect(result.newSecrets).toHaveLength(2)
     expect(result.existingSecrets).toHaveLength(1)
@@ -599,14 +599,14 @@ describe('groupMCPDefinedSecrets', () => {
   })
 
   it('handles empty secrets array', () => {
-    const result = groupMCPDefinedSecrets([])
+    const result = groupMCPSecretFieldValues([])
 
     expect(result.newSecrets).toHaveLength(0)
     expect(result.existingSecrets).toHaveLength(0)
   })
 
   it('handles all new secrets', () => {
-    const secrets: DefinedSecret[] = [
+    const secrets: SecretFieldValue[] = [
       {
         name: 'SECRET1',
         value: { isFromStore: false, secret: 'value1' },
@@ -617,14 +617,14 @@ describe('groupMCPDefinedSecrets', () => {
       },
     ]
 
-    const result = groupMCPDefinedSecrets(secrets)
+    const result = groupMCPSecretFieldValues(secrets)
 
     expect(result.newSecrets).toHaveLength(2)
     expect(result.existingSecrets).toHaveLength(0)
   })
 
   it('handles all existing secrets', () => {
-    const secrets: DefinedSecret[] = [
+    const secrets: SecretFieldValue[] = [
       {
         name: 'SECRET1',
         value: { isFromStore: true, secret: 'key1' },
@@ -635,7 +635,7 @@ describe('groupMCPDefinedSecrets', () => {
       },
     ]
 
-    const result = groupMCPDefinedSecrets(secrets)
+    const result = groupMCPSecretFieldValues(secrets)
 
     expect(result.newSecrets).toHaveLength(0)
     expect(result.existingSecrets).toHaveLength(2)
@@ -648,7 +648,7 @@ describe('groupMCPDefinedSecrets', () => {
   })
 })
 
-describe('getMCPDefinedSecrets', () => {
+describe('getMCPSecretFieldValues', () => {
   it('filters out secrets with empty names', () => {
     const secrets: FormSchemaLocalMcp['secrets'] = [
       {
@@ -669,7 +669,7 @@ describe('getMCPDefinedSecrets', () => {
       },
     ]
 
-    const result = getMCPDefinedSecrets(secrets)
+    const result = getMCPSecretFieldValues(secrets)
 
     expect(result).toHaveLength(2)
     expect(result[0]?.name).toBe('VALID_SECRET')
@@ -688,7 +688,7 @@ describe('getMCPDefinedSecrets', () => {
       },
     ]
 
-    const result = getMCPDefinedSecrets(secrets)
+    const result = getMCPSecretFieldValues(secrets)
 
     expect(result).toHaveLength(1)
     expect(result[0]?.name).toBe('VALID_SECRET')
@@ -710,7 +710,7 @@ describe('getMCPDefinedSecrets', () => {
       },
     ]
 
-    const result = getMCPDefinedSecrets(secrets)
+    const result = getMCPSecretFieldValues(secrets)
 
     expect(result).toHaveLength(3)
     expect(result[0]?.value.isFromStore).toBe(true)
@@ -719,7 +719,7 @@ describe('getMCPDefinedSecrets', () => {
   })
 
   it('returns empty array for empty input', () => {
-    const result = getMCPDefinedSecrets([])
+    const result = getMCPSecretFieldValues([])
     expect(result).toEqual([])
   })
 })

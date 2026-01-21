@@ -11,11 +11,7 @@ import { FormControl, FormField, FormItem } from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
 import { DynamicArrayField } from '@/features/registry-servers/components/dynamic-array-field'
 import { SecretStoreCombobox } from '@/common/components/secrets/secret-store-combobox'
-
-type SecretFieldValue = {
-  name?: string
-  value?: { secret?: string; isFromStore: boolean } | string
-}
+import type { SecretFieldValue } from '@/common/types/secrets'
 
 type FormWithSecrets = {
   secrets: Array<SecretFieldValue>
