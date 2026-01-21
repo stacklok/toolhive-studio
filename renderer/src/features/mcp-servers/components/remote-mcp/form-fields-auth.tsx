@@ -17,6 +17,7 @@ import {
   REMOTE_MCP_AUTH_TYPES,
   type RemoteMcpAuthType,
 } from '@/common/lib/form-schema-mcp'
+import type { SecretFieldValue } from '@/common/types/secrets'
 
 const AUTH_FIELD_MATRIX = {
   none: ['callback_port', 'issuer'],
@@ -59,20 +60,6 @@ type SecretValue = {
   value: SecretValueData
 }
 
-const isSecretValueObj = (value: unknown): value is SecretValueData =>
-  typeof value === 'object' &&
-  value !== null &&
-  'secret' in value &&
-  'isFromStore' in value
-
-const isSecretValue = (value: unknown): value is SecretValue =>
-  typeof value === 'object' &&
-  value !== null &&
-  'name' in value &&
-  typeof value.name === 'string' &&
-  'value' in value &&
-  isSecretValueObj(value.value)
-
 const getDefaultSecretName = (
   mcpName: string | undefined,
   prefix: string
@@ -86,17 +73,24 @@ const buildSecretValue = ({
   mcpName,
   prefix,
 }: {
-  fieldValue: unknown
+  fieldValue: SecretFieldValue | undefined
   mcpName: string | undefined
   prefix: string
 }): SecretValue => {
-  if (isSecretValue(fieldValue)) {
+  if (!fieldValue) {
+    return {
+      name: getDefaultSecretName(mcpName, prefix),
+      value: { secret: '', isFromStore: false },
+    }
+  }
+
+  if (fieldValue.value.isFromStore) {
     return fieldValue
   }
 
   return {
     name: getDefaultSecretName(mcpName, prefix),
-    value: { secret: '', isFromStore: false },
+    value: { secret: fieldValue?.value?.secret ?? '', isFromStore: false },
   }
 }
 
