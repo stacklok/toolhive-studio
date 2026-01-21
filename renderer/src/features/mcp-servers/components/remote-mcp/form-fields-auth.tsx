@@ -137,10 +137,8 @@ export function FormFieldsAuth({
                     <div>
                       <FormLabel
                         htmlFor="oauth_config.bearer_token.name"
-                        className={cn(
-                          `text-muted-foreground border-input! h-full
-                          items-center font-mono ring-0!`
-                        )}
+                        className="text-muted-foreground flex items-center gap-1
+                          pb-2 font-mono text-sm"
                       >
                         Bearer token name
                         <TooltipInfoIcon className="m-w-90">
@@ -162,10 +160,8 @@ export function FormFieldsAuth({
                     <div>
                       <FormLabel
                         htmlFor="oauth_config.bearer_token.value"
-                        className={cn(
-                          `text-muted-foreground border-input! h-full
-                          items-center font-mono ring-0!`
-                        )}
+                        className="text-muted-foreground flex items-center gap-1
+                          pb-2 font-mono text-sm"
                       >
                         Value
                         <TooltipInfoIcon className="m-w-90">
