@@ -34,7 +34,7 @@ importers:
         version: 2.0.123(react@19.2.3)(zod@4.1.13)
       '@ai-sdk/xai':
         specifier: ^2.0.38
-        version: 2.0.53(zod@4.1.13)
+        version: 2.0.54(zod@4.1.13)
       '@fontsource-variable/inter':
         specifier: ^5.2.6
         version: 5.2.8
@@ -402,6 +402,12 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
+  '@ai-sdk/openai-compatible@1.0.31':
+    resolution: {integrity: sha512-znBvaVHM0M6yWNerIEy3hR+O8ZK2sPcE7e2cxfb6kYLEX3k//JH5VDnRnajseVofg7LXtTCFFdjsB7WLf1BdeQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
   '@ai-sdk/openai@2.0.89':
     resolution: {integrity: sha512-4+qWkBCbL9HPKbgrUO/F2uXZ8GqrYxHa8SWEYIzxEJ9zvWw3ISr3t1/27O1i8MGSym+PzEyHBT48EV4LAwWaEw==}
     engines: {node: '>=18'}
@@ -428,8 +434,8 @@ packages:
       zod:
         optional: true
 
-  '@ai-sdk/xai@2.0.53':
-    resolution: {integrity: sha512-YFjOBqtyXH2jc5HcgNvsXWNXIUeLFUguqV75YN3L4E2mjjP5w7E6ezC9kOOuZ4X+Zk2CMApxQjopKgnEaPvVpg==}
+  '@ai-sdk/xai@2.0.54':
+    resolution: {integrity: sha512-G5/qO4Ww9AFDn8tl/uZT3pBHKh/snNzurANiHMxFT/TAY5bsUUdwUZDXa1gKicallbyBaRgQwcNuyeX/x/LARg==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -7794,6 +7800,12 @@ snapshots:
       '@ai-sdk/provider-utils': 3.0.20(zod@4.1.13)
       zod: 4.1.13
 
+  '@ai-sdk/openai-compatible@1.0.31(zod@4.1.13)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.1
+      '@ai-sdk/provider-utils': 3.0.20(zod@4.1.13)
+      zod: 4.1.13
+
   '@ai-sdk/openai@2.0.89(zod@4.1.13)':
     dependencies:
       '@ai-sdk/provider': 2.0.1
@@ -7821,9 +7833,9 @@ snapshots:
     optionalDependencies:
       zod: 4.1.13
 
-  '@ai-sdk/xai@2.0.53(zod@4.1.13)':
+  '@ai-sdk/xai@2.0.54(zod@4.1.13)':
     dependencies:
-      '@ai-sdk/openai-compatible': 1.0.30(zod@4.1.13)
+      '@ai-sdk/openai-compatible': 1.0.31(zod@4.1.13)
       '@ai-sdk/provider': 2.0.1
       '@ai-sdk/provider-utils': 3.0.20(zod@4.1.13)
       zod: 4.1.13
