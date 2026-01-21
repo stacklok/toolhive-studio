@@ -530,14 +530,11 @@ describe('RegistryTab', () => {
       expect(screen.getByLabelText(/Registry Server API URL/i)).toBeVisible()
     })
 
-    // Enter API URL
     const apiUrlInput = screen.getByLabelText(/Registry Server API URL/i)
     await userEvent.type(apiUrlInput, apiUrl)
 
-    // Submit
     await userEvent.click(screen.getByRole('button', { name: 'Save' }))
 
-    // After mutation, form should still show the submitted values (not flash to default)
     await waitFor(() => {
       expect(screen.getByLabelText(/Registry Server API URL/i)).toHaveValue(
         apiUrl

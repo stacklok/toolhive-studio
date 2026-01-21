@@ -88,8 +88,7 @@ export function RegistryTab() {
       type: mapResponseTypeToFormType(registryData?.type),
       source: registryData?.source ?? '',
     },
-    mode: 'onChange',
-    reValidateMode: 'onChange',
+    mode: 'onSubmit',
   })
 
   const onSubmit = async (data: RegistryFormData) => {
