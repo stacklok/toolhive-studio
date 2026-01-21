@@ -1,6 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { HttpResponse } from 'msw'
 import React, { type ReactNode } from 'react'
 import { useCleanupMetaOptimizer } from '../use-cleanup-meta-optimizer'
 import {
@@ -123,8 +124,9 @@ describe('useCleanupMetaOptimizer', () => {
     }))
 
     mockedPostApiV1BetaClientsRegister.override(() => [])
-    mockedDeleteApiV1BetaClientsByNameGroupsByGroup.override(
-      () => undefined as unknown as void
+    // DELETE /clients/:name/groups/:group is a 204 with no body in the API.
+    mockedDeleteApiV1BetaClientsByNameGroupsByGroup.overrideHandler(
+      () => new HttpResponse(null, { status: 204 })
     )
     mockedDeleteApiV1BetaGroupsByName.override(() => '')
     mockedGetApiV1BetaDiscoveryClients.override(() => ({ clients: [] }))
