@@ -83,14 +83,9 @@ jobs:
           sm-client-cert-password: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
           sm-code-signing-cert-sha1-hash: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
 
-      - name: Install Flatpak tool-chain (Linux only)
+      - name: Setup Flatpak (Linux only)
+        uses: ./.github/actions/setup-flatpak
         if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          # flatpak itself isn’t strictly required to *build*, but it’s good to have.
-          sudo apt-get install -y --no-install-recommends \
-               flatpak flatpak-builder elfutils
-          flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
       - name: Build and Publish to GitHub Release
         run: pnpm run publish

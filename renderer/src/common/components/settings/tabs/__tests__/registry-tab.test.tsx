@@ -1,11 +1,13 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi } from 'vitest'
+import { HttpResponse } from 'msw'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RegistryTab } from '../../registry/registry-tab'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
 import { recordRequests } from '@/common/mocks/node'
 import { mockedPutApiV1BetaRegistryByName } from '@/common/mocks/fixtures/registry_name/put'
+import { mockedGetApiV1BetaRegistryByName } from '@/common/mocks/fixtures/registry_name/get'
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -435,5 +437,92 @@ describe('RegistryTab', () => {
         req.method === 'PUT' && req.pathname === '/api/v1beta/registry/default'
     )
     expect(putRequests).toHaveLength(0)
+  })
+
+  it('shows error message when GET API returns 500', async () => {
+    mockedGetApiV1BetaRegistryByName.overrideHandler(() =>
+      HttpResponse.json({ error: 'Internal server error' }, { status: 500 })
+    )
+
+    renderWithProviders(<RegistryTab />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Save' })).toBeVisible()
+    })
+
+    // Select a type that shows the source field to see the error message
+    await userEvent.click(screen.getByRole('combobox'))
+    await userEvent.click(
+      screen.getByRole('option', { name: 'Registry Server API' })
+    )
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          'Failed to load registry configuration. The registry source may be misconfigured or unavailable.'
+        )
+      ).toBeVisible()
+    })
+  })
+
+  it('populates form with existing registry data from API', async () => {
+    mockedGetApiV1BetaRegistryByName.override((data) => ({
+      ...data,
+      type: 'api',
+      source: 'http://localhost:8080/api/registry',
+    }))
+
+    renderWithProviders(<RegistryTab />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('combobox')).toHaveTextContent(
+        'Registry Server API'
+      )
+    })
+
+    const apiUrlInput = screen.getByLabelText(/Registry Server API URL/i)
+    expect(apiUrlInput).toHaveValue('http://localhost:8080/api/registry')
+  })
+
+  it('updates cache with correct type mapping after mutation', async () => {
+    const apiUrl = 'http://localhost:8080/api/registry'
+
+    mockedPutApiV1BetaRegistryByName.override(() => ({
+      message: 'Registry updated successfully',
+      type: 'api',
+      source: apiUrl,
+    }))
+
+    renderWithProviders(<RegistryTab />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Save' })).toBeVisible()
+    })
+
+    // Change to API URL type
+    await userEvent.click(screen.getByRole('combobox'))
+    await userEvent.click(
+      screen.getByRole('option', { name: 'Registry Server API' })
+    )
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Registry Server API URL/i)).toBeVisible()
+    })
+
+    const apiUrlInput = screen.getByLabelText(/Registry Server API URL/i)
+    await userEvent.type(apiUrlInput, apiUrl)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Registry Server API URL/i)).toHaveValue(
+        apiUrl
+      )
+    })
+
+    // Verify the select still shows the correct type
+    expect(screen.getByRole('combobox')).toHaveTextContent(
+      'Registry Server API'
+    )
   })
 })

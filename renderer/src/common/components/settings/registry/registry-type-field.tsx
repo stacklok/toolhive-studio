@@ -50,8 +50,6 @@ export function RegistryTypeField({
               } else {
                 form.setValue('source', '')
               }
-
-              form.trigger('source')
             }}
             value={field.value}
           >

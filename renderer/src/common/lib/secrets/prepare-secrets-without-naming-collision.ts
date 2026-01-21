@@ -1,6 +1,6 @@
 import type { V1ListSecretsResponse } from '@api/types.gen'
 import { SECRET_NAME_REGEX } from '../../../features/registry-servers/lib/secret-name-regex'
-import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
+import type { SecretFieldValue, PreparedSecret } from '@/common/types/secrets'
 
 /**
  * A utility function to update the keys used in the form schema to prevent any
@@ -17,7 +17,7 @@ export function prepareSecretsWithoutNamingCollision(
    * NOTE: For simplicity, we are expecting that any undefined secrets are
    * already filtered out by this stage
    */
-  secrets: DefinedSecret[],
+  secrets: SecretFieldValue[],
   fetchedSecrets: V1ListSecretsResponse
 ): PreparedSecret[] {
   // A map is the most efficient way to check for existing keys
