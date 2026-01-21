@@ -15,4 +15,4 @@ export const mockedGetApiV1BetaSecretsDefaultKeys = AutoAPIMock<
     { key: 'Slack' },
     { key: 'Jira' },
   ],
-})
+}).scenario('empty', (mock) => mock.override(() => ({ keys: [] })))

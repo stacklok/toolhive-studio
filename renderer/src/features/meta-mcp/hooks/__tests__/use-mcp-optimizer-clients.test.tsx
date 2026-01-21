@@ -39,7 +39,7 @@ describe('useMcpOptimizerClients', () => {
       ],
     }))
 
-    mockedPostApiV1BetaClientsRegister.override(() => [])
+    mockedPostApiV1BetaClientsRegister.activateScenario('empty')
 
     server.use(
       http.post(mswEndpoint('/api/v1beta/clients/unregister'), () =>
@@ -146,7 +146,7 @@ describe('useMcpOptimizerClients', () => {
       ],
     }))
 
-    mockedPostApiV1BetaClientsRegister.override(() => [])
+    mockedPostApiV1BetaClientsRegister.activateScenario('empty')
 
     server.use(
       http.post(mswEndpoint('/api/v1beta/clients/unregister'), () =>

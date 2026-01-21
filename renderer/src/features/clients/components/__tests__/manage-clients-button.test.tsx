@@ -73,7 +73,7 @@ describe('ManageClientsButton – BDD flows', () => {
       ],
     }))
 
-    mockedPostApiV1BetaClientsRegister.override(() => [])
+    mockedPostApiV1BetaClientsRegister.activateScenario('empty')
 
     mockedGetApiV1BetaClients.override(() => [])
 
@@ -150,7 +150,7 @@ describe('ManageClientsButton – BDD flows', () => {
       ],
     }))
 
-    mockedPostApiV1BetaClientsRegister.override(() => [])
+    mockedPostApiV1BetaClientsRegister.activateScenario('empty')
 
     // Simulate backend returning clients with empty groups
     mockedGetApiV1BetaClients.override(() => [
@@ -225,7 +225,7 @@ describe('ManageClientsButton – BDD flows', () => {
       ],
     }))
 
-    mockedPostApiV1BetaClientsRegister.override(() => [])
+    mockedPostApiV1BetaClientsRegister.activateScenario('empty')
 
     const rec = recordRequests()
 
@@ -281,7 +281,7 @@ describe('ManageClientsButton – BDD flows', () => {
       ],
     }))
 
-    mockedPostApiV1BetaClientsRegister.override(() => [])
+    mockedPostApiV1BetaClientsRegister.activateScenario('empty')
 
     mockedGetApiV1BetaClients.override(() => [
       { name: 'vscode', groups: ['default'] },
@@ -433,7 +433,7 @@ describe('ManageClientsButton – BDD flows', () => {
       ],
     }))
 
-    mockedPostApiV1BetaClientsRegister.override(() => [])
+    mockedPostApiV1BetaClientsRegister.activateScenario('empty')
 
     mockedGetApiV1BetaClients.override(() => [
       { name: 'vscode', groups: ['default'] },

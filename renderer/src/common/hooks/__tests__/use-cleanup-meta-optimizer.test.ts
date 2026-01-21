@@ -123,13 +123,13 @@ describe('useCleanupMetaOptimizer', () => {
       },
     }))
 
-    mockedPostApiV1BetaClientsRegister.override(() => [])
+    mockedPostApiV1BetaClientsRegister.activateScenario('empty')
     // DELETE /clients/:name/groups/:group is a 204 with no body in the API.
     mockedDeleteApiV1BetaClientsByNameGroupsByGroup.overrideHandler(
       () => new HttpResponse(null, { status: 204 })
     )
     mockedDeleteApiV1BetaGroupsByName.override(() => '')
-    mockedGetApiV1BetaDiscoveryClients.override(() => ({ clients: [] }))
+    mockedGetApiV1BetaDiscoveryClients.activateScenario('empty')
 
     const { result } = renderHook(() => useCleanupMetaOptimizer(), {
       wrapper: createWrapper(),
