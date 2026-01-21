@@ -2,8 +2,6 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { Error as ErrorComponent } from '../index'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { http, HttpResponse } from 'msw'
-import { server } from '../../../mocks/node'
 
 vi.mock('../../layout/top-nav/minimal', () => ({
   TopNavMinimal: () => {
@@ -35,13 +33,6 @@ describe('Error', () => {
       },
     })
     vi.clearAllMocks()
-
-    // Mock container-engines endpoint to avoid triggering ConnectionRefusedError
-    server.use(
-      http.get('*/container-engines', () => {
-        return HttpResponse.json({ available: true })
-      })
-    )
   })
 
   it('renders <KeyringError /> when error contains "OS keyring is not available" and platform is Linux', () => {
