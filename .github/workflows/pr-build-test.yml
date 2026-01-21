@@ -36,26 +36,23 @@ jobs:
               core.info('🔐 Windows signing enabled via --sign-windows flag');
             }
 
-      - name: Check org membership
+      - name: Check write permission
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
           script: |
             const commenter = context.payload.comment.user.login;
-            const org = 'stacklok';
+            const { data: permissionLevel } = await github.rest.repos.getCollaboratorPermissionLevel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              username: commenter
+            });
 
-            try {
-              await github.rest.orgs.checkMembershipForUser({
-                org: org,
-                username: commenter
-              });
-              core.info(`✅ ${commenter} is a member of ${org}`);
-            } catch (error) {
-              if (error.status === 404) {
-                core.setFailed(`❌ ${commenter} is not a member of the ${org} organization. Only org members can trigger builds.`);
-              } else {
-                core.setFailed(`Failed to check org membership: ${error.message}`);
-              }
+            const allowed = ['admin', 'write', 'maintain'].includes(permissionLevel.permission);
+            if (!allowed) {
+              core.setFailed(`❌ ${commenter} does not have write access. Only collaborators with write permission can trigger builds.`);
+              return;
             }
+            core.info(`✅ ${commenter} has ${permissionLevel.permission} permission`);
 
       - name: React to comment
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
