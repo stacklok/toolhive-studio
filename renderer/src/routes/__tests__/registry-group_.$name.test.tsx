@@ -50,15 +50,15 @@ import {
   waitForElementToBeRemoved,
 } from '@testing-library/react'
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { http, HttpResponse } from 'msw'
 import { RegistryGroupDetail } from '@/routes/(registry)/registry-group_.$name'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
-import { server, recordRequests } from '@/common/mocks/node'
+import { recordRequests } from '@/common/mocks/node'
 import userEvent from '@testing-library/user-event'
-import type { V1GetRegistryResponse } from '@api/types.gen'
 import { toast } from 'sonner'
 import { mockedGetApiV1BetaWorkloads } from '@/common/mocks/fixtures/workloads/get'
+import { mockedGetApiV1BetaRegistryByName } from '@/common/mocks/fixtures/registry_name/get'
+import { mockedGetApiV1BetaDiscoveryClients } from '@/common/mocks/fixtures/discovery_clients/get'
 
 const mockUseParams = vi.fn(() => ({ name: 'dev-toolkit' }))
 
@@ -177,7 +177,7 @@ describe('Registry Group Detail Route', () => {
   it('renders a different group with multiple servers (proves component is dynamic)', async () => {
     mockUseParams.mockReturnValue({ name: 'ai-tools' })
 
-    const customRegistry: V1GetRegistryResponse = {
+    mockedGetApiV1BetaRegistryByName.override(() => ({
       registry: {
         servers: {},
         groups: [
@@ -243,13 +243,7 @@ describe('Registry Group Detail Route', () => {
           },
         ],
       },
-    }
-
-    server.use(
-      http.get('*/api/v1beta/registry/:name', () => {
-        return HttpResponse.json(customRegistry)
-      })
-    )
+    }))
 
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
@@ -287,7 +281,7 @@ describe('Registry Group Detail Route', () => {
 
     mockUseParams.mockReturnValue({ name: 'two-server-group' })
 
-    const twoServerRegistry: V1GetRegistryResponse = {
+    mockedGetApiV1BetaRegistryByName.override(() => ({
       registry: {
         servers: {},
         groups: [
@@ -338,41 +332,17 @@ describe('Registry Group Detail Route', () => {
           },
         ],
       },
-    }
+    }))
 
-    server.use(
-      http.get('*/api/v1beta/registry/:name', () => {
-        return HttpResponse.json(twoServerRegistry)
-      }),
-      http.post('*/api/v1beta/groups', async ({ request }) => {
-        const body = (await request.json()) as { name: string }
-        return HttpResponse.json({ name: body.name })
-      }),
-      http.post('*/api/v1beta/workloads', async ({ request }) => {
-        const body = (await request.json()) as { name: string; group: string }
-        return HttpResponse.json({
-          name: body.name,
-          group: body.group,
-          status: 'running',
-        })
-      }),
-      http.get('*/api/v1beta/workloads/:name/status', () => {
-        return HttpResponse.json({
-          status: 'running',
-        })
-      }),
-      http.get('*/api/v1beta/discovery/clients', () => {
-        return HttpResponse.json({
-          clients: [
-            {
-              client_type: 'claude-code',
-              installed: true,
-              registered: true,
-            },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaDiscoveryClients.override(() => ({
+      clients: [
+        {
+          client_type: 'claude-code',
+          installed: true,
+          registered: true,
+        },
+      ],
+    }))
 
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
@@ -502,7 +472,7 @@ describe('Registry Group Detail Route', () => {
       ),
     }))
 
-    const multiServerRegistry: V1GetRegistryResponse = {
+    mockedGetApiV1BetaRegistryByName.override(() => ({
       registry: {
         servers: {},
         groups: [
@@ -553,13 +523,7 @@ describe('Registry Group Detail Route', () => {
           },
         ],
       },
-    }
-
-    server.use(
-      http.get('*/api/v1beta/registry/:name', () => {
-        return HttpResponse.json(multiServerRegistry)
-      })
-    )
+    }))
 
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
@@ -606,7 +570,7 @@ describe('Registry Group Detail Route', () => {
   it('shows alert banner when group has no servers and hides the button', async () => {
     mockUseParams.mockReturnValue({ name: 'empty-group' })
 
-    const emptyGroupRegistry: V1GetRegistryResponse = {
+    mockedGetApiV1BetaRegistryByName.override(() => ({
       registry: {
         servers: {},
         groups: [
@@ -618,13 +582,7 @@ describe('Registry Group Detail Route', () => {
           },
         ],
       },
-    }
-
-    server.use(
-      http.get('*/api/v1beta/registry/:name', () => {
-        return HttpResponse.json(emptyGroupRegistry)
-      })
-    )
+    }))
 
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
