@@ -157,6 +157,10 @@ export const customHandlers = [
     }
   }),
 
+  http.post(mswEndpoint('/api/v1beta/clients/unregister'), () =>
+    HttpResponse.json(null, { status: 204 })
+  ),
+
   http.delete(mswEndpoint('/api/v1beta/clients/:name'), ({ params }) => {
     const { name } = params
 

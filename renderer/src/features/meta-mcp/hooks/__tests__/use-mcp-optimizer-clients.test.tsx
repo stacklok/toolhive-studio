@@ -1,9 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useMcpOptimizerClients } from '../use-mcp-optimizer-clients'
-import { server, recordRequests } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
-import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { recordRequests } from '@/common/mocks/node'
 import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'
 import { mockedPostApiV1BetaClientsRegister } from '@/common/mocks/fixtures/clients_register/post'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
@@ -40,12 +38,6 @@ describe('useMcpOptimizerClients', () => {
     }))
 
     mockedPostApiV1BetaClientsRegister.activateScenario('empty')
-
-    server.use(
-      http.post(mswEndpoint('/api/v1beta/clients/unregister'), () =>
-        HttpResponse.json(null, { status: 204 })
-      )
-    )
 
     const rec = recordRequests()
 
@@ -93,12 +85,6 @@ describe('useMcpOptimizerClients', () => {
         },
       ],
     }))
-
-    server.use(
-      http.post(mswEndpoint('/api/v1beta/clients/unregister'), () =>
-        HttpResponse.json(null, { status: 204 })
-      )
-    )
 
     const rec = recordRequests()
 
@@ -148,12 +134,6 @@ describe('useMcpOptimizerClients', () => {
 
     mockedPostApiV1BetaClientsRegister.activateScenario('empty')
 
-    server.use(
-      http.post(mswEndpoint('/api/v1beta/clients/unregister'), () =>
-        HttpResponse.json(null, { status: 204 })
-      )
-    )
-
     const rec = recordRequests()
 
     const { result } = renderHook(() => useMcpOptimizerClients(), { wrapper })
@@ -195,25 +175,19 @@ describe('useMcpOptimizerClients', () => {
   })
 
   it('remove clients from source group even when already synced', async () => {
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [
-            {
-              name: 'test',
-              registered_clients: ['cursor', 'vscode'],
-            },
-            {
-              name: MCP_OPTIMIZER_GROUP_NAME,
-              registered_clients: ['cursor', 'vscode'],
-            },
-          ],
-        })
-      ),
-      http.post(mswEndpoint('/api/v1beta/clients/unregister'), () =>
-        HttpResponse.json(null, { status: 204 })
-      )
-    )
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        {
+          name: 'test',
+          registered_clients: ['cursor', 'vscode'],
+        },
+        {
+          name: MCP_OPTIMIZER_GROUP_NAME,
+          registered_clients: ['cursor', 'vscode'],
+        },
+      ],
+    }))
 
     const rec = recordRequests()
 
@@ -243,28 +217,21 @@ describe('useMcpOptimizerClients', () => {
   })
 
   it('sync all clients when optimizer group is empty', async () => {
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [
-            {
-              name: 'test',
-              registered_clients: ['cursor', 'vscode'],
-            },
-            {
-              name: MCP_OPTIMIZER_GROUP_NAME,
-              registered_clients: [],
-            },
-          ],
-        })
-      ),
-      http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
-        HttpResponse.json([])
-      ),
-      http.post(mswEndpoint('/api/v1beta/clients/unregister'), () =>
-        HttpResponse.json(null, { status: 204 })
-      )
-    )
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        {
+          name: 'test',
+          registered_clients: ['cursor', 'vscode'],
+        },
+        {
+          name: MCP_OPTIMIZER_GROUP_NAME,
+          registered_clients: [],
+        },
+      ],
+    }))
+
+    mockedPostApiV1BetaClientsRegister.activateScenario('empty')
 
     const rec = recordRequests()
 
@@ -298,18 +265,15 @@ describe('useMcpOptimizerClients', () => {
   })
 
   it('should handle non-existent group gracefully', async () => {
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [
-            {
-              name: MCP_OPTIMIZER_GROUP_NAME,
-              registered_clients: ['cursor'],
-            },
-          ],
-        })
-      )
-    )
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        {
+          name: MCP_OPTIMIZER_GROUP_NAME,
+          registered_clients: ['cursor'],
+        },
+      ],
+    }))
 
     const rec = recordRequests()
 
@@ -335,25 +299,21 @@ describe('useMcpOptimizerClients', () => {
   })
 
   it('should restore clients from optimizer group to target group', async () => {
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [
-            {
-              name: MCP_OPTIMIZER_GROUP_NAME,
-              registered_clients: ['cursor', 'vscode', 'windsurf'],
-            },
-            {
-              name: 'production',
-              registered_clients: [],
-            },
-          ],
-        })
-      ),
-      http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
-        HttpResponse.json([])
-      )
-    )
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        {
+          name: MCP_OPTIMIZER_GROUP_NAME,
+          registered_clients: ['cursor', 'vscode', 'windsurf'],
+        },
+        {
+          name: 'production',
+          registered_clients: [],
+        },
+      ],
+    }))
+
+    mockedPostApiV1BetaClientsRegister.activateScenario('empty')
 
     const rec = recordRequests()
 
@@ -377,22 +337,19 @@ describe('useMcpOptimizerClients', () => {
   })
 
   it('should handle empty optimizer group when restoring clients', async () => {
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [
-            {
-              name: MCP_OPTIMIZER_GROUP_NAME,
-              registered_clients: [],
-            },
-            {
-              name: 'production',
-              registered_clients: [],
-            },
-          ],
-        })
-      )
-    )
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        {
+          name: MCP_OPTIMIZER_GROUP_NAME,
+          registered_clients: [],
+        },
+        {
+          name: 'production',
+          registered_clients: [],
+        },
+      ],
+    }))
 
     const rec = recordRequests()
 
@@ -412,32 +369,25 @@ describe('useMcpOptimizerClients', () => {
   })
 
   it('should restore clients to previous allowed group when switching groups', async () => {
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [
-            {
-              name: 'staging',
-              registered_clients: ['cursor', 'vscode'],
-            },
-            {
-              name: 'production',
-              registered_clients: [],
-            },
-            {
-              name: MCP_OPTIMIZER_GROUP_NAME,
-              registered_clients: ['cursor', 'vscode'],
-            },
-          ],
-        })
-      ),
-      http.post(mswEndpoint('/api/v1beta/clients/register'), () =>
-        HttpResponse.json([])
-      ),
-      http.post(mswEndpoint('/api/v1beta/clients/unregister'), () =>
-        HttpResponse.json(null, { status: 204 })
-      )
-    )
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        {
+          name: 'staging',
+          registered_clients: ['cursor', 'vscode'],
+        },
+        {
+          name: 'production',
+          registered_clients: [],
+        },
+        {
+          name: MCP_OPTIMIZER_GROUP_NAME,
+          registered_clients: ['cursor', 'vscode'],
+        },
+      ],
+    }))
+
+    mockedPostApiV1BetaClientsRegister.activateScenario('empty')
 
     const rec = recordRequests()
 
