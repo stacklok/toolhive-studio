@@ -7,7 +7,7 @@ export type PreparedSecret = {
   value: string
 }
 
-export type DefinedSecret = {
+export type SecretFieldValue = {
   name: string
   value: {
     secret: string

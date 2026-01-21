@@ -8,7 +8,7 @@ import type {
 } from '@api/types.gen'
 import type { Options } from '@api/client'
 import { prepareSecretsWithoutNamingCollision } from '@/common/lib/secrets/prepare-secrets-without-naming-collision'
-import type { DefinedSecret, PreparedSecret } from '@/common/types/secrets'
+import type { SecretFieldValue, PreparedSecret } from '@/common/types/secrets'
 import type { FormSchemaLocalMcp } from '@/features/mcp-servers/lib/form-schema-local-mcp'
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
 import type { FormSchemaRegistryMcp } from '@/features/registry-servers/lib/form-schema-registry-mcp'
@@ -82,13 +82,13 @@ export async function saveMCPSecrets(
 /**
  * A utility function to filter out secrets that are not defined.
  */
-export function getMCPDefinedSecrets(
+export function getMCPSecretFieldValues(
   secrets:
     | FormSchemaRemoteMcp['secrets']
     | FormSchemaLocalMcp['secrets']
     | FormSchemaRegistryMcp['secrets']
-): DefinedSecret[] {
-  return secrets.reduce<DefinedSecret[]>((acc, { name, value }) => {
+): SecretFieldValue[] {
+  return secrets.reduce<SecretFieldValue[]>((acc, { name, value }) => {
     if (name && value.secret) {
       acc.push({
         name,
@@ -107,13 +107,13 @@ export function getMCPDefinedSecrets(
  * existing secrets (from the registry). We need this separation to know which
  * secrets need to be encrypted and stored before creating the server workload.
  */
-export function groupMCPDefinedSecrets(secrets: DefinedSecret[]): {
-  newSecrets: DefinedSecret[]
-  existingSecrets: DefinedSecret[]
+export function groupMCPSecretFieldValues(secrets: SecretFieldValue[]): {
+  newSecrets: SecretFieldValue[]
+  existingSecrets: SecretFieldValue[]
 } {
   return secrets.reduce<{
-    newSecrets: DefinedSecret[]
-    existingSecrets: DefinedSecret[]
+    newSecrets: SecretFieldValue[]
+    existingSecrets: SecretFieldValue[]
   }>(
     (acc, secret) => {
       if (secret.value.isFromStore) {
@@ -137,11 +137,11 @@ interface UseMCPSecretsParams {
 
 interface MCPSecretsResult {
   newlyCreatedSecrets: SecretsSecretParameter[]
-  existingSecrets: DefinedSecret[]
+  existingSecrets: SecretFieldValue[]
 }
 
 interface UseMCPSecretsReturn {
-  handleSecrets: (secrets: DefinedSecret[]) => Promise<MCPSecretsResult>
+  handleSecrets: (secrets: SecretFieldValue[]) => Promise<MCPSecretsResult>
   isPendingSecrets: boolean
   isErrorSecrets: boolean
 }
@@ -183,8 +183,8 @@ export function useMCPSecrets({
       // We need to know which secrets are new (not from the registry) and which are
       // existing (already stored). This helps us handle the encryption and storage
       // of secrets correctly.
-      const { existingSecrets, newSecrets } = groupMCPDefinedSecrets(
-        getMCPDefinedSecrets(secrets)
+      const { existingSecrets, newSecrets } = groupMCPSecretFieldValues(
+        getMCPSecretFieldValues(secrets)
       )
 
       // Step 2: Fetch existing secrets & handle naming collisions
