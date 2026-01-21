@@ -155,10 +155,6 @@ function autoGenerateHandlers() {
             // behavior matches pre-existing fixtures.
           }
 
-          if (successStatus === '204') {
-            return new HttpResponse(null, { status: 204 })
-          }
-
           const relPath = getFixtureRelPath(safePath, method)
           const opType = successStatus
             ? opResponseTypeName(method, rawPath)
@@ -177,9 +173,13 @@ function autoGenerateHandlers() {
               const mod = (await import(relPath)) as Record<string, unknown>
               fixture = mod[mockName] ?? mod.default ?? mod
             }
-          } catch (e) {
+          } catch {
+            // No fixture found - for 204 endpoints, return default 204 response
+            if (successStatus === '204') {
+              return new HttpResponse(null, { status: 204 })
+            }
             return new HttpResponse(
-              `[auto-mocker] Missing mock fixture: ${relPath}. ${e instanceof Error ? e.message : ''}`,
+              `[auto-mocker] Missing mock fixture: ${relPath}.`,
               { status: 500 }
             )
           }
@@ -193,6 +193,11 @@ function autoGenerateHandlers() {
             return (fixture as AutoAPIMockInstance<unknown>).generatedHandler(
               info
             )
+          }
+
+          // For 204 endpoints without AutoAPIMock fixture, return default 204
+          if (successStatus === '204') {
+            return new HttpResponse(null, { status: 204 })
           }
 
           // Old format: plain data object (backward compatibility)

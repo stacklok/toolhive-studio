@@ -1,6 +1,6 @@
 ---
 name: skill-editor
-description: Edit, update, or modify existing AI agent skills. Use when asked to change a skill, update skill instructions, fix a skill, or improve an existing agent capability.
+description: REQUIRED for editing any skill file. Ensures changes sync to Claude, Codex, and Cursor. Never edit .claude/skills/ files directly - always use this skill.
 ---
 
 # Skill Editor

@@ -5,9 +5,9 @@ import { HttpResponse } from 'msw'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RegistryTab } from '../../registry/registry-tab'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
-import { recordRequests, server } from '@/common/mocks/node'
-import { mswEndpoint } from '@/common/mocks/customHandlers'
-import { http } from 'msw'
+import { recordRequests } from '@/common/mocks/node'
+import { mockedPutApiV1BetaRegistryByName } from '@/common/mocks/fixtures/registry_name/put'
+import { mockedGetApiV1BetaRegistryByName } from '@/common/mocks/fixtures/registry_name/get'
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -51,14 +51,10 @@ describe('RegistryTab', () => {
     const rec = recordRequests()
     const url = 'https://domain.com/registry.json'
 
-    server.use(
-      http.put(mswEndpoint('/api/v1beta/registry/:name'), () =>
-        HttpResponse.json({
-          message: 'Registry updated successfully',
-          type: 'remote',
-        })
-      )
-    )
+    mockedPutApiV1BetaRegistryByName.override(() => ({
+      message: 'Registry updated successfully',
+      type: 'remote',
+    }))
 
     renderWithProviders(<RegistryTab />)
 
@@ -177,14 +173,10 @@ describe('RegistryTab', () => {
   it('handles local registry configuration', async () => {
     const rec = recordRequests()
 
-    server.use(
-      http.put(mswEndpoint('/api/v1beta/registry/:name'), () =>
-        HttpResponse.json({
-          message: 'Registry updated successfully',
-          type: 'local',
-        })
-      )
-    )
+    mockedPutApiV1BetaRegistryByName.override(() => ({
+      message: 'Registry updated successfully',
+      type: 'local',
+    }))
 
     renderWithProviders(<RegistryTab />)
 
@@ -328,14 +320,10 @@ describe('RegistryTab', () => {
     const rec = recordRequests()
     const apiUrl = 'http://localhost:8080/api/registry'
 
-    server.use(
-      http.put(mswEndpoint('/api/v1beta/registry/:name'), () =>
-        HttpResponse.json({
-          message: 'Registry updated successfully',
-          type: 'api',
-        })
-      )
-    )
+    mockedPutApiV1BetaRegistryByName.override(() => ({
+      message: 'Registry updated successfully',
+      type: 'api',
+    }))
 
     renderWithProviders(<RegistryTab />)
 
@@ -452,10 +440,8 @@ describe('RegistryTab', () => {
   })
 
   it('shows error message when GET API returns 500', async () => {
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/registry/:name'), () =>
-        HttpResponse.json({ error: 'Internal server error' }, { status: 500 })
-      )
+    mockedGetApiV1BetaRegistryByName.overrideHandler(() =>
+      HttpResponse.json({ error: 'Internal server error' }, { status: 500 })
     )
 
     renderWithProviders(<RegistryTab />)
@@ -480,14 +466,11 @@ describe('RegistryTab', () => {
   })
 
   it('populates form with existing registry data from API', async () => {
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/registry/:name'), () =>
-        HttpResponse.json({
-          type: 'api',
-          source: 'http://localhost:8080/api/registry',
-        })
-      )
-    )
+    mockedGetApiV1BetaRegistryByName.override((data) => ({
+      ...data,
+      type: 'api',
+      source: 'http://localhost:8080/api/registry',
+    }))
 
     renderWithProviders(<RegistryTab />)
 
@@ -504,15 +487,11 @@ describe('RegistryTab', () => {
   it('updates cache with correct type mapping after mutation', async () => {
     const apiUrl = 'http://localhost:8080/api/registry'
 
-    server.use(
-      http.put(mswEndpoint('/api/v1beta/registry/:name'), () =>
-        HttpResponse.json({
-          message: 'Registry updated successfully',
-          type: 'api',
-          source: apiUrl,
-        })
-      )
-    )
+    mockedPutApiV1BetaRegistryByName.override(() => ({
+      message: 'Registry updated successfully',
+      type: 'api',
+      source: apiUrl,
+    }))
 
     renderWithProviders(<RegistryTab />)
 

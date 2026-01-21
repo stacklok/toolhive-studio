@@ -2,8 +2,8 @@ import { render, screen, cleanup, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { StartingToolHive } from '../starting-toolhive'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { http, HttpResponse } from 'msw'
-import { server } from '../../mocks/node'
+import { HttpResponse } from 'msw'
+import { mockedGetHealth } from '../../mocks/fixtures/health/get'
 
 const mockNavigate = vi.fn()
 
@@ -39,6 +39,10 @@ describe('StartingToolHive', () => {
     })
     vi.useFakeTimers()
     mockNavigate.mockClear()
+    // Health check is a 204 with no body; keep tests aligned with API semantics.
+    mockedGetHealth.overrideHandler(
+      () => new HttpResponse(null, { status: 204 })
+    )
   })
 
   afterEach(() => {
@@ -47,7 +51,6 @@ describe('StartingToolHive', () => {
   })
 
   it('should display loading state with loader', () => {
-    // MSW handler is already configured in customHandlers to return 204
     render(
       <QueryClientProvider client={queryClient}>
         <StartingToolHive />
@@ -63,11 +66,7 @@ describe('StartingToolHive', () => {
   })
 
   it('should throw error when health check fails', async () => {
-    server.use(
-      http.get('*/health', () => {
-        return HttpResponse.error()
-      })
-    )
+    mockedGetHealth.overrideHandler(() => HttpResponse.error())
 
     render(
       <QueryClientProvider client={queryClient}>

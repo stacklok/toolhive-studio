@@ -3,8 +3,6 @@ import type json from '../../../../../api/openapi.json'
 import { getWorkloadByName, getMockLogs } from './fixtures/servers'
 import type { V1UpdateRegistryRequest } from '../../../../../api/generated/types.gen'
 import { registryServerFixture } from './fixtures/registry_server'
-import { MOCK_REGISTRY_RESPONSE } from './fixtures/registry'
-import { DEFAULT_REGISTRY } from './fixtures/default_registry'
 
 /**
  * OpenAPI spec uses curly braces to denote path parameters
@@ -37,12 +35,6 @@ export function mswEndpoint(endpoint: Endpoint) {
 }
 
 export const customHandlers = [
-  http.get(mswEndpoint('/health'), () => {
-    return new HttpResponse(null, {
-      status: 204,
-    })
-  }),
-
   http.delete(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
     const { name } = params
 
@@ -200,14 +192,6 @@ export const customHandlers = [
       return new HttpResponse(null, { status: 204 })
     }
   ),
-
-  http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-    return HttpResponse.json({ servers: MOCK_REGISTRY_RESPONSE })
-  }),
-
-  http.get(mswEndpoint('/api/v1beta/registry/:name'), async () => {
-    return HttpResponse.json(DEFAULT_REGISTRY)
-  }),
 
   http.put(mswEndpoint('/api/v1beta/registry/:name'), async ({ request }) => {
     const { local_path, url } =

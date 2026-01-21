@@ -3,9 +3,11 @@ import { beforeEach, it, expect, vi } from 'vitest'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { McpOptimizerRoute } from '../mcp-optimizer'
 import { renderRoute } from '@/common/test/render-route'
-import { server, recordRequests } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
-import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { recordRequests } from '@/common/mocks/node'
+import { HttpResponse } from 'msw'
+import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'
+import { mockedGetApiV1BetaWorkloads } from '@/common/mocks/fixtures/workloads/get'
+import { mockedGetApiV1BetaWorkloadsByName } from '@/common/mocks/fixtures/workloads_name/get'
 import {
   MCP_OPTIMIZER_GROUP_NAME,
   META_MCP_SERVER_NAME,
@@ -17,22 +19,34 @@ const router = createTestRouter(McpOptimizerRoute, '/mcp-optimizer')
 beforeEach(() => {
   vi.clearAllMocks()
 
-  server.use(
-    http.get(mswEndpoint('/api/v1beta/groups'), () =>
-      HttpResponse.json({
-        groups: [{ name: 'default' }, { name: 'production' }],
-      })
-    ),
-    http.get(mswEndpoint('/api/v1beta/workloads'), () =>
-      HttpResponse.json({
-        workloads: [
-          { name: 'server1', group: 'default', status: 'running' },
-          { name: 'server2', group: 'default', status: 'running' },
-          { name: 'server3', group: 'production', status: 'running' },
-        ],
-      })
-    )
-  )
+  mockedGetApiV1BetaGroups.override((data) => {
+    const [first, second] = data.groups ?? []
+    if (!first || !second) {
+      return data
+    }
+    return {
+      ...data,
+      groups: [
+        { ...first, name: 'default' },
+        { ...second, name: 'production' },
+      ],
+    }
+  })
+
+  mockedGetApiV1BetaWorkloads.override((data) => {
+    const [first, second, third] = data.workloads ?? []
+    if (!first || !second || !third) {
+      return data
+    }
+    return {
+      ...data,
+      workloads: [
+        { ...first, name: 'server1', group: 'default', status: 'running' },
+        { ...second, name: 'server2', group: 'default', status: 'running' },
+        { ...third, name: 'server3', group: 'production', status: 'running' },
+      ],
+    }
+  })
 })
 
 it('renders the MCP Optimizer page title', async () => {
@@ -46,16 +60,13 @@ it('renders the MCP Optimizer page title', async () => {
 })
 
 it('renders the Advanced dropdown menu button', async () => {
-  server.use(
-    http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-      if (params.name === META_MCP_SERVER_NAME) {
-        return HttpResponse.json({
-          name: META_MCP_SERVER_NAME,
-          group: MCP_OPTIMIZER_GROUP_NAME,
-          env_vars: { ALLOWED_GROUPS: 'default' },
-        })
-      }
-      return HttpResponse.json(null, { status: 404 })
+  mockedGetApiV1BetaWorkloadsByName.conditionalOverride(
+    ({ path }) => path?.name === META_MCP_SERVER_NAME,
+    (data) => ({
+      ...data,
+      name: META_MCP_SERVER_NAME,
+      group: MCP_OPTIMIZER_GROUP_NAME,
+      env_vars: { ALLOWED_GROUPS: 'default' },
     })
   )
 
@@ -119,23 +130,21 @@ it('displays server names for each group', async () => {
 })
 
 it('only displays running servers and filters out stopped ones', async () => {
-  server.use(
-    http.get(mswEndpoint('/api/v1beta/groups'), () =>
-      HttpResponse.json({
-        groups: [{ name: 'default' }, { name: 'production' }],
-      })
-    ),
-    http.get(mswEndpoint('/api/v1beta/workloads'), () =>
-      HttpResponse.json({
-        workloads: [
-          { name: 'server1', group: 'default', status: 'running' },
-          { name: 'server2', group: 'default', status: 'stopped' },
-          { name: 'server3', group: 'production', status: 'running' },
-          { name: 'server4', group: 'production', status: 'exited' },
-        ],
-      })
-    )
-  )
+  mockedGetApiV1BetaWorkloads.override((data) => {
+    const [first, second, third, fourth] = data.workloads ?? []
+    if (!first || !second || !third || !fourth) {
+      return data
+    }
+    return {
+      ...data,
+      workloads: [
+        { ...first, name: 'server1', group: 'default', status: 'running' },
+        { ...second, name: 'server2', group: 'default', status: 'stopped' },
+        { ...third, name: 'server3', group: 'production', status: 'running' },
+        { ...fourth, name: 'server4', group: 'production', status: 'stopped' },
+      ],
+    }
+  })
 
   renderRoute(router)
 
@@ -149,30 +158,40 @@ it('only displays running servers and filters out stopped ones', async () => {
 })
 
 it('hides the mcp-optimizer group even when present in fixture data', async () => {
-  server.use(
-    http.get(mswEndpoint('/api/v1beta/groups'), () =>
-      HttpResponse.json({
-        groups: [
-          { name: 'default' },
-          { name: MCP_OPTIMIZER_GROUP_NAME },
-          { name: 'production' },
-        ],
-      })
-    ),
-    http.get(mswEndpoint('/api/v1beta/workloads'), () =>
-      HttpResponse.json({
-        workloads: [
-          { name: 'server1', group: 'default', status: 'running' },
-          {
-            name: 'meta-mcp',
-            group: MCP_OPTIMIZER_GROUP_NAME,
-            status: 'running',
-          },
-          { name: 'server3', group: 'production', status: 'running' },
-        ],
-      })
-    )
-  )
+  mockedGetApiV1BetaGroups.override((data) => {
+    const [first, second, third] = data.groups ?? []
+    if (!first || !second || !third) {
+      return data
+    }
+    return {
+      ...data,
+      groups: [
+        { ...first, name: 'default' },
+        { ...second, name: MCP_OPTIMIZER_GROUP_NAME },
+        { ...third, name: 'production' },
+      ],
+    }
+  })
+
+  mockedGetApiV1BetaWorkloads.override((data) => {
+    const [first, second, third] = data.workloads ?? []
+    if (!first || !second || !third) {
+      return data
+    }
+    return {
+      ...data,
+      workloads: [
+        { ...first, name: 'server1', group: 'default', status: 'running' },
+        {
+          ...second,
+          name: 'meta-mcp',
+          group: MCP_OPTIMIZER_GROUP_NAME,
+          status: 'running',
+        },
+        { ...third, name: 'server3', group: 'production', status: 'running' },
+      ],
+    }
+  })
 
   renderRoute(router)
 
@@ -185,21 +204,13 @@ it('hides the mcp-optimizer group even when present in fixture data', async () =
 })
 
 it('preselects the default group when meta-mcp ALLOWED_GROUPS is set to default', async () => {
-  server.use(
-    http.get(mswEndpoint('/api/v1beta/groups'), () =>
-      HttpResponse.json({
-        groups: [{ name: 'default' }, { name: 'production' }],
-      })
-    ),
-    http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-      if (params.name === META_MCP_SERVER_NAME) {
-        return HttpResponse.json({
-          name: META_MCP_SERVER_NAME,
-          group: MCP_OPTIMIZER_GROUP_NAME,
-          env_vars: { ALLOWED_GROUPS: 'default' },
-        })
-      }
-      return HttpResponse.json(null, { status: 404 })
+  mockedGetApiV1BetaWorkloadsByName.conditionalOverride(
+    ({ path }) => path?.name === META_MCP_SERVER_NAME,
+    (data) => ({
+      ...data,
+      name: META_MCP_SERVER_NAME,
+      group: MCP_OPTIMIZER_GROUP_NAME,
+      env_vars: { ALLOWED_GROUPS: 'default' },
     })
   )
 
@@ -215,21 +226,13 @@ it('preselects the default group when meta-mcp ALLOWED_GROUPS is set to default'
 })
 
 it('preselects the production group when meta-mcp ALLOWED_GROUPS is set to production', async () => {
-  server.use(
-    http.get(mswEndpoint('/api/v1beta/groups'), () =>
-      HttpResponse.json({
-        groups: [{ name: 'default' }, { name: 'production' }],
-      })
-    ),
-    http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-      if (params.name === META_MCP_SERVER_NAME) {
-        return HttpResponse.json({
-          name: META_MCP_SERVER_NAME,
-          group: MCP_OPTIMIZER_GROUP_NAME,
-          env_vars: { ALLOWED_GROUPS: 'production' },
-        })
-      }
-      return HttpResponse.json(null, { status: 404 })
+  mockedGetApiV1BetaWorkloadsByName.conditionalOverride(
+    ({ path }) => path?.name === META_MCP_SERVER_NAME,
+    (data) => ({
+      ...data,
+      name: META_MCP_SERVER_NAME,
+      group: MCP_OPTIMIZER_GROUP_NAME,
+      env_vars: { ALLOWED_GROUPS: 'production' },
     })
   )
 
@@ -245,21 +248,13 @@ it('preselects the production group when meta-mcp ALLOWED_GROUPS is set to produ
 })
 
 it('shows no group selected when meta-mcp ALLOWED_GROUPS is not set', async () => {
-  server.use(
-    http.get(mswEndpoint('/api/v1beta/groups'), () =>
-      HttpResponse.json({
-        groups: [{ name: 'default' }, { name: 'production' }],
-      })
-    ),
-    http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-      if (params.name === META_MCP_SERVER_NAME) {
-        return HttpResponse.json({
-          name: META_MCP_SERVER_NAME,
-          group: MCP_OPTIMIZER_GROUP_NAME,
-          env_vars: {},
-        })
-      }
-      return HttpResponse.json(null, { status: 404 })
+  mockedGetApiV1BetaWorkloadsByName.conditionalOverride(
+    ({ path }) => path?.name === META_MCP_SERVER_NAME,
+    (data) => ({
+      ...data,
+      name: META_MCP_SERVER_NAME,
+      group: MCP_OPTIMIZER_GROUP_NAME,
+      env_vars: {},
     })
   )
 
@@ -275,21 +270,13 @@ it('shows no group selected when meta-mcp ALLOWED_GROUPS is not set', async () =
 })
 
 it('shows no group selected when meta-mcp ALLOWED_GROUPS contains multiple groups', async () => {
-  server.use(
-    http.get(mswEndpoint('/api/v1beta/groups'), () =>
-      HttpResponse.json({
-        groups: [{ name: 'default' }, { name: 'production' }],
-      })
-    ),
-    http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-      if (params.name === META_MCP_SERVER_NAME) {
-        return HttpResponse.json({
-          name: META_MCP_SERVER_NAME,
-          group: MCP_OPTIMIZER_GROUP_NAME,
-          env_vars: { ALLOWED_GROUPS: 'default,production' },
-        })
-      }
-      return HttpResponse.json(null, { status: 404 })
+  mockedGetApiV1BetaWorkloadsByName.conditionalOverride(
+    ({ path }) => path?.name === META_MCP_SERVER_NAME,
+    (data) => ({
+      ...data,
+      name: META_MCP_SERVER_NAME,
+      group: MCP_OPTIMIZER_GROUP_NAME,
+      env_vars: { ALLOWED_GROUPS: 'default,production' },
     })
   )
 
@@ -305,19 +292,13 @@ it('shows no group selected when meta-mcp ALLOWED_GROUPS contains multiple group
 })
 
 it('shows no group selected when meta-mcp workload does not exist', async () => {
-  server.use(
-    http.get(mswEndpoint('/api/v1beta/groups'), () =>
-      HttpResponse.json({
-        groups: [{ name: 'default' }, { name: 'production' }],
-      })
-    ),
-    http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-      if (params.name === META_MCP_SERVER_NAME) {
-        return HttpResponse.json(null, { status: 404 })
-      }
+  mockedGetApiV1BetaWorkloadsByName.overrideHandler((data, info) => {
+    const name = info.params?.name
+    if (name === META_MCP_SERVER_NAME) {
       return HttpResponse.json(null, { status: 404 })
-    })
-  )
+    }
+    return HttpResponse.json(data)
+  })
 
   renderRoute(router)
 
@@ -334,25 +315,20 @@ it('refetches the selected group when navigating back to the page', async () => 
   const rec = recordRequests()
   let callCount = 0
 
-  server.use(
-    http.get(mswEndpoint('/api/v1beta/groups'), () =>
-      HttpResponse.json({
-        groups: [{ name: 'default' }, { name: 'production' }],
+  mockedGetApiV1BetaWorkloadsByName.overrideHandler((data, info) => {
+    const name = info.params?.name
+    if (name === META_MCP_SERVER_NAME) {
+      callCount++
+      const allowedGroups = callCount === 1 ? 'default' : 'production'
+      return HttpResponse.json({
+        ...data,
+        name: META_MCP_SERVER_NAME,
+        group: MCP_OPTIMIZER_GROUP_NAME,
+        env_vars: { ALLOWED_GROUPS: allowedGroups },
       })
-    ),
-    http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-      if (params.name === META_MCP_SERVER_NAME) {
-        callCount++
-        const allowedGroups = callCount === 1 ? 'default' : 'production'
-        return HttpResponse.json({
-          name: META_MCP_SERVER_NAME,
-          group: MCP_OPTIMIZER_GROUP_NAME,
-          env_vars: { ALLOWED_GROUPS: allowedGroups },
-        })
-      }
-      return HttpResponse.json(null, { status: 404 })
-    })
-  )
+    }
+    return HttpResponse.json(data)
+  })
 
   const metaMcpCalls = () =>
     rec.recordedRequests.filter(
@@ -386,16 +362,13 @@ it('refetches the selected group when navigating back to the page', async () => 
 })
 
 it('clicking Meta-MCP logs in Advanced menu navigates to logs page', async () => {
-  server.use(
-    http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-      if (params.name === META_MCP_SERVER_NAME) {
-        return HttpResponse.json({
-          name: META_MCP_SERVER_NAME,
-          group: MCP_OPTIMIZER_GROUP_NAME,
-          env_vars: { ALLOWED_GROUPS: 'default' },
-        })
-      }
-      return HttpResponse.json(null, { status: 404 })
+  mockedGetApiV1BetaWorkloadsByName.conditionalOverride(
+    ({ path }) => path?.name === META_MCP_SERVER_NAME,
+    (data) => ({
+      ...data,
+      name: META_MCP_SERVER_NAME,
+      group: MCP_OPTIMIZER_GROUP_NAME,
+      env_vars: { ALLOWED_GROUPS: 'default' },
     })
   )
 

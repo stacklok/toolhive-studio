@@ -2,9 +2,13 @@ import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { http, HttpResponse } from 'msw'
-import { server, recordRequests } from '@/common/mocks/node'
-import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { HttpResponse } from 'msw'
+import { recordRequests } from '@/common/mocks/node'
+import { mockedGetApiV1BetaWorkloadsByName } from '@/common/mocks/fixtures/workloads_name/get'
+import { mockedPostApiV1BetaWorkloadsByNameEdit } from '@/common/mocks/fixtures/workloads_name_edit/post'
+import { mockedGetApiV1BetaSecretsDefaultKeys } from '@/common/mocks/fixtures/secrets_default_keys/get'
+import { mockedGetApiV1BetaDiscoveryClients } from '@/common/mocks/fixtures/discovery_clients/get'
+import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'
 import { GroupSelectorForm } from '../group-selector-form'
 import {
   META_MCP_SERVER_NAME,
@@ -83,30 +87,15 @@ describe('GroupSelectorForm', () => {
       handleCreateMetaOptimizerWorkload: mockHandleCreateMetaOptimizerWorkload,
     })
 
-    // Default MSW handlers for API endpoints used by useUpdateServer
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-        if (params.name === META_MCP_SERVER_NAME) {
-          return HttpResponse.json(null, { status: 404 })
-        }
-        return HttpResponse.json(null, { status: 404 })
-      }),
-      http.post(mswEndpoint('/api/v1beta/workloads/:name/edit'), () => {
-        return HttpResponse.json({
-          name: META_MCP_SERVER_NAME,
-          status: 'running',
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({ keys: [] })
-      }),
-      http.get(mswEndpoint('/api/v1beta/discovery/clients'), () => {
-        return HttpResponse.json({ clients: [] })
-      }),
-      http.get(mswEndpoint('/api/v1beta/groups'), () => {
-        return HttpResponse.json({ groups: [{ name: 'default' }] })
-      })
+    // Default overrides for API endpoints used by useUpdateServer
+    mockedGetApiV1BetaWorkloadsByName.overrideHandler(() =>
+      HttpResponse.json(null, { status: 404 })
     )
+    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
+    mockedGetApiV1BetaDiscoveryClients.override(() => ({ clients: [] }))
+    mockedGetApiV1BetaGroups.override(() => ({
+      groups: [{ name: 'default', registered_clients: [] }],
+    }))
   })
 
   const renderWithClient = (ui: React.ReactElement) => {
@@ -198,23 +187,13 @@ describe('GroupSelectorForm', () => {
         [ALLOWED_GROUPS_ENV_VAR]: 'old-group',
         OTHER_VAR: 'other_value',
       },
-      networkIsolation: false,
+      network_isolation: false,
       secrets: [],
     }
 
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-        if (params.name === META_MCP_SERVER_NAME) {
-          return HttpResponse.json(mockMetaMcpConfig)
-        }
-        return HttpResponse.json(null, { status: 404 })
-      }),
-      http.post(mswEndpoint('/api/v1beta/workloads/:name/edit'), () => {
-        return HttpResponse.json({
-          name: META_MCP_SERVER_NAME,
-          status: 'running',
-        })
-      })
+    mockedGetApiV1BetaWorkloadsByName.conditionalOverride(
+      ({ path }) => path.name === META_MCP_SERVER_NAME,
+      () => mockMetaMcpConfig
     )
 
     renderWithClient(<GroupSelectorForm groups={mockGroups} />)
@@ -258,24 +237,14 @@ describe('GroupSelectorForm', () => {
       env_vars: {
         [ALLOWED_GROUPS_ENV_VAR]: 'old-group',
       },
-      networkIsolation: false,
+      network_isolation: false,
       secrets: [],
     }
 
     beforeEach(() => {
-      server.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-          if (params.name === META_MCP_SERVER_NAME) {
-            return HttpResponse.json(mockMetaMcpConfig)
-          }
-          return HttpResponse.json(null, { status: 404 })
-        }),
-        http.post(mswEndpoint('/api/v1beta/workloads/:name/edit'), () => {
-          return HttpResponse.json({
-            name: META_MCP_SERVER_NAME,
-            status: 'running',
-          })
-        })
+      mockedGetApiV1BetaWorkloadsByName.conditionalOverride(
+        ({ path }) => path.name === META_MCP_SERVER_NAME,
+        () => mockMetaMcpConfig
       )
     })
 
@@ -312,13 +281,8 @@ describe('GroupSelectorForm', () => {
     it('shows error toast when mutation fails', async () => {
       const user = userEvent.setup()
 
-      server.use(
-        http.post(mswEndpoint('/api/v1beta/workloads/:name/edit'), () => {
-          return HttpResponse.json(
-            { error: 'Mutation failed' },
-            { status: 500 }
-          )
-        })
+      mockedPostApiV1BetaWorkloadsByNameEdit.overrideHandler(() =>
+        HttpResponse.json({ error: 'Mutation failed' }, { status: 500 })
       )
 
       renderWithClient(<GroupSelectorForm groups={mockGroups} />)
@@ -352,24 +316,14 @@ describe('GroupSelectorForm', () => {
       env_vars: {
         [ALLOWED_GROUPS_ENV_VAR]: 'old-group',
       },
-      networkIsolation: false,
+      network_isolation: false,
       secrets: [],
     }
 
     beforeEach(() => {
-      server.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-          if (params.name === META_MCP_SERVER_NAME) {
-            return HttpResponse.json(mockMetaMcpConfig)
-          }
-          return HttpResponse.json(null, { status: 404 })
-        }),
-        http.post(mswEndpoint('/api/v1beta/workloads/:name/edit'), () => {
-          return HttpResponse.json({
-            name: META_MCP_SERVER_NAME,
-            status: 'running',
-          })
-        })
+      mockedGetApiV1BetaWorkloadsByName.conditionalOverride(
+        ({ path }) => path.name === META_MCP_SERVER_NAME,
+        () => mockMetaMcpConfig
       )
     })
 
@@ -413,10 +367,8 @@ describe('GroupSelectorForm', () => {
     it('handles mutation error and shows error toast', async () => {
       const user = userEvent.setup()
 
-      server.use(
-        http.post(mswEndpoint('/api/v1beta/workloads/:name/edit'), () => {
-          return HttpResponse.json({ error: 'API error' }, { status: 500 })
-        })
+      mockedPostApiV1BetaWorkloadsByNameEdit.overrideHandler(() =>
+        HttpResponse.json({ error: 'API error' }, { status: 500 })
       )
 
       renderWithClient(<GroupSelectorForm groups={mockGroups} />)
@@ -444,21 +396,16 @@ describe('GroupSelectorForm', () => {
     it('disables submit button when no group is selected', async () => {
       const rec = recordRequests()
 
-      server.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-          if (params.name === META_MCP_SERVER_NAME) {
-            // Return config without ALLOWED_GROUPS_ENV_VAR
-            return HttpResponse.json({
-              name: META_MCP_SERVER_NAME,
-              transport: 'sse' as const,
-              transport_type: 'sse' as const,
-              group: MCP_OPTIMIZER_GROUP_NAME,
-              env_vars: {},
-              networkIsolation: false,
-              secrets: [],
-            })
-          }
-          return HttpResponse.json(null, { status: 404 })
+      mockedGetApiV1BetaWorkloadsByName.conditionalOverride(
+        ({ path }) => path.name === META_MCP_SERVER_NAME,
+        () => ({
+          name: META_MCP_SERVER_NAME,
+          transport: 'sse' as const,
+          transport_type: 'sse' as const,
+          group: MCP_OPTIMIZER_GROUP_NAME,
+          env_vars: {},
+          network_isolation: false,
+          secrets: [],
         })
       )
 
@@ -492,10 +439,8 @@ describe('GroupSelectorForm', () => {
       const user = userEvent.setup()
       const rec = recordRequests()
 
-      server.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(null, { status: 404 })
-        })
+      mockedGetApiV1BetaWorkloadsByName.overrideHandler(() =>
+        HttpResponse.json(null, { status: 404 })
       )
 
       renderWithClient(<GroupSelectorForm groups={mockGroups} />)
@@ -532,10 +477,8 @@ describe('GroupSelectorForm', () => {
       // Reset the mock to resolved state
       mockHandleCreateMetaOptimizerWorkload.mockResolvedValue(undefined)
 
-      server.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(null, { status: 404 })
-        })
+      mockedGetApiV1BetaWorkloadsByName.overrideHandler(() =>
+        HttpResponse.json(null, { status: 404 })
       )
     })
 

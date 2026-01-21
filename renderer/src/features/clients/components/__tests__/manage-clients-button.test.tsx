@@ -4,13 +4,12 @@ import { Suspense } from 'react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ManageClientsButton } from '../manage-clients-button'
-import { server, recordRequests } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
+import { recordRequests } from '@/common/mocks/node'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
-import { mswEndpoint } from '@/common/mocks/customHandlers'
 import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'
 import { mockedGetApiV1BetaDiscoveryClients } from '@/common/mocks/fixtures/discovery_clients/get'
 import { mockedPostApiV1BetaClientsRegister } from '@/common/mocks/fixtures/clients_register/post'
+import { mockedGetApiV1BetaClients } from '@/common/mocks/fixtures/clients/get'
 
 vi.mock('@/common/hooks/use-feature-flag')
 vi.mock('@/features/meta-mcp/hooks/use-mcp-optimizer-clients')
@@ -76,9 +75,7 @@ describe('ManageClientsButton – BDD flows', () => {
 
     mockedPostApiV1BetaClientsRegister.override(() => [])
 
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/clients'), () => HttpResponse.json([]))
-    )
+    mockedGetApiV1BetaClients.override(() => [])
 
     const rec = recordRequests()
 
@@ -155,16 +152,12 @@ describe('ManageClientsButton – BDD flows', () => {
 
     mockedPostApiV1BetaClientsRegister.override(() => [])
 
-    server.use(
-      // Simulate backend returning empty/null for current clients list
-      http.get(mswEndpoint('/api/v1beta/clients'), () =>
-        HttpResponse.json([
-          { name: { name: 'vscode' }, groups: [] },
-          { name: { name: 'cursor' }, groups: [] },
-          { name: { name: 'claude-code' }, groups: [] },
-        ])
-      )
-    )
+    // Simulate backend returning clients with empty groups
+    mockedGetApiV1BetaClients.override(() => [
+      { name: 'vscode', groups: [] },
+      { name: 'cursor', groups: [] },
+      { name: 'claude-code', groups: [] },
+    ])
 
     const rec = recordRequests()
 
@@ -290,15 +283,11 @@ describe('ManageClientsButton – BDD flows', () => {
 
     mockedPostApiV1BetaClientsRegister.override(() => [])
 
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/clients'), () =>
-        HttpResponse.json([
-          { name: { name: 'vscode' }, groups: ['default'] },
-          { name: { name: 'cursor' }, groups: ['default'] },
-          { name: { name: 'claude-code' }, groups: [] },
-        ])
-      )
-    )
+    mockedGetApiV1BetaClients.override(() => [
+      { name: 'vscode', groups: ['default'] },
+      { name: 'cursor', groups: ['default'] },
+      { name: 'claude-code', groups: [] },
+    ])
 
     const rec = recordRequests()
 
@@ -365,14 +354,10 @@ describe('ManageClientsButton – BDD flows', () => {
       ],
     }))
 
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/clients'), () =>
-        HttpResponse.json([
-          { name: { name: 'vscode' }, groups: ['default'] },
-          { name: { name: 'cursor' }, groups: ['default'] },
-        ])
-      )
-    )
+    mockedGetApiV1BetaClients.override(() => [
+      { name: 'vscode', groups: ['default'] },
+      { name: 'cursor', groups: ['default'] },
+    ])
 
     const rec = recordRequests()
 
@@ -450,15 +435,11 @@ describe('ManageClientsButton – BDD flows', () => {
 
     mockedPostApiV1BetaClientsRegister.override(() => [])
 
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/clients'), () =>
-        HttpResponse.json([
-          { name: { name: 'vscode' }, groups: ['default'] },
-          { name: { name: 'cursor' }, groups: ['default'] },
-          { name: { name: 'claude-code' }, groups: [] },
-        ])
-      )
-    )
+    mockedGetApiV1BetaClients.override(() => [
+      { name: 'vscode', groups: ['default'] },
+      { name: 'cursor', groups: ['default'] },
+      { name: 'claude-code', groups: [] },
+    ])
 
     renderWithProviders({ groupName: 'default' })
     const user = userEvent.setup()

@@ -2,11 +2,10 @@ import { screen, waitFor } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import { InstallGroupButton } from '../install-group-button'
 import type { RegistryGroup, RegistryImageMetadata } from '@api/types.gen'
-import { server } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
 import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'
+import { mockedGetApiV1BetaWorkloads } from '@/common/mocks/fixtures/workloads/get'
 
 const mockServer: RegistryImageMetadata = {
   name: 'atlassian',
@@ -47,11 +46,7 @@ describe('InstallGroupButton', () => {
       ],
     }))
 
-    server.use(
-      http.get('*/api/v1beta/workloads', () => {
-        return HttpResponse.json({ workloads: [] })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({ workloads: [] }))
 
     const router = createTestRouter(() => (
       <InstallGroupButton groupName="dev-toolkit" group={mockGroup} />
@@ -75,16 +70,12 @@ describe('InstallGroupButton', () => {
   })
 
   it('shows error when trying to install a group with servers that conflict with existing servers', async () => {
-    server.use(
-      http.get('*/api/v1beta/workloads', () => {
-        return HttpResponse.json({
-          workloads: [
-            { name: 'atlassian', group: 'default', status: 'running' },
-            { name: 'other-server', group: 'default', status: 'running' },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({
+      workloads: [
+        { name: 'atlassian', group: 'default', status: 'running' },
+        { name: 'other-server', group: 'default', status: 'running' },
+      ],
+    }))
 
     const router = createTestRouter(() => (
       <InstallGroupButton groupName="dev-toolkit" group={mockGroup} />
@@ -108,15 +99,11 @@ describe('InstallGroupButton', () => {
   })
 
   it('shows error with link to specific group when server conflict exists in a named group', async () => {
-    server.use(
-      http.get('*/api/v1beta/workloads', () => {
-        return HttpResponse.json({
-          workloads: [
-            { name: 'fetch', group: 'my-existing-group', status: 'running' },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({
+      workloads: [
+        { name: 'fetch', group: 'my-existing-group', status: 'running' },
+      ],
+    }))
 
     const customGroup: RegistryGroup = {
       ...mockGroup,
