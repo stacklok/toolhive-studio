@@ -90,7 +90,7 @@ const buildSecretValue = ({
 
   return {
     name: getDefaultSecretName(mcpName, prefix),
-    value: { secret: fieldValue?.value?.secret ?? '', isFromStore: false },
+    value: { secret: fieldValue.value.secret ?? '', isFromStore: false },
   }
 }
 
