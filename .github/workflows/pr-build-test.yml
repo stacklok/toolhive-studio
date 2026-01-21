@@ -1,0 +1,315 @@
+name: PR Build Test
+on:
+  issue_comment:
+    types: [created]
+
+# Cancel any in-progress runs for the same PR when a new /build-test is triggered
+concurrency:
+  group: build-test-pr-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  # Gate job to check if we should run the build
+  check-trigger:
+    name: Check Trigger
+    runs-on: ubuntu-latest
+    if: github.event.issue.pull_request && contains(github.event.comment.body, '/build-test')
+    outputs:
+      pr_number: ${{ steps.pr-info.outputs.pr_number }}
+      pr_sha: ${{ steps.pr-info.outputs.pr_sha }}
+      sign_windows: ${{ steps.parse-flags.outputs.sign_windows }}
+      comment_id: ${{ steps.react.outputs.comment_id }}
+    steps:
+      - name: Parse command flags
+        id: parse-flags
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const comment = context.payload.comment.body;
+            const signWindows = comment.includes('--sign-windows');
+            core.setOutput('sign_windows', signWindows ? 'true' : 'false');
+            if (signWindows) {
+              core.info('🔐 Windows signing enabled via --sign-windows flag');
+            }
+
+      - name: Check org membership
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const commenter = context.payload.comment.user.login;
+            const org = 'stacklok';
+
+            try {
+              await github.rest.orgs.checkMembershipForUser({
+                org: org,
+                username: commenter
+              });
+              core.info(`✅ ${commenter} is a member of ${org}`);
+            } catch (error) {
+              if (error.status === 404) {
+                core.setFailed(`❌ ${commenter} is not a member of the ${org} organization. Only org members can trigger builds.`);
+              } else {
+                core.setFailed(`Failed to check org membership: ${error.message}`);
+              }
+            }
+
+      - name: React to comment
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        id: react
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'eyes'
+            });
+            core.setOutput('comment_id', context.payload.comment.id);
+
+      - name: Get PR info
+        id: pr-info
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            const isFork = pr.data.head.repo.full_name !== `${context.repo.owner}/${context.repo.repo}`;
+            if (isFork) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.data.number,
+                body: '❌ `/build-test` is disabled for forked PRs to protect signing secrets. Please open a PR from a branch in this repository if you need a build.'
+              });
+              core.setFailed('❌ /build-test is disabled for forked PRs to protect signing secrets.');
+              return;
+            }
+            core.setOutput('pr_number', pr.data.number);
+            core.setOutput('pr_sha', pr.data.head.sha);
+            core.setOutput('base_ref', pr.data.base.ref);
+
+      - name: Check if branch is up-to-date with base
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const baseBranch = '${{ steps.pr-info.outputs.base_ref }}';
+            const headSha = '${{ steps.pr-info.outputs.pr_sha }}';
+            const prNumber = ${{ steps.pr-info.outputs.pr_number }};
+
+            // Compare base branch with PR head
+            const comparison = await github.rest.repos.compareCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              base: headSha,
+              head: baseBranch
+            });
+
+            // If base is ahead of the PR branch, it needs a rebase
+            if (comparison.data.ahead_by > 0) {
+              const behindCount = comparison.data.ahead_by;
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: `⚠️ This branch is **${behindCount} commit${behindCount > 1 ? 's' : ''} behind \`${baseBranch}\`**. Please rebase before running \`/build-test\` to ensure artifacts are built on the latest code.\n\n\`\`\`bash\ngit fetch origin ${baseBranch}\ngit rebase origin/${baseBranch}\ngit push --force-with-lease\n\`\`\``
+              });
+              core.setFailed(`Branch is ${behindCount} commits behind ${baseBranch}. Rebase required.`);
+            } else {
+              core.info(`✅ Branch is up-to-date with ${baseBranch}`);
+            }
+
+  build:
+    name: Build on ${{ matrix.os }}${{ matrix.arch && format(' ({0})', matrix.arch) || '' }}
+    needs: check-trigger
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x64
+            platform: linux
+          - os: windows-latest
+            arch: x64
+            platform: win32
+          - os: macos-15-intel
+            arch: x64
+            platform: darwin
+          - os: macos-latest
+            arch: arm64
+            platform: darwin
+    env:
+      NODE_OPTIONS: '--max_old_space_size=4096'
+      PR_NUMBER: ${{ needs.check-trigger.outputs.pr_number }}
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          ref: ${{ needs.check-trigger.outputs.pr_sha }}
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Set version
+        id: version
+        shell: bash
+        run: |
+          VERSION="pr-${{ env.PR_NUMBER }}"
+          echo "Setting version to: $VERSION"
+          npm version $VERSION --no-git-tag-version --allow-same-version
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "artifact_prefix=ToolHive-$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Setup macOS code signing
+        uses: ./.github/actions/setup-macos-codesign
+        if: runner.os == 'macOS'
+        with:
+          apple-certificate: ${{ secrets.APPLE_CERTIFICATE }}
+          apple-certificate-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          keychain-password: ${{ secrets.KEYCHAIN_PASSWORD }}
+          apple-api-key: ${{ secrets.APPLE_API_KEY }}
+          apple-issuer-id: ${{ secrets.APPLE_ISSUER_ID }}
+          apple-key-id: ${{ secrets.APPLE_KEY_ID }}
+
+      - name: Setup Windows code signing
+        uses: ./.github/actions/setup-windows-codesign
+        if: runner.os == 'Windows' && needs.check-trigger.outputs.sign_windows == 'true'
+        with:
+          sm-host: ${{ secrets.SM_HOST }}
+          sm-api-key: ${{ secrets.SM_API_KEY }}
+          sm-client-cert-file-b64: ${{ secrets.SM_CLIENT_CERT_FILE_B64 }}
+          sm-client-cert-password: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+          sm-code-signing-cert-sha1-hash: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
+
+      - name: Setup Flatpak (Linux only)
+        uses: ./.github/actions/setup-flatpak
+        if: runner.os == 'Linux'
+
+      - name: Build App
+        run: pnpm run make -- --arch=${{ matrix.arch }}
+        env:
+          npm_config_target_platform: ${{ matrix.platform }}
+          # macOS signing (set by composite action)
+          APPLE_API_KEY: ${{ env.APPLE_API_KEY_PATH }}
+          APPLE_ISSUER_ID: ${{ env.APPLE_ISSUER_ID }}
+          APPLE_KEY_ID: ${{ env.APPLE_KEY_ID }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: ${{ steps.version.outputs.artifact_prefix }}-${{ matrix.platform }}-${{ matrix.arch }}
+          path: |
+            out/make/**/*.dmg
+            out/make/**/*.zip
+            out/make/**/*.exe
+            out/make/**/*.deb
+            out/make/**/*.rpm
+            out/make/**/*.tar.gz
+            out/make/**/*.flatpak
+          retention-days: 7
+          if-no-files-found: error
+
+  post-comment:
+    name: Post Download Links
+    needs: [check-trigger, build]
+    runs-on: ubuntu-latest
+    if: always() && needs.check-trigger.result == 'success'
+    steps:
+      - name: Get workflow run URL
+        id: run-url
+        run: |
+          echo "url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
+
+      - name: Post comment with results
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const prNumber = ${{ needs.check-trigger.outputs.pr_number }};
+            const version = `pr-${prNumber}`;
+            const runUrl = `${{ steps.run-url.outputs.url }}`;
+            const buildResult = '${{ needs.build.result }}';
+            const triggeredBy = '${{ github.event.comment.user.login }}';
+            const signWindows = '${{ needs.check-trigger.outputs.sign_windows }}' === 'true';
+
+            // Marker to identify bot comments for this workflow
+            const marker = '<!-- build-test-bot -->';
+
+            const windowsSignedNote = signWindows
+              ? 'macOS builds are signed (not notarized). Windows builds are signed and timestamped. Linux builds are unsigned.'
+              : 'macOS builds are signed (not notarized). Windows and Linux builds are unsigned.';
+
+            let body;
+            if (buildResult === 'success') {
+              body = [
+                marker,
+                '## Build Artifacts for PR #' + prNumber,
+                '',
+                '| Platform | Architecture | Status |',
+                '|----------|--------------|--------|',
+                '| macOS | arm64 | :white_check_mark: Ready |',
+                '| macOS | x64 | :white_check_mark: Ready |',
+                '| Windows | x64 | :white_check_mark: Ready' + (signWindows ? ' (signed)' : '') + ' |',
+                '| Linux | x64 | :white_check_mark: Ready |',
+                '',
+                '**[Download artifacts from workflow run](' + runUrl + ')**',
+                '',
+                '*Version: `' + version + '` | Artifacts expire in 7 days | Triggered by @' + triggeredBy + '*',
+                '',
+                '> **Note:** ' + windowsSignedNote
+              ].join('\n');
+            } else {
+              body = [
+                marker,
+                '## Build Failed for PR #' + prNumber,
+                '',
+                'The build encountered errors. Please check the [workflow run](' + runUrl + ') for details.',
+                '',
+                '*Triggered by @' + triggeredBy + '*'
+              ].join('\n');
+            }
+            // Find existing bot comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber
+            });
+
+            const botComment = comments.find(comment => comment.body.includes(marker));
+
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+              core.info(`Updated existing comment ${botComment.id}`);
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: body
+              });
+              core.info('Created new comment');
+            }
+
+            // Add rocket reaction to original comment on success
+            const commentId = '${{ needs.check-trigger.outputs.comment_id }}';
+            if (buildResult === 'success' && commentId) {
+              await github.rest.reactions.createForIssueComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: commentId,
+                content: 'rocket'
+              });
+            }
