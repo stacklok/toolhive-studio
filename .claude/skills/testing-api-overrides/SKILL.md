@@ -192,6 +192,27 @@ mockedGetApiV1BetaGroups.overrideHandler(() => HttpResponse.error())
 
 All overrides are automatically reset before each test via `resetAllAutoAPIMocks()` in `vitest.setup.ts`. No cleanup needed.
 
+## Reusable Scenarios
+
+When the same response override is needed across many tests, define it as a scenario in the fixture instead of duplicating `.override()` calls.
+
+### Defining Scenarios (in fixtures)
+
+```typescript
+// In fixtures/workloads/get.ts
+export const mockedGetApiV1BetaWorkloads = AutoAPIMock<...>({
+  workloads: [/* default data */],
+}).scenario('empty', (mock) => mock.override(() => ({ workloads: [] })))
+```
+
+### Using Scenarios (in tests)
+
+```typescript
+mockedGetApiV1BetaWorkloads.activateScenario('empty')
+```
+
+Scenario names are defined in `renderer/src/common/mocks/scenarioNames.ts`. Use existing names when possible to keep scenarios consolidated.
+
 ## Related Skills
 
 - **testing-with-api-mocks** - Auto-generated mocks and fixture basics
