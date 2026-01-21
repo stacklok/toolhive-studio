@@ -2,12 +2,10 @@ import { screen, waitFor } from '@testing-library/react'
 import { expect, it, vi, beforeEach, describe } from 'vitest'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
-import { server } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
 import RegistryRouteComponent from '../(registry)/registry.route'
-import { mswEndpoint } from '@/common/mocks/customHandlers'
-import { DEFAULT_REGISTRY } from '@/common/mocks/customHandlers/fixtures/default_registry'
 import { META_MCP_SERVER_NAME } from '@/common/lib/constants'
+import { mockedGetApiV1BetaRegistryByName } from '@/common/mocks/fixtures/registry_name/get'
+import { mockedGetApiV1BetaRegistryByNameServers } from '@/common/mocks/fixtures/registry_name_servers/get'
 
 const router = createTestRouter(RegistryRouteComponent)
 
@@ -47,17 +45,13 @@ describe('Groups in Registry', () => {
   })
 
   it('handles empty groups array gracefully', async () => {
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/registry/:name'), () => {
-        return HttpResponse.json({
-          ...DEFAULT_REGISTRY,
-          registry: {
-            ...DEFAULT_REGISTRY.registry,
-            groups: [],
-          },
-        })
-      })
-    )
+    mockedGetApiV1BetaRegistryByName.override((data) => ({
+      ...data,
+      registry: {
+        ...data.registry,
+        groups: [],
+      },
+    }))
 
     renderRoute(router)
 
@@ -87,26 +81,21 @@ describe('Meta-MCP Server Filtering', () => {
       writable: true,
     })
 
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-        return HttpResponse.json({
-          servers: [
-            { name: 'atlassian', description: 'Atlassian server' },
-            {
-              name: META_MCP_SERVER_NAME,
-              description: 'Meta MCP server',
-            },
-          ],
-          remote_servers: [],
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/registry/:name'), () => {
-        return HttpResponse.json({
-          ...DEFAULT_REGISTRY,
-          name: 'default',
-        })
-      })
-    )
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        { name: 'atlassian', description: 'Atlassian server' },
+        {
+          name: META_MCP_SERVER_NAME,
+          description: 'Meta MCP server',
+        },
+      ],
+      remote_servers: [],
+    }))
+
+    mockedGetApiV1BetaRegistryByName.override((data) => ({
+      ...data,
+      name: 'default',
+    }))
 
     renderRoute(router)
 
@@ -130,26 +119,21 @@ describe('Meta-MCP Server Filtering', () => {
       writable: true,
     })
 
-    server.use(
-      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-        return HttpResponse.json({
-          servers: [
-            { name: 'atlassian', description: 'Atlassian server' },
-            {
-              name: META_MCP_SERVER_NAME,
-              description: 'Meta MCP server',
-            },
-          ],
-          remote_servers: [],
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/registry/:name'), () => {
-        return HttpResponse.json({
-          ...DEFAULT_REGISTRY,
-          name: 'custom-registry',
-        })
-      })
-    )
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        { name: 'atlassian', description: 'Atlassian server' },
+        {
+          name: META_MCP_SERVER_NAME,
+          description: 'Meta MCP server',
+        },
+      ],
+      remote_servers: [],
+    }))
+
+    mockedGetApiV1BetaRegistryByName.override((data) => ({
+      ...data,
+      name: 'custom-registry',
+    }))
 
     renderRoute(router)
 
