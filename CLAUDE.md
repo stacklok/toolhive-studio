@@ -7,6 +7,7 @@ Project-specific guidance for AI agents working on this codebase.
 This project uses MSW with typed `AutoAPIMock` fixtures.
 
 **REQUIRED**: Invoke `/testing-with-api-mocks` first whenever you are:
+
 - Creating new tests that involve API calls
 - Refactoring existing tests
 - Modifying test files in any way that affects or might affect API mocking
