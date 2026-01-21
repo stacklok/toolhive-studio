@@ -141,7 +141,7 @@ it('only displays running servers and filters out stopped ones', async () => {
         { ...first, name: 'server1', group: 'default', status: 'running' },
         { ...second, name: 'server2', group: 'default', status: 'stopped' },
         { ...third, name: 'server3', group: 'production', status: 'running' },
-        { ...fourth, name: 'server4', group: 'production', status: 'exited' },
+        { ...fourth, name: 'server4', group: 'production', status: 'stopped' },
       ],
     }
   })
