@@ -2,23 +2,25 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { expect, it, vi, beforeEach, describe } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
-import { server, recordRequests } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
+import { recordRequests } from '@/common/mocks/node'
+import { HttpResponse } from 'msw'
 import { toast } from 'sonner'
-import { mswEndpoint } from '@/common/mocks/customHandlers'
 import log from 'electron-log/renderer'
 import {
   ALLOWED_GROUPS_ENV_VAR,
   MCP_OPTIMIZER_BASE_IMAGE,
   MCP_OPTIMIZER_GROUP_NAME,
   MCP_OPTIMIZER_IMAGE_VERSION,
-  MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
   META_MCP_SERVER_NAME,
 } from '@/common/lib/constants'
 import { useCreateOptimizerWorkload } from '../use-create-optimizer-workload'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { useMcpOptimizerClients } from '@/features/meta-mcp/hooks/use-mcp-optimizer-clients'
 import type { V1CreateRequest } from '@api/types.gen'
+import { mockedGetApiV1BetaWorkloadsByName } from '@/common/mocks/fixtures/workloads_name/get'
+import { mockedGetApiV1BetaRegistryByNameServers } from '@/common/mocks/fixtures/registry_name_servers/get'
+import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'
+import { mockedPostApiV1BetaWorkloads } from '@/common/mocks/fixtures/workloads/post'
 
 vi.mock('@/common/hooks/use-feature-flag', () => ({
   useFeatureFlag: vi.fn(),
@@ -154,23 +156,15 @@ describe('useCreateOptimizerWorkload', () => {
     })
 
     it('loads optimizer workload detail when it exists', async () => {
-      server.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-          const { name } = params
-          if (name === META_MCP_SERVER_NAME) {
-            return HttpResponse.json({
-              name: META_MCP_SERVER_NAME,
-              group: MCP_OPTIMIZER_GROUP_NAME,
-              image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
-              status: 'running',
-              env_vars: {
-                [ALLOWED_GROUPS_ENV_VAR]: 'default',
-              },
-            })
-          }
-          return HttpResponse.json({ error: 'Not found' }, { status: 404 })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override(() => ({
+        name: META_MCP_SERVER_NAME,
+        group: MCP_OPTIMIZER_GROUP_NAME,
+        image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
+        status: 'running',
+        env_vars: {
+          [ALLOWED_GROUPS_ENV_VAR]: 'default',
+        },
+      }))
 
       const { Wrapper } = createQueryClientWrapper()
       const { result } = renderHook(() => useCreateOptimizerWorkload(), {
@@ -186,21 +180,13 @@ describe('useCreateOptimizerWorkload', () => {
     })
 
     it('returns isMCPOptimizerEnabled as true when workload has ALLOWED_GROUPS env var', async () => {
-      server.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-          const { name } = params
-          if (name === META_MCP_SERVER_NAME) {
-            return HttpResponse.json({
-              name: META_MCP_SERVER_NAME,
-              group: MCP_OPTIMIZER_GROUP_NAME,
-              env_vars: {
-                [ALLOWED_GROUPS_ENV_VAR]: 'default',
-              },
-            })
-          }
-          return HttpResponse.json({ error: 'Not found' }, { status: 404 })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override(() => ({
+        name: META_MCP_SERVER_NAME,
+        group: MCP_OPTIMIZER_GROUP_NAME,
+        env_vars: {
+          [ALLOWED_GROUPS_ENV_VAR]: 'default',
+        },
+      }))
 
       const { Wrapper } = createQueryClientWrapper()
       const { result } = renderHook(() => useCreateOptimizerWorkload(), {
@@ -213,19 +199,11 @@ describe('useCreateOptimizerWorkload', () => {
     })
 
     it('returns isMCPOptimizerEnabled as false when workload exists without ALLOWED_GROUPS env var', async () => {
-      server.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-          const { name } = params
-          if (name === META_MCP_SERVER_NAME) {
-            return HttpResponse.json({
-              name: META_MCP_SERVER_NAME,
-              group: MCP_OPTIMIZER_GROUP_NAME,
-              env_vars: {},
-            })
-          }
-          return HttpResponse.json({ error: 'Not found' }, { status: 404 })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override(() => ({
+        name: META_MCP_SERVER_NAME,
+        group: MCP_OPTIMIZER_GROUP_NAME,
+        env_vars: {},
+      }))
 
       const { Wrapper } = createQueryClientWrapper()
       const { result } = renderHook(() => useCreateOptimizerWorkload(), {
@@ -240,11 +218,7 @@ describe('useCreateOptimizerWorkload', () => {
     })
 
     it('returns isMCPOptimizerEnabled as false when workload does not exist', async () => {
-      server.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () =>
-          HttpResponse.json({ error: 'Not found' }, { status: 404 })
-        )
-      )
+      mockedGetApiV1BetaWorkloadsByName.activateScenario('not-found')
 
       const { Wrapper } = createQueryClientWrapper()
       const { result } = renderHook(() => useCreateOptimizerWorkload(), {
@@ -261,43 +235,24 @@ describe('useCreateOptimizerWorkload', () => {
     it('successfully creates workload with correct parameters', async () => {
       const rec = recordRequests()
 
-      server.use(
-        http.get(
-          mswEndpoint('/api/v1beta/registry/:name/servers/:serverName'),
-          ({ params }) => {
-            const { serverName } = params
-            if (serverName === MCP_OPTIMIZER_REGISTRY_SERVER_NAME) {
-              return HttpResponse.json({
-                server: {
-                  image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
-                  transport: 'streamable-http',
-                },
-              })
-            }
-            return HttpResponse.json({ server: null })
-          }
-        ),
-        http.get(mswEndpoint('/api/v1beta/groups'), () =>
-          HttpResponse.json({
-            groups: [
-              {
-                name: 'test-group',
-                registered_clients: [],
-              },
-              {
-                name: MCP_OPTIMIZER_GROUP_NAME,
-                registered_clients: [],
-              },
-            ],
-          })
-        ),
-        http.post(mswEndpoint('/api/v1beta/workloads'), () => {
-          return HttpResponse.json({
-            name: META_MCP_SERVER_NAME,
-            group: MCP_OPTIMIZER_GROUP_NAME,
-          })
-        })
-      )
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        server: {
+          image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
+          transport: 'streamable-http',
+        },
+      }))
+
+      mockedGetApiV1BetaGroups.override(() => ({
+        groups: [
+          { name: 'test-group', registered_clients: [] },
+          { name: MCP_OPTIMIZER_GROUP_NAME, registered_clients: [] },
+        ],
+      }))
+
+      mockedPostApiV1BetaWorkloads.override(() => ({
+        name: META_MCP_SERVER_NAME,
+        group: MCP_OPTIMIZER_GROUP_NAME,
+      }))
 
       const { Wrapper, queryClient } = createQueryClientWrapper()
       const { result } = renderHook(() => useCreateOptimizerWorkload(), {
@@ -356,36 +311,24 @@ describe('useCreateOptimizerWorkload', () => {
     })
 
     it('handles API error when workload creation fails', async () => {
-      server.use(
-        http.get(
-          mswEndpoint('/api/v1beta/registry/:name/servers/:serverName'),
-          () =>
-            HttpResponse.json({
-              server: {
-                image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
-                transport: 'streamable-http',
-              },
-            })
-        ),
-        http.get(mswEndpoint('/api/v1beta/groups'), () =>
-          HttpResponse.json({
-            groups: [
-              {
-                name: 'test-group',
-                registered_clients: [],
-              },
-              {
-                name: MCP_OPTIMIZER_GROUP_NAME,
-                registered_clients: [],
-              },
-            ],
-          })
-        ),
-        http.post(mswEndpoint('/api/v1beta/workloads'), () =>
-          HttpResponse.json(
-            { error: 'Failed to create workload' },
-            { status: 500 }
-          )
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        server: {
+          image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
+          transport: 'streamable-http',
+        },
+      }))
+
+      mockedGetApiV1BetaGroups.override(() => ({
+        groups: [
+          { name: 'test-group', registered_clients: [] },
+          { name: MCP_OPTIMIZER_GROUP_NAME, registered_clients: [] },
+        ],
+      }))
+
+      mockedPostApiV1BetaWorkloads.overrideHandler(() =>
+        HttpResponse.json(
+          { error: 'Failed to create workload' },
+          { status: 500 }
         )
       )
 
@@ -415,25 +358,20 @@ describe('useCreateOptimizerWorkload', () => {
         resolveRequest = resolve
       })
 
-      server.use(
-        http.get(
-          mswEndpoint('/api/v1beta/registry/:name/servers/:serverName'),
-          () =>
-            HttpResponse.json({
-              server: {
-                image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
-                transport: 'streamable-http',
-              },
-            })
-        ),
-        http.post(mswEndpoint('/api/v1beta/workloads'), async () => {
-          await requestPromise
-          return HttpResponse.json({
-            name: META_MCP_SERVER_NAME,
-            group: MCP_OPTIMIZER_GROUP_NAME,
-          })
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        server: {
+          image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
+          transport: 'streamable-http',
+        },
+      }))
+
+      mockedPostApiV1BetaWorkloads.overrideHandler(async () => {
+        await requestPromise
+        return HttpResponse.json({
+          name: META_MCP_SERVER_NAME,
+          group: MCP_OPTIMIZER_GROUP_NAME,
         })
-      )
+      })
 
       const { Wrapper } = createQueryClientWrapper()
       const { result } = renderHook(() => useCreateOptimizerWorkload(), {
@@ -467,38 +405,24 @@ describe('useCreateOptimizerWorkload', () => {
         vi.clearAllMocks()
         const rec = recordRequests()
 
-        server.use(
-          http.get(
-            mswEndpoint('/api/v1beta/registry/:name/servers/:serverName'),
-            () =>
-              HttpResponse.json({
-                server: {
-                  image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
-                  transport: 'streamable-http',
-                },
-              })
-          ),
-          http.get(mswEndpoint('/api/v1beta/groups'), () =>
-            HttpResponse.json({
-              groups: [
-                {
-                  name: groupName,
-                  registered_clients: [],
-                },
-                {
-                  name: MCP_OPTIMIZER_GROUP_NAME,
-                  registered_clients: [],
-                },
-              ],
-            })
-          ),
-          http.post(mswEndpoint('/api/v1beta/workloads'), () => {
-            return HttpResponse.json({
-              name: META_MCP_SERVER_NAME,
-              group: MCP_OPTIMIZER_GROUP_NAME,
-            })
-          })
-        )
+        mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+          server: {
+            image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
+            transport: 'streamable-http',
+          },
+        }))
+
+        mockedGetApiV1BetaGroups.override(() => ({
+          groups: [
+            { name: groupName, registered_clients: [] },
+            { name: MCP_OPTIMIZER_GROUP_NAME, registered_clients: [] },
+          ],
+        }))
+
+        mockedPostApiV1BetaWorkloads.override(() => ({
+          name: META_MCP_SERVER_NAME,
+          group: MCP_OPTIMIZER_GROUP_NAME,
+        }))
 
         const { Wrapper } = createQueryClientWrapper()
         const { result } = renderHook(() => useCreateOptimizerWorkload(), {
@@ -537,35 +461,21 @@ describe('useCreateOptimizerWorkload', () => {
     })
 
     it('handles network errors during workload creation', async () => {
-      server.use(
-        http.get(
-          mswEndpoint('/api/v1beta/registry/:name/servers/:serverName'),
-          () =>
-            HttpResponse.json({
-              server: {
-                image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
-                transport: 'streamable-http',
-              },
-            })
-        ),
-        http.get(mswEndpoint('/api/v1beta/groups'), () =>
-          HttpResponse.json({
-            groups: [
-              {
-                name: 'test-group',
-                registered_clients: [],
-              },
-              {
-                name: MCP_OPTIMIZER_GROUP_NAME,
-                registered_clients: [],
-              },
-            ],
-          })
-        ),
-        http.post(mswEndpoint('/api/v1beta/workloads'), () =>
-          HttpResponse.error()
-        )
-      )
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        server: {
+          image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
+          transport: 'streamable-http',
+        },
+      }))
+
+      mockedGetApiV1BetaGroups.override(() => ({
+        groups: [
+          { name: 'test-group', registered_clients: [] },
+          { name: MCP_OPTIMIZER_GROUP_NAME, registered_clients: [] },
+        ],
+      }))
+
+      mockedPostApiV1BetaWorkloads.overrideHandler(() => HttpResponse.error())
 
       const { Wrapper } = createQueryClientWrapper()
       const { result } = renderHook(() => useCreateOptimizerWorkload(), {
@@ -593,38 +503,24 @@ describe('useCreateOptimizerWorkload', () => {
       // Initialize recordRequests first to capture all requests for this test
       const rec = recordRequests()
 
-      server.use(
-        http.get(
-          mswEndpoint('/api/v1beta/registry/:name/servers/:serverName'),
-          () =>
-            HttpResponse.json({
-              server: {
-                image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
-                transport: 'streamable-http',
-              },
-            })
-        ),
-        http.get(mswEndpoint('/api/v1beta/groups'), () =>
-          HttpResponse.json({
-            groups: [
-              {
-                name: 'production',
-                registered_clients: [],
-              },
-              {
-                name: MCP_OPTIMIZER_GROUP_NAME,
-                registered_clients: [],
-              },
-            ],
-          })
-        ),
-        http.post(mswEndpoint('/api/v1beta/workloads'), () =>
-          HttpResponse.json({
-            name: META_MCP_SERVER_NAME,
-            group: MCP_OPTIMIZER_GROUP_NAME,
-          })
-        )
-      )
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        server: {
+          image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
+          transport: 'streamable-http',
+        },
+      }))
+
+      mockedGetApiV1BetaGroups.override(() => ({
+        groups: [
+          { name: 'production', registered_clients: [] },
+          { name: MCP_OPTIMIZER_GROUP_NAME, registered_clients: [] },
+        ],
+      }))
+
+      mockedPostApiV1BetaWorkloads.override(() => ({
+        name: META_MCP_SERVER_NAME,
+        group: MCP_OPTIMIZER_GROUP_NAME,
+      }))
 
       const { Wrapper, queryClient } = createQueryClientWrapper()
       const { result } = renderHook(() => useCreateOptimizerWorkload(), {
@@ -670,21 +566,16 @@ describe('useCreateOptimizerWorkload', () => {
     it('verifies no extra fields are sent in payload', async () => {
       const rec = recordRequests()
 
-      server.use(
-        http.get(
-          mswEndpoint('/api/v1beta/registry/:name/servers/:serverName'),
-          () =>
-            HttpResponse.json({
-              server: {
-                image: 'test-image',
-                transport: 'sse',
-              },
-            })
-        ),
-        http.post(mswEndpoint('/api/v1beta/workloads'), () =>
-          HttpResponse.json({ name: META_MCP_SERVER_NAME })
-        )
-      )
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        server: {
+          image: 'test-image',
+          transport: 'sse',
+        },
+      }))
+
+      mockedPostApiV1BetaWorkloads.override(() => ({
+        name: META_MCP_SERVER_NAME,
+      }))
 
       const { Wrapper, queryClient } = createQueryClientWrapper()
       const { result } = renderHook(() => useCreateOptimizerWorkload(), {
@@ -735,24 +626,17 @@ describe('useCreateOptimizerWorkload', () => {
         restoreClientsToGroup: vi.fn().mockResolvedValue(undefined),
       })
 
-      server.use(
-        http.get(
-          mswEndpoint('/api/v1beta/registry/:name/servers/:serverName'),
-          () =>
-            HttpResponse.json({
-              server: {
-                image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
-                transport: 'streamable-http',
-              },
-            })
-        ),
-        http.post(mswEndpoint('/api/v1beta/workloads'), () =>
-          HttpResponse.json({
-            name: META_MCP_SERVER_NAME,
-            group: MCP_OPTIMIZER_GROUP_NAME,
-          })
-        )
-      )
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        server: {
+          image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
+          transport: 'streamable-http',
+        },
+      }))
+
+      mockedPostApiV1BetaWorkloads.override(() => ({
+        name: META_MCP_SERVER_NAME,
+        group: MCP_OPTIMIZER_GROUP_NAME,
+      }))
 
       const { Wrapper, queryClient } = createQueryClientWrapper()
       const { result } = renderHook(() => useCreateOptimizerWorkload(), {
@@ -789,24 +673,17 @@ describe('useCreateOptimizerWorkload', () => {
 
       const rec = recordRequests()
 
-      server.use(
-        http.get(
-          mswEndpoint('/api/v1beta/registry/:name/servers/:serverName'),
-          () =>
-            HttpResponse.json({
-              server: {
-                image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
-                transport: 'streamable-http',
-              },
-            })
-        ),
-        http.post(mswEndpoint('/api/v1beta/workloads'), () =>
-          HttpResponse.json({
-            name: META_MCP_SERVER_NAME,
-            group: MCP_OPTIMIZER_GROUP_NAME,
-          })
-        )
-      )
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        server: {
+          image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
+          transport: 'streamable-http',
+        },
+      }))
+
+      mockedPostApiV1BetaWorkloads.override(() => ({
+        name: META_MCP_SERVER_NAME,
+        group: MCP_OPTIMIZER_GROUP_NAME,
+      }))
 
       const { Wrapper, queryClient } = createQueryClientWrapper()
       const { result } = renderHook(() => useCreateOptimizerWorkload(), {
@@ -858,24 +735,17 @@ describe('useCreateOptimizerWorkload', () => {
     it('does not include permission profile on non-Linux platforms', async () => {
       const rec = recordRequests()
 
-      server.use(
-        http.get(
-          mswEndpoint('/api/v1beta/registry/:name/servers/:serverName'),
-          () =>
-            HttpResponse.json({
-              server: {
-                image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
-                transport: 'streamable-http',
-              },
-            })
-        ),
-        http.post(mswEndpoint('/api/v1beta/workloads'), () =>
-          HttpResponse.json({
-            name: META_MCP_SERVER_NAME,
-            group: MCP_OPTIMIZER_GROUP_NAME,
-          })
-        )
-      )
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        server: {
+          image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
+          transport: 'streamable-http',
+        },
+      }))
+
+      mockedPostApiV1BetaWorkloads.override(() => ({
+        name: META_MCP_SERVER_NAME,
+        group: MCP_OPTIMIZER_GROUP_NAME,
+      }))
 
       const { Wrapper, queryClient } = createQueryClientWrapper()
       const { result } = renderHook(() => useCreateOptimizerWorkload(), {
