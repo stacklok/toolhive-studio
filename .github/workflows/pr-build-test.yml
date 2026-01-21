@@ -158,7 +158,7 @@ jobs:
         id: version
         shell: bash
         run: |
-          VERSION="pr-${{ env.PR_NUMBER }}"
+          VERSION="0.0.0-pr.${{ env.PR_NUMBER }}"
           echo "Setting version to: $VERSION"
           npm version $VERSION --no-git-tag-version --allow-same-version
           echo "version=$VERSION" >> $GITHUB_OUTPUT
