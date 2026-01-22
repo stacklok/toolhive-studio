@@ -171,8 +171,6 @@ log.info(`Binary file exists: ${existsSync(binPath)}`)
 
 /** Hold the quit, run teardown, then really exit. */
 export async function blockQuit(source: string, event?: Electron.Event) {
-  log.info('blockQuit')
-  log.info('getTearingDownState', getTearingDownState())
   if (getTearingDownState()) return
   setTearingDownState(true)
   setQuittingState(true)
@@ -250,8 +248,6 @@ app.whenReady().then(async () => {
 
     if (!canProceed) {
       log.info('CLI alignment validation failed, quitting app')
-      stopToolhive()
-      safeTrayDestroy()
       app.quit()
       return
     }
@@ -378,7 +374,6 @@ app.on('will-finish-launching', () => {
 })
 
 app.on('before-quit', async (e) => {
-  log.info('before quit')
   try {
     if (isMainWindowValid()) {
       await showMainWindow()
