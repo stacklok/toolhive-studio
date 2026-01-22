@@ -235,11 +235,14 @@ describe('useCreateOptimizerWorkload', () => {
     it('successfully creates workload with correct parameters', async () => {
       const rec = recordRequests()
 
-      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
-        server: {
-          image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
-          transport: 'streamable-http',
-        },
+      mockedGetApiV1BetaRegistryByNameServers.override((data) => ({
+        ...data,
+        servers: [
+          {
+            image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
+            transport: 'streamable-http',
+          },
+        ],
       }))
 
       mockedGetApiV1BetaGroups.override(() => ({
@@ -311,11 +314,14 @@ describe('useCreateOptimizerWorkload', () => {
     })
 
     it('handles API error when workload creation fails', async () => {
-      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
-        server: {
-          image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
-          transport: 'streamable-http',
-        },
+      mockedGetApiV1BetaRegistryByNameServers.override((data) => ({
+        ...data,
+        servers: [
+          {
+            image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
+            transport: 'streamable-http',
+          },
+        ],
       }))
 
       mockedGetApiV1BetaGroups.override(() => ({
@@ -358,11 +364,14 @@ describe('useCreateOptimizerWorkload', () => {
         resolveRequest = resolve
       })
 
-      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
-        server: {
-          image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
-          transport: 'streamable-http',
-        },
+      mockedGetApiV1BetaRegistryByNameServers.override((data) => ({
+        ...data,
+        servers: [
+          {
+            image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
+            transport: 'streamable-http',
+          },
+        ],
       }))
 
       mockedPostApiV1BetaWorkloads.overrideHandler(async () => {
@@ -405,11 +414,14 @@ describe('useCreateOptimizerWorkload', () => {
         vi.clearAllMocks()
         const rec = recordRequests()
 
-        mockedGetApiV1BetaRegistryByNameServers.override(() => ({
-          server: {
-            image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
-            transport: 'streamable-http',
-          },
+        mockedGetApiV1BetaRegistryByNameServers.override((data) => ({
+          ...data,
+          servers: [
+            {
+              image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
+              transport: 'streamable-http',
+            },
+          ],
         }))
 
         mockedGetApiV1BetaGroups.override(() => ({
@@ -461,11 +473,14 @@ describe('useCreateOptimizerWorkload', () => {
     })
 
     it('handles network errors during workload creation', async () => {
-      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
-        server: {
-          image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
-          transport: 'streamable-http',
-        },
+      mockedGetApiV1BetaRegistryByNameServers.override((data) => ({
+        ...data,
+        servers: [
+          {
+            image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
+            transport: 'streamable-http',
+          },
+        ],
       }))
 
       mockedGetApiV1BetaGroups.override(() => ({
@@ -503,11 +518,14 @@ describe('useCreateOptimizerWorkload', () => {
       // Initialize recordRequests first to capture all requests for this test
       const rec = recordRequests()
 
-      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
-        server: {
-          image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
-          transport: 'streamable-http',
-        },
+      mockedGetApiV1BetaRegistryByNameServers.override((data) => ({
+        ...data,
+        servers: [
+          {
+            image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
+            transport: 'streamable-http',
+          },
+        ],
       }))
 
       mockedGetApiV1BetaGroups.override(() => ({
@@ -566,11 +584,14 @@ describe('useCreateOptimizerWorkload', () => {
     it('verifies no extra fields are sent in payload', async () => {
       const rec = recordRequests()
 
-      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
-        server: {
-          image: 'test-image',
-          transport: 'sse',
-        },
+      mockedGetApiV1BetaRegistryByNameServers.override((data) => ({
+        ...data,
+        servers: [
+          {
+            image: 'test-image',
+            transport: 'sse',
+          },
+        ],
       }))
 
       mockedPostApiV1BetaWorkloads.override(() => ({
@@ -626,11 +647,14 @@ describe('useCreateOptimizerWorkload', () => {
         restoreClientsToGroup: vi.fn().mockResolvedValue(undefined),
       })
 
-      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
-        server: {
-          image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
-          transport: 'streamable-http',
-        },
+      mockedGetApiV1BetaRegistryByNameServers.override((data) => ({
+        ...data,
+        servers: [
+          {
+            image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
+            transport: 'streamable-http',
+          },
+        ],
       }))
 
       mockedPostApiV1BetaWorkloads.override(() => ({
@@ -673,11 +697,14 @@ describe('useCreateOptimizerWorkload', () => {
 
       const rec = recordRequests()
 
-      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
-        server: {
-          image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
-          transport: 'streamable-http',
-        },
+      mockedGetApiV1BetaRegistryByNameServers.override((data) => ({
+        ...data,
+        servers: [
+          {
+            image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
+            transport: 'streamable-http',
+          },
+        ],
       }))
 
       mockedPostApiV1BetaWorkloads.override(() => ({
@@ -735,11 +762,14 @@ describe('useCreateOptimizerWorkload', () => {
     it('does not include permission profile on non-Linux platforms', async () => {
       const rec = recordRequests()
 
-      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
-        server: {
-          image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
-          transport: 'streamable-http',
-        },
+      mockedGetApiV1BetaRegistryByNameServers.override((data) => ({
+        ...data,
+        servers: [
+          {
+            image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
+            transport: 'streamable-http',
+          },
+        ],
       }))
 
       mockedPostApiV1BetaWorkloads.override(() => ({
