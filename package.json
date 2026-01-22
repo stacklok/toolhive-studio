@@ -103,7 +103,7 @@
     "@fontsource-variable/inter": "^5.2.6",
     "@fontsource/atkinson-hyperlegible": "^5.2.6",
     "@fontsource/space-mono": "^5.2.7",
-    "@modelcontextprotocol/sdk": "^1.25.2",
+    "@modelcontextprotocol/sdk": "^1.25.3",
     "@openrouter/ai-sdk-provider": "^1.2.0",
     "@radix-ui/react-checkbox": "^1.3.2",
     "@radix-ui/react-collapsible": "^1.1.12",
@@ -158,10 +158,5 @@
       "prettier --write",
       "eslint --max-warnings 0 --no-warn-ignored"
     ]
-  },
-  "pnpm": {
-    "overrides": {
-      "hono": ">=4.11.4"
-    }
   }
 }
