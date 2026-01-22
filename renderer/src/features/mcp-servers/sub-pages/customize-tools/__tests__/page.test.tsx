@@ -150,9 +150,6 @@ describe('Customize Tools Page - Converter Function Selection', () => {
         image: localWorkload.package,
       }))
       mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
-      mockedGetApiV1BetaRegistryByNameServers.activateScenario(
-        'single-server-basic'
-      )
 
       Object.defineProperty(window, 'electronAPI', {
         value: {

@@ -11,8 +11,6 @@ export const MockScenarios = {
   ServerError: 'server-error',
   /** Resource not found - API returns 404 */
   NotFound: 'not-found',
-  /** Single server with basic tools */
-  SingleServerBasic: 'single-server-basic',
 } as const
 
 /**
