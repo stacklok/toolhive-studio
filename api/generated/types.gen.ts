@@ -211,6 +211,10 @@ export type CoreWorkload = {
    * Remote indicates whether this is a remote workload (true) or a container workload (false).
    */
   remote?: boolean
+  /**
+   * StartedAt is when the container was last started (changes on restart)
+   */
+  started_at?: string
   status?: RuntimeWorkloadStatus
   /**
    * StatusContext provides additional context about the workload's status.
@@ -1520,7 +1524,7 @@ export type V1SetupSecretsRequest = {
    */
   password?: string
   /**
-   * Type of the secrets provider (encrypted, 1password, none)
+   * Type of the secrets provider (encrypted, 1password, environment)
    */
   provider_type?: string
 }
