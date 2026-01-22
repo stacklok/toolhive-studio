@@ -69,6 +69,14 @@ import {
   type FeatureFlagOptions,
 } from './feature-flags'
 import {
+  validateCliAlignment,
+  handleValidationResult,
+  getCliAlignmentStatus,
+  reinstallCliSymlink,
+  removeCliInstallation,
+} from './cli'
+import { checkPathConfiguration } from './cli/path-configurator'
+import {
   discoverToolSupportedModels,
   fetchProviderModelsHandler,
   getAllProvidersHandler,
@@ -163,6 +171,8 @@ log.info(`Binary file exists: ${existsSync(binPath)}`)
 
 /** Hold the quit, run teardown, then really exit. */
 export async function blockQuit(source: string, event?: Electron.Event) {
+  log.info('blockQuit')
+  log.info('getTearingDownState', getTearingDownState())
   if (getTearingDownState()) return
   setTearingDownState(true)
   setQuittingState(true)
@@ -229,6 +239,25 @@ if (started) {
 
 app.whenReady().then(async () => {
   resetUpdateState()
+
+  // ────────────────────────────────────────────────────────────────────────────
+  //  CLI Alignment Validation - MUST happen first (THV-0020)
+  //  Skip in dev mode since bundled CLI may not exist
+  // ────────────────────────────────────────────────────────────────────────────
+  if (app.isPackaged) {
+    const validation = await validateCliAlignment()
+    const canProceed = await handleValidationResult(validation)
+
+    if (!canProceed) {
+      log.info('CLI alignment validation failed, quitting app')
+      stopToolhive()
+      safeTrayDestroy()
+      app.quit()
+      return
+    }
+  } else {
+    log.info('Skipping CLI alignment validation in dev mode')
+  }
 
   // Initialize tray first
   try {
@@ -349,6 +378,7 @@ app.on('will-finish-launching', () => {
 })
 
 app.on('before-quit', async (e) => {
+  log.info('before quit')
   try {
     if (isMainWindowValid()) {
       await showMainWindow()
@@ -813,3 +843,15 @@ ipcMain.handle(
 ipcMain.handle('utils:get-workload-available-tools', async (_, workload) =>
   getWorkloadAvailableTools(workload)
 )
+
+// ────────────────────────────────────────────────────────────────────────────
+//  CLI Alignment IPC handlers (THV-0020)
+// ────────────────────────────────────────────────────────────────────────────
+
+ipcMain.handle('cli-alignment:get-status', () => getCliAlignmentStatus())
+
+ipcMain.handle('cli-alignment:reinstall', () => reinstallCliSymlink())
+
+ipcMain.handle('cli-alignment:remove', () => removeCliInstallation())
+
+ipcMain.handle('cli-alignment:get-path-status', () => checkPathConfiguration())
