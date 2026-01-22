@@ -216,6 +216,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('utils:get-workload-available-tools', workload),
   },
 
+  // CLI Alignment (THV-0020)
+  cliAlignment: {
+    getStatus: () => ipcRenderer.invoke('cli-alignment:get-status'),
+    reinstall: () => ipcRenderer.invoke('cli-alignment:reinstall'),
+    remove: () => ipcRenderer.invoke('cli-alignment:remove'),
+    getPathStatus: () => ipcRenderer.invoke('cli-alignment:get-path-status'),
+  },
+
   // IPC event listeners for streaming
   on: (channel: string, listener: (...args: unknown[]) => void) => {
     ipcRenderer.on(channel, (_, ...args) => listener(...args))
@@ -505,6 +513,26 @@ export interface ElectronAPI {
         >
       | undefined
     >
+  }
+
+  // CLI Alignment (THV-0020)
+  cliAlignment: {
+    getStatus: () => Promise<{
+      isManaged: boolean
+      cliPath: string
+      cliVersion: string | null
+      installMethod: 'symlink' | 'copy' | null
+      symlinkTarget: string | null
+      isValid: boolean
+      lastValidated: string
+    }>
+    reinstall: () => Promise<{ success: boolean; error?: string }>
+    remove: () => Promise<{ success: boolean; error?: string }>
+    getPathStatus: () => Promise<{
+      isConfigured: boolean
+      modifiedFiles: string[]
+      pathEntry: string
+    }>
   }
 
   // IPC event listeners for streaming
