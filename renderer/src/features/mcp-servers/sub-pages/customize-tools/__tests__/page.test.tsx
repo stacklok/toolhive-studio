@@ -1,9 +1,10 @@
 import { render, waitFor, screen, within, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { server as mswServer } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
-import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { mockedGetApiV1BetaWorkloads } from '@mocks/fixtures/workloads/get'
+import { mockedGetApiV1BetaWorkloadsByName } from '@mocks/fixtures/workloads_name/get'
+import { mockedGetApiV1BetaSecretsDefaultKeys } from '@mocks/fixtures/secrets_default_keys/get'
+import { mockedGetApiV1BetaRegistryByNameServers } from '@mocks/fixtures/registry_name_servers/get'
 import type { CoreWorkload, V1CreateRequest } from '@api/types.gen'
 import * as orchestrateRunLocalServer from '@/features/mcp-servers/lib/orchestrate-run-local-server'
 import * as orchestrateRunRemoteServer from '@/features/mcp-servers/lib/orchestrate-run-remote-server'
@@ -123,7 +124,6 @@ describe('Customize Tools Page - Converter Function Selection', () => {
   })
 
   afterEach(() => {
-    mswServer.resetHandlers()
     vi.clearAllMocks()
   })
 
@@ -142,32 +142,14 @@ describe('Customize Tools Page - Converter Function Selection', () => {
         package: 'ghcr.io/test/server:latest',
       })
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-          return HttpResponse.json({
-            workloads: [localWorkload],
-          })
-        }),
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json({
-            ...localWorkload,
-            image: localWorkload.package,
-          })
-        }),
-        http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-          return HttpResponse.json({ keys: [] })
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              {
-                image: 'ghcr.io/test/server:latest',
-                tools: ['tool1', 'tool2'],
-              },
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloads.override(() => ({
+        workloads: [localWorkload],
+      }))
+      mockedGetApiV1BetaWorkloadsByName.override(() => ({
+        ...localWorkload,
+        image: localWorkload.package,
+      }))
+      mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
 
       Object.defineProperty(window, 'electronAPI', {
         value: {
@@ -262,29 +244,19 @@ describe('Customize Tools Page - Converter Function Selection', () => {
         url: 'https://api.example.com/mcp',
       })
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-          return HttpResponse.json({
-            workloads: [remoteWorkload],
-          })
-        }),
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(remoteWorkload)
-        }),
-        http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-          return HttpResponse.json({ keys: [] })
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            remote_servers: [
-              {
-                url: 'https://api.example.com/mcp',
-                tools: ['remote-tool1', 'remote-tool2'],
-              },
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloads.override(() => ({
+        workloads: [remoteWorkload],
+      }))
+      mockedGetApiV1BetaWorkloadsByName.override(() => remoteWorkload)
+      mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        remote_servers: [
+          {
+            url: 'https://api.example.com/mcp',
+            tools: ['remote-tool1', 'remote-tool2'],
+          },
+        ],
+      }))
 
       Object.defineProperty(window, 'electronAPI', {
         value: {
@@ -430,7 +402,6 @@ describe('Customize Tools Page - Server Not Running', () => {
   })
 
   afterEach(() => {
-    mswServer.resetHandlers()
     vi.clearAllMocks()
   })
 
@@ -439,32 +410,22 @@ describe('Customize Tools Page - Server Not Running', () => {
       status: 'stopped',
     })
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json({
-          workloads: [stoppedWorkload],
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json({
-          ...stoppedWorkload,
-          image: stoppedWorkload.package,
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({ keys: [] })
-      }),
-      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-        return HttpResponse.json({
-          servers: [
-            {
-              image: 'ghcr.io/test/server:latest',
-              tools: ['tool1', 'tool2'],
-            },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({
+      workloads: [stoppedWorkload],
+    }))
+    mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      ...stoppedWorkload,
+      image: stoppedWorkload.package,
+    }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          image: 'ghcr.io/test/server:latest',
+          tools: ['tool1', 'tool2'],
+        },
+      ],
+    }))
 
     const { queryClient, router } = setupRouterWithPage('test-local-server')
 
@@ -492,32 +453,22 @@ describe('Customize Tools Page - Server Not Running', () => {
       status: 'stopped',
     })
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json({
-          workloads: [stoppedWorkload],
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json({
-          ...stoppedWorkload,
-          image: stoppedWorkload.package,
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({ keys: [] })
-      }),
-      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-        return HttpResponse.json({
-          servers: [
-            {
-              image: 'ghcr.io/test/server:latest',
-              tools: ['tool1', 'tool2'],
-            },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({
+      workloads: [stoppedWorkload],
+    }))
+    mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      ...stoppedWorkload,
+      image: stoppedWorkload.package,
+    }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          image: 'ghcr.io/test/server:latest',
+          tools: ['tool1', 'tool2'],
+        },
+      ],
+    }))
 
     const { queryClient, router } = setupRouterWithPage('test-local-server')
 
@@ -541,32 +492,22 @@ describe('Customize Tools Page - Server Not Running', () => {
       status: 'stopped',
     })
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json({
-          workloads: [stoppedWorkload],
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json({
-          ...stoppedWorkload,
-          image: stoppedWorkload.package,
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({ keys: [] })
-      }),
-      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-        return HttpResponse.json({
-          servers: [
-            {
-              image: 'ghcr.io/test/server:latest',
-              tools: ['tool1', 'tool2'],
-            },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({
+      workloads: [stoppedWorkload],
+    }))
+    mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      ...stoppedWorkload,
+      image: stoppedWorkload.package,
+    }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          image: 'ghcr.io/test/server:latest',
+          tools: ['tool1', 'tool2'],
+        },
+      ],
+    }))
 
     const { queryClient, router } = setupRouterWithPage('test-local-server')
 
@@ -591,32 +532,22 @@ describe('Customize Tools Page - Server Not Running', () => {
       group: 'test-group',
     })
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json({
-          workloads: [stoppedWorkload],
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json({
-          ...stoppedWorkload,
-          image: stoppedWorkload.package,
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({ keys: [] })
-      }),
-      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-        return HttpResponse.json({
-          servers: [
-            {
-              image: 'ghcr.io/test/server:latest',
-              tools: ['tool1', 'tool2'],
-            },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({
+      workloads: [stoppedWorkload],
+    }))
+    mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      ...stoppedWorkload,
+      image: stoppedWorkload.package,
+    }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          image: 'ghcr.io/test/server:latest',
+          tools: ['tool1', 'tool2'],
+        },
+      ],
+    }))
 
     mockRestartServer.mockImplementation((_, options) => {
       options?.onSuccess?.()
@@ -659,32 +590,22 @@ describe('Customize Tools Page - Server Not Running', () => {
       status: 'stopped',
     })
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json({
-          workloads: [stoppedWorkload],
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json({
-          ...stoppedWorkload,
-          image: stoppedWorkload.package,
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({ keys: [] })
-      }),
-      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-        return HttpResponse.json({
-          servers: [
-            {
-              image: 'ghcr.io/test/server:latest',
-              tools: ['tool1', 'tool2'],
-            },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({
+      workloads: [stoppedWorkload],
+    }))
+    mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      ...stoppedWorkload,
+      image: stoppedWorkload.package,
+    }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          image: 'ghcr.io/test/server:latest',
+          tools: ['tool1', 'tool2'],
+        },
+      ],
+    }))
 
     const { queryClient, router } = setupRouterWithPage('test-local-server')
     const user = userEvent.setup()
@@ -721,32 +642,22 @@ describe('Customize Tools Page - Server Not Running', () => {
       status: 'stopped',
     })
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json({
-          workloads: [stoppedWorkload],
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json({
-          ...stoppedWorkload,
-          image: stoppedWorkload.package,
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({ keys: [] })
-      }),
-      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-        return HttpResponse.json({
-          servers: [
-            {
-              image: 'ghcr.io/test/server:latest',
-              tools: ['tool1', 'tool2'],
-            },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({
+      workloads: [stoppedWorkload],
+    }))
+    mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      ...stoppedWorkload,
+      image: stoppedWorkload.package,
+    }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          image: 'ghcr.io/test/server:latest',
+          tools: ['tool1', 'tool2'],
+        },
+      ],
+    }))
 
     mockRestartServer.mockImplementation((_, options) => {
       options?.onError?.()
@@ -806,32 +717,22 @@ describe('Customize Tools Page - Server Not Running', () => {
       submittedAt: Date.now(),
     })
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json({
-          workloads: [stoppedWorkload],
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json({
-          ...stoppedWorkload,
-          image: stoppedWorkload.package,
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({ keys: [] })
-      }),
-      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-        return HttpResponse.json({
-          servers: [
-            {
-              image: 'ghcr.io/test/server:latest',
-              tools: ['tool1', 'tool2'],
-            },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({
+      workloads: [stoppedWorkload],
+    }))
+    mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      ...stoppedWorkload,
+      image: stoppedWorkload.package,
+    }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          image: 'ghcr.io/test/server:latest',
+          tools: ['tool1', 'tool2'],
+        },
+      ],
+    }))
 
     const { queryClient, router } = setupRouterWithPage('test-local-server')
 
@@ -856,32 +757,22 @@ describe('Customize Tools Page - Server Not Running', () => {
       group: 'test-group',
     })
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json({
-          workloads: [stoppedWorkload],
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json({
-          ...stoppedWorkload,
-          image: stoppedWorkload.package,
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({ keys: [] })
-      }),
-      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-        return HttpResponse.json({
-          servers: [
-            {
-              image: 'ghcr.io/test/server:latest',
-              tools: ['tool1', 'tool2'],
-            },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({
+      workloads: [stoppedWorkload],
+    }))
+    mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      ...stoppedWorkload,
+      image: stoppedWorkload.package,
+    }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          image: 'ghcr.io/test/server:latest',
+          tools: ['tool1', 'tool2'],
+        },
+      ],
+    }))
 
     const { queryClient, router } = setupRouterWithPage('test-local-server')
     const user = userEvent.setup()
@@ -924,32 +815,22 @@ describe('Customize Tools Page - Server Not Running', () => {
       status: 'stopped',
     })
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json({
-          workloads: [stoppedWorkload],
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json({
-          ...stoppedWorkload,
-          image: stoppedWorkload.package,
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({ keys: [] })
-      }),
-      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-        return HttpResponse.json({
-          servers: [
-            {
-              image: 'ghcr.io/test/server:latest',
-              tools: ['tool1', 'tool2'],
-            },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({
+      workloads: [stoppedWorkload],
+    }))
+    mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      ...stoppedWorkload,
+      image: stoppedWorkload.package,
+    }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          image: 'ghcr.io/test/server:latest',
+          tools: ['tool1', 'tool2'],
+        },
+      ],
+    }))
 
     const { queryClient, router } = setupRouterWithPage('test-local-server')
 
@@ -995,7 +876,6 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
   })
 
   afterEach(() => {
-    mswServer.resetHandlers()
     vi.clearAllMocks()
   })
 
@@ -1007,32 +887,22 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
         tools_override: undefined, // No overrides
       })
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json({
-          workloads: [workload],
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json({
-          ...workload,
-          image: workload.package,
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({ keys: [] })
-      }),
-      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-        return HttpResponse.json({
-          servers: [
-            {
-              image: 'ghcr.io/test/server:latest',
-              tools: ['edit_file', 'make_dir'],
-            },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({
+      workloads: [workload],
+    }))
+    mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      ...workload,
+      image: workload.package,
+    }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          image: 'ghcr.io/test/server:latest',
+          tools: ['edit_file', 'make_dir'],
+        },
+      ],
+    }))
 
     Object.defineProperty(window, 'electronAPI', {
       value: {
@@ -1079,32 +949,22 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
         tools_override: undefined,
       })
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json({
-          workloads: [workload],
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json({
-          ...workload,
-          image: workload.package,
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({ keys: [] })
-      }),
-      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-        return HttpResponse.json({
-          servers: [
-            {
-              image: 'ghcr.io/test/server:latest',
-              tools: ['edit_file', 'make_dir'],
-            },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({
+      workloads: [workload],
+    }))
+    mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      ...workload,
+      image: workload.package,
+    }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          image: 'ghcr.io/test/server:latest',
+          tools: ['edit_file', 'make_dir'],
+        },
+      ],
+    }))
 
     Object.defineProperty(window, 'electronAPI', {
       value: {
@@ -1155,32 +1015,22 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
         tools_override: undefined,
       })
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json({
-          workloads: [workload],
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json({
-          ...workload,
-          image: workload.package,
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({ keys: [] })
-      }),
-      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-        return HttpResponse.json({
-          servers: [
-            {
-              image: 'ghcr.io/test/server:latest',
-              tools: ['edit_file', 'make_dir'],
-            },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({
+      workloads: [workload],
+    }))
+    mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      ...workload,
+      image: workload.package,
+    }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          image: 'ghcr.io/test/server:latest',
+          tools: ['edit_file', 'make_dir'],
+        },
+      ],
+    }))
 
     Object.defineProperty(window, 'electronAPI', {
       value: {
@@ -1227,32 +1077,22 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
         },
       })
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json({
-          workloads: [workload],
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json({
-          ...workload,
-          image: workload.package,
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({ keys: [] })
-      }),
-      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-        return HttpResponse.json({
-          servers: [
-            {
-              image: 'ghcr.io/test/server:latest',
-              tools: ['edit_file', 'make_dir'],
-            },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({
+      workloads: [workload],
+    }))
+    mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      ...workload,
+      image: workload.package,
+    }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          image: 'ghcr.io/test/server:latest',
+          tools: ['edit_file', 'make_dir'],
+        },
+      ],
+    }))
 
     Object.defineProperty(window, 'electronAPI', {
       value: {
@@ -1303,32 +1143,22 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
         },
       })
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json({
-          workloads: [workload],
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json({
-          ...workload,
-          image: workload.package,
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({ keys: [] })
-      }),
-      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-        return HttpResponse.json({
-          servers: [
-            {
-              image: 'ghcr.io/test/server:latest',
-              tools: ['edit_file', 'make_dir'],
-            },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({
+      workloads: [workload],
+    }))
+    mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      ...workload,
+      image: workload.package,
+    }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          image: 'ghcr.io/test/server:latest',
+          tools: ['edit_file', 'make_dir'],
+        },
+      ],
+    }))
 
     Object.defineProperty(window, 'electronAPI', {
       value: {
@@ -1377,32 +1207,22 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
         },
       })
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json({
-          workloads: [workload],
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json({
-          ...workload,
-          image: workload.package,
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({ keys: [] })
-      }),
-      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-        return HttpResponse.json({
-          servers: [
-            {
-              image: 'ghcr.io/test/server:latest',
-              tools: ['edit_file', 'make_dir'],
-            },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({
+      workloads: [workload],
+    }))
+    mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      ...workload,
+      image: workload.package,
+    }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          image: 'ghcr.io/test/server:latest',
+          tools: ['edit_file', 'make_dir'],
+        },
+      ],
+    }))
 
     Object.defineProperty(window, 'electronAPI', {
       value: {
@@ -1457,32 +1277,22 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
       return Promise.resolve()
     })
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json({
-          workloads: [workload],
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json({
-          ...workload,
-          image: workload.package,
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({ keys: [] })
-      }),
-      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-        return HttpResponse.json({
-          servers: [
-            {
-              image: 'ghcr.io/test/server:latest',
-              tools: ['edit_file', 'make_dir'],
-            },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({
+      workloads: [workload],
+    }))
+    mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      ...workload,
+      image: workload.package,
+    }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          image: 'ghcr.io/test/server:latest',
+          tools: ['edit_file', 'make_dir'],
+        },
+      ],
+    }))
 
     Object.defineProperty(window, 'electronAPI', {
       value: {
@@ -1577,32 +1387,22 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
       return Promise.resolve()
     })
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json({
-          workloads: [workload],
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json({
-          ...workload,
-          image: workload.package,
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({ keys: [] })
-      }),
-      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-        return HttpResponse.json({
-          servers: [
-            {
-              image: 'ghcr.io/test/server:latest',
-              tools: ['edit_file', 'make_dir'],
-            },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({
+      workloads: [workload],
+    }))
+    mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      ...workload,
+      image: workload.package,
+    }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          image: 'ghcr.io/test/server:latest',
+          tools: ['edit_file', 'make_dir'],
+        },
+      ],
+    }))
 
     Object.defineProperty(window, 'electronAPI', {
       value: {
@@ -1690,32 +1490,22 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
       return Promise.resolve()
     })
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json({
-          workloads: [workload],
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json({
-          ...workload,
-          image: workload.package,
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({ keys: [] })
-      }),
-      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-        return HttpResponse.json({
-          servers: [
-            {
-              image: 'ghcr.io/test/server:latest',
-              tools: ['edit_file', 'make_dir'],
-            },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({
+      workloads: [workload],
+    }))
+    mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      ...workload,
+      image: workload.package,
+    }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          image: 'ghcr.io/test/server:latest',
+          tools: ['edit_file', 'make_dir'],
+        },
+      ],
+    }))
 
     Object.defineProperty(window, 'electronAPI', {
       value: {
@@ -1786,32 +1576,22 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
         tools_override: undefined,
       })
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json({
-          workloads: [workload],
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json({
-          ...workload,
-          image: workload.package,
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({ keys: [] })
-      }),
-      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-        return HttpResponse.json({
-          servers: [
-            {
-              image: 'ghcr.io/test/server:latest',
-              tools: ['edit_file', 'make_dir'],
-            },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({
+      workloads: [workload],
+    }))
+    mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      ...workload,
+      image: workload.package,
+    }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          image: 'ghcr.io/test/server:latest',
+          tools: ['edit_file', 'make_dir'],
+        },
+      ],
+    }))
 
     Object.defineProperty(window, 'electronAPI', {
       value: {
@@ -1892,32 +1672,22 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
         tools_override: undefined,
       })
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json({
-          workloads: [workload],
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json({
-          ...workload,
-          image: workload.package,
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({ keys: [] })
-      }),
-      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-        return HttpResponse.json({
-          servers: [
-            {
-              image: 'ghcr.io/test/server:latest',
-              tools: ['edit_file', 'make_dir'],
-            },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({
+      workloads: [workload],
+    }))
+    mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      ...workload,
+      image: workload.package,
+    }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          image: 'ghcr.io/test/server:latest',
+          tools: ['edit_file', 'make_dir'],
+        },
+      ],
+    }))
 
     Object.defineProperty(window, 'electronAPI', {
       value: {
@@ -2015,32 +1785,22 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
         },
       })
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-        return HttpResponse.json({
-          workloads: [workload],
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-        return HttpResponse.json({
-          ...workload,
-          image: workload.package,
-        })
-      }),
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({ keys: [] })
-      }),
-      http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-        return HttpResponse.json({
-          servers: [
-            {
-              image: 'ghcr.io/test/server:latest',
-              tools: ['edit_file', 'make_dir'],
-            },
-          ],
-        })
-      })
-    )
+    mockedGetApiV1BetaWorkloads.override(() => ({
+      workloads: [workload],
+    }))
+    mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      ...workload,
+      image: workload.package,
+    }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          image: 'ghcr.io/test/server:latest',
+          tools: ['edit_file', 'make_dir'],
+        },
+      ],
+    }))
 
     Object.defineProperty(window, 'electronAPI', {
       value: {

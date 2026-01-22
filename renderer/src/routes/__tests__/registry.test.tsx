@@ -15,6 +15,17 @@ beforeEach(() => {
 })
 
 it('renders list of MCP servers', async () => {
+  mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+    servers: [
+      {
+        name: 'atlassian',
+        image: 'ghcr.io/test/atlassian:latest',
+        description: 'Atlassian server',
+      },
+    ],
+    remote_servers: [],
+  }))
+
   renderRoute(router)
   await waitFor(() => {
     expect(
@@ -51,6 +62,16 @@ describe('Groups in Registry', () => {
         ...data.registry,
         groups: [],
       },
+    }))
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          name: 'atlassian',
+          image: 'ghcr.io/test/atlassian:latest',
+          description: 'Atlassian server',
+        },
+      ],
+      remote_servers: [],
     }))
 
     renderRoute(router)

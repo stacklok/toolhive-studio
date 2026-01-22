@@ -1,27 +1,14 @@
 import { renderHook, waitFor } from '@testing-library/react'
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useIsServerFromRegistry } from '../use-is-server-from-registry'
-import { server as mswServer } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
-import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { mockedGetApiV1BetaWorkloadsByName } from '@mocks/fixtures/workloads_name/get'
+import { mockedGetApiV1BetaRegistryByNameServers } from '@mocks/fixtures/registry_name_servers/get'
 import type {
-  V1CreateRequest,
   RegistryImageMetadata,
   RegistryRemoteServerMetadata,
   CoreWorkload,
 } from '@api/types.gen'
-
-const createWorkload = (
-  overrides: Partial<V1CreateRequest> = {}
-): V1CreateRequest => {
-  return {
-    name: 'test-server',
-    image: 'ghcr.io/test/server:latest',
-    transport: 'stdio',
-    ...overrides,
-  }
-}
 
 const createRegistryImage = (
   overrides: Partial<RegistryImageMetadata> = {}
@@ -74,31 +61,22 @@ const createWrapper = () => {
 }
 
 describe('useIsServerFromRegistry', () => {
-  beforeEach(() => {
-    mswServer.resetHandlers()
-  })
-
   describe('Server from registry', () => {
     it('identifies a server from registry with matching image and tools', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              createRegistryImage({
-                image: 'ghcr.io/test/server:v1.0.0',
-                tools: ['tool1', 'tool2', 'tool3'],
-              }),
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'ghcr.io/test/server:v1.0.0',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'ghcr.io/test/server:v1.0.0',
+            tools: ['tool1', 'tool2', 'tool3'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-server'),
@@ -119,23 +97,18 @@ describe('useIsServerFromRegistry', () => {
     it('identifies a server from registry even with different tags', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              createRegistryImage({
-                image: 'ghcr.io/test/server:v2.0.0',
-                tools: ['tool1', 'tool2'],
-              }),
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'ghcr.io/test/server:v1.0.0',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'ghcr.io/test/server:v2.0.0',
+            tools: ['tool1', 'tool2'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-server'),
@@ -155,23 +128,18 @@ describe('useIsServerFromRegistry', () => {
     it('identifies a server from registry with image without tag', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createWorkload({ image: 'ghcr.io/test/server' })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              createRegistryImage({
-                image: 'ghcr.io/test/server:latest',
-                tools: ['tool1'],
-              }),
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'ghcr.io/test/server',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'ghcr.io/test/server:latest',
+            tools: ['tool1'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-server'),
@@ -191,23 +159,18 @@ describe('useIsServerFromRegistry', () => {
     it('returns no drift when tags match', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createWorkload({ image: 'ghcr.io/test/server:latest' })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              createRegistryImage({
-                image: 'ghcr.io/test/server:latest',
-                tools: ['tool1', 'tool2'],
-              }),
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'ghcr.io/test/server:latest',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'ghcr.io/test/server:latest',
+            tools: ['tool1', 'tool2'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-server'),
@@ -225,23 +188,18 @@ describe('useIsServerFromRegistry', () => {
     it('returns false when image does not match any registry server', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createWorkload({ image: 'ghcr.io/test/different-server:v1.0.0' })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              createRegistryImage({
-                image: 'ghcr.io/test/server:v1.0.0',
-                tools: ['tool1', 'tool2'],
-              }),
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'ghcr.io/test/different-server:v1.0.0',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'ghcr.io/test/server:v1.0.0',
+            tools: ['tool1', 'tool2'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-server'),
@@ -257,23 +215,18 @@ describe('useIsServerFromRegistry', () => {
     it('returns false when matched registry item has no tools', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              createRegistryImage({
-                image: 'ghcr.io/test/server:v1.0.0',
-                tools: [],
-              }),
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'ghcr.io/test/server:v1.0.0',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'ghcr.io/test/server:v1.0.0',
+            tools: [],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-server'),
@@ -290,22 +243,17 @@ describe('useIsServerFromRegistry', () => {
     it('returns false when matched registry item has undefined tools', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              createRegistryImage({
-                image: 'ghcr.io/test/server:v1.0.0',
-              }),
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'ghcr.io/test/server:v1.0.0',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'ghcr.io/test/server:v1.0.0',
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-server'),
@@ -333,21 +281,18 @@ describe('useIsServerFromRegistry', () => {
     it('returns false when workload has no image', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(createWorkload({ image: '' }))
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              createRegistryImage({
-                image: 'ghcr.io/test/server:v1.0.0',
-                tools: ['tool1'],
-              }),
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: '',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'ghcr.io/test/server:v1.0.0',
+            tools: ['tool1'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-server'),
@@ -363,18 +308,13 @@ describe('useIsServerFromRegistry', () => {
     it('returns false when registry has no servers', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'ghcr.io/test/server:v1.0.0',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-server'),
@@ -393,34 +333,29 @@ describe('useIsServerFromRegistry', () => {
     it('finds the correct server among multiple registry items', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createWorkload({ image: 'ghcr.io/test/server-b:v1.0.0' })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              createRegistryImage({
-                name: 'Server A',
-                image: 'ghcr.io/test/server-a:v1.0.0',
-                tools: ['tool-a'],
-              }),
-              createRegistryImage({
-                name: 'Server B',
-                image: 'ghcr.io/test/server-b:v2.0.0',
-                tools: ['tool-b1', 'tool-b2'],
-              }),
-              createRegistryImage({
-                name: 'Server C',
-                image: 'ghcr.io/test/server-c:v1.0.0',
-                tools: ['tool-c'],
-              }),
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'ghcr.io/test/server-b:v1.0.0',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            name: 'Server A',
+            image: 'ghcr.io/test/server-a:v1.0.0',
+            tools: ['tool-a'],
+          }),
+          createRegistryImage({
+            name: 'Server B',
+            image: 'ghcr.io/test/server-b:v2.0.0',
+            tools: ['tool-b1', 'tool-b2'],
+          }),
+          createRegistryImage({
+            name: 'Server C',
+            image: 'ghcr.io/test/server-c:v1.0.0',
+            tools: ['tool-c'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-server'),
@@ -440,29 +375,24 @@ describe('useIsServerFromRegistry', () => {
     it('matches only the first server when multiple have same image name', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              createRegistryImage({
-                name: 'Server First',
-                image: 'ghcr.io/test/server:v1.0.0',
-                tools: ['tool1', 'tool2'],
-              }),
-              createRegistryImage({
-                name: 'Server Second',
-                image: 'ghcr.io/test/server:v2.0.0',
-                tools: ['tool3', 'tool4'],
-              }),
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'ghcr.io/test/server:v1.0.0',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            name: 'Server First',
+            image: 'ghcr.io/test/server:v1.0.0',
+            tools: ['tool1', 'tool2'],
+          }),
+          createRegistryImage({
+            name: 'Server Second',
+            image: 'ghcr.io/test/server:v2.0.0',
+            tools: ['tool3', 'tool4'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-server'),
@@ -482,23 +412,18 @@ describe('useIsServerFromRegistry', () => {
     it('handles image with multiple colons correctly', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createWorkload({ image: 'registry.io:5000/test/server:v1.0.0' })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              createRegistryImage({
-                image: 'registry.io:5000/test/server:v1.0.0',
-                tools: ['tool1'],
-              }),
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'registry.io:5000/test/server:v1.0.0',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'registry.io:5000/test/server:v1.0.0',
+            tools: ['tool1'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-server'),
@@ -527,23 +452,18 @@ describe('useIsServerFromRegistry', () => {
     it('detects drift even when registry tools exist but tags differ', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createWorkload({ image: 'ghcr.io/test/server:v1.0.0-beta' })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              createRegistryImage({
-                image: 'ghcr.io/test/server:v2.0.0-stable',
-                tools: ['tool1', 'tool2'],
-              }),
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'ghcr.io/test/server:v1.0.0-beta',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'ghcr.io/test/server:v2.0.0-stable',
+            tools: ['tool1', 'tool2'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-server'),
@@ -564,23 +484,18 @@ describe('useIsServerFromRegistry', () => {
     it('returns hasExactMatch true when tools match exactly in same order', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              createRegistryImage({
-                image: 'ghcr.io/test/server:v1.0.0',
-                tools: ['tool1', 'tool2', 'tool3'],
-              }),
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'ghcr.io/test/server:v1.0.0',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'ghcr.io/test/server:v1.0.0',
+            tools: ['tool1', 'tool2', 'tool3'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-server'),
@@ -605,23 +520,18 @@ describe('useIsServerFromRegistry', () => {
     it('returns hasExactMatch true when tools match but in different order', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              createRegistryImage({
-                image: 'ghcr.io/test/server:v1.0.0',
-                tools: ['tool1', 'tool2', 'tool3'],
-              }),
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'ghcr.io/test/server:v1.0.0',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'ghcr.io/test/server:v1.0.0',
+            tools: ['tool1', 'tool2', 'tool3'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-server'),
@@ -646,23 +556,18 @@ describe('useIsServerFromRegistry', () => {
     it('does not mutate the original tools array', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              createRegistryImage({
-                image: 'ghcr.io/test/server:v1.0.0',
-                tools: ['tool1', 'tool2', 'tool3'],
-              }),
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'ghcr.io/test/server:v1.0.0',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'ghcr.io/test/server:v1.0.0',
+            tools: ['tool1', 'tool2', 'tool3'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-server'),
@@ -685,23 +590,18 @@ describe('useIsServerFromRegistry', () => {
     it('identifies added tools in server', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              createRegistryImage({
-                image: 'ghcr.io/test/server:v1.0.0',
-                tools: ['tool1', 'tool2'],
-              }),
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'ghcr.io/test/server:v1.0.0',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'ghcr.io/test/server:v1.0.0',
+            tools: ['tool1', 'tool2'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-server'),
@@ -727,23 +627,18 @@ describe('useIsServerFromRegistry', () => {
     it('identifies missing tools from server', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              createRegistryImage({
-                image: 'ghcr.io/test/server:v1.0.0',
-                tools: ['tool1', 'tool2', 'tool3', 'tool4'],
-              }),
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'ghcr.io/test/server:v1.0.0',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'ghcr.io/test/server:v1.0.0',
+            tools: ['tool1', 'tool2', 'tool3', 'tool4'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-server'),
@@ -764,23 +659,18 @@ describe('useIsServerFromRegistry', () => {
     it('identifies both added and missing tools', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              createRegistryImage({
-                image: 'ghcr.io/test/server:v1.0.0',
-                tools: ['tool1', 'tool2', 'tool3'],
-              }),
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'ghcr.io/test/server:v1.0.0',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'ghcr.io/test/server:v1.0.0',
+            tools: ['tool1', 'tool2', 'tool3'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-server'),
@@ -805,23 +695,18 @@ describe('useIsServerFromRegistry', () => {
     it('returns null when registry item has no tools', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              createRegistryImage({
-                image: 'ghcr.io/test/server:v1.0.0',
-                tools: [],
-              }),
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'ghcr.io/test/server:v1.0.0',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'ghcr.io/test/server:v1.0.0',
+            tools: [],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-server'),
@@ -838,23 +723,18 @@ describe('useIsServerFromRegistry', () => {
     it('returns null when server is not from registry', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createWorkload({ image: 'ghcr.io/test/different-server:v1.0.0' })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              createRegistryImage({
-                image: 'ghcr.io/test/server:v1.0.0',
-                tools: ['tool1', 'tool2'],
-              }),
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'ghcr.io/test/different-server:v1.0.0',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'ghcr.io/test/server:v1.0.0',
+            tools: ['tool1', 'tool2'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-server'),
@@ -871,23 +751,18 @@ describe('useIsServerFromRegistry', () => {
     it('handles duplicate tools correctly', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              createRegistryImage({
-                image: 'ghcr.io/test/server:v1.0.0',
-                tools: ['tool1', 'tool2', 'tool2'],
-              }),
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'ghcr.io/test/server:v1.0.0',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'ghcr.io/test/server:v1.0.0',
+            tools: ['tool1', 'tool2', 'tool2'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-server'),
@@ -914,23 +789,18 @@ describe('useIsServerFromRegistry', () => {
     it('preserves order of tools in the result', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createWorkload({ image: 'ghcr.io/test/server:v1.0.0' })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              createRegistryImage({
-                image: 'ghcr.io/test/server:v1.0.0',
-                tools: ['alpha', 'beta', 'gamma'],
-              }),
-            ],
-          })
-        })
-      )
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'ghcr.io/test/server:v1.0.0',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'ghcr.io/test/server:v1.0.0',
+            tools: ['alpha', 'beta', 'gamma'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-server'),
@@ -958,25 +828,19 @@ describe('useIsServerFromRegistry', () => {
     it('identifies a remote server from registry with matching URL', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createRemoteWorkload({
-              url: 'https://api.example.com/mcp',
-            })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            remote_servers: [
-              createRegistryRemoteServer({
-                url: 'https://api.example.com/mcp',
-                tools: ['remote-tool1', 'remote-tool2'],
-              }),
-            ],
-          })
+      mockedGetApiV1BetaWorkloadsByName.override(() =>
+        createRemoteWorkload({
+          url: 'https://api.example.com/mcp',
         })
       )
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        remote_servers: [
+          createRegistryRemoteServer({
+            url: 'https://api.example.com/mcp',
+            tools: ['remote-tool1', 'remote-tool2'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-remote-server'),
@@ -997,25 +861,19 @@ describe('useIsServerFromRegistry', () => {
     it('does not match remote server when URL is different', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createRemoteWorkload({
-              url: 'https://api.different.com/mcp',
-            })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            remote_servers: [
-              createRegistryRemoteServer({
-                url: 'https://api.example.com/mcp',
-                tools: ['remote-tool1'],
-              }),
-            ],
-          })
+      mockedGetApiV1BetaWorkloadsByName.override(() =>
+        createRemoteWorkload({
+          url: 'https://api.different.com/mcp',
         })
       )
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        remote_servers: [
+          createRegistryRemoteServer({
+            url: 'https://api.example.com/mcp',
+            tools: ['remote-tool1'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-remote-server'),
@@ -1031,36 +889,30 @@ describe('useIsServerFromRegistry', () => {
     it('finds the correct remote server among multiple registry items', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createRemoteWorkload({
-              url: 'https://api.server-b.com/mcp',
-            })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            remote_servers: [
-              createRegistryRemoteServer({
-                name: 'Remote Server A',
-                url: 'https://api.server-a.com/mcp',
-                tools: ['tool-a'],
-              }),
-              createRegistryRemoteServer({
-                name: 'Remote Server B',
-                url: 'https://api.server-b.com/mcp',
-                tools: ['tool-b1', 'tool-b2'],
-              }),
-              createRegistryRemoteServer({
-                name: 'Remote Server C',
-                url: 'https://api.server-c.com/mcp',
-                tools: ['tool-c'],
-              }),
-            ],
-          })
+      mockedGetApiV1BetaWorkloadsByName.override(() =>
+        createRemoteWorkload({
+          url: 'https://api.server-b.com/mcp',
         })
       )
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        remote_servers: [
+          createRegistryRemoteServer({
+            name: 'Remote Server A',
+            url: 'https://api.server-a.com/mcp',
+            tools: ['tool-a'],
+          }),
+          createRegistryRemoteServer({
+            name: 'Remote Server B',
+            url: 'https://api.server-b.com/mcp',
+            tools: ['tool-b1', 'tool-b2'],
+          }),
+          createRegistryRemoteServer({
+            name: 'Remote Server C',
+            url: 'https://api.server-c.com/mcp',
+            tools: ['tool-c'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-remote-server'),
@@ -1077,25 +929,19 @@ describe('useIsServerFromRegistry', () => {
     it('returns false when remote server has no tools', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createRemoteWorkload({
-              url: 'https://api.example.com/mcp',
-            })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            remote_servers: [
-              createRegistryRemoteServer({
-                url: 'https://api.example.com/mcp',
-                tools: [],
-              }),
-            ],
-          })
+      mockedGetApiV1BetaWorkloadsByName.override(() =>
+        createRemoteWorkload({
+          url: 'https://api.example.com/mcp',
         })
       )
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        remote_servers: [
+          createRegistryRemoteServer({
+            url: 'https://api.example.com/mcp',
+            tools: [],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-remote-server'),
@@ -1112,25 +958,19 @@ describe('useIsServerFromRegistry', () => {
     it('works with getToolsDiffFromRegistry for remote servers', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createRemoteWorkload({
-              url: 'https://api.example.com/mcp',
-            })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            remote_servers: [
-              createRegistryRemoteServer({
-                url: 'https://api.example.com/mcp',
-                tools: ['remote-tool1', 'remote-tool2', 'remote-tool3'],
-              }),
-            ],
-          })
+      mockedGetApiV1BetaWorkloadsByName.override(() =>
+        createRemoteWorkload({
+          url: 'https://api.example.com/mcp',
         })
       )
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        remote_servers: [
+          createRegistryRemoteServer({
+            url: 'https://api.example.com/mcp',
+            tools: ['remote-tool1', 'remote-tool2', 'remote-tool3'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-remote-server'),
@@ -1154,31 +994,25 @@ describe('useIsServerFromRegistry', () => {
     it('handles both remote and container servers in registry', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createRemoteWorkload({
-              url: 'https://api.example.com/mcp',
-            })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            servers: [
-              createRegistryImage({
-                image: 'ghcr.io/test/server:v1.0.0',
-                tools: ['container-tool1'],
-              }),
-            ],
-            remote_servers: [
-              createRegistryRemoteServer({
-                url: 'https://api.example.com/mcp',
-                tools: ['remote-tool1'],
-              }),
-            ],
-          })
+      mockedGetApiV1BetaWorkloadsByName.override(() =>
+        createRemoteWorkload({
+          url: 'https://api.example.com/mcp',
         })
       )
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'ghcr.io/test/server:v1.0.0',
+            tools: ['container-tool1'],
+          }),
+        ],
+        remote_servers: [
+          createRegistryRemoteServer({
+            url: 'https://api.example.com/mcp',
+            tools: ['remote-tool1'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-remote-server'),
@@ -1196,25 +1030,19 @@ describe('useIsServerFromRegistry', () => {
     it('URL match must be exact (case-sensitive)', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createRemoteWorkload({
-              url: 'https://api.Example.com/mcp',
-            })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            remote_servers: [
-              createRegistryRemoteServer({
-                url: 'https://api.example.com/mcp',
-                tools: ['remote-tool1'],
-              }),
-            ],
-          })
+      mockedGetApiV1BetaWorkloadsByName.override(() =>
+        createRemoteWorkload({
+          url: 'https://api.Example.com/mcp',
         })
       )
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        remote_servers: [
+          createRegistryRemoteServer({
+            url: 'https://api.example.com/mcp',
+            tools: ['remote-tool1'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-remote-server'),
@@ -1232,25 +1060,19 @@ describe('useIsServerFromRegistry', () => {
     it('returns exact match for remote server with same tools', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createRemoteWorkload({
-              url: 'https://api.example.com/mcp',
-            })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            remote_servers: [
-              createRegistryRemoteServer({
-                url: 'https://api.example.com/mcp',
-                tools: ['remote-tool1', 'remote-tool2', 'remote-tool3'],
-              }),
-            ],
-          })
+      mockedGetApiV1BetaWorkloadsByName.override(() =>
+        createRemoteWorkload({
+          url: 'https://api.example.com/mcp',
         })
       )
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        remote_servers: [
+          createRegistryRemoteServer({
+            url: 'https://api.example.com/mcp',
+            tools: ['remote-tool1', 'remote-tool2', 'remote-tool3'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-remote-server'),
@@ -1275,25 +1097,19 @@ describe('useIsServerFromRegistry', () => {
     it('returns exact match for remote server with tools in different order', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createRemoteWorkload({
-              url: 'https://api.example.com/mcp',
-            })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            remote_servers: [
-              createRegistryRemoteServer({
-                url: 'https://api.example.com/mcp',
-                tools: ['remote-tool1', 'remote-tool2', 'remote-tool3'],
-              }),
-            ],
-          })
+      mockedGetApiV1BetaWorkloadsByName.override(() =>
+        createRemoteWorkload({
+          url: 'https://api.example.com/mcp',
         })
       )
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        remote_servers: [
+          createRegistryRemoteServer({
+            url: 'https://api.example.com/mcp',
+            tools: ['remote-tool1', 'remote-tool2', 'remote-tool3'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-remote-server'),
@@ -1318,25 +1134,19 @@ describe('useIsServerFromRegistry', () => {
     it('identifies added tools in remote server', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createRemoteWorkload({
-              url: 'https://api.example.com/mcp',
-            })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            remote_servers: [
-              createRegistryRemoteServer({
-                url: 'https://api.example.com/mcp',
-                tools: ['remote-tool1', 'remote-tool2'],
-              }),
-            ],
-          })
+      mockedGetApiV1BetaWorkloadsByName.override(() =>
+        createRemoteWorkload({
+          url: 'https://api.example.com/mcp',
         })
       )
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        remote_servers: [
+          createRegistryRemoteServer({
+            url: 'https://api.example.com/mcp',
+            tools: ['remote-tool1', 'remote-tool2'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-remote-server'),
@@ -1362,30 +1172,24 @@ describe('useIsServerFromRegistry', () => {
     it('identifies missing tools from remote server', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createRemoteWorkload({
-              url: 'https://api.example.com/mcp',
-            })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            remote_servers: [
-              createRegistryRemoteServer({
-                url: 'https://api.example.com/mcp',
-                tools: [
-                  'remote-tool1',
-                  'remote-tool2',
-                  'remote-tool3',
-                  'remote-tool4',
-                ],
-              }),
-            ],
-          })
+      mockedGetApiV1BetaWorkloadsByName.override(() =>
+        createRemoteWorkload({
+          url: 'https://api.example.com/mcp',
         })
       )
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        remote_servers: [
+          createRegistryRemoteServer({
+            url: 'https://api.example.com/mcp',
+            tools: [
+              'remote-tool1',
+              'remote-tool2',
+              'remote-tool3',
+              'remote-tool4',
+            ],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-remote-server'),
@@ -1409,25 +1213,19 @@ describe('useIsServerFromRegistry', () => {
     it('identifies both added and missing tools for remote server', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createRemoteWorkload({
-              url: 'https://api.example.com/mcp',
-            })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            remote_servers: [
-              createRegistryRemoteServer({
-                url: 'https://api.example.com/mcp',
-                tools: ['remote-tool1', 'remote-tool2', 'remote-tool3'],
-              }),
-            ],
-          })
+      mockedGetApiV1BetaWorkloadsByName.override(() =>
+        createRemoteWorkload({
+          url: 'https://api.example.com/mcp',
         })
       )
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        remote_servers: [
+          createRegistryRemoteServer({
+            url: 'https://api.example.com/mcp',
+            tools: ['remote-tool1', 'remote-tool2', 'remote-tool3'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-remote-server'),
@@ -1452,25 +1250,19 @@ describe('useIsServerFromRegistry', () => {
     it('handles duplicate tools correctly for remote server', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createRemoteWorkload({
-              url: 'https://api.example.com/mcp',
-            })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            remote_servers: [
-              createRegistryRemoteServer({
-                url: 'https://api.example.com/mcp',
-                tools: ['remote-tool1', 'remote-tool2', 'remote-tool2'],
-              }),
-            ],
-          })
+      mockedGetApiV1BetaWorkloadsByName.override(() =>
+        createRemoteWorkload({
+          url: 'https://api.example.com/mcp',
         })
       )
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        remote_servers: [
+          createRegistryRemoteServer({
+            url: 'https://api.example.com/mcp',
+            tools: ['remote-tool1', 'remote-tool2', 'remote-tool2'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-remote-server'),
@@ -1496,25 +1288,19 @@ describe('useIsServerFromRegistry', () => {
     it('returns null when remote server is not from registry', async () => {
       const wrapper = createWrapper()
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/workloads/:name'), () => {
-          return HttpResponse.json(
-            createRemoteWorkload({
-              url: 'https://api.different.com/mcp',
-            })
-          )
-        }),
-        http.get(mswEndpoint('/api/v1beta/registry/:name/servers'), () => {
-          return HttpResponse.json({
-            remote_servers: [
-              createRegistryRemoteServer({
-                url: 'https://api.example.com/mcp',
-                tools: ['remote-tool1', 'remote-tool2'],
-              }),
-            ],
-          })
+      mockedGetApiV1BetaWorkloadsByName.override(() =>
+        createRemoteWorkload({
+          url: 'https://api.different.com/mcp',
         })
       )
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        remote_servers: [
+          createRegistryRemoteServer({
+            url: 'https://api.example.com/mcp',
+            tools: ['remote-tool1', 'remote-tool2'],
+          }),
+        ],
+      }))
 
       const { result } = renderHook(
         () => useIsServerFromRegistry('test-remote-server'),
