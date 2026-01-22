@@ -26,6 +26,7 @@ vi.mock('../symlink-manager', () => ({
 
 vi.mock('../path-configurator', () => ({
   configureShellPath: vi.fn(),
+  checkPathConfiguration: vi.fn(),
 }))
 
 vi.mock('../dialogs', () => ({
@@ -50,6 +51,7 @@ vi.mock('electron', () => ({
   app: {
     isPackaged: false,
     getVersion: () => '1.0.0',
+    quit: vi.fn(),
   },
 }))
 
@@ -61,7 +63,10 @@ import {
   getBundledCliPath,
   repairSymlink,
 } from '../symlink-manager'
-import { configureShellPath } from '../path-configurator'
+import {
+  configureShellPath,
+  checkPathConfiguration,
+} from '../path-configurator'
 import {
   showExternalCliDialog,
   showSymlinkBrokenDialog,
@@ -79,6 +84,7 @@ const mockCreateMarkerForDesktopInstall = vi.mocked(
   createMarkerForDesktopInstall
 )
 const mockConfigureShellPath = vi.mocked(configureShellPath)
+const mockCheckPathConfiguration = vi.mocked(checkPathConfiguration)
 const mockShowExternalCliDialog = vi.mocked(showExternalCliDialog)
 const mockShowSymlinkBrokenDialog = vi.mocked(showSymlinkBrokenDialog)
 const mockShowSymlinkTamperedDialog = vi.mocked(showSymlinkTamperedDialog)
@@ -87,6 +93,12 @@ describe('validation', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockGetBundledCliPath.mockReturnValue('/app/resources/bin/thv')
+    // Default mock for checkPathConfiguration
+    mockCheckPathConfiguration.mockResolvedValue({
+      isConfigured: true,
+      modifiedFiles: [],
+      pathEntry: '/home/testuser/.toolhive/bin',
+    })
   })
 
   afterEach(() => {
@@ -213,6 +225,16 @@ describe('validation', () => {
 
   describe('handleValidationResult', () => {
     it('returns true for valid status', async () => {
+      // Mock marker with same desktop version so no update is needed
+      mockReadMarkerFile.mockReturnValue({
+        schema_version: 1,
+        source: 'desktop',
+        install_method: 'symlink',
+        cli_version: '1.0.0',
+        installed_at: '2024-01-01',
+        desktop_version: '1.0.0', // Same as app.getVersion() mock
+      })
+
       const result = await handleValidationResult({ status: 'valid' }, 'darwin')
 
       expect(result).toBe(true)
@@ -238,6 +260,11 @@ describe('validation', () => {
     it('repairs symlink when user accepts broken dialog', async () => {
       mockShowSymlinkBrokenDialog.mockReturnValue(true)
       mockRepairSymlink.mockReturnValue({ success: true })
+      mockGetCliInfo.mockResolvedValue({
+        exists: true,
+        version: '1.0.0',
+        isExecutable: true,
+      })
 
       const result = await handleValidationResult(
         { status: 'symlink-broken', target: '/old/path' },
@@ -263,6 +290,11 @@ describe('validation', () => {
     it('fixes symlink when user accepts tampered dialog', async () => {
       mockShowSymlinkTamperedDialog.mockReturnValue(true)
       mockRepairSymlink.mockReturnValue({ success: true })
+      mockGetCliInfo.mockResolvedValue({
+        exists: true,
+        version: '1.0.0',
+        isExecutable: true,
+      })
 
       const result = await handleValidationResult(
         { status: 'symlink-tampered', target: '/other/path' },

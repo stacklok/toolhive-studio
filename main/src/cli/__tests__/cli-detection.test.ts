@@ -75,7 +75,7 @@ describe('cli-detection', () => {
       })
 
       mockExecFileAsync.mockResolvedValue({
-        stdout: 'thv version 1.2.3',
+        stdout: 'ToolHive v1.2.3',
         stderr: '',
       })
 
@@ -92,7 +92,10 @@ describe('cli-detection', () => {
         '/usr/local/bin/thv': 'binary content',
       })
 
-      mockExecFileAsync.mockResolvedValue({ stdout: 'v2.0.0', stderr: '' })
+      mockExecFileAsync.mockResolvedValue({
+        stdout: 'ToolHive v2.0.0',
+        stderr: '',
+      })
 
       const result = await detectExternalCli('darwin')
 
@@ -106,7 +109,10 @@ describe('cli-detection', () => {
         '/usr/local/bin/thv': 'binary content',
       })
 
-      mockExecFileAsync.mockResolvedValue({ stdout: '1.0.0', stderr: '' })
+      mockExecFileAsync.mockResolvedValue({
+        stdout: 'ToolHive v1.0.0',
+        stderr: '',
+      })
 
       const result = await detectExternalCli('linux')
 
@@ -133,7 +139,10 @@ describe('cli-detection', () => {
         '/usr/local/bin/thv': 'binary content',
       })
 
-      mockExecFileAsync.mockResolvedValue({ stdout: '1.0.0', stderr: '' })
+      mockExecFileAsync.mockResolvedValue({
+        stdout: 'ToolHive v1.0.0',
+        stderr: '',
+      })
 
       const result = await detectExternalCli('darwin')
 
@@ -159,7 +168,7 @@ describe('cli-detection', () => {
       })
 
       mockExecFileAsync.mockResolvedValue({
-        stdout: 'thv version 1.5.0',
+        stdout: 'ToolHive v1.5.0',
         stderr: '',
       })
 
