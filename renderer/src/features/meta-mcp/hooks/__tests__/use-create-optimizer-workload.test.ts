@@ -156,7 +156,8 @@ describe('useCreateOptimizerWorkload', () => {
     })
 
     it('loads optimizer workload detail when it exists', async () => {
-      mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
         name: META_MCP_SERVER_NAME,
         group: MCP_OPTIMIZER_GROUP_NAME,
         image: `${MCP_OPTIMIZER_BASE_IMAGE}:${MCP_OPTIMIZER_IMAGE_VERSION}`,
@@ -180,7 +181,8 @@ describe('useCreateOptimizerWorkload', () => {
     })
 
     it('returns isMCPOptimizerEnabled as true when workload has ALLOWED_GROUPS env var', async () => {
-      mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
         name: META_MCP_SERVER_NAME,
         group: MCP_OPTIMIZER_GROUP_NAME,
         env_vars: {
@@ -199,7 +201,8 @@ describe('useCreateOptimizerWorkload', () => {
     })
 
     it('returns isMCPOptimizerEnabled as false when workload exists without ALLOWED_GROUPS env var', async () => {
-      mockedGetApiV1BetaWorkloadsByName.override(() => ({
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
         name: META_MCP_SERVER_NAME,
         group: MCP_OPTIMIZER_GROUP_NAME,
         env_vars: {},
