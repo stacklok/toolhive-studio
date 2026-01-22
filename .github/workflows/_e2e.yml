@@ -96,21 +96,21 @@ jobs:
           ELECTRON_DISABLE_SANDBOX: 'true'
         run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" pnpm e2e:prebuilt
 
-      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: ${{ always() }}
         with:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
 
-      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: ${{ always() }}
         with:
           name: test-videos
           path: test-videos/
           retention-days: 30
 
-      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: ${{ always() }}
         with:
           name: test-results
