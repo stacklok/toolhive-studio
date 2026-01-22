@@ -9,6 +9,8 @@ export const MockScenarios = {
   Empty: 'empty',
   /** API returns 500 Internal Server Error */
   ServerError: 'server-error',
+  /** Resource not found - API returns 404 */
+  NotFound: 'not-found',
 } as const
 
 /**

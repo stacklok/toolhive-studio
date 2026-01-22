@@ -2,12 +2,14 @@ import { renderHook, waitFor, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useUpdateServer } from '../use-update-server'
-import { server as mswServer, recordRequests } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
-import { mswEndpoint } from '@/common/mocks/customHandlers'
+import { recordRequests } from '@/common/mocks/node'
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
 import type { FormSchemaLocalMcp } from '../../lib/form-schema-local-mcp'
 import { getApiV1BetaWorkloadsQueryKey } from '@api/@tanstack/react-query.gen'
+import { mockedGetApiV1BetaClients } from '@mocks/fixtures/clients/get'
+import { mockedPostApiV1BetaWorkloadsByNameEdit } from '@mocks/fixtures/workloads_name_edit/post'
+import { mockedGetApiV1BetaSecretsDefaultKeys } from '@mocks/fixtures/secrets_default_keys/get'
+import { mockedPostApiV1BetaSecretsDefaultKeys } from '@mocks/fixtures/secrets_default_keys/post'
 
 // Mock the useLocation hook
 vi.mock('@tanstack/react-router', () => ({
@@ -42,11 +44,7 @@ const createWrapper = (groupName: string) => {
 describe('useUpdateServer', () => {
   beforeEach(() => {
     // Mock the queries that the hook depends on
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/clients'), () => {
-        return HttpResponse.json({ clients: [] })
-      })
-    )
+    mockedGetApiV1BetaClients.override(() => [])
   })
 
   describe('Remote Server', () => {
@@ -54,11 +52,11 @@ describe('useUpdateServer', () => {
       const rec = recordRequests()
       const wrapper = createWrapper('production')
 
-      mswServer.use(
-        http.post(mswEndpoint('/api/v1beta/workloads/:name/edit'), () => {
-          return HttpResponse.json({ name: 'test-remote-server', port: 8080 })
-        })
-      )
+      mockedPostApiV1BetaWorkloadsByNameEdit.override((data) => ({
+        ...data,
+        name: 'test-remote-server',
+        port: 8080,
+      }))
 
       const { result } = renderHook(
         () =>
@@ -114,11 +112,11 @@ describe('useUpdateServer', () => {
       const rec = recordRequests()
       const wrapper = createWrapper('development')
 
-      mswServer.use(
-        http.post(mswEndpoint('/api/v1beta/workloads/:name/edit'), () => {
-          return HttpResponse.json({ name: 'test-oauth-server', port: 8080 })
-        })
-      )
+      mockedPostApiV1BetaWorkloadsByNameEdit.override((data) => ({
+        ...data,
+        name: 'test-oauth-server',
+        port: 8080,
+      }))
 
       const { result } = renderHook(
         () =>
@@ -183,24 +181,15 @@ describe('useUpdateServer', () => {
       const onSecretSuccess = vi.fn()
       const wrapper = createWrapper('development')
 
-      mswServer.use(
-        http.post(
-          mswEndpoint('/api/v1beta/secrets/default/keys'),
-          async ({ request }) => {
-            const body = (await request.json()) as { key: string }
-            return HttpResponse.json({ key: body.key })
-          }
-        ),
-        http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-          return HttpResponse.json({ keys: [] })
-        }),
-        http.post(mswEndpoint('/api/v1beta/workloads/:name/edit'), () => {
-          return HttpResponse.json({
-            name: 'test-oauth-new-secret',
-            port: 8080,
-          })
-        })
-      )
+      mockedPostApiV1BetaSecretsDefaultKeys.override(() => ({
+        key: 'OAUTH_CLIENT_SECRET_NEW',
+      }))
+      mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+      mockedPostApiV1BetaWorkloadsByNameEdit.override((data) => ({
+        ...data,
+        name: 'test-oauth-new-secret',
+        port: 8080,
+      }))
 
       const { result } = renderHook(
         () =>
@@ -271,25 +260,15 @@ describe('useUpdateServer', () => {
 
       // Mock that simulates a naming collision:
       // User requests "OAUTH_CLIENT_SECRET" but store creates "OAUTH_CLIENT_SECRET_2"
-      mswServer.use(
-        http.post(
-          mswEndpoint('/api/v1beta/secrets/default/keys'),
-          async ({ request }) => {
-            const body = (await request.json()) as { key: string }
-            // Simulate collision: return with _2 suffix
-            return HttpResponse.json({ key: `${body.key}_2` })
-          }
-        ),
-        http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-          return HttpResponse.json({ keys: [] })
-        }),
-        http.post(mswEndpoint('/api/v1beta/workloads/:name/edit'), () => {
-          return HttpResponse.json({
-            name: 'test-oauth-collision',
-            port: 8080,
-          })
-        })
-      )
+      mockedPostApiV1BetaSecretsDefaultKeys.override(() => ({
+        key: 'OAUTH_CLIENT_SECRET_2',
+      }))
+      mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+      mockedPostApiV1BetaWorkloadsByNameEdit.override((data) => ({
+        ...data,
+        name: 'test-oauth-collision',
+        port: 8080,
+      }))
 
       const { result } = renderHook(
         () =>
@@ -357,14 +336,11 @@ describe('useUpdateServer', () => {
       const rec = recordRequests()
       const wrapper = createWrapper('development')
 
-      mswServer.use(
-        http.post(mswEndpoint('/api/v1beta/workloads/:name/edit'), () => {
-          return HttpResponse.json({
-            name: 'test-oauth-existing-secret',
-            port: 8080,
-          })
-        })
-      )
+      mockedPostApiV1BetaWorkloadsByNameEdit.override((data) => ({
+        ...data,
+        name: 'test-oauth-existing-secret',
+        port: 8080,
+      }))
 
       const { result } = renderHook(
         () =>
@@ -434,21 +410,15 @@ describe('useUpdateServer', () => {
       const onSecretSuccess = vi.fn()
       const wrapper = createWrapper('development')
 
-      mswServer.use(
-        http.post(
-          mswEndpoint('/api/v1beta/secrets/default/keys'),
-          async ({ request }) => {
-            const body = (await request.json()) as { key: string }
-            return HttpResponse.json({ key: body.key })
-          }
-        ),
-        http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-          return HttpResponse.json({ keys: [] })
-        }),
-        http.post(mswEndpoint('/api/v1beta/workloads/:name/edit'), () => {
-          return HttpResponse.json({ name: 'test-local-server', port: 8080 })
-        })
-      )
+      mockedPostApiV1BetaSecretsDefaultKeys.override(() => ({
+        key: 'API_KEY',
+      }))
+      mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+      mockedPostApiV1BetaWorkloadsByNameEdit.override((data) => ({
+        ...data,
+        name: 'test-local-server',
+        port: 8080,
+      }))
 
       const { result } = renderHook(
         () =>
@@ -520,14 +490,12 @@ describe('useUpdateServer', () => {
       const rec = recordRequests()
       const wrapper = createWrapper('testing')
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-          return HttpResponse.json({ keys: [] })
-        }),
-        http.post(mswEndpoint('/api/v1beta/workloads/:name/edit'), () => {
-          return HttpResponse.json({ name: 'test-npm-server', port: 8080 })
-        })
-      )
+      mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+      mockedPostApiV1BetaWorkloadsByNameEdit.override((data) => ({
+        ...data,
+        name: 'test-npm-server',
+        port: 8080,
+      }))
 
       const { result } = renderHook(
         () =>
@@ -581,14 +549,12 @@ describe('useUpdateServer', () => {
       const rec = recordRequests()
       const wrapper = createWrapper('development')
 
-      mswServer.use(
-        http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-          return HttpResponse.json({ keys: [] })
-        }),
-        http.post(mswEndpoint('/api/v1beta/workloads/:name/edit'), () => {
-          return HttpResponse.json({ name: 'test-no-secrets', port: 8080 })
-        })
-      )
+      mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+      mockedPostApiV1BetaWorkloadsByNameEdit.override((data) => ({
+        ...data,
+        name: 'test-no-secrets',
+        port: 8080,
+      }))
 
       const { result } = renderHook(
         () =>
@@ -640,11 +606,11 @@ describe('useUpdateServer', () => {
     it('correctly discriminates between local and remote data types', async () => {
       const wrapper = createWrapper('test-group')
 
-      mswServer.use(
-        http.post(mswEndpoint('/api/v1beta/workloads/:name/edit'), () => {
-          return HttpResponse.json({ name: 'test-server', port: 8080 })
-        })
-      )
+      mockedPostApiV1BetaWorkloadsByNameEdit.override((data) => ({
+        ...data,
+        name: 'test-server',
+        port: 8080,
+      }))
 
       const { result: remoteResult } = renderHook(
         () =>

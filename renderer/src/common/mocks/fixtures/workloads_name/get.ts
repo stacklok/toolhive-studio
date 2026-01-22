@@ -3,6 +3,7 @@ import type {
   GetApiV1BetaWorkloadsByNameData,
 } from '@api/types.gen'
 import { AutoAPIMock } from '@mocks'
+import { HttpResponse } from 'msw'
 
 export const mockedGetApiV1BetaWorkloadsByName = AutoAPIMock<
   GetApiV1BetaWorkloadsByNameResponse,
@@ -19,4 +20,8 @@ export const mockedGetApiV1BetaWorkloadsByName = AutoAPIMock<
   volumes: [],
   network_isolation: false,
   group: 'default',
-})
+}).scenario('not-found', (mock) =>
+  mock.overrideHandler(() =>
+    HttpResponse.json({ error: 'Not found' }, { status: 404 })
+  )
+)

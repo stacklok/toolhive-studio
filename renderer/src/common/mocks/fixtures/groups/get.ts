@@ -14,4 +14,4 @@ export const mockedGetApiV1BetaGroups = AutoAPIMock<
     { name: 'archive', registered_clients: [] },
     { name: 'my group', registered_clients: [] },
   ],
-})
+}).scenario('empty', (mock) => mock.override(() => ({ groups: [] })))

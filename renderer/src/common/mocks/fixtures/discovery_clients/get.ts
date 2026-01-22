@@ -16,4 +16,4 @@ export const mockedGetApiV1BetaDiscoveryClients = AutoAPIMock<
     { client_type: 'cursor', installed: true, registered: false },
     { client_type: 'claude-code', installed: true, registered: false },
   ],
-})
+}).scenario('empty', (mock) => mock.override(() => ({ clients: [] })))

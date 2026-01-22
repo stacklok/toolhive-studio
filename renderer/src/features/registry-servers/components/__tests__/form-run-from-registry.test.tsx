@@ -4,11 +4,9 @@ import { it, expect, vi, describe, beforeEach, afterEach } from 'vitest'
 import { FormRunFromRegistry } from '../form-run-from-registry'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { server as mswServer } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
 import { useRunFromRegistry } from '../../hooks/use-run-from-registry'
-import { mswEndpoint } from '@/common/mocks/customHandlers'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
+import { mockedGetApiV1BetaSecretsDefaultKeys } from '@mocks/fixtures/secrets_default_keys/get'
 
 // Mock the hook
 vi.mock('../../hooks/use-run-from-registry.tsx', () => ({
@@ -277,14 +275,10 @@ describe('FormRunFromRegistry', () => {
 
     // --- Scenario 2: Secret from store ---
     vi.clearAllMocks()
-    // Restore MSW mock for secrets endpoint
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-        return HttpResponse.json({
-          keys: [{ key: 'MY_AWESOME_SECRET' }],
-        })
-      })
-    )
+    // Override secrets endpoint to return custom key
+    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({
+      keys: [{ key: 'MY_AWESOME_SECRET' }],
+    }))
     mockUseRunFromRegistry.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
       isErrorSecrets: false,

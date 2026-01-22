@@ -12,4 +12,4 @@ export const mockedPostApiV1BetaClientsRegister = AutoAPIMock<
     groups: ['default', 'research', 'archive', 'my group'],
     name: 'vscode',
   },
-])
+]).scenario('empty', (mock) => mock.override(() => []))

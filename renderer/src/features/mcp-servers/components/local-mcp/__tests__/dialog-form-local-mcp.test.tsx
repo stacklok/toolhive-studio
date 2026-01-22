@@ -4,17 +4,18 @@ import { it, expect, vi, describe, beforeEach } from 'vitest'
 import { DialogFormLocalMcp } from '../dialog-form-local-mcp'
 import userEvent from '@testing-library/user-event'
 import { Dialog } from '@/common/components/ui/dialog'
-import { server as mswServer } from '@/common/mocks/node'
-import { http, HttpResponse } from 'msw'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useRunCustomServer } from '../../../hooks/use-run-custom-server'
-import { mswEndpoint } from '@/common/mocks/customHandlers'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 import { useUpdateServer } from '../../../hooks/use-update-server'
 import {
   MCP_OPTIMIZER_GROUP_NAME,
   META_MCP_SERVER_NAME,
 } from '@/common/lib/constants'
+import { mockedGetApiV1BetaSecretsDefaultKeys } from '@mocks/fixtures/secrets_default_keys/get'
+import { mockedGetApiV1BetaWorkloads } from '@mocks/fixtures/workloads/get'
+import { mockedGetApiV1BetaGroups } from '@mocks/fixtures/groups/get'
+import { mockedGetApiV1BetaWorkloadsByName } from '@mocks/fixtures/workloads_name/get'
 
 // Mock the hook
 vi.mock('../../../hooks/use-run-custom-server', () => ({
@@ -60,22 +61,16 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => (
 beforeEach(() => {
   vi.clearAllMocks()
 
-  // Setup MSW with default secrets
-  mswServer.use(
-    http.get(mswEndpoint('/api/v1beta/secrets/default/keys'), () => {
-      return HttpResponse.json({
-        keys: [
-          { key: 'SECRET_FROM_STORE' },
-          { key: 'GITHUB_TOKEN' },
-          { key: 'API_KEY' },
-        ],
-      })
-    }),
-    // Mock empty workloads by default
-    http.get(mswEndpoint('/api/v1beta/workloads'), () => {
-      return HttpResponse.json({ workloads: [] })
-    })
-  )
+  // Setup mocks with default secrets
+  mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({
+    keys: [
+      { key: 'SECRET_FROM_STORE' },
+      { key: 'GITHUB_TOKEN' },
+      { key: 'API_KEY' },
+    ],
+  }))
+  // Mock empty workloads by default
+  mockedGetApiV1BetaWorkloads.activateScenario('empty')
 
   // Default mock implementation
   mockUseRunCustomServer.mockReturnValue({
@@ -132,13 +127,9 @@ describe('DialogFormLocalMcp', () => {
 
   it('opens with the latest groupName when group changes before opening', async () => {
     // Provide groups API
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [{ name: 'default' }, { name: 'research' }],
-        })
-      )
-    )
+    mockedGetApiV1BetaGroups.override(() => ({
+      groups: [{ name: 'default' }, { name: 'research' }],
+    }))
 
     const mockInstallServerMutation = vi.fn()
     mockUseRunCustomServer.mockReturnValue({
@@ -186,14 +177,9 @@ describe('DialogFormLocalMcp', () => {
 
   it('preselects the current route group in Group dropdown even with delayed groups', async () => {
     // Provide groups including a non-default one
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json(
-          { groups: [{ name: 'default' }, { name: 'research' }] },
-          { status: 200 }
-        )
-      )
-    )
+    mockedGetApiV1BetaGroups.override(() => ({
+      groups: [{ name: 'default' }, { name: 'research' }],
+    }))
 
     renderWithProviders(
       <Wrapper>
@@ -212,32 +198,18 @@ describe('DialogFormLocalMcp', () => {
 
   it('shows group field when editing an existing server', async () => {
     // Mock the existing server data
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-        if (params.name === 'test-server') {
-          return HttpResponse.json({
-            name: 'test-server',
-            type: 'docker_image',
-            transport: 'stdio',
-            image: 'ghcr.io/test/server',
-            group: 'research',
-            cmd_arguments: [],
-            env_vars: [],
-            secrets: [],
-            network_isolation: false,
-            allowed_hosts: [],
-            allowed_ports: [],
-            volumes: [],
-          })
-        }
-        return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
-      }),
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [{ name: 'default' }, { name: 'research' }],
-        })
-      )
+    mockedGetApiV1BetaWorkloadsByName.conditionalOverride(
+      ({ path }) => path.name === 'test-server',
+      (data) => ({
+        ...data,
+        name: 'test-server',
+        image: 'ghcr.io/test/server',
+        group: 'research',
+      })
     )
+    mockedGetApiV1BetaGroups.override(() => ({
+      groups: [{ name: 'default' }, { name: 'research' }],
+    }))
 
     renderWithProviders(
       <Wrapper>
@@ -260,36 +232,22 @@ describe('DialogFormLocalMcp', () => {
   })
 
   it('hides group field when editing the meta-mcp server in the meta-mcp group', async () => {
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-        if (params.name === META_MCP_SERVER_NAME) {
-          return HttpResponse.json({
-            name: META_MCP_SERVER_NAME,
-            type: 'docker_image',
-            transport: 'stdio',
-            image: 'ghcr.io/toolhive/meta-mcp',
-            group: MCP_OPTIMIZER_GROUP_NAME,
-            cmd_arguments: [],
-            env_vars: [],
-            secrets: [],
-            network_isolation: false,
-            allowed_hosts: [],
-            allowed_ports: [],
-            volumes: [],
-          })
-        }
-        return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
-      }),
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [
-            { name: 'default' },
-            { name: 'research' },
-            { name: MCP_OPTIMIZER_GROUP_NAME },
-          ],
-        })
-      )
+    mockedGetApiV1BetaWorkloadsByName.conditionalOverride(
+      ({ path }) => path.name === META_MCP_SERVER_NAME,
+      (data) => ({
+        ...data,
+        name: META_MCP_SERVER_NAME,
+        image: 'ghcr.io/toolhive/meta-mcp',
+        group: MCP_OPTIMIZER_GROUP_NAME,
+      })
     )
+    mockedGetApiV1BetaGroups.override(() => ({
+      groups: [
+        { name: 'default' },
+        { name: 'research' },
+        { name: MCP_OPTIMIZER_GROUP_NAME },
+      ],
+    }))
 
     renderWithProviders(
       <Wrapper>
@@ -317,36 +275,22 @@ describe('DialogFormLocalMcp', () => {
   })
 
   it('shows group field when editing a different server in the meta-mcp group', async () => {
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-        if (params.name === 'other-server') {
-          return HttpResponse.json({
-            name: 'other-server',
-            type: 'docker_image',
-            transport: 'stdio',
-            image: 'ghcr.io/other/server',
-            group: MCP_OPTIMIZER_GROUP_NAME,
-            cmd_arguments: [],
-            env_vars: [],
-            secrets: [],
-            network_isolation: false,
-            allowed_hosts: [],
-            allowed_ports: [],
-            volumes: [],
-          })
-        }
-        return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
-      }),
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [
-            { name: 'default' },
-            { name: 'research' },
-            { name: MCP_OPTIMIZER_GROUP_NAME },
-          ],
-        })
-      )
+    mockedGetApiV1BetaWorkloadsByName.conditionalOverride(
+      ({ path }) => path.name === 'other-server',
+      (data) => ({
+        ...data,
+        name: 'other-server',
+        image: 'ghcr.io/other/server',
+        group: MCP_OPTIMIZER_GROUP_NAME,
+      })
     )
+    mockedGetApiV1BetaGroups.override(() => ({
+      groups: [
+        { name: 'default' },
+        { name: 'research' },
+        { name: MCP_OPTIMIZER_GROUP_NAME },
+      ],
+    }))
 
     renderWithProviders(
       <Wrapper>
@@ -382,13 +326,9 @@ describe('DialogFormLocalMcp', () => {
       isPendingSecrets: false,
     })
 
-    mswServer.use(
-      http.get(mswEndpoint('/api/v1beta/groups'), () =>
-        HttpResponse.json({
-          groups: [{ name: 'default' }, { name: 'research' }],
-        })
-      )
-    )
+    mockedGetApiV1BetaGroups.override(() => ({
+      groups: [{ name: 'default' }, { name: 'research' }],
+    }))
 
     renderWithProviders(
       <Wrapper>

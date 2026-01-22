@@ -91,8 +91,8 @@ describe('GroupSelectorForm', () => {
     mockedGetApiV1BetaWorkloadsByName.overrideHandler(() =>
       HttpResponse.json(null, { status: 404 })
     )
-    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
-    mockedGetApiV1BetaDiscoveryClients.override(() => ({ clients: [] }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+    mockedGetApiV1BetaDiscoveryClients.activateScenario('empty')
     mockedGetApiV1BetaGroups.override(() => ({
       groups: [{ name: 'default', registered_clients: [] }],
     }))

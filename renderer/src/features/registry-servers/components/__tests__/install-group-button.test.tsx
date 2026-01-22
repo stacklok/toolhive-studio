@@ -46,7 +46,7 @@ describe('InstallGroupButton', () => {
       ],
     }))
 
-    mockedGetApiV1BetaWorkloads.override(() => ({ workloads: [] }))
+    mockedGetApiV1BetaWorkloads.activateScenario('empty')
 
     const router = createTestRouter(() => (
       <InstallGroupButton groupName="dev-toolkit" group={mockGroup} />
