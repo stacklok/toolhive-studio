@@ -11,4 +11,13 @@ export const mockedGetApiV1BetaRegistryByNameServers = AutoAPIMock<
 >({
   servers: MOCK_REGISTRY_RESPONSE,
   remote_servers: [],
-})
+}).scenario('single-server-basic', (mock) =>
+  mock.override(() => ({
+    servers: [
+      {
+        image: 'ghcr.io/test/server:latest',
+        tools: ['tool1', 'tool2'],
+      },
+    ],
+  }))
+)

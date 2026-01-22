@@ -149,15 +149,10 @@ describe('Customize Tools Page - Converter Function Selection', () => {
         ...localWorkload,
         image: localWorkload.package,
       }))
-      mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
-      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
-        servers: [
-          {
-            image: 'ghcr.io/test/server:latest',
-            tools: ['tool1', 'tool2'],
-          },
-        ],
-      }))
+      mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
+      mockedGetApiV1BetaRegistryByNameServers.activateScenario(
+        'single-server-basic'
+      )
 
       Object.defineProperty(window, 'electronAPI', {
         value: {
@@ -256,7 +251,7 @@ describe('Customize Tools Page - Converter Function Selection', () => {
         workloads: [remoteWorkload],
       }))
       mockedGetApiV1BetaWorkloadsByName.override(() => remoteWorkload)
-      mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
+      mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
       mockedGetApiV1BetaRegistryByNameServers.override(() => ({
         remote_servers: [
           {
@@ -425,7 +420,7 @@ describe('Customize Tools Page - Server Not Running', () => {
       ...stoppedWorkload,
       image: stoppedWorkload.package,
     }))
-    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [
         {
@@ -468,7 +463,7 @@ describe('Customize Tools Page - Server Not Running', () => {
       ...stoppedWorkload,
       image: stoppedWorkload.package,
     }))
-    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [
         {
@@ -507,7 +502,7 @@ describe('Customize Tools Page - Server Not Running', () => {
       ...stoppedWorkload,
       image: stoppedWorkload.package,
     }))
-    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [
         {
@@ -547,7 +542,7 @@ describe('Customize Tools Page - Server Not Running', () => {
       ...stoppedWorkload,
       image: stoppedWorkload.package,
     }))
-    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [
         {
@@ -605,7 +600,7 @@ describe('Customize Tools Page - Server Not Running', () => {
       ...stoppedWorkload,
       image: stoppedWorkload.package,
     }))
-    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [
         {
@@ -657,7 +652,7 @@ describe('Customize Tools Page - Server Not Running', () => {
       ...stoppedWorkload,
       image: stoppedWorkload.package,
     }))
-    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [
         {
@@ -732,7 +727,7 @@ describe('Customize Tools Page - Server Not Running', () => {
       ...stoppedWorkload,
       image: stoppedWorkload.package,
     }))
-    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [
         {
@@ -772,7 +767,7 @@ describe('Customize Tools Page - Server Not Running', () => {
       ...stoppedWorkload,
       image: stoppedWorkload.package,
     }))
-    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [
         {
@@ -830,7 +825,7 @@ describe('Customize Tools Page - Server Not Running', () => {
       ...stoppedWorkload,
       image: stoppedWorkload.package,
     }))
-    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [
         {
@@ -902,7 +897,7 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
       ...workload,
       image: workload.package,
     }))
-    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [
         {
@@ -964,7 +959,7 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
       ...workload,
       image: workload.package,
     }))
-    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [
         {
@@ -1030,7 +1025,7 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
       ...workload,
       image: workload.package,
     }))
-    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [
         {
@@ -1092,7 +1087,7 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
       ...workload,
       image: workload.package,
     }))
-    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [
         {
@@ -1158,7 +1153,7 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
       ...workload,
       image: workload.package,
     }))
-    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [
         {
@@ -1222,7 +1217,7 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
       ...workload,
       image: workload.package,
     }))
-    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [
         {
@@ -1292,7 +1287,7 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
       ...workload,
       image: workload.package,
     }))
-    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [
         {
@@ -1402,7 +1397,7 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
       ...workload,
       image: workload.package,
     }))
-    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [
         {
@@ -1505,7 +1500,7 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
       ...workload,
       image: workload.package,
     }))
-    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [
         {
@@ -1591,7 +1586,7 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
       ...workload,
       image: workload.package,
     }))
-    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [
         {
@@ -1687,7 +1682,7 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
       ...workload,
       image: workload.package,
     }))
-    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [
         {
@@ -1800,7 +1795,7 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
       ...workload,
       image: workload.package,
     }))
-    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({ keys: [] }))
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [
         {
