@@ -137,45 +137,42 @@ import { mockedGetApiV1BetaGroups } from '@mocks/fixtures/groups/get'
 
 ## 204 No Content Endpoints
 
-Endpoints that return 204 (no body) need special handling. Create fixtures that override the handler to return the proper 204 response:
+For endpoints that return 204, create a minimal `AutoAPIMock` fixture and override the handler in each test:
 
 ```typescript
 // renderer/src/common/mocks/fixtures/health/get.ts
 import type { GetHealthResponse, GetHealthData } from '@api/types.gen'
 import { AutoAPIMock } from '@mocks'
-import { HttpResponse } from 'msw'
 
 export const mockedGetHealth = AutoAPIMock<GetHealthResponse, GetHealthData>(
-  undefined as unknown as GetHealthResponse
-).overrideHandler(() => new HttpResponse(null, { status: 204 }))
+  '' as unknown as GetHealthResponse
+)
 ```
 
-This pattern:
-1. Uses `undefined` as the default value (there's no response body)
-2. Immediately overrides the handler to return a proper 204 response
-3. Still allows tests to override with `.overrideHandler()` for error cases
-
-Example test overriding to return an error:
+Then in tests, use `.overrideHandler()` to return the appropriate response:
 
 ```typescript
 import { mockedGetHealth } from '@mocks/fixtures/health/get'
+import { HttpResponse } from 'msw'
+
+it('navigates on health check success', async () => {
+  mockedGetHealth.overrideHandler(() => new HttpResponse(null, { status: 204 }))
+  // ...
+})
 
 it('handles health check failure', async () => {
   mockedGetHealth.overrideHandler(() => HttpResponse.error())
-  // ... test error handling ...
+  // ...
 })
 ```
 
-## Custom Mocks (Rare)
+## Custom Mocks (Text/Plain Endpoints)
 
-For endpoints defined in the OpenAPI schema, always use `AutoAPIMock` fixtures. The related skills below cover all the ways to customize mock behavior for different test scenarios.
-
-**Custom mocks are only needed for non-JSON endpoints.** The only current example is the logs endpoint which returns `text/plain`:
+**Custom mocks are only needed for text/plain endpoints.** The only current example is the logs endpoint:
 
 ```typescript
 // renderer/src/common/mocks/customHandlers/index.ts
 export const customHandlers = [
-  // Logs endpoint returns text/plain, not JSON - needs custom handler
   http.get(mswEndpoint('/api/v1beta/workloads/:name/logs'), ({ params }) => {
     const { name } = params
     const logs = getMockLogs(name as string)

@@ -39,7 +39,6 @@ describe('StartingToolHive', () => {
     })
     vi.useFakeTimers()
     mockNavigate.mockClear()
-    // Auto-mocker returns 204 for health endpoint by default
   })
 
   afterEach(() => {
@@ -95,6 +94,10 @@ describe('StartingToolHive', () => {
   })
 
   it('should navigate when health check succeeds', async () => {
+    mockedGetHealth.overrideHandler(
+      () => new HttpResponse(null, { status: 204 })
+    )
+
     render(
       <QueryClientProvider client={queryClient}>
         <StartingToolHive />
