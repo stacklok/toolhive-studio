@@ -1,8 +1,4 @@
-import type {
-  CoreWorkload,
-  V1WorkloadListResponse,
-  V1CreateWorkloadResponse,
-} from '@api/types.gen'
+import type { CoreWorkload } from '@api/types.gen'
 
 export const MOCK_MCP_SERVERS = [
   {
@@ -108,15 +104,6 @@ export const MOCK_MCP_SERVERS = [
     group: 'default',
   },
 ] as const satisfies CoreWorkload[]
-
-export const workloadListFixture: V1WorkloadListResponse = {
-  workloads: MOCK_MCP_SERVERS,
-}
-
-export const createWorkloadResponseFixture: V1CreateWorkloadResponse = {
-  name: 'new-server',
-  port: 8080,
-}
 
 // Helper function to get a workload by name
 export const getWorkloadByName = (name: string): CoreWorkload | undefined => {
