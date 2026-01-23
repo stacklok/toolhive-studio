@@ -4,7 +4,7 @@ import { LogsPage } from '@/features/mcp-servers/sub-pages/logs-page'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
 import userEvent from '@testing-library/user-event'
-import { getMockLogs } from '@/common/mocks/customHandlers/fixtures/servers'
+import { getMockLogs } from '@/common/mocks/customHandlers'
 import {
   MCP_OPTIMIZER_GROUP_NAME,
   META_MCP_SERVER_NAME,
