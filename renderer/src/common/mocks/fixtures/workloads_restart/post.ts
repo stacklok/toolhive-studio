@@ -3,8 +3,13 @@ import type {
   PostApiV1BetaWorkloadsRestartData,
 } from '@api/types.gen'
 import { AutoAPIMock } from '@mocks'
+import { HttpResponse } from 'msw'
 
 export const mockedPostApiV1BetaWorkloadsRestart = AutoAPIMock<
   PostApiV1BetaWorkloadsRestartResponse,
   PostApiV1BetaWorkloadsRestartData
->('Ut Excepteur sit in aute')
+>('Servers restarted successfully').scenario('not-found', (mock) =>
+  mock.overrideHandler(() =>
+    HttpResponse.json({ error: 'Server not found' }, { status: 404 })
+  )
+)

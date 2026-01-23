@@ -3,6 +3,7 @@ import type {
   GetApiV1BetaWorkloadsData,
 } from '@api/types.gen'
 import { AutoAPIMock } from '@mocks'
+import { HttpResponse } from 'msw'
 
 export const mockedGetApiV1BetaWorkloads = AutoAPIMock<
   GetApiV1BetaWorkloadsResponse,
@@ -70,4 +71,10 @@ export const mockedGetApiV1BetaWorkloads = AutoAPIMock<
       group: 'default',
     },
   ],
-}).scenario('empty', (mock) => mock.override(() => ({ workloads: [] })))
+})
+  .scenario('empty', (mock) => mock.override(() => ({ workloads: [] })))
+  .scenario('server-error', (mock) =>
+    mock.overrideHandler(() =>
+      HttpResponse.json({ error: 'Internal server error' }, { status: 500 })
+    )
+  )
