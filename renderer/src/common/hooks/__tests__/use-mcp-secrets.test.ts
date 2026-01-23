@@ -10,7 +10,6 @@ import {
 } from '../use-mcp-secrets'
 import type { SecretFieldValue, PreparedSecret } from '@/common/types/secrets'
 import { recordRequests } from '@/common/mocks/node'
-import { HttpResponse } from 'msw'
 import { mockedGetApiV1BetaSecretsDefaultKeys } from '@/common/mocks/fixtures/secrets_default_keys/get'
 import { mockedPostApiV1BetaSecretsDefaultKeys } from '@/common/mocks/fixtures/secrets_default_keys/post'
 import type { FormSchemaLocalMcp } from '@/features/mcp-servers/lib/form-schema-local-mcp'
@@ -210,9 +209,7 @@ describe('useMCPSecrets', () => {
   })
 
   it('handles API errors', async () => {
-    mockedGetApiV1BetaSecretsDefaultKeys.overrideHandler(() =>
-      HttpResponse.json({ error: 'API Error' }, { status: 500 })
-    )
+    mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('server-error')
 
     mockedPostApiV1BetaSecretsDefaultKeys.override(() => ({
       key: 'API_KEY',

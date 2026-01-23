@@ -20,8 +20,14 @@ export const mockedGetApiV1BetaWorkloadsByName = AutoAPIMock<
   volumes: [],
   network_isolation: false,
   group: 'default',
-}).scenario('not-found', (mock) =>
-  mock.overrideHandler(() =>
-    HttpResponse.json({ error: 'Not found' }, { status: 404 })
+})
+  .scenario('not-found', (mock) =>
+    mock.overrideHandler(() =>
+      HttpResponse.json({ error: 'Not found' }, { status: 404 })
+    )
   )
-)
+  .scenario('server-error', (mock) =>
+    mock.overrideHandler(() =>
+      HttpResponse.json({ error: 'Internal server error' }, { status: 500 })
+    )
+  )

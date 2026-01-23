@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { HttpResponse } from 'msw'
 import { recordRequests } from '@/common/mocks/node'
 import { mockedGetApiV1BetaWorkloadsByName } from '@/common/mocks/fixtures/workloads_name/get'
 import { mockedPostApiV1BetaWorkloadsByNameEdit } from '@/common/mocks/fixtures/workloads_name_edit/post'
@@ -88,9 +87,7 @@ describe('GroupSelectorForm', () => {
     })
 
     // Default overrides for API endpoints used by useUpdateServer
-    mockedGetApiV1BetaWorkloadsByName.overrideHandler(() =>
-      HttpResponse.json(null, { status: 404 })
-    )
+    mockedGetApiV1BetaWorkloadsByName.activateScenario('not-found')
     mockedGetApiV1BetaSecretsDefaultKeys.activateScenario('empty')
     mockedGetApiV1BetaDiscoveryClients.activateScenario('empty')
     mockedGetApiV1BetaGroups.override(() => ({
@@ -281,9 +278,7 @@ describe('GroupSelectorForm', () => {
     it('shows error toast when mutation fails', async () => {
       const user = userEvent.setup()
 
-      mockedPostApiV1BetaWorkloadsByNameEdit.overrideHandler(() =>
-        HttpResponse.json({ error: 'Mutation failed' }, { status: 500 })
-      )
+      mockedPostApiV1BetaWorkloadsByNameEdit.activateScenario('server-error')
 
       renderWithClient(<GroupSelectorForm groups={mockGroups} />)
 
@@ -367,9 +362,7 @@ describe('GroupSelectorForm', () => {
     it('handles mutation error and shows error toast', async () => {
       const user = userEvent.setup()
 
-      mockedPostApiV1BetaWorkloadsByNameEdit.overrideHandler(() =>
-        HttpResponse.json({ error: 'API error' }, { status: 500 })
-      )
+      mockedPostApiV1BetaWorkloadsByNameEdit.activateScenario('server-error')
 
       renderWithClient(<GroupSelectorForm groups={mockGroups} />)
 
@@ -439,9 +432,7 @@ describe('GroupSelectorForm', () => {
       const user = userEvent.setup()
       const rec = recordRequests()
 
-      mockedGetApiV1BetaWorkloadsByName.overrideHandler(() =>
-        HttpResponse.json(null, { status: 404 })
-      )
+      mockedGetApiV1BetaWorkloadsByName.activateScenario('not-found')
 
       renderWithClient(<GroupSelectorForm groups={mockGroups} />)
 
@@ -477,9 +468,7 @@ describe('GroupSelectorForm', () => {
       // Reset the mock to resolved state
       mockHandleCreateMetaOptimizerWorkload.mockResolvedValue(undefined)
 
-      mockedGetApiV1BetaWorkloadsByName.overrideHandler(() =>
-        HttpResponse.json(null, { status: 404 })
-      )
+      mockedGetApiV1BetaWorkloadsByName.activateScenario('not-found')
     })
 
     it('calls handleCreateMetaOptimizerWorkload when metaMcpConfig is null', async () => {

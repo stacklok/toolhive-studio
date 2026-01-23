@@ -3,6 +3,7 @@ import type {
   GetApiV1BetaRegistryByNameData,
 } from '@api/types.gen'
 import { AutoAPIMock } from '@mocks'
+import { HttpResponse } from 'msw'
 
 export const mockedGetApiV1BetaRegistryByName = AutoAPIMock<
   GetApiV1BetaRegistryByNameResponse,
@@ -140,4 +141,8 @@ export const mockedGetApiV1BetaRegistryByName = AutoAPIMock<
       },
     ],
   },
-})
+}).scenario('server-error', (mock) =>
+  mock.overrideHandler(() =>
+    HttpResponse.json({ error: 'Internal server error' }, { status: 500 })
+  )
+)
