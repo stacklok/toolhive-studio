@@ -1,7 +1,6 @@
-import { renderHook, waitFor } from '@testing-library/react'
+import { renderHook, waitFor, act } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { HttpResponse } from 'msw'
 import React, { type ReactNode } from 'react'
 import { useCleanupMetaOptimizer } from '../use-cleanup-meta-optimizer'
 import {
@@ -12,7 +11,6 @@ import { recordRequests } from '@/common/mocks/node'
 import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'
 import { mockedGetApiV1BetaWorkloadsByName } from '@/common/mocks/fixtures/workloads_name/get'
 import { mockedPostApiV1BetaClientsRegister } from '@/common/mocks/fixtures/clients_register/post'
-import { mockedDeleteApiV1BetaClientsByNameGroupsByGroup } from '@/common/mocks/fixtures/clients_name_groups_group/delete'
 import { mockedDeleteApiV1BetaGroupsByName } from '@/common/mocks/fixtures/groups_name/delete'
 import { mockedGetApiV1BetaDiscoveryClients } from '@/common/mocks/fixtures/discovery_clients/get'
 
@@ -124,10 +122,7 @@ describe('useCleanupMetaOptimizer', () => {
     }))
 
     mockedPostApiV1BetaClientsRegister.activateScenario('empty')
-    // DELETE /clients/:name/groups/:group is a 204 with no body in the API.
-    mockedDeleteApiV1BetaClientsByNameGroupsByGroup.overrideHandler(
-      () => new HttpResponse(null, { status: 204 })
-    )
+    // DELETE /clients/:name/groups/:group is a 204 - auto-mocker handles it
     mockedDeleteApiV1BetaGroupsByName.override(() => '')
     mockedGetApiV1BetaDiscoveryClients.activateScenario('empty')
 
@@ -142,7 +137,9 @@ describe('useCleanupMetaOptimizer', () => {
       expect(groupsCalls.length).toBeGreaterThan(0)
     })
 
-    await result.current.cleanupMetaOptimizer()
+    await act(async () => {
+      await result.current.cleanupMetaOptimizer()
+    })
 
     await waitFor(() => {
       const deleteCalls = rec.recordedRequests.filter(
