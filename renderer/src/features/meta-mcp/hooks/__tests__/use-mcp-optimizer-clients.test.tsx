@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react'
+import { renderHook, waitFor, act } from '@testing-library/react'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useMcpOptimizerClients } from '../use-mcp-optimizer-clients'
 import { recordRequests } from '@/common/mocks/node'
@@ -20,8 +20,6 @@ const wrapper = ({ children }: { children: ReactNode }) => (
 describe('useMcpOptimizerClients', () => {
   beforeEach(() => {
     queryClient.clear()
-    // Suppress React act() warnings from async state updates
-    vi.spyOn(console, 'error').mockImplementation(() => {})
   })
 
   it('register clients that are missing from optimizer group', async () => {
@@ -45,7 +43,9 @@ describe('useMcpOptimizerClients', () => {
 
     const { result } = renderHook(() => useMcpOptimizerClients(), { wrapper })
 
-    await result.current.saveGroupClients({ groupName: 'test' })
+    await act(async () => {
+      await result.current.saveGroupClients({ groupName: 'test' })
+    })
 
     await waitFor(() => {
       const registerRequest = rec.recordedRequests.find(
@@ -71,6 +71,11 @@ describe('useMcpOptimizerClients', () => {
         groups: ['test'],
       })
     })
+
+    await waitFor(() => {
+      expect(queryClient.isMutating()).toBe(0)
+      expect(queryClient.isFetching()).toBe(0)
+    })
   })
 
   it('unregister clients that are disabled in clientsStatus', async () => {
@@ -92,12 +97,14 @@ describe('useMcpOptimizerClients', () => {
 
     const { result } = renderHook(() => useMcpOptimizerClients(), { wrapper })
 
-    await result.current.saveGroupClients({
-      groupName: 'test',
-      clientsStatus: {
-        enableVscode: false,
-        enableWindsurf: false,
-      },
+    await act(async () => {
+      await result.current.saveGroupClients({
+        groupName: 'test',
+        clientsStatus: {
+          enableVscode: false,
+          enableWindsurf: false,
+        },
+      })
     })
 
     await waitFor(() => {
@@ -116,6 +123,11 @@ describe('useMcpOptimizerClients', () => {
         names: ['cursor'],
         groups: ['test'],
       })
+    })
+
+    await waitFor(() => {
+      expect(queryClient.isMutating()).toBe(0)
+      expect(queryClient.isFetching()).toBe(0)
     })
   })
 
@@ -140,11 +152,13 @@ describe('useMcpOptimizerClients', () => {
 
     const { result } = renderHook(() => useMcpOptimizerClients(), { wrapper })
 
-    await result.current.saveGroupClients({
-      groupName: 'test',
-      clientsStatus: {
-        enableVscode: false,
-      },
+    await act(async () => {
+      await result.current.saveGroupClients({
+        groupName: 'test',
+        clientsStatus: {
+          enableVscode: false,
+        },
+      })
     })
 
     await waitFor(() => {
@@ -174,6 +188,11 @@ describe('useMcpOptimizerClients', () => {
         groups: ['test'],
       })
     })
+
+    await waitFor(() => {
+      expect(queryClient.isMutating()).toBe(0)
+      expect(queryClient.isFetching()).toBe(0)
+    })
   })
 
   it('remove clients from source group even when already synced', async () => {
@@ -195,7 +214,9 @@ describe('useMcpOptimizerClients', () => {
 
     const { result } = renderHook(() => useMcpOptimizerClients(), { wrapper })
 
-    await result.current.saveGroupClients({ groupName: 'test' })
+    await act(async () => {
+      await result.current.saveGroupClients({ groupName: 'test' })
+    })
 
     await waitFor(() => {
       const registerRequest = rec.recordedRequests.find(
@@ -215,6 +236,11 @@ describe('useMcpOptimizerClients', () => {
         names: ['cursor', 'vscode'],
         groups: ['test'],
       })
+    })
+
+    await waitFor(() => {
+      expect(queryClient.isMutating()).toBe(0)
+      expect(queryClient.isFetching()).toBe(0)
     })
   })
 
@@ -239,7 +265,9 @@ describe('useMcpOptimizerClients', () => {
 
     const { result } = renderHook(() => useMcpOptimizerClients(), { wrapper })
 
-    await result.current.saveGroupClients({ groupName: 'test' })
+    await act(async () => {
+      await result.current.saveGroupClients({ groupName: 'test' })
+    })
 
     await waitFor(() => {
       const registerRequest = rec.recordedRequests.find(
@@ -264,6 +292,11 @@ describe('useMcpOptimizerClients', () => {
         groups: ['test'],
       })
     })
+
+    await waitFor(() => {
+      expect(queryClient.isMutating()).toBe(0)
+      expect(queryClient.isFetching()).toBe(0)
+    })
   })
 
   it('should handle non-existent group gracefully', async () => {
@@ -281,7 +314,9 @@ describe('useMcpOptimizerClients', () => {
 
     const { result } = renderHook(() => useMcpOptimizerClients(), { wrapper })
 
-    await result.current.saveGroupClients({ groupName: 'non-existent' })
+    await act(async () => {
+      await result.current.saveGroupClients({ groupName: 'non-existent' })
+    })
 
     await waitFor(() => {
       const registerRequest = rec.recordedRequests.find(
@@ -297,6 +332,11 @@ describe('useMcpOptimizerClients', () => {
 
       expect(registerRequest).toBeUndefined()
       expect(unregisterRequest).toBeUndefined()
+    })
+
+    await waitFor(() => {
+      expect(queryClient.isMutating()).toBe(0)
+      expect(queryClient.isFetching()).toBe(0)
     })
   })
 
@@ -321,7 +361,9 @@ describe('useMcpOptimizerClients', () => {
 
     const { result } = renderHook(() => useMcpOptimizerClients(), { wrapper })
 
-    await result.current.restoreClientsToGroup('production')
+    await act(async () => {
+      await result.current.restoreClientsToGroup('production')
+    })
 
     await waitFor(() => {
       const registerRequest = rec.recordedRequests.find(
@@ -335,6 +377,11 @@ describe('useMcpOptimizerClients', () => {
         names: ['cursor', 'vscode', 'windsurf'],
         groups: ['production'],
       })
+    })
+
+    await waitFor(() => {
+      expect(queryClient.isMutating()).toBe(0)
+      expect(queryClient.isFetching()).toBe(0)
     })
   })
 
@@ -357,7 +404,9 @@ describe('useMcpOptimizerClients', () => {
 
     const { result } = renderHook(() => useMcpOptimizerClients(), { wrapper })
 
-    await result.current.restoreClientsToGroup('production')
+    await act(async () => {
+      await result.current.restoreClientsToGroup('production')
+    })
 
     await waitFor(() => {
       const registerRequest = rec.recordedRequests.find(
@@ -367,6 +416,11 @@ describe('useMcpOptimizerClients', () => {
       )
 
       expect(registerRequest).toBeUndefined()
+    })
+
+    await waitFor(() => {
+      expect(queryClient.isMutating()).toBe(0)
+      expect(queryClient.isFetching()).toBe(0)
     })
   })
 
@@ -395,9 +449,11 @@ describe('useMcpOptimizerClients', () => {
 
     const { result } = renderHook(() => useMcpOptimizerClients(), { wrapper })
 
-    await result.current.saveGroupClients({
-      groupName: 'staging',
-      previousGroupName: 'production',
+    await act(async () => {
+      await result.current.saveGroupClients({
+        groupName: 'staging',
+        previousGroupName: 'production',
+      })
     })
 
     await waitFor(() => {
@@ -412,6 +468,11 @@ describe('useMcpOptimizerClients', () => {
         names: ['cursor', 'vscode'],
         groups: ['production'],
       })
+    })
+
+    await waitFor(() => {
+      expect(queryClient.isMutating()).toBe(0)
+      expect(queryClient.isFetching()).toBe(0)
     })
   })
 })
