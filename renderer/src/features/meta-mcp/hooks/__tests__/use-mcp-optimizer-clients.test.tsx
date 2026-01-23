@@ -20,6 +20,8 @@ const wrapper = ({ children }: { children: ReactNode }) => (
 describe('useMcpOptimizerClients', () => {
   beforeEach(() => {
     queryClient.clear()
+    // Suppress React act() warnings from async state updates
+    vi.spyOn(console, 'error').mockImplementation(() => {})
   })
 
   it('register clients that are missing from optimizer group', async () => {

@@ -10,6 +10,7 @@ import { recordRequests } from '@/common/mocks/node'
 import { HttpResponse } from 'msw'
 import { toast } from 'sonner'
 import { mockedPostApiV1BetaWorkloadsRestart } from '@/common/mocks/fixtures/workloads_restart/post'
+import { mockedPostApiV1BetaWorkloadsByNameRestart } from '@/common/mocks/fixtures/workloads_name_restart/post'
 import { mockedGetApiV1BetaWorkloadsByNameStatus } from '@/common/mocks/fixtures/workloads_name_status/get'
 
 vi.mock('sonner', () => ({
@@ -196,6 +197,11 @@ describe('useMutationRestartServer', () => {
   it('handles API error for single server restart', async () => {
     const { Wrapper } = createQueryClientWrapper()
     const serverName = 'non-existent-server'
+
+    // Override to return 404 error
+    mockedPostApiV1BetaWorkloadsByNameRestart.overrideHandler(() =>
+      HttpResponse.json({ error: 'Server not found' }, { status: 404 })
+    )
 
     const { result } = renderHook(
       () => useMutationRestartServer({ name: serverName }),

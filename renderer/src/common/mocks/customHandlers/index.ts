@@ -1,8 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import type json from '../../../../../api/openapi.json'
-import { getWorkloadByName, getMockLogs } from './fixtures/servers'
-import type { V1UpdateRegistryRequest } from '../../../../../api/generated/types.gen'
-import { registryServerFixture } from './fixtures/registry_server'
+import { getMockLogs } from './fixtures/servers'
 
 /**
  * OpenAPI spec uses curly braces to denote path parameters
@@ -34,151 +32,21 @@ export function mswEndpoint(endpoint: Endpoint) {
   return new URL(endpoint, import.meta.env.VITE_BASE_API_URL).toString()
 }
 
+/**
+ * Custom handlers for endpoints that need special handling.
+ * Most endpoints use AutoAPIMock fixtures; only text/plain endpoints need custom handlers.
+ */
 export const customHandlers = [
-  http.delete(mswEndpoint('/api/v1beta/workloads/:name'), ({ params }) => {
-    const { name } = params
-
-    const server = getWorkloadByName(name as string)
-    if (!server) {
-      return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
-    }
-
-    return new HttpResponse(null, { status: 204 })
-  }),
-
-  http.post(mswEndpoint('/api/v1beta/workloads/:name/stop'), ({ params }) => {
-    const { name } = params
-
-    const server = getWorkloadByName(name as string)
-    if (!server) {
-      return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
-    }
-
-    return new HttpResponse(null, { status: 204 })
-  }),
-
-  http.post(
-    mswEndpoint('/api/v1beta/workloads/:name/restart'),
-    ({ params }) => {
-      const { name } = params
-
-      const server = getWorkloadByName(name as string)
-      if (!server) {
-        return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
-      }
-
-      return new HttpResponse(null, { status: 204 })
-    }
-  ),
-
+  // Logs endpoint returns text/plain, not JSON - needs custom handler
   http.get(mswEndpoint('/api/v1beta/workloads/:name/logs'), ({ params }) => {
     const { name } = params
 
-    // Special test cases for edge cases
+    // Special test case for empty logs
     if (name === 'empty-logs-server') {
       return new HttpResponse('', { status: 200 })
-    }
-
-    const server = getWorkloadByName(name as string)
-    if (!server) {
-      return HttpResponse.json({ error: 'Server not found' }, { status: 404 })
     }
 
     const logs = getMockLogs(name as string)
     return new HttpResponse(logs, { status: 200 })
   }),
-
-  http.post(mswEndpoint('/api/v1beta/clients'), async ({ request }) => {
-    try {
-      const body = (await request.json()) as { name: string; groups: string[] }
-      const { name, groups } = body
-
-      if (!name) {
-        return HttpResponse.json(
-          { error: 'Client name is required' },
-          { status: 400 }
-        )
-      }
-
-      if (!groups || groups.length === 0) {
-        return HttpResponse.json(
-          { error: 'Groups parameter is required' },
-          { status: 400 }
-        )
-      }
-
-      return HttpResponse.json(
-        {
-          name,
-          groups: groups || ['default'],
-        },
-        { status: 200 }
-      )
-    } catch {
-      return HttpResponse.json(
-        { error: 'Invalid request body' },
-        { status: 400 }
-      )
-    }
-  }),
-
-  http.post(mswEndpoint('/api/v1beta/clients/unregister'), () =>
-    HttpResponse.json(null, { status: 204 })
-  ),
-
-  http.delete(mswEndpoint('/api/v1beta/clients/:name'), ({ params }) => {
-    const { name } = params
-
-    if (!name) {
-      return HttpResponse.json(
-        { error: 'Client name is required' },
-        { status: 400 }
-      )
-    }
-
-    return new HttpResponse(null, { status: 204 })
-  }),
-
-  http.delete(
-    mswEndpoint('/api/v1beta/clients/:name/groups/:group'),
-    ({ params }) => {
-      const { name, group } = params
-
-      if (!name) {
-        return HttpResponse.json(
-          { error: 'Client name is required' },
-          { status: 400 }
-        )
-      }
-
-      if (!group) {
-        return HttpResponse.json(
-          { error: 'Group name is required' },
-          { status: 400 }
-        )
-      }
-
-      return new HttpResponse(null, { status: 204 })
-    }
-  ),
-
-  http.put(mswEndpoint('/api/v1beta/registry/:name'), async ({ request }) => {
-    const { local_path, url } =
-      (await request.json()) as V1UpdateRegistryRequest
-
-    return HttpResponse.json({ local_path, url })
-  }),
-
-  http.get(
-    mswEndpoint('/api/v1beta/registry/:name/servers/:serverName'),
-    ({ params }) => {
-      const { name } = params
-      return HttpResponse.json({ ...registryServerFixture, name })
-    }
-  ),
-
-  http.delete(
-    mswEndpoint('/api/v1beta/secrets/default/keys/:key'),
-    async () => new HttpResponse(null, { status: 204 })
-  ),
 ]
