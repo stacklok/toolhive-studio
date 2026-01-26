@@ -8,7 +8,7 @@ import { extendElectronAPI } from '@mocks/electronAPI'
 
 const mockGetMainLogContent = vi.fn()
 const mockGetAppVersion = vi.fn()
-const mockIsReleaseBuild = vi.fn()
+const mockIsOfficialReleaseBuild = vi.fn()
 const mockGetToolhiveVersion = vi.fn()
 const mockIsAutoUpdateEnabled = vi.fn()
 const mockSetAutoUpdate = vi.fn()
@@ -24,7 +24,7 @@ extendElectronAPI({
   platform: 'darwin',
   getMainLogContent: mockGetMainLogContent,
   getAppVersion: mockGetAppVersion,
-  isReleaseBuild: mockIsReleaseBuild,
+  isOfficialReleaseBuild: mockIsOfficialReleaseBuild,
   getToolhiveVersion: mockGetToolhiveVersion,
   isAutoUpdateEnabled: mockIsAutoUpdateEnabled,
   setAutoUpdate: mockSetAutoUpdate,
@@ -104,7 +104,7 @@ describe('SettingsTabs', () => {
 
     mockGetMainLogContent.mockResolvedValue('Mock log content')
     mockGetAppVersion.mockResolvedValue('1.0.0')
-    mockIsReleaseBuild.mockResolvedValue(true)
+    mockIsOfficialReleaseBuild.mockResolvedValue(true)
     mockGetToolhiveVersion.mockResolvedValue('0.9.0')
     mockIsAutoUpdateEnabled.mockResolvedValue(false)
     mockGetUpdateState.mockResolvedValue('none')

@@ -20,16 +20,16 @@ export const baseElectronStub: Partial<ElectronAPI> = {
       themeSource: 'system',
     }),
     set: vi.fn().mockResolvedValue(true),
-  },
+  } as ElectronAPI['darkMode'],
   featureFlags: {
     get: vi.fn().mockResolvedValue(false),
     enable: vi.fn().mockResolvedValue(undefined),
     disable: vi.fn().mockResolvedValue(undefined),
     getAll: vi.fn().mockResolvedValue({}),
-  },
+  } as ElectronAPI['featureFlags'],
   chat: {
     stream: vi.fn(),
-  },
+  } as unknown as ElectronAPI['chat'],
   on: vi.fn(),
   removeListener: vi.fn(),
 }
