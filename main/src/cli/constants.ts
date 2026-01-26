@@ -85,6 +85,14 @@ export function getCliSourceFromPath(
   }
 
   if (platform === 'win32') {
+    // Check for WinGet packages directory (e.g., stacklok.thv_Microsoft.Winget.Source_*)
+    if (
+      normalizedPath.includes('microsoft\\winget\\packages') ||
+      normalizedPath.includes('microsoft/winget/packages')
+    ) {
+      return 'winget'
+    }
+
     // Check for typical winget installation paths
     const programFiles = (process.env.ProgramFiles || '').toLowerCase()
     const localAppData = (process.env.LOCALAPPDATA || '').toLowerCase()

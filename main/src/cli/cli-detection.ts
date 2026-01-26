@@ -3,9 +3,11 @@
  * Detects externally installed CLI binaries (THV-0020)
  */
 
-import { existsSync } from 'node:fs'
+import { existsSync, readdirSync } from 'node:fs'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
+import path from 'node:path'
+import { homedir } from 'node:os'
 import { EXTERNAL_CLI_PATHS, getCliSourceFromPath } from './constants'
 import type { ExternalCliInfo, Platform } from './types'
 import log from '../logger'
@@ -29,10 +31,57 @@ const getCliVersion = async (cliPath: string): Promise<string | null> => {
   }
 }
 
+/**
+ * Scans the WinGet packages directory for ToolHive installations.
+ * WinGet uses dynamic folder names like: stacklok.thv_Microsoft.Winget.Source_8wekyb3d8bbwe
+ */
+function findWingetCliPaths(): string[] {
+  const localAppData =
+    process.env.LOCALAPPDATA || path.join(homedir(), 'AppData', 'Local')
+  const wingetPackagesDir = path.join(
+    localAppData,
+    'Microsoft',
+    'WinGet',
+    'Packages'
+  )
+
+  if (!existsSync(wingetPackagesDir)) {
+    return []
+  }
+
+  try {
+    const entries = readdirSync(wingetPackagesDir, { withFileTypes: true })
+    const thvPaths: string[] = []
+
+    for (const entry of entries) {
+      // Match folders starting with 'stacklok.thv_' (case-insensitive)
+      if (
+        entry.isDirectory() &&
+        entry.name.toLowerCase().startsWith('stacklok.thv_')
+      ) {
+        const cliPath = path.join(wingetPackagesDir, entry.name, 'thv.exe')
+        if (existsSync(cliPath)) {
+          thvPaths.push(cliPath)
+        }
+      }
+    }
+
+    return thvPaths
+  } catch {
+    return []
+  }
+}
+
 export async function detectExternalCli(
   platform: Platform = process.platform as Platform
 ): Promise<ExternalCliInfo | null> {
-  const pathsToCheck = EXTERNAL_CLI_PATHS[platform] ?? []
+  const pathsToCheck = [...(EXTERNAL_CLI_PATHS[platform] ?? [])]
+
+  // On Windows, also scan the WinGet packages directory
+  if (platform === 'win32') {
+    pathsToCheck.push(...findWingetCliPaths())
+  }
+
   const existingPath = pathsToCheck.find((p) => existsSync(p))
 
   if (!existingPath) {
