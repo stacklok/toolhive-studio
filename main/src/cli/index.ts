@@ -22,10 +22,4 @@ export {
 //  Types (Public API)
 // ────────────────────────────────────────────────────────────────────────────
 
-export type { ValidationResult, ExternalCliInfo } from './types'
-
-// ────────────────────────────────────────────────────────────────────────────
-//  Constants (Public API)
-// ────────────────────────────────────────────────────────────────────────────
-
-export { getUninstallInstructions } from './constants'
+export type { ValidationResult } from './types'
