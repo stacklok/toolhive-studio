@@ -5,6 +5,10 @@ import { afterEach, expect, beforeAll, beforeEach, vi, afterAll } from 'vitest'
 import failOnConsole from 'vitest-fail-on-console'
 import { client } from './api/generated/client.gen'
 import { resetAllAutoAPIMocks } from './renderer/src/common/mocks/autoAPIMock'
+import {
+  resetMatchMediaState,
+  setupMatchMediaMock,
+} from './renderer/src/common/mocks/matchMedia'
 import { server } from './renderer/src/common/mocks/node'
 import type { ElectronAPI } from './preload/src/preload'
 
@@ -12,6 +16,7 @@ expect.extend(testingLibraryMatchers)
 
 beforeEach(() => {
   resetAllAutoAPIMocks()
+  resetMatchMediaState()
 })
 
 afterEach(() => {
@@ -27,6 +32,24 @@ beforeAll(() => {
         clearShutdownHistory: async () => ({ success: true }),
       } as ElectronAPI['shutdownStore'],
       getInstanceId: async () => 'test-instance-id',
+      darkMode: {
+        get: vi.fn().mockResolvedValue({
+          shouldUseDarkColors: false,
+          themeSource: 'system',
+        }),
+        set: vi.fn().mockResolvedValue(true),
+      },
+      featureFlags: {
+        get: vi.fn().mockResolvedValue(false),
+        enable: vi.fn().mockResolvedValue(undefined),
+        disable: vi.fn().mockResolvedValue(undefined),
+        getAll: vi.fn().mockResolvedValue({}),
+      },
+      chat: {
+        stream: vi.fn(),
+      },
+      on: vi.fn(),
+      removeListener: vi.fn(),
     }
     Object.defineProperty(window, 'electronAPI', {
       value: electronStub as ElectronAPI,
@@ -87,6 +110,12 @@ beforeAll(() => {
       // do nothing
     }
   }
+
+  setupMatchMediaMock()
+
+  // Mock URL blob methods
+  global.URL.createObjectURL = vi.fn().mockReturnValue('blob:mock-url')
+  global.URL.revokeObjectURL = vi.fn()
 })
 afterEach(() => {
   server.resetHandlers()

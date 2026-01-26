@@ -1,23 +1,15 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  afterEach,
+  type Mock,
+} from 'vitest'
 
 describe('Feature Flags', () => {
-  const mockElectronAPI = {
-    featureFlags: {
-      get: vi.fn(),
-      enable: vi.fn(),
-      disable: vi.fn(),
-      getAll: vi.fn(),
-    },
-  }
-
   beforeEach(() => {
-    // Mock window.electronAPI
-    Object.defineProperty(window, 'electronAPI', {
-      value: mockElectronAPI,
-      writable: true,
-    })
-
-    // Clear all mocks before each test
     vi.clearAllMocks()
   })
 
@@ -27,38 +19,48 @@ describe('Feature Flags', () => {
 
   describe('window.electronAPI feature flags', () => {
     it('should call electronAPI.featureFlags.get', async () => {
-      mockElectronAPI.featureFlags.get.mockResolvedValue(true)
+      ;(window.electronAPI.featureFlags.get as Mock).mockResolvedValue(true)
 
       const result = await window.electronAPI.featureFlags.get('test')
 
       expect(result).toBe(true)
-      expect(mockElectronAPI.featureFlags.get).toHaveBeenCalledWith('test')
+      expect(window.electronAPI.featureFlags.get).toHaveBeenCalledWith('test')
     })
 
     it('should call electronAPI.featureFlags.enable', async () => {
-      mockElectronAPI.featureFlags.enable.mockResolvedValue(undefined)
+      ;(window.electronAPI.featureFlags.enable as Mock).mockResolvedValue(
+        undefined
+      )
 
       await window.electronAPI.featureFlags.enable('test')
 
-      expect(mockElectronAPI.featureFlags.enable).toHaveBeenCalledWith('test')
+      expect(window.electronAPI.featureFlags.enable).toHaveBeenCalledWith(
+        'test'
+      )
     })
 
     it('should call electronAPI.featureFlags.disable', async () => {
-      mockElectronAPI.featureFlags.disable.mockResolvedValue(undefined)
+      ;(window.electronAPI.featureFlags.disable as Mock).mockResolvedValue(
+        undefined
+      )
 
       await window.electronAPI.featureFlags.disable('test')
 
-      expect(mockElectronAPI.featureFlags.disable).toHaveBeenCalledWith('test')
+      expect(window.electronAPI.featureFlags.disable).toHaveBeenCalledWith(
+        'test'
+      )
     })
 
     it('should call electronAPI.featureFlags.getAll', async () => {
       const mockFlags = { test: true }
-      mockElectronAPI.featureFlags.getAll.mockResolvedValue(mockFlags)
+      ;(window.electronAPI.featureFlags.getAll as Mock).mockResolvedValue(
+        mockFlags
+      )
 
       const result = await window.electronAPI.featureFlags.getAll()
 
       expect(result).toEqual(mockFlags)
-      expect(mockElectronAPI.featureFlags.getAll).toHaveBeenCalled()
+      expect(window.electronAPI.featureFlags.getAll).toHaveBeenCalled()
     })
   })
 
