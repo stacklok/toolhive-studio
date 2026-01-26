@@ -1,11 +1,8 @@
 name: 'Setup Action'
-description: 'Checkouts the repo, sets up node, and installs dependencies'
+description: 'Sets up node and installs dependencies (assumes repo is already checked out)'
 runs:
   using: 'composite'
   steps:
-    - name: Checkout Repository
-      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
-
     - name: Install pnpm
       uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
       with:
