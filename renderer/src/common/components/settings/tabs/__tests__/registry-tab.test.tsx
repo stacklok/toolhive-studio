@@ -1,7 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi } from 'vitest'
-import { HttpResponse } from 'msw'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RegistryTab } from '../../registry/registry-tab'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
@@ -440,9 +439,7 @@ describe('RegistryTab', () => {
   })
 
   it('shows error message when GET API returns 500', async () => {
-    mockedGetApiV1BetaRegistryByName.overrideHandler(() =>
-      HttpResponse.json({ error: 'Internal server error' }, { status: 500 })
-    )
+    mockedGetApiV1BetaRegistryByName.activateScenario('server-error')
 
     renderWithProviders(<RegistryTab />)
 

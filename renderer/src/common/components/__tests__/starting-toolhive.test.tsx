@@ -39,10 +39,6 @@ describe('StartingToolHive', () => {
     })
     vi.useFakeTimers()
     mockNavigate.mockClear()
-    // Health check is a 204 with no body; keep tests aligned with API semantics.
-    mockedGetHealth.overrideHandler(
-      () => new HttpResponse(null, { status: 204 })
-    )
   })
 
   afterEach(() => {
@@ -98,6 +94,10 @@ describe('StartingToolHive', () => {
   })
 
   it('should navigate when health check succeeds', async () => {
+    mockedGetHealth.overrideHandler(
+      () => new HttpResponse(null, { status: 204 })
+    )
+
     render(
       <QueryClientProvider client={queryClient}>
         <StartingToolHive />

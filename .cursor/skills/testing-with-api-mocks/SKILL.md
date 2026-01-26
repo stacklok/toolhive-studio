@@ -135,26 +135,59 @@ import { AutoAPIMock } from '@mocks'
 import { mockedGetApiV1BetaGroups } from '@mocks/fixtures/groups/get'
 ```
 
-## Custom Mocks (Rare)
+## 204 No Content Endpoints
 
-For endpoints defined in the OpenAPI schema, always use `AutoAPIMock` fixtures. The related skills below cover all the ways to customize mock behavior for different test scenarios.
+For endpoints that return 204, create a minimal `AutoAPIMock` fixture and override the handler in each test:
 
-**Custom mocks are only needed for endpoints with no schema at all** - for example, third-party APIs or non-standard endpoints not defined in `api/openapi.json`. In these rare cases, add handlers to `renderer/src/common/mocks/customHandlers/index.ts`.
+```typescript
+// renderer/src/common/mocks/fixtures/health/get.ts
+import type { GetHealthResponse, GetHealthData } from '@api/types.gen'
+import { AutoAPIMock } from '@mocks'
 
-Note: Some existing handlers in `customHandlers` predate the `AutoAPIMock` system. These are legacy patterns - new code should use fixtures with the techniques described in the related skills.
+export const mockedGetHealth = AutoAPIMock<GetHealthResponse, GetHealthData>(
+  '' as unknown as GetHealthResponse
+)
+```
 
-## Migrating from Custom Handlers to AutoAPIMock
+Then in tests, use `.overrideHandler()` to return the appropriate response:
 
-When refactoring tests that use `server.use()` overrides, you may find that the endpoint has a legacy custom handler in `customHandlers/index.ts` instead of an `AutoAPIMock` fixture.
+```typescript
+import { mockedGetHealth } from '@mocks/fixtures/health/get'
+import { HttpResponse } from 'msw'
 
-To migrate:
+it('navigates on health check success', async () => {
+  mockedGetHealth.overrideHandler(() => new HttpResponse(null, { status: 204 }))
+  // ...
+})
 
-1. **Remove the custom handler** from `renderer/src/common/mocks/customHandlers/index.ts`
-2. **Run the tests** - this triggers auto-generation of the fixture
-3. **Verify the fixture** was created in `renderer/src/common/mocks/fixtures/<endpoint>/<method>.ts`
-4. **Refactor tests** to use `.override()` or `.conditionalOverride()` instead of `server.use()`
+it('handles health check failure', async () => {
+  mockedGetHealth.overrideHandler(() => HttpResponse.error())
+  // ...
+})
+```
 
-This workflow ensures fixtures are generated from the OpenAPI schema rather than manually copied from legacy code.
+## Custom Mocks (Text/Plain Endpoints)
+
+**Custom mocks are only needed for text/plain endpoints.** The only current example is the logs endpoint:
+
+```typescript
+// renderer/src/common/mocks/customHandlers/index.ts
+export const customHandlers = [
+  http.get(mswEndpoint('/api/v1beta/workloads/:name/logs'), ({ params }) => {
+    const { name } = params
+    const logs = getMockLogs(name as string)
+    return new HttpResponse(logs, { status: 200 })
+  }),
+]
+```
+
+To override the logs response in tests, use the exported `getMockLogs` mock:
+
+```typescript
+import { getMockLogs } from '@/common/mocks/customHandlers'
+
+getMockLogs.mockReturnValueOnce('Custom log content for this test')
+```
 
 ## Related Skills
 
