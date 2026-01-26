@@ -124,13 +124,48 @@ const removePathFromFile = (filePath: string): boolean => {
   }
 }
 
+async function configureWindowsPath(): Promise<{
+  success: boolean
+  modifiedFiles: string[]
+}> {
+  const toolhiveBinPath = path.join(
+    process.env.LOCALAPPDATA ?? path.join(homedir(), 'AppData', 'Local'),
+    'ToolHive',
+    'bin'
+  )
+
+  try {
+    // Query actual user PATH from Windows
+    const { stdout } = await execAsync(
+      `powershell -Command "[Environment]::GetEnvironmentVariable('Path', 'User')"`
+    )
+    const userPath = stdout.trim()
+    const isAlreadyConfigured = userPath
+      .split(';')
+      .some((p) => p.toLowerCase() === toolhiveBinPath.toLowerCase())
+
+    if (isAlreadyConfigured) {
+      log.info('Windows PATH already configured')
+      return { success: true, modifiedFiles: ['Windows User PATH'] }
+    }
+
+    // Add to user PATH using PowerShell
+    const command = `[Environment]::SetEnvironmentVariable('Path', [Environment]::GetEnvironmentVariable('Path', 'User') + ';${toolhiveBinPath}', 'User')`
+    await execAsync(`powershell -Command "${command}"`)
+    log.info(`Added ${toolhiveBinPath} to Windows user PATH`)
+    return { success: true, modifiedFiles: ['Windows User PATH'] }
+  } catch (error) {
+    log.error(`Failed to configure Windows PATH: ${error}`)
+    return { success: false, modifiedFiles: [] }
+  }
+}
+
 export async function configureShellPath(): Promise<{
   success: boolean
   modifiedFiles: string[]
 }> {
   if (process.platform === 'win32') {
-    log.info('Skipping shell PATH configuration on Windows')
-    return { success: true, modifiedFiles: [] }
+    return configureWindowsPath()
   }
 
   const shellRcFiles = getShellRcFiles()
@@ -167,12 +202,34 @@ export async function configureShellPath(): Promise<{
   return { success: true, modifiedFiles }
 }
 
+async function removeWindowsPath(): Promise<{
+  success: boolean
+  modifiedFiles: string[]
+}> {
+  const toolhiveBinPath = path.join(
+    process.env.LOCALAPPDATA ?? path.join(homedir(), 'AppData', 'Local'),
+    'ToolHive',
+    'bin'
+  )
+
+  try {
+    // Remove from user PATH using PowerShell
+    const command = `$currentPath = [Environment]::GetEnvironmentVariable('Path', 'User'); $newPath = ($currentPath -split ';' | Where-Object { $_.ToLower() -ne '${toolhiveBinPath.toLowerCase()}' }) -join ';'; [Environment]::SetEnvironmentVariable('Path', $newPath, 'User')`
+    await execAsync(`powershell -Command "${command}"`)
+    log.info(`Removed ${toolhiveBinPath} from Windows user PATH`)
+    return { success: true, modifiedFiles: ['Windows User PATH'] }
+  } catch (error) {
+    log.error(`Failed to remove from Windows PATH: ${error}`)
+    return { success: false, modifiedFiles: [] }
+  }
+}
+
 export async function removeShellPath(): Promise<{
   success: boolean
   modifiedFiles: string[]
 }> {
   if (process.platform === 'win32') {
-    return { success: true, modifiedFiles: [] }
+    return removeWindowsPath()
   }
 
   const shellRcFiles = getShellRcFiles()
@@ -197,12 +254,30 @@ export async function checkPathConfiguration(): Promise<PathConfigStatus> {
       'bin'
     )
 
-    const pathEnv = process.env.PATH ?? ''
-    const isConfigured = pathEnv
-      .split(';')
-      .some((p) => p.toLowerCase() === toolhiveBinPath.toLowerCase())
+    try {
+      // Query the actual user PATH from Windows, not process.env.PATH
+      const { stdout } = await execAsync(
+        `powershell -Command "[Environment]::GetEnvironmentVariable('Path', 'User')"`
+      )
+      const userPath = stdout.trim()
+      const isConfigured = userPath
+        .split(';')
+        .some((p) => p.toLowerCase() === toolhiveBinPath.toLowerCase())
 
-    return { isConfigured, modifiedFiles: [], pathEntry: toolhiveBinPath }
+      return {
+        isConfigured,
+        modifiedFiles: isConfigured ? ['Windows User PATH'] : [],
+        pathEntry: toolhiveBinPath,
+      }
+    } catch {
+      // Fallback to process.env.PATH if PowerShell fails
+      const pathEnv = process.env.PATH ?? ''
+      const isConfigured = pathEnv
+        .split(';')
+        .some((p) => p.toLowerCase() === toolhiveBinPath.toLowerCase())
+
+      return { isConfigured, modifiedFiles: [], pathEntry: toolhiveBinPath }
+    }
   }
 
   const shellRcFiles = getShellRcFiles()
