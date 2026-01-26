@@ -35,18 +35,18 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Skip prerelease
+        if: steps.release.outputs.prerelease == 'true'
+        run: |
+          echo "::notice::Skipping prerelease ${{ steps.release.outputs.tag }} - only stable releases are mirrored to GitHub Pages"
+
       - name: Generate manifest from GitHub Releases
+        if: steps.release.outputs.prerelease != 'true'
         run: |
           TAG="${{ steps.release.outputs.tag }}"
           BASE_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
           RELEASE_URL="https://github.com/${{ github.repository }}/releases/download/$TAG"
           TIMESTAMP=$(date +%s)
-
-          # Skip prereleases to only mirror stable releases
-          if [[ "${{ steps.release.outputs.prerelease }}" == "true" ]]; then
-            echo "Skipping prerelease $TAG"
-            exit 0
-          fi
 
           # Create directory for manifest
           mkdir -p "latest"
@@ -100,6 +100,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to GitHub Pages
+        if: steps.release.outputs.prerelease != 'true'
         uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
