@@ -1,17 +1,14 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { extendElectronAPI } from '@mocks/electronAPI'
 import { LogsTab } from '../logs-tab'
 import { toast } from 'sonner'
 
-const mockElectronAPI = {
+const mockGetMainLogContent = vi.fn()
+const mockElectronAPI = extendElectronAPI({
   platform: 'darwin',
-  getMainLogContent: vi.fn(),
-}
-
-Object.defineProperty(window, 'electronAPI', {
-  value: mockElectronAPI,
-  writable: true,
+  getMainLogContent: mockGetMainLogContent,
 })
 
 Object.assign(navigator, {
@@ -32,7 +29,7 @@ describe('LogsTab', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    mockElectronAPI.getMainLogContent.mockResolvedValue('/logs/main.log')
+    mockGetMainLogContent.mockResolvedValue('/logs/main.log')
     navigator.clipboard.writeText = vi.fn().mockResolvedValue(undefined)
 
     document.querySelectorAll('a').forEach((link) => link.remove())
@@ -112,7 +109,7 @@ describe('LogsTab', () => {
     })
     await userEvent.click(downloadButton)
 
-    expect(mockElectronAPI.getMainLogContent).toHaveBeenCalled()
+    expect(mockGetMainLogContent).toHaveBeenCalled()
     expect(global.Blob).toHaveBeenCalledWith(['/logs/main.log'], {
       type: 'text/plain',
     })
@@ -121,7 +118,7 @@ describe('LogsTab', () => {
 
   it('handles download error gracefully', async () => {
     const mockError = new Error('Failed to get log content')
-    mockElectronAPI.getMainLogContent.mockRejectedValue(mockError)
+    mockGetMainLogContent.mockRejectedValue(mockError)
 
     render(<LogsTab />)
 

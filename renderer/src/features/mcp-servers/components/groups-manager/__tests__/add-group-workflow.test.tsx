@@ -13,10 +13,7 @@ import {
   Outlet,
   Router,
 } from '@tanstack/react-router'
-
-vi.mock('@/common/hooks/use-feature-flag', () => ({
-  useFeatureFlag: () => true,
-}))
+import { extendElectronAPI } from '@mocks/electronAPI'
 
 vi.mock('@/features/mcp-servers/hooks/use-mutation-create-group', () => ({
   useMutationCreateGroup: vi.fn(),
@@ -54,15 +51,12 @@ const router = createGroupsTestRouter() as unknown as ReturnType<
 beforeEach(() => {
   vi.clearAllMocks()
 
-  Object.defineProperty(window, 'electronAPI', {
-    value: {
-      shutdownStore: {
-        getLastShutdownServers: vi.fn().mockResolvedValue([]),
-        clearShutdownHistory: vi.fn().mockResolvedValue(undefined),
-      },
-      onServerShutdown: vi.fn().mockReturnValue(() => {}),
+  extendElectronAPI({
+    shutdownStore: {
+      getLastShutdownServers: vi.fn().mockResolvedValue([]),
+      clearShutdownHistory: vi.fn().mockResolvedValue(undefined),
     },
-    writable: true,
+    onServerShutdown: vi.fn().mockReturnValue(() => {}),
   })
 
   // Default mock implementation for create group mutation

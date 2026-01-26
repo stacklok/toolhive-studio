@@ -54,6 +54,7 @@ beforeAll(() => {
     Object.defineProperty(window, 'electronAPI', {
       value: electronStub as ElectronAPI,
       writable: true,
+      configurable: true,
     })
   }
   server.listen({

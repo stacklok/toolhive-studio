@@ -11,18 +11,18 @@ import { toast } from 'sonner'
 import { mockedPostApiV1BetaWorkloadsRestart } from '@/common/mocks/fixtures/workloads_restart/post'
 import { mockedPostApiV1BetaWorkloadsByNameRestart } from '@/common/mocks/fixtures/workloads_name_restart/post'
 import { mockedGetApiV1BetaWorkloadsByNameStatus } from '@/common/mocks/fixtures/workloads_name_status/get'
+import { extendElectronAPI } from '@mocks/electronAPI'
 
-// Mock electron API
 const mockOnServerShutdown = vi.fn()
-Object.defineProperty(window, 'electronAPI', {
-  value: {
-    shutdownStore: {
-      getLastShutdownServers: vi.fn(),
-      clearShutdownHistory: vi.fn(),
-    },
-    onServerShutdown: mockOnServerShutdown,
+const mockGetLastShutdownServers = vi.fn()
+const mockClearShutdownHistory = vi.fn()
+
+extendElectronAPI({
+  shutdownStore: {
+    getLastShutdownServers: mockGetLastShutdownServers,
+    clearShutdownHistory: mockClearShutdownHistory,
   },
-  writable: true,
+  onServerShutdown: mockOnServerShutdown,
 })
 
 const createQueryClientWrapper = () => {
@@ -42,12 +42,8 @@ const createQueryClientWrapper = () => {
 beforeEach(() => {
   vi.clearAllMocks()
   mockOnServerShutdown.mockClear()
-  window.electronAPI.shutdownStore.getLastShutdownServers = vi
-    .fn()
-    .mockResolvedValue([])
-  window.electronAPI.shutdownStore.clearShutdownHistory = vi
-    .fn()
-    .mockResolvedValue(undefined)
+  mockGetLastShutdownServers.mockResolvedValue([])
+  mockClearShutdownHistory.mockResolvedValue(undefined)
 })
 
 describe('useMutationRestartServerAtStartup', () => {
@@ -87,9 +83,7 @@ describe('useMutationRestartServerAtStartup', () => {
     )
     expect(restartCall?.payload).toEqual({ names: ['postgres-db', 'github'] })
 
-    expect(
-      window.electronAPI.shutdownStore.clearShutdownHistory
-    ).toHaveBeenCalled()
+    expect(mockClearShutdownHistory).toHaveBeenCalled()
 
     await waitFor(() => {
       expect(queryClient.isMutating()).toBe(0)
@@ -110,9 +104,7 @@ describe('useMutationRestartServerAtStartup', () => {
       expect(result.current.isSuccess).toBe(true)
     })
 
-    expect(
-      window.electronAPI.shutdownStore.getLastShutdownServers
-    ).not.toHaveBeenCalled()
+    expect(mockGetLastShutdownServers).not.toHaveBeenCalled()
   })
 
   it('handles API error gracefully', async () => {

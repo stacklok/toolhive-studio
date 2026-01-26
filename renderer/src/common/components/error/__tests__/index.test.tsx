@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { Error as ErrorComponent } from '../index'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { extendElectronAPI } from '@mocks/electronAPI'
 
 vi.mock('../../layout/top-nav/minimal', () => ({
   TopNavMinimal: () => {
@@ -9,16 +10,11 @@ vi.mock('../../layout/top-nav/minimal', () => ({
   },
 }))
 
-const mockElectronAPI = {
+const mockElectronAPI = extendElectronAPI({
   isLinux: false,
   isMac: false,
   isWindows: false,
   platform: 'win32',
-}
-
-Object.defineProperty(window, 'electronAPI', {
-  value: mockElectronAPI,
-  writable: true,
 })
 
 describe('Error', () => {
@@ -39,8 +35,9 @@ describe('Error', () => {
     const keyringError = new Error('OS keyring is not available', {
       cause: { containerEngineAvailable: true },
     })
-    mockElectronAPI.isLinux = true
-    mockElectronAPI.platform = 'linux'
+    ;(mockElectronAPI as { isLinux: boolean; platform: string }).isLinux = true
+    ;(mockElectronAPI as { isLinux: boolean; platform: string }).platform =
+      'linux'
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -65,8 +62,9 @@ describe('Error', () => {
       cause: { containerEngineAvailable: true },
     })
 
-    mockElectronAPI.isLinux = false
-    mockElectronAPI.platform = 'win32'
+    ;(mockElectronAPI as { isLinux: boolean; platform: string }).isLinux = false
+    ;(mockElectronAPI as { isLinux: boolean; platform: string }).platform =
+      'win32'
 
     render(
       <QueryClientProvider client={queryClient}>

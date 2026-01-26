@@ -4,31 +4,42 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { SettingsTabs } from '../settings-tabs'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
+import { extendElectronAPI } from '@mocks/electronAPI'
 
-const mockElectronAPI = {
+const mockGetMainLogContent = vi.fn()
+const mockGetAppVersion = vi.fn()
+const mockIsReleaseBuild = vi.fn()
+const mockGetToolhiveVersion = vi.fn()
+const mockIsAutoUpdateEnabled = vi.fn()
+const mockSetAutoUpdate = vi.fn()
+const mockGetUpdateState = vi.fn()
+const mockSentryIsEnabled = vi.fn()
+const mockSentryOptIn = vi.fn()
+const mockSentryOptOut = vi.fn()
+const mockFeatureFlagsGetAll = vi.fn()
+const mockFeatureFlagsEnable = vi.fn()
+const mockFeatureFlagsDisable = vi.fn()
+
+extendElectronAPI({
   platform: 'darwin',
-  getMainLogContent: vi.fn(),
-  getAppVersion: vi.fn(),
-  isReleaseBuild: vi.fn(),
-  getToolhiveVersion: vi.fn(),
-  isAutoUpdateEnabled: vi.fn(),
-  setAutoUpdate: vi.fn(),
-  getUpdateState: vi.fn(),
+  getMainLogContent: mockGetMainLogContent,
+  getAppVersion: mockGetAppVersion,
+  isReleaseBuild: mockIsReleaseBuild,
+  getToolhiveVersion: mockGetToolhiveVersion,
+  isAutoUpdateEnabled: mockIsAutoUpdateEnabled,
+  setAutoUpdate: mockSetAutoUpdate,
+  getUpdateState: mockGetUpdateState,
   sentry: {
-    isEnabled: vi.fn(),
-    optIn: vi.fn(),
-    optOut: vi.fn(),
+    isEnabled: mockSentryIsEnabled,
+    optIn: mockSentryOptIn,
+    optOut: mockSentryOptOut,
   },
   featureFlags: {
-    getAll: vi.fn(),
-    enable: vi.fn(),
-    disable: vi.fn(),
+    get: vi.fn().mockResolvedValue(false),
+    getAll: mockFeatureFlagsGetAll,
+    enable: mockFeatureFlagsEnable,
+    disable: mockFeatureFlagsDisable,
   },
-}
-
-Object.defineProperty(window, 'electronAPI', {
-  value: mockElectronAPI,
-  writable: true,
 })
 
 vi.mock('@/common/hooks/use-auto-launch', () => ({
@@ -91,16 +102,16 @@ describe('SettingsTabs', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    mockElectronAPI.getMainLogContent.mockResolvedValue('Mock log content')
-    mockElectronAPI.getAppVersion.mockResolvedValue('1.0.0')
-    mockElectronAPI.isReleaseBuild.mockResolvedValue(true)
-    mockElectronAPI.getToolhiveVersion.mockResolvedValue('0.9.0')
-    mockElectronAPI.isAutoUpdateEnabled.mockResolvedValue(false)
-    mockElectronAPI.getUpdateState.mockResolvedValue('none')
-    mockElectronAPI.sentry.isEnabled.mockResolvedValue(true)
-    mockElectronAPI.featureFlags.getAll.mockResolvedValue({})
-    mockElectronAPI.featureFlags.enable.mockResolvedValue(undefined)
-    mockElectronAPI.featureFlags.disable.mockResolvedValue(undefined)
+    mockGetMainLogContent.mockResolvedValue('Mock log content')
+    mockGetAppVersion.mockResolvedValue('1.0.0')
+    mockIsReleaseBuild.mockResolvedValue(true)
+    mockGetToolhiveVersion.mockResolvedValue('0.9.0')
+    mockIsAutoUpdateEnabled.mockResolvedValue(false)
+    mockGetUpdateState.mockResolvedValue('none')
+    mockSentryIsEnabled.mockResolvedValue(true)
+    mockFeatureFlagsGetAll.mockResolvedValue({})
+    mockFeatureFlagsEnable.mockResolvedValue(undefined)
+    mockFeatureFlagsDisable.mockResolvedValue(undefined)
 
     // Reset mock return values
     mockUseAppVersion.mockReturnValue({
