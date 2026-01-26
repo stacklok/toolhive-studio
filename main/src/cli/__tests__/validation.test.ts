@@ -3,6 +3,7 @@ import {
   validateCliAlignment,
   handleValidationResult,
   getCliAlignmentStatus,
+  repairCliSymlink,
 } from '../validation'
 import type { ExternalCliInfo } from '../types'
 
@@ -27,12 +28,6 @@ vi.mock('../symlink-manager', () => ({
 vi.mock('../path-configurator', () => ({
   configureShellPath: vi.fn(),
   checkPathConfiguration: vi.fn(),
-}))
-
-vi.mock('../dialogs', () => ({
-  showExternalCliDialog: vi.fn(),
-  showSymlinkBrokenDialog: vi.fn(),
-  showSymlinkTamperedDialog: vi.fn(),
 }))
 
 vi.mock('../constants', () => ({
@@ -67,11 +62,6 @@ import {
   configureShellPath,
   checkPathConfiguration,
 } from '../path-configurator'
-import {
-  showExternalCliDialog,
-  showSymlinkBrokenDialog,
-  showSymlinkTamperedDialog,
-} from '../dialogs'
 
 const mockDetectExternalCli = vi.mocked(detectExternalCli)
 const mockReadMarkerFile = vi.mocked(readMarkerFile)
@@ -85,9 +75,6 @@ const mockCreateMarkerForDesktopInstall = vi.mocked(
 )
 const mockConfigureShellPath = vi.mocked(configureShellPath)
 const mockCheckPathConfiguration = vi.mocked(checkPathConfiguration)
-const mockShowExternalCliDialog = vi.mocked(showExternalCliDialog)
-const mockShowSymlinkBrokenDialog = vi.mocked(showSymlinkBrokenDialog)
-const mockShowSymlinkTamperedDialog = vi.mocked(showSymlinkTamperedDialog)
 
 describe('validation', () => {
   beforeEach(() => {
@@ -224,7 +211,7 @@ describe('validation', () => {
   })
 
   describe('handleValidationResult', () => {
-    it('returns true for valid status', async () => {
+    it('returns valid status for valid input', async () => {
       // Mock marker with same desktop version so no update is needed
       mockReadMarkerFile.mockReturnValue({
         schema_version: 1,
@@ -237,73 +224,49 @@ describe('validation', () => {
 
       const result = await handleValidationResult({ status: 'valid' }, 'darwin')
 
-      expect(result).toBe(true)
+      expect(result.status).toBe('valid')
     })
 
-    it('shows dialog and returns false for external CLI', async () => {
+    it('passes through external-cli-found for renderer to handle', async () => {
       const externalCli: ExternalCliInfo = {
         path: '/opt/homebrew/bin/thv',
         version: '1.0.0',
         source: 'homebrew',
       }
-      mockShowExternalCliDialog.mockReturnValue('quit')
 
       const result = await handleValidationResult(
         { status: 'external-cli-found', cli: externalCli },
         'darwin'
       )
 
-      expect(mockShowExternalCliDialog).toHaveBeenCalledWith(externalCli)
-      expect(result).toBe(false)
+      expect(result.status).toBe('external-cli-found')
+      if (result.status === 'external-cli-found') {
+        expect(result.cli).toEqual(externalCli)
+      }
     })
 
-    it('repairs symlink when user accepts broken dialog', async () => {
-      mockShowSymlinkBrokenDialog.mockReturnValue(true)
-      mockRepairSymlink.mockReturnValue({ success: true })
-      mockGetCliInfo.mockResolvedValue({
-        exists: true,
-        version: '1.0.0',
-        isExecutable: true,
-      })
-
+    it('passes through symlink-broken for renderer to handle', async () => {
       const result = await handleValidationResult(
         { status: 'symlink-broken', target: '/old/path' },
         'darwin'
       )
 
-      expect(mockShowSymlinkBrokenDialog).toHaveBeenCalled()
-      expect(mockRepairSymlink).toHaveBeenCalled()
-      expect(result).toBe(true)
+      expect(result.status).toBe('symlink-broken')
+      if (result.status === 'symlink-broken') {
+        expect(result.target).toBe('/old/path')
+      }
     })
 
-    it('returns false when user declines broken dialog', async () => {
-      mockShowSymlinkBrokenDialog.mockReturnValue(false)
-
-      const result = await handleValidationResult(
-        { status: 'symlink-broken', target: '/old/path' },
-        'darwin'
-      )
-
-      expect(result).toBe(false)
-    })
-
-    it('fixes symlink when user accepts tampered dialog', async () => {
-      mockShowSymlinkTamperedDialog.mockReturnValue(true)
-      mockRepairSymlink.mockReturnValue({ success: true })
-      mockGetCliInfo.mockResolvedValue({
-        exists: true,
-        version: '1.0.0',
-        isExecutable: true,
-      })
-
+    it('passes through symlink-tampered for renderer to handle', async () => {
       const result = await handleValidationResult(
         { status: 'symlink-tampered', target: '/other/path' },
         'darwin'
       )
 
-      expect(mockShowSymlinkTamperedDialog).toHaveBeenCalled()
-      expect(mockRepairSymlink).toHaveBeenCalled()
-      expect(result).toBe(true)
+      expect(result.status).toBe('symlink-tampered')
+      if (result.status === 'symlink-tampered') {
+        expect(result.target).toBe('/other/path')
+      }
     })
 
     it('performs fresh install for fresh-install status', async () => {
@@ -327,7 +290,7 @@ describe('validation', () => {
       expect(mockCreateSymlink).toHaveBeenCalled()
       expect(mockCreateMarkerForDesktopInstall).toHaveBeenCalled()
       expect(mockConfigureShellPath).toHaveBeenCalled()
-      expect(result).toBe(true)
+      expect(result.status).toBe('valid')
     })
 
     it('performs fresh install for symlink-missing status', async () => {
@@ -349,10 +312,10 @@ describe('validation', () => {
       )
 
       expect(mockCreateSymlink).toHaveBeenCalled()
-      expect(result).toBe(true)
+      expect(result.status).toBe('valid')
     })
 
-    it('returns false when fresh install fails', async () => {
+    it('returns original status when fresh install fails', async () => {
       mockCreateSymlink.mockReturnValue({
         success: false,
         error: 'Permission denied',
@@ -363,7 +326,37 @@ describe('validation', () => {
         'darwin'
       )
 
-      expect(result).toBe(false)
+      expect(result.status).toBe('fresh-install')
+    })
+  })
+
+  describe('repairCliSymlink', () => {
+    it('repairs symlink and updates marker', async () => {
+      mockRepairSymlink.mockReturnValue({ success: true, checksum: 'abc123' })
+      mockGetCliInfo.mockResolvedValue({
+        exists: true,
+        version: '1.0.0',
+        isExecutable: true,
+      })
+
+      const result = await repairCliSymlink('darwin')
+
+      expect(mockRepairSymlink).toHaveBeenCalledWith('darwin')
+      expect(mockCreateMarkerForDesktopInstall).toHaveBeenCalled()
+      expect(result.success).toBe(true)
+    })
+
+    it('returns error when repair fails', async () => {
+      mockRepairSymlink.mockReturnValue({
+        success: false,
+        error: 'Permission denied',
+      })
+
+      const result = await repairCliSymlink('darwin')
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Permission denied')
+      expect(mockCreateMarkerForDesktopInstall).not.toHaveBeenCalled()
     })
   })
 
