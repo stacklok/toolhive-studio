@@ -14,6 +14,34 @@ import type { ElectronAPI } from './preload/src/preload'
 
 expect.extend(testingLibraryMatchers)
 
+// Module mocks - hoisted by Vitest but placed at top level for clarity
+vi.mock('@utils/delay', () => ({
+  delay: (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, Math.min(ms, 10))),
+}))
+
+vi.mock('electron-log/renderer', () => ({
+  default: new Proxy(
+    {},
+    {
+      get: () => vi.fn(() => new Proxy({}, { get: () => vi.fn() })),
+    }
+  ),
+}))
+
+vi.mock('sonner', () => ({
+  Toaster: () => null,
+  toast: {
+    dismiss: vi.fn(),
+    promise: vi.fn((p: Promise<unknown>) => p.catch(() => {})),
+    success: vi.fn(),
+    error: vi.fn(),
+    warning: vi.fn(),
+    loading: vi.fn(),
+    info: vi.fn(),
+  },
+}))
+
 beforeEach(() => {
   resetAllAutoAPIMocks()
   resetMatchMediaState()
@@ -38,16 +66,16 @@ beforeAll(() => {
           themeSource: 'system',
         }),
         set: vi.fn().mockResolvedValue(true),
-      },
+      } as unknown as ElectronAPI['darkMode'],
       featureFlags: {
         get: vi.fn().mockResolvedValue(false),
         enable: vi.fn().mockResolvedValue(undefined),
         disable: vi.fn().mockResolvedValue(undefined),
         getAll: vi.fn().mockResolvedValue({}),
-      },
+      } as ElectronAPI['featureFlags'],
       chat: {
         stream: vi.fn(),
-      },
+      } as unknown as ElectronAPI['chat'],
       on: vi.fn(),
       removeListener: vi.fn(),
     }
@@ -64,34 +92,6 @@ beforeAll(() => {
     baseUrl: 'https://foo.bar.com',
     fetch,
   })
-
-  // Globally reduce UI delays to a negligible amount in tests
-  vi.mock('@utils/delay', () => ({
-    delay: (ms: number) =>
-      new Promise((resolve) => setTimeout(resolve, Math.min(ms, 10))),
-  }))
-
-  vi.mock('electron-log/renderer', () => ({
-    default: new Proxy(
-      {},
-      {
-        get: () => vi.fn(() => new Proxy({}, { get: () => vi.fn() })),
-      }
-    ),
-  }))
-
-  vi.mock('sonner', () => ({
-    Toaster: () => null,
-    toast: {
-      dismiss: vi.fn(),
-      promise: vi.fn((p: Promise<unknown>) => p.catch(() => {})),
-      success: vi.fn(),
-      error: vi.fn(),
-      warning: vi.fn(),
-      loading: vi.fn(),
-      info: vi.fn(),
-    },
-  }))
 
   window.HTMLElement.prototype.scrollIntoView = function () {}
   window.HTMLElement.prototype.hasPointerCapture = vi.fn()
