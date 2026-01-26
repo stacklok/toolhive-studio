@@ -246,8 +246,11 @@ app.whenReady().then(async () => {
   //  Skip in dev mode since bundled CLI may not exist.
   //  Validation result is stored for renderer to query - renderer shows UI for
   //  issues that require user interaction (external CLI, broken/tampered symlink).
+  //  Set FORCE_CLI_VALIDATION=true to test validation in dev mode.
   // ────────────────────────────────────────────────────────────────────────────
-  if (app.isPackaged) {
+  const shouldValidateCli =
+    app.isPackaged || process.env.FORCE_CLI_VALIDATION === 'true'
+  if (shouldValidateCli) {
     const validation = await validateCliAlignment()
     const result = await handleValidationResult(validation)
     setCliValidationResult(result)
