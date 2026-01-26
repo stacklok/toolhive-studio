@@ -1,59 +1,16 @@
 import { render, screen, waitFor, act, cleanup } from '@testing-library/react'
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  vi,
+  type Mock,
+} from 'vitest'
+import { setSystemTheme } from '@mocks/matchMedia'
 import { ThemeProvider } from '../theme-provider'
 import { useTheme } from '../../../hooks/use-theme'
-
-const mockElectronAPI = {
-  darkMode: {
-    get: vi.fn().mockResolvedValue({
-      shouldUseDarkColors: false,
-      themeSource: 'system',
-    }),
-    set: vi.fn().mockResolvedValue(true),
-  },
-}
-
-Object.defineProperty(window, 'electronAPI', {
-  value: mockElectronAPI,
-  writable: true,
-})
-
-const matchMediaListeners: Record<string, Set<(e: Event) => void>> = {}
-const matchMediaMatches: Record<string, boolean> = {}
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: vi.fn(function matchMedia(query: string) {
-    matchMediaListeners[query] = matchMediaListeners[query] || new Set()
-    matchMediaMatches[query] = matchMediaMatches[query] ?? false
-    return {
-      media: query,
-      onchange: null,
-      addListener: vi.fn(), // deprecated
-      removeListener: vi.fn(), // deprecated
-      addEventListener: (event: string, cb: (e: Event) => void) => {
-        if (event === 'change') matchMediaListeners[query]?.add(cb)
-      },
-      removeEventListener: (event: string, cb: (e: Event) => void) => {
-        if (event === 'change') matchMediaListeners[query]?.delete(cb)
-      },
-      dispatchEvent: (event: Event) => {
-        if (event.type === 'change') {
-          matchMediaListeners[query]?.forEach((cb) => cb(event))
-        }
-      },
-      get matches() {
-        return matchMediaMatches[query]
-      },
-    }
-  }),
-})
-function setSystemTheme(isDark: boolean) {
-  const query = '(prefers-color-scheme: dark)'
-  matchMediaMatches[query] = isDark
-  const event = new Event('change')
-  Object.defineProperty(event, 'matches', { value: isDark })
-  window.matchMedia(query).dispatchEvent(event)
-}
 
 function TestComponent({ id = 'theme' }: { id?: string }) {
   const { theme, setTheme } = useTheme()
@@ -72,7 +29,7 @@ describe('<ThemeProvider />', () => {
     localStorage.clear()
     vi.clearAllMocks()
     document.documentElement.className = ''
-    mockElectronAPI.darkMode.get.mockResolvedValue({
+    ;(window.electronAPI.darkMode.get as Mock).mockResolvedValue({
       shouldUseDarkColors: false,
       themeSource: 'system',
     })
@@ -86,7 +43,7 @@ describe('<ThemeProvider />', () => {
 
   it('keeps stored theme even if Electron reports something else', async () => {
     localStorage.setItem('toolhive-ui-theme', 'dark')
-    mockElectronAPI.darkMode.get.mockResolvedValue({
+    ;(window.electronAPI.darkMode.get as Mock).mockResolvedValue({
       shouldUseDarkColors: false,
       themeSource: 'system',
     })
@@ -108,7 +65,7 @@ describe('<ThemeProvider />', () => {
   })
 
   it('seeds localStorage from Electron when nothing stored', async () => {
-    mockElectronAPI.darkMode.get.mockResolvedValue({
+    ;(window.electronAPI.darkMode.get as Mock).mockResolvedValue({
       shouldUseDarkColors: true,
       themeSource: 'dark',
     })
@@ -145,7 +102,7 @@ describe('<ThemeProvider />', () => {
 
     expect(document.documentElement).toHaveClass('light')
     expect(localStorage.getItem('toolhive-ui-theme')).toBe('light')
-    expect(mockElectronAPI.darkMode.set).toHaveBeenCalledWith('light')
+    expect(window.electronAPI.darkMode.set).toHaveBeenCalledWith('light')
   })
 
   it('listens to system theme changes when theme is system', async () => {

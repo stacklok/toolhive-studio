@@ -1,34 +1,7 @@
 import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { useDownloadFile } from '../use-download-file'
 import { toast } from 'sonner'
-
-vi.mock('sonner', async () => {
-  const original = await vi.importActual<typeof import('sonner')>('sonner')
-  return {
-    ...original,
-    toast: {
-      error: vi.fn(),
-    },
-  }
-})
-
-vi.mock('electron-log/renderer', () => ({
-  default: {
-    error: vi.fn(),
-  },
-}))
-
-// Mock URL methods while keeping the native URL constructor
-global.URL.createObjectURL = vi.fn().mockReturnValue('blob:mock-url')
-global.URL.revokeObjectURL = vi.fn()
-
-global.Blob = vi.fn(function Blob(content, options) {
-  return {
-    content,
-    options,
-  }
-}) as unknown as typeof Blob
+import { useDownloadFile } from '../use-download-file'
 
 describe('useDownloadFile', () => {
   beforeEach(() => {
