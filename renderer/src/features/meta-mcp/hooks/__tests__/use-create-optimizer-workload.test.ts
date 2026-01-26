@@ -37,18 +37,7 @@ vi.mock('@/common/lib/analytics', () => ({
   trackEvent: vi.fn(),
 }))
 
-vi.mock('sonner', () => ({
-  toast: {
-    success: vi.fn(),
-    error: vi.fn(),
-    promise: vi.fn((promise) => {
-      // Execute the promise to trigger any side effects
-      promise.catch(() => {})
-      return promise
-    }),
-  },
-}))
-
+// Need local mock to assert on log.error calls (global uses Proxy)
 vi.mock('electron-log/renderer', () => ({
   default: {
     error: vi.fn(),

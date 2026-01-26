@@ -19,13 +19,6 @@ vi.mock('../layout/top-nav/window-controls', () => ({
   WindowControls: () => null,
 }))
 
-vi.mock('electron-log/renderer', () => ({
-  default: {
-    info: vi.fn(),
-    error: vi.fn(),
-  },
-}))
-
 describe('StartingToolHive', () => {
   let queryClient: QueryClient
 

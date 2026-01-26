@@ -25,17 +25,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
 import { CustomizeToolsPage } from '../page'
 
-vi.mock('sonner', () => ({
-  toast: {
-    error: vi.fn(),
-    success: vi.fn(),
-    loading: vi.fn(),
-    warning: vi.fn(),
-    promise: vi.fn(),
-    dismiss: vi.fn(),
-  },
-}))
-
 const createLocalServerWorkload = (
   overrides: Partial<CoreWorkload & V1CreateRequest> = {}
 ): CoreWorkload & Partial<V1CreateRequest> => ({

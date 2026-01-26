@@ -7,12 +7,6 @@ import type { AppVersionInfo } from '@/common/hooks/use-app-version'
 import userEvent from '@testing-library/user-event'
 import { toast } from 'sonner'
 
-vi.mock('sonner', () => ({
-  toast: {
-    info: vi.fn(),
-  },
-}))
-
 const mockElectronAPI = {
   isAutoUpdateEnabled: vi.fn(),
   setAutoUpdate: vi.fn(),

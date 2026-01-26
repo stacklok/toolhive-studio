@@ -20,30 +20,13 @@ Object.assign(navigator, {
   },
 })
 
-// Mock URL methods while keeping the native URL constructor
-global.URL.createObjectURL = vi.fn().mockReturnValue('blob:mock-url')
-global.URL.revokeObjectURL = vi.fn()
-
+// Blob mock must stay local - MSW uses Blob internally
 global.Blob = vi.fn(function Blob(content, options) {
   return {
     content,
     options,
   }
 }) as unknown as typeof Blob
-
-vi.mock('sonner', async () => {
-  const original = await vi.importActual<typeof import('sonner')>('sonner')
-  return {
-    ...original,
-    toast: {
-      loading: vi.fn(),
-      success: vi.fn(),
-      warning: vi.fn(),
-      error: vi.fn(),
-      dismiss: vi.fn(),
-    },
-  }
-})
 
 describe('LogsTab', () => {
   beforeEach(() => {

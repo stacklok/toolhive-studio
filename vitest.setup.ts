@@ -88,6 +88,7 @@ beforeAll(() => {
       error: vi.fn(),
       warning: vi.fn(),
       loading: vi.fn(),
+      info: vi.fn(),
     },
   }))
 

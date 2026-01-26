@@ -22,15 +22,6 @@ vi.mock('@tanstack/react-router', () => ({
   useLocation: () => ({ pathname: '/mcp-optimizer' }),
 }))
 
-vi.mock('sonner', () => ({
-  toast: {
-    loading: vi.fn(),
-    success: vi.fn(),
-    error: vi.fn(),
-    dismiss: vi.fn(),
-  },
-}))
-
 vi.mock('@/features/meta-mcp/hooks/use-mcp-optimizer-clients', () => ({
   useMcpOptimizerClients: vi.fn(),
 }))

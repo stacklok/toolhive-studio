@@ -7,20 +7,6 @@ import {
 } from '../orchestrate-run-remote-server'
 import type { V1CreateRequest, V1ListSecretsResponse } from '@api/types.gen'
 
-vi.mock('sonner', async () => {
-  const original = await vi.importActual<typeof import('sonner')>('sonner')
-  return {
-    ...original,
-    toast: {
-      loading: vi.fn(),
-      success: vi.fn(),
-      warning: vi.fn(),
-      error: vi.fn(),
-      dismiss: vi.fn(),
-    },
-  }
-})
-
 beforeEach(() => {
   vi.clearAllMocks()
 })

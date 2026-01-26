@@ -12,16 +12,6 @@ import { mockedPostApiV1BetaWorkloadsRestart } from '@/common/mocks/fixtures/wor
 import { mockedPostApiV1BetaWorkloadsByNameRestart } from '@/common/mocks/fixtures/workloads_name_restart/post'
 import { mockedGetApiV1BetaWorkloadsByNameStatus } from '@/common/mocks/fixtures/workloads_name_status/get'
 
-vi.mock('sonner', () => ({
-  toast: {
-    dismiss: vi.fn(),
-    promise: vi.fn((promise) => promise.catch(() => {})),
-    success: vi.fn(),
-    error: vi.fn(),
-    loading: vi.fn(),
-  },
-}))
-
 // Mock electron API
 const mockOnServerShutdown = vi.fn()
 Object.defineProperty(window, 'electronAPI', {
