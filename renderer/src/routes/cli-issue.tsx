@@ -105,7 +105,7 @@ function ExternalCliContent({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="bg-muted rounded-md p-4 text-sm">
-          <p>
+          <p className="break-all">
             <strong>Found:</strong> {cli.path}
             {versionInfo}
           </p>
