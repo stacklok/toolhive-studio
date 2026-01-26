@@ -58,15 +58,13 @@ export async function validateCliAlignment(
     return { status: 'symlink-tampered', target: symlink.target ?? 'unknown' }
   }
 
-  // Check and configure PATH if needed (non-Windows only)
-  if (platform !== 'win32') {
-    const pathStatus = await checkPathConfiguration()
-    if (!pathStatus.isConfigured) {
-      log.info('PATH not configured, configuring now...')
-      const pathResult = await configureShellPath()
-      if (!pathResult.success) {
-        log.warn('Failed to configure PATH, user may need to add manually')
-      }
+  // Check and configure PATH if needed
+  const pathStatus = await checkPathConfiguration()
+  if (!pathStatus.isConfigured) {
+    log.info('PATH not configured, configuring now...')
+    const pathResult = await configureShellPath()
+    if (!pathResult.success) {
+      log.warn('Failed to configure PATH, user may need to add manually')
     }
   }
 
@@ -158,13 +156,11 @@ export async function handleValidationResult(
 
       log.info(`CLI installed: version=${cliInfo.version}, path=${cliPath}`)
 
-      if (platform !== 'win32') {
-        const pathResult = await configureShellPath()
-        if (!pathResult.success) {
-          log.warn(
-            'Failed to configure shell PATH, user may need to add manually'
-          )
-        }
+      const pathResult = await configureShellPath()
+      if (!pathResult.success) {
+        log.warn(
+          'Failed to configure shell PATH, user may need to add manually'
+        )
       }
 
       log.info('Fresh CLI installation completed successfully')
@@ -249,9 +245,7 @@ export async function removeCliInstallation(
 
   deleteMarkerFile()
 
-  if (platform !== 'win32') {
-    await removeShellPath()
-  }
+  await removeShellPath()
 
   return { success: true }
 }
