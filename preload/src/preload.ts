@@ -222,6 +222,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     reinstall: () => ipcRenderer.invoke('cli-alignment:reinstall'),
     remove: () => ipcRenderer.invoke('cli-alignment:remove'),
     getPathStatus: () => ipcRenderer.invoke('cli-alignment:get-path-status'),
+    getValidationResult: () =>
+      ipcRenderer.invoke('cli-alignment:get-validation-result'),
+    validate: () => ipcRenderer.invoke('cli-alignment:validate'),
+    repair: () => ipcRenderer.invoke('cli-alignment:repair'),
   },
 
   // IPC event listeners for streaming
@@ -533,6 +537,12 @@ export interface ElectronAPI {
       modifiedFiles: string[]
       pathEntry: string
     }>
+    getValidationResult: () => Promise<ValidationResult | null>
+    validate: () => Promise<ValidationResult>
+    repair: () => Promise<{
+      repairResult: { success: boolean; error?: string }
+      validationResult: ValidationResult | null
+    }>
   }
 
   // IPC event listeners for streaming
@@ -541,4 +551,19 @@ export interface ElectronAPI {
     channel: string,
     listener: (...args: unknown[]) => void
   ) => void
+}
+
+// CLI Alignment Types (shared with renderer)
+export type ValidationResult =
+  | { status: 'valid' }
+  | { status: 'external-cli-found'; cli: ExternalCliInfo }
+  | { status: 'symlink-broken'; target: string }
+  | { status: 'symlink-tampered'; target: string }
+  | { status: 'symlink-missing' }
+  | { status: 'fresh-install' }
+
+export interface ExternalCliInfo {
+  path: string
+  version: string | null
+  source: 'homebrew' | 'winget' | 'manual'
 }

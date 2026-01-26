@@ -74,6 +74,7 @@ import {
   getCliAlignmentStatus,
   reinstallCliSymlink,
   removeCliInstallation,
+  repairCliSymlink,
 } from './cli'
 import { checkPathConfiguration } from './cli/path-configurator'
 import {
@@ -123,6 +124,8 @@ import {
   getTearingDownState,
   setTearingDownState,
   getTray,
+  getCliValidationResult,
+  setCliValidationResult,
 } from './app-state'
 import type { UIMessage } from 'ai'
 
@@ -239,20 +242,19 @@ app.whenReady().then(async () => {
   resetUpdateState()
 
   // ────────────────────────────────────────────────────────────────────────────
-  //  CLI Alignment Validation - MUST happen first (THV-0020)
-  //  Skip in dev mode since bundled CLI may not exist
+  //  CLI Alignment Validation (THV-0020)
+  //  Skip in dev mode since bundled CLI may not exist.
+  //  Validation result is stored for renderer to query - renderer shows UI for
+  //  issues that require user interaction (external CLI, broken/tampered symlink).
   // ────────────────────────────────────────────────────────────────────────────
   if (app.isPackaged) {
     const validation = await validateCliAlignment()
-    const canProceed = await handleValidationResult(validation)
-
-    if (!canProceed) {
-      log.info('CLI alignment validation failed, quitting app')
-      app.quit()
-      return
-    }
+    const result = await handleValidationResult(validation)
+    setCliValidationResult(result)
+    log.info(`CLI validation result: ${result.status}`)
   } else {
     log.info('Skipping CLI alignment validation in dev mode')
+    setCliValidationResult({ status: 'valid' })
   }
 
   // Initialize tray first
@@ -850,3 +852,29 @@ ipcMain.handle('cli-alignment:reinstall', () => reinstallCliSymlink())
 ipcMain.handle('cli-alignment:remove', () => removeCliInstallation())
 
 ipcMain.handle('cli-alignment:get-path-status', () => checkPathConfiguration())
+
+// Get the stored validation result from startup
+ipcMain.handle('cli-alignment:get-validation-result', () =>
+  getCliValidationResult()
+)
+
+// Re-run validation (e.g., after user uninstalls external CLI)
+ipcMain.handle('cli-alignment:validate', async () => {
+  const validation = await validateCliAlignment()
+  const result = await handleValidationResult(validation)
+  setCliValidationResult(result)
+  return result
+})
+
+// Repair broken or tampered symlink
+ipcMain.handle('cli-alignment:repair', async () => {
+  const repairResult = await repairCliSymlink()
+  if (repairResult.success) {
+    // Re-validate after repair
+    const validation = await validateCliAlignment()
+    const result = await handleValidationResult(validation)
+    setCliValidationResult(result)
+    return { repairResult, validationResult: result }
+  }
+  return { repairResult, validationResult: getCliValidationResult() }
+})

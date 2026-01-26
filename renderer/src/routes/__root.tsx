@@ -8,6 +8,7 @@ import type { QueryClient } from '@tanstack/react-query'
 import {
   createRootRouteWithContext,
   Outlet,
+  redirect,
   useMatches,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
@@ -50,11 +51,15 @@ async function setupSecretProvider(queryClient: QueryClient) {
 function RootComponent() {
   const matches = useMatches()
   const isShutdownRoute = matches.some((match) => match.routeId === '/shutdown')
+  const isCliIssueRoute = matches.some(
+    (match) => match.routeId === '/cli-issue'
+  )
+  const hideNav = isShutdownRoute || isCliIssueRoute
 
   return (
     <>
-      {!isShutdownRoute && <TopNav />}
-      {!isShutdownRoute && import.meta.env.DEV && <CustomPortBanner />}
+      {!hideNav && <TopNav />}
+      {!hideNav && import.meta.env.DEV && <CustomPortBanner />}
       <Main>
         <Outlet />
         <Toaster
@@ -98,7 +103,7 @@ export const Route = createRootRouteWithContext<{
   onError: (error) => {
     log.error(error)
   },
-  beforeLoad: async ({ context: { queryClient } }) => {
+  beforeLoad: async ({ context: { queryClient }, location }) => {
     let isUpdateInProgress = false
 
     try {
@@ -110,6 +115,20 @@ export const Route = createRootRouteWithContext<{
     if (isUpdateInProgress) {
       log.info(`[beforeLoad] Skipping health API check - update in progress`)
       return
+    }
+
+    // Check CLI validation status (skip if already on cli-issue or shutdown routes)
+    const isCliOrShutdownRoute =
+      location.pathname === '/cli-issue' || location.pathname === '/shutdown'
+    if (!isCliOrShutdownRoute) {
+      const validationResult =
+        await window.electronAPI.cliAlignment.getValidationResult()
+      if (validationResult && validationResult.status !== 'valid') {
+        log.info(
+          `[beforeLoad] CLI validation issue: ${validationResult.status}, redirecting to /cli-issue`
+        )
+        throw redirect({ to: '/cli-issue' })
+      }
     }
 
     await queryClient.ensureQueryData({

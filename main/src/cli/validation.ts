@@ -18,11 +18,6 @@ import {
   removeShellPath,
   checkPathConfiguration,
 } from './path-configurator'
-import {
-  showExternalCliDialog,
-  showSymlinkBrokenDialog,
-  showSymlinkTamperedDialog,
-} from './dialogs'
 import { getDesktopCliPath } from './constants'
 import { deleteMarkerFile } from './marker-file'
 import type { ValidationResult, CliAlignmentStatus, Platform } from './types'
@@ -79,11 +74,24 @@ export async function validateCliAlignment(
   return { status: 'valid' }
 }
 
-/** Returns true if the app can proceed, false if it should quit. */
+/**
+ * Handles validation results that can be auto-fixed without user interaction.
+ * Returns the updated validation result after attempting auto-fixes.
+ *
+ * Cases handled automatically:
+ * - valid: Updates marker file if needed
+ * - fresh-install: Creates symlink and marker
+ * - symlink-missing: Creates symlink and marker
+ *
+ * Cases requiring user interaction (returned as-is for renderer to handle):
+ * - external-cli-found: User must uninstall external CLI
+ * - symlink-broken: User must confirm repair
+ * - symlink-tampered: User must confirm restore
+ */
 export async function handleValidationResult(
   result: ValidationResult,
   platform: Platform = process.platform as Platform
-): Promise<boolean> {
+): Promise<ValidationResult> {
   switch (result.status) {
     case 'valid': {
       log.info('CLI alignment is valid')
@@ -110,70 +118,23 @@ export async function handleValidationResult(
         )
       }
 
-      return true
+      return { status: 'valid' }
     }
 
+    // These cases require user interaction - return as-is for renderer to handle
     case 'external-cli-found':
-      showExternalCliDialog(result.cli)
-      app.quit()
-      return false
+      log.info('External CLI found - renderer will show issue page')
+      return result
 
-    case 'symlink-broken': {
-      const shouldRepair = showSymlinkBrokenDialog(result.target)
-      if (!shouldRepair) {
-        app.quit()
-        return false
-      }
+    case 'symlink-broken':
+      log.info('Symlink broken - renderer will show issue page')
+      return result
 
-      const repairResult = repairSymlink(platform)
-      if (!repairResult.success) {
-        log.error(`Failed to repair symlink: ${repairResult.error}`)
-        app.quit()
-        return false
-      }
+    case 'symlink-tampered':
+      log.info('Symlink tampered - renderer will show issue page')
+      return result
 
-      // Update marker file after repair
-      const bundledPath = getBundledCliPath()
-      const cliPath = getDesktopCliPath(platform)
-      const cliInfo = await getCliInfo(cliPath)
-      createMarkerForDesktopInstall(
-        cliInfo.version ?? 'unknown',
-        platform === 'win32' ? undefined : bundledPath,
-        repairResult.checksum
-      )
-
-      log.info('Symlink repaired successfully')
-      return true
-    }
-
-    case 'symlink-tampered': {
-      const shouldFix = showSymlinkTamperedDialog(result.target)
-      if (!shouldFix) {
-        app.quit()
-        return false
-      }
-
-      const fixResult = repairSymlink(platform)
-      if (!fixResult.success) {
-        log.error(`Failed to fix symlink: ${fixResult.error}`)
-        app.quit()
-        return false
-      }
-
-      // Update marker file after fix
-      const bundledPathTampered = getBundledCliPath()
-      const cliPathTampered = getDesktopCliPath(platform)
-      const cliInfoTampered = await getCliInfo(cliPathTampered)
-      createMarkerForDesktopInstall(
-        cliInfoTampered.version ?? 'unknown',
-        platform === 'win32' ? undefined : bundledPathTampered,
-        fixResult.checksum
-      )
-
-      log.info('Symlink fixed successfully')
-      return true
-    }
-
+    // These cases can be auto-fixed without user interaction
     case 'symlink-missing':
     case 'fresh-install': {
       log.info('Performing fresh CLI installation...')
@@ -181,8 +142,8 @@ export async function handleValidationResult(
       const symlinkResult = createSymlink(platform)
       if (!symlinkResult.success) {
         log.error(`Failed to create CLI symlink: ${symlinkResult.error}`)
-        app.quit()
-        return false
+        // Return a special error status - the app can still run
+        return result
       }
 
       const bundledPath = getBundledCliPath()
@@ -207,9 +168,38 @@ export async function handleValidationResult(
       }
 
       log.info('Fresh CLI installation completed successfully')
-      return true
+      return { status: 'valid' }
     }
   }
+}
+
+/**
+ * Repairs a broken or tampered symlink.
+ * Called from renderer via IPC when user confirms repair.
+ */
+export async function repairCliSymlink(
+  platform: Platform = process.platform as Platform
+): Promise<{ success: boolean; error?: string }> {
+  log.info('Repairing CLI symlink...')
+
+  const result = repairSymlink(platform)
+  if (!result.success) {
+    log.error(`Failed to repair symlink: ${result.error}`)
+    return result
+  }
+
+  // Update marker file after repair
+  const bundledPath = getBundledCliPath()
+  const cliPath = getDesktopCliPath(platform)
+  const cliInfo = await getCliInfo(cliPath)
+  createMarkerForDesktopInstall(
+    cliInfo.version ?? 'unknown',
+    platform === 'win32' ? undefined : bundledPath,
+    result.checksum
+  )
+
+  log.info('Symlink repaired successfully')
+  return { success: true }
 }
 
 export async function getCliAlignmentStatus(

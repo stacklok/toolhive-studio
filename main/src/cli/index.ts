@@ -15,4 +15,17 @@ export {
   getCliAlignmentStatus,
   reinstallCliSymlink,
   removeCliInstallation,
+  repairCliSymlink,
 } from './validation'
+
+// ────────────────────────────────────────────────────────────────────────────
+//  Types (Public API)
+// ────────────────────────────────────────────────────────────────────────────
+
+export type { ValidationResult, ExternalCliInfo } from './types'
+
+// ────────────────────────────────────────────────────────────────────────────
+//  Constants (Public API)
+// ────────────────────────────────────────────────────────────────────────────
+
+export { getUninstallInstructions } from './constants'
