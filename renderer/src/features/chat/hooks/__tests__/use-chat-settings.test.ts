@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 import { useChatSettings } from '../use-chat-settings'
 import type { ChatProvider } from '../../types'
+import { extendElectronAPI } from '@mocks/electronAPI'
 
 // Mock electron API chat methods
 const mockChatAPI = {
@@ -14,12 +15,6 @@ const mockChatAPI = {
   saveSettings: vi.fn(),
   clearSettings: vi.fn(),
 }
-
-// Extend the existing window.electronAPI with chat methods
-Object.defineProperty(window, 'electronAPI', {
-  value: { chat: mockChatAPI },
-  writable: true,
-})
 
 // Test wrapper with QueryClient
 const createTestUtils = () => {
@@ -53,6 +48,10 @@ const mockProviders: ChatProvider[] = [
 describe('useChatSettings', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+
+    extendElectronAPI({
+      chat: mockChatAPI as unknown as typeof window.electronAPI.chat,
+    })
 
     // Default mock implementations
     mockChatAPI.getSelectedModel.mockResolvedValue({

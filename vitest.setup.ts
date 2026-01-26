@@ -9,6 +9,7 @@ import {
   resetMatchMediaState,
   setupMatchMediaMock,
 } from './renderer/src/common/mocks/matchMedia'
+import { resetElectronAPI } from './renderer/src/common/mocks/electronAPI'
 import { server } from './renderer/src/common/mocks/node'
 import type { ElectronAPI } from './preload/src/preload'
 
@@ -45,6 +46,7 @@ vi.mock('sonner', () => ({
 beforeEach(() => {
   resetAllAutoAPIMocks()
   resetMatchMediaState()
+  resetElectronAPI()
 })
 
 afterEach(() => {

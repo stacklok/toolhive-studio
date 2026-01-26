@@ -6,10 +6,6 @@ import { LogsTab } from '../logs-tab'
 import { toast } from 'sonner'
 
 const mockGetMainLogContent = vi.fn()
-const mockElectronAPI = extendElectronAPI({
-  platform: 'darwin',
-  getMainLogContent: mockGetMainLogContent,
-})
 
 Object.assign(navigator, {
   clipboard: {
@@ -28,6 +24,11 @@ global.Blob = vi.fn(function Blob(content, options) {
 describe('LogsTab', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+
+    extendElectronAPI({
+      platform: 'darwin',
+      getMainLogContent: mockGetMainLogContent,
+    })
 
     mockGetMainLogContent.mockResolvedValue('/logs/main.log')
     navigator.clipboard.writeText = vi.fn().mockResolvedValue(undefined)
@@ -49,7 +50,10 @@ describe('LogsTab', () => {
   })
 
   it('displays correct log path for macOS', async () => {
-    mockElectronAPI.platform = 'darwin'
+    extendElectronAPI({
+      platform: 'darwin',
+      getMainLogContent: mockGetMainLogContent,
+    })
 
     render(<LogsTab />)
 
@@ -59,7 +63,10 @@ describe('LogsTab', () => {
   })
 
   it('displays correct log path for Windows', async () => {
-    mockElectronAPI.platform = 'win32'
+    extendElectronAPI({
+      platform: 'win32',
+      getMainLogContent: mockGetMainLogContent,
+    })
 
     render(<LogsTab />)
 
@@ -73,7 +80,10 @@ describe('LogsTab', () => {
   })
 
   it('displays correct log path for Linux', async () => {
-    mockElectronAPI.platform = 'linux'
+    extendElectronAPI({
+      platform: 'linux',
+      getMainLogContent: mockGetMainLogContent,
+    })
 
     render(<LogsTab />)
 

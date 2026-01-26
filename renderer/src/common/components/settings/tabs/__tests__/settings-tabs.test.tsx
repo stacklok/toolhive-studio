@@ -20,28 +20,6 @@ const mockFeatureFlagsGetAll = vi.fn()
 const mockFeatureFlagsEnable = vi.fn()
 const mockFeatureFlagsDisable = vi.fn()
 
-extendElectronAPI({
-  platform: 'darwin',
-  getMainLogContent: mockGetMainLogContent,
-  getAppVersion: mockGetAppVersion,
-  isOfficialReleaseBuild: mockIsOfficialReleaseBuild,
-  getToolhiveVersion: mockGetToolhiveVersion,
-  isAutoUpdateEnabled: mockIsAutoUpdateEnabled,
-  setAutoUpdate: mockSetAutoUpdate,
-  getUpdateState: mockGetUpdateState,
-  sentry: {
-    isEnabled: mockSentryIsEnabled,
-    optIn: mockSentryOptIn,
-    optOut: mockSentryOptOut,
-  },
-  featureFlags: {
-    get: vi.fn().mockResolvedValue(false),
-    getAll: mockFeatureFlagsGetAll,
-    enable: mockFeatureFlagsEnable,
-    disable: mockFeatureFlagsDisable,
-  },
-})
-
 vi.mock('@/common/hooks/use-auto-launch', () => ({
   useAutoLaunchStatus: vi.fn().mockReturnValue({
     data: false,
@@ -101,6 +79,28 @@ describe('SettingsTabs', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+
+    extendElectronAPI({
+      platform: 'darwin',
+      getMainLogContent: mockGetMainLogContent,
+      getAppVersion: mockGetAppVersion,
+      isOfficialReleaseBuild: mockIsOfficialReleaseBuild,
+      getToolhiveVersion: mockGetToolhiveVersion,
+      isAutoUpdateEnabled: mockIsAutoUpdateEnabled,
+      setAutoUpdate: mockSetAutoUpdate,
+      getUpdateState: mockGetUpdateState,
+      sentry: {
+        isEnabled: mockSentryIsEnabled,
+        optIn: mockSentryOptIn,
+        optOut: mockSentryOptOut,
+      },
+      featureFlags: {
+        get: vi.fn().mockResolvedValue(false),
+        getAll: mockFeatureFlagsGetAll,
+        enable: mockFeatureFlagsEnable,
+        disable: mockFeatureFlagsDisable,
+      },
+    })
 
     mockGetMainLogContent.mockResolvedValue('Mock log content')
     mockGetAppVersion.mockResolvedValue('1.0.0')

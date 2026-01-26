@@ -33,20 +33,6 @@ const mockFeatureFlagsGetAll = vi.fn()
 const mockFeatureFlagsEnable = vi.fn()
 const mockFeatureFlagsDisable = vi.fn()
 
-extendElectronAPI({
-  sentry: {
-    isEnabled: mockSentryIsEnabled,
-    optIn: mockSentryOptIn,
-    optOut: mockSentryOptOut,
-  },
-  featureFlags: {
-    get: mockFeatureFlagsGet,
-    getAll: mockFeatureFlagsGetAll,
-    enable: mockFeatureFlagsEnable,
-    disable: mockFeatureFlagsDisable,
-  },
-})
-
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -68,6 +54,20 @@ describe('GeneralTab', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     localStorage.clear()
+
+    extendElectronAPI({
+      sentry: {
+        isEnabled: mockSentryIsEnabled,
+        optIn: mockSentryOptIn,
+        optOut: mockSentryOptOut,
+      },
+      featureFlags: {
+        get: mockFeatureFlagsGet,
+        getAll: mockFeatureFlagsGetAll,
+        enable: mockFeatureFlagsEnable,
+        disable: mockFeatureFlagsDisable,
+      },
+    })
 
     vi.mocked(useAutoLaunchStatus).mockReturnValue({
       data: false,

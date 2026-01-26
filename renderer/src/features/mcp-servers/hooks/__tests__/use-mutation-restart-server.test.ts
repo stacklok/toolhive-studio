@@ -17,14 +17,6 @@ const mockOnServerShutdown = vi.fn()
 const mockGetLastShutdownServers = vi.fn()
 const mockClearShutdownHistory = vi.fn()
 
-extendElectronAPI({
-  shutdownStore: {
-    getLastShutdownServers: mockGetLastShutdownServers,
-    clearShutdownHistory: mockClearShutdownHistory,
-  },
-  onServerShutdown: mockOnServerShutdown,
-})
-
 const createQueryClientWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -41,6 +33,15 @@ const createQueryClientWrapper = () => {
 
 beforeEach(() => {
   vi.clearAllMocks()
+
+  extendElectronAPI({
+    shutdownStore: {
+      getLastShutdownServers: mockGetLastShutdownServers,
+      clearShutdownHistory: mockClearShutdownHistory,
+    },
+    onServerShutdown: mockOnServerShutdown,
+  })
+
   mockOnServerShutdown.mockClear()
   mockGetLastShutdownServers.mockResolvedValue([])
   mockClearShutdownHistory.mockResolvedValue(undefined)

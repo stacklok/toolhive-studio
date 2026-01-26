@@ -4,6 +4,7 @@ import { vi, describe, beforeEach, it, expect } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 import { DialogProviderSettings } from '../dialog-provider-settings'
+import { extendElectronAPI } from '@mocks/electronAPI'
 
 vi.mock('@/common/lib/analytics', () => ({
   trackEvent: vi.fn(),
@@ -19,11 +20,6 @@ const mockChatAPI = {
   fetchProviderModels: vi.fn(),
 }
 
-Object.defineProperty(window, 'electronAPI', {
-  value: { ...window.electronAPI, chat: mockChatAPI },
-  writable: true,
-})
-
 const createWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -38,6 +34,10 @@ const createWrapper = () => {
 
 describe('DialogProviderSettings', () => {
   beforeEach(() => {
+    extendElectronAPI({
+      chat: mockChatAPI as unknown as typeof window.electronAPI.chat,
+    })
+
     mockChatAPI.getProviders.mockResolvedValue([
       {
         id: 'ollama',

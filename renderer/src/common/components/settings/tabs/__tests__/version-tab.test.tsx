@@ -13,14 +13,6 @@ const mockSetAutoUpdate = vi.fn()
 const mockManualUpdate = vi.fn()
 const mockGetUpdateState = vi.fn()
 
-const mockElectronAPI = extendElectronAPI({
-  isAutoUpdateEnabled: mockIsAutoUpdateEnabled,
-  setAutoUpdate: mockSetAutoUpdate,
-  manualUpdate: mockManualUpdate,
-  getUpdateState: mockGetUpdateState,
-  isLinux: false,
-})
-
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -54,9 +46,15 @@ describe('VersionTab', () => {
   const originalEnv = import.meta.env.MODE
 
   beforeEach(() => {
+    extendElectronAPI({
+      isAutoUpdateEnabled: mockIsAutoUpdateEnabled,
+      setAutoUpdate: mockSetAutoUpdate,
+      manualUpdate: mockManualUpdate,
+      getUpdateState: mockGetUpdateState,
+      isLinux: false,
+    })
     mockIsAutoUpdateEnabled.mockResolvedValue(true)
     mockGetUpdateState.mockResolvedValue('none')
-    ;(mockElectronAPI as { isLinux: boolean }).isLinux = false
     vi.stubGlobal('open', vi.fn())
     vi.clearAllMocks()
   })
@@ -171,7 +169,13 @@ describe('VersionTab', () => {
 
   it('calls window.open on Linux when Download button is clicked', async () => {
     import.meta.env.MODE = 'production'
-    ;(mockElectronAPI as { isLinux: boolean }).isLinux = true
+    extendElectronAPI({
+      isAutoUpdateEnabled: mockIsAutoUpdateEnabled,
+      setAutoUpdate: mockSetAutoUpdate,
+      manualUpdate: mockManualUpdate,
+      getUpdateState: mockGetUpdateState,
+      isLinux: true,
+    })
     const user = userEvent.setup()
 
     const appInfoWithUpdate: AppVersionInfo = {
@@ -195,7 +199,7 @@ describe('VersionTab', () => {
 
   it('calls manualUpdate on non-Linux when Download button is clicked', async () => {
     import.meta.env.MODE = 'production'
-    ;(mockElectronAPI as { isLinux: boolean }).isLinux = false
+    // isLinux: false is already set in beforeEach
     const user = userEvent.setup()
 
     const appInfoWithUpdate: AppVersionInfo = {

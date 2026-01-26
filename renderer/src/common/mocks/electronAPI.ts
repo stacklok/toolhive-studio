@@ -68,8 +68,37 @@ export function extendElectronAPI(
  * Call this in afterEach if you used extendElectronAPI.
  */
 export function resetElectronAPI(): void {
+  // Create fresh mocks on reset to avoid stale mock state between tests
+  const freshStub: Partial<ElectronAPI> = {
+    onServerShutdown: () => () => {},
+    shutdownStore: {
+      getLastShutdownServers: async () => [],
+      clearShutdownHistory: async () => ({ success: true }),
+    } as ElectronAPI['shutdownStore'],
+    getInstanceId: async () => 'test-instance-id',
+    darkMode: {
+      toggle: vi.fn().mockResolvedValue(false),
+      system: vi.fn().mockResolvedValue(false),
+      get: vi.fn().mockResolvedValue({
+        shouldUseDarkColors: false,
+        themeSource: 'system',
+      }),
+      set: vi.fn().mockResolvedValue(true),
+    } as ElectronAPI['darkMode'],
+    featureFlags: {
+      get: vi.fn().mockResolvedValue(false),
+      enable: vi.fn().mockResolvedValue(undefined),
+      disable: vi.fn().mockResolvedValue(undefined),
+      getAll: vi.fn().mockResolvedValue({}),
+    } as ElectronAPI['featureFlags'],
+    chat: {
+      stream: vi.fn(),
+    } as unknown as ElectronAPI['chat'],
+    on: vi.fn(),
+    removeListener: vi.fn(),
+  }
   Object.defineProperty(window, 'electronAPI', {
-    value: baseElectronStub as ElectronAPI,
+    value: freshStub as ElectronAPI,
     writable: true,
     configurable: true,
   })

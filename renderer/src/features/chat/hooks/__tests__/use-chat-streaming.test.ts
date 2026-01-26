@@ -6,6 +6,7 @@ import { useChatStreaming } from '../use-chat-streaming'
 import type { ChatUIMessage } from '../../types'
 import { useChat } from '@ai-sdk/react'
 import { ElectronIPCChatTransport } from '../../transport/electron-ipc-chat-transport'
+import { extendElectronAPI } from '@mocks/electronAPI'
 
 const mockUseChatFn = vi.mocked(useChat)
 const mockTransportClass = vi.mocked(ElectronIPCChatTransport)
@@ -71,12 +72,6 @@ const mockChatAPI = {
   updateThreadMessages: vi.fn(),
 }
 
-// Extend the existing window.electronAPI with chat methods
-Object.defineProperty(window, 'electronAPI', {
-  value: { chat: mockChatAPI, getInstanceId: vi.fn() },
-  writable: true,
-})
-
 // Test wrapper with QueryClient
 const createTestUtils = () => {
   const queryClient = new QueryClient({
@@ -109,6 +104,11 @@ const mockMessages: ChatUIMessage[] = [
 describe('useChatStreaming', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+
+    extendElectronAPI({
+      chat: mockChatAPI as unknown as typeof window.electronAPI.chat,
+      getInstanceId: vi.fn(),
+    })
 
     // Suppress React act warnings for these tests
     vi.spyOn(console, 'error').mockImplementation(() => {})
