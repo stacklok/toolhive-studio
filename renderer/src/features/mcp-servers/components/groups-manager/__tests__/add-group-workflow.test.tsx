@@ -13,7 +13,6 @@ import {
   Outlet,
   Router,
 } from '@tanstack/react-router'
-import { extendElectronAPI } from '@mocks/electronAPI'
 
 vi.mock('@/features/mcp-servers/hooks/use-mutation-create-group', () => ({
   useMutationCreateGroup: vi.fn(),
@@ -51,13 +50,11 @@ const router = createGroupsTestRouter() as unknown as ReturnType<
 beforeEach(() => {
   vi.clearAllMocks()
 
-  extendElectronAPI({
-    shutdownStore: {
-      getLastShutdownServers: vi.fn().mockResolvedValue([]),
-      clearShutdownHistory: vi.fn().mockResolvedValue(undefined),
-    },
-    onServerShutdown: vi.fn().mockReturnValue(() => {}),
-  })
+  window.electronAPI.shutdownStore = {
+    getLastShutdownServers: vi.fn().mockResolvedValue([]),
+    clearShutdownHistory: vi.fn().mockResolvedValue(undefined),
+  } as typeof window.electronAPI.shutdownStore
+  window.electronAPI.onServerShutdown = vi.fn().mockReturnValue(() => {})
 
   // Default mock implementation for create group mutation
   const mockMutateAsync = vi.fn().mockResolvedValue({})

@@ -10,7 +10,6 @@ import {
 } from '@/common/hooks/use-auto-launch'
 import { useTheme } from '@/common/hooks/use-theme'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
-import { extendElectronAPI } from '@mocks/electronAPI'
 
 vi.mock('@/common/hooks/use-auto-launch', () => ({
   useAutoLaunchStatus: vi.fn(),
@@ -55,19 +54,17 @@ describe('GeneralTab', () => {
     vi.clearAllMocks()
     localStorage.clear()
 
-    extendElectronAPI({
-      sentry: {
-        isEnabled: mockSentryIsEnabled,
-        optIn: mockSentryOptIn,
-        optOut: mockSentryOptOut,
-      },
-      featureFlags: {
-        get: mockFeatureFlagsGet,
-        getAll: mockFeatureFlagsGetAll,
-        enable: mockFeatureFlagsEnable,
-        disable: mockFeatureFlagsDisable,
-      },
-    })
+    window.electronAPI.sentry = {
+      isEnabled: mockSentryIsEnabled,
+      optIn: mockSentryOptIn,
+      optOut: mockSentryOptOut,
+    } as typeof window.electronAPI.sentry
+    window.electronAPI.featureFlags = {
+      get: mockFeatureFlagsGet,
+      getAll: mockFeatureFlagsGetAll,
+      enable: mockFeatureFlagsEnable,
+      disable: mockFeatureFlagsDisable,
+    } as typeof window.electronAPI.featureFlags
 
     vi.mocked(useAutoLaunchStatus).mockReturnValue({
       data: false,

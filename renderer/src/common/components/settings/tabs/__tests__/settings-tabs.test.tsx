@@ -4,7 +4,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { SettingsTabs } from '../settings-tabs'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
-import { extendElectronAPI } from '@mocks/electronAPI'
 
 const mockGetMainLogContent = vi.fn()
 const mockGetAppVersion = vi.fn()
@@ -80,27 +79,25 @@ describe('SettingsTabs', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    extendElectronAPI({
-      platform: 'darwin',
-      getMainLogContent: mockGetMainLogContent,
-      getAppVersion: mockGetAppVersion,
-      isOfficialReleaseBuild: mockIsOfficialReleaseBuild,
-      getToolhiveVersion: mockGetToolhiveVersion,
-      isAutoUpdateEnabled: mockIsAutoUpdateEnabled,
-      setAutoUpdate: mockSetAutoUpdate,
-      getUpdateState: mockGetUpdateState,
-      sentry: {
-        isEnabled: mockSentryIsEnabled,
-        optIn: mockSentryOptIn,
-        optOut: mockSentryOptOut,
-      },
-      featureFlags: {
-        get: vi.fn().mockResolvedValue(false),
-        getAll: mockFeatureFlagsGetAll,
-        enable: mockFeatureFlagsEnable,
-        disable: mockFeatureFlagsDisable,
-      },
-    })
+    window.electronAPI.platform = 'darwin'
+    window.electronAPI.getMainLogContent = mockGetMainLogContent
+    window.electronAPI.getAppVersion = mockGetAppVersion
+    window.electronAPI.isOfficialReleaseBuild = mockIsOfficialReleaseBuild
+    window.electronAPI.getToolhiveVersion = mockGetToolhiveVersion
+    window.electronAPI.isAutoUpdateEnabled = mockIsAutoUpdateEnabled
+    window.electronAPI.setAutoUpdate = mockSetAutoUpdate
+    window.electronAPI.getUpdateState = mockGetUpdateState
+    window.electronAPI.sentry = {
+      isEnabled: mockSentryIsEnabled,
+      optIn: mockSentryOptIn,
+      optOut: mockSentryOptOut,
+    } as typeof window.electronAPI.sentry
+    window.electronAPI.featureFlags = {
+      get: vi.fn().mockResolvedValue(false),
+      getAll: mockFeatureFlagsGetAll,
+      enable: mockFeatureFlagsEnable,
+      disable: mockFeatureFlagsDisable,
+    } as typeof window.electronAPI.featureFlags
 
     mockGetMainLogContent.mockResolvedValue('Mock log content')
     mockGetAppVersion.mockResolvedValue('1.0.0')

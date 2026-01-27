@@ -2,7 +2,6 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { Error as ErrorComponent } from '../index'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { extendElectronAPI } from '@mocks/electronAPI'
 
 vi.mock('../../layout/top-nav/minimal', () => ({
   TopNavMinimal: () => {
@@ -23,24 +22,18 @@ describe('Error', () => {
     })
     vi.clearAllMocks()
 
-    extendElectronAPI({
-      isLinux: false,
-      isMac: false,
-      isWindows: false,
-      platform: 'win32',
-    })
+    window.electronAPI.isLinux = false
+    window.electronAPI.isMac = false
+    window.electronAPI.isWindows = false
+    window.electronAPI.platform = 'win32'
   })
 
   it('renders <KeyringError /> when error contains "OS keyring is not available" and platform is Linux', () => {
     const keyringError = new Error('OS keyring is not available', {
       cause: { containerEngineAvailable: true },
     })
-    extendElectronAPI({
-      isLinux: true,
-      isMac: false,
-      isWindows: false,
-      platform: 'linux',
-    })
+    window.electronAPI.isLinux = true
+    window.electronAPI.platform = 'linux'
 
     render(
       <QueryClientProvider client={queryClient}>

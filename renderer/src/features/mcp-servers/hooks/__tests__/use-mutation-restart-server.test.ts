@@ -11,7 +11,6 @@ import { toast } from 'sonner'
 import { mockedPostApiV1BetaWorkloadsRestart } from '@/common/mocks/fixtures/workloads_restart/post'
 import { mockedPostApiV1BetaWorkloadsByNameRestart } from '@/common/mocks/fixtures/workloads_name_restart/post'
 import { mockedGetApiV1BetaWorkloadsByNameStatus } from '@/common/mocks/fixtures/workloads_name_status/get'
-import { extendElectronAPI } from '@mocks/electronAPI'
 
 const mockOnServerShutdown = vi.fn()
 const mockGetLastShutdownServers = vi.fn()
@@ -34,13 +33,11 @@ const createQueryClientWrapper = () => {
 beforeEach(() => {
   vi.clearAllMocks()
 
-  extendElectronAPI({
-    shutdownStore: {
-      getLastShutdownServers: mockGetLastShutdownServers,
-      clearShutdownHistory: mockClearShutdownHistory,
-    },
-    onServerShutdown: mockOnServerShutdown,
-  })
+  window.electronAPI.shutdownStore = {
+    getLastShutdownServers: mockGetLastShutdownServers,
+    clearShutdownHistory: mockClearShutdownHistory,
+  } as typeof window.electronAPI.shutdownStore
+  window.electronAPI.onServerShutdown = mockOnServerShutdown
 
   mockOnServerShutdown.mockClear()
   mockGetLastShutdownServers.mockResolvedValue([])

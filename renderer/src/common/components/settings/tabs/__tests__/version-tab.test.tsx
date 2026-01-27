@@ -5,7 +5,6 @@ import { PromptProvider } from '@/common/contexts/prompt/provider'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { AppVersionInfo } from '@/common/hooks/use-app-version'
 import userEvent from '@testing-library/user-event'
-import { extendElectronAPI } from '@mocks/electronAPI'
 import { toast } from 'sonner'
 
 const mockIsAutoUpdateEnabled = vi.fn()
@@ -46,13 +45,12 @@ describe('VersionTab', () => {
   const originalEnv = import.meta.env.MODE
 
   beforeEach(() => {
-    extendElectronAPI({
-      isAutoUpdateEnabled: mockIsAutoUpdateEnabled,
-      setAutoUpdate: mockSetAutoUpdate,
-      manualUpdate: mockManualUpdate,
-      getUpdateState: mockGetUpdateState,
-      isLinux: false,
-    })
+    window.electronAPI.isAutoUpdateEnabled = mockIsAutoUpdateEnabled
+    window.electronAPI.setAutoUpdate = mockSetAutoUpdate
+    window.electronAPI.manualUpdate = mockManualUpdate
+    window.electronAPI.getUpdateState = mockGetUpdateState
+    window.electronAPI.isLinux = false
+
     mockIsAutoUpdateEnabled.mockResolvedValue(true)
     mockGetUpdateState.mockResolvedValue('none')
     vi.stubGlobal('open', vi.fn())
@@ -169,13 +167,7 @@ describe('VersionTab', () => {
 
   it('calls window.open on Linux when Download button is clicked', async () => {
     import.meta.env.MODE = 'production'
-    extendElectronAPI({
-      isAutoUpdateEnabled: mockIsAutoUpdateEnabled,
-      setAutoUpdate: mockSetAutoUpdate,
-      manualUpdate: mockManualUpdate,
-      getUpdateState: mockGetUpdateState,
-      isLinux: true,
-    })
+    window.electronAPI.isLinux = true
     const user = userEvent.setup()
 
     const appInfoWithUpdate: AppVersionInfo = {

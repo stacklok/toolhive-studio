@@ -1,7 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { extendElectronAPI } from '@mocks/electronAPI'
 import { LogsTab } from '../logs-tab'
 import { toast } from 'sonner'
 
@@ -25,10 +24,8 @@ describe('LogsTab', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    extendElectronAPI({
-      platform: 'darwin',
-      getMainLogContent: mockGetMainLogContent,
-    })
+    window.electronAPI.platform = 'darwin'
+    window.electronAPI.getMainLogContent = mockGetMainLogContent
 
     mockGetMainLogContent.mockResolvedValue('/logs/main.log')
     navigator.clipboard.writeText = vi.fn().mockResolvedValue(undefined)
@@ -50,10 +47,7 @@ describe('LogsTab', () => {
   })
 
   it('displays correct log path for macOS', async () => {
-    extendElectronAPI({
-      platform: 'darwin',
-      getMainLogContent: mockGetMainLogContent,
-    })
+    window.electronAPI.platform = 'darwin'
 
     render(<LogsTab />)
 
@@ -63,10 +57,7 @@ describe('LogsTab', () => {
   })
 
   it('displays correct log path for Windows', async () => {
-    extendElectronAPI({
-      platform: 'win32',
-      getMainLogContent: mockGetMainLogContent,
-    })
+    window.electronAPI.platform = 'win32'
 
     render(<LogsTab />)
 
@@ -80,10 +71,7 @@ describe('LogsTab', () => {
   })
 
   it('displays correct log path for Linux', async () => {
-    extendElectronAPI({
-      platform: 'linux',
-      getMainLogContent: mockGetMainLogContent,
-    })
+    window.electronAPI.platform = 'linux'
 
     render(<LogsTab />)
 
