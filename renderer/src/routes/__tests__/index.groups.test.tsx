@@ -12,6 +12,7 @@ import {
 } from '@tanstack/react-router'
 import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
+import { setFeatureFlags } from '@mocks/electronAPI'
 
 function createGroupsTestRouter() {
   const rootRoute = createRootRoute({
@@ -43,19 +44,12 @@ const router = createGroupsTestRouter() as unknown as ReturnType<
 beforeEach(() => {
   vi.clearAllMocks()
 
-  Object.defineProperty(window, 'electronAPI', {
-    value: {
-      shutdownStore: {
-        getLastShutdownServers: vi.fn().mockResolvedValue([]),
-        clearShutdownHistory: vi.fn().mockResolvedValue(undefined),
-      },
-      onServerShutdown: vi.fn().mockReturnValue(() => {}),
-      featureFlags: {
-        get: vi.fn(() => Promise.resolve(false)),
-      },
-    },
-    writable: true,
-  })
+  window.electronAPI.shutdownStore = {
+    getLastShutdownServers: vi.fn().mockResolvedValue([]),
+    clearShutdownHistory: vi.fn().mockResolvedValue(undefined),
+  } as typeof window.electronAPI.shutdownStore
+  window.electronAPI.onServerShutdown = vi.fn().mockReturnValue(() => {})
+  setFeatureFlags({})
 })
 
 describe('Groups Manager in Index route (feature flagged)', () => {
@@ -106,18 +100,7 @@ describe('Groups Manager in Index route (feature flagged)', () => {
   })
 
   it('hides the mcp-optimizer group when META_OPTIMIZER flag is enabled', async () => {
-    Object.defineProperty(window, 'electronAPI', {
-      value: {
-        ...window.electronAPI,
-        featureFlags: {
-          get: vi.fn((key) => {
-            if (key === 'meta_optimizer') return Promise.resolve(true)
-            return Promise.resolve(false)
-          }),
-        },
-      },
-      writable: true,
-    })
+    setFeatureFlags({ meta_optimizer: true })
 
     mockedGetApiV1BetaGroups.override((data) => ({
       ...data,

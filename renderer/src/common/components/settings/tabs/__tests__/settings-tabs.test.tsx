@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { SettingsTabs } from '../settings-tabs'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
+import { setFeatureFlags } from '@mocks/electronAPI'
 
 const mockGetMainLogContent = vi.fn()
 const mockGetAppVersion = vi.fn()
@@ -15,9 +16,6 @@ const mockGetUpdateState = vi.fn()
 const mockSentryIsEnabled = vi.fn()
 const mockSentryOptIn = vi.fn()
 const mockSentryOptOut = vi.fn()
-const mockFeatureFlagsGetAll = vi.fn()
-const mockFeatureFlagsEnable = vi.fn()
-const mockFeatureFlagsDisable = vi.fn()
 
 vi.mock('@/common/hooks/use-auto-launch', () => ({
   useAutoLaunchStatus: vi.fn().mockReturnValue({
@@ -92,12 +90,7 @@ describe('SettingsTabs', () => {
       optIn: mockSentryOptIn,
       optOut: mockSentryOptOut,
     } as typeof window.electronAPI.sentry
-    window.electronAPI.featureFlags = {
-      get: vi.fn().mockResolvedValue(false),
-      getAll: mockFeatureFlagsGetAll,
-      enable: mockFeatureFlagsEnable,
-      disable: mockFeatureFlagsDisable,
-    } as typeof window.electronAPI.featureFlags
+    setFeatureFlags({})
 
     mockGetMainLogContent.mockResolvedValue('Mock log content')
     mockGetAppVersion.mockResolvedValue('1.0.0')
@@ -106,9 +99,6 @@ describe('SettingsTabs', () => {
     mockIsAutoUpdateEnabled.mockResolvedValue(false)
     mockGetUpdateState.mockResolvedValue('none')
     mockSentryIsEnabled.mockResolvedValue(true)
-    mockFeatureFlagsGetAll.mockResolvedValue({})
-    mockFeatureFlagsEnable.mockResolvedValue(undefined)
-    mockFeatureFlagsDisable.mockResolvedValue(undefined)
 
     // Reset mock return values
     mockUseAppVersion.mockReturnValue({

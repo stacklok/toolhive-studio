@@ -57,3 +57,26 @@ export function resetElectronAPI(): void {
     configurable: true,
   })
 }
+
+/**
+ * Convenience helper to set feature flag values for testing.
+ *
+ * @example
+ * ```ts
+ * beforeEach(() => {
+ *   setFeatureFlags({ my_feature: true, other_feature: false })
+ * })
+ * ```
+ */
+export function setFeatureFlags(flags: Record<string, boolean>): void {
+  window.electronAPI.featureFlags = {
+    get: vi
+      .fn()
+      .mockImplementation((flag: string) =>
+        Promise.resolve(flags[flag] ?? false)
+      ),
+    getAll: vi.fn().mockResolvedValue(flags),
+    enable: vi.fn().mockResolvedValue(undefined),
+    disable: vi.fn().mockResolvedValue(undefined),
+  } as typeof window.electronAPI.featureFlags
+}
