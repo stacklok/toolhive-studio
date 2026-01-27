@@ -1,4 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs'
+import { ScrollArea } from '../../ui/scroll-area'
 import { GeneralTab } from './general-tab'
 import { VersionTab } from './version-tab'
 import { LogsTab } from './logs-tab'
@@ -47,7 +48,7 @@ export function SettingsTabs({ defaultTab }: SettingsTabsProps) {
       <Tabs
         defaultValue={defaultTab || 'general'}
         orientation="vertical"
-        className="flex flex-row items-start gap-10"
+        className="flex h-full flex-row gap-10"
       >
         <TabsList
           className="flex h-fit w-48 shrink-0 flex-col gap-2 border-none
@@ -73,25 +74,27 @@ export function SettingsTabs({ defaultTab }: SettingsTabsProps) {
           ))}
         </TabsList>
 
-        <TabsContent value="general" className="space-y-6">
-          <GeneralTab />
-        </TabsContent>
+        <ScrollArea className="h-[calc(100vh-10rem)] flex-1">
+          <TabsContent value="general" className="space-y-6 pr-4">
+            <GeneralTab />
+          </TabsContent>
 
-        <TabsContent value="registry" className="space-y-6">
-          <RegistryTab />
-        </TabsContent>
+          <TabsContent value="registry" className="space-y-6 pr-4">
+            <RegistryTab />
+          </TabsContent>
 
-        <TabsContent value="cli" className="space-y-6">
-          <CliTab />
-        </TabsContent>
+          <TabsContent value="cli" className="space-y-6 pr-4">
+            <CliTab />
+          </TabsContent>
 
-        <TabsContent value="version" className="space-y-6">
-          <VersionTab isLoading={isLoading} error={error} appInfo={appInfo} />
-        </TabsContent>
+          <TabsContent value="version" className="space-y-6 pr-4">
+            <VersionTab isLoading={isLoading} error={error} appInfo={appInfo} />
+          </TabsContent>
 
-        <TabsContent value="logs" className="space-y-6">
-          <LogsTab />
-        </TabsContent>
+          <TabsContent value="logs" className="space-y-6 pr-4">
+            <LogsTab />
+          </TabsContent>
+        </ScrollArea>
       </Tabs>
     </>
   )
