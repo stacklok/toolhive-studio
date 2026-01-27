@@ -59,7 +59,6 @@ describe('VersionTab', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals()
-    // Reset import.meta.env.MODE
     import.meta.env.MODE = originalEnv
   })
 
@@ -191,7 +190,6 @@ describe('VersionTab', () => {
 
   it('calls manualUpdate on non-Linux when Download button is clicked', async () => {
     import.meta.env.MODE = 'production'
-    // isLinux: false is already set in beforeEach
     const user = userEvent.setup()
 
     const appInfoWithUpdate: AppVersionInfo = {

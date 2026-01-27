@@ -100,7 +100,6 @@ describe('SettingsTabs', () => {
     mockGetUpdateState.mockResolvedValue('none')
     mockSentryIsEnabled.mockResolvedValue(true)
 
-    // Reset mock return values
     mockUseAppVersion.mockReturnValue({
       data: {
         currentVersion: '1.0.0',

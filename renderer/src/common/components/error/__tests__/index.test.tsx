@@ -58,8 +58,6 @@ describe('Error', () => {
       cause: { containerEngineAvailable: true },
     })
 
-    // isLinux: false and platform: 'win32' are already set in beforeEach
-
     render(
       <QueryClientProvider client={queryClient}>
         <ErrorComponent

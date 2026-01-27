@@ -11,7 +11,6 @@ import { setFeatureFlags } from '@mocks/electronAPI'
 const router = createTestRouter(RegistryRouteComponent)
 
 beforeEach(() => {
-  // Reset mocks before each test
   vi.clearAllMocks()
 })
 

@@ -7,7 +7,6 @@ import { renderRoute } from '@/common/test/render-route'
 const router = createTestRouter(Secrets)
 
 beforeEach(() => {
-  // Reset mocks before each test
   vi.clearAllMocks()
 })
 
