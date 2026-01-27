@@ -71,12 +71,6 @@ const mockChatAPI = {
   updateThreadMessages: vi.fn(),
 }
 
-// Extend the existing window.electronAPI with chat methods
-Object.defineProperty(window, 'electronAPI', {
-  value: { chat: mockChatAPI, getInstanceId: vi.fn() },
-  writable: true,
-})
-
 // Test wrapper with QueryClient
 const createTestUtils = () => {
   const queryClient = new QueryClient({
@@ -109,6 +103,10 @@ const mockMessages: ChatUIMessage[] = [
 describe('useChatStreaming', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+
+    window.electronAPI.chat =
+      mockChatAPI as unknown as typeof window.electronAPI.chat
+    window.electronAPI.getInstanceId = vi.fn()
 
     // Suppress React act warnings for these tests
     vi.spyOn(console, 'error').mockImplementation(() => {})

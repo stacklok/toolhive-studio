@@ -9,18 +9,6 @@ vi.mock('../../layout/top-nav/minimal', () => ({
   },
 }))
 
-const mockElectronAPI = {
-  isLinux: false,
-  isMac: false,
-  isWindows: false,
-  platform: 'win32',
-}
-
-Object.defineProperty(window, 'electronAPI', {
-  value: mockElectronAPI,
-  writable: true,
-})
-
 describe('Error', () => {
   let queryClient: QueryClient
 
@@ -33,14 +21,19 @@ describe('Error', () => {
       },
     })
     vi.clearAllMocks()
+
+    window.electronAPI.isLinux = false
+    window.electronAPI.isMac = false
+    window.electronAPI.isWindows = false
+    window.electronAPI.platform = 'win32'
   })
 
   it('renders <KeyringError /> when error contains "OS keyring is not available" and platform is Linux', () => {
     const keyringError = new Error('OS keyring is not available', {
       cause: { containerEngineAvailable: true },
     })
-    mockElectronAPI.isLinux = true
-    mockElectronAPI.platform = 'linux'
+    window.electronAPI.isLinux = true
+    window.electronAPI.platform = 'linux'
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -64,9 +57,6 @@ describe('Error', () => {
     const keyringError = new Error('OS keyring is not available', {
       cause: { containerEngineAvailable: true },
     })
-
-    mockElectronAPI.isLinux = false
-    mockElectronAPI.platform = 'win32'
 
     render(
       <QueryClientProvider client={queryClient}>

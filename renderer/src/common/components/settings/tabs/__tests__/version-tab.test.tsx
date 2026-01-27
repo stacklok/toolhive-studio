@@ -7,24 +7,10 @@ import type { AppVersionInfo } from '@/common/hooks/use-app-version'
 import userEvent from '@testing-library/user-event'
 import { toast } from 'sonner'
 
-vi.mock('sonner', () => ({
-  toast: {
-    info: vi.fn(),
-  },
-}))
-
-const mockElectronAPI = {
-  isAutoUpdateEnabled: vi.fn(),
-  setAutoUpdate: vi.fn(),
-  manualUpdate: vi.fn(),
-  getUpdateState: vi.fn(),
-  isLinux: false,
-}
-
-Object.defineProperty(window, 'electronAPI', {
-  value: mockElectronAPI,
-  writable: true,
-})
+const mockIsAutoUpdateEnabled = vi.fn()
+const mockSetAutoUpdate = vi.fn()
+const mockManualUpdate = vi.fn()
+const mockGetUpdateState = vi.fn()
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -59,16 +45,20 @@ describe('VersionTab', () => {
   const originalEnv = import.meta.env.MODE
 
   beforeEach(() => {
-    mockElectronAPI.isAutoUpdateEnabled.mockResolvedValue(true)
-    mockElectronAPI.getUpdateState.mockResolvedValue('none')
-    mockElectronAPI.isLinux = false
+    window.electronAPI.isAutoUpdateEnabled = mockIsAutoUpdateEnabled
+    window.electronAPI.setAutoUpdate = mockSetAutoUpdate
+    window.electronAPI.manualUpdate = mockManualUpdate
+    window.electronAPI.getUpdateState = mockGetUpdateState
+    window.electronAPI.isLinux = false
+
+    mockIsAutoUpdateEnabled.mockResolvedValue(true)
+    mockGetUpdateState.mockResolvedValue('none')
     vi.stubGlobal('open', vi.fn())
     vi.clearAllMocks()
   })
 
   afterEach(() => {
     vi.unstubAllGlobals()
-    // Reset import.meta.env.MODE
     import.meta.env.MODE = originalEnv
   })
 
@@ -176,7 +166,7 @@ describe('VersionTab', () => {
 
   it('calls window.open on Linux when Download button is clicked', async () => {
     import.meta.env.MODE = 'production'
-    mockElectronAPI.isLinux = true
+    window.electronAPI.isLinux = true
     const user = userEvent.setup()
 
     const appInfoWithUpdate: AppVersionInfo = {
@@ -195,12 +185,11 @@ describe('VersionTab', () => {
     expect(window.open).toHaveBeenCalledWith(
       'https://github.com/stacklok/toolhive-studio/releases/latest'
     )
-    expect(mockElectronAPI.manualUpdate).not.toHaveBeenCalled()
+    expect(mockManualUpdate).not.toHaveBeenCalled()
   })
 
   it('calls manualUpdate on non-Linux when Download button is clicked', async () => {
     import.meta.env.MODE = 'production'
-    mockElectronAPI.isLinux = false
     const user = userEvent.setup()
 
     const appInfoWithUpdate: AppVersionInfo = {
@@ -216,7 +205,7 @@ describe('VersionTab', () => {
     const downloadButton = screen.getByRole('button', { name: 'Download' })
     await user.click(downloadButton)
 
-    expect(mockElectronAPI.manualUpdate).toHaveBeenCalled()
+    expect(mockManualUpdate).toHaveBeenCalled()
     expect(window.open).not.toHaveBeenCalled()
   })
 

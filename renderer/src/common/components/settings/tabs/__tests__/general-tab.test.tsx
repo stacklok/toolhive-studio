@@ -24,24 +24,13 @@ vi.mock('@/common/hooks/use-feature-flag', () => ({
   useFeatureFlag: vi.fn(),
 }))
 
-const mockElectronAPI = {
-  sentry: {
-    isEnabled: vi.fn(),
-    optIn: vi.fn(),
-    optOut: vi.fn(),
-  },
-  featureFlags: {
-    get: vi.fn(),
-    getAll: vi.fn(),
-    enable: vi.fn(),
-    disable: vi.fn(),
-  },
-}
-
-Object.defineProperty(window, 'electronAPI', {
-  value: mockElectronAPI,
-  writable: true,
-})
+const mockSentryIsEnabled = vi.fn()
+const mockSentryOptIn = vi.fn()
+const mockSentryOptOut = vi.fn()
+const mockFeatureFlagsGet = vi.fn()
+const mockFeatureFlagsGetAll = vi.fn()
+const mockFeatureFlagsEnable = vi.fn()
+const mockFeatureFlagsDisable = vi.fn()
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -65,6 +54,18 @@ describe('GeneralTab', () => {
     vi.clearAllMocks()
     localStorage.clear()
 
+    window.electronAPI.sentry = {
+      isEnabled: mockSentryIsEnabled,
+      optIn: mockSentryOptIn,
+      optOut: mockSentryOptOut,
+    } as typeof window.electronAPI.sentry
+    window.electronAPI.featureFlags = {
+      get: mockFeatureFlagsGet,
+      getAll: mockFeatureFlagsGetAll,
+      enable: mockFeatureFlagsEnable,
+      disable: mockFeatureFlagsDisable,
+    } as typeof window.electronAPI.featureFlags
+
     vi.mocked(useAutoLaunchStatus).mockReturnValue({
       data: false,
       isLoading: false,
@@ -82,13 +83,13 @@ describe('GeneralTab', () => {
 
     vi.mocked(useFeatureFlag).mockReturnValue(true)
 
-    mockElectronAPI.sentry.isEnabled.mockResolvedValue(true)
-    mockElectronAPI.sentry.optIn.mockResolvedValue(true)
-    mockElectronAPI.sentry.optOut.mockResolvedValue(false)
-    mockElectronAPI.featureFlags.get.mockResolvedValue(true)
-    mockElectronAPI.featureFlags.getAll.mockResolvedValue({})
-    mockElectronAPI.featureFlags.enable.mockResolvedValue(undefined)
-    mockElectronAPI.featureFlags.disable.mockResolvedValue(undefined)
+    mockSentryIsEnabled.mockResolvedValue(true)
+    mockSentryOptIn.mockResolvedValue(true)
+    mockSentryOptOut.mockResolvedValue(false)
+    mockFeatureFlagsGet.mockResolvedValue(true)
+    mockFeatureFlagsGetAll.mockResolvedValue({})
+    mockFeatureFlagsEnable.mockResolvedValue(undefined)
+    mockFeatureFlagsDisable.mockResolvedValue(undefined)
   })
 
   it('renders all settings sections', async () => {
@@ -139,12 +140,12 @@ describe('GeneralTab', () => {
     await userEvent.click(telemetrySwitch)
 
     await waitFor(() => {
-      expect(mockElectronAPI.sentry.optOut).toHaveBeenCalled()
+      expect(mockSentryOptOut).toHaveBeenCalled()
     })
   })
 
   it('handles telemetry toggle opt in', async () => {
-    mockElectronAPI.sentry.isEnabled.mockResolvedValue(false)
+    mockSentryIsEnabled.mockResolvedValue(false)
 
     renderWithProviders(<GeneralTab />)
 
@@ -160,7 +161,7 @@ describe('GeneralTab', () => {
     await userEvent.click(telemetrySwitch)
 
     await waitFor(() => {
-      expect(mockElectronAPI.sentry.optIn).toHaveBeenCalled()
+      expect(mockSentryOptIn).toHaveBeenCalled()
     })
   })
 
@@ -216,7 +217,7 @@ describe('GeneralTab', () => {
     })
 
     it('displays experimental features when available', async () => {
-      mockElectronAPI.featureFlags.getAll.mockResolvedValue({
+      mockFeatureFlagsGetAll.mockResolvedValue({
         test_feature: {
           isExperimental: true,
           isDisabled: false,
@@ -236,7 +237,7 @@ describe('GeneralTab', () => {
     })
 
     it('does not display non-experimental features', async () => {
-      mockElectronAPI.featureFlags.getAll.mockResolvedValue({
+      mockFeatureFlagsGetAll.mockResolvedValue({
         regular_feature: {
           isExperimental: false,
           isDisabled: false,
@@ -261,7 +262,7 @@ describe('GeneralTab', () => {
     })
 
     it('handles enabling an experimental feature', async () => {
-      mockElectronAPI.featureFlags.getAll.mockResolvedValue({
+      mockFeatureFlagsGetAll.mockResolvedValue({
         test_feature: {
           isExperimental: true,
           isDisabled: false,
@@ -285,14 +286,12 @@ describe('GeneralTab', () => {
       await userEvent.click(featureSwitch)
 
       await waitFor(() => {
-        expect(mockElectronAPI.featureFlags.enable).toHaveBeenCalledWith(
-          'test_feature'
-        )
+        expect(mockFeatureFlagsEnable).toHaveBeenCalledWith('test_feature')
       })
     })
 
     it('handles disabling an experimental feature', async () => {
-      mockElectronAPI.featureFlags.getAll.mockResolvedValue({
+      mockFeatureFlagsGetAll.mockResolvedValue({
         test_feature: {
           isExperimental: true,
           isDisabled: false,
@@ -316,9 +315,7 @@ describe('GeneralTab', () => {
       await userEvent.click(featureSwitch)
 
       await waitFor(() => {
-        expect(mockElectronAPI.featureFlags.disable).toHaveBeenCalledWith(
-          'test_feature'
-        )
+        expect(mockFeatureFlagsDisable).toHaveBeenCalledWith('test_feature')
       })
     })
   })

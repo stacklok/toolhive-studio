@@ -1,25 +1,15 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  afterEach,
+  type Mock,
+} from 'vitest'
 import { QueryClient } from '@tanstack/react-query'
 import { ElectronIPCChatTransport } from '../electron-ipc-chat-transport'
 import type { ChatUIMessage } from '../../types'
-
-// Mock the global window.electronAPI
-const mockElectronAPI = {
-  chat: {
-    stream: vi.fn(),
-  },
-  on: vi.fn(),
-  removeListener: vi.fn(),
-}
-
-// Mock window object
-Object.defineProperty(global, 'window', {
-  value: {
-    electronAPI: mockElectronAPI,
-    HTMLElement: global.HTMLElement || class HTMLElement {},
-  },
-  writable: true,
-})
 
 describe('Electron IPC Chat Transport', () => {
   let queryClient: QueryClient
@@ -226,11 +216,13 @@ describe('Electron IPC Chat Transport', () => {
     })
 
     it('calls electron API with correct parameters', async () => {
-      mockElectronAPI.chat.stream.mockResolvedValue({ streamId: 'stream-123' })
+      ;(window.electronAPI.chat.stream as Mock).mockResolvedValue({
+        streamId: 'stream-123',
+      })
 
       const stream = await transport.sendMessages(defaultOptions)
 
-      expect(mockElectronAPI.chat.stream).toHaveBeenCalledWith({
+      expect(window.electronAPI.chat.stream as Mock).toHaveBeenCalledWith({
         chatId: 'test-chat',
         messages: [
           {
@@ -249,7 +241,9 @@ describe('Electron IPC Chat Transport', () => {
     })
 
     it('handles electron API errors', async () => {
-      mockElectronAPI.chat.stream.mockRejectedValue(new Error('IPC failed'))
+      ;(window.electronAPI.chat.stream as Mock).mockRejectedValue(
+        new Error('IPC failed')
+      )
 
       await expect(transport.sendMessages(defaultOptions)).rejects.toThrow(
         'IPC communication failed: IPC failed'
@@ -257,19 +251,21 @@ describe('Electron IPC Chat Transport', () => {
     })
 
     it('sets up IPC listeners for stream events', async () => {
-      mockElectronAPI.chat.stream.mockResolvedValue({ streamId: 'stream-123' })
+      ;(window.electronAPI.chat.stream as Mock).mockResolvedValue({
+        streamId: 'stream-123',
+      })
 
       await transport.sendMessages(defaultOptions)
 
-      expect(mockElectronAPI.on).toHaveBeenCalledWith(
+      expect(window.electronAPI.on as Mock).toHaveBeenCalledWith(
         'chat:stream:chunk',
         expect.any(Function)
       )
-      expect(mockElectronAPI.on).toHaveBeenCalledWith(
+      expect(window.electronAPI.on as Mock).toHaveBeenCalledWith(
         'chat:stream:end',
         expect.any(Function)
       )
-      expect(mockElectronAPI.on).toHaveBeenCalledWith(
+      expect(window.electronAPI.on as Mock).toHaveBeenCalledWith(
         'chat:stream:error',
         expect.any(Function)
       )
@@ -277,7 +273,9 @@ describe('Electron IPC Chat Transport', () => {
 
     it('handles abort signal', async () => {
       const abortController = new AbortController()
-      mockElectronAPI.chat.stream.mockResolvedValue({ streamId: 'stream-123' })
+      ;(window.electronAPI.chat.stream as Mock).mockResolvedValue({
+        streamId: 'stream-123',
+      })
 
       const optionsWithAbort = {
         ...defaultOptions,
@@ -296,8 +294,9 @@ describe('Electron IPC Chat Transport', () => {
     it('handles already aborted signal', async () => {
       const abortController = new AbortController()
       abortController.abort() // Abort before creating stream
-
-      mockElectronAPI.chat.stream.mockResolvedValue({ streamId: 'stream-123' })
+      ;(window.electronAPI.chat.stream as Mock).mockResolvedValue({
+        streamId: 'stream-123',
+      })
 
       const optionsWithAbort = {
         ...defaultOptions,
@@ -322,7 +321,9 @@ describe('Electron IPC Chat Transport', () => {
     })
 
     it('handles stream chunks correctly', async () => {
-      mockElectronAPI.chat.stream.mockResolvedValue({ streamId: 'stream-123' })
+      ;(window.electronAPI.chat.stream as Mock).mockResolvedValue({
+        streamId: 'stream-123',
+      })
 
       const stream = await transport.sendMessages({
         trigger: 'submit-message',
@@ -335,7 +336,7 @@ describe('Electron IPC Chat Transport', () => {
       const reader = stream.getReader()
 
       // Simulate receiving a chunk
-      const chunkHandler = mockElectronAPI.on.mock.calls.find(
+      const chunkHandler = (window.electronAPI.on as Mock).mock.calls.find(
         (call) => call[0] === 'chat:stream:chunk'
       )?.[1]
 
@@ -355,7 +356,9 @@ describe('Electron IPC Chat Transport', () => {
     })
 
     it('handles stream end correctly', async () => {
-      mockElectronAPI.chat.stream.mockResolvedValue({ streamId: 'stream-123' })
+      ;(window.electronAPI.chat.stream as Mock).mockResolvedValue({
+        streamId: 'stream-123',
+      })
 
       const stream = await transport.sendMessages({
         trigger: 'submit-message',
@@ -368,7 +371,7 @@ describe('Electron IPC Chat Transport', () => {
       const reader = stream.getReader()
 
       // Simulate stream end
-      const endHandler = mockElectronAPI.on.mock.calls.find(
+      const endHandler = (window.electronAPI.on as Mock).mock.calls.find(
         (call) => call[0] === 'chat:stream:end'
       )?.[1]
 
@@ -384,7 +387,9 @@ describe('Electron IPC Chat Transport', () => {
     })
 
     it('handles stream errors correctly', async () => {
-      mockElectronAPI.chat.stream.mockResolvedValue({ streamId: 'stream-123' })
+      ;(window.electronAPI.chat.stream as Mock).mockResolvedValue({
+        streamId: 'stream-123',
+      })
 
       const stream = await transport.sendMessages({
         trigger: 'submit-message',
@@ -397,7 +402,7 @@ describe('Electron IPC Chat Transport', () => {
       const reader = stream.getReader()
 
       // Simulate stream error
-      const errorHandler = mockElectronAPI.on.mock.calls.find(
+      const errorHandler = (window.electronAPI.on as Mock).mock.calls.find(
         (call) => call[0] === 'chat:stream:error'
       )?.[1]
 

@@ -15,12 +15,6 @@ const mockChatAPI = {
   clearSettings: vi.fn(),
 }
 
-// Extend the existing window.electronAPI with chat methods
-Object.defineProperty(window, 'electronAPI', {
-  value: { chat: mockChatAPI },
-  writable: true,
-})
-
 // Test wrapper with QueryClient
 const createTestUtils = () => {
   const queryClient = new QueryClient({
@@ -53,6 +47,9 @@ const mockProviders: ChatProvider[] = [
 describe('useChatSettings', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+
+    window.electronAPI.chat =
+      mockChatAPI as unknown as typeof window.electronAPI.chat
 
     // Default mock implementations
     mockChatAPI.getSelectedModel.mockResolvedValue({

@@ -5,13 +5,48 @@ import { afterEach, expect, beforeAll, beforeEach, vi, afterAll } from 'vitest'
 import failOnConsole from 'vitest-fail-on-console'
 import { client } from './api/generated/client.gen'
 import { resetAllAutoAPIMocks } from './renderer/src/common/mocks/autoAPIMock'
+import {
+  resetMatchMediaState,
+  setupMatchMediaMock,
+} from './renderer/src/common/mocks/matchMedia'
+import { resetElectronAPI } from './renderer/src/common/mocks/electronAPI'
 import { server } from './renderer/src/common/mocks/node'
 import type { ElectronAPI } from './preload/src/preload'
 
 expect.extend(testingLibraryMatchers)
 
+// Module mocks - hoisted by Vitest but placed at top level for clarity
+vi.mock('@utils/delay', () => ({
+  delay: (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, Math.min(ms, 10))),
+}))
+
+vi.mock('electron-log/renderer', () => ({
+  default: new Proxy(
+    {},
+    {
+      get: () => vi.fn(() => new Proxy({}, { get: () => vi.fn() })),
+    }
+  ),
+}))
+
+vi.mock('sonner', () => ({
+  Toaster: () => null,
+  toast: {
+    dismiss: vi.fn(),
+    promise: vi.fn((p: Promise<unknown>) => p.catch(() => {})),
+    success: vi.fn(),
+    error: vi.fn(),
+    warning: vi.fn(),
+    loading: vi.fn(),
+    info: vi.fn(),
+  },
+}))
+
 beforeEach(() => {
   resetAllAutoAPIMocks()
+  resetMatchMediaState()
+  resetElectronAPI()
 })
 
 afterEach(() => {
@@ -27,10 +62,29 @@ beforeAll(() => {
         clearShutdownHistory: async () => ({ success: true }),
       } as ElectronAPI['shutdownStore'],
       getInstanceId: async () => 'test-instance-id',
+      darkMode: {
+        get: vi.fn().mockResolvedValue({
+          shouldUseDarkColors: false,
+          themeSource: 'system',
+        }),
+        set: vi.fn().mockResolvedValue(true),
+      } as unknown as ElectronAPI['darkMode'],
+      featureFlags: {
+        get: vi.fn().mockResolvedValue(false),
+        enable: vi.fn().mockResolvedValue(undefined),
+        disable: vi.fn().mockResolvedValue(undefined),
+        getAll: vi.fn().mockResolvedValue({}),
+      } as ElectronAPI['featureFlags'],
+      chat: {
+        stream: vi.fn(),
+      } as unknown as ElectronAPI['chat'],
+      on: vi.fn(),
+      removeListener: vi.fn(),
     }
     Object.defineProperty(window, 'electronAPI', {
       value: electronStub as ElectronAPI,
       writable: true,
+      configurable: true,
     })
   }
   server.listen({
@@ -40,33 +94,6 @@ beforeAll(() => {
     baseUrl: 'https://foo.bar.com',
     fetch,
   })
-
-  // Globally reduce UI delays to a negligible amount in tests
-  vi.mock('@utils/delay', () => ({
-    delay: (ms: number) =>
-      new Promise((resolve) => setTimeout(resolve, Math.min(ms, 10))),
-  }))
-
-  vi.mock('electron-log/renderer', () => ({
-    default: new Proxy(
-      {},
-      {
-        get: () => vi.fn(() => new Proxy({}, { get: () => vi.fn() })),
-      }
-    ),
-  }))
-
-  vi.mock('sonner', () => ({
-    Toaster: () => null,
-    toast: {
-      dismiss: vi.fn(),
-      promise: vi.fn((p: Promise<unknown>) => p.catch(() => {})),
-      success: vi.fn(),
-      error: vi.fn(),
-      warning: vi.fn(),
-      loading: vi.fn(),
-    },
-  }))
 
   window.HTMLElement.prototype.scrollIntoView = function () {}
   window.HTMLElement.prototype.hasPointerCapture = vi.fn()
@@ -87,6 +114,12 @@ beforeAll(() => {
       // do nothing
     }
   }
+
+  setupMatchMediaMock()
+
+  // Mock URL blob methods
+  global.URL.createObjectURL = vi.fn().mockReturnValue('blob:mock-url')
+  global.URL.revokeObjectURL = vi.fn()
 })
 afterEach(() => {
   server.resetHandlers()

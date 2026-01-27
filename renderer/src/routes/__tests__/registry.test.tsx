@@ -6,11 +6,11 @@ import RegistryRouteComponent from '../(registry)/registry.route'
 import { META_MCP_SERVER_NAME } from '@/common/lib/constants'
 import { mockedGetApiV1BetaRegistryByName } from '@/common/mocks/fixtures/registry_name/get'
 import { mockedGetApiV1BetaRegistryByNameServers } from '@/common/mocks/fixtures/registry_name_servers/get'
+import { setFeatureFlags } from '@mocks/electronAPI'
 
 const router = createTestRouter(RegistryRouteComponent)
 
 beforeEach(() => {
-  // Reset mocks before each test
   vi.clearAllMocks()
 })
 
@@ -90,17 +90,7 @@ describe('Groups in Registry', () => {
 
 describe('Meta-MCP Server Filtering', () => {
   it('hides meta-mcp server when using default registry and META_OPTIMIZER is enabled', async () => {
-    Object.defineProperty(window, 'electronAPI', {
-      value: {
-        featureFlags: {
-          get: vi.fn((key) => {
-            if (key === 'meta_optimizer') return Promise.resolve(true)
-            return Promise.resolve(false)
-          }),
-        },
-      },
-      writable: true,
-    })
+    setFeatureFlags({ meta_optimizer: true })
 
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [
@@ -128,17 +118,7 @@ describe('Meta-MCP Server Filtering', () => {
   })
 
   it('shows meta-mcp server when using custom registry (even with META_OPTIMIZER enabled)', async () => {
-    Object.defineProperty(window, 'electronAPI', {
-      value: {
-        featureFlags: {
-          get: vi.fn((key) => {
-            if (key === 'meta_optimizer') return Promise.resolve(true)
-            return Promise.resolve(false)
-          }),
-        },
-      },
-      writable: true,
-    })
+    setFeatureFlags({ meta_optimizer: true })
 
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [

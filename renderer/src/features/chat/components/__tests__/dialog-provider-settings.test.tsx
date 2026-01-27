@@ -19,11 +19,6 @@ const mockChatAPI = {
   fetchProviderModels: vi.fn(),
 }
 
-Object.defineProperty(window, 'electronAPI', {
-  value: { ...window.electronAPI, chat: mockChatAPI },
-  writable: true,
-})
-
 const createWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -38,6 +33,9 @@ const createWrapper = () => {
 
 describe('DialogProviderSettings', () => {
   beforeEach(() => {
+    window.electronAPI.chat =
+      mockChatAPI as unknown as typeof window.electronAPI.chat
+
     mockChatAPI.getProviders.mockResolvedValue([
       {
         id: 'ollama',

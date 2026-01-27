@@ -1,15 +1,5 @@
 // Delay is globally mocked in vitest.setup.ts via @utils/delay
-
-// Ensure toast API is mocked so we can assert calls deterministically
-vi.mock('sonner', () => ({
-  toast: {
-    success: vi.fn(),
-    loading: vi.fn(),
-    warning: vi.fn(),
-    promise: vi.fn(),
-    dismiss: vi.fn(),
-  },
-}))
+// Toast API is globally mocked in vitest.setup.ts via sonner
 
 // Mock server readiness polling to remove background delays while preserving toasts
 vi.mock('@/common/hooks/use-check-server-status', () => ({

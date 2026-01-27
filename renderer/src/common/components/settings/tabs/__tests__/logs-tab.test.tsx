@@ -4,15 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { LogsTab } from '../logs-tab'
 import { toast } from 'sonner'
 
-const mockElectronAPI = {
-  platform: 'darwin',
-  getMainLogContent: vi.fn(),
-}
-
-Object.defineProperty(window, 'electronAPI', {
-  value: mockElectronAPI,
-  writable: true,
-})
+const mockGetMainLogContent = vi.fn()
 
 Object.assign(navigator, {
   clipboard: {
@@ -20,10 +12,7 @@ Object.assign(navigator, {
   },
 })
 
-// Mock URL methods while keeping the native URL constructor
-global.URL.createObjectURL = vi.fn().mockReturnValue('blob:mock-url')
-global.URL.revokeObjectURL = vi.fn()
-
+// Blob mock must stay local - MSW uses Blob internally
 global.Blob = vi.fn(function Blob(content, options) {
   return {
     content,
@@ -31,25 +20,14 @@ global.Blob = vi.fn(function Blob(content, options) {
   }
 }) as unknown as typeof Blob
 
-vi.mock('sonner', async () => {
-  const original = await vi.importActual<typeof import('sonner')>('sonner')
-  return {
-    ...original,
-    toast: {
-      loading: vi.fn(),
-      success: vi.fn(),
-      warning: vi.fn(),
-      error: vi.fn(),
-      dismiss: vi.fn(),
-    },
-  }
-})
-
 describe('LogsTab', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    mockElectronAPI.getMainLogContent.mockResolvedValue('/logs/main.log')
+    window.electronAPI.platform = 'darwin'
+    window.electronAPI.getMainLogContent = mockGetMainLogContent
+
+    mockGetMainLogContent.mockResolvedValue('/logs/main.log')
     navigator.clipboard.writeText = vi.fn().mockResolvedValue(undefined)
 
     document.querySelectorAll('a').forEach((link) => link.remove())
@@ -69,7 +47,7 @@ describe('LogsTab', () => {
   })
 
   it('displays correct log path for macOS', async () => {
-    mockElectronAPI.platform = 'darwin'
+    window.electronAPI.platform = 'darwin'
 
     render(<LogsTab />)
 
@@ -79,7 +57,7 @@ describe('LogsTab', () => {
   })
 
   it('displays correct log path for Windows', async () => {
-    mockElectronAPI.platform = 'win32'
+    window.electronAPI.platform = 'win32'
 
     render(<LogsTab />)
 
@@ -93,7 +71,7 @@ describe('LogsTab', () => {
   })
 
   it('displays correct log path for Linux', async () => {
-    mockElectronAPI.platform = 'linux'
+    window.electronAPI.platform = 'linux'
 
     render(<LogsTab />)
 
@@ -129,7 +107,7 @@ describe('LogsTab', () => {
     })
     await userEvent.click(downloadButton)
 
-    expect(mockElectronAPI.getMainLogContent).toHaveBeenCalled()
+    expect(mockGetMainLogContent).toHaveBeenCalled()
     expect(global.Blob).toHaveBeenCalledWith(['/logs/main.log'], {
       type: 'text/plain',
     })
@@ -138,7 +116,7 @@ describe('LogsTab', () => {
 
   it('handles download error gracefully', async () => {
     const mockError = new Error('Failed to get log content')
-    mockElectronAPI.getMainLogContent.mockRejectedValue(mockError)
+    mockGetMainLogContent.mockRejectedValue(mockError)
 
     render(<LogsTab />)
 
