@@ -33,7 +33,7 @@
   "keywords": [],
   "license": "Apache-2.0",
   "devDependencies": {
-    "@electron-forge/cli": "^7.8.1",
+    "@electron-forge/cli": "^7.11.1",
     "@electron-forge/maker-base": "^7.8.1",
     "@electron-forge/maker-deb": "^7.8.1",
     "@electron-forge/maker-dmg": "^7.8.1",
@@ -82,7 +82,7 @@
     "prettier-plugin-merge": "^0.9.0",
     "prettier-plugin-tailwindcss": "^0.7.0",
     "rimraf": "^6.1.0",
-    "tar": "^7.5.2",
+    "tar": "^7.5.6",
     "ts-node": "^10.9.2",
     "typescript": "5.9.3",
     "typescript-eslint": "^8.30.1",
@@ -163,7 +163,9 @@
   "pnpm": {
     "overrides": {
       "lodash": ">=4.17.23",
-      "lodash-es": ">=4.17.23"
+      "lodash-es": ">=4.17.23",
+      "hono": ">=4.11.7",
+      "tar": ">=7.5.6"
     }
   }
 }
