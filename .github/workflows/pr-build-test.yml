@@ -131,6 +131,8 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
+            arch: arm64
+          - os: ubuntu-latest
             arch: x64
             platform: linux
           - os: windows-latest
