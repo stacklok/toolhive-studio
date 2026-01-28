@@ -29,6 +29,8 @@ jobs:
     strategy:
       matrix:
         include:
+          - os: ubuntu-24.04-arm
+            arch: arm64
           - os: ubuntu-latest
             arch: x64
           - os: windows-latest
@@ -88,7 +90,7 @@ jobs:
         if: runner.os == 'Linux'
 
       - name: Build and Publish to GitHub Release
-        run: pnpm run publish
+        run: pnpm run publish -- --arch=${{ matrix.arch }}
         env:
           # Ensure the correct Node.js version is used for native modules
           npm_config_target_platform: ${{ runner.os == 'Linux' && 'linux' || (runner.os == 'macOS' && 'darwin' || 'win32') }}

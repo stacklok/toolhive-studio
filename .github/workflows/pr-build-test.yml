@@ -130,6 +130,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - os: ubuntu-24.04-arm
+            arch: arm64
+            platform: linux
           - os: ubuntu-latest
             arch: x64
             platform: linux
@@ -253,6 +256,7 @@ jobs:
                 '| macOS | arm64 | :white_check_mark: Ready |',
                 '| macOS | x64 | :white_check_mark: Ready |',
                 '| Windows | x64 | :white_check_mark: Ready' + (signWindows ? ' (signed)' : '') + ' |',
+                '| Linux | arm64 | :white_check_mark: Ready |',
                 '| Linux | x64 | :white_check_mark: Ready |',
                 '',
                 '**[Download artifacts from workflow run](' + runUrl + ')**',
