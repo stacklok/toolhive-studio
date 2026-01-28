@@ -216,6 +216,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('utils:get-workload-available-tools', workload),
   },
 
+  // CLI Alignment (THV-0020)
+  cliAlignment: {
+    getStatus: () => ipcRenderer.invoke('cli-alignment:get-status'),
+    reinstall: () => ipcRenderer.invoke('cli-alignment:reinstall'),
+    remove: () => ipcRenderer.invoke('cli-alignment:remove'),
+    getPathStatus: () => ipcRenderer.invoke('cli-alignment:get-path-status'),
+    getValidationResult: () =>
+      ipcRenderer.invoke('cli-alignment:get-validation-result'),
+    validate: () => ipcRenderer.invoke('cli-alignment:validate'),
+    repair: () => ipcRenderer.invoke('cli-alignment:repair'),
+  },
+
   // IPC event listeners for streaming
   on: (channel: string, listener: (...args: unknown[]) => void) => {
     ipcRenderer.on(channel, (_, ...args) => listener(...args))
@@ -507,10 +519,51 @@ export interface ElectronAPI {
     >
   }
 
+  // CLI Alignment (THV-0020)
+  cliAlignment: {
+    getStatus: () => Promise<{
+      isManaged: boolean
+      cliPath: string
+      cliVersion: string | null
+      installMethod: 'symlink' | 'copy' | null
+      symlinkTarget: string | null
+      isValid: boolean
+      lastValidated: string
+    }>
+    reinstall: () => Promise<{ success: boolean; error?: string }>
+    remove: () => Promise<{ success: boolean; error?: string }>
+    getPathStatus: () => Promise<{
+      isConfigured: boolean
+      modifiedFiles: string[]
+      pathEntry: string
+    }>
+    getValidationResult: () => Promise<ValidationResult | null>
+    validate: () => Promise<ValidationResult>
+    repair: () => Promise<{
+      repairResult: { success: boolean; error?: string }
+      validationResult: ValidationResult | null
+    }>
+  }
+
   // IPC event listeners for streaming
   on: (channel: string, listener: (...args: unknown[]) => void) => void
   removeListener: (
     channel: string,
     listener: (...args: unknown[]) => void
   ) => void
+}
+
+// CLI Alignment Types (shared with renderer)
+export type ValidationResult =
+  | { status: 'valid' }
+  | { status: 'external-cli-found'; cli: ExternalCliInfo }
+  | { status: 'symlink-broken'; target: string }
+  | { status: 'symlink-tampered'; target: string }
+  | { status: 'symlink-missing' }
+  | { status: 'fresh-install' }
+
+export interface ExternalCliInfo {
+  path: string
+  version: string | null
+  source: 'homebrew' | 'winget' | 'manual'
 }
