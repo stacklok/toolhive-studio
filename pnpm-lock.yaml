@@ -16,28 +16,28 @@ importers:
     dependencies:
       '@ai-sdk/anthropic':
         specifier: '^2.0.41 '
-        version: 2.0.57(zod@4.1.13)
+        version: 2.0.57(zod@4.3.6)
       '@ai-sdk/google':
         specifier: ^2.0.28
-        version: 2.0.52(zod@4.1.13)
+        version: 2.0.52(zod@4.3.6)
       '@ai-sdk/mcp':
         specifier: ^0.0.13
-        version: 0.0.13(zod@4.1.13)
+        version: 0.0.13(zod@4.3.6)
       '@ai-sdk/openai':
         specifier: ^2.0.62
-        version: 2.0.89(zod@4.1.13)
+        version: 2.0.89(zod@4.3.6)
       '@ai-sdk/openai-compatible':
         specifier: ^1.0.27
-        version: 1.0.31(zod@4.1.13)
+        version: 1.0.31(zod@4.3.6)
       '@ai-sdk/provider':
         specifier: ^2.0.0
         version: 2.0.1
       '@ai-sdk/react':
         specifier: ^2.0.81
-        version: 2.0.123(react@19.2.4)(zod@4.1.13)
+        version: 2.0.123(react@19.2.4)(zod@4.3.6)
       '@ai-sdk/xai':
         specifier: ^2.0.38
-        version: 2.0.54(zod@4.1.13)
+        version: 2.0.54(zod@4.3.6)
       '@fontsource-variable/inter':
         specifier: ^5.2.6
         version: 5.2.8
@@ -49,10 +49,10 @@ importers:
         version: 5.2.9
       '@modelcontextprotocol/sdk':
         specifier: ^1.25.3
-        version: 1.25.3(hono@4.11.7)(zod@4.1.13)
+        version: 1.25.3(hono@4.11.7)(zod@4.3.6)
       '@openrouter/ai-sdk-provider':
         specifier: ^1.2.0
-        version: 1.5.4(ai@5.0.121(zod@4.1.13))(zod@4.1.13)
+        version: 1.5.4(ai@5.0.121(zod@4.3.6))(zod@4.3.6)
       '@radix-ui/react-checkbox':
         specifier: ^1.3.2
         version: 1.3.3(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -133,10 +133,10 @@ importers:
         version: 1.157.16(@tanstack/react-router@1.157.16(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@tanstack/router-core@1.157.16)(csstype@3.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       ai:
         specifier: ^5.0.102
-        version: 5.0.121(zod@4.1.13)
+        version: 5.0.121(zod@4.3.6)
       ai-sdk-ollama:
         specifier: ^1.0.1
-        version: 1.1.0(ai@5.0.121(zod@4.1.13))(zod@4.1.13)
+        version: 1.1.0(ai@5.0.121(zod@4.3.6))(zod@4.3.6)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -195,8 +195,8 @@ importers:
         specifier: ^3.1.1
         version: 3.1.2
       zod:
-        specifier: 4.1.13
-        version: 4.1.13
+        specifier: 4.3.6
+        version: 4.3.6
     devDependencies:
       '@electron-forge/cli':
         specifier: ^7.11.1
@@ -7770,8 +7770,8 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zod@4.1.13:
-    resolution: {integrity: sha512-AvvthqfqrAhNH9dnfmrfKzX5upOdjUVJYFqNSlkmGf64gRaTzlPwz99IHYnVs28qYAybvAlBV+H7pn0saFY4Ig==}
+  zod@4.3.6:
+    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -7782,71 +7782,71 @@ snapshots:
 
   '@adobe/css-tools@4.4.4': {}
 
-  '@ai-sdk/anthropic@2.0.57(zod@4.1.13)':
+  '@ai-sdk/anthropic@2.0.57(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 2.0.1
-      '@ai-sdk/provider-utils': 3.0.20(zod@4.1.13)
-      zod: 4.1.13
+      '@ai-sdk/provider-utils': 3.0.20(zod@4.3.6)
+      zod: 4.3.6
 
-  '@ai-sdk/gateway@2.0.27(zod@4.1.13)':
+  '@ai-sdk/gateway@2.0.27(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 2.0.1
-      '@ai-sdk/provider-utils': 3.0.20(zod@4.1.13)
+      '@ai-sdk/provider-utils': 3.0.20(zod@4.3.6)
       '@vercel/oidc': 3.1.0
-      zod: 4.1.13
+      zod: 4.3.6
 
-  '@ai-sdk/google@2.0.52(zod@4.1.13)':
+  '@ai-sdk/google@2.0.52(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 2.0.1
-      '@ai-sdk/provider-utils': 3.0.20(zod@4.1.13)
-      zod: 4.1.13
+      '@ai-sdk/provider-utils': 3.0.20(zod@4.3.6)
+      zod: 4.3.6
 
-  '@ai-sdk/mcp@0.0.13(zod@4.1.13)':
+  '@ai-sdk/mcp@0.0.13(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 2.0.1
-      '@ai-sdk/provider-utils': 3.0.20(zod@4.1.13)
+      '@ai-sdk/provider-utils': 3.0.20(zod@4.3.6)
       pkce-challenge: 5.0.1
-      zod: 4.1.13
+      zod: 4.3.6
 
-  '@ai-sdk/openai-compatible@1.0.31(zod@4.1.13)':
+  '@ai-sdk/openai-compatible@1.0.31(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 2.0.1
-      '@ai-sdk/provider-utils': 3.0.20(zod@4.1.13)
-      zod: 4.1.13
+      '@ai-sdk/provider-utils': 3.0.20(zod@4.3.6)
+      zod: 4.3.6
 
-  '@ai-sdk/openai@2.0.89(zod@4.1.13)':
+  '@ai-sdk/openai@2.0.89(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 2.0.1
-      '@ai-sdk/provider-utils': 3.0.20(zod@4.1.13)
-      zod: 4.1.13
+      '@ai-sdk/provider-utils': 3.0.20(zod@4.3.6)
+      zod: 4.3.6
 
-  '@ai-sdk/provider-utils@3.0.20(zod@4.1.13)':
+  '@ai-sdk/provider-utils@3.0.20(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 2.0.1
       '@standard-schema/spec': 1.1.0
       eventsource-parser: 3.0.6
-      zod: 4.1.13
+      zod: 4.3.6
 
   '@ai-sdk/provider@2.0.1':
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@2.0.123(react@19.2.4)(zod@4.1.13)':
+  '@ai-sdk/react@2.0.123(react@19.2.4)(zod@4.3.6)':
     dependencies:
-      '@ai-sdk/provider-utils': 3.0.20(zod@4.1.13)
-      ai: 5.0.121(zod@4.1.13)
+      '@ai-sdk/provider-utils': 3.0.20(zod@4.3.6)
+      ai: 5.0.121(zod@4.3.6)
       react: 19.2.4
       swr: 2.3.8(react@19.2.4)
       throttleit: 2.1.0
     optionalDependencies:
-      zod: 4.1.13
+      zod: 4.3.6
 
-  '@ai-sdk/xai@2.0.54(zod@4.1.13)':
+  '@ai-sdk/xai@2.0.54(zod@4.3.6)':
     dependencies:
-      '@ai-sdk/openai-compatible': 1.0.31(zod@4.1.13)
+      '@ai-sdk/openai-compatible': 1.0.31(zod@4.3.6)
       '@ai-sdk/provider': 2.0.1
-      '@ai-sdk/provider-utils': 3.0.20(zod@4.1.13)
-      zod: 4.1.13
+      '@ai-sdk/provider-utils': 3.0.20(zod@4.3.6)
+      zod: 4.3.6
 
   '@alloc/quick-lru@5.2.0': {}
 
@@ -9030,7 +9030,7 @@ snapshots:
     dependencies:
       langium: 3.3.1
 
-  '@modelcontextprotocol/sdk@1.25.3(hono@4.11.7)(zod@4.1.13)':
+  '@modelcontextprotocol/sdk@1.25.3(hono@4.11.7)(zod@4.3.6)':
     dependencies:
       '@hono/node-server': 1.19.9(hono@4.11.7)
       ajv: 8.17.1
@@ -9046,8 +9046,8 @@ snapshots:
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
       raw-body: 3.0.2
-      zod: 4.1.13
-      zod-to-json-schema: 3.25.1(zod@4.1.13)
+      zod: 4.3.6
+      zod-to-json-schema: 3.25.1(zod@4.3.6)
     transitivePeerDependencies:
       - hono
       - supports-color
@@ -9175,15 +9175,15 @@ snapshots:
 
   '@open-draft/until@2.1.0': {}
 
-  '@openrouter/ai-sdk-provider@1.5.4(ai@5.0.121(zod@4.1.13))(zod@4.1.13)':
+  '@openrouter/ai-sdk-provider@1.5.4(ai@5.0.121(zod@4.3.6))(zod@4.3.6)':
     dependencies:
       '@openrouter/sdk': 0.1.27
-      ai: 5.0.121(zod@4.1.13)
-      zod: 4.1.13
+      ai: 5.0.121(zod@4.3.6)
+      zod: 4.3.6
 
   '@openrouter/sdk@0.1.27':
     dependencies:
-      zod: 4.1.13
+      zod: 4.3.6
 
   '@opentelemetry/api-logs@0.208.0':
     dependencies:
@@ -11153,22 +11153,22 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ai-sdk-ollama@1.1.0(ai@5.0.121(zod@4.1.13))(zod@4.1.13):
+  ai-sdk-ollama@1.1.0(ai@5.0.121(zod@4.3.6))(zod@4.3.6):
     dependencies:
       '@ai-sdk/provider': 2.0.1
-      '@ai-sdk/provider-utils': 3.0.20(zod@4.1.13)
-      ai: 5.0.121(zod@4.1.13)
+      '@ai-sdk/provider-utils': 3.0.20(zod@4.3.6)
+      ai: 5.0.121(zod@4.3.6)
       ollama: 0.6.3
     transitivePeerDependencies:
       - zod
 
-  ai@5.0.121(zod@4.1.13):
+  ai@5.0.121(zod@4.3.6):
     dependencies:
-      '@ai-sdk/gateway': 2.0.27(zod@4.1.13)
+      '@ai-sdk/gateway': 2.0.27(zod@4.3.6)
       '@ai-sdk/provider': 2.0.1
-      '@ai-sdk/provider-utils': 3.0.20(zod@4.1.13)
+      '@ai-sdk/provider-utils': 3.0.20(zod@4.3.6)
       '@opentelemetry/api': 1.9.0
-      zod: 4.1.13
+      zod: 4.3.6
 
   ajv-formats@2.1.1(ajv@8.17.1):
     optionalDependencies:
@@ -12341,8 +12341,8 @@ snapshots:
       '@babel/parser': 7.28.6
       eslint: 9.39.2(jiti@2.6.1)
       hermes-parser: 0.25.1
-      zod: 4.1.13
-      zod-validation-error: 4.0.2(zod@4.1.13)
+      zod: 4.3.6
+      zod-validation-error: 4.0.2(zod@4.3.6)
     transitivePeerDependencies:
       - supports-color
 
@@ -13487,7 +13487,7 @@ snapshots:
       smol-toml: 1.6.0
       strip-json-comments: 5.0.3
       typescript: 5.9.3
-      zod: 4.1.13
+      zod: 4.3.6
 
   langium@3.3.1:
     dependencies:
@@ -16194,18 +16194,18 @@ snapshots:
 
   yoctocolors-cjs@2.1.3: {}
 
-  zod-to-json-schema@3.25.1(zod@4.1.13):
+  zod-to-json-schema@3.25.1(zod@4.3.6):
     dependencies:
-      zod: 4.1.13
+      zod: 4.3.6
 
-  zod-validation-error@4.0.2(zod@4.1.13):
+  zod-validation-error@4.0.2(zod@4.3.6):
     dependencies:
-      zod: 4.1.13
+      zod: 4.3.6
 
   zod@3.22.4: {}
 
   zod@3.25.76: {}
 
-  zod@4.1.13: {}
+  zod@4.3.6: {}
 
   zwitch@2.0.4: {}
