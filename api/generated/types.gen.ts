@@ -670,6 +670,14 @@ export type RemoteConfig = {
    */
   bearer_token?: string
   bearer_token_file?: string
+  /**
+   * Cached OAuth token reference for persistence across restarts.
+   * The refresh token is stored securely in the secret manager, and this field
+   * contains the reference to retrieve it (e.g., "OAUTH_REFRESH_TOKEN_workload").
+   * This enables session restoration without requiring a new browser-based login.
+   */
+  cached_refresh_token_ref?: string
+  cached_token_expiry?: string
   callback_port?: number
   client_id?: string
   client_secret?: string
@@ -701,6 +709,29 @@ export type RemoteConfig = {
   timeout?: string
   token_url?: string
   use_pkce?: boolean
+}
+
+/**
+ * HeaderForward contains configuration for injecting headers into requests to remote servers.
+ */
+export type RunnerHeaderForwardConfig = {
+  /**
+   * AddHeadersFromSecret is a map of header names to secret names.
+   * The key is the header name, the value is the secret name in ToolHive's secrets manager.
+   * Resolved at runtime via WithSecrets() into resolvedHeaders.
+   * The actual secret value is only held in memory, never persisted.
+   */
+  add_headers_from_secret?: {
+    [key: string]: string
+  }
+  /**
+   * AddPlaintextHeaders is a map of header names to literal values to inject into requests.
+   * WARNING: These values are stored in plaintext in the configuration.
+   * For sensitive values (API keys, tokens), use AddHeadersFromSecret instead.
+   */
+  add_plaintext_headers?: {
+    [key: string]: string
+  }
 }
 
 export type RunnerRunConfig = {
@@ -758,6 +789,7 @@ export type RunnerRunConfig = {
    * Group is the name of the group this workload belongs to, if any
    */
   group?: string
+  header_forward?: RunnerHeaderForwardConfig
   /**
    * Host is the host for the HTTP proxy
    */
@@ -1736,7 +1768,7 @@ export type PostApiV1BetaClientsData = {
 
 export type PostApiV1BetaClientsErrors = {
   /**
-   * Invalid request
+   * Invalid request or unsupported client type
    */
   400: string
 }
@@ -1770,7 +1802,7 @@ export type PostApiV1BetaClientsRegisterData = {
 
 export type PostApiV1BetaClientsRegisterErrors = {
   /**
-   * Invalid request
+   * Invalid request or unsupported client type
    */
   400: string
 }
@@ -1804,7 +1836,7 @@ export type PostApiV1BetaClientsUnregisterData = {
 
 export type PostApiV1BetaClientsUnregisterErrors = {
   /**
-   * Invalid request
+   * Invalid request or unsupported client type
    */
   400: string
 }
@@ -1836,7 +1868,7 @@ export type DeleteApiV1BetaClientsByNameData = {
 
 export type DeleteApiV1BetaClientsByNameErrors = {
   /**
-   * Invalid request
+   * Invalid request or unsupported client type
    */
   400: string
 }
@@ -1872,7 +1904,7 @@ export type DeleteApiV1BetaClientsByNameGroupsByGroupData = {
 
 export type DeleteApiV1BetaClientsByNameGroupsByGroupErrors = {
   /**
-   * Invalid request
+   * Invalid request or unsupported client type
    */
   400: string
   /**

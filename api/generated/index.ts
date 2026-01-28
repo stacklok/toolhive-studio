@@ -261,6 +261,7 @@ export type {
   RegistryRemoteServerMetadata,
   RegistryVerifiedAttestation,
   RemoteConfig,
+  RunnerHeaderForwardConfig,
   RunnerRunConfig,
   RunnerToolOverride,
   RuntimeWorkloadStatus,
