@@ -9,7 +9,11 @@ import type { Platform } from './types'
 /** Paths checked for package manager installations (Homebrew, Winget, etc.) */
 export const EXTERNAL_CLI_PATHS: Record<Platform, string[]> = {
   darwin: ['/opt/homebrew/bin/thv', '/usr/local/bin/thv'],
-  linux: ['/usr/local/bin/thv', '/usr/bin/thv'],
+  linux: [
+    '/home/linuxbrew/.linuxbrew/bin/thv',
+    '/usr/local/bin/thv',
+    '/usr/bin/thv',
+  ],
   win32: [
     path.join(
       process.env.ProgramFiles || 'C:\\Program Files',
@@ -78,7 +82,8 @@ export function getCliSourceFromPath(
   if (platform === 'darwin' || platform === 'linux') {
     if (
       normalizedPath.includes('/homebrew/') ||
-      normalizedPath.includes('/opt/homebrew/')
+      normalizedPath.includes('/opt/homebrew/') ||
+      normalizedPath.includes('/linuxbrew/')
     ) {
       return 'homebrew'
     }

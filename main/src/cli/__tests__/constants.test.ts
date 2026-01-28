@@ -38,6 +38,9 @@ describe('constants', () => {
     })
 
     it('has linux paths', () => {
+      expect(EXTERNAL_CLI_PATHS.linux).toContain(
+        '/home/linuxbrew/.linuxbrew/bin/thv'
+      )
       expect(EXTERNAL_CLI_PATHS.linux).toContain('/usr/local/bin/thv')
       expect(EXTERNAL_CLI_PATHS.linux).toContain('/usr/bin/thv')
     })
@@ -138,6 +141,12 @@ describe('constants', () => {
       expect(getCliSourceFromPath('/some/random/path/thv', 'darwin')).toBe(
         'manual'
       )
+    })
+
+    it('detects linuxbrew on linux', () => {
+      expect(
+        getCliSourceFromPath('/home/linuxbrew/.linuxbrew/bin/thv', 'linux')
+      ).toBe('homebrew')
     })
 
     it('returns manual for unknown paths on linux', () => {
