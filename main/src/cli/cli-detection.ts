@@ -14,7 +14,7 @@ import log from '../logger'
 
 const execFileAsync = promisify(execFile)
 
-/** Extracts version from "ToolHive v0.7.2" line in `thv version` output */
+/** Extracts version from "ToolHive v0.X.X" line in `thv version` output */
 const parseVersionOutput = (stdout: string): string | null => {
   const match = stdout.match(/^ToolHive v(\d+\.\d+\.\d+(?:-[\w.]+)?)/m)
   return match?.[1] ?? null
@@ -31,10 +31,6 @@ const getCliVersion = async (cliPath: string): Promise<string | null> => {
   }
 }
 
-/**
- * Scans the WinGet packages directory for ToolHive installations.
- * WinGet uses dynamic folder names like: stacklok.thv_Microsoft.Winget.Source_8wekyb3d8bbwe
- */
 function findWingetCliPaths(): string[] {
   const localAppData =
     process.env.LOCALAPPDATA || path.join(homedir(), 'AppData', 'Local')

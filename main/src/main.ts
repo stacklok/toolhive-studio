@@ -73,7 +73,6 @@ import {
   handleValidationResult,
   getCliAlignmentStatus,
   reinstallCliSymlink,
-  removeCliInstallation,
   repairCliSymlink,
 } from './cli'
 import { checkPathConfiguration } from './cli/path-configurator'
@@ -851,8 +850,6 @@ ipcMain.handle('utils:get-workload-available-tools', async (_, workload) =>
 ipcMain.handle('cli-alignment:get-status', () => getCliAlignmentStatus())
 
 ipcMain.handle('cli-alignment:reinstall', () => reinstallCliSymlink())
-
-ipcMain.handle('cli-alignment:remove', () => removeCliInstallation())
 
 ipcMain.handle('cli-alignment:get-path-status', () => checkPathConfiguration())
 

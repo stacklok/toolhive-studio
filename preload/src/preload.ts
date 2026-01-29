@@ -220,7 +220,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   cliAlignment: {
     getStatus: () => ipcRenderer.invoke('cli-alignment:get-status'),
     reinstall: () => ipcRenderer.invoke('cli-alignment:reinstall'),
-    remove: () => ipcRenderer.invoke('cli-alignment:remove'),
     getPathStatus: () => ipcRenderer.invoke('cli-alignment:get-path-status'),
     getValidationResult: () =>
       ipcRenderer.invoke('cli-alignment:get-validation-result'),
@@ -531,7 +530,6 @@ export interface ElectronAPI {
       lastValidated: string
     }>
     reinstall: () => Promise<{ success: boolean; error?: string }>
-    remove: () => Promise<{ success: boolean; error?: string }>
     getPathStatus: () => Promise<{
       isConfigured: boolean
       modifiedFiles: string[]

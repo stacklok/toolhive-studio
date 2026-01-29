@@ -3,27 +3,35 @@ import {
   CheckCircle2,
   XCircle,
   RefreshCw,
-  Trash2,
   FolderOpen,
   AlertCircle,
   Terminal,
+  ExternalLink,
+  AlertTriangle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { WrapperField } from './components/wrapper-field'
 import { Badge } from '../../ui/badge'
 import { Button } from '../../ui/button'
-import { Alert, AlertDescription } from '../../ui/alert'
+import { Alert, AlertDescription, AlertTitle } from '../../ui/alert'
+
+const CLI_DOCS_URL = 'https://docs.stacklok.com/toolhive/guides-cli/'
 
 function CliInfoWrapper({
   title,
   children,
+  actions,
 }: {
   title: string
   children: React.ReactNode
+  actions?: React.ReactNode
 }) {
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold">{title}</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">{title}</h2>
+        {actions && <div className="flex items-center gap-2">{actions}</div>}
+      </div>
       <div className="text-muted-foreground text-sm">{children}</div>
     </div>
   )
@@ -49,7 +57,6 @@ export function CliTab() {
     data: cliStatus,
     isLoading,
     error,
-    refetch,
   } = useQuery({
     queryKey: ['cli-alignment-status'],
     queryFn: () => window.electronAPI.cliAlignment.getStatus(),
@@ -58,6 +65,30 @@ export function CliTab() {
   const { data: pathStatus } = useQuery({
     queryKey: ['cli-path-status'],
     queryFn: () => window.electronAPI.cliAlignment.getPathStatus(),
+  })
+
+  const { data: validationResult } = useQuery({
+    queryKey: ['cli-validation-result'],
+    queryFn: () => window.electronAPI.cliAlignment.getValidationResult(),
+  })
+
+  // Validate mutation - runs full validation including external CLI detection
+  const { mutateAsync: validate, isPending: isValidating } = useMutation({
+    mutationFn: () => window.electronAPI.cliAlignment.validate(),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['cli-alignment-status'] })
+      queryClient.invalidateQueries({ queryKey: ['cli-validation-result'] })
+      if (result.status === 'external-cli-found') {
+        toast.warning('External CLI installation detected')
+      } else if (result.status === 'valid') {
+        toast.success('CLI status verified')
+      } else {
+        toast.info('CLI status updated')
+      }
+    },
+    onError: (error) => {
+      toast.error(`Validation failed: ${error.message}`)
+    },
   })
 
   // Reinstall mutation
@@ -76,25 +107,8 @@ export function CliTab() {
     },
   })
 
-  const { mutateAsync: remove, isPending: isRemoving } = useMutation({
-    mutationFn: () => window.electronAPI.cliAlignment.remove(),
-    onSuccess: (result) => {
-      if (result.success) {
-        toast.success('CLI removed successfully')
-        queryClient.invalidateQueries({ queryKey: ['cli-alignment-status'] })
-        queryClient.invalidateQueries({ queryKey: ['cli-path-status'] })
-      } else {
-        toast.error(`Failed to remove CLI: ${result.error}`)
-      }
-    },
-    onError: (error) => {
-      toast.error(`Failed to remove CLI: ${error.message}`)
-    },
-  })
-
   const handleVerify = () => {
-    refetch()
-    toast.info('CLI status verified')
+    validate()
   }
 
   if (isLoading) {
@@ -116,9 +130,79 @@ export function CliTab() {
     )
   }
 
+  const headerActions = (
+    <>
+      <a
+        href={CLI_DOCS_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-muted-foreground hover:text-foreground flex items-center
+          gap-1 text-sm transition-colors"
+      >
+        <ExternalLink className="size-3.5" />
+        <span>Docs</span>
+      </a>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={handleVerify}
+        disabled={isLoading || isValidating}
+        title="Refresh status"
+      >
+        <RefreshCw className={`size-4 ${isValidating ? 'animate-spin' : ''}`} />
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => reinstall()}
+        disabled={isReinstalling}
+      >
+        <RefreshCw
+          className={`mr-2 size-4 ${isReinstalling ? 'animate-spin' : ''}`}
+        />
+        {isReinstalling ? 'Reinstalling...' : 'Reinstall'}
+      </Button>
+    </>
+  )
+
+  // Check if external CLI was detected
+  const externalCli =
+    validationResult?.status === 'external-cli-found'
+      ? validationResult.cli
+      : null
+
   return (
     <div className="space-y-6">
-      <CliInfoWrapper title="CLI Installation">
+      <CliInfoWrapper title="CLI Installation" actions={headerActions}>
+        {externalCli && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTriangle className="size-4" />
+            <AlertTitle>External CLI Installation Detected</AlertTitle>
+            <AlertDescription className="space-y-2">
+              <p>
+                An external ToolHive CLI was found at{' '}
+                <code className="bg-muted rounded px-1 text-xs">
+                  {externalCli.path}
+                </code>
+              </p>
+              <p>
+                {externalCli.source === 'homebrew' && (
+                  <>
+                    To uninstall, run: <code>brew uninstall toolhive</code>
+                  </>
+                )}
+                {externalCli.source === 'winget' && (
+                  <>
+                    To uninstall, run: <code>winget uninstall toolhive</code>
+                  </>
+                )}
+                {externalCli.source === 'manual' && (
+                  <>Please manually remove the external CLI installation.</>
+                )}
+              </p>
+            </AlertDescription>
+          </Alert>
+        )}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Status</span>
@@ -150,6 +234,15 @@ export function CliTab() {
             </div>
           )}
         </div>
+        {!cliStatus.isManaged && (
+          <Alert className="mt-3">
+            <AlertCircle className="size-4" />
+            <AlertDescription>
+              CLI is not currently managed by ToolHive Studio. Click
+              &quot;Reinstall&quot; to set up CLI management.
+            </AlertDescription>
+          </Alert>
+        )}
       </CliInfoWrapper>
 
       <CliInfoWrapper title="CLI Location">
@@ -203,62 +296,6 @@ export function CliTab() {
           )}
         </CliInfoWrapper>
       )}
-
-      <CliInfoWrapper title="Actions">
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleVerify}
-            disabled={isLoading}
-          >
-            <RefreshCw className="mr-2 size-4" />
-            Verify
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => reinstall()}
-            disabled={isReinstalling || isRemoving}
-          >
-            <RefreshCw
-              className={`mr-2 size-4 ${isReinstalling ? 'animate-spin' : ''}`}
-            />
-            {isReinstalling ? 'Reinstalling...' : 'Reinstall'}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => remove()}
-            disabled={isReinstalling || isRemoving || !cliStatus.isManaged}
-          >
-            <Trash2 className="mr-2 size-4" />
-            {isRemoving ? 'Removing...' : 'Remove'}
-          </Button>
-        </div>
-        {!cliStatus.isManaged && (
-          <Alert className="mt-3">
-            <AlertCircle className="size-4" />
-            <AlertDescription>
-              CLI is not currently managed by ToolHive Studio. Click
-              &quot;Reinstall&quot; to set up CLI management.
-            </AlertDescription>
-          </Alert>
-        )}
-      </CliInfoWrapper>
-
-      <CliInfoWrapper title="Usage">
-        <div className="bg-muted rounded-md p-3">
-          <p className="text-muted-foreground mb-2 text-sm">
-            Use the `thv` command in your terminal to interact with ToolHive:
-          </p>
-          <div className="space-y-2">
-            <code className="block text-xs">thv --help</code>
-            <code className="block text-xs">thv list</code>
-            <code className="block text-xs">thv run &lt;server-name&gt;</code>
-          </div>
-        </div>
-      </CliInfoWrapper>
     </div>
   )
 }
