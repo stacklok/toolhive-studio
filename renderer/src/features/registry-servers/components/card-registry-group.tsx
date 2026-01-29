@@ -1,4 +1,4 @@
-import type { RegistryGroup } from '@api/types.gen'
+import type { RegistryGroup } from '@common/api/generated/types.gen'
 import { GitFork } from 'lucide-react'
 import { Badge } from '@/common/components/ui/badge'
 import {

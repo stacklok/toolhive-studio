@@ -5,7 +5,7 @@ import {
   type V1CreateRequest,
   type V1UpdateRequest,
   type V1ListSecretsResponse,
-} from '@api/types.gen'
+} from '@common/api/generated/types.gen'
 import { getVolumes, mapEnvVars } from '@/common/lib/utils'
 import { getProxyModeOrDefault } from '@/common/lib/proxy-mode'
 import type { FormSchemaLocalMcp } from './form-schema-local-mcp'

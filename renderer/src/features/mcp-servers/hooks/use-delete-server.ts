@@ -1,9 +1,9 @@
-import type { V1WorkloadListResponse, CoreWorkload } from '@api/types.gen'
+import type { V1WorkloadListResponse, CoreWorkload } from '@common/api/generated/types.gen'
 import {
   deleteApiV1BetaWorkloadsByNameMutation,
   getApiV1BetaWorkloadsByNameStatusOptions,
   getApiV1BetaWorkloadsQueryKey,
-} from '@api/@tanstack/react-query.gen'
+} from '@common/api/generated/@tanstack/react-query.gen'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { pollServerDelete } from '@/common/lib/polling'
 import { useQueryClient } from '@tanstack/react-query'

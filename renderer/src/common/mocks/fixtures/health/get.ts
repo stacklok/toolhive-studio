@@ -1,4 +1,4 @@
-import type { GetHealthResponse, GetHealthData } from '@api/types.gen'
+import type { GetHealthResponse, GetHealthData } from '@common/api/generated/types.gen'
 import { AutoAPIMock } from '@mocks'
 
 // Health endpoint returns 204 No Content - tests override as needed

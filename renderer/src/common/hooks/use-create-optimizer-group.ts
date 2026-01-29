@@ -1,11 +1,11 @@
-import { postApiV1BetaGroups } from '@api/index'
+import { postApiV1BetaGroups } from '@common/api/generated/index'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { MCP_OPTIMIZER_GROUP_NAME } from '../lib/constants'
 import { queryClient } from '../lib/query-client'
 import {
   getApiV1BetaGroupsOptions,
   getApiV1BetaGroupsQueryKey,
-} from '@api/@tanstack/react-query.gen'
+} from '@common/api/generated/@tanstack/react-query.gen'
 import log from 'electron-log/renderer'
 import { useCallback } from 'react'
 import { toast } from 'sonner'

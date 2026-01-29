@@ -1,6 +1,6 @@
 import { Settings } from 'lucide-react'
 import { DropdownMenuItem } from '@/common/components/ui/dropdown-menu'
-import { getApiV1BetaWorkloadsByNameOptions } from '@api/@tanstack/react-query.gen'
+import { getApiV1BetaWorkloadsByNameOptions } from '@common/api/generated/@tanstack/react-query.gen'
 import { useQuery } from '@tanstack/react-query'
 import { useEditServerDialog } from '../../../../hooks/use-edit-server-dialog'
 

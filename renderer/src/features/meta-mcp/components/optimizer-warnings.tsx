@@ -6,7 +6,7 @@ import {
 import { AlertTriangle, InfoIcon } from 'lucide-react'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 import { useQuery } from '@tanstack/react-query'
-import { getApiV1BetaGroupsOptions } from '@api/@tanstack/react-query.gen'
+import { getApiV1BetaGroupsOptions } from '@common/api/generated/@tanstack/react-query.gen'
 
 export function OptimizerWarnings() {
   const { data: groupsData } = useQuery({

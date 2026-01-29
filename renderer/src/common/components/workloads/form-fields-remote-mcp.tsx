@@ -16,7 +16,7 @@ import {
 import { TooltipInfoIcon } from '../ui/tooltip-info-icon'
 import type { Control } from 'react-hook-form'
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
-import type { GroupsGroup } from '@api/types.gen'
+import type { GroupsGroup } from '@common/api/generated/types.gen'
 import { Input } from '../ui/input'
 import { REMOTE_MCP_AUTH_TYPES } from '@/common/lib/form-schema-mcp'
 import { FormFieldsProxy } from './form-fields-proxy'

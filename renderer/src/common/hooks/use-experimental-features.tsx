@@ -11,7 +11,7 @@ import {
   MCP_OPTIMIZER_GROUP_NAME,
   META_MCP_SERVER_NAME,
 } from '../lib/constants'
-import { getApiV1BetaWorkloadsByNameQueryKey } from '@api/@tanstack/react-query.gen'
+import { getApiV1BetaWorkloadsByNameQueryKey } from '@common/api/generated/@tanstack/react-query.gen'
 import { ExternalLinkIcon } from 'lucide-react'
 import { trackEvent } from '../lib/analytics'
 

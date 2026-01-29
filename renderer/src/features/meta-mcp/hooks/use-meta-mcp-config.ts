@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { getApiV1BetaWorkloadsByNameOptions } from '@api/@tanstack/react-query.gen'
+import { getApiV1BetaWorkloadsByNameOptions } from '@common/api/generated/@tanstack/react-query.gen'
 import { META_MCP_SERVER_NAME } from '@/common/lib/constants'
 
 export function useMetaMcpConfig() {

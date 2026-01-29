@@ -2,7 +2,7 @@
  * Functional, composable polling utilities
  */
 
-import type { CoreWorkload } from '../../../../api/generated/types.gen'
+import type { CoreWorkload } from '@common/api/generated/types.gen'
 import { delay } from '../../../../utils/delay'
 
 // Types

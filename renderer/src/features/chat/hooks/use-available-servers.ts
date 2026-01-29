@@ -1,5 +1,5 @@
-import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
-import type { CoreWorkload } from '@api/types.gen'
+import { getApiV1BetaWorkloadsOptions } from '@common/api/generated/@tanstack/react-query.gen'
+import type { CoreWorkload } from '@common/api/generated/types.gen'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ChatMcpServer } from '../types'
 import { TOOLHIVE_MCP_SERVER_NAME } from '../lib/constants'

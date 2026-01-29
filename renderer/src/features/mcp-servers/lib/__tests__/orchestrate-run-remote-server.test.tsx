@@ -5,7 +5,7 @@ import {
   prepareUpdateRemoteWorkloadData,
   convertCreateRequestToFormData,
 } from '../orchestrate-run-remote-server'
-import type { V1CreateRequest, V1ListSecretsResponse } from '@api/types.gen'
+import type { V1CreateRequest, V1ListSecretsResponse } from '@common/api/generated/types.gen'
 
 beforeEach(() => {
   vi.clearAllMocks()

@@ -30,7 +30,7 @@
 
 ## Types
 
-- Fixtures use strict types via the `AutoAPIMock` wrapper. Generated modules import response and request types from `@api/types.gen` and pass them as generic parameters to `AutoAPIMock<TResponse, TRequest>` for type safety.
+- Fixtures use strict types via the `AutoAPIMock` wrapper. Generated modules import response and request types from `@common/api/generated/types.gen` and pass them as generic parameters to `AutoAPIMock<TResponse, TRequest>` for type safety.
 - The `@mocks` path alias points to `renderer/src/common/mocks`.
 
 ## Test-Scoped Overrides with AutoAPIMock
@@ -46,7 +46,7 @@ Generated fixtures use named exports with a consistent naming convention:
 import type {
   GetApiV1BetaGroupsResponse,
   GetApiV1BetaGroupsData,
-} from '@api/types.gen'
+} from '@common/api/generated/types.gen'
 import { AutoAPIMock } from '@mocks'
 
 export const mockedGetApiV1BetaGroups = AutoAPIMock<
@@ -130,7 +130,7 @@ Define named scenarios in your fixture for commonly used test states:
 import type {
   GetApiV1BetaGroupsResponse,
   GetApiV1BetaGroupsData,
-} from '@api/types.gen'
+} from '@common/api/generated/types.gen'
 import { AutoAPIMock } from '@mocks'
 import { HttpResponse } from 'msw'
 

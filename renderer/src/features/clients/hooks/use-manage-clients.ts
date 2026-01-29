@@ -8,11 +8,11 @@ import {
   postApiV1BetaClientsMutation,
   getApiV1BetaGroupsQueryKey,
   getApiV1BetaGroupsOptions,
-} from '@api/@tanstack/react-query.gen'
+} from '@common/api/generated/@tanstack/react-query.gen'
 import {
   getApiV1BetaClients,
   deleteApiV1BetaClientsByNameGroupsByGroup,
-} from '@api/sdk.gen'
+} from '@common/api/generated/sdk.gen'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 import { useIsOptimizedGroupName } from './use-is-optimized-group-name'
 

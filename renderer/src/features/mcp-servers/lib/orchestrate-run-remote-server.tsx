@@ -3,7 +3,7 @@ import {
   type V1CreateRequest,
   type V1ListSecretsResponse,
   type V1UpdateRequest,
-} from '@api/types.gen'
+} from '@common/api/generated/types.gen'
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
 import { omit } from '@/common/lib/utils'
 import { getRemoteAuthFieldType } from '@/common/lib/workloads/remote/form-fields-util-remote'

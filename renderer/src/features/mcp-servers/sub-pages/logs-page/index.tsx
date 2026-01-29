@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import {
   getApiV1BetaWorkloadsByNameLogsOptions,
   getApiV1BetaWorkloadsByNameProxyLogsOptions,
-} from '@api/@tanstack/react-query.gen'
+} from '@common/api/generated/@tanstack/react-query.gen'
 import { RefreshButton } from '@/common/components/refresh-button'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
 import { InputSearch } from '@/common/components/ui/input-search'

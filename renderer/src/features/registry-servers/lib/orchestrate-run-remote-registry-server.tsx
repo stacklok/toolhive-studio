@@ -1,4 +1,4 @@
-import { type RegistryRemoteServerMetadata } from '@api/types.gen'
+import { type RegistryRemoteServerMetadata } from '@common/api/generated/types.gen'
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
 import { getRemoteAuthFieldType } from '@/common/lib/workloads/remote/form-fields-util-remote'
 

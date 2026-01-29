@@ -1,9 +1,9 @@
 import {
   getApiV1BetaWorkloads,
   postApiV1BetaWorkloadsByNameStop,
-} from '@api/sdk.gen'
-import { createClient } from '@api/client'
-import type { CoreWorkload } from '@api/types.gen'
+} from '@common/api/generated/sdk.gen'
+import { createClient } from '@common/api/generated/client'
+import type { CoreWorkload } from '@common/api/generated/types.gen'
 import Store from 'electron-store'
 import log from './logger'
 import { delay } from '../../utils/delay'

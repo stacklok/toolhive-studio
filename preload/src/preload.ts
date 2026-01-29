@@ -2,7 +2,7 @@
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 
 import { contextBridge, ipcRenderer } from 'electron'
-import type { CoreWorkload } from '../../api/generated/types.gen'
+import type { CoreWorkload } from '@common/api/generated/types.gen'
 import type {
   AvailableServer,
   ChatUIMessage,

@@ -3,9 +3,9 @@ import {
   type RegistryImageMetadata,
   type SecretsSecretParameter,
   type V1CreateRequest,
-} from '@api/types.gen'
-import { type Options } from '@api/sdk.gen'
-import { postApiV1BetaWorkloadsMutation } from '@api/@tanstack/react-query.gen'
+} from '@common/api/generated/types.gen'
+import { type Options } from '@common/api/generated/sdk.gen'
+import { postApiV1BetaWorkloadsMutation } from '@common/api/generated/@tanstack/react-query.gen'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { prepareCreateWorkloadData } from '../lib/orchestrate-run-registry-server'
 import { trackEvent } from '@/common/lib/analytics'

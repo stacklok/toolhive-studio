@@ -1,5 +1,5 @@
 import z from 'zod/v4'
-import type { CoreWorkload } from '@api/types.gen'
+import type { CoreWorkload } from '@common/api/generated/types.gen'
 import {
   createRemoteMcpBaseSchema,
   REMOTE_MCP_AUTH_TYPES,

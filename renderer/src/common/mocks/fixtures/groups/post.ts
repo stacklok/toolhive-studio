@@ -1,7 +1,7 @@
 import type {
   PostApiV1BetaGroupsResponse,
   PostApiV1BetaGroupsData,
-} from '@api/types.gen'
+} from '@common/api/generated/types.gen'
 import { AutoAPIMock } from '@mocks'
 
 export const mockedPostApiV1BetaGroups = AutoAPIMock<

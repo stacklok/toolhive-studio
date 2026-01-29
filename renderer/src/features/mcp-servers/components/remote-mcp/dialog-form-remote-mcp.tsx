@@ -9,7 +9,7 @@ import {
   getApiV1BetaSecretsDefaultKeysOptions,
   getApiV1BetaWorkloadsByNameOptions,
   getApiV1BetaWorkloadsOptions,
-} from '@api/@tanstack/react-query.gen'
+} from '@common/api/generated/@tanstack/react-query.gen'
 import { useQuery } from '@tanstack/react-query'
 import { convertCreateRequestToFormData } from '../../lib/orchestrate-run-remote-server'
 import { LoadingStateAlert } from '@/common/components/secrets/loading-state-alert'

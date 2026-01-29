@@ -26,7 +26,7 @@ export function deriveDataTypeName(responseTypeName: string): string {
 /**
  * Renders a TypeScript module for a generated mock fixture.
  * When a response type name is provided, includes type imports
- * from '@api/types.gen' and wraps the fixture in `AutoAPIMock<TResponse, TRequest>`
+ * from '@common/api/generated/types.gen' and wraps the fixture in `AutoAPIMock<TResponse, TRequest>`
  * for type-safe test overrides with typed request parameters.
  */
 export function buildMockModule(payload: unknown, opType?: string): string {
@@ -37,7 +37,7 @@ export function buildMockModule(payload: unknown, opType?: string): string {
   // Type imports first, then value imports (biome import order)
   const imports = [
     ...(typeName && dataTypeName
-      ? [`import type { ${typeName}, ${dataTypeName} } from '@api/types.gen'`]
+      ? [`import type { ${typeName}, ${dataTypeName} } from '@common/api/generated/types.gen'`]
       : []),
     `import { AutoAPIMock } from '@mocks'`,
   ].join('\n')

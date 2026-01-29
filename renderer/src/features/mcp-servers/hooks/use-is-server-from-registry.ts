@@ -1,7 +1,7 @@
 import {
   getApiV1BetaRegistryByNameServersOptions,
   getApiV1BetaWorkloadsByNameOptions,
-} from '@api/@tanstack/react-query.gen'
+} from '@common/api/generated/@tanstack/react-query.gen'
 import { useQuery } from '@tanstack/react-query'
 
 export interface IsFromRegistryToolDiff {

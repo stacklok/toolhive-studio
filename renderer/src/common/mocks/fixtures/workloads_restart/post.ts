@@ -1,7 +1,7 @@
 import type {
   PostApiV1BetaWorkloadsRestartResponse,
   PostApiV1BetaWorkloadsRestartData,
-} from '@api/types.gen'
+} from '@common/api/generated/types.gen'
 import { AutoAPIMock } from '@mocks'
 import { HttpResponse } from 'msw'
 

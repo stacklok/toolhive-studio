@@ -1,12 +1,12 @@
 import { useMutation } from '@tanstack/react-query'
-import { postApiV1BetaSecretsDefaultKeysMutation } from '@api/@tanstack/react-query.gen'
-import { getApiV1BetaSecretsDefaultKeys } from '@api/sdk.gen'
+import { postApiV1BetaSecretsDefaultKeysMutation } from '@common/api/generated/@tanstack/react-query.gen'
+import { getApiV1BetaSecretsDefaultKeys } from '@common/api/generated/sdk.gen'
 import type {
   PostApiV1BetaSecretsDefaultKeysData,
   SecretsSecretParameter,
   V1CreateSecretResponse,
-} from '@api/types.gen'
-import type { Options } from '@api/client'
+} from '@common/api/generated/types.gen'
+import type { Options } from '@common/api/generated/client'
 import { prepareSecretsWithoutNamingCollision } from '@/common/lib/secrets/prepare-secrets-without-naming-collision'
 import type { SecretFieldValue, PreparedSecret } from '@/common/types/secrets'
 import type { FormSchemaLocalMcp } from '@/features/mcp-servers/lib/form-schema-local-mcp'

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { RegistryGroup } from '@api/types.gen'
+import type { RegistryGroup } from '@common/api/generated/types.gen'
 import { Button } from '@/common/components/ui/button'
 import { Wrench } from 'lucide-react'
 import { useGroupInstallValidation } from '../hooks/use-group-install-validation'

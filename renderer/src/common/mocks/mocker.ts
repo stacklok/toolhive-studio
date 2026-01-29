@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 
-import openapi from '../../../../api/openapi.json'
+import openapi from '@common/api/openapi.json'
 import fs from 'fs'
 import { JSONSchemaFaker as jsf } from 'json-schema-faker'
 import { http, HttpResponse } from 'msw'

@@ -1,4 +1,4 @@
-import type { CoreWorkload } from '@api/types.gen'
+import type { CoreWorkload } from '@common/api/generated/types.gen'
 import { Switch } from '@/common/components/ui/switch'
 
 function getStatusText(status: CoreWorkload['status'] | 'restarting') {

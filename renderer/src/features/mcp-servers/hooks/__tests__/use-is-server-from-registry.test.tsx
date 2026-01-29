@@ -8,7 +8,7 @@ import type {
   RegistryImageMetadata,
   RegistryRemoteServerMetadata,
   CoreWorkload,
-} from '@api/types.gen'
+} from '@common/api/generated/types.gen'
 
 const createRegistryImage = (
   overrides: Partial<RegistryImageMetadata> = {}

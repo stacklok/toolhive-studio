@@ -1,7 +1,7 @@
 import {
   getApiV1BetaRegistryByNameServersOptions,
   getApiV1BetaRegistryByNameOptions,
-} from '@api/@tanstack/react-query.gen'
+} from '@common/api/generated/@tanstack/react-query.gen'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { GridCardsRegistry } from '@/features/registry-servers/components/grid-cards-registry'
 import { EmptyState } from '@/common/components/empty-state'

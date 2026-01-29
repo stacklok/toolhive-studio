@@ -3,7 +3,7 @@ import {
   type RegistryImageMetadata,
   type SecretsSecretParameter,
   type V1CreateRequest,
-} from '@api/types.gen'
+} from '@common/api/generated/types.gen'
 import { getVolumes, mapEnvVars } from '@/common/lib/utils'
 import type { FormSchemaRegistryMcp } from './form-schema-registry-mcp'
 

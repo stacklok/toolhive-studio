@@ -1,7 +1,7 @@
 import type {
   GetApiV1BetaWorkloadsByNameResponse,
   GetApiV1BetaWorkloadsByNameData,
-} from '@api/types.gen'
+} from '@common/api/generated/types.gen'
 import { AutoAPIMock } from '@mocks'
 import { HttpResponse } from 'msw'
 
