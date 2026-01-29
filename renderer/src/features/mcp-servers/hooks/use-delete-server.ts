@@ -1,4 +1,7 @@
-import type { V1WorkloadListResponse, CoreWorkload } from '@common/api/generated/types.gen'
+import type {
+  V1WorkloadListResponse,
+  CoreWorkload,
+} from '@common/api/generated/types.gen'
 import {
   deleteApiV1BetaWorkloadsByNameMutation,
   getApiV1BetaWorkloadsByNameStatusOptions,

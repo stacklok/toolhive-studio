@@ -141,7 +141,10 @@ For endpoints that return 204, create a minimal `AutoAPIMock` fixture and overri
 
 ```typescript
 // renderer/src/common/mocks/fixtures/health/get.ts
-import type { GetHealthResponse, GetHealthData } from '@common/api/generated/types.gen'
+import type {
+  GetHealthResponse,
+  GetHealthData,
+} from '@common/api/generated/types.gen'
 import { AutoAPIMock } from '@mocks'
 
 export const mockedGetHealth = AutoAPIMock<GetHealthResponse, GetHealthData>(

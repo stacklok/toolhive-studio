@@ -1,7 +1,10 @@
 import { screen, waitFor } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import { InstallGroupButton } from '../install-group-button'
-import type { RegistryGroup, RegistryImageMetadata } from '@common/api/generated/types.gen'
+import type {
+  RegistryGroup,
+  RegistryImageMetadata,
+} from '@common/api/generated/types.gen'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
 import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'

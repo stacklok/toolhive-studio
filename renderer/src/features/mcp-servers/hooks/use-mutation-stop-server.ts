@@ -1,4 +1,7 @@
-import type { CoreWorkload, V1WorkloadListResponse } from '@common/api/generated/types.gen'
+import type {
+  CoreWorkload,
+  V1WorkloadListResponse,
+} from '@common/api/generated/types.gen'
 import {
   postApiV1BetaWorkloadsByNameStopMutation,
   getApiV1BetaWorkloadsQueryKey,

@@ -9,7 +9,10 @@ import * as clientGen from '@common/api/generated/client'
 import * as headers from '../headers'
 import * as logger from '../logger'
 import * as delay from '../../../utils/delay'
-import type { CoreWorkload, V1WorkloadListResponse } from '@common/api/generated/types.gen'
+import type {
+  CoreWorkload,
+  V1WorkloadListResponse,
+} from '@common/api/generated/types.gen'
 
 // Mock dependencies
 vi.mock('@common/api/generated/sdk.gen')

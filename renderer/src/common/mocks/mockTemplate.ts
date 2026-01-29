@@ -37,7 +37,9 @@ export function buildMockModule(payload: unknown, opType?: string): string {
   // Type imports first, then value imports (biome import order)
   const imports = [
     ...(typeName && dataTypeName
-      ? [`import type { ${typeName}, ${dataTypeName} } from '@common/api/generated/types.gen'`]
+      ? [
+          `import type { ${typeName}, ${dataTypeName} } from '@common/api/generated/types.gen'`,
+        ]
       : []),
     `import { AutoAPIMock } from '@mocks'`,
   ].join('\n')
