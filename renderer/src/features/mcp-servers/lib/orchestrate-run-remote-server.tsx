@@ -1,6 +1,7 @@
 import {
   type SecretsSecretParameter,
   type V1CreateRequest,
+  type V1HeaderForwardConfig,
   type V1ListSecretsResponse,
   type V1UpdateRequest,
 } from '@common/api/generated/types.gen'
@@ -8,6 +9,124 @@ import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-sch
 import { omit } from '@/common/lib/utils'
 import { getRemoteAuthFieldType } from '@/common/lib/workloads/remote/form-fields-util-remote'
 import { REMOTE_MCP_AUTH_TYPES } from '@/common/lib/form-schema-mcp'
+
+type FormHeaderForward = FormSchemaRemoteMcp['header_forward']
+
+type HeaderSecretItem =
+  NonNullable<FormHeaderForward>['add_headers_from_secret'][number]
+
+/**
+ * Extracts secrets from header_forward that need to be created.
+ */
+export function getHeaderForwardSecrets(
+  headerForward: FormHeaderForward
+): HeaderSecretItem['secret'][] {
+  if (!headerForward?.add_headers_from_secret) return []
+  return headerForward.add_headers_from_secret
+    .filter(
+      (item) => item.header_name.trim() && item.secret.value.secret.trim()
+    )
+    .map((item) => item.secret)
+}
+
+/**
+ * Transforms form header_forward arrays to API record format.
+ * Uses newlyCreatedSecrets to get actual secret names (handles naming collisions).
+ */
+function transformHeaderForwardToApi(
+  headerForward: FormHeaderForward,
+  newlyCreatedSecrets?: SecretsSecretParameter[]
+): V1HeaderForwardConfig | undefined {
+  if (!headerForward) return undefined
+
+  const hasPlaintextHeaders =
+    headerForward.add_plaintext_headers &&
+    headerForward.add_plaintext_headers.length > 0
+  const hasSecretHeaders =
+    headerForward.add_headers_from_secret &&
+    headerForward.add_headers_from_secret.length > 0
+
+  if (!hasPlaintextHeaders && !hasSecretHeaders) return undefined
+
+  const result: V1HeaderForwardConfig = {}
+
+  if (hasPlaintextHeaders) {
+    result.add_plaintext_headers = headerForward.add_plaintext_headers!.reduce(
+      (acc, { header_name, header_value }) => {
+        if (header_name.trim()) {
+          acc[header_name] = header_value
+        }
+        return acc
+      },
+      {} as Record<string, string>
+    )
+  }
+
+  if (hasSecretHeaders) {
+    // Build a map of original secret names to actual created names
+    const secretNameMap = new Map<string, string>()
+    newlyCreatedSecrets?.forEach((created) => {
+      secretNameMap.set(created.target || created.name, created.name)
+    })
+
+    result.add_headers_from_secret =
+      headerForward.add_headers_from_secret!.reduce(
+        (acc, { header_name, secret }) => {
+          if (header_name.trim() && secret.value.secret.trim()) {
+            // Use the actual created secret name if available, otherwise use the original
+            const secretName = secret.value.isFromStore
+              ? secret.name
+              : (secretNameMap.get(secret.name) ?? secret.name)
+            acc[header_name] = secretName
+          }
+          return acc
+        },
+        {} as Record<string, string>
+      )
+  }
+
+  return result
+}
+
+/**
+ * Transforms API header_forward records to form array format.
+ */
+function transformHeaderForwardToForm(
+  headerForward: V1HeaderForwardConfig | undefined,
+  availableSecretKeys: Set<string>
+): FormHeaderForward {
+  if (!headerForward) {
+    return {
+      add_plaintext_headers: [],
+      add_headers_from_secret: [],
+    }
+  }
+
+  return {
+    add_plaintext_headers: headerForward.add_plaintext_headers
+      ? Object.entries(headerForward.add_plaintext_headers).map(
+          ([header_name, header_value]) => ({
+            header_name,
+            header_value,
+          })
+        )
+      : [],
+    add_headers_from_secret: headerForward.add_headers_from_secret
+      ? Object.entries(headerForward.add_headers_from_secret).map(
+          ([header_name, secret_name]) => ({
+            header_name,
+            secret: {
+              name: secret_name,
+              value: {
+                secret: secret_name,
+                isFromStore: availableSecretKeys.has(secret_name),
+              },
+            },
+          })
+        )
+      : [],
+  }
+}
 
 function getOAuthConfig(
   data: FormSchemaRemoteMcp,
@@ -69,8 +188,19 @@ export function prepareCreateWorkloadData(
   )
 
   const request = {
-    ...omit({ ...data }, 'auth_type', 'secrets', 'tools', 'tools_override'),
+    ...omit(
+      { ...data },
+      'auth_type',
+      'secrets',
+      'tools',
+      'tools_override',
+      'header_forward'
+    ),
     oauth_config: oauthConfig,
+    header_forward: transformHeaderForwardToApi(
+      data.header_forward,
+      newlyCreatedSecrets
+    ),
     tools: data.tools ?? undefined,
     tools_override: data.tools_override ?? undefined,
   }
@@ -94,8 +224,19 @@ export function prepareUpdateRemoteWorkloadData(
   )
 
   return {
-    ...omit({ ...data }, 'auth_type', 'secrets', 'tools', 'tools_override'),
+    ...omit(
+      { ...data },
+      'auth_type',
+      'secrets',
+      'tools',
+      'tools_override',
+      'header_forward'
+    ),
     oauth_config: oauthConfig,
+    header_forward: transformHeaderForwardToApi(
+      data.header_forward,
+      newlyCreatedSecrets
+    ),
     tools: data.tools ?? undefined,
     tools_override: data.tools_override ?? undefined,
   }
@@ -166,6 +307,10 @@ export function convertCreateRequestToFormData(
         : createRequest.oauth_config?.scopes || '',
       token_url: createRequest.oauth_config?.token_url,
     },
+    header_forward: transformHeaderForwardToForm(
+      createRequest.header_forward,
+      availableSecretKeys
+    ),
     auth_type: authType,
     secrets,
     group: createRequest.group ?? 'default',

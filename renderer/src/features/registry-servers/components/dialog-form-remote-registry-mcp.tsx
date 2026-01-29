@@ -39,6 +39,10 @@ const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
     token_url: '',
     use_pkce: true,
   },
+  header_forward: {
+    add_headers_from_secret: [],
+    add_plaintext_headers: [],
+  },
   secrets: [],
   url: '',
   group: 'default',
@@ -209,6 +213,7 @@ export function DialogFormRemoteRegistryMcp({
               control={form.control}
               groups={groups}
               isEditing={isSubmitting}
+              form={form}
             />
             <FormFieldsAuth authType={authType} form={form} />
           </div>
