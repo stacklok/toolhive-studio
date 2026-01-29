@@ -8,7 +8,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './renderer/src'),
-      '@api': path.resolve(__dirname, './api/generated'),
+      '@common': path.resolve(__dirname, './common'),
       '@utils': path.resolve(__dirname, './utils'),
       '@mocks': path.resolve(__dirname, './renderer/src/common/mocks'),
     },
@@ -35,7 +35,7 @@ export default defineConfig({
       include: ['renderer/src/**/*.{ts,tsx}', 'main/src/**/*.ts'],
       exclude: [
         'node_modules/**',
-        'api/generated/**',
+        'common/api/generated/**',
         'renderer/src/common/mocks/**',
         '**/*.d.ts',
         '**/*.test.{ts,tsx}',

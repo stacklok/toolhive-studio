@@ -1,7 +1,7 @@
 import { Loader } from 'lucide-react'
 import { IllustrationPackage } from './illustrations/illustration-package'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
-import { getHealthOptions } from '@api/@tanstack/react-query.gen'
+import { getHealthOptions } from '@common/api/generated/@tanstack/react-query.gen'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import log from 'electron-log/renderer'

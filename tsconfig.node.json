@@ -19,7 +19,7 @@
     "noUncheckedSideEffectImports": true,
     "noUncheckedIndexedAccess": true,
     "paths": {
-      "@api/*": ["./api/generated/*"],
+      "@common/*": ["./common/*"],
       "@utils/*": ["./utils/*"]
     }
   },

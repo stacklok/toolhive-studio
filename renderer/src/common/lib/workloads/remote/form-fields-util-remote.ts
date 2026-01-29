@@ -1,4 +1,4 @@
-import type { V1CreateRequest } from '@api/types.gen'
+import type { V1CreateRequest } from '@common/api/generated/types.gen'
 import {
   REMOTE_MCP_AUTH_TYPES,
   type RemoteMcpAuthType,

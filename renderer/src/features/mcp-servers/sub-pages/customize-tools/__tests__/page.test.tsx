@@ -5,7 +5,10 @@ import { mockedGetApiV1BetaWorkloads } from '@mocks/fixtures/workloads/get'
 import { mockedGetApiV1BetaWorkloadsByName } from '@mocks/fixtures/workloads_name/get'
 import { mockedGetApiV1BetaSecretsDefaultKeys } from '@mocks/fixtures/secrets_default_keys/get'
 import { mockedGetApiV1BetaRegistryByNameServers } from '@mocks/fixtures/registry_name_servers/get'
-import type { CoreWorkload, V1CreateRequest } from '@api/types.gen'
+import type {
+  CoreWorkload,
+  V1CreateRequest,
+} from '@common/api/generated/types.gen'
 import * as orchestrateRunLocalServer from '@/features/mcp-servers/lib/orchestrate-run-local-server'
 import * as orchestrateRunRemoteServer from '@/features/mcp-servers/lib/orchestrate-run-remote-server'
 import * as useUpdateServerModule from '@/features/mcp-servers/hooks/use-update-server'

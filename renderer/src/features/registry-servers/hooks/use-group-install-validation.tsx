@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
-import type { RegistryGroup } from '@api/types.gen'
+import { getApiV1BetaWorkloadsOptions } from '@common/api/generated/@tanstack/react-query.gen'
+import type { RegistryGroup } from '@common/api/generated/types.gen'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
 
 interface UseGroupInstallValidationProps {

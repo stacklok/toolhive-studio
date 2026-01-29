@@ -3,7 +3,7 @@ import type {
   RegistryImageMetadata,
   RegistryRemoteServerMetadata,
   RegistryGroup,
-} from '@api/types.gen'
+} from '@common/api/generated/types.gen'
 import { FormRunFromRegistry } from './form-run-from-registry'
 import { DialogFormRemoteRegistryMcp } from './dialog-form-remote-registry-mcp'
 import { useMutationCreateGroup } from '@/features/mcp-servers/hooks/use-mutation-create-group'

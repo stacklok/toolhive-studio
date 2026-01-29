@@ -17,7 +17,7 @@ import {
 } from '@/common/lib/constants'
 import log from 'electron-log/renderer'
 import type { FormSchemaLocalMcp } from '@/features/mcp-servers/lib/form-schema-local-mcp'
-import { getApiV1BetaWorkloadsByNameQueryKey } from '@api/@tanstack/react-query.gen'
+import { getApiV1BetaWorkloadsByNameQueryKey } from '@common/api/generated/@tanstack/react-query.gen'
 import { queryClient } from '@/common/lib/query-client'
 import { toast } from 'sonner'
 import { useMcpOptimizerClients } from '../hooks/use-mcp-optimizer-clients'

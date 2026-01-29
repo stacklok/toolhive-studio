@@ -4,16 +4,19 @@ import {
   getLastShutdownServers,
   clearShutdownHistory,
 } from '../graceful-exit'
-import * as sdkGen from '@api/sdk.gen'
-import * as clientGen from '@api/client'
+import * as sdkGen from '@common/api/generated/sdk.gen'
+import * as clientGen from '@common/api/generated/client'
 import * as headers from '../headers'
 import * as logger from '../logger'
 import * as delay from '../../../utils/delay'
-import type { CoreWorkload, V1WorkloadListResponse } from '@api/types.gen'
+import type {
+  CoreWorkload,
+  V1WorkloadListResponse,
+} from '@common/api/generated/types.gen'
 
 // Mock dependencies
-vi.mock('@api/sdk.gen')
-vi.mock('@api/client')
+vi.mock('@common/api/generated/sdk.gen')
+vi.mock('@common/api/generated/client')
 vi.mock('../headers')
 vi.mock('../logger')
 vi.mock('../../../utils/delay')

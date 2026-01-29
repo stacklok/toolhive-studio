@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { pollServerStatus, pollServerDelete } from '../polling'
-import type { CoreWorkload } from '@api/types.gen'
+import type { CoreWorkload } from '@common/api/generated/types.gen'
 
 describe('Polling Utility', () => {
   beforeEach(() => {

@@ -1,7 +1,7 @@
 import type {
   GetApiV1BetaSecretsDefaultKeysResponse,
   GetApiV1BetaSecretsDefaultKeysData,
-} from '@api/types.gen'
+} from '@common/api/generated/types.gen'
 import { AutoAPIMock } from '@mocks'
 import { HttpResponse } from 'msw'
 

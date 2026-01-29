@@ -5,7 +5,7 @@ import {
   getApiV1BetaWorkloadsByNameStatusOptions,
   getApiV1BetaWorkloadsQueryKey,
   getApiV1BetaWorkloadsByNameQueryKey,
-} from '@api/@tanstack/react-query.gen'
+} from '@common/api/generated/@tanstack/react-query.gen'
 import { toast } from 'sonner'
 import { Button } from '../components/ui/button'
 import { Link } from '@tanstack/react-router'

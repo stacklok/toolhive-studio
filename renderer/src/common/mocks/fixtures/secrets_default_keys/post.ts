@@ -1,7 +1,7 @@
 import type {
   PostApiV1BetaSecretsDefaultKeysResponse,
   PostApiV1BetaSecretsDefaultKeysData,
-} from '@api/types.gen'
+} from '@common/api/generated/types.gen'
 import { AutoAPIMock } from '@mocks'
 
 export const mockedPostApiV1BetaSecretsDefaultKeys = AutoAPIMock<

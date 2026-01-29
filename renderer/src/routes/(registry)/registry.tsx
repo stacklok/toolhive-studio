@@ -1,7 +1,7 @@
 import {
   getApiV1BetaRegistryByNameServersOptions,
   getApiV1BetaRegistryByNameOptions,
-} from '@api/@tanstack/react-query.gen'
+} from '@common/api/generated/@tanstack/react-query.gen'
 import { createFileRoute } from '@tanstack/react-router'
 import { RegistryError } from '@/common/components/error/registry-error'
 import RegistryRouteComponent from './registry.route'

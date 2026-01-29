@@ -1,8 +1,8 @@
 import {
   getApiV1BetaWorkloadsByNameOptions,
   getApiV1BetaWorkloadsByNameQueryKey,
-} from '@api/@tanstack/react-query.gen'
-import { postApiV1BetaWorkloads } from '@api/sdk.gen'
+} from '@common/api/generated/@tanstack/react-query.gen'
+import { postApiV1BetaWorkloads } from '@common/api/generated/sdk.gen'
 import { featureFlagKeys } from '../../../../../utils/feature-flags'
 import { useFeatureFlag } from '../../../common/hooks/use-feature-flag'
 import {
@@ -14,7 +14,7 @@ import {
 } from '../../../common/lib/constants'
 import { useQuery } from '@tanstack/react-query'
 import { useToastMutation } from '../../../common/hooks/use-toast-mutation'
-import type { V1CreateRequest } from '@api/types.gen'
+import type { V1CreateRequest } from '@common/api/generated/types.gen'
 import { toast } from 'sonner'
 import log from 'electron-log/renderer'
 import { useMcpOptimizerClients } from '@/features/meta-mcp/hooks/use-mcp-optimizer-clients'

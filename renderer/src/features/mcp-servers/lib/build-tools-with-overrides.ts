@@ -1,4 +1,4 @@
-import type { V1ToolOverride } from '@api/types.gen'
+import type { V1ToolOverride } from '@common/api/generated/types.gen'
 import type { Tool, ToolWithMetadata } from '../types/tool-override'
 
 interface BuildToolsWithOverridesParams {

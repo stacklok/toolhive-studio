@@ -2,7 +2,7 @@ import type {
   RegistryImageMetadata,
   RegistryRemoteServerMetadata,
   RegistryGroup,
-} from '@api/types.gen'
+} from '@common/api/generated/types.gen'
 import { CardRegistry } from './card-registry'
 import { useFilterSort } from '@/common/hooks/use-filter-sort'
 import { InputSearch } from '@/common/components/ui/input-search'

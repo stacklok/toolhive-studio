@@ -1,7 +1,7 @@
 import type {
   RegistryImageMetadata,
   RegistryRemoteServerMetadata,
-} from '@api/types.gen'
+} from '@common/api/generated/types.gen'
 import { CloudIcon, Github, LaptopIcon } from 'lucide-react'
 import { Button } from '@/common/components/ui/button'
 import { Stars } from './stars'

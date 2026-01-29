@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getApiV1BetaWorkloadsOptions } from '@api/@tanstack/react-query.gen'
-import type { GroupsGroup } from '@api/types.gen'
+import { getApiV1BetaWorkloadsOptions } from '@common/api/generated/@tanstack/react-query.gen'
+import type { GroupsGroup } from '@common/api/generated/types.gen'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
 
 export type GroupWithServers = GroupsGroup & {

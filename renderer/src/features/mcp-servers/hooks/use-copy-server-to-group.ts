@@ -6,8 +6,8 @@ import { usePrompt, generateSimplePrompt } from '@/common/hooks/use-prompt'
 import {
   postApiV1BetaWorkloadsMutation,
   getApiV1BetaWorkloadsQueryKey,
-} from '@api/@tanstack/react-query.gen'
-import { getApiV1BetaWorkloadsByName } from '@api/sdk.gen'
+} from '@common/api/generated/@tanstack/react-query.gen'
+import { getApiV1BetaWorkloadsByName } from '@common/api/generated/sdk.gen'
 import { trackEvent } from '@/common/lib/analytics'
 
 async function ensureUniqueName(

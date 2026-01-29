@@ -6,10 +6,10 @@ import {
   getApiV1BetaGroupsOptions,
   postApiV1BetaClientsRegisterMutation,
   postApiV1BetaClientsUnregisterMutation,
-} from '@api/@tanstack/react-query.gen'
+} from '@common/api/generated/@tanstack/react-query.gen'
 import { queryClient } from '@/common/lib/query-client'
 import log from 'electron-log/renderer'
-import type { GroupsGroup } from '@api/types.gen'
+import type { GroupsGroup } from '@common/api/generated/types.gen'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 import { trackEvent } from '@/common/lib/analytics'
 

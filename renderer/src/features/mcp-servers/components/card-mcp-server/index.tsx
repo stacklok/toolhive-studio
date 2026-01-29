@@ -5,7 +5,7 @@ import {
   CardTitle,
 } from '@/common/components/ui/card'
 
-import type { CoreWorkload } from '@api/types.gen'
+import type { CoreWorkload } from '@common/api/generated/types.gen'
 import { ActionsMcpServer } from '../actions-mcp-server'
 import { useMutationRestartServer } from '../../hooks/use-mutation-restart-server'
 import { useMutationStopServerList } from '../../hooks/use-mutation-stop-server'

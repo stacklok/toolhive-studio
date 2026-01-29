@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { getApiV1BetaGroupsOptions } from '@api/@tanstack/react-query.gen'
+import { getApiV1BetaGroupsOptions } from '@common/api/generated/@tanstack/react-query.gen'
 import { useMemo } from 'react'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '../../../../../utils/feature-flags'

@@ -11,7 +11,7 @@ import type {
   CoreWorkload,
   V1CreateRequest,
   V1ListSecretsResponse,
-} from '@api/types.gen'
+} from '@common/api/generated/types.gen'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 
 describe('prepareCreateWorkloadData', () => {

@@ -9,7 +9,7 @@ import {
   getApiV1BetaWorkloadsByNameOptions,
   getApiV1BetaWorkloadsQueryKey,
   postApiV1BetaClientsUnregisterMutation,
-} from '@api/@tanstack/react-query.gen'
+} from '@common/api/generated/@tanstack/react-query.gen'
 import { useNavigate } from '@tanstack/react-router'
 import { trackEvent } from '@/common/lib/analytics'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'

@@ -7,7 +7,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import {
   getApiV1BetaRegistryByNameServersOptions,
   getApiV1BetaRegistryByNameOptions,
-} from '@api/@tanstack/react-query.gen'
+} from '@common/api/generated/@tanstack/react-query.gen'
 
 const DEFAULT_REGISTRY_NAME = 'default'
 

@@ -11,9 +11,9 @@ import {
   getApiV1BetaGroupsOptions,
   getApiV1BetaGroupsQueryKey,
   getApiV1BetaWorkloadsByNameOptions,
-} from '@api/@tanstack/react-query.gen'
+} from '@common/api/generated/@tanstack/react-query.gen'
 import { useQuery } from '@tanstack/react-query'
-import { deleteApiV1BetaClientsByNameGroupsByGroup } from '@api/index'
+import { deleteApiV1BetaClientsByNameGroupsByGroup } from '@common/api/generated/index'
 import { useCallback } from 'react'
 import { useToastMutation } from './use-toast-mutation'
 import { useMcpOptimizerClients } from '@/features/meta-mcp/hooks/use-mcp-optimizer-clients'

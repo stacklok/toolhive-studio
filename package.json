@@ -25,8 +25,8 @@
     "test:nonInteractive": "vitest run",
     "test:coverage": "vitest run --coverage",
     "update-api": "ts-node scripts/update-api.ts",
-    "generate-client": "pnpm run update-api && cd api && openapi-ts",
-    "generate-client:nofetch": "cd api && openapi-ts",
+    "generate-client": "pnpm run update-api && cd common/api && openapi-ts",
+    "generate-client:nofetch": "cd common/api && openapi-ts",
     "generate-icons": "ts-node scripts/generate-icons.ts",
     "knip": "knip"
   },

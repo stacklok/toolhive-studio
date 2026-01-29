@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { getApiV1BetaRegistryByNameServersByServerName } from '@api/sdk.gen'
+import { getApiV1BetaRegistryByNameServersByServerName } from '@common/api/generated/sdk.gen'
 
 export function useServerDetails(serverName: string) {
   return useQuery({

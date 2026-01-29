@@ -1,4 +1,4 @@
-import { client } from '../../api/generated/client.gen'
+import { client } from '@common/api/generated/client.gen'
 import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 import {

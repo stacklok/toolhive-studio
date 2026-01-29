@@ -1,6 +1,6 @@
 import { createFileRoute, useParams } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { getApiV1BetaRegistryByNameOptions } from '@api/@tanstack/react-query.gen'
+import { getApiV1BetaRegistryByNameOptions } from '@common/api/generated/@tanstack/react-query.gen'
 import { Badge } from '@/common/components/ui/badge'
 import { RegistryDetailHeader } from '@/features/registry-servers/components/registry-detail-header'
 import { Separator } from '@/common/components/ui/separator'

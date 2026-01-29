@@ -3,11 +3,11 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { ChevronLeft } from 'lucide-react'
 import { toast } from 'sonner'
-import { getApiV1BetaWorkloads } from '@api/sdk.gen'
+import { getApiV1BetaWorkloads } from '@common/api/generated/sdk.gen'
 import {
   getApiV1BetaSecretsDefaultKeysOptions,
   getApiV1BetaWorkloadsByNameOptions,
-} from '@api/@tanstack/react-query.gen'
+} from '@common/api/generated/@tanstack/react-query.gen'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 import { Button } from '@/common/components/ui/button'

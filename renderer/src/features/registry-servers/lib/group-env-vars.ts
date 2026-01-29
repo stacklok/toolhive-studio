@@ -1,4 +1,4 @@
-import type { RegistryEnvVar } from '@api/types.gen'
+import type { RegistryEnvVar } from '@common/api/generated/types.gen'
 
 export type GroupedEnvVars = {
   secrets: RegistryEnvVar[]

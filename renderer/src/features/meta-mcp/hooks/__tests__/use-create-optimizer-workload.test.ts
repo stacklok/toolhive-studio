@@ -16,7 +16,7 @@ import {
 import { useCreateOptimizerWorkload } from '../use-create-optimizer-workload'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { useMcpOptimizerClients } from '@/features/meta-mcp/hooks/use-mcp-optimizer-clients'
-import type { V1CreateRequest } from '@api/types.gen'
+import type { V1CreateRequest } from '@common/api/generated/types.gen'
 import { mockedGetApiV1BetaWorkloadsByName } from '@/common/mocks/fixtures/workloads_name/get'
 import { mockedGetApiV1BetaRegistryByNameServers } from '@/common/mocks/fixtures/registry_name_servers/get'
 import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'

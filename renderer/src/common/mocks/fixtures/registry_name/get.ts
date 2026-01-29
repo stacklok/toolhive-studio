@@ -1,7 +1,7 @@
 import type {
   GetApiV1BetaRegistryByNameResponse,
   GetApiV1BetaRegistryByNameData,
-} from '@api/types.gen'
+} from '@common/api/generated/types.gen'
 import { AutoAPIMock } from '@mocks'
 import { HttpResponse } from 'msw'
 

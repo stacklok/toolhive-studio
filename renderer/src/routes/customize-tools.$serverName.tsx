@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { getApiV1BetaWorkloadsByNameStatusOptions } from '@api/@tanstack/react-query.gen'
+import { getApiV1BetaWorkloadsByNameStatusOptions } from '@common/api/generated/@tanstack/react-query.gen'
 import { CustomizeToolsPage } from '@/features/mcp-servers/sub-pages/customize-tools/page'
 
 export const Route = createFileRoute('/customize-tools/$serverName')({

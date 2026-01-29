@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { type PostApiV1BetaSecretsDefaultKeysData } from '@api/types.gen'
-import type { Options } from '@api/client'
+import { type PostApiV1BetaSecretsDefaultKeysData } from '@common/api/generated/types.gen'
+import type { Options } from '@common/api/generated/client'
 import { restartClientNotification } from '../lib/restart-client-notification'
 import { trackEvent } from '@/common/lib/analytics'
 import { prepareUpdateLocalWorkloadData } from '../lib/orchestrate-run-local-server'

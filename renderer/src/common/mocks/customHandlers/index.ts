@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw'
-import type json from '../../../../../api/openapi.json'
+import type json from '@common/api/openapi.json'
 
 /**
  * Mock log generator for the logs endpoint (text/plain).

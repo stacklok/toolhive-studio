@@ -5,7 +5,7 @@ import { useCopyServerToGroup } from '../use-copy-server-to-group'
 import { recordRequests } from '@/common/mocks/node'
 import { mockedGetApiV1BetaWorkloadsByName } from '@/common/mocks/fixtures/workloads_name/get'
 import { mockedPostApiV1BetaWorkloads } from '@/common/mocks/fixtures/workloads/post'
-import type { V1CreateRequest } from '@api/types.gen'
+import type { V1CreateRequest } from '@common/api/generated/types.gen'
 import userEvent from '@testing-library/user-event'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
 

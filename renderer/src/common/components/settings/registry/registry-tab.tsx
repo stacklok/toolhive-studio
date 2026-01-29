@@ -4,8 +4,8 @@ import { useForm } from 'react-hook-form'
 import {
   getApiV1BetaRegistryByName,
   putApiV1BetaRegistryByName,
-} from '@api/sdk.gen'
-import { getApiV1BetaRegistryByNameServersQueryKey } from '@api/@tanstack/react-query.gen'
+} from '@common/api/generated/sdk.gen'
+import { getApiV1BetaRegistryByNameServersQueryKey } from '@common/api/generated/@tanstack/react-query.gen'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { registryFormSchema, type RegistryFormData } from './schema'

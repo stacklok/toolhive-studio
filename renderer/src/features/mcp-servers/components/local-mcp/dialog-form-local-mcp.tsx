@@ -6,7 +6,7 @@ import {
   getApiV1BetaWorkloadsOptions,
   getApiV1BetaWorkloadsByNameOptions,
   getApiV1BetaSecretsDefaultKeysOptions,
-} from '@api/@tanstack/react-query.gen'
+} from '@common/api/generated/@tanstack/react-query.gen'
 import { convertCreateRequestToFormData } from '../../lib/orchestrate-run-local-server'
 import { useUpdateServer } from '../../hooks/use-update-server'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'

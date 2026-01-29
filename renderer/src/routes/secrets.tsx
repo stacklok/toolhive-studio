@@ -1,4 +1,4 @@
-import { getApiV1BetaSecretsDefaultKeysOptions } from '@api/@tanstack/react-query.gen'
+import { getApiV1BetaSecretsDefaultKeysOptions } from '@common/api/generated/@tanstack/react-query.gen'
 import { SecretsTable } from '@/features/secrets/components/secrets-table'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
