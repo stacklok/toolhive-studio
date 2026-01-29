@@ -10,6 +10,7 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { trackEvent } from '@/common/lib/analytics'
 import { WrapperField } from './components/wrapper-field'
 import { Badge } from '../../ui/badge'
 import { Button } from '../../ui/button'
@@ -76,9 +77,17 @@ export function CliTab() {
   const { mutateAsync: validate, isPending: isValidating } = useMutation({
     mutationFn: () => window.electronAPI.cliAlignment.validate(),
     onSuccess: (result) => {
+      trackEvent('CLI Settings: verify result', {
+        'cli.status': result.status,
+        'cli.has_external_cli': result.status === 'external-cli-found',
+      })
       queryClient.invalidateQueries({ queryKey: ['cli-alignment-status'] })
       queryClient.invalidateQueries({ queryKey: ['cli-validation-result'] })
       if (result.status === 'external-cli-found') {
+        trackEvent('CLI Settings: external cli detected', {
+          'cli.source': result.cli?.source,
+          'cli.path': result.cli?.path,
+        })
         toast.warning('External CLI installation detected')
       } else if (result.status === 'valid') {
         toast.success('CLI status verified')
@@ -87,6 +96,10 @@ export function CliTab() {
       }
     },
     onError: (error) => {
+      trackEvent('CLI Settings: verify result', {
+        'cli.success': false,
+        'cli.error': error.message,
+      })
       toast.error(`Validation failed: ${error.message}`)
     },
   })
@@ -95,6 +108,10 @@ export function CliTab() {
   const { mutateAsync: reinstall, isPending: isReinstalling } = useMutation({
     mutationFn: () => window.electronAPI.cliAlignment.reinstall(),
     onSuccess: (result) => {
+      trackEvent('CLI Settings: reinstall result', {
+        'cli.success': result.success,
+        'cli.error': result.error,
+      })
       if (result.success) {
         toast.success('CLI reinstalled successfully')
         queryClient.invalidateQueries({ queryKey: ['cli-alignment-status'] })
@@ -103,11 +120,16 @@ export function CliTab() {
       }
     },
     onError: (error) => {
+      trackEvent('CLI Settings: reinstall result', {
+        'cli.success': false,
+        'cli.error': error.message,
+      })
       toast.error(`Failed to reinstall CLI: ${error.message}`)
     },
   })
 
   const handleVerify = () => {
+    trackEvent('CLI Settings: verify clicked')
     validate()
   }
 
@@ -154,7 +176,10 @@ export function CliTab() {
       <Button
         variant="outline"
         size="sm"
-        onClick={() => reinstall()}
+        onClick={() => {
+          trackEvent('CLI Settings: reinstall clicked')
+          reinstall()
+        }}
         disabled={isReinstalling}
       >
         <RefreshCw
