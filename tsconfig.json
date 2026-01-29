@@ -12,7 +12,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./renderer/src/*"],
-      "@api/*": ["./api/generated/*"],
+      "@common/*": ["./common/*"],
       "@utils/*": ["./utils/*"],
       "@mocks": ["./renderer/src/common/mocks"],
       "@mocks/*": ["./renderer/src/common/mocks/*"]

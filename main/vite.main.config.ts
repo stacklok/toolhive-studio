@@ -9,7 +9,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@api': path.resolve(__dirname, '../api/generated'),
+      '@common': path.resolve(__dirname, '../common'),
       '@utils': path.resolve(__dirname, '../utils'),
     },
   },

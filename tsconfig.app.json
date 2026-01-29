@@ -22,13 +22,13 @@
     "noUncheckedIndexedAccess": true,
     "paths": {
       "@/*": ["./renderer/src/*"],
-      "@api/*": ["./api/generated/*"],
+      "@common/*": ["./common/*"],
       "@utils/*": ["./utils/*"],
       "@mocks": ["./renderer/src/common/mocks"],
       "@mocks/*": ["./renderer/src/common/mocks/*"]
     },
     "types": ["vitest/globals", "@testing-library/jest-dom/vitest"]
   },
-  "include": ["forge.env.d.ts", "renderer/src", "preload/src", "api/generated"],
+  "include": ["forge.env.d.ts", "renderer/src", "preload/src", "common/api"],
   "exclude": ["node_modules"]
 }

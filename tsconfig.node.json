@@ -19,12 +19,14 @@
     "noUncheckedSideEffectImports": true,
     "noUncheckedIndexedAccess": true,
     "paths": {
-      "@api/*": ["./api/generated/*"],
+      "@common/*": ["./common/*"],
       "@utils/*": ["./utils/*"]
     }
   },
   "include": [
     "vite.config.ts",
+    "vitest.config.ts",
+    "vitest.setup.ts",
     "forge.config.ts",
     "main/src",
     "preload/src",
