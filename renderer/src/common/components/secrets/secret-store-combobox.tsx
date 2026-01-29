@@ -29,7 +29,7 @@ export function SecretStoreCombobox({
   const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
+    <Popover open={isOpen} onOpenChange={setIsOpen} modal>
       <PopoverTrigger asChild>
         <Button
           variant="outline"

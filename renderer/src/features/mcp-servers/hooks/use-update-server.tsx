@@ -4,7 +4,10 @@ import type { Options } from '@common/api/generated/client'
 import { restartClientNotification } from '../lib/restart-client-notification'
 import { trackEvent } from '@/common/lib/analytics'
 import { prepareUpdateLocalWorkloadData } from '../lib/orchestrate-run-local-server'
-import { prepareUpdateRemoteWorkloadData } from '../lib/orchestrate-run-remote-server'
+import {
+  prepareUpdateRemoteWorkloadData,
+  getHeaderForwardSecrets,
+} from '../lib/orchestrate-run-remote-server'
 import type { FormSchemaLocalMcp } from '../lib/form-schema-local-mcp'
 import { useMCPSecrets } from '@/common/hooks/use-mcp-secrets'
 import { useMutationUpdateWorkload } from './use-mutation-update-workload'
@@ -54,7 +57,9 @@ export function useUpdateServer<TIsRemote extends boolean = false>(
           data.auth_type === REMOTE_MCP_AUTH_TYPES.AutoDiscovered
         const isBearerAuth =
           data.auth_type === REMOTE_MCP_AUTH_TYPES.BearerToken
-        const secrets = isDefaultAuthType
+
+        // Get auth secrets
+        const authSecrets = isDefaultAuthType
           ? data.secrets
           : isBearerAuth
             ? data.oauth_config.bearer_token
@@ -64,11 +69,17 @@ export function useUpdateServer<TIsRemote extends boolean = false>(
               ? [data.oauth_config.client_secret]
               : []
 
-        const hasNewSecrets = secrets.some((s) => !s.value?.isFromStore)
+        // Get header_forward secrets
+        const headerSecrets = getHeaderForwardSecrets(data.header_forward)
+
+        // Combine all secrets
+        const allSecrets = [...authSecrets, ...headerSecrets]
+
+        const hasNewSecrets = allSecrets.some((s) => !s.value?.isFromStore)
 
         // Handle secrets and get actual names (handles naming collisions)
         const newlyCreatedSecrets = hasNewSecrets
-          ? (await handleSecrets(secrets)).newlyCreatedSecrets
+          ? (await handleSecrets(allSecrets)).newlyCreatedSecrets
           : undefined
 
         const updateRequest = prepareUpdateRemoteWorkloadData(

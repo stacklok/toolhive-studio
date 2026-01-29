@@ -1,9 +1,12 @@
 import { postApiV1BetaWorkloadsMutation } from '@common/api/generated/@tanstack/react-query.gen'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
-import { prepareCreateWorkloadData } from '../lib/orchestrate-run-remote-server'
 import { type PostApiV1BetaSecretsDefaultKeysData } from '@common/api/generated/types.gen'
 import type { Options } from '@common/api/generated/client'
+import {
+  prepareCreateWorkloadData,
+  getHeaderForwardSecrets,
+} from '../lib/orchestrate-run-remote-server'
 import { restartClientNotification } from '../lib/restart-client-notification'
 import { trackEvent } from '@/common/lib/analytics'
 import { useMCPSecrets } from '@/common/hooks/use-mcp-secrets'
@@ -25,13 +28,22 @@ const buildAuthSecret = (data: FormSchemaRemoteMcp) => {
   const isDefaultAuthType =
     data.auth_type === REMOTE_MCP_AUTH_TYPES.AutoDiscovered
   const isBearerAuth = data.auth_type === REMOTE_MCP_AUTH_TYPES.BearerToken
-  if (isDefaultAuthType) return data.secrets
-  if (isBearerAuth)
-    return data.oauth_config.bearer_token
-      ? [data.oauth_config.bearer_token]
-      : []
-  if (data.oauth_config.client_secret) return [data.oauth_config.client_secret]
-  return []
+
+  // Get auth secrets
+  const authSecrets = isDefaultAuthType
+    ? data.secrets
+    : isBearerAuth
+      ? data.oauth_config.bearer_token
+        ? [data.oauth_config.bearer_token]
+        : []
+      : data.oauth_config.client_secret
+        ? [data.oauth_config.client_secret]
+        : []
+
+  // Get header_forward secrets
+  const headerSecrets = getHeaderForwardSecrets(data.header_forward)
+
+  return [...authSecrets, ...headerSecrets]
 }
 
 export function useRunRemoteServer({

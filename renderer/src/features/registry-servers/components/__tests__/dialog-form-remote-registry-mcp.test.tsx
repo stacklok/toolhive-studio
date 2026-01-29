@@ -248,9 +248,14 @@ describe('DialogFormRemoteRegistryMcp', () => {
           data: {
             auth_type: 'oauth2',
             group: 'default',
+            header_forward: {
+              add_headers_from_secret: [],
+              add_plaintext_headers: [],
+            },
             name: 'test-registry-server',
             oauth_config: {
               authorize_url: 'https://api.example.com/authorize',
+              bearer_token: undefined,
               callback_port: 8888,
               client_id: 'client_id',
               client_secret: {
@@ -267,6 +272,7 @@ describe('DialogFormRemoteRegistryMcp', () => {
               token_url: 'https://api.example.com/token',
               use_pkce: true,
             },
+            proxy_port: undefined,
             secrets: [],
             transport: 'streamable-http',
             url: 'https://api.example.com/mcp',

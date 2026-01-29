@@ -223,6 +223,117 @@ describe('getFormSchemaRemoteMcp', () => {
     })
   })
 
+  describe('header_forward validation', () => {
+    // Helper to create secret header items in the schema format
+    const createSecretHeader = (
+      headerName: string,
+      secretName: string,
+      secretValue: string,
+      isFromStore: boolean
+    ) => ({
+      header_name: headerName,
+      secret: {
+        name: secretName,
+        value: {
+          secret: secretValue,
+          isFromStore,
+        },
+      },
+    })
+
+    it('passes with valid header_forward configuration', () => {
+      const input = {
+        ...baseValidInput,
+        header_forward: {
+          add_plaintext_headers: [
+            { header_name: 'X-Tenant-ID', header_value: 'tenant-123' },
+          ],
+          add_headers_from_secret: [
+            createSecretHeader(
+              'Authorization',
+              'MY_API_KEY',
+              'secret-value',
+              false
+            ),
+          ],
+        },
+      }
+
+      const result = getFormSchemaRemoteMcp([]).safeParse(input)
+      expect(result.success, `${result.error}`).toBe(true)
+    })
+
+    it('passes with empty header_forward arrays', () => {
+      const input = {
+        ...baseValidInput,
+        header_forward: {
+          add_plaintext_headers: [],
+          add_headers_from_secret: [],
+        },
+      }
+
+      const result = getFormSchemaRemoteMcp([]).safeParse(input)
+      expect(result.success, `${result.error}`).toBe(true)
+    })
+
+    it('passes without header_forward (optional field)', () => {
+      const result = getFormSchemaRemoteMcp([]).safeParse(baseValidInput)
+      expect(result.success, `${result.error}`).toBe(true)
+    })
+
+    it('passes with only plaintext headers', () => {
+      const input = {
+        ...baseValidInput,
+        header_forward: {
+          add_plaintext_headers: [
+            { header_name: 'X-Custom', header_value: 'value' },
+          ],
+        },
+      }
+
+      const result = getFormSchemaRemoteMcp([]).safeParse(input)
+      expect(result.success, `${result.error}`).toBe(true)
+    })
+
+    it('passes with only secret headers', () => {
+      const input = {
+        ...baseValidInput,
+        header_forward: {
+          add_headers_from_secret: [
+            createSecretHeader('Authorization', 'SECRET_KEY', 'value', false),
+          ],
+        },
+      }
+
+      const result = getFormSchemaRemoteMcp([]).safeParse(input)
+      expect(result.success, `${result.error}`).toBe(true)
+    })
+
+    it('passes with multiple headers of both types', () => {
+      const input = {
+        ...baseValidInput,
+        header_forward: {
+          add_plaintext_headers: [
+            { header_name: 'X-Tenant-ID', header_value: 'tenant-1' },
+            { header_name: 'X-Correlation-ID', header_value: 'corr-123' },
+          ],
+          add_headers_from_secret: [
+            createSecretHeader('Authorization', 'API_KEY', 'api-value', false),
+            createSecretHeader(
+              'X-Auth-Token',
+              'AUTH_TOKEN',
+              'auth-value',
+              true
+            ),
+          ],
+        },
+      }
+
+      const result = getFormSchemaRemoteMcp([]).safeParse(input)
+      expect(result.success, `${result.error}`).toBe(true)
+    })
+  })
+
   describe('base field validation', () => {
     it('passes with all valid required fields', () => {
       const result = getFormSchemaRemoteMcp([]).safeParse(baseValidInput)
