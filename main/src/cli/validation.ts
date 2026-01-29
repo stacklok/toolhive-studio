@@ -11,15 +11,9 @@ import {
   createSymlink,
   getBundledCliPath,
   repairSymlink,
-  removeSymlink,
 } from './symlink-manager'
-import {
-  configureShellPath,
-  removeShellPath,
-  checkPathConfiguration,
-} from './path-configurator'
+import { configureShellPath, checkPathConfiguration } from './path-configurator'
 import { getDesktopCliPath } from './constants'
-import { deleteMarkerFile } from './marker-file'
 import type { ValidationResult, CliAlignmentStatus, Platform } from './types'
 import log from '../logger'
 
@@ -233,19 +227,4 @@ export async function reinstallCliSymlink(
   }
 
   return result
-}
-
-export async function removeCliInstallation(
-  platform: Platform = process.platform as Platform
-): Promise<{ success: boolean; error?: string }> {
-  const symlinkResult = removeSymlink(platform)
-  if (!symlinkResult.success) {
-    return symlinkResult
-  }
-
-  deleteMarkerFile()
-
-  await removeShellPath()
-
-  return { success: true }
 }

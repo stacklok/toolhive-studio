@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/common/components/ui/card'
 import { QuitConfirmationListener } from '@/common/components/layout/top-nav/quit-confirmation-listener'
 import { ExternalCliContent } from './external-cli-content'
 import { SymlinkIssueContent } from './symlink-issue-content'
-import type { ValidationResult } from '../../../../../preload/src/preload'
+import type { ValidationResult } from '@common/types/cli'
 
 export function CliIssuePage() {
   const navigate = useNavigate()

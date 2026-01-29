@@ -13,6 +13,7 @@ import type { UIMessage } from 'ai'
 import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 import type { FeatureFlagOptions } from '../../main/src/feature-flags'
 import type { UpdateState } from '../../main/src/auto-update'
+import type { ValidationResult } from '@common/types/cli'
 
 // Expose auto-launch functionality to renderer
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -551,17 +552,5 @@ export interface ElectronAPI {
   ) => void
 }
 
-// CLI Alignment Types (shared with renderer)
-export type ValidationResult =
-  | { status: 'valid' }
-  | { status: 'external-cli-found'; cli: ExternalCliInfo }
-  | { status: 'symlink-broken'; target: string }
-  | { status: 'symlink-tampered'; target: string }
-  | { status: 'symlink-missing' }
-  | { status: 'fresh-install' }
-
-export interface ExternalCliInfo {
-  path: string
-  version: string | null
-  source: 'homebrew' | 'winget' | 'manual'
-}
+// CLI Alignment Types (re-exported from shared types)
+export type { ValidationResult, ExternalCliInfo } from '@common/types/cli'

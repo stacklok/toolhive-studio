@@ -8,7 +8,6 @@ import {
 } from '../marker-file'
 import type { CliSourceMarker } from '../types'
 
-// Mock dependencies - use memfs pattern like other tests
 vi.mock('node:fs')
 
 vi.mock('electron', () => ({

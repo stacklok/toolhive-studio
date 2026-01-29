@@ -8,7 +8,7 @@ import {
 import { Button } from '@/common/components/ui/button'
 import { CodeBlockWithCopy } from '@/common/components/code-block-with-copy'
 import { getUninstallCommand, getSourceLabel } from '../lib/cli-issue-utils'
-import type { ExternalCliInfo } from '../../../../preload/src/preload'
+import type { ExternalCliInfo } from '@common/types/cli'
 
 interface ExternalCliContentProps {
   cli: ExternalCliInfo
