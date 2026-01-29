@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { Card, CardContent } from '@/common/components/ui/card'
 import { QuitConfirmationListener } from '@/common/components/layout/top-nav/quit-confirmation-listener'
+import { trackEvent, trackPageView } from '@/common/lib/analytics'
 import { ExternalCliContent } from './external-cli-content'
 import { SymlinkIssueContent } from './symlink-issue-content'
 import type { ValidationResult } from '@common/types/cli'
@@ -24,44 +25,90 @@ export function CliIssuePage() {
         navigate({ to: '/' })
       } else {
         setValidationResult(result)
+        // Track page view when issue is displayed
+        if (result) {
+          trackPageView('CLI Issue Page', {
+            'cli.status': result.status,
+            'cli.target':
+              result.status === 'symlink-broken' ||
+              result.status === 'symlink-tampered'
+                ? result.target
+                : undefined,
+            'cli.external_source':
+              result.status === 'external-cli-found'
+                ? result.cli?.source
+                : undefined,
+          })
+        }
       }
     })
   }
 
   const handleCheckAgain = async () => {
+    trackEvent('CLI Issue: check again clicked', {
+      'cli.current_status': validationResult?.status,
+    })
     setIsLoading(true)
     setError(null)
     try {
       const result = await window.electronAPI.cliAlignment.validate()
+      trackEvent('CLI Issue: check again result', {
+        'cli.new_status': result.status,
+        'cli.success': result.status === 'valid',
+      })
       if (result.status === 'valid') {
         navigate({ to: '/' })
       } else {
         setValidationResult(result)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Validation failed')
+      const errorMessage =
+        err instanceof Error ? err.message : 'Validation failed'
+      trackEvent('CLI Issue: check again result', {
+        'cli.success': false,
+        'cli.error': errorMessage,
+      })
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleRepair = async () => {
+    const issueType =
+      validationResult?.status === 'symlink-broken' ? 'broken' : 'tampered'
+    trackEvent('CLI Issue: repair clicked', {
+      'cli.issue_type': issueType,
+    })
     setIsLoading(true)
     setError(null)
     try {
       const { repairResult, validationResult: newValidation } =
         await window.electronAPI.cliAlignment.repair()
       if (!repairResult.success) {
+        trackEvent('CLI Issue: repair result', {
+          'cli.success': false,
+          'cli.error': repairResult.error ?? 'Repair failed',
+        })
         setError(repairResult.error ?? 'Repair failed')
         return
       }
+      trackEvent('CLI Issue: repair result', {
+        'cli.success': true,
+        'cli.new_status': newValidation?.status,
+      })
       if (newValidation?.status === 'valid') {
         navigate({ to: '/' })
       } else {
         setValidationResult(newValidation)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Repair failed')
+      const errorMessage = err instanceof Error ? err.message : 'Repair failed'
+      trackEvent('CLI Issue: repair result', {
+        'cli.success': false,
+        'cli.error': errorMessage,
+      })
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }

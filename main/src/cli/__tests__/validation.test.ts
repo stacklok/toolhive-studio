@@ -50,6 +50,13 @@ vi.mock('electron', () => ({
   },
 }))
 
+vi.mock('@sentry/electron/main', () => ({
+  startSpanManual: vi.fn((_options, callback) =>
+    callback({ setAttributes: vi.fn(), setAttribute: vi.fn(), end: vi.fn() })
+  ),
+  startSpan: vi.fn((_options, callback) => callback()),
+}))
+
 import { detectExternalCli, getCliInfo } from '../cli-detection'
 import { readMarkerFile, createMarkerForDesktopInstall } from '../marker-file'
 import {
