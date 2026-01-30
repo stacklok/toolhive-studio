@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Copy, Check } from 'lucide-react'
 import { Button } from '@/common/components/ui/button'
 
@@ -10,12 +10,26 @@ const TIMEOUT_MS = 2000
 
 export function CodeBlockWithCopy({ code }: CodeBlockWithCopyProps) {
   const [copied, setCopied] = useState(false)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Clear timeout on unmount to prevent memory leak
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [])
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(code)
       setCopied(true)
-      setTimeout(() => setCopied(false), TIMEOUT_MS)
+      // Clear any existing timeout before setting a new one
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+      timeoutRef.current = setTimeout(() => setCopied(false), TIMEOUT_MS)
     } catch {
       // Ignore copy errors
     }
