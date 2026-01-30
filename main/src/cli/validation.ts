@@ -15,7 +15,8 @@ import {
 } from './symlink-manager'
 import { configureShellPath, checkPathConfiguration } from './path-configurator'
 import { getDesktopCliPath } from './constants'
-import type { ValidationResult, CliAlignmentStatus, Platform } from './types'
+import type { ValidationResult } from '@common/types/cli'
+import type { CliAlignmentStatus, Platform } from './types'
 import log from '../logger'
 
 export async function validateCliAlignment(

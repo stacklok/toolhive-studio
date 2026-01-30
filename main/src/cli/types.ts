@@ -27,30 +27,6 @@ export interface CliSourceMarker {
 }
 
 /**
- * Information about an externally installed CLI
- * (e.g., via Homebrew, Winget, or manual installation)
- */
-export interface ExternalCliInfo {
-  /** Full path to the external CLI binary */
-  path: string
-  /** Version of the external CLI, if detectable */
-  version: string | null
-  /** Detected installation source */
-  source: 'homebrew' | 'winget' | 'manual'
-}
-
-/**
- * Result of CLI alignment validation
- */
-export type ValidationResult =
-  | { status: 'valid' }
-  | { status: 'external-cli-found'; cli: ExternalCliInfo }
-  | { status: 'symlink-broken'; target: string }
-  | { status: 'symlink-tampered'; target: string }
-  | { status: 'symlink-missing' }
-  | { status: 'fresh-install' }
-
-/**
  * Status information for CLI alignment (exposed to renderer)
  */
 export interface CliAlignmentStatus {

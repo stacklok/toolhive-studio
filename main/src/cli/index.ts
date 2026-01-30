@@ -6,4 +6,3 @@ export {
   reinstallCliSymlink,
   repairCliSymlink,
 } from './validation'
-export type { ValidationResult } from './types'

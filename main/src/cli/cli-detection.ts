@@ -9,7 +9,8 @@ import { promisify } from 'node:util'
 import path from 'node:path'
 import { homedir } from 'node:os'
 import { EXTERNAL_CLI_PATHS, getCliSourceFromPath } from './constants'
-import type { ExternalCliInfo, Platform } from './types'
+import type { ExternalCliInfo } from '@common/types/cli'
+import type { Platform } from './types'
 import log from '../logger'
 
 const execFileAsync = promisify(execFile)
