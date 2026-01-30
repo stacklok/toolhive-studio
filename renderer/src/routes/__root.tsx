@@ -24,6 +24,7 @@ import log from 'electron-log/renderer'
 import * as Sentry from '@sentry/electron/renderer'
 import { StartingToolHive } from '@/common/components/starting-toolhive'
 import { CustomPortBanner } from '@/common/components/custom-port-banner'
+import { featureFlagKeys } from '@utils/feature-flags'
 
 async function setupSecretProvider(queryClient: QueryClient) {
   const createEncryptedProvider = async () =>
@@ -124,10 +125,21 @@ export const Route = createRootRouteWithContext<{
       const validationResult =
         await window.electronAPI.cliAlignment.getValidationResult()
       if (validationResult && validationResult.status !== 'valid') {
-        log.info(
-          `[beforeLoad] CLI validation issue: ${validationResult.status}, redirecting to /cli-issue`
+        // Check if enforcement is enabled via feature flag
+        const isEnforcementEnabled = await window.electronAPI.featureFlags.get(
+          featureFlagKeys.CLI_VALIDATION_ENFORCE
         )
-        throw redirect({ to: '/cli-issue' })
+        if (isEnforcementEnabled) {
+          log.info(
+            `[beforeLoad] CLI validation issue: ${validationResult.status}, redirecting to /cli-issue`
+          )
+          throw redirect({ to: '/cli-issue' })
+        } else {
+          // Telemetry-only mode: log but don't block
+          log.info(
+            `[beforeLoad] CLI validation issue detected: ${validationResult.status} (enforcement disabled, continuing)`
+          )
+        }
       }
     }
 
