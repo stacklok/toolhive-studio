@@ -52,9 +52,8 @@ export function useUpdateServer<TIsRemote extends boolean = false>(
       data: TIsRemote extends true ? FormSchemaRemoteMcp : FormSchemaLocalMcp
     }) => {
       if (isRemoteFormData(data, options?.isRemote)) {
-        // Remote server update - handle secrets not in store
-        const isDefaultAuthType =
-          data.auth_type === REMOTE_MCP_AUTH_TYPES.DynamicClientRegistration
+        // Remote server update - handle auth and header secrets separately
+        const isDefaultAuthType = data.auth_type === REMOTE_MCP_AUTH_TYPES.None
         const isBearerAuth =
           data.auth_type === REMOTE_MCP_AUTH_TYPES.BearerToken
 
@@ -72,19 +71,24 @@ export function useUpdateServer<TIsRemote extends boolean = false>(
         // Get header_forward secrets
         const headerSecrets = getHeaderForwardSecrets(data.header_forward)
 
-        // Combine all secrets
-        const allSecrets = [...authSecrets, ...headerSecrets]
+        // Handle auth secrets (create if new)
+        const hasNewAuthSecrets = authSecrets.some((s) => !s.value?.isFromStore)
+        const createdAuthSecrets = hasNewAuthSecrets
+          ? (await handleSecrets(authSecrets)).newlyCreatedSecrets
+          : undefined
 
-        const hasNewSecrets = allSecrets.some((s) => !s.value?.isFromStore)
-
-        // Handle secrets and get actual names (handles naming collisions)
-        const newlyCreatedSecrets = hasNewSecrets
-          ? (await handleSecrets(allSecrets)).newlyCreatedSecrets
+        // Handle header secrets (create if new)
+        const hasNewHeaderSecrets = headerSecrets.some(
+          (s) => !s.value?.isFromStore
+        )
+        const createdHeaderSecrets = hasNewHeaderSecrets
+          ? (await handleSecrets(headerSecrets)).newlyCreatedSecrets
           : undefined
 
         const updateRequest = prepareUpdateRemoteWorkloadData(
           data,
-          newlyCreatedSecrets
+          createdAuthSecrets,
+          createdHeaderSecrets
         )
 
         await updateWorkload({

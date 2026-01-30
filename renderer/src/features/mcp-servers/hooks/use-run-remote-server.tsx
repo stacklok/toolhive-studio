@@ -23,26 +23,20 @@ interface UseRunRemoteServerProps {
   quietly?: boolean
 }
 
-/** Build all secrets that need to be created (auth + header_forward). */
-const buildAllSecrets = (data: FormSchemaRemoteMcp) => {
+/** Get auth secret (bearer_token or client_secret). */
+const getAuthSecret = (data: FormSchemaRemoteMcp) => {
   const isDefaultAuthType = data.auth_type === REMOTE_MCP_AUTH_TYPES.None
   const isBearerAuth = data.auth_type === REMOTE_MCP_AUTH_TYPES.BearerToken
 
-  // Get auth secrets
-  const authSecrets = isDefaultAuthType
-    ? data.secrets
-    : isBearerAuth
-      ? data.oauth_config.bearer_token
-        ? [data.oauth_config.bearer_token]
-        : []
-      : data.oauth_config.client_secret
-        ? [data.oauth_config.client_secret]
-        : []
-
-  // Get header_forward secrets
-  const headerSecrets = getHeaderForwardSecrets(data.header_forward)
-
-  return [...authSecrets, ...headerSecrets]
+  if (isDefaultAuthType) return data.secrets
+  if (isBearerAuth) {
+    return data.oauth_config.bearer_token
+      ? [data.oauth_config.bearer_token]
+      : []
+  }
+  return data.oauth_config.client_secret
+    ? [data.oauth_config.client_secret]
+    : []
 }
 
 export function useRunRemoteServer({
@@ -64,10 +58,23 @@ export function useRunRemoteServer({
 
   const { mutate: installServerMutation } = useMutation({
     mutationFn: async ({ data }: { data: FormSchemaRemoteMcp }) => {
-      const secrets = buildAllSecrets(data)
-      const { newlyCreatedSecrets } = await handleSecrets(secrets)
+      // Handle auth secrets and header secrets separately
+      const authSecrets = getAuthSecret(data)
+      const headerSecrets = getHeaderForwardSecrets(data.header_forward)
 
-      const preparedData = prepareCreateWorkloadData(data, newlyCreatedSecrets)
+      // Create auth secrets first
+      const { newlyCreatedSecrets: createdAuthSecrets } =
+        await handleSecrets(authSecrets)
+
+      // Create header secrets
+      const { newlyCreatedSecrets: createdHeaderSecrets } =
+        await handleSecrets(headerSecrets)
+
+      const preparedData = prepareCreateWorkloadData(
+        data,
+        createdAuthSecrets,
+        createdHeaderSecrets
+      )
 
       await createWorkload({
         body: preparedData,

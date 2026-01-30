@@ -177,16 +177,16 @@ function getOAuthConfig(
 /**
  * Combines the registry server definition, the form fields, and the newly
  * created secrets from the secret store into a single request object.
- * If newlyCreatedSecrets is provided, uses the actual secret name from the store
- * (handles naming collisions where secret_key becomes secret_key_2).
+ * Auth secrets and header secrets are handled separately to avoid confusion.
  */
 export function prepareCreateWorkloadData(
   data: FormSchemaRemoteMcp,
-  newlyCreatedSecrets?: SecretsSecretParameter[]
+  createdAuthSecrets?: SecretsSecretParameter[],
+  createdHeaderSecrets?: SecretsSecretParameter[]
 ): V1CreateRequest {
   const oauthConfig = getOAuthConfig(
     data,
-    newlyCreatedSecrets,
+    createdAuthSecrets,
     data.oauth_config.client_secret?.name
   )
 
@@ -202,7 +202,7 @@ export function prepareCreateWorkloadData(
     oauth_config: oauthConfig,
     header_forward: transformHeaderForwardToApi(
       data.header_forward,
-      newlyCreatedSecrets
+      createdHeaderSecrets
     ),
     tools: data.tools ?? undefined,
     tools_override: data.tools_override ?? undefined,
@@ -213,16 +213,16 @@ export function prepareCreateWorkloadData(
 
 /**
  * Transforms form data into an update request object.
- * If newlyCreatedSecrets is provided, uses the actual secret name from the store
- * (handles naming collisions where secret_key becomes secret_key_2).
+ * Auth secrets and header secrets are handled separately to avoid confusion.
  */
 export function prepareUpdateRemoteWorkloadData(
   data: FormSchemaRemoteMcp,
-  newlyCreatedSecrets?: SecretsSecretParameter[]
+  createdAuthSecrets?: SecretsSecretParameter[],
+  createdHeaderSecrets?: SecretsSecretParameter[]
 ): V1UpdateRequest {
   const oauthConfig = getOAuthConfig(
     data,
-    newlyCreatedSecrets,
+    createdAuthSecrets,
     data.oauth_config.client_secret?.value.secret
   )
 
@@ -238,7 +238,7 @@ export function prepareUpdateRemoteWorkloadData(
     oauth_config: oauthConfig,
     header_forward: transformHeaderForwardToApi(
       data.header_forward,
-      newlyCreatedSecrets
+      createdHeaderSecrets
     ),
     tools: data.tools ?? undefined,
     tools_override: data.tools_override ?? undefined,
