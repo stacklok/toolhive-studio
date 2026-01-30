@@ -26,7 +26,7 @@ const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
   name: '',
   transport: 'streamable-http',
   proxy_port: undefined,
-  auth_type: REMOTE_MCP_AUTH_TYPES.None,
+  auth_type: REMOTE_MCP_AUTH_TYPES.DynamicClientRegistration,
   oauth_config: {
     authorize_url: '',
     client_id: '',

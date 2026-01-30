@@ -20,7 +20,7 @@ import {
 import type { SecretFieldValue } from '@/common/types/secrets'
 
 const AUTH_FIELD_MATRIX = {
-  none: ['callback_port', 'issuer'],
+  dynamic_client_registration: ['callback_port'],
   bearer_token: ['bearer_token'],
   oidc: [
     'callback_port',

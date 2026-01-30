@@ -78,8 +78,11 @@ export const getFormSchemaRemoteMcp = (
         }
       }
 
-      // Validate callback_port is required when auth_type is 'none'
-      if (auth_type === 'none' && (port === undefined || port === null)) {
+      // Validate callback_port is required when auth_type is 'dynamic_client_registration'
+      if (
+        auth_type === REMOTE_MCP_AUTH_TYPES.DynamicClientRegistration &&
+        (port === undefined || port === null)
+      ) {
         ctx.addIssue({
           code: 'custom',
           message: 'Callback port is required',

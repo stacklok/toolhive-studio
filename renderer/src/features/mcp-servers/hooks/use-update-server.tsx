@@ -50,7 +50,8 @@ export function useUpdateServer<TIsRemote extends boolean = false>(
     }) => {
       if (isRemoteFormData(data, options?.isRemote)) {
         // Remote server update - handle secrets not in store
-        const isDefaultAuthType = data.auth_type === REMOTE_MCP_AUTH_TYPES.None
+        const isDefaultAuthType =
+          data.auth_type === REMOTE_MCP_AUTH_TYPES.DynamicClientRegistration
         const isBearerAuth =
           data.auth_type === REMOTE_MCP_AUTH_TYPES.BearerToken
         const secrets = isDefaultAuthType
