@@ -152,7 +152,7 @@ function createBinaryPath(
   return { os, binDir, binPath, assetName, downloadUrl }
 }
 
-async function adHocSignBinary(binPath: string): Promise<void> {
+async function signThvBin(binPath: string): Promise<void> {
   console.log('Ad-hoc signing thv binary for macOS...')
   try {
     await execFileAsync('codesign', ['--force', '--sign', '-', binPath])
@@ -178,9 +178,10 @@ export async function ensureThv(
   await downloadAndExtractBinary(downloadUrl, binDir, assetName)
   await chmod(binPath, 0o755)
 
-  // Ad-hoc sign for macOS to enable notarization (required for Sequoia+)
+  // Ad-hoc sign the binary for macOS. Required because Xcode 26.2+ refuses to
+  // sign app bundles containing unsigned binaries, which breaks notarization.
   if (platform === 'darwin') {
-    await adHocSignBinary(binPath)
+    await signThvBin(binPath)
   }
 
   await generateApiClient()
