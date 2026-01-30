@@ -152,6 +152,16 @@ function createBinaryPath(
   return { os, binDir, binPath, assetName, downloadUrl }
 }
 
+async function signThvBin(binPath: string): Promise<void> {
+  console.log('Ad-hoc signing thv binary for macOS...')
+  try {
+    await execFileAsync('codesign', ['--force', '--sign', '-', binPath])
+    console.log('thv binary signed successfully')
+  } catch (error) {
+    console.warn('Failed to ad-hoc sign binary:', error)
+  }
+}
+
 export async function ensureThv(
   platform: NodeJS.Platform = process.platform,
   arch: NodeJS.Architecture = process.arch
@@ -167,6 +177,13 @@ export async function ensureThv(
   await cleanBinaryDirectory(binDir)
   await downloadAndExtractBinary(downloadUrl, binDir, assetName)
   await chmod(binPath, 0o755)
+
+  // Ad-hoc sign the binary for macOS. Required because Xcode 26.2+ refuses to
+  // sign app bundles containing unsigned binaries, which breaks notarization.
+  if (platform === 'darwin') {
+    await signThvBin(binPath)
+  }
+
   await generateApiClient()
 
   return binPath

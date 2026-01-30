@@ -1106,10 +1106,6 @@ export type V1UpdateRegistryRequest = {
  */
 export type V1UpdateRegistryResponse = {
   /**
-   * Status message
-   */
-  message?: string
-  /**
    * Registry type after update
    */
   type?: string
@@ -1193,6 +1189,7 @@ export type V1CreateRequest = {
    * Group name this workload belongs to
    */
   group?: string
+  header_forward?: V1HeaderForwardConfig
   headers?: Array<RegistryHeader>
   /**
    * Host to bind to
@@ -1359,6 +1356,28 @@ export type V1GroupListResponse = {
    * List of groups
    */
   groups?: Array<GroupsGroup>
+}
+
+/**
+ * HeaderForward configures headers to inject into requests to remote MCP servers.
+ * Use this to add custom headers like X-Tenant-ID or correlation IDs.
+ */
+export type V1HeaderForwardConfig = {
+  /**
+   * AddHeadersFromSecret maps header names to secret names in ToolHive's secrets manager.
+   * Key: HTTP header name, Value: secret name in the secrets manager
+   */
+  add_headers_from_secret?: {
+    [key: string]: string
+  }
+  /**
+   * AddPlaintextHeaders contains literal header values to inject.
+   * WARNING: These values are stored and transmitted in plaintext.
+   * Use AddHeadersFromSecret for sensitive data like API keys.
+   */
+  add_plaintext_headers?: {
+    [key: string]: string
+  }
 }
 
 /**
@@ -1611,6 +1630,7 @@ export type V1UpdateRequest = {
    * Group name this workload belongs to
    */
   group?: string
+  header_forward?: V1HeaderForwardConfig
   headers?: Array<RegistryHeader>
   /**
    * Host to bind to
@@ -2217,6 +2237,14 @@ export type PutApiV1BetaRegistryByNameErrors = {
    * Not Found
    */
   404: string
+  /**
+   * Bad Gateway - Registry validation failed
+   */
+  502: string
+  /**
+   * Gateway Timeout - Registry unreachable
+   */
+  504: string
 }
 
 export type PutApiV1BetaRegistryByNameError =
