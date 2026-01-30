@@ -168,7 +168,7 @@ export function CliTab() {
         variant="ghost"
         size="icon"
         onClick={handleVerify}
-        disabled={isLoading || isValidating}
+        disabled={isValidating}
         title="Refresh status"
       >
         <RefreshCw className={`size-4 ${isValidating ? 'animate-spin' : ''}`} />
