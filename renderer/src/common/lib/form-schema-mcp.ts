@@ -6,6 +6,7 @@ import { z } from 'zod/v4'
 
 export const REMOTE_MCP_AUTH_TYPES = {
   None: 'none',
+  DynamicClientRegistration: 'dynamic_client_registration',
   OAuth2: 'oauth2',
   OIDC: 'oidc',
   BearerToken: 'bearer_token',
@@ -16,6 +17,7 @@ export type RemoteMcpAuthType =
 
 const remoteMcpAuthTypeSchema = z.enum([
   REMOTE_MCP_AUTH_TYPES.None,
+  REMOTE_MCP_AUTH_TYPES.DynamicClientRegistration,
   REMOTE_MCP_AUTH_TYPES.OAuth2,
   REMOTE_MCP_AUTH_TYPES.OIDC,
   REMOTE_MCP_AUTH_TYPES.BearerToken,
