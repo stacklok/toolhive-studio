@@ -404,7 +404,6 @@ describe('DialogFormRemoteMcp', () => {
       'https://api.example.com/mcp'
     )
 
-    // Select None auth type
     await user.click(screen.getByLabelText('Authorization method'))
     await user.click(
       screen.getByRole('option', {
@@ -412,7 +411,6 @@ describe('DialogFormRemoteMcp', () => {
       })
     )
 
-    // Verify callback_port field is NOT visible for None auth type
     expect(screen.queryByLabelText('Callback port')).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Install server' }))
