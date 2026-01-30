@@ -213,12 +213,12 @@ export function CliTab() {
               <p>
                 {externalCli.source === 'homebrew' && (
                   <>
-                    To uninstall, run: <code>brew uninstall toolhive</code>
+                    To uninstall, run: <code>brew uninstall thv</code>
                   </>
                 )}
                 {externalCli.source === 'winget' && (
                   <>
-                    To uninstall, run: <code>winget uninstall toolhive</code>
+                    To uninstall, run: <code>winget uninstall thv</code>
                   </>
                 )}
                 {externalCli.source === 'manual' && (

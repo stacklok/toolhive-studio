@@ -55,7 +55,7 @@ describe('ExternalCliContent', () => {
   it('displays Homebrew uninstall command', () => {
     render(<ExternalCliContent {...defaultProps} />)
 
-    expect(screen.getByText('brew uninstall toolhive')).toBeVisible()
+    expect(screen.getByText('brew uninstall thv')).toBeVisible()
   })
 
   it('displays source label for Winget', () => {
@@ -85,7 +85,7 @@ describe('ExternalCliContent', () => {
       />
     )
 
-    expect(screen.getByText('winget uninstall toolhive')).toBeVisible()
+    expect(screen.getByText('winget uninstall thv')).toBeVisible()
   })
 
   it('displays manual uninstall message for manual source', () => {

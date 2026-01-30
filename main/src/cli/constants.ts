@@ -121,9 +121,9 @@ export function getUninstallInstructions(
 ): string {
   switch (source) {
     case 'homebrew':
-      return 'To uninstall, run:\n  brew uninstall toolhive'
+      return 'To uninstall, run:\n  brew uninstall thv'
     case 'winget':
-      return 'To uninstall, run:\n  winget uninstall toolhive'
+      return 'To uninstall, run:\n  winget uninstall thv'
     case 'manual':
       return 'Please manually remove the external ToolHive CLI installation.'
   }

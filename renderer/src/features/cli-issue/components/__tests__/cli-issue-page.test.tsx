@@ -71,7 +71,7 @@ describe('CliIssuePage', () => {
       expect(screen.getByText(/\/opt\/homebrew\/bin\/thv/)).toBeVisible()
       expect(screen.getByText(/version 0\.7\.0/)).toBeVisible()
       expect(screen.getByText('Homebrew')).toBeVisible()
-      expect(screen.getByText('brew uninstall toolhive')).toBeVisible()
+      expect(screen.getByText('brew uninstall thv')).toBeVisible()
       expect(screen.getByRole('button', { name: /check again/i })).toBeVisible()
     })
 
@@ -92,7 +92,7 @@ describe('CliIssuePage', () => {
       })
 
       expect(screen.getByText('Winget')).toBeVisible()
-      expect(screen.getByText('winget uninstall toolhive')).toBeVisible()
+      expect(screen.getByText('winget uninstall thv')).toBeVisible()
     })
 
     it('displays manual uninstall message for manual installations', async () => {

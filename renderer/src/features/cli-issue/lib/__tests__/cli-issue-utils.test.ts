@@ -4,11 +4,11 @@ import { getUninstallCommand, getSourceLabel } from '../cli-issue-utils'
 describe('cli-issue-utils', () => {
   describe('getUninstallCommand', () => {
     it('returns brew uninstall command for homebrew source', () => {
-      expect(getUninstallCommand('homebrew')).toBe('brew uninstall toolhive')
+      expect(getUninstallCommand('homebrew')).toBe('brew uninstall thv')
     })
 
     it('returns winget uninstall command for winget source', () => {
-      expect(getUninstallCommand('winget')).toBe('winget uninstall toolhive')
+      expect(getUninstallCommand('winget')).toBe('winget uninstall thv')
     })
 
     it('returns null for manual source', () => {

@@ -18,20 +18,20 @@ beforeEach(() => {
 
 describe('CodeBlockWithCopy', () => {
   it('renders the code content', () => {
-    render(<CodeBlockWithCopy code="brew uninstall toolhive" />)
+    render(<CodeBlockWithCopy code="brew uninstall thv" />)
 
-    expect(screen.getByText('brew uninstall toolhive')).toBeVisible()
+    expect(screen.getByText('brew uninstall thv')).toBeVisible()
   })
 
   it('renders a copy button', () => {
-    render(<CodeBlockWithCopy code="brew uninstall toolhive" />)
+    render(<CodeBlockWithCopy code="brew uninstall thv" />)
 
     expect(screen.getByTitle('Copy command')).toBeVisible()
   })
 
   it('copies code to clipboard when copy button is clicked', async () => {
     const user = userEvent.setup()
-    render(<CodeBlockWithCopy code="brew uninstall toolhive" />)
+    render(<CodeBlockWithCopy code="brew uninstall thv" />)
 
     const copyButton = screen.getByTitle('Copy command')
     await user.click(copyButton)

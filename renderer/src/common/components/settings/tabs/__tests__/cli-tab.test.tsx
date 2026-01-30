@@ -229,7 +229,7 @@ describe('CliTab', () => {
       })
 
       expect(screen.getByText('/opt/homebrew/bin/thv')).toBeVisible()
-      expect(screen.getByText('brew uninstall toolhive')).toBeVisible()
+      expect(screen.getByText('brew uninstall thv')).toBeVisible()
     })
 
     it('displays alert when external CLI is detected via Winget', async () => {
@@ -250,7 +250,7 @@ describe('CliTab', () => {
         ).toBeVisible()
       })
 
-      expect(screen.getByText('winget uninstall toolhive')).toBeVisible()
+      expect(screen.getByText('winget uninstall thv')).toBeVisible()
     })
 
     it('displays alert when external CLI is detected via manual install', async () => {

@@ -12,9 +12,9 @@ export type CliSource = 'homebrew' | 'winget' | 'manual'
 export function getUninstallCommand(source: CliSource): string | null {
   switch (source) {
     case 'homebrew':
-      return 'brew uninstall toolhive'
+      return 'brew uninstall thv'
     case 'winget':
-      return 'winget uninstall toolhive'
+      return 'winget uninstall thv'
     case 'manual':
       return null
   }
