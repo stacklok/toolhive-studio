@@ -29,6 +29,10 @@ vi.mock('../constants', () => ({
   },
 }))
 
+vi.mock('../marker-file', () => ({
+  readMarkerFile: vi.fn(() => ({ source: 'desktop', cli_checksum: undefined })),
+}))
+
 vi.mock('../../logger', () => ({
   default: {
     info: vi.fn(),
