@@ -224,7 +224,6 @@ describe('getFormSchemaRemoteMcp', () => {
   })
 
   describe('header_forward validation', () => {
-    // Helper to create secret header items in the schema format
     const createSecretHeader = (
       headerName: string,
       secretName: string,

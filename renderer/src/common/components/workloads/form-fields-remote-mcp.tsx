@@ -233,15 +233,6 @@ function FormFieldRemoteServerName({
   )
 }
 
-const getDefaultSecretNameFromHeader = (headerName: string): string => {
-  if (!headerName) return 'HEADER_SECRET'
-  return headerName
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, '_')
-    .replace(/_+/g, '_')
-    .replace(/^_|_$/g, '')
-}
-
 function FormFieldsCustomHeaders({
   control,
 }: {
@@ -412,14 +403,6 @@ function FormFieldsCustomHeaders({
                               secretField.onChange({
                                 ...currentValue,
                                 header_name: e.target.value,
-                                secret: {
-                                  ...currentValue.secret,
-                                  name: currentValue.secret.value.isFromStore
-                                    ? currentValue.secret.name
-                                    : getDefaultSecretNameFromHeader(
-                                        e.target.value
-                                      ),
-                                },
                               })
                             }
                             placeholder="Authorization"
@@ -439,9 +422,7 @@ function FormFieldsCustomHeaders({
                                 secretField.onChange({
                                   ...currentValue,
                                   secret: {
-                                    name: getDefaultSecretNameFromHeader(
-                                      currentValue.header_name
-                                    ),
+                                    ...currentValue.secret,
                                     value: {
                                       secret: e.target.value,
                                       isFromStore: false,
