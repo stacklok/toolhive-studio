@@ -28,6 +28,10 @@ const execAsync = promisify(exec)
 const escapeRegex = (str: string): string =>
   str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
+// Escape single quotes for PowerShell single-quoted strings
+const escapePowerShellSingleQuote = (str: string): string =>
+  str.replace(/'/g, "''")
+
 const generatePathBlock = (isFish: boolean = false): string => {
   const pathEntry = isFish ? FISH_PATH_ENTRY : SHELL_PATH_ENTRY
   return [SHELL_PATH_MARKERS.start, pathEntry, SHELL_PATH_MARKERS.end].join(
@@ -149,8 +153,9 @@ async function configureWindowsPath(): Promise<{
       return { success: true, modifiedFiles: ['Windows User PATH'] }
     }
 
-    // Add to user PATH using PowerShell
-    const command = `[Environment]::SetEnvironmentVariable('Path', [Environment]::GetEnvironmentVariable('Path', 'User') + ';${toolhiveBinPath}', 'User')`
+    // Add to user PATH using PowerShell (escape single quotes for safety)
+    const escapedPath = escapePowerShellSingleQuote(toolhiveBinPath)
+    const command = `[Environment]::SetEnvironmentVariable('Path', [Environment]::GetEnvironmentVariable('Path', 'User') + ';${escapedPath}', 'User')`
     await execAsync(`powershell -Command "${command}"`)
     log.info(`Added ${toolhiveBinPath} to Windows user PATH`)
     return { success: true, modifiedFiles: ['Windows User PATH'] }
@@ -213,8 +218,11 @@ async function removeWindowsPath(): Promise<{
   )
 
   try {
-    // Remove from user PATH using PowerShell
-    const command = `$currentPath = [Environment]::GetEnvironmentVariable('Path', 'User'); $newPath = ($currentPath -split ';' | Where-Object { $_.ToLower() -ne '${toolhiveBinPath.toLowerCase()}' }) -join ';'; [Environment]::SetEnvironmentVariable('Path', $newPath, 'User')`
+    // Remove from user PATH using PowerShell (escape single quotes for safety)
+    const escapedPathLower = escapePowerShellSingleQuote(
+      toolhiveBinPath.toLowerCase()
+    )
+    const command = `$currentPath = [Environment]::GetEnvironmentVariable('Path', 'User'); $newPath = ($currentPath -split ';' | Where-Object { $_.ToLower() -ne '${escapedPathLower}' }) -join ';'; [Environment]::SetEnvironmentVariable('Path', $newPath, 'User')`
     await execAsync(`powershell -Command "${command}"`)
     log.info(`Removed ${toolhiveBinPath} from Windows user PATH`)
     return { success: true, modifiedFiles: ['Windows User PATH'] }
