@@ -22,7 +22,8 @@ interface UseRunRemoteServerProps {
 
 /** Build the appropriate secrets based on auth type. */
 const buildAuthSecret = (data: FormSchemaRemoteMcp) => {
-  const isDefaultAuthType = data.auth_type === REMOTE_MCP_AUTH_TYPES.None
+  const isDefaultAuthType =
+    data.auth_type === REMOTE_MCP_AUTH_TYPES.DynamicClientRegistration
   const isBearerAuth = data.auth_type === REMOTE_MCP_AUTH_TYPES.BearerToken
   if (isDefaultAuthType) return data.secrets
   if (isBearerAuth)
