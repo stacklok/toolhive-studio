@@ -286,6 +286,7 @@ export type {
   V1GetSecretsProviderResponse,
   V1GetServerResponse,
   V1GroupListResponse,
+  V1HeaderForwardConfig,
   V1ListSecretsResponse,
   V1ListServersResponse,
   V1OidcOptions,
