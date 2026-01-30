@@ -1,9 +1,9 @@
 import { useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { Card, CardContent } from '@/common/components/ui/card'
 import { QuitConfirmationListener } from '@/common/components/layout/top-nav/quit-confirmation-listener'
-import { trackEvent, trackPageView } from '@/common/lib/analytics'
+import { trackEvent } from '@/common/lib/analytics'
 import { ExternalCliContent } from './external-cli-content'
 import { SymlinkIssueContent } from './symlink-issue-content'
 import type { ValidationResult } from '@common/types/cli'
@@ -16,33 +16,16 @@ export function CliIssuePage() {
   const [error, setError] = useState<string | null>(null)
 
   // Load initial validation result
-  const [initialLoaded, setInitialLoaded] = useState(false)
-  if (!initialLoaded) {
-    setInitialLoaded(true)
+  useEffect(() => {
     window.electronAPI.cliAlignment.getValidationResult().then((result) => {
-      if (result && result.status === 'valid') {
+      if (result?.status === 'valid') {
         // Already valid, navigate away
         navigate({ to: '/' })
       } else {
         setValidationResult(result)
-        // Track page view when issue is displayed
-        if (result) {
-          trackPageView('CLI Issue Page', {
-            'cli.status': result.status,
-            'cli.target':
-              result.status === 'symlink-broken' ||
-              result.status === 'symlink-tampered'
-                ? result.target
-                : undefined,
-            'cli.external_source':
-              result.status === 'external-cli-found'
-                ? result.cli?.source
-                : undefined,
-          })
-        }
       }
     })
-  }
+  }, [navigate])
 
   const handleCheckAgain = async () => {
     trackEvent('CLI Issue: check again clicked', {
