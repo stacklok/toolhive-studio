@@ -17,6 +17,7 @@ import path from 'node:path'
 import crypto from 'node:crypto'
 import { app } from 'electron'
 import { getDesktopCliPath } from './constants'
+import { readMarkerFile } from './marker-file'
 import { binPath } from '../toolhive-manager'
 import type { SymlinkCheckResult, Platform } from './types'
 import log from '../logger'
@@ -55,12 +56,37 @@ export function checkSymlink(
   }
 
   // On Windows, we use a copy, not a symlink
+  // Verify the binary checksum matches what we stored in the marker file
   if (platform === 'win32') {
+    const marker = readMarkerFile()
+    let isOurBinaryResult = false
+
+    if (marker?.cli_checksum) {
+      try {
+        const content = readFileSync(cliPath)
+        const currentChecksum = crypto
+          .createHash('sha256')
+          .update(content)
+          .digest('hex')
+        isOurBinaryResult = currentChecksum === marker.cli_checksum
+        if (!isOurBinaryResult) {
+          log.warn(
+            `Windows CLI checksum mismatch: expected ${marker.cli_checksum}, got ${currentChecksum}`
+          )
+        }
+      } catch (error) {
+        log.warn(`Failed to verify Windows CLI checksum: ${error}`)
+      }
+    } else {
+      // No marker or no checksum stored - assume it's ours if marker exists with desktop source
+      isOurBinaryResult = marker?.source === 'desktop'
+    }
+
     return {
       exists: true,
       targetExists: true,
       target: cliPath,
-      isOurBinary: true,
+      isOurBinary: isOurBinaryResult,
     }
   }
 
