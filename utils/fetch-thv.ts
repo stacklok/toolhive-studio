@@ -152,6 +152,16 @@ function createBinaryPath(
   return { os, binDir, binPath, assetName, downloadUrl }
 }
 
+async function adHocSignBinary(binPath: string): Promise<void> {
+  console.log('Ad-hoc signing thv binary for macOS...')
+  try {
+    await execFileAsync('codesign', ['--force', '--sign', '-', binPath])
+    console.log('thv binary signed successfully')
+  } catch (error) {
+    console.warn('Failed to ad-hoc sign binary:', error)
+  }
+}
+
 export async function ensureThv(
   platform: NodeJS.Platform = process.platform,
   arch: NodeJS.Architecture = process.arch
@@ -167,6 +177,12 @@ export async function ensureThv(
   await cleanBinaryDirectory(binDir)
   await downloadAndExtractBinary(downloadUrl, binDir, assetName)
   await chmod(binPath, 0o755)
+
+  // Ad-hoc sign for macOS to enable notarization (required for Sequoia+)
+  if (platform === 'darwin') {
+    await adHocSignBinary(binPath)
+  }
+
   await generateApiClient()
 
   return binPath
