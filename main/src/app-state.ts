@@ -1,5 +1,5 @@
 import type { Tray } from 'electron'
-import type { ValidationResult } from './cli'
+import type { ValidationResult } from '@common/types/cli'
 
 let isQuitting = false
 let tearingDown = false
