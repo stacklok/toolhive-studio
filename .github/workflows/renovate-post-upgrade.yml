@@ -64,6 +64,6 @@ jobs:
           git diff --quiet && exit 0
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add api/
+          git add common/api/
           git commit -m "chore: regenerate artifacts after dependency update"
           git push
