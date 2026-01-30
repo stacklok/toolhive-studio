@@ -13,6 +13,7 @@ import type { UIMessage } from 'ai'
 import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 import type { FeatureFlagOptions } from '../../main/src/feature-flags'
 import type { UpdateState } from '../../main/src/auto-update'
+import type { ValidationResult } from '@common/types/cli'
 
 // Expose auto-launch functionality to renderer
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -214,6 +215,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   utils: {
     getWorkloadAvailableTools: (workload: unknown) =>
       ipcRenderer.invoke('utils:get-workload-available-tools', workload),
+  },
+
+  // CLI Alignment (THV-0020)
+  cliAlignment: {
+    getStatus: () => ipcRenderer.invoke('cli-alignment:get-status'),
+    reinstall: () => ipcRenderer.invoke('cli-alignment:reinstall'),
+    getPathStatus: () => ipcRenderer.invoke('cli-alignment:get-path-status'),
+    getValidationResult: () =>
+      ipcRenderer.invoke('cli-alignment:get-validation-result'),
+    validate: () => ipcRenderer.invoke('cli-alignment:validate'),
+    repair: () => ipcRenderer.invoke('cli-alignment:repair'),
   },
 
   // IPC event listeners for streaming
@@ -507,6 +519,31 @@ export interface ElectronAPI {
     >
   }
 
+  // CLI Alignment (THV-0020)
+  cliAlignment: {
+    getStatus: () => Promise<{
+      isManaged: boolean
+      cliPath: string
+      cliVersion: string | null
+      installMethod: 'symlink' | 'copy' | null
+      symlinkTarget: string | null
+      isValid: boolean
+      lastValidated: string
+    }>
+    reinstall: () => Promise<{ success: boolean; error?: string }>
+    getPathStatus: () => Promise<{
+      isConfigured: boolean
+      modifiedFiles: string[]
+      pathEntry: string
+    }>
+    getValidationResult: () => Promise<ValidationResult | null>
+    validate: () => Promise<ValidationResult>
+    repair: () => Promise<{
+      repairResult: { success: boolean; error?: string }
+      validationResult: ValidationResult | null
+    }>
+  }
+
   // IPC event listeners for streaming
   on: (channel: string, listener: (...args: unknown[]) => void) => void
   removeListener: (
@@ -514,3 +551,6 @@ export interface ElectronAPI {
     listener: (...args: unknown[]) => void
   ) => void
 }
+
+// CLI Alignment Types (re-exported from shared types)
+export type { ValidationResult, ExternalCliInfo } from '@common/types/cli'

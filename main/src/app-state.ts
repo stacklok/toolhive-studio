@@ -1,8 +1,10 @@
 import type { Tray } from 'electron'
+import type { ValidationResult } from '@common/types/cli'
 
 let isQuitting = false
 let tearingDown = false
 let tray: Tray | null = null
+let cliValidationResult: ValidationResult | null = null
 
 export function setQuittingState(quitting: boolean) {
   isQuitting = quitting
@@ -26,4 +28,12 @@ export function setTray(newTray: Tray | null) {
 
 export function getTray(): Tray | null {
   return tray
+}
+
+export function setCliValidationResult(result: ValidationResult | null) {
+  cliValidationResult = result
+}
+
+export function getCliValidationResult(): ValidationResult | null {
+  return cliValidationResult
 }

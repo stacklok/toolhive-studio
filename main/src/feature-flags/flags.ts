@@ -12,6 +12,11 @@ const featureFlagOptions: Record<FeatureFlagKey, FeatureFlagOptions> = {
     defaultValue: false,
     isExperimental: true,
   },
+  [featureFlagKeys.CLI_VALIDATION_ENFORCE]: {
+    isDisabled: false,
+    defaultValue: false,
+    isExperimental: false,
+  },
 }
 
 // Create a dedicated store for feature flags

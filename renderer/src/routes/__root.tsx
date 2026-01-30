@@ -8,6 +8,7 @@ import type { QueryClient } from '@tanstack/react-query'
 import {
   createRootRouteWithContext,
   Outlet,
+  redirect,
   useMatches,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
@@ -23,6 +24,7 @@ import log from 'electron-log/renderer'
 import * as Sentry from '@sentry/electron/renderer'
 import { StartingToolHive } from '@/common/components/starting-toolhive'
 import { CustomPortBanner } from '@/common/components/custom-port-banner'
+import { featureFlagKeys } from '@utils/feature-flags'
 
 async function setupSecretProvider(queryClient: QueryClient) {
   const createEncryptedProvider = async () =>
@@ -50,11 +52,15 @@ async function setupSecretProvider(queryClient: QueryClient) {
 function RootComponent() {
   const matches = useMatches()
   const isShutdownRoute = matches.some((match) => match.routeId === '/shutdown')
+  const isCliIssueRoute = matches.some(
+    (match) => match.routeId === '/cli-issue'
+  )
+  const hideNav = isShutdownRoute || isCliIssueRoute
 
   return (
     <>
-      {!isShutdownRoute && <TopNav />}
-      {!isShutdownRoute && import.meta.env.DEV && <CustomPortBanner />}
+      {!hideNav && <TopNav />}
+      {!hideNav && import.meta.env.DEV && <CustomPortBanner />}
       <Main>
         <Outlet />
         <Toaster
@@ -98,7 +104,7 @@ export const Route = createRootRouteWithContext<{
   onError: (error) => {
     log.error(error)
   },
-  beforeLoad: async ({ context: { queryClient } }) => {
+  beforeLoad: async ({ context: { queryClient }, location }) => {
     let isUpdateInProgress = false
 
     try {
@@ -110,6 +116,31 @@ export const Route = createRootRouteWithContext<{
     if (isUpdateInProgress) {
       log.info(`[beforeLoad] Skipping health API check - update in progress`)
       return
+    }
+
+    // Check CLI validation status (skip if already on cli-issue or shutdown routes)
+    const isCliOrShutdownRoute =
+      location.pathname === '/cli-issue' || location.pathname === '/shutdown'
+    if (!isCliOrShutdownRoute) {
+      const validationResult =
+        await window.electronAPI.cliAlignment.getValidationResult()
+      if (validationResult && validationResult.status !== 'valid') {
+        // Check if enforcement is enabled via feature flag
+        const isEnforcementEnabled = await window.electronAPI.featureFlags.get(
+          featureFlagKeys.CLI_VALIDATION_ENFORCE
+        )
+        if (isEnforcementEnabled) {
+          log.info(
+            `[beforeLoad] CLI validation issue: ${validationResult.status}, redirecting to /cli-issue`
+          )
+          throw redirect({ to: '/cli-issue' })
+        } else {
+          // Telemetry-only mode: log but don't block
+          log.info(
+            `[beforeLoad] CLI validation issue detected: ${validationResult.status} (enforcement disabled, continuing)`
+          )
+        }
+      }
     }
 
     await queryClient.ensureQueryData({
