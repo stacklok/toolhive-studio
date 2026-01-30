@@ -230,106 +230,208 @@ describe('DialogFormRemoteMcp', () => {
     })
   })
 
-  it.each([
-    ['Dynamic Client Registration', 'none'],
-    ['OIDC', 'oidc'],
-  ])(
-    'submits Issuer URL when auth type is %s',
-    async (authOptionLabel, expectedAuthType) => {
-      const user = userEvent.setup({ delay: null })
-      const rec = recordRequests()
+  it('submits Issuer URL when auth type is OIDC', async () => {
+    const user = userEvent.setup({ delay: null })
+    const rec = recordRequests()
 
-      mockedPostApiV1BetaWorkloads.override(() => ({
-        name: 'issuer-enabled-server',
-        port: 0,
-      }))
+    mockedPostApiV1BetaWorkloads.override(() => ({
+      name: 'issuer-enabled-server',
+      port: 0,
+    }))
 
-      renderWithProviders(
-        <Wrapper>
-          <DialogFormRemoteMcp
-            isOpen
-            closeDialog={vi.fn()}
-            groupName="default"
-          />
-        </Wrapper>
-      )
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRemoteMcp isOpen closeDialog={vi.fn()} groupName="default" />
+      </Wrapper>
+    )
 
-      await waitFor(() => {
-        expect(screen.getByRole('dialog')).toBeVisible()
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    await user.type(
+      screen.getByRole('textbox', {
+        name: /server name/i,
+      }),
+      'issuer-enabled-server'
+    )
+
+    await user.type(
+      screen.getByRole('textbox', {
+        name: /server url/i,
+      }),
+      'https://api.example.com/mcp'
+    )
+
+    await user.click(screen.getByLabelText('Authorization method'))
+    await user.click(
+      screen.getByRole('option', {
+        name: 'OIDC',
       })
+    )
 
-      await user.type(
-        screen.getByRole('textbox', {
-          name: /server name/i,
-        }),
-        'issuer-enabled-server'
+    const issuerInput = screen.getByPlaceholderText(
+      'e.g. https://auth.example.com/'
+    )
+    await user.clear(issuerInput)
+    await user.type(issuerInput, 'https://issuer.example.com/oidc')
+
+    const clientIdInput = screen.getByPlaceholderText(
+      'e.g. 00000000-0000-0000-0000-000000000000'
+    )
+    await user.clear(clientIdInput)
+    await user.type(clientIdInput, 'oidc-client-id')
+
+    // Fill callback port for OIDC
+    await user.type(screen.getByLabelText('Callback port'), '7777')
+
+    await user.click(screen.getByRole('button', { name: 'Install server' }))
+
+    await waitFor(() => {
+      const workloadCall = rec.recordedRequests.find(
+        (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
       )
-
-      await user.type(
-        screen.getByRole('textbox', {
-          name: /server url/i,
-        }),
-        'https://api.example.com/mcp'
-      )
-
-      await user.type(screen.getByLabelText('Callback port'), '7777')
-
-      await user.click(screen.getByLabelText('Authorization method'))
-      await user.click(
-        screen.getByRole('option', {
-          name: authOptionLabel,
+      expect(workloadCall).toBeDefined()
+      expect(workloadCall?.payload).toEqual(
+        expect.objectContaining({
+          name: 'issuer-enabled-server',
+          url: 'https://api.example.com/mcp',
+          transport: 'streamable-http',
+          group: 'default',
+          oauth_config: expect.objectContaining({
+            issuer: 'https://issuer.example.com/oidc',
+            callback_port: 7777,
+            client_id: 'oidc-client-id',
+            scopes: [],
+          }),
         })
       )
+    })
+  })
 
-      const issuerValue =
-        expectedAuthType === 'none'
-          ? 'https://issuer.example.com/none'
-          : 'https://issuer.example.com/oidc'
+  it('submits with Dynamic Client Registration auth type (callback_port only)', async () => {
+    const user = userEvent.setup({ delay: null })
+    const rec = recordRequests()
 
-      const issuerInput = screen.getByPlaceholderText(
-        'e.g. https://auth.example.com/'
+    mockedPostApiV1BetaWorkloads.override(() => ({
+      name: 'dcr-server',
+      port: 0,
+    }))
+
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRemoteMcp isOpen closeDialog={vi.fn()} groupName="default" />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    await user.type(
+      screen.getByRole('textbox', {
+        name: /server name/i,
+      }),
+      'dcr-server'
+    )
+
+    await user.type(
+      screen.getByRole('textbox', {
+        name: /server url/i,
+      }),
+      'https://api.example.com/mcp'
+    )
+
+    // Dynamic Client Registration is the default, so just fill callback_port
+    await user.type(screen.getByLabelText('Callback port'), '9999')
+
+    // Verify issuer field is NOT visible for Dynamic Client Registration
+    expect(
+      screen.queryByPlaceholderText('e.g. https://auth.example.com/')
+    ).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Install server' }))
+
+    await waitFor(() => {
+      const workloadCall = rec.recordedRequests.find(
+        (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
       )
-      await user.clear(issuerInput)
-      await user.type(issuerInput, issuerValue)
+      expect(workloadCall).toBeDefined()
+      expect(workloadCall?.payload).toEqual(
+        expect.objectContaining({
+          name: 'dcr-server',
+          url: 'https://api.example.com/mcp',
+          transport: 'streamable-http',
+          group: 'default',
+          oauth_config: expect.objectContaining({
+            callback_port: 9999,
+          }),
+        })
+      )
+    })
+  })
 
-      if (expectedAuthType === 'oidc') {
-        const clientIdInput = screen.getByPlaceholderText(
-          'e.g. 00000000-0000-0000-0000-000000000000'
-        )
-        await user.clear(clientIdInput)
-        await user.type(clientIdInput, 'oidc-client-id')
-      }
+  it('submits with None auth type (no callback_port field)', async () => {
+    const user = userEvent.setup({ delay: null })
+    const rec = recordRequests()
 
-      await user.click(screen.getByRole('button', { name: 'Install server' }))
+    mockedPostApiV1BetaWorkloads.override(() => ({
+      name: 'none-auth-server',
+      port: 0,
+    }))
 
-      await waitFor(() => {
-        const workloadCall = rec.recordedRequests.find(
-          (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
-        )
-        expect(workloadCall).toBeDefined()
-        expect(workloadCall?.payload).toEqual(
-          expect.objectContaining({
-            name: 'issuer-enabled-server',
-            url: 'https://api.example.com/mcp',
-            transport: 'streamable-http',
-            group: 'default',
-            oauth_config: expect.objectContaining({
-              issuer: issuerValue,
-              callback_port: 7777,
-              scopes: [],
-            }),
-          })
-        )
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRemoteMcp isOpen closeDialog={vi.fn()} groupName="default" />
+      </Wrapper>
+    )
 
-        if (expectedAuthType === 'oidc') {
-          expect(
-            (workloadCall?.payload as { oauth_config: { client_id: string } })
-              .oauth_config
-          ).toHaveProperty('client_id', 'oidc-client-id')
-        }
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    await user.type(
+      screen.getByRole('textbox', {
+        name: /server name/i,
+      }),
+      'none-auth-server'
+    )
+
+    await user.type(
+      screen.getByRole('textbox', {
+        name: /server url/i,
+      }),
+      'https://api.example.com/mcp'
+    )
+
+    // Select None auth type
+    await user.click(screen.getByLabelText('Authorization method'))
+    await user.click(
+      screen.getByRole('option', {
+        name: 'None',
       })
-    }
-  )
+    )
+
+    // Verify callback_port field is NOT visible for None auth type
+    expect(screen.queryByLabelText('Callback port')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Install server' }))
+
+    await waitFor(() => {
+      const workloadCall = rec.recordedRequests.find(
+        (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
+      )
+      expect(workloadCall).toBeDefined()
+      expect(workloadCall?.payload).toEqual(
+        expect.objectContaining({
+          name: 'none-auth-server',
+          url: 'https://api.example.com/mcp',
+          transport: 'streamable-http',
+          group: 'default',
+        })
+      )
+    })
+  })
 
   it('can cancel and close dialog', async () => {
     const user = userEvent.setup({ delay: null })
