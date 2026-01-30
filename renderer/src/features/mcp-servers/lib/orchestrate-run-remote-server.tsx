@@ -12,8 +12,9 @@ import { REMOTE_MCP_AUTH_TYPES } from '@/common/lib/form-schema-mcp'
 
 type FormHeaderForward = FormSchemaRemoteMcp['header_forward']
 
-type HeaderSecretItem =
-  NonNullable<FormHeaderForward>['add_headers_from_secret'][number]
+type HeaderSecretItem = NonNullable<
+  NonNullable<FormHeaderForward>['add_headers_from_secret']
+>[number]
 
 /**
  * Extracts secrets from header_forward that need to be created.
@@ -66,7 +67,9 @@ function transformHeaderForwardToApi(
     // Build a map of original secret names to actual created names
     const secretNameMap = new Map<string, string>()
     newlyCreatedSecrets?.forEach((created) => {
-      secretNameMap.set(created.target || created.name, created.name)
+      if (created.name) {
+        secretNameMap.set(created.target ?? created.name, created.name)
+      }
     })
 
     result.add_headers_from_secret =
@@ -249,7 +252,9 @@ export function convertCreateRequestToFormData(
 ): FormSchemaRemoteMcp {
   // Convert secrets from API format to form format
   const availableSecretKeys = new Set(
-    availableSecrets?.keys?.map((key) => key.key).filter(Boolean) || []
+    availableSecrets?.keys
+      ?.map((key) => key.key)
+      .filter((key): key is string => Boolean(key)) || []
   )
 
   const secrets = (createRequest.secrets || []).map((secret) => {

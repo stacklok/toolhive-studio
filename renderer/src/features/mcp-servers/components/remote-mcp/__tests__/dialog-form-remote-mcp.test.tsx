@@ -635,6 +635,13 @@ describe('DialogFormRemoteMcp', () => {
     )
     await user.click(screen.getByRole('option', { name: /secret_from_store/i }))
 
+    // Wait for the secrets popover to close before interacting with the form
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: 'Secrets store' })
+      ).not.toBeInTheDocument()
+    })
+
     // Verify secret name changed to the selected one
     await waitFor(() => {
       expect(secretNameInput).toHaveValue('SECRET_FROM_STORE')
@@ -689,6 +696,13 @@ describe('DialogFormRemoteMcp', () => {
     await userEvent.click(
       screen.getByRole('option', { name: /secret_from_store/i })
     )
+
+    // Wait for the secrets popover to close before interacting with the form
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: 'Secrets store' })
+      ).not.toBeInTheDocument()
+    })
 
     // Verify secret name changed to the selected one
     await waitFor(() => {

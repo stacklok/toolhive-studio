@@ -213,7 +213,6 @@ export function DialogFormRemoteRegistryMcp({
               control={form.control}
               groups={groups}
               isEditing={isSubmitting}
-              form={form}
             />
             <FormFieldsAuth authType={authType} form={form} />
           </div>

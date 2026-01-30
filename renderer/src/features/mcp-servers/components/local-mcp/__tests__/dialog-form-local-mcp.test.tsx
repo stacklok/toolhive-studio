@@ -552,6 +552,13 @@ describe('DialogFormLocalMcp', () => {
       screen.getByRole('option', { name: 'SECRET_FROM_STORE' })
     )
 
+    // Wait for the secrets popover to close before interacting with the form
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: 'Secrets store' })
+      ).not.toBeInTheDocument()
+    })
+
     await userEvent.click(
       screen.getByRole('button', { name: 'Install server' })
     )
