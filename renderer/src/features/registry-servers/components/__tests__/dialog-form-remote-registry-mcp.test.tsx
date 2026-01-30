@@ -237,6 +237,13 @@ describe('DialogFormRemoteRegistryMcp', () => {
       })
     )
 
+    // Wait for the secrets popover to close before interacting with the form
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: 'Secrets store' })
+      ).not.toBeInTheDocument()
+    })
+
     const submitButton = screen.getByRole('button', { name: 'Install server' })
     expect(submitButton).toBeEnabled()
 
