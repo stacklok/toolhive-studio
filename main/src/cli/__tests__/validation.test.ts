@@ -5,7 +5,6 @@ import {
   getCliAlignmentStatus,
   repairCliSymlink,
 } from '../validation'
-import type { ExternalCliInfo } from '../types'
 
 // Mock all dependencies
 vi.mock('../cli-detection', () => ({
@@ -69,6 +68,7 @@ import {
   configureShellPath,
   checkPathConfiguration,
 } from '../path-configurator'
+import type { ExternalCliInfo } from '@common/types/cli'
 
 const mockDetectExternalCli = vi.mocked(detectExternalCli)
 const mockReadMarkerFile = vi.mocked(readMarkerFile)
