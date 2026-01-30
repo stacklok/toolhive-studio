@@ -1,3 +1,5 @@
+export type CliSource = 'homebrew' | 'winget' | 'manual'
+
 export type ValidationResult =
   | { status: 'valid' }
   | { status: 'external-cli-found'; cli: ExternalCliInfo }
@@ -9,5 +11,5 @@ export type ValidationResult =
 export interface ExternalCliInfo {
   path: string
   version: string | null
-  source: 'homebrew' | 'winget' | 'manual'
+  source: CliSource
 }

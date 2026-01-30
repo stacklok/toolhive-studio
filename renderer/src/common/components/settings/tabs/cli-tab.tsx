@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { trackEvent } from '@/common/lib/analytics'
+import { getUninstallCommand } from '@/features/cli-issue/lib/cli-issue-utils'
 import { WrapperField } from './components/wrapper-field'
 import { Badge } from '../../ui/badge'
 import { Button } from '../../ui/button'
@@ -211,17 +212,12 @@ export function CliTab() {
                 </code>
               </p>
               <p>
-                {externalCli.source === 'homebrew' && (
+                {getUninstallCommand(externalCli.source) ? (
                   <>
-                    To uninstall, run: <code>brew uninstall thv</code>
+                    To uninstall, run:{' '}
+                    <code>{getUninstallCommand(externalCli.source)}</code>
                   </>
-                )}
-                {externalCli.source === 'winget' && (
-                  <>
-                    To uninstall, run: <code>winget uninstall thv</code>
-                  </>
-                )}
-                {externalCli.source === 'manual' && (
+                ) : (
                   <>Please manually remove the external CLI installation.</>
                 )}
               </p>

@@ -551,6 +551,3 @@ export interface ElectronAPI {
     listener: (...args: unknown[]) => void
   ) => void
 }
-
-// CLI Alignment Types (re-exported from shared types)
-export type { ValidationResult, ExternalCliInfo } from '@common/types/cli'

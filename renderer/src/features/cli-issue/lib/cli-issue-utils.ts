@@ -3,7 +3,7 @@
  * Helper functions for CLI issue handling
  */
 
-export type CliSource = 'homebrew' | 'winget' | 'manual'
+import type { CliSource } from '@common/types/cli'
 
 /**
  * Returns the uninstall command for the given CLI source.
