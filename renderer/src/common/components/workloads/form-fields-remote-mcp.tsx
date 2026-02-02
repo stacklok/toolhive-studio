@@ -58,7 +58,7 @@ function FormFieldRemoteAuthType({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={REMOTE_MCP_AUTH_TYPES.AutoDiscovered}>
-                  Auto Discovered
+                  Auto-Discovered
                 </SelectItem>
                 <SelectItem value={REMOTE_MCP_AUTH_TYPES.OAuth2}>
                   OAuth 2.0
