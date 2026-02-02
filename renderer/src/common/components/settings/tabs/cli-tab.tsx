@@ -170,7 +170,7 @@ export function CliTab() {
         variant="ghost"
         size="icon"
         onClick={handleVerify}
-        disabled={isValidating}
+        disabled={isLoading || isValidating}
         title="Refresh status"
       >
         <RefreshCw className={`size-4 ${isValidating ? 'animate-spin' : ''}`} />
@@ -182,7 +182,7 @@ export function CliTab() {
           trackEvent('CLI Settings: reinstall clicked')
           reinstall()
         }}
-        disabled={isReinstalling}
+        disabled={isLoading || isReinstalling}
       >
         <ArrowDownToLine className="mr-2 size-4" />
         {isReinstalling ? 'Reinstalling...' : 'Reinstall'}

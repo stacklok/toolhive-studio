@@ -78,8 +78,12 @@ export function checkSymlink(
         log.warn(`Failed to verify Windows CLI checksum: ${error}`)
       }
     } else {
-      // No marker or no checksum stored - assume it's ours if marker exists with desktop source
-      isOurBinaryResult = marker?.source === 'desktop'
+      // No checksum stored - cannot verify binary integrity
+      // Require reinstall to establish checksum-based verification
+      log.warn(
+        'Windows CLI marker has no checksum stored - cannot verify binary integrity'
+      )
+      isOurBinaryResult = false
     }
 
     return {

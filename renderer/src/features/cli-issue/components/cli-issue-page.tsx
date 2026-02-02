@@ -17,14 +17,28 @@ export function CliIssuePage() {
 
   // Load initial validation result
   useEffect(() => {
-    window.electronAPI.cliAlignment.getValidationResult().then((result) => {
-      if (result?.status === 'valid') {
-        // Already valid, navigate away
-        navigate({ to: '/' })
-      } else {
-        setValidationResult(result)
-      }
-    })
+    window.electronAPI.cliAlignment
+      .getValidationResult()
+      .then((result) => {
+        if (result?.status === 'valid') {
+          navigate({ to: '/' })
+        } else {
+          trackEvent('CLI Issue: page loaded', {
+            'cli.status': result?.status ?? 'unknown',
+          })
+          setValidationResult(result)
+        }
+      })
+      .catch((err) => {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : 'Failed to load validation result'
+        trackEvent('CLI Issue: page load error', {
+          'cli.error': errorMessage,
+        })
+        setError(errorMessage)
+      })
   }, [navigate])
 
   const handleCheckAgain = async () => {

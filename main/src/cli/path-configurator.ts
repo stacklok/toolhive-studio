@@ -28,9 +28,13 @@ const execAsync = promisify(exec)
 const escapeRegex = (str: string): string =>
   str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
-// Escape single quotes for PowerShell single-quoted strings
-const escapePowerShellSingleQuote = (str: string): string =>
-  str.replace(/'/g, "''")
+// Escape for PowerShell by encoding the command as Base64
+// This avoids shell escaping issues entirely
+const encodePowerShellCommand = (command: string): string => {
+  // PowerShell -EncodedCommand expects UTF-16LE Base64
+  const utf16le = Buffer.from(command, 'utf16le')
+  return utf16le.toString('base64')
+}
 
 const generatePathBlock = (isFish: boolean = false): string => {
   const pathEntry = isFish ? FISH_PATH_ENTRY : SHELL_PATH_ENTRY
@@ -153,10 +157,10 @@ async function configureWindowsPath(): Promise<{
       return { success: true, modifiedFiles: ['Windows User PATH'] }
     }
 
-    // Add to user PATH using PowerShell (escape single quotes for safety)
-    const escapedPath = escapePowerShellSingleQuote(toolhiveBinPath)
-    const command = `[Environment]::SetEnvironmentVariable('Path', [Environment]::GetEnvironmentVariable('Path', 'User') + ';${escapedPath}', 'User')`
-    await execAsync(`powershell -Command "${command}"`)
+    // Add to user PATH using PowerShell with encoded command to prevent injection
+    const command = `[Environment]::SetEnvironmentVariable('Path', [Environment]::GetEnvironmentVariable('Path', 'User') + ';${toolhiveBinPath}', 'User')`
+    const encodedCommand = encodePowerShellCommand(command)
+    await execAsync(`powershell -EncodedCommand ${encodedCommand}`)
     log.info(`Added ${toolhiveBinPath} to Windows user PATH`)
     return { success: true, modifiedFiles: ['Windows User PATH'] }
   } catch (error) {
@@ -218,12 +222,11 @@ async function removeWindowsPath(): Promise<{
   )
 
   try {
-    // Remove from user PATH using PowerShell (escape single quotes for safety)
-    const escapedPathLower = escapePowerShellSingleQuote(
-      toolhiveBinPath.toLowerCase()
-    )
-    const command = `$currentPath = [Environment]::GetEnvironmentVariable('Path', 'User'); $newPath = ($currentPath -split ';' | Where-Object { $_.ToLower() -ne '${escapedPathLower}' }) -join ';'; [Environment]::SetEnvironmentVariable('Path', $newPath, 'User')`
-    await execAsync(`powershell -Command "${command}"`)
+    // Remove from user PATH using PowerShell with encoded command to prevent injection
+    const pathLower = toolhiveBinPath.toLowerCase()
+    const command = `$currentPath = [Environment]::GetEnvironmentVariable('Path', 'User'); $newPath = ($currentPath -split ';' | Where-Object { $_.ToLower() -ne '${pathLower}' }) -join ';'; [Environment]::SetEnvironmentVariable('Path', $newPath, 'User')`
+    const encodedCommand = encodePowerShellCommand(command)
+    await execAsync(`powershell -EncodedCommand ${encodedCommand}`)
     log.info(`Removed ${toolhiveBinPath} from Windows user PATH`)
     return { success: true, modifiedFiles: ['Windows User PATH'] }
   } catch (error) {

@@ -29,8 +29,15 @@ vi.mock('../constants', () => ({
   },
 }))
 
+// SHA256 of 'binary content' for Windows checksum verification
+const TEST_BINARY_CHECKSUM =
+  '93a0b24644f2e0fd11d6b422c90275c482b0cc20be4a4e3f62148ed2932b4792'
+
 vi.mock('../marker-file', () => ({
-  readMarkerFile: vi.fn(() => ({ source: 'desktop', cli_checksum: undefined })),
+  readMarkerFile: vi.fn(() => ({
+    source: 'desktop',
+    cli_checksum: TEST_BINARY_CHECKSUM,
+  })),
 }))
 
 vi.mock('../../logger', () => ({
@@ -81,7 +88,7 @@ describe('symlink-manager', () => {
       })
     })
 
-    it('handles Windows copy (checks existence)', () => {
+    it('handles Windows copy with valid checksum', () => {
       vol.fromJSON({
         'C:\\Users\\test\\AppData\\Local\\ToolHive\\bin\\thv.exe':
           'binary content',
@@ -91,6 +98,30 @@ describe('symlink-manager', () => {
 
       expect(result.exists).toBe(true)
       expect(result.isOurBinary).toBe(true)
+    })
+
+    it('returns isOurBinary: false on Windows when checksum is missing (security)', async () => {
+      const { readMarkerFile } = await import('../marker-file')
+      vi.mocked(readMarkerFile).mockReturnValueOnce({
+        schema_version: 1,
+        source: 'desktop',
+        install_method: 'copy',
+        cli_version: '1.0.0',
+        cli_checksum: undefined, // No checksum stored
+        installed_at: new Date().toISOString(),
+        desktop_version: '1.0.0',
+      })
+
+      vol.fromJSON({
+        'C:\\Users\\test\\AppData\\Local\\ToolHive\\bin\\thv.exe':
+          'binary content',
+      })
+
+      const result = checkSymlink('win32')
+
+      expect(result.exists).toBe(true)
+      // Security: Without checksum, we cannot verify the binary
+      expect(result.isOurBinary).toBe(false)
     })
   })
 
