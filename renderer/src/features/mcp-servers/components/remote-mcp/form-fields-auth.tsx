@@ -244,7 +244,9 @@ export function FormFieldsAuth({
                   value={field.value || ''}
                   onChange={(e) => {
                     const value = e.target.value
-                    field.onChange(value === '' ? '' : parseInt(value, 10))
+                    field.onChange(
+                      value === '' ? undefined : parseInt(value, 10)
+                    )
                     debouncedTrigger()
                   }}
                   name={field.name}
