@@ -72,7 +72,7 @@ describe('useUpdateServer', () => {
         name: 'test-remote-server',
         url: 'https://api.example.com',
         transport: 'streamable-http',
-        auth_type: 'none',
+        auth_type: 'auto_discovered',
         oauth_config: {
           authorize_url: '',
           callback_port: 8080,
