@@ -8,6 +8,7 @@ import {
   Terminal,
   ExternalLink,
   AlertTriangle,
+  ArrowDownToLine,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { trackEvent } from '@/common/lib/analytics'
@@ -183,9 +184,7 @@ export function CliTab() {
         }}
         disabled={isReinstalling}
       >
-        <RefreshCw
-          className={`mr-2 size-4 ${isReinstalling ? 'animate-spin' : ''}`}
-        />
+        <ArrowDownToLine className="mr-2 size-4" />
         {isReinstalling ? 'Reinstalling...' : 'Reinstall'}
       </Button>
     </>
