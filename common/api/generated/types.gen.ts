@@ -115,6 +115,238 @@ export type AuthTokenValidatorConfig = {
 }
 
 /**
+ * OAuth2Config contains OAuth 2.0-specific configuration.
+ * Required when Type is "oauth2", must be nil when Type is "oidc".
+ */
+export type AuthserverOAuth2UpstreamRunConfig = {
+  /**
+   * AuthorizationEndpoint is the URL for the OAuth authorization endpoint.
+   */
+  authorization_endpoint?: string
+  /**
+   * ClientID is the OAuth 2.0 client identifier registered with the upstream IDP.
+   */
+  client_id?: string
+  /**
+   * ClientSecretEnvVar is the name of an environment variable containing the client secret.
+   * Mutually exclusive with ClientSecretFile. Optional for public clients using PKCE.
+   */
+  client_secret_env_var?: string
+  /**
+   * ClientSecretFile is the path to a file containing the OAuth 2.0 client secret.
+   * Mutually exclusive with ClientSecretEnvVar. Optional for public clients using PKCE.
+   */
+  client_secret_file?: string
+  /**
+   * RedirectURI is the callback URL where the upstream IDP will redirect after authentication.
+   * When not specified, defaults to `{issuer}/oauth/callback`.
+   */
+  redirect_uri?: string
+  /**
+   * Scopes are the OAuth scopes to request from the upstream IDP.
+   */
+  scopes?: Array<string>
+  /**
+   * TokenEndpoint is the URL for the OAuth token endpoint.
+   */
+  token_endpoint?: string
+  userinfo?: AuthserverUserInfoRunConfig
+}
+
+/**
+ * OIDCConfig contains OIDC-specific configuration.
+ * Required when Type is "oidc", must be nil when Type is "oauth2".
+ */
+export type AuthserverOidcUpstreamRunConfig = {
+  /**
+   * ClientID is the OAuth 2.0 client identifier registered with the upstream IDP.
+   */
+  client_id?: string
+  /**
+   * ClientSecretEnvVar is the name of an environment variable containing the client secret.
+   * Mutually exclusive with ClientSecretFile. Optional for public clients using PKCE.
+   */
+  client_secret_env_var?: string
+  /**
+   * ClientSecretFile is the path to a file containing the OAuth 2.0 client secret.
+   * Mutually exclusive with ClientSecretEnvVar. Optional for public clients using PKCE.
+   */
+  client_secret_file?: string
+  /**
+   * IssuerURL is the OIDC issuer URL for automatic endpoint discovery.
+   * Must be a valid HTTPS URL.
+   */
+  issuer_url?: string
+  /**
+   * RedirectURI is the callback URL where the upstream IDP will redirect after authentication.
+   * When not specified, defaults to `{issuer}/oauth/callback`.
+   */
+  redirect_uri?: string
+  /**
+   * Scopes are the OAuth scopes to request from the upstream IDP.
+   * If not specified, defaults to ["openid", "offline_access"].
+   */
+  scopes?: Array<string>
+  userinfo_override?: AuthserverUserInfoRunConfig
+}
+
+/**
+ * EmbeddedAuthServerConfig contains configuration for the embedded OAuth2/OIDC authorization server.
+ * When set, the proxy runner will start an embedded auth server that delegates to upstream IDPs.
+ * This is the serializable RunConfig; secrets are referenced by file paths or env var names.
+ */
+export type AuthserverRunConfig = {
+  /**
+   * AllowedAudiences is the list of valid resource URIs that tokens can be issued for.
+   * Per RFC 8707, the "resource" parameter in authorization and token requests is
+   * validated against this list. Required for MCP compliance.
+   */
+  allowed_audiences?: Array<string>
+  /**
+   * HMACSecretFiles contains file paths to HMAC secrets for signing authorization codes
+   * and refresh tokens (opaque tokens).
+   * First file is the current secret (must be at least 32 bytes), subsequent files
+   * are for rotation/verification of existing tokens.
+   * If empty, an ephemeral secret will be auto-generated (development only).
+   */
+  hmac_secret_files?: Array<string>
+  /**
+   * Issuer is the issuer identifier for this authorization server.
+   * This will be included in the "iss" claim of issued tokens.
+   * Must be a valid HTTPS URL (or HTTP for localhost) without query, fragment, or trailing slash.
+   */
+  issuer?: string
+  /**
+   * SchemaVersion is the version of the RunConfig schema.
+   */
+  schema_version?: string
+  /**
+   * ScopesSupported lists the OAuth 2.0 scope values advertised in discovery documents.
+   * If empty, defaults to ["openid", "offline_access"].
+   */
+  scopes_supported?: Array<string>
+  signing_key_config?: AuthserverSigningKeyRunConfig
+  token_lifespans?: AuthserverTokenLifespanRunConfig
+  /**
+   * Upstreams configures connections to upstream Identity Providers.
+   * At least one upstream is required - the server delegates authentication to these providers.
+   * Currently only a single upstream is supported.
+   */
+  upstreams?: Array<AuthserverUpstreamRunConfig>
+}
+
+/**
+ * SigningKeyConfig configures the signing key provider for JWT operations.
+ * If nil or empty, an ephemeral signing key will be auto-generated (development only).
+ */
+export type AuthserverSigningKeyRunConfig = {
+  /**
+   * FallbackKeyFiles are filenames of additional keys for verification (relative to KeyDir).
+   * These keys are included in the JWKS endpoint for token verification but are NOT
+   * used for signing new tokens. Useful for key rotation.
+   */
+  fallback_key_files?: Array<string>
+  /**
+   * KeyDir is the directory containing PEM-encoded private key files.
+   * All key filenames are relative to this directory.
+   * In Kubernetes, this is typically a mounted Secret volume.
+   */
+  key_dir?: string
+  /**
+   * SigningKeyFile is the filename of the primary signing key (relative to KeyDir).
+   * This key is used for signing new tokens.
+   */
+  signing_key_file?: string
+}
+
+/**
+ * TokenLifespans configures the duration that various tokens are valid.
+ * If nil, defaults are applied (access: 1h, refresh: 7d, authCode: 10m).
+ */
+export type AuthserverTokenLifespanRunConfig = {
+  /**
+   * AccessTokenLifespan is the duration that access tokens are valid.
+   * If empty, defaults to 1 hour.
+   */
+  access_token_lifespan?: string
+  /**
+   * AuthCodeLifespan is the duration that authorization codes are valid.
+   * If empty, defaults to 10 minutes.
+   */
+  auth_code_lifespan?: string
+  /**
+   * RefreshTokenLifespan is the duration that refresh tokens are valid.
+   * If empty, defaults to 7 days (168h).
+   */
+  refresh_token_lifespan?: string
+}
+
+/**
+ * Type specifies the provider type: "oidc" or "oauth2".
+ */
+export type AuthserverUpstreamProviderType = 'oidc' | 'oauth2'
+
+export type AuthserverUpstreamRunConfig = {
+  /**
+   * Name uniquely identifies this upstream.
+   * Used for routing decisions and session binding in multi-upstream scenarios.
+   * If empty when only one upstream is configured, defaults to "default".
+   */
+  name?: string
+  oauth2_config?: AuthserverOAuth2UpstreamRunConfig
+  oidc_config?: AuthserverOidcUpstreamRunConfig
+  type?: AuthserverUpstreamProviderType
+}
+
+/**
+ * FieldMapping contains custom field mapping configuration for non-standard providers.
+ * If nil, standard OIDC field names are used ("sub", "name", "email").
+ */
+export type AuthserverUserInfoFieldMappingRunConfig = {
+  /**
+   * EmailFields is an ordered list of field names to try for the email address.
+   * The first non-empty value found will be used.
+   * Default: ["email"]
+   */
+  email_fields?: Array<string>
+  /**
+   * NameFields is an ordered list of field names to try for the display name.
+   * The first non-empty value found will be used.
+   * Default: ["name"]
+   */
+  name_fields?: Array<string>
+  /**
+   * SubjectFields is an ordered list of field names to try for the user ID.
+   * The first non-empty value found will be used.
+   * Default: ["sub"]
+   */
+  subject_fields?: Array<string>
+}
+
+/**
+ * UserInfo contains configuration for fetching user information (required for OAuth2).
+ */
+export type AuthserverUserInfoRunConfig = {
+  /**
+   * AdditionalHeaders contains extra headers to include in the userinfo request.
+   * Useful for providers that require specific headers (e.g., GitHub's Accept header).
+   */
+  additional_headers?: {
+    [key: string]: string
+  }
+  /**
+   * EndpointURL is the URL of the userinfo endpoint.
+   */
+  endpoint_url?: string
+  field_mapping?: AuthserverUserInfoFieldMappingRunConfig
+  /**
+   * HTTPMethod is the HTTP method to use for the userinfo request.
+   * If not specified, defaults to GET.
+   */
+  http_method?: string
+}
+
+/**
  * DEPRECATED: Middleware configuration.
  * AuthzConfig contains the authorization configuration
  */
@@ -671,12 +903,29 @@ export type RemoteConfig = {
   bearer_token?: string
   bearer_token_file?: string
   /**
+   * Cached DCR client credentials for persistence across restarts.
+   * These are obtained during Dynamic Client Registration and needed to refresh tokens.
+   * ClientID is stored as plain text since it's public information.
+   */
+  cached_client_id?: string
+  cached_client_secret_ref?: string
+  /**
    * Cached OAuth token reference for persistence across restarts.
    * The refresh token is stored securely in the secret manager, and this field
    * contains the reference to retrieve it (e.g., "OAUTH_REFRESH_TOKEN_workload").
    * This enables session restoration without requiring a new browser-based login.
    */
   cached_refresh_token_ref?: string
+  /**
+   * RegistrationAccessToken is used to update/delete the client registration.
+   * Stored as a secret reference since it's sensitive.
+   */
+  cached_reg_token_ref?: string
+  /**
+   * ClientSecretExpiresAt indicates when the client secret expires (if provided by the DCR server).
+   * A zero value means the secret does not expire.
+   */
+  cached_secret_expiry?: string
   cached_token_expiry?: string
   callback_port?: number
   client_id?: string
@@ -769,6 +1018,7 @@ export type RunnerRunConfig = {
    * Debug indicates whether debug mode is enabled
    */
   debug?: boolean
+  embedded_auth_server_config?: AuthserverRunConfig
   /**
    * EndpointPrefix is an explicit prefix to prepend to SSE endpoint URLs.
    * This is used to handle path-based ingress routing scenarios.
