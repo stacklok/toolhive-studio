@@ -46,6 +46,15 @@ export {
 } from './sdk.gen'
 export type {
   AuditConfig,
+  AuthserverOAuth2UpstreamRunConfig,
+  AuthserverOidcUpstreamRunConfig,
+  AuthserverRunConfig,
+  AuthserverSigningKeyRunConfig,
+  AuthserverTokenLifespanRunConfig,
+  AuthserverUpstreamProviderType,
+  AuthserverUpstreamRunConfig,
+  AuthserverUserInfoFieldMappingRunConfig,
+  AuthserverUserInfoRunConfig,
   AuthTokenValidatorConfig,
   AuthzConfig,
   ClientMcpClient,
