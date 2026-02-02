@@ -73,6 +73,24 @@ vi.mock('../../logger', () => ({
   },
 }))
 
+vi.mock('@sentry/electron/main', () => ({
+  addBreadcrumb: vi.fn(),
+}))
+
+const { mockGetFeatureFlag } = vi.hoisted(() => ({
+  mockGetFeatureFlag: vi.fn().mockReturnValue(true),
+}))
+
+vi.mock('../../feature-flags', () => ({
+  getFeatureFlag: mockGetFeatureFlag,
+}))
+
+vi.mock('../../../../utils/feature-flags', () => ({
+  featureFlagKeys: {
+    CLI_VALIDATION_ENFORCE: 'cli_validation_enforce',
+  },
+}))
+
 describe('path-configurator', () => {
   beforeEach(() => {
     vol.reset()
@@ -85,6 +103,8 @@ describe('path-configurator', () => {
     })
     // Default mock for execAsync (shell detection)
     mockExecAsync.mockResolvedValue({ stdout: '', stderr: '' })
+    // Default feature flag to enabled
+    mockGetFeatureFlag.mockReturnValue(true)
   })
 
   afterEach(() => {
@@ -185,6 +205,33 @@ export PATH="$HOME/.toolhive/bin:$PATH"
 
       expect(result.success).toBe(true)
       expect(vol.existsSync('/home/testuser/.config/fish')).toBe(true)
+    })
+
+    it('skips PATH modification when feature flag is disabled but still logs to Sentry', async () => {
+      const Sentry = await import('@sentry/electron/main')
+      mockGetFeatureFlag.mockReturnValue(false)
+
+      vol.fromJSON({
+        '/home/testuser/.zshrc': '# My zsh config\nalias ll="ls -la"\n',
+      })
+
+      const result = await configureShellPath()
+
+      expect(result.success).toBe(false)
+      expect(result.modifiedFiles).toHaveLength(0)
+      // Should still log to Sentry
+      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith(
+        expect.objectContaining({
+          category: 'cli.shell-detection',
+          message: expect.stringContaining('Detected default shell'),
+          data: expect.objectContaining({
+            shell: 'zsh',
+          }),
+        })
+      )
+      // File should not be modified
+      const content = vol.readFileSync('/home/testuser/.zshrc', 'utf8')
+      expect(content).not.toContain('# Added by ToolHive Studio')
     })
   })
 

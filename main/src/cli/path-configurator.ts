@@ -14,6 +14,7 @@ import path from 'node:path'
 import { homedir } from 'node:os'
 import { exec } from 'node:child_process'
 import { promisify } from 'node:util'
+import * as Sentry from '@sentry/electron/main'
 import {
   getShellRcFiles,
   SHELL_PATH_ENTRY,
@@ -22,6 +23,8 @@ import {
 } from './constants'
 import type { PathConfigStatus } from './types'
 import log from '../logger'
+import { getFeatureFlag } from '../feature-flags'
+import { featureFlagKeys } from '../../../utils/feature-flags'
 
 const execAsync = promisify(exec)
 
@@ -182,6 +185,27 @@ export async function configureShellPath(): Promise<{
 
   const defaultShell = await detectDefaultShell()
   log.info(`Detected default shell: ${defaultShell}`)
+
+  // Log shell detection to Sentry for analytics
+  Sentry.addBreadcrumb({
+    category: 'cli.shell-detection',
+    message: `Detected default shell: ${defaultShell}`,
+    level: 'info',
+    data: {
+      shell: defaultShell,
+      platform: process.platform,
+    },
+  })
+
+  // Check if PATH configuration is enabled via feature flag
+  const isPathConfigEnabled = getFeatureFlag(
+    featureFlagKeys.CLI_VALIDATION_ENFORCE
+  )
+
+  if (!isPathConfigEnabled) {
+    log.info('PATH configuration disabled by feature flag, skipping')
+    return { success: false, modifiedFiles: [] }
+  }
 
   const defaultShellFiles = shellRcFiles[defaultShell] ?? []
   const isFish = defaultShell === 'fish'
