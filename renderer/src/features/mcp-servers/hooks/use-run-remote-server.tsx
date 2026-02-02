@@ -25,7 +25,8 @@ interface UseRunRemoteServerProps {
 
 /** Get auth secret (bearer_token or client_secret). */
 const getAuthSecret = (data: FormSchemaRemoteMcp) => {
-  const isDefaultAuthType = data.auth_type === REMOTE_MCP_AUTH_TYPES.AutoDiscovered
+  const isDefaultAuthType =
+    data.auth_type === REMOTE_MCP_AUTH_TYPES.AutoDiscovered
   const isBearerAuth = data.auth_type === REMOTE_MCP_AUTH_TYPES.BearerToken
 
   if (isDefaultAuthType) return data.secrets
