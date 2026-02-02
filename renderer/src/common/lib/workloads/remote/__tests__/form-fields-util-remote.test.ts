@@ -3,12 +3,16 @@ import { getRemoteAuthFieldType } from '../form-fields-util-remote'
 import { REMOTE_MCP_AUTH_TYPES } from '../../../form-schema-mcp'
 
 describe('getRemoteAuthFieldType', () => {
-  it('returns None when oauthConfig is undefined', () => {
-    expect(getRemoteAuthFieldType(undefined)).toBe(REMOTE_MCP_AUTH_TYPES.None)
+  it('returns AutoDiscovered when oauthConfig is undefined', () => {
+    expect(getRemoteAuthFieldType(undefined)).toBe(
+      REMOTE_MCP_AUTH_TYPES.AutoDiscovered
+    )
   })
 
-  it('returns None when oauthConfig is empty object', () => {
-    expect(getRemoteAuthFieldType({})).toBe(REMOTE_MCP_AUTH_TYPES.None)
+  it('returns AutoDiscovered when oauthConfig is empty object', () => {
+    expect(getRemoteAuthFieldType({})).toBe(
+      REMOTE_MCP_AUTH_TYPES.AutoDiscovered
+    )
   })
 
   it('returns BearerToken when bearer_token is present', () => {
@@ -34,12 +38,12 @@ describe('getRemoteAuthFieldType', () => {
     expect(getRemoteAuthFieldType(config)).toBe(REMOTE_MCP_AUTH_TYPES.OIDC)
   })
 
-  it('returns DynamicClientRegistration when only callback_port is present', () => {
+  it('returns AutoDiscovered when only callback_port is present', () => {
     const config = {
       callback_port: 8080,
     }
     expect(getRemoteAuthFieldType(config)).toBe(
-      REMOTE_MCP_AUTH_TYPES.DynamicClientRegistration
+      REMOTE_MCP_AUTH_TYPES.AutoDiscovered
     )
   })
 

@@ -105,7 +105,7 @@ describe('DialogFormRemoteMcp', () => {
       ).toHaveAttribute('aria-invalid', 'true')
       expect(screen.getByLabelText('Callback port')).toHaveAttribute(
         'aria-invalid',
-        'true'
+        'false'
       )
     })
   })
@@ -309,12 +309,12 @@ describe('DialogFormRemoteMcp', () => {
     })
   })
 
-  it('submits with Dynamic Client Registration auth type (callback_port only)', async () => {
+  it('submits with Auto-discovered auth type (callback_port only)', async () => {
     const user = userEvent.setup({ delay: null })
     const rec = recordRequests()
 
     mockedPostApiV1BetaWorkloads.override(() => ({
-      name: 'dcr-server',
+      name: 'auto-discovered-server',
       port: 0,
     }))
 
@@ -332,7 +332,7 @@ describe('DialogFormRemoteMcp', () => {
       screen.getByRole('textbox', {
         name: /server name/i,
       }),
-      'dcr-server'
+      'auto-discovered-server'
     )
 
     await user.type(
@@ -342,10 +342,10 @@ describe('DialogFormRemoteMcp', () => {
       'https://api.example.com/mcp'
     )
 
-    // Dynamic Client Registration is the default, so just fill callback_port
+    // Auto-discovered is the default, so just fill callback_port
     await user.type(screen.getByLabelText('Callback port'), '9999')
 
-    // Verify issuer field is NOT visible for Dynamic Client Registration
+    // Verify issuer field is NOT visible for Auto-discovered
     expect(
       screen.queryByPlaceholderText('e.g. https://auth.example.com/')
     ).not.toBeInTheDocument()
@@ -359,73 +359,13 @@ describe('DialogFormRemoteMcp', () => {
       expect(workloadCall).toBeDefined()
       expect(workloadCall?.payload).toEqual(
         expect.objectContaining({
-          name: 'dcr-server',
+          name: 'auto-discovered-server',
           url: 'https://api.example.com/mcp',
           transport: 'streamable-http',
           group: 'default',
           oauth_config: expect.objectContaining({
             callback_port: 9999,
           }),
-        })
-      )
-    })
-  })
-
-  it('submits with None auth type (no callback_port field)', async () => {
-    const user = userEvent.setup({ delay: null })
-    const rec = recordRequests()
-
-    mockedPostApiV1BetaWorkloads.override(() => ({
-      name: 'none-auth-server',
-      port: 0,
-    }))
-
-    renderWithProviders(
-      <Wrapper>
-        <DialogFormRemoteMcp isOpen closeDialog={vi.fn()} groupName="default" />
-      </Wrapper>
-    )
-
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeVisible()
-    })
-
-    await user.type(
-      screen.getByRole('textbox', {
-        name: /server name/i,
-      }),
-      'none-auth-server'
-    )
-
-    await user.type(
-      screen.getByRole('textbox', {
-        name: /server url/i,
-      }),
-      'https://api.example.com/mcp'
-    )
-
-    await user.click(screen.getByLabelText('Authorization method'))
-    await user.click(
-      screen.getByRole('option', {
-        name: 'None',
-      })
-    )
-
-    expect(screen.queryByLabelText('Callback port')).not.toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: 'Install server' }))
-
-    await waitFor(() => {
-      const workloadCall = rec.recordedRequests.find(
-        (r) => r.method === 'POST' && r.pathname === '/api/v1beta/workloads'
-      )
-      expect(workloadCall).toBeDefined()
-      expect(workloadCall?.payload).toEqual(
-        expect.objectContaining({
-          name: 'none-auth-server',
-          url: 'https://api.example.com/mcp',
-          transport: 'streamable-http',
-          group: 'default',
         })
       )
     })

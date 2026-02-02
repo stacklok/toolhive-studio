@@ -20,7 +20,7 @@ import {
 import type { SecretFieldValue } from '@/common/types/secrets'
 
 const AUTH_FIELD_MATRIX = {
-  dynamic_client_registration: ['callback_port'],
+  auto_discovered: ['callback_port'],
   bearer_token: ['bearer_token'],
   oidc: [
     'callback_port',
@@ -244,7 +244,9 @@ export function FormFieldsAuth({
                   value={field.value || ''}
                   onChange={(e) => {
                     const value = e.target.value
-                    field.onChange(value === '' ? '' : parseInt(value, 10))
+                    field.onChange(
+                      value === '' ? undefined : parseInt(value, 10)
+                    )
                     debouncedTrigger()
                   }}
                   name={field.name}

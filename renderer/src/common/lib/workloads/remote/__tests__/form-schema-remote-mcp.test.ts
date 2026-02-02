@@ -6,9 +6,10 @@ describe('getFormSchemaRemoteMcp', () => {
     name: 'test-remote-server',
     url: 'https://api.example.com/mcp',
     transport: 'streamable-http' as const,
-    auth_type: 'none' as const,
+    auth_type: 'auto_discovered' as const,
     oauth_config: {
       authorize_url: '',
+      callback_port: 8080,
       client_id: '',
       client_secret: undefined,
       issuer: '',
@@ -22,76 +23,17 @@ describe('getFormSchemaRemoteMcp', () => {
     group: 'default',
   }
 
-  describe('auth_type: "none"', () => {
-    const noneAuthInput = {
+  describe('auth_type: "auto_discovered"', () => {
+    const autoDiscoveredInput = {
       ...baseValidInput,
-      auth_type: 'none' as const,
-    }
-
-    it('passes without callback_port (not required for none)', () => {
-      const result = getFormSchemaRemoteMcp([]).safeParse(noneAuthInput)
-      expect(result.success, `${result.error}`).toBe(true)
-    })
-
-    it('passes with valid callback_port when provided', () => {
-      const input = {
-        ...noneAuthInput,
-        oauth_config: {
-          ...noneAuthInput.oauth_config,
-          callback_port: 50051,
-        },
-      }
-
-      const result = getFormSchemaRemoteMcp([]).safeParse(input)
-      expect(result.success, `${result.error}`).toBe(true)
-    })
-
-    it('fails when callback_port is below 1024', () => {
-      const input = {
-        ...noneAuthInput,
-        oauth_config: {
-          ...noneAuthInput.oauth_config,
-          callback_port: 1023,
-        },
-      }
-
-      const result = getFormSchemaRemoteMcp([]).safeParse(input)
-      expect(result.success).toBe(false)
-      const portError = result.error?.issues.find((issue) =>
-        issue.path.includes('callback_port')
-      )
-      expect(portError?.message).toBe('Port must be between 1024 and 65535')
-    })
-
-    it('fails when callback_port is above 65535', () => {
-      const input = {
-        ...noneAuthInput,
-        oauth_config: {
-          ...noneAuthInput.oauth_config,
-          callback_port: 65536,
-        },
-      }
-
-      const result = getFormSchemaRemoteMcp([]).safeParse(input)
-      expect(result.success).toBe(false)
-      const portError = result.error?.issues.find((issue) =>
-        issue.path.includes('callback_port')
-      )
-      expect(portError?.message).toBe('Port must be between 1024 and 65535')
-    })
-  })
-
-  describe('auth_type: "dynamic_client_registration"', () => {
-    const dcrAuthInput = {
-      ...baseValidInput,
-      auth_type: 'dynamic_client_registration' as const,
+      auth_type: 'auto_discovered' as const,
     }
 
     it('passes with valid callback_port', () => {
       const input = {
-        ...dcrAuthInput,
+        ...autoDiscoveredInput,
         oauth_config: {
-          ...dcrAuthInput.oauth_config,
+          ...autoDiscoveredInput.oauth_config,
           callback_port: 50051,
         },
       }
@@ -100,28 +42,24 @@ describe('getFormSchemaRemoteMcp', () => {
       expect(result.success, `${result.error}`).toBe(true)
     })
 
-    it('fails when callback_port is not defined (required)', () => {
+    it('passes without callback_port (optional for auto_discovered)', () => {
       const input = {
-        ...dcrAuthInput,
+        ...autoDiscoveredInput,
         oauth_config: {
-          ...dcrAuthInput.oauth_config,
+          ...autoDiscoveredInput.oauth_config,
           callback_port: undefined,
         },
       }
 
       const result = getFormSchemaRemoteMcp([]).safeParse(input)
-      expect(result.success).toBe(false)
-      const portError = result.error?.issues.find((issue) =>
-        issue.path.includes('callback_port')
-      )
-      expect(portError?.message).toBe('Callback port is required')
+      expect(result.success, `${result.error}`).toBe(true)
     })
 
     it('fails when callback_port is below 1024', () => {
       const input = {
-        ...dcrAuthInput,
+        ...autoDiscoveredInput,
         oauth_config: {
-          ...dcrAuthInput.oauth_config,
+          ...autoDiscoveredInput.oauth_config,
           callback_port: 1023,
         },
       }
@@ -136,9 +74,9 @@ describe('getFormSchemaRemoteMcp', () => {
 
     it('fails when callback_port is above 65535', () => {
       const input = {
-        ...dcrAuthInput,
+        ...autoDiscoveredInput,
         oauth_config: {
-          ...dcrAuthInput.oauth_config,
+          ...autoDiscoveredInput.oauth_config,
           callback_port: 65536,
         },
       }
@@ -293,7 +231,7 @@ describe('getFormSchemaRemoteMcp', () => {
         name: 'test-remote-server',
         url: 'https://api.example.com/mcp',
         transport: 'streamable-http',
-        auth_type: 'none',
+        auth_type: 'auto_discovered',
       })
     })
 

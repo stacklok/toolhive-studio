@@ -5,8 +5,7 @@ import type {
 import { z } from 'zod/v4'
 
 export const REMOTE_MCP_AUTH_TYPES = {
-  None: 'none',
-  DynamicClientRegistration: 'dynamic_client_registration',
+  AutoDiscovered: 'auto_discovered',
   OAuth2: 'oauth2',
   OIDC: 'oidc',
   BearerToken: 'bearer_token',
@@ -16,8 +15,7 @@ export type RemoteMcpAuthType =
   (typeof REMOTE_MCP_AUTH_TYPES)[keyof typeof REMOTE_MCP_AUTH_TYPES]
 
 const remoteMcpAuthTypeSchema = z.enum([
-  REMOTE_MCP_AUTH_TYPES.None,
-  REMOTE_MCP_AUTH_TYPES.DynamicClientRegistration,
+  REMOTE_MCP_AUTH_TYPES.AutoDiscovered,
   REMOTE_MCP_AUTH_TYPES.OAuth2,
   REMOTE_MCP_AUTH_TYPES.OIDC,
   REMOTE_MCP_AUTH_TYPES.BearerToken,
@@ -423,7 +421,7 @@ export const createRemoteMcpBaseSchema = (workloads: CoreWorkload[]) => {
     url: z.string().nonempty('The MCP server URL is required'),
   })
   const authTypeObjSchema = z.object({
-    auth_type: remoteMcpAuthTypeSchema.default('none'),
+    auth_type: remoteMcpAuthTypeSchema.default('auto_discovered'),
   })
 
   const commonSchema = nameSchema
