@@ -78,19 +78,6 @@ export const getFormSchemaRemoteMcp = (
         }
       }
 
-      // Validate callback_port is required when auth_type is 'dynamic_client_registration'
-      if (
-        auth_type === REMOTE_MCP_AUTH_TYPES.DynamicClientRegistration &&
-        (port === undefined || port === null)
-      ) {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'Callback port is required',
-          path: ['oauth_config', 'callback_port'],
-        })
-        return
-      }
-
       // Validate OAuth/OIDC specific fields
       const validationRules =
         OAUTH_VALIDATION_RULES[auth_type as keyof typeof OAUTH_VALIDATION_RULES]

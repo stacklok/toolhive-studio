@@ -7,11 +7,9 @@ import {
 export const getRemoteAuthFieldType = (
   oauthConfig?: V1CreateRequest['oauth_config']
 ): RemoteMcpAuthType => {
-  if (!oauthConfig) return REMOTE_MCP_AUTH_TYPES.None
+  if (!oauthConfig) return REMOTE_MCP_AUTH_TYPES.AutoDiscovered
   if (oauthConfig.bearer_token) return REMOTE_MCP_AUTH_TYPES.BearerToken
   if (oauthConfig.authorize_url) return REMOTE_MCP_AUTH_TYPES.OAuth2
   if (oauthConfig.issuer) return REMOTE_MCP_AUTH_TYPES.OIDC
-  if (oauthConfig.callback_port)
-    return REMOTE_MCP_AUTH_TYPES.DynamicClientRegistration
-  return REMOTE_MCP_AUTH_TYPES.None
+  return REMOTE_MCP_AUTH_TYPES.AutoDiscovered
 }

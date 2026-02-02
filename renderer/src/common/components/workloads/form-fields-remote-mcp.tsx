@@ -57,11 +57,8 @@ function FormFieldRemoteAuthType({
                 <SelectValue placeholder="Select authorization method" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={REMOTE_MCP_AUTH_TYPES.None}>None</SelectItem>
-                <SelectItem
-                  value={REMOTE_MCP_AUTH_TYPES.DynamicClientRegistration}
-                >
-                  Dynamic Client Registration
+                <SelectItem value={REMOTE_MCP_AUTH_TYPES.AutoDiscovered}>
+                  Auto Discovered
                 </SelectItem>
                 <SelectItem value={REMOTE_MCP_AUTH_TYPES.OAuth2}>
                   OAuth 2.0

@@ -314,6 +314,6 @@ describe('convertCreateRequestToFormData', () => {
     const result = convertCreateRequestToFormData(createRequest)
 
     expect(result.secrets).toEqual([])
-    expect(result.auth_type).toBe('none')
+    expect(result.auth_type).toBe('auto_discovered')
   })
 })
