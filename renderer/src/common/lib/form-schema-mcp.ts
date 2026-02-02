@@ -410,6 +410,31 @@ const remoteMcpOauthConfigSchema = z.object({
   use_pkce: z.boolean(),
 })
 
+const headerForwardConfigSchema = z.object({
+  add_headers_from_secret: z
+    .array(
+      z.object({
+        header_name: z.string(),
+        secret: z.object({
+          name: z.string(),
+          value: z.object({
+            secret: z.string(),
+            isFromStore: z.boolean(),
+          }),
+        }),
+      })
+    )
+    .optional(),
+  add_plaintext_headers: z
+    .array(
+      z.object({
+        header_name: z.string(),
+        header_value: z.string(),
+      })
+    )
+    .optional(),
+})
+
 export const createRemoteMcpBaseSchema = (workloads: CoreWorkload[]) => {
   const nameSchema = createNameSchema(workloads)
   const toolsSchema = createToolsSchema()
@@ -434,6 +459,7 @@ export const createRemoteMcpBaseSchema = (workloads: CoreWorkload[]) => {
     .extend(toolsSchema.shape)
     .extend(toolsOverrideSchema.shape)
     .extend({ oauth_config: remoteMcpOauthConfigSchema })
+    .extend({ header_forward: headerForwardConfigSchema.optional() })
     .extend({
       group: z.string().min(1, 'Group is required'),
     })

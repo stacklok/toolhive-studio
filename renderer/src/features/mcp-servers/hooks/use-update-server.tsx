@@ -4,7 +4,10 @@ import type { Options } from '@common/api/generated/client'
 import { restartClientNotification } from '../lib/restart-client-notification'
 import { trackEvent } from '@/common/lib/analytics'
 import { prepareUpdateLocalWorkloadData } from '../lib/orchestrate-run-local-server'
-import { prepareUpdateRemoteWorkloadData } from '../lib/orchestrate-run-remote-server'
+import {
+  prepareUpdateRemoteWorkloadData,
+  getHeaderForwardSecrets,
+} from '../lib/orchestrate-run-remote-server'
 import type { FormSchemaLocalMcp } from '../lib/form-schema-local-mcp'
 import { useMCPSecrets } from '@/common/hooks/use-mcp-secrets'
 import { useMutationUpdateWorkload } from './use-mutation-update-workload'
@@ -54,7 +57,9 @@ export function useUpdateServer<TIsRemote extends boolean = false>(
           data.auth_type === REMOTE_MCP_AUTH_TYPES.AutoDiscovered
         const isBearerAuth =
           data.auth_type === REMOTE_MCP_AUTH_TYPES.BearerToken
-        const secrets = isDefaultAuthType
+
+        // Get auth secrets
+        const authSecrets = isDefaultAuthType
           ? data.secrets
           : isBearerAuth
             ? data.oauth_config.bearer_token
@@ -64,16 +69,27 @@ export function useUpdateServer<TIsRemote extends boolean = false>(
               ? [data.oauth_config.client_secret]
               : []
 
-        const hasNewSecrets = secrets.some((s) => !s.value?.isFromStore)
+        // Get header_forward secrets
+        const headerSecrets = getHeaderForwardSecrets(data.header_forward)
 
-        // Handle secrets and get actual names (handles naming collisions)
-        const newlyCreatedSecrets = hasNewSecrets
-          ? (await handleSecrets(secrets)).newlyCreatedSecrets
+        // Handle auth secrets (create if new)
+        const hasNewAuthSecrets = authSecrets.some((s) => !s.value?.isFromStore)
+        const createdAuthSecrets = hasNewAuthSecrets
+          ? (await handleSecrets(authSecrets)).newlyCreatedSecrets
+          : undefined
+
+        // Handle header secrets (create if new)
+        const hasNewHeaderSecrets = headerSecrets.some(
+          (s) => !s.value?.isFromStore
+        )
+        const createdHeaderSecrets = hasNewHeaderSecrets
+          ? (await handleSecrets(headerSecrets)).newlyCreatedSecrets
           : undefined
 
         const updateRequest = prepareUpdateRemoteWorkloadData(
           data,
-          newlyCreatedSecrets
+          createdAuthSecrets,
+          createdHeaderSecrets
         )
 
         await updateWorkload({

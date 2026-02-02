@@ -200,6 +200,240 @@ describe('prepareUpdateRemoteWorkloadData', () => {
   })
 })
 
+// Helper to create secret header items in the new schema format
+const createSecretHeader = (
+  headerName: string,
+  secretName: string,
+  secretValue: string,
+  isFromStore: boolean
+) => ({
+  header_name: headerName,
+  secret: {
+    name: secretName,
+    value: {
+      secret: secretValue,
+      isFromStore,
+    },
+  },
+})
+
+describe('prepareCreateWorkloadData - header_forward', () => {
+  it('transforms header_forward arrays to API record format', () => {
+    const data: FormSchemaRemoteMcp = {
+      name: 'headers-server',
+      url: 'https://api.example.com',
+      transport: 'sse',
+      auth_type: 'auto_discovered',
+      oauth_config: {
+        use_pkce: false,
+        skip_browser: false,
+        callback_port: 8080,
+      },
+      header_forward: {
+        add_plaintext_headers: [
+          { header_name: 'X-Tenant-ID', header_value: 'tenant-123' },
+          { header_name: 'X-Correlation-ID', header_value: 'corr-456' },
+        ],
+        add_headers_from_secret: [
+          createSecretHeader(
+            'Authorization',
+            'MY_API_KEY',
+            'my-secret-value',
+            false
+          ),
+          createSecretHeader(
+            'X-Custom-Auth',
+            'CUSTOM_SECRET',
+            'custom-value',
+            false
+          ),
+        ],
+      },
+      secrets: [],
+      group: 'default',
+    }
+
+    const result = prepareCreateWorkloadData(data)
+
+    expect(result.header_forward).toEqual({
+      add_plaintext_headers: {
+        'X-Tenant-ID': 'tenant-123',
+        'X-Correlation-ID': 'corr-456',
+      },
+      add_headers_from_secret: {
+        Authorization: 'MY_API_KEY',
+        'X-Custom-Auth': 'CUSTOM_SECRET',
+      },
+    })
+  })
+
+  it('uses renamed secret name when collision occurs', () => {
+    const data: FormSchemaRemoteMcp = {
+      name: 'collision-server',
+      url: 'https://api.example.com',
+      transport: 'sse',
+      auth_type: 'auto_discovered',
+      oauth_config: {
+        use_pkce: false,
+        skip_browser: false,
+        callback_port: 8080,
+      },
+      header_forward: {
+        add_plaintext_headers: [],
+        add_headers_from_secret: [
+          createSecretHeader(
+            'Authorization',
+            'MY_SECRET',
+            'secret-value',
+            false
+          ),
+        ],
+      },
+      secrets: [],
+      group: 'default',
+    }
+
+    // Simulate collision: secret store renamed MY_SECRET to MY_SECRET_2
+    const createdHeaderSecrets = [{ name: 'MY_SECRET_2', target: 'MY_SECRET' }]
+
+    const result = prepareCreateWorkloadData(
+      data,
+      undefined,
+      createdHeaderSecrets
+    )
+
+    expect(result.header_forward).toEqual({
+      add_headers_from_secret: {
+        Authorization: 'MY_SECRET_2',
+      },
+    })
+  })
+
+  it('returns undefined header_forward when arrays are empty', () => {
+    const data: FormSchemaRemoteMcp = {
+      name: 'no-headers-server',
+      url: 'https://api.example.com',
+      transport: 'sse',
+      auth_type: 'auto_discovered',
+      oauth_config: {
+        use_pkce: false,
+        skip_browser: false,
+        callback_port: 8080,
+      },
+      header_forward: {
+        add_plaintext_headers: [],
+        add_headers_from_secret: [],
+      },
+      secrets: [],
+      group: 'default',
+    }
+
+    const result = prepareCreateWorkloadData(data)
+
+    expect(result.header_forward).toBeUndefined()
+  })
+
+  it('returns undefined header_forward when header_forward is undefined', () => {
+    const data: FormSchemaRemoteMcp = {
+      name: 'undefined-headers-server',
+      url: 'https://api.example.com',
+      transport: 'sse',
+      auth_type: 'auto_discovered',
+      oauth_config: {
+        use_pkce: false,
+        skip_browser: false,
+        callback_port: 8080,
+      },
+      secrets: [],
+      group: 'default',
+    }
+
+    const result = prepareCreateWorkloadData(data)
+
+    expect(result.header_forward).toBeUndefined()
+  })
+
+  it('filters out empty header names', () => {
+    const data: FormSchemaRemoteMcp = {
+      name: 'filter-headers-server',
+      url: 'https://api.example.com',
+      transport: 'sse',
+      auth_type: 'auto_discovered',
+      oauth_config: {
+        use_pkce: false,
+        skip_browser: false,
+        callback_port: 8080,
+      },
+      header_forward: {
+        add_plaintext_headers: [
+          { header_name: 'X-Valid', header_value: 'value' },
+          { header_name: '', header_value: 'ignored' },
+          { header_name: '  ', header_value: 'also-ignored' },
+        ],
+        add_headers_from_secret: [
+          createSecretHeader('Authorization', 'SECRET', 'secret-value', false),
+          createSecretHeader('', 'IGNORED', 'ignored-value', false),
+        ],
+      },
+      secrets: [],
+      group: 'default',
+    }
+
+    const result = prepareCreateWorkloadData(data)
+
+    expect(result.header_forward).toEqual({
+      add_plaintext_headers: {
+        'X-Valid': 'value',
+      },
+      add_headers_from_secret: {
+        Authorization: 'SECRET',
+      },
+    })
+  })
+})
+
+describe('prepareUpdateRemoteWorkloadData - header_forward', () => {
+  it('transforms header_forward arrays to API record format', () => {
+    const data: FormSchemaRemoteMcp = {
+      name: 'update-headers-server',
+      url: 'https://api.example.com',
+      transport: 'streamable-http',
+      auth_type: 'auto_discovered',
+      oauth_config: {
+        use_pkce: false,
+        skip_browser: false,
+        callback_port: 9090,
+      },
+      header_forward: {
+        add_plaintext_headers: [
+          { header_name: 'X-Updated-Header', header_value: 'updated-value' },
+        ],
+        add_headers_from_secret: [
+          createSecretHeader(
+            'X-Secret-Header',
+            'UPDATED_SECRET',
+            'secret-value',
+            false
+          ),
+        ],
+      },
+      secrets: [],
+      group: 'staging',
+    }
+
+    const result = prepareUpdateRemoteWorkloadData(data)
+
+    expect(result.header_forward).toEqual({
+      add_plaintext_headers: {
+        'X-Updated-Header': 'updated-value',
+      },
+      add_headers_from_secret: {
+        'X-Secret-Header': 'UPDATED_SECRET',
+      },
+    })
+  })
+})
+
 describe('convertCreateRequestToFormData', () => {
   it('converts OAuth2 request with client_secret correctly', () => {
     const createRequest: V1CreateRequest = {
@@ -258,6 +492,10 @@ describe('convertCreateRequestToFormData', () => {
         issuer: undefined,
         oauth_params: undefined,
       },
+      header_forward: {
+        add_plaintext_headers: [],
+        add_headers_from_secret: [],
+      },
       secrets: [],
       group: 'production',
       tools: undefined,
@@ -315,5 +553,100 @@ describe('convertCreateRequestToFormData', () => {
 
     expect(result.secrets).toEqual([])
     expect(result.auth_type).toBe('auto_discovered')
+  })
+
+  it('converts header_forward records to form arrays', () => {
+    const createRequest: V1CreateRequest = {
+      name: 'headers-server',
+      url: 'https://api.example.com',
+      transport: 'sse',
+      header_forward: {
+        add_plaintext_headers: {
+          'X-Tenant-ID': 'tenant-123',
+          'X-Correlation-ID': 'corr-456',
+        },
+        add_headers_from_secret: {
+          Authorization: 'MY_API_KEY',
+          'X-Custom-Auth': 'CUSTOM_SECRET',
+        },
+      },
+    }
+
+    const result = convertCreateRequestToFormData(createRequest)
+
+    expect(result.header_forward).toEqual({
+      add_plaintext_headers: [
+        { header_name: 'X-Tenant-ID', header_value: 'tenant-123' },
+        { header_name: 'X-Correlation-ID', header_value: 'corr-456' },
+      ],
+      add_headers_from_secret: [
+        createSecretHeader('Authorization', 'MY_API_KEY', 'MY_API_KEY', false),
+        createSecretHeader(
+          'X-Custom-Auth',
+          'CUSTOM_SECRET',
+          'CUSTOM_SECRET',
+          false
+        ),
+      ],
+    })
+  })
+
+  it('returns empty arrays when header_forward is undefined', () => {
+    const createRequest: V1CreateRequest = {
+      name: 'no-headers-server',
+      url: 'https://api.example.com',
+      transport: 'sse',
+    }
+
+    const result = convertCreateRequestToFormData(createRequest)
+
+    expect(result.header_forward).toEqual({
+      add_plaintext_headers: [],
+      add_headers_from_secret: [],
+    })
+  })
+
+  it('handles partial header_forward with only plaintext headers', () => {
+    const createRequest: V1CreateRequest = {
+      name: 'partial-headers-server',
+      url: 'https://api.example.com',
+      transport: 'sse',
+      header_forward: {
+        add_plaintext_headers: {
+          'X-Only-Plaintext': 'value',
+        },
+      },
+    }
+
+    const result = convertCreateRequestToFormData(createRequest)
+
+    expect(result.header_forward).toEqual({
+      add_plaintext_headers: [
+        { header_name: 'X-Only-Plaintext', header_value: 'value' },
+      ],
+      add_headers_from_secret: [],
+    })
+  })
+
+  it('handles partial header_forward with only secret headers', () => {
+    const createRequest: V1CreateRequest = {
+      name: 'secrets-only-server',
+      url: 'https://api.example.com',
+      transport: 'sse',
+      header_forward: {
+        add_headers_from_secret: {
+          Authorization: 'API_SECRET',
+        },
+      },
+    }
+
+    const result = convertCreateRequestToFormData(createRequest)
+
+    expect(result.header_forward).toEqual({
+      add_plaintext_headers: [],
+      add_headers_from_secret: [
+        createSecretHeader('Authorization', 'API_SECRET', 'API_SECRET', false),
+      ],
+    })
   })
 })

@@ -1,9 +1,12 @@
 import { postApiV1BetaWorkloadsMutation } from '@common/api/generated/@tanstack/react-query.gen'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
-import { prepareCreateWorkloadData } from '../lib/orchestrate-run-remote-server'
 import { type PostApiV1BetaSecretsDefaultKeysData } from '@common/api/generated/types.gen'
 import type { Options } from '@common/api/generated/client'
+import {
+  prepareCreateWorkloadData,
+  getHeaderForwardSecrets,
+} from '../lib/orchestrate-run-remote-server'
 import { restartClientNotification } from '../lib/restart-client-notification'
 import { trackEvent } from '@/common/lib/analytics'
 import { useMCPSecrets } from '@/common/hooks/use-mcp-secrets'
@@ -20,18 +23,21 @@ interface UseRunRemoteServerProps {
   quietly?: boolean
 }
 
-/** Build the appropriate secrets based on auth type. */
-const buildAuthSecret = (data: FormSchemaRemoteMcp) => {
+/** Get auth secret (bearer_token or client_secret). */
+const getAuthSecret = (data: FormSchemaRemoteMcp) => {
   const isDefaultAuthType =
     data.auth_type === REMOTE_MCP_AUTH_TYPES.AutoDiscovered
   const isBearerAuth = data.auth_type === REMOTE_MCP_AUTH_TYPES.BearerToken
+
   if (isDefaultAuthType) return data.secrets
-  if (isBearerAuth)
+  if (isBearerAuth) {
     return data.oauth_config.bearer_token
       ? [data.oauth_config.bearer_token]
       : []
-  if (data.oauth_config.client_secret) return [data.oauth_config.client_secret]
-  return []
+  }
+  return data.oauth_config.client_secret
+    ? [data.oauth_config.client_secret]
+    : []
 }
 
 export function useRunRemoteServer({
@@ -53,10 +59,23 @@ export function useRunRemoteServer({
 
   const { mutate: installServerMutation } = useMutation({
     mutationFn: async ({ data }: { data: FormSchemaRemoteMcp }) => {
-      const secrets = buildAuthSecret(data)
-      const { newlyCreatedSecrets } = await handleSecrets(secrets)
+      // Handle auth secrets and header secrets separately
+      const authSecrets = getAuthSecret(data)
+      const headerSecrets = getHeaderForwardSecrets(data.header_forward)
 
-      const preparedData = prepareCreateWorkloadData(data, newlyCreatedSecrets)
+      // Create auth secrets first
+      const { newlyCreatedSecrets: createdAuthSecrets } =
+        await handleSecrets(authSecrets)
+
+      // Create header secrets
+      const { newlyCreatedSecrets: createdHeaderSecrets } =
+        await handleSecrets(headerSecrets)
+
+      const preparedData = prepareCreateWorkloadData(
+        data,
+        createdAuthSecrets,
+        createdHeaderSecrets
+      )
 
       await createWorkload({
         body: preparedData,
