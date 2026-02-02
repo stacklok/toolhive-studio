@@ -73,8 +73,16 @@ vi.mock('../../logger', () => ({
   },
 }))
 
+const { mockSpan } = vi.hoisted(() => ({
+  mockSpan: {
+    setAttribute: vi.fn(),
+    setAttributes: vi.fn(),
+    end: vi.fn(),
+  },
+}))
+
 vi.mock('@sentry/electron/main', () => ({
-  addBreadcrumb: vi.fn(),
+  startSpanManual: vi.fn((_options, callback) => callback(mockSpan)),
 }))
 
 const { mockGetFeatureFlag } = vi.hoisted(() => ({
@@ -95,6 +103,10 @@ describe('path-configurator', () => {
   beforeEach(() => {
     vol.reset()
     vi.clearAllMocks()
+    // Reset span mock
+    mockSpan.setAttribute.mockClear()
+    mockSpan.setAttributes.mockClear()
+    mockSpan.end.mockClear()
     // Default to non-Windows
     vi.stubGlobal('process', {
       ...process,
@@ -207,8 +219,7 @@ export PATH="$HOME/.toolhive/bin:$PATH"
       expect(vol.existsSync('/home/testuser/.config/fish')).toBe(true)
     })
 
-    it('skips PATH modification when feature flag is disabled but still logs to Sentry', async () => {
-      const Sentry = await import('@sentry/electron/main')
+    it('skips PATH modification when feature flag is disabled but still records shell in span', async () => {
       mockGetFeatureFlag.mockReturnValue(false)
 
       vol.fromJSON({
@@ -219,16 +230,20 @@ export PATH="$HOME/.toolhive/bin:$PATH"
 
       expect(result.success).toBe(false)
       expect(result.modifiedFiles).toHaveLength(0)
-      // Should still log to Sentry
-      expect(Sentry.addBreadcrumb).toHaveBeenCalledWith(
-        expect.objectContaining({
-          category: 'cli.shell-detection',
-          message: expect.stringContaining('Detected default shell'),
-          data: expect.objectContaining({
-            shell: 'zsh',
-          }),
-        })
+      // Should still record detected shell in span
+      expect(mockSpan.setAttribute).toHaveBeenCalledWith(
+        'cli.detected_shell',
+        'zsh'
       )
+      expect(mockSpan.setAttribute).toHaveBeenCalledWith(
+        'cli.feature_flag_enabled',
+        false
+      )
+      expect(mockSpan.setAttributes).toHaveBeenCalledWith({
+        'cli.path_configured': false,
+        'cli.skipped_reason': 'feature_flag_disabled',
+      })
+      expect(mockSpan.end).toHaveBeenCalled()
       // File should not be modified
       const content = vol.readFileSync('/home/testuser/.zshrc', 'utf8')
       expect(content).not.toContain('# Added by ToolHive Studio')
@@ -434,6 +449,29 @@ export PATH="$HOME/.toolhive/bin:$PATH"
       const result = await checkPathConfiguration()
 
       expect(result.isConfigured).toBe(false)
+    })
+
+    it('skips PATH modification when feature flag is disabled on Windows', async () => {
+      mockGetFeatureFlag.mockReturnValue(false)
+      mockExecAsync.mockResolvedValue({ stdout: '', stderr: '' })
+
+      const result = await configureShellPath()
+
+      expect(result.success).toBe(false)
+      expect(result.modifiedFiles).toHaveLength(0)
+      // Should record in span
+      expect(mockSpan.setAttribute).toHaveBeenCalledWith(
+        'cli.feature_flag_enabled',
+        false
+      )
+      expect(mockSpan.setAttribute).toHaveBeenCalledWith('cli.is_windows', true)
+      expect(mockSpan.setAttributes).toHaveBeenCalledWith({
+        'cli.path_configured': false,
+        'cli.skipped_reason': 'feature_flag_disabled',
+      })
+      expect(mockSpan.end).toHaveBeenCalled()
+      // PowerShell should NOT be called
+      expect(mockExecAsync).not.toHaveBeenCalled()
     })
   })
 })

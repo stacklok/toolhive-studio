@@ -176,63 +176,95 @@ export async function configureShellPath(): Promise<{
   success: boolean
   modifiedFiles: string[]
 }> {
-  if (process.platform === 'win32') {
-    return configureWindowsPath()
-  }
-
-  const shellRcFiles = getShellRcFiles()
-  const modifiedFiles: string[] = []
-
-  const defaultShell = await detectDefaultShell()
-  log.info(`Detected default shell: ${defaultShell}`)
-
-  // Log shell detection to Sentry for analytics
-  Sentry.addBreadcrumb({
-    category: 'cli.shell-detection',
-    message: `Detected default shell: ${defaultShell}`,
-    level: 'info',
-    data: {
-      shell: defaultShell,
-      platform: process.platform,
+  return Sentry.startSpanManual(
+    {
+      name: 'CLI configure shell PATH',
+      op: 'cli.configure_path',
+      attributes: {
+        'analytics.source': 'tracking',
+        'analytics.type': 'event',
+        'cli.platform': process.platform,
+      },
     },
-  })
+    async (span) => {
+      // Check if PATH configuration is enabled via feature flag
+      const isPathConfigEnabled = getFeatureFlag(
+        featureFlagKeys.CLI_VALIDATION_ENFORCE
+      )
 
-  // Check if PATH configuration is enabled via feature flag
-  const isPathConfigEnabled = getFeatureFlag(
-    featureFlagKeys.CLI_VALIDATION_ENFORCE
-  )
+      span.setAttribute('cli.feature_flag_enabled', isPathConfigEnabled)
 
-  if (!isPathConfigEnabled) {
-    log.info('PATH configuration disabled by feature flag, skipping')
-    return { success: false, modifiedFiles: [] }
-  }
+      if (process.platform === 'win32') {
+        span.setAttribute('cli.is_windows', true)
 
-  const defaultShellFiles = shellRcFiles[defaultShell] ?? []
-  const isFish = defaultShell === 'fish'
+        if (!isPathConfigEnabled) {
+          log.info('PATH configuration disabled by feature flag, skipping')
+          span.setAttributes({
+            'cli.path_configured': false,
+            'cli.skipped_reason': 'feature_flag_disabled',
+          })
+          span.end()
+          return { success: false, modifiedFiles: [] }
+        }
 
-  for (const rcFile of defaultShellFiles) {
-    if (addPathToFile(rcFile, isFish)) {
-      modifiedFiles.push(rcFile)
-    }
-  }
+        const result = await configureWindowsPath()
+        span.setAttribute('cli.path_configured', result.success)
+        span.end()
+        return result
+      }
 
-  const otherShells = Object.entries(shellRcFiles).filter(
-    ([shell]) => shell !== defaultShell
-  )
+      const shellRcFiles = getShellRcFiles()
+      const modifiedFiles: string[] = []
 
-  for (const [shell, files] of otherShells) {
-    const shellIsFish = shell === 'fish'
+      const defaultShell = await detectDefaultShell()
+      log.info(`Detected default shell: ${defaultShell}`)
 
-    for (const rcFile of files) {
-      if (existsSync(rcFile) && addPathToFile(rcFile, shellIsFish)) {
-        if (!modifiedFiles.includes(rcFile)) {
+      // Record detected shell in span for analytics
+      span.setAttribute('cli.detected_shell', defaultShell)
+
+      if (!isPathConfigEnabled) {
+        log.info('PATH configuration disabled by feature flag, skipping')
+        span.setAttributes({
+          'cli.path_configured': false,
+          'cli.skipped_reason': 'feature_flag_disabled',
+        })
+        span.end()
+        return { success: false, modifiedFiles: [] }
+      }
+
+      const defaultShellFiles = shellRcFiles[defaultShell] ?? []
+      const isFish = defaultShell === 'fish'
+
+      for (const rcFile of defaultShellFiles) {
+        if (addPathToFile(rcFile, isFish)) {
           modifiedFiles.push(rcFile)
         }
       }
-    }
-  }
 
-  return { success: true, modifiedFiles }
+      const otherShells = Object.entries(shellRcFiles).filter(
+        ([shell]) => shell !== defaultShell
+      )
+
+      for (const [shell, files] of otherShells) {
+        const shellIsFish = shell === 'fish'
+
+        for (const rcFile of files) {
+          if (existsSync(rcFile) && addPathToFile(rcFile, shellIsFish)) {
+            if (!modifiedFiles.includes(rcFile)) {
+              modifiedFiles.push(rcFile)
+            }
+          }
+        }
+      }
+
+      span.setAttributes({
+        'cli.path_configured': true,
+        'cli.modified_files_count': modifiedFiles.length,
+      })
+      span.end()
+      return { success: true, modifiedFiles }
+    }
+  )
 }
 
 async function removeWindowsPath(): Promise<{
