@@ -223,7 +223,7 @@ describe('prepareCreateWorkloadData - header_forward', () => {
       name: 'headers-server',
       url: 'https://api.example.com',
       transport: 'sse',
-      auth_type: 'none',
+      auth_type: 'auto_discovered',
       oauth_config: {
         use_pkce: false,
         skip_browser: false,
@@ -267,12 +267,54 @@ describe('prepareCreateWorkloadData - header_forward', () => {
     })
   })
 
+  it('uses renamed secret name when collision occurs', () => {
+    const data: FormSchemaRemoteMcp = {
+      name: 'collision-server',
+      url: 'https://api.example.com',
+      transport: 'sse',
+      auth_type: 'auto_discovered',
+      oauth_config: {
+        use_pkce: false,
+        skip_browser: false,
+        callback_port: 8080,
+      },
+      header_forward: {
+        add_plaintext_headers: [],
+        add_headers_from_secret: [
+          createSecretHeader(
+            'Authorization',
+            'MY_SECRET',
+            'secret-value',
+            false
+          ),
+        ],
+      },
+      secrets: [],
+      group: 'default',
+    }
+
+    // Simulate collision: secret store renamed MY_SECRET to MY_SECRET_2
+    const createdHeaderSecrets = [{ name: 'MY_SECRET_2', target: 'MY_SECRET' }]
+
+    const result = prepareCreateWorkloadData(
+      data,
+      undefined,
+      createdHeaderSecrets
+    )
+
+    expect(result.header_forward).toEqual({
+      add_headers_from_secret: {
+        Authorization: 'MY_SECRET_2',
+      },
+    })
+  })
+
   it('returns undefined header_forward when arrays are empty', () => {
     const data: FormSchemaRemoteMcp = {
       name: 'no-headers-server',
       url: 'https://api.example.com',
       transport: 'sse',
-      auth_type: 'none',
+      auth_type: 'auto_discovered',
       oauth_config: {
         use_pkce: false,
         skip_browser: false,
@@ -296,7 +338,7 @@ describe('prepareCreateWorkloadData - header_forward', () => {
       name: 'undefined-headers-server',
       url: 'https://api.example.com',
       transport: 'sse',
-      auth_type: 'none',
+      auth_type: 'auto_discovered',
       oauth_config: {
         use_pkce: false,
         skip_browser: false,
@@ -316,7 +358,7 @@ describe('prepareCreateWorkloadData - header_forward', () => {
       name: 'filter-headers-server',
       url: 'https://api.example.com',
       transport: 'sse',
-      auth_type: 'none',
+      auth_type: 'auto_discovered',
       oauth_config: {
         use_pkce: false,
         skip_browser: false,
@@ -356,7 +398,7 @@ describe('prepareUpdateRemoteWorkloadData - header_forward', () => {
       name: 'update-headers-server',
       url: 'https://api.example.com',
       transport: 'streamable-http',
-      auth_type: 'none',
+      auth_type: 'auto_discovered',
       oauth_config: {
         use_pkce: false,
         skip_browser: false,
