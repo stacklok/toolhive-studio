@@ -403,6 +403,13 @@ function FormFieldsCustomHeaders({
                               secretField.onChange({
                                 ...currentValue,
                                 header_name: e.target.value,
+                                secret: {
+                                  ...currentValue.secret,
+                                  // Sync secret name with header name for custom values
+                                  name: currentValue.secret.value.isFromStore
+                                    ? currentValue.secret.name
+                                    : e.target.value,
+                                },
                               })
                             }
                             placeholder="Authorization"
@@ -422,7 +429,8 @@ function FormFieldsCustomHeaders({
                                 secretField.onChange({
                                   ...currentValue,
                                   secret: {
-                                    ...currentValue.secret,
+                                    // Use header name as secret name for custom values
+                                    name: currentValue.header_name,
                                     value: {
                                       secret: e.target.value,
                                       isFromStore: false,
