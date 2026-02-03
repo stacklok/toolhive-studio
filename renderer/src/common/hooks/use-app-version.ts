@@ -7,7 +7,6 @@ export interface AppVersionInfo {
   latestVersion: string
   isNewVersionAvailable: boolean
   isReleaseBuild: boolean
-  isLatestVersion: boolean
   toolhiveVersion: string
 }
 
@@ -34,10 +33,6 @@ export function useAppVersion() {
           isNewVersionAvailable:
             version.status === 'fulfilled'
               ? version?.value?.isNewVersionAvailable
-              : false,
-          isLatestVersion:
-            version.status === 'fulfilled'
-              ? !version?.value?.isNewVersionAvailable
               : false,
           isReleaseBuild:
             release.status === 'fulfilled' ? release.value : false,

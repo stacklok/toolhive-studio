@@ -38,7 +38,6 @@ const mockAppInfo: AppVersionInfo = {
   latestVersion: '',
   isNewVersionAvailable: false,
   isReleaseBuild: true,
-  isLatestVersion: true,
   toolhiveVersion: '0.9.0',
 }
 
@@ -132,10 +131,10 @@ describe('VersionTab', () => {
     expect(badges).toHaveLength(3)
   })
 
-  it('displays latest version label when isLatestVersion is true', () => {
+  it('displays latest version label when no update is available', () => {
     const appInfoLatest: AppVersionInfo = {
       ...mockAppInfo,
-      isLatestVersion: true,
+      isNewVersionAvailable: false,
     }
 
     renderWithProviders(
@@ -145,10 +144,10 @@ describe('VersionTab', () => {
     expect(screen.getByText(/\(latest version\)/)).toBeVisible()
   })
 
-  it('does not display latest version label when isLatestVersion is false', () => {
+  it('does not display latest version label when update is available', () => {
     const appInfoNotLatest: AppVersionInfo = {
       ...mockAppInfo,
-      isLatestVersion: false,
+      isNewVersionAvailable: true,
     }
 
     renderWithProviders(
@@ -182,7 +181,6 @@ describe('VersionTab', () => {
       ...mockAppInfo,
       latestVersion: '2.0.0',
       isNewVersionAvailable: true,
-      isLatestVersion: false,
     }
 
     renderWithProviders(
@@ -203,7 +201,6 @@ describe('VersionTab', () => {
       ...mockAppInfo,
       latestVersion: '2.0.0',
       isNewVersionAvailable: true,
-      isLatestVersion: false,
     }
 
     renderWithProviders(
@@ -227,7 +224,6 @@ describe('VersionTab', () => {
       ...mockAppInfo,
       latestVersion: '2.0.0',
       isNewVersionAvailable: true,
-      isLatestVersion: false,
     }
 
     renderWithProviders(
@@ -248,7 +244,6 @@ describe('VersionTab', () => {
       ...mockAppInfo,
       latestVersion: '2.0.0',
       isNewVersionAvailable: true,
-      isLatestVersion: false,
     }
 
     renderWithProviders(
@@ -270,7 +265,6 @@ describe('VersionTab', () => {
       ...mockAppInfo,
       latestVersion: '2.0.0',
       isNewVersionAvailable: true,
-      isLatestVersion: false,
     }
 
     renderWithProviders(
@@ -308,7 +302,6 @@ describe('VersionTab', () => {
       ...mockAppInfo,
       latestVersion: '2.0.0',
       isNewVersionAvailable: true,
-      isLatestVersion: false,
     }
 
     const queryClient = new QueryClient({
@@ -352,7 +345,6 @@ describe('VersionTab', () => {
       ...mockAppInfo,
       latestVersion: '2.0.0',
       isNewVersionAvailable: true,
-      isLatestVersion: false,
     }
 
     const queryClient = new QueryClient({
@@ -389,7 +381,6 @@ describe('VersionTab', () => {
       ...mockAppInfo,
       latestVersion: '2.0.0',
       isNewVersionAvailable: true,
-      isLatestVersion: false,
     }
 
     const queryClient = new QueryClient({
