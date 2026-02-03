@@ -114,7 +114,10 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Desktop UI version</span>
-            <Badge variant="secondary">{appInfo.currentVersion}</Badge>
+            <Badge variant="secondary">
+              {appInfo.currentVersion}{' '}
+              {appInfo.isLatestVersion ? '( latest version )' : ''}
+            </Badge>
           </div>
 
           <div className="flex items-center justify-between">
