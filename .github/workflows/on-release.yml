@@ -9,17 +9,40 @@ permissions:
   pull-requests: write # Required for unit tests workflow
 
 jobs:
+  validate-prerelease:
+    name: Validate Prerelease Tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate prerelease tag
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          # Check if it's a prerelease (has suffix after semver)
+          if [[ "$TAG" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+-.+ ]]; then
+            # Validate it uses allowed identifiers (alpha, beta, rc)
+            if [[ ! "$TAG" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta|rc)(\.[0-9]+)?$ ]]; then
+              echo "::error::Invalid prerelease tag '$TAG'. Allowed identifiers: alpha, beta, rc"
+              exit 1
+            fi
+            echo "Valid prerelease tag: $TAG"
+          else
+            echo "Stable release tag: $TAG"
+          fi
+
   security:
     name: Security Checks
+    needs: [validate-prerelease]
     uses: ./.github/workflows/_security-checks.yml
 
   static-checks:
     name: Static Checks
+    needs: [validate-prerelease]
     uses: ./.github/workflows/_static-checks.yml
     secrets: inherit
 
   unit-tests:
     name: Unit Tests
+    needs: [validate-prerelease]
     uses: ./.github/workflows/_unit-tests.yml
 
   build-and-release:
