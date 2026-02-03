@@ -37,7 +37,7 @@ export function useAppVersion() {
               : false,
           isLatestVersion:
             version.status === 'fulfilled'
-              ? version?.value?.latestVersion === version?.value?.currentVersion
+              ? !version?.value?.isNewVersionAvailable
               : false,
           isReleaseBuild:
             release.status === 'fulfilled' ? release.value : false,
