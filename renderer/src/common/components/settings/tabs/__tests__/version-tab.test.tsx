@@ -38,6 +38,7 @@ const mockAppInfo: AppVersionInfo = {
   latestVersion: '',
   isNewVersionAvailable: false,
   isReleaseBuild: true,
+  isLatestVersion: true,
   toolhiveVersion: '0.9.0',
 }
 
@@ -78,7 +79,7 @@ describe('VersionTab', () => {
     expect(screen.getByText('Desktop UI version')).toBeVisible()
     expect(screen.getByText('ToolHive binary version')).toBeVisible()
     expect(screen.getByText('Build type')).toBeVisible()
-    expect(screen.getByText('1.0.0')).toBeVisible()
+    expect(screen.getByText(/1\.0\.0/)).toBeVisible()
     expect(screen.getByText('0.9.0')).toBeVisible()
     expect(screen.getByText('Release')).toBeVisible()
   })
@@ -122,11 +123,39 @@ describe('VersionTab', () => {
     const badges = screen.getAllByText((content, element) => {
       return (
         element?.tagName === 'SPAN' &&
-        (content === '1.0.0' || content === '0.9.0' || content === 'Release')
+        (content.includes('1.0.0') ||
+          content === '0.9.0' ||
+          content === 'Release')
       )
     })
 
     expect(badges).toHaveLength(3)
+  })
+
+  it('displays latest version label when isLatestVersion is true', () => {
+    const appInfoLatest: AppVersionInfo = {
+      ...mockAppInfo,
+      isLatestVersion: true,
+    }
+
+    renderWithProviders(
+      <VersionTab appInfo={appInfoLatest} isLoading={false} error={null} />
+    )
+
+    expect(screen.getByText(/\(latest version\)/)).toBeVisible()
+  })
+
+  it('does not display latest version label when isLatestVersion is false', () => {
+    const appInfoNotLatest: AppVersionInfo = {
+      ...mockAppInfo,
+      isLatestVersion: false,
+    }
+
+    renderWithProviders(
+      <VersionTab appInfo={appInfoNotLatest} isLoading={false} error={null} />
+    )
+
+    expect(screen.queryByText(/\(latest version\)/)).not.toBeInTheDocument()
   })
 
   it('displays empty toolhive version when not provided', () => {
@@ -153,6 +182,7 @@ describe('VersionTab', () => {
       ...mockAppInfo,
       latestVersion: '2.0.0',
       isNewVersionAvailable: true,
+      isLatestVersion: false,
     }
 
     renderWithProviders(
@@ -173,6 +203,7 @@ describe('VersionTab', () => {
       ...mockAppInfo,
       latestVersion: '2.0.0',
       isNewVersionAvailable: true,
+      isLatestVersion: false,
     }
 
     renderWithProviders(
@@ -196,6 +227,7 @@ describe('VersionTab', () => {
       ...mockAppInfo,
       latestVersion: '2.0.0',
       isNewVersionAvailable: true,
+      isLatestVersion: false,
     }
 
     renderWithProviders(
@@ -216,6 +248,7 @@ describe('VersionTab', () => {
       ...mockAppInfo,
       latestVersion: '2.0.0',
       isNewVersionAvailable: true,
+      isLatestVersion: false,
     }
 
     renderWithProviders(
@@ -237,6 +270,7 @@ describe('VersionTab', () => {
       ...mockAppInfo,
       latestVersion: '2.0.0',
       isNewVersionAvailable: true,
+      isLatestVersion: false,
     }
 
     renderWithProviders(
@@ -274,6 +308,7 @@ describe('VersionTab', () => {
       ...mockAppInfo,
       latestVersion: '2.0.0',
       isNewVersionAvailable: true,
+      isLatestVersion: false,
     }
 
     const queryClient = new QueryClient({
@@ -317,6 +352,7 @@ describe('VersionTab', () => {
       ...mockAppInfo,
       latestVersion: '2.0.0',
       isNewVersionAvailable: true,
+      isLatestVersion: false,
     }
 
     const queryClient = new QueryClient({
@@ -353,6 +389,7 @@ describe('VersionTab', () => {
       ...mockAppInfo,
       latestVersion: '2.0.0',
       isNewVersionAvailable: true,
+      isLatestVersion: false,
     }
 
     const queryClient = new QueryClient({
