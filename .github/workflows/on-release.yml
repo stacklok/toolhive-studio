@@ -15,18 +15,23 @@ jobs:
     steps:
       - name: Validate prerelease tag
         shell: bash
+        env:
+          IS_PRERELEASE: ${{ github.event.release.prerelease }}
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
-          # Check if it's a prerelease (has suffix after semver)
-          if [[ "$TAG" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+-.+ ]]; then
-            # Validate it uses allowed identifiers (alpha, beta, rc)
+          echo "Tag: $TAG"
+          echo "GitHub prerelease flag: $IS_PRERELEASE"
+          
+          # First check: is this marked as a prerelease in GitHub?
+          if [[ "$IS_PRERELEASE" == "true" ]]; then
+            # Second check: validate the tag uses allowed identifiers (alpha, beta, rc)
             if [[ ! "$TAG" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta|rc)(\.[0-9]+)?$ ]]; then
               echo "::error::Invalid prerelease tag '$TAG'. Allowed identifiers: alpha, beta, rc"
               exit 1
             fi
-            echo "Valid prerelease tag: $TAG"
+            echo "Valid prerelease: flag=true, tag=$TAG"
           else
-            echo "Stable release tag: $TAG"
+            echo "Stable release: flag=false, tag=$TAG"
           fi
 
   security:
