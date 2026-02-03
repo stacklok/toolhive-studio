@@ -116,7 +116,7 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
             <span className="text-sm font-medium">Desktop UI version</span>
             <Badge variant="secondary">
               {appInfo.currentVersion}{' '}
-              {appInfo.isLatestVersion ? '(latest version)' : ''}
+              {!appInfo.isNewVersionAvailable ? '(latest version)' : ''}
             </Badge>
           </div>
 
