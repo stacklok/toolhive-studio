@@ -5,21 +5,25 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/common/components/ui/dropdown-menu'
-import { Button } from '@/common/components/ui/button'
-import { twMerge } from 'tailwind-merge'
+import { cn } from '@/common/lib/utils'
 
 export function HelpDropdown({ className }: { className?: string }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className={twMerge('cursor-pointer', className)}
+        <button
+          className={cn(
+            'flex h-9 items-center gap-2 rounded-full px-4',
+            'text-sm font-medium transition-colors',
+            // Inactive style: transparent bg, white text
+            'bg-transparent text-white/90 hover:bg-white/10 hover:text-white',
+            'cursor-pointer',
+            className
+          )}
         >
-          <HelpCircle className="text-muted-foreground size-4" />
-          <span className="sr-only">Help</span>
-        </Button>
+          <HelpCircle className="size-4" />
+          Help
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem asChild>
