@@ -52,7 +52,8 @@ export function Secrets() {
       <TitlePage title="Secrets">
         {keys.length > 0 && (
           <Button
-            variant="default"
+            variant="action"
+            className="rounded-full"
             onClick={() => {
               setIsSecretDialogOpen(true)
               setSecretKey('')
@@ -69,7 +70,8 @@ export function Secrets() {
           body="Create secrets to store API keys and other sensitive data for use in MCP server configurations"
           actions={[
             <Button
-              variant="default"
+              variant="action"
+              className="rounded-full"
               key="add"
               onClick={() => {
                 setIsSecretDialogOpen(true)

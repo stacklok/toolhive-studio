@@ -114,10 +114,16 @@ export function DialogOverrideTool({
           </div>
         </div>
         <DialogFooter className="flex-shrink-0">
-          <Button variant="outline" onClick={onCancel}>
+          <Button
+            variant="secondary"
+            className="rounded-full"
+            onClick={onCancel}
+          >
             Cancel
           </Button>
-          <Button onClick={onSave}>Save</Button>
+          <Button variant="action" className="rounded-full" onClick={onSave}>
+            Save
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

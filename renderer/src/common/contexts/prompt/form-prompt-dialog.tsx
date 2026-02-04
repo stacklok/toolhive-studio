@@ -83,13 +83,15 @@ export function FormDialog({
           <DialogFooter className="px-1 pt-1">
             <Button
               variant={config.buttons?.cancelVariant ?? 'secondary'}
+              className="rounded-full"
               onClick={handleCancel}
               type="button"
             >
               {config.buttons?.cancel ?? 'Cancel'}
             </Button>
             <Button
-              variant={config.buttons?.confirmVariant ?? 'default'}
+              variant={config.buttons?.confirmVariant ?? 'action'}
+              className="rounded-full"
               type="submit"
               disabled={form.formState.isSubmitting || !form.formState.isValid}
             >
