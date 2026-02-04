@@ -64,7 +64,8 @@ export function AddGroupButton({
     <Button
       variant="outline"
       onClick={handleAddGroup}
-      className="flex h-9 w-[215px] items-center gap-2 px-4 py-2"
+      className="flex h-9 w-[215px] items-center gap-2 rounded-full px-4 py-2
+        shadow-sm"
     >
       <Plus className="size-4" />
       Add a group
