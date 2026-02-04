@@ -47,7 +47,12 @@ export default function RegistryRouteComponent() {
   return (
     <>
       <div className="mb-6 flex items-center">
-        <h1 className="text-3xl font-bold">Registry</h1>
+        <h1
+          className="font-serif text-[34px] leading-[42px] font-light
+            tracking-[-0.85px]"
+        >
+          Registry
+        </h1>
       </div>
       {!hasContent ? (
         <EmptyState
