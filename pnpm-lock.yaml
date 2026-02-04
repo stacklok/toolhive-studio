@@ -106,7 +106,7 @@ importers:
         version: 7.6.0
       '@sentry/vite-plugin':
         specifier: ^4.0.0
-        version: 4.7.0(encoding@0.1.13)
+        version: 4.9.0(encoding@0.1.13)
       '@streamdown/cjk':
         specifier: ^1.0.1
         version: 1.0.1(@types/mdast@4.0.4)(micromark-util-types@2.0.2)(micromark@4.0.2)(react@19.2.4)(unified@11.0.5)
@@ -478,8 +478,16 @@ packages:
     resolution: {integrity: sha512-H3mcG6ZDLTlYfaSNi0iOKkigqMFvkTKlGUYlD8GW7nNOYRrevuA46iTypPyv+06V3fEmvvazfntkBU34L0azAw==}
     engines: {node: '>=6.9.0'}
 
+  '@babel/core@7.29.0':
+    resolution: {integrity: sha512-CGOfOJqWjg2qW/Mb6zNsDm+u5vFQ8DxXfbM09z69p5Z6+mE1ikP2jUXw+j42Pf1XTYED2Rni5f95npYeuwMDQA==}
+    engines: {node: '>=6.9.0'}
+
   '@babel/generator@7.28.6':
     resolution: {integrity: sha512-lOoVRwADj8hjf7al89tvQ2a1lf53Z+7tiXMgpZJL3maQPDxh0DgLMN62B2MKUOFcoodBHLMbDM6WAbKgNy5Suw==}
+    engines: {node: '>=6.9.0'}
+
+  '@babel/generator@7.29.0':
+    resolution: {integrity: sha512-vSH118/wwM/pLR38g/Sgk05sNtro6TlTJKuiMXDaZqPUfjTFcudpCOt00IhOfj+1BFAX+UFAlzCU+6WXr3GLFQ==}
     engines: {node: '>=6.9.0'}
 
   '@babel/helper-compilation-targets@7.28.6':
@@ -525,6 +533,11 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
+  '@babel/parser@7.29.0':
+    resolution: {integrity: sha512-IyDgFV5GeDUVX4YdF/3CPULtVGSXXMLh1xVIgdCgxApktqnQV0r7/8Nqthg+8YLGaAtdyIlo2qIdZrbCv4+7ww==}
+    engines: {node: '>=6.0.0'}
+    hasBin: true
+
   '@babel/plugin-syntax-jsx@7.28.6':
     resolution: {integrity: sha512-wgEmr06G6sIpqr8YDwA2dSRTE3bJ+V0IfpzfSY3Lfgd7YWOaAdlykvJi13ZKBt8cZHfgH1IXN+CL656W3uUa4w==}
     engines: {node: '>=6.9.0'}
@@ -549,8 +562,16 @@ packages:
     resolution: {integrity: sha512-fgWX62k02qtjqdSNTAGxmKYY/7FSL9WAS1o2Hu5+I5m9T0yxZzr4cnrfXQ/MX0rIifthCSs6FKTlzYbJcPtMNg==}
     engines: {node: '>=6.9.0'}
 
+  '@babel/traverse@7.29.0':
+    resolution: {integrity: sha512-4HPiQr0X7+waHfyXPZpWPfWL/J7dcN1mx9gL6WdQVMbPnF3+ZhSMs8tCxN7oHddJE9fhNE7+lxdnlyemKfJRuA==}
+    engines: {node: '>=6.9.0'}
+
   '@babel/types@7.28.6':
     resolution: {integrity: sha512-0ZrskXVEHSWIqZM/sQZ4EV3jZJXRkio/WCxaqKZP1g//CEWEPSfeZFcms4XeKBCHU0ZKnIkdJeU/kF+eRp5lBg==}
+    engines: {node: '>=6.9.0'}
+
+  '@babel/types@7.29.0':
+    resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
 
   '@bcoe/v8-coverage@1.0.2':
@@ -2471,16 +2492,16 @@ packages:
     resolution: {integrity: sha512-Vmea0GcOg57z/S1bVSj3saFcRvDqdLzdy4wd9fQMpMgy5OCbTlo7lxVUndKzbcZnanma6zF6VxwnWER1WuN9RA==}
     engines: {node: '>=18'}
 
-  '@sentry/babel-plugin-component-annotate@4.7.0':
-    resolution: {integrity: sha512-MkyajDiO17/GaHHFgOmh05ZtOwF5hmm9KRjVgn9PXHIdpz+TFM5mkp1dABmR6Y75TyNU98Z1aOwPOgyaR5etJw==}
+  '@sentry/babel-plugin-component-annotate@4.9.0':
+    resolution: {integrity: sha512-TJ7sVoa2Bf36lpJjBAzpNDC5Hg+evjsQnqUPeDx9Nz/YFw0u9rK1cwvi95gVWpx7PJSDCkljIv3aw0m4RatHpQ==}
     engines: {node: '>= 14'}
 
   '@sentry/browser@10.34.0':
     resolution: {integrity: sha512-8WCsAXli5Z+eIN8dMY8KGQjrS3XgUp1np/pjdeWNrVPVR8q8XpS34qc+f+y/LFrYQC9bs2Of5aIBwRtDCIvRsg==}
     engines: {node: '>=18'}
 
-  '@sentry/bundler-plugin-core@4.7.0':
-    resolution: {integrity: sha512-gFdEtiup/7qYhN3vp1v2f0WL9AG9OorWLtIpfSBYbWjtzklVNg1sizvNyZ8nEiwtnb25LzvvCUbOP1SyP6IodQ==}
+  '@sentry/bundler-plugin-core@4.9.0':
+    resolution: {integrity: sha512-gOVgHG5BrxCFmZow1XovlDr1FH/gO/LfD8OKci1rryeqHVBLr3+S4yS4ACl+E5lfQPym8Ve1BKh793d1rZ0dyA==}
     engines: {node: '>= 14'}
 
   '@sentry/cli-darwin@2.58.4':
@@ -2573,8 +2594,8 @@ packages:
       '@opentelemetry/sdk-trace-base': ^1.30.1 || ^2.1.0 || ^2.2.0
       '@opentelemetry/semantic-conventions': ^1.37.0
 
-  '@sentry/vite-plugin@4.7.0':
-    resolution: {integrity: sha512-eQXDghOQLsYwnHutJo8TCzhG4gp0KLNq3h96iqFMhsbjnNnfYeCX1lIw1pJEh/az3cDwSyPI/KGkvf8hr0dZmQ==}
+  '@sentry/vite-plugin@4.9.0':
+    resolution: {integrity: sha512-1olEMpZnwZS4UdboB25w5sZYJSlwbxJaieoL0c7FDNMyyns5GhXSl6mK8Lpx9w3rIc88gw9JOdsehdd6YrlLOA==}
     engines: {node: '>= 14'}
 
   '@shikijs/core@3.21.0':
@@ -7922,10 +7943,38 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@babel/core@7.29.0':
+    dependencies:
+      '@babel/code-frame': 7.29.0
+      '@babel/generator': 7.29.0
+      '@babel/helper-compilation-targets': 7.28.6
+      '@babel/helper-module-transforms': 7.28.6(@babel/core@7.29.0)
+      '@babel/helpers': 7.28.6
+      '@babel/parser': 7.29.0
+      '@babel/template': 7.28.6
+      '@babel/traverse': 7.29.0
+      '@babel/types': 7.29.0
+      '@jridgewell/remapping': 2.3.5
+      convert-source-map: 2.0.0
+      debug: 4.4.3
+      gensync: 1.0.0-beta.2
+      json5: 2.2.3
+      semver: 6.3.1
+    transitivePeerDependencies:
+      - supports-color
+
   '@babel/generator@7.28.6':
     dependencies:
       '@babel/parser': 7.28.6
       '@babel/types': 7.28.6
+      '@jridgewell/gen-mapping': 0.3.13
+      '@jridgewell/trace-mapping': 0.3.31
+      jsesc: 3.1.0
+
+  '@babel/generator@7.29.0':
+    dependencies:
+      '@babel/parser': 7.29.0
+      '@babel/types': 7.29.0
       '@jridgewell/gen-mapping': 0.3.13
       '@jridgewell/trace-mapping': 0.3.31
       jsesc: 3.1.0
@@ -7956,6 +8005,15 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@babel/helper-module-transforms@7.28.6(@babel/core@7.29.0)':
+    dependencies:
+      '@babel/core': 7.29.0
+      '@babel/helper-module-imports': 7.28.6
+      '@babel/helper-validator-identifier': 7.28.5
+      '@babel/traverse': 7.28.6
+    transitivePeerDependencies:
+      - supports-color
+
   '@babel/helper-plugin-utils@7.28.6': {}
 
   '@babel/helper-string-parser@7.27.1': {}
@@ -7972,6 +8030,10 @@ snapshots:
   '@babel/parser@7.28.6':
     dependencies:
       '@babel/types': 7.28.6
+
+  '@babel/parser@7.29.0':
+    dependencies:
+      '@babel/types': 7.29.0
 
   '@babel/plugin-syntax-jsx@7.28.6(@babel/core@7.28.6)':
     dependencies:
@@ -8003,7 +8065,24 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@babel/traverse@7.29.0':
+    dependencies:
+      '@babel/code-frame': 7.29.0
+      '@babel/generator': 7.29.0
+      '@babel/helper-globals': 7.28.0
+      '@babel/parser': 7.29.0
+      '@babel/template': 7.28.6
+      '@babel/types': 7.29.0
+      debug: 4.4.3
+    transitivePeerDependencies:
+      - supports-color
+
   '@babel/types@7.28.6':
+    dependencies:
+      '@babel/helper-string-parser': 7.27.1
+      '@babel/helper-validator-identifier': 7.28.5
+
+  '@babel/types@7.29.0':
     dependencies:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
@@ -10124,7 +10203,7 @@ snapshots:
       '@sentry-internal/browser-utils': 10.34.0
       '@sentry/core': 10.34.0
 
-  '@sentry/babel-plugin-component-annotate@4.7.0': {}
+  '@sentry/babel-plugin-component-annotate@4.9.0': {}
 
   '@sentry/browser@10.34.0':
     dependencies:
@@ -10134,10 +10213,10 @@ snapshots:
       '@sentry-internal/replay-canvas': 10.34.0
       '@sentry/core': 10.34.0
 
-  '@sentry/bundler-plugin-core@4.7.0(encoding@0.1.13)':
+  '@sentry/bundler-plugin-core@4.9.0(encoding@0.1.13)':
     dependencies:
-      '@babel/core': 7.28.6
-      '@sentry/babel-plugin-component-annotate': 4.7.0
+      '@babel/core': 7.29.0
+      '@sentry/babel-plugin-component-annotate': 4.9.0
       '@sentry/cli': 2.58.4(encoding@0.1.13)
       dotenv: 16.6.1
       find-up: 5.0.0
@@ -10267,9 +10346,9 @@ snapshots:
       '@opentelemetry/semantic-conventions': 1.39.0
       '@sentry/core': 10.34.0
 
-  '@sentry/vite-plugin@4.7.0(encoding@0.1.13)':
+  '@sentry/vite-plugin@4.9.0(encoding@0.1.13)':
     dependencies:
-      '@sentry/bundler-plugin-core': 4.7.0(encoding@0.1.13)
+      '@sentry/bundler-plugin-core': 4.9.0(encoding@0.1.13)
       unplugin: 1.0.1
     transitivePeerDependencies:
       - encoding
