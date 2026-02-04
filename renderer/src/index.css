@@ -12,6 +12,7 @@
   --font-sans: 'Inter Variable', sans-serif;
   --font-mono: 'Space Mono', monospace;
   --font-display: 'Atkinson Hyperlegible', sans-serif;
+  --font-serif: 'Merriweather Variable', serif;
 
   --spacing-sidebar: 247px;
 
@@ -51,23 +52,37 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Nav/Header brand colors */
+  --color-nav-background: var(--nav-background);
+  --color-nav-border: var(--nav-border);
+  --color-nav-button-active-bg: var(--nav-button-active-bg);
+  --color-nav-button-active-text: var(--nav-button-active-text);
+
+  /* Status colors */
+  --color-success: var(--success);
 }
 
 :root {
   color-scheme: light dark;
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
+  --radius: 0.5rem;
+  --background: #f9faf9;
   --foreground: oklch(0.145 0 0);
-  --card: oklch(0.97 0 0 / 50%);
-  /* --card: oklch(0.965 0.002 276 / 50%); */
+
+  /* Nav/Header brand tokens - Light Mode (hex for exact Figma match) */
+  --nav-background: #265763;
+  --nav-border: #538b98;
+  --nav-button-active-bg: #064251;
+  --nav-button-active-text: #ffffff;
+  --card: #ffffff;
 
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
+  --secondary: #F4F4F5;
+  --secondary-foreground: #18181b;
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
@@ -81,7 +96,7 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
+  --sidebar: #f9faf9;
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
   --sidebar-primary-foreground: oklch(0.985 0 0);
@@ -89,19 +104,30 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Status colors */
+  --success: #428D68;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: #131313;
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.269 0 0 / 50%);
+
+  /* Nav/Header brand tokens - Dark Mode (hex for exact Figma match) */
+  --nav-background: #102930;
+  --nav-border: #1d4b57;
+  --nav-button-active-bg: #196a7c;
+  --nav-button-active-text: #fafafa;
+  --card: #09090b;
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: #09090b;
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
+  --primary: #e1e1e1;
+  --primary-foreground: #09090b;
+  --button-primary-bg: #e1e1e1;
+  --button-primary-text: #09090b;
+  --secondary: #27272A;
+  --secondary-foreground: #fafafa;
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
   --accent: oklch(0.269 0 0);
@@ -115,7 +141,7 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
+  --sidebar: #09090b;
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
   --sidebar-primary-foreground: oklch(0.985 0 0);
@@ -123,6 +149,9 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* Status colors */
+  --success: #61BB8F;
 }
 
 @layer base {
