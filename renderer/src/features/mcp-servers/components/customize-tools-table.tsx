@@ -364,7 +364,8 @@ export function CustomizeToolsTable({
               <TooltipTrigger asChild>
                 <span className="inline-flex">
                   <Button
-                    variant="default"
+                    variant="action"
+                    className="rounded-full"
                     onClick={() => {
                       setDisableBlocker(true)
                       handleApply()
@@ -386,6 +387,7 @@ export function CustomizeToolsTable({
             </Tooltip>
             <Button
               variant="outline"
+              className="rounded-full"
               onClick={handleGoBack}
               disabled={isLoading}
             >

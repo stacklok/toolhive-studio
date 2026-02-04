@@ -443,11 +443,11 @@ export function DialogProviderSettings({
                                   <Button
                                     type="button"
                                     variant="outline"
-                                    size="sm"
+                                    size="icon"
                                     onClick={() =>
                                       handleRemoveApiKey(pk.provider.id)
                                     }
-                                    className="hover:bg-destructive hover:text-destructive-foreground cursor-pointer px-3"
+                                    className="hover:bg-destructive hover:text-destructive-foreground cursor-pointer"
                                     data-testid="remove-credentials-button"
                                   >
                                     <Trash2 className="h-4 w-4" />
@@ -503,13 +503,18 @@ export function DialogProviderSettings({
         </ScrollArea>
 
         <DialogFooter>
-          <Button variant="secondary" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="secondary"
+            className="rounded-full"
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
           <Button
             onClick={handleSave}
             disabled={updateProviderSettingsMutation.isPending}
-            variant="default"
+            variant="action"
+            className="rounded-full"
           >
             {updateProviderSettingsMutation.isPending ? 'Saving...' : 'Save'}
           </Button>
