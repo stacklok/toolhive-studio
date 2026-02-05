@@ -59,8 +59,8 @@ vi.mock('../constants', () => ({
   }),
   SHELL_PATH_ENTRY: 'export PATH="$HOME/.toolhive/bin:$PATH"',
   SHELL_PATH_MARKERS: {
-    start: '# Added by ToolHive Studio - do not modify this block',
-    end: '# End ToolHive Studio',
+    start: '# Added by ToolHive UI - do not modify this block',
+    end: '# End ToolHive UI',
   },
   FISH_PATH_ENTRY: 'fish_add_path -g $HOME/.toolhive/bin',
 }))
@@ -141,16 +141,16 @@ describe('path-configurator', () => {
 
       expect(result.success).toBe(true)
       const content = vol.readFileSync('/home/testuser/.zshrc', 'utf8')
-      expect(content).toContain('# Added by ToolHive Studio')
+      expect(content).toContain('# Added by ToolHive UI')
       expect(content).toContain('export PATH="$HOME/.toolhive/bin:$PATH"')
-      expect(content).toContain('# End ToolHive Studio')
+      expect(content).toContain('# End ToolHive UI')
     })
 
     it('does not duplicate path block if already configured', async () => {
       const existingContent = `# My config
-# Added by ToolHive Studio - do not modify this block
+# Added by ToolHive UI - do not modify this block
 export PATH="$HOME/.toolhive/bin:$PATH"
-# End ToolHive Studio
+# End ToolHive UI
 `
       vol.fromJSON({
         '/home/testuser/.zshrc': existingContent,
@@ -164,7 +164,7 @@ export PATH="$HOME/.toolhive/bin:$PATH"
         'utf8'
       ) as string
       // Should not have duplicate markers
-      const markerCount = (content.match(/# Added by ToolHive Studio/g) || [])
+      const markerCount = (content.match(/# Added by ToolHive UI/g) || [])
         .length
       expect(markerCount).toBe(1)
     })
@@ -246,7 +246,7 @@ export PATH="$HOME/.toolhive/bin:$PATH"
       expect(mockSpan.end).toHaveBeenCalled()
       // File should not be modified
       const content = vol.readFileSync('/home/testuser/.zshrc', 'utf8')
-      expect(content).not.toContain('# Added by ToolHive Studio')
+      expect(content).not.toContain('# Added by ToolHive UI')
     })
   })
 
@@ -254,9 +254,9 @@ export PATH="$HOME/.toolhive/bin:$PATH"
     it('removes path block from shell RC files', async () => {
       const contentWithBlock = `# My config
 
-# Added by ToolHive Studio - do not modify this block
+# Added by ToolHive UI - do not modify this block
 export PATH="$HOME/.toolhive/bin:$PATH"
-# End ToolHive Studio
+# End ToolHive UI
 
 alias ll="ls -la"
 `
@@ -268,7 +268,7 @@ alias ll="ls -la"
 
       expect(result.success).toBe(true)
       const content = vol.readFileSync('/home/testuser/.zshrc', 'utf8')
-      expect(content).not.toContain('# Added by ToolHive Studio')
+      expect(content).not.toContain('# Added by ToolHive UI')
       expect(content).not.toContain('export PATH="$HOME/.toolhive/bin:$PATH"')
       expect(content).toContain('alias ll="ls -la"')
     })
@@ -295,9 +295,9 @@ alias ll="ls -la"
 
     it('removes from all shell RC files', async () => {
       const blockContent = `
-# Added by ToolHive Studio - do not modify this block
+# Added by ToolHive UI - do not modify this block
 export PATH="$HOME/.toolhive/bin:$PATH"
-# End ToolHive Studio
+# End ToolHive UI
 `
       vol.fromJSON({
         '/home/testuser/.zshrc': `# zsh${blockContent}`,
@@ -309,14 +309,14 @@ export PATH="$HOME/.toolhive/bin:$PATH"
 
       expect(result.success).toBe(true)
       expect(vol.readFileSync('/home/testuser/.zshrc', 'utf8')).not.toContain(
-        '# Added by ToolHive Studio'
+        '# Added by ToolHive UI'
       )
       expect(vol.readFileSync('/home/testuser/.bashrc', 'utf8')).not.toContain(
-        '# Added by ToolHive Studio'
+        '# Added by ToolHive UI'
       )
       expect(
         vol.readFileSync('/home/testuser/.bash_profile', 'utf8')
-      ).not.toContain('# Added by ToolHive Studio')
+      ).not.toContain('# Added by ToolHive UI')
     })
   })
 
@@ -324,9 +324,9 @@ export PATH="$HOME/.toolhive/bin:$PATH"
     it('returns isConfigured: true when path block exists', async () => {
       vol.fromJSON({
         '/home/testuser/.zshrc': `# config
-# Added by ToolHive Studio - do not modify this block
+# Added by ToolHive UI - do not modify this block
 export PATH="$HOME/.toolhive/bin:$PATH"
-# End ToolHive Studio
+# End ToolHive UI
 `,
       })
 
@@ -359,9 +359,9 @@ export PATH="$HOME/.toolhive/bin:$PATH"
       vol.fromJSON({
         '/home/testuser/.zshrc': '# no config here',
         '/home/testuser/.bashrc': `# bash config
-# Added by ToolHive Studio - do not modify this block
+# Added by ToolHive UI - do not modify this block
 export PATH="$HOME/.toolhive/bin:$PATH"
-# End ToolHive Studio
+# End ToolHive UI
 `,
       })
 

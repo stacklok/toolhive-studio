@@ -250,7 +250,7 @@ export function CliTab() {
           {cliStatus.isManaged && (
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Managed by</span>
-              <Badge variant="secondary">ToolHive Studio</Badge>
+              <Badge variant="secondary">ToolHive UI</Badge>
             </div>
           )}
         </div>
@@ -258,7 +258,7 @@ export function CliTab() {
           <Alert className="mt-3">
             <AlertCircle className="size-4" />
             <AlertDescription>
-              CLI is not currently managed by ToolHive Studio. Click
+              CLI is not currently managed by ToolHive UI. Click
               &quot;Reinstall&quot; to set up CLI management.
             </AlertDescription>
           </Alert>

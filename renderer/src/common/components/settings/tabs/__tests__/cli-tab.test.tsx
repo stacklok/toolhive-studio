@@ -95,7 +95,7 @@ describe('CliTab', () => {
       expect(screen.getByText('Install Method')).toBeVisible()
       expect(screen.getByText('Symlink')).toBeVisible()
       expect(screen.getByText('Managed by')).toBeVisible()
-      expect(screen.getByText('ToolHive Studio')).toBeVisible()
+      expect(screen.getByText('ToolHive UI')).toBeVisible()
     })
 
     it('displays CLI location with symlink target', async () => {
@@ -160,7 +160,7 @@ describe('CliTab', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText(/CLI is not currently managed by ToolHive Studio/)
+          screen.getByText(/CLI is not currently managed by ToolHive UI/)
         ).toBeVisible()
       })
     })

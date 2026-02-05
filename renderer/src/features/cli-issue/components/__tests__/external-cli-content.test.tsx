@@ -34,7 +34,7 @@ describe('ExternalCliContent', () => {
     expect(screen.getByText('External ToolHive CLI Detected')).toBeVisible()
     expect(
       screen.getByText(
-        'ToolHive Studio cannot run while an external CLI is installed.'
+        'ToolHive UI cannot run while an external CLI is installed.'
       )
     ).toBeVisible()
   })
