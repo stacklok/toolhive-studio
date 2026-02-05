@@ -116,7 +116,10 @@ export function LogsPage() {
           <RefreshButton refresh={refetch} aria-label="Refresh" />
         </div>
       </div>
-      <div className="max-h-full flex-1 overflow-auto rounded-md border">
+      <div
+        className="dark:bg-card max-h-full flex-1 overflow-auto rounded-md
+          border bg-white"
+      >
         {isLoadingState ? (
           <SkeletonLogs />
         ) : (
