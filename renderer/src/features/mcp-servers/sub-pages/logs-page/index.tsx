@@ -24,7 +24,7 @@ const SKELETON_COUNTS = Array.from(
 function SkeletonLogs() {
   return (
     <div
-      className="flex h-full w-full flex-1 flex-col gap-4 p-10"
+      className="flex w-full flex-col gap-4 p-10"
       data-testid="skeleton-logs"
     >
       {SKELETON_COUNTS.map((numSkeletons, i) => (
@@ -81,7 +81,7 @@ export function LogsPage() {
       : { to: '/group/$groupName' as const, params: { groupName } }
 
   return (
-    <div className="flex max-h-full w-full flex-1 flex-col">
+    <div className="flex w-full flex-col">
       <div className="mb-2">
         <LinkViewTransition {...backLink}>
           <Button
@@ -117,15 +117,15 @@ export function LogsPage() {
         </div>
       </div>
       <div
-        className="dark:bg-card max-h-full flex-1 overflow-auto rounded-md
-          border bg-white"
+        className="dark:bg-card max-h-[500px] overflow-auto rounded-md border
+          bg-white"
       >
         {isLoadingState ? (
           <SkeletonLogs />
         ) : (
           <pre
-            className="text-foreground min-h-full p-5 font-mono text-[13px]
-              leading-[22px] font-normal"
+            className="text-foreground p-5 font-mono text-[13px] leading-[22px]
+              font-normal"
           >
             {filteredLogs.length ? (
               filteredLogs.map((line, i) => (
