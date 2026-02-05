@@ -81,7 +81,7 @@ export function LogsPage() {
       : { to: '/group/$groupName' as const, params: { groupName } }
 
   return (
-    <div className="flex w-full flex-col">
+    <div className="flex h-full w-full flex-col">
       <div className="mb-2">
         <LinkViewTransition {...backLink}>
           <Button
@@ -117,7 +117,7 @@ export function LogsPage() {
         </div>
       </div>
       <div
-        className="dark:border-secondary dark:bg-card h-[calc(100vh-22rem)]
+        className="dark:border-secondary dark:bg-card min-h-0 flex-1
           overflow-auto rounded-md border bg-white"
       >
         {isLoadingState ? (
