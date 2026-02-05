@@ -196,6 +196,7 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
             <Button
               type="button"
               variant="outline"
+              size="icon"
               aria-label={`Remove ${inputLabelPrefix} ${idx + 1}`}
               onClick={() => remove(idx)}
             >
