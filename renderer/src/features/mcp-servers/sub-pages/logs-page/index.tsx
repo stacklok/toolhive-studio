@@ -117,7 +117,7 @@ export function LogsPage() {
         </div>
       </div>
       <div
-        className="border-nav-border dark:bg-card h-[480px] overflow-auto
+        className="dark:border-secondary dark:bg-card h-[480px] overflow-auto
           rounded-md border bg-white"
       >
         {isLoadingState ? (
