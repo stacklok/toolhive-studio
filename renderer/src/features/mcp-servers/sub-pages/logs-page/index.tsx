@@ -117,8 +117,8 @@ export function LogsPage() {
         </div>
       </div>
       <div
-        className="dark:border-secondary dark:bg-card h-[600px] overflow-auto
-          rounded-md border bg-white"
+        className="dark:border-secondary dark:bg-card h-[calc(100vh-22rem)]
+          overflow-auto rounded-md border bg-white"
       >
         {isLoadingState ? (
           <SkeletonLogs />
