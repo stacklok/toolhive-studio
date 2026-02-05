@@ -106,7 +106,7 @@ export function ChatInterface() {
           <Button
             onClick={onClearMessages}
             variant="outline"
-            className="cursor-pointer"
+            className="cursor-pointer rounded-full"
           >
             Clear Chat
             <Trash2 />
