@@ -155,8 +155,8 @@ export function RegistryServerDetail() {
         description={server.description}
       />
       {hasTools && (
-        <div className="my-8 flex w-3/5 flex-col gap-8">
-          <div className="flex w-3/5 flex-[3] flex-col gap-4">
+        <div className="mt-8 mb-2 flex w-3/5 flex-col gap-8">
+          <div className="flex w-3/5 flex-3 flex-col gap-4">
             <p className="text-base font-bold">Tools listed</p>
             <div className="flex flex-wrap gap-2">
               {toolsToShow?.map((tool) => (
