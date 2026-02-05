@@ -92,7 +92,7 @@
     "vitest-fail-on-console": "^0.10.0"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "3.0.36",
+    "@ai-sdk/anthropic": "^3.0.36",
     "@ai-sdk/google": "^3.0.21",
     "@ai-sdk/mcp": "^1.0.18",
     "@ai-sdk/openai": "^3.0.25",
