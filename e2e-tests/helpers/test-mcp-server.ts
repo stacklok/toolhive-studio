@@ -34,27 +34,8 @@ export async function startTestMcpServer(): Promise<TestMcpServer> {
   const secretCode = generateSimpleCode()
   const bearerToken = `token-${generateSimpleCode()}`
 
-  const mcpServer = new McpServer({
-    name: 'e2e-test-server',
-    version: '1.0.0',
-  })
-
-  mcpServer.tool(
-    'get_secret_code',
-    'Returns a secret code for testing',
-    {},
-    async () => ({
-      content: [{ type: 'text', text: secretCode }],
-    })
-  )
-
   const app = express()
   app.use(express.json())
-
-  const transport = new StreamableHTTPServerTransport({
-    sessionIdGenerator: undefined,
-  })
-  await mcpServer.connect(transport)
 
   // Handle OAuth discovery - return 404 to indicate no auth required
   app.get('/.well-known/oauth-protected-resource', (_req, res) => {
@@ -78,6 +59,26 @@ export async function startTestMcpServer(): Promise<TestMcpServer> {
       }
     }
 
+    // Create fresh server + transport per request to avoid cross-client data leaks
+    // See: GHSA-345p-7cg4-v4c7
+    const mcpServer = new McpServer({
+      name: 'e2e-test-server',
+      version: '1.0.0',
+    })
+
+    mcpServer.tool(
+      'get_secret_code',
+      'Returns a secret code for testing',
+      {},
+      async () => ({
+        content: [{ type: 'text', text: secretCode }],
+      })
+    )
+
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: undefined,
+    })
+    await mcpServer.connect(transport)
     await transport.handleRequest(req, res, req.body)
   })
 
@@ -92,7 +93,6 @@ export async function startTestMcpServer(): Promise<TestMcpServer> {
         bearerToken,
         url: `http://127.0.0.1:${port}/mcp`,
         stop: async () => {
-          await transport.close()
           await new Promise<void>((res) => {
             httpServer.close(() => res())
           })
