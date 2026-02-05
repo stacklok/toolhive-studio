@@ -45,7 +45,13 @@ export function DropdownMenuRunMcpServer({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="action" className={cn('rounded-full', className)}>
+        <Button
+          variant="action"
+          className={cn(
+            'dark:bg-nav-button-active-bg! rounded-full',
+            className
+          )}
+        >
           <PlusIcon />
           Add an MCP server
         </Button>
