@@ -42,7 +42,7 @@ describe('SymlinkIssueContent', () => {
       render(<SymlinkIssueContent {...defaultProps} type="broken" />)
 
       expect(
-        screen.getByText(/This can happen if ToolHive Studio was moved/)
+        screen.getByText(/This can happen if ToolHive UI was moved/)
       ).toBeVisible()
     })
 

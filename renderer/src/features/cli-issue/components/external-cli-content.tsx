@@ -34,7 +34,7 @@ export function ExternalCliContent({
           External ToolHive CLI Detected
         </CardTitle>
         <CardDescription>
-          ToolHive Studio cannot run while an external CLI is installed.
+          ToolHive UI cannot run while an external CLI is installed.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -48,7 +48,7 @@ export function ExternalCliContent({
           </p>
         </div>
         <p className="text-muted-foreground text-sm">
-          ToolHive Studio manages its own CLI installation to ensure version
+          ToolHive UI manages its own CLI installation to ensure version
           compatibility. Please uninstall the external CLI and click "Check
           Again".
         </p>

@@ -28,7 +28,7 @@ export function SymlinkIssueContent({
     ? 'The ToolHive CLI symlink is broken.'
     : 'The ToolHive CLI has been modified externally.'
   const detail = isBroken
-    ? 'This can happen if ToolHive Studio was moved or updated.'
+    ? 'This can happen if ToolHive UI was moved or updated.'
     : 'This could cause version compatibility issues.'
   const buttonText = isBroken ? 'Repair' : 'Restore'
 

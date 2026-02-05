@@ -67,8 +67,8 @@ export function getShellRcFiles(): Record<string, string[]> {
 export const SHELL_PATH_ENTRY = 'export PATH="$HOME/.toolhive/bin:$PATH"'
 
 export const SHELL_PATH_MARKERS = {
-  start: '# Added by ToolHive Studio - do not modify this block',
-  end: '# End ToolHive Studio',
+  start: '# Added by ToolHive UI - do not modify this block',
+  end: '# End ToolHive UI',
 }
 
 export const FISH_PATH_ENTRY = 'fish_add_path -g $HOME/.toolhive/bin'

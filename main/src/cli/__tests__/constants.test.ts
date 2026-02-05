@@ -109,8 +109,8 @@ describe('constants', () => {
 
   describe('SHELL_PATH_MARKERS', () => {
     it('has start and end markers', () => {
-      expect(SHELL_PATH_MARKERS.start).toContain('ToolHive Studio')
-      expect(SHELL_PATH_MARKERS.end).toContain('End ToolHive Studio')
+      expect(SHELL_PATH_MARKERS.start).toContain('ToolHive UI')
+      expect(SHELL_PATH_MARKERS.end).toContain('End ToolHive UI')
     })
   })
 
