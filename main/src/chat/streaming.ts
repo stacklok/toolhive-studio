@@ -57,7 +57,7 @@ export async function handleChatStreamRealtime(
         try {
           const result = streamText({
             model,
-            messages: convertToModelMessages(request.messages),
+            messages: await convertToModelMessages(request.messages),
             tools: Object.keys(mcpTools).length > 0 ? mcpTools : undefined,
             toolChoice: Object.keys(mcpTools).length > 0 ? 'auto' : undefined,
             stopWhen: stepCountIs(50), // Increase step limit for complex tool chains
