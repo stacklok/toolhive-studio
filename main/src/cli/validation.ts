@@ -162,13 +162,34 @@ export async function handleValidationResult(
               'cli.old_desktop_version': marker.desktop_version,
               'cli.new_desktop_version': currentDesktopVersion,
             })
+
             const bundledPath = getBundledCliPath()
             const cliPath = getDesktopCliPath(platform)
+            let newChecksum = marker.cli_checksum
+
+            // On Windows, we need to recopy the CLI since it's a copy not a symlink
+            if (platform === 'win32') {
+              log.info('Recopying CLI on Windows after app update...')
+              const symlinkResult = createSymlink(platform)
+              if (symlinkResult.success) {
+                newChecksum = symlinkResult.checksum
+                span.setAttribute('cli.windows_recopy', true)
+              } else {
+                log.error(
+                  `Failed to recopy CLI on Windows: ${symlinkResult.error}`
+                )
+                span.setAttribute(
+                  'cli.windows_recopy_error',
+                  symlinkResult.error ?? 'unknown'
+                )
+              }
+            }
+
             const cliInfo = await getCliInfo(cliPath)
             createMarkerForDesktopInstall(
               cliInfo.version ?? 'unknown',
               platform === 'win32' ? undefined : bundledPath,
-              marker.cli_checksum
+              newChecksum
             )
           }
 
