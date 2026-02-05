@@ -378,6 +378,97 @@ describe('validation', () => {
       expect(mockCreateMarkerForDesktopInstall).not.toHaveBeenCalled()
       expect(result.status).toBe('valid')
     })
+
+    it('recopies CLI on Windows when desktop version changes', async () => {
+      // Marker with old desktop version triggers needsUpdate
+      mockReadMarkerFile.mockReturnValue({
+        schema_version: 1,
+        source: 'desktop',
+        install_method: 'copy',
+        cli_version: '0.9.0',
+        cli_checksum: 'old-checksum',
+        installed_at: '2024-01-01',
+        desktop_version: '0.9.0', // Different from app.getVersion() mock (1.0.0)
+      })
+      mockCreateSymlink.mockReturnValue({
+        success: true,
+        checksum: 'new-checksum',
+      })
+      mockGetCliInfo.mockResolvedValue({
+        exists: true,
+        version: '1.0.0',
+        isExecutable: true,
+      })
+      mockCreateMarkerForDesktopInstall.mockReturnValue(true)
+
+      const result = await handleValidationResult({ status: 'valid' }, 'win32')
+
+      expect(mockCreateSymlink).toHaveBeenCalledWith('win32')
+      expect(mockCreateMarkerForDesktopInstall).toHaveBeenCalledWith(
+        '1.0.0',
+        undefined, // Windows passes undefined for symlink target
+        'new-checksum'
+      )
+      expect(result.status).toBe('valid')
+    })
+
+    it('does not recopy CLI on macOS/Linux when desktop version changes', async () => {
+      // Marker with old desktop version triggers needsUpdate
+      mockReadMarkerFile.mockReturnValue({
+        schema_version: 1,
+        source: 'desktop',
+        install_method: 'symlink',
+        cli_version: '0.9.0',
+        installed_at: '2024-01-01',
+        desktop_version: '0.9.0', // Different from app.getVersion() mock (1.0.0)
+      })
+      mockGetCliInfo.mockResolvedValue({
+        exists: true,
+        version: '1.0.0',
+        isExecutable: true,
+      })
+      mockCreateMarkerForDesktopInstall.mockReturnValue(true)
+
+      const result = await handleValidationResult({ status: 'valid' }, 'darwin')
+
+      // Should NOT call createSymlink on macOS - symlink auto-updates
+      expect(mockCreateSymlink).not.toHaveBeenCalled()
+      expect(mockCreateMarkerForDesktopInstall).toHaveBeenCalled()
+      expect(result.status).toBe('valid')
+    })
+
+    it('handles Windows CLI recopy failure gracefully', async () => {
+      mockReadMarkerFile.mockReturnValue({
+        schema_version: 1,
+        source: 'desktop',
+        install_method: 'copy',
+        cli_version: '0.9.0',
+        cli_checksum: 'old-checksum',
+        installed_at: '2024-01-01',
+        desktop_version: '0.9.0',
+      })
+      mockCreateSymlink.mockReturnValue({
+        success: false,
+        error: 'Permission denied',
+      })
+      mockGetCliInfo.mockResolvedValue({
+        exists: true,
+        version: '0.9.0', // Old version since copy failed
+        isExecutable: true,
+      })
+      mockCreateMarkerForDesktopInstall.mockReturnValue(true)
+
+      const result = await handleValidationResult({ status: 'valid' }, 'win32')
+
+      expect(mockCreateSymlink).toHaveBeenCalledWith('win32')
+      // Should still update marker with old checksum when recopy fails
+      expect(mockCreateMarkerForDesktopInstall).toHaveBeenCalledWith(
+        '0.9.0',
+        undefined,
+        'old-checksum' // Falls back to old checksum
+      )
+      expect(result.status).toBe('valid')
+    })
   })
 
   describe('repairCliSymlink', () => {
