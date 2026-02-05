@@ -22,6 +22,7 @@ import { useIsOptimizedGroupName } from '@/features/clients/hooks/use-is-optimiz
 import { Button } from '@/common/components/ui/button'
 import { Sparkles } from 'lucide-react'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
+import { Separator } from '@/common/components/ui/separator'
 
 export const Route = createFileRoute('/group/$groupName')({
   loader: ({ context: { queryClient }, params: { groupName } }) =>
@@ -115,10 +116,7 @@ function GroupRoute() {
     <div className="flex h-full gap-6">
       <McpServersSidebar currentGroupName={groupName} />
       <div className="ml-sidebar min-w-0 flex-1">
-        <TitlePage
-          title={getPageTitle(groupName, isOptimizedGroupName)}
-          variant="group"
-        >
+        <TitlePage title={getPageTitle(groupName, isOptimizedGroupName)}>
           <>
             <div className="flex gap-2 lg:ml-auto">
               {workloads.length > 0 && (
@@ -159,7 +157,10 @@ function GroupRoute() {
             </div>
           </EmptyState>
         ) : (
-          <GridCardsMcpServers mcpServers={filteredWorkloads} />
+          <>
+            <Separator className="my-5" />
+            <GridCardsMcpServers mcpServers={filteredWorkloads} />
+          </>
         )}
       </div>
     </div>

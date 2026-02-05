@@ -1,16 +1,14 @@
 export function TitlePage({
   title,
   children,
-  variant = 'default',
 }: {
   title: string | React.ReactNode
   children?: React.ReactNode
-  variant?: 'default' | 'group'
 }) {
   return (
     <div className="flex flex-col gap-4">
       <div
-        className="flex flex-wrap gap-4 md:flex-row md:items-center
+        className="flex flex-wrap gap-4 space-y-5 md:flex-row md:items-center
           md:justify-between"
       >
         <h1
@@ -21,11 +19,6 @@ export function TitlePage({
         </h1>
         {children}
       </div>
-      {variant === 'group' && (
-        <div className="py-4">
-          <div className="border-border h-px w-full border-t" />
-        </div>
-      )}
     </div>
   )
 }
