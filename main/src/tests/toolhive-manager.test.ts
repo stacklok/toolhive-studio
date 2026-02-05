@@ -214,6 +214,9 @@ describe('toolhive-manager', () => {
           stdio: ['ignore', 'ignore', 'pipe'],
           detached: false,
           windowsHide: true,
+          env: expect.objectContaining({
+            TOOLHIVE_SKIP_DESKTOP_CHECK: 'true',
+          }),
         }
       )
 
@@ -408,6 +411,9 @@ describe('toolhive-manager', () => {
           stdio: ['ignore', 'ignore', 'pipe'],
           detached: false,
           windowsHide: true,
+          env: expect.objectContaining({
+            TOOLHIVE_SKIP_DESKTOP_CHECK: 'true',
+          }),
         }
       )
     })
