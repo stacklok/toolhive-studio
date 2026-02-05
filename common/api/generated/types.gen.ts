@@ -386,6 +386,7 @@ export type ClientMcpClient =
   | 'kiro'
   | 'antigravity'
   | 'zed'
+  | 'gemini-cli'
 
 export type ClientMcpClientStatus = {
   client_type?: ClientMcpClient
