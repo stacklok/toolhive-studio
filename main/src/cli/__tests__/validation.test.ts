@@ -407,7 +407,8 @@ describe('validation', () => {
       expect(mockCreateMarkerForDesktopInstall).toHaveBeenCalledWith(
         '1.0.0',
         undefined, // Windows passes undefined for symlink target
-        'new-checksum'
+        'new-checksum',
+        'win32'
       )
       expect(result.status).toBe('valid')
     })
@@ -419,6 +420,7 @@ describe('validation', () => {
         source: 'desktop',
         install_method: 'symlink',
         cli_version: '0.9.0',
+        cli_checksum: 'old-checksum',
         installed_at: '2024-01-01',
         desktop_version: '0.9.0', // Different from app.getVersion() mock (1.0.0)
       })
@@ -433,11 +435,16 @@ describe('validation', () => {
 
       // Should NOT call createSymlink on macOS - symlink auto-updates
       expect(mockCreateSymlink).not.toHaveBeenCalled()
-      expect(mockCreateMarkerForDesktopInstall).toHaveBeenCalled()
+      expect(mockCreateMarkerForDesktopInstall).toHaveBeenCalledWith(
+        '1.0.0',
+        '/app/resources/bin/thv',
+        'old-checksum',
+        'darwin'
+      )
       expect(result.status).toBe('valid')
     })
 
-    it('handles Windows CLI recopy failure gracefully', async () => {
+    it('does not update marker when Windows CLI recopy fails', async () => {
       mockReadMarkerFile.mockReturnValue({
         schema_version: 1,
         source: 'desktop',
@@ -451,22 +458,12 @@ describe('validation', () => {
         success: false,
         error: 'Permission denied',
       })
-      mockGetCliInfo.mockResolvedValue({
-        exists: true,
-        version: '0.9.0', // Old version since copy failed
-        isExecutable: true,
-      })
-      mockCreateMarkerForDesktopInstall.mockReturnValue(true)
 
       const result = await handleValidationResult({ status: 'valid' }, 'win32')
 
       expect(mockCreateSymlink).toHaveBeenCalledWith('win32')
-      // Should still update marker with old checksum when recopy fails
-      expect(mockCreateMarkerForDesktopInstall).toHaveBeenCalledWith(
-        '0.9.0',
-        undefined,
-        'old-checksum' // Falls back to old checksum
-      )
+      // Marker should NOT be updated when recopy fails - allows retry on next launch
+      expect(mockCreateMarkerForDesktopInstall).not.toHaveBeenCalled()
       expect(result.status).toBe('valid')
     })
   })
