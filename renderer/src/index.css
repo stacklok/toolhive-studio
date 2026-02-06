@@ -81,7 +81,7 @@
   --popover-foreground: oklch(0.145 0 0);
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: #F4F4F5;
+  --secondary: #f4f4f5;
   --secondary-foreground: #18181b;
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
@@ -106,7 +106,7 @@
   --sidebar-ring: oklch(0.708 0 0);
 
   /* Status colors */
-  --success: #428D68;
+  --success: #428d68;
 }
 
 .dark {
@@ -126,7 +126,7 @@
   --primary-foreground: #09090b;
   --button-primary-bg: #e1e1e1;
   --button-primary-text: #09090b;
-  --secondary: #27272A;
+  --secondary: #27272a;
   --secondary-foreground: #fafafa;
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
@@ -151,7 +151,7 @@
   --sidebar-ring: oklch(0.556 0 0);
 
   /* Status colors */
-  --success: #61BB8F;
+  --success: #61bb8f;
 }
 
 @layer base {
