@@ -109,6 +109,7 @@ jobs:
         if: runner.os == 'Linux'
 
       - name: Configure AWS Credentials
+        if: vars.AWS_ROLE_ARN != ''
         uses: aws-actions/configure-aws-credentials@e3dd6a429d7300ae4291eb0f18bc549ea1a09cd7 # v4
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
