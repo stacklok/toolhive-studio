@@ -36,7 +36,7 @@ function UpdateVersionButton({
   drift: { localTag: string; registryTag: string }
   disabled?: boolean
 }) {
-  const { promptUpdate } = useUpdateVersion({
+  const { promptUpdate, isReady } = useUpdateVersion({
     serverName,
     registryImage,
     localTag: drift.localTag,
@@ -49,9 +49,9 @@ function UpdateVersionButton({
         <button
           onClick={(e) => {
             e.stopPropagation()
-            promptUpdate()
+            void promptUpdate()
           }}
-          disabled={disabled}
+          disabled={disabled || !isReady}
           className="hover:bg-accent inline-flex size-9 cursor-pointer
             items-center justify-center rounded-md disabled:pointer-events-none
             disabled:opacity-50"
