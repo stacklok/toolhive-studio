@@ -21,14 +21,59 @@ import {
   TooltipContent,
 } from '@/common/components/ui/tooltip'
 import { ServerActionsDropdown } from './server-actions'
-import { CloudIcon, LaptopIcon } from 'lucide-react'
+import { useIsServerFromRegistry } from '../../hooks/use-is-server-from-registry'
+import { useUpdateVersion } from '../../hooks/use-update-version'
+import { CloudIcon, LaptopIcon, ArrowUpCircle } from 'lucide-react'
+
+function UpdateVersionButton({
+  serverName,
+  registryImage,
+  drift,
+  disabled,
+}: {
+  serverName: string
+  registryImage: string
+  drift: { localTag: string; registryTag: string }
+  disabled?: boolean
+}) {
+  const { promptUpdate } = useUpdateVersion({
+    serverName,
+    registryImage,
+    localTag: drift.localTag,
+    registryTag: drift.registryTag,
+  })
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            promptUpdate()
+          }}
+          disabled={disabled}
+          className="hover:bg-accent inline-flex size-9 cursor-pointer
+            items-center justify-center rounded-md disabled:pointer-events-none
+            disabled:opacity-50"
+          aria-label={`Update to ${drift.registryTag}`}
+        >
+          <ArrowUpCircle className="size-5 text-amber-500" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs">
+        Update available: {drift.localTag} → {drift.registryTag}
+      </TooltipContent>
+    </Tooltip>
+  )
+}
 
 type CardContentMcpServerProps = {
   status: CoreWorkload['status']
-  statusContext: CoreWorkload['status_context']
   name: string
   transport: CoreWorkload['transport_type']
   group?: CoreWorkload['group']
+  drift: { localTag: string; registryTag: string } | null
+  registryImage: string | null
 }
 
 function CardContentMcpServer({
@@ -36,6 +81,8 @@ function CardContentMcpServer({
   status,
   transport,
   group,
+  drift,
+  registryImage,
 }: CardContentMcpServerProps) {
   const isRunning = status === 'running'
   const { mutateAsync: restartMutate, isPending: isRestartPending } =
@@ -83,6 +130,14 @@ function CardContentMcpServer({
               })
             }}
           />
+          {drift && registryImage && (
+            <UpdateVersionButton
+              serverName={name}
+              registryImage={registryImage}
+              drift={drift}
+              disabled={`${status}` === 'updating'}
+            />
+          )}
         </div>
       </div>
     </CardContent>
@@ -92,7 +147,6 @@ function CardContentMcpServer({
 export function CardMcpServer({
   name,
   status,
-  statusContext,
   url,
   remote,
   transport,
@@ -100,7 +154,7 @@ export function CardMcpServer({
 }: {
   name: string
   status: CoreWorkload['status']
-  statusContext: CoreWorkload['status_context']
+  statusContext?: CoreWorkload['status_context']
   remote?: CoreWorkload['remote']
   url: string
   transport: CoreWorkload['transport_type']
@@ -167,6 +221,10 @@ export function CardMcpServer({
     prevStatusRef.current = status
   }, [status])
 
+  const { isFromRegistry, drift, matchedRegistryItem } =
+    useIsServerFromRegistry(name)
+  const hasUpdate = isFromRegistry && drift
+
   return (
     <Card
       className={twMerge(
@@ -213,16 +271,24 @@ export function CardMcpServer({
               status={status}
               remote={!!remote}
               group={group}
+              isFromRegistry={!!isFromRegistry}
+              drift={drift}
+              matchedRegistryItem={matchedRegistryItem}
             />
           </div>
         </div>
       </CardHeader>
       <CardContentMcpServer
         status={status}
-        statusContext={statusContext}
         name={name}
         transport={transport}
         group={group}
+        drift={hasUpdate ? drift : null}
+        registryImage={
+          hasUpdate && matchedRegistryItem && 'image' in matchedRegistryItem
+            ? (matchedRegistryItem.image ?? null)
+            : null
+        }
       />
     </Card>
   )
