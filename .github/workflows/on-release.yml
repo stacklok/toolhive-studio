@@ -7,6 +7,7 @@ permissions:
   contents: write # Required for GitHub publisher to upload release assets
   checks: write # Required for unit tests workflow
   pull-requests: write # Required for unit tests workflow
+  id-token: write # Required for AWS OIDC authentication
 
 jobs:
   validate-prerelease:
@@ -107,7 +108,13 @@ jobs:
         uses: ./.github/actions/setup-flatpak
         if: runner.os == 'Linux'
 
-      - name: Build and Publish to GitHub Release
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300ae4291eb0f18bc549ea1a09cd7 # v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Build and Publish
         run: pnpm run publish -- --arch=${{ matrix.arch }}
         env:
           # Ensure the correct Node.js version is used for native modules
