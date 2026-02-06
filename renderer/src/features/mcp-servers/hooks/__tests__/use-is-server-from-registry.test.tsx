@@ -1317,4 +1317,110 @@ describe('useIsServerFromRegistry', () => {
       })
     })
   })
+
+  describe('matchedRegistryItem', () => {
+    it('returns the matched container server registry item', async () => {
+      const wrapper = createWrapper()
+
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'ghcr.io/test/server:v1.0.0',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'ghcr.io/test/server:v1.0.0',
+            tools: ['tool1'],
+            repository_url: 'https://github.com/test/server',
+          }),
+        ],
+      }))
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(true)
+        expect(result.current.matchedRegistryItem).toBeDefined()
+        expect(result.current.matchedRegistryItem).toMatchObject({
+          image: 'ghcr.io/test/server:v1.0.0',
+          tools: ['tool1'],
+          repository_url: 'https://github.com/test/server',
+        })
+      })
+    })
+
+    it('returns the matched remote server registry item', async () => {
+      const wrapper = createWrapper()
+
+      mockedGetApiV1BetaWorkloadsByName.override(() =>
+        createRemoteWorkload({
+          url: 'https://api.example.com/mcp',
+        })
+      )
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        remote_servers: [
+          createRegistryRemoteServer({
+            url: 'https://api.example.com/mcp',
+            tools: ['remote-tool1'],
+            repository_url: 'https://github.com/test/remote',
+          }),
+        ],
+      }))
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-remote-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(true)
+        expect(result.current.matchedRegistryItem).toBeDefined()
+        expect(result.current.matchedRegistryItem).toMatchObject({
+          url: 'https://api.example.com/mcp',
+          tools: ['remote-tool1'],
+          repository_url: 'https://github.com/test/remote',
+        })
+      })
+    })
+
+    it('returns undefined when server is not from registry', async () => {
+      const wrapper = createWrapper()
+
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'ghcr.io/unknown/server:v1.0.0',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'ghcr.io/test/server:v1.0.0',
+            tools: ['tool1'],
+          }),
+        ],
+      }))
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('test-server'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(false)
+        expect(result.current.matchedRegistryItem).toBeUndefined()
+      })
+    })
+
+    it('returns undefined when serverName is empty', async () => {
+      const wrapper = createWrapper()
+
+      const { result } = renderHook(() => useIsServerFromRegistry(''), {
+        wrapper,
+      })
+
+      expect(result.current.matchedRegistryItem).toBeUndefined()
+    })
+  })
 })
