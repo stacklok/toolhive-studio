@@ -11,7 +11,7 @@ interface UseUpdateVersionOptions {
   registryTag: string
 }
 
-function toUpdateBody(
+export function toUpdateBody(
   workloadData: V1CreateRequest,
   registryImage: string
 ): Omit<V1CreateRequest, 'name'> & { image: string } {

@@ -3,9 +3,10 @@ import userEvent from '@testing-library/user-event'
 import { describe, it, expect } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
-import { useUpdateVersion } from '../use-update-version'
+import { useUpdateVersion, toUpdateBody } from '../use-update-version'
 import { mockedGetApiV1BetaWorkloadsByName } from '@mocks/fixtures/workloads_name/get'
 import { recordRequests } from '@/common/mocks/node'
+import type { V1CreateRequest } from '@common/api/generated/types.gen'
 
 const defaultOptions = {
   serverName: 'postgres-db',
@@ -18,6 +19,9 @@ const createWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
+        retry: false,
+      },
+      mutations: {
         retry: false,
       },
     },
@@ -162,5 +166,67 @@ describe('useUpdateVersion', () => {
       )
       expect(editRequest).toBeUndefined()
     })
+  })
+})
+
+describe('toUpdateBody', () => {
+  it('removes name and replaces image from workload data', () => {
+    const workload: V1CreateRequest = {
+      name: 'my-server',
+      image: 'ghcr.io/test/server:v1.0.0',
+      transport: 'stdio',
+      group: 'default',
+      env_vars: { API_KEY: 'secret' },
+      cmd_arguments: ['--verbose'],
+      host: '127.0.0.1',
+      target_port: 8080,
+      secrets: ['s1'],
+      volumes: ['/data:/data'],
+      network_isolation: true,
+    }
+
+    const result = toUpdateBody(workload, 'ghcr.io/test/server:v2.0.0')
+
+    expect(result).not.toHaveProperty('name')
+    expect(result.image).toBe('ghcr.io/test/server:v2.0.0')
+    expect(result).toMatchObject({
+      image: 'ghcr.io/test/server:v2.0.0',
+      transport: 'stdio',
+      group: 'default',
+      env_vars: { API_KEY: 'secret' },
+      cmd_arguments: ['--verbose'],
+      host: '127.0.0.1',
+      target_port: 8080,
+      secrets: ['s1'],
+      volumes: ['/data:/data'],
+      network_isolation: true,
+    })
+  })
+
+  it('preserves all other fields from the original workload', () => {
+    const workload: V1CreateRequest = {
+      name: 'minimal-server',
+      image: 'old-image:v1',
+    }
+
+    const result = toUpdateBody(workload, 'new-image:v2')
+
+    expect(result).not.toHaveProperty('name')
+    expect(result.image).toBe('new-image:v2')
+  })
+
+  it('does not mutate the original workload object', () => {
+    const workload: V1CreateRequest = {
+      name: 'my-server',
+      image: 'old-image:v1',
+      transport: 'sse',
+    }
+
+    const originalName = workload.name
+
+    toUpdateBody(workload, 'new-image:v2')
+
+    expect(workload.name).toBe(originalName)
+    expect(workload.image).toBe('old-image:v1')
   })
 })
