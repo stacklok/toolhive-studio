@@ -154,6 +154,10 @@ export async function startToolhive(): Promise<void> {
         // Ensure child process is killed when parent exits
         // On Windows, this creates a job object to enforce cleanup
         windowsHide: true,
+        env: {
+          ...process.env,
+          TOOLHIVE_SKIP_DESKTOP_CHECK: 'true',
+        },
       }
     )
     log.info(`[startToolhive] Process spawned with PID: ${toolhiveProcess.pid}`)
