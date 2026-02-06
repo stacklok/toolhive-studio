@@ -180,7 +180,7 @@ describe('toUpdateBody', () => {
       cmd_arguments: ['--verbose'],
       host: '127.0.0.1',
       target_port: 8080,
-      secrets: ['s1'],
+      secrets: [{ name: 's1', target: 'SECRET_VAR' }],
       volumes: ['/data:/data'],
       network_isolation: true,
     }
@@ -197,7 +197,7 @@ describe('toUpdateBody', () => {
       cmd_arguments: ['--verbose'],
       host: '127.0.0.1',
       target_port: 8080,
-      secrets: ['s1'],
+      secrets: [{ name: 's1', target: 'SECRET_VAR' }],
       volumes: ['/data:/data'],
       network_isolation: true,
     })
