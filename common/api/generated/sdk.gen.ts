@@ -50,6 +50,12 @@ import type {
   GetApiV1BetaSecretsDefaultKeysErrors,
   GetApiV1BetaSecretsDefaultKeysResponses,
   GetApiV1BetaSecretsDefaultResponses,
+  GetApiV1BetaSkillsByNameData,
+  GetApiV1BetaSkillsByNameErrors,
+  GetApiV1BetaSkillsByNameResponses,
+  GetApiV1BetaSkillsData,
+  GetApiV1BetaSkillsErrors,
+  GetApiV1BetaSkillsResponses,
   GetApiV1BetaVersionData,
   GetApiV1BetaVersionResponses,
   GetApiV1BetaWorkloadsByNameData,
@@ -92,6 +98,21 @@ import type {
   PostApiV1BetaSecretsDefaultKeysResponses,
   PostApiV1BetaSecretsErrors,
   PostApiV1BetaSecretsResponses,
+  PostApiV1BetaSkillsBuildData,
+  PostApiV1BetaSkillsBuildErrors,
+  PostApiV1BetaSkillsBuildResponses,
+  PostApiV1BetaSkillsInstallData,
+  PostApiV1BetaSkillsInstallErrors,
+  PostApiV1BetaSkillsInstallResponses,
+  PostApiV1BetaSkillsPushData,
+  PostApiV1BetaSkillsPushErrors,
+  PostApiV1BetaSkillsPushResponses,
+  PostApiV1BetaSkillsUninstallData,
+  PostApiV1BetaSkillsUninstallErrors,
+  PostApiV1BetaSkillsUninstallResponses,
+  PostApiV1BetaSkillsValidateData,
+  PostApiV1BetaSkillsValidateErrors,
+  PostApiV1BetaSkillsValidateResponses,
   PostApiV1BetaWorkloadsByNameEditData,
   PostApiV1BetaWorkloadsByNameEditErrors,
   PostApiV1BetaWorkloadsByNameEditResponses,
@@ -587,6 +608,145 @@ export const putApiV1BetaSecretsDefaultKeysByKey = <
   })
 
 /**
+ * List all installed skills
+ *
+ * Get a list of all installed skills
+ */
+export const getApiV1BetaSkills = <ThrowOnError extends boolean = false>(
+  options?: Options<GetApiV1BetaSkillsData, ThrowOnError>
+) =>
+  (options?.client ?? client).get<
+    GetApiV1BetaSkillsResponses,
+    GetApiV1BetaSkillsErrors,
+    ThrowOnError
+  >({ url: '/api/v1beta/skills', ...options })
+
+/**
+ * Build a skill
+ *
+ * Build a skill from a local directory
+ */
+export const postApiV1BetaSkillsBuild = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1BetaSkillsBuildData, ThrowOnError>
+) =>
+  (options.client ?? client).post<
+    PostApiV1BetaSkillsBuildResponses,
+    PostApiV1BetaSkillsBuildErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/skills/build',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * Install a skill
+ *
+ * Install a skill from a remote source
+ */
+export const postApiV1BetaSkillsInstall = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1BetaSkillsInstallData, ThrowOnError>
+) =>
+  (options.client ?? client).post<
+    PostApiV1BetaSkillsInstallResponses,
+    PostApiV1BetaSkillsInstallErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/skills/install',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * Push a skill
+ *
+ * Push a built skill artifact to a remote registry
+ */
+export const postApiV1BetaSkillsPush = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1BetaSkillsPushData, ThrowOnError>
+) =>
+  (options.client ?? client).post<
+    PostApiV1BetaSkillsPushResponses,
+    PostApiV1BetaSkillsPushErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/skills/push',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * Uninstall a skill
+ *
+ * Remove an installed skill
+ */
+export const postApiV1BetaSkillsUninstall = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1BetaSkillsUninstallData, ThrowOnError>
+) =>
+  (options.client ?? client).post<
+    PostApiV1BetaSkillsUninstallResponses,
+    PostApiV1BetaSkillsUninstallErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/skills/uninstall',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * Validate a skill
+ *
+ * Validate a skill definition
+ */
+export const postApiV1BetaSkillsValidate = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1BetaSkillsValidateData, ThrowOnError>
+) =>
+  (options.client ?? client).post<
+    PostApiV1BetaSkillsValidateResponses,
+    PostApiV1BetaSkillsValidateErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/skills/validate',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * Get skill details
+ *
+ * Get detailed information about a specific skill
+ */
+export const getApiV1BetaSkillsByName = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1BetaSkillsByNameData, ThrowOnError>
+) =>
+  (options.client ?? client).get<
+    GetApiV1BetaSkillsByNameResponses,
+    GetApiV1BetaSkillsByNameErrors,
+    ThrowOnError
+  >({ url: '/api/v1beta/skills/{name}', ...options })
+
+/**
  * Get server version
  *
  * Returns the current version of the server
@@ -638,7 +798,8 @@ export const postApiV1BetaWorkloads = <ThrowOnError extends boolean = false>(
 /**
  * Delete workloads in bulk
  *
- * Delete multiple workloads by name or by group
+ * Delete multiple workloads by name or by group asynchronously.
+ * Returns 202 Accepted immediately. Deletion happens in the background.
  */
 export const postApiV1BetaWorkloadsDelete = <
   ThrowOnError extends boolean = false,
@@ -707,7 +868,8 @@ export const postApiV1BetaWorkloadsStop = <
 /**
  * Delete a workload
  *
- * Delete a workload
+ * Delete a workload asynchronously. Returns 202 Accepted immediately.
+ * The deletion happens in the background. Poll the workload list to confirm deletion.
  */
 export const deleteApiV1BetaWorkloadsByName = <
   ThrowOnError extends boolean = false,

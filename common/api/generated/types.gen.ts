@@ -387,6 +387,9 @@ export type ClientMcpClient =
   | 'antigravity'
   | 'zed'
   | 'gemini-cli'
+  | 'vscode-server'
+  | 'mistral-vibe'
+  | 'codex'
 
 export type ClientMcpClientStatus = {
   client_type?: ClientMcpClient
@@ -712,9 +715,44 @@ export type RegistryImageMetadata = {
 }
 
 /**
+ * Kubernetes contains Kubernetes-specific metadata when the MCP server is deployed in a cluster.
+ * This field is optional and only populated when:
+ * - The server is served from ToolHive Registry Server
+ * - The server was auto-discovered from a Kubernetes deployment
+ * - The Kubernetes resource has the required registry annotations
+ */
+export type RegistryKubernetesMetadata = {
+  /**
+   * Image is the container image used by the Kubernetes workload (applicable to MCPServer)
+   */
+  image?: string
+  /**
+   * Kind is the Kubernetes resource kind (e.g., MCPServer, VirtualMCPServer, MCPRemoteProxy)
+   */
+  kind?: string
+  /**
+   * Name is the Kubernetes resource name
+   */
+  name?: string
+  /**
+   * Namespace is the Kubernetes namespace where the resource is deployed
+   */
+  namespace?: string
+  /**
+   * Transport is the transport type configured for the Kubernetes workload (applicable to MCPServer)
+   */
+  transport?: string
+  /**
+   * UID is the Kubernetes resource UID
+   */
+  uid?: string
+}
+
+/**
  * Metadata contains additional information about the server such as popularity metrics
  */
 export type RegistryMetadata = {
+  kubernetes?: RegistryKubernetesMetadata
   /**
    * LastUpdated is the timestamp when the server was last updated, in RFC3339 format
    */
@@ -1130,6 +1168,7 @@ export type RunnerRunConfig = {
    * TrustProxyHeaders indicates whether to trust X-Forwarded-* headers from reverse proxies
    */
   trust_proxy_headers?: boolean
+  upstream_swap_config?: UpstreamswapConfig
   /**
    * Volumes are the directory mounts to pass to the container
    * Format: "host-path:container-path[:ro]"
@@ -1168,6 +1207,87 @@ export type RuntimeWorkloadStatus =
 export type SecretsSecretParameter = {
   name?: string
   target?: string
+}
+
+export type SkillsBuildResult = {
+  /**
+   * Reference is the OCI reference of the built skill artifact.
+   */
+  reference?: string
+}
+
+/**
+ * Status is the current installation status.
+ */
+export type SkillsInstallStatus = 'installed' | 'pending' | 'failed'
+
+/**
+ * InstalledSkill is set if the skill is installed.
+ */
+export type SkillsInstalledSkill = {
+  /**
+   * Clients is the list of client identifiers the skill is installed for.
+   * TODO: Refactor client.MCPClient to a shared package so it can be used here instead of []string.
+   */
+  clients?: Array<string>
+  /**
+   * InstalledAt is the timestamp when the skill was installed.
+   */
+  installed_at?: string
+  metadata?: SkillsSkillMetadata
+  scope?: SkillsScope
+  status?: SkillsInstallStatus
+}
+
+/**
+ * Scope from which to uninstall
+ */
+export type SkillsScope = 'user' | 'system'
+
+export type SkillsSkillInfo = {
+  /**
+   * Installed indicates whether the skill is currently installed.
+   */
+  installed?: boolean
+  installed_skill?: SkillsInstalledSkill
+  metadata?: SkillsSkillMetadata
+}
+
+/**
+ * Metadata contains the skill's metadata.
+ */
+export type SkillsSkillMetadata = {
+  /**
+   * Author is the skill author or maintainer.
+   */
+  author?: string
+  /**
+   * Description is a human-readable description of the skill.
+   */
+  description?: string
+  /**
+   * Name is the unique name of the skill.
+   */
+  name?: string
+  /**
+   * Tags is a list of tags for categorization.
+   */
+  tags?: Array<string>
+  /**
+   * Version is the semantic version of the skill.
+   */
+  version?: string
+}
+
+export type SkillsValidationResult = {
+  /**
+   * Errors is a list of validation errors, if any.
+   */
+  errors?: Array<string>
+  /**
+   * Valid indicates whether the skill definition is valid.
+   */
+  valid?: boolean
 }
 
 /**
@@ -1326,6 +1446,22 @@ export type TypesTransportType =
   | 'inspector'
 
 /**
+ * UpstreamSwapConfig contains configuration for upstream token swap middleware.
+ * When set along with EmbeddedAuthServerConfig, this middleware exchanges ToolHive JWTs
+ * for upstream IdP tokens before forwarding requests to the MCP server.
+ */
+export type UpstreamswapConfig = {
+  /**
+   * CustomHeaderName is the header name when HeaderStrategy is "custom".
+   */
+  custom_header_name?: string
+  /**
+   * HeaderStrategy determines how to inject the token: "replace" (default) or "custom".
+   */
+  header_strategy?: string
+}
+
+/**
  * Type of registry (file, url, or default)
  */
 export type V1RegistryType = 'file' | 'url' | 'api' | 'default'
@@ -1360,6 +1496,20 @@ export type V1UpdateRegistryResponse = {
    * Registry type after update
    */
   type?: string
+}
+
+/**
+ * Request to build a skill from a local directory
+ */
+export type V1BuildSkillRequest = {
+  /**
+   * Path to the skill definition directory
+   */
+  path?: string
+  /**
+   * OCI tag for the built artifact
+   */
+  tag?: string
 }
 
 export type V1BulkClientRequest = {
@@ -1632,6 +1782,28 @@ export type V1HeaderForwardConfig = {
 }
 
 /**
+ * Request to install a skill
+ */
+export type V1InstallSkillRequest = {
+  /**
+   * Name or OCI reference of the skill to install
+   */
+  name?: string
+  scope?: SkillsScope
+  /**
+   * Version to install (empty means latest)
+   */
+  version?: string
+}
+
+/**
+ * Response after successfully installing a skill
+ */
+export type V1InstallSkillResponse = {
+  skill?: SkillsInstalledSkill
+}
+
+/**
  * Response containing a list of secret keys
  */
 export type V1ListSecretsResponse = {
@@ -1713,6 +1885,16 @@ export type V1ProviderCapabilitiesResponse = {
    * Whether the provider can write secrets
    */
   can_write?: boolean
+}
+
+/**
+ * Request to push a built skill artifact
+ */
+export type V1PushSkillRequest = {
+  /**
+   * OCI reference to push
+   */
+  reference?: string
 }
 
 /**
@@ -1846,6 +2028,16 @@ export type V1SetupSecretsResponse = {
 }
 
 /**
+ * Response containing a list of installed skills
+ */
+export type V1SkillListResponse = {
+  /**
+   * List of installed skills
+   */
+  skills?: Array<SkillsInstalledSkill>
+}
+
+/**
  * Tool override
  */
 export type V1ToolOverride = {
@@ -1857,6 +2049,17 @@ export type V1ToolOverride = {
    * Name of the tool
    */
   name?: string
+}
+
+/**
+ * Request to uninstall a skill
+ */
+export type V1UninstallSkillRequest = {
+  /**
+   * Name of the skill to uninstall
+   */
+  name?: string
+  scope?: SkillsScope
 }
 
 /**
@@ -1964,6 +2167,16 @@ export type V1UpdateSecretResponse = {
    * Success message
    */
   message?: string
+}
+
+/**
+ * Request to validate a skill definition
+ */
+export type V1ValidateSkillRequest = {
+  /**
+   * Path to the skill definition directory
+   */
+  path?: string
 }
 
 export type V1VersionResponse = {
@@ -2824,6 +3037,235 @@ export type PutApiV1BetaSecretsDefaultKeysByKeyResponses = {
 export type PutApiV1BetaSecretsDefaultKeysByKeyResponse =
   PutApiV1BetaSecretsDefaultKeysByKeyResponses[keyof PutApiV1BetaSecretsDefaultKeysByKeyResponses]
 
+export type GetApiV1BetaSkillsData = {
+  body?: never
+  path?: never
+  query?: never
+  url: '/api/v1beta/skills'
+}
+
+export type GetApiV1BetaSkillsErrors = {
+  /**
+   * Not Implemented
+   */
+  501: string
+}
+
+export type GetApiV1BetaSkillsError =
+  GetApiV1BetaSkillsErrors[keyof GetApiV1BetaSkillsErrors]
+
+export type GetApiV1BetaSkillsResponses = {
+  /**
+   * OK
+   */
+  200: V1SkillListResponse
+}
+
+export type GetApiV1BetaSkillsResponse =
+  GetApiV1BetaSkillsResponses[keyof GetApiV1BetaSkillsResponses]
+
+export type PostApiV1BetaSkillsBuildData = {
+  /**
+   * Build request
+   */
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | V1BuildSkillRequest
+  path?: never
+  query?: never
+  url: '/api/v1beta/skills/build'
+}
+
+export type PostApiV1BetaSkillsBuildErrors = {
+  /**
+   * Not Implemented
+   */
+  501: string
+}
+
+export type PostApiV1BetaSkillsBuildError =
+  PostApiV1BetaSkillsBuildErrors[keyof PostApiV1BetaSkillsBuildErrors]
+
+export type PostApiV1BetaSkillsBuildResponses = {
+  /**
+   * OK
+   */
+  200: SkillsBuildResult
+}
+
+export type PostApiV1BetaSkillsBuildResponse =
+  PostApiV1BetaSkillsBuildResponses[keyof PostApiV1BetaSkillsBuildResponses]
+
+export type PostApiV1BetaSkillsInstallData = {
+  /**
+   * Install request
+   */
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | V1InstallSkillRequest
+  path?: never
+  query?: never
+  url: '/api/v1beta/skills/install'
+}
+
+export type PostApiV1BetaSkillsInstallErrors = {
+  /**
+   * Not Implemented
+   */
+  501: string
+}
+
+export type PostApiV1BetaSkillsInstallError =
+  PostApiV1BetaSkillsInstallErrors[keyof PostApiV1BetaSkillsInstallErrors]
+
+export type PostApiV1BetaSkillsInstallResponses = {
+  /**
+   * Created
+   */
+  201: V1InstallSkillResponse
+}
+
+export type PostApiV1BetaSkillsInstallResponse =
+  PostApiV1BetaSkillsInstallResponses[keyof PostApiV1BetaSkillsInstallResponses]
+
+export type PostApiV1BetaSkillsPushData = {
+  /**
+   * Push request
+   */
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | V1PushSkillRequest
+  path?: never
+  query?: never
+  url: '/api/v1beta/skills/push'
+}
+
+export type PostApiV1BetaSkillsPushErrors = {
+  /**
+   * Not Implemented
+   */
+  501: string
+}
+
+export type PostApiV1BetaSkillsPushError =
+  PostApiV1BetaSkillsPushErrors[keyof PostApiV1BetaSkillsPushErrors]
+
+export type PostApiV1BetaSkillsPushResponses = {
+  /**
+   * No Content
+   */
+  204: string
+}
+
+export type PostApiV1BetaSkillsPushResponse =
+  PostApiV1BetaSkillsPushResponses[keyof PostApiV1BetaSkillsPushResponses]
+
+export type PostApiV1BetaSkillsUninstallData = {
+  /**
+   * Uninstall request
+   */
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | V1UninstallSkillRequest
+  path?: never
+  query?: never
+  url: '/api/v1beta/skills/uninstall'
+}
+
+export type PostApiV1BetaSkillsUninstallErrors = {
+  /**
+   * Not Implemented
+   */
+  501: string
+}
+
+export type PostApiV1BetaSkillsUninstallError =
+  PostApiV1BetaSkillsUninstallErrors[keyof PostApiV1BetaSkillsUninstallErrors]
+
+export type PostApiV1BetaSkillsUninstallResponses = {
+  /**
+   * No Content
+   */
+  204: string
+}
+
+export type PostApiV1BetaSkillsUninstallResponse =
+  PostApiV1BetaSkillsUninstallResponses[keyof PostApiV1BetaSkillsUninstallResponses]
+
+export type PostApiV1BetaSkillsValidateData = {
+  /**
+   * Validate request
+   */
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | V1ValidateSkillRequest
+  path?: never
+  query?: never
+  url: '/api/v1beta/skills/validate'
+}
+
+export type PostApiV1BetaSkillsValidateErrors = {
+  /**
+   * Not Implemented
+   */
+  501: string
+}
+
+export type PostApiV1BetaSkillsValidateError =
+  PostApiV1BetaSkillsValidateErrors[keyof PostApiV1BetaSkillsValidateErrors]
+
+export type PostApiV1BetaSkillsValidateResponses = {
+  /**
+   * OK
+   */
+  200: SkillsValidationResult
+}
+
+export type PostApiV1BetaSkillsValidateResponse =
+  PostApiV1BetaSkillsValidateResponses[keyof PostApiV1BetaSkillsValidateResponses]
+
+export type GetApiV1BetaSkillsByNameData = {
+  body?: never
+  path: {
+    /**
+     * Skill name
+     */
+    name: string
+  }
+  query?: never
+  url: '/api/v1beta/skills/{name}'
+}
+
+export type GetApiV1BetaSkillsByNameErrors = {
+  /**
+   * Not Implemented
+   */
+  501: string
+}
+
+export type GetApiV1BetaSkillsByNameError =
+  GetApiV1BetaSkillsByNameErrors[keyof GetApiV1BetaSkillsByNameErrors]
+
+export type GetApiV1BetaSkillsByNameResponses = {
+  /**
+   * OK
+   */
+  200: SkillsSkillInfo
+}
+
+export type GetApiV1BetaSkillsByNameResponse =
+  GetApiV1BetaSkillsByNameResponses[keyof GetApiV1BetaSkillsByNameResponses]
+
 export type GetApiV1BetaVersionData = {
   body?: never
   path?: never
@@ -2941,7 +3383,7 @@ export type PostApiV1BetaWorkloadsDeleteError =
 
 export type PostApiV1BetaWorkloadsDeleteResponses = {
   /**
-   * Accepted
+   * Accepted - deletion started
    */
   202: string
 }
@@ -3045,7 +3487,7 @@ export type DeleteApiV1BetaWorkloadsByNameError =
 
 export type DeleteApiV1BetaWorkloadsByNameResponses = {
   /**
-   * Accepted
+   * Accepted - deletion started
    */
   202: string
 }
