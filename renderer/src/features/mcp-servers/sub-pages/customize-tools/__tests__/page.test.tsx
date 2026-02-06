@@ -112,6 +112,7 @@ describe('Customize Tools Page - Converter Function Selection', () => {
       registryTools: ['tool1', 'tool2'],
       drift: null,
       getToolsDiffFromRegistry: vi.fn(() => null),
+      matchedRegistryItem: { image: 'test:latest', tools: ['tool1', 'tool2'] },
     })
   })
 
@@ -369,6 +370,7 @@ describe('Customize Tools Page - Server Not Running', () => {
       registryTools: ['tool1', 'tool2'],
       drift: null,
       getToolsDiffFromRegistry: vi.fn(() => null),
+      matchedRegistryItem: { image: 'test:latest', tools: ['tool1', 'tool2'] },
     })
 
     vi.spyOn(
@@ -864,6 +866,10 @@ describe('Customize Tools Page - Tool Overrides and Filtering', () => {
       registryTools: ['edit_file', 'make_dir'],
       drift: null,
       getToolsDiffFromRegistry: vi.fn(() => null),
+      matchedRegistryItem: {
+        image: 'test:latest',
+        tools: ['edit_file', 'make_dir'],
+      },
     })
   })
 
