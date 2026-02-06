@@ -136,6 +136,9 @@ jobs:
           - os: ubuntu-latest
             arch: x64
             platform: linux
+          - os: windows-11-arm
+            arch: arm64
+            platform: win32
           - os: windows-latest
             arch: x64
             platform: win32
@@ -255,6 +258,7 @@ jobs:
                 '|----------|--------------|--------|',
                 '| macOS | arm64 | :white_check_mark: Ready |',
                 '| macOS | x64 | :white_check_mark: Ready |',
+                '| Windows | arm64 | :white_check_mark: Ready' + (signWindows ? ' (signed)' : '') + ' |',
                 '| Windows | x64 | :white_check_mark: Ready' + (signWindows ? ' (signed)' : '') + ' |',
                 '| Linux | arm64 | :white_check_mark: Ready |',
                 '| Linux | x64 | :white_check_mark: Ready |',
