@@ -70,10 +70,8 @@ function TopNavLinks({ showUpdateBadge }: { showUpdateBadge?: boolean }) {
     paths.some((p) => pathname.startsWith(p) || pathname === p)
 
   const updateBadge = showUpdateBadge ? (
-    <span
-      className="bg-nav-button-active-bg absolute -top-1 -right-1 rounded-full"
-    >
-      <ArrowUpCircle className="size-2.5 text-blue-500" />
+    <span className="absolute -top-1 -right-1">
+      <ArrowUpCircle className="size-3 fill-blue-500" />
     </span>
   ) : null
 
