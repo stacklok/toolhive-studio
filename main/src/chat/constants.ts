@@ -65,7 +65,10 @@ export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
     id: 'anthropic',
     name: 'Anthropic',
     models: [
-      // Claude 4.5 models (newest)
+      // Claude 4.6 models (newest)
+      'claude-opus-4-6',
+
+      // Claude 4.5 models
       'claude-opus-4-5',
       'claude-opus-4-5-20251101',
       'claude-sonnet-4-5',
@@ -186,6 +189,7 @@ export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
       'openai/o1',
 
       // Anthropic models via OpenRouter
+      'anthropic/claude-opus-4-6',
       'anthropic/claude-opus-4-5',
       'anthropic/claude-sonnet-4-5',
       'anthropic/claude-haiku-4-5',
