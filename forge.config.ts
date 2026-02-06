@@ -1,6 +1,6 @@
 import 'dotenv/config'
 import type { ForgeConfig } from '@electron-forge/shared-types'
-import { MakerSquirrel } from '@electron-forge/maker-squirrel'
+import MakerSquirrelWithArch from './utils/forge-makers/MakerSquirrelWithArch'
 import { MakerZIP } from '@electron-forge/maker-zip'
 import { MakerDeb } from '@electron-forge/maker-deb'
 import { MakerRpm } from '@electron-forge/maker-rpm'
@@ -92,10 +92,17 @@ const config: ForgeConfig = {
         prerelease: isPrerelease(),
       },
     },
+    {
+      name: '@electron-forge/publisher-s3',
+      config: {
+        bucket: 'toolhive-studio-releases',
+        public: true,
+      },
+    },
   ],
 
   makers: [
-    new MakerSquirrel({
+    new MakerSquirrelWithArch({
       // Windows Squirrel installer configuration
       setupIcon: './icons/icon.ico', // Setup.exe icon
       setupExe: 'ToolHive Setup.exe',

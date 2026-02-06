@@ -1,14 +1,14 @@
-import { MakerDMG } from '@electron-forge/maker-dmg'
+import { MakerSquirrel } from '@electron-forge/maker-squirrel'
 import type { MakerOptions } from '@electron-forge/maker-base'
 import { renameOutputsWithArch } from './rename-outputs-with-arch'
 
 /**
- * Custom DMG Maker that includes architecture in the filename
+ * Custom Squirrel Maker that includes architecture in the filename
  * to prevent conflicts when building multiple architectures
  *
- * Example: "ToolHive.dmg" → "ToolHive-arm64.dmg"
+ * Example: "ToolHive Setup.exe" → "ToolHive Setup-arm64.exe"
  */
-export default class MakerDMGWithArch extends MakerDMG {
+export default class MakerSquirrelWithArch extends MakerSquirrel {
   async make(opts: MakerOptions): Promise<string[]> {
     const results = await super.make(opts)
     return renameOutputsWithArch(results, opts.targetArch)
