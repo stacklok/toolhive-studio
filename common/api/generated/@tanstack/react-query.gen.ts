@@ -25,6 +25,8 @@ import {
   getApiV1BetaRegistryByNameServersByServerName,
   getApiV1BetaSecretsDefault,
   getApiV1BetaSecretsDefaultKeys,
+  getApiV1BetaSkills,
+  getApiV1BetaSkillsByName,
   getApiV1BetaVersion,
   getApiV1BetaWorkloads,
   getApiV1BetaWorkloadsByName,
@@ -41,6 +43,11 @@ import {
   postApiV1BetaRegistry,
   postApiV1BetaSecrets,
   postApiV1BetaSecretsDefaultKeys,
+  postApiV1BetaSkillsBuild,
+  postApiV1BetaSkillsInstall,
+  postApiV1BetaSkillsPush,
+  postApiV1BetaSkillsUninstall,
+  postApiV1BetaSkillsValidate,
   postApiV1BetaWorkloads,
   postApiV1BetaWorkloadsByNameEdit,
   postApiV1BetaWorkloadsByNameRestart,
@@ -99,6 +106,12 @@ import type {
   GetApiV1BetaSecretsDefaultKeysError,
   GetApiV1BetaSecretsDefaultKeysResponse,
   GetApiV1BetaSecretsDefaultResponse,
+  GetApiV1BetaSkillsByNameData,
+  GetApiV1BetaSkillsByNameError,
+  GetApiV1BetaSkillsByNameResponse,
+  GetApiV1BetaSkillsData,
+  GetApiV1BetaSkillsError,
+  GetApiV1BetaSkillsResponse,
   GetApiV1BetaVersionData,
   GetApiV1BetaVersionResponse,
   GetApiV1BetaWorkloadsByNameData,
@@ -141,6 +154,21 @@ import type {
   PostApiV1BetaSecretsDefaultKeysResponse,
   PostApiV1BetaSecretsError,
   PostApiV1BetaSecretsResponse,
+  PostApiV1BetaSkillsBuildData,
+  PostApiV1BetaSkillsBuildError,
+  PostApiV1BetaSkillsBuildResponse,
+  PostApiV1BetaSkillsInstallData,
+  PostApiV1BetaSkillsInstallError,
+  PostApiV1BetaSkillsInstallResponse,
+  PostApiV1BetaSkillsPushData,
+  PostApiV1BetaSkillsPushError,
+  PostApiV1BetaSkillsPushResponse,
+  PostApiV1BetaSkillsUninstallData,
+  PostApiV1BetaSkillsUninstallError,
+  PostApiV1BetaSkillsUninstallResponse,
+  PostApiV1BetaSkillsValidateData,
+  PostApiV1BetaSkillsValidateError,
+  PostApiV1BetaSkillsValidateResponse,
   PostApiV1BetaWorkloadsByNameEditData,
   PostApiV1BetaWorkloadsByNameEditError,
   PostApiV1BetaWorkloadsByNameEditResponse,
@@ -946,6 +974,211 @@ export const putApiV1BetaSecretsDefaultKeysByKeyMutation = (
   return mutationOptions
 }
 
+export const getApiV1BetaSkillsQueryKey = (
+  options?: Options<GetApiV1BetaSkillsData>
+) => createQueryKey('getApiV1BetaSkills', options)
+
+/**
+ * List all installed skills
+ *
+ * Get a list of all installed skills
+ */
+export const getApiV1BetaSkillsOptions = (
+  options?: Options<GetApiV1BetaSkillsData>
+) =>
+  queryOptions<
+    GetApiV1BetaSkillsResponse,
+    GetApiV1BetaSkillsError,
+    GetApiV1BetaSkillsResponse,
+    ReturnType<typeof getApiV1BetaSkillsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1BetaSkills({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: getApiV1BetaSkillsQueryKey(options),
+  })
+
+/**
+ * Build a skill
+ *
+ * Build a skill from a local directory
+ */
+export const postApiV1BetaSkillsBuildMutation = (
+  options?: Partial<Options<PostApiV1BetaSkillsBuildData>>
+): UseMutationOptions<
+  PostApiV1BetaSkillsBuildResponse,
+  PostApiV1BetaSkillsBuildError,
+  Options<PostApiV1BetaSkillsBuildData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaSkillsBuildResponse,
+    PostApiV1BetaSkillsBuildError,
+    Options<PostApiV1BetaSkillsBuildData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1BetaSkillsBuild({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Install a skill
+ *
+ * Install a skill from a remote source
+ */
+export const postApiV1BetaSkillsInstallMutation = (
+  options?: Partial<Options<PostApiV1BetaSkillsInstallData>>
+): UseMutationOptions<
+  PostApiV1BetaSkillsInstallResponse,
+  PostApiV1BetaSkillsInstallError,
+  Options<PostApiV1BetaSkillsInstallData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaSkillsInstallResponse,
+    PostApiV1BetaSkillsInstallError,
+    Options<PostApiV1BetaSkillsInstallData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1BetaSkillsInstall({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Push a skill
+ *
+ * Push a built skill artifact to a remote registry
+ */
+export const postApiV1BetaSkillsPushMutation = (
+  options?: Partial<Options<PostApiV1BetaSkillsPushData>>
+): UseMutationOptions<
+  PostApiV1BetaSkillsPushResponse,
+  PostApiV1BetaSkillsPushError,
+  Options<PostApiV1BetaSkillsPushData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaSkillsPushResponse,
+    PostApiV1BetaSkillsPushError,
+    Options<PostApiV1BetaSkillsPushData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1BetaSkillsPush({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Uninstall a skill
+ *
+ * Remove an installed skill
+ */
+export const postApiV1BetaSkillsUninstallMutation = (
+  options?: Partial<Options<PostApiV1BetaSkillsUninstallData>>
+): UseMutationOptions<
+  PostApiV1BetaSkillsUninstallResponse,
+  PostApiV1BetaSkillsUninstallError,
+  Options<PostApiV1BetaSkillsUninstallData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaSkillsUninstallResponse,
+    PostApiV1BetaSkillsUninstallError,
+    Options<PostApiV1BetaSkillsUninstallData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1BetaSkillsUninstall({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Validate a skill
+ *
+ * Validate a skill definition
+ */
+export const postApiV1BetaSkillsValidateMutation = (
+  options?: Partial<Options<PostApiV1BetaSkillsValidateData>>
+): UseMutationOptions<
+  PostApiV1BetaSkillsValidateResponse,
+  PostApiV1BetaSkillsValidateError,
+  Options<PostApiV1BetaSkillsValidateData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaSkillsValidateResponse,
+    PostApiV1BetaSkillsValidateError,
+    Options<PostApiV1BetaSkillsValidateData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1BetaSkillsValidate({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+export const getApiV1BetaSkillsByNameQueryKey = (
+  options: Options<GetApiV1BetaSkillsByNameData>
+) => createQueryKey('getApiV1BetaSkillsByName', options)
+
+/**
+ * Get skill details
+ *
+ * Get detailed information about a specific skill
+ */
+export const getApiV1BetaSkillsByNameOptions = (
+  options: Options<GetApiV1BetaSkillsByNameData>
+) =>
+  queryOptions<
+    GetApiV1BetaSkillsByNameResponse,
+    GetApiV1BetaSkillsByNameError,
+    GetApiV1BetaSkillsByNameResponse,
+    ReturnType<typeof getApiV1BetaSkillsByNameQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1BetaSkillsByName({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: getApiV1BetaSkillsByNameQueryKey(options),
+  })
+
 export const getApiV1BetaVersionQueryKey = (
   options?: Options<GetApiV1BetaVersionData>
 ) => createQueryKey('getApiV1BetaVersion', options)
@@ -1038,7 +1271,8 @@ export const postApiV1BetaWorkloadsMutation = (
 /**
  * Delete workloads in bulk
  *
- * Delete multiple workloads by name or by group
+ * Delete multiple workloads by name or by group asynchronously.
+ * Returns 202 Accepted immediately. Deletion happens in the background.
  */
 export const postApiV1BetaWorkloadsDeleteMutation = (
   options?: Partial<Options<PostApiV1BetaWorkloadsDeleteData>>
@@ -1125,7 +1359,8 @@ export const postApiV1BetaWorkloadsStopMutation = (
 /**
  * Delete a workload
  *
- * Delete a workload
+ * Delete a workload asynchronously. Returns 202 Accepted immediately.
+ * The deletion happens in the background. Poll the workload list to confirm deletion.
  */
 export const deleteApiV1BetaWorkloadsByNameMutation = (
   options?: Partial<Options<DeleteApiV1BetaWorkloadsByNameData>>
