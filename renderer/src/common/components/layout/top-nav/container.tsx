@@ -21,8 +21,8 @@ export function TopNavContainer(props: HTMLProps<HTMLElement>) {
       {...props}
       className={twMerge(
         props.className,
-        'bg-muted/50',
-        'border-mid h-16 border-b',
+        'bg-nav-background',
+        'border-nav-border h-16 border-b',
         'px-6',
         'grid grid-cols-[auto_1fr_auto] items-center gap-7',
         'app-region-drag',

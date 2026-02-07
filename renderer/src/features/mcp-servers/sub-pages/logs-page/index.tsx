@@ -24,7 +24,7 @@ const SKELETON_COUNTS = Array.from(
 function SkeletonLogs() {
   return (
     <div
-      className="flex h-full w-full flex-1 flex-col gap-4 p-10"
+      className="flex w-full flex-col gap-4 p-10"
       data-testid="skeleton-logs"
     >
       {SKELETON_COUNTS.map((numSkeletons, i) => (
@@ -81,7 +81,7 @@ export function LogsPage() {
       : { to: '/group/$groupName' as const, params: { groupName } }
 
   return (
-    <div className="flex max-h-full w-full flex-1 flex-col">
+    <div className="flex h-full w-full flex-col">
       <div className="mb-2">
         <LinkViewTransition {...backLink}>
           <Button
@@ -95,7 +95,10 @@ export function LogsPage() {
         </LinkViewTransition>
       </div>
       <div className="flex flex-col gap-5">
-        <h1 className="m-0 mb-0 p-0 text-3xl font-bold">
+        <h1
+          className="m-0 mb-0 p-0 font-serif text-[34px] leading-[42px]
+            font-light tracking-[-0.85px]"
+        >
           {groupName === MCP_OPTIMIZER_GROUP_NAME
             ? 'MCP Optimizer'
             : serverName}
@@ -113,13 +116,16 @@ export function LogsPage() {
           <RefreshButton refresh={refetch} aria-label="Refresh" />
         </div>
       </div>
-      <div className="max-h-full flex-1 overflow-auto rounded-md border">
+      <div
+        className="dark:border-secondary dark:bg-card max-h-[70vh] min-h-0
+          flex-1 overflow-auto rounded-md border bg-white"
+      >
         {isLoadingState ? (
           <SkeletonLogs />
         ) : (
           <pre
-            className="text-foreground min-h-full p-5 font-mono text-[13px]
-              leading-[22px] font-normal"
+            className="text-foreground p-5 font-mono text-[13px] leading-[22px]
+              font-normal"
           >
             {filteredLogs.length ? (
               filteredLogs.map((line, i) => (

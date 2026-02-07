@@ -114,8 +114,8 @@ export function RegistryServerDetail() {
         description={server.description}
       />
       {hasTools && (
-        <div className="my-8 flex w-3/5 flex-col gap-8">
-          <div className="flex w-3/5 flex-[3] flex-col gap-4">
+        <div className="mt-8 mb-2 flex w-3/5 flex-col gap-8">
+          <div className="flex w-3/5 flex-3 flex-col gap-4">
             <p className="text-base font-bold">Tools listed</p>
             <div className="flex flex-wrap gap-2">
               {toolsToShow?.map((tool) => (
@@ -147,13 +147,17 @@ export function RegistryServerDetail() {
 
       <Separator className="my-6" />
       <div className="flex gap-5 pb-10">
-        <Button variant="default" onClick={() => handleCardClick(server)}>
+        <Button
+          variant="action"
+          className="rounded-full"
+          onClick={() => handleCardClick(server)}
+        >
           <Wrench className="size-4" />
           Install server
         </Button>
         {repositoryUrl && (
           <Link to={repositoryUrl} target="_blank">
-            <Button variant="outline">
+            <Button variant="outline" className="rounded-full">
               <GithubIcon className="size-4" />
               GitHub
             </Button>

@@ -11,6 +11,7 @@ import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { trackEvent } from '@/common/lib/analytics'
 import { useMcpOptimizerClients } from '@/features/meta-mcp/hooks/use-mcp-optimizer-clients'
 import { toast } from 'sonner'
+import { cn } from '@/common/lib/utils'
 
 interface ManageClientsButtonProps {
   groupName: string
@@ -132,9 +133,9 @@ export function ManageClientsButton({
     <Button
       variant={variant}
       onClick={handleManageClients}
-      className={className}
+      className={cn('rounded-full', className)}
     >
-      <Code className="mr-2 h-4 w-4" />
+      <Code className="mr-2 size-4" />
       Manage Clients
     </Button>
   )

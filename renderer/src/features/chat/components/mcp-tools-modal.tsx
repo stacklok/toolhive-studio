@@ -295,14 +295,22 @@ export function McpToolsModal({
           </ScrollArea>
         </div>
 
-        <DialogFooter className="flex-shrink-0">
-          <Button variant="outline" onClick={handleCancel}>
+        <DialogFooter className="shrink-0">
+          <Button
+            variant="secondary"
+            className="rounded-full"
+            onClick={handleCancel}
+          >
             Cancel
           </Button>
           <Button
+            variant="action"
             onClick={handleSave}
             disabled={saveToolsMutation.isPending || !serverTools?.isRunning}
-            className={cn(saveToolsMutation.isPending && 'opacity-50')}
+            className={cn(
+              'rounded-full',
+              saveToolsMutation.isPending && 'opacity-50'
+            )}
           >
             {saveToolsMutation.isPending ? 'Saving...' : 'Save'}
           </Button>

@@ -2,7 +2,7 @@ import { test, expect } from './fixtures/electron'
 import { TOOLHIVE_VERSION } from '../utils/constants'
 
 test('displays correct ToolHive binary version', async ({ window }) => {
-  await window.getByRole('button', { name: 'Settings' }).click()
+  await window.getByRole('link', { name: 'Settings' }).click()
   await window.getByRole('tab', { name: 'Version' }).click()
 
   const versionRow = window

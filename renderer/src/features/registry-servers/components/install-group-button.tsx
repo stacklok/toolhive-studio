@@ -26,7 +26,8 @@ export function InstallGroupButton({
       <div className="flex flex-col gap-2">
         <div>
           <Button
-            variant="default"
+            variant="action"
+            className="rounded-full"
             onClick={() => setIsWizardOpen(true)}
             disabled={!!installError}
           >

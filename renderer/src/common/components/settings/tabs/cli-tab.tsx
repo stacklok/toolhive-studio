@@ -42,7 +42,7 @@ function CliInfoWrapper({
 
 function StatusBadge({ isValid }: { isValid: boolean }) {
   return isValid ? (
-    <Badge variant="default" className="bg-green-600">
+    <Badge variant="success">
       <CheckCircle2 className="mr-1 size-3" />
       Valid
     </Badge>
@@ -178,6 +178,7 @@ export function CliTab() {
       <Button
         variant="outline"
         size="sm"
+        className="rounded-full"
         onClick={() => {
           trackEvent('CLI Settings: reinstall clicked')
           reinstall()
@@ -286,7 +287,7 @@ export function CliTab() {
             label="Shell PATH"
             description={
               pathStatus.isConfigured ? (
-                <span className="text-green-600">
+                <span className="text-success">
                   CLI is accessible from your terminal
                 </span>
               ) : (

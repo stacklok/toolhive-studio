@@ -14,9 +14,7 @@ export function Group(props: {
       onClick={onClick}
       className={`flex h-9 w-[215px] cursor-pointer items-center gap-2 px-4 py-2
         ${
-          isActive
-            ? 'border-input bg-background rounded-md border shadow-sm'
-            : ''
+          isActive ? 'border-input bg-card rounded-full border shadow-sm' : ''
         }`}
       role="button"
       tabIndex={0}

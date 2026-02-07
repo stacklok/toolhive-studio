@@ -6,12 +6,19 @@ export function TitlePage({
   children?: React.ReactNode
 }) {
   return (
-    <div
-      className="mb-6 flex flex-wrap gap-4 md:flex-row md:items-center
-        md:justify-between"
-    >
-      <h1 className="text-3xl font-bold">{title}</h1>
-      {children}
+    <div className="flex flex-col gap-4">
+      <div
+        className="flex flex-wrap gap-4 space-y-5 md:flex-row md:items-center
+          md:justify-between"
+      >
+        <h1
+          className="font-serif text-[34px] leading-[42px] font-light
+            tracking-[-0.85px]"
+        >
+          {title}
+        </h1>
+        {children}
+      </div>
     </div>
   )
 }

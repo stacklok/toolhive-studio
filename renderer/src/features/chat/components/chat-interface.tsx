@@ -106,7 +106,7 @@ export function ChatInterface() {
           <Button
             onClick={onClearMessages}
             variant="outline"
-            className="cursor-pointer"
+            className="cursor-pointer rounded-full"
           >
             Clear Chat
             <Trash2 />
@@ -239,9 +239,9 @@ export function ChatInterface() {
                           responses from your MCP servers
                         </p>
                         <Button
-                          variant="default"
+                          variant="action"
                           onClick={() => setIsSettingsOpen(true)}
-                          className="mt-6"
+                          className="mt-6 rounded-full"
                         >
                           <Plus /> Configure your providers
                         </Button>

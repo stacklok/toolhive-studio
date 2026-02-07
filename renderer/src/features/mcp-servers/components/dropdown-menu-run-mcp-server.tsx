@@ -9,6 +9,7 @@ import { CloudIcon, DatabaseIcon, LaptopIcon, PlusIcon } from 'lucide-react'
 import { useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
+import { cn } from '@/common/lib/utils'
 
 export function DropdownMenuRunMcpServer({
   className,
@@ -44,7 +45,13 @@ export function DropdownMenuRunMcpServer({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button className={className}>
+        <Button
+          variant="action"
+          className={cn(
+            'dark:bg-nav-button-active-bg! rounded-full',
+            className
+          )}
+        >
           <PlusIcon />
           Add an MCP server
         </Button>
