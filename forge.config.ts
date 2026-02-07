@@ -92,6 +92,13 @@ const config: ForgeConfig = {
         prerelease: isPrerelease(),
       },
     },
+    {
+      name: '@electron-forge/publisher-s3',
+      config: {
+        bucket: 'toolhive-studio-releases',
+        public: true,
+      },
+    },
   ],
 
   makers: [
