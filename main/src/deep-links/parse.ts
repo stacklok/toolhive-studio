@@ -6,8 +6,6 @@ import {
   type DeepLinkIntent,
 } from '@common/deep-links'
 
-export type { DeepLinkIntent }
-
 export type ParseResult =
   | { ok: true; deepLink: DeepLinkIntent }
   | { ok: false; error: string }

@@ -11,13 +11,7 @@ import {
   resolveDeepLinkTarget,
 } from '@common/deep-links'
 
-export {
-  parseDeepLinkUrl,
-  type DeepLinkIntent,
-  type ParseResult,
-} from './parse'
 export { registerProtocolWithSquirrel } from './squirrel'
-export { DEEP_LINK_PROTOCOL } from '@common/deep-links'
 
 const IPC_CHANNEL = 'deep-link-navigation'
 
