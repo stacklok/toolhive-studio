@@ -136,7 +136,7 @@ jobs:
           - os: ubuntu-latest
             arch: x64
             platform: linux
-          - os: windows-11-arm
+          - os: windows-latest
             arch: arm64
             platform: win32
           - os: windows-latest
