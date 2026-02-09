@@ -9,6 +9,11 @@ import {
 import path from 'node:path'
 import { existsSync, readFile } from 'node:fs'
 import started from 'electron-squirrel-startup'
+import {
+  handleDeepLink,
+  registerProtocolWithSquirrel,
+  extractDeepLinkFromArgs,
+} from './deep-links'
 import * as Sentry from '@sentry/electron/main'
 import { initTray, updateTrayStatus, safeTrayDestroy } from './system-tray'
 import { showInDock } from './dock-utils'
@@ -220,8 +225,12 @@ if (!gotTheLock) {
   log.info('Another instance is already running. Exiting...')
   app.quit()
 } else {
-  app.on('second-instance', () => {
-    // Someone tried to run a second instance, focus our window instead
+  app.on('second-instance', (_event, argv) => {
+    // On Windows/Linux, deep link URL is passed as a command line argument
+    const deepLinkUrl = extractDeepLinkFromArgs(argv)
+    if (deepLinkUrl) {
+      handleDeepLink(deepLinkUrl)
+    }
     focusMainWindow()
   })
 }
@@ -232,6 +241,11 @@ if (!gotTheLock) {
 if (started) {
   app.quit()
 }
+
+// ────────────────────────────────────────────────────────────────────────────
+//  Deep Link Protocol Registration
+// ────────────────────────────────────────────────────────────────────────────
+registerProtocolWithSquirrel()
 
 // ────────────────────────────────────────────────────────────────────────────
 //  Main-window management is now handled by MainWindowManager
@@ -323,6 +337,18 @@ app.whenReady().then(async () => {
     log.error('Failed to create main window:', error)
   }
 
+  // Handle deep link URL from initial cold launch (Windows/Linux).
+  // On macOS this is handled by the 'open-url' event in will-finish-launching.
+  if (process.platform !== 'darwin') {
+    const initialDeepLink = extractDeepLinkFromArgs(process.argv)
+    if (initialDeepLink) {
+      log.info(`[deep-link] Cold start with deep link: ${initialDeepLink}`)
+      // TODO: Evaluate if pollWindowReady is sufficient for cold start or if
+      // we need an explicit readiness signal from the renderer
+      handleDeepLink(initialDeepLink)
+    }
+  }
+
   // Setup CSP headers
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     if (process.env.NODE_ENV === 'development') {
@@ -375,6 +401,13 @@ app.on('activate', async () => {
 
 app.on('will-finish-launching', () => {
   log.info('App will finish launching')
+
+  // macOS: deep links arrive via open-url event, not process.argv
+  app.on('open-url', (event, url) => {
+    event.preventDefault()
+    log.info(`[deep-link] open-url event received: ${url}`)
+    handleDeepLink(url)
+  })
 })
 
 app.on('before-quit', async (e) => {

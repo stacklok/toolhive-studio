@@ -80,6 +80,26 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }
   },
 
+  // Deep link navigation
+  onDeepLinkNavigation: (
+    callback: (
+      intent:
+        | { action: string; version: string; params: Record<string, string> }
+        | { error: true }
+    ) => void
+  ) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      intent:
+        | { action: string; version: string; params: Record<string, string> }
+        | { error: true }
+    ) => callback(intent)
+    ipcRenderer.on('deep-link-navigation', listener)
+    return () => {
+      ipcRenderer.removeListener('deep-link-navigation', listener)
+    }
+  },
+
   // File/folder pickers
   selectFile: (): Promise<string | null> =>
     ipcRenderer.invoke('dialog:select-file'),
@@ -290,6 +310,13 @@ export interface ElectronAPI {
   isLinux: boolean
   platform: NodeJS.Platform
   onServerShutdown: (callback: () => void) => () => void
+  onDeepLinkNavigation: (
+    callback: (
+      intent:
+        | { action: string; version: string; params: Record<string, string> }
+        | { error: true }
+    ) => void
+  ) => () => void
   onShowQuitConfirmation: (callback: () => void) => () => void
   windowControls: {
     minimize: () => Promise<void>

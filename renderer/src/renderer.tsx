@@ -112,6 +112,25 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
     router.navigate({ to: '/shutdown' })
   })
 
+  // Listen for deep link navigation events
+  const deepLinkCleanup = window.electronAPI.onDeepLinkNavigation((intent) => {
+    if ('error' in intent) {
+      // Invalid deep link — trigger not-found handler
+      router.navigate({ to: '/deep-link-error' })
+      return
+    }
+    switch (intent.action) {
+      case 'open-registry-server-detail':
+        router.navigate({
+          to: '/registry/$name',
+          params: { name: intent.params.serverName },
+        })
+        break
+      default:
+        router.navigate({ to: '/deep-link-error' })
+    }
+  })
+
   const rootElement = document.getElementById('root')!
   const root = ReactDOM.createRoot(rootElement)
 
@@ -130,8 +149,9 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
     </StrictMode>
   )
 
-  // Cleanup listener on unmount
+  // Cleanup listeners on unmount
   return () => {
     cleanup()
+    deepLinkCleanup()
   }
 })()

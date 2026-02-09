@@ -57,6 +57,7 @@ beforeAll(() => {
   if (!(window as unknown as { electronAPI?: ElectronAPI }).electronAPI) {
     const electronStub: Partial<ElectronAPI> = {
       onServerShutdown: () => () => {},
+      onDeepLinkNavigation: () => () => {},
       shutdownStore: {
         getLastShutdownServers: async () => [],
         clearShutdownHistory: async () => ({ success: true }),
