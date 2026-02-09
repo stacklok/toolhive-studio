@@ -5,6 +5,7 @@ import {
   waitForMainWindowReady,
 } from '../main-window'
 import { parseDeepLinkUrl } from './parse'
+import { showNotFound } from './intents'
 
 export {
   parseDeepLinkUrl,
@@ -12,6 +13,7 @@ export {
   type ParseResult,
 } from './parse'
 export { registerProtocolWithSquirrel } from './squirrel'
+export { allIntents } from './intents'
 
 const IPC_CHANNEL = 'deep-link-navigation'
 
@@ -47,8 +49,8 @@ export async function handleDeepLink(rawUrl: string): Promise<void> {
     log.warn(`[deep-link] Invalid deep link: ${result.error}`)
     log.info('[deep-link] Sending show-not-found intent to renderer')
     sendToMainWindowRenderer(IPC_CHANNEL, {
-      version: 'v1',
-      action: 'show-not-found',
+      version: showNotFound.version,
+      action: showNotFound.action,
       params: {},
     })
     return

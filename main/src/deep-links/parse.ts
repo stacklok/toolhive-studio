@@ -1,31 +1,10 @@
 import { z } from 'zod/v4'
 import log from '../logger'
+import { deepLinkSchema, type DeepLinkIntent } from './intents'
 
 const PROTOCOL = 'toolhive-gui:'
 
-const safeString = z.string().regex(/^[a-zA-Z0-9_.-]+$/)
-
-const openRegistryServerDetailIntent = z.object({
-  version: z.literal('v1'),
-  action: z.literal('open-registry-server-detail'),
-  params: z.object({
-    serverName: safeString,
-  }),
-})
-
-const showNotFoundIntent = z.object({
-  version: z.literal('v1'),
-  action: z.literal('show-not-found'),
-  params: z.object({}),
-})
-
-// Extend this union as new deep link intents are added
-const deepLinkIntent = z.discriminatedUnion('action', [
-  openRegistryServerDetailIntent,
-  showNotFoundIntent,
-])
-
-export type DeepLinkIntent = z.infer<typeof deepLinkIntent>
+export type { DeepLinkIntent }
 
 export type ParseResult =
   | { ok: true; intent: DeepLinkIntent }
@@ -51,7 +30,7 @@ export function parseDeepLinkUrl(rawUrl: string): ParseResult {
       `[deep-link] Parsed components — version: ${version}, action: ${action}, params: ${JSON.stringify(params)}`
     )
 
-    const result = deepLinkIntent.safeParse({ version, action, params })
+    const result = deepLinkSchema.safeParse({ version, action, params })
 
     if (!result.success) {
       const error = `Invalid deep link: ${z.prettifyError(result.error)}`

@@ -20,6 +20,7 @@ import { trackPageView } from './common/lib/analytics'
 import { queryClient } from './common/lib/query-client'
 // Import feature flags to bind them to window for developer tools access
 import './common/lib/feature-flags'
+import { allIntents } from '../../main/src/deep-links/intents'
 
 // Sentry setup
 Sentry.init({
@@ -116,23 +117,15 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
   const deepLinkCleanup = window.electronAPI.onDeepLinkNavigation((intent) => {
     log.info('[deep-link] Renderer received deep link intent:', intent)
 
-    switch (intent.action) {
-      case 'open-registry-server-detail':
-        log.info(
-          `[deep-link] Navigating to registry server detail: ${intent.params.serverName}`
-        )
-        router.navigate({
-          to: '/registry/$name',
-          params: { name: intent.params.serverName },
-        })
-        break
-      case 'show-not-found':
-        log.warn('[deep-link] Navigating to not-found page')
-        router.navigate({ to: '/deep-link-not-found' })
-        break
-      default:
-        log.warn(`[deep-link] Unknown action received: ${intent.action}`)
-        router.navigate({ to: '/deep-link-not-found' })
+    const intentDef = allIntents.find((i) => i.action === intent.action)
+    if (intentDef) {
+      // Params are already Zod-validated in the main process before IPC dispatch
+      const target = intentDef.navigate(intent.params as never)
+      log.info(`[deep-link] Navigating to: ${target.to}`, target.params)
+      router.navigate(target)
+    } else {
+      log.warn(`[deep-link] Unknown action received: ${intent.action}`)
+      router.navigate({ to: '/deep-link-not-found' })
     }
   })
 
