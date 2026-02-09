@@ -2,6 +2,8 @@ import { z } from 'zod/v4'
 
 const safeString = z.string().regex(/^[a-zA-Z0-9_.-]+$/)
 
+export const DEEP_LINK_PROTOCOL = 'toolhive-gui'
+
 const VERSION = 'v1'
 
 type NavigateTarget = { to: string; params?: Record<string, string> }

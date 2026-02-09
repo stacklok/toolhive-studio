@@ -1,8 +1,7 @@
 import { app } from 'electron'
 import path from 'node:path'
 import log from '../logger'
-
-const PROTOCOL = 'toolhive-gui'
+import { DEEP_LINK_PROTOCOL } from './intents'
 
 /**
  * Register the toolhive-gui:// protocol handler.
@@ -17,15 +16,16 @@ const PROTOCOL = 'toolhive-gui'
 export function registerProtocolWithSquirrel(): void {
   if (process.platform === 'win32' && app.isPackaged) {
     const updateExe = path.resolve(process.execPath, '..', '..', 'Update.exe')
-    const success = app.setAsDefaultProtocolClient(PROTOCOL, updateExe, [
-      '--processStart',
-      path.basename(process.execPath),
-    ])
+    const success = app.setAsDefaultProtocolClient(
+      DEEP_LINK_PROTOCOL,
+      updateExe,
+      ['--processStart', path.basename(process.execPath)]
+    )
     log.info(
       `[deep-link] Registered protocol via Squirrel Update.exe: ${success}`
     )
   } else {
-    const success = app.setAsDefaultProtocolClient(PROTOCOL)
+    const success = app.setAsDefaultProtocolClient(DEEP_LINK_PROTOCOL)
     log.info(`[deep-link] Registered protocol: ${success}`)
   }
 }

@@ -1,8 +1,10 @@
 import { z } from 'zod/v4'
 import log from '../logger'
-import { deepLinkSchema, type DeepLinkIntent } from './intents'
-
-const PROTOCOL = 'toolhive-gui:'
+import {
+  DEEP_LINK_PROTOCOL,
+  deepLinkSchema,
+  type DeepLinkIntent,
+} from './intents'
 
 export type { DeepLinkIntent }
 
@@ -16,8 +18,8 @@ export function parseDeepLinkUrl(rawUrl: string): ParseResult {
   try {
     const url = new URL(rawUrl)
 
-    if (url.protocol !== PROTOCOL) {
-      const error = `Unsupported protocol: ${url.protocol} (expected ${PROTOCOL})`
+    if (url.protocol !== `${DEEP_LINK_PROTOCOL}:`) {
+      const error = `Unsupported protocol: ${url.protocol} (expected ${DEEP_LINK_PROTOCOL}:)`
       log.warn(`[deep-link] ${error}`)
       return { ok: false, error }
     }

@@ -5,7 +5,7 @@ import {
   waitForMainWindowReady,
 } from '../main-window'
 import { parseDeepLinkUrl } from './parse'
-import { showNotFound } from './intents'
+import { DEEP_LINK_PROTOCOL, showNotFound } from './intents'
 
 export {
   parseDeepLinkUrl,
@@ -13,7 +13,7 @@ export {
   type ParseResult,
 } from './parse'
 export { registerProtocolWithSquirrel } from './squirrel'
-export { deepLinksByIntent } from './intents'
+export { DEEP_LINK_PROTOCOL, deepLinksByIntent } from './intents'
 
 const IPC_CHANNEL = 'deep-link-navigation'
 
@@ -22,7 +22,7 @@ const IPC_CHANNEL = 'deep-link-navigation'
  * Returns the first argument matching toolhive-gui:// or undefined.
  */
 export function extractDeepLinkFromArgs(args: string[]): string | undefined {
-  const match = args.find((arg) => arg.startsWith('toolhive-gui://'))
+  const match = args.find((arg) => arg.startsWith(`${DEEP_LINK_PROTOCOL}://`))
   if (match) {
     log.info(`[deep-link] Found deep link in argv: ${match}`)
   } else {

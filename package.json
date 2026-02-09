@@ -28,7 +28,8 @@
     "generate-client": "pnpm run update-api && cd common/api && openapi-ts",
     "generate-client:nofetch": "cd common/api && openapi-ts",
     "generate-icons": "ts-node scripts/generate-icons.ts",
-    "knip": "knip"
+    "knip": "knip",
+    "install-deep-link-handler": "bash scripts/install-deep-link-handler.sh"
   },
   "keywords": [],
   "license": "Apache-2.0",

@@ -84,6 +84,13 @@ toolhive-gui://<version>/<intent>?<params>
 
 #### Linux
 
+**Register the protocol handler** (builds a .deb, extracts and installs the
+`.desktop` file for the current user):
+
+```bash
+pnpm run install-deep-link-handler
+```
+
 **Cold start** (app is not running):
 
 ```bash
