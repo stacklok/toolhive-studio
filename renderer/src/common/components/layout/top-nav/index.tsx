@@ -48,10 +48,8 @@ function NavButton({
         'flex h-9 items-center gap-2 rounded-full px-4',
         'text-sm font-medium transition-colors',
         isActive
-          ? // Active: teal bg (#064251), white text
-            'bg-nav-button-active-bg text-nav-button-active-text'
-          : // Inactive: transparent bg, white text
-            'bg-transparent text-white/90 hover:bg-white/10 hover:text-white'
+          ? 'bg-nav-button-active-bg text-nav-button-active-text'
+          : 'bg-transparent text-white/90 hover:bg-white/10 hover:text-white'
       )}
     >
       <span className="relative">
