@@ -84,7 +84,7 @@ Register the protocol handler (builds a `.deb`, extracts and installs the
 `.desktop` file system-wide):
 
 ```bash
-pnpm run install-deep-link-handler
+pnpm run deeplink:registerTestLinuxProtocolHandler
 ```
 
 Once registered, you can open deep links from the browser or with `xdg-open`:
