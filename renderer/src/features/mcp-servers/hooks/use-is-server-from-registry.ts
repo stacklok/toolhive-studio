@@ -123,6 +123,7 @@ export function useIsServerFromRegistry(serverName: string) {
       isFromRegistry: false,
       registryTools: [],
       drift,
+      matchedRegistryItem: undefined,
     }
 
   return {
@@ -130,5 +131,6 @@ export function useIsServerFromRegistry(serverName: string) {
     isFromRegistry,
     registryTools: matchedRegistryItem.tools,
     drift,
+    matchedRegistryItem,
   }
 }

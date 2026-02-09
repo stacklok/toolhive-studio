@@ -6,13 +6,17 @@ import {
   DropdownMenuContent,
   DropdownMenuSeparator,
 } from '@/common/components/ui/dropdown-menu'
-import { useServerDetails } from '../../../hooks/use-server-details'
+import type {
+  RegistryImageMetadata,
+  RegistryRemoteServerMetadata,
+} from '@common/api/generated/types.gen'
 import { ServerUrl } from './items/server-url'
 import { EditConfigurationMenuItem } from './items/edit-configuration-menu-item'
 import { GithubRepositoryMenuItem } from './items/github-repository-menu-item'
 import { LogsMenuItem } from './items/logs-menu-item'
 import { CustomizeToolsMenuItem } from './items/customize-tools-menu-item'
 import { RemoveServerMenuItem } from './items/remove-server-menu-item'
+import { UpdateVersionMenuItem } from './items/update-version-menu-item'
 import { AddServerToGroupMenuItem } from './items/add-server-to-group-menu-item'
 
 interface ServerActionsDropdownProps {
@@ -21,6 +25,12 @@ interface ServerActionsDropdownProps {
   status: string | undefined
   remote: boolean
   group?: string
+  isFromRegistry: boolean
+  drift: { localTag: string; registryTag: string } | null
+  matchedRegistryItem:
+    | RegistryImageMetadata
+    | RegistryRemoteServerMetadata
+    | undefined
 }
 
 export function ServerActionsDropdown({
@@ -29,11 +39,12 @@ export function ServerActionsDropdown({
   status,
   remote,
   group,
+  isFromRegistry,
+  drift,
+  matchedRegistryItem,
 }: ServerActionsDropdownProps) {
-  const { data: serverDetails } = useServerDetails(name)
-
-  const repositoryUrl = serverDetails?.server?.repository_url
-  const isDeleting = status === 'deleting'
+  const repositoryUrl = matchedRegistryItem?.repository_url
+  const isDeleting = status === 'deleting' || status === 'removing'
 
   return (
     <DropdownMenu>
@@ -58,6 +69,19 @@ export function ServerActionsDropdown({
         <ServerUrl url={url} />
         <DropdownMenuSeparator />
         <EditConfigurationMenuItem serverName={name} />
+        {isFromRegistry &&
+          drift &&
+          matchedRegistryItem &&
+          'image' in matchedRegistryItem &&
+          matchedRegistryItem.image && (
+            <UpdateVersionMenuItem
+              serverName={name}
+              registryImage={matchedRegistryItem.image}
+              localTag={drift.localTag}
+              registryTag={drift.registryTag}
+              disabled={isDeleting || status === 'updating'}
+            />
+          )}
         {repositoryUrl && (
           <GithubRepositoryMenuItem repositoryUrl={repositoryUrl} />
         )}
