@@ -8,6 +8,7 @@ import { EmptyState } from '@/common/components/empty-state'
 import { ExternalLinkIcon } from 'lucide-react'
 import { Button } from '@/common/components/ui/button'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
+import { TitlePage } from '@/common/components/title-page'
 import {
   DEPRECATED_MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
   MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
@@ -46,14 +47,7 @@ export default function RegistryRouteComponent() {
 
   return (
     <>
-      <div className="mb-6 flex items-center">
-        <h1
-          className="font-serif text-[34px] leading-[42px] font-light
-            tracking-[-0.85px]"
-        >
-          Registry
-        </h1>
-      </div>
+      <TitlePage title="Registry" />
       {!hasContent ? (
         <EmptyState
           title="No MCP servers found"

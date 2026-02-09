@@ -22,7 +22,6 @@ import { useIsOptimizedGroupName } from '@/features/clients/hooks/use-is-optimiz
 import { Button } from '@/common/components/ui/button'
 import { Sparkles } from 'lucide-react'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
-import { Separator } from '@/common/components/ui/separator'
 
 export const Route = createFileRoute('/group/$groupName')({
   loader: ({ context: { queryClient }, params: { groupName } }) =>
@@ -157,10 +156,7 @@ function GroupRoute() {
             </div>
           </EmptyState>
         ) : (
-          <>
-            <Separator className="my-5" />
-            <GridCardsMcpServers mcpServers={filteredWorkloads} />
-          </>
+          <GridCardsMcpServers mcpServers={filteredWorkloads} />
         )}
       </div>
     </div>

@@ -67,11 +67,11 @@ export function RegistryError() {
           </CardContent>
 
           <CardFooter className="flex flex-col gap-2">
-            <Button onClick={handleTryAgain} className="w-full">
+            <Button onClick={handleTryAgain} className="w-full rounded-full">
               <RefreshCw className="mr-2 size-4" />
               Try Again
             </Button>
-            <Button asChild variant="outline" className="w-full">
+            <Button asChild variant="outline" className="w-full rounded-full">
               <Link
                 to="/settings"
                 search={{ tab: 'registry' }}

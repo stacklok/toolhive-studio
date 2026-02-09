@@ -100,7 +100,7 @@ export function ChatInterface() {
   }, [clearMessages, confirm])
 
   return (
-    <>
+    <div className="flex min-h-0 flex-1 flex-col">
       <TitlePage title="Playground">
         {hasMessages && (
           <Button
@@ -113,7 +113,7 @@ export function ChatInterface() {
           </Button>
         )}
       </TitlePage>
-      <div className="h-[calc(100vh-10rem)]">
+      <div className="min-h-0 flex-1">
         <div className="bg-background flex h-full flex-col">
           {hasMessages && <Separator />}
           {/* Messages Area */}
@@ -217,8 +217,8 @@ export function ChatInterface() {
                 <div className="w-full max-w-4xl space-y-8 text-center">
                   <div>
                     <div
-                      className="text-foreground font-display text-center
-                        text-4xl font-bold"
+                      className="text-foreground text-center font-serif text-4xl
+                        font-light"
                     >
                       {!hasProviderAndModel && (
                         <MessageCircleMore
@@ -308,6 +308,6 @@ export function ChatInterface() {
           />
         </div>
       </div>
-    </>
+    </div>
   )
 }

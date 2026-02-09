@@ -48,7 +48,7 @@ export function SettingsTabs({ defaultTab }: SettingsTabsProps) {
       <Tabs
         defaultValue={defaultTab || 'general'}
         orientation="vertical"
-        className="mt-5 flex h-full flex-row gap-10"
+        className="flex h-full flex-row gap-10"
       >
         <TabsList
           className="flex h-fit w-48 shrink-0 flex-col gap-2 border-none
