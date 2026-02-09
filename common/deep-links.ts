@@ -1,3 +1,6 @@
+// Deep link definitions — see design doc:
+// https://docs.google.com/document/d/1Y-tYsIl98DPHKdCNsbuvtZeb0VUq41cTxQfGQElbS9c
+
 import { z } from 'zod/v4'
 
 const safeIdentifier = z.string().regex(/^[a-zA-Z0-9_.-]+$/)
