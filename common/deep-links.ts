@@ -83,5 +83,7 @@ export function resolveDeepLinkTarget(
     return showNotFound.navigate({})
   }
   // Safe: deepLink was Zod-validated, so params match the definition
-  return def.navigate(deepLink.params as never)
+  return (def.navigate as (params: DeepLinkIntent['params']) => NavigateTarget)(
+    deepLink.params
+  )
 }
