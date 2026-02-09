@@ -222,6 +222,10 @@ export async function blockQuit(source: string, event?: Electron.Event) {
 const gotTheLock = app.requestSingleInstanceLock()
 
 if (!gotTheLock) {
+  // This is the second instance (e.g. launched by a deep link or duplicate click).
+  // The first instance handles the deep link via the 'second-instance' event.
+  // We use process.exit(0) instead of app.quit() because quit() is async —
+  // its lifecycle events let app.whenReady() fire and briefly create a window.
   log.info('Another instance is already running. Exiting...')
   process.exit(0)
 } else {
