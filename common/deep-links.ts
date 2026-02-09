@@ -1,6 +1,6 @@
 import { z } from 'zod/v4'
 
-const safeString = z.string().regex(/^[a-zA-Z0-9_.-]+$/)
+const safeIdentifier = z.string().regex(/^[a-zA-Z0-9_.-]+$/)
 
 export const DEEP_LINK_PROTOCOL = 'toolhive-gui'
 
@@ -35,7 +35,7 @@ function v1DeepLink<I extends string, P extends z.ZodType>(config: {
 
 export const openRegistryServerDetail = v1DeepLink({
   intent: 'open-registry-server-detail',
-  params: z.object({ serverName: safeString }),
+  params: z.object({ serverName: safeIdentifier }),
   navigate: (params) => ({
     to: '/registry/$name',
     params: { name: params.serverName },

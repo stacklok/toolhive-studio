@@ -11,7 +11,7 @@ export type ParseResult =
   | { ok: false; error: string }
 
 export function parseDeepLinkUrl(rawUrl: string): ParseResult {
-  log.info(`[deep-link] Parsing URL: ${rawUrl}`)
+  log.debug(`[deep-link] Parsing URL: ${rawUrl}`)
 
   try {
     const url = new URL(rawUrl)
@@ -26,7 +26,7 @@ export function parseDeepLinkUrl(rawUrl: string): ParseResult {
     const intent = url.pathname.replace(/^\//, '')
     const params = Object.fromEntries(url.searchParams)
 
-    log.info(
+    log.debug(
       `[deep-link] Parsed components — version: ${version}, intent: ${intent}, params: ${JSON.stringify(params)}`
     )
 
@@ -34,7 +34,7 @@ export function parseDeepLinkUrl(rawUrl: string): ParseResult {
 
     if (!result.success) {
       const error = `Invalid deep link: ${z.prettifyError(result.error)}`
-      log.warn(`[deep-link] Validation failed: ${error}`)
+      log.warn(`[deep-link] ${error}`)
       return { ok: false, error }
     }
 
