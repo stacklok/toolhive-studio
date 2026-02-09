@@ -73,14 +73,19 @@ toolhive-gui://<version>/<intent>?<params>
 
 #### Example deep links
 
-> [!NOTE]
-> These links are clickable when the protocol handler is registered on your
-> system (e.g. after installing a packaged build or running the dev app once).
+Open a registry server detail page:
 
-- [Open registry server "fetch"](toolhive-gui://v1/open-registry-server-detail?serverName=fetch)
-- [Open registry server "time"](toolhive-gui://v1/open-registry-server-detail?serverName=time)
-- [Invalid intent (shows not-found page)](toolhive-gui://v1/bogus-intent)
-- [Invalid protocol version](toolhive-gui://v99/open-registry-server-detail?serverName=fetch)
+```
+toolhive-gui://v1/open-registry-server-detail?serverName=fetch
+toolhive-gui://v1/open-registry-server-detail?serverName=time
+```
+
+Invalid deep links (for testing error handling):
+
+```
+toolhive-gui://v1/bogus-intent
+toolhive-gui://v99/open-registry-server-detail?serverName=fetch
+```
 
 #### Linux
 
