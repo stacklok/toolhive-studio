@@ -13,7 +13,7 @@ export {
   type ParseResult,
 } from './parse'
 export { registerProtocolWithSquirrel } from './squirrel'
-export { intentsByAction } from './intents'
+export { deepLinksByIntent } from './intents'
 
 const IPC_CHANNEL = 'deep-link-navigation'
 
@@ -33,7 +33,7 @@ export function extractDeepLinkFromArgs(args: string[]): string | undefined {
 
 /**
  * Process a deep link URL end-to-end: parse, validate, wait for
- * the window to be ready, then send the intent to the renderer.
+ * the window to be ready, then send the deep link to the renderer.
  *
  * Safe to call at any time — logs and no-ops gracefully on errors.
  */
@@ -47,10 +47,10 @@ export async function handleDeepLink(rawUrl: string): Promise<void> {
 
   if (!result.ok) {
     log.warn(`[deep-link] Invalid deep link: ${result.error}`)
-    log.info('[deep-link] Sending show-not-found intent to renderer')
+    log.info('[deep-link] Sending show-not-found deep link to renderer')
     sendToMainWindowRenderer(IPC_CHANNEL, {
       version: showNotFound.version,
-      action: showNotFound.action,
+      intent: showNotFound.intent,
       params: {},
     })
     return
@@ -71,7 +71,7 @@ export async function handleDeepLink(rawUrl: string): Promise<void> {
   }
 
   log.info(
-    `[deep-link] Dispatching intent: ${result.intent.action} (${JSON.stringify(result.intent.params)})`
+    `[deep-link] Dispatching deep link: ${result.deepLink.intent} (${JSON.stringify(result.deepLink.params)})`
   )
-  sendToMainWindowRenderer(IPC_CHANNEL, result.intent)
+  sendToMainWindowRenderer(IPC_CHANNEL, result.deepLink)
 }

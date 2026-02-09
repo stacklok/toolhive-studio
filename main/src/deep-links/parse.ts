@@ -7,7 +7,7 @@ const PROTOCOL = 'toolhive-gui:'
 export type { DeepLinkIntent }
 
 export type ParseResult =
-  | { ok: true; intent: DeepLinkIntent }
+  | { ok: true; deepLink: DeepLinkIntent }
   | { ok: false; error: string }
 
 export function parseDeepLinkUrl(rawUrl: string): ParseResult {
@@ -23,14 +23,14 @@ export function parseDeepLinkUrl(rawUrl: string): ParseResult {
     }
 
     const version = url.host
-    const action = url.pathname.replace(/^\//, '')
+    const intent = url.pathname.replace(/^\//, '')
     const params = Object.fromEntries(url.searchParams)
 
     log.info(
-      `[deep-link] Parsed components — version: ${version}, action: ${action}, params: ${JSON.stringify(params)}`
+      `[deep-link] Parsed components — version: ${version}, intent: ${intent}, params: ${JSON.stringify(params)}`
     )
 
-    const result = deepLinkSchema.safeParse({ version, action, params })
+    const result = deepLinkSchema.safeParse({ version, intent, params })
 
     if (!result.success) {
       const error = `Invalid deep link: ${z.prettifyError(result.error)}`
@@ -39,9 +39,9 @@ export function parseDeepLinkUrl(rawUrl: string): ParseResult {
     }
 
     log.info(
-      `[deep-link] Validated intent: ${result.data.action} (version: ${result.data.version})`
+      `[deep-link] Validated deep link: ${result.data.intent} (version: ${result.data.version})`
     )
-    return { ok: true, intent: result.data }
+    return { ok: true, deepLink: result.data }
   } catch (err) {
     const error = `Failed to parse URL: ${rawUrl}`
     log.warn(`[deep-link] ${error}`, err)

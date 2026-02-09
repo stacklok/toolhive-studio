@@ -20,7 +20,7 @@ import { trackPageView } from './common/lib/analytics'
 import { queryClient } from './common/lib/query-client'
 // Import feature flags to bind them to window for developer tools access
 import './common/lib/feature-flags'
-import { intentsByAction } from '../../main/src/deep-links/intents'
+import { deepLinksByIntent } from '../../main/src/deep-links/intents'
 
 // Sentry setup
 Sentry.init({
@@ -114,20 +114,22 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
   })
 
   // Listen for deep link navigation events
-  const deepLinkCleanup = window.electronAPI.onDeepLinkNavigation((intent) => {
-    log.info('[deep-link] Renderer received deep link intent:', intent)
+  const deepLinkCleanup = window.electronAPI.onDeepLinkNavigation(
+    (deepLink) => {
+      log.info('[deep-link] Renderer received deep link:', deepLink)
 
-    const intentDef = intentsByAction.get(intent.action)
-    if (intentDef) {
-      // Params are already Zod-validated in the main process before IPC dispatch
-      const target = intentDef.navigate(intent.params as never)
-      log.info(`[deep-link] Navigating to: ${target.to}`, target.params)
-      router.navigate(target)
-    } else {
-      log.warn(`[deep-link] Unknown action received: ${intent.action}`)
-      router.navigate({ to: '/deep-link-not-found' })
+      const deepLinkDef = deepLinksByIntent.get(deepLink.intent)
+      if (deepLinkDef) {
+        // Params are already Zod-validated in the main process before IPC dispatch
+        const target = deepLinkDef.navigate(deepLink.params as never)
+        log.info(`[deep-link] Navigating to: ${target.to}`, target.params)
+        router.navigate(target)
+      } else {
+        log.warn(`[deep-link] Unknown intent received: ${deepLink.intent}`)
+        router.navigate({ to: '/deep-link-not-found' })
+      }
     }
-  })
+  )
 
   const rootElement = document.getElementById('root')!
   const root = ReactDOM.createRoot(rootElement)

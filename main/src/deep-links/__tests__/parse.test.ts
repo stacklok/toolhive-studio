@@ -18,9 +18,9 @@ describe('parseDeepLinkUrl', () => {
     )
     expect(result).toEqual({
       ok: true,
-      intent: {
+      deepLink: {
         version: 'v1',
-        action: 'open-registry-server-detail',
+        intent: 'open-registry-server-detail',
         params: { serverName: 'time' },
       },
     })
@@ -32,9 +32,9 @@ describe('parseDeepLinkUrl', () => {
     )
     expect(result).toEqual({
       ok: true,
-      intent: {
+      deepLink: {
         version: 'v1',
-        action: 'open-registry-server-detail',
+        intent: 'open-registry-server-detail',
         params: { serverName: 'my-server_v1.2' },
       },
     })
@@ -57,9 +57,9 @@ describe('parseDeepLinkUrl', () => {
     expect(result.ok).toBe(false)
   })
 
-  it('rejects unknown action', () => {
+  it('rejects unknown intent', () => {
     const result = parseDeepLinkUrl(
-      'toolhive-gui://v1/unknown-action?serverName=time'
+      'toolhive-gui://v1/unknown-intent?serverName=time'
     )
     expect(result.ok).toBe(false)
   })

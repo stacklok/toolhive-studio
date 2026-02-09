@@ -7,12 +7,12 @@ const VERSION = 'v1'
 type NavigateTarget = { to: string; params?: Record<string, string> }
 
 /**
- * Define a v1 deep link intent with its Zod schema and navigation handler
+ * Define a v1 deep link with its Zod schema and navigation handler
  * in a single place. The schema is used by the main process for validation,
  * and the navigate function is used by the renderer for routing.
  */
-function v1Intent<A extends string, P extends z.ZodType>(config: {
-  action: A
+function v1DeepLink<I extends string, P extends z.ZodType>(config: {
+  intent: I
   params: P
   navigate: (params: z.output<P>) => NavigateTarget
 }) {
@@ -21,18 +21,18 @@ function v1Intent<A extends string, P extends z.ZodType>(config: {
     version: VERSION,
     schema: z.object({
       version: z.literal(VERSION),
-      action: z.literal(config.action),
+      intent: z.literal(config.intent),
       params: config.params,
     }),
   }
 }
 
-// ── Intent definitions ─────────────────────────────────────────────────
-// Add new intents here. Each definition is the single source of truth for
-// its Zod validation schema AND its renderer-side navigation target.
+// ── Deep link definitions ─────────────────────────────────────────────
+// Add new deep links here. Each definition is the single source of truth
+// for its Zod validation schema AND its renderer-side navigation target.
 
-export const openRegistryServerDetail = v1Intent({
-  action: 'open-registry-server-detail',
+export const openRegistryServerDetail = v1DeepLink({
+  intent: 'open-registry-server-detail',
   params: z.object({ serverName: safeString }),
   navigate: (params) => ({
     to: '/registry/$name',
@@ -40,23 +40,23 @@ export const openRegistryServerDetail = v1Intent({
   }),
 })
 
-export const showNotFound = v1Intent({
-  action: 'show-not-found',
+export const showNotFound = v1DeepLink({
+  intent: 'show-not-found',
   params: z.object({}),
   navigate: () => ({ to: '/deep-link-not-found' }),
 })
 
 // ── Registry ───────────────────────────────────────────────────────────
 
-const allIntentsList = [openRegistryServerDetail, showNotFound] as const
+const allDeepLinks = [openRegistryServerDetail, showNotFound] as const
 
-type IntentDef = (typeof allIntentsList)[number]
+type DeepLinkDef = (typeof allDeepLinks)[number]
 
-export const intentsByAction: ReadonlyMap<string, IntentDef> = new Map(
-  allIntentsList.map((intent) => [intent.action, intent])
+export const deepLinksByIntent: ReadonlyMap<string, DeepLinkDef> = new Map(
+  allDeepLinks.map((dl) => [dl.intent, dl])
 )
 
-export const deepLinkSchema = z.discriminatedUnion('action', [
+export const deepLinkSchema = z.discriminatedUnion('intent', [
   openRegistryServerDetail.schema,
   showNotFound.schema,
 ])
