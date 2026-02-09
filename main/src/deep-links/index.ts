@@ -5,7 +5,7 @@ import {
   waitForMainWindowReady,
 } from '../main-window'
 import { parseDeepLinkUrl } from './parse'
-import { DEEP_LINK_PROTOCOL, showNotFound } from './intents'
+import { DEEP_LINK_PROTOCOL, showNotFound } from '@common/deep-links'
 
 export {
   parseDeepLinkUrl,
@@ -13,7 +13,7 @@ export {
   type ParseResult,
 } from './parse'
 export { registerProtocolWithSquirrel } from './squirrel'
-export { DEEP_LINK_PROTOCOL, deepLinksByIntent } from './intents'
+export { DEEP_LINK_PROTOCOL, deepLinksByIntent } from '@common/deep-links'
 
 const IPC_CHANNEL = 'deep-link-navigation'
 

@@ -1,7 +1,7 @@
 import { app } from 'electron'
 import path from 'node:path'
 import log from '../logger'
-import { DEEP_LINK_PROTOCOL } from './intents'
+import { DEEP_LINK_PROTOCOL } from '@common/deep-links'
 
 /**
  * Register the toolhive-gui:// protocol handler.

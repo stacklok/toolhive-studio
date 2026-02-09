@@ -20,7 +20,7 @@ import { trackPageView } from './common/lib/analytics'
 import { queryClient } from './common/lib/query-client'
 // Import feature flags to bind them to window for developer tools access
 import './common/lib/feature-flags'
-import { deepLinksByIntent } from '../../main/src/deep-links/intents'
+import { deepLinksByIntent } from '@common/deep-links'
 
 // Sentry setup
 Sentry.init({

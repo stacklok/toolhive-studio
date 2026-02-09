@@ -4,7 +4,7 @@ import {
   DEEP_LINK_PROTOCOL,
   deepLinkSchema,
   type DeepLinkIntent,
-} from './intents'
+} from '@common/deep-links'
 
 export type { DeepLinkIntent }
 
