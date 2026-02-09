@@ -126,6 +126,7 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
         router.navigate(target)
       } else {
         log.warn(`[deep-link] Unknown intent received: ${deepLink.intent}`)
+        // /deep-link-not-found is not a real route — triggers notFoundComponent from __root.tsx
         router.navigate({ to: '/deep-link-not-found' })
       }
     }

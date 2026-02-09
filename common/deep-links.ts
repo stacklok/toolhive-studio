@@ -42,6 +42,8 @@ export const openRegistryServerDetail = v1DeepLink({
   }),
 })
 
+// /deep-link-not-found is not a real route. Navigating to a non-existent route
+// triggers the notFoundComponent defined in __root.tsx, which is the desired effect.
 export const showNotFound = v1DeepLink({
   intent: 'show-not-found',
   params: z.object({}),
