@@ -18,7 +18,7 @@ APPLICATIONS_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
 echo "==> Building .deb package..."
 cd "$PROJECT_ROOT"
 pnpm exec tsc -b --clean && pnpm exec tsc -b
-pnpm exec electron-forge make --targets @electron-forge/maker-deb
+pnpm exec electron-forge make --targets deb
 
 DEB_FILE=$(find "$DEB_DIR" -name '*.deb' -print -quit)
 if [ -z "$DEB_FILE" ]; then
