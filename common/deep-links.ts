@@ -6,7 +6,7 @@ export const DEEP_LINK_PROTOCOL = 'toolhive-gui'
 
 const VERSION = 'v1'
 
-type NavigateTarget = { to: string; params?: Record<string, string> }
+export type NavigateTarget = { to: string; params?: Record<string, string> }
 
 /**
  * Define a v1 deep link with its Zod schema and navigation handler
@@ -59,7 +59,7 @@ const allDeepLinks = [openRegistryServerDetail, showNotFound] as const
 
 type DeepLinkDef = (typeof allDeepLinks)[number]
 
-export const deepLinksByIntent: ReadonlyMap<string, DeepLinkDef> = new Map(
+const deepLinksByIntent: ReadonlyMap<string, DeepLinkDef> = new Map(
   allDeepLinks.map((dl) => [dl.intent, dl])
 )
 
@@ -69,3 +69,19 @@ export const deepLinkSchema = z.discriminatedUnion('intent', [
 ])
 
 export type DeepLinkIntent = z.infer<typeof deepLinkSchema>
+
+/**
+ * Resolve a validated deep link intent to a navigation target.
+ * Called in the main process where types are fully known, so the
+ * result can be sent over IPC without any type casts in the renderer.
+ */
+export function resolveDeepLinkTarget(
+  deepLink: DeepLinkIntent
+): NavigateTarget {
+  const def = deepLinksByIntent.get(deepLink.intent)
+  if (!def) {
+    return showNotFound.navigate({})
+  }
+  // Safe: deepLink was Zod-validated, so params match the definition
+  return def.navigate(deepLink.params as never)
+}

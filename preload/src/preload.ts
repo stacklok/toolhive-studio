@@ -80,22 +80,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }
   },
 
-  // Deep link navigation
+  // Deep link navigation — main process resolves the deep link to a
+  // navigation target ({ to, params }) and sends it over IPC.
   onDeepLinkNavigation: (
-    callback: (deepLink: {
-      intent: string
-      version: string
-      params: Record<string, string>
-    }) => void
+    callback: (target: { to: string; params?: Record<string, string> }) => void
   ) => {
     const listener = (
       _event: Electron.IpcRendererEvent,
-      deepLink: {
-        intent: string
-        version: string
-        params: Record<string, string>
-      }
-    ) => callback(deepLink)
+      target: { to: string; params?: Record<string, string> }
+    ) => callback(target)
     ipcRenderer.on('deep-link-navigation', listener)
     return () => {
       ipcRenderer.removeListener('deep-link-navigation', listener)
@@ -313,11 +306,7 @@ export interface ElectronAPI {
   platform: NodeJS.Platform
   onServerShutdown: (callback: () => void) => () => void
   onDeepLinkNavigation: (
-    callback: (deepLink: {
-      intent: string
-      version: string
-      params: Record<string, string>
-    }) => void
+    callback: (target: { to: string; params?: Record<string, string> }) => void
   ) => () => void
   onShowQuitConfirmation: (callback: () => void) => () => void
   windowControls: {

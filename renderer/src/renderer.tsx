@@ -20,7 +20,6 @@ import { trackPageView } from './common/lib/analytics'
 import { queryClient } from './common/lib/query-client'
 // Import feature flags to bind them to window for developer tools access
 import './common/lib/feature-flags'
-import { deepLinksByIntent } from '@common/deep-links'
 
 // Sentry setup
 Sentry.init({
@@ -113,24 +112,12 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
     router.navigate({ to: '/shutdown' })
   })
 
-  // Listen for deep link navigation events
-  const deepLinkCleanup = window.electronAPI.onDeepLinkNavigation(
-    (deepLink) => {
-      log.info('[deep-link] Renderer received deep link:', deepLink)
-
-      const deepLinkDef = deepLinksByIntent.get(deepLink.intent)
-      if (deepLinkDef) {
-        // Params are already Zod-validated in the main process before IPC dispatch
-        const target = deepLinkDef.navigate(deepLink.params as never)
-        log.info(`[deep-link] Navigating to: ${target.to}`, target.params)
-        router.navigate(target)
-      } else {
-        log.warn(`[deep-link] Unknown intent received: ${deepLink.intent}`)
-        // /deep-link-not-found is not a real route — triggers notFoundComponent from __root.tsx
-        router.navigate({ to: '/deep-link-not-found' })
-      }
-    }
-  )
+  // Listen for deep link navigation events — the main process resolves
+  // the deep link URL to a navigation target, so the renderer just navigates.
+  const deepLinkCleanup = window.electronAPI.onDeepLinkNavigation((target) => {
+    log.info(`[deep-link] Navigating to: ${target.to}`, target.params)
+    router.navigate(target)
+  })
 
   const rootElement = document.getElementById('root')!
   const root = ReactDOM.createRoot(rootElement)

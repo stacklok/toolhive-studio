@@ -5,7 +5,11 @@ import {
   waitForMainWindowReady,
 } from '../main-window'
 import { parseDeepLinkUrl } from './parse'
-import { DEEP_LINK_PROTOCOL, showNotFound } from '@common/deep-links'
+import {
+  DEEP_LINK_PROTOCOL,
+  showNotFound,
+  resolveDeepLinkTarget,
+} from '@common/deep-links'
 
 export {
   parseDeepLinkUrl,
@@ -13,7 +17,7 @@ export {
   type ParseResult,
 } from './parse'
 export { registerProtocolWithSquirrel } from './squirrel'
-export { DEEP_LINK_PROTOCOL, deepLinksByIntent } from '@common/deep-links'
+export { DEEP_LINK_PROTOCOL } from '@common/deep-links'
 
 const IPC_CHANNEL = 'deep-link-navigation'
 
@@ -45,24 +49,6 @@ export async function handleDeepLink(rawUrl: string): Promise<void> {
   log.info('[deep-link] Focusing main window')
   focusMainWindow()
 
-  if (!result.ok) {
-    log.warn(`[deep-link] Invalid deep link: ${result.error}`)
-    log.info('[deep-link] Waiting for main window to be ready')
-    try {
-      await waitForMainWindowReady()
-    } catch (error) {
-      log.error('[deep-link] Window did not become ready:', error)
-      return
-    }
-    log.info('[deep-link] Sending show-not-found deep link to renderer')
-    sendToMainWindowRenderer(IPC_CHANNEL, {
-      version: showNotFound.version,
-      intent: showNotFound.intent,
-      params: {},
-    })
-    return
-  }
-
   // TODO: Evaluate if pollWindowReady (used by waitForMainWindowReady) is
   // sufficient for cold-start scenarios where the app is launched via a deep
   // link. The renderer performs async initialization (fetching the ToolHive
@@ -77,8 +63,10 @@ export async function handleDeepLink(rawUrl: string): Promise<void> {
     return
   }
 
-  log.info(
-    `[deep-link] Dispatching deep link: ${result.deepLink.intent} (${JSON.stringify(result.deepLink.params)})`
-  )
-  sendToMainWindowRenderer(IPC_CHANNEL, result.deepLink)
+  const target = result.ok
+    ? resolveDeepLinkTarget(result.deepLink)
+    : showNotFound.navigate({})
+
+  log.info(`[deep-link] Navigating renderer to: ${target.to}`, target.params)
+  sendToMainWindowRenderer(IPC_CHANNEL, target)
 }
