@@ -9,7 +9,7 @@ import {
   notFound,
   useParams,
 } from '@tanstack/react-router'
-import { GithubIcon, ShieldCheck, Wrench } from 'lucide-react'
+import { Cloud, GithubIcon, Monitor, ShieldCheck, Wrench } from 'lucide-react'
 import { getApiV1BetaRegistryByNameServersByServerNameOptions } from '@common/api/generated/@tanstack/react-query.gen'
 import { getApiV1BetaRegistryByNameServersByServerName } from '@common/api/generated/sdk.gen'
 import { useSuspenseQuery } from '@tanstack/react-query'
@@ -128,10 +128,23 @@ export function RegistryServerDetail() {
         badges={
           <>
             {server.tier && <Badge variant="default">{server.tier}</Badge>}
+            <Badge variant="secondary" className="text-muted-foreground">
+              {isRemoteServer ? (
+                <>
+                  <Cloud className="size-3" /> Remote
+                </>
+              ) : (
+                <>
+                  <Monitor className="size-3" /> Local
+                </>
+              )}
+            </Badge>
             {server.status === statusMap.deprecated && (
               <Badge variant="outline">{server.status}</Badge>
             )}
-            <Badge variant="secondary">{server.transport}</Badge>
+            <Badge variant="secondary" className="text-muted-foreground">
+              {server.transport}
+            </Badge>
             <Stars stars={server.metadata?.stars} className="size-4" />
             {hasProvenance && (
               <Tooltip>
@@ -155,8 +168,8 @@ export function RegistryServerDetail() {
         description={server.description}
       />
       {hasTools && (
-        <div className="mt-8 mb-2 flex w-3/5 flex-col gap-8">
-          <div className="flex w-3/5 flex-3 flex-col gap-4">
+        <div className="mt-6 mb-2 flex w-3/5 flex-col gap-8">
+          <div className="flex w-3/5 flex-3 flex-col gap-2">
             <p className="text-base font-bold">Tools listed</p>
             <div className="flex flex-wrap gap-2">
               {toolsToShow?.map((tool) => (

@@ -5,7 +5,6 @@ import {
   CardContent,
   CardFooter,
 } from '@/common/components/ui/card'
-import { Plus } from 'lucide-react'
 import { cn } from '@/common/lib/utils'
 import type { ReactNode } from 'react'
 
@@ -44,11 +43,6 @@ export function CardRegistryBase({
             {title}
             <span className="absolute inset-0 rounded-md" />
           </button>
-          <Plus
-            className="text-muted-foreground
-              group-has-[button:focus-visible]:text-foreground
-              group-hover:text-foreground transition-color size-5"
-          />
         </CardTitle>
         {badge}
       </CardHeader>

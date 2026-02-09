@@ -204,6 +204,7 @@ export function ChatInputPrompt({
 
   return (
     <PromptInput
+      className="bg-card"
       accept="image/*,application/pdf,.pdf"
       onError={(er) => {
         if (!('code' in er)) {

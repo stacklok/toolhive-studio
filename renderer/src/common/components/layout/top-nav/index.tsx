@@ -140,7 +140,13 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
       toast.info('Update downloaded and ready to install', {
         duration: Infinity,
         dismissible: true,
+        closeButton: false,
         id: 'update-notification',
+        classNames: {
+          cancelButton: 'rounded-full!',
+          actionButton:
+            'rounded-full! bg-nav-button-active-bg! text-nav-button-active-text! hover:bg-nav-button-active-bg/90!',
+        },
         cancel: {
           label: 'Dismiss',
           onClick: () => toast.dismiss('update-notification'),

@@ -18,23 +18,19 @@ export function RegistryDetailHeader({
 }: RegistryDetailHeaderProps) {
   return (
     <div className="w-full">
-      <div className="my-2">
+      <div className="mb-5">
         <LinkViewTransition to={backTo}>
-          <Button
-            variant="link"
-            aria-label="Back"
-            className="text-muted-foreground"
-          >
+          <Button variant="outline" aria-label="Back" className="rounded-full">
             <ChevronLeft className="size-4" />
             Back
           </Button>
         </LinkViewTransition>
       </div>
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2">
         <h1 className="text-page-title m-0 mb-0 p-0">{title}</h1>
-        {badges && <div className="flex items-center gap-3">{badges}</div>}
+        {badges && <div className="flex items-center gap-4">{badges}</div>}
         {description ? (
-          <div className="text-muted-foreground flex-[2] select-none">
+          <div className="text-muted-foreground mt-5 flex-[2] select-none">
             {description}
           </div>
         ) : null}
