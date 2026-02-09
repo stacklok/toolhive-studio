@@ -36,6 +36,7 @@ export default {
     '@electron-forge/maker-dmg', // Used indirectly in MakerDMGWithArch
     '@electron-forge/publisher-github',
     '@electron-forge/maker-base',
+    '@electron-forge/maker-squirrel',
     '@tailwindcss/vite',
   ],
   compilers: {
