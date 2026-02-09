@@ -13,7 +13,7 @@ export {
   type ParseResult,
 } from './parse'
 export { registerProtocolWithSquirrel } from './squirrel'
-export { allIntents } from './intents'
+export { intentsByAction } from './intents'
 
 const IPC_CHANNEL = 'deep-link-navigation'
 

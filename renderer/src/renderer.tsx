@@ -20,7 +20,7 @@ import { trackPageView } from './common/lib/analytics'
 import { queryClient } from './common/lib/query-client'
 // Import feature flags to bind them to window for developer tools access
 import './common/lib/feature-flags'
-import { allIntents } from '../../main/src/deep-links/intents'
+import { intentsByAction } from '../../main/src/deep-links/intents'
 
 // Sentry setup
 Sentry.init({
@@ -117,7 +117,7 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
   const deepLinkCleanup = window.electronAPI.onDeepLinkNavigation((intent) => {
     log.info('[deep-link] Renderer received deep link intent:', intent)
 
-    const intentDef = allIntents.find((i) => i.action === intent.action)
+    const intentDef = intentsByAction.get(intent.action)
     if (intentDef) {
       // Params are already Zod-validated in the main process before IPC dispatch
       const target = intentDef.navigate(intent.params as never)

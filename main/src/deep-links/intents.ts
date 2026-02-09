@@ -48,7 +48,13 @@ export const showNotFound = v1Intent({
 
 // ── Registry ───────────────────────────────────────────────────────────
 
-export const allIntents = [openRegistryServerDetail, showNotFound]
+const allIntentsList = [openRegistryServerDetail, showNotFound] as const
+
+type IntentDef = (typeof allIntentsList)[number]
+
+export const intentsByAction: ReadonlyMap<string, IntentDef> = new Map(
+  allIntentsList.map((intent) => [intent.action, intent])
+)
 
 export const deepLinkSchema = z.discriminatedUnion('action', [
   openRegistryServerDetail.schema,
