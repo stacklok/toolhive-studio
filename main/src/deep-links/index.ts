@@ -20,7 +20,13 @@ const IPC_CHANNEL = 'deep-link-navigation'
  * Returns the first argument matching toolhive-gui:// or undefined.
  */
 export function extractDeepLinkFromArgs(args: string[]): string | undefined {
-  return args.find((arg) => arg.startsWith('toolhive-gui://'))
+  const match = args.find((arg) => arg.startsWith('toolhive-gui://'))
+  if (match) {
+    log.info(`[deep-link] Found deep link in argv: ${match}`)
+  } else {
+    log.info('[deep-link] No deep link found in argv')
+  }
+  return match
 }
 
 /**
@@ -34,10 +40,12 @@ export async function handleDeepLink(rawUrl: string): Promise<void> {
 
   const result = parseDeepLinkUrl(rawUrl)
 
+  log.info('[deep-link] Focusing main window')
   focusMainWindow()
 
   if (!result.ok) {
     log.warn(`[deep-link] Invalid deep link: ${result.error}`)
+    log.info('[deep-link] Sending error to renderer')
     sendToMainWindowRenderer(IPC_CHANNEL, { error: true })
     return
   }
@@ -47,8 +55,10 @@ export async function handleDeepLink(rawUrl: string): Promise<void> {
   // link. The renderer performs async initialization (fetching the ToolHive
   // port, creating the router) after the HTML loads. A more robust approach
   // would be an explicit readiness signal from the renderer.
+  log.info('[deep-link] Waiting for main window to be ready')
   try {
     await waitForMainWindowReady()
+    log.info('[deep-link] Main window is ready')
   } catch (error) {
     log.error('[deep-link] Window did not become ready:', error)
     return

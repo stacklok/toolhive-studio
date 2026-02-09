@@ -114,19 +114,26 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
 
   // Listen for deep link navigation events
   const deepLinkCleanup = window.electronAPI.onDeepLinkNavigation((intent) => {
+    log.info('[deep-link] Renderer received deep link intent:', intent)
+
     if ('error' in intent) {
-      // Invalid deep link — trigger not-found handler
+      log.warn('[deep-link] Received invalid deep link error from main process')
       router.navigate({ to: '/deep-link-error' })
       return
     }
+
     switch (intent.action) {
       case 'open-registry-server-detail':
+        log.info(
+          `[deep-link] Navigating to registry server detail: ${intent.params.serverName}`
+        )
         router.navigate({
           to: '/registry/$name',
           params: { name: intent.params.serverName },
         })
         break
       default:
+        log.warn(`[deep-link] Unknown action received: ${intent.action}`)
         router.navigate({ to: '/deep-link-error' })
     }
   })

@@ -226,6 +226,9 @@ if (!gotTheLock) {
   app.quit()
 } else {
   app.on('second-instance', (_event, argv) => {
+    log.info(
+      `[deep-link] second-instance event received with argv: ${argv.join(' ')}`
+    )
     // On Windows/Linux, deep link URL is passed as a command line argument
     const deepLinkUrl = extractDeepLinkFromArgs(argv)
     if (deepLinkUrl) {

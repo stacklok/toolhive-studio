@@ -1,4 +1,14 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+
+vi.mock('../../logger', () => ({
+  default: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+}))
+
 import { parseDeepLinkUrl } from '../parse'
 
 describe('parseDeepLinkUrl', () => {
