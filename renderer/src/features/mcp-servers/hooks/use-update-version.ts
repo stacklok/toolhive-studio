@@ -3,6 +3,7 @@ import { getApiV1BetaWorkloadsByNameOptions } from '@common/api/generated/@tanst
 import type { V1CreateRequest } from '@common/api/generated/types.gen'
 import { useConfirm } from '@/common/hooks/use-confirm'
 import { useMutationUpdateWorkload } from './use-mutation-update-workload'
+import { toast } from 'sonner'
 
 interface UseUpdateVersionOptions {
   serverName: string
@@ -36,6 +37,8 @@ export function useUpdateVersion({
   })
 
   const promptUpdate = async () => {
+    if (!workloadData) return
+
     const result = await confirm(
       `Update "${serverName}" from ${localTag} to ${registryTag}?`,
       {
@@ -44,11 +47,15 @@ export function useUpdateVersion({
       }
     )
 
-    if (result && workloadData) {
-      await updateWorkload({
-        path: { name: serverName },
-        body: toUpdateBody(workloadData, registryImage),
-      })
+    if (result) {
+      try {
+        await updateWorkload({
+          path: { name: serverName },
+          body: toUpdateBody(workloadData, registryImage),
+        })
+      } catch {
+        toast.error(`Failed to update "${serverName}"`)
+      }
     }
   }
 

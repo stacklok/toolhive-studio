@@ -44,7 +44,7 @@ export function ServerActionsDropdown({
   matchedRegistryItem,
 }: ServerActionsDropdownProps) {
   const repositoryUrl = matchedRegistryItem?.repository_url
-  const isDeleting = status === 'deleting'
+  const isDeleting = status === 'deleting' || status === 'removing'
 
   return (
     <DropdownMenu>
@@ -79,7 +79,7 @@ export function ServerActionsDropdown({
               registryImage={matchedRegistryItem.image}
               localTag={drift.localTag}
               registryTag={drift.registryTag}
-              disabled={status === 'updating'}
+              disabled={isDeleting || status === 'updating'}
             />
           )}
         {repositoryUrl && (

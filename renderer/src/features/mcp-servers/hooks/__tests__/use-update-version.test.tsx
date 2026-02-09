@@ -72,7 +72,7 @@ describe('useUpdateVersion', () => {
       expect(result.current.isReady).toBe(true)
     })
 
-    await act(() => {
+    act(() => {
       result.current.promptUpdate()
     })
 
@@ -108,7 +108,7 @@ describe('useUpdateVersion', () => {
       expect(result.current.isReady).toBe(true)
     })
 
-    await act(() => {
+    act(() => {
       result.current.promptUpdate()
     })
 
@@ -149,7 +149,7 @@ describe('useUpdateVersion', () => {
       expect(result.current.isReady).toBe(true)
     })
 
-    await act(() => {
+    act(() => {
       result.current.promptUpdate()
     })
 

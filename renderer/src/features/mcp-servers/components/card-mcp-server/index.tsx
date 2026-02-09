@@ -85,6 +85,8 @@ function CardContentMcpServer({
   registryImage,
 }: CardContentMcpServerProps) {
   const isRunning = status === 'running'
+  const isUpdating = `${status}` === 'updating'
+  const isDeleting = `${status}` === 'deleting' || status === 'removing'
   const { mutateAsync: restartMutate, isPending: isRestartPending } =
     useMutationRestartServer({
       name,
@@ -135,7 +137,7 @@ function CardContentMcpServer({
               serverName={name}
               registryImage={registryImage}
               drift={drift}
-              disabled={`${status}` === 'updating'}
+              disabled={isUpdating || isDeleting}
             />
           )}
         </div>
