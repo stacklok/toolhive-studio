@@ -3,7 +3,7 @@ import { twMerge } from 'tailwind-merge'
 
 function getPlatformSpecificHeaderClasses() {
   const platformClasses = {
-    darwin: 'pl-26', // Left padding for traffic light buttons
+    darwin: 'pl-26 pt-0.5', // Left padding for traffic light buttons + top offset for title bar
     win32: 'pr-2', // Right padding for visual spacing with window edge
     linux: '', // No padding needed - custom controls are part of the layout
   }
