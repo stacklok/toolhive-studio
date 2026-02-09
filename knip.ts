@@ -35,6 +35,7 @@ export default {
   ignoreDependencies: [
     '@electron-forge/maker-dmg', // Used indirectly in MakerDMGWithArch
     '@electron-forge/publisher-github',
+    '@electron-forge/publisher-s3',
     '@electron-forge/maker-base',
     '@electron-forge/maker-squirrel',
     '@tailwindcss/vite',
