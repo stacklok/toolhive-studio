@@ -44,6 +44,9 @@ export const openRegistryServerDetail = v1DeepLink({
 
 // /deep-link-not-found is not a real route. Navigating to a non-existent route
 // triggers the notFoundComponent defined in __root.tsx, which is the desired effect.
+// There is no harm in this being part of the public schema — an externally crafted
+// toolhive-gui://v1/show-not-found link only shows a 404 page, which is the same
+// outcome as any other invalid deep link URL.
 export const showNotFound = v1DeepLink({
   intent: 'show-not-found',
   params: z.object({}),
