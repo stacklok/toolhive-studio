@@ -364,7 +364,7 @@ export type AuthzConfig = {
 /**
  * ClientType is the type of MCP client
  */
-export type ClientMcpClient =
+export type ClientClientApp =
   | 'roo-code'
   | 'cline'
   | 'cursor'
@@ -391,8 +391,8 @@ export type ClientMcpClient =
   | 'mistral-vibe'
   | 'codex'
 
-export type ClientMcpClientStatus = {
-  client_type?: ClientMcpClient
+export type ClientClientAppStatus = {
+  client_type?: ClientClientApp
   /**
    * Installed indicates whether the client is installed on the system
    */
@@ -405,7 +405,7 @@ export type ClientMcpClientStatus = {
 
 export type ClientRegisteredClient = {
   groups?: Array<string>
-  name?: ClientMcpClient
+  name?: ClientClientApp
 }
 
 export type CoreWorkload = {
@@ -1127,6 +1127,7 @@ export type RunnerRunConfig = {
    * RemoteURL is the URL of the remote MCP server (if running remotely)
    */
   remote_url?: string
+  runtime_config?: TemplatesRuntimeConfig
   /**
    * SchemaVersion is the version of the RunConfig schema
    */
@@ -1227,7 +1228,7 @@ export type SkillsInstallStatus = 'installed' | 'pending' | 'failed'
 export type SkillsInstalledSkill = {
   /**
    * Clients is the list of client identifiers the skill is installed for.
-   * TODO: Refactor client.MCPClient to a shared package so it can be used here instead of []string.
+   * TODO: Refactor client.ClientApp to a shared package so it can be used here instead of []string.
    */
   clients?: Array<string>
   /**
@@ -1288,6 +1289,10 @@ export type SkillsValidationResult = {
    * Valid indicates whether the skill definition is valid.
    */
   valid?: boolean
+  /**
+   * Warnings is a list of non-blocking validation warnings, if any.
+   */
+  warnings?: Array<string>
 }
 
 /**
@@ -1373,6 +1378,24 @@ export type TelemetryConfig = {
    * +optional
    */
   tracingEnabled?: boolean
+}
+
+/**
+ * RuntimeConfig allows overriding the default runtime configuration
+ * for this specific workload (base images and packages)
+ */
+export type TemplatesRuntimeConfig = {
+  /**
+   * AdditionalPackages lists extra packages to install in builder stage
+   * Examples for Alpine: ["git", "make", "gcc"]
+   * Examples for Debian: ["git", "build-essential"]
+   */
+  additional_packages?: Array<string>
+  /**
+   * BuilderImage is the full image reference for the builder stage
+   * Examples: "golang:1.25-alpine", "node:22-alpine", "python:3.13-slim"
+   */
+  builder_image?: string
 }
 
 /**
@@ -1520,7 +1543,7 @@ export type V1BulkClientRequest = {
   /**
    * Names is the list of client names to operate on.
    */
-  names?: Array<ClientMcpClient>
+  names?: Array<ClientClientApp>
 }
 
 export type V1BulkOperationRequest = {
@@ -1535,7 +1558,7 @@ export type V1BulkOperationRequest = {
 }
 
 export type V1ClientStatusResponse = {
-  clients?: Array<ClientMcpClientStatus>
+  clients?: Array<ClientClientAppStatus>
 }
 
 export type V1CreateClientRequest = {
@@ -1543,7 +1566,7 @@ export type V1CreateClientRequest = {
    * Groups is the list of groups configured on the client.
    */
   groups?: Array<string>
-  name?: ClientMcpClient
+  name?: ClientClientApp
 }
 
 export type V1CreateClientResponse = {
@@ -1551,7 +1574,7 @@ export type V1CreateClientResponse = {
    * Groups is the list of groups configured on the client.
    */
   groups?: Array<string>
-  name?: ClientMcpClient
+  name?: ClientClientApp
 }
 
 export type V1CreateGroupRequest = {

@@ -369,7 +369,7 @@
         },
         "type": "object"
       },
-      "client.MCPClient": {
+      "client.ClientApp": {
         "description": "ClientType is the type of MCP client",
         "enum": [
           "roo-code",
@@ -427,10 +427,10 @@
           "Codex"
         ]
       },
-      "client.MCPClientStatus": {
+      "client.ClientAppStatus": {
         "properties": {
           "client_type": {
-            "$ref": "#/components/schemas/client.MCPClient"
+            "$ref": "#/components/schemas/client.ClientApp"
           },
           "installed": {
             "description": "Installed indicates whether the client is installed on the system",
@@ -453,7 +453,7 @@
             "uniqueItems": false
           },
           "name": {
-            "$ref": "#/components/schemas/client.MCPClient"
+            "$ref": "#/components/schemas/client.ClientApp"
           }
         },
         "type": "object"
@@ -1320,6 +1320,9 @@
             "description": "RemoteURL is the URL of the remote MCP server (if running remotely)",
             "type": "string"
           },
+          "runtime_config": {
+            "$ref": "#/components/schemas/templates.RuntimeConfig"
+          },
           "schema_version": {
             "description": "SchemaVersion is the version of the RunConfig schema",
             "type": "string"
@@ -1460,7 +1463,7 @@
         "description": "InstalledSkill is set if the skill is installed.",
         "properties": {
           "clients": {
-            "description": "Clients is the list of client identifiers the skill is installed for.\nTODO: Refactor client.MCPClient to a shared package so it can be used here instead of []string.",
+            "description": "Clients is the list of client identifiers the skill is installed for.\nTODO: Refactor client.ClientApp to a shared package so it can be used here instead of []string.",
             "items": {
               "type": "string"
             },
@@ -1547,6 +1550,14 @@
           "valid": {
             "description": "Valid indicates whether the skill definition is valid.",
             "type": "boolean"
+          },
+          "warnings": {
+            "description": "Warnings is a list of non-blocking validation warnings, if any.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": false
           }
         },
         "type": "object"
@@ -1607,6 +1618,24 @@
           "tracingEnabled": {
             "description": "TracingEnabled controls whether distributed tracing is enabled.\nWhen false, no tracer provider is created even if an endpoint is configured.\n+kubebuilder:default=false\n+optional",
             "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "templates.RuntimeConfig": {
+        "description": "RuntimeConfig allows overriding the default runtime configuration\nfor this specific workload (base images and packages)",
+        "properties": {
+          "additional_packages": {
+            "description": "AdditionalPackages lists extra packages to install in builder stage\nExamples for Alpine: [\"git\", \"make\", \"gcc\"]\nExamples for Debian: [\"git\", \"build-essential\"]",
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": false
+          },
+          "builder_image": {
+            "description": "BuilderImage is the full image reference for the builder stage\nExamples: \"golang:1.25-alpine\", \"node:22-alpine\", \"python:3.13-slim\"",
+            "type": "string"
           }
         },
         "type": "object"
@@ -1767,7 +1796,7 @@
           "names": {
             "description": "Names is the list of client names to operate on.",
             "items": {
-              "$ref": "#/components/schemas/client.MCPClient"
+              "$ref": "#/components/schemas/client.ClientApp"
             },
             "type": "array",
             "uniqueItems": false
@@ -1796,7 +1825,7 @@
         "properties": {
           "clients": {
             "items": {
-              "$ref": "#/components/schemas/client.MCPClientStatus"
+              "$ref": "#/components/schemas/client.ClientAppStatus"
             },
             "type": "array",
             "uniqueItems": false
@@ -1815,7 +1844,7 @@
             "uniqueItems": false
           },
           "name": {
-            "$ref": "#/components/schemas/client.MCPClient"
+            "$ref": "#/components/schemas/client.ClientApp"
           }
         },
         "type": "object"
@@ -1831,7 +1860,7 @@
             "uniqueItems": false
           },
           "name": {
-            "$ref": "#/components/schemas/client.MCPClient"
+            "$ref": "#/components/schemas/client.ClientApp"
           }
         },
         "type": "object"
