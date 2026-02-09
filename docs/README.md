@@ -71,50 +71,23 @@ follow the format:
 toolhive-gui://<version>/<intent>?<params>
 ```
 
-#### Example deep links
-
-Open a registry server detail page:
+Example deep links:
 
 ```
 toolhive-gui://v1/open-registry-server-detail?serverName=fetch
 toolhive-gui://v1/open-registry-server-detail?serverName=time
 ```
 
-Invalid deep links (for testing error handling):
-
-```
-toolhive-gui://v1/bogus-intent
-toolhive-gui://v99/open-registry-server-detail?serverName=fetch
-```
-
 #### Linux
 
-**Register the protocol handler** (builds a .deb, extracts and installs the
-`.desktop` file for the current user):
+Register the protocol handler (builds a `.deb`, extracts and installs the
+`.desktop` file system-wide):
 
 ```bash
 pnpm run install-deep-link-handler
 ```
 
-**Cold start** (app is not running):
-
-```bash
-# Start the app and navigate to a deep link in one step
-./node_modules/.bin/electron . "toolhive-gui://v1/open-registry-server-detail?serverName=fetch"
-```
-
-**Second instance** (app is already running):
-
-```bash
-# With the dev server already running (pnpm start), open a second terminal:
-./node_modules/.bin/electron . "toolhive-gui://v1/open-registry-server-detail?serverName=fetch"
-```
-
-> [!NOTE]
-> In dev mode, the second electron instance will briefly show a white window
-> before quitting. This does not happen with packaged builds.
-
-**Using xdg-open** (requires the protocol handler to be registered):
+Once registered, you can open deep links from the browser or with `xdg-open`:
 
 ```bash
 xdg-open "toolhive-gui://v1/open-registry-server-detail?serverName=fetch"
