@@ -215,11 +215,8 @@ export function ChatInterface() {
                   motion-safe:transition-all motion-safe:duration-300"
               >
                 <div className="w-full max-w-4xl space-y-8 text-center">
-                  <div>
-                    <div
-                      className="text-foreground text-center font-serif text-4xl
-                        font-light"
-                    >
+                  <div className="mb-6 flex flex-col items-center">
+                    <div className="text-foreground text-page-title text-center">
                       {!hasProviderAndModel && (
                         <MessageCircleMore
                           strokeWidth={1}

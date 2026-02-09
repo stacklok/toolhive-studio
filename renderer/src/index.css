@@ -212,6 +212,14 @@
     app-region: no-drag;
   }
 
+  .text-page-title {
+    font-family: var(--font-serif);
+    font-size: 34px;
+    line-height: 42px;
+    font-weight: 300;
+    letter-spacing: -0.85px;
+  }
+
   @keyframes diagonal-ring {
     from {
       background-position: -150% -150%;

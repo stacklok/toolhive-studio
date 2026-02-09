@@ -158,6 +158,7 @@ function InputWithAttachments({
           onClick={handleSubmit}
           disabled={!text && !hasMessages}
           status={status}
+          variant="action"
         />
       </PromptInputToolbar>
     </>

@@ -37,12 +37,7 @@ export function RegistryError() {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center">
-        <h1
-          className="font-serif text-[34px] leading-[42px] font-light
-            tracking-[-0.85px]"
-        >
-          Registry
-        </h1>
+        <h1 className="text-page-title">Registry</h1>
       </div>
       <div className="flex min-h-0 flex-1 items-center justify-center">
         <Card className="flex w-full max-w-md flex-col">
