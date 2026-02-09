@@ -62,6 +62,58 @@ E2E tests use Playwright to test the packaged Electron application.
   `out/`. Use this when iterating on tests without rebuilding.
 - Detailed E2E guide: `docs/e2e-testing.md`
 
+### Testing deep links
+
+The app registers the `toolhive-gui://` protocol for deep linking. Deep links
+follow the format:
+
+```
+toolhive-gui://<version>/<intent>?<params>
+```
+
+#### Example deep links
+
+> [!NOTE]
+> These links are clickable when the protocol handler is registered on your
+> system (e.g. after installing a packaged build or running the dev app once).
+
+- [Open registry server "fetch"](toolhive-gui://v1/open-registry-server-detail?serverName=fetch)
+- [Open registry server "time"](toolhive-gui://v1/open-registry-server-detail?serverName=time)
+- [Invalid intent (shows not-found page)](toolhive-gui://v1/bogus-intent)
+- [Invalid protocol version](toolhive-gui://v99/open-registry-server-detail?serverName=fetch)
+
+#### Linux
+
+**Cold start** (app is not running):
+
+```bash
+# Start the app and navigate to a deep link in one step
+./node_modules/.bin/electron . "toolhive-gui://v1/open-registry-server-detail?serverName=fetch"
+```
+
+**Second instance** (app is already running):
+
+```bash
+# With the dev server already running (pnpm start), open a second terminal:
+./node_modules/.bin/electron . "toolhive-gui://v1/open-registry-server-detail?serverName=fetch"
+```
+
+> [!NOTE]
+> In dev mode, the second electron instance will briefly show a white window
+> before quitting. This does not happen with packaged builds.
+
+**Using xdg-open** (requires the protocol handler to be registered):
+
+```bash
+xdg-open "toolhive-gui://v1/open-registry-server-detail?serverName=fetch"
+```
+
+You can check whether the protocol handler is registered with:
+
+```bash
+xdg-mime query default x-scheme-handler/toolhive-gui
+```
+
 ### Building and packaging
 
 - `pnpm run package`: Packages the application for the current platform.
