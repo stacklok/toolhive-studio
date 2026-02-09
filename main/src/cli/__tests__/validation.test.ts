@@ -56,20 +56,6 @@ vi.mock('@sentry/electron/main', () => ({
   startSpan: vi.fn((_options, callback) => callback()),
 }))
 
-const { mockGetFeatureFlag } = vi.hoisted(() => ({
-  mockGetFeatureFlag: vi.fn().mockReturnValue(true),
-}))
-
-vi.mock('../../feature-flags', () => ({
-  getFeatureFlag: mockGetFeatureFlag,
-}))
-
-vi.mock('../../../../utils/feature-flags', () => ({
-  featureFlagKeys: {
-    CLI_VALIDATION_ENFORCE: 'cli_validation_enforce',
-  },
-}))
-
 import { detectExternalCli, getCliInfo } from '../cli-detection'
 import { readMarkerFile, createMarkerForDesktopInstall } from '../marker-file'
 import {
@@ -107,8 +93,6 @@ describe('validation', () => {
       modifiedFiles: [],
       pathEntry: '/home/testuser/.toolhive/bin',
     })
-    // Default feature flag to enabled
-    mockGetFeatureFlag.mockReturnValue(true)
   })
 
   afterEach(() => {
@@ -350,33 +334,6 @@ describe('validation', () => {
       )
 
       expect(result.status).toBe('fresh-install')
-    })
-
-    it('skips symlink and marker creation when feature flag is disabled', async () => {
-      mockGetFeatureFlag.mockReturnValue(false)
-
-      const result = await handleValidationResult(
-        { status: 'fresh-install' },
-        'darwin'
-      )
-
-      expect(mockCreateSymlink).not.toHaveBeenCalled()
-      expect(mockCreateMarkerForDesktopInstall).not.toHaveBeenCalled()
-      expect(mockConfigureShellPath).not.toHaveBeenCalled()
-      expect(result.status).toBe('valid')
-    })
-
-    it('skips symlink creation for symlink-missing when feature flag is disabled', async () => {
-      mockGetFeatureFlag.mockReturnValue(false)
-
-      const result = await handleValidationResult(
-        { status: 'symlink-missing' },
-        'darwin'
-      )
-
-      expect(mockCreateSymlink).not.toHaveBeenCalled()
-      expect(mockCreateMarkerForDesktopInstall).not.toHaveBeenCalled()
-      expect(result.status).toBe('valid')
     })
 
     it('recopies CLI on Windows when desktop version changes', async () => {

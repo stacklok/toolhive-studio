@@ -18,8 +18,6 @@ import { getDesktopCliPath } from './constants'
 import type { ValidationResult } from '@common/types/cli'
 import type { CliAlignmentStatus, Platform } from './types'
 import log from '../logger'
-import { getFeatureFlag } from '../feature-flags'
-import { featureFlagKeys } from '../../../utils/feature-flags'
 
 export async function validateCliAlignment(
   platform: Platform = process.platform as Platform
@@ -237,25 +235,6 @@ export async function handleValidationResult(
         // These cases can be auto-fixed without user interaction
         case 'symlink-missing':
         case 'fresh-install': {
-          // Check if CLI installation is enabled via feature flag
-          const isCliInstallEnabled = getFeatureFlag(
-            featureFlagKeys.CLI_VALIDATION_ENFORCE
-          )
-
-          span.setAttribute('cli.feature_flag_enabled', isCliInstallEnabled)
-
-          if (!isCliInstallEnabled) {
-            log.info(
-              'CLI installation disabled by feature flag, skipping symlink and marker creation'
-            )
-            span.setAttributes({
-              'cli.output_status': 'skipped',
-              'cli.skipped_reason': 'feature_flag_disabled',
-            })
-            span.end()
-            return { status: 'valid' }
-          }
-
           log.info('Performing fresh CLI installation...')
 
           const symlinkResult = createSymlink(platform)
