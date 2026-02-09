@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 #
 # Build a .deb package, extract the .desktop file from it,
-# install it into ~/.local/share/applications/, and rebuild
-# the desktop file database so the toolhive-gui:// protocol
-# handler is registered for the current user.
+# install it into /usr/share/applications/ (system-wide, like a
+# real .deb install), and rebuild the desktop file database so the
+# toolhive-gui:// protocol handler is registered.
+#
+# Requires sudo for the system-wide install step.
 #
 # Usage: pnpm run install-deep-link-handler
 
@@ -13,7 +15,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 DEB_DIR="$PROJECT_ROOT/out/make/deb/x64"
 EXTRACT_DIR="$PROJECT_ROOT/out/deb-extracted"
-APPLICATIONS_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+SYSTEM_APPLICATIONS_DIR="/usr/share/applications"
 
 echo "==> Building .deb package..."
 cd "$PROJECT_ROOT"
@@ -47,15 +49,32 @@ if ! grep -q 'MimeType=.*x-scheme-handler/toolhive-gui' "$DESKTOP_FILE"; then
   exit 1
 fi
 
-echo "==> Installing .desktop file to $APPLICATIONS_DIR"
-mkdir -p "$APPLICATIONS_DIR"
-cp "$DESKTOP_FILE" "$APPLICATIONS_DIR/"
+INSTALLED_NAME=$(basename "$DESKTOP_FILE")
+
+# Patch the Exec line to point to the packaged binary in out/.
+# A real .deb install would have the binary at /usr/lib/toolhive/ToolHive
+# with a symlink from /usr/bin/toolhive, but we only extracted the .desktop
+# file so we rewrite Exec to use the local packaged build instead.
+PACKAGED_BIN="$PROJECT_ROOT/out/ToolHive-linux-x64/ToolHive"
+if [ ! -x "$PACKAGED_BIN" ]; then
+  echo "ERROR: Packaged binary not found at $PACKAGED_BIN"
+  exit 1
+fi
+echo "==> Patching Exec to use packaged binary: $PACKAGED_BIN"
+sed -i "s|^Exec=.*|Exec=$PACKAGED_BIN %U|" "$DESKTOP_FILE"
+
+echo "==> Installing .desktop file to $SYSTEM_APPLICATIONS_DIR (requires sudo)..."
+sudo cp "$DESKTOP_FILE" "$SYSTEM_APPLICATIONS_DIR/"
 
 echo "==> Rebuilding desktop file database..."
-update-desktop-database "$APPLICATIONS_DIR"
+sudo update-desktop-database "$SYSTEM_APPLICATIONS_DIR"
 
-INSTALLED_NAME=$(basename "$DESKTOP_FILE")
-echo "==> Done! Installed $INSTALLED_NAME"
-echo ""
-echo "Verify with:"
-echo "  xdg-mime query default x-scheme-handler/toolhive-gui"
+echo "==> Verifying protocol handler registration..."
+HANDLER=$(xdg-mime query default x-scheme-handler/toolhive-gui)
+if [ "$HANDLER" = "$INSTALLED_NAME" ]; then
+  echo "==> Done! x-scheme-handler/toolhive-gui -> $HANDLER"
+else
+  echo "WARNING: Expected handler '$INSTALLED_NAME' but got '$HANDLER'"
+  echo "The protocol handler may not be registered correctly."
+  exit 1
+fi

@@ -223,7 +223,7 @@ const gotTheLock = app.requestSingleInstanceLock()
 
 if (!gotTheLock) {
   log.info('Another instance is already running. Exiting...')
-  app.quit()
+  process.exit(0)
 } else {
   app.on('second-instance', (_event, argv) => {
     log.info(
