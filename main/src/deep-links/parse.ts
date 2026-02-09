@@ -13,9 +13,16 @@ const openRegistryServerDetailIntent = z.object({
   }),
 })
 
+const showNotFoundIntent = z.object({
+  version: z.literal('v1'),
+  action: z.literal('show-not-found'),
+  params: z.object({}),
+})
+
 // Extend this union as new deep link intents are added
 const deepLinkIntent = z.discriminatedUnion('action', [
   openRegistryServerDetailIntent,
+  showNotFoundIntent,
 ])
 
 export type DeepLinkIntent = z.infer<typeof deepLinkIntent>

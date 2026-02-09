@@ -82,17 +82,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Deep link navigation
   onDeepLinkNavigation: (
-    callback: (
-      intent:
-        | { action: string; version: string; params: Record<string, string> }
-        | { error: true }
-    ) => void
+    callback: (intent: {
+      action: string
+      version: string
+      params: Record<string, string>
+    }) => void
   ) => {
     const listener = (
       _event: Electron.IpcRendererEvent,
-      intent:
-        | { action: string; version: string; params: Record<string, string> }
-        | { error: true }
+      intent: {
+        action: string
+        version: string
+        params: Record<string, string>
+      }
     ) => callback(intent)
     ipcRenderer.on('deep-link-navigation', listener)
     return () => {
@@ -311,11 +313,11 @@ export interface ElectronAPI {
   platform: NodeJS.Platform
   onServerShutdown: (callback: () => void) => () => void
   onDeepLinkNavigation: (
-    callback: (
-      intent:
-        | { action: string; version: string; params: Record<string, string> }
-        | { error: true }
-    ) => void
+    callback: (intent: {
+      action: string
+      version: string
+      params: Record<string, string>
+    }) => void
   ) => () => void
   onShowQuitConfirmation: (callback: () => void) => () => void
   windowControls: {
