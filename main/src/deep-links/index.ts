@@ -47,6 +47,13 @@ export async function handleDeepLink(rawUrl: string): Promise<void> {
 
   if (!result.ok) {
     log.warn(`[deep-link] Invalid deep link: ${result.error}`)
+    log.info('[deep-link] Waiting for main window to be ready')
+    try {
+      await waitForMainWindowReady()
+    } catch (error) {
+      log.error('[deep-link] Window did not become ready:', error)
+      return
+    }
     log.info('[deep-link] Sending show-not-found deep link to renderer')
     sendToMainWindowRenderer(IPC_CHANNEL, {
       version: showNotFound.version,

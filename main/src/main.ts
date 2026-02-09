@@ -232,9 +232,10 @@ if (!gotTheLock) {
     // On Windows/Linux, deep link URL is passed as a command line argument
     const deepLinkUrl = extractDeepLinkFromArgs(argv)
     if (deepLinkUrl) {
-      handleDeepLink(deepLinkUrl)
+      handleDeepLink(deepLinkUrl) // focuses window internally
+    } else {
+      focusMainWindow()
     }
-    focusMainWindow()
   })
 }
 
