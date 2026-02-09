@@ -247,10 +247,7 @@ export function CustomizeToolsPage() {
         </LinkViewTransition>
       </div>
       <div className="mb-5">
-        <h1
-          className="m-0 mb-0 p-0 font-serif text-[34px] leading-[42px]
-            font-light tracking-[-0.85px]"
-        >
+        <h1 className="text-page-title m-0 mb-0 p-0">
           Customize tools for {serverName}
         </h1>
       </div>
@@ -265,6 +262,8 @@ export function CustomizeToolsPage() {
             actions={[
               <Button
                 key="start-server"
+                variant="action"
+                className="dark:bg-nav-button-active-bg! rounded-full"
                 onClick={() => handleStartServer()}
                 disabled={isRestartPending}
               >
@@ -272,6 +271,7 @@ export function CustomizeToolsPage() {
               </Button>,
               <Button
                 key="cancel"
+                className="rounded-full"
                 variant="outline"
                 onClick={() =>
                   navigate({
