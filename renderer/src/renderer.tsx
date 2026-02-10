@@ -115,8 +115,6 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
   // Listen for deep link navigation events — the main process resolves
   // the deep link URL to a navigation target, so the renderer just navigates.
   const deepLinkCleanup = window.electronAPI.onDeepLinkNavigation((target) => {
-    // TODO: Remove this alert — temporary debug aid for Windows testing
-    alert(`[deep-link] target: ${target.to} ${JSON.stringify(target.params)}`)
     log.info(`[deep-link] Navigating to: ${target.to}`, target.params)
     router.navigate(target)
   })
