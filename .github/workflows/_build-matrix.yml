@@ -17,8 +17,6 @@ jobs:
           - os: ubuntu-latest
             arch: x64
           - os: windows-latest
-            arch: arm64
-          - os: windows-latest
             arch: x64
           - os: macos-15-intel
             arch: x64
@@ -50,7 +48,7 @@ jobs:
         if: runner.os == 'Linux'
 
       - name: Build App
-        run: pnpm run make -- --arch=${{ matrix.arch }}
+        run: pnpm run make
         env:
           npm_config_target_platform: ${{ runner.os == 'Linux' && 'linux' || (runner.os == 'macOS' && 'darwin' || 'win32') }}
           # Apple API Key method for notarization (set by composite action)
