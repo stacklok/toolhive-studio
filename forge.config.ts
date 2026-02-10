@@ -1,6 +1,6 @@
 import 'dotenv/config'
 import type { ForgeConfig } from '@electron-forge/shared-types'
-import MakerSquirrelWithArch from './utils/forge-makers/MakerSquirrelWithArch'
+import { MakerSquirrel } from '@electron-forge/maker-squirrel'
 import { MakerZIP } from '@electron-forge/maker-zip'
 import { MakerDeb } from '@electron-forge/maker-deb'
 import { MakerRpm } from '@electron-forge/maker-rpm'
@@ -111,7 +111,7 @@ const config: ForgeConfig = {
   ],
 
   makers: [
-    new MakerSquirrelWithArch({
+    new MakerSquirrel({
       // Windows Squirrel installer configuration
       setupIcon: './icons/icon.ico', // Setup.exe icon
       setupExe: 'ToolHive Setup.exe',
