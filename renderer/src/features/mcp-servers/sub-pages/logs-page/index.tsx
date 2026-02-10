@@ -1,7 +1,6 @@
 import { useParams, useSearch } from '@tanstack/react-router'
 import { Button } from '@/common/components/ui/button'
 import { ChevronLeft } from 'lucide-react'
-import { Separator } from '@/common/components/ui/separator'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -84,11 +83,7 @@ export function LogsPage() {
     <div className="flex h-full w-full flex-col">
       <div className="mb-2">
         <LinkViewTransition {...backLink}>
-          <Button
-            variant="link"
-            aria-label="Back"
-            className="text-muted-foreground"
-          >
+          <Button variant="outline" aria-label="Back" className="rounded-full">
             <ChevronLeft className="size-4" />
             Back
           </Button>
@@ -101,7 +96,6 @@ export function LogsPage() {
             : serverName}
         </h1>
 
-        <Separator />
         <div className="mb-4 flex justify-between">
           <InputSearch
             placeholder="Search log"
