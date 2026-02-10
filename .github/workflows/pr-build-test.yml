@@ -193,7 +193,7 @@ jobs:
         if: runner.os == 'Linux'
 
       - name: Build App
-        run: pnpm run make 
+        run: pnpm run make
         env:
           npm_config_target_platform: ${{ matrix.platform }}
           # macOS signing (set by composite action)

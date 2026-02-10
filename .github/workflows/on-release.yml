@@ -116,7 +116,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Build and Publish
-        run: pnpm run publish 
+        run: pnpm run publish
         env:
           # Ensure the correct Node.js version is used for native modules
           npm_config_target_platform: ${{ runner.os == 'Linux' && 'linux' || (runner.os == 'macOS' && 'darwin' || 'win32') }}
