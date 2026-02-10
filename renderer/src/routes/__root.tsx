@@ -123,7 +123,15 @@ export const Route = createRootRouteWithContext<{
     if (!isCliOrShutdownRoute) {
       const validationResult =
         await window.electronAPI.cliAlignment.getValidationResult()
-      if (validationResult && validationResult.status !== 'valid') {
+      const actionableStatuses = [
+        'external-cli-found',
+        'symlink-broken',
+        'symlink-tampered',
+      ]
+      if (
+        validationResult &&
+        actionableStatuses.includes(validationResult.status)
+      ) {
         log.info(
           `[beforeLoad] CLI validation issue: ${validationResult.status}, redirecting to /cli-issue`
         )
