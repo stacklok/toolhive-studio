@@ -55,6 +55,7 @@ function deleteTestGroupViaCli(): void {
     execSync(`"${thvPath}" group rm "${TEST_GROUP_NAME}" --with-workloads`, {
       input: 'y\n',
       stdio: ['pipe', 'ignore', 'ignore'],
+      env: { ...process.env, TOOLHIVE_SKIP_DESKTOP_CHECK: 'true' },
     })
   } catch {
     // Group doesn't exist, which is fine
@@ -66,6 +67,7 @@ export function deleteTestSecretViaCli(): void {
   try {
     execSync(`"${thvPath}" secret delete "${TEST_SECRET_NAME}"`, {
       stdio: ['pipe', 'ignore', 'ignore'],
+      env: { ...process.env, TOOLHIVE_SKIP_DESKTOP_CHECK: 'true' },
     })
   } catch {
     // Secret doesn't exist, which is fine

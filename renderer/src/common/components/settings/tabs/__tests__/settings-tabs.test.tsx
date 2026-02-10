@@ -47,15 +47,10 @@ vi.mock('@/common/hooks/use-theme', () => ({
 
 const mockUseAppVersion = vi.fn()
 const mockUseCurrentUpdateState = vi.fn()
-const mockUseFeatureFlag = vi.fn()
 
 vi.mock('@/common/hooks/use-app-version', () => ({
   useAppVersion: () => mockUseAppVersion(),
   useCurrentUpdateState: () => mockUseCurrentUpdateState(),
-}))
-
-vi.mock('@/common/hooks/use-feature-flag', () => ({
-  useFeatureFlag: (key: string) => mockUseFeatureFlag(key),
 }))
 
 const renderWithProviders = (component: React.ReactElement) => {
@@ -119,9 +114,6 @@ describe('SettingsTabs', () => {
       data: 'none',
       isLoading: false,
     })
-
-    // Default: CLI enforcement disabled (telemetry-only mode)
-    mockUseFeatureFlag.mockReturnValue(false)
   })
 
   afterEach(() => {
@@ -132,6 +124,8 @@ describe('SettingsTabs', () => {
   it('renders all tab triggers', async () => {
     renderWithProviders(<SettingsTabs />)
     expect(screen.getByRole('tab', { name: 'General' })).toBeVisible()
+    expect(screen.getByRole('tab', { name: 'Registry' })).toBeVisible()
+    expect(screen.getByRole('tab', { name: 'CLI' })).toBeVisible()
     expect(screen.getByRole('tab', { name: 'Version' })).toBeVisible()
     expect(screen.getByRole('tab', { name: 'Logs' })).toBeVisible()
   })
@@ -259,37 +253,5 @@ describe('SettingsTabs', () => {
     // Check that these tabs don't have the icon
     expect(generalTab.querySelector('svg')).not.toBeInTheDocument()
     expect(logsTab.querySelector('svg')).not.toBeInTheDocument()
-  })
-
-  describe('CLI tab visibility based on feature flag', () => {
-    it('does not show CLI tab when CLI_VALIDATION_ENFORCE flag is disabled', async () => {
-      mockUseFeatureFlag.mockReturnValue(false)
-
-      renderWithProviders(<SettingsTabs />)
-
-      // CLI tab should not be present
-      expect(screen.queryByRole('tab', { name: 'CLI' })).not.toBeInTheDocument()
-
-      // Other tabs should still be visible
-      expect(screen.getByRole('tab', { name: 'General' })).toBeVisible()
-      expect(screen.getByRole('tab', { name: 'Registry' })).toBeVisible()
-      expect(screen.getByRole('tab', { name: 'Version' })).toBeVisible()
-      expect(screen.getByRole('tab', { name: 'Logs' })).toBeVisible()
-    })
-
-    it('shows CLI tab when CLI_VALIDATION_ENFORCE flag is enabled', async () => {
-      mockUseFeatureFlag.mockReturnValue(true)
-
-      renderWithProviders(<SettingsTabs />)
-
-      // CLI tab should be present
-      expect(screen.getByRole('tab', { name: 'CLI' })).toBeVisible()
-
-      // All other tabs should also be visible
-      expect(screen.getByRole('tab', { name: 'General' })).toBeVisible()
-      expect(screen.getByRole('tab', { name: 'Registry' })).toBeVisible()
-      expect(screen.getByRole('tab', { name: 'Version' })).toBeVisible()
-      expect(screen.getByRole('tab', { name: 'Logs' })).toBeVisible()
-    })
   })
 })

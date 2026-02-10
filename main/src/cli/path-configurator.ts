@@ -23,8 +23,6 @@ import {
 } from './constants'
 import type { PathConfigStatus } from './types'
 import log from '../logger'
-import { getFeatureFlag } from '../feature-flags'
-import { featureFlagKeys } from '../../../utils/feature-flags'
 
 const execAsync = promisify(exec)
 
@@ -187,25 +185,8 @@ export async function configureShellPath(): Promise<{
       },
     },
     async (span) => {
-      // Check if PATH configuration is enabled via feature flag
-      const isPathConfigEnabled = getFeatureFlag(
-        featureFlagKeys.CLI_VALIDATION_ENFORCE
-      )
-
-      span.setAttribute('cli.feature_flag_enabled', isPathConfigEnabled)
-
       if (process.platform === 'win32') {
         span.setAttribute('cli.is_windows', true)
-
-        if (!isPathConfigEnabled) {
-          log.info('PATH configuration disabled by feature flag, skipping')
-          span.setAttributes({
-            'cli.path_configured': false,
-            'cli.skipped_reason': 'feature_flag_disabled',
-          })
-          span.end()
-          return { success: false, modifiedFiles: [] }
-        }
 
         const result = await configureWindowsPath()
         span.setAttribute('cli.path_configured', result.success)
@@ -221,16 +202,6 @@ export async function configureShellPath(): Promise<{
 
       // Record detected shell in span for analytics
       span.setAttribute('cli.detected_shell', defaultShell)
-
-      if (!isPathConfigEnabled) {
-        log.info('PATH configuration disabled by feature flag, skipping')
-        span.setAttributes({
-          'cli.path_configured': false,
-          'cli.skipped_reason': 'feature_flag_disabled',
-        })
-        span.end()
-        return { success: false, modifiedFiles: [] }
-      }
 
       const defaultShellFiles = shellRcFiles[defaultShell] ?? []
       const isFish = defaultShell === 'fish'
