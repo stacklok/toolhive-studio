@@ -12,6 +12,7 @@ import { ensureThv } from './utils/fetch-thv'
 import MakerTarGz from './utils/forge-makers/MakerTarGz'
 import MakerDMGWithArch from './utils/forge-makers/MakerDMGWithArch'
 import { isPrerelease } from './utils/pre-release'
+import packageJson from './package.json'
 
 function isValidPlatform(platform: string): platform is NodeJS.Platform {
   return ['win32', 'darwin', 'linux'].includes(platform)
@@ -103,6 +104,7 @@ const config: ForgeConfig = {
       name: '@electron-forge/publisher-s3',
       config: {
         bucket: 'toolhive-studio-releases',
+        folder: `${isPrerelease() ? 'pre-release' : 'stable'}/${packageJson.version}`,
         public: true,
       },
     },
