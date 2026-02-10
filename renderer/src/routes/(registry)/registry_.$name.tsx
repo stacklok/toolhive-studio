@@ -7,7 +7,12 @@ import {
   CardTitle,
 } from '@/common/components/ui/card'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
-import { createFileRoute, Link, useParams } from '@tanstack/react-router'
+import {
+  createFileRoute,
+  Link,
+  notFound,
+  useParams,
+} from '@tanstack/react-router'
 import {
   FileQuestion,
   GithubIcon,
@@ -16,6 +21,7 @@ import {
   Wrench,
 } from 'lucide-react'
 import { getApiV1BetaRegistryByNameServersByServerNameOptions } from '@common/api/generated/@tanstack/react-query.gen'
+import { getApiV1BetaRegistryByNameServersByServerName } from '@common/api/generated/sdk.gen'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { Stars } from '@/features/registry-servers/components/stars'
 import { Badge } from '@/common/components/ui/badge'
@@ -71,18 +77,29 @@ function RegistryServerNotFound() {
 }
 
 export const Route = createFileRoute('/(registry)/registry_/$name')({
-  loader: ({ context: { queryClient }, params }) => {
-    return queryClient.ensureQueryData(
-      getApiV1BetaRegistryByNameServersByServerNameOptions({
-        path: {
-          name: 'default',
-          serverName: params.name,
-        },
-      })
-    )
+  loader: async ({ context: { queryClient }, params }) => {
+    const pathOptions = {
+      path: { name: 'default' as const, serverName: params.name },
+    }
+    return queryClient.ensureQueryData({
+      ...getApiV1BetaRegistryByNameServersByServerNameOptions(pathOptions),
+      queryFn: async ({ signal }) => {
+        const result = await getApiV1BetaRegistryByNameServersByServerName({
+          ...pathOptions,
+          signal,
+        })
+        if (result.error !== undefined) {
+          if (result.response.status === 404) {
+            throw notFound()
+          }
+          throw result.error
+        }
+        return result.data
+      },
+    })
   },
   component: RegistryServerDetail,
-  errorComponent: RegistryServerNotFound,
+  notFoundComponent: RegistryServerNotFound,
 })
 
 export function RegistryServerDetail() {
