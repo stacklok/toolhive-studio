@@ -149,7 +149,7 @@ export function RegistryServerDetail() {
             {hasProvenance && (
               <Tooltip>
                 <TooltipTrigger
-                  className="text-muted-foreground flex items-center gap-2"
+                  className="text-muted-foreground flex items-center gap-1"
                 >
                   <ShieldCheck className="size-4" />
                   <span className="text-sm">Provenance signed by Sigstore</span>

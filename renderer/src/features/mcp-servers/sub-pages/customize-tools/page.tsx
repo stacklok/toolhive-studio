@@ -236,11 +236,7 @@ export function CustomizeToolsPage() {
     <div className="flex h-full flex-col">
       <div className="mb-2">
         <LinkViewTransition to={`/group/${workload?.group || 'default'}`}>
-          <Button
-            variant="link"
-            aria-label="Back"
-            className="text-muted-foreground"
-          >
+          <Button variant="outline" aria-label="Back" className="rounded-full">
             <ChevronLeft className="size-4" />
             Back
           </Button>
