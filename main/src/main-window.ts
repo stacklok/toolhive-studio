@@ -338,7 +338,7 @@ export function sendToMainWindowRenderer(
 /**
  * Wait for the window to be ready
  */
-async function waitForMainWindowReady(): Promise<void> {
+export async function waitForMainWindowReady(): Promise<void> {
   try {
     if (!isMainWindowValid()) {
       logError(

@@ -112,6 +112,13 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
     router.navigate({ to: '/shutdown' })
   })
 
+  // Listen for deep link navigation events — the main process resolves
+  // the deep link URL to a navigation target, so the renderer just navigates.
+  const deepLinkCleanup = window.electronAPI.onDeepLinkNavigation((target) => {
+    log.info(`[deep-link] Navigating to: ${target.to}`, target.params)
+    router.navigate(target)
+  })
+
   const rootElement = document.getElementById('root')!
   const root = ReactDOM.createRoot(rootElement)
 
@@ -130,8 +137,9 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
     </StrictMode>
   )
 
-  // Cleanup listener on unmount
+  // Cleanup listeners on unmount
   return () => {
     cleanup()
+    deepLinkCleanup()
   }
 })()

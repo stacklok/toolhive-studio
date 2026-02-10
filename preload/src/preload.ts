@@ -14,6 +14,7 @@ import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 import type { FeatureFlagOptions } from '../../main/src/feature-flags'
 import type { UpdateState } from '../../main/src/auto-update'
 import type { ValidationResult } from '@common/types/cli'
+import type { NavigateTarget } from '@common/deep-links'
 
 // Expose auto-launch functionality to renderer
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -77,6 +78,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('graceful-exit', callback)
     return () => {
       ipcRenderer.removeListener('graceful-exit', callback)
+    }
+  },
+
+  // Deep link navigation — main process resolves the deep link to a
+  // navigation target ({ to, params }) and sends it over IPC.
+  onDeepLinkNavigation: (callback: (target: NavigateTarget) => void) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      target: NavigateTarget
+    ) => callback(target)
+    ipcRenderer.on('deep-link-navigation', listener)
+    return () => {
+      ipcRenderer.removeListener('deep-link-navigation', listener)
     }
   },
 
@@ -290,6 +304,9 @@ export interface ElectronAPI {
   isLinux: boolean
   platform: NodeJS.Platform
   onServerShutdown: (callback: () => void) => () => void
+  onDeepLinkNavigation: (
+    callback: (target: NavigateTarget) => void
+  ) => () => void
   onShowQuitConfirmation: (callback: () => void) => () => void
   windowControls: {
     minimize: () => Promise<void>

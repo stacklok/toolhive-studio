@@ -62,6 +62,47 @@ E2E tests use Playwright to test the packaged Electron application.
   `out/`. Use this when iterating on tests without rebuilding.
 - Detailed E2E guide: `docs/e2e-testing.md`
 
+### Testing deep links
+
+See the
+[deep link design document](https://docs.google.com/document/d/1Y-tYsIl98DPHKdCNsbuvtZeb0VUq41cTxQfGQElbS9c)
+for background and rationale.
+
+The app registers the `toolhive-gui://` protocol for deep linking. Deep links
+follow the format:
+
+```
+toolhive-gui://<version>/<intent>?<params>
+```
+
+Example deep links:
+
+```
+toolhive-gui://v1/open-registry-server-detail?serverName=fetch
+toolhive-gui://v1/open-registry-server-detail?serverName=time
+```
+
+#### Linux
+
+Register the protocol handler (builds a `.deb`, extracts and installs the
+`.desktop` file system-wide):
+
+```bash
+pnpm run deeplink:registerTestLinuxProtocolHandler
+```
+
+Once registered, you can open deep links from the browser or with `xdg-open`:
+
+```bash
+xdg-open "toolhive-gui://v1/open-registry-server-detail?serverName=fetch"
+```
+
+You can check whether the protocol handler is registered with:
+
+```bash
+xdg-mime query default x-scheme-handler/toolhive-gui
+```
+
 ### Building and packaging
 
 - `pnpm run package`: Packages the application for the current platform.

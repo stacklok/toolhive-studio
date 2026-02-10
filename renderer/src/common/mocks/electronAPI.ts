@@ -7,6 +7,7 @@ import type { ElectronAPI } from '../../../../preload/src/preload'
 function createElectronStub(): Partial<ElectronAPI> {
   return {
     onServerShutdown: () => () => {},
+    onDeepLinkNavigation: () => () => {},
     shutdownStore: {
       getLastShutdownServers: async () => [],
       clearShutdownHistory: async () => ({ success: true }),

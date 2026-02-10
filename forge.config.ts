@@ -32,6 +32,13 @@ const config: ForgeConfig = {
      * <app>/resources/bin/       (Win/Linux)
      */
     extraResource: ['bin/', 'icons/', 'assets/'],
+    // Deep link protocol registration (generates Info.plist on macOS)
+    protocols: [
+      {
+        name: 'ToolHive Studio',
+        schemes: ['toolhive-gui'],
+      },
+    ],
     // Windows specific options
     win32metadata: {
       CompanyName: 'Stacklok',
@@ -147,6 +154,7 @@ const config: ForgeConfig = {
         requires: ['docker >= 20.10'],
         license: 'Apache-2.0',
         bin: 'ToolHive',
+        mimeType: ['x-scheme-handler/toolhive-gui'],
       },
     }),
     new MakerDeb({
@@ -160,6 +168,7 @@ const config: ForgeConfig = {
         homepage: 'https://github.com/stacklok/toolhive-studio',
         section: 'devel',
         bin: 'ToolHive',
+        mimeType: ['x-scheme-handler/toolhive-gui'],
       },
     }),
     // Requirements: install elfutils package and add Flathub remote
@@ -169,6 +178,9 @@ const config: ForgeConfig = {
         categories: ['Development', 'Utility'],
         id: 'io.github.stacklok.toolhive_studio',
         bin: 'ToolHive',
+        // TODO: Flatpak may require desktop-file-edit hacks for the scheme
+        // handler to work correctly. Test and add build hooks if needed.
+        mimeType: ['x-scheme-handler/toolhive-gui'],
         finishArgs: [
           '--share=network',
           '--socket=x11',
