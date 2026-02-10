@@ -1,8 +1,17 @@
 import { Button } from '@/common/components/ui/button'
 import { Separator } from '@/common/components/ui/separator'
-import { createFileRoute, Link, useParams } from '@tanstack/react-router'
+import { EmptyState } from '@/common/components/empty-state'
+import { IllustrationNoSearchResults } from '@/common/components/illustrations/illustration-no-search-results'
+import { LinkViewTransition } from '@/common/components/link-view-transition'
+import {
+  createFileRoute,
+  Link,
+  notFound,
+  useParams,
+} from '@tanstack/react-router'
 import { GithubIcon, ShieldCheck, Wrench } from 'lucide-react'
 import { getApiV1BetaRegistryByNameServersByServerNameOptions } from '@common/api/generated/@tanstack/react-query.gen'
+import { getApiV1BetaRegistryByNameServersByServerName } from '@common/api/generated/sdk.gen'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { Stars } from '@/features/registry-servers/components/stars'
 import { Badge } from '@/common/components/ui/badge'
@@ -28,18 +37,50 @@ const statusMap = {
 
 const INITIAL_TOOLS_LIMIT = 10
 
+function RegistryServerNotFound() {
+  return (
+    <div className="flex max-h-full w-full flex-1 flex-col">
+      <RegistryDetailHeader title="Server Not Found" />
+      <EmptyState
+        illustration={IllustrationNoSearchResults}
+        title="Server Not Found"
+        body="The server you're looking for doesn't exist in the registry or has been removed."
+        actions={[
+          <Button asChild key="registry">
+            <LinkViewTransition to="/registry">
+              Browse Registry
+            </LinkViewTransition>
+          </Button>,
+        ]}
+      />
+    </div>
+  )
+}
+
 export const Route = createFileRoute('/(registry)/registry_/$name')({
-  loader: ({ context: { queryClient }, params }) => {
-    return queryClient.ensureQueryData(
-      getApiV1BetaRegistryByNameServersByServerNameOptions({
-        path: {
-          name: 'default',
-          serverName: params.name,
-        },
-      })
-    )
+  loader: async ({ context: { queryClient }, params }) => {
+    const pathOptions = {
+      path: { name: 'default' as const, serverName: params.name },
+    }
+    return queryClient.ensureQueryData({
+      ...getApiV1BetaRegistryByNameServersByServerNameOptions(pathOptions),
+      queryFn: async ({ signal }) => {
+        const result = await getApiV1BetaRegistryByNameServersByServerName({
+          ...pathOptions,
+          signal,
+        })
+        if (result.error !== undefined) {
+          if (result.response.status === 404) {
+            throw notFound()
+          }
+          throw result.error
+        }
+        return result.data
+      },
+    })
   },
   component: RegistryServerDetail,
+  notFoundComponent: RegistryServerNotFound,
 })
 
 export function RegistryServerDetail() {
