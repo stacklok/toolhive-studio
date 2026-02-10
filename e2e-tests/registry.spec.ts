@@ -19,7 +19,9 @@ test('install and uninstall server from registry', async ({ window }) => {
 
   await window.getByRole('button', { name: /more options/i }).click()
   await window.getByRole('menuitem', { name: /remove/i }).click()
+  await window.getByRole('dialog').waitFor()
   await window.getByRole('button', { name: /remove/i }).click()
+  await window.getByRole('dialog').waitFor({ state: 'hidden' })
 
   await expect(
     window.getByRole('heading', { name: /add your first mcp server/i })
