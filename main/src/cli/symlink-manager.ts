@@ -41,12 +41,26 @@ export const isOurBinary = (target: string): boolean => {
   return normalizedTarget.startsWith(path.normalize(devBinDir))
 }
 
+/**
+ * Check if a file or symlink exists at the given path, including dangling symlinks.
+ * Unlike `existsSync`, this uses `lstatSync` which does NOT follow symlinks,
+ * so it returns `true` even for broken/dangling symlinks.
+ */
+function fileOrSymlinkExists(filePath: string): boolean {
+  try {
+    lstatSync(filePath)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export function checkSymlink(
   platform: Platform = process.platform as Platform
 ): SymlinkCheckResult {
   const cliPath = getDesktopCliPath(platform)
 
-  if (!existsSync(cliPath)) {
+  if (!fileOrSymlinkExists(cliPath)) {
     return {
       exists: false,
       targetExists: false,
@@ -144,7 +158,7 @@ export function createSymlink(
       log.info(`Created CLI directory: ${cliDir}`)
     }
 
-    if (existsSync(cliPath)) {
+    if (fileOrSymlinkExists(cliPath)) {
       unlinkSync(cliPath)
       log.info(`Removed existing CLI at: ${cliPath}`)
     }
@@ -170,7 +184,7 @@ export function removeSymlink(
 ): { success: boolean; error?: string } {
   const cliPath = getDesktopCliPath(platform)
 
-  if (!existsSync(cliPath)) {
+  if (!fileOrSymlinkExists(cliPath)) {
     return { success: true }
   }
 
