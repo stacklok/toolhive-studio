@@ -112,7 +112,7 @@ jobs:
 
       - name: Configure AWS Credentials
         if: vars.AWS_ROLE_ARN != ''
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300ae4291eb0f18bc549ea1a09cd7 # v4
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # v6
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: us-east-1
