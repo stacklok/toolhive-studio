@@ -1,7 +1,20 @@
 import { Button } from '@/common/components/ui/button'
 import { Separator } from '@/common/components/ui/separator'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/common/components/ui/card'
+import { LinkViewTransition } from '@/common/components/link-view-transition'
 import { createFileRoute, Link, useParams } from '@tanstack/react-router'
-import { GithubIcon, ShieldCheck, Wrench } from 'lucide-react'
+import {
+  FileQuestion,
+  GithubIcon,
+  ShieldCheck,
+  Store,
+  Wrench,
+} from 'lucide-react'
 import { getApiV1BetaRegistryByNameServersByServerNameOptions } from '@common/api/generated/@tanstack/react-query.gen'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { Stars } from '@/features/registry-servers/components/stars'
@@ -28,6 +41,35 @@ const statusMap = {
 
 const INITIAL_TOOLS_LIMIT = 10
 
+function RegistryServerNotFound() {
+  return (
+    <div className="flex h-[calc(100vh-5rem)] items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="mb-4 flex justify-center">
+            <FileQuestion className="text-muted-foreground size-12" />
+          </div>
+          <CardTitle className="text-2xl font-semibold">
+            Server Not Found
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-center">
+          <p className="text-muted-foreground">
+            The server you're looking for doesn't exist in the registry or has
+            been removed.
+          </p>
+          <Button asChild className="w-full">
+            <LinkViewTransition to="/registry">
+              <Store className="mr-2 size-4" />
+              Go to Registry
+            </LinkViewTransition>
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
 export const Route = createFileRoute('/(registry)/registry_/$name')({
   loader: ({ context: { queryClient }, params }) => {
     return queryClient.ensureQueryData(
@@ -40,6 +82,7 @@ export const Route = createFileRoute('/(registry)/registry_/$name')({
     )
   },
   component: RegistryServerDetail,
+  errorComponent: RegistryServerNotFound,
 })
 
 export function RegistryServerDetail() {
