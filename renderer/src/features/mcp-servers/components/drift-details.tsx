@@ -1,6 +1,18 @@
 import { Badge } from '@/common/components/ui/badge'
 import type { EnvVarDrift } from '../lib/get-env-vars-drift'
 
+function VarTypeBadge({ secret }: { secret: boolean }) {
+  return secret ? (
+    <Badge variant="outline" className="px-1 py-0 text-[10px]">
+      secret
+    </Badge>
+  ) : (
+    <Badge variant="secondary" className="px-1 py-0 text-[10px]">
+      env
+    </Badge>
+  )
+}
+
 export function DriftDetails({ drift }: { drift: EnvVarDrift }) {
   return (
     <div className="space-y-2">
@@ -13,15 +25,7 @@ export function DriftDetails({ drift }: { drift: EnvVarDrift }) {
             {drift.added.map((v) => (
               <li key={v.name} className="flex items-center gap-1.5 text-xs">
                 <code className="bg-muted rounded px-1 py-0.5">{v.name}</code>
-                {v.secret ? (
-                  <Badge variant="outline" className="px-1 py-0 text-[10px]">
-                    secret
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary" className="px-1 py-0 text-[10px]">
-                    env
-                  </Badge>
-                )}
+                <VarTypeBadge secret={v.secret} />
                 {v.required && (
                   <Badge
                     variant="destructive"
@@ -48,15 +52,7 @@ export function DriftDetails({ drift }: { drift: EnvVarDrift }) {
                   text-xs line-through"
               >
                 <code className="bg-muted rounded px-1 py-0.5">{v.name}</code>
-                {v.secret ? (
-                  <Badge variant="outline" className="px-1 py-0 text-[10px]">
-                    secret
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary" className="px-1 py-0 text-[10px]">
-                    env
-                  </Badge>
-                )}
+                <VarTypeBadge secret={v.secret} />
               </li>
             ))}
           </ul>

@@ -1263,6 +1263,54 @@ describe('DialogFormLocalMcp', () => {
       // No extra env var rows should exist
       expect(screen.queryByDisplayValue('NEW_API_URL')).not.toBeInTheDocument()
     })
+
+    it('pre-fills missing secrets when editing with secretsOverride', async () => {
+      mockedGetApiV1BetaWorkloadsByName.conditionalOverride(
+        ({ path }) => path.name === 'test-server',
+        (data) => ({
+          ...data,
+          name: 'test-server',
+          image: 'ghcr.io/test/server:v1',
+          transport: 'stdio',
+          group: 'default',
+          secrets: [{ name: 'existing-key', target: 'EXISTING_SECRET' }],
+        })
+      )
+
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormLocalMcp
+            isOpen
+            closeDialog={vi.fn()}
+            serverToEdit="test-server"
+            groupName="default"
+            imageOverride="ghcr.io/test/server:v2"
+            secretsOverride={[
+              {
+                name: 'NEW_API_KEY',
+                value: { secret: '', isFromStore: false },
+              },
+            ]}
+          />
+        </Wrapper>
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      await waitFor(() => {
+        expect(screen.getByRole('textbox', { name: /name/i })).toHaveValue(
+          'test-server'
+        )
+      })
+
+      // Existing secret should be present
+      expect(screen.getByDisplayValue('EXISTING_SECRET')).toBeVisible()
+
+      // New secret from override should be pre-filled
+      expect(screen.getByDisplayValue('NEW_API_KEY')).toBeVisible()
+    })
   })
 
   it('paste arg from clipboard into command arguments field', async () => {

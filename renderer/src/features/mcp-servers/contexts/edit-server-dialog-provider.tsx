@@ -1,5 +1,8 @@
 import { useState, type ReactNode } from 'react'
-import { EditServerDialogContext } from './edit-server-dialog-context'
+import {
+  EditServerDialogContext,
+  type SecretOverride,
+} from './edit-server-dialog-context'
 
 export function EditServerDialogProvider({
   children,
@@ -13,6 +16,7 @@ export function EditServerDialogProvider({
     groupName: null as string | null,
     imageOverride: null as string | null,
     envVarsOverride: null as Array<{ name: string; value: string }> | null,
+    secretsOverride: null as SecretOverride[] | null,
   })
 
   const openDialog = (
@@ -22,6 +26,7 @@ export function EditServerDialogProvider({
     options?: {
       imageOverride?: string
       envVarsOverride?: Array<{ name: string; value: string }>
+      secretsOverride?: SecretOverride[]
     }
   ) => {
     setState({
@@ -31,6 +36,7 @@ export function EditServerDialogProvider({
       groupName,
       imageOverride: options?.imageOverride ?? null,
       envVarsOverride: options?.envVarsOverride ?? null,
+      secretsOverride: options?.secretsOverride ?? null,
     })
   }
 
@@ -42,6 +48,7 @@ export function EditServerDialogProvider({
       groupName: null,
       imageOverride: null,
       envVarsOverride: null,
+      secretsOverride: null,
     })
   }
 

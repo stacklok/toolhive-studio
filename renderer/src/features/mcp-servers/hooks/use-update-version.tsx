@@ -5,15 +5,12 @@ import type {
   V1CreateRequest,
 } from '@common/api/generated/types.gen'
 import { useConfirm } from '@/common/hooks/use-confirm'
-import { usePrompt } from '@/common/hooks/use-prompt'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 import { useEditServerDialog } from './use-edit-server-dialog'
 import { useMutationUpdateWorkload } from './use-mutation-update-workload'
 import { DriftDetails } from '../components/drift-details'
 import { getEnvVarsDrift } from '../lib/get-env-vars-drift'
 import { toast } from 'sonner'
-import { z } from 'zod/v4'
-import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 
 interface UseUpdateVersionOptions {
   serverName: string
@@ -32,10 +29,6 @@ export function toUpdateBody(
   return { ...config, image: registryImage }
 }
 
-const updateVersionSchema = z.object({
-  action: z.enum(['update', 'edit']),
-})
-
 export function useUpdateVersion({
   serverName,
   registryImage,
@@ -44,7 +37,6 @@ export function useUpdateVersion({
   registryEnvVars,
 }: UseUpdateVersionOptions) {
   const confirm = useConfirm()
-  const prompt = usePrompt()
   const updateWorkload = useMutationUpdateWorkload()
   const { checkServerStatus } = useCheckServerStatus()
   const { openDialog } = useEditServerDialog()
@@ -107,40 +99,40 @@ export function useUpdateVersion({
     }
 
     // Drift detected — show detailed dialog with edit option
-    const result = await prompt({
-      title: 'Update to latest version',
-      defaultValues: { action: 'update' as 'update' | 'edit' },
-      resolver: zodV4Resolver(updateVersionSchema),
-      validateOnMount: true,
-      fields: () => (
-        <div className="space-y-3">
-          <p className="text-sm">
-            Update <span className="font-medium">"{serverName}"</span> from{' '}
-            <code className="bg-muted rounded px-1 py-0.5 text-xs">
-              {localTag}
-            </code>{' '}
-            to{' '}
-            <code className="bg-muted rounded px-1 py-0.5 text-xs">
-              {registryTag}
-            </code>
-            ?
-          </p>
-          <DriftDetails drift={drift} />
-        </div>
-      ),
-      buttons: {
-        confirm: 'Edit and review',
-        cancel: 'Cancel',
-      },
-    })
+    const confirmed = await confirm(
+      <div className="space-y-3">
+        <p className="text-sm">
+          Update <span className="font-medium">"{serverName}"</span> from{' '}
+          <code className="bg-muted rounded px-1 py-0.5 text-xs">
+            {localTag}
+          </code>{' '}
+          to{' '}
+          <code className="bg-muted rounded px-1 py-0.5 text-xs">
+            {registryTag}
+          </code>
+          ?
+        </p>
+        <DriftDetails drift={drift} />
+      </div>,
+      {
+        title: 'Update to latest version',
+        buttons: { yes: 'Edit and review', no: 'Cancel' },
+      }
+    )
 
-    if (!result) return
+    if (!confirmed) return
 
     openDialog(serverName, false, workloadData.group || 'default', {
       imageOverride: registryImage,
       envVarsOverride: drift.added
         .filter((v) => !v.secret)
         .map((v) => ({ name: v.name, value: '' })),
+      secretsOverride: drift.added
+        .filter((v) => v.secret)
+        .map((v) => ({
+          name: v.name,
+          value: { secret: '', isFromStore: false },
+        })),
     })
   }
 
