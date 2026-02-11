@@ -3,10 +3,14 @@ import userEvent from '@testing-library/user-event'
 import { describe, it, expect } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
+import { EditServerDialogProvider } from '../../contexts/edit-server-dialog-provider'
 import { useUpdateVersion, toUpdateBody } from '../use-update-version'
 import { mockedGetApiV1BetaWorkloadsByName } from '@mocks/fixtures/workloads_name/get'
 import { recordRequests } from '@/common/mocks/node'
-import type { V1CreateRequest } from '@common/api/generated/types.gen'
+import type {
+  RegistryEnvVar,
+  V1CreateRequest,
+} from '@common/api/generated/types.gen'
 
 const defaultOptions = {
   serverName: 'postgres-db',
@@ -29,7 +33,9 @@ const createWrapper = () => {
 
   return ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>
-      <PromptProvider>{children}</PromptProvider>
+      <PromptProvider>
+        <EditServerDialogProvider>{children}</EditServerDialogProvider>
+      </PromptProvider>
     </QueryClientProvider>
   )
 }
@@ -61,110 +67,240 @@ describe('useUpdateVersion', () => {
     })
   })
 
-  it('shows confirmation dialog when promptUpdate is called', async () => {
-    const wrapper = createWrapper()
+  describe('without drift', () => {
+    it('shows simple confirm dialog when no drift detected', async () => {
+      const wrapper = createWrapper()
 
-    const { result } = renderHook(() => useUpdateVersion(defaultOptions), {
-      wrapper,
+      const { result } = renderHook(() => useUpdateVersion(defaultOptions), {
+        wrapper,
+      })
+
+      await waitFor(() => {
+        expect(result.current.isReady).toBe(true)
+      })
+
+      act(() => {
+        result.current.promptUpdate()
+      })
+
+      await waitFor(() => {
+        expect(screen.getByText('Update to latest version')).toBeVisible()
+        expect(screen.getByText('v2.0.0')).toBeVisible()
+        expect(
+          screen.getByText(
+            'No configuration changes detected between versions.'
+          )
+        ).toBeVisible()
+        expect(screen.getByRole('button', { name: 'Update' })).toBeVisible()
+        expect(screen.getByRole('button', { name: 'Cancel' })).toBeVisible()
+      })
     })
 
-    await waitFor(() => {
-      expect(result.current.isReady).toBe(true)
-    })
+    it('sends update request when confirmed without drift', async () => {
+      const wrapper = createWrapper()
+      const rec = recordRequests()
 
-    act(() => {
-      result.current.promptUpdate()
-    })
-
-    await waitFor(() => {
-      expect(screen.getByText('Update to latest version')).toBeVisible()
-      expect(
-        screen.getByText('Update "postgres-db" from latest to v2.0.0?')
-      ).toBeVisible()
-      expect(screen.getByRole('button', { name: 'Update' })).toBeVisible()
-      expect(screen.getByRole('button', { name: 'Cancel' })).toBeVisible()
-    })
-  })
-
-  it('sends update request with full workload config and new image when confirmed', async () => {
-    const wrapper = createWrapper()
-    const rec = recordRequests()
-
-    mockedGetApiV1BetaWorkloadsByName.override((data) => ({
-      ...data,
-      name: 'postgres-db',
-      image: 'ghcr.io/postgres/postgres-mcp-server:latest',
-      transport: 'stdio',
-      group: 'default',
-      env_vars: { DB_HOST: 'localhost' },
-      cmd_arguments: ['--verbose'],
-    }))
-
-    const { result } = renderHook(() => useUpdateVersion(defaultOptions), {
-      wrapper,
-    })
-
-    await waitFor(() => {
-      expect(result.current.isReady).toBe(true)
-    })
-
-    act(() => {
-      result.current.promptUpdate()
-    })
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Update' })).toBeVisible()
-    })
-
-    await userEvent.click(screen.getByRole('button', { name: 'Update' }))
-
-    await waitFor(() => {
-      const editRequest = rec.recordedRequests.find(
-        (r) =>
-          r.method === 'POST' &&
-          r.pathname === '/api/v1beta/workloads/postgres-db/edit'
-      )
-      expect(editRequest).toBeDefined()
-      expect(editRequest?.payload).toMatchObject({
-        image: 'ghcr.io/postgres/postgres-mcp-server:v2.0.0',
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        name: 'postgres-db',
+        image: 'ghcr.io/postgres/postgres-mcp-server:latest',
         transport: 'stdio',
         group: 'default',
         env_vars: { DB_HOST: 'localhost' },
         cmd_arguments: ['--verbose'],
+      }))
+
+      const { result } = renderHook(() => useUpdateVersion(defaultOptions), {
+        wrapper,
       })
-      // name should NOT be in the payload
-      expect(editRequest?.payload).not.toHaveProperty('name')
+
+      await waitFor(() => {
+        expect(result.current.isReady).toBe(true)
+      })
+
+      act(() => {
+        result.current.promptUpdate()
+      })
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Update' })).toBeVisible()
+      })
+
+      await userEvent.click(screen.getByRole('button', { name: 'Update' }))
+
+      await waitFor(() => {
+        const editRequest = rec.recordedRequests.find(
+          (r) =>
+            r.method === 'POST' &&
+            r.pathname === '/api/v1beta/workloads/postgres-db/edit'
+        )
+        expect(editRequest).toBeDefined()
+        expect(editRequest?.payload).toMatchObject({
+          image: 'ghcr.io/postgres/postgres-mcp-server:v2.0.0',
+          transport: 'stdio',
+          group: 'default',
+          env_vars: { DB_HOST: 'localhost' },
+          cmd_arguments: ['--verbose'],
+        })
+        expect(editRequest?.payload).not.toHaveProperty('name')
+      })
+    })
+
+    it('does not send update request when cancelled', async () => {
+      const wrapper = createWrapper()
+      const rec = recordRequests()
+
+      const { result } = renderHook(() => useUpdateVersion(defaultOptions), {
+        wrapper,
+      })
+
+      await waitFor(() => {
+        expect(result.current.isReady).toBe(true)
+      })
+
+      act(() => {
+        result.current.promptUpdate()
+      })
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Cancel' })).toBeVisible()
+      })
+
+      await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+      await waitFor(() => {
+        const editRequest = rec.recordedRequests.find(
+          (r) => r.method === 'POST' && r.pathname.includes('/edit')
+        )
+        expect(editRequest).toBeUndefined()
+      })
+    })
+
+    it('shows no-drift message when registryEnvVars match local config', async () => {
+      const wrapper = createWrapper()
+
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        name: 'postgres-db',
+        env_vars: { DB_HOST: 'localhost' },
+      }))
+
+      const registryEnvVars: RegistryEnvVar[] = [
+        { name: 'DB_HOST', required: false, secret: false },
+      ]
+
+      const { result } = renderHook(
+        () =>
+          useUpdateVersion({
+            ...defaultOptions,
+            registryEnvVars,
+          }),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isReady).toBe(true)
+      })
+
+      act(() => {
+        result.current.promptUpdate()
+      })
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(
+            'No configuration changes detected between versions.'
+          )
+        ).toBeVisible()
+        expect(screen.getByRole('button', { name: 'Update' })).toBeVisible()
+      })
     })
   })
 
-  it('does not send update request when cancelled', async () => {
-    const wrapper = createWrapper()
-    const rec = recordRequests()
+  describe('with drift', () => {
+    it('shows drift details and edit option when added variables detected', async () => {
+      const wrapper = createWrapper()
 
-    const { result } = renderHook(() => useUpdateVersion(defaultOptions), {
-      wrapper,
-    })
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        name: 'postgres-db',
+        env_vars: {},
+        secrets: [],
+      }))
 
-    await waitFor(() => {
-      expect(result.current.isReady).toBe(true)
-    })
+      const registryEnvVars: RegistryEnvVar[] = [
+        { name: 'NEW_API_KEY', required: true, secret: true },
+        { name: 'NEW_LOG_LEVEL', required: false, secret: false },
+      ]
 
-    act(() => {
-      result.current.promptUpdate()
-    })
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Cancel' })).toBeVisible()
-    })
-
-    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
-
-    // Wait for the prompt promise to settle after cancel
-    await waitFor(() => {
-      const editRequest = rec.recordedRequests.find(
-        (r) => r.method === 'POST' && r.pathname.includes('/edit')
+      const { result } = renderHook(
+        () =>
+          useUpdateVersion({
+            ...defaultOptions,
+            registryEnvVars,
+          }),
+        { wrapper }
       )
-      expect(editRequest).toBeUndefined()
+
+      await waitFor(() => {
+        expect(result.current.isReady).toBe(true)
+      })
+
+      act(() => {
+        result.current.promptUpdate()
+      })
+
+      await waitFor(() => {
+        expect(screen.getByText('New variables in this version:')).toBeVisible()
+        expect(screen.getByText('NEW_API_KEY')).toBeVisible()
+        expect(screen.getByText('NEW_LOG_LEVEL')).toBeVisible()
+        expect(screen.getByText('required')).toBeVisible()
+        expect(screen.getByText('secret')).toBeVisible()
+        expect(
+          screen.getByRole('button', { name: 'Edit and review' })
+        ).toBeVisible()
+        expect(screen.getByRole('button', { name: 'Cancel' })).toBeVisible()
+      })
+    })
+
+    it('shows removed variables in the drift details', async () => {
+      const wrapper = createWrapper()
+
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        name: 'postgres-db',
+        env_vars: { OLD_VAR: 'value' },
+        secrets: [{ name: 'old-secret', target: 'OLD_SECRET' }],
+      }))
+
+      const registryEnvVars: RegistryEnvVar[] = [
+        { name: 'KEPT_VAR', required: false, secret: false },
+      ]
+
+      const { result } = renderHook(
+        () =>
+          useUpdateVersion({
+            ...defaultOptions,
+            registryEnvVars,
+          }),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isReady).toBe(true)
+      })
+
+      act(() => {
+        result.current.promptUpdate()
+      })
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('Variables no longer in registry:')
+        ).toBeVisible()
+        expect(screen.getByText('OLD_VAR')).toBeVisible()
+        expect(screen.getByText('OLD_SECRET')).toBeVisible()
+      })
     })
   })
 })

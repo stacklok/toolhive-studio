@@ -1,5 +1,6 @@
 import { ArrowUpCircle } from 'lucide-react'
 import { DropdownMenuItem } from '@/common/components/ui/dropdown-menu'
+import type { RegistryEnvVar } from '@common/api/generated/types.gen'
 import { useUpdateVersion } from '../../../../hooks/use-update-version'
 
 interface UpdateVersionMenuItemProps {
@@ -7,6 +8,7 @@ interface UpdateVersionMenuItemProps {
   registryImage: string
   localTag: string
   registryTag: string
+  registryEnvVars?: RegistryEnvVar[]
   disabled?: boolean
 }
 
@@ -15,6 +17,7 @@ export function UpdateVersionMenuItem({
   registryImage,
   localTag,
   registryTag,
+  registryEnvVars,
   disabled,
 }: UpdateVersionMenuItemProps) {
   const { promptUpdate, isReady } = useUpdateVersion({
@@ -22,6 +25,7 @@ export function UpdateVersionMenuItem({
     registryImage,
     localTag,
     registryTag,
+    registryEnvVars,
   })
 
   const handleUpdate = async (e: React.MouseEvent) => {

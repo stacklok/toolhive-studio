@@ -5,7 +5,10 @@ import {
   CardTitle,
 } from '@/common/components/ui/card'
 
-import type { CoreWorkload } from '@common/api/generated/types.gen'
+import type {
+  CoreWorkload,
+  RegistryEnvVar,
+} from '@common/api/generated/types.gen'
 import { ActionsMcpServer } from '../actions-mcp-server'
 import { useMutationRestartServer } from '../../hooks/use-mutation-restart-server'
 import { useMutationStopServerList } from '../../hooks/use-mutation-stop-server'
@@ -29,11 +32,13 @@ function UpdateVersionButton({
   serverName,
   registryImage,
   drift,
+  registryEnvVars,
   disabled,
 }: {
   serverName: string
   registryImage: string
   drift: { localTag: string; registryTag: string }
+  registryEnvVars?: RegistryEnvVar[]
   disabled?: boolean
 }) {
   const { promptUpdate, isReady } = useUpdateVersion({
@@ -41,6 +46,7 @@ function UpdateVersionButton({
     registryImage,
     localTag: drift.localTag,
     registryTag: drift.registryTag,
+    registryEnvVars,
   })
 
   return (
@@ -74,6 +80,7 @@ type CardContentMcpServerProps = {
   group?: CoreWorkload['group']
   drift: { localTag: string; registryTag: string } | null
   registryImage: string | null
+  registryEnvVars?: RegistryEnvVar[]
 }
 
 function CardContentMcpServer({
@@ -83,6 +90,7 @@ function CardContentMcpServer({
   group,
   drift,
   registryImage,
+  registryEnvVars,
 }: CardContentMcpServerProps) {
   const isRunning = status === 'running'
   const isUpdating = `${status}` === 'updating'
@@ -137,6 +145,7 @@ function CardContentMcpServer({
               serverName={name}
               registryImage={registryImage}
               drift={drift}
+              registryEnvVars={registryEnvVars}
               disabled={isUpdating || isDeleting}
             />
           )}
@@ -291,6 +300,7 @@ export function CardMcpServer({
             ? (matchedRegistryItem.image ?? null)
             : null
         }
+        registryEnvVars={hasUpdate ? matchedRegistryItem?.env_vars : undefined}
       />
     </Card>
   )
