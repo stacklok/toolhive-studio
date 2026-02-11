@@ -80,7 +80,7 @@ describe('useUpdateVersion', () => {
       })
 
       act(() => {
-        result.current.promptUpdate()
+        result.current.promptUpdate('card_button')
       })
 
       await waitFor(() => {
@@ -119,7 +119,7 @@ describe('useUpdateVersion', () => {
       })
 
       act(() => {
-        result.current.promptUpdate()
+        result.current.promptUpdate('card_button')
       })
 
       await waitFor(() => {
@@ -159,7 +159,7 @@ describe('useUpdateVersion', () => {
       })
 
       act(() => {
-        result.current.promptUpdate()
+        result.current.promptUpdate('card_button')
       })
 
       await waitFor(() => {
@@ -203,7 +203,7 @@ describe('useUpdateVersion', () => {
       })
 
       act(() => {
-        result.current.promptUpdate()
+        result.current.promptUpdate('card_button')
       })
 
       await waitFor(() => {
@@ -247,7 +247,7 @@ describe('useUpdateVersion', () => {
       })
 
       act(() => {
-        result.current.promptUpdate()
+        result.current.promptUpdate('card_button')
       })
 
       await waitFor(() => {
@@ -291,7 +291,7 @@ describe('useUpdateVersion', () => {
       })
 
       act(() => {
-        result.current.promptUpdate()
+        result.current.promptUpdate('card_button')
       })
 
       await waitFor(() => {

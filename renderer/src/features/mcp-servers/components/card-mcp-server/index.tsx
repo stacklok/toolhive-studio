@@ -55,7 +55,7 @@ function UpdateVersionButton({
         <button
           onClick={(e) => {
             e.stopPropagation()
-            void promptUpdate()
+            void promptUpdate('card_button')
           }}
           disabled={disabled || !isReady}
           className="hover:bg-accent inline-flex size-9 cursor-pointer

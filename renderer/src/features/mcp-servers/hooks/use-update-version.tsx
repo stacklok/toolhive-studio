@@ -11,6 +11,7 @@ import { useMutationUpdateWorkload } from './use-mutation-update-workload'
 import { DriftDetails } from '../components/drift-details'
 import { getEnvVarsDrift } from '../lib/get-env-vars-drift'
 import { toast } from 'sonner'
+import { trackEvent } from '@/common/lib/analytics'
 
 interface UseUpdateVersionOptions {
   serverName: string
@@ -47,8 +48,14 @@ export function useUpdateVersion({
     enabled: !!serverName,
   })
 
-  const performUpdate = async () => {
+  const performUpdate = async (updateType: 'direct' | 'edit_and_review') => {
     if (!workloadData) return
+    trackEvent('Update Version: confirmed', {
+      server_name: serverName,
+      update_type: updateType,
+      from_tag: localTag,
+      to_tag: registryTag,
+    })
     try {
       await updateWorkload({
         path: { name: serverName },
@@ -64,10 +71,18 @@ export function useUpdateVersion({
     }
   }
 
-  const promptUpdate = async () => {
+  const promptUpdate = async (source: 'card_button' | 'menu_item') => {
     if (!workloadData) return
 
     const drift = getEnvVarsDrift(registryEnvVars, workloadData)
+
+    trackEvent('Update Version: clicked', {
+      server_name: serverName,
+      from_tag: localTag,
+      to_tag: registryTag,
+      has_drift: drift ? 'true' : 'false',
+      source,
+    })
 
     if (!drift) {
       // No env var drift — simple confirm dialog
@@ -93,8 +108,14 @@ export function useUpdateVersion({
           buttons: { yes: 'Update', no: 'Cancel' },
         }
       )
-      if (!confirmed) return
-      await performUpdate()
+      if (!confirmed) {
+        trackEvent('Update Version: cancelled', {
+          server_name: serverName,
+          update_type: 'direct',
+        })
+        return
+      }
+      await performUpdate('direct')
       return
     }
 
@@ -120,7 +141,21 @@ export function useUpdateVersion({
       }
     )
 
-    if (!confirmed) return
+    if (!confirmed) {
+      trackEvent('Update Version: cancelled', {
+        server_name: serverName,
+        update_type: 'edit_and_review',
+      })
+      return
+    }
+
+    trackEvent('Update Version: edit and review opened', {
+      server_name: serverName,
+      from_tag: localTag,
+      to_tag: registryTag,
+      drift_added_count: String(drift.added.length),
+      drift_removed_count: String(drift.removed.length),
+    })
 
     openDialog(serverName, false, workloadData.group || 'default', {
       imageOverride: registryImage,

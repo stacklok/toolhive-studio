@@ -36,7 +36,7 @@ export function UpdateVersionMenuItem({
     ) {
       e.nativeEvent.stopImmediatePropagation()
     }
-    await promptUpdate()
+    await promptUpdate('menu_item')
   }
 
   return (
