@@ -32,7 +32,7 @@ importers:
         version: 2.0.27(zod@4.1.13)
       '@ai-sdk/provider':
         specifier: ^3.0.7
-        version: 3.0.7
+        version: 3.0.8
       '@ai-sdk/react':
         specifier: ^3.0.71
         version: 3.0.75(react@19.2.4)(zod@4.1.13)
@@ -12597,7 +12597,7 @@ snapshots:
 
   ai-sdk-ollama@3.3.0(ai@6.0.78(zod@4.1.13))(zod@4.1.13):
     dependencies:
-      '@ai-sdk/provider': 3.0.7
+      '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.13(zod@4.1.13)
       ai: 6.0.78(zod@4.1.13)
       ollama: 0.6.3
