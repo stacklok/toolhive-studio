@@ -37,7 +37,7 @@ export function createApplicationMenu() {
       enabled: item.enabled,
       visible: item.visible,
       checked: item.checked,
-      accelerator: item.accelerator,
+      accelerator: item.accelerator ?? undefined,
       submenu:
         item.submenu && 'items' in item.submenu
           ? convertMenuItemsToTemplate(item.submenu.items)
