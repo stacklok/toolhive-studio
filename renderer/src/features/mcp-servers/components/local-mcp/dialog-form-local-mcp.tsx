@@ -89,11 +89,20 @@ export function DialogFormLocalMcp({
   closeDialog,
   serverToEdit,
   groupName,
+  imageOverride,
+  envVarsOverride,
+  secretsOverride,
 }: {
   isOpen: boolean
   closeDialog: () => void
   serverToEdit?: string | null
   groupName: string
+  imageOverride?: string | null
+  envVarsOverride?: Array<{ name: string; value: string }> | null
+  secretsOverride?: Array<{
+    name: string
+    value: { secret: string; isFromStore: boolean }
+  }> | null
 }) {
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -164,6 +173,25 @@ export function DialogFormLocalMcp({
     isEditing &&
     convertCreateRequestToFormData(existingServer, availableSecrets)
 
+  // Apply image, env vars, and secrets overrides when opening the edit dialog for a version update
+  const editingFormDataWithOverride =
+    editingFormData && editingFormData.type === 'docker_image'
+      ? {
+          ...editingFormData,
+          ...(imageOverride ? { image: imageOverride } : {}),
+          ...(envVarsOverride
+            ? {
+                envVars: [...editingFormData.envVars, ...envVarsOverride],
+              }
+            : {}),
+          ...(secretsOverride
+            ? {
+                secrets: [...editingFormData.secrets, ...secretsOverride],
+              }
+            : {}),
+        }
+      : editingFormData
+
   const { data: groupsData } = useGroups()
   const groups = useMemo(() => groupsData?.groups ?? [], [groupsData])
 
@@ -174,10 +202,10 @@ export function DialogFormLocalMcp({
     defaultValues: { ...DEFAULT_FORM_VALUES, group: groupName },
     reValidateMode: 'onChange',
     mode: 'onChange',
-    ...(editingFormData
+    ...(editingFormDataWithOverride
       ? {
           values: {
-            ...editingFormData,
+            ...editingFormDataWithOverride,
             group: existingServer?.group ?? groupName,
           },
         }

@@ -79,6 +79,7 @@ export function ServerActionsDropdown({
               registryImage={matchedRegistryItem.image}
               localTag={drift.localTag}
               registryTag={drift.registryTag}
+              registryEnvVars={matchedRegistryItem.env_vars}
               disabled={isDeleting || status === 'updating'}
             />
           )}

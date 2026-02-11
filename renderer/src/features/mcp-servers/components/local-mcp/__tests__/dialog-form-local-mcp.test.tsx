@@ -1167,6 +1167,152 @@ describe('DialogFormLocalMcp', () => {
     })
   })
 
+  describe('envVarsOverride', () => {
+    it('pre-fills missing env vars when editing with envVarsOverride', async () => {
+      mockedGetApiV1BetaWorkloadsByName.conditionalOverride(
+        ({ path }) => path.name === 'test-server',
+        (data) => ({
+          ...data,
+          name: 'test-server',
+          image: 'ghcr.io/test/server:v1',
+          transport: 'stdio',
+          group: 'default',
+          env_vars: { EXISTING_VAR: 'existing-value' },
+        })
+      )
+
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormLocalMcp
+            isOpen
+            closeDialog={vi.fn()}
+            serverToEdit="test-server"
+            groupName="default"
+            imageOverride="ghcr.io/test/server:v2"
+            envVarsOverride={[
+              { name: 'NEW_API_URL', value: '' },
+              { name: 'NEW_LOG_LEVEL', value: '' },
+            ]}
+          />
+        </Wrapper>
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      // Wait for the form to populate with data
+      await waitFor(() => {
+        expect(screen.getByRole('textbox', { name: /name/i })).toHaveValue(
+          'test-server'
+        )
+      })
+
+      // Image should be overridden
+      expect(screen.getByRole('textbox', { name: 'Docker image' })).toHaveValue(
+        'ghcr.io/test/server:v2'
+      )
+
+      // Existing env var should be present
+      expect(screen.getByDisplayValue('EXISTING_VAR')).toBeVisible()
+      expect(screen.getByDisplayValue('existing-value')).toBeVisible()
+
+      // New env vars from override should be pre-filled with empty values
+      expect(screen.getByDisplayValue('NEW_API_URL')).toBeVisible()
+      expect(screen.getByDisplayValue('NEW_LOG_LEVEL')).toBeVisible()
+    })
+
+    it('does not add extra env vars when envVarsOverride is null', async () => {
+      mockedGetApiV1BetaWorkloadsByName.conditionalOverride(
+        ({ path }) => path.name === 'test-server',
+        (data) => ({
+          ...data,
+          name: 'test-server',
+          image: 'ghcr.io/test/server:v1',
+          transport: 'stdio',
+          group: 'default',
+          env_vars: { EXISTING_VAR: 'existing-value' },
+        })
+      )
+
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormLocalMcp
+            isOpen
+            closeDialog={vi.fn()}
+            serverToEdit="test-server"
+            groupName="default"
+          />
+        </Wrapper>
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      await waitFor(() => {
+        expect(screen.getByRole('textbox', { name: /name/i })).toHaveValue(
+          'test-server'
+        )
+      })
+
+      // Existing env var should be present
+      expect(screen.getByDisplayValue('EXISTING_VAR')).toBeVisible()
+      expect(screen.getByDisplayValue('existing-value')).toBeVisible()
+
+      // No extra env var rows should exist
+      expect(screen.queryByDisplayValue('NEW_API_URL')).not.toBeInTheDocument()
+    })
+
+    it('pre-fills missing secrets when editing with secretsOverride', async () => {
+      mockedGetApiV1BetaWorkloadsByName.conditionalOverride(
+        ({ path }) => path.name === 'test-server',
+        (data) => ({
+          ...data,
+          name: 'test-server',
+          image: 'ghcr.io/test/server:v1',
+          transport: 'stdio',
+          group: 'default',
+          secrets: [{ name: 'existing-key', target: 'EXISTING_SECRET' }],
+        })
+      )
+
+      renderWithProviders(
+        <Wrapper>
+          <DialogFormLocalMcp
+            isOpen
+            closeDialog={vi.fn()}
+            serverToEdit="test-server"
+            groupName="default"
+            imageOverride="ghcr.io/test/server:v2"
+            secretsOverride={[
+              {
+                name: 'NEW_API_KEY',
+                value: { secret: '', isFromStore: false },
+              },
+            ]}
+          />
+        </Wrapper>
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      await waitFor(() => {
+        expect(screen.getByRole('textbox', { name: /name/i })).toHaveValue(
+          'test-server'
+        )
+      })
+
+      // Existing secret should be present
+      expect(screen.getByDisplayValue('EXISTING_SECRET')).toBeVisible()
+
+      // New secret from override should be pre-filled
+      expect(screen.getByDisplayValue('NEW_API_KEY')).toBeVisible()
+    })
+  })
+
   it('paste arg from clipboard into command arguments field', async () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunCustomServer.mockReturnValue({
