@@ -53,7 +53,7 @@ importers:
         version: 1.26.0(zod@4.1.13)
       '@openrouter/ai-sdk-provider':
         specifier: ^2.1.1
-        version: 2.1.1(ai@6.0.78(zod@4.1.13))(zod@4.1.13)
+        version: 2.1.1(ai@6.0.79(zod@4.1.13))(zod@4.1.13)
       '@radix-ui/react-checkbox':
         specifier: ^1.3.2
         version: 1.3.3(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -134,10 +134,10 @@ importers:
         version: 1.157.16(@tanstack/react-router@1.157.16(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@tanstack/router-core@1.157.16)(csstype@3.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       ai:
         specifier: ^6.0.69
-        version: 6.0.78(zod@4.1.13)
+        version: 6.0.79(zod@4.1.13)
       ai-sdk-ollama:
         specifier: ^3.3.0
-        version: 3.3.0(ai@6.0.78(zod@4.1.13))(zod@4.1.13)
+        version: 3.3.0(ai@6.0.79(zod@4.1.13))(zod@4.1.13)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -384,12 +384,6 @@ packages:
 
   '@ai-sdk/anthropic@3.0.41':
     resolution: {integrity: sha512-Wk/YHKyP/MmvQ63MFGRwmm3URM3ey7Tg62y0a7MT+7/8kMVZ40pUYidYO0hB9YB+dHe4z1ks006mNfGYy+wzkA==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      zod: ^3.25.76 || ^4.1.8
-
-  '@ai-sdk/gateway@3.0.39':
-    resolution: {integrity: sha512-SeCZBAdDNbWpVUXiYgOAqis22p5MEYfrjRw0hiBa5hM+7sDGYQpMinUjkM8kbPXMkY+AhKLrHleBl+SuqpzlgA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -3813,12 +3807,6 @@ packages:
     engines: {node: '>=22'}
     peerDependencies:
       ai: ^6.0.48
-
-  ai@6.0.78:
-    resolution: {integrity: sha512-eriIX/NLWfWNDeE/OJy8wmIp9fyaH7gnxTOCPT5bp0MNkvORstp1TwRUql9au8XjXzH7o2WApqbwgxJDDV0Rbw==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      zod: ^3.25.76 || ^4.1.8
 
   ai@6.0.79:
     resolution: {integrity: sha512-xmZHdJu3g+tbafqU+RDat/cfL4C9UUehjZuwn3+Il88E6T2gZdSRm2h/TV9Txaqj86vz9OSmdrELDUKWJB+Kog==}
@@ -8275,13 +8263,6 @@ snapshots:
       '@ai-sdk/provider-utils': 4.0.14(zod@4.1.13)
       zod: 4.1.13
 
-  '@ai-sdk/gateway@3.0.39(zod@4.1.13)':
-    dependencies:
-      '@ai-sdk/provider': 3.0.8
-      '@ai-sdk/provider-utils': 4.0.14(zod@4.1.13)
-      '@vercel/oidc': 3.1.0
-      zod: 4.1.13
-
   '@ai-sdk/gateway@3.0.40(zod@4.1.13)':
     dependencies:
       '@ai-sdk/provider': 3.0.8
@@ -10283,9 +10264,9 @@ snapshots:
 
   '@open-draft/until@2.1.0': {}
 
-  '@openrouter/ai-sdk-provider@2.1.1(ai@6.0.78(zod@4.1.13))(zod@4.1.13)':
+  '@openrouter/ai-sdk-provider@2.1.1(ai@6.0.79(zod@4.1.13))(zod@4.1.13)':
     dependencies:
-      ai: 6.0.78(zod@4.1.13)
+      ai: 6.0.79(zod@4.1.13)
       zod: 4.1.13
 
   '@opentelemetry/api-logs@0.208.0':
@@ -12598,22 +12579,14 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ai-sdk-ollama@3.3.0(ai@6.0.78(zod@4.1.13))(zod@4.1.13):
+  ai-sdk-ollama@3.3.0(ai@6.0.79(zod@4.1.13))(zod@4.1.13):
     dependencies:
       '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.13(zod@4.1.13)
-      ai: 6.0.78(zod@4.1.13)
+      ai: 6.0.79(zod@4.1.13)
       ollama: 0.6.3
     transitivePeerDependencies:
       - zod
-
-  ai@6.0.78(zod@4.1.13):
-    dependencies:
-      '@ai-sdk/gateway': 3.0.39(zod@4.1.13)
-      '@ai-sdk/provider': 3.0.8
-      '@ai-sdk/provider-utils': 4.0.14(zod@4.1.13)
-      '@opentelemetry/api': 1.9.0
-      zod: 4.1.13
 
   ai@6.0.79(zod@4.1.13):
     dependencies:
