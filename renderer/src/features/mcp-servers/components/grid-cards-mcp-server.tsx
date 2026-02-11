@@ -90,6 +90,8 @@ function GridCardsMcpServersContent({
           closeDialog={closeDialog}
           serverToEdit={state.serverName}
           groupName={state.groupName}
+          imageOverride={state.imageOverride}
+          envVarsOverride={state.envVarsOverride}
         />
       )}
     </div>

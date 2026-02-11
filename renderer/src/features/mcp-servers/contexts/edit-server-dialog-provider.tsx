@@ -11,18 +11,26 @@ export function EditServerDialogProvider({
     serverName: null as string | null,
     isRemote: false,
     groupName: null as string | null,
+    imageOverride: null as string | null,
+    envVarsOverride: null as Array<{ name: string; value: string }> | null,
   })
 
   const openDialog = (
     serverName: string,
     isRemote: boolean,
-    groupName: string
+    groupName: string,
+    options?: {
+      imageOverride?: string
+      envVarsOverride?: Array<{ name: string; value: string }>
+    }
   ) => {
     setState({
       isOpen: true,
       serverName,
       isRemote,
       groupName,
+      imageOverride: options?.imageOverride ?? null,
+      envVarsOverride: options?.envVarsOverride ?? null,
     })
   }
 
@@ -32,6 +40,8 @@ export function EditServerDialogProvider({
       serverName: null,
       isRemote: false,
       groupName: null,
+      imageOverride: null,
+      envVarsOverride: null,
     })
   }
 

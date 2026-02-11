@@ -6,11 +6,15 @@ export function WrapperDialogFormMcp({
   closeDialog,
   serverToEdit,
   groupName,
+  imageOverride,
+  envVarsOverride,
 }: {
   serverType: { local: boolean; remote: boolean }
   closeDialog: () => void
   serverToEdit?: string | null
   groupName: string
+  imageOverride?: string | null
+  envVarsOverride?: Array<{ name: string; value: string }> | null
 }) {
   return (
     <>
@@ -20,6 +24,8 @@ export function WrapperDialogFormMcp({
         closeDialog={closeDialog}
         serverToEdit={serverToEdit}
         groupName={groupName}
+        imageOverride={imageOverride}
+        envVarsOverride={envVarsOverride}
       />
 
       <DialogFormRemoteMcp
