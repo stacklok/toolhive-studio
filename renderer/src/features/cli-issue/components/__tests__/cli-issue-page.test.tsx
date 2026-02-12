@@ -17,9 +17,6 @@ function renderCliIssuePage() {
 beforeEach(() => {
   vi.clearAllMocks()
 
-  window.electronAPI.onShowQuitConfirmation = vi.fn(() => vi.fn())
-  window.electronAPI.quitApp = vi.fn()
-
   window.electronAPI.cliAlignment = {
     getStatus: vi.fn(),
     getPathStatus: vi.fn(),
