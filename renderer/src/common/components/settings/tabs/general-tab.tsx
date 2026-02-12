@@ -162,7 +162,7 @@ function QuitConfirmationField() {
     >
       <Switch
         id="quit-confirmation"
-        checked={skipQuitConfirmation}
+        checked={skipQuitConfirmation ?? false}
         onCheckedChange={handleQuitConfirmationToggle}
         disabled={isLoading || isSaving}
       />
