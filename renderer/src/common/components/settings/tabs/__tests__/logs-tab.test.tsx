@@ -83,12 +83,12 @@ describe('LogsTab', () => {
   it('copies log path to clipboard when copy button is clicked', async () => {
     render(<LogsTab />)
 
-    const copyButton = screen.getByRole('button', { name: 'Copy log path' })
+    const copyButton = screen.getByRole('button', { name: 'Copy command' })
     await userEvent.click(copyButton)
 
     await waitFor(() => {
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-        '/logs/main.log'
+        '~/Library/Logs/ToolHive/main.log'
       )
     })
   })
