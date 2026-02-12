@@ -21,7 +21,6 @@ import { setAutoLaunch, getAutoLaunchStatus } from './auto-launch'
 import { createApplicationMenu } from './menu'
 import {
   getMainWindow,
-  isMainWindowValid,
   createMainWindow,
   showMainWindow,
   focusMainWindow,
@@ -132,6 +131,11 @@ import {
   setCliValidationResult,
 } from './app-state'
 import type { UIMessage } from 'ai'
+import {
+  showNativeQuitConfirmation,
+  getSkipQuitConfirmation,
+  setSkipQuitConfirmation,
+} from './quit-confirmation'
 
 const isE2E = process.env.TOOLHIVE_E2E === 'true'
 
@@ -419,18 +423,26 @@ app.on('will-finish-launching', () => {
 })
 
 app.on('before-quit', async (e) => {
-  try {
-    if (isMainWindowValid()) {
-      await showMainWindow()
-      sendToMainWindowRenderer('show-quit-confirmation')
-    }
-  } catch (error) {
-    log.error('Failed to show quit confirmation:', error)
+  // Already tearing down – let the quit proceed
+  if (getTearingDownState()) return
+
+  // Already in quitting state (blockQuit was called) – let it proceed
+  if (getQuittingState()) return
+
+  // Prevent the default quit synchronously so the app stays alive
+  // while the native dialog is shown. This is critical during OS
+  // shutdown: the OS sees the modal dialog and will not force-kill.
+  e.preventDefault()
+
+  // Show the native confirmation dialog (async to support the
+  // "Don't ask me again" checkbox, which only the async variant offers).
+  const confirmed = await showNativeQuitConfirmation()
+  if (!confirmed) {
+    log.info('[before-quit] User cancelled quit')
+    return
   }
 
-  if (!getQuittingState()) {
-    e.preventDefault()
-  }
+  blockQuit('before-quit')
 })
 app.on('will-quit', (e) => blockQuit('will-quit', e))
 
@@ -524,6 +536,11 @@ ipcMain.handle('hide-app', () => {
 ipcMain.handle('quit-app', (e) => {
   blockQuit('before-quit', e)
 })
+
+ipcMain.handle('get-skip-quit-confirmation', () => getSkipQuitConfirmation())
+ipcMain.handle('set-skip-quit-confirmation', (_e, skip: boolean) =>
+  setSkipQuitConfirmation(skip)
+)
 
 ipcMain.handle('get-toolhive-port', () => getToolhivePort())
 ipcMain.handle('get-toolhive-mcp-port', () => getToolhiveMcpPort())
