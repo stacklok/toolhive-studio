@@ -4,8 +4,7 @@ import { getAutoLaunchStatus, setAutoLaunch } from './auto-launch'
 import { createApplicationMenu } from './menu'
 import log from './logger'
 import { getAppVersion } from './util'
-import { hideWindow, showWindow, showInDock } from './dock-utils'
-import { showMainWindow, sendToMainWindowRenderer } from './main-window'
+import { hideWindow, showWindow } from './dock-utils'
 import { getTray, setTray } from './app-state'
 import { handleCheckForUpdates } from './utils/update-dialogs'
 
@@ -190,15 +189,10 @@ const createHideMenuItem = () => ({
 const createQuitMenuItem = () => ({
   label: 'Quit ToolHive',
   type: 'normal' as const,
-  click: async () => {
-    try {
-      // Trigger the quit confirmation flow
-      showInDock() // Ensure app is visible in dock
-      await showMainWindow()
-      sendToMainWindowRenderer('show-quit-confirmation')
-    } catch (error) {
-      log.error('[tray] Failed to show quit confirmation from tray:', error)
-    }
+  click: () => {
+    // Triggers the 'before-quit' event, which shows the native
+    // confirmation dialog and performs graceful shutdown if confirmed.
+    app.quit()
   },
 })
 
