@@ -27,7 +27,6 @@ export function InstallGroupButton({
         <div>
           <Button
             variant="action"
-            className="rounded-full"
             onClick={() => setIsWizardOpen(true)}
             disabled={!!installError}
           >

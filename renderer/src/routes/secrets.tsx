@@ -53,7 +53,6 @@ export function Secrets() {
         {keys.length > 0 && (
           <Button
             variant="action"
-            className="rounded-full"
             onClick={() => {
               setIsSecretDialogOpen(true)
               setSecretKey('')
@@ -71,7 +70,6 @@ export function Secrets() {
           actions={[
             <Button
               variant="action"
-              className="rounded-full"
               key="add"
               onClick={() => {
                 setIsSecretDialogOpen(true)

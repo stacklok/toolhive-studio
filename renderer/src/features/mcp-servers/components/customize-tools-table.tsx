@@ -363,7 +363,6 @@ export function CustomizeToolsTable({
                 <span className="inline-flex">
                   <Button
                     variant="action"
-                    className="rounded-full"
                     onClick={() => {
                       setDisableBlocker(true)
                       handleApply()

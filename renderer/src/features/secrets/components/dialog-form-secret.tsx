@@ -190,7 +190,7 @@ function SecretForm({
           >
             Cancel
           </Button>
-          <Button variant="action" className="rounded-full" type="submit">
+          <Button variant="action" type="submit">
             {submitButtonText}
           </Button>
         </DialogFooter>

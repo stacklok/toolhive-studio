@@ -514,7 +514,6 @@ export function DialogProviderSettings({
             onClick={handleSave}
             disabled={updateProviderSettingsMutation.isPending}
             variant="action"
-            className="rounded-full"
           >
             {updateProviderSettingsMutation.isPending ? 'Saving...' : 'Save'}
           </Button>

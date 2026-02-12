@@ -201,11 +201,7 @@ export function RegistryServerDetail() {
 
       <Separator className="my-6" />
       <div className="flex gap-5 pb-10">
-        <Button
-          variant="action"
-          className="rounded-full"
-          onClick={() => handleCardClick(server)}
-        >
+        <Button variant="action" onClick={() => handleCardClick(server)}>
           <Wrench className="size-4" />
           Install server
         </Button>

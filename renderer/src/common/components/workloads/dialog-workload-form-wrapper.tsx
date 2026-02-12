@@ -79,7 +79,6 @@ export function DialogWorkloadFormWrapper<T extends FieldValues = FieldValues>({
                 </Button>
                 <Button
                   variant="action"
-                  className="rounded-full"
                   disabled={actionsIsDisabled}
                   type="submit"
                 >

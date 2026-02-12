@@ -259,7 +259,6 @@ export function CustomizeToolsPage() {
               <Button
                 key="start-server"
                 variant="action"
-                className="dark:bg-nav-button-active-bg! rounded-full"
                 onClick={() => handleStartServer()}
                 disabled={isRestartPending}
               >

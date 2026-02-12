@@ -121,7 +121,7 @@ export function DialogOverrideTool({
           >
             Cancel
           </Button>
-          <Button variant="action" className="rounded-full" onClick={onSave}>
+          <Button variant="action" onClick={onSave}>
             Save
           </Button>
         </DialogFooter>
