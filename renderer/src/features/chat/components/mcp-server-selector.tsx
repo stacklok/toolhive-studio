@@ -151,7 +151,10 @@ export function McpServerSelector() {
           >
             <ServerIcon className="size-4" /> {enabledMcpServers.length} Servers
             / {getTotalToolsCount()} Tools
-            <ChevronDown className="h-4 w-4" />
+            <ChevronDown
+              className="size-4"
+              data-testid="mcp-server-selector-chevron"
+            />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" side="top" className="max-h-96 w-72">

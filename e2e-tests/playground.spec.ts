@@ -82,7 +82,7 @@ async function enableMcpServer(
   window: Page,
   serverName: string
 ): Promise<void> {
-  await window.getByRole('button', { name: /mcp servers/i }).click()
+  await window.getByTestId('mcp-server-selector-chevron').click()
   await window.getByText(/available mcp servers/i).waitFor()
   await window
     .getByRole('menuitemcheckbox', { name: new RegExp(serverName, 'i') })
