@@ -11,15 +11,12 @@ import {
   useSetAutoLaunch,
 } from '@/common/hooks/use-auto-launch'
 import { useTheme } from '@/common/hooks/use-theme'
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Sun, Moon, Monitor } from 'lucide-react'
 import log from 'electron-log/renderer'
 import { trackEvent } from '@/common/lib/analytics'
 import { ExperimentalFeatures } from './components/experimental-features'
 import { WrapperField } from './components/wrapper-field'
-
-const CONFIRM_QUIT_STORAGE_KEY = 'doNotShowAgain_confirm_quit'
 
 function ThemeField() {
   const { theme, setTheme } = useTheme()
@@ -138,19 +135,23 @@ function AutoLaunchField() {
 }
 
 function QuitConfirmationField() {
-  const [skipQuitConfirmation, setSkipQuitConfirmation] = useState<boolean>(
-    () => localStorage.getItem(CONFIRM_QUIT_STORAGE_KEY) === 'true'
-  )
+  const { data: skipQuitConfirmation, isPending: isLoading } = useQuery({
+    queryFn: window.electronAPI.getSkipQuitConfirmation,
+    queryKey: ['skip-quit-confirmation'],
+  })
 
-  const handleQuitConfirmationToggle = () => {
-    const newValue = !skipQuitConfirmation
-    setSkipQuitConfirmation(newValue)
+  const queryClient = useQueryClient()
 
-    if (newValue) {
-      localStorage.setItem(CONFIRM_QUIT_STORAGE_KEY, 'true')
-    } else {
-      localStorage.removeItem(CONFIRM_QUIT_STORAGE_KEY)
-    }
+  const { mutate: setSkipQuitConfirmation, isPending: isSaving } = useMutation({
+    mutationFn: (skip: boolean) =>
+      window.electronAPI.setSkipQuitConfirmation(skip),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['skip-quit-confirmation'] })
+    },
+  })
+
+  const handleQuitConfirmationToggle = (checked: boolean) => {
+    setSkipQuitConfirmation(checked)
   }
 
   return (
@@ -163,6 +164,7 @@ function QuitConfirmationField() {
         id="quit-confirmation"
         checked={skipQuitConfirmation}
         onCheckedChange={handleQuitConfirmationToggle}
+        disabled={isLoading || isSaving}
       />
     </WrapperField>
   )
