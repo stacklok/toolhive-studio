@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import SettingsRouteComponent from './settings.route'
+import SettingsRouteComponent from './-settings.route'
 
 interface SettingsSearch {
   tab?: 'general' | 'registry' | 'version' | 'logs'
