@@ -52,6 +52,7 @@ const renderWithProviders = (component: React.ReactElement) => {
 describe('GeneralTab', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
+    localStorage.clear()
 
     window.electronAPI.getSkipQuitConfirmation = vi
       .fn()
