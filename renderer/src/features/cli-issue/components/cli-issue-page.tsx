@@ -2,7 +2,6 @@ import { useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { Card, CardContent } from '@/common/components/ui/card'
-import { QuitConfirmationListener } from '@/common/components/layout/top-nav/quit-confirmation-listener'
 import { trackEvent } from '@/common/lib/analytics'
 import { ExternalCliContent } from './external-cli-content'
 import { SymlinkIssueContent } from './symlink-issue-content'
@@ -128,7 +127,6 @@ export function CliIssuePage() {
 
   return (
     <div className="flex h-[calc(100vh-5rem)] items-center justify-center p-4">
-      <QuitConfirmationListener />
       <Card className="w-full max-w-lg">
         {validationResult.status === 'external-cli-found' && (
           <ExternalCliContent
