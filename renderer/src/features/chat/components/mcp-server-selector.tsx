@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/common/components/ui/dropdown-menu'
-import { ChevronDown, Loader2, Settings2 } from 'lucide-react'
+import { ChevronDown, Loader2, ServerIcon, Settings2 } from 'lucide-react'
 import { Badge } from '@/common/components/ui/badge'
 import { ScrollArea } from '@/common/components/ui/scroll-area'
 import { useAvailableServers } from '../hooks/use-available-servers'
@@ -149,10 +149,8 @@ export function McpServerSelector() {
             size="sm"
             className="flex h-10 items-center justify-between gap-2"
           >
-            <span>MCP Servers</span>
-            <Badge variant="secondary">
-              {enabledMcpServers.length} Enabled / {getTotalToolsCount()} Tools
-            </Badge>
+            <ServerIcon className="size-4" /> {enabledMcpServers.length} Servers
+            / {getTotalToolsCount()} Tools
             <ChevronDown className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
