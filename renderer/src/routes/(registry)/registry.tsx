@@ -4,7 +4,7 @@ import {
 } from '@common/api/generated/@tanstack/react-query.gen'
 import { createFileRoute } from '@tanstack/react-router'
 import { RegistryError } from '@/common/components/error/registry-error'
-import RegistryRouteComponent from './registry.route'
+import RegistryRouteComponent from './-registry.route'
 
 const DEFAULT_REGISTRY_NAME = 'default'
 
