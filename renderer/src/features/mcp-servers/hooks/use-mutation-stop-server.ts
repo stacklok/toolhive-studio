@@ -74,7 +74,6 @@ export function useMutationStopServerList({
             'stopped'
           ),
         staleTime: 0,
-        gcTime: 30_000,
       })
       notifyChangeWithOptimizer(group)
       queryClient.invalidateQueries({ queryKey })

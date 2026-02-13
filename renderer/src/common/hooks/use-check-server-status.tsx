@@ -59,7 +59,6 @@ export function useCheckServerStatus() {
             'running'
           ),
         staleTime: 0,
-        gcTime: 30_000,
       })
 
       if (isServerReady) {

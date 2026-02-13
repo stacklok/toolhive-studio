@@ -128,7 +128,6 @@ export function useMutationRestartServerAtStartup() {
                 'running'
               ),
             staleTime: 0,
-            gcTime: 30_000,
           })
         )
       )
@@ -202,7 +201,6 @@ export function useMutationRestartServer({
             'running'
           ),
         staleTime: 0,
-        gcTime: 30_000,
       })
       notifyChangeWithOptimizer(group ?? 'default')
       queryClient.invalidateQueries({ queryKey })

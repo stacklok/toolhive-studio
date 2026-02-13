@@ -61,7 +61,6 @@ export function useDeleteServer({
             )
           ),
         staleTime: 0,
-        gcTime: 30_000,
       })
       notifyChangeWithOptimizer(group)
     },
