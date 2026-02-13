@@ -8,6 +8,8 @@ function createElectronStub(): Partial<ElectronAPI> {
   return {
     onServerShutdown: () => () => {},
     onDeepLinkNavigation: () => () => {},
+    getSkipQuitConfirmation: vi.fn().mockResolvedValue(false),
+    setSkipQuitConfirmation: vi.fn().mockResolvedValue(undefined),
     shutdownStore: {
       getLastShutdownServers: async () => [],
       clearShutdownHistory: async () => ({ success: true }),

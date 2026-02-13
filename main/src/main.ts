@@ -21,7 +21,6 @@ import { setAutoLaunch, getAutoLaunchStatus } from './auto-launch'
 import { createApplicationMenu } from './menu'
 import {
   getMainWindow,
-  isMainWindowValid,
   createMainWindow,
   showMainWindow,
   focusMainWindow,
@@ -132,6 +131,11 @@ import {
   setCliValidationResult,
 } from './app-state'
 import type { UIMessage } from 'ai'
+import {
+  showNativeQuitConfirmation,
+  getSkipQuitConfirmation,
+  setSkipQuitConfirmation,
+} from './quit-confirmation'
 
 const isE2E = process.env.TOOLHIVE_E2E === 'true'
 
@@ -419,18 +423,38 @@ app.on('will-finish-launching', () => {
 })
 
 app.on('before-quit', async (e) => {
+  // Already tearing down – let the quit proceed
+  if (getTearingDownState()) return
+
+  // Already in quitting state (blockQuit was called) – let it proceed
+  if (getQuittingState()) return
+
+  // Prevent the default quit synchronously so the app stays alive
+  // while the native dialog is shown. This is critical during OS
+  // shutdown: the OS sees the modal dialog and will not force-kill.
+  e.preventDefault()
+
+  // Show the native confirmation dialog (async to support the
+  // "Don't ask me again" checkbox, which only the async variant offers).
+  let confirmed = false
   try {
-    if (isMainWindowValid()) {
-      await showMainWindow()
-      sendToMainWindowRenderer('show-quit-confirmation')
-    }
+    confirmed = await showNativeQuitConfirmation()
   } catch (error) {
-    log.error('Failed to show quit confirmation:', error)
+    // If the dialog fails (e.g. during OS shutdown), fall back to
+    // proceeding with quit rather than leaving it blocked.
+    log.error(
+      '[before-quit] Failed to show quit confirmation dialog, proceeding with quit',
+      error
+    )
+    confirmed = true
   }
 
-  if (!getQuittingState()) {
-    e.preventDefault()
+  if (!confirmed) {
+    log.info('[before-quit] User cancelled quit')
+    return
   }
+
+  blockQuit('before-quit')
 })
 app.on('will-quit', (e) => blockQuit('will-quit', e))
 
@@ -524,6 +548,11 @@ ipcMain.handle('hide-app', () => {
 ipcMain.handle('quit-app', (e) => {
   blockQuit('before-quit', e)
 })
+
+ipcMain.handle('get-skip-quit-confirmation', () => getSkipQuitConfirmation())
+ipcMain.handle('set-skip-quit-confirmation', (_e, skip: boolean) =>
+  setSkipQuitConfirmation(skip)
+)
 
 ipcMain.handle('get-toolhive-port', () => getToolhivePort())
 ipcMain.handle('get-toolhive-mcp-port', () => getToolhiveMcpPort())

@@ -54,6 +54,13 @@ describe('GeneralTab', () => {
     vi.clearAllMocks()
     localStorage.clear()
 
+    window.electronAPI.getSkipQuitConfirmation = vi
+      .fn()
+      .mockResolvedValue(false)
+    window.electronAPI.setSkipQuitConfirmation = vi
+      .fn()
+      .mockResolvedValue(undefined)
+
     window.electronAPI.sentry = {
       isEnabled: mockSentryIsEnabled,
       optIn: mockSentryOptIn,
@@ -168,20 +175,25 @@ describe('GeneralTab', () => {
   it('handles quit confirmation toggle', async () => {
     renderWithProviders(<GeneralTab />)
 
+    await waitFor(() => {
+      expect(
+        screen.getByRole('switch', { name: /skip quit confirmation/i })
+      ).not.toBeChecked()
+    })
+
     const quitConfirmationSwitch = screen.getByRole('switch', {
       name: /skip quit confirmation/i,
     })
 
-    expect(quitConfirmationSwitch).not.toBeChecked()
-
     await userEvent.click(quitConfirmationSwitch)
 
-    expect(quitConfirmationSwitch).toBeChecked()
-    expect(localStorage.getItem('doNotShowAgain_confirm_quit')).toBe('true')
+    expect(window.electronAPI.setSkipQuitConfirmation).toHaveBeenCalledWith(
+      true
+    )
   })
 
   it('handles quit confirmation toggle disable skip', async () => {
-    localStorage.setItem('doNotShowAgain_confirm_quit', 'true')
+    window.electronAPI.getSkipQuitConfirmation = vi.fn().mockResolvedValue(true)
 
     renderWithProviders(<GeneralTab />)
 
@@ -197,8 +209,9 @@ describe('GeneralTab', () => {
     })
     await userEvent.click(quitConfirmationSwitch)
 
-    expect(quitConfirmationSwitch).not.toBeChecked()
-    expect(localStorage.getItem('doNotShowAgain_confirm_quit')).toBeNull()
+    expect(window.electronAPI.setSkipQuitConfirmation).toHaveBeenCalledWith(
+      false
+    )
   })
 
   describe('Experimental Features', () => {

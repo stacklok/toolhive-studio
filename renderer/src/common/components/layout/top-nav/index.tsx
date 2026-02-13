@@ -10,8 +10,6 @@ import { useEffect } from 'react'
 import { toast } from 'sonner'
 import { LinkViewTransition } from '../../link-view-transition'
 import { TopNavContainer } from './container'
-import { useConfirmQuit } from '@/common/hooks/use-confirm-quit'
-import { QuitConfirmationListener } from './quit-confirmation-listener'
 import {
   Server,
   CloudDownload,
@@ -131,7 +129,6 @@ function TopNavLinks({ showUpdateBadge }: { showUpdateBadge?: boolean }) {
 }
 
 export function TopNav(props: HTMLProps<HTMLElement>) {
-  const confirmQuit = useConfirmQuit()
   const { data: appVersion } = useAppVersion()
   const isProduction = import.meta.env.MODE === 'production'
 
@@ -153,22 +150,18 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
         },
         action: {
           label: 'Restart now',
-          onClick: async () => {
-            const confirmed = await confirmQuit()
-            if (confirmed) {
-              window.electronAPI.installUpdateAndRestart()
-            }
+          onClick: () => {
+            window.electronAPI.installUpdateAndRestart()
           },
         },
       })
     })
 
     return cleanup
-  }, [confirmQuit])
+  }, [])
 
   return (
     <TopNavContainer {...props}>
-      <QuitConfirmationListener />
       <div className="flex h-10 items-center">
         <TopNavLinks
           showUpdateBadge={

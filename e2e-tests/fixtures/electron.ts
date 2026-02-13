@@ -105,8 +105,9 @@ export const test = base.extend<ElectronFixtures>({
 
     // Disable quit confirmation dialog to prevent hang on close
     const window = await app.firstWindow()
-    await window.evaluate(() => {
-      localStorage.setItem('doNotShowAgain_confirm_quit', 'true')
+    await window.evaluate(async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (globalThis as any).electronAPI.setSkipQuitConfirmation(true)
     })
 
     await app.close()
@@ -137,8 +138,9 @@ export const test = base.extend<ElectronFixtures>({
     }
 
     // Disable quit confirmation dialog to prevent hang on close
-    await window.evaluate(() => {
-      localStorage.setItem('doNotShowAgain_confirm_quit', 'true')
+    await window.evaluate(async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (globalThis as any).electronAPI.setSkipQuitConfirmation(true)
     })
 
     await window.getByRole('link', { name: /mcp servers/i }).waitFor()

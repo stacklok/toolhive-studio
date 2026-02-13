@@ -89,6 +89,12 @@ describe('SettingsTabs', () => {
       optIn: mockSentryOptIn,
       optOut: mockSentryOptOut,
     } as typeof window.electronAPI.sentry
+    window.electronAPI.getSkipQuitConfirmation = vi
+      .fn()
+      .mockResolvedValue(false)
+    window.electronAPI.setSkipQuitConfirmation = vi
+      .fn()
+      .mockResolvedValue(undefined)
 
     mockGetMainLogContent.mockResolvedValue('Mock log content')
     mockGetAppVersion.mockResolvedValue('1.0.0')

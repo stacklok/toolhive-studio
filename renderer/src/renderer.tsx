@@ -90,6 +90,24 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
     throw e
   }
 
+  // One-time migration: sync the old localStorage quit-confirmation
+  // preference into the main-process electron-store so existing users
+  // who already chose "Don't ask me again" keep that setting.
+  // Wrapped in its own try/catch because this is best-effort — a failed
+  // IPC call should not prevent the renderer from booting.
+  try {
+    const legacyKey = 'doNotShowAgain_confirm_quit'
+    if (localStorage.getItem(legacyKey) === 'true') {
+      await window.electronAPI.setSkipQuitConfirmation(true)
+      localStorage.removeItem(legacyKey)
+      log.info(
+        'Migrated quit-confirmation preference from localStorage to main process store'
+      )
+    }
+  } catch (e) {
+    log.error('Failed to migrate quit-confirmation preference', e)
+  }
+
   const hashHistory = createHashHistory()
   const router = createRouter({
     routeTree,

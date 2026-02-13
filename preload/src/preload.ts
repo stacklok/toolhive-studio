@@ -100,13 +100,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   selectFolder: (): Promise<string | null> =>
     ipcRenderer.invoke('dialog:select-folder'),
 
-  // Quit confirmation
-  onShowQuitConfirmation: (callback: () => void) => {
-    ipcRenderer.on('show-quit-confirmation', callback)
-    return () => {
-      ipcRenderer.removeListener('show-quit-confirmation', callback)
-    }
-  },
+  // Quit confirmation preference (stored in electron-store on main process)
+  getSkipQuitConfirmation: (): Promise<boolean> =>
+    ipcRenderer.invoke('get-skip-quit-confirmation'),
+  setSkipQuitConfirmation: (skip: boolean): Promise<void> =>
+    ipcRenderer.invoke('set-skip-quit-confirmation', skip),
 
   sentry: {
     isEnabled: () => ipcRenderer.invoke('sentry.is-enabled'),
@@ -307,7 +305,8 @@ export interface ElectronAPI {
   onDeepLinkNavigation: (
     callback: (target: NavigateTarget) => void
   ) => () => void
-  onShowQuitConfirmation: (callback: () => void) => () => void
+  getSkipQuitConfirmation: () => Promise<boolean>
+  setSkipQuitConfirmation: (skip: boolean) => Promise<void>
   windowControls: {
     minimize: () => Promise<void>
     maximize: () => Promise<void>

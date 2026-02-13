@@ -142,7 +142,7 @@ export function getMainWindow(): BrowserWindow | null {
 /**
  * Check if the main window exists and is not destroyed
  */
-export function isMainWindowValid(): boolean {
+function isMainWindowValid(): boolean {
   return mainWindow !== null && !mainWindow.isDestroyed()
 }
 

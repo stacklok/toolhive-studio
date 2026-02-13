@@ -11,10 +11,6 @@ vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => mockNavigate,
 }))
 
-vi.mock('../layout/top-nav/quit-confirmation-listener', () => ({
-  QuitConfirmationListener: () => null,
-}))
-
 vi.mock('../layout/top-nav/window-controls', () => ({
   WindowControls: () => null,
 }))
