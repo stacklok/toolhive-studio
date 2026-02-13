@@ -37,7 +37,7 @@ describe('useAutoResumePolling', () => {
 
   it('starts polling for a server with "starting" status', async () => {
     const pollSpy = vi
-      .spyOn(polling, 'pollServerStatus')
+      .spyOn(polling, 'pollServerUntilStable')
       .mockResolvedValue(true)
 
     const workloads = [makeWorkload('my-server', 'starting')]
@@ -45,13 +45,13 @@ describe('useAutoResumePolling', () => {
     renderHook(() => useAutoResumePolling(workloads, 'default'), { wrapper })
 
     await waitFor(() => {
-      expect(pollSpy).toHaveBeenCalledWith(expect.any(Function), 'running')
+      expect(pollSpy).toHaveBeenCalledWith(expect.any(Function))
     })
   })
 
   it('starts polling for a server with "stopping" status', async () => {
     const pollSpy = vi
-      .spyOn(polling, 'pollServerStatus')
+      .spyOn(polling, 'pollServerUntilStable')
       .mockResolvedValue(true)
 
     const workloads = [makeWorkload('my-server', 'stopping')]
@@ -59,13 +59,13 @@ describe('useAutoResumePolling', () => {
     renderHook(() => useAutoResumePolling(workloads, 'default'), { wrapper })
 
     await waitFor(() => {
-      expect(pollSpy).toHaveBeenCalledWith(expect.any(Function), 'stopped')
+      expect(pollSpy).toHaveBeenCalledWith(expect.any(Function))
     })
   })
 
   it('starts polling for a server with "restarting" status', async () => {
     const pollSpy = vi
-      .spyOn(polling, 'pollServerStatus')
+      .spyOn(polling, 'pollServerUntilStable')
       .mockResolvedValue(true)
 
     const workloads = [
@@ -75,13 +75,13 @@ describe('useAutoResumePolling', () => {
     renderHook(() => useAutoResumePolling(workloads, 'default'), { wrapper })
 
     await waitFor(() => {
-      expect(pollSpy).toHaveBeenCalledWith(expect.any(Function), 'running')
+      expect(pollSpy).toHaveBeenCalledWith(expect.any(Function))
     })
   })
 
   it('does NOT start polling for servers in stable states', async () => {
     const pollSpy = vi
-      .spyOn(polling, 'pollServerStatus')
+      .spyOn(polling, 'pollServerUntilStable')
       .mockResolvedValue(true)
 
     const workloads = [
@@ -100,12 +100,14 @@ describe('useAutoResumePolling', () => {
   it('does not start a second poll if one is already in-flight for the same server', async () => {
     // Create a poll that never resolves so it stays in-flight
     let resolveFirstPoll!: (value: boolean) => void
-    const pollSpy = vi.spyOn(polling, 'pollServerStatus').mockImplementation(
-      () =>
-        new Promise<boolean>((resolve) => {
-          resolveFirstPoll = resolve
-        })
-    )
+    const pollSpy = vi
+      .spyOn(polling, 'pollServerUntilStable')
+      .mockImplementation(
+        () =>
+          new Promise<boolean>((resolve) => {
+            resolveFirstPoll = resolve
+          })
+      )
 
     const workloads = [makeWorkload('my-server', 'starting')]
 
@@ -125,15 +127,70 @@ describe('useAutoResumePolling', () => {
     // Give the effect time to run again
     await new Promise((r) => setTimeout(r, 50))
 
-    // Should still only have been called once — deduplication via query cache
+    // Should still only have been called once — deduplication via ref + query cache
     expect(pollSpy).toHaveBeenCalledTimes(1)
 
     // Clean up the hanging promise
     resolveFirstPoll(true)
   })
 
+  it('does not re-trigger polling after it completes even if workloads still show transition status', async () => {
+    const pollSpy = vi
+      .spyOn(polling, 'pollServerUntilStable')
+      .mockResolvedValue(true)
+
+    const workloads = [makeWorkload('my-server', 'starting')]
+
+    const { rerender } = renderHook(
+      ({ w }) => useAutoResumePolling(w, 'default'),
+      { wrapper, initialProps: { w: workloads } }
+    )
+
+    // Wait for first poll to complete
+    await waitFor(() => {
+      expect(pollSpy).toHaveBeenCalledTimes(1)
+    })
+
+    // Simulate re-render with stale data still showing transition status
+    rerender({ w: [makeWorkload('my-server', 'starting')] })
+    await new Promise((r) => setTimeout(r, 50))
+
+    // Should NOT have started a second poll — ref tracks initiated polls
+    expect(pollSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('re-enables polling after server reaches stable state and transitions again', async () => {
+    const pollSpy = vi
+      .spyOn(polling, 'pollServerUntilStable')
+      .mockResolvedValue(true)
+
+    const { rerender } = renderHook(
+      ({ w }) => useAutoResumePolling(w, 'default'),
+      {
+        wrapper,
+        initialProps: { w: [makeWorkload('my-server', 'starting')] },
+      }
+    )
+
+    // First poll
+    await waitFor(() => {
+      expect(pollSpy).toHaveBeenCalledTimes(1)
+    })
+
+    // Server reaches stable state — clears the ref
+    rerender({ w: [makeWorkload('my-server', 'running')] })
+    await new Promise((r) => setTimeout(r, 50))
+
+    // Server transitions again (e.g. stopped via CLI)
+    rerender({ w: [makeWorkload('my-server', 'stopping')] })
+
+    await waitFor(() => {
+      expect(pollSpy).toHaveBeenCalledTimes(2)
+    })
+  })
+
   it('invalidates workloads query after successful polling', async () => {
-    vi.spyOn(polling, 'pollServerStatus').mockResolvedValue(true)
+    vi.spyOn(polling, 'pollServerUntilStable').mockResolvedValue(true)
 
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
 
@@ -155,7 +212,7 @@ describe('useAutoResumePolling', () => {
   })
 
   it('does NOT invalidate workloads query when polling fails', async () => {
-    vi.spyOn(polling, 'pollServerStatus').mockResolvedValue(false)
+    vi.spyOn(polling, 'pollServerUntilStable').mockResolvedValue(false)
 
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
 
@@ -171,7 +228,7 @@ describe('useAutoResumePolling', () => {
 
   it('handles multiple transitioning servers independently', async () => {
     const pollSpy = vi
-      .spyOn(polling, 'pollServerStatus')
+      .spyOn(polling, 'pollServerUntilStable')
       .mockResolvedValue(true)
 
     const workloads = [
@@ -184,10 +241,5 @@ describe('useAutoResumePolling', () => {
     await waitFor(() => {
       expect(pollSpy).toHaveBeenCalledTimes(2)
     })
-
-    // One for 'running', one for 'stopped'
-    const targetStatuses = pollSpy.mock.calls.map((call) => call[1])
-    expect(targetStatuses).toContain('running')
-    expect(targetStatuses).toContain('stopped')
   })
 })
