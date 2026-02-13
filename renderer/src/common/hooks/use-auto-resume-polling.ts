@@ -1,13 +1,16 @@
 import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { pollServerUntilStable, pollingQueryKey } from '@/common/lib/polling'
+import {
+  pollServerUntilStable,
+  pollingQueryKey,
+  TRANSITION_STATUSES,
+} from '@/common/lib/polling'
+import { fetchPollingQuery } from '@/common/lib/polling-query'
 import {
   getApiV1BetaWorkloadsByNameStatusOptions,
   getApiV1BetaWorkloadsQueryKey,
 } from '@common/api/generated/@tanstack/react-query.gen'
 import type { CoreWorkload } from '@common/api/generated/types.gen'
-
-const TRANSITION_STATUSES = ['starting', 'restarting', 'stopping']
 
 /**
  * Automatically resumes polling for servers stuck in transition statuses.
@@ -63,19 +66,15 @@ export function useAutoResumePolling(
       // Fire-and-forget: fetchQuery deduplicates by key automatically
       // Polls until ANY stable status (not a specific target) to handle
       // edit cycles where stopping -> running instead of stopping -> stopped
-      queryClient
-        .fetchQuery({
-          queryKey: qKey,
-          queryFn: () =>
-            pollServerUntilStable(() =>
-              queryClient.fetchQuery(
-                getApiV1BetaWorkloadsByNameStatusOptions({
-                  path: { name },
-                })
-              )
-            ),
-          staleTime: 0,
-        })
+      fetchPollingQuery(queryClient, name, () =>
+        pollServerUntilStable(() =>
+          queryClient.fetchQuery(
+            getApiV1BetaWorkloadsByNameStatusOptions({
+              path: { name },
+            })
+          )
+        )
+      )
         .then((success) => {
           if (success) {
             queryClient.invalidateQueries({
@@ -84,6 +83,10 @@ export function useAutoResumePolling(
               }),
             })
           }
+        })
+        .catch(() => {
+          // Clear from ref on failure so the next render can retry
+          initiatedRef.current.delete(name)
         })
     }
   }, [workloads, groupName, queryClient])

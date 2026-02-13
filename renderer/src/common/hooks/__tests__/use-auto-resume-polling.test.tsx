@@ -226,6 +226,33 @@ describe('useAutoResumePolling', () => {
     expect(invalidateSpy).not.toHaveBeenCalled()
   })
 
+  it('clears initiated ref on polling failure so next render can retry', async () => {
+    const pollSpy = vi
+      .spyOn(polling, 'pollServerUntilStable')
+      .mockRejectedValueOnce(new Error('timeout'))
+      .mockResolvedValueOnce(true)
+
+    const workloads = [makeWorkload('my-server', 'starting')]
+
+    const { rerender } = renderHook(
+      ({ w }) => useAutoResumePolling(w, 'default'),
+      { wrapper, initialProps: { w: workloads } }
+    )
+
+    // Wait for the first poll to fail and .catch to clear the ref
+    await waitFor(() => {
+      expect(pollSpy).toHaveBeenCalledTimes(1)
+    })
+    await new Promise((r) => setTimeout(r, 50))
+
+    // Re-render with the same transition status — should retry now
+    rerender({ w: [makeWorkload('my-server', 'starting')] })
+
+    await waitFor(() => {
+      expect(pollSpy).toHaveBeenCalledTimes(2)
+    })
+  })
+
   it('handles multiple transitioning servers independently', async () => {
     const pollSpy = vi
       .spyOn(polling, 'pollServerUntilStable')

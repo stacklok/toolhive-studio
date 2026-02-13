@@ -108,11 +108,17 @@ const serverPredicates = {
 }
 
 // Transition statuses that indicate a server is mid-operation
-const TRANSITION_STATUSES = ['starting', 'restarting', 'removing', 'stopping']
+export const TRANSITION_STATUSES = [
+  'starting',
+  'restarting',
+  'removing',
+  'stopping',
+]
 
 // Query key factory for TanStack Query polling deduplication
 export const pollingQueryKey = (serverName: string) =>
   ['polling', serverName] as const
+
 // Public API
 export const pollServerUntilStable = async (
   fetchServer: () => Promise<CoreWorkload>,
@@ -120,7 +126,7 @@ export const pollServerUntilStable = async (
 ): Promise<boolean> => {
   const result = await pollUntilTrue(
     fetchServer,
-    (server) => !TRANSITION_STATUSES.includes(server?.status ?? ''),
+    (server) => !!server && !TRANSITION_STATUSES.includes(server.status ?? ''),
     config
   )
   return result.success
