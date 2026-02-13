@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { pollServerStatus } from '@/common/lib/polling'
+import { pollServerStatus, pollingQueryKey } from '@/common/lib/polling'
 import {
   getApiV1BetaWorkloadsByNameStatusOptions,
   getApiV1BetaWorkloadsQueryKey,
@@ -46,15 +46,21 @@ export function useCheckServerStatus() {
         })
       }
 
-      const isServerReady = await pollServerStatus(
-        () =>
-          queryClient.fetchQuery(
-            getApiV1BetaWorkloadsByNameStatusOptions({
-              path: { name: serverName },
-            })
+      const isServerReady = await queryClient.fetchQuery({
+        queryKey: pollingQueryKey(serverName),
+        queryFn: () =>
+          pollServerStatus(
+            () =>
+              queryClient.fetchQuery(
+                getApiV1BetaWorkloadsByNameStatusOptions({
+                  path: { name: serverName },
+                })
+              ),
+            'running'
           ),
-        'running'
-      )
+        staleTime: 0,
+        gcTime: 30_000,
+      })
 
       if (isServerReady) {
         await queryClient.invalidateQueries({

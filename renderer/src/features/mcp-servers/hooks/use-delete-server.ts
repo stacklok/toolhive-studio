@@ -8,7 +8,7 @@ import {
   getApiV1BetaWorkloadsQueryKey,
 } from '@common/api/generated/@tanstack/react-query.gen'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
-import { pollServerDelete } from '@/common/lib/polling'
+import { pollServerDelete, pollingQueryKey } from '@/common/lib/polling'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNotificationOptimizer } from './use-notification-optimizer'
 
@@ -50,13 +50,19 @@ export function useDeleteServer({
       return { previousServersList }
     },
     onSuccess: async () => {
-      await pollServerDelete(() =>
-        queryClient.fetchQuery(
-          getApiV1BetaWorkloadsByNameStatusOptions({
-            path: { name },
-          })
-        )
-      )
+      await queryClient.fetchQuery({
+        queryKey: pollingQueryKey(name),
+        queryFn: () =>
+          pollServerDelete(() =>
+            queryClient.fetchQuery(
+              getApiV1BetaWorkloadsByNameStatusOptions({
+                path: { name },
+              })
+            )
+          ),
+        staleTime: 0,
+        gcTime: 30_000,
+      })
       notifyChangeWithOptimizer(group)
     },
     onSettled: () => {
