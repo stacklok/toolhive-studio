@@ -38,7 +38,7 @@ export function EmptyState({
         py-32 text-center text-balance"
     >
       <Illustration className="mb-4 size-32" />
-      <h4 className="text-foreground mb-2 text-3xl font-bold">{title}</h4>
+      <h4 className="text-foreground text-page-title mb-2">{title}</h4>
       <p className="text-muted-foreground">{body}</p>
       {actions ? <Actions actions={actions} /> : children}
     </div>

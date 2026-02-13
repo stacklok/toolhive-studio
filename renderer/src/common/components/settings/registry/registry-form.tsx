@@ -30,7 +30,7 @@ export function RegistryForm({
           form={form}
           hasRegistryError={hasRegistryError}
         />
-        <Button type="submit" disabled={isLoading}>
+        <Button variant="action" type="submit" disabled={isLoading}>
           {isLoading ? 'Saving...' : 'Save'}
         </Button>
       </form>

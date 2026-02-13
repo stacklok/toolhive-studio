@@ -28,5 +28,9 @@ test('creates and deletes a secret', async ({ window }) => {
   await secretRow.getByRole('button', { name: 'Secret options' }).click()
   await window.getByRole('menuitem', { name: 'Delete' }).click()
 
+  await window.getByRole('dialog').waitFor()
+  await window.getByRole('button', { name: 'Delete' }).click()
+  await window.getByRole('dialog').waitFor({ state: 'hidden' })
+
   await expect(window.getByText(TEST_SECRET_NAME)).not.toBeVisible()
 })

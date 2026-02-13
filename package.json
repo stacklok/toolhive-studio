@@ -103,6 +103,7 @@
     "@ai-sdk/react": "^3.0.71",
     "@ai-sdk/xai": "^3.0.46",
     "@fontsource-variable/inter": "^5.2.6",
+    "@fontsource-variable/merriweather": "^5.2.6",
     "@fontsource/atkinson-hyperlegible": "^5.2.6",
     "@fontsource/space-mono": "^5.2.7",
     "@modelcontextprotocol/sdk": "^1.26.0",

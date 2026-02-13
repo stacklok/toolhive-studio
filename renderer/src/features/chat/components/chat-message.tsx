@@ -474,10 +474,10 @@ export function ChatMessage({ message, status }: ChatMessageProps) {
 
           {/* User avatar */}
           <div
-            className="bg-primary flex h-8 w-8 shrink-0 items-center
-              justify-center rounded-lg"
+            className="bg-card flex h-8 w-8 shrink-0 items-center justify-center
+              rounded-lg"
           >
-            <User className="text-primary-foreground h-4 w-4" />
+            <User className="text-primary h-4 w-4" />
           </div>
         </div>
       </div>
@@ -489,7 +489,7 @@ export function ChatMessage({ message, status }: ChatMessageProps) {
     <div className="flex items-start gap-4">
       {/* Bot avatar */}
       <div
-        className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center
+        className="bg-card flex h-8 w-8 shrink-0 items-center justify-center
           rounded-lg"
       >
         {providerIcon ?? <Bot className="h-4 w-4" />}

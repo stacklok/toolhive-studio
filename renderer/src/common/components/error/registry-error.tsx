@@ -37,7 +37,7 @@ export function RegistryError() {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center">
-        <h1 className="text-3xl font-bold">Registry</h1>
+        <h1 className="text-page-title">Registry</h1>
       </div>
       <div className="flex min-h-0 flex-1 items-center justify-center">
         <Card className="flex w-full max-w-md flex-col">
@@ -62,11 +62,11 @@ export function RegistryError() {
           </CardContent>
 
           <CardFooter className="flex flex-col gap-2">
-            <Button onClick={handleTryAgain} className="w-full">
+            <Button onClick={handleTryAgain} className="w-full rounded-full">
               <RefreshCw className="mr-2 size-4" />
               Try Again
             </Button>
-            <Button asChild variant="outline" className="w-full">
+            <Button asChild variant="outline" className="w-full rounded-full">
               <Link
                 to="/settings"
                 search={{ tab: 'registry' }}

@@ -11,11 +11,11 @@ export function Stars({
   if (!stars) return null
 
   return (
-    <>
-      <StarIcon className={cn('text-muted-foreground size-3', className)} />
-      <span className="text-muted-foreground text-sm select-none">
+    <span className="text-muted-foreground flex items-center gap-1">
+      <StarIcon className={cn('size-3', className)} />
+      <span className="text-sm select-none">
         {Intl.NumberFormat().format(stars)}
       </span>
-    </>
+    </span>
   )
 }

@@ -300,7 +300,7 @@ export function CustomizeToolsTable({
         {renderAlert()}
         <div className="flex min-h-0 flex-1 flex-col gap-5">
           <div
-            className="max-h-full overflow-auto rounded-md border
+            className="bg-card max-h-full overflow-auto rounded-md border
               [&_[data-slot=table-container]]:overflow-visible"
           >
             <Table className={isLoading ? 'table-fixed' : 'table-auto'}>
@@ -313,8 +313,7 @@ export function CustomizeToolsTable({
               <TableHeader>
                 {isLoading ? (
                   <TableRow
-                    className="border-border bg-muted sticky top-0 z-10
-                      border-b"
+                    className="border-border bg-card sticky top-0 z-10 border-b"
                   >
                     <TableHead className="text-muted-foreground text-xs">
                       <Skeleton
@@ -333,8 +332,7 @@ export function CustomizeToolsTable({
                   </TableRow>
                 ) : (
                   <TableRow
-                    className="border-border bg-muted sticky top-0 z-10
-                      border-b"
+                    className="border-border bg-card sticky top-0 z-10 border-b"
                   >
                     <TableHead className="text-muted-foreground text-xs">
                       <Switch
@@ -364,7 +362,7 @@ export function CustomizeToolsTable({
               <TooltipTrigger asChild>
                 <span className="inline-flex">
                   <Button
-                    variant="default"
+                    variant="action"
                     onClick={() => {
                       setDisableBlocker(true)
                       handleApply()
@@ -386,6 +384,7 @@ export function CustomizeToolsTable({
             </Tooltip>
             <Button
               variant="outline"
+              className="rounded-full"
               onClick={handleGoBack}
               disabled={isLoading}
             >

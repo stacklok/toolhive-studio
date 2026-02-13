@@ -7,6 +7,7 @@ import {
 } from '@/common/components/ui/dropdown-menu'
 import { MoreVertical, Pencil, Trash2 } from 'lucide-react'
 import { useMutationDeleteSecret } from '../hooks/use-mutation-delete-secret'
+import { useConfirm } from '@/common/hooks/use-confirm'
 
 export function SecretDropdown({
   onHandleClick,
@@ -15,7 +16,30 @@ export function SecretDropdown({
   onHandleClick: () => void
   secretKey: string
 }) {
-  const { mutateAsync: deleteSecret } = useMutationDeleteSecret(secretKey)
+  const confirm = useConfirm()
+  const { mutateAsync: deleteSecret, isPending: isDeletePending } =
+    useMutationDeleteSecret(secretKey)
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+
+    const confirmed = await confirm(
+      "Deleting this secret will permanently erase it's contents. Are you sure you want to proceed? This action cannot be undone.",
+      {
+        title: 'Delete secret',
+        isDestructive: true,
+        buttons: { yes: 'Delete', no: 'Cancel' },
+      }
+    )
+
+    if (confirmed) {
+      await deleteSecret({
+        path: {
+          key: secretKey,
+        },
+      })
+    }
+  }
 
   return (
     <DropdownMenu>
@@ -42,13 +66,8 @@ export function SecretDropdown({
         </DropdownMenuItem>
 
         <DropdownMenuItem
-          onClick={() => {
-            deleteSecret({
-              path: {
-                key: secretKey,
-              },
-            })
-          }}
+          onClick={handleDelete}
+          disabled={isDeletePending}
           className="flex cursor-pointer items-center"
         >
           <Trash2 className="mr-2 size-4" />

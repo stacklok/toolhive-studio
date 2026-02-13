@@ -69,9 +69,9 @@ describe('Groups Manager in Index route (feature flagged)', () => {
     const defaultGroup = await screen.findByText('default')
     const groupItem = defaultGroup.parentElement as HTMLElement
 
-    expect(groupItem).toHaveClass('rounded-md')
+    expect(groupItem).toHaveClass('rounded-full')
     expect(groupItem).toHaveClass('border', 'border-input')
-    expect(groupItem).toHaveClass('bg-background')
+    expect(groupItem).toHaveClass('bg-card')
     expect(groupItem).toHaveClass('shadow-sm')
 
     expect(groupItem).toHaveClass('flex', 'h-9', 'w-[215px]', 'px-4', 'py-2')

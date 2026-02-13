@@ -236,18 +236,14 @@ export function CustomizeToolsPage() {
     <div className="flex h-full flex-col">
       <div className="mb-2">
         <LinkViewTransition to={`/group/${workload?.group || 'default'}`}>
-          <Button
-            variant="link"
-            aria-label="Back"
-            className="text-muted-foreground"
-          >
+          <Button variant="outline" aria-label="Back" className="rounded-full">
             <ChevronLeft className="size-4" />
             Back
           </Button>
         </LinkViewTransition>
       </div>
       <div className="mb-5">
-        <h1 className="m-0 mb-0 p-0 text-3xl font-bold">
+        <h1 className="text-page-title m-0 p-0">
           Customize tools for {serverName}
         </h1>
       </div>
@@ -262,6 +258,7 @@ export function CustomizeToolsPage() {
             actions={[
               <Button
                 key="start-server"
+                variant="action"
                 onClick={() => handleStartServer()}
                 disabled={isRestartPending}
               >
@@ -269,6 +266,7 @@ export function CustomizeToolsPage() {
               </Button>,
               <Button
                 key="cancel"
+                className="rounded-full"
                 variant="outline"
                 onClick={() =>
                   navigate({

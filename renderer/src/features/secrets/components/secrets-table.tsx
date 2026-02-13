@@ -38,9 +38,9 @@ export function SecretsTable({
         onChange={(v) => setFilter(v)}
         placeholder="Search..."
       />
-      <div className="overflow-hidden rounded-md border">
+      <div className="bg-card overflow-hidden rounded-md border">
         <Table className="">
-          <TableHeader className="bg-muted/50">
+          <TableHeader>
             <TableRow>
               <TableHead
                 className="text-muted-foreground flex items-center px-5 text-xs"

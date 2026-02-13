@@ -9,7 +9,7 @@ import {
   notFound,
   useParams,
 } from '@tanstack/react-router'
-import { GithubIcon, ShieldCheck, Wrench } from 'lucide-react'
+import { Cloud, GithubIcon, Monitor, ShieldCheck, Wrench } from 'lucide-react'
 import { getApiV1BetaRegistryByNameServersByServerNameOptions } from '@common/api/generated/@tanstack/react-query.gen'
 import { getApiV1BetaRegistryByNameServersByServerName } from '@common/api/generated/sdk.gen'
 import { useSuspenseQuery } from '@tanstack/react-query'
@@ -128,15 +128,28 @@ export function RegistryServerDetail() {
         badges={
           <>
             {server.tier && <Badge variant="default">{server.tier}</Badge>}
+            <Badge variant="secondary" className="text-muted-foreground">
+              {isRemoteServer ? (
+                <>
+                  <Cloud className="size-3" /> Remote
+                </>
+              ) : (
+                <>
+                  <Monitor className="size-3" /> Local
+                </>
+              )}
+            </Badge>
             {server.status === statusMap.deprecated && (
               <Badge variant="outline">{server.status}</Badge>
             )}
-            <Badge variant="secondary">{server.transport}</Badge>
+            <Badge variant="secondary" className="text-muted-foreground">
+              {server.transport}
+            </Badge>
             <Stars stars={server.metadata?.stars} className="size-4" />
             {hasProvenance && (
               <Tooltip>
                 <TooltipTrigger
-                  className="text-muted-foreground flex items-center gap-2"
+                  className="text-muted-foreground flex items-center gap-1"
                 >
                   <ShieldCheck className="size-4" />
                   <span className="text-sm">Provenance signed by Sigstore</span>
@@ -155,8 +168,8 @@ export function RegistryServerDetail() {
         description={server.description}
       />
       {hasTools && (
-        <div className="my-8 flex w-3/5 flex-col gap-8">
-          <div className="flex w-3/5 flex-[3] flex-col gap-4">
+        <div className="mt-6 mb-2 flex w-3/5 flex-col gap-8">
+          <div className="flex w-3/5 flex-3 flex-col gap-2">
             <p className="text-base font-bold">Tools listed</p>
             <div className="flex flex-wrap gap-2">
               {toolsToShow?.map((tool) => (
@@ -188,13 +201,13 @@ export function RegistryServerDetail() {
 
       <Separator className="my-6" />
       <div className="flex gap-5 pb-10">
-        <Button variant="default" onClick={() => handleCardClick(server)}>
+        <Button variant="action" onClick={() => handleCardClick(server)}>
           <Wrench className="size-4" />
           Install server
         </Button>
         {repositoryUrl && (
           <Link to={repositoryUrl} target="_blank">
-            <Button variant="outline">
+            <Button variant="outline" className="rounded-full">
               <GithubIcon className="size-4" />
               GitHub
             </Button>

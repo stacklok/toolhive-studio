@@ -58,7 +58,7 @@ export function useConfirm() {
           (typeof config.buttons?.no === 'string'
             ? (config.buttons?.no as string)
             : undefined) ?? 'No',
-        confirmVariant: config.isDestructive ? 'destructive' : 'default',
+        confirmVariant: config.isDestructive ? 'destructive' : 'action',
         cancelVariant: 'secondary',
       },
     })

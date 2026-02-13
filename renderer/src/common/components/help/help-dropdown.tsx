@@ -6,7 +6,7 @@ import {
   DropdownMenuTrigger,
 } from '@/common/components/ui/dropdown-menu'
 import { Button } from '@/common/components/ui/button'
-import { twMerge } from 'tailwind-merge'
+import { cn } from '@/common/lib/utils'
 
 export function HelpDropdown({ className }: { className?: string }) {
   return (
@@ -14,11 +14,14 @@ export function HelpDropdown({ className }: { className?: string }) {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          size="sm"
-          className={twMerge('cursor-pointer', className)}
+          className={cn(
+            `rounded-full text-white/90 hover:bg-white/10 hover:text-white
+            dark:hover:bg-white/10`,
+            className
+          )}
         >
-          <HelpCircle className="text-muted-foreground size-4" />
-          <span className="sr-only">Help</span>
+          <HelpCircle className="size-4" />
+          Help
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">

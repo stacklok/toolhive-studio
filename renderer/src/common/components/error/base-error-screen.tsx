@@ -58,7 +58,7 @@ export function BaseErrorScreen({
           </CardContent>
 
           <CardFooter>
-            <Button onClick={handleReload} className="w-full">
+            <Button onClick={handleReload} className="w-full rounded-full">
               <RefreshCw className="mr-2 size-4" />
               Try Again
             </Button>

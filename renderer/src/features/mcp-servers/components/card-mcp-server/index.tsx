@@ -251,7 +251,7 @@ export function CardMcpServer({
           <CardTitle
             className={twMerge(
               'min-w-0 flex-1 text-xl',
-              isStopped && 'text-primary/65'
+              isStopped && 'text-foreground/65'
             )}
           >
             <Tooltip onlyWhenTruncated>

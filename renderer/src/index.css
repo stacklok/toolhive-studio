@@ -12,6 +12,7 @@
   --font-sans: 'Inter Variable', sans-serif;
   --font-mono: 'Space Mono', monospace;
   --font-display: 'Atkinson Hyperlegible', sans-serif;
+  --font-serif: 'Merriweather Variable', serif;
 
   --spacing-sidebar: 247px;
 
@@ -51,23 +52,37 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Nav/Header brand colors */
+  --color-nav-background: var(--nav-background);
+  --color-nav-border: var(--nav-border);
+  --color-nav-button-active-bg: var(--nav-button-active-bg);
+  --color-nav-button-active-text: var(--nav-button-active-text);
+
+  /* Status colors */
+  --color-success: var(--success);
 }
 
 :root {
   color-scheme: light dark;
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
+  --radius: 0.5rem;
+  --background: #f9faf9;
   --foreground: oklch(0.145 0 0);
-  --card: oklch(0.97 0 0 / 50%);
-  /* --card: oklch(0.965 0.002 276 / 50%); */
+
+  /* Nav/Header brand tokens - Light Mode (hex for exact Figma match) */
+  --nav-background: oklch(0.4282 0.0561 216.14);
+  --nav-border: oklch(0.6031 0.0621 214.22);
+  --nav-button-active-bg: oklch(0.3516 0.0612 220.22);
+  --nav-button-active-text: oklch(1 0 0);
+  --card: oklch(1 0 0);
 
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.9674 0.0013 286.37);
+  --secondary-foreground: oklch(0.2103 0.0059 285.89);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
@@ -81,7 +96,7 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
+  --sidebar: oklch(0.9841 0.0017 145.56);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
   --sidebar-primary-foreground: oklch(0.985 0 0);
@@ -89,19 +104,30 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Status colors */
+  --success: oklch(0.5849 0.095 159.91);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: oklch(0.1867 0 0);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.269 0 0 / 50%);
+
+  /* Nav/Header brand tokens - Dark Mode (hex for exact Figma match) */
+  --nav-background: oklch(0.2645 0.0334 218.49);
+  --nav-border: oklch(0.3865 0.0535 217.72);
+  --nav-button-active-bg: oklch(0.4861 0.0787 216.59);
+  --nav-button-active-text: oklch(0.9851 0 0);
+  --card: oklch(0.1408 0.0044 285.82);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.1408 0.0044 285.82);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.9097 0 0);
+  --primary-foreground: oklch(0.1408 0.0044 285.82);
+  --button-primary-bg: oklch(0.9097 0 0);
+  --button-primary-text: oklch(0.1408 0.0044 285.82);
+  --secondary: oklch(0.2739 0.0055 286.03);
+  --secondary-foreground: oklch(0.9851 0 0);
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
   --accent: oklch(0.269 0 0);
@@ -115,7 +141,7 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
+  --sidebar: oklch(0.1408 0.0044 285.82);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
   --sidebar-primary-foreground: oklch(0.985 0 0);
@@ -123,6 +149,9 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* Status colors */
+  --success: oklch(0.724 0.1091 160.66);
 }
 
 @layer base {
@@ -181,6 +210,14 @@
 
   .app-region-no-drag {
     app-region: no-drag;
+  }
+
+  .text-page-title {
+    font-family: var(--font-serif);
+    font-size: 34px;
+    line-height: 42px;
+    font-weight: 300;
+    letter-spacing: -0.85px;
   }
 
   @keyframes diagonal-ring {

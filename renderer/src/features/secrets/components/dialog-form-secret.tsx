@@ -182,10 +182,17 @@ function SecretForm({
         </div>
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button
+            type="button"
+            variant="secondary"
+            className="rounded-full"
+            onClick={onCancel}
+          >
             Cancel
           </Button>
-          <Button type="submit">{submitButtonText}</Button>
+          <Button variant="action" type="submit">
+            {submitButtonText}
+          </Button>
         </DialogFooter>
       </form>
     </Form>

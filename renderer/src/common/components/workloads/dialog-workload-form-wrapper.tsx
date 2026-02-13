@@ -70,13 +70,18 @@ export function DialogWorkloadFormWrapper<T extends FieldValues = FieldValues>({
               <DialogFooter className="p-6">
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="secondary"
+                  className="rounded-full"
                   disabled={actionsIsDisabled}
                   onClick={actionsOnCancel}
                 >
                   Cancel
                 </Button>
-                <Button disabled={actionsIsDisabled} type="submit">
+                <Button
+                  variant="action"
+                  disabled={actionsIsDisabled}
+                  type="submit"
+                >
                   {actionsSubmitLabel}
                 </Button>
               </DialogFooter>

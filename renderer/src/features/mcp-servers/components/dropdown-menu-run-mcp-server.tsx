@@ -5,7 +5,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/common/components/ui/dropdown-menu'
-import { CloudIcon, DatabaseIcon, LaptopIcon, PlusIcon } from 'lucide-react'
+import { ChevronDown, CloudIcon, DatabaseIcon, LaptopIcon } from 'lucide-react'
 import { useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
@@ -44,9 +44,9 @@ export function DropdownMenuRunMcpServer({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button className={className}>
-          <PlusIcon />
+        <Button variant="action" className={className}>
           Add an MCP server
+          <ChevronDown />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="bottom" align="end">

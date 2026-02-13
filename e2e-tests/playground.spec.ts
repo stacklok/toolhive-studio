@@ -82,7 +82,7 @@ async function enableMcpServer(
   window: Page,
   serverName: string
 ): Promise<void> {
-  await window.getByRole('button', { name: /mcp servers/i }).click()
+  await window.getByTestId('mcp-server-selector-chevron').click()
   await window.getByText(/available mcp servers/i).waitFor()
   await window
     .getByRole('menuitemcheckbox', { name: new RegExp(serverName, 'i') })
@@ -150,9 +150,7 @@ test.describe('Playground chat with Ollama', () => {
     const serverName = generateRandomServerName()
 
     await window.getByRole('link', { name: 'MCP Servers' }).click()
-    await expect(
-      window.getByRole('heading', { name: 'MCP Servers', level: 1 })
-    ).toBeVisible()
+    await expect(window.getByRole('heading', { level: 1 })).toBeVisible()
 
     await window.getByRole('button', { name: /add an mcp server/i }).click()
     await window.getByRole('menuitem', { name: /remote mcp server/i }).click()

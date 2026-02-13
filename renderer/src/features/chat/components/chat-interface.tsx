@@ -100,20 +100,20 @@ export function ChatInterface() {
   }, [clearMessages, confirm])
 
   return (
-    <>
+    <div className="flex min-h-0 flex-1 flex-col">
       <TitlePage title="Playground">
         {hasMessages && (
           <Button
             onClick={onClearMessages}
             variant="outline"
-            className="cursor-pointer"
+            className="cursor-pointer rounded-full"
           >
             Clear Chat
             <Trash2 />
           </Button>
         )}
       </TitlePage>
-      <div className="h-[calc(100vh-10rem)]">
+      <div className="min-h-0 flex-1">
         <div className="bg-background flex h-full flex-col">
           {hasMessages && <Separator />}
           {/* Messages Area */}
@@ -215,11 +215,8 @@ export function ChatInterface() {
                   motion-safe:transition-all motion-safe:duration-300"
               >
                 <div className="w-full max-w-4xl space-y-8 text-center">
-                  <div>
-                    <div
-                      className="text-foreground font-display text-center
-                        text-4xl font-bold"
-                    >
+                  <div className="mb-6 flex flex-col items-center">
+                    <div className="text-foreground text-page-title text-center">
                       {!hasProviderAndModel && (
                         <MessageCircleMore
                           strokeWidth={1}
@@ -239,9 +236,9 @@ export function ChatInterface() {
                           responses from your MCP servers
                         </p>
                         <Button
-                          variant="default"
+                          variant="action"
                           onClick={() => setIsSettingsOpen(true)}
-                          className="mt-6"
+                          className="mt-6 rounded-full"
                         >
                           <Plus /> Configure your providers
                         </Button>
@@ -308,6 +305,6 @@ export function ChatInterface() {
           />
         </div>
       </div>
-    </>
+    </div>
   )
 }
