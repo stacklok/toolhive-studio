@@ -90,7 +90,7 @@ export function LogsPage() {
         </LinkViewTransition>
       </div>
       <div className="flex flex-col gap-5">
-        <h1 className="text-page-title m-0 mb-0 p-0">
+        <h1 className="text-page-title m-0 p-0">
           {groupName === MCP_OPTIMIZER_GROUP_NAME
             ? 'MCP Optimizer'
             : serverName}

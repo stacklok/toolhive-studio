@@ -243,7 +243,7 @@ export function CustomizeToolsPage() {
         </LinkViewTransition>
       </div>
       <div className="mb-5">
-        <h1 className="text-page-title m-0 mb-0 p-0">
+        <h1 className="text-page-title m-0 p-0">
           Customize tools for {serverName}
         </h1>
       </div>

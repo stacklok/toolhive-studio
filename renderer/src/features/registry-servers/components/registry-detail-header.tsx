@@ -27,7 +27,7 @@ export function RegistryDetailHeader({
         </LinkViewTransition>
       </div>
       <div className="flex flex-col gap-2">
-        <h1 className="text-page-title m-0 mb-0 p-0">{title}</h1>
+        <h1 className="text-page-title m-0 p-0">{title}</h1>
         {badges && <div className="flex items-center gap-2">{badges}</div>}
         {description ? (
           <div className="text-muted-foreground mt-5 flex-2 select-none">
