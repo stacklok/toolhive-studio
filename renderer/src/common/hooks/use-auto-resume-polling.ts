@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import {
+  pollServerDelete,
   pollServerUntilStable,
-  pollingQueryKey,
+  pollingBaseKey,
   TRANSITION_STATUSES,
 } from '@/common/lib/polling'
 import { fetchPollingQuery } from '@/common/lib/polling-query'
@@ -13,20 +14,9 @@ import {
 import type { CoreWorkload } from '@common/api/generated/types.gen'
 
 /**
- * Automatically resumes polling for servers stuck in transition statuses.
- *
- * When the workload list is fetched and a server has a transition status
- * (starting, restarting, stopping) — e.g. due to a CLI-initiated action —
- * this hook starts polling until the server reaches any stable status,
- * then invalidates the workloads list to refresh the UI.
- *
- * Polls until stable (not a specific target) because a server in "stopping"
- * could end up "stopped" (normal stop) or "running" (edit/restart cycle).
- *
- * Uses the TanStack Query cache with `pollingQueryKey` for deduplication:
- * if a mutation hook already started polling for the same server, no
- * duplicate poll is created. Additionally tracks initiated polls in a ref
- * to prevent re-triggering when the effect re-runs with stale workload data.
+ * Detects servers in transition statuses (e.g. from CLI actions) and polls
+ * until stable, then refreshes the workloads list. Deduplicates against
+ * in-flight mutation polls via the TanStack Query cache.
  */
 export function useAutoResumePolling(
   workloads: CoreWorkload[],
@@ -41,40 +31,37 @@ export function useAutoResumePolling(
       const status = server.status
       if (!name) continue
 
-      // When a server reaches a stable state, clear it from the ref
-      // so future transitions (e.g. stopped via CLI again) can be picked up
+      // Stable → clear ref so future transitions can be picked up
       if (!status || !TRANSITION_STATUSES.includes(status)) {
         initiatedRef.current.delete(name)
         continue
       }
 
-      // Skip if we already initiated polling for this server
       if (initiatedRef.current.has(name)) continue
 
-      const qKey = pollingQueryKey(name)
-
-      // Check if a polling query is already in-flight for this server
-      // (e.g. started by a mutation hook)
+      // Skip if any polling variant is already in-flight (e.g. from a mutation hook)
       const existingQuery = queryClient
         .getQueryCache()
-        .find({ queryKey: qKey, fetchStatus: 'fetching' })
+        .findAll({ queryKey: pollingBaseKey(name) })
+        .find((q) => q.state.fetchStatus === 'fetching')
 
       if (existingQuery) continue
 
       initiatedRef.current.add(name)
 
-      // Fire-and-forget: fetchQuery deduplicates by key automatically
-      // Polls until ANY stable status (not a specific target) to handle
-      // edit cycles where stopping -> running instead of stopping -> stopped
-      fetchPollingQuery(queryClient, name, () =>
-        pollServerUntilStable(() =>
-          queryClient.fetchQuery(
-            getApiV1BetaWorkloadsByNameStatusOptions({
-              path: { name },
-            })
-          )
+      // "removing" → poll until 404; others → poll until non-transition status
+      const fetchStatus = () =>
+        queryClient.fetchQuery(
+          getApiV1BetaWorkloadsByNameStatusOptions({ path: { name } })
         )
-      )
+
+      const isRemoving = status === 'removing'
+      const variant = isRemoving ? 'delete' : 'stable'
+      const pollFn = isRemoving
+        ? () => pollServerDelete(fetchStatus)
+        : () => pollServerUntilStable(fetchStatus)
+
+      fetchPollingQuery(queryClient, name, variant, pollFn)
         .then((success) => {
           if (success) {
             queryClient.invalidateQueries({
@@ -82,10 +69,11 @@ export function useAutoResumePolling(
                 query: { all: true, group: groupName },
               }),
             })
+          } else {
+            initiatedRef.current.delete(name)
           }
         })
         .catch(() => {
-          // Clear from ref on failure so the next render can retry
           initiatedRef.current.delete(name)
         })
     }

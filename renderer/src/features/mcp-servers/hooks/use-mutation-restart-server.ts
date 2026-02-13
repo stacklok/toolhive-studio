@@ -116,7 +116,7 @@ export function useMutationRestartServerAtStartup() {
       // Poll until all servers are running (per-server for dedup granularity)
       await Promise.all(
         serverNames.map((serverName) =>
-          fetchPollingQuery(queryClient, serverName, () =>
+          fetchPollingQuery(queryClient, serverName, 'running', () =>
             pollServerStatus(
               () =>
                 queryClient.fetchQuery(
@@ -186,7 +186,7 @@ export function useMutationRestartServer({
     },
     onSuccess: async () => {
       // Poll until server running
-      await fetchPollingQuery(queryClient, name, () =>
+      await fetchPollingQuery(queryClient, name, 'running', () =>
         pollServerStatus(
           () =>
             queryClient.fetchQuery(

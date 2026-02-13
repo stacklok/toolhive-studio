@@ -51,7 +51,7 @@ export function useDeleteServer({
       return { previousServersList }
     },
     onSuccess: async () => {
-      await fetchPollingQuery(queryClient, name, () =>
+      await fetchPollingQuery(queryClient, name, 'delete', () =>
         pollServerDelete(() =>
           queryClient.fetchQuery(
             getApiV1BetaWorkloadsByNameStatusOptions({

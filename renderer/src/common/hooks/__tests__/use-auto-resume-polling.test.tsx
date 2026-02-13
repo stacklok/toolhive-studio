@@ -1,15 +1,22 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import React from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { renderHook, waitFor } from '@testing-library/react'
+import { renderHook, act } from '@testing-library/react'
 import { useAutoResumePolling } from '../use-auto-resume-polling'
 import * as polling from '../../lib/polling'
 import type { CoreWorkload } from '@common/api/generated/types.gen'
+
+/** Flush React effects and pending promise chains */
+const flushAsync = () =>
+  act(async () => {
+    await vi.advanceTimersByTimeAsync(0)
+  })
 
 describe('useAutoResumePolling', () => {
   let queryClient: QueryClient
 
   beforeEach(() => {
+    vi.useFakeTimers()
     queryClient = new QueryClient({
       defaultOptions: {
         queries: { gcTime: 0, staleTime: 0, retry: false },
@@ -19,6 +26,7 @@ describe('useAutoResumePolling', () => {
 
   afterEach(() => {
     queryClient.clear()
+    vi.useRealTimers()
     vi.restoreAllMocks()
   })
 
@@ -44,9 +52,9 @@ describe('useAutoResumePolling', () => {
 
     renderHook(() => useAutoResumePolling(workloads, 'default'), { wrapper })
 
-    await waitFor(() => {
-      expect(pollSpy).toHaveBeenCalledWith(expect.any(Function))
-    })
+    await flushAsync()
+
+    expect(pollSpy).toHaveBeenCalledWith(expect.any(Function))
   })
 
   it('starts polling for a server with "stopping" status', async () => {
@@ -58,9 +66,9 @@ describe('useAutoResumePolling', () => {
 
     renderHook(() => useAutoResumePolling(workloads, 'default'), { wrapper })
 
-    await waitFor(() => {
-      expect(pollSpy).toHaveBeenCalledWith(expect.any(Function))
-    })
+    await flushAsync()
+
+    expect(pollSpy).toHaveBeenCalledWith(expect.any(Function))
   })
 
   it('starts polling for a server with "restarting" status', async () => {
@@ -74,9 +82,29 @@ describe('useAutoResumePolling', () => {
 
     renderHook(() => useAutoResumePolling(workloads, 'default'), { wrapper })
 
-    await waitFor(() => {
-      expect(pollSpy).toHaveBeenCalledWith(expect.any(Function))
-    })
+    await flushAsync()
+
+    expect(pollSpy).toHaveBeenCalledWith(expect.any(Function))
+  })
+
+  it('uses pollServerDelete for servers with "removing" status', async () => {
+    const stableSpy = vi
+      .spyOn(polling, 'pollServerUntilStable')
+      .mockResolvedValue(true)
+    const deleteSpy = vi
+      .spyOn(polling, 'pollServerDelete')
+      .mockResolvedValue(true)
+
+    const workloads = [
+      makeWorkload('my-server', 'removing' as CoreWorkload['status']),
+    ]
+
+    renderHook(() => useAutoResumePolling(workloads, 'default'), { wrapper })
+
+    await flushAsync()
+
+    expect(deleteSpy).toHaveBeenCalledWith(expect.any(Function))
+    expect(stableSpy).not.toHaveBeenCalled()
   })
 
   it('does NOT start polling for servers in stable states', async () => {
@@ -91,8 +119,7 @@ describe('useAutoResumePolling', () => {
 
     renderHook(() => useAutoResumePolling(workloads, 'default'), { wrapper })
 
-    // Give the effect time to run
-    await new Promise((r) => setTimeout(r, 50))
+    await flushAsync()
 
     expect(pollSpy).not.toHaveBeenCalled()
   })
@@ -117,15 +144,13 @@ describe('useAutoResumePolling', () => {
       { wrapper, initialProps: { w: workloads } }
     )
 
-    await waitFor(() => {
-      expect(pollSpy).toHaveBeenCalledTimes(1)
-    })
+    await flushAsync()
+    expect(pollSpy).toHaveBeenCalledTimes(1)
 
     // Re-render with the same transitioning workload
     rerender({ w: [...workloads] })
 
-    // Give the effect time to run again
-    await new Promise((r) => setTimeout(r, 50))
+    await flushAsync()
 
     // Should still only have been called once — deduplication via ref + query cache
     expect(pollSpy).toHaveBeenCalledTimes(1)
@@ -147,13 +172,12 @@ describe('useAutoResumePolling', () => {
     )
 
     // Wait for first poll to complete
-    await waitFor(() => {
-      expect(pollSpy).toHaveBeenCalledTimes(1)
-    })
+    await flushAsync()
+    expect(pollSpy).toHaveBeenCalledTimes(1)
 
     // Simulate re-render with stale data still showing transition status
     rerender({ w: [makeWorkload('my-server', 'starting')] })
-    await new Promise((r) => setTimeout(r, 50))
+    await flushAsync()
 
     // Should NOT have started a second poll — ref tracks initiated polls
     expect(pollSpy).toHaveBeenCalledTimes(1)
@@ -173,20 +197,18 @@ describe('useAutoResumePolling', () => {
     )
 
     // First poll
-    await waitFor(() => {
-      expect(pollSpy).toHaveBeenCalledTimes(1)
-    })
+    await flushAsync()
+    expect(pollSpy).toHaveBeenCalledTimes(1)
 
     // Server reaches stable state — clears the ref
     rerender({ w: [makeWorkload('my-server', 'running')] })
-    await new Promise((r) => setTimeout(r, 50))
+    await flushAsync()
 
     // Server transitions again (e.g. stopped via CLI)
     rerender({ w: [makeWorkload('my-server', 'stopping')] })
+    await flushAsync()
 
-    await waitFor(() => {
-      expect(pollSpy).toHaveBeenCalledTimes(2)
-    })
+    expect(pollSpy).toHaveBeenCalledTimes(2)
   })
 
   it('invalidates workloads query after successful polling', async () => {
@@ -198,20 +220,20 @@ describe('useAutoResumePolling', () => {
 
     renderHook(() => useAutoResumePolling(workloads, 'my-group'), { wrapper })
 
-    await waitFor(() => {
-      expect(invalidateSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          queryKey: expect.arrayContaining([
-            expect.objectContaining({
-              query: { all: true, group: 'my-group' },
-            }),
-          ]),
-        })
-      )
-    })
+    await flushAsync()
+
+    expect(invalidateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryKey: expect.arrayContaining([
+          expect.objectContaining({
+            query: { all: true, group: 'my-group' },
+          }),
+        ]),
+      })
+    )
   })
 
-  it('does NOT invalidate workloads query when polling fails', async () => {
+  it('does NOT invalidate workloads query when polling times out', async () => {
     vi.spyOn(polling, 'pollServerUntilStable').mockResolvedValue(false)
 
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
@@ -220,16 +242,15 @@ describe('useAutoResumePolling', () => {
 
     renderHook(() => useAutoResumePolling(workloads, 'my-group'), { wrapper })
 
-    // Give the effect + promise chain time to complete
-    await new Promise((r) => setTimeout(r, 100))
+    await flushAsync()
 
     expect(invalidateSpy).not.toHaveBeenCalled()
   })
 
-  it('clears initiated ref on polling failure so next render can retry', async () => {
+  it('clears initiated ref on polling rejection so next render can retry', async () => {
     const pollSpy = vi
       .spyOn(polling, 'pollServerUntilStable')
-      .mockRejectedValueOnce(new Error('timeout'))
+      .mockRejectedValueOnce(new Error('network error'))
       .mockResolvedValueOnce(true)
 
     const workloads = [makeWorkload('my-server', 'starting')]
@@ -240,17 +261,38 @@ describe('useAutoResumePolling', () => {
     )
 
     // Wait for the first poll to fail and .catch to clear the ref
-    await waitFor(() => {
-      expect(pollSpy).toHaveBeenCalledTimes(1)
-    })
-    await new Promise((r) => setTimeout(r, 50))
+    await flushAsync()
+    expect(pollSpy).toHaveBeenCalledTimes(1)
 
     // Re-render with the same transition status — should retry now
     rerender({ w: [makeWorkload('my-server', 'starting')] })
+    await flushAsync()
 
-    await waitFor(() => {
-      expect(pollSpy).toHaveBeenCalledTimes(2)
-    })
+    expect(pollSpy).toHaveBeenCalledTimes(2)
+  })
+
+  it('clears initiated ref on polling timeout (success: false) so next render can retry', async () => {
+    const pollSpy = vi
+      .spyOn(polling, 'pollServerUntilStable')
+      .mockResolvedValueOnce(false) // timeout — max attempts reached
+      .mockResolvedValueOnce(true)
+
+    const workloads = [makeWorkload('my-server', 'starting')]
+
+    const { rerender } = renderHook(
+      ({ w }) => useAutoResumePolling(w, 'default'),
+      { wrapper, initialProps: { w: workloads } }
+    )
+
+    // Wait for the first poll to resolve with false (timeout)
+    await flushAsync()
+    expect(pollSpy).toHaveBeenCalledTimes(1)
+
+    // Re-render with the same transition status — should retry
+    rerender({ w: [makeWorkload('my-server', 'starting')] })
+    await flushAsync()
+
+    expect(pollSpy).toHaveBeenCalledTimes(2)
   })
 
   it('handles multiple transitioning servers independently', async () => {
@@ -265,8 +307,8 @@ describe('useAutoResumePolling', () => {
 
     renderHook(() => useAutoResumePolling(workloads, 'default'), { wrapper })
 
-    await waitFor(() => {
-      expect(pollSpy).toHaveBeenCalledTimes(2)
-    })
+    await flushAsync()
+
+    expect(pollSpy).toHaveBeenCalledTimes(2)
   })
 })

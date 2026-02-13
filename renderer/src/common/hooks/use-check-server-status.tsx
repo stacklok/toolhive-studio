@@ -50,6 +50,7 @@ export function useCheckServerStatus() {
       const isServerReady = await fetchPollingQuery(
         queryClient,
         serverName,
+        'running',
         () =>
           pollServerStatus(
             () =>

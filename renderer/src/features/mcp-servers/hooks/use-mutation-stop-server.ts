@@ -62,7 +62,7 @@ export function useMutationStopServerList({
     },
     onSuccess: async () => {
       // Poll until server stopped
-      await fetchPollingQuery(queryClient, name, () =>
+      await fetchPollingQuery(queryClient, name, 'stopped', () =>
         pollServerStatus(
           () =>
             queryClient.fetchQuery(
