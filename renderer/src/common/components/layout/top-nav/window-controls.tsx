@@ -30,12 +30,11 @@ export function WindowControls() {
   }
 
   return (
-    <div className="app-region-no-drag flex items-center gap-0">
+    <div className="app-region-no-drag flex items-center gap-0 text-white">
       <Button
         variant="ghost"
         size="icon"
-        className="hover:bg-accent/50 hover:text-accent-foreground h-8 w-12
-          rounded-none"
+        className="h-8 w-12 rounded-none hover:bg-white/10 hover:text-white"
         onClick={handleMinimize}
       >
         <Minus className="size-4" />
@@ -43,15 +42,14 @@ export function WindowControls() {
       <Button
         variant="ghost"
         size="icon"
-        className="hover:bg-accent/50 hover:text-accent-foreground h-8 w-12
-          rounded-none"
+        className="h-8 w-12 rounded-none hover:bg-white/10 hover:text-white"
         onClick={handleMaximize}
       >
         {isMaximized ? (
           <div className="relative size-4">
             <div className="absolute inset-0 size-3 border border-current" />
             <div
-              className="bg-background absolute top-1 left-1 size-3 border
+              className="bg-nav-background absolute top-1 left-1 size-3 border
                 border-current"
             />
           </div>
