@@ -436,7 +436,19 @@ app.on('before-quit', async (e) => {
 
   // Show the native confirmation dialog (async to support the
   // "Don't ask me again" checkbox, which only the async variant offers).
-  const confirmed = await showNativeQuitConfirmation()
+  let confirmed = false
+  try {
+    confirmed = await showNativeQuitConfirmation()
+  } catch (error) {
+    // If the dialog fails (e.g. during OS shutdown), fall back to
+    // proceeding with quit rather than leaving it blocked.
+    log.error(
+      '[before-quit] Failed to show quit confirmation dialog, proceeding with quit',
+      error
+    )
+    confirmed = true
+  }
+
   if (!confirmed) {
     log.info('[before-quit] User cancelled quit')
     return

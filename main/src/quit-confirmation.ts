@@ -39,27 +39,37 @@ export async function showNativeQuitConfirmation(): Promise<boolean> {
     return true
   }
 
-  const { response, checkboxChecked } = await dialog.showMessageBox({
-    type: 'warning',
-    title: 'Quit ToolHive',
-    message: 'Quit ToolHive?',
-    detail: 'Shutting down ToolHive stops all MCP servers.',
-    buttons: ['Quit', 'Cancel'],
-    defaultId: 0,
-    cancelId: 1,
-    checkboxLabel: "Don't ask me again",
-    checkboxChecked: false,
-  })
+  try {
+    const { response, checkboxChecked } = await dialog.showMessageBox({
+      type: 'warning',
+      title: 'Quit ToolHive',
+      message: 'Quit ToolHive?',
+      detail: 'Shutting down ToolHive stops all MCP servers.',
+      buttons: ['Quit', 'Cancel'],
+      defaultId: 0,
+      cancelId: 1,
+      checkboxLabel: "Don't ask me again",
+      checkboxChecked: false,
+    })
 
-  const confirmed = response === 0
+    const confirmed = response === 0
 
-  if (confirmed && checkboxChecked) {
-    setSkipQuitConfirmation(true)
-    log.info('[quit-confirmation] User opted to skip future confirmations')
+    if (confirmed && checkboxChecked) {
+      setSkipQuitConfirmation(true)
+      log.info('[quit-confirmation] User opted to skip future confirmations')
+    }
+
+    log.info(
+      `[quit-confirmation] User ${confirmed ? 'confirmed' : 'cancelled'} quit`
+    )
+    return confirmed
+  } catch (error) {
+    log.error(
+      '[quit-confirmation] Failed to show native quit confirmation dialog',
+      error
+    )
+    // Fail open so the app can still exit gracefully even if the dialog fails
+    // (e.g. during OS shutdown edge cases).
+    return true
   }
-
-  log.info(
-    `[quit-confirmation] User ${confirmed ? 'confirmed' : 'cancelled'} quit`
-  )
-  return confirmed
 }
