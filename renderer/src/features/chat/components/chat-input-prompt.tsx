@@ -137,7 +137,9 @@ function InputWithAttachments({
       <PromptInputToolbar>
         <PromptInputTools>
           <PromptInputActionMenu>
-            <PromptInputActionMenuTrigger />
+            <PromptInputActionMenuTrigger
+              className="bg-secondary text-secondary-foreground rounded-full"
+            />
             <PromptInputActionMenuContent>
               <PromptInputActionAddAttachments label="Add images or PDFs" />
             </PromptInputActionMenuContent>
