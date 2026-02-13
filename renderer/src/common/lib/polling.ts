@@ -107,6 +107,10 @@ const serverPredicates = {
     server?.status === status,
 }
 
+// Query key factory for TanStack Query polling deduplication
+export const pollingQueryKey = (serverName: string) =>
+  ['polling', serverName] as const
+
 // Public API
 export const pollServerStatus = async (
   fetchServer: () => Promise<CoreWorkload>,
