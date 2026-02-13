@@ -8,7 +8,8 @@ import {
   getApiV1BetaWorkloadsByNameStatusOptions,
 } from '@common/api/generated/@tanstack/react-query.gen'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
-import { pollBatchServerStatus } from '@/common/lib/polling'
+import { pollServerStatus } from '@/common/lib/polling'
+import { fetchPollingQuery } from '@/common/lib/polling-query'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNotificationOptimizer } from './use-notification-optimizer'
 
@@ -61,23 +62,16 @@ export function useMutationStopServerList({
     },
     onSuccess: async () => {
       // Poll until server stopped
-      await pollBatchServerStatus(
-        async (names) => {
-          const statusResponses = await Promise.all(
-            names.map((name) =>
-              queryClient.fetchQuery(
-                getApiV1BetaWorkloadsByNameStatusOptions({ path: { name } })
-              )
-            )
-          )
-          // Convert status responses to CoreWorkload-like objects for polling
-          return statusResponses.map((response, index) => ({
-            name: names[index],
-            status: response.status || 'unknown',
-          }))
-        },
-        [name],
-        'stopped'
+      await fetchPollingQuery(queryClient, name, 'stopped', () =>
+        pollServerStatus(
+          () =>
+            queryClient.fetchQuery(
+              getApiV1BetaWorkloadsByNameStatusOptions({
+                path: { name },
+              })
+            ),
+          'stopped'
+        )
       )
       notifyChangeWithOptimizer(group)
       queryClient.invalidateQueries({ queryKey })

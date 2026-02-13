@@ -22,6 +22,7 @@ import { useIsOptimizedGroupName } from '@/features/clients/hooks/use-is-optimiz
 import { Button } from '@/common/components/ui/button'
 import { Sparkles } from 'lucide-react'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
+import { useAutoResumePolling } from '@/common/hooks/use-auto-resume-polling'
 
 export const Route = createFileRoute('/group/$groupName')({
   loader: ({ context: { queryClient }, params: { groupName } }) =>
@@ -79,6 +80,9 @@ function GroupRoute() {
   })
 
   const workloads = data?.workloads ?? []
+
+  useAutoResumePolling(workloads, groupName)
+
   const filteredWorkloads = workloads
   const [serverDialogOpen, setServerDialogOpen] = useState<{
     local: boolean
