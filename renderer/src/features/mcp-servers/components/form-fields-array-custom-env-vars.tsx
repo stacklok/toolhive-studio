@@ -3,16 +3,15 @@ import {
   type UseFormReturn,
   type Path,
   type ArrayPath,
-  type ControllerRenderProps,
 } from 'react-hook-form'
-import { FormControl, FormField, FormItem } from '@/common/components/ui/form'
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
 import { DynamicArrayField } from '@/features/registry-servers/components/dynamic-array-field'
-
-type EnvVar = {
-  name?: string
-  value?: string
-}
 
 type FormWithEnvVars = {
   envVars: Array<{
@@ -46,56 +45,47 @@ export function FormFieldsArrayCustomEnvVars<T extends FormWithEnvVars>({
             ]}
             form={form}
           >
-            {({ inputProps, setInputRef, idx }) => (
-              <FormField
-                control={form.control}
-                name={`envVars.${idx}` as Path<T>}
-                render={({
-                  field,
-                }: {
-                  field: ControllerRenderProps<T, Path<T>>
-                }) => {
-                  const envVarValue = field.value as EnvVar
-
-                  return (
-                    <>
-                      <FormControl className="flex-1">
+            {({ setInputRef, idx }) => (
+              <>
+                <FormField
+                  control={form.control}
+                  name={`envVars.${idx}.name` as Path<T>}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
                         <Input
                           ref={setInputRef(idx)}
                           aria-label={`Environment variable key ${idx + 1}`}
                           className="font-mono"
-                          name={`envVars.${idx}.name` as Path<T>}
-                          value={envVarValue?.name || ''}
-                          onChange={(e) =>
-                            field.onChange({
-                              ...envVarValue,
-                              name: e.target.value,
-                            })
-                          }
+                          value={(field.value as string) ?? ''}
+                          onChange={field.onChange}
                           placeholder="e.g. API_KEY"
                         />
                       </FormControl>
-                      <FormControl className="flex-1">
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name={`envVars.${idx}.value` as Path<T>}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
                         <Input
-                          {...inputProps}
                           ref={setInputRef(idx)}
                           aria-label={`Environment variable value ${idx + 1}`}
                           className="font-mono"
-                          name={`envVars.${idx}.value` as Path<T>}
-                          value={envVarValue?.value || ''}
-                          onChange={(e) =>
-                            field.onChange({
-                              ...envVarValue,
-                              value: e.target.value,
-                            })
-                          }
+                          value={(field.value as string) ?? ''}
+                          onChange={field.onChange}
                           placeholder="e.g. 123_ABC_789_XZY"
                         />
                       </FormControl>
-                    </>
-                  )
-                }}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
             )}
           </DynamicArrayField>
         )}
