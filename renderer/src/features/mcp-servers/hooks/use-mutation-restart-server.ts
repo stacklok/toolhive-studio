@@ -10,7 +10,8 @@ import {
   postApiV1BetaWorkloadsRestartMutation,
 } from '@common/api/generated/@tanstack/react-query.gen'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
-import { pollBatchServerStatus } from '@/common/lib/polling'
+import { pollServerStatus } from '@/common/lib/polling'
+import { fetchPollingQuery } from '@/common/lib/polling-query'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
@@ -112,23 +113,21 @@ export function useMutationRestartServerAtStartup() {
         return
       }
 
-      // Poll until all servers are running
-      await pollBatchServerStatus(
-        async (names) => {
-          const statusResponses = await Promise.all(
-            names.map((name) =>
-              queryClient.fetchQuery(
-                getApiV1BetaWorkloadsByNameStatusOptions({ path: { name } })
-              )
+      // Poll until all servers are running (per-server for dedup granularity)
+      await Promise.all(
+        serverNames.map((serverName) =>
+          fetchPollingQuery(queryClient, serverName, 'running', () =>
+            pollServerStatus(
+              () =>
+                queryClient.fetchQuery(
+                  getApiV1BetaWorkloadsByNameStatusOptions({
+                    path: { name: serverName },
+                  })
+                ),
+              'running'
             )
           )
-          return statusResponses.map((response, index) => ({
-            name: names[index],
-            status: response.status || 'unknown',
-          }))
-        },
-        serverNames,
-        'running'
+        )
       )
 
       await window.electronAPI.shutdownStore.clearShutdownHistory()
@@ -187,22 +186,16 @@ export function useMutationRestartServer({
     },
     onSuccess: async () => {
       // Poll until server running
-      await pollBatchServerStatus(
-        async (names) => {
-          const statusResponses = await Promise.all(
-            names.map((name) =>
-              queryClient.fetchQuery(
-                getApiV1BetaWorkloadsByNameStatusOptions({ path: { name } })
-              )
-            )
-          )
-          return statusResponses.map((response, index) => ({
-            name: names[index],
-            status: response.status || 'unknown',
-          }))
-        },
-        [name],
-        'running'
+      await fetchPollingQuery(queryClient, name, 'running', () =>
+        pollServerStatus(
+          () =>
+            queryClient.fetchQuery(
+              getApiV1BetaWorkloadsByNameStatusOptions({
+                path: { name },
+              })
+            ),
+          'running'
+        )
       )
       notifyChangeWithOptimizer(group ?? 'default')
       queryClient.invalidateQueries({ queryKey })
