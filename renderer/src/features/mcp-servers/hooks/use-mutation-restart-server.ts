@@ -1,23 +1,17 @@
 import type {
   V1WorkloadListResponse,
   CoreWorkload,
-  V1BulkOperationRequest,
 } from '@common/api/generated/types.gen'
 import {
   postApiV1BetaWorkloadsByNameRestartMutation,
   getApiV1BetaWorkloadsQueryKey,
   getApiV1BetaWorkloadsByNameStatusOptions,
-  postApiV1BetaWorkloadsRestartMutation,
 } from '@common/api/generated/@tanstack/react-query.gen'
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { pollServerStatus } from '@/common/lib/polling'
 import { fetchPollingQuery } from '@/common/lib/polling-query'
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect } from 'react'
-import { toast } from 'sonner'
 import { useNotificationOptimizer } from './use-notification-optimizer'
-
-const TOAST_ID = 'restart-servers-startup'
 
 const getMutationData = (name: string) => ({
   ...postApiV1BetaWorkloadsByNameRestartMutation(),
@@ -25,126 +19,6 @@ const getMutationData = (name: string) => ({
   errorMsg: `Failed to start server ${name}`,
   loadingMsg: `Starting server ${name}...`,
 })
-
-export function useMutationRestartServerAtStartup() {
-  const queryClient = useQueryClient()
-
-  useEffect(() => {
-    const cleanup = window.electronAPI.onServerShutdown(() => {
-      toast.dismiss(TOAST_ID)
-    })
-
-    return cleanup
-  }, [])
-
-  return useToastMutation({
-    successMsg: 'Servers restarted successfully',
-    errorMsg: 'Failed to restart servers',
-    loadingMsg: 'Restarting servers...',
-    toastId: TOAST_ID,
-    ...postApiV1BetaWorkloadsRestartMutation(),
-    onMutate: async (variables) => {
-      const body: V1BulkOperationRequest = variables.body
-      const serverNames = body.names ?? []
-
-      if (!serverNames || serverNames.length === 0) {
-        return
-      }
-
-      const shutdownServers =
-        await window.electronAPI.shutdownStore.getLastShutdownServers()
-
-      await queryClient.cancelQueries({
-        queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
-      })
-
-      const previousData = new Map()
-      const queries = queryClient.getQueryCache().findAll({
-        queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
-      })
-
-      queries.forEach((query) => {
-        previousData.set(query.queryKey, query.state.data)
-
-        const queryKeyGroup =
-          (query.queryKey[1] as { query?: { group?: string } })?.query?.group ??
-          'default'
-
-        queryClient.setQueryData(
-          query.queryKey,
-          (oldData: V1WorkloadListResponse | undefined) => {
-            if (!oldData) return oldData
-
-            const groupShutdownServers = shutdownServers.filter(
-              (server) => (server.group ?? 'default') === queryKeyGroup
-            )
-
-            const seenNames = new Set<string>()
-            const workloads = [
-              ...(oldData.workloads ?? []),
-              ...groupShutdownServers,
-            ].filter((server) => {
-              if (server.name && !seenNames.has(server.name)) {
-                seenNames.add(server.name)
-                return true
-              }
-              return false
-            })
-
-            return {
-              ...oldData,
-              workloads: workloads?.map((server: CoreWorkload) =>
-                serverNames.includes(server.name || '')
-                  ? { ...server, status: 'restarting' }
-                  : server
-              ),
-            }
-          }
-        )
-      })
-
-      return { previousData }
-    },
-    onSuccess: async (_data, variables) => {
-      const body: V1BulkOperationRequest = variables.body
-      const serverNames = body.names ?? []
-
-      if (!serverNames || serverNames.length === 0) {
-        return
-      }
-
-      // Poll until all servers are running (per-server for dedup granularity)
-      await Promise.all(
-        serverNames.map((serverName) =>
-          fetchPollingQuery(queryClient, serverName, 'running', () =>
-            pollServerStatus(
-              () =>
-                queryClient.fetchQuery(
-                  getApiV1BetaWorkloadsByNameStatusOptions({
-                    path: { name: serverName },
-                  })
-                ),
-              'running'
-            )
-          )
-        )
-      )
-
-      await window.electronAPI.shutdownStore.clearShutdownHistory()
-
-      queryClient.invalidateQueries({
-        queryKey: getApiV1BetaWorkloadsQueryKey({ query: { all: true } }),
-      })
-    },
-    onError: (_error, _variables, context) => {
-      if (context?.previousData) {
-        context.previousData.forEach((data, queryKey) => {
-          queryClient.setQueryData(queryKey, data)
-        })
-      }
-    },
-  })
-}
 
 export function useMutationRestartServer({
   name,
