@@ -17,6 +17,7 @@ import { WrapperField } from './components/wrapper-field'
 import { Badge } from '../../ui/badge'
 import { Button } from '../../ui/button'
 import { Alert, AlertDescription, AlertTitle } from '../../ui/alert'
+import { useAppVersion } from '@/common/hooks/use-app-version'
 
 const CLI_DOCS_URL = 'https://docs.stacklok.com/toolhive/guides-cli/'
 
@@ -55,6 +56,7 @@ function StatusBadge({ isValid }: { isValid: boolean }) {
 }
 
 export function CliTab() {
+  const { data: appInfo } = useAppVersion()
   const queryClient = useQueryClient()
   const {
     data: cliStatus,
@@ -232,26 +234,29 @@ export function CliTab() {
 
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">CLI Version</span>
-            <Badge variant="secondary">
+            <span className="text/text-muted-foreground flex items-center gap-2">
               {cliStatus.cliVersion || 'Unknown'}
-            </Badge>
+              {!appInfo?.isNewVersionAvailable && (
+                <Badge variant="success">Latest</Badge>
+              )}
+            </span>
           </div>
 
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Install Method</span>
-            <Badge variant="outline">
+            <span className="text/text-muted-foreground">
               {cliStatus.installMethod === 'symlink'
                 ? 'Symlink'
                 : cliStatus.installMethod === 'copy'
                   ? 'Copy'
                   : 'Not installed'}
-            </Badge>
+            </span>
           </div>
 
           {cliStatus.isManaged && (
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Managed by</span>
-              <Badge variant="secondary">ToolHive UI</Badge>
+              <span className="text/text-muted-foreground">ToolHive UI</span>
             </div>
           )}
         </div>
