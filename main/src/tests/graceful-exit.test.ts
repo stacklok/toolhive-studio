@@ -28,8 +28,8 @@ vi.mock('electron', () => ({
 }))
 
 const mockGetApiV1BetaWorkloads = vi.mocked(sdkGen.getApiV1BetaWorkloads)
-const mockPostApiV1BetaWorkloadsByNameStop = vi.mocked(
-  sdkGen.postApiV1BetaWorkloadsByNameStop
+const mockPostApiV1BetaWorkloadsStop = vi.mocked(
+  sdkGen.postApiV1BetaWorkloadsStop
 )
 const mockCreateClient = vi.mocked(clientGen.createClient)
 const mockGetHeaders = vi.mocked(headers.getHeaders)
@@ -124,7 +124,7 @@ describe('graceful-exit', () => {
       expect(mockLog.info).toHaveBeenCalledWith(
         'No running servers – teardown complete'
       )
-      expect(mockPostApiV1BetaWorkloadsByNameStop).not.toHaveBeenCalled()
+      expect(mockPostApiV1BetaWorkloadsStop).not.toHaveBeenCalled()
     })
 
     it('stops all running servers successfully', async () => {
@@ -140,20 +140,14 @@ describe('graceful-exit', () => {
         )
         .mockResolvedValueOnce(createMockWorkloadsResponse(mockStoppedServers))
 
-      mockPostApiV1BetaWorkloadsByNameStop.mockResolvedValue(
-        createMockStopResponse()
-      )
+      mockPostApiV1BetaWorkloadsStop.mockResolvedValue(createMockStopResponse())
 
       await stopAllServers('', 3000)
 
-      expect(mockPostApiV1BetaWorkloadsByNameStop).toHaveBeenCalledTimes(2)
-      expect(mockPostApiV1BetaWorkloadsByNameStop).toHaveBeenCalledWith({
+      expect(mockPostApiV1BetaWorkloadsStop).toHaveBeenCalledTimes(1)
+      expect(mockPostApiV1BetaWorkloadsStop).toHaveBeenCalledWith({
         client: mockClient,
-        path: { name: 'server1' },
-      })
-      expect(mockPostApiV1BetaWorkloadsByNameStop).toHaveBeenCalledWith({
-        client: mockClient,
-        path: { name: 'server2' },
+        body: { names: ['server1', 'server2'] },
       })
       expect(mockLog.info).toHaveBeenCalledWith('All servers stopped cleanly')
     })
@@ -171,9 +165,7 @@ describe('graceful-exit', () => {
           createMockWorkloadsResponse(serversWithFinalStatuses)
         )
 
-      mockPostApiV1BetaWorkloadsByNameStop.mockResolvedValue(
-        createMockStopResponse()
-      )
+      mockPostApiV1BetaWorkloadsStop.mockResolvedValue(createMockStopResponse())
 
       await stopAllServers('', 3000)
 
@@ -188,13 +180,11 @@ describe('graceful-exit', () => {
         createMockWorkloadsResponse(mockRunningServers)
       )
 
-      mockPostApiV1BetaWorkloadsByNameStop
-        .mockResolvedValueOnce(createMockStopResponse()) // server1 succeeds
-        .mockRejectedValueOnce(new Error('Stop failed')) // server2 fails
-
-      await expect(stopAllServers('', 3000)).rejects.toThrow(
-        '1 server(s) failed to initiate stop'
+      mockPostApiV1BetaWorkloadsStop.mockRejectedValueOnce(
+        new Error('Stop failed')
       )
+
+      await expect(stopAllServers('', 3000)).rejects.toThrow('Stop failed')
     })
 
     it('handles timeout when servers do not stop', async () => {
@@ -211,9 +201,7 @@ describe('graceful-exit', () => {
         // Keep returning stopping status to simulate timeout
         .mockResolvedValue(createMockWorkloadsResponse(stuckServers))
 
-      mockPostApiV1BetaWorkloadsByNameStop.mockResolvedValue(
-        createMockStopResponse()
-      )
+      mockPostApiV1BetaWorkloadsStop.mockResolvedValue(createMockStopResponse())
 
       await expect(stopAllServers('', 3000)).rejects.toThrow(
         'Some servers failed to stop within timeout'
@@ -225,9 +213,7 @@ describe('graceful-exit', () => {
         .mockResolvedValueOnce(createMockWorkloadsResponse(mockRunningServers))
         .mockResolvedValueOnce(createMockWorkloadsResponse(mockStoppedServers))
 
-      mockPostApiV1BetaWorkloadsByNameStop.mockResolvedValue(
-        createMockStopResponse()
-      )
+      mockPostApiV1BetaWorkloadsStop.mockResolvedValue(createMockStopResponse())
 
       await stopAllServers('', 3000)
 
@@ -251,17 +237,15 @@ describe('graceful-exit', () => {
           ])
         )
 
-      mockPostApiV1BetaWorkloadsByNameStop.mockResolvedValue(
-        createMockStopResponse()
-      )
+      mockPostApiV1BetaWorkloadsStop.mockResolvedValue(createMockStopResponse())
 
       await stopAllServers('', 3000)
 
-      // Should only try to stop the server with a name
-      expect(mockPostApiV1BetaWorkloadsByNameStop).toHaveBeenCalledTimes(1)
-      expect(mockPostApiV1BetaWorkloadsByNameStop).toHaveBeenCalledWith({
+      // Should only include the server with a name in the batch call
+      expect(mockPostApiV1BetaWorkloadsStop).toHaveBeenCalledTimes(1)
+      expect(mockPostApiV1BetaWorkloadsStop).toHaveBeenCalledWith({
         client: mockClient,
-        path: { name: 'server2' },
+        body: { names: ['server2'] },
       })
     })
   })
@@ -320,9 +304,7 @@ describe('graceful-exit', () => {
         .mockResolvedValueOnce(createMockWorkloadsResponse(stoppingServer))
         .mockResolvedValueOnce(createMockWorkloadsResponse(stoppedServer))
 
-      mockPostApiV1BetaWorkloadsByNameStop.mockResolvedValue(
-        createMockStopResponse()
-      )
+      mockPostApiV1BetaWorkloadsStop.mockResolvedValue(createMockStopResponse())
 
       await stopAllServers('', 3000)
 
@@ -348,9 +330,7 @@ describe('graceful-exit', () => {
         .mockResolvedValueOnce(createMockWorkloadsResponse(runningServer))
         .mockResolvedValueOnce(createMockWorkloadsResponse(stoppedServer))
 
-      mockPostApiV1BetaWorkloadsByNameStop.mockResolvedValue(
-        createMockStopResponse()
-      )
+      mockPostApiV1BetaWorkloadsStop.mockResolvedValue(createMockStopResponse())
 
       await stopAllServers('', 3000)
 
