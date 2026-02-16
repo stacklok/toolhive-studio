@@ -45,7 +45,10 @@ function Tooltip({
   const handleOpenChange = React.useCallback(
     (nextOpen: boolean) => {
       if (onlyWhenTruncated) {
-        setInternalOpen(nextOpen && isTruncated)
+        const resolvedOpen = nextOpen && isTruncated
+        setInternalOpen(resolvedOpen)
+        onOpenChange?.(resolvedOpen)
+        return
       }
       onOpenChange?.(nextOpen)
     },
