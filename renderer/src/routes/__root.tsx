@@ -14,6 +14,7 @@ import {
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { Toaster } from '@/common/components/ui/sonner'
 import { getApiV1BetaSecretsDefaultOptions } from '@common/api/generated/@tanstack/react-query.gen'
+import { useRestartShutdownServers } from '@/common/hooks/use-restart-shutdown-servers'
 import '@fontsource/space-mono/400.css'
 import '@fontsource/atkinson-hyperlegible/400.css'
 import '@fontsource/atkinson-hyperlegible/700.css'
@@ -56,6 +57,8 @@ function RootComponent() {
     (match) => match.routeId === '/cli-issue'
   )
   const hideNav = isShutdownRoute || isCliIssueRoute
+
+  useRestartShutdownServers()
 
   return (
     <>
