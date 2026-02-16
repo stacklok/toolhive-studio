@@ -164,8 +164,8 @@ export function useRestartShutdownServers() {
           (allWorkloads?.workloads ?? []).map((w) => w.name).filter(Boolean)
         )
         const validNames = shutdownServers
-          .map((s) => s.name!)
-          .filter((name) => existingNames.has(name))
+          .map((s) => s.name)
+          .filter((name): name is string => !!name && existingNames.has(name))
 
         if (validNames.length === 0) {
           await window.electronAPI.shutdownStore.clearShutdownHistory()
