@@ -141,7 +141,7 @@ describe('VersionTab', () => {
       <VersionTab appInfo={appInfoLatest} isLoading={false} error={null} />
     )
 
-    expect(screen.getByText(/\(latest version\)/)).toBeVisible()
+    expect(screen.getAllByText('Latest')).toHaveLength(2)
   })
 
   it('does not display latest version label when update is available', () => {
@@ -154,7 +154,7 @@ describe('VersionTab', () => {
       <VersionTab appInfo={appInfoNotLatest} isLoading={false} error={null} />
     )
 
-    expect(screen.queryByText(/\(latest version\)/)).not.toBeInTheDocument()
+    expect(screen.queryByText('Latest')).not.toBeInTheDocument()
   })
 
   it('displays empty toolhive version when not provided', () => {

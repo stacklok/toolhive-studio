@@ -21,6 +21,21 @@ interface VersionTabProps {
   error: Error | null
 }
 
+function VersionBadge({
+  version,
+  isLatest,
+}: {
+  version: string
+  isLatest: boolean
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text/text-muted-foreground">{version}</span>
+      {isLatest && <Badge variant="success">Latest</Badge>}
+    </div>
+  )
+}
+
 function VersionInfoWrapper({ children }: { children: React.ReactNode }) {
   return (
     <div className="space-y-6">
@@ -114,22 +129,25 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Desktop UI version</span>
-            <Badge variant="secondary">
-              {appInfo.currentVersion}{' '}
-              {!appInfo.isNewVersionAvailable ? '(latest version)' : ''}
-            </Badge>
+            <VersionBadge
+              version={appInfo.currentVersion}
+              isLatest={!appInfo.isNewVersionAvailable}
+            />
           </div>
 
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">ToolHive binary version</span>
-            <Badge variant="secondary">{appInfo.toolhiveVersion}</Badge>
+            <VersionBadge
+              version={appInfo.toolhiveVersion}
+              isLatest={!appInfo.isNewVersionAvailable}
+            />
           </div>
 
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Build type</span>
-            <Badge variant={appInfo.isReleaseBuild ? 'default' : 'outline'}>
+            <span className="text/text-muted-foreground">
               {appInfo.isReleaseBuild ? 'Release' : 'Development'}
-            </Badge>
+            </span>
           </div>
         </div>
       </VersionInfoWrapper>
