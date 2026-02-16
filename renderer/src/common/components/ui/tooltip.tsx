@@ -23,31 +23,47 @@ type TooltipProps = React.ComponentProps<typeof TooltipPrimitive.Root> & {
 
 const TruncateContext = React.createContext<{
   onlyWhenTruncated: boolean
-  triggerRef: React.RefObject<HTMLElement | null>
+  setTriggerElement: React.Dispatch<React.SetStateAction<HTMLElement | null>>
 } | null>(null)
 
-function Tooltip({ onlyWhenTruncated = false, ...props }: TooltipProps) {
-  const triggerRef = React.useRef<HTMLElement | null>(null)
-  const isTruncated = useIsTruncated(triggerRef)
+function Tooltip({
+  onlyWhenTruncated = false,
+  onOpenChange,
+  open,
+  ...props
+}: TooltipProps) {
+  const [triggerElement, setTriggerElement] =
+    React.useState<HTMLElement | null>(null)
+  const isTruncated = useIsTruncated(triggerElement)
+  const [internalOpen, setInternalOpen] = React.useState(false)
 
   const contextValue = React.useMemo(
-    () => ({ onlyWhenTruncated, triggerRef }),
+    () => ({ onlyWhenTruncated, setTriggerElement }),
     [onlyWhenTruncated]
   )
 
-  const effectiveOpen = React.useMemo(() => {
-    if (!onlyWhenTruncated) {
-      return props.open
-    }
+  const handleOpenChange = React.useCallback(
+    (nextOpen: boolean) => {
+      if (onlyWhenTruncated) {
+        setInternalOpen(nextOpen && isTruncated)
+      }
+      onOpenChange?.(nextOpen)
+    },
+    [onlyWhenTruncated, isTruncated, onOpenChange]
+  )
 
-    // When onlyWhenTruncated is enabled, only show tooltip if text is truncated
-    if (!isTruncated) {
-      return false
+  // Close the tooltip if truncation state changes while open
+  React.useEffect(() => {
+    if (onlyWhenTruncated && !isTruncated) {
+      setInternalOpen(false)
     }
+  }, [onlyWhenTruncated, isTruncated])
 
-    // Text is truncated, respect consumer control or default to false
-    return props.open ?? false
-  }, [onlyWhenTruncated, isTruncated, props.open])
+  // When onlyWhenTruncated is active, always stay controlled
+  const resolvedOpen = onlyWhenTruncated ? internalOpen : open
+  const resolvedOnOpenChange = onlyWhenTruncated
+    ? handleOpenChange
+    : onOpenChange
 
   return (
     <TooltipProvider>
@@ -55,7 +71,8 @@ function Tooltip({ onlyWhenTruncated = false, ...props }: TooltipProps) {
         <TooltipPrimitive.Root
           data-slot="tooltip"
           {...props}
-          open={effectiveOpen}
+          open={resolvedOpen}
+          onOpenChange={resolvedOnOpenChange}
         />
       </TruncateContext.Provider>
     </TooltipProvider>
@@ -72,16 +89,14 @@ const TooltipTrigger = React.forwardRef<
     (node: HTMLButtonElement | null) => {
       // internal: keep track for truncation measurement
       if (ctx) {
-        const triggerRef = ctx.triggerRef
-        triggerRef.current = node
+        ctx.setTriggerElement(node)
       }
       // forward to consumer
       if (typeof forwardedRef === 'function') {
         forwardedRef(node)
       } else if (forwardedRef) {
-        ;(
-          forwardedRef as React.MutableRefObject<HTMLButtonElement | null>
-        ).current = node
+        ;(forwardedRef as React.RefObject<HTMLButtonElement | null>).current =
+          node
       }
     },
     [ctx, forwardedRef]
@@ -123,7 +138,7 @@ function TooltipContent({
         {children}
         <TooltipPrimitive.Arrow
           className="bg-primary fill-primary z-50 size-2.5
-            translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px]"
+            translate-y-[calc(-50%-2px)] rotate-45 rounded-[2px]"
         />
       </TooltipPrimitive.Content>
     </TooltipPrimitive.Portal>
