@@ -17,7 +17,7 @@ importers:
     dependencies:
       '@ai-sdk/anthropic':
         specifier: ^3.0.36
-        version: 3.0.43(zod@4.3.6)
+        version: 3.0.44(zod@4.3.6)
       '@ai-sdk/google':
         specifier: ^3.0.21
         version: 3.0.29(zod@4.3.6)
@@ -385,8 +385,8 @@ packages:
   '@adobe/css-tools@4.4.4':
     resolution: {integrity: sha512-Elp+iwUx5rN5+Y8xLt5/GRoG20WGoDCQ/1Fb+1LiGtvwbDavuSk0jhD/eZdckHAuzcDzccnkv+rEjyWfRx18gg==}
 
-  '@ai-sdk/anthropic@3.0.43':
-    resolution: {integrity: sha512-hfhOa13HqNYIe2GtC7blUMVOKrmt5RzxbE7StFGXKN3hIn4xuppLLQY/gFOr+oEhQw1pO8j6CpffrRrWYz1mVQ==}
+  '@ai-sdk/anthropic@3.0.44':
+    resolution: {integrity: sha512-ke1NldgohWJ7sWLqm9Um9TVIOrtg8Y8AecWeB6PgaLt+paTPisAsyNfe8FNOVusuv58ugLBqY/78AkhUmbjXHA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -8267,7 +8267,7 @@ snapshots:
 
   '@adobe/css-tools@4.4.4': {}
 
-  '@ai-sdk/anthropic@3.0.43(zod@4.3.6)':
+  '@ai-sdk/anthropic@3.0.44(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.15(zod@4.3.6)
