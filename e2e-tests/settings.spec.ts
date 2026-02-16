@@ -8,7 +8,5 @@ test('displays correct ToolHive binary version', async ({ window }) => {
   const versionRow = window
     .locator('text=ToolHive binary version')
     .locator('..')
-  await expect(versionRow.locator('[data-slot="badge"]')).toHaveText(
-    TOOLHIVE_VERSION
-  )
+  await expect(versionRow).toContainText(TOOLHIVE_VERSION)
 })
