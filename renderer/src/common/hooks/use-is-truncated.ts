@@ -3,15 +3,17 @@ import { useEffect, useRef, useState } from 'react'
 /**
  * Detects when an element's text is visually truncated.
  * Works for single-line (with `truncate`) and multi-line (line-clamp) cases.
+ *
+ * Accepts the element directly (not a ref) so the effect re-runs
+ * whenever the underlying DOM node changes (e.g. Radix remounts).
  */
 export function useIsTruncated<T extends HTMLElement>(
-  elementRef: React.RefObject<T | null>
+  element: T | null
 ): boolean {
   const [isTruncated, setIsTruncated] = useState(false)
   const rafIdRef = useRef<number | null>(null)
 
   useEffect(() => {
-    const element = elementRef.current
     if (!element) return
 
     const measure = () => {
@@ -49,7 +51,7 @@ export function useIsTruncated<T extends HTMLElement>(
       mo.disconnect()
       ro?.disconnect()
     }
-  }, [elementRef])
+  }, [element])
 
   return isTruncated
 }
