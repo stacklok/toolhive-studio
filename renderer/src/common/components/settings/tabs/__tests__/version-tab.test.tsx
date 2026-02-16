@@ -78,7 +78,7 @@ describe('VersionTab', () => {
     expect(screen.getByText('Desktop UI version')).toBeVisible()
     expect(screen.getByText('ToolHive binary version')).toBeVisible()
     expect(screen.getByText('Build type')).toBeVisible()
-    expect(screen.getByText('1.0.0')).toBeVisible()
+    expect(screen.getByText(/1\.0\.0/)).toBeVisible()
     expect(screen.getByText('0.9.0')).toBeVisible()
     expect(screen.getByText('Release')).toBeVisible()
   })
@@ -122,11 +122,39 @@ describe('VersionTab', () => {
     const badges = screen.getAllByText((content, element) => {
       return (
         element?.tagName === 'SPAN' &&
-        (content === '1.0.0' || content === '0.9.0' || content === 'Release')
+        (content.includes('1.0.0') ||
+          content === '0.9.0' ||
+          content === 'Release')
       )
     })
 
     expect(badges).toHaveLength(3)
+  })
+
+  it('displays latest version label when no update is available', () => {
+    const appInfoLatest: AppVersionInfo = {
+      ...mockAppInfo,
+      isNewVersionAvailable: false,
+    }
+
+    renderWithProviders(
+      <VersionTab appInfo={appInfoLatest} isLoading={false} error={null} />
+    )
+
+    expect(screen.getAllByText('Latest')).toHaveLength(2)
+  })
+
+  it('does not display latest version label when update is available', () => {
+    const appInfoNotLatest: AppVersionInfo = {
+      ...mockAppInfo,
+      isNewVersionAvailable: true,
+    }
+
+    renderWithProviders(
+      <VersionTab appInfo={appInfoNotLatest} isLoading={false} error={null} />
+    )
+
+    expect(screen.queryByText('Latest')).not.toBeInTheDocument()
   })
 
   it('displays empty toolhive version when not provided', () => {
