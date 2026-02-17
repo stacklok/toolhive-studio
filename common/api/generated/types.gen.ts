@@ -222,7 +222,7 @@ export type AuthserverRunConfig = {
   schema_version?: string
   /**
    * ScopesSupported lists the OAuth 2.0 scope values advertised in discovery documents.
-   * If empty, defaults to ["openid", "offline_access"].
+   * If empty, defaults to ["openid", "profile", "email", "offline_access"].
    */
   scopes_supported?: Array<string>
   signing_key_config?: AuthserverSigningKeyRunConfig
@@ -359,6 +359,69 @@ export type AuthzConfig = {
    * Version is the version of the configuration format.
    */
   version?: string
+}
+
+/**
+ * AWSStsConfig contains AWS STS token exchange configuration for accessing AWS services
+ */
+export type AwsstsConfig = {
+  /**
+   * FallbackRoleArn is the IAM role ARN to assume when no role mapping matches.
+   */
+  fallback_role_arn?: string
+  /**
+   * Region is the AWS region for STS and SigV4 signing.
+   */
+  region?: string
+  /**
+   * RoleClaim is the JWT claim to use for role mapping (default: "groups").
+   */
+  role_claim?: string
+  /**
+   * RoleMappings maps JWT claim values to IAM roles with priority.
+   */
+  role_mappings?: Array<AwsstsRoleMapping>
+  /**
+   * Service is the AWS service name for SigV4 signing (default: "aws-mcp").
+   */
+  service?: string
+  /**
+   * SessionDuration is the duration in seconds for assumed role credentials (default: 3600).
+   */
+  session_duration?: number
+  /**
+   * SessionNameClaim is the JWT claim to use for role session name (default: "sub").
+   */
+  session_name_claim?: string
+}
+
+export type AwsstsRoleMapping = {
+  /**
+   * Claim is the simple claim value to match (e.g., group name).
+   * Internally compiles to a CEL expression: "<claim_value>" in claims["<role_claim>"]
+   * Mutually exclusive with Matcher.
+   */
+  claim?: string
+  /**
+   * Matcher is a CEL expression for complex matching against JWT claims.
+   * The expression has access to a "claims" variable containing all JWT claims.
+   * Examples:
+   * - "admins" in claims["groups"]
+   * - claims["sub"] == "user123" && !("act" in claims)
+   * Mutually exclusive with Claim.
+   */
+  matcher?: string
+  /**
+   * Priority determines selection order (lower number = higher priority).
+   * When multiple mappings match, the one with the lowest priority is selected.
+   * When nil (omitted), the mapping has the lowest possible priority, and
+   * configuration order acts as tie-breaker via stable sort.
+   */
+  priority?: number
+  /**
+   * RoleArn is the IAM role ARN to assume when this mapping matches.
+   */
+  role_arn?: string
 }
 
 /**
@@ -1035,6 +1098,7 @@ export type RunnerRunConfig = {
    * AuthzConfigPath is the path to the authorization configuration file
    */
   authz_config_path?: string
+  aws_sts_config?: AwsstsConfig
   /**
    * BaseName is the base name used for the container (without prefixes)
    */
@@ -1217,13 +1281,28 @@ export type SkillsBuildResult = {
   reference?: string
 }
 
+export type SkillsDependency = {
+  /**
+   * Digest is the OCI digest for upgrade detection.
+   */
+  digest?: string
+  /**
+   * Name is the dependency name.
+   */
+  name?: string
+  /**
+   * Reference is the OCI reference for the dependency.
+   */
+  reference?: string
+}
+
 /**
  * Status is the current installation status.
  */
 export type SkillsInstallStatus = 'installed' | 'pending' | 'failed'
 
 /**
- * InstalledSkill is set if the skill is installed.
+ * InstalledSkill contains the full installation record.
  */
 export type SkillsInstalledSkill = {
   /**
@@ -1232,24 +1311,40 @@ export type SkillsInstalledSkill = {
    */
   clients?: Array<string>
   /**
+   * Dependencies is the list of external skill dependencies.
+   */
+  dependencies?: Array<SkillsDependency>
+  /**
+   * Digest is the OCI digest (sha256:...) for upgrade detection.
+   */
+  digest?: string
+  /**
    * InstalledAt is the timestamp when the skill was installed.
    */
   installed_at?: string
   metadata?: SkillsSkillMetadata
+  /**
+   * ProjectRoot is the project root path for project-scoped skills. Empty for user-scoped.
+   */
+  project_root?: string
+  /**
+   * Reference is the full OCI reference (e.g. ghcr.io/org/skill:v1).
+   */
+  reference?: string
   scope?: SkillsScope
   status?: SkillsInstallStatus
+  /**
+   * Tag is the OCI tag (e.g. v1.0.0).
+   */
+  tag?: string
 }
 
 /**
- * Scope from which to uninstall
+ * Scope for the installation
  */
-export type SkillsScope = 'user' | 'system'
+export type SkillsScope = 'user' | 'project'
 
 export type SkillsSkillInfo = {
-  /**
-   * Installed indicates whether the skill is currently installed.
-   */
-  installed?: boolean
   installed_skill?: SkillsInstalledSkill
   metadata?: SkillsSkillMetadata
 }
@@ -1378,6 +1473,15 @@ export type TelemetryConfig = {
    * +optional
    */
   tracingEnabled?: boolean
+  /**
+   * UseLegacyAttributes controls whether legacy (pre-MCP OTEL semconv) attribute names
+   * are emitted alongside the new standard attribute names. When true, spans include both
+   * old and new attribute names for backward compatibility with existing dashboards.
+   * Currently defaults to true; this will change to false in a future release.
+   * +kubebuilder:default=true
+   * +optional
+   */
+  useLegacyAttributes?: boolean
 }
 
 /**
@@ -2072,17 +2176,6 @@ export type V1ToolOverride = {
    * Name of the tool
    */
   name?: string
-}
-
-/**
- * Request to uninstall a skill
- */
-export type V1UninstallSkillRequest = {
-  /**
-   * Name of the skill to uninstall
-   */
-  name?: string
-  scope?: SkillsScope
 }
 
 /**
@@ -3063,15 +3156,20 @@ export type PutApiV1BetaSecretsDefaultKeysByKeyResponse =
 export type GetApiV1BetaSkillsData = {
   body?: never
   path?: never
-  query?: never
+  query?: {
+    /**
+     * Filter by scope (user or project)
+     */
+    scope?: 'user' | 'project'
+  }
   url: '/api/v1beta/skills'
 }
 
 export type GetApiV1BetaSkillsErrors = {
   /**
-   * Not Implemented
+   * Internal Server Error
    */
-  501: string
+  500: string
 }
 
 export type GetApiV1BetaSkillsError =
@@ -3086,6 +3184,48 @@ export type GetApiV1BetaSkillsResponses = {
 
 export type GetApiV1BetaSkillsResponse =
   GetApiV1BetaSkillsResponses[keyof GetApiV1BetaSkillsResponses]
+
+export type PostApiV1BetaSkillsData = {
+  /**
+   * Install request
+   */
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | V1InstallSkillRequest
+  path?: never
+  query?: never
+  url: '/api/v1beta/skills'
+}
+
+export type PostApiV1BetaSkillsErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+  /**
+   * Conflict
+   */
+  409: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type PostApiV1BetaSkillsError =
+  PostApiV1BetaSkillsErrors[keyof PostApiV1BetaSkillsErrors]
+
+export type PostApiV1BetaSkillsResponses = {
+  /**
+   * Created
+   */
+  201: V1InstallSkillResponse
+}
+
+export type PostApiV1BetaSkillsResponse =
+  PostApiV1BetaSkillsResponses[keyof PostApiV1BetaSkillsResponses]
 
 export type PostApiV1BetaSkillsBuildData = {
   /**
@@ -3121,40 +3261,6 @@ export type PostApiV1BetaSkillsBuildResponses = {
 export type PostApiV1BetaSkillsBuildResponse =
   PostApiV1BetaSkillsBuildResponses[keyof PostApiV1BetaSkillsBuildResponses]
 
-export type PostApiV1BetaSkillsInstallData = {
-  /**
-   * Install request
-   */
-  body:
-    | {
-        [key: string]: unknown
-      }
-    | V1InstallSkillRequest
-  path?: never
-  query?: never
-  url: '/api/v1beta/skills/install'
-}
-
-export type PostApiV1BetaSkillsInstallErrors = {
-  /**
-   * Not Implemented
-   */
-  501: string
-}
-
-export type PostApiV1BetaSkillsInstallError =
-  PostApiV1BetaSkillsInstallErrors[keyof PostApiV1BetaSkillsInstallErrors]
-
-export type PostApiV1BetaSkillsInstallResponses = {
-  /**
-   * Created
-   */
-  201: V1InstallSkillResponse
-}
-
-export type PostApiV1BetaSkillsInstallResponse =
-  PostApiV1BetaSkillsInstallResponses[keyof PostApiV1BetaSkillsInstallResponses]
-
 export type PostApiV1BetaSkillsPushData = {
   /**
    * Push request
@@ -3188,40 +3294,6 @@ export type PostApiV1BetaSkillsPushResponses = {
 
 export type PostApiV1BetaSkillsPushResponse =
   PostApiV1BetaSkillsPushResponses[keyof PostApiV1BetaSkillsPushResponses]
-
-export type PostApiV1BetaSkillsUninstallData = {
-  /**
-   * Uninstall request
-   */
-  body:
-    | {
-        [key: string]: unknown
-      }
-    | V1UninstallSkillRequest
-  path?: never
-  query?: never
-  url: '/api/v1beta/skills/uninstall'
-}
-
-export type PostApiV1BetaSkillsUninstallErrors = {
-  /**
-   * Not Implemented
-   */
-  501: string
-}
-
-export type PostApiV1BetaSkillsUninstallError =
-  PostApiV1BetaSkillsUninstallErrors[keyof PostApiV1BetaSkillsUninstallErrors]
-
-export type PostApiV1BetaSkillsUninstallResponses = {
-  /**
-   * No Content
-   */
-  204: string
-}
-
-export type PostApiV1BetaSkillsUninstallResponse =
-  PostApiV1BetaSkillsUninstallResponses[keyof PostApiV1BetaSkillsUninstallResponses]
 
 export type PostApiV1BetaSkillsValidateData = {
   /**
@@ -3257,6 +3329,51 @@ export type PostApiV1BetaSkillsValidateResponses = {
 export type PostApiV1BetaSkillsValidateResponse =
   PostApiV1BetaSkillsValidateResponses[keyof PostApiV1BetaSkillsValidateResponses]
 
+export type DeleteApiV1BetaSkillsByNameData = {
+  body?: never
+  path: {
+    /**
+     * Skill name
+     */
+    name: string
+  }
+  query?: {
+    /**
+     * Scope to uninstall from (user or project)
+     */
+    scope?: 'user' | 'project'
+  }
+  url: '/api/v1beta/skills/{name}'
+}
+
+export type DeleteApiV1BetaSkillsByNameErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+  /**
+   * Not Found
+   */
+  404: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type DeleteApiV1BetaSkillsByNameError =
+  DeleteApiV1BetaSkillsByNameErrors[keyof DeleteApiV1BetaSkillsByNameErrors]
+
+export type DeleteApiV1BetaSkillsByNameResponses = {
+  /**
+   * No Content
+   */
+  204: string
+}
+
+export type DeleteApiV1BetaSkillsByNameResponse =
+  DeleteApiV1BetaSkillsByNameResponses[keyof DeleteApiV1BetaSkillsByNameResponses]
+
 export type GetApiV1BetaSkillsByNameData = {
   body?: never
   path: {
@@ -3265,15 +3382,28 @@ export type GetApiV1BetaSkillsByNameData = {
      */
     name: string
   }
-  query?: never
+  query?: {
+    /**
+     * Filter by scope (user or project)
+     */
+    scope?: 'user' | 'project'
+  }
   url: '/api/v1beta/skills/{name}'
 }
 
 export type GetApiV1BetaSkillsByNameErrors = {
   /**
-   * Not Implemented
+   * Bad Request
    */
-  501: string
+  400: string
+  /**
+   * Not Found
+   */
+  404: string
+  /**
+   * Internal Server Error
+   */
+  500: string
 }
 
 export type GetApiV1BetaSkillsByNameError =

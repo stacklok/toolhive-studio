@@ -13,6 +13,7 @@ import {
   deleteApiV1BetaGroupsByName,
   deleteApiV1BetaRegistryByName,
   deleteApiV1BetaSecretsDefaultKeysByKey,
+  deleteApiV1BetaSkillsByName,
   deleteApiV1BetaWorkloadsByName,
   getApiOpenapiJson,
   getApiV1BetaClients,
@@ -43,10 +44,9 @@ import {
   postApiV1BetaRegistry,
   postApiV1BetaSecrets,
   postApiV1BetaSecretsDefaultKeys,
+  postApiV1BetaSkills,
   postApiV1BetaSkillsBuild,
-  postApiV1BetaSkillsInstall,
   postApiV1BetaSkillsPush,
-  postApiV1BetaSkillsUninstall,
   postApiV1BetaSkillsValidate,
   postApiV1BetaWorkloads,
   postApiV1BetaWorkloadsByNameEdit,
@@ -74,6 +74,9 @@ import type {
   DeleteApiV1BetaSecretsDefaultKeysByKeyData,
   DeleteApiV1BetaSecretsDefaultKeysByKeyError,
   DeleteApiV1BetaSecretsDefaultKeysByKeyResponse,
+  DeleteApiV1BetaSkillsByNameData,
+  DeleteApiV1BetaSkillsByNameError,
+  DeleteApiV1BetaSkillsByNameResponse,
   DeleteApiV1BetaWorkloadsByNameData,
   DeleteApiV1BetaWorkloadsByNameError,
   DeleteApiV1BetaWorkloadsByNameResponse,
@@ -157,15 +160,12 @@ import type {
   PostApiV1BetaSkillsBuildData,
   PostApiV1BetaSkillsBuildError,
   PostApiV1BetaSkillsBuildResponse,
-  PostApiV1BetaSkillsInstallData,
-  PostApiV1BetaSkillsInstallError,
-  PostApiV1BetaSkillsInstallResponse,
+  PostApiV1BetaSkillsData,
+  PostApiV1BetaSkillsError,
   PostApiV1BetaSkillsPushData,
   PostApiV1BetaSkillsPushError,
   PostApiV1BetaSkillsPushResponse,
-  PostApiV1BetaSkillsUninstallData,
-  PostApiV1BetaSkillsUninstallError,
-  PostApiV1BetaSkillsUninstallResponse,
+  PostApiV1BetaSkillsResponse,
   PostApiV1BetaSkillsValidateData,
   PostApiV1BetaSkillsValidateError,
   PostApiV1BetaSkillsValidateResponse,
@@ -1005,6 +1005,35 @@ export const getApiV1BetaSkillsOptions = (
   })
 
 /**
+ * Install a skill
+ *
+ * Install a skill from a remote source
+ */
+export const postApiV1BetaSkillsMutation = (
+  options?: Partial<Options<PostApiV1BetaSkillsData>>
+): UseMutationOptions<
+  PostApiV1BetaSkillsResponse,
+  PostApiV1BetaSkillsError,
+  Options<PostApiV1BetaSkillsData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaSkillsResponse,
+    PostApiV1BetaSkillsError,
+    Options<PostApiV1BetaSkillsData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1BetaSkills({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
  * Build a skill
  *
  * Build a skill from a local directory
@@ -1023,35 +1052,6 @@ export const postApiV1BetaSkillsBuildMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await postApiV1BetaSkillsBuild({
-        ...options,
-        ...fnOptions,
-        throwOnError: true,
-      })
-      return data
-    },
-  }
-  return mutationOptions
-}
-
-/**
- * Install a skill
- *
- * Install a skill from a remote source
- */
-export const postApiV1BetaSkillsInstallMutation = (
-  options?: Partial<Options<PostApiV1BetaSkillsInstallData>>
-): UseMutationOptions<
-  PostApiV1BetaSkillsInstallResponse,
-  PostApiV1BetaSkillsInstallError,
-  Options<PostApiV1BetaSkillsInstallData>
-> => {
-  const mutationOptions: UseMutationOptions<
-    PostApiV1BetaSkillsInstallResponse,
-    PostApiV1BetaSkillsInstallError,
-    Options<PostApiV1BetaSkillsInstallData>
-  > = {
-    mutationFn: async (fnOptions) => {
-      const { data } = await postApiV1BetaSkillsInstall({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -1092,35 +1092,6 @@ export const postApiV1BetaSkillsPushMutation = (
 }
 
 /**
- * Uninstall a skill
- *
- * Remove an installed skill
- */
-export const postApiV1BetaSkillsUninstallMutation = (
-  options?: Partial<Options<PostApiV1BetaSkillsUninstallData>>
-): UseMutationOptions<
-  PostApiV1BetaSkillsUninstallResponse,
-  PostApiV1BetaSkillsUninstallError,
-  Options<PostApiV1BetaSkillsUninstallData>
-> => {
-  const mutationOptions: UseMutationOptions<
-    PostApiV1BetaSkillsUninstallResponse,
-    PostApiV1BetaSkillsUninstallError,
-    Options<PostApiV1BetaSkillsUninstallData>
-  > = {
-    mutationFn: async (fnOptions) => {
-      const { data } = await postApiV1BetaSkillsUninstall({
-        ...options,
-        ...fnOptions,
-        throwOnError: true,
-      })
-      return data
-    },
-  }
-  return mutationOptions
-}
-
-/**
  * Validate a skill
  *
  * Validate a skill definition
@@ -1139,6 +1110,35 @@ export const postApiV1BetaSkillsValidateMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await postApiV1BetaSkillsValidate({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Uninstall a skill
+ *
+ * Remove an installed skill
+ */
+export const deleteApiV1BetaSkillsByNameMutation = (
+  options?: Partial<Options<DeleteApiV1BetaSkillsByNameData>>
+): UseMutationOptions<
+  DeleteApiV1BetaSkillsByNameResponse,
+  DeleteApiV1BetaSkillsByNameError,
+  Options<DeleteApiV1BetaSkillsByNameData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    DeleteApiV1BetaSkillsByNameResponse,
+    DeleteApiV1BetaSkillsByNameError,
+    Options<DeleteApiV1BetaSkillsByNameData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await deleteApiV1BetaSkillsByName({
         ...options,
         ...fnOptions,
         throwOnError: true,

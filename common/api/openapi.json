@@ -210,7 +210,7 @@
             "type": "string"
           },
           "scopes_supported": {
-            "description": "ScopesSupported lists the OAuth 2.0 scope values advertised in discovery documents.\nIf empty, defaults to [\"openid\", \"offline_access\"].",
+            "description": "ScopesSupported lists the OAuth 2.0 scope values advertised in discovery documents.\nIf empty, defaults to [\"openid\", \"profile\", \"email\", \"offline_access\"].",
             "items": {
               "type": "string"
             },
@@ -364,6 +364,65 @@
           },
           "version": {
             "description": "Version is the version of the configuration format.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "awssts.Config": {
+        "description": "AWSStsConfig contains AWS STS token exchange configuration for accessing AWS services",
+        "properties": {
+          "fallback_role_arn": {
+            "description": "FallbackRoleArn is the IAM role ARN to assume when no role mapping matches.",
+            "type": "string"
+          },
+          "region": {
+            "description": "Region is the AWS region for STS and SigV4 signing.",
+            "type": "string"
+          },
+          "role_claim": {
+            "description": "RoleClaim is the JWT claim to use for role mapping (default: \"groups\").",
+            "type": "string"
+          },
+          "role_mappings": {
+            "description": "RoleMappings maps JWT claim values to IAM roles with priority.",
+            "items": {
+              "$ref": "#/components/schemas/awssts.RoleMapping"
+            },
+            "type": "array",
+            "uniqueItems": false
+          },
+          "service": {
+            "description": "Service is the AWS service name for SigV4 signing (default: \"aws-mcp\").",
+            "type": "string"
+          },
+          "session_duration": {
+            "description": "SessionDuration is the duration in seconds for assumed role credentials (default: 3600).",
+            "type": "integer"
+          },
+          "session_name_claim": {
+            "description": "SessionNameClaim is the JWT claim to use for role session name (default: \"sub\").",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "awssts.RoleMapping": {
+        "properties": {
+          "claim": {
+            "description": "Claim is the simple claim value to match (e.g., group name).\nInternally compiles to a CEL expression: \"\u003cclaim_value\u003e\" in claims[\"\u003crole_claim\u003e\"]\nMutually exclusive with Matcher.",
+            "type": "string"
+          },
+          "matcher": {
+            "description": "Matcher is a CEL expression for complex matching against JWT claims.\nThe expression has access to a \"claims\" variable containing all JWT claims.\nExamples:\n  - \"admins\" in claims[\"groups\"]\n  - claims[\"sub\"] == \"user123\" \u0026\u0026 !(\"act\" in claims)\nMutually exclusive with Claim.",
+            "type": "string"
+          },
+          "priority": {
+            "description": "Priority determines selection order (lower number = higher priority).\nWhen multiple mappings match, the one with the lowest priority is selected.\nWhen nil (omitted), the mapping has the lowest possible priority, and\nconfiguration order acts as tie-breaker via stable sort.",
+            "type": "integer"
+          },
+          "role_arn": {
+            "description": "RoleArn is the IAM role ARN to assume when this mapping matches.",
             "type": "string"
           }
         },
@@ -1209,6 +1268,9 @@
             "description": "DEPRECATED: Middleware configuration.\nAuthzConfigPath is the path to the authorization configuration file",
             "type": "string"
           },
+          "aws_sts_config": {
+            "$ref": "#/components/schemas/awssts.Config"
+          },
           "base_name": {
             "description": "BaseName is the base name used for the container (without prefixes)",
             "type": "string"
@@ -1449,6 +1511,23 @@
         },
         "type": "object"
       },
+      "skills.Dependency": {
+        "properties": {
+          "digest": {
+            "description": "Digest is the OCI digest for upgrade detection.",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name is the dependency name.",
+            "type": "string"
+          },
+          "reference": {
+            "description": "Reference is the OCI reference for the dependency.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "skills.InstallStatus": {
         "description": "Status is the current installation status.",
         "enum": ["installed", "pending", "failed"],
@@ -1460,7 +1539,7 @@
         ]
       },
       "skills.InstalledSkill": {
-        "description": "InstalledSkill is set if the skill is installed.",
+        "description": "InstalledSkill contains the full installation record.",
         "properties": {
           "clients": {
             "description": "Clients is the list of client identifiers the skill is installed for.\nTODO: Refactor client.ClientApp to a shared package so it can be used here instead of []string.",
@@ -1470,6 +1549,18 @@
             "type": "array",
             "uniqueItems": false
           },
+          "dependencies": {
+            "description": "Dependencies is the list of external skill dependencies.",
+            "items": {
+              "$ref": "#/components/schemas/skills.Dependency"
+            },
+            "type": "array",
+            "uniqueItems": false
+          },
+          "digest": {
+            "description": "Digest is the OCI digest (sha256:...) for upgrade detection.",
+            "type": "string"
+          },
           "installed_at": {
             "description": "InstalledAt is the timestamp when the skill was installed.",
             "type": "string"
@@ -1477,27 +1568,35 @@
           "metadata": {
             "$ref": "#/components/schemas/skills.SkillMetadata"
           },
+          "project_root": {
+            "description": "ProjectRoot is the project root path for project-scoped skills. Empty for user-scoped.",
+            "type": "string"
+          },
+          "reference": {
+            "description": "Reference is the full OCI reference (e.g. ghcr.io/org/skill:v1).",
+            "type": "string"
+          },
           "scope": {
             "$ref": "#/components/schemas/skills.Scope"
           },
           "status": {
             "$ref": "#/components/schemas/skills.InstallStatus"
+          },
+          "tag": {
+            "description": "Tag is the OCI tag (e.g. v1.0.0).",
+            "type": "string"
           }
         },
         "type": "object"
       },
       "skills.Scope": {
-        "description": "Scope from which to uninstall",
-        "enum": ["user", "system"],
+        "description": "Scope for the installation",
+        "enum": ["user", "project"],
         "type": "string",
-        "x-enum-varnames": ["ScopeUser", "ScopeSystem"]
+        "x-enum-varnames": ["ScopeUser", "ScopeProject"]
       },
       "skills.SkillInfo": {
         "properties": {
-          "installed": {
-            "description": "Installed indicates whether the skill is currently installed.",
-            "type": "boolean"
-          },
           "installed_skill": {
             "$ref": "#/components/schemas/skills.InstalledSkill"
           },
@@ -1617,6 +1716,10 @@
           },
           "tracingEnabled": {
             "description": "TracingEnabled controls whether distributed tracing is enabled.\nWhen false, no tracer provider is created even if an endpoint is configured.\n+kubebuilder:default=false\n+optional",
+            "type": "boolean"
+          },
+          "useLegacyAttributes": {
+            "description": "UseLegacyAttributes controls whether legacy (pre-MCP OTEL semconv) attribute names\nare emitted alongside the new standard attribute names. When true, spans include both\nold and new attribute names for backward compatibility with existing dashboards.\nCurrently defaults to true; this will change to false in a future release.\n+kubebuilder:default=true\n+optional",
             "type": "boolean"
           }
         },
@@ -2446,19 +2549,6 @@
           "name": {
             "description": "Name of the tool",
             "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "v1.uninstallSkillRequest": {
-        "description": "Request to uninstall a skill",
-        "properties": {
-          "name": {
-            "description": "Name of the skill to uninstall",
-            "type": "string"
-          },
-          "scope": {
-            "$ref": "#/components/schemas/skills.Scope"
           }
         },
         "type": "object"
@@ -3828,6 +3918,17 @@
     "/api/v1beta/skills": {
       "get": {
         "description": "Get a list of all installed skills",
+        "parameters": [
+          {
+            "description": "Filter by scope (user or project)",
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "enum": ["user", "project"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -3839,7 +3940,7 @@
             },
             "description": "OK"
           },
-          "501": {
+          "500": {
             "content": {
               "application/json": {
                 "schema": {
@@ -3847,10 +3948,85 @@
                 }
               }
             },
-            "description": "Not Implemented"
+            "description": "Internal Server Error"
           }
         },
         "summary": "List all installed skills",
+        "tags": ["skills"]
+      },
+      "post": {
+        "description": "Install a skill from a remote source",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "$ref": "#/components/schemas/v1.installSkillRequest",
+                    "summary": "request",
+                    "description": "Install request"
+                  }
+                ]
+              }
+            }
+          },
+          "description": "Install request",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1.installSkillResponse"
+                }
+              }
+            },
+            "description": "Created",
+            "headers": {
+              "Location": {
+                "description": "URI of the installed skill resource",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Install a skill",
         "tags": ["skills"]
       }
     },
@@ -3903,55 +4079,6 @@
         "tags": ["skills"]
       }
     },
-    "/api/v1beta/skills/install": {
-      "post": {
-        "description": "Install a skill from a remote source",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "oneOf": [
-                  {
-                    "type": "object"
-                  },
-                  {
-                    "$ref": "#/components/schemas/v1.installSkillRequest",
-                    "summary": "request",
-                    "description": "Install request"
-                  }
-                ]
-              }
-            }
-          },
-          "description": "Install request",
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/v1.installSkillResponse"
-                }
-              }
-            },
-            "description": "Created"
-          },
-          "501": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "description": "Not Implemented"
-          }
-        },
-        "summary": "Install a skill",
-        "tags": ["skills"]
-      }
-    },
     "/api/v1beta/skills/push": {
       "post": {
         "description": "Push a built skill artifact to a remote registry",
@@ -3998,55 +4125,6 @@
           }
         },
         "summary": "Push a skill",
-        "tags": ["skills"]
-      }
-    },
-    "/api/v1beta/skills/uninstall": {
-      "post": {
-        "description": "Remove an installed skill",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "oneOf": [
-                  {
-                    "type": "object"
-                  },
-                  {
-                    "$ref": "#/components/schemas/v1.uninstallSkillRequest",
-                    "summary": "request",
-                    "description": "Uninstall request"
-                  }
-                ]
-              }
-            }
-          },
-          "description": "Uninstall request",
-          "required": true
-        },
-        "responses": {
-          "204": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "description": "No Content"
-          },
-          "501": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "description": "Not Implemented"
-          }
-        },
-        "summary": "Uninstall a skill",
         "tags": ["skills"]
       }
     },
@@ -4100,6 +4178,73 @@
       }
     },
     "/api/v1beta/skills/{name}": {
+      "delete": {
+        "description": "Remove an installed skill",
+        "parameters": [
+          {
+            "description": "Skill name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Scope to uninstall from (user or project)",
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "enum": ["user", "project"],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "No Content"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Uninstall a skill",
+        "tags": ["skills"]
+      },
       "get": {
         "description": "Get detailed information about a specific skill",
         "parameters": [
@@ -4109,6 +4254,15 @@
             "name": "name",
             "required": true,
             "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by scope (user or project)",
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "enum": ["user", "project"],
               "type": "string"
             }
           }
@@ -4124,7 +4278,7 @@
             },
             "description": "OK"
           },
-          "501": {
+          "400": {
             "content": {
               "application/json": {
                 "schema": {
@@ -4132,7 +4286,27 @@
                 }
               }
             },
-            "description": "Not Implemented"
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Internal Server Error"
           }
         },
         "summary": "Get skill details",
