@@ -6,6 +6,9 @@ import path from 'path'
 export default defineConfig({
   build: {
     sourcemap: true, // Required for Sentry sourcemaps
+    rollupOptions: {
+      external: ['better-sqlite3'],
+    },
   },
   resolve: {
     alias: {

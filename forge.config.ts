@@ -24,7 +24,9 @@ function isValidArchitecture(arch: string): arch is NodeJS.Architecture {
 
 const config: ForgeConfig = {
   packagerConfig: {
-    asar: true,
+    asar: {
+      unpack: '**/{better-sqlite3,bindings,file-uri-to-path}/**/*.node',
+    },
     icon: './icons/icon',
     executableName: 'ToolHive',
     /**
