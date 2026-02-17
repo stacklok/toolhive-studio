@@ -148,7 +148,7 @@ export function GroupSelectorForm({
               className="gap-0"
               disabled={isPending}
             >
-              <div className="rounded-xl border">
+              <div className="bg-card rounded-md border">
                 {groups.map((group) => {
                   const groupName = group.name ?? ''
                   const servers = group.servers
@@ -184,6 +184,7 @@ export function GroupSelectorForm({
         <div className="mt-6 flex justify-end">
           <Button
             type="submit"
+            variant="action"
             disabled={isPending || !isSelectedGroup || !isDirty}
           >
             Set Optimized Group
