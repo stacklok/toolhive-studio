@@ -1,6 +1,6 @@
 import {
   getApiV1BetaWorkloads,
-  postApiV1BetaWorkloadsByNameStop,
+  postApiV1BetaWorkloadsStop,
 } from '@common/api/generated/sdk.gen'
 import { createClient } from '@common/api/generated/client'
 import type { CoreWorkload } from '@common/api/generated/types.gen'
@@ -128,32 +128,22 @@ export async function stopAllServers(
   shutdownStore.set('lastShutdownServers', servers)
   log.info(`Stopping ${servers.length} servers...`)
 
-  // First, initiate stop for all servers
-  const stopPromises = servers.map(async (server) => {
-    try {
-      if (!server.name) return server.name
-      await postApiV1BetaWorkloadsByNameStop({
-        client,
-        path: { name: server.name },
-      })
-      return server.name
-    } catch (error) {
-      log.error(`Failed to initiate stop for server ${server.name}: `, error)
-      throw error
-    }
-  })
+  const serverNames = servers
+    .map((s) => s.name)
+    .filter((name): name is string => !!name)
 
-  const results = await Promise.allSettled(stopPromises)
-  const failures = results.filter((r) => r.status === 'rejected')
-  if (failures.length) {
-    log.error(`${failures.length} server(s) failed to initiate stop`)
-    throw new Error(`${failures.length} server(s) failed to initiate stop`)
+  // Initiate batch stop for all servers
+  try {
+    await postApiV1BetaWorkloadsStop({
+      client,
+      body: { names: serverNames },
+    })
+  } catch (error) {
+    log.error('Failed to initiate batch stop: ', error)
+    throw error
   }
 
   // Then poll until all servers are stopped
-  const serverNames = servers
-    .map((server) => server.name)
-    .filter((name): name is string => typeof name === 'string')
   const allStopped = await pollUntilAllStopped(client, serverNames)
 
   if (!allStopped) {
