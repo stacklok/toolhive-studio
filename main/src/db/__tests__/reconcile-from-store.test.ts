@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import Database from 'better-sqlite3'
-import { up as applyInitialSchema } from '../migrations/001-initial-schema'
+import type Database from 'better-sqlite3'
+import { createTestDb } from './test-helpers'
 
 let testDb: Database.Database
 
@@ -51,9 +51,7 @@ vi.mock('electron', () => ({
 import { reconcileFromStore } from '../reconcile-from-store'
 
 beforeEach(() => {
-  testDb = new Database(':memory:')
-  testDb.pragma('foreign_keys = ON')
-  applyInitialSchema(testDb)
+  testDb = createTestDb()
 
   Object.keys(mockStoreData).forEach((key) => delete mockStoreData[key])
 })

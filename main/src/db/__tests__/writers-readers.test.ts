@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import Database from 'better-sqlite3'
-import { up as applyInitialSchema } from '../migrations/001-initial-schema'
+import type Database from 'better-sqlite3'
+import { createTestDb } from './test-helpers'
 
 let testDb: Database.Database
 
@@ -63,9 +63,7 @@ import {
 import { readShutdownServers } from '../readers/shutdown-reader'
 
 beforeEach(() => {
-  testDb = new Database(':memory:')
-  testDb.pragma('foreign_keys = ON')
-  applyInitialSchema(testDb)
+  testDb = createTestDb()
 })
 
 afterEach(() => {

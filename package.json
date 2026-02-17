@@ -9,7 +9,7 @@
     "node": ">=24.0.0 <25.0.0"
   },
   "scripts": {
-    "prestart": "electron-rebuild -f -w better-sqlite3",
+    "postinstall": "electron-rebuild -f -w better-sqlite3",
     "start": "electron-forge start",
     "e2e": "pnpm package && pnpm e2e:prebuilt",
     "e2e:prebuilt": "playwright test",
@@ -24,8 +24,8 @@
     "thv": "rimraf bin/ && ts-node ./utils/fetch-thv.ts --run",
     "vitest:electron": "ELECTRON_RUN_AS_NODE=1 electron ./node_modules/vitest/vitest.mjs",
     "test": "pnpm run vitest:electron",
-    "test:nonInteractive": "pnpm run vitest:electron -- run",
-    "test:coverage": "pnpm run vitest:electron -- run --coverage",
+    "test:nonInteractive": "pnpm run vitest:electron run",
+    "test:coverage": "pnpm run vitest:electron run --coverage",
     "update-api": "ts-node scripts/update-api.ts",
     "generate-client": "pnpm run update-api && cd common/api && openapi-ts",
     "generate-client:nofetch": "cd common/api && openapi-ts",
@@ -50,6 +50,7 @@
     "@electron-forge/publisher-s3": "^7.11.1",
     "@electron-forge/shared-types": "^7.8.1",
     "@electron/fuses": "^2.0.0",
+    "@electron/rebuild": "^4.0.3",
     "@eslint/js": "^9.25.0",
     "@hey-api/openapi-ts": "0.92.3",
     "@playwright/test": "^1.57.0",
