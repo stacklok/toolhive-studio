@@ -1,6 +1,10 @@
 import { dialog } from 'electron'
 import Store from 'electron-store'
 import log from './logger'
+import { writeSetting } from './db/writers/settings-writer'
+import { readSetting } from './db/readers/settings-reader'
+import { getFeatureFlag } from './feature-flags/flags'
+import { featureFlagKeys } from '../../utils/feature-flags'
 
 interface QuitConfirmationStore {
   skipQuitConfirmation: boolean
@@ -14,11 +18,24 @@ const store = new Store<QuitConfirmationStore>({
 })
 
 export function getSkipQuitConfirmation(): boolean {
+  if (getFeatureFlag(featureFlagKeys.SQLITE_READS_SETTINGS)) {
+    try {
+      const value = readSetting('skipQuitConfirmation')
+      if (value !== undefined) return value === 'true'
+    } catch (err) {
+      log.error('[DB] SQLite read failed, falling back to electron-store:', err)
+    }
+  }
   return store.get('skipQuitConfirmation')
 }
 
 export function setSkipQuitConfirmation(skip: boolean): void {
   store.set('skipQuitConfirmation', skip)
+  try {
+    writeSetting('skipQuitConfirmation', String(skip))
+  } catch (err) {
+    log.error('[DB] Failed to dual-write skipQuitConfirmation:', err)
+  }
 }
 
 /**
