@@ -3,6 +3,20 @@ import log from '../logger'
 import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 import type { UIMessage } from 'ai'
 import type { ChatUIMessage } from './types'
+import {
+  writeThread,
+  deleteThreadFromDb,
+  clearAllThreadsFromDb,
+  writeActiveThread,
+} from '../db/writers/threads-writer'
+import {
+  readThread as readThreadFromDb,
+  readAllThreads as readAllThreadsFromDb,
+  readActiveThreadId as readActiveThreadIdFromDb,
+  readThreadCount as readThreadCountFromDb,
+} from '../db/readers/threads-reader'
+import { getFeatureFlag } from '../feature-flags/flags'
+import { featureFlagKeys } from '../../../utils/feature-flags'
 
 export interface ChatSettingsThread {
   id: string
@@ -84,6 +98,13 @@ export function createThread(
     threadsStore.set('threads', typedThreads)
     threadsStore.set('activeThreadId', threadId)
 
+    try {
+      writeThread(newThread)
+      writeActiveThread(threadId)
+    } catch (err) {
+      log.error('[DB] Failed to dual-write thread:', err)
+    }
+
     return { success: true, threadId }
   } catch (error) {
     log.error('[THREADS] Failed to create thread:', error)
@@ -96,6 +117,16 @@ export function createThread(
 
 export function getThread(threadId: string): ChatSettingsThread | null {
   try {
+    if (getFeatureFlag(featureFlagKeys.SQLITE_READS_THREADS)) {
+      try {
+        return readThreadFromDb(threadId)
+      } catch (err) {
+        log.error(
+          '[DB] SQLite read failed, falling back to electron-store:',
+          err
+        )
+      }
+    }
     const threads = threadsStore.get('threads')
     if (isThreadsRecord(threads)) {
       return threads[threadId] || null
@@ -109,6 +140,16 @@ export function getThread(threadId: string): ChatSettingsThread | null {
 
 export function getAllThreads(): ChatSettingsThread[] {
   try {
+    if (getFeatureFlag(featureFlagKeys.SQLITE_READS_THREADS)) {
+      try {
+        return readAllThreadsFromDb()
+      } catch (err) {
+        log.error(
+          '[DB] SQLite read failed, falling back to electron-store:',
+          err
+        )
+      }
+    }
     const threads = threadsStore.get('threads')
     if (isThreadsRecord(threads)) {
       return Object.values(threads).sort(
@@ -142,6 +183,12 @@ export function updateThread(
 
     typedThreads[threadId] = updatedThread
     threadsStore.set('threads', typedThreads)
+
+    try {
+      writeThread(updatedThread)
+    } catch (err) {
+      log.error('[DB] Failed to dual-write thread update:', err)
+    }
 
     return { success: true }
   } catch (error) {
@@ -183,6 +230,12 @@ export function addMessageToThread(
     typedThreads[threadId] = updatedThread
     threadsStore.set('threads', typedThreads)
 
+    try {
+      writeThread(updatedThread)
+    } catch (err) {
+      log.error('[DB] Failed to dual-write message addition:', err)
+    }
+
     return { success: true }
   } catch (error) {
     log.error(`[THREADS] Failed to add message to thread ${threadId}:`, error)
@@ -215,6 +268,12 @@ export function updateThreadMessages(
     typedThreads[threadId] = updatedThread
     threadsStore.set('threads', typedThreads)
 
+    try {
+      writeThread(updatedThread)
+    } catch (err) {
+      log.error('[DB] Failed to dual-write thread messages:', err)
+    }
+
     return { success: true }
   } catch (error) {
     log.error(
@@ -243,6 +302,12 @@ export function deleteThread(threadId: string): {
     delete typedThreads[threadId]
     threadsStore.set('threads', typedThreads)
 
+    try {
+      deleteThreadFromDb(threadId)
+    } catch (err) {
+      log.error('[DB] Failed to dual-write thread deletion:', err)
+    }
+
     // If this was the active thread, clear the active thread
     const activeThreadId = threadsStore.get('activeThreadId')
     if (activeThreadId === threadId) {
@@ -261,6 +326,16 @@ export function deleteThread(threadId: string): {
 
 export function getActiveThreadId(): string | undefined {
   try {
+    if (getFeatureFlag(featureFlagKeys.SQLITE_READS_THREADS)) {
+      try {
+        return readActiveThreadIdFromDb()
+      } catch (err) {
+        log.error(
+          '[DB] SQLite read failed, falling back to electron-store:',
+          err
+        )
+      }
+    }
     return threadsStore.get('activeThreadId')
   } catch (error) {
     log.error('[THREADS] Failed to get active thread ID:', error)
@@ -282,6 +357,13 @@ export function setActiveThreadId(threadId: string | undefined): {
     }
 
     threadsStore.set('activeThreadId', threadId)
+
+    try {
+      writeActiveThread(threadId)
+    } catch (err) {
+      log.error('[DB] Failed to dual-write active thread:', err)
+    }
+
     return { success: true }
   } catch (error) {
     log.error('[THREADS] Failed to set active thread ID:', error)
@@ -296,6 +378,13 @@ export function clearAllThreads(): { success: boolean; error?: string } {
   try {
     threadsStore.set('threads', {})
     threadsStore.set('activeThreadId', undefined)
+
+    try {
+      clearAllThreadsFromDb()
+    } catch (err) {
+      log.error('[DB] Failed to dual-write clear all threads:', err)
+    }
+
     return { success: true }
   } catch (error) {
     log.error('[THREADS] Failed to clear all threads:', error)
@@ -308,6 +397,16 @@ export function clearAllThreads(): { success: boolean; error?: string } {
 
 export function getThreadCount(): number {
   try {
+    if (getFeatureFlag(featureFlagKeys.SQLITE_READS_THREADS)) {
+      try {
+        return readThreadCountFromDb()
+      } catch (err) {
+        log.error(
+          '[DB] SQLite read failed, falling back to electron-store:',
+          err
+        )
+      }
+    }
     const threads = threadsStore.get('threads')
     if (isThreadsRecord(threads)) {
       return Object.keys(threads).length

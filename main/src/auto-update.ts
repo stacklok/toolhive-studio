@@ -15,6 +15,10 @@ import log from './logger'
 import { setQuittingState, setTearingDownState } from './app-state'
 import Store from 'electron-store'
 import { fetchLatestRelease } from './utils/toolhive-version'
+import { writeSetting } from './db/writers/settings-writer'
+import { readSetting } from './db/readers/settings-reader'
+import { getFeatureFlag } from './feature-flags/flags'
+import { featureFlagKeys } from '../../utils/feature-flags'
 
 export type UpdateState =
   | 'checking'
@@ -639,6 +643,11 @@ export function setAutoUpdateEnabled(enabled: boolean) {
   )
 
   store.set('isAutoUpdateEnabled', enabled)
+  try {
+    writeSetting('isAutoUpdateEnabled', String(enabled))
+  } catch (err) {
+    log.error('[DB] Failed to dual-write isAutoUpdateEnabled:', err)
+  }
 
   if (!enabled) {
     // Reset update state when disabled
@@ -674,6 +683,14 @@ export function getUpdateState() {
 }
 
 export function getIsAutoUpdateEnabled() {
+  if (getFeatureFlag(featureFlagKeys.SQLITE_READS_SETTINGS)) {
+    try {
+      const value = readSetting('isAutoUpdateEnabled')
+      if (value !== undefined) return value === 'true'
+    } catch (err) {
+      log.error('[DB] SQLite read failed, falling back to electron-store:', err)
+    }
+  }
   return store.get('isAutoUpdateEnabled')
 }
 
