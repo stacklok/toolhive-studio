@@ -1,11 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { getApiV1BetaWorkloadsOptions } from '@common/api/generated/@tanstack/react-query.gen'
 import { EmptyState } from '@/common/components/empty-state'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
 import { GridCardsMcpServers } from '@/features/mcp-servers/components/grid-cards-mcp-server'
-import { useMutationRestartServerAtStartup } from '@/features/mcp-servers/hooks/use-mutation-restart-server'
 import { TitlePage } from '@/common/components/title-page'
 import { McpServersSidebar } from '@/features/mcp-servers/components/mcp-servers-sidebar'
 import { RefreshButton } from '@/common/components/refresh-button'
@@ -91,29 +90,6 @@ function GroupRoute() {
     local: false,
     remote: false,
   })
-  const { mutateAsync, isPending } = useMutationRestartServerAtStartup()
-  const hasProcessedShutdown = useRef(false)
-
-  useEffect(() => {
-    const handleShutdownRestart = async () => {
-      try {
-        if (hasProcessedShutdown.current) return
-        hasProcessedShutdown.current = true
-
-        const shutdownServers =
-          await window.electronAPI.shutdownStore.getLastShutdownServers()
-        if (shutdownServers.length === 0) return
-
-        await mutateAsync({
-          body: { names: shutdownServers.map((server) => server.name!) },
-        })
-      } catch (error) {
-        console.error('Error during shutdown server restart:', error)
-      }
-    }
-
-    handleShutdownRestart()
-  }, [mutateAsync])
 
   return (
     <div className="flex h-full gap-6">
@@ -147,7 +123,7 @@ function GroupRoute() {
             />
           </>
         </TitlePage>
-        {!isPending && !filteredWorkloads.length ? (
+        {!filteredWorkloads.length ? (
           <EmptyState
             title="Add your first MCP server"
             body="Add a server manually or browse the MCP Server registry"
