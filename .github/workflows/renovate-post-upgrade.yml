@@ -37,7 +37,7 @@ jobs:
         if: steps.check.outputs.toolhive == 'true' || steps.check.outputs.heyapi == 'true'
         uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
         with:
-          version: '10.29.3'
+          version: '10.30.0'
 
       - name: Setup Node.js
         if: steps.check.outputs.toolhive == 'true' || steps.check.outputs.heyapi == 'true'
