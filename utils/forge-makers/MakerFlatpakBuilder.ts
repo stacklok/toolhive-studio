@@ -65,6 +65,7 @@ export default class MakerFlatpakBuilder extends MakerBase<
 
       // Build with flatpak-builder
       await runCommand('flatpak-builder', [
+        '--user',
         '--force-clean',
         `--arch=${flatpakArch}`,
         '--install-deps-from=flathub',
