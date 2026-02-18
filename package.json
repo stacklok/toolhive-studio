@@ -9,8 +9,8 @@
     "node": ">=24.0.0 <25.0.0"
   },
   "scripts": {
-    "postinstall": "electron-rebuild -f -w better-sqlite3",
-    "start": "electron-forge start",
+    "rebuild": "electron-rebuild -f -w better-sqlite3",
+    "postinstall": "pnpm run rebuild",
     "e2e": "pnpm package && pnpm e2e:prebuilt",
     "e2e:prebuilt": "playwright test",
     "package": "tsc -b --clean && tsc -b && electron-forge package",
@@ -44,6 +44,7 @@
     "@electron-forge/maker-rpm": "^7.8.1",
     "@electron-forge/maker-squirrel": "^7.8.1",
     "@electron-forge/maker-zip": "^7.8.1",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.11.1",
     "@electron-forge/plugin-fuses": "^7.8.1",
     "@electron-forge/plugin-vite": "^7.8.1",
     "@electron-forge/publisher-github": "^7.8.1",

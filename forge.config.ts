@@ -8,6 +8,7 @@ import { MakerFlatpak } from '@electron-forge/maker-flatpak'
 import { VitePlugin } from '@electron-forge/plugin-vite'
 import { FusesPlugin } from '@electron-forge/plugin-fuses'
 import { FuseV1Options, FuseVersion } from '@electron/fuses'
+import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-natives'
 import { ensureThv } from './utils/fetch-thv'
 import MakerTarGz from './utils/forge-makers/MakerTarGz'
 import MakerDMGWithArch from './utils/forge-makers/MakerDMGWithArch'
@@ -24,9 +25,8 @@ function isValidArchitecture(arch: string): arch is NodeJS.Architecture {
 
 const config: ForgeConfig = {
   packagerConfig: {
-    asar: {
-      unpack: '**/{better-sqlite3,bindings,file-uri-to-path}/**/*.node',
-    },
+    asar: true,
+    ignore: [/node_modules\/(?!(better-sqlite3|bindings|file-uri-to-path)\/)/],
     icon: './icons/icon',
     executableName: 'ToolHive',
     /**
@@ -203,6 +203,7 @@ const config: ForgeConfig = {
   ],
 
   plugins: [
+    new AutoUnpackNativesPlugin({}),
     new VitePlugin({
       build: [
         {
