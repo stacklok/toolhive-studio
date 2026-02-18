@@ -214,9 +214,6 @@ importers:
       '@electron-forge/maker-dmg':
         specifier: ^7.8.1
         version: 7.11.1
-      '@electron-forge/maker-flatpak':
-        specifier: ^7.8.1
-        version: 7.11.1
       '@electron-forge/maker-rpm':
         specifier: ^7.8.1
         version: 7.11.1
@@ -837,10 +834,6 @@ packages:
 
   '@electron-forge/maker-dmg@7.11.1':
     resolution: {integrity: sha512-7zs5/Ewz1PcOl4N1102stFgBiFGWxU18+UPFUSd/fgf9MErBl4HBWuVNMIHyeJ/56rdfkcmTxTqE+9TBEYrZcg==}
-    engines: {node: '>= 16.4.0'}
-
-  '@electron-forge/maker-flatpak@7.11.1':
-    resolution: {integrity: sha512-H7+aa1OkJUHBj08DdbhSz2gL1hD/IowYpVS+uv7e6PcDqRYy/5XQQ2FoX52+3Qlik8d+tai7iOzVGcqb+D7f0Q==}
     engines: {node: '>= 16.4.0'}
 
   '@electron-forge/maker-rpm@7.11.1':
@@ -1653,16 +1646,6 @@ packages:
   '@malept/cross-spawn-promise@2.0.0':
     resolution: {integrity: sha512-1DpKU0Z5ThltBwjNySMC14g0CkbyhCaz9FkhxqNsZI6uAPJXFS8cMXlBKo26FJ8ZuW6S9GCMcR9IO5k2X5/9Fg==}
     engines: {node: '>= 12.13.0'}
-
-  '@malept/electron-installer-flatpak@0.11.4':
-    resolution: {integrity: sha512-ZdwhT4WeeJWdnsmALUtQ7bn4pzYVh0Vg+4NnF1S3n3OACc9IWg+B+LxI5gT3XSXIrxogouqkjM6gD8S592awyA==}
-    engines: {node: '>= 10.0.0'}
-    os: [darwin, linux]
-    hasBin: true
-
-  '@malept/flatpak-bundler@0.4.0':
-    resolution: {integrity: sha512-9QOtNffcOF/c1seMCDnjckb3R9WHcG34tky+FHpNKKCW0wc/scYLwMtO+ptyGUfMW0/b/n4qRiALlaFHc9Oj7Q==}
-    engines: {node: '>= 10.0.0'}
 
   '@mermaid-js/parser@0.6.3':
     resolution: {integrity: sha512-lnjOhe7zyHjc+If7yT4zoedx2vo4sHaTmtkl1+or8BRTnCtDmcTpAjpzDSfCZrshM5bCoz0GyidzadJAH1xobA==}
@@ -9302,17 +9285,6 @@ snapshots:
       - bluebird
       - supports-color
 
-  '@electron-forge/maker-flatpak@7.11.1':
-    dependencies:
-      '@electron-forge/maker-base': 7.11.1
-      '@electron-forge/shared-types': 7.11.1
-      fs-extra: 10.1.0
-    optionalDependencies:
-      '@malept/electron-installer-flatpak': 0.11.4
-    transitivePeerDependencies:
-      - bluebird
-      - supports-color
-
   '@electron-forge/maker-rpm@7.11.1':
     dependencies:
       '@electron-forge/maker-base': 7.11.1
@@ -10261,28 +10233,6 @@ snapshots:
   '@malept/cross-spawn-promise@2.0.0':
     dependencies:
       cross-spawn: 7.0.6
-
-  '@malept/electron-installer-flatpak@0.11.4':
-    dependencies:
-      '@malept/flatpak-bundler': 0.4.0
-      debug: 4.4.3
-      electron-installer-common: 0.10.4
-      lodash: 4.17.23
-      semver: 7.7.3
-      yargs: 16.2.0
-    transitivePeerDependencies:
-      - supports-color
-    optional: true
-
-  '@malept/flatpak-bundler@0.4.0':
-    dependencies:
-      debug: 4.4.3
-      fs-extra: 9.1.0
-      lodash: 4.17.23
-      tmp-promise: 3.0.3
-    transitivePeerDependencies:
-      - supports-color
-    optional: true
 
   '@mermaid-js/parser@0.6.3':
     dependencies:
