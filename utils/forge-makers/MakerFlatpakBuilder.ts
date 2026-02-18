@@ -1,8 +1,6 @@
 import path from 'node:path'
 import { promises as fs } from 'node:fs'
 import { spawn } from 'node:child_process'
-import os from 'node:os'
-
 import { MakerBase, type MakerOptions } from '@electron-forge/maker-base'
 import type { ForgePlatform } from '@electron-forge/shared-types'
 
@@ -49,7 +47,9 @@ export default class MakerFlatpakBuilder extends MakerBase<
 
     await this.ensureFile(outPath)
 
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'forge-flatpak-'))
+    // Use a temp dir on the same filesystem as the project so
+    // flatpak-builder can hardlink its state/cache directories.
+    const tmpDir = await fs.mkdtemp(path.join(outDir, '.flatpak-work-'))
     const buildDir = path.join(tmpDir, 'build')
     const repoDir = path.join(tmpDir, 'repo')
 
