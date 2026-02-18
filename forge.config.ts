@@ -26,7 +26,6 @@ function isValidArchitecture(arch: string): arch is NodeJS.Architecture {
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
-    ignore: [/node_modules\/(?!(better-sqlite3|bindings|file-uri-to-path)\/)/],
     icon: './icons/icon',
     executableName: 'ToolHive',
     /**
@@ -237,11 +236,19 @@ const config: ForgeConfig = {
     }),
   ],
 
-  /**
-   * Hooks are the glue that let us pull ToolHive ("thv")
-   * right before dev-server start or a production build.
-   */
   hooks: {
+    // copy sqlite deps that already compiled
+    packageAfterCopy: async (_config, buildPath) => {
+      const fs = await import('node:fs')
+      const nodePath = await import('node:path')
+      const modules = ['better-sqlite3', 'bindings', 'file-uri-to-path']
+      for (const mod of modules) {
+        const src = nodePath.join(process.cwd(), 'node_modules', mod)
+        const dest = nodePath.join(buildPath, 'node_modules', mod)
+        fs.cpSync(src, dest, { recursive: true })
+      }
+    },
+    // this would take care of downloading thv binary
     generateAssets: async (_forgeConfig, platform, arch) => {
       if (!isValidPlatform(platform)) {
         throw new Error(`Unsupported platform: ${platform}`)
