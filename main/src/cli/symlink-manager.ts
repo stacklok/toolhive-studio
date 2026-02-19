@@ -45,6 +45,13 @@ export const getBundledCliPath = (): string => binPath
  * (used as flatpak_target). This path exists when the flatpak is installed
  * and disappears on uninstall, allowing the Go CLI to detect conflicts.
  * For non-flatpak: the bundled binary path (used as symlink_target).
+ *
+ * Assumptions for the flatpak path:
+ * - Assumes a per-user installation (~/.local/share/flatpak/). System-wide
+ *   installs (/var/lib/flatpak/) use a different base path.
+ * - Uses the "master" branch name, which is the Flatpak default for
+ *   non-versioned apps.
+ * - Relies on the "active" symlink inside the Flatpak directory structure.
  */
 export function getMarkerTargetPath(): string {
   if (!isFlatpak()) {

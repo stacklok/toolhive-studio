@@ -98,14 +98,15 @@ export function deleteMarkerFile(): boolean {
   }
 }
 
-export function createMarkerForDesktopInstall(
-  cliVersion: string,
-  symlinkTarget: string | undefined,
-  cliChecksum: string | undefined,
-  platform: Platform = process.platform as Platform,
+export function createMarkerForDesktopInstall(opts: {
+  cliVersion: string
+  symlinkTarget?: string
+  cliChecksum?: string
+  platform?: Platform
   flatpakTarget?: string
-): boolean {
-  const installMethod = flatpakTarget
+}): boolean {
+  const platform = opts.platform ?? (process.platform as Platform)
+  const installMethod = opts.flatpakTarget
     ? 'flatpak'
     : platform === 'win32'
       ? 'copy'
@@ -114,10 +115,10 @@ export function createMarkerForDesktopInstall(
   return writeMarkerFile({
     source: 'desktop',
     install_method: installMethod,
-    cli_version: cliVersion,
-    symlink_target: flatpakTarget ? undefined : symlinkTarget,
-    flatpak_target: flatpakTarget,
-    cli_checksum: cliChecksum,
+    cli_version: opts.cliVersion,
+    symlink_target: opts.flatpakTarget ? undefined : opts.symlinkTarget,
+    flatpak_target: opts.flatpakTarget,
+    cli_checksum: opts.cliChecksum,
     installed_at: new Date().toISOString(),
     desktop_version: app.getVersion(),
   })

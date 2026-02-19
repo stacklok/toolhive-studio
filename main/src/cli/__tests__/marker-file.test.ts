@@ -168,7 +168,10 @@ describe('marker-file', () => {
       const originalPlatform = process.platform
       Object.defineProperty(process, 'platform', { value: 'darwin' })
 
-      createMarkerForDesktopInstall('1.0.0', '/path/to/thv', undefined)
+      createMarkerForDesktopInstall({
+        cliVersion: '1.0.0',
+        symlinkTarget: '/path/to/thv',
+      })
 
       const content = vol.readFileSync(
         '/home/testuser/.toolhive/.cli-source',
@@ -184,7 +187,10 @@ describe('marker-file', () => {
       const originalPlatform = process.platform
       Object.defineProperty(process, 'platform', { value: 'win32' })
 
-      createMarkerForDesktopInstall('1.0.0', undefined, 'abc123checksum')
+      createMarkerForDesktopInstall({
+        cliVersion: '1.0.0',
+        cliChecksum: 'abc123checksum',
+      })
 
       const content = vol.readFileSync(
         '/home/testuser/.toolhive/.cli-source',
