@@ -40,7 +40,13 @@ export default class MakerFlatpakBuilder extends MakerBase<
   }
 
   async make({ dir, makeDir, targetArch }: MakerOptions): Promise<string[]> {
-    const flatpakArch = targetArch === 'x64' ? 'x86_64' : 'aarch64'
+    const archMap: Record<string, string> = { x64: 'x86_64', arm64: 'aarch64' }
+    const flatpakArch = archMap[targetArch]
+    if (!flatpakArch) {
+      throw new Error(
+        `Unsupported architecture for Flatpak build: ${targetArch}`
+      )
+    }
     const fileName = `${APP_ID}_${flatpakArch}.flatpak`
     const outDir = path.join(makeDir, flatpakArch)
     const outPath = path.join(outDir, fileName)

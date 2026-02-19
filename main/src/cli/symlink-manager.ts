@@ -27,8 +27,10 @@ import log from '../logger'
 const FLATPAK_APP_ID = 'com.stacklok.ToolHive'
 
 function getFlatpakCliPath(): string {
-  const arch = process.arch === 'x64' ? 'x64' : 'arm64'
-  return `/app/toolhive/resources/bin/linux-${arch}/thv`
+  if (process.arch !== 'x64' && process.arch !== 'arm64') {
+    throw new Error(`Unsupported architecture for Flatpak CLI: ${process.arch}`)
+  }
+  return `/app/toolhive/resources/bin/linux-${process.arch}/thv`
 }
 
 export function isFlatpak(): boolean {
