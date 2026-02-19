@@ -13,7 +13,7 @@ export interface CliSourceMarker {
   /** Source of CLI installation - always 'desktop' for Desktop-managed CLI */
   source: 'desktop'
   /** Installation method used */
-  install_method: 'symlink' | 'copy'
+  install_method: 'symlink' | 'copy' | 'wrapper'
   /** Version of the CLI binary */
   cli_version: string
   /** Path the symlink points to (macOS/Linux only) */
@@ -37,7 +37,7 @@ export interface CliAlignmentStatus {
   /** Version of the managed CLI */
   cliVersion: string | null
   /** Installation method used */
-  installMethod: 'symlink' | 'copy' | null
+  installMethod: 'symlink' | 'copy' | 'wrapper' | null
   /** Path the symlink points to (macOS/Linux) or null (Windows) */
   symlinkTarget: string | null
   /** Whether the CLI installation is valid */

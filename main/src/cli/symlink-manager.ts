@@ -4,14 +4,16 @@
  */
 
 import {
+  chmodSync,
   existsSync,
   lstatSync,
   mkdirSync,
   readlinkSync,
+  readFileSync,
   symlinkSync,
   unlinkSync,
   copyFileSync,
-  readFileSync,
+  writeFileSync,
 } from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
@@ -21,6 +23,13 @@ import { readMarkerFile } from './marker-file'
 import { binPath } from '../toolhive-manager'
 import type { SymlinkCheckResult, Platform } from './types'
 import log from '../logger'
+
+const FLATPAK_APP_ID = 'com.stacklok.ToolHive'
+const FLATPAK_CLI_PATH = '/app/toolhive/resources/bin/linux-x64/thv'
+
+export function isFlatpak(): boolean {
+  return existsSync('/.flatpak-info')
+}
 
 export const getBundledCliPath = (): string => binPath
 
@@ -66,6 +75,28 @@ export function checkSymlink(
       targetExists: false,
       target: null,
       isOurBinary: false,
+    }
+  }
+
+  // In Flatpak, we use a wrapper script instead of a symlink
+  if (isFlatpak()) {
+    try {
+      const content = readFileSync(cliPath, 'utf8')
+      const isWrapper =
+        content.includes('flatpak run') && content.includes(FLATPAK_APP_ID)
+      return {
+        exists: true,
+        targetExists: true,
+        target: cliPath,
+        isOurBinary: isWrapper,
+      }
+    } catch {
+      return {
+        exists: true,
+        targetExists: false,
+        target: cliPath,
+        isOurBinary: false,
+      }
     }
   }
 
@@ -169,6 +200,18 @@ export function createSymlink(
       const content = readFileSync(cliPath)
       const checksum = crypto.createHash('sha256').update(content).digest('hex')
       return { success: true, checksum }
+    }
+
+    if (isFlatpak()) {
+      const wrapper = [
+        '#!/bin/sh',
+        `exec flatpak run --command=${FLATPAK_CLI_PATH} ${FLATPAK_APP_ID} "$@"`,
+        '',
+      ].join('\n')
+      writeFileSync(cliPath, wrapper, 'utf8')
+      chmodSync(cliPath, 0o755)
+      log.info(`Created flatpak wrapper script: ${cliPath}`)
+      return { success: true }
     }
 
     symlinkSync(bundledPath, cliPath)
