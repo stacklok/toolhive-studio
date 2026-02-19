@@ -109,8 +109,12 @@ export default class MakerFlatpakBuilder extends MakerBase<
         '--socket=x11',
         '--socket=wayland',
         '--device=dri',
+        // TODO: Narrow D-Bus permissions to specific --talk-name= entries before Flathub submission.
+        // Full bus access will be rejected by Flathub reviewers.
         '--socket=system-bus',
         '--socket=session-bus',
+        // Docker/Podman socket access is required for the app's core functionality:
+        // ToolHive manages MCP servers running as containers.
         '--filesystem=/run/docker.sock',
         '--filesystem=/run/podman/podman.sock',
         '--filesystem=xdg-run/podman/podman.sock',

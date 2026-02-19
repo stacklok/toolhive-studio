@@ -25,7 +25,11 @@ import type { SymlinkCheckResult, Platform } from './types'
 import log from '../logger'
 
 const FLATPAK_APP_ID = 'com.stacklok.ToolHive'
-const FLATPAK_CLI_PATH = '/app/toolhive/resources/bin/linux-x64/thv'
+
+function getFlatpakCliPath(): string {
+  const arch = process.arch === 'x64' ? 'x64' : 'arm64'
+  return `/app/toolhive/resources/bin/linux-${arch}/thv`
+}
 
 export function isFlatpak(): boolean {
   return existsSync('/.flatpak-info')
@@ -93,7 +97,7 @@ export function checkSymlink(
     } catch {
       return {
         exists: true,
-        targetExists: false,
+        targetExists: true, // file exists, we just can't read/verify it
         target: cliPath,
         isOurBinary: false,
       }
@@ -205,7 +209,7 @@ export function createSymlink(
     if (isFlatpak()) {
       const wrapper = [
         '#!/bin/sh',
-        `exec flatpak run --command=${FLATPAK_CLI_PATH} ${FLATPAK_APP_ID} "$@"`,
+        `exec flatpak run --command=${getFlatpakCliPath()} ${FLATPAK_APP_ID} "$@"`,
         '',
       ].join('\n')
       writeFileSync(cliPath, wrapper, 'utf8')
