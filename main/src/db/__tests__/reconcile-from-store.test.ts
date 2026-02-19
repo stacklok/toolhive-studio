@@ -157,7 +157,7 @@ describe('reconcileFromStore', () => {
     expect(tools[0]!.server_name).toBe('server1')
   })
 
-  it('syncs threads and skips unchanged threads based on timestamp', () => {
+  it('syncs all threads from electron-store to SQLite', () => {
     testDb
       .prepare(
         "INSERT INTO threads (id, title, created_at, last_edit_timestamp) VALUES ('t1', 'Old', 1000, 1000)"

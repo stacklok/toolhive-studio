@@ -93,14 +93,10 @@ function syncThreads(db: Database.Database): void {
   const threads = threadsStore.get('threads')
   if (!threads || typeof threads !== 'object') return
 
-  // Get all timestamps from SQLite in one query
-  const dbTimestamps = new Map(
-    (
-      db.prepare('SELECT id, last_edit_timestamp FROM threads').all() as {
-        id: string
-        last_edit_timestamp: number
-      }[]
-    ).map((row) => [row.id, row.last_edit_timestamp])
+  const dbThreadIds = new Set(
+    (db.prepare('SELECT id FROM threads').all() as { id: string }[]).map(
+      (row) => row.id
+    )
   )
 
   const storeThreadIds = new Set<string>()
@@ -109,16 +105,11 @@ function syncThreads(db: Database.Database): void {
     if (!thread || typeof thread !== 'object') continue
     const t = thread as ChatSettingsThread
     storeThreadIds.add(threadId)
-
-    // Only upsert if the thread is new or has changed
-    const dbTimestamp = dbTimestamps.get(threadId)
-    if (dbTimestamp === t.lastEditTimestamp) continue
-
     writeThread(t)
   }
 
   // Remove threads from SQLite that no longer exist in electron-store
-  for (const [dbId] of dbTimestamps) {
+  for (const dbId of dbThreadIds) {
     if (!storeThreadIds.has(dbId)) {
       deleteThreadFromDb(dbId)
     }
