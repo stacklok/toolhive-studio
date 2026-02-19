@@ -118,6 +118,9 @@ export default class MakerFlatpakBuilder extends MakerBase<
         '--filesystem=/run/docker.sock',
         '--filesystem=/run/podman/podman.sock',
         '--filesystem=xdg-run/podman/podman.sock',
+        // CLI alignment: write wrapper script to ~/.toolhive/bin/thv and
+        // PATH entries to shell RC files (~/.bashrc, ~/.zshrc, etc.)
+        '--filesystem=home',
         '--env=ELECTRON_TRASH=gio',
       ],
       modules: [
