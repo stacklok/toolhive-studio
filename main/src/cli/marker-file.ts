@@ -14,7 +14,6 @@ import {
 import path from 'node:path'
 import { app } from 'electron'
 import { getMarkerFilePath } from './constants'
-import { isFlatpak } from './symlink-manager'
 import type { CliSourceMarker, Platform } from './types'
 import log from '../logger'
 
@@ -103,14 +102,21 @@ export function createMarkerForDesktopInstall(
   cliVersion: string,
   symlinkTarget: string | undefined,
   cliChecksum: string | undefined,
-  platform: Platform = process.platform as Platform
+  platform: Platform = process.platform as Platform,
+  flatpakTarget?: string
 ): boolean {
+  const installMethod = flatpakTarget
+    ? 'flatpak'
+    : platform === 'win32'
+      ? 'copy'
+      : 'symlink'
+
   return writeMarkerFile({
     source: 'desktop',
-    install_method:
-      platform === 'win32' ? 'copy' : isFlatpak() ? 'wrapper' : 'symlink',
+    install_method: installMethod,
     cli_version: cliVersion,
-    symlink_target: symlinkTarget,
+    symlink_target: flatpakTarget ? undefined : symlinkTarget,
+    flatpak_target: flatpakTarget,
     cli_checksum: cliChecksum,
     installed_at: new Date().toISOString(),
     desktop_version: app.getVersion(),

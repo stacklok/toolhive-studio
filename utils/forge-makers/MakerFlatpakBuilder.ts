@@ -133,6 +133,7 @@ export default class MakerFlatpakBuilder extends MakerBase<
         '--filesystem=~/.zshrc',
         '--filesystem=~/.config/fish:create',
         '--env=ELECTRON_TRASH=gio',
+        '--env=TOOLHIVE_SKIP_DESKTOP_CHECK=1',
       ],
       modules: [
         {

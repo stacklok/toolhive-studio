@@ -39,6 +39,30 @@ export function isFlatpak(): boolean {
 
 export const getBundledCliPath = (): string => binPath
 
+/**
+ * Returns the target path to write in the marker file.
+ * For flatpak: the host-visible path inside the flatpak installation directory
+ * (used as flatpak_target). This path exists when the flatpak is installed
+ * and disappears on uninstall, allowing the Go CLI to detect conflicts.
+ * For non-flatpak: the bundled binary path (used as symlink_target).
+ */
+export function getMarkerTargetPath(): string {
+  if (!isFlatpak()) {
+    return binPath
+  }
+  const flatpakArch = process.arch === 'x64' ? 'x86_64' : 'aarch64'
+  const homedir = app.getPath('home')
+  return path.join(
+    homedir,
+    '.local/share/flatpak/app',
+    FLATPAK_APP_ID,
+    flatpakArch,
+    'master/active/files/toolhive/resources/bin',
+    `linux-${process.arch}`,
+    'thv'
+  )
+}
+
 export const isOurBinary = (target: string): boolean => {
   const bundledPath = getBundledCliPath()
   const normalizedTarget = path.normalize(target)

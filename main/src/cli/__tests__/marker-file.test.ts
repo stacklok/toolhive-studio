@@ -21,10 +21,6 @@ vi.mock('../constants', () => ({
   getMarkerFilePath: () => '/home/testuser/.toolhive/.cli-source',
 }))
 
-vi.mock('../symlink-manager', () => ({
-  isFlatpak: () => false,
-}))
-
 vi.mock('../../logger', () => ({
   default: {
     info: vi.fn(),

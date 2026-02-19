@@ -21,6 +21,8 @@ vi.mock('../symlink-manager', () => ({
   checkSymlink: vi.fn(),
   createSymlink: vi.fn(),
   getBundledCliPath: vi.fn(),
+  getMarkerTargetPath: vi.fn(() => '/app/resources/bin/darwin-arm64/thv'),
+  isFlatpak: vi.fn(() => false),
   repairSymlink: vi.fn(),
 }))
 
@@ -394,9 +396,10 @@ describe('validation', () => {
       expect(mockCreateSymlink).not.toHaveBeenCalled()
       expect(mockCreateMarkerForDesktopInstall).toHaveBeenCalledWith(
         '1.0.0',
-        '/app/resources/bin/thv',
+        '/app/resources/bin/darwin-arm64/thv',
         'old-checksum',
-        'darwin'
+        'darwin',
+        undefined
       )
       expect(result.status).toBe('valid')
     })

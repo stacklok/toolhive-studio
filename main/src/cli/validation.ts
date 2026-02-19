@@ -11,6 +11,8 @@ import {
   checkSymlink,
   createSymlink,
   getBundledCliPath,
+  getMarkerTargetPath,
+  isFlatpak,
   repairSymlink,
 } from './symlink-manager'
 import { configureShellPath, checkPathConfiguration } from './path-configurator'
@@ -161,7 +163,6 @@ export async function handleValidationResult(
               'cli.new_desktop_version': currentDesktopVersion,
             })
 
-            const bundledPath = getBundledCliPath()
             const cliPath = getDesktopCliPath(platform)
 
             // On Windows, we need to recopy the CLI since it's a copy not a symlink
@@ -190,11 +191,13 @@ export async function handleValidationResult(
             } else {
               // macOS/Linux: symlink auto-updates, just update marker
               const cliInfo = await getCliInfo(cliPath)
+              const targetPath = getMarkerTargetPath()
               createMarkerForDesktopInstall(
                 cliInfo.version ?? 'unknown',
-                bundledPath,
+                isFlatpak() ? undefined : targetPath,
                 marker.cli_checksum,
-                platform
+                platform,
+                isFlatpak() ? targetPath : undefined
               )
             }
           }
@@ -250,14 +253,16 @@ export async function handleValidationResult(
             return result
           }
 
-          const bundledPath = getBundledCliPath()
           const cliPath = getDesktopCliPath(platform)
           const cliInfo = await getCliInfo(cliPath)
+          const targetPath = getMarkerTargetPath()
 
           createMarkerForDesktopInstall(
             cliInfo.version ?? 'unknown',
-            platform === 'win32' ? undefined : bundledPath,
-            symlinkResult.checksum
+            platform === 'win32' || isFlatpak() ? undefined : targetPath,
+            symlinkResult.checksum,
+            undefined,
+            isFlatpak() ? targetPath : undefined
           )
 
           log.info(`CLI installed: version=${cliInfo.version}, path=${cliPath}`)
@@ -317,13 +322,15 @@ export async function repairCliSymlink(
       }
 
       // Update marker file after repair
-      const bundledPath = getBundledCliPath()
       const cliPath = getDesktopCliPath(platform)
       const cliInfo = await getCliInfo(cliPath)
+      const targetPath = getMarkerTargetPath()
       createMarkerForDesktopInstall(
         cliInfo.version ?? 'unknown',
-        platform === 'win32' ? undefined : bundledPath,
-        result.checksum
+        platform === 'win32' || isFlatpak() ? undefined : targetPath,
+        result.checksum,
+        undefined,
+        isFlatpak() ? targetPath : undefined
       )
 
       log.info('Symlink repaired successfully')
@@ -399,10 +406,13 @@ export async function reinstallCliSymlink(
       if (result.success) {
         const bundledPath = getBundledCliPath()
         const cliInfo = await getCliInfo(bundledPath)
+        const targetPath = getMarkerTargetPath()
         createMarkerForDesktopInstall(
           cliInfo.version ?? 'unknown',
-          platform === 'win32' ? undefined : bundledPath,
-          result.checksum
+          platform === 'win32' || isFlatpak() ? undefined : targetPath,
+          result.checksum,
+          undefined,
+          isFlatpak() ? targetPath : undefined
         )
         span.setAttributes({
           'cli.success': true,
