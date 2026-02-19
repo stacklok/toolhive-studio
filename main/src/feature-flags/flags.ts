@@ -44,7 +44,7 @@ const featureFlagOptions: Record<FeatureFlagKey, FeatureFlagOptions> = {
 }
 
 // Create a dedicated store for feature flags
-const featureFlagStore = new Store<Record<string, boolean>>({
+export const featureFlagStore = new Store<Record<string, boolean>>({
   name: 'feature-flags',
   defaults: {},
 })

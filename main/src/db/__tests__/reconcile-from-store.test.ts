@@ -4,9 +4,21 @@ import { createTestDb } from './test-helpers'
 
 let testDb: Database.Database
 
-const { mockStoreData } = vi.hoisted(() => ({
-  mockStoreData: {} as Record<string, Record<string, unknown>>,
-}))
+const { mockStoreData, createMockStore } = vi.hoisted(() => {
+  const mockStoreData = {} as Record<string, Record<string, unknown>>
+  const createMockStore = (storeName: string) => ({
+    get: vi.fn((key: string, defaultValue?: unknown) => {
+      const data = mockStoreData[storeName] || {}
+      return key in data ? data[key] : defaultValue
+    }),
+    set: vi.fn(),
+    delete: vi.fn(),
+    get store() {
+      return mockStoreData[storeName] || {}
+    },
+  })
+  return { mockStoreData, createMockStore }
+})
 
 vi.mock('electron-store', () => {
   return {
@@ -46,6 +58,20 @@ vi.mock('../../logger', () => ({
 
 vi.mock('electron', () => ({
   app: { getPath: vi.fn(() => ':memory:') },
+}))
+
+// Mock heavy source modules to avoid their transitive deps (electron full API, sentry, etc.)
+vi.mock('../../auto-update', () => ({
+  autoUpdateStore: createMockStore('auto-update'),
+}))
+vi.mock('../../quit-confirmation', () => ({
+  quitConfirmationStore: createMockStore('quit-confirmation'),
+}))
+vi.mock('../../chat/settings-storage', () => ({
+  chatSettingsStore: createMockStore('chat-settings'),
+}))
+vi.mock('../../graceful-exit', () => ({
+  shutdownStore: createMockStore('server-shutdown'),
 }))
 
 import { reconcileFromStore } from '../reconcile-from-store'

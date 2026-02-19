@@ -1,4 +1,3 @@
-import Store from 'electron-store'
 import type Database from 'better-sqlite3'
 import { getDb, isDbWritable } from './database'
 import { writeSetting } from './writers/settings-writer'
@@ -16,59 +15,13 @@ import {
 import { writeShutdownServers } from './writers/shutdown-writer'
 import log from '../logger'
 import type { ChatSettingsThread } from '../chat/threads-storage'
-
-// Re-create store references for reading (these match the stores in each module)
-const telemetryStore = new Store<{ isTelemetryEnabled: boolean }>({
-  defaults: { isTelemetryEnabled: true },
-})
-
-const autoUpdateStore = new Store<{ isAutoUpdateEnabled: boolean }>({
-  name: 'auto-update',
-  defaults: { isAutoUpdateEnabled: true },
-})
-
-const quitConfirmationStore = new Store<{ skipQuitConfirmation: boolean }>({
-  name: 'quit-confirmation',
-  defaults: { skipQuitConfirmation: false },
-})
-
-const featureFlagStore = new Store<Record<string, boolean>>({
-  name: 'feature-flags',
-  defaults: {},
-})
-
-const chatSettingsStore = new Store<{
-  providers: Record<string, unknown>
-  selectedModel: { provider: string; model: string }
-  enabledMcpTools: Record<string, string[]>
-}>({
-  name: 'chat-settings',
-  encryptionKey: 'toolhive-chat-encryption-key',
-  clearInvalidConfig: true,
-  defaults: {
-    providers: {},
-    selectedModel: { provider: '', model: '' },
-    enabledMcpTools: {},
-  },
-})
-
-const threadsStore = new Store<{
-  threads: Record<string, ChatSettingsThread>
-  activeThreadId?: string
-}>({
-  name: 'chat-threads',
-  encryptionKey: 'toolhive-threads-encryption-key',
-  clearInvalidConfig: true,
-  defaults: {
-    threads: {},
-    activeThreadId: undefined,
-  },
-})
-
-const shutdownStore = new Store({
-  name: 'server-shutdown',
-  defaults: { lastShutdownServers: [] as unknown[] },
-})
+import { telemetryStore } from '../telemetry-store'
+import { autoUpdateStore } from '../auto-update'
+import { quitConfirmationStore } from '../quit-confirmation'
+import { featureFlagStore } from '../feature-flags/flags'
+import { chatSettingsStore } from '../chat/settings-storage'
+import { threadsStore } from '../chat/threads-storage'
+import { shutdownStore } from '../graceful-exit'
 
 function syncSettings(): void {
   const telemetryEnabled = telemetryStore.get('isTelemetryEnabled', true)
