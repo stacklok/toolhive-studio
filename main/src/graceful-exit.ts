@@ -17,7 +17,7 @@ import { getFeatureFlag } from './feature-flags/flags'
 import { featureFlagKeys } from '../../utils/feature-flags'
 
 // Create a store instance for tracking shutdown servers
-const shutdownStore = new Store({
+export const shutdownStore = new Store({
   name: 'server-shutdown',
   defaults: {
     lastShutdownServers: [],

@@ -28,7 +28,7 @@ export type UpdateState =
   | 'not-available'
   | 'none'
 
-const store = new Store<{
+export const autoUpdateStore = new Store<{
   isAutoUpdateEnabled: boolean
 }>({ name: 'auto-update', defaults: { isAutoUpdateEnabled: true } })
 
@@ -533,7 +533,7 @@ export function initAutoUpdate({
   mainWindowGetter: () => BrowserWindow | null
   windowCreator: () => Promise<BrowserWindow>
 }) {
-  const isAutoUpdateEnabled = store.get('isAutoUpdateEnabled')
+  const isAutoUpdateEnabled = autoUpdateStore.get('isAutoUpdateEnabled')
   return Sentry.startSpanManual(
     {
       name: 'Auto-update initialization',
@@ -642,7 +642,7 @@ export function setAutoUpdateEnabled(enabled: boolean) {
     `[update] Auto update ${enabled ? 'enabled' : 'disabled'} dynamically`
   )
 
-  store.set('isAutoUpdateEnabled', enabled)
+  autoUpdateStore.set('isAutoUpdateEnabled', enabled)
   try {
     writeSetting('isAutoUpdateEnabled', String(enabled))
   } catch (err) {
@@ -691,11 +691,11 @@ export function getIsAutoUpdateEnabled() {
       log.error('[DB] SQLite read failed, falling back to electron-store:', err)
     }
   }
-  return store.get('isAutoUpdateEnabled')
+  return autoUpdateStore.get('isAutoUpdateEnabled')
 }
 
 export async function getLatestAvailableVersion() {
-  const isAutoUpdateEnabled = store.get('isAutoUpdateEnabled')
+  const isAutoUpdateEnabled = autoUpdateStore.get('isAutoUpdateEnabled')
   return Sentry.startSpanManual(
     {
       name: 'Check for latest version',
@@ -740,7 +740,7 @@ export async function getLatestAvailableVersion() {
 }
 
 export function manualUpdate() {
-  const isAutoUpdateEnabled = store.get('isAutoUpdateEnabled')
+  const isAutoUpdateEnabled = autoUpdateStore.get('isAutoUpdateEnabled')
   return Sentry.startSpanManual(
     {
       name: 'Manual update triggered',

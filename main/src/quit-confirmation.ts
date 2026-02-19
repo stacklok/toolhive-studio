@@ -10,7 +10,7 @@ interface QuitConfirmationStore {
   skipQuitConfirmation: boolean
 }
 
-const store = new Store<QuitConfirmationStore>({
+export const quitConfirmationStore = new Store<QuitConfirmationStore>({
   name: 'quit-confirmation',
   defaults: {
     skipQuitConfirmation: false,
@@ -26,11 +26,11 @@ export function getSkipQuitConfirmation(): boolean {
       log.error('[DB] SQLite read failed, falling back to electron-store:', err)
     }
   }
-  return store.get('skipQuitConfirmation')
+  return quitConfirmationStore.get('skipQuitConfirmation')
 }
 
 export function setSkipQuitConfirmation(skip: boolean): void {
-  store.set('skipQuitConfirmation', skip)
+  quitConfirmationStore.set('skipQuitConfirmation', skip)
   try {
     writeSetting('skipQuitConfirmation', String(skip))
   } catch (err) {

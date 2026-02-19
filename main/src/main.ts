@@ -62,7 +62,7 @@ import {
   resetUpdateState,
   setAutoUpdateEnabled,
 } from './auto-update'
-import Store from 'electron-store'
+import { telemetryStore } from './telemetry-store'
 import { getHeaders } from './headers'
 import {
   getFeatureFlag,
@@ -144,9 +144,7 @@ import { reconcileFromStore } from './db/reconcile-from-store'
 
 const isE2E = process.env.TOOLHIVE_E2E === 'true'
 
-const store = new Store<{
-  isTelemetryEnabled: boolean
-}>({ defaults: { isTelemetryEnabled: !isE2E } })
+const store = telemetryStore
 
 Sentry.init({
   dsn: isE2E ? undefined : import.meta.env.VITE_SENTRY_DSN,

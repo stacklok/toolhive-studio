@@ -61,7 +61,7 @@ function isThreadsRecord(
   return Object.values(value).every((thread) => isThread(thread))
 }
 
-const threadsStore = new Store<ChatSettingsThreads>({
+export const threadsStore = new Store<ChatSettingsThreads>({
   name: 'chat-threads',
   encryptionKey: 'toolhive-threads-encryption-key',
   clearInvalidConfig: true,
