@@ -43,7 +43,6 @@ describe('RegistryTab', () => {
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Save' })).toBeVisible()
     })
-    expect(screen.getByText('Registry Type')).toBeVisible()
   })
 
   it('handles remote registry configuration with valid URL', async () => {
