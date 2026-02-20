@@ -121,6 +121,7 @@ import {
 } from './chat'
 import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 import { getWorkloadAvailableTools } from './utils/mcp-tools'
+import { runComplianceChecks } from './utils/mcp-compliance'
 import {
   getQuittingState,
   setQuittingState,
@@ -911,6 +912,32 @@ ipcMain.handle(
 // Workload tools discovery handler
 ipcMain.handle('utils:get-workload-available-tools', async (_, workload) =>
   getWorkloadAvailableTools(workload)
+)
+
+// MCP Compliance checker handler
+ipcMain.handle(
+  'mcp-compliance:run-checks',
+  async (_, serverName: string) => {
+    const port = getToolhivePort()
+    const { createClient: createApiClient } = await import(
+      '@common/api/generated/client'
+    )
+    const { getApiV1BetaWorkloads } = await import(
+      '@common/api/generated/sdk.gen'
+    )
+    const apiClient = createApiClient({
+      baseUrl: `http://localhost:${port}`,
+      headers: getHeaders(),
+    })
+    const { data } = await getApiV1BetaWorkloads({ client: apiClient })
+    const workload = (data?.workloads || []).find(
+      (w) => w.name === serverName
+    )
+    if (!workload) {
+      throw new Error(`Workload "${serverName}" not found`)
+    }
+    return runComplianceChecks(workload)
+  }
 )
 
 // ────────────────────────────────────────────────────────────────────────────

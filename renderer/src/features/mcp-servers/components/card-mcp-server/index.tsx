@@ -1,159 +1,9 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/common/components/ui/card'
-
-import type {
-  CoreWorkload,
-  RegistryEnvVar,
-} from '@common/api/generated/types.gen'
-import { ActionsMcpServer } from '../actions-mcp-server'
-import { useMutationRestartServer } from '../../hooks/use-mutation-restart-server'
-import { useMutationStopServerList } from '../../hooks/use-mutation-stop-server'
-
-import { useSearch } from '@tanstack/react-router'
-import { useEffect, useRef, useState } from 'react'
+import { Card } from '@/common/components/ui/card'
+import type { CoreWorkload } from '@common/api/generated/types.gen'
 import { twMerge } from 'tailwind-merge'
-import { trackEvent } from '@/common/lib/analytics'
-import { delay } from '@utils/delay'
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from '@/common/components/ui/tooltip'
-import { ServerActionsDropdown } from './server-actions'
-import { useIsServerFromRegistry } from '../../hooks/use-is-server-from-registry'
-import { useUpdateVersion } from '../../hooks/use-update-version'
-import { CloudIcon, LaptopIcon, ArrowUpCircle } from 'lucide-react'
-
-function UpdateVersionButton({
-  serverName,
-  registryImage,
-  drift,
-  registryEnvVars,
-  disabled,
-}: {
-  serverName: string
-  registryImage: string
-  drift: { localTag: string; registryTag: string }
-  registryEnvVars?: RegistryEnvVar[]
-  disabled?: boolean
-}) {
-  const { promptUpdate, isReady } = useUpdateVersion({
-    serverName,
-    registryImage,
-    localTag: drift.localTag,
-    registryTag: drift.registryTag,
-    registryEnvVars,
-  })
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            void promptUpdate('card_button')
-          }}
-          disabled={disabled || !isReady}
-          className="hover:bg-accent inline-flex size-9 cursor-pointer
-            items-center justify-center rounded-md disabled:pointer-events-none
-            disabled:opacity-50"
-          aria-label={`Update to ${drift.registryTag}`}
-        >
-          <ArrowUpCircle className="size-5 text-amber-500" />
-        </button>
-      </TooltipTrigger>
-      <TooltipContent className="max-w-xs">
-        Update available: {drift.localTag} → {drift.registryTag}
-      </TooltipContent>
-    </Tooltip>
-  )
-}
-
-type CardContentMcpServerProps = {
-  status: CoreWorkload['status']
-  name: string
-  transport: CoreWorkload['transport_type']
-  group?: CoreWorkload['group']
-  drift: { localTag: string; registryTag: string } | null
-  registryImage: string | null
-  registryEnvVars?: RegistryEnvVar[]
-}
-
-function CardContentMcpServer({
-  name,
-  status,
-  transport,
-  group,
-  drift,
-  registryImage,
-  registryEnvVars,
-}: CardContentMcpServerProps) {
-  const isRunning = status === 'running'
-  const isUpdating = `${status}` === 'updating'
-  const isDeleting = `${status}` === 'deleting' || status === 'removing'
-  const { mutateAsync: restartMutate, isPending: isRestartPending } =
-    useMutationRestartServer({
-      name,
-      group,
-    })
-  const { mutateAsync: stopMutate, isPending: isStopPending } =
-    useMutationStopServerList({
-      name,
-      group,
-    })
-
-  return (
-    <CardContent>
-      <div className="flex flex-col gap-4">
-        <div
-          className="border-border flex items-center justify-between border-t
-            pt-4"
-        >
-          <ActionsMcpServer
-            status={status}
-            isPending={isRestartPending || isStopPending}
-            mutate={() => {
-              if (isRunning) {
-                stopMutate({
-                  path: {
-                    name,
-                  },
-                })
-                return trackEvent(`Workload ${name} stopped`, {
-                  workload: name,
-                  transport,
-                })
-              }
-
-              restartMutate({
-                path: {
-                  name,
-                },
-              })
-              return trackEvent(`Workload ${name} started`, {
-                workload: name,
-                transport,
-              })
-            }}
-          />
-          {drift && registryImage && (
-            <UpdateVersionButton
-              serverName={name}
-              registryImage={registryImage}
-              drift={drift}
-              registryEnvVars={registryEnvVars}
-              disabled={isUpdating || isDeleting}
-            />
-          )}
-        </div>
-      </div>
-    </CardContent>
-  )
-}
+import { CardHeaderMcpServer } from './card-header'
+import { CardContentMcpServer } from './card-content'
+import { useCardMcpServerState } from './hooks/use-card-mcp-server-state'
 
 export function CardMcpServer({
   name,
@@ -171,70 +21,21 @@ export function CardMcpServer({
   transport: CoreWorkload['transport_type']
   group?: CoreWorkload['group']
 }) {
-  const nameRef = useRef<HTMLElement | null>(null)
-  const search = useSearch({
-    strict: false,
-  })
-  const [isNewServer, setIsNewServer] = useState(false)
-  const searchNewServerName =
-    'newServerName' in search ? search.newServerName : null
-
-  useEffect(() => {
-    // Check if the server is new by looking for a specific search parameter
-    if (searchNewServerName === name) {
-      let cancelled = false
-
-      const showNewServerAnimation = async () => {
-        setIsNewServer(true)
-        await delay(2000)
-        if (!cancelled) {
-          setIsNewServer(false)
-        }
-      }
-
-      showNewServerAnimation()
-
-      return () => {
-        cancelled = true
-      }
-    }
-  }, [name, searchNewServerName])
-
-  // Check if the server is in deleting state
-  const isDeleting = status === 'removing'
-  const isTransitioning = status === 'starting' || status === 'stopping'
-  const isStopped = status === 'stopped' || status === 'stopping'
-  const [hadRecentStatusChange, setHadRecentStatusChange] = useState(false)
-  const prevStatusRef = useRef<CoreWorkload['status']>(status)
-
-  useEffect(() => {
-    // Show a brief animation for status transitions
-    if (
-      prevStatusRef.current !== status &&
-      ['running'].includes(status ?? '')
-    ) {
-      let cancelled = false
-
-      const showStatusChangeAnimation = async () => {
-        setHadRecentStatusChange(true)
-        await delay(2500)
-        if (!cancelled) {
-          setHadRecentStatusChange(false)
-        }
-      }
-
-      showStatusChangeAnimation()
-
-      return () => {
-        cancelled = true
-      }
-    }
-    prevStatusRef.current = status
-  }, [status])
-
-  const { isFromRegistry, drift, matchedRegistryItem } =
-    useIsServerFromRegistry(name)
-  const hasUpdate = isFromRegistry && drift
+  const {
+    isNewServer,
+    hadRecentStatusChange,
+    isDeleting,
+    isTransitioning,
+    isStopped,
+    isFromRegistry,
+    drift,
+    hasUpdate,
+    matchedRegistryItem,
+    report,
+    isChecking,
+    error,
+    recheck,
+  } = useCardMcpServerState(name, status)
 
   return (
     <Card
@@ -246,49 +47,19 @@ export function CardMcpServer({
         isStopped && 'bg-card/65'
       )}
     >
-      <CardHeader>
-        <div className="flex items-center justify-between gap-6 overflow-hidden">
-          <CardTitle
-            className={twMerge(
-              'min-w-0 flex-1 text-xl',
-              isStopped && 'text-foreground/65'
-            )}
-          >
-            <Tooltip onlyWhenTruncated>
-              <TooltipTrigger asChild>
-                <span ref={nameRef} className="block cursor-default truncate">
-                  {name}
-                </span>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs">{name}</TooltipContent>
-            </Tooltip>
-          </CardTitle>
-          <div className="flex items-center gap-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                {remote ? (
-                  <CloudIcon className="size-5" />
-                ) : (
-                  <LaptopIcon className="size-5" />
-                )}
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs">
-                {remote ? 'Remote MCP server' : 'Local MCP server'}
-              </TooltipContent>
-            </Tooltip>
-            <ServerActionsDropdown
-              name={name}
-              url={url}
-              status={status}
-              remote={!!remote}
-              group={group}
-              isFromRegistry={!!isFromRegistry}
-              drift={drift}
-              matchedRegistryItem={matchedRegistryItem}
-            />
-          </div>
-        </div>
-      </CardHeader>
+      <CardHeaderMcpServer
+        name={name}
+        url={url}
+        status={status}
+        remote={!!remote}
+        group={group}
+        isStopped={isStopped}
+        isFromRegistry={isFromRegistry}
+        drift={drift}
+        matchedRegistryItem={matchedRegistryItem}
+        onRecheck={() => recheck()}
+        isCheckingCompliance={isChecking}
+      />
       <CardContentMcpServer
         status={status}
         name={name}
@@ -301,6 +72,9 @@ export function CardMcpServer({
             : null
         }
         registryEnvVars={hasUpdate ? matchedRegistryItem?.env_vars : undefined}
+        report={report}
+        isChecking={isChecking}
+        error={error}
       />
     </Card>
   )
