@@ -64,6 +64,7 @@ export function SettingsTabs({ defaultTab }: SettingsTabsProps) {
                 {tab.value === 'version' && isNewVersionAvailable && (
                   <div className="bg-background rounded-full">
                     <ArrowUpCircle className="size-4 text-blue-500" />
+                    <span className="sr-only">Update available</span>
                   </div>
                 )}
               </TabsTrigger>

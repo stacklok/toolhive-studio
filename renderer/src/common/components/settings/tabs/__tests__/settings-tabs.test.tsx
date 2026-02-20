@@ -131,6 +131,7 @@ describe('SettingsTabs', () => {
     renderWithProviders(<SettingsTabs />)
     expect(screen.getByRole('tab', { name: 'General' })).toBeVisible()
     expect(screen.getByRole('tab', { name: 'Registry' })).toBeVisible()
+    expect(screen.getByRole('tab', { name: 'CLI' })).toBeVisible()
     expect(screen.getByRole('tab', { name: 'Version' })).toBeVisible()
     expect(screen.getByRole('tab', { name: 'Logs' })).toBeVisible()
   })
