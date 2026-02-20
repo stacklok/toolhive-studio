@@ -3,6 +3,7 @@ import { Form } from '../../ui/form'
 import { RegistrySourceField } from './registry-source-field'
 import { Button } from '../../ui/button'
 import { RegistryTypeField } from './registry-type-field'
+import { Separator } from '../../ui/separator'
 import type { RegistryFormData } from './schema'
 
 interface RegistryFormProps {
@@ -21,15 +22,18 @@ export function RegistryForm({
   return (
     <Form {...form}>
       <form
-        className="flex flex-col items-start gap-4"
+        className="flex flex-col items-start gap-3"
         onSubmit={form.handleSubmit(onSubmit)}
       >
-        <RegistryTypeField isPending={isLoading} form={form} />
-        <RegistrySourceField
-          isPending={isLoading}
-          form={form}
-          hasRegistryError={hasRegistryError}
-        />
+        <div className="flex w-full flex-col gap-3 py-1">
+          <RegistryTypeField isPending={isLoading} form={form} />
+          <RegistrySourceField
+            isPending={isLoading}
+            form={form}
+            hasRegistryError={hasRegistryError}
+          />
+          <Separator className="my-1 w-full" />
+        </div>
         <Button variant="action" type="submit" disabled={isLoading}>
           {isLoading ? 'Saving...' : 'Save'}
         </Button>
