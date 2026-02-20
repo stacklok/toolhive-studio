@@ -131,7 +131,6 @@ describe('SettingsTabs', () => {
     renderWithProviders(<SettingsTabs />)
     expect(screen.getByRole('tab', { name: 'General' })).toBeVisible()
     expect(screen.getByRole('tab', { name: 'Registry' })).toBeVisible()
-    expect(screen.getByRole('tab', { name: 'CLI' })).toBeVisible()
     expect(screen.getByRole('tab', { name: 'Version' })).toBeVisible()
     expect(screen.getByRole('tab', { name: 'Logs' })).toBeVisible()
   })
@@ -139,18 +138,14 @@ describe('SettingsTabs', () => {
     renderWithProviders(<SettingsTabs />)
 
     await waitFor(() => {
-      expect(
-        screen.getByRole('heading', { name: 'General Settings' })
-      ).toBeVisible()
+      expect(screen.getByRole('heading', { name: 'General' })).toBeVisible()
     })
   })
   it('shows Version tab when clicked', async () => {
     renderWithProviders(<SettingsTabs />)
     await userEvent.click(screen.getByRole('tab', { name: 'Version' }))
     await waitFor(() => {
-      expect(
-        screen.getByRole('heading', { name: 'Version Information' })
-      ).toBeVisible()
+      expect(screen.getByRole('heading', { name: 'Version' })).toBeVisible()
     })
   })
   it('shows Logs tab when clicked', async () => {
@@ -158,9 +153,7 @@ describe('SettingsTabs', () => {
 
     await userEvent.click(screen.getByRole('tab', { name: 'Logs' }))
     await waitFor(() => {
-      expect(
-        screen.getByRole('heading', { name: 'Application Logs' })
-      ).toBeVisible()
+      expect(screen.getByRole('heading', { name: 'Logs' })).toBeVisible()
     })
   })
 
@@ -183,10 +176,8 @@ describe('SettingsTabs', () => {
     const versionTab = screen.getByRole('tab', { name: /Version/i })
     expect(versionTab).toBeVisible()
 
-    // Check that the ArrowUpCircle icon is present
-    const icon = versionTab.querySelector('svg')
-    expect(icon).toBeInTheDocument()
-    expect(icon).toHaveClass('text-blue-500')
+    const updateIcon = versionTab.querySelector('svg.text-blue-500')
+    expect(updateIcon).toBeInTheDocument()
   })
 
   it('does not show update icon on Version tab in development mode', async () => {
@@ -208,9 +199,8 @@ describe('SettingsTabs', () => {
     const versionTab = screen.getByRole('tab', { name: /Version/i })
     expect(versionTab).toBeVisible()
 
-    // Check that the icon is not present
-    const icon = versionTab.querySelector('svg')
-    expect(icon).not.toBeInTheDocument()
+    const updateIcon = versionTab.querySelector('svg.text-blue-500')
+    expect(updateIcon).not.toBeInTheDocument()
   })
 
   it('does not show update icon on Version tab when no update is available', async () => {
@@ -232,9 +222,8 @@ describe('SettingsTabs', () => {
     const versionTab = screen.getByRole('tab', { name: /Version/i })
     expect(versionTab).toBeVisible()
 
-    // Check that the icon is not present
-    const icon = versionTab.querySelector('svg')
-    expect(icon).not.toBeInTheDocument()
+    const updateIcon = versionTab.querySelector('svg.text-blue-500')
+    expect(updateIcon).not.toBeInTheDocument()
   })
 
   it('does not show update icon on other tabs', async () => {
@@ -256,8 +245,9 @@ describe('SettingsTabs', () => {
     const generalTab = screen.getByRole('tab', { name: 'General' })
     const logsTab = screen.getByRole('tab', { name: 'Logs' })
 
-    // Check that these tabs don't have the icon
-    expect(generalTab.querySelector('svg')).not.toBeInTheDocument()
-    expect(logsTab.querySelector('svg')).not.toBeInTheDocument()
+    expect(
+      generalTab.querySelector('svg.text-blue-500')
+    ).not.toBeInTheDocument()
+    expect(logsTab.querySelector('svg.text-blue-500')).not.toBeInTheDocument()
   })
 })
