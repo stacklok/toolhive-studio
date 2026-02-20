@@ -37,7 +37,7 @@ describe('LogsTab', () => {
     render(<LogsTab />)
 
     await waitFor(() => {
-      expect(screen.getByText('Application Logs')).toBeVisible()
+      expect(screen.getByText('Logs')).toBeVisible()
     })
 
     expect(
