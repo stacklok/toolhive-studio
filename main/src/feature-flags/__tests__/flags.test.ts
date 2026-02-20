@@ -26,6 +26,15 @@ vi.mock('../../logger', () => ({
   },
 }))
 
+vi.mock('../../db/writers/feature-flags-writer', () => ({
+  writeFeatureFlag: vi.fn(),
+  deleteFeatureFlag: vi.fn(),
+}))
+
+vi.mock('../../db/readers/feature-flags-reader', () => ({
+  readFeatureFlag: vi.fn(() => undefined),
+}))
+
 // Import after mocks are set up
 import {
   getFeatureFlag,
@@ -67,10 +76,12 @@ describe('Feature Flags', () => {
     )
 
     it('should return stored value when flag is enabled in store', () => {
-      mockStoreInstance.get.mockReturnValueOnce(true)
-      const flagKeys = Object.values(featureFlagKeys)
-      // We know there's at least one flag defined
-      const result = getFeatureFlag(flagKeys[0]!)
+      // First call: readFromElectronStore(SQLITE_READS_FEATURE_FLAGS) -> false (default)
+      // Second call: readFromElectronStore(meta_optimizer) -> true
+      mockStoreInstance.get
+        .mockReturnValueOnce(false) // SQLITE_READS_FEATURE_FLAGS check
+        .mockReturnValueOnce(true) // actual flag value
+      const result = getFeatureFlag(featureFlagKeys.META_OPTIMIZER)
       expect(result).toBe(true)
     })
 

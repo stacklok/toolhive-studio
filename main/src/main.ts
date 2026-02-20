@@ -62,7 +62,7 @@ import {
   resetUpdateState,
   setAutoUpdateEnabled,
 } from './auto-update'
-import Store from 'electron-store'
+import { telemetryStore } from './telemetry-store'
 import { getHeaders } from './headers'
 import {
   getFeatureFlag,
@@ -137,11 +137,14 @@ import {
   setSkipQuitConfirmation,
 } from './quit-confirmation'
 
+import { writeSetting } from './db/writers/settings-writer'
+import { getDb, closeDb } from './db/database'
+import { runMigrations } from './db/migrator'
+import { reconcileFromStore } from './db/reconcile-from-store'
+
 const isE2E = process.env.TOOLHIVE_E2E === 'true'
 
-const store = new Store<{
-  isTelemetryEnabled: boolean
-}>({ defaults: { isTelemetryEnabled: !isE2E } })
+const store = telemetryStore
 
 Sentry.init({
   dsn: isE2E ? undefined : import.meta.env.VITE_SENTRY_DSN,
@@ -264,6 +267,15 @@ registerProtocolWithSquirrel()
 // ────────────────────────────────────────────────────────────────────────────
 
 app.whenReady().then(async () => {
+  // Initialize SQLite database, run migrations, and reconcile from electron-store
+  try {
+    getDb()
+    runMigrations()
+    reconcileFromStore()
+  } catch (err) {
+    log.error('[DB] Database initialization failed:', err)
+  }
+
   resetUpdateState()
 
   // ────────────────────────────────────────────────────────────────────────────
@@ -465,6 +477,7 @@ app.on('quit', () => {
     stopToolhive()
     safeTrayDestroy()
   }
+  closeDb()
 })
 
 // Docker / Ctrl-C etc.
@@ -638,11 +651,21 @@ ipcMain.handle('sentry.is-enabled', () => {
 
 ipcMain.handle('sentry.opt-out', (): boolean => {
   store.set('isTelemetryEnabled', false)
+  try {
+    writeSetting('isTelemetryEnabled', 'false')
+  } catch (err) {
+    log.error('[DB] Failed to dual-write isTelemetryEnabled:', err)
+  }
   return store.get('isTelemetryEnabled', false)
 })
 
 ipcMain.handle('sentry.opt-in', (): boolean => {
   store.set('isTelemetryEnabled', true)
+  try {
+    writeSetting('isTelemetryEnabled', 'true')
+  } catch (err) {
+    log.error('[DB] Failed to dual-write isTelemetryEnabled:', err)
+  }
   return true
 })
 

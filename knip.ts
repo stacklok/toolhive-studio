@@ -40,6 +40,9 @@ export default {
     '@electron-forge/maker-squirrel',
     '@tailwindcss/vite',
   ],
+  ignoreBinaries: [
+    'run', // False positive from "pnpm run vitest:electron -- run"
+  ],
   compilers: {
     // this is needed to support css entry files
     // see: https://knip.dev/features/compilers#css
