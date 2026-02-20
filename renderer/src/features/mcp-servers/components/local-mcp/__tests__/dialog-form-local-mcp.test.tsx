@@ -496,7 +496,7 @@ describe('DialogFormLocalMcp', () => {
     })
   })
 
-  it('handles secrets correctly - both inline and from store', async () => {
+  it('submits an inline secret correctly', async () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunCustomServer.mockReturnValue({
       installServerMutation: mockInstallServerMutation,
@@ -514,50 +514,20 @@ describe('DialogFormLocalMcp', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
 
-    // Fill basic fields
     await userEvent.type(
       screen.getByRole('textbox', { name: /name/i }),
-      'secret-server'
+      'inline-secret-server'
     )
     await userEvent.click(screen.getByLabelText('Transport'))
     await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
-    expect(screen.getByLabelText(/proxy mode/i)).toBeVisible()
     await userEvent.type(
       screen.getByRole('textbox', { name: 'Docker image' }),
       'ghcr.io/test/server'
     )
 
-    // Add inline secret
     await userEvent.click(screen.getByRole('button', { name: 'Add secret' }))
     await userEvent.type(screen.getByLabelText('Secret key'), 'API_TOKEN')
     await userEvent.type(screen.getByLabelText('Secret value'), 'secret-value')
-
-    // Add secret from store
-    await userEvent.click(screen.getByRole('button', { name: 'Add secret' }))
-    await userEvent.type(
-      screen.getAllByLabelText('Secret key')[1] as HTMLElement,
-      'GITHUB_TOKEN'
-    )
-    await userEvent.click(
-      screen.getAllByLabelText('Use a secret from the store')[1] as HTMLElement
-    )
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole('dialog', { name: 'Secrets store' })
-      ).toBeVisible()
-    })
-
-    await userEvent.click(
-      screen.getByRole('option', { name: 'SECRET_FROM_STORE' })
-    )
-
-    // Wait for the secrets popover to close before interacting with the form
-    await waitFor(() => {
-      expect(
-        screen.queryByRole('dialog', { name: 'Secrets store' })
-      ).not.toBeInTheDocument()
-    })
 
     await userEvent.click(
       screen.getByRole('button', { name: 'Install server' })
@@ -575,6 +545,72 @@ describe('DialogFormLocalMcp', () => {
                   secret: 'secret-value',
                 },
               },
+            ],
+          }),
+        },
+        expect.any(Object)
+      )
+    })
+  })
+
+  it('submits a secret from the store correctly', async () => {
+    const mockInstallServerMutation = vi.fn()
+    mockUseRunCustomServer.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} groupName="default" />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    await userEvent.type(
+      screen.getByRole('textbox', { name: /name/i }),
+      'store-secret-server'
+    )
+    await userEvent.click(screen.getByLabelText('Transport'))
+    await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
+    await userEvent.type(
+      screen.getByRole('textbox', { name: 'Docker image' }),
+      'ghcr.io/test/server'
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add secret' }))
+    await userEvent.type(screen.getByLabelText('Secret key'), 'GITHUB_TOKEN')
+    await userEvent.click(screen.getByLabelText('Use a secret from the store'))
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('dialog', { name: 'Secrets store' })
+      ).toBeVisible()
+    })
+
+    await userEvent.click(
+      screen.getByRole('option', { name: 'SECRET_FROM_STORE' })
+    )
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: 'Secrets store' })
+      ).not.toBeInTheDocument()
+    })
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalledWith(
+        {
+          data: expect.objectContaining({
+            secrets: [
               {
                 name: 'GITHUB_TOKEN',
                 value: {
