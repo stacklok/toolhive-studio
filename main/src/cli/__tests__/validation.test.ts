@@ -21,6 +21,8 @@ vi.mock('../symlink-manager', () => ({
   checkSymlink: vi.fn(),
   createSymlink: vi.fn(),
   getBundledCliPath: vi.fn(),
+  getMarkerTargetPath: vi.fn(() => '/app/resources/bin/darwin-arm64/thv'),
+  isFlatpak: vi.fn(() => false),
   repairSymlink: vi.fn(),
 }))
 
@@ -361,12 +363,11 @@ describe('validation', () => {
       const result = await handleValidationResult({ status: 'valid' }, 'win32')
 
       expect(mockCreateSymlink).toHaveBeenCalledWith('win32')
-      expect(mockCreateMarkerForDesktopInstall).toHaveBeenCalledWith(
-        '1.0.0',
-        undefined, // Windows passes undefined for symlink target
-        'new-checksum',
-        'win32'
-      )
+      expect(mockCreateMarkerForDesktopInstall).toHaveBeenCalledWith({
+        cliVersion: '1.0.0',
+        cliChecksum: 'new-checksum',
+        platform: 'win32',
+      })
       expect(result.status).toBe('valid')
     })
 
@@ -392,12 +393,13 @@ describe('validation', () => {
 
       // Should NOT call createSymlink on macOS - symlink auto-updates
       expect(mockCreateSymlink).not.toHaveBeenCalled()
-      expect(mockCreateMarkerForDesktopInstall).toHaveBeenCalledWith(
-        '1.0.0',
-        '/app/resources/bin/thv',
-        'old-checksum',
-        'darwin'
-      )
+      expect(mockCreateMarkerForDesktopInstall).toHaveBeenCalledWith({
+        cliVersion: '1.0.0',
+        symlinkTarget: '/app/resources/bin/darwin-arm64/thv',
+        cliChecksum: 'old-checksum',
+        platform: 'darwin',
+        flatpakTarget: undefined,
+      })
       expect(result.status).toBe('valid')
     })
 

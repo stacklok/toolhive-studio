@@ -4,7 +4,7 @@ import { MakerSquirrel } from '@electron-forge/maker-squirrel'
 import { MakerZIP } from '@electron-forge/maker-zip'
 import { MakerDeb } from '@electron-forge/maker-deb'
 import { MakerRpm } from '@electron-forge/maker-rpm'
-import { MakerFlatpak } from '@electron-forge/maker-flatpak'
+import MakerFlatpakBuilder from './utils/forge-makers/MakerFlatpakBuilder'
 import { VitePlugin } from '@electron-forge/plugin-vite'
 import { FusesPlugin } from '@electron-forge/plugin-fuses'
 import { FuseV1Options, FuseVersion } from '@electron/fuses'
@@ -173,31 +173,7 @@ const config: ForgeConfig = {
         mimeType: ['x-scheme-handler/toolhive-gui'],
       },
     }),
-    // Requirements: install elfutils package and add Flathub remote
-    // Run: flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-    new MakerFlatpak({
-      options: {
-        categories: ['Development', 'Utility'],
-        id: 'io.github.stacklok.toolhive_studio',
-        bin: 'ToolHive',
-        // TODO: Flatpak may require desktop-file-edit hacks for the scheme
-        // handler to work correctly. Test and add build hooks if needed.
-        mimeType: ['x-scheme-handler/toolhive-gui'],
-        finishArgs: [
-          '--share=network',
-          '--socket=x11',
-          '--socket=wayland',
-          '--device=dri',
-          '--socket=system-bus',
-          '--socket=session-bus',
-          '--filesystem=/run/docker.sock',
-          '--filesystem=/run/podman/podman.sock',
-          '--filesystem=xdg-run/podman/podman.sock',
-        ],
-        icon: './icons/icon.png',
-        files: [],
-      },
-    }),
+    new MakerFlatpakBuilder({}, ['linux']),
   ],
 
   plugins: [

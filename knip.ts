@@ -37,7 +37,6 @@ export default {
     '@electron-forge/publisher-github',
     '@electron-forge/publisher-s3',
     '@electron-forge/maker-base',
-    '@electron-forge/maker-squirrel',
     '@tailwindcss/vite',
   ],
   compilers: {

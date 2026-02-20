@@ -13,11 +13,13 @@ export interface CliSourceMarker {
   /** Source of CLI installation - always 'desktop' for Desktop-managed CLI */
   source: 'desktop'
   /** Installation method used */
-  install_method: 'symlink' | 'copy'
+  install_method: 'symlink' | 'copy' | 'flatpak'
   /** Version of the CLI binary */
   cli_version: string
   /** Path the symlink points to (macOS/Linux only) */
   symlink_target?: string
+  /** Host-visible path to the CLI binary inside the Flatpak installation (Linux only) */
+  flatpak_target?: string
   /** Checksum of the CLI binary (Windows only, for copy validation) */
   cli_checksum?: string
   /** ISO timestamp of when CLI was installed */
@@ -37,7 +39,7 @@ export interface CliAlignmentStatus {
   /** Version of the managed CLI */
   cliVersion: string | null
   /** Installation method used */
-  installMethod: 'symlink' | 'copy' | null
+  installMethod: 'symlink' | 'copy' | 'flatpak' | null
   /** Path the symlink points to (macOS/Linux) or null (Windows) */
   symlinkTarget: string | null
   /** Whether the CLI installation is valid */

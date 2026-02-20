@@ -11,3 +11,10 @@ runs:
         sudo apt-get install -y --no-install-recommends \
              flatpak flatpak-builder elfutils
         flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+    - name: Install Flatpak runtimes
+      shell: bash
+      run: |
+        flatpak install --user -y --noninteractive flathub \
+          org.freedesktop.Platform//24.08 \
+          org.freedesktop.Sdk//24.08 \
+          org.electronjs.Electron2.BaseApp//24.08

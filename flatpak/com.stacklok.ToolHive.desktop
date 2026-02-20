@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=ToolHive
+Comment=Install, manage and run MCP servers and connect them to AI agents and clients
+GenericName=ToolHive
+Exec=toolhive-wrapper %U
+Icon=com.stacklok.ToolHive
+Type=Application
+StartupNotify=true
+Categories=Development;Utility;
+MimeType=x-scheme-handler/toolhive-gui;
