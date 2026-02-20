@@ -33,6 +33,21 @@ function createElectronStub(): Partial<ElectronAPI> {
     chat: {
       stream: vi.fn(),
     } as unknown as ElectronAPI['chat'],
+    mcpCompliance: {
+      runChecks: vi.fn().mockResolvedValue({
+        serverName: 'mock-server',
+        checkedAt: new Date().toISOString(),
+        totalDurationMs: 0,
+        summary: {
+          total: 0,
+          passed: 0,
+          warnings: 0,
+          failed: 0,
+          skipped: 0,
+        },
+        checks: [],
+      }),
+    } as ElectronAPI['mcpCompliance'],
     on: vi.fn(),
     removeListener: vi.fn(),
   }

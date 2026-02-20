@@ -14,6 +14,7 @@ import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 import type { FeatureFlagOptions } from '../../main/src/feature-flags'
 import type { UpdateState } from '../../main/src/auto-update'
 import type { ValidationResult } from '@common/types/cli'
+import type { ComplianceReport } from '@common/types/mcp-compliance'
 import type { NavigateTarget } from '@common/deep-links'
 
 // Expose auto-launch functionality to renderer
@@ -227,6 +228,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   utils: {
     getWorkloadAvailableTools: (workload: unknown) =>
       ipcRenderer.invoke('utils:get-workload-available-tools', workload),
+  },
+
+  // MCP Compliance
+  mcpCompliance: {
+    runChecks: (serverName: string) =>
+      ipcRenderer.invoke('mcp-compliance:run-checks', serverName),
   },
 
   // CLI Alignment (THV-0020)
@@ -533,6 +540,11 @@ export interface ElectronAPI {
         >
       | undefined
     >
+  }
+
+  // MCP Compliance
+  mcpCompliance: {
+    runChecks: (serverName: string) => Promise<ComplianceReport>
   }
 
   // CLI Alignment (THV-0020)

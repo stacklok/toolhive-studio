@@ -18,6 +18,7 @@ import { CustomizeToolsMenuItem } from './items/customize-tools-menu-item'
 import { RemoveServerMenuItem } from './items/remove-server-menu-item'
 import { UpdateVersionMenuItem } from './items/update-version-menu-item'
 import { AddServerToGroupMenuItem } from './items/add-server-to-group-menu-item'
+import { ComplianceCheckMenuItem } from './items/compliance-check-menu-item'
 
 interface ServerActionsDropdownProps {
   name: string
@@ -31,6 +32,8 @@ interface ServerActionsDropdownProps {
     | RegistryImageMetadata
     | RegistryRemoteServerMetadata
     | undefined
+  onRecheck?: () => void
+  isCheckingCompliance?: boolean
 }
 
 export function ServerActionsDropdown({
@@ -42,6 +45,8 @@ export function ServerActionsDropdown({
   isFromRegistry,
   drift,
   matchedRegistryItem,
+  onRecheck,
+  isCheckingCompliance,
 }: ServerActionsDropdownProps) {
   const repositoryUrl = matchedRegistryItem?.repository_url
   const isDeleting = status === 'deleting' || status === 'removing'
@@ -88,6 +93,12 @@ export function ServerActionsDropdown({
         )}
         <LogsMenuItem serverName={name} remote={remote} group={group} />
         <CustomizeToolsMenuItem serverName={name} status={status} />
+        {onRecheck && (
+          <ComplianceCheckMenuItem
+            onRecheck={onRecheck}
+            disabled={status !== 'running' || !!isCheckingCompliance}
+          />
+        )}
         <RemoveServerMenuItem serverName={name} group={group} />
         <DropdownMenuSeparator />
         <AddServerToGroupMenuItem serverName={name} />
