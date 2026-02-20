@@ -1,10 +1,11 @@
 import { AlertTriangle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '../../../ui/alert'
 import { getUninstallCommand } from '@/features/cli-issue/lib/cli-issue-utils'
+import type { CliSource } from '@common/types/cli'
 
 interface ExternalCliAlertProps {
   path: string
-  source: string
+  source: CliSource
 }
 
 export function ExternalCliAlert({ path, source }: ExternalCliAlertProps) {
