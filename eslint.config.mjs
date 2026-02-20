@@ -32,6 +32,10 @@ export default defineConfig([
       ...reactHooks.configs.flat.recommended.plugins,
       ...reactRefresh.configs.recommended.plugins,
     },
+    rules: {
+      ...reactRefresh.configs.recommended.rules,
+      ...reactHooks.configs.flat.recommended.rules,
+    },
   },
   {
     extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
