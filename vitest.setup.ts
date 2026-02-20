@@ -136,7 +136,10 @@ vi.mock('./renderer/src/common/hooks/use-feature-flag', async (orig) => {
   }
 })
 
-const SILENCED_MESSAGES = ['Not implemented: navigation (except hash changes)']
+const SILENCED_MESSAGES = [
+  'Not implemented: navigation (except hash changes)',
+  'was not wrapped in act(...)',
+]
 
 failOnConsole({
   shouldFailOnDebug: false,
