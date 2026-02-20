@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import SettingsRouteComponent from './-settings.route'
 
-const VALID_TABS = ['general', 'registry', 'version', 'logs'] as const
+const VALID_TABS = ['general', 'registry', 'version', 'logs', 'cli'] as const
 
 type SettingsTab = (typeof VALID_TABS)[number]
 
