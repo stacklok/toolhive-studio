@@ -23,7 +23,6 @@ const mockServer: RegistryImageMetadata = {
   args: [],
   metadata: {
     stars: 150,
-    pulls: 1500,
     last_updated: '2025-01-01T00:00:00Z',
   },
   repository_url: 'https://github.com/example/atlassian',

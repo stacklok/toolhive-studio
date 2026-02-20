@@ -41,7 +41,6 @@ export const mockedGetApiV1BetaRegistryByNameServersByServerName = AutoAPIMock<
     args: [],
     metadata: {
       stars: 52153,
-      pulls: 5883,
       last_updated: '2025-06-18T00:21:32Z',
     },
     repository_url: 'https://github.com/modelcontextprotocol/servers',
