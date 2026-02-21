@@ -64,9 +64,7 @@ E2E tests use Playwright to test the packaged Electron application.
 
 ### Testing deep links
 
-See the
-[deep link design document](https://docs.google.com/document/d/1Y-tYsIl98DPHKdCNsbuvtZeb0VUq41cTxQfGQElbS9c)
-for background and rationale.
+See [ADR-001](adr/001-deep-links.md) for background and rationale.
 
 The app registers the `toolhive-gui://` protocol for deep linking. Deep links
 follow the format:

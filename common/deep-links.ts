@@ -1,5 +1,4 @@
-// Deep link definitions — see design doc:
-// https://docs.google.com/document/d/1Y-tYsIl98DPHKdCNsbuvtZeb0VUq41cTxQfGQElbS9c
+// Deep link definitions — see docs/adr/001-deep-links.md
 
 import { z } from 'zod/v4'
 
