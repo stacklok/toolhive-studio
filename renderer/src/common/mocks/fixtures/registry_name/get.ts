@@ -51,7 +51,6 @@ export const mockedGetApiV1BetaRegistryByName = AutoAPIMock<
         args: [],
         metadata: {
           stars: 2692,
-          pulls: 11969,
           last_updated: '2025-08-06T00:24:12Z',
         },
         repository_url: 'https://github.com/sooperset/mcp-atlassian',
@@ -91,7 +90,6 @@ export const mockedGetApiV1BetaRegistryByName = AutoAPIMock<
         args: [],
         metadata: {
           stars: 5207,
-          pulls: 7763,
           last_updated: '2025-08-06T00:24:26Z',
         },
         repository_url: 'https://github.com/awslabs/mcp',
@@ -124,7 +122,6 @@ export const mockedGetApiV1BetaRegistryByName = AutoAPIMock<
             args: [],
             metadata: {
               stars: 2692,
-              pulls: 11969,
               last_updated: '2025-08-06T00:24:12Z',
             },
             repository_url: 'https://github.com/sooperset/mcp-atlassian',

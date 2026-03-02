@@ -222,7 +222,7 @@ export type AuthserverRunConfig = {
   schema_version?: string
   /**
    * ScopesSupported lists the OAuth 2.0 scope values advertised in discovery documents.
-   * If empty, defaults to ["openid", "profile", "email", "offline_access"].
+   * If empty, defaults to registration.DefaultScopes (["openid", "profile", "email", "offline_access"]).
    */
   scopes_supported?: Array<string>
   signing_key_config?: AuthserverSigningKeyRunConfig
@@ -738,6 +738,12 @@ export type RegistryImageMetadata = {
    * If not provided, it will be auto-generated from the registry key
    */
   name?: string
+  /**
+   * Overview is a longer Markdown-formatted description for web display.
+   * Unlike the Description field (limited to 500 chars), this supports
+   * full Markdown and is intended for rich rendering on catalog pages.
+   */
+  overview?: string
   permissions?: PermissionsProfile
   provenance?: RegistryProvenance
   /**
@@ -765,6 +771,11 @@ export type RegistryImageMetadata = {
    * Tier represents the tier classification level of the server, e.g., "Official" or "Community"
    */
   tier?: string
+  /**
+   * Title is an optional human-readable display name for the server.
+   * If not provided, the Name field is used for display purposes.
+   */
+  title?: string
   /**
    * Tools is a list of tool names provided by this MCP server
    */
@@ -820,10 +831,6 @@ export type RegistryMetadata = {
    * LastUpdated is the timestamp when the server was last updated, in RFC3339 format
    */
   last_updated?: string
-  /**
-   * Pulls indicates how many times the server image has been downloaded
-   */
-  pulls?: number
   /**
    * Stars represents the popularity rating or number of stars for the server
    */
@@ -958,6 +965,12 @@ export type RegistryRemoteServerMetadata = {
   name?: string
   oauth_config?: RegistryOAuthConfig
   /**
+   * Overview is a longer Markdown-formatted description for web display.
+   * Unlike the Description field (limited to 500 chars), this supports
+   * full Markdown and is intended for rich rendering on catalog pages.
+   */
+  overview?: string
+  /**
    * RepositoryURL is the URL to the source code repository for the server
    */
   repository_url?: string
@@ -973,6 +986,11 @@ export type RegistryRemoteServerMetadata = {
    * Tier represents the tier classification level of the server, e.g., "Official" or "Community"
    */
   tier?: string
+  /**
+   * Title is an optional human-readable display name for the server.
+   * If not provided, the Name field is used for display purposes.
+   */
+  title?: string
   /**
    * Tools is a list of tool names provided by this MCP server
    */
@@ -1912,6 +1930,14 @@ export type V1HeaderForwardConfig = {
  * Request to install a skill
  */
 export type V1InstallSkillRequest = {
+  /**
+   * Client is the target client (e.g., "claude-code")
+   */
+  client?: string
+  /**
+   * Force allows overwriting unmanaged skill directories
+   */
+  force?: boolean
   /**
    * Name or OCI reference of the skill to install
    */

@@ -1,15 +1,27 @@
-import js from '@eslint/js'
+// @ts-check
+import eslint from '@eslint/js'
 import globals from 'globals'
+import { defineConfig } from 'eslint/config'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 
-export default tseslint.config(
+export default defineConfig([
+  eslint.configs.recommended,
+  tseslint.configs.recommended,
   {
-    ignores: ['dist', 'coverage', '.vite', 'out', './common/api/generated/**'],
+    ignores: [
+      'dist',
+      'coverage',
+      '.vite',
+      'out',
+      '__mocks__/**',
+      './common/api/generated/**',
+      'utils/digicert-hook.js',
+    ],
   },
   {
-    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
     ignores: ['e2e-tests/**/*'],
     languageOptions: {
@@ -17,23 +29,20 @@ export default tseslint.config(
       globals: globals.browser,
     },
     plugins: {
-      'react-hooks': reactHooks,
-      'react-refresh': reactRefresh,
+      ...reactHooks.configs.flat.recommended.plugins,
+      ...reactRefresh.configs.recommended.plugins,
     },
     rules: {
-      ...reactHooks.configs.recommended.rules,
-      'react-refresh/only-export-components': [
-        'warn',
-        { allowConstantExport: true },
-      ],
+      ...reactRefresh.configs.recommended.rules,
+      ...reactHooks.configs.flat.recommended.rules,
     },
   },
   {
-    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
     files: ['e2e-tests/**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.node,
     },
-  }
-)
+  },
+])

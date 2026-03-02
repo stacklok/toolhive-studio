@@ -27,7 +27,6 @@ export const mockedGetApiV1BetaRegistryByNameServers = AutoAPIMock<
       args: [],
       metadata: {
         stars: 54338,
-        pulls: 6612,
         last_updated: '2025-06-18T00:21:32Z',
       },
       repository_url: 'https://github.com/modelcontextprotocol/servers',
@@ -73,7 +72,6 @@ export const mockedGetApiV1BetaRegistryByNameServers = AutoAPIMock<
       args: [],
       metadata: {
         stars: 54338,
-        pulls: 5339,
         last_updated: '2025-06-18T00:21:30Z',
       },
       repository_url: 'https://github.com/modelcontextprotocol/servers',
@@ -102,7 +100,6 @@ export const mockedGetApiV1BetaRegistryByNameServers = AutoAPIMock<
       args: [],
       metadata: {
         stars: 5,
-        pulls: 5242,
         last_updated: '2025-06-18T00:21:30Z',
       },
       repository_url: 'https://github.com/stacklok/osv-mcp',

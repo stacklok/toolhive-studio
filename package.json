@@ -72,7 +72,7 @@
     "globals": "^17.0.0",
     "husky": "^9.1.7",
     "icon-gen": "^5.0.0",
-    "jsdom": "^27.0.0",
+    "jsdom": "^28.0.0",
     "json-schema-faker": "^0.5.9",
     "knip": "^5.58.1",
     "lint-staged": "^16.0.0",
@@ -123,8 +123,8 @@
     "@radix-ui/react-switch": "^1.2.5",
     "@radix-ui/react-tabs": "^1.1.12",
     "@radix-ui/react-tooltip": "^1.2.7",
-    "@sentry/electron": "^7.0.0",
-    "@sentry/vite-plugin": "^4.0.0",
+    "@sentry/electron": "^7.9.0",
+    "@sentry/vite-plugin": "^5.1.1",
     "@streamdown/cjk": "^1.0.1",
     "@streamdown/code": "^1.0.1",
     "@streamdown/mermaid": "^1.0.1",
@@ -168,7 +168,8 @@
       "lodash": ">=4.17.23",
       "lodash-es": ">=4.17.23",
       "hono": ">=4.11.7",
-      "tar": ">=7.5.7"
+      "tar": ">=7.5.7",
+      "rollup": ">=4.59.0"
     }
   }
 }
