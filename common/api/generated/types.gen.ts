@@ -226,6 +226,7 @@ export type AuthserverRunConfig = {
    */
   scopes_supported?: Array<string>
   signing_key_config?: AuthserverSigningKeyRunConfig
+  storage?: StorageRunConfig
   token_lifespans?: AuthserverTokenLifespanRunConfig
   /**
    * Upstreams configures connections to upstream Identity Providers.
@@ -551,468 +552,6 @@ export type IgnoreConfig = {
 }
 
 /**
- * Inbound defines inbound network permissions
- */
-export type PermissionsInboundNetworkPermissions = {
-  /**
-   * AllowHost is a list of allowed hosts for inbound connections
-   */
-  allow_host?: Array<string>
-}
-
-/**
- * Network defines network permissions
- */
-export type PermissionsNetworkPermissions = {
-  inbound?: PermissionsInboundNetworkPermissions
-  /**
-   * Mode specifies the network mode for the container (e.g., "host", "bridge", "none")
-   * When empty, the default container runtime network mode is used
-   */
-  mode?: string
-  outbound?: PermissionsOutboundNetworkPermissions
-}
-
-/**
- * Outbound defines outbound network permissions
- */
-export type PermissionsOutboundNetworkPermissions = {
-  /**
-   * AllowHost is a list of allowed hosts
-   */
-  allow_host?: Array<string>
-  /**
-   * AllowPort is a list of allowed ports
-   */
-  allow_port?: Array<number>
-  /**
-   * InsecureAllowAll allows all outbound network connections
-   */
-  insecure_allow_all?: boolean
-}
-
-/**
- * PermissionProfile is the permission profile to use
- */
-export type PermissionsProfile = {
-  /**
-   * Name is the name of the profile
-   */
-  name?: string
-  network?: PermissionsNetworkPermissions
-  /**
-   * Privileged indicates whether the container should run in privileged mode
-   * When true, the container has access to all host devices and capabilities
-   * Use with extreme caution as this removes most security isolation
-   */
-  privileged?: boolean
-  /**
-   * Read is a list of mount declarations that the container can read from
-   * These can be in the following formats:
-   * - A single path: The same path will be mounted from host to container
-   * - host-path:container-path: Different paths for host and container
-   * - resource-uri:container-path: Mount a resource identified by URI to a container path
-   */
-  read?: Array<string>
-  /**
-   * Write is a list of mount declarations that the container can write to
-   * These follow the same format as Read mounts but with write permissions
-   */
-  write?: Array<string>
-}
-
-export type RegistryEnvVar = {
-  /**
-   * Default is the value to use if the environment variable is not explicitly provided
-   * Only used for non-required variables
-   */
-  default?: string
-  /**
-   * Description is a human-readable explanation of the variable's purpose
-   */
-  description?: string
-  /**
-   * Name is the environment variable name (e.g., API_KEY)
-   */
-  name?: string
-  /**
-   * Required indicates whether this environment variable must be provided
-   * If true and not provided via command line or secrets, the user will be prompted for a value
-   */
-  required?: boolean
-  /**
-   * Secret indicates whether this environment variable contains sensitive information
-   * If true, the value will be stored as a secret rather than as a plain environment variable
-   */
-  secret?: boolean
-}
-
-export type RegistryGroup = {
-  /**
-   * Description is a human-readable description of the group's purpose and functionality
-   */
-  description?: string
-  /**
-   * Name is the identifier for the group, used when referencing the group in commands
-   */
-  name?: string
-  /**
-   * RemoteServers is a map of server names to their corresponding remote server definitions within this group
-   */
-  remote_servers?: {
-    [key: string]: RegistryRemoteServerMetadata
-  }
-  /**
-   * Servers is a map of server names to their corresponding server definitions within this group
-   */
-  servers?: {
-    [key: string]: RegistryImageMetadata
-  }
-}
-
-export type RegistryHeader = {
-  /**
-   * Choices provides a list of valid values for the header (optional)
-   */
-  choices?: Array<string>
-  /**
-   * Default is the value to use if the header is not explicitly provided
-   * Only used for non-required headers
-   */
-  default?: string
-  /**
-   * Description is a human-readable explanation of the header's purpose
-   */
-  description?: string
-  /**
-   * Name is the header name (e.g., X-API-Key, Authorization)
-   */
-  name?: string
-  /**
-   * Required indicates whether this header must be provided
-   * If true and not provided via command line or secrets, the user will be prompted for a value
-   */
-  required?: boolean
-  /**
-   * Secret indicates whether this header contains sensitive information
-   * If true, the value will be stored as a secret rather than as plain text
-   */
-  secret?: boolean
-}
-
-/**
- * Container server details (if it's a container server)
- */
-export type RegistryImageMetadata = {
-  /**
-   * Args are the default command-line arguments to pass to the MCP server container.
-   * These arguments will be used only if no command-line arguments are provided by the user.
-   * If the user provides arguments, they will override these defaults.
-   */
-  args?: Array<string>
-  /**
-   * CustomMetadata allows for additional user-defined metadata
-   */
-  custom_metadata?: {
-    [key: string]: unknown
-  }
-  /**
-   * Description is a human-readable description of the server's purpose and functionality
-   */
-  description?: string
-  /**
-   * DockerTags lists the available Docker tags for this server image
-   */
-  docker_tags?: Array<string>
-  /**
-   * EnvVars defines environment variables that can be passed to the server
-   */
-  env_vars?: Array<RegistryEnvVar>
-  /**
-   * Image is the Docker image reference for the MCP server
-   */
-  image?: string
-  metadata?: RegistryMetadata
-  /**
-   * Name is the identifier for the MCP server, used when referencing the server in commands
-   * If not provided, it will be auto-generated from the registry key
-   */
-  name?: string
-  /**
-   * Overview is a longer Markdown-formatted description for web display.
-   * Unlike the Description field (limited to 500 chars), this supports
-   * full Markdown and is intended for rich rendering on catalog pages.
-   */
-  overview?: string
-  permissions?: PermissionsProfile
-  provenance?: RegistryProvenance
-  /**
-   * ProxyPort is the port for the HTTP proxy to listen on (host port)
-   * If not specified, a random available port will be assigned
-   */
-  proxy_port?: number
-  /**
-   * RepositoryURL is the URL to the source code repository for the server
-   */
-  repository_url?: string
-  /**
-   * Status indicates whether the server is currently active or deprecated
-   */
-  status?: string
-  /**
-   * Tags are categorization labels for the server to aid in discovery and filtering
-   */
-  tags?: Array<string>
-  /**
-   * TargetPort is the port for the container to expose (only applicable to SSE and Streamable HTTP transports)
-   */
-  target_port?: number
-  /**
-   * Tier represents the tier classification level of the server, e.g., "Official" or "Community"
-   */
-  tier?: string
-  /**
-   * Title is an optional human-readable display name for the server.
-   * If not provided, the Name field is used for display purposes.
-   */
-  title?: string
-  /**
-   * Tools is a list of tool names provided by this MCP server
-   */
-  tools?: Array<string>
-  /**
-   * Transport defines the communication protocol for the server
-   * For containers: stdio, sse, or streamable-http
-   * For remote servers: sse or streamable-http (stdio not supported)
-   */
-  transport?: string
-}
-
-/**
- * Kubernetes contains Kubernetes-specific metadata when the MCP server is deployed in a cluster.
- * This field is optional and only populated when:
- * - The server is served from ToolHive Registry Server
- * - The server was auto-discovered from a Kubernetes deployment
- * - The Kubernetes resource has the required registry annotations
- */
-export type RegistryKubernetesMetadata = {
-  /**
-   * Image is the container image used by the Kubernetes workload (applicable to MCPServer)
-   */
-  image?: string
-  /**
-   * Kind is the Kubernetes resource kind (e.g., MCPServer, VirtualMCPServer, MCPRemoteProxy)
-   */
-  kind?: string
-  /**
-   * Name is the Kubernetes resource name
-   */
-  name?: string
-  /**
-   * Namespace is the Kubernetes namespace where the resource is deployed
-   */
-  namespace?: string
-  /**
-   * Transport is the transport type configured for the Kubernetes workload (applicable to MCPServer)
-   */
-  transport?: string
-  /**
-   * UID is the Kubernetes resource UID
-   */
-  uid?: string
-}
-
-/**
- * Metadata contains additional information about the server such as popularity metrics
- */
-export type RegistryMetadata = {
-  kubernetes?: RegistryKubernetesMetadata
-  /**
-   * LastUpdated is the timestamp when the server was last updated, in RFC3339 format
-   */
-  last_updated?: string
-  /**
-   * Stars represents the popularity rating or number of stars for the server
-   */
-  stars?: number
-}
-
-/**
- * OAuthConfig provides OAuth/OIDC configuration for authentication to the remote server
- * Used with the thv proxy command's --remote-auth flags
- */
-export type RegistryOAuthConfig = {
-  /**
-   * AuthorizeURL is the OAuth authorization endpoint URL
-   * Used for non-OIDC OAuth flows when issuer is not provided
-   */
-  authorize_url?: string
-  /**
-   * CallbackPort is the specific port to use for the OAuth callback server
-   * If not specified, a random available port will be used
-   */
-  callback_port?: number
-  /**
-   * ClientID is the OAuth client ID for authentication
-   */
-  client_id?: string
-  /**
-   * Issuer is the OAuth/OIDC issuer URL (e.g., https://accounts.google.com)
-   * Used for OIDC discovery to find authorization and token endpoints
-   */
-  issuer?: string
-  /**
-   * OAuthParams contains additional OAuth parameters to include in the authorization request
-   * These are server-specific parameters like "prompt", "response_mode", etc.
-   */
-  oauth_params?: {
-    [key: string]: string
-  }
-  /**
-   * Resource is the OAuth 2.0 resource indicator (RFC 8707)
-   */
-  resource?: string
-  /**
-   * Scopes are the OAuth scopes to request
-   * If not specified, defaults to ["openid", "profile", "email"] for OIDC
-   */
-  scopes?: Array<string>
-  /**
-   * TokenURL is the OAuth token endpoint URL
-   * Used for non-OIDC OAuth flows when issuer is not provided
-   */
-  token_url?: string
-  /**
-   * UsePKCE indicates whether to use PKCE for the OAuth flow
-   * Defaults to true for enhanced security
-   */
-  use_pkce?: boolean
-}
-
-/**
- * Provenance contains verification and signing metadata
- */
-export type RegistryProvenance = {
-  attestation?: RegistryVerifiedAttestation
-  cert_issuer?: string
-  repository_ref?: string
-  repository_uri?: string
-  runner_environment?: string
-  signer_identity?: string
-  sigstore_url?: string
-}
-
-/**
- * Full registry data
- */
-export type RegistryRegistry = {
-  /**
-   * Groups is a slice of group definitions containing related MCP servers
-   */
-  groups?: Array<RegistryGroup>
-  /**
-   * LastUpdated is the timestamp when the registry was last updated, in RFC3339 format
-   */
-  last_updated?: string
-  /**
-   * RemoteServers is a map of server names to their corresponding remote server definitions
-   * These are MCP servers accessed via HTTP/HTTPS using the thv proxy command
-   */
-  remote_servers?: {
-    [key: string]: RegistryRemoteServerMetadata
-  }
-  /**
-   * Servers is a map of server names to their corresponding server definitions
-   */
-  servers?: {
-    [key: string]: RegistryImageMetadata
-  }
-  /**
-   * Version is the schema version of the registry
-   */
-  version?: string
-}
-
-/**
- * Remote server details (if it's a remote server)
- */
-export type RegistryRemoteServerMetadata = {
-  /**
-   * CustomMetadata allows for additional user-defined metadata
-   */
-  custom_metadata?: {
-    [key: string]: unknown
-  }
-  /**
-   * Description is a human-readable description of the server's purpose and functionality
-   */
-  description?: string
-  /**
-   * EnvVars defines environment variables that can be passed to configure the client
-   * These might be needed for client-side configuration when connecting to the remote server
-   */
-  env_vars?: Array<RegistryEnvVar>
-  /**
-   * Headers defines HTTP headers that can be passed to the remote server for authentication
-   * These are used with the thv proxy command's authentication features
-   */
-  headers?: Array<RegistryHeader>
-  metadata?: RegistryMetadata
-  /**
-   * Name is the identifier for the MCP server, used when referencing the server in commands
-   * If not provided, it will be auto-generated from the registry key
-   */
-  name?: string
-  oauth_config?: RegistryOAuthConfig
-  /**
-   * Overview is a longer Markdown-formatted description for web display.
-   * Unlike the Description field (limited to 500 chars), this supports
-   * full Markdown and is intended for rich rendering on catalog pages.
-   */
-  overview?: string
-  /**
-   * RepositoryURL is the URL to the source code repository for the server
-   */
-  repository_url?: string
-  /**
-   * Status indicates whether the server is currently active or deprecated
-   */
-  status?: string
-  /**
-   * Tags are categorization labels for the server to aid in discovery and filtering
-   */
-  tags?: Array<string>
-  /**
-   * Tier represents the tier classification level of the server, e.g., "Official" or "Community"
-   */
-  tier?: string
-  /**
-   * Title is an optional human-readable display name for the server.
-   * If not provided, the Name field is used for display purposes.
-   */
-  title?: string
-  /**
-   * Tools is a list of tool names provided by this MCP server
-   */
-  tools?: Array<string>
-  /**
-   * Transport defines the communication protocol for the server
-   * For containers: stdio, sse, or streamable-http
-   * For remote servers: sse or streamable-http (stdio not supported)
-   */
-  transport?: string
-  /**
-   * URL is the endpoint URL for the remote MCP server (e.g., https://api.example.com/mcp)
-   */
-  url?: string
-}
-
-export type RegistryVerifiedAttestation = {
-  predicate?: unknown
-  predicate_type?: string
-}
-
-/**
  * RemoteAuthConfig contains OAuth configuration for remote MCP servers
  */
 export type RemoteConfig = {
@@ -1051,14 +590,6 @@ export type RemoteConfig = {
   client_id?: string
   client_secret?: string
   client_secret_file?: string
-  /**
-   * Environment variables for the client
-   */
-  env_vars?: Array<RegistryEnvVar>
-  /**
-   * Headers for HTTP requests
-   */
-  headers?: Array<RegistryHeader>
   /**
    * OAuth endpoint configuration (from registry)
    */
@@ -1194,7 +725,6 @@ export type RunnerRunConfig = {
    */
   name?: string
   oidc_config?: AuthTokenValidatorConfig
-  permission_profile?: PermissionsProfile
   /**
    * PermissionProfileNameOrPath is the name or path of the permission profile
    */
@@ -1406,6 +936,78 @@ export type SkillsValidationResult = {
    * Warnings is a list of non-blocking validation warnings, if any.
    */
   warnings?: Array<string>
+}
+
+/**
+ * ACLUserConfig contains ACL user authentication configuration.
+ */
+export type StorageAclUserRunConfig = {
+  /**
+   * PasswordEnvVar is the environment variable containing the Redis password.
+   */
+  password_env_var?: string
+  /**
+   * UsernameEnvVar is the environment variable containing the Redis username.
+   */
+  username_env_var?: string
+}
+
+/**
+ * RedisConfig is the Redis-specific configuration when Type is "redis".
+ */
+export type StorageRedisRunConfig = {
+  acl_user_config?: StorageAclUserRunConfig
+  /**
+   * AuthType must be "aclUser" - only ACL user authentication is supported.
+   */
+  auth_type?: string
+  /**
+   * DialTimeout is the timeout for establishing connections (e.g., "5s").
+   */
+  dial_timeout?: string
+  /**
+   * KeyPrefix for multi-tenancy, typically "thv:auth:{ns}:{name}:".
+   */
+  key_prefix?: string
+  /**
+   * ReadTimeout is the timeout for read operations (e.g., "3s").
+   */
+  read_timeout?: string
+  sentinel_config?: StorageSentinelRunConfig
+  /**
+   * WriteTimeout is the timeout for write operations (e.g., "3s").
+   */
+  write_timeout?: string
+}
+
+/**
+ * Storage configures the storage backend for the auth server.
+ * If nil, defaults to in-memory storage.
+ */
+export type StorageRunConfig = {
+  redis_config?: StorageRedisRunConfig
+  /**
+   * Type specifies the storage backend type. Defaults to "memory".
+   */
+  type?: string
+}
+
+/**
+ * SentinelConfig contains Sentinel-specific configuration.
+ */
+export type StorageSentinelRunConfig = {
+  /**
+   * DB is the Redis database number (default: 0).
+   */
+  db?: number
+  /**
+   * MasterName is the name of the Redis Sentinel master.
+   */
+  master_name?: string
+  /**
+   * SentinelAddrs is the list of Sentinel addresses (host:port).
+   */
+  sentinel_addrs?: Array<string>
 }
 
 /**
@@ -1736,7 +1338,6 @@ export type V1CreateRequest = {
    */
   group?: string
   header_forward?: V1HeaderForwardConfig
-  headers?: Array<RegistryHeader>
   /**
    * Host to bind to
    */
@@ -1755,7 +1356,6 @@ export type V1CreateRequest = {
   network_isolation?: boolean
   oauth_config?: V1RemoteOAuthConfig
   oidc?: V1OidcOptions
-  permission_profile?: PermissionsProfile
   /**
    * Proxy mode to use
    */
@@ -1854,7 +1454,6 @@ export type V1GetRegistryResponse = {
    * Name of the registry
    */
   name?: string
-  registry?: RegistryRegistry
   /**
    * Number of servers in the registry
    */
@@ -1893,8 +1492,6 @@ export type V1GetServerResponse = {
    * Indicates if this is a remote server
    */
   is_remote?: boolean
-  remote_server?: RegistryRemoteServerMetadata
-  server?: RegistryImageMetadata
 }
 
 export type V1GroupListResponse = {
@@ -1970,14 +1567,7 @@ export type V1ListSecretsResponse = {
  * Response containing a list of servers
  */
 export type V1ListServersResponse = {
-  /**
-   * List of remote servers in the registry (if any)
-   */
-  remote_servers?: Array<RegistryRemoteServerMetadata>
-  /**
-   * List of container servers in the registry
-   */
-  servers?: Array<RegistryImageMetadata>
+  [key: string]: unknown
 }
 
 /**
@@ -2227,7 +1817,6 @@ export type V1UpdateRequest = {
    */
   group?: string
   header_forward?: V1HeaderForwardConfig
-  headers?: Array<RegistryHeader>
   /**
    * Host to bind to
    */
@@ -2242,7 +1831,6 @@ export type V1UpdateRequest = {
   network_isolation?: boolean
   oauth_config?: V1RemoteOAuthConfig
   oidc?: V1OidcOptions
-  permission_profile?: PermissionsProfile
   /**
    * Proxy mode to use
    */
@@ -3269,9 +2857,13 @@ export type PostApiV1BetaSkillsBuildData = {
 
 export type PostApiV1BetaSkillsBuildErrors = {
   /**
-   * Not Implemented
+   * Bad Request
    */
-  501: string
+  400: string
+  /**
+   * Internal Server Error
+   */
+  500: string
 }
 
 export type PostApiV1BetaSkillsBuildError =
@@ -3303,9 +2895,17 @@ export type PostApiV1BetaSkillsPushData = {
 
 export type PostApiV1BetaSkillsPushErrors = {
   /**
-   * Not Implemented
+   * Bad Request
    */
-  501: string
+  400: string
+  /**
+   * Not Found
+   */
+  404: string
+  /**
+   * Internal Server Error
+   */
+  500: string
 }
 
 export type PostApiV1BetaSkillsPushError =
@@ -3337,9 +2937,13 @@ export type PostApiV1BetaSkillsValidateData = {
 
 export type PostApiV1BetaSkillsValidateErrors = {
   /**
-   * Not Implemented
+   * Bad Request
    */
-  501: string
+  400: string
+  /**
+   * Internal Server Error
+   */
+  500: string
 }
 
 export type PostApiV1BetaSkillsValidateError =
