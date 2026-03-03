@@ -1,23 +1,23 @@
 # OS & Packaging Support for Deep Links
 
-*Part of the [deep-links skill](../SKILL.md). This is research and prior-art material — may not reflect the current state of implementation.*
+_Part of the [deep-links skill](../SKILL.md). This is research and prior-art material — may not reflect the current state of implementation._
 
 ---
 
 ## Prior work
 
-I took a look at a (somewhat arbitrarily) selected list of popular *open source applications* that were built using Electron and have some sort of deep-linking features:
+I took a look at a (somewhat arbitrarily) selected list of popular _open source applications_ that were built using Electron and have some sort of deep-linking features:
 
-* VS Code                                                                                                                                                                                                                                                                                                                                      
-* GitHub Desktop                                                                                                                                                                                                                                                                                                                                                 
-* Rocket.Chat                                                                                                                                                                                                                                                                                                                                                                         
-* Mattermost                                                                                                                                                                                                                                                                                                                                                                                                      
-* Element                                                                                                                                                                                                                                                                                                                                                                                              
-* WebTorrent                                                                                                                                                                                                                                                                                                                                                                                                 
-* Mailspring  
-* BalenaEtcher (etcher) \- uses Electron Forge  
-* Electron Fiddle \- uses Electron Forge  
-* Museeks \- used to use Electron Forge; migrated to Tauri later, so abandoned Electron completely
+- VS Code
+- GitHub Desktop
+- Rocket.Chat
+- Mattermost
+- Element
+- WebTorrent
+- Mailspring
+- BalenaEtcher (etcher) \- uses Electron Forge
+- Electron Fiddle \- uses Electron Forge
+- Museeks \- used to use Electron Forge; migrated to Tauri later, so abandoned Electron completely
 
 All of these applications rely on Electron’s built-in support for protocol handlers, but all of them basically also employ some sort of “hacks” to make them work in different environments. Mailspring relies on special hacks because it is actually handling mailto: links, but that is not relevant for us. The “hacks” that might be relevant are explained [later in the document](#packaging-issues).
 
@@ -29,22 +29,22 @@ Apart from hacks, there are also some implementation details/patterns that can b
 
 On Windows, protocol handlers need to be registered in the Registry. This is more or less straightforward, and [handled by Electron directly](https://www.electronjs.org/docs/latest/api/app#appsetasdefaultprotocolclientprotocol-path-args). But, different packaging solutions can slightly complicate it. This is explained in a [later section](#packaging-issues).
 
-Deep links are passed in using **process.argv** on cold start, and via the **second-instance** event if already running. 
+Deep links are passed in using **process.argv** on cold start, and via the **second-instance** event if already running.
 
 #### **Linux**
 
-For the Electron app to be able to handle the protocol, there needs to be a .*desktop* file with the appropriate MimeType, such as:
+For the Electron app to be able to handle the protocol, there needs to be a ._desktop_ file with the appropriate MimeType, such as:
 
 ```
-  [Desktop Entry]                                                                                                                                                                                                                                                                                      
-  Name=Mattermost                                                                                                                                                                                                                                                                                      
-  Exec=mattermost-flatpak                                                                                                                                                                                                                                                                              
-  MimeType=x-scheme-handler/mattermost;     
+  [Desktop Entry]
+  Name=Mattermost
+  Exec=mattermost-flatpak
+  MimeType=x-scheme-handler/mattermost;
 ```
 
-For the .desktop file to be picked up, **update-desktop-database** might need to be run after the installation. An alternative way is to manually call **childProcess.exec('xdg-mime default myApp.desktop x-scheme-handler/myapp')**. *This is taken care of by most “traditional” package managers, so .deb and .rpm packages handle it out of the box.* Xdg-mime can also be used to debug/query current settings on most Linux distributions.
+For the .desktop file to be picked up, **update-desktop-database** might need to be run after the installation. An alternative way is to manually call **childProcess.exec('xdg-mime default myApp.desktop x-scheme-handler/myapp')**. _This is taken care of by most “traditional” package managers, so .deb and .rpm packages handle it out of the box._ Xdg-mime can also be used to debug/query current settings on most Linux distributions.
 
-Deep links are passed in using **process.argv** on cold start, and via the **second-instance** event if already running. Because of this, the Exec field of the *.desktop* file needs to contain **%U**.
+Deep links are passed in using **process.argv** on cold start, and via the **second-instance** event if already running. Because of this, the Exec field of the _.desktop_ file needs to contain **%U**.
 
 All major desktop environments protocol handlers (scheme handlers) using .desktop files based on the XDG protocol. This includes Gnome, Kde, Xfce, etc. and covers almost all Linux users.
 
@@ -54,7 +54,7 @@ Browsers will typically ask users to confirm that they want to open the deeplink
 
 This is required for the built-in **app.setAsDefaultProtocolClient()** to do anything.
 
-#### 
+####
 
 #### **MacOS**
 
@@ -62,7 +62,7 @@ Deep links on MacOS work quite differently than Linux and Windows. Instead of re
 
 The support is based on Launch services. The difference in Electron-side implementation exists because on Mac, the operating system will inherently enforce that a single instance of the app is running. Registration of the service depends on proper packaging. Testing a dev build is possible, but you need to [supply the full path to the binary](https://www.bigbinary.com/blog/deep-link-electron-app) when calling app.setAsDefaultProtocolClient. [This npm package](https://www.npmjs.com/package/electron-deeplink) might also help. Note that protocol associations might be cached on MacOS, which can also create annoying experiences when testing local builds.
 
-There is such a thing as Universal Links, which basically is an even smarter version of the [landing page](#landing-pages) pattern where the links will open directly in the app, even though they are normal web links. But this *only works in Safari*, so we can probably, for now, safely ignore this option.
+There is such a thing as Universal Links, which basically is an even smarter version of the [landing page](#landing-pages) pattern where the links will open directly in the app, even though they are normal web links. But this _only works in Safari_, so we can probably, for now, safely ignore this option.
 
 ### Packaging issues {#packaging-issues}
 
@@ -70,36 +70,37 @@ There is such a thing as Universal Links, which basically is an even smarter ver
 
 Of the applications examined, none of them have an official flathub app. Nevertheless, many of them have community-maintained packages such as Mattermost. Deep links can work properly despite Flatpak apps being in isolated environments.
 
-For deep-linking to work, a .desktop file has to be created with the appropriate MimeType. For instance: 
+For deep-linking to work, a .desktop file has to be created with the appropriate MimeType. For instance:
 
 ```
-  [Desktop Entry]                                                                                                                                                                                                                                                                                      
-  Name=Mattermost                                                                                                                                                                                                                                                                                      
-  Exec=mattermost-flatpak                                                                                                                                                                                                                                                                            
-  MimeType=x-scheme-handler/mattermost;     
+  [Desktop Entry]
+  Name=Mattermost
+  Exec=mattermost-flatpak
+  MimeType=x-scheme-handler/mattermost;
 ```
 
 For whatever reason, in Mattermost this is handled in the manifest.json which specifies a wrapper script and a build hook that edits the desktop entry to pass URLs to the wrapper script. Wrapper script then executes the sandboxed app:
 
 ```json
-  {                                                                                                                                                                                                                                                                                                    
-    "base": "org.electronjs.Electron2.BaseApp",                                                                                                                                                                                                                                                        
-    "finish-args": [                                                                                                                                                                                                                                                                                   
-      "--share=network"                                                                                                                                                                                                                                                                                
-    ],                                                                                                                                                                                                                                                                                                 
-    "modules": [{                                                                                                                                                                                                                                                                                      
-      "build_commands": [                                                                                                                                                                                                                                                                              
-        "desktop-file-edit --set-key=Exec --set-value='myapp-wrapper %U' ..."                                                                                                                                                                                                                          
-      ],                                                                                                                                                                                                                                                                                               
-      "sources": [{                                                                                                                                                                                                                                                                                    
-        "type": "script",                                                                                                                                                                                                                                                                              
-        "commands": ["exec zypak-wrapper /app/main/myapp \"$@\""]                                                                                                                                                                                                                                      
-      }]                                                                                                                                                                                                                                                                                               
-    }]                                                                                                                                                                                                                                                                                                 
-  }  
+{
+  "base": "org.electronjs.Electron2.BaseApp",
+  "finish-args": ["--share=network"],
+  "modules": [
+    {
+      "build_commands": [
+        "desktop-file-edit --set-key=Exec --set-value='myapp-wrapper %U' ..."
+      ],
+      "sources": [
+        {
+          "type": "script",
+          "commands": ["exec zypak-wrapper /app/main/myapp \"$@\""]
+        }
+      ]
+    }
+  ]
+}
 ```
 
-    
 Rocket.chat, for example, uses the same method but they build their Flatpak by extracting the .deb file and re-wrapping it. Still, desktop-file-edit is used in order to add the deep linking support.
 
 This is only required when the build system (Snap, Flatpack, AppImages) generates their own .desktop files, or overrides .desktop files, or does not allow that setting to be set for some other reason.
@@ -143,11 +144,11 @@ Also, just like with the Linux equivalent, if we implement this, the deeplinks w
 VS-Code and WebTorrent explicitly skip deep-link support for portable mode on Windows:
 
 ```ts
-// Skip in portable mode: the registered command wouldn't preserve                                                                               
-// portable mode settings, causing issues with OAuth flows                                                                                       
-if (isWindows && !environmentMainService.isPortable) {                                                                                           
-  app.setAsDefaultProtocolClient(protocol, process.execPath, [...]);                                                                             
-}  
+// Skip in portable mode: the registered command wouldn't preserve
+// portable mode settings, causing issues with OAuth flows
+if (isWindows && !environmentMainService.isPortable) {
+  app.setAsDefaultProtocolClient(protocol, process.execPath, [...]);
+}
 ```
 
 #### **Microsoft Store(MSIX) / AppX packages**
@@ -158,7 +159,7 @@ This is basically the Windows equivalent of [Flatpak](#flatpak) packages \- app.
 
 Squirrel.Windows is Electron Forge’s recommended Windows packaging format. It does not inherently support protocol registration, but does not sabotage app.setAsDefaultProtocolClient \- so the protocol registration should work out of the box after the first launch.
 
-[Squirrel will spawn the app with command line flags on first run](https://github.com/electron/windows-installer/blob/main/README.md?utm_source=chatgpt.com#handling-squirrel-events), updates, and uninstalls. Here, it is possible to call app.setAsDefaultProtocolClient  which will have the effect of immediately registering the protocol.
+[Squirrel will spawn the app with command line flags on first run](https://github.com/electron/windows-installer/blob/main/README.md?utm_source=chatgpt.com#handling-squirrel-events), updates, and uninstalls. Here, it is possible to call app.setAsDefaultProtocolClient which will have the effect of immediately registering the protocol.
 
 [There is a potential issue with auto updates, because the binary path includes the version number](https://www.electronjs.org/docs/latest/api/app#appsetasdefaultprotocolclientprotocol-path-args) (e.g. C:\\Users\\you\\AppData\\Local\\Toolhive\\app-1.2.3\\Toolhive.exe). In order to deal with this issue, we have to refer to the “Update.exe” file provided by Squirrel instead:
 
@@ -168,22 +169,22 @@ const protocolSet = app.setAsDefaultProtocolClient(
   'myapp',
   path.resolve(process.execPath, '..', '..', 'Update.exe'),
   ['--processStart', 'Toolhive.exe', '--process-start-args']
-);
+)
 ```
 
- **Important**: Squirrel's \--processStart only accepts the exe name. It does not forward additional positional arguments to the spawned process. Since Electron's setAsDefaultProtocolClient appends "%1" (the URL) at the end of the registry command, \--process-start-args must be included so that Squirrel forwards the URL to the app.
+**Important**: Squirrel's \--processStart only accepts the exe name. It does not forward additional positional arguments to the spawned process. Since Electron's setAsDefaultProtocolClient appends "%1" (the URL) at the end of the registry command, \--process-start-args must be included so that Squirrel forwards the URL to the app.
 
 #### **MacOS (.app, .dmg)**
 
-In order for deep links to work seamlessly, the .app bundle needs to contain a properly configured Contents/Info.plist file that includes the protocol handler configuration. This will be generated by Electron Forge automatically when configured properly. For instance, for the toolhive:// protocol to work, the following configuration is required in forge.config.ts: 
+In order for deep links to work seamlessly, the .app bundle needs to contain a properly configured Contents/Info.plist file that includes the protocol handler configuration. This will be generated by Electron Forge automatically when configured properly. For instance, for the toolhive:// protocol to work, the following configuration is required in forge.config.ts:
 
 ```ts
 packagerConfig: {
   protocols: [
     {
       name: 'ToolHive',
-      schemes: ['toolhive']
-    }
+      schemes: ['toolhive'],
+    },
   ]
 }
 ```
@@ -209,4 +210,3 @@ So no manual config is required\!
 #### **MacOS (Homebrew)**
 
 Should work if the cask simply wraps the .dmg file.
-

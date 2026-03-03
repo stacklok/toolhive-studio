@@ -1,6 +1,6 @@
 # Observed Patterns in Deep Link Implementations
 
-*Part of the [deep-links skill](../SKILL.md). Documents patterns observed in VS Code, GitHub Desktop, Mattermost, Element, and other open-source Electron apps. This is research — some patterns are adopted in our implementation, others are noted for future reference.*
+_Part of the [deep-links skill](../SKILL.md). Documents patterns observed in VS Code, GitHub Desktop, Mattermost, Element, and other open-source Electron apps. This is research — some patterns are adopted in our implementation, others are noted for future reference._
 
 ---
 
@@ -21,13 +21,12 @@ Interestingly, the landing page (at least in the case of Mattermost) is designed
 VS-Code uses the following mechanism to tag protocol-related invocation using CLI flags:
 
 ```ts
-  app.setAsDefaultProtocolClient(protocol, process.execPath, [                                                                                     
-    '--open-url',  // Distinguishes protocol invocation                                                                                            
-    '--'           // Separator for URL argument                                                                                                   
-  ]);      
+app.setAsDefaultProtocolClient(protocol, process.execPath, [
+  '--open-url', // Distinguishes protocol invocation
+  '--', // Separator for URL argument
+])
 ```
 
-   
 Albeit it’s unclear if this will also work on MacOS, since protocol handlers do not rely on process.argv in that case.
 
 #### **Windows registry hacks**
@@ -43,10 +42,10 @@ On Windows, Chromium may inject additional command-line arguments (like \`--allo
 Most of the apps examined implemented a workaround. For instance GitHub Desktop scans raw \`process.argv\` for URLs matching known protocol prefixes instead of relying on parsed arguments:
 
 ```ts
-const prefixes = ['x-github-client://', 'github-windows://'];                                                                                    
-const protocolUrl = process.argv.find(arg =>                                                                                                     
-  prefixes.some(p => arg.startsWith(p))                                                                                                          
-);   
+const prefixes = ['x-github-client://', 'github-windows://']
+const protocolUrl = process.argv.find((arg) =>
+  prefixes.some((p) => arg.startsWith(p))
+)
 ```
 
 #### **Waiting for readiness** {#waiting-for-readiness}
@@ -56,13 +55,13 @@ Multiple apps, such as BalenaEtcher and Electron Fiddle use some patterns, such 
 Here’s an example code:
 
 ```ts
-  // Main process waits for renderer to signal ready                                                                                               
-  let sourceSelectorReady: Promise<void>;                                                                                                          
-  ipcMain.once('source-selector-ready', resolve);                                                                                                  
-                                                                                                                                                   
-  // Then sends the URL                                                                                                                            
-  await sourceSelectorReady;                                                                                                                       
-  window.webContents.send('select-image', url);    
+// Main process waits for renderer to signal ready
+let sourceSelectorReady: Promise<void>
+ipcMain.once('source-selector-ready', resolve)
+
+// Then sends the URL
+await sourceSelectorReady
+window.webContents.send('select-image', url)
 ```
 
 #### **Security/safety confirmations**
@@ -78,53 +77,55 @@ Element implements a strict URL sanitization logic. Deep links do not connect di
 The way Element does this is by ignoring the pathname:
 
 ```ts
-private processUrl(url: string): void {                                                                                                          
-  const parsed = new URL(url);                                                                                                                   
-  const urlToLoad = new URL("vector://vector/webapp/");                                                                                          
-                                                                                                                                                  
-  // Only preserve search (for SSO) and hash (for deep links)                                                                                    
-  // Strip pathname to prevent loading internal pages like Jitsi wrapper                                                                         
-  urlToLoad.search = parsed.search;                                                                                                              
-  urlToLoad.hash = parsed.hash;                                                                                                                  
-  // pathname is NOT copied - security measure                                                                                                   
-                                                                                                                                                  
-  void global.mainWindow.loadURL(urlToLoad.href);                                                                                                
+private processUrl(url: string): void {
+  const parsed = new URL(url);
+  const urlToLoad = new URL("vector://vector/webapp/");
+
+  // Only preserve search (for SSO) and hash (for deep links)
+  // Strip pathname to prevent loading internal pages like Jitsi wrapper
+  urlToLoad.search = parsed.search;
+  urlToLoad.hash = parsed.hash;
+  // pathname is NOT copied - security measure
+
+  void global.mainWindow.loadURL(urlToLoad.href);
 }
 ```
 
-Explicit action registry (GitHub Desktop): 
+Explicit action registry (GitHub Desktop):
 
 ```ts
-switch (parsedUrl.hostname.toLowerCase()) {                                                                                                      
-  case 'oauth': return { name: 'oauth', code, state };                                                                                           
-  case 'openrepo': return { name: 'open-repository-from-url', ... };                                                                             
-  default: return { name: 'unknown', url };  // Dropped                                                                                          
-}           
+switch (parsedUrl.hostname.toLowerCase()) {
+  case 'oauth': return { name: 'oauth', code, state };
+  case 'openrepo': return { name: 'open-repository-from-url', ... };
+  default: return { name: 'unknown', url };  // Dropped
+}
 ```
 
 Path regex validation (Rocket.Chat):
 
 ```ts
-if (!/^\/?(direct|group|channel|livechat)\/[0-9a-zA-Z-_.]+/.test(path)) {                                                                        
-  return;  // Invalid paths rejected                                                                                                             
-}               
+if (!/^\/?(direct|group|channel|livechat)\/[0-9a-zA-Z-_.]+/.test(path)) {
+  return // Invalid paths rejected
+}
 ```
 
-                                                                           
-VS Code command gating: 
+VS Code command gating:
 
 ```ts
-if (!options?.allowCommands) return true;  // Block by default                                                                                   
-if (Array.isArray(options.allowCommands) && !options.allowCommands.includes(target.path)) {                                                      
-  return true;  // Not in allowlist                                                                                                              
-}             
+if (!options?.allowCommands) return true // Block by default
+if (
+  Array.isArray(options.allowCommands) &&
+  !options.allowCommands.includes(target.path)
+) {
+  return true // Not in allowlist
+}
 ```
 
 Sanitization is pretty important. For instance, VS-Code had a remote code execution vulnerability in the past due to the Deep Links feature: [https://www.sonarsource.com/blog/securing-developer-tools-argument-injection-in-vscode/](https://www.sonarsource.com/blog/securing-developer-tools-argument-injection-in-vscode/)
 
 So these are the 2 important aspects of sanitizing URLs:
 
-- Controlling what internal (router) state can actually be accessed through deep links, such as by allow-listing specific URLs  
+- Controlling what internal (router) state can actually be accessed through deep links, such as by allow-listing specific URLs
 - Beyond this, we also have to sanitize parametric parts of the URL, including the search and hash, and not assume that they are safe to import into local state
 
 #### **Passthrough URLs vs. separate system for deep links**
@@ -136,4 +137,3 @@ This additional layer does not only provide greater security but allows for the 
 #### **Telemetry & logging**
 
 Seems like none of the apps have telemetry specifically about deep links \- they simply track the action that they deep link triggered. However some apps do log events or errors related to deep links.
-

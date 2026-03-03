@@ -19,6 +19,7 @@ toolhive-gui://v1/<intent>[?<query>]
 ```
 
 Examples:
+
 - `toolhive-gui://v1/open-registry-server-detail?serverName=fetch` — open a registry server detail page
 
 The `v1` segment is the version. The intent is a kebab-case action name. Query params carry intent-specific data.
@@ -29,12 +30,12 @@ The `v1` segment is the version. The intent is a kebab-case action name. Query p
 
 ### Key Files
 
-| File | Role |
-|---|---|
-| `common/deep-links.ts` | **Single source of truth.** All deep link definitions: intent name, Zod param schema, navigation target. |
-| `main/src/deep-links/parse.ts` | Parses and validates a raw URL string using the schemas from `common/deep-links.ts`. |
-| `main/src/deep-links/index.ts` | Entry point: extracts URL from argv (Windows/Linux), waits for window ready, dispatches via IPC. |
-| `main/src/deep-links/squirrel.ts` | Squirrel.Windows-specific protocol registration. |
+| File                              | Role                                                                                                     |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `common/deep-links.ts`            | **Single source of truth.** All deep link definitions: intent name, Zod param schema, navigation target. |
+| `main/src/deep-links/parse.ts`    | Parses and validates a raw URL string using the schemas from `common/deep-links.ts`.                     |
+| `main/src/deep-links/index.ts`    | Entry point: extracts URL from argv (Windows/Linux), waits for window ready, dispatches via IPC.         |
+| `main/src/deep-links/squirrel.ts` | Squirrel.Windows-specific protocol registration.                                                         |
 
 ### IPC Channel
 
@@ -64,28 +65,33 @@ All changes happen in **`common/deep-links.ts`**:
 ```ts
 // 1. Define the new intent using v1DeepLink()
 export const myNewIntent = v1DeepLink({
-  intent: 'my-new-intent',           // kebab-case, matches URL path segment
+  intent: 'my-new-intent', // kebab-case, matches URL path segment
   params: z.object({
-    someParam: safeIdentifier,        // use safeIdentifier for user-supplied strings
+    someParam: safeIdentifier, // use safeIdentifier for user-supplied strings
   }),
   navigate: (params) => ({
-    to: '/some-route/$id',            // TanStack Router route
+    to: '/some-route/$id', // TanStack Router route
     params: { id: params.someParam },
   }),
 })
 
 // 2. Add to allDeepLinks array
-const allDeepLinks = [openRegistryServerDetail, showNotFound, myNewIntent] as const
+const allDeepLinks = [
+  openRegistryServerDetail,
+  showNotFound,
+  myNewIntent,
+] as const
 
 // 3. Add to deepLinkSchema discriminated union
 export const deepLinkSchema = z.discriminatedUnion('intent', [
   openRegistryServerDetail.schema,
   showNotFound.schema,
-  myNewIntent.schema,               // ← add here
+  myNewIntent.schema, // ← add here
 ])
 ```
 
 **Test manually:**
+
 ```bash
 ./node_modules/.bin/electron . "toolhive-gui://v1/my-new-intent?someParam=value"
 ```
