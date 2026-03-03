@@ -166,6 +166,68 @@ describe('symlink-manager', () => {
     })
   })
 
+  describe('checkSymlink (flatpak)', () => {
+    it('detects a valid flatpak wrapper script', () => {
+      const wrapper =
+        '#!/bin/sh\nexec flatpak run --command=/app/toolhive/resources/bin/linux-x64/thv com.stacklok.ToolHive "$@"\n'
+      vol.fromJSON({
+        '/.flatpak-info': '',
+        '/home/testuser/.toolhive/bin/thv': wrapper,
+      })
+
+      const result = checkSymlink('linux')
+
+      expect(result.exists).toBe(true)
+      expect(result.targetExists).toBe(true)
+      expect(result.isOurBinary).toBe(true)
+    })
+
+    it('returns isOurBinary: false for non-wrapper file in flatpak', () => {
+      vol.fromJSON({
+        '/.flatpak-info': '',
+        '/home/testuser/.toolhive/bin/thv': '#!/bin/sh\necho hello\n',
+      })
+
+      const result = checkSymlink('linux')
+
+      expect(result.exists).toBe(true)
+      expect(result.isOurBinary).toBe(false)
+    })
+  })
+
+  describe('createSymlink (flatpak)', () => {
+    it('creates a wrapper script instead of a symlink', () => {
+      vol.fromJSON({
+        '/.flatpak-info': '',
+        '/app/resources/bin/darwin-arm64/thv': 'binary content',
+      })
+
+      const result = createSymlink('linux')
+
+      expect(result.success).toBe(true)
+      const content = vol.readFileSync(
+        '/home/testuser/.toolhive/bin/thv',
+        'utf8'
+      )
+      expect(content).toContain('#!/bin/sh')
+      expect(content).toContain('flatpak run --command=')
+      expect(content).toContain('com.stacklok.ToolHive')
+    })
+
+    it('wrapper script is executable', () => {
+      vol.fromJSON({
+        '/.flatpak-info': '',
+        '/app/resources/bin/darwin-arm64/thv': 'binary content',
+      })
+
+      createSymlink('linux')
+
+      const stats = vol.statSync('/home/testuser/.toolhive/bin/thv')
+      // Check executable bit (0o755 = 493)
+      expect(stats.mode! & 0o755).toBe(0o755)
+    })
+  })
+
   describe('removeSymlink', () => {
     it('returns success when symlink does not exist', () => {
       const result = removeSymlink('darwin')

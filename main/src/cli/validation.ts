@@ -11,6 +11,8 @@ import {
   checkSymlink,
   createSymlink,
   getBundledCliPath,
+  getMarkerTargetPath,
+  isFlatpak,
   repairSymlink,
 } from './symlink-manager'
 import { configureShellPath, checkPathConfiguration } from './path-configurator'
@@ -161,7 +163,6 @@ export async function handleValidationResult(
               'cli.new_desktop_version': currentDesktopVersion,
             })
 
-            const bundledPath = getBundledCliPath()
             const cliPath = getDesktopCliPath(platform)
 
             // On Windows, we need to recopy the CLI since it's a copy not a symlink
@@ -171,12 +172,11 @@ export async function handleValidationResult(
               if (symlinkResult.success) {
                 span.setAttribute('cli.windows_recopy', true)
                 const cliInfo = await getCliInfo(cliPath)
-                createMarkerForDesktopInstall(
-                  cliInfo.version ?? 'unknown',
-                  undefined,
-                  symlinkResult.checksum,
-                  platform
-                )
+                createMarkerForDesktopInstall({
+                  cliVersion: cliInfo.version ?? 'unknown',
+                  cliChecksum: symlinkResult.checksum,
+                  platform,
+                })
               } else {
                 // Don't update marker on failure - next launch will retry
                 log.error(
@@ -190,12 +190,14 @@ export async function handleValidationResult(
             } else {
               // macOS/Linux: symlink auto-updates, just update marker
               const cliInfo = await getCliInfo(cliPath)
-              createMarkerForDesktopInstall(
-                cliInfo.version ?? 'unknown',
-                bundledPath,
-                marker.cli_checksum,
-                platform
-              )
+              const targetPath = getMarkerTargetPath()
+              createMarkerForDesktopInstall({
+                cliVersion: cliInfo.version ?? 'unknown',
+                symlinkTarget: isFlatpak() ? undefined : targetPath,
+                cliChecksum: marker.cli_checksum,
+                platform,
+                flatpakTarget: isFlatpak() ? targetPath : undefined,
+              })
             }
           }
 
@@ -250,15 +252,17 @@ export async function handleValidationResult(
             return result
           }
 
-          const bundledPath = getBundledCliPath()
           const cliPath = getDesktopCliPath(platform)
           const cliInfo = await getCliInfo(cliPath)
+          const targetPath = getMarkerTargetPath()
 
-          createMarkerForDesktopInstall(
-            cliInfo.version ?? 'unknown',
-            platform === 'win32' ? undefined : bundledPath,
-            symlinkResult.checksum
-          )
+          createMarkerForDesktopInstall({
+            cliVersion: cliInfo.version ?? 'unknown',
+            symlinkTarget:
+              platform === 'win32' || isFlatpak() ? undefined : targetPath,
+            cliChecksum: symlinkResult.checksum,
+            flatpakTarget: isFlatpak() ? targetPath : undefined,
+          })
 
           log.info(`CLI installed: version=${cliInfo.version}, path=${cliPath}`)
 
@@ -317,14 +321,16 @@ export async function repairCliSymlink(
       }
 
       // Update marker file after repair
-      const bundledPath = getBundledCliPath()
       const cliPath = getDesktopCliPath(platform)
       const cliInfo = await getCliInfo(cliPath)
-      createMarkerForDesktopInstall(
-        cliInfo.version ?? 'unknown',
-        platform === 'win32' ? undefined : bundledPath,
-        result.checksum
-      )
+      const targetPath = getMarkerTargetPath()
+      createMarkerForDesktopInstall({
+        cliVersion: cliInfo.version ?? 'unknown',
+        symlinkTarget:
+          platform === 'win32' || isFlatpak() ? undefined : targetPath,
+        cliChecksum: result.checksum,
+        flatpakTarget: isFlatpak() ? targetPath : undefined,
+      })
 
       log.info('Symlink repaired successfully')
       span.setAttributes({
@@ -399,11 +405,14 @@ export async function reinstallCliSymlink(
       if (result.success) {
         const bundledPath = getBundledCliPath()
         const cliInfo = await getCliInfo(bundledPath)
-        createMarkerForDesktopInstall(
-          cliInfo.version ?? 'unknown',
-          platform === 'win32' ? undefined : bundledPath,
-          result.checksum
-        )
+        const targetPath = getMarkerTargetPath()
+        createMarkerForDesktopInstall({
+          cliVersion: cliInfo.version ?? 'unknown',
+          symlinkTarget:
+            platform === 'win32' || isFlatpak() ? undefined : targetPath,
+          cliChecksum: result.checksum,
+          flatpakTarget: isFlatpak() ? targetPath : undefined,
+        })
         span.setAttributes({
           'cli.success': true,
           'cli.version': cliInfo.version ?? 'unknown',
