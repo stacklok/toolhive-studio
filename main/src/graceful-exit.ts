@@ -8,9 +8,16 @@ import Store from 'electron-store'
 import log from './logger'
 import { delay } from '../../utils/delay'
 import { getHeaders } from './headers'
+import {
+  writeShutdownServers,
+  clearShutdownServersFromDb,
+} from './db/writers/shutdown-writer'
+import { readShutdownServers } from './db/readers/shutdown-reader'
+import { getFeatureFlag } from './feature-flags/flags'
+import { featureFlagKeys } from '../../utils/feature-flags'
 
 // Create a store instance for tracking shutdown servers
-const shutdownStore = new Store({
+export const shutdownStore = new Store({
   name: 'server-shutdown',
   defaults: {
     lastShutdownServers: [],
@@ -126,6 +133,11 @@ export async function stopAllServers(
 
   // Store the servers that are about to be shut down
   shutdownStore.set('lastShutdownServers', servers)
+  try {
+    writeShutdownServers(servers)
+  } catch (err) {
+    log.error('[DB] Failed to dual-write shutdown servers:', err)
+  }
   log.info(`Stopping ${servers.length} servers...`)
 
   const serverNames = servers
@@ -156,11 +168,23 @@ export async function stopAllServers(
 
 /** Get the list of servers that were shut down in the last shutdown */
 export function getLastShutdownServers(): CoreWorkload[] {
+  if (getFeatureFlag(featureFlagKeys.SQLITE_READS_SHUTDOWN)) {
+    try {
+      return readShutdownServers()
+    } catch (err) {
+      log.error('[DB] SQLite read failed, falling back to electron-store:', err)
+    }
+  }
   return shutdownStore.get('lastShutdownServers', [])
 }
 
 /** Clear the shutdown history */
 export function clearShutdownHistory(): void {
   shutdownStore.set('lastShutdownServers', [])
+  try {
+    clearShutdownServersFromDb()
+  } catch (err) {
+    log.error('[DB] Failed to dual-write clear shutdown history:', err)
+  }
   log.info('Shutdown history cleared')
 }
