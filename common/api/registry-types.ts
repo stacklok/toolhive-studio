@@ -57,6 +57,9 @@ export type RegistryKubernetesMetadata = {
   image?: string
   kind?: string
   name?: string
+  namespace?: string
+  transport?: string
+  uid?: string
 }
 
 export type RegistryMetadata = {
