@@ -4,6 +4,12 @@ import { createTestDb } from './test-helpers'
 
 let testDb: Database.Database
 
+vi.mock('@sentry/electron/main', () => ({
+  startSpan: vi.fn((_opts: unknown, cb: (span: unknown) => unknown) =>
+    cb({ setStatus: vi.fn(), setAttribute: vi.fn(), setAttributes: vi.fn() })
+  ),
+}))
+
 vi.mock('../database', () => ({
   getDb: () => testDb,
   isDbWritable: () => true,

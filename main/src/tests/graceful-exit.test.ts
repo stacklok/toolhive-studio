@@ -14,7 +14,12 @@ import type {
   V1WorkloadListResponse,
 } from '@common/api/generated/types.gen'
 
-// Mock dependencies
+vi.mock('@sentry/electron/main', () => ({
+  startSpan: vi.fn((_opts: unknown, cb: (span: unknown) => unknown) =>
+    cb({ setStatus: vi.fn(), setAttribute: vi.fn(), setAttributes: vi.fn() })
+  ),
+}))
+
 vi.mock('@common/api/generated/sdk.gen')
 vi.mock('@common/api/generated/client')
 vi.mock('../headers')

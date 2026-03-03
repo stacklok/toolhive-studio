@@ -1,20 +1,28 @@
 import { getDb, isDbWritable } from '../database'
 import log from '../../logger'
+import { withDbSpan } from '../telemetry'
 import type { CoreWorkload } from '@common/api/generated/types.gen'
 
 export function writeShutdownServers(servers: CoreWorkload[]): void {
   if (!isDbWritable()) return
   try {
-    const db = getDb()
-    db.transaction(() => {
-      db.prepare('DELETE FROM shutdown_servers').run()
-      const insert = db.prepare(
-        'INSERT INTO shutdown_servers (server_data) VALUES (?)'
-      )
-      for (const server of servers) {
-        insert.run(JSON.stringify(server))
+    withDbSpan(
+      'DB write shutdown servers',
+      'db.write',
+      { 'db.server_count': servers.length },
+      () => {
+        const db = getDb()
+        db.transaction(() => {
+          db.prepare('DELETE FROM shutdown_servers').run()
+          const insert = db.prepare(
+            'INSERT INTO shutdown_servers (server_data) VALUES (?)'
+          )
+          for (const server of servers) {
+            insert.run(JSON.stringify(server))
+          }
+        })()
       }
-    })()
+    )
   } catch (err) {
     log.error('[DB] Failed to write shutdown servers:', err)
   }
@@ -23,8 +31,10 @@ export function writeShutdownServers(servers: CoreWorkload[]): void {
 export function clearShutdownServersFromDb(): void {
   if (!isDbWritable()) return
   try {
-    const db = getDb()
-    db.prepare('DELETE FROM shutdown_servers').run()
+    withDbSpan('DB clear shutdown servers', 'db.write', {}, () => {
+      const db = getDb()
+      db.prepare('DELETE FROM shutdown_servers').run()
+    })
   } catch (err) {
     log.error('[DB] Failed to clear shutdown servers:', err)
   }

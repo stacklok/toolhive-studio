@@ -41,6 +41,12 @@ vi.mock('electron-store', () => {
   }
 })
 
+vi.mock('@sentry/electron/main', () => ({
+  startSpan: vi.fn((_opts: unknown, cb: (span: unknown) => unknown) =>
+    cb({ setStatus: vi.fn(), setAttribute: vi.fn(), setAttributes: vi.fn() })
+  ),
+}))
+
 vi.mock('../database', () => ({
   getDb: () => testDb,
   isDbWritable: () => true,
