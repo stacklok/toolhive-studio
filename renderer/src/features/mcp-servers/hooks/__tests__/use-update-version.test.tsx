@@ -10,7 +10,7 @@ import { recordRequests } from '@/common/mocks/node'
 import type {
   RegistryEnvVar,
   V1CreateRequest,
-} from '@common/api/generated/types.gen'
+} from '@common/api/registry-types'
 
 const defaultOptions = {
   serverName: 'postgres-db',

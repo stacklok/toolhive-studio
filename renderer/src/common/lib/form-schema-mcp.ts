@@ -1,7 +1,5 @@
-import type {
-  CoreWorkload,
-  PermissionsProfile,
-} from '@common/api/generated/types.gen'
+import type { CoreWorkload } from '@common/api/generated/types.gen'
+import type { PermissionsProfile } from '@common/api/registry-types'
 import { z } from 'zod/v4'
 
 export const REMOTE_MCP_AUTH_TYPES = {

@@ -1,5 +1,5 @@
 import { it, expect, vi, describe } from 'vitest'
-import type { RegistryImageMetadata } from '@common/api/generated/types.gen'
+import type { RegistryImageMetadata } from '@common/api/registry-types'
 import { prepareCreateWorkloadData } from '../orchestrate-run-registry-server'
 import type { FormSchemaRegistryMcp } from '../form-schema-registry-mcp'
 

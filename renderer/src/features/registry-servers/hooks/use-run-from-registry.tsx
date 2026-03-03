@@ -1,9 +1,11 @@
 import {
   type PostApiV1BetaSecretsDefaultKeysData,
-  type RegistryImageMetadata,
   type SecretsSecretParameter,
-  type V1CreateRequest,
 } from '@common/api/generated/types.gen'
+import type {
+  RegistryImageMetadata,
+  V1CreateRequest,
+} from '@common/api/registry-types'
 import { type Options } from '@common/api/generated/sdk.gen'
 import { postApiV1BetaWorkloadsMutation } from '@common/api/generated/@tanstack/react-query.gen'
 import { useMutation, useQueryClient } from '@tanstack/react-query'

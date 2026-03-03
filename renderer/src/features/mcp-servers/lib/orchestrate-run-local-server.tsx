@@ -1,11 +1,13 @@
 import {
   type CoreWorkload,
-  type PermissionsOutboundNetworkPermissions,
   type SecretsSecretParameter,
-  type V1CreateRequest,
-  type V1UpdateRequest,
   type V1ListSecretsResponse,
 } from '@common/api/generated/types.gen'
+import type {
+  PermissionsOutboundNetworkPermissions,
+  V1CreateRequest,
+  V1UpdateRequest,
+} from '@common/api/registry-types'
 import { getVolumes, mapEnvVars } from '@/common/lib/utils'
 import { getProxyModeOrDefault } from '@/common/lib/proxy-mode'
 import type { FormSchemaLocalMcp } from './form-schema-local-mcp'
