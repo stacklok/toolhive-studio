@@ -223,7 +223,7 @@ const config: ForgeConfig = {
         throw new Error(`Unsupported architecture: ${arch}`)
       }
 
-      // Download/cached the exact binary needed for this build target
+      // Download/cache the exact binary needed for this build target
       await ensureThv(platform, arch)
     },
   },

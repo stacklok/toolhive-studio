@@ -1,8 +1,16 @@
 import path from 'node:path'
 import { promises as fs } from 'node:fs'
-import { spawn } from 'node:child_process'
+import { execFile, spawn } from 'node:child_process'
+import { promisify } from 'node:util'
 import { MakerBase, type MakerOptions } from '@electron-forge/maker-base'
 import type { ForgePlatform } from '@electron-forge/shared-types'
+import { ensureThv } from '../fetch-thv'
+import {
+  flatpakFilesystemEntries,
+  parseThvClients,
+} from '../flatpak-client-paths'
+
+const execFileAsync = promisify(execFile)
 
 const APP_ID = 'com.stacklok.ToolHive'
 const RUNTIME_VERSION = '24.08'
@@ -47,6 +55,32 @@ export default class MakerFlatpakBuilder extends MakerBase<
         `Unsupported architecture for Flatpak build: ${targetArch}`
       )
     }
+
+    // Resolve the thv binary for this arch (already downloaded by generateAssets)
+    // and derive finish-args from the exact client list this version of thv reports.
+    // This ensures the manifest reflects what the current binary supports — stale
+    // mapping entries are excluded, and any unmapped new client fails the build.
+    const thvPath = await ensureThv('linux', targetArch as NodeJS.Architecture)
+    const { stdout, stderr } = await execFileAsync(thvPath, [
+      'client',
+      'register',
+      '--help',
+    ]).catch((err: { stdout?: string; stderr?: string }) => ({
+      stdout: err.stdout ?? '',
+      stderr: err.stderr ?? '',
+    }))
+
+    const clients = parseThvClients(`${stdout}\n${stderr}`)
+    if (clients.length === 0) {
+      throw new Error(
+        'Failed to parse any clients from `thv client register --help`. ' +
+          'Cannot generate Flatpak filesystem permissions.'
+      )
+    }
+
+    // Throws with a clear message if any client is missing from CLIENT_FLATPAK_PATHS
+    const clientFilesystemEntries = flatpakFilesystemEntries(clients)
+
     const fileName = `${APP_ID}_${flatpakArch}.flatpak`
     const outDir = path.join(makeDir, flatpakArch)
     const outPath = path.join(outDir, fileName)
@@ -65,7 +99,12 @@ export default class MakerFlatpakBuilder extends MakerBase<
       const iconPath = path.join(projectRoot, 'icons', 'icon.png')
 
       // Generate the flatpak-builder manifest (JSON format)
-      const manifest = this.generateManifest(dir, flatpakDir, iconPath)
+      const manifest = this.generateManifest(
+        dir,
+        flatpakDir,
+        iconPath,
+        clientFilesystemEntries
+      )
       const manifestPath = path.join(tmpDir, `${APP_ID}.json`)
       await fs.writeFile(manifestPath, JSON.stringify(manifest, null, 2))
 
@@ -98,7 +137,8 @@ export default class MakerFlatpakBuilder extends MakerBase<
   private generateManifest(
     appDir: string,
     flatpakDir: string,
-    iconPath: string
+    iconPath: string,
+    clientFilesystemEntries: string[]
   ) {
     return {
       id: APP_ID,
@@ -134,6 +174,10 @@ export default class MakerFlatpakBuilder extends MakerBase<
         '--filesystem=~/.config/fish:create',
         '--env=ELECTRON_TRASH=gio',
         '--env=TOOLHIVE_SKIP_DESKTOP_CHECK=1',
+        // MCP client config directories — derived at build time from the live
+        // `thv client register --help` output. Validated against CLIENT_FLATPAK_PATHS:
+        // any client not in the map fails the build before this line is reached.
+        ...clientFilesystemEntries,
       ],
       modules: [
         {
