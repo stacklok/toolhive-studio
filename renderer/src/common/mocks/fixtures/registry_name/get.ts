@@ -138,8 +138,10 @@ export const mockedGetApiV1BetaRegistryByName = AutoAPIMock<
       },
     ],
   },
-}).scenario('server-error', (mock) =>
-  mock.overrideHandler(() =>
-    HttpResponse.json({ error: 'Internal server error' }, { status: 500 })
-  )
+} as unknown as GetApiV1BetaRegistryByNameResponse).scenario(
+  'server-error',
+  (mock) =>
+    mock.overrideHandler(() =>
+      HttpResponse.json({ error: 'Internal server error' }, { status: 500 })
+    )
 )

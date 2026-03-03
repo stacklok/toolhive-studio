@@ -9,7 +9,7 @@ import {
 import type {
   RegistryImageMetadata,
   RegistryRemoteServerMetadata,
-} from '@common/api/generated/types.gen'
+} from '@common/api/registry-types'
 import { ServerUrl } from './items/server-url'
 import { EditConfigurationMenuItem } from './items/edit-configuration-menu-item'
 import { GithubRepositoryMenuItem } from './items/github-repository-menu-item'

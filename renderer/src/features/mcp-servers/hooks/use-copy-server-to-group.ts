@@ -9,6 +9,7 @@ import {
 } from '@common/api/generated/@tanstack/react-query.gen'
 import { getApiV1BetaWorkloadsByName } from '@common/api/generated/sdk.gen'
 import { trackEvent } from '@/common/lib/analytics'
+import type { V1CreateRequest } from '@common/api/registry-types'
 
 async function ensureUniqueName(
   prompt: ReturnType<typeof usePrompt>,
@@ -86,10 +87,11 @@ export function useCopyServerToGroup(serverName: string) {
         }
 
         try {
-          const { data: runConfig } = await getApiV1BetaWorkloadsByName({
+          const { data: runConfigRaw } = await getApiV1BetaWorkloadsByName({
             path: { name: serverName },
             throwOnError: true,
           })
+          const runConfig = runConfigRaw as V1CreateRequest
 
           const secrets = runConfig.secrets || []
 
@@ -118,7 +120,7 @@ export function useCopyServerToGroup(serverName: string) {
               host: runConfig.host,
               target_port: runConfig.target_port,
               group: groupName,
-            },
+            } as V1CreateRequest,
           })
 
           await queryClient.invalidateQueries({

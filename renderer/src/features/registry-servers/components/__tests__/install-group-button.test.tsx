@@ -4,7 +4,7 @@ import { InstallGroupButton } from '../install-group-button'
 import type {
   RegistryGroup,
   RegistryImageMetadata,
-} from '@common/api/generated/types.gen'
+} from '@common/api/registry-types'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
 import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'

@@ -3,6 +3,7 @@ import {
   getApiV1BetaWorkloadsByNameOptions,
 } from '@common/api/generated/@tanstack/react-query.gen'
 import { useQuery } from '@tanstack/react-query'
+import type { V1ListServersResponse } from '@common/api/registry-types'
 
 export interface IsFromRegistryToolDiff {
   hasExactMatch: boolean
@@ -36,7 +37,7 @@ export function useIsServerFromRegistry(serverName: string) {
     retry: false,
   })
   const { servers: serversList = [], remote_servers: remoteServersList = [] } =
-    data || {}
+    (data as V1ListServersResponse | undefined) || {}
 
   // If workload has a URL defined, it's a remote server - match by URL
   const matchedRegistryItem = workload?.url
