@@ -2,7 +2,7 @@ import type {
   RegistryImageMetadata,
   RegistryRemoteServerMetadata,
   RegistryGroup,
-} from '@common/api/generated/types.gen'
+} from '@common/api/registry-types'
 import type { WithTypeTag } from '@/common/types/utils'
 
 export type RegistryItem =

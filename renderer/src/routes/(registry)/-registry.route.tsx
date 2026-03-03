@@ -3,6 +3,10 @@ import {
   getApiV1BetaRegistryByNameOptions,
 } from '@common/api/generated/@tanstack/react-query.gen'
 import { useSuspenseQuery } from '@tanstack/react-query'
+import type {
+  V1GetRegistryResponse,
+  V1ListServersResponse,
+} from '@common/api/registry-types'
 import { GridCardsRegistry } from '@/features/registry-servers/components/grid-cards-registry'
 import { EmptyState } from '@/common/components/empty-state'
 import { ExternalLinkIcon } from 'lucide-react'
@@ -41,9 +45,10 @@ export default function RegistryRouteComponent() {
   )
 
   const { servers: serversList = [], remote_servers: remoteServersList = [] } =
-    serversData || {}
+    (serversData as V1ListServersResponse | undefined) || {}
 
-  const groups = registryData?.registry?.groups || []
+  const groups =
+    (registryData as V1GetRegistryResponse | undefined)?.registry?.groups || []
 
   const servers = [...serversList, ...remoteServersList].filter(
     (server) => !SKIP_META_MCP.includes(server.name ?? '')

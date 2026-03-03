@@ -1,9 +1,9 @@
-import {
-  type PermissionsOutboundNetworkPermissions,
-  type RegistryImageMetadata,
-  type SecretsSecretParameter,
-  type V1CreateRequest,
-} from '@common/api/generated/types.gen'
+import { type SecretsSecretParameter } from '@common/api/generated/types.gen'
+import type {
+  PermissionsOutboundNetworkPermissions,
+  RegistryImageMetadata,
+  V1CreateRequest,
+} from '@common/api/registry-types'
 import { getVolumes, mapEnvVars } from '@/common/lib/utils'
 import type { FormSchemaRegistryMcp } from './form-schema-registry-mcp'
 

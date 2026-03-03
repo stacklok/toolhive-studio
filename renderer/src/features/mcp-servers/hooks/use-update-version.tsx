@@ -3,7 +3,7 @@ import { getApiV1BetaWorkloadsByNameOptions } from '@common/api/generated/@tanst
 import type {
   RegistryEnvVar,
   V1CreateRequest,
-} from '@common/api/generated/types.gen'
+} from '@common/api/registry-types'
 import { useConfirm } from '@/common/hooks/use-confirm'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 import { useEditServerDialog } from './use-edit-server-dialog'

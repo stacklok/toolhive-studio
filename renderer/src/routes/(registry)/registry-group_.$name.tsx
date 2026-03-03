@@ -1,6 +1,7 @@
 import { createFileRoute, useParams } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { getApiV1BetaRegistryByNameOptions } from '@common/api/generated/@tanstack/react-query.gen'
+import type { V1GetRegistryResponse } from '@common/api/registry-types'
 import { Badge } from '@/common/components/ui/badge'
 import { RegistryDetailHeader } from '@/features/registry-servers/components/registry-detail-header'
 import { Separator } from '@/common/components/ui/separator'
@@ -30,7 +31,9 @@ export function RegistryGroupDetail() {
   const { data: registryData } = useSuspenseQuery(
     getApiV1BetaRegistryByNameOptions({ path: { name: 'default' } })
   )
-  const group = registryData?.registry?.groups?.find((g) => g.name === name)
+  const group = (
+    registryData as V1GetRegistryResponse | undefined
+  )?.registry?.groups?.find((g) => g.name === name)
 
   const hasServers =
     Object.keys(group?.servers ?? {}).length > 0 ||

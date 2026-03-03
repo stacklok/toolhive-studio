@@ -13,6 +13,21 @@ import {
   LOCAL_PROVIDER_IDS,
   type LocalProviderId,
 } from './constants'
+import {
+  writeProvider,
+  deleteProvider,
+  clearAllProviders,
+  writeSelectedModel,
+  writeEnabledMcpTools,
+  deleteEnabledMcpTools,
+} from '../db/writers/chat-settings-writer'
+import {
+  readChatProvider as readChatProviderFromDb,
+  readSelectedModel as readSelectedModelFromDb,
+  readEnabledMcpTools as readEnabledMcpToolsFromDb,
+} from '../db/readers/chat-settings-reader'
+import { getFeatureFlag } from '../feature-flags/flags'
+import { featureFlagKeys } from '../../../utils/feature-flags'
 
 // Extract provider IDs from CHAT_PROVIDER_INFO
 type ProviderId = (typeof CHAT_PROVIDER_INFO)[number]['id']
@@ -84,7 +99,7 @@ function isSelectedModel(value: unknown): value is ChatSettingsSelectedModel {
 }
 
 // Create a secure store for chat settings (API keys and model selection)
-const chatStore = new Store<ChatSettings>({
+export const chatSettingsStore = new Store<ChatSettings>({
   name: 'chat-settings',
   encryptionKey: 'toolhive-chat-encryption-key', // Basic encryption for API keys
   clearInvalidConfig: true,
@@ -101,7 +116,32 @@ const chatStore = new Store<ChatSettings>({
 // Get chat settings for a provider
 export function getChatSettings(providerId: ProviderId): ChatSettingsProvider {
   try {
-    const providers = chatStore.get('providers')
+    if (getFeatureFlag(featureFlagKeys.SQLITE_READS_CHAT_SETTINGS)) {
+      try {
+        const dbProvider = readChatProviderFromDb(providerId)
+        if (dbProvider) {
+          if (isLocalProvider(providerId)) {
+            return {
+              providerId,
+              endpointURL: dbProvider.endpointURL ?? '',
+              enabledTools: [],
+            }
+          } else {
+            return {
+              providerId,
+              apiKey: dbProvider.apiKey ?? '',
+              enabledTools: [],
+            }
+          }
+        }
+      } catch (err) {
+        log.error(
+          '[DB] SQLite read failed, falling back to electron-store:',
+          err
+        )
+      }
+    }
+    const providers = chatSettingsStore.get('providers')
     if (isProvidersRecord(providers)) {
       const existing = providers[providerId]
       if (existing) return existing
@@ -187,10 +227,23 @@ function saveChatSettings(
           enabledTools: settings.enabledTools,
         }
 
-    const providers = chatStore.get('providers')
+    const providers = chatSettingsStore.get('providers')
     const typedProviders = isProvidersRecord(providers) ? providers : {}
     typedProviders[providerId] = settingsWithProviderId
-    chatStore.set('providers', typedProviders)
+    chatSettingsStore.set('providers', typedProviders)
+    try {
+      if (isLocalProvider(providerId)) {
+        writeProvider(providerId, {
+          endpointURL: extractEndpointURL(settingsWithProviderId),
+        })
+      } else {
+        writeProvider(providerId, {
+          apiKey: extractApiKey(settingsWithProviderId),
+        })
+      }
+    } catch (err) {
+      log.error('[DB] Failed to dual-write provider settings:', err)
+    }
     return { success: true }
   } catch (error) {
     log.error(
@@ -211,13 +264,23 @@ export function clearChatSettings(providerId?: ProviderId): {
 } {
   try {
     if (providerId) {
-      const providers = chatStore.get('providers')
+      const providers = chatSettingsStore.get('providers')
       const typedProviders = isProvidersRecord(providers) ? providers : {}
       delete typedProviders[providerId]
-      chatStore.set('providers', typedProviders)
+      chatSettingsStore.set('providers', typedProviders)
+      try {
+        deleteProvider(providerId)
+      } catch (err) {
+        log.error('[DB] Failed to dual-write provider deletion:', err)
+      }
     } else {
       // Clear all providers if no specific provider is given
-      chatStore.set('providers', {})
+      chatSettingsStore.set('providers', {})
+      try {
+        clearAllProviders()
+      } catch (err) {
+        log.error('[DB] Failed to dual-write clear all providers:', err)
+      }
     }
     return { success: true }
   } catch (error) {
@@ -231,7 +294,18 @@ export function clearChatSettings(providerId?: ProviderId): {
 // Get selected model
 export function getSelectedModel(): ChatSettingsSelectedModel {
   try {
-    const selectedModel = chatStore.get('selectedModel')
+    if (getFeatureFlag(featureFlagKeys.SQLITE_READS_CHAT_SETTINGS)) {
+      try {
+        const dbModel = readSelectedModelFromDb()
+        if (dbModel.provider && dbModel.model) return dbModel
+      } catch (err) {
+        log.error(
+          '[DB] SQLite read failed, falling back to electron-store:',
+          err
+        )
+      }
+    }
+    const selectedModel = chatSettingsStore.get('selectedModel')
     if (
       isSelectedModel(selectedModel) &&
       selectedModel.provider &&
@@ -252,7 +326,12 @@ export function saveSelectedModel(
   model: string
 ): { success: boolean; error?: string } {
   try {
-    chatStore.set('selectedModel', { provider, model })
+    chatSettingsStore.set('selectedModel', { provider, model })
+    try {
+      writeSelectedModel(provider, model)
+    } catch (err) {
+      log.error('[DB] Failed to dual-write selected model:', err)
+    }
     return { success: true }
   } catch (error) {
     return {
@@ -268,10 +347,15 @@ export function saveEnabledMcpTools(
   toolNames: string[]
 ): { success: boolean; error?: string } {
   try {
-    const enabledMcpTools = chatStore.get('enabledMcpTools')
+    const enabledMcpTools = chatSettingsStore.get('enabledMcpTools')
     const typedTools = isToolsRecord(enabledMcpTools) ? enabledMcpTools : {}
     typedTools[serverName] = toolNames
-    chatStore.set('enabledMcpTools', typedTools)
+    chatSettingsStore.set('enabledMcpTools', typedTools)
+    try {
+      writeEnabledMcpTools(serverName, toolNames)
+    } catch (err) {
+      log.error('[DB] Failed to dual-write enabled MCP tools:', err)
+    }
     return { success: true }
   } catch (error) {
     return {
@@ -286,7 +370,17 @@ export async function getEnabledMcpTools(): Promise<
   ChatSettings['enabledMcpTools']
 > {
   try {
-    const enabledMcpTools = chatStore.get('enabledMcpTools')
+    if (getFeatureFlag(featureFlagKeys.SQLITE_READS_CHAT_SETTINGS)) {
+      try {
+        return readEnabledMcpToolsFromDb()
+      } catch (err) {
+        log.error(
+          '[DB] SQLite read failed, falling back to electron-store:',
+          err
+        )
+      }
+    }
+    const enabledMcpTools = chatSettingsStore.get('enabledMcpTools')
     if (!isToolsRecord(enabledMcpTools)) {
       return {}
     }
@@ -348,7 +442,14 @@ export async function getEnabledMcpTools(): Promise<
         for (const serverName of serversToRemove) {
           delete updatedTools[serverName]
         }
-        chatStore.set('enabledMcpTools', updatedTools)
+        chatSettingsStore.set('enabledMcpTools', updatedTools)
+        for (const serverName of serversToRemove) {
+          try {
+            deleteEnabledMcpTools(serverName)
+          } catch (err) {
+            log.error('[DB] Failed to dual-write MCP tools cleanup:', err)
+          }
+        }
       }
 
       return filteredTools

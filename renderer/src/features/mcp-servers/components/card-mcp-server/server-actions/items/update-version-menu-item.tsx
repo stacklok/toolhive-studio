@@ -1,6 +1,6 @@
 import { ArrowUpCircle } from 'lucide-react'
 import { DropdownMenuItem } from '@/common/components/ui/dropdown-menu'
-import type { RegistryEnvVar } from '@common/api/generated/types.gen'
+import type { RegistryEnvVar } from '@common/api/registry-types'
 import { useUpdateVersion } from '../../../../hooks/use-update-version'
 
 interface UpdateVersionMenuItemProps {

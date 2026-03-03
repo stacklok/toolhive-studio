@@ -4,11 +4,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useIsServerFromRegistry } from '../use-is-server-from-registry'
 import { mockedGetApiV1BetaWorkloadsByName } from '@mocks/fixtures/workloads_name/get'
 import { mockedGetApiV1BetaRegistryByNameServers } from '@mocks/fixtures/registry_name_servers/get'
+import type { CoreWorkload } from '@common/api/generated/types.gen'
 import type {
   RegistryImageMetadata,
   RegistryRemoteServerMetadata,
-  CoreWorkload,
-} from '@common/api/generated/types.gen'
+} from '@common/api/registry-types'
 
 const createRegistryImage = (
   overrides: Partial<RegistryImageMetadata> = {}

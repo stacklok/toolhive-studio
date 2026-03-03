@@ -1,5 +1,6 @@
 import { screen, waitFor } from '@testing-library/react'
 import { expect, it, vi, beforeEach, describe } from 'vitest'
+import type { V1GetRegistryResponse } from '@common/api/registry-types'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
 import RegistryRouteComponent from '../(registry)/-registry.route'
@@ -56,13 +57,16 @@ describe('Groups in Registry', () => {
   })
 
   it('handles empty groups array gracefully', async () => {
-    mockedGetApiV1BetaRegistryByName.override((data) => ({
-      ...data,
-      registry: {
-        ...data.registry,
-        groups: [],
-      },
-    }))
+    mockedGetApiV1BetaRegistryByName.override(
+      (data) =>
+        ({
+          ...data,
+          registry: {
+            ...(data as V1GetRegistryResponse).registry,
+            groups: [],
+          },
+        }) as unknown as V1GetRegistryResponse
+    )
     mockedGetApiV1BetaRegistryByNameServers.override(() => ({
       servers: [
         {

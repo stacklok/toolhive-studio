@@ -54,4 +54,4 @@ export const mockedGetApiV1BetaRegistryByNameServersByServerName = AutoAPIMock<
       cert_issuer: 'https://token.actions.githubusercontent.com',
     },
   },
-})
+} as unknown as GetApiV1BetaRegistryByNameServersByServerNameResponse)

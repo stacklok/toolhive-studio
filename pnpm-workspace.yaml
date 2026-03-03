@@ -1,9 +1,12 @@
 onlyBuiltDependencies:
+  - '@sentry/cli'
   - '@swc/core'
   - '@tailwindcss/oxide'
+  - better-sqlite3
   - electron
   - electron-winstaller
   - esbuild
   - fs-xattr
   - macos-alias
   - msw
+  - sharp

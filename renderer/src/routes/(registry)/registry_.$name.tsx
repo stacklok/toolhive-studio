@@ -18,7 +18,8 @@ import { Badge } from '@/common/components/ui/badge'
 import type {
   RegistryImageMetadata,
   RegistryRemoteServerMetadata,
-} from '@common/api/generated/types.gen'
+  V1GetServerResponse,
+} from '@common/api/registry-types'
 import { useState } from 'react'
 import {
   Tooltip,
@@ -85,9 +86,7 @@ export const Route = createFileRoute('/(registry)/registry_/$name')({
 
 export function RegistryServerDetail() {
   const { name } = useParams({ from: '/(registry)/registry_/$name' })
-  const {
-    data: { server: localServer, remote_server: remoteServer },
-  } = useSuspenseQuery(
+  const { data: rawData } = useSuspenseQuery(
     getApiV1BetaRegistryByNameServersByServerNameOptions({
       path: {
         name: 'default',
@@ -95,6 +94,8 @@ export function RegistryServerDetail() {
       },
     })
   )
+  const { server: localServer, remote_server: remoteServer } =
+    rawData as V1GetServerResponse
   const server = localServer || remoteServer
   const isRemoteServer = !!remoteServer
   const [showAllTools, setShowAllTools] = useState(false)

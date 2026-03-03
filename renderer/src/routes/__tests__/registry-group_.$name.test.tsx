@@ -40,6 +40,7 @@ import {
   waitForElementToBeRemoved,
 } from '@testing-library/react'
 import { describe, it, expect, vi, afterEach } from 'vitest'
+import type { V1GetRegistryResponse } from '@common/api/registry-types'
 import { RegistryGroupDetail } from '@/routes/(registry)/registry-group_.$name'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
@@ -167,73 +168,76 @@ describe('Registry Group Detail Route', () => {
   it('renders a different group with multiple servers (proves component is dynamic)', async () => {
     mockUseParams.mockReturnValue({ name: 'ai-tools' })
 
-    mockedGetApiV1BetaRegistryByName.override(() => ({
-      registry: {
-        servers: {},
-        groups: [
-          {
-            name: 'ai-tools',
-            description: 'AI and machine learning tools',
-            servers: {
-              'openai-server': {
-                name: 'openai-server',
-                image: 'ghcr.io/example/openai:latest',
-                description: 'OpenAI API integration for Claude',
-                tier: 'Official',
-                status: 'Active',
-                transport: 'stdio',
-                permissions: {},
-                tools: ['chat', 'completion'],
-                env_vars: [],
-                args: [],
-                metadata: {
-                  stars: 500,
-                  pulls: 2000,
-                  last_updated: '2025-01-01T00:00:00Z',
+    mockedGetApiV1BetaRegistryByName.override(
+      () =>
+        ({
+          registry: {
+            servers: {},
+            groups: [
+              {
+                name: 'ai-tools',
+                description: 'AI and machine learning tools',
+                servers: {
+                  'openai-server': {
+                    name: 'openai-server',
+                    image: 'ghcr.io/example/openai:latest',
+                    description: 'OpenAI API integration for Claude',
+                    tier: 'Official',
+                    status: 'Active',
+                    transport: 'stdio',
+                    permissions: {},
+                    tools: ['chat', 'completion'],
+                    env_vars: [],
+                    args: [],
+                    metadata: {
+                      stars: 500,
+                      pulls: 2000,
+                      last_updated: '2025-01-01T00:00:00Z',
+                    },
+                    repository_url: 'https://github.com/example/openai',
+                    tags: ['ai', 'openai'],
+                  },
+                  'anthropic-server': {
+                    name: 'anthropic-server',
+                    image: 'ghcr.io/example/anthropic:latest',
+                    description: 'Anthropic API tools and utilities',
+                    tier: 'Official',
+                    status: 'Active',
+                    transport: 'stdio',
+                    permissions: {},
+                    tools: ['messages'],
+                    env_vars: [],
+                    args: [],
+                    metadata: {
+                      stars: 800,
+                      pulls: 3000,
+                      last_updated: '2025-01-02T00:00:00Z',
+                    },
+                    repository_url: 'https://github.com/example/anthropic',
+                    tags: ['ai', 'anthropic'],
+                  },
                 },
-                repository_url: 'https://github.com/example/openai',
-                tags: ['ai', 'openai'],
-              },
-              'anthropic-server': {
-                name: 'anthropic-server',
-                image: 'ghcr.io/example/anthropic:latest',
-                description: 'Anthropic API tools and utilities',
-                tier: 'Official',
-                status: 'Active',
-                transport: 'stdio',
-                permissions: {},
-                tools: ['messages'],
-                env_vars: [],
-                args: [],
-                metadata: {
-                  stars: 800,
-                  pulls: 3000,
-                  last_updated: '2025-01-02T00:00:00Z',
+                remote_servers: {
+                  'huggingface-remote': {
+                    name: 'huggingface-remote',
+                    description: 'HuggingFace model inference',
+                    url: 'https://huggingface.co/api',
+                    tier: 'Community',
+                    status: 'Active',
+                    tools: ['inference', 'models'],
+                    metadata: {
+                      stars: 1200,
+                      last_updated: '2025-01-03T00:00:00Z',
+                    },
+                    repository_url: 'https://github.com/example/huggingface',
+                    tags: ['ai', 'ml'],
+                  },
                 },
-                repository_url: 'https://github.com/example/anthropic',
-                tags: ['ai', 'anthropic'],
               },
-            },
-            remote_servers: {
-              'huggingface-remote': {
-                name: 'huggingface-remote',
-                description: 'HuggingFace model inference',
-                url: 'https://huggingface.co/api',
-                tier: 'Community',
-                status: 'Active',
-                tools: ['inference', 'models'],
-                metadata: {
-                  stars: 1200,
-                  last_updated: '2025-01-03T00:00:00Z',
-                },
-                repository_url: 'https://github.com/example/huggingface',
-                tags: ['ai', 'ml'],
-              },
-            },
+            ],
           },
-        ],
-      },
-    }))
+        }) as unknown as V1GetRegistryResponse
+    )
 
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
@@ -271,58 +275,61 @@ describe('Registry Group Detail Route', () => {
 
     mockUseParams.mockReturnValue({ name: 'two-server-group' })
 
-    mockedGetApiV1BetaRegistryByName.override(() => ({
-      registry: {
-        servers: {},
-        groups: [
-          {
-            name: 'two-server-group',
-            description: 'A group with two servers',
-            servers: {
-              'first-server': {
-                name: 'first-server',
-                image: 'ghcr.io/example/first:latest',
-                description: 'First server',
-                tier: 'Official',
-                status: 'Active',
-                transport: 'stdio',
-                permissions: {},
-                tools: ['tool1'],
-                env_vars: [],
-                args: [],
-                metadata: {
-                  stars: 100,
-                  pulls: 1000,
-                  last_updated: '2025-01-01T00:00:00Z',
+    mockedGetApiV1BetaRegistryByName.override(
+      () =>
+        ({
+          registry: {
+            servers: {},
+            groups: [
+              {
+                name: 'two-server-group',
+                description: 'A group with two servers',
+                servers: {
+                  'first-server': {
+                    name: 'first-server',
+                    image: 'ghcr.io/example/first:latest',
+                    description: 'First server',
+                    tier: 'Official',
+                    status: 'Active',
+                    transport: 'stdio',
+                    permissions: {},
+                    tools: ['tool1'],
+                    env_vars: [],
+                    args: [],
+                    metadata: {
+                      stars: 100,
+                      pulls: 1000,
+                      last_updated: '2025-01-01T00:00:00Z',
+                    },
+                    repository_url: 'https://github.com/example/first',
+                    tags: ['test'],
+                  },
+                  'second-server': {
+                    name: 'second-server',
+                    image: 'ghcr.io/example/second:latest',
+                    description: 'Second server',
+                    tier: 'Official',
+                    status: 'Active',
+                    transport: 'stdio',
+                    permissions: {},
+                    tools: ['tool2'],
+                    env_vars: [],
+                    args: [],
+                    metadata: {
+                      stars: 200,
+                      pulls: 2000,
+                      last_updated: '2025-01-02T00:00:00Z',
+                    },
+                    repository_url: 'https://github.com/example/second',
+                    tags: ['test'],
+                  },
                 },
-                repository_url: 'https://github.com/example/first',
-                tags: ['test'],
+                remote_servers: {},
               },
-              'second-server': {
-                name: 'second-server',
-                image: 'ghcr.io/example/second:latest',
-                description: 'Second server',
-                tier: 'Official',
-                status: 'Active',
-                transport: 'stdio',
-                permissions: {},
-                tools: ['tool2'],
-                env_vars: [],
-                args: [],
-                metadata: {
-                  stars: 200,
-                  pulls: 2000,
-                  last_updated: '2025-01-02T00:00:00Z',
-                },
-                repository_url: 'https://github.com/example/second',
-                tags: ['test'],
-              },
-            },
-            remote_servers: {},
+            ],
           },
-        ],
-      },
-    }))
+        }) as unknown as V1GetRegistryResponse
+    )
 
     mockedGetApiV1BetaDiscoveryClients.override(() => ({
       clients: [
@@ -462,58 +469,61 @@ describe('Registry Group Detail Route', () => {
       ),
     }))
 
-    mockedGetApiV1BetaRegistryByName.override(() => ({
-      registry: {
-        servers: {},
-        groups: [
-          {
-            name: 'multi-server-group',
-            description: 'A group with multiple servers',
-            servers: {
-              fetch: {
-                name: 'fetch',
-                image: 'ghcr.io/example/fetch:latest',
-                description: 'Fetch server',
-                tier: 'Official',
-                status: 'Active',
-                transport: 'stdio',
-                permissions: {},
-                tools: ['fetch'],
-                env_vars: [],
-                args: [],
-                metadata: {
-                  stars: 100,
-                  pulls: 1000,
-                  last_updated: '2025-01-01T00:00:00Z',
+    mockedGetApiV1BetaRegistryByName.override(
+      () =>
+        ({
+          registry: {
+            servers: {},
+            groups: [
+              {
+                name: 'multi-server-group',
+                description: 'A group with multiple servers',
+                servers: {
+                  fetch: {
+                    name: 'fetch',
+                    image: 'ghcr.io/example/fetch:latest',
+                    description: 'Fetch server',
+                    tier: 'Official',
+                    status: 'Active',
+                    transport: 'stdio',
+                    permissions: {},
+                    tools: ['fetch'],
+                    env_vars: [],
+                    args: [],
+                    metadata: {
+                      stars: 100,
+                      pulls: 1000,
+                      last_updated: '2025-01-01T00:00:00Z',
+                    },
+                    repository_url: 'https://github.com/example/fetch',
+                    tags: ['test'],
+                  },
+                  filesystem: {
+                    name: 'filesystem',
+                    image: 'ghcr.io/example/filesystem:latest',
+                    description: 'Filesystem server',
+                    tier: 'Official',
+                    status: 'Active',
+                    transport: 'stdio',
+                    permissions: {},
+                    tools: ['read_file', 'write_file'],
+                    env_vars: [],
+                    args: [],
+                    metadata: {
+                      stars: 200,
+                      pulls: 2000,
+                      last_updated: '2025-01-02T00:00:00Z',
+                    },
+                    repository_url: 'https://github.com/example/filesystem',
+                    tags: ['test'],
+                  },
                 },
-                repository_url: 'https://github.com/example/fetch',
-                tags: ['test'],
+                remote_servers: {},
               },
-              filesystem: {
-                name: 'filesystem',
-                image: 'ghcr.io/example/filesystem:latest',
-                description: 'Filesystem server',
-                tier: 'Official',
-                status: 'Active',
-                transport: 'stdio',
-                permissions: {},
-                tools: ['read_file', 'write_file'],
-                env_vars: [],
-                args: [],
-                metadata: {
-                  stars: 200,
-                  pulls: 2000,
-                  last_updated: '2025-01-02T00:00:00Z',
-                },
-                repository_url: 'https://github.com/example/filesystem',
-                tags: ['test'],
-              },
-            },
-            remote_servers: {},
+            ],
           },
-        ],
-      },
-    }))
+        }) as unknown as V1GetRegistryResponse
+    )
 
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
@@ -560,19 +570,22 @@ describe('Registry Group Detail Route', () => {
   it('shows alert banner when group has no servers and hides the button', async () => {
     mockUseParams.mockReturnValue({ name: 'empty-group' })
 
-    mockedGetApiV1BetaRegistryByName.override(() => ({
-      registry: {
-        servers: {},
-        groups: [
-          {
-            name: 'empty-group',
-            description: 'A group with no servers',
+    mockedGetApiV1BetaRegistryByName.override(
+      () =>
+        ({
+          registry: {
             servers: {},
-            remote_servers: {},
+            groups: [
+              {
+                name: 'empty-group',
+                description: 'A group with no servers',
+                servers: {},
+                remote_servers: {},
+              },
+            ],
           },
-        ],
-      },
-    }))
+        }) as unknown as V1GetRegistryResponse
+    )
 
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)

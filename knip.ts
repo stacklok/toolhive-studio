@@ -37,8 +37,10 @@ export default {
     '@electron-forge/publisher-github',
     '@electron-forge/publisher-s3',
     '@electron-forge/maker-base',
-    '@electron-forge/maker-squirrel',
     '@tailwindcss/vite',
+  ],
+  ignoreBinaries: [
+    'run', // False positive from "pnpm run vitest:electron -- run"
   ],
   compilers: {
     // this is needed to support css entry files
