@@ -14,6 +14,7 @@ import {
 } from './writers/threads-writer'
 import { writeShutdownServers } from './writers/shutdown-writer'
 import log from '../logger'
+import { withDbSpan } from './telemetry'
 import type { ChatSettingsThread } from '../chat/threads-storage'
 import { telemetryStore } from '../telemetry-store'
 import { autoUpdateStore } from '../auto-update'
@@ -130,15 +131,17 @@ export function reconcileFromStore(): void {
   log.info('[DB] Reconciling SQLite from electron-store...')
 
   try {
-    db.transaction(() => {
-      syncSettings()
-      syncFeatureFlags()
-      syncChatProviders()
-      syncSelectedModel()
-      syncEnabledMcpTools()
-      syncShutdownServers()
-      syncThreads(db)
-    })()
+    withDbSpan('DB reconcile from store', 'db.reconcile', {}, () => {
+      db.transaction(() => {
+        syncSettings()
+        syncFeatureFlags()
+        syncChatProviders()
+        syncSelectedModel()
+        syncEnabledMcpTools()
+        syncShutdownServers()
+        syncThreads(db)
+      })()
+    })
     log.info('[DB] Reconciliation complete')
   } catch (err) {
     log.error('[DB] Reconciliation failed:', err)
