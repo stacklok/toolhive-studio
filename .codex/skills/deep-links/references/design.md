@@ -156,3 +156,4 @@ Build a minimal PoC as described in the [Minimal proof of concept](#minimal-proo
 ## Minimal proof of concept {#minimal-proof-of-concept}
 
 - Open MCP server detail page by server name
+- Release with this feature for internal testing \- no need to advertise feature to users
