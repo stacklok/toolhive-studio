@@ -132,6 +132,7 @@ jobs:
           APPLE_KEY_ID: ${{ env.APPLE_KEY_ID }}
 
       - name: Generate and upload macOS update manifest
+        id: macos-manifest
         if: runner.os == 'macOS' && vars.AWS_ROLE_ARN != ''
         shell: bash
         run: |
@@ -150,6 +151,7 @@ jobs:
 
           if [ -z "$ZIP_FILE" ]; then
             echo "::warning::No ZIP artifact found at s3://${BUCKET}/${SRC_PREFIX}/ — skipping RELEASES.json generation"
+            echo "uploaded=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -183,8 +185,10 @@ jobs:
             --acl public-read
 
           echo "Uploaded RELEASES.json to s3://${BUCKET}/${DST_PREFIX}/RELEASES.json"
+          echo "uploaded=true" >> "$GITHUB_OUTPUT"
 
       - name: Promote Windows update manifests to stable path
+        id: windows-manifest
         if: runner.os == 'Windows' && vars.AWS_ROLE_ARN != ''
         shell: bash
         run: |
@@ -198,23 +202,36 @@ jobs:
 
           echo "Promoting Windows update files from ${SRC} to ${DST}"
 
-          aws s3 sync "${SRC}/" "${DST}/" \
+          # --delete ensures stale nupkg files from previous releases don't accumulate in latest/
+          # Note: RELEASES only contains the current full release entry; cumulative delta support
+          # will be added alongside remoteReleases in MakerSquirrel in a follow-up PR.
+          if aws s3 sync "${SRC}/" "${DST}/" \
             --acl public-read \
+            --delete \
             --exclude "*" \
             --include "RELEASES" \
-            --include "*.nupkg" || echo "::warning::No Windows update files found — skipping"
+            --include "*.nupkg"; then
+            echo "uploaded=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::No Windows update files found — skipping"
+            echo "uploaded=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Invalidate CloudFront cache for update manifests
-        if: runner.os != 'Linux' && vars.AWS_ROLE_ARN != '' && vars.CLOUDFRONT_DISTRIBUTION_ID != ''
+        if: |
+          vars.AWS_ROLE_ARN != '' &&
+          vars.CLOUDFRONT_DISTRIBUTION_ID != '' &&
+          (steps.macos-manifest.outputs.uploaded == 'true' || steps.windows-manifest.outputs.uploaded == 'true')
         shell: bash
         run: |
           CHANNEL=${{ github.event.release.prerelease == true && 'pre-release' || 'stable' }}
           PLATFORM=${{ runner.os == 'macOS' && 'darwin' || 'win32' }}
           ARCH=${{ matrix.arch }}
+          DIST_ID="${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}"
 
           echo "Invalidating /${CHANNEL}/latest/${PLATFORM}/${ARCH}/*"
           aws cloudfront create-invalidation \
-            --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --distribution-id "$DIST_ID" \
             --paths "/${CHANNEL}/latest/${PLATFORM}/${ARCH}/*"
 
   mirror-pages:
