@@ -27,16 +27,9 @@ interface NavButtonProps {
   icon: LucideIcon
   children: React.ReactNode
   isActive?: boolean
-  badge?: React.ReactNode
 }
 
-function NavButton({
-  to,
-  icon: Icon,
-  children,
-  isActive,
-  badge,
-}: NavButtonProps) {
+function NavButton({ to, icon: Icon, children, isActive }: NavButtonProps) {
   return (
     <LinkViewTransition
       to={to}
@@ -49,20 +42,20 @@ function NavButton({
           : 'bg-transparent text-white/90 hover:bg-white/10 hover:text-white'
       )}
     >
-      <span className="relative">
-        <Icon className="size-4" />
-        {badge}
-      </span>
+      <Icon className="size-4" />
       {children}
     </LinkViewTransition>
   )
 }
 
-function TopNavLinks() {
+function useIsActive() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
-
-  const isActive = (paths: string[]) =>
+  return (paths: string[]) =>
     paths.some((p) => pathname.startsWith(p) || pathname === p)
+}
+
+function TopNavLinks() {
+  const isActive = useIsActive()
 
   return (
     <NavigationMenu>
@@ -93,9 +86,7 @@ function TopNavLinks() {
 export function TopNav(props: HTMLProps<HTMLElement>) {
   const { data: appVersion } = useAppVersion()
   const isProduction = import.meta.env.MODE === 'production'
-  const pathname = useRouterState({ select: (s) => s.location.pathname })
-  const isActive = (paths: string[]) =>
-    paths.some((p) => pathname.startsWith(p) || pathname === p)
+  const isActive = useIsActive()
   const showUpdateBadge = !!(appVersion?.isNewVersionAvailable && isProduction)
 
   useEffect(() => {

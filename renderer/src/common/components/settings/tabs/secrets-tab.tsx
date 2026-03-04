@@ -40,7 +40,8 @@ export function SecretsTab() {
   }
 
   return (
-    <>
+    <div className="space-y-6">
+      <h2 className="text-lg font-semibold">Secrets</h2>
       {keys.length > 0 && (
         <div className="flex justify-end">
           <Button
@@ -87,6 +88,6 @@ export function SecretsTab() {
         onOpenChange={setIsSecretDialogOpen}
         onSubmit={onSubmit}
       />
-    </>
+    </div>
   )
 }
