@@ -21,7 +21,7 @@ import type { LucideIcon } from 'lucide-react'
 import { useRouterState } from '@tanstack/react-router'
 import { useAppVersion } from '@/common/hooks/use-app-version'
 import { cn } from '@/common/lib/utils'
-import { useAssistantDrawer } from '@/common/contexts/assistant-drawer'
+import { useAssistantDrawer } from '@/common/hooks/use-assistant-drawer'
 
 interface NavButtonProps {
   to: string

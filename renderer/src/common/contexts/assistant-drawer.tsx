@@ -1,13 +1,5 @@
-import { createContext, useContext, useState } from 'react'
-
-interface AssistantDrawerContextValue {
-  isOpen: boolean
-  toggle: () => void
-  close: () => void
-}
-
-const AssistantDrawerContext =
-  createContext<AssistantDrawerContextValue | null>(null)
+import { useState } from 'react'
+import { AssistantDrawerContext } from '@/common/hooks/use-assistant-drawer'
 
 export function AssistantDrawerProvider({
   children,
@@ -27,13 +19,4 @@ export function AssistantDrawerProvider({
       {children}
     </AssistantDrawerContext.Provider>
   )
-}
-
-export function useAssistantDrawer() {
-  const ctx = useContext(AssistantDrawerContext)
-  if (!ctx)
-    throw new Error(
-      'useAssistantDrawer must be used within AssistantDrawerProvider'
-    )
-  return ctx
 }
