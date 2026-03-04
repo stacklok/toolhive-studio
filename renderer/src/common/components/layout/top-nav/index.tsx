@@ -13,10 +13,10 @@ import { TopNavContainer } from './container'
 import {
   Server,
   CloudDownload,
-  FlaskConical,
   Lock,
   Settings as SettingsIcon,
   ArrowUpCircle,
+  MessageCircle,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useRouterState } from '@tanstack/react-router'
@@ -59,17 +59,11 @@ function NavButton({
   )
 }
 
-function TopNavLinks({ showUpdateBadge }: { showUpdateBadge?: boolean }) {
+function TopNavLinks() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
 
   const isActive = (paths: string[]) =>
     paths.some((p) => pathname.startsWith(p) || pathname === p)
-
-  const updateBadge = showUpdateBadge ? (
-    <span className="absolute -top-1 -right-1">
-      <ArrowUpCircle className="size-3 fill-blue-500" />
-    </span>
-  ) : null
 
   return (
     <NavigationMenu>
@@ -94,34 +88,12 @@ function TopNavLinks({ showUpdateBadge }: { showUpdateBadge?: boolean }) {
         </NavigationMenuItem>
         <NavigationMenuItem>
           <NavButton
-            to="/playground"
-            icon={FlaskConical}
-            isActive={isActive(['/playground'])}
-          >
-            Playground
-          </NavButton>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavButton
             to="/secrets"
             icon={Lock}
             isActive={isActive(['/secrets'])}
           >
             Secrets
           </NavButton>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavButton
-            to="/settings"
-            icon={SettingsIcon}
-            isActive={isActive(['/settings'])}
-            badge={updateBadge}
-          >
-            Settings
-          </NavButton>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <HelpDropdown className="app-region-no-drag" />
         </NavigationMenuItem>
       </NavigationMenuList>
     </NavigationMenu>
@@ -131,6 +103,10 @@ function TopNavLinks({ showUpdateBadge }: { showUpdateBadge?: boolean }) {
 export function TopNav(props: HTMLProps<HTMLElement>) {
   const { data: appVersion } = useAppVersion()
   const isProduction = import.meta.env.MODE === 'production'
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const isActive = (paths: string[]) =>
+    paths.some((p) => pathname.startsWith(p) || pathname === p)
+  const showUpdateBadge = !!(appVersion?.isNewVersionAvailable && isProduction)
 
   useEffect(() => {
     const cleanup = window.electronAPI.onUpdateDownloaded(() => {
@@ -163,13 +139,44 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
   return (
     <TopNavContainer {...props}>
       <div className="flex h-10 items-center">
-        <TopNavLinks
-          showUpdateBadge={
-            !!(appVersion?.isNewVersionAvailable && isProduction)
-          }
-        />
+        <TopNavLinks />
       </div>
-      <div className="flex items-center gap-2 justify-self-end">
+      <div className="flex items-center justify-self-end">
+        <div className="flex items-center gap-1 px-2">
+          <HelpDropdown className="app-region-no-drag" />
+          <LinkViewTransition
+            to="/settings"
+            className={cn(
+              'app-region-no-drag',
+              'relative flex size-10 items-center justify-center rounded-full',
+              `text-white/90 transition-colors hover:bg-white/10
+              hover:text-white`,
+              isActive(['/settings']) &&
+                'bg-nav-button-active-bg text-nav-button-active-text'
+            )}
+          >
+            <SettingsIcon className="size-5" />
+            {showUpdateBadge && (
+              <span className="absolute -top-0.5 -right-0.5">
+                <ArrowUpCircle className="size-3 fill-blue-500" />
+              </span>
+            )}
+          </LinkViewTransition>
+        </div>
+        <LinkViewTransition
+          to="/playground"
+          className={cn(
+            'app-region-no-drag',
+            'flex size-16 shrink-0 items-center justify-center',
+            'border-nav-border border-l',
+            window.electronAPI.isMac && '-mr-6',
+            'text-white/90 transition-colors hover:bg-white/10 hover:text-white',
+            isActive(['/playground']) &&
+              'bg-nav-button-active-bg text-nav-button-active-text'
+          )}
+        >
+          <MessageCircle className="size-5" />
+        </LinkViewTransition>
         <WindowControls />
       </div>
     </TopNavContainer>
