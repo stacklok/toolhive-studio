@@ -49,8 +49,7 @@ export function SettingsTabs({ defaultTab }: SettingsTabsProps) {
   const isNewVersionAvailable = appInfo?.isNewVersionAvailable && isProduction
 
   return (
-    <>
-      <Tabs
+    <Tabs
         defaultValue={defaultTab || 'general'}
         orientation="vertical"
         className="flex h-full flex-row gap-10"
@@ -105,6 +104,5 @@ export function SettingsTabs({ defaultTab }: SettingsTabsProps) {
           </TabsContent>
         </ScrollArea>
       </Tabs>
-    </>
   )
 }

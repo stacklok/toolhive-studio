@@ -21,6 +21,7 @@ import type { LucideIcon } from 'lucide-react'
 import { useRouterState } from '@tanstack/react-router'
 import { useAppVersion } from '@/common/hooks/use-app-version'
 import { cn } from '@/common/lib/utils'
+import { useAssistantDrawer } from '@/common/contexts/assistant-drawer'
 
 interface NavButtonProps {
   to: string
@@ -88,6 +89,8 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
   const isProduction = import.meta.env.MODE === 'production'
   const isActive = useIsActive()
   const showUpdateBadge = !!(appVersion?.isNewVersionAvailable && isProduction)
+  const { toggle: toggleAssistant, isOpen: isAssistantOpen } =
+    useAssistantDrawer()
 
   useEffect(() => {
     const cleanup = window.electronAPI.onUpdateDownloaded(() => {
@@ -127,6 +130,7 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
           <HelpDropdown className="app-region-no-drag" />
           <LinkViewTransition
             to="/settings"
+            aria-label="Settings"
             className={cn(
               'app-region-no-drag',
               'relative flex size-10 items-center justify-center rounded-full',
@@ -144,21 +148,22 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
             )}
           </LinkViewTransition>
         </div>
-        <LinkViewTransition
-          to="/playground"
+        <button
+          onClick={toggleAssistant}
+          aria-label="Assistant"
           className={cn(
             'app-region-no-drag',
             'flex size-16 shrink-0 items-center justify-center',
             'border-nav-border border-l',
             window.electronAPI.isMac && '-mr-6',
             'text-white/90 transition-colors hover:bg-white/10 hover:text-white',
-            isActive(['/playground']) &&
+            isAssistantOpen &&
               'bg-nav-button-active-bg text-nav-button-active-text'
           )}
         >
           <MessageCircle className="size-5" />
-        </LinkViewTransition>
-        <WindowControls />
+        </button>
+        {!isAssistantOpen && <WindowControls />}
       </div>
     </TopNavContainer>
   )

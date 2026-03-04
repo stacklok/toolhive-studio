@@ -17,7 +17,7 @@ import { useConfirm } from '@/common/hooks/use-confirm'
 import { TitlePage } from '@/common/components/title-page'
 import { hasCredentials } from '../lib/utils'
 
-export function ChatInterface() {
+export function ChatInterface({ hideTitle }: { hideTitle?: boolean }) {
   const {
     status,
     messages,
@@ -101,18 +101,20 @@ export function ChatInterface() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <TitlePage title="Playground">
-        {hasMessages && (
-          <Button
-            onClick={onClearMessages}
-            variant="outline"
-            className="cursor-pointer rounded-full"
-          >
-            Clear Chat
-            <Trash2 />
-          </Button>
-        )}
-      </TitlePage>
+      {!hideTitle && (
+        <TitlePage title="Playground">
+          {hasMessages && (
+            <Button
+              onClick={onClearMessages}
+              variant="outline"
+              className="cursor-pointer rounded-full"
+            >
+              Clear Chat
+              <Trash2 />
+            </Button>
+          )}
+        </TitlePage>
+      )}
       <div className="min-h-0 flex-1">
         <div className="bg-background flex h-full flex-col">
           {hasMessages && <Separator />}
