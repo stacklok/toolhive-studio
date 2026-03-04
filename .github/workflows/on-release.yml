@@ -131,6 +131,92 @@ jobs:
           APPLE_ISSUER_ID: ${{ env.APPLE_ISSUER_ID }}
           APPLE_KEY_ID: ${{ env.APPLE_KEY_ID }}
 
+      - name: Generate and upload macOS update manifest
+        if: runner.os == 'macOS' && vars.AWS_ROLE_ARN != ''
+        shell: bash
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          VERSION=${VERSION#v}
+          CHANNEL=${{ github.event.release.prerelease == true && 'pre-release' || 'stable' }}
+          ARCH=${{ matrix.arch }}
+          BUCKET="toolhive-studio-releases"
+          SRC_PREFIX="${CHANNEL}/${VERSION}/darwin/${ARCH}"
+          DST_PREFIX="${CHANNEL}/latest/darwin/${ARCH}"
+          CDN_BASE="https://releases.toolhive.dev"
+          PUB_DATE=$(date -u +"%Y-%m-%dT%H:%M:%S+00:00")
+
+          echo "Looking for ZIP artifacts at s3://${BUCKET}/${SRC_PREFIX}/"
+          ZIP_FILE=$(aws s3 ls "s3://${BUCKET}/${SRC_PREFIX}/" | grep '\.zip$' | awk '{print $NF}' | head -1)
+
+          if [ -z "$ZIP_FILE" ]; then
+            echo "::warning::No ZIP artifact found at s3://${BUCKET}/${SRC_PREFIX}/ — skipping RELEASES.json generation"
+            exit 0
+          fi
+
+          echo "Found ZIP: ${ZIP_FILE}"
+          DOWNLOAD_URL="${CDN_BASE}/${SRC_PREFIX}/${ZIP_FILE}"
+
+          jq -n \
+            --arg version "$VERSION" \
+            --arg pub_date "$PUB_DATE" \
+            --arg url "$DOWNLOAD_URL" \
+            '{
+              currentRelease: $version,
+              releases: [
+                {
+                  version: $version,
+                  updateTo: {
+                    version: $version,
+                    pub_date: $pub_date,
+                    name: $version,
+                    url: $url
+                  }
+                }
+              ]
+            }' > /tmp/RELEASES.json
+
+          echo "Generated RELEASES.json:"
+          cat /tmp/RELEASES.json
+
+          aws s3 cp /tmp/RELEASES.json "s3://${BUCKET}/${DST_PREFIX}/RELEASES.json" \
+            --content-type "application/json" \
+            --acl public-read
+
+          echo "Uploaded RELEASES.json to s3://${BUCKET}/${DST_PREFIX}/RELEASES.json"
+
+      - name: Promote Windows update manifests to stable path
+        if: runner.os == 'Windows' && vars.AWS_ROLE_ARN != ''
+        shell: bash
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          VERSION=${VERSION#v}
+          CHANNEL=${{ github.event.release.prerelease == true && 'pre-release' || 'stable' }}
+          ARCH=${{ matrix.arch }}
+          BUCKET="toolhive-studio-releases"
+          SRC="s3://${BUCKET}/${CHANNEL}/${VERSION}/win32/${ARCH}"
+          DST="s3://${BUCKET}/${CHANNEL}/latest/win32/${ARCH}"
+
+          echo "Promoting Windows update files from ${SRC} to ${DST}"
+
+          aws s3 sync "${SRC}/" "${DST}/" \
+            --acl public-read \
+            --exclude "*" \
+            --include "RELEASES" \
+            --include "*.nupkg" || echo "::warning::No Windows update files found — skipping"
+
+      - name: Invalidate CloudFront cache for update manifests
+        if: runner.os != 'Linux' && vars.AWS_ROLE_ARN != '' && vars.CLOUDFRONT_DISTRIBUTION_ID != ''
+        shell: bash
+        run: |
+          CHANNEL=${{ github.event.release.prerelease == true && 'pre-release' || 'stable' }}
+          PLATFORM=${{ runner.os == 'macOS' && 'darwin' || 'win32' }}
+          ARCH=${{ matrix.arch }}
+
+          echo "Invalidating /${CHANNEL}/latest/${PLATFORM}/${ARCH}/*"
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/${CHANNEL}/latest/${PLATFORM}/${ARCH}/*"
+
   mirror-pages:
     name: Mirror release to GitHub Pages
     needs: [build-and-release]
