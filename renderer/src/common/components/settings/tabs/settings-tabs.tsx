@@ -5,10 +5,11 @@ import { VersionTab } from './version-tab'
 import { LogsTab } from './logs-tab'
 import { CliTab } from './cli-tab'
 import { RegistryTab } from '../registry/registry-tab'
+import { SecretsTab } from './secrets-tab'
 import { useAppVersion } from '@/common/hooks/use-app-version'
 import { ArrowUpCircle } from 'lucide-react'
 
-type Tab = 'general' | 'registry' | 'cli' | 'version' | 'logs'
+type Tab = 'general' | 'registry' | 'secrets' | 'cli' | 'version' | 'logs'
 type TabItem = { label: string; value: Tab }
 
 const tabs: TabItem[] = [
@@ -19,6 +20,10 @@ const tabs: TabItem[] = [
   {
     label: 'Registry',
     value: 'registry',
+  },
+  {
+    label: 'Secrets',
+    value: 'secrets',
   },
   {
     label: 'CLI',
@@ -81,6 +86,10 @@ export function SettingsTabs({ defaultTab }: SettingsTabsProps) {
 
           <TabsContent value="registry" className="space-y-6 pr-4">
             <RegistryTab />
+          </TabsContent>
+
+          <TabsContent value="secrets" className="space-y-6 pr-4">
+            <SecretsTab />
           </TabsContent>
 
           <TabsContent value="cli" className="space-y-6 pr-4">

@@ -13,7 +13,6 @@ import { TopNavContainer } from './container'
 import {
   Server,
   CloudDownload,
-  Lock,
   Settings as SettingsIcon,
   ArrowUpCircle,
   MessageCircle,
@@ -84,15 +83,6 @@ function TopNavLinks() {
             isActive={isActive(['/registry'])}
           >
             Registry
-          </NavButton>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavButton
-            to="/secrets"
-            icon={Lock}
-            isActive={isActive(['/secrets'])}
-          >
-            Secrets
           </NavButton>
         </NavigationMenuItem>
       </NavigationMenuList>

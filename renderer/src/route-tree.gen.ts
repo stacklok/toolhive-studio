@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from "./routes/__root"
 import { Route as ShutdownRouteImport } from "./routes/shutdown"
 import { Route as SettingsRouteImport } from "./routes/settings"
-import { Route as SecretsRouteImport } from "./routes/secrets"
 import { Route as PlaygroundRouteImport } from "./routes/playground"
 import { Route as McpOptimizerRouteImport } from "./routes/mcp-optimizer"
 import { Route as CliIssueRouteImport } from "./routes/cli-issue"
@@ -31,11 +30,6 @@ const ShutdownRoute = ShutdownRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: "/settings",
   path: "/settings",
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SecretsRoute = SecretsRouteImport.update({
-  id: "/secrets",
-  path: "/secrets",
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlaygroundRoute = PlaygroundRouteImport.update({
@@ -96,7 +90,6 @@ export interface FileRoutesByFullPath {
   "/cli-issue": typeof CliIssueRoute
   "/mcp-optimizer": typeof McpOptimizerRoute
   "/playground": typeof PlaygroundRoute
-  "/secrets": typeof SecretsRoute
   "/settings": typeof SettingsRoute
   "/shutdown": typeof ShutdownRoute
   "/registry": typeof registryRegistryRoute
@@ -111,7 +104,6 @@ export interface FileRoutesByTo {
   "/cli-issue": typeof CliIssueRoute
   "/mcp-optimizer": typeof McpOptimizerRoute
   "/playground": typeof PlaygroundRoute
-  "/secrets": typeof SecretsRoute
   "/settings": typeof SettingsRoute
   "/shutdown": typeof ShutdownRoute
   "/registry": typeof registryRegistryRoute
@@ -127,7 +119,6 @@ export interface FileRoutesById {
   "/cli-issue": typeof CliIssueRoute
   "/mcp-optimizer": typeof McpOptimizerRoute
   "/playground": typeof PlaygroundRoute
-  "/secrets": typeof SecretsRoute
   "/settings": typeof SettingsRoute
   "/shutdown": typeof ShutdownRoute
   "/(registry)/registry": typeof registryRegistryRoute
@@ -144,7 +135,6 @@ export interface FileRouteTypes {
     | "/cli-issue"
     | "/mcp-optimizer"
     | "/playground"
-    | "/secrets"
     | "/settings"
     | "/shutdown"
     | "/registry"
@@ -159,7 +149,6 @@ export interface FileRouteTypes {
     | "/cli-issue"
     | "/mcp-optimizer"
     | "/playground"
-    | "/secrets"
     | "/settings"
     | "/shutdown"
     | "/registry"
@@ -174,7 +163,6 @@ export interface FileRouteTypes {
     | "/cli-issue"
     | "/mcp-optimizer"
     | "/playground"
-    | "/secrets"
     | "/settings"
     | "/shutdown"
     | "/(registry)/registry"
@@ -190,7 +178,6 @@ export interface RootRouteChildren {
   CliIssueRoute: typeof CliIssueRoute
   McpOptimizerRoute: typeof McpOptimizerRoute
   PlaygroundRoute: typeof PlaygroundRoute
-  SecretsRoute: typeof SecretsRoute
   SettingsRoute: typeof SettingsRoute
   ShutdownRoute: typeof ShutdownRoute
   registryRegistryRoute: typeof registryRegistryRoute
@@ -215,13 +202,6 @@ declare module "@tanstack/react-router" {
       path: "/settings"
       fullPath: "/settings"
       preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/secrets": {
-      id: "/secrets"
-      path: "/secrets"
-      fullPath: "/secrets"
-      preLoaderRoute: typeof SecretsRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/playground": {
@@ -302,7 +282,6 @@ const rootRouteChildren: RootRouteChildren = {
   CliIssueRoute: CliIssueRoute,
   McpOptimizerRoute: McpOptimizerRoute,
   PlaygroundRoute: PlaygroundRoute,
-  SecretsRoute: SecretsRoute,
   SettingsRoute: SettingsRoute,
   ShutdownRoute: ShutdownRoute,
   registryRegistryRoute: registryRegistryRoute,
