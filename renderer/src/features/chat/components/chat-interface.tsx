@@ -115,9 +115,26 @@ export function ChatInterface({ hideTitle }: { hideTitle?: boolean }) {
           )}
         </TitlePage>
       )}
+      {hideTitle && (
+        <div
+          className="border-border mb-2 flex items-center justify-end border-b
+            pb-4"
+        >
+          {hasMessages && (
+            <Button
+              onClick={onClearMessages}
+              variant="outline"
+              className="cursor-pointer rounded-full"
+            >
+              <Plus className="size-4" />
+              New conversation
+            </Button>
+          )}
+        </div>
+      )}
       <div className="min-h-0 flex-1">
         <div className="bg-background flex h-full flex-col">
-          {hasMessages && <Separator />}
+          {hasMessages && !hideTitle && <Separator />}
           {/* Messages Area */}
           <div className="relative flex-1 overflow-hidden">
             {isPersistentLoading && (

@@ -62,11 +62,13 @@ export function AssistantDrawer() {
           )}
         >
           <div
-            className="app-region-no-drag flex items-center gap-2 px-4
-              text-white"
+            className="app-region-no-drag border-nav-border flex h-full
+              items-center gap-3 border-l px-4 text-white"
           >
-            <MessageCircle className="size-5" />
-            <span className="font-semibold">Assistant</span>
+            <MessageCircle className="size-[22px]" />
+            <span className="font-serif text-2xl font-light tracking-tight">
+              Assistant
+            </span>
           </div>
           <div className="flex items-center">
             <button
@@ -88,8 +90,8 @@ export function AssistantDrawer() {
           </div>
         </div>
         <div
-          className="bg-background border-border min-h-0 flex-1 overflow-hidden
-            border-l px-8 py-5"
+          className="bg-background border-border flex min-h-0 flex-1 flex-col
+            overflow-hidden border-l px-8 pt-4 pb-8"
         >
           <ChatInterface hideTitle />
         </div>
