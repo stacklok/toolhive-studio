@@ -6,9 +6,9 @@ import { DialogFormSecret } from '@/features/secrets/components/dialog-form-secr
 import { Button } from '@/common/components/ui/button'
 import { useMutationCerateSecret } from '@/features/secrets/hooks/use-mutation-create-secret'
 import { useMutationUpdateSecret } from '@/features/secrets/hooks/use-mutation-update-secret'
-import { PlusIcon } from 'lucide-react'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
 import { EmptyState } from '@/common/components/empty-state'
+import { SettingsSectionTitle } from './components/settings-section-title'
 
 export function SecretsTab() {
   const {
@@ -40,21 +40,8 @@ export function SecretsTab() {
   }
 
   return (
-    <>
-      <h2 className="text-lg font-semibold">Secrets</h2>
-      {keys.length > 0 && (
-        <div className="flex justify-end">
-          <Button
-            variant="action"
-            onClick={() => {
-              setIsSecretDialogOpen(true)
-              setSecretKey('')
-            }}
-          >
-            <PlusIcon /> Add secret
-          </Button>
-        </div>
-      )}
+    <div className="space-y-3">
+      <SettingsSectionTitle>Secrets</SettingsSectionTitle>
 
       {keys.length === 0 ? (
         <EmptyState
@@ -88,6 +75,6 @@ export function SecretsTab() {
         onOpenChange={setIsSecretDialogOpen}
         onSubmit={onSubmit}
       />
-    </>
+    </div>
   )
 }
