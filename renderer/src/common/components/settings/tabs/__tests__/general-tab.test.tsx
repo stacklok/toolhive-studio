@@ -103,12 +103,12 @@ describe('GeneralTab', () => {
     renderWithProviders(<GeneralTab />)
 
     await waitFor(() => {
-      expect(screen.getByText('General Settings')).toBeVisible()
+      expect(screen.getByRole('heading', { name: 'General' })).toBeVisible()
     })
     expect(screen.getByText('Theme')).toBeVisible()
     expect(screen.getByText('Start on login')).toBeVisible()
     expect(screen.getByText('Error reporting')).toBeVisible()
-    expect(screen.getByText('Skip quit confirmation')).toBeVisible()
+    expect(screen.getByText('Quit confirmation')).toBeVisible()
   })
 
   it('handles auto-launch toggle', async () => {
@@ -121,7 +121,7 @@ describe('GeneralTab', () => {
 
     renderWithProviders(<GeneralTab />)
     await waitFor(() => {
-      expect(screen.getByText('General Settings')).toBeVisible()
+      expect(screen.getByRole('heading', { name: 'General' })).toBeVisible()
     })
 
     const autoLaunchSwitch = screen.getByRole('switch', {
@@ -177,12 +177,12 @@ describe('GeneralTab', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole('switch', { name: /skip quit confirmation/i })
+        screen.getByRole('switch', { name: /quit confirmation/i })
       ).not.toBeChecked()
     })
 
     const quitConfirmationSwitch = screen.getByRole('switch', {
-      name: /skip quit confirmation/i,
+      name: /quit confirmation/i,
     })
 
     await userEvent.click(quitConfirmationSwitch)
@@ -199,13 +199,13 @@ describe('GeneralTab', () => {
 
     await waitFor(() => {
       const quitConfirmationSwitch = screen.getByRole('switch', {
-        name: /skip quit confirmation/i,
+        name: /quit confirmation/i,
       })
       expect(quitConfirmationSwitch).toBeChecked()
     })
 
     const quitConfirmationSwitch = screen.getByRole('switch', {
-      name: /skip quit confirmation/i,
+      name: /quit confirmation/i,
     })
     await userEvent.click(quitConfirmationSwitch)
 
@@ -222,7 +222,9 @@ describe('GeneralTab', () => {
       renderWithProviders(<GeneralTab />)
 
       await waitFor(() => {
-        expect(screen.getByText('Experimental Features')).toBeVisible()
+        expect(
+          screen.getByRole('heading', { name: 'Experimental' })
+        ).toBeVisible()
         expect(
           screen.getByText('No experimental features available')
         ).toBeVisible()
@@ -242,7 +244,9 @@ describe('GeneralTab', () => {
       renderWithProviders(<GeneralTab />)
 
       await waitFor(() => {
-        expect(screen.getByText('Experimental Features')).toBeVisible()
+        expect(
+          screen.getByRole('heading', { name: 'Experimental' })
+        ).toBeVisible()
         expect(screen.getByText('Test Feature')).toBeVisible()
       })
 
@@ -268,7 +272,9 @@ describe('GeneralTab', () => {
       renderWithProviders(<GeneralTab />)
 
       await waitFor(() => {
-        expect(screen.getByText('Experimental Features')).toBeVisible()
+        expect(
+          screen.getByRole('heading', { name: 'Experimental' })
+        ).toBeVisible()
       })
 
       expect(screen.queryByText('Regular Feature')).not.toBeInTheDocument()

@@ -1,59 +1,26 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  CheckCircle2,
-  XCircle,
   RefreshCw,
   FolderOpen,
   AlertCircle,
   Terminal,
   ExternalLink,
-  AlertTriangle,
   ArrowDownToLine,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { trackEvent } from '@/common/lib/analytics'
-import { getUninstallCommand } from '@/features/cli-issue/lib/cli-issue-utils'
 import { WrapperField } from './components/wrapper-field'
+import { SettingsRow } from './components/settings-row'
+import { StatusBadge } from './components/status-badge'
+import { ExternalCliAlert } from './components/external-cli-alert'
 import { Badge } from '../../ui/badge'
 import { Button } from '../../ui/button'
-import { Alert, AlertDescription, AlertTitle } from '../../ui/alert'
+import { Alert, AlertDescription } from '../../ui/alert'
+import { Separator } from '../../ui/separator'
+import { SettingsSectionTitle } from './components/settings-section-title'
 import { useAppVersion } from '@/common/hooks/use-app-version'
 
 const CLI_DOCS_URL = 'https://docs.stacklok.com/toolhive/guides-cli/'
-
-function CliInfoWrapper({
-  title,
-  children,
-  actions,
-}: {
-  title: string
-  children: React.ReactNode
-  actions?: React.ReactNode
-}) {
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">{title}</h2>
-        {actions && <div className="flex items-center gap-2">{actions}</div>}
-      </div>
-      <div className="text-muted-foreground text-sm">{children}</div>
-    </div>
-  )
-}
-
-function StatusBadge({ isValid }: { isValid: boolean }) {
-  return isValid ? (
-    <Badge variant="success">
-      <CheckCircle2 className="mr-1 size-3" />
-      Valid
-    </Badge>
-  ) : (
-    <Badge variant="destructive">
-      <XCircle className="mr-1 size-3" />
-      Invalid
-    </Badge>
-  )
-}
 
 export function CliTab() {
   const { data: appInfo } = useAppVersion()
@@ -139,20 +106,24 @@ export function CliTab() {
 
   if (isLoading) {
     return (
-      <CliInfoWrapper title="CLI Installation">
-        Loading CLI information...
-      </CliInfoWrapper>
+      <div className="space-y-3">
+        <SettingsSectionTitle>CLI Installation</SettingsSectionTitle>
+        <p className="text-muted-foreground text-sm">
+          Loading CLI information...
+        </p>
+      </div>
     )
   }
 
   if (error || !cliStatus) {
     return (
-      <CliInfoWrapper title="CLI Installation">
+      <div className="space-y-3">
+        <SettingsSectionTitle>CLI Installation</SettingsSectionTitle>
         <Alert variant="destructive">
           <AlertCircle className="size-4" />
           <AlertDescription>Failed to load CLI information</AlertDescription>
         </Alert>
-      </CliInfoWrapper>
+      </div>
     )
   }
 
@@ -200,78 +171,67 @@ export function CliTab() {
       : null
 
   return (
-    <div className="space-y-6">
-      <CliInfoWrapper title="CLI Installation" actions={headerActions}>
-        {externalCli && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertTriangle className="size-4" />
-            <AlertTitle>External CLI Installation Detected</AlertTitle>
-            <AlertDescription className="space-y-2">
-              <p>
-                An external ToolHive CLI was found at{' '}
-                <code className="bg-muted rounded px-1 text-xs">
-                  {externalCli.path}
-                </code>
-              </p>
-              <p>
-                {getUninstallCommand(externalCli.source) ? (
-                  <>
-                    To uninstall, run:{' '}
-                    <code>{getUninstallCommand(externalCli.source)}</code>
-                  </>
-                ) : (
-                  <>Please manually remove the external CLI installation.</>
-                )}
-              </p>
-            </AlertDescription>
-          </Alert>
+    <div className="space-y-3">
+      <div className="flex items-start justify-between">
+        <SettingsSectionTitle>CLI Installation</SettingsSectionTitle>
+        <div className="flex items-center gap-2 pt-2">{headerActions}</div>
+      </div>
+
+      {externalCli && (
+        <ExternalCliAlert path={externalCli.path} source={externalCli.source} />
+      )}
+
+      <div className="flex flex-col gap-3 pt-1 pb-5">
+        <SettingsRow label="Status">
+          <StatusBadge isValid={cliStatus.isValid} />
+        </SettingsRow>
+        <Separator />
+        <SettingsRow label="CLI Version">
+          <span
+            className="text-muted-foreground flex items-center gap-2 text-sm
+              leading-5.5"
+          >
+            {cliStatus.cliVersion || 'Unknown'}
+            {!appInfo?.isNewVersionAvailable && (
+              <Badge variant="success">Latest</Badge>
+            )}
+          </span>
+        </SettingsRow>
+        <Separator />
+        <SettingsRow label="Install Method">
+          <span className="text-muted-foreground text-sm leading-5.5">
+            {cliStatus.installMethod === 'symlink'
+              ? 'Symlink'
+              : cliStatus.installMethod === 'copy'
+                ? 'Copy'
+                : 'Not installed'}
+          </span>
+        </SettingsRow>
+        <Separator />
+        {cliStatus.isManaged && (
+          <>
+            <SettingsRow label="Managed by">
+              <span className="text-muted-foreground text-sm leading-5.5">
+                ToolHive UI
+              </span>
+            </SettingsRow>
+            <Separator />
+          </>
         )}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Status</span>
-            <StatusBadge isValid={cliStatus.isValid} />
-          </div>
+      </div>
 
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">CLI Version</span>
-            <span className="text/text-muted-foreground flex items-center gap-2">
-              {cliStatus.cliVersion || 'Unknown'}
-              {!appInfo?.isNewVersionAvailable && (
-                <Badge variant="success">Latest</Badge>
-              )}
-            </span>
-          </div>
+      {!cliStatus.isManaged && (
+        <Alert>
+          <AlertCircle className="size-4" />
+          <AlertDescription>
+            CLI is not currently managed by ToolHive UI. Click
+            &quot;Reinstall&quot; to set up CLI management.
+          </AlertDescription>
+        </Alert>
+      )}
 
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Install Method</span>
-            <span className="text/text-muted-foreground">
-              {cliStatus.installMethod === 'symlink'
-                ? 'Symlink'
-                : cliStatus.installMethod === 'copy'
-                  ? 'Copy'
-                  : 'Not installed'}
-            </span>
-          </div>
-
-          {cliStatus.isManaged && (
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Managed by</span>
-              <span className="text/text-muted-foreground">ToolHive UI</span>
-            </div>
-          )}
-        </div>
-        {!cliStatus.isManaged && (
-          <Alert className="mt-3">
-            <AlertCircle className="size-4" />
-            <AlertDescription>
-              CLI is not currently managed by ToolHive UI. Click
-              &quot;Reinstall&quot; to set up CLI management.
-            </AlertDescription>
-          </Alert>
-        )}
-      </CliInfoWrapper>
-
-      <CliInfoWrapper title="CLI Location">
+      <SettingsSectionTitle>CLI Location</SettingsSectionTitle>
+      <div className="flex flex-col gap-3 py-1">
         <div className="bg-muted rounded-md p-3">
           <div className="flex items-center gap-2">
             <FolderOpen className="text-muted-foreground size-4" />
@@ -284,29 +244,35 @@ export function CliTab() {
             </div>
           )}
         </div>
-      </CliInfoWrapper>
+        <Separator />
+      </div>
 
       {pathStatus && (
-        <CliInfoWrapper title="PATH Configuration">
-          <WrapperField
-            label="Shell PATH"
-            description={
-              pathStatus.isConfigured ? (
-                <span className="text-success">
-                  CLI is accessible from your terminal
-                </span>
-              ) : (
-                <span className="text-yellow-600">
-                  PATH not configured - run `thv` may not work in new terminals
-                </span>
-              )
-            }
-            htmlFor="path-status"
-          >
-            <StatusBadge isValid={pathStatus.isConfigured} />
-          </WrapperField>
+        <>
+          <SettingsSectionTitle>PATH Configuration</SettingsSectionTitle>
+          <div className="flex flex-col gap-3 py-1">
+            <WrapperField
+              label="Shell PATH"
+              description={
+                pathStatus.isConfigured ? (
+                  <span className="text-success">
+                    CLI is accessible from your terminal
+                  </span>
+                ) : (
+                  <span className="text-yellow-600">
+                    PATH not configured - run `thv` may not work in new
+                    terminals
+                  </span>
+                )
+              }
+              htmlFor="path-status"
+            >
+              <StatusBadge isValid={pathStatus.isConfigured} />
+            </WrapperField>
+            <Separator />
+          </div>
           {pathStatus.modifiedFiles.length > 0 && (
-            <div className="bg-muted mt-3 rounded-md p-3">
+            <div className="bg-muted rounded-md p-3">
               <div className="text-muted-foreground mb-2 text-xs font-medium">
                 Modified files:
               </div>
@@ -320,7 +286,7 @@ export function CliTab() {
               </div>
             </div>
           )}
-        </CliInfoWrapper>
+        </>
       )}
     </div>
   )

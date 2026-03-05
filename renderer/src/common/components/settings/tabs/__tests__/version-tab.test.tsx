@@ -62,12 +62,12 @@ describe('VersionTab', () => {
     import.meta.env.MODE = originalEnv
   })
 
-  it('renders version information heading', () => {
+  it('renders version heading', () => {
     renderWithProviders(
       <VersionTab appInfo={mockAppInfo} isLoading={false} error={null} />
     )
 
-    expect(screen.getByText('Version Information')).toBeVisible()
+    expect(screen.getByText('Version')).toBeVisible()
   })
 
   it('displays version information when loaded', () => {

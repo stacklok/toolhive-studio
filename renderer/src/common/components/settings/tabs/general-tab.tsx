@@ -17,6 +17,8 @@ import log from 'electron-log/renderer'
 import { trackEvent } from '@/common/lib/analytics'
 import { ExperimentalFeatures } from './components/experimental-features'
 import { WrapperField } from './components/wrapper-field'
+import { Separator } from '../../ui/separator'
+import { SettingsSectionTitle } from './components/settings-section-title'
 
 function ThemeField() {
   const { theme, setTheme } = useTheme()
@@ -36,7 +38,7 @@ function ThemeField() {
       htmlFor="theme-select"
     >
       <Select value={theme} onValueChange={handleThemeChange}>
-        <SelectTrigger id="theme-select" className="w-32">
+        <SelectTrigger id="theme-select" className="w-[180px]">
           <SelectValue placeholder="Select theme" />
         </SelectTrigger>
         <SelectContent>
@@ -156,7 +158,7 @@ function QuitConfirmationField() {
 
   return (
     <WrapperField
-      label="Skip quit confirmation"
+      label="Quit confirmation"
       description="Skip the confirmation dialog when quitting ToolHive"
       htmlFor="quit-confirmation"
     >
@@ -172,16 +174,19 @@ function QuitConfirmationField() {
 
 export function GeneralTab() {
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold">General Settings</h2>
-
+    <div className="space-y-3">
+      <SettingsSectionTitle>General</SettingsSectionTitle>
+      <div className="flex flex-col gap-3 pt-1 pb-5">
         <ThemeField />
+        <Separator />
         <AutoLaunchField />
+        <Separator />
         <TelemetryField />
+        <Separator />
         <QuitConfirmationField />
-        <ExperimentalFeatures />
+        <Separator />
       </div>
+      <ExperimentalFeatures />
     </div>
   )
 }

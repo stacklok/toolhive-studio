@@ -6,14 +6,7 @@ import {
   SelectItem,
 } from '../../ui/select'
 import type { UseFormReturn } from 'react-hook-form'
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormDescription,
-  FormControl,
-  FormMessage,
-} from '../../ui/form'
+import { FormField, FormItem, FormControl, FormMessage } from '../../ui/form'
 import type { RegistryFormData } from './schema'
 import { REGISTRY_TYPE_OPTIONS } from './utils'
 
@@ -35,12 +28,6 @@ export function RegistryTypeField({
       name="type"
       render={({ field }) => (
         <FormItem className="w-full">
-          <FormLabel>Registry Type</FormLabel>
-          <FormDescription>
-            Choose between ToolHive default registry, a custom remote registry
-            JSON URL, a custom local registry JSON file, or a custom registry
-            server API URL.
-          </FormDescription>
           <Select
             onValueChange={(value) => {
               field.onChange(value)
