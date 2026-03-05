@@ -3,8 +3,9 @@ import {
   setTearingDownState,
   setQuittingState,
 } from '../app-state'
-import { getToolhivePort, stopToolhive, binPath } from '../toolhive-manager'
+import { stopToolhive, binPath } from '../toolhive-manager'
 import { stopAllServers } from '../graceful-exit'
+import { createMainProcessFetch } from '../unix-socket-fetch'
 import { safeTrayDestroy } from '../system-tray'
 import log from '../logger'
 
@@ -17,10 +18,7 @@ export function register() {
       setQuittingState(true)
       log.info(`[${sig}] delaying exit for teardown...`)
       try {
-        const port = getToolhivePort()
-        if (port) {
-          await stopAllServers(binPath, port)
-        }
+        await stopAllServers(binPath, { createFetch: createMainProcessFetch })
       } finally {
         stopToolhive()
         safeTrayDestroy()

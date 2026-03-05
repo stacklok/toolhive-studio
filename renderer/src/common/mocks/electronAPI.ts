@@ -46,6 +46,10 @@ function createElectronStub(): Partial<ElectronAPI> {
       getPageSize: vi.fn().mockResolvedValue(undefined),
       setPageSize: vi.fn().mockResolvedValue(undefined),
     } as ElectronAPI['uiPreferences'],
+    apiFetch: vi
+      .fn()
+      .mockResolvedValue({ status: 200, headers: {}, body: '{}' }),
+    apiFetchAbort: vi.fn().mockResolvedValue(undefined),
     chat: {
       stream: vi.fn(),
       resumeStream: vi.fn().mockResolvedValue(null),

@@ -14,6 +14,7 @@ import {
   isToolhiveRunning,
   stopToolhive,
 } from '../toolhive-manager'
+import { registerApiFetchHandlers } from '../unix-socket-fetch'
 import { getMainWindow, createMainWindow, hideMainWindow } from '../main-window'
 import { extractDeepLinkFromArgs, handleDeepLink } from '../deep-links'
 import { getCspString } from '../csp'
@@ -70,6 +71,9 @@ export function register() {
 
     // Start ToolHive with tray reference
     await startToolhive()
+
+    // Register IPC handlers for renderer -> main -> thv API bridge
+    registerApiFetchHandlers()
 
     // Create main window
     try {
@@ -133,10 +137,9 @@ export function register() {
       if (process.env.NODE_ENV === 'development') {
         return callback({ responseHeaders: details.responseHeaders })
       }
+      // When using UNIX sockets, API requests go through IPC so no port is
+      // needed in connect-src. Pass the port only when available (TCP fallback).
       const port = getToolhivePort()
-      if (port == null) {
-        throw new Error('[content-security-policy] ToolHive port is not set')
-      }
       return callback({
         responseHeaders: {
           ...details.responseHeaders,
