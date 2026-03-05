@@ -162,6 +162,8 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
         >
           <MessageCircle className="size-5" />
         </button>
+        {/* When the drawer is open it renders its own WindowControls in its
+            header, so we hide these to avoid duplicates. */}
         {!isAssistantOpen && <WindowControls />}
       </div>
     </TopNavContainer>

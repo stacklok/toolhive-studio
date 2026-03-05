@@ -10,26 +10,22 @@ const ANIMATION_DURATION_MS = 200
 export function AssistantDrawer() {
   const { isOpen, close } = useAssistantDrawer()
   const [isMounted, setIsMounted] = useState(false)
-  const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
-      let frame2: number | undefined
-      const frame1 = requestAnimationFrame(() => {
-        setIsMounted(true)
-        frame2 = requestAnimationFrame(() => setIsVisible(true))
-      })
-      return () => {
-        cancelAnimationFrame(frame1)
-        if (frame2 !== undefined) cancelAnimationFrame(frame2)
-      }
+      // rAF is only here to satisfy the ESLint no-sync-setState-in-effect rule.
+      // The entry animation is handled by CSS (animate-in), which fires
+      // automatically on mount — no class toggling needed.
+      const frame = requestAnimationFrame(() => setIsMounted(true))
+      return () => cancelAnimationFrame(frame)
     } else {
-      const frame = requestAnimationFrame(() => setIsVisible(false))
+      // Unmount after the slide-out animation rather than using
+      // visibility/display/pointer-events. In Electron, -webkit-app-region
+      // is not applied when pointer-events: none, so a hidden-but-mounted
+      // drawer would still claim its off-screen region as a drag area,
+      // making buttons in the navbar beneath it unclickable.
       const timer = setTimeout(() => setIsMounted(false), ANIMATION_DURATION_MS)
-      return () => {
-        cancelAnimationFrame(frame)
-        clearTimeout(timer)
-      }
+      return () => clearTimeout(timer)
     }
   }, [isOpen])
 
@@ -37,7 +33,7 @@ export function AssistantDrawer() {
 
   return (
     <>
-      {isVisible && (
+      {isOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/40"
           onClick={close}
@@ -49,8 +45,10 @@ export function AssistantDrawer() {
           'app-region-no-drag',
           'fixed top-0 right-0 z-50 flex h-dvh flex-col',
           'w-[700px] max-w-full',
-          'transform-gpu transition-transform duration-200 ease-linear',
-          isVisible ? 'translate-x-0' : 'translate-x-full'
+          'duration-200',
+          isOpen
+            ? 'animate-in slide-in-from-right fill-mode-backwards'
+            : 'animate-out slide-out-to-right fill-mode-forwards'
         )}
         aria-label="Assistant"
       >
