@@ -13,6 +13,7 @@ import { mapResponseTypeToFormType, mapFormTypeToResponseType } from './utils'
 import { RegistryForm } from './registry-form'
 import { delay } from '@utils/delay'
 import { trackEvent } from '@/common/lib/analytics'
+import { SettingsSectionTitle } from '../tabs/components/settings-section-title'
 
 export function RegistryTab() {
   const queryClient = useQueryClient()
@@ -111,18 +112,21 @@ export function RegistryTab() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold">Registry</h2>
+    <div className="space-y-3">
+      <div className="flex flex-col gap-2">
+        <SettingsSectionTitle>Registry</SettingsSectionTitle>
+        <p className="text-muted-foreground text-sm leading-5.5">
+          Choose between ToolHive default registry, a custom remote registry
+          JSON URL, a custom local registry JSON file, or a custom registry
+          server API URL.
+        </p>
       </div>
-      <div className="space-y-4">
-        <RegistryForm
-          form={form}
-          onSubmit={onSubmit}
-          isLoading={isLoading}
-          hasRegistryError={!!registryError}
-        />
-      </div>
+      <RegistryForm
+        form={form}
+        onSubmit={onSubmit}
+        isLoading={isLoading}
+        hasRegistryError={!!registryError}
+      />
     </div>
   )
 }

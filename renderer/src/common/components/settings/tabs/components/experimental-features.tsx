@@ -1,6 +1,8 @@
 import { WrapperField } from './wrapper-field'
 import { Switch } from '@/common/components/ui/switch'
+import { Separator } from '@/common/components/ui/separator'
 import { useExperimentalFeatures } from '@/common/hooks/use-experimental-features'
+import { SettingsSectionTitle } from './settings-section-title'
 
 export function ExperimentalFeatures() {
   const {
@@ -15,7 +17,7 @@ export function ExperimentalFeatures() {
   if (isLoadingFlags) {
     return (
       <div>
-        <h2 className="text-lg font-semibold">Experimental Features</h2>
+        <SettingsSectionTitle>Experimental</SettingsSectionTitle>
         <p className="text-muted-foreground text-sm">Loading...</p>
       </div>
     )
@@ -24,7 +26,7 @@ export function ExperimentalFeatures() {
   if (!flags?.length) {
     return (
       <div>
-        <h2 className="text-lg font-semibold">Experimental Features</h2>
+        <SettingsSectionTitle>Experimental</SettingsSectionTitle>
         <p className="text-muted-foreground text-sm">
           No experimental features available
         </p>
@@ -33,28 +35,32 @@ export function ExperimentalFeatures() {
   }
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-semibold">Experimental Features</h2>
+    <div className="space-y-3">
+      <SettingsSectionTitle>Experimental</SettingsSectionTitle>
+      <div className="flex flex-col gap-3 py-1">
+        {flags?.map(({ key, enabled }, index) => {
+          const flagId = `feature-flag-${key}`
 
-      {flags?.map(({ key, enabled }) => {
-        const flagId = `feature-flag-${key}`
-
-        return (
-          <WrapperField
-            key={key}
-            label={formatFeatureFlagName(key)}
-            description={formatFeatureFlagDescription(key)}
-            htmlFor={flagId}
-          >
-            <Switch
-              id={flagId}
-              checked={enabled}
-              onCheckedChange={() => handleToggle(key, enabled)}
-              disabled={isPending}
-            />
-          </WrapperField>
-        )
-      })}
+          return (
+            <div key={key} className="flex flex-col gap-3">
+              <WrapperField
+                label={formatFeatureFlagName(key)}
+                description={formatFeatureFlagDescription(key)}
+                htmlFor={flagId}
+              >
+                <Switch
+                  id={flagId}
+                  checked={enabled}
+                  onCheckedChange={() => handleToggle(key, enabled)}
+                  disabled={isPending}
+                />
+              </WrapperField>
+              {index < flags.length - 1 && <Separator />}
+            </div>
+          )
+        })}
+        <Separator />
+      </div>
     </div>
   )
 }

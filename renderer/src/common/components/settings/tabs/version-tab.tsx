@@ -14,6 +14,10 @@ import { AlertCircleIcon, Download } from 'lucide-react'
 import { trackEvent } from '@/common/lib/analytics'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
+import { Separator } from '../../ui/separator'
+import { SettingsSectionTitle } from './components/settings-section-title'
+import { SettingsRow } from './components/settings-row'
+import { WrapperField } from './components/wrapper-field'
 
 interface VersionTabProps {
   appInfo: AppVersionInfo | undefined
@@ -32,17 +36,6 @@ function VersionBadge({
     <div className="flex items-center gap-2">
       <span className="text/text-muted-foreground">{version}</span>
       {isLatest && <Badge variant="success">Latest</Badge>}
-    </div>
-  )
-}
-
-function VersionInfoWrapper({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold">Version Information</h2>
-        <div className="text-muted-foreground text-sm">{children}</div>
-      </div>
     </div>
   )
 }
@@ -75,15 +68,23 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
 
   if (isLoading) {
     return (
-      <VersionInfoWrapper>Loading version information...</VersionInfoWrapper>
+      <div className="space-y-3">
+        <SettingsSectionTitle>Version</SettingsSectionTitle>
+        <p className="text-muted-foreground text-sm">
+          Loading version information...
+        </p>
+      </div>
     )
   }
 
   if (error || !appInfo) {
     return (
-      <VersionInfoWrapper>
-        Failed to load version information
-      </VersionInfoWrapper>
+      <div className="space-y-3">
+        <SettingsSectionTitle>Version</SettingsSectionTitle>
+        <p className="text-muted-foreground text-sm">
+          Failed to load version information
+        </p>
+      </div>
     )
   }
 
@@ -124,41 +125,38 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
   }
 
   return (
-    <>
-      <VersionInfoWrapper>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Desktop UI version</span>
-            <VersionBadge
-              version={appInfo.currentVersion}
-              isLatest={!appInfo.isNewVersionAvailable}
-            />
-          </div>
+    <div className="space-y-3">
+      <SettingsSectionTitle>Version</SettingsSectionTitle>
+      <div className="flex flex-col gap-3 pt-1 pb-5">
+        <SettingsRow label="Desktop UI version">
+          <VersionBadge
+            version={appInfo.currentVersion}
+            isLatest={!appInfo.isNewVersionAvailable}
+          />
+        </SettingsRow>
+        <Separator />
+        <SettingsRow label="ToolHive binary version">
+          <VersionBadge
+            version={appInfo.toolhiveVersion}
+            isLatest={!appInfo.isNewVersionAvailable}
+          />
+        </SettingsRow>
+        <Separator />
+        <SettingsRow label="Build type">
+          <span className="text-muted-foreground text-sm leading-5.5">
+            {appInfo.isReleaseBuild ? 'Release' : 'Development'}
+          </span>
+        </SettingsRow>
+        <Separator />
+      </div>
 
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">ToolHive binary version</span>
-            <VersionBadge
-              version={appInfo.toolhiveVersion}
-              isLatest={!appInfo.isNewVersionAvailable}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Build type</span>
-            <span className="text/text-muted-foreground">
-              {appInfo.isReleaseBuild ? 'Release' : 'Development'}
-            </span>
-          </div>
-        </div>
-      </VersionInfoWrapper>
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold">ToolHive Updates</h2>
-        <div className="flex items-center justify-between">
-          <p className="text-muted-foreground text-sm">
-            Automatically download and install ToolHive updates when a new
-            release is available.
-          </p>
-
+      <SettingsSectionTitle>Updates</SettingsSectionTitle>
+      <div className="flex flex-col gap-3 py-1">
+        <WrapperField
+          label="Downloads"
+          description="Automatically download and install ToolHive updates when a new release is available."
+          htmlFor="auto-update"
+        >
           <Switch
             id="auto-update"
             checked={isAutoUpdateEnabled ?? true}
@@ -168,31 +166,31 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
             }}
             disabled={isAutoUpdateEnabledLoading || isSetAutoUpdatePending}
           />
-        </div>
-        {appInfo.isNewVersionAvailable && isProduction && (
-          <div>
-            <Alert className="flex h-full items-center">
-              <AlertDescription className="flex w-full items-center gap-2">
-                <AlertCircleIcon className="flex size-4 items-center" />
-                <div className="flex w-full items-center justify-between">
-                  <div className="font-medium">
-                    A new version {appInfo.latestVersion} is available
-                  </div>
-                  <Button
-                    variant="outline"
-                    disabled={isCheckingOrDownloading}
-                    onClick={() => {
-                      handleManualUpdate()
-                    }}
-                  >
-                    <Download className="size-4" /> {getButtonText()}
-                  </Button>
-                </div>
-              </AlertDescription>
-            </Alert>
-          </div>
-        )}
+        </WrapperField>
+        <Separator />
       </div>
-    </>
+
+      {appInfo.isNewVersionAvailable && isProduction && (
+        <Alert className="flex h-full items-center">
+          <AlertDescription className="flex w-full items-center gap-2">
+            <AlertCircleIcon className="flex size-4 items-center" />
+            <div className="flex w-full items-center justify-between">
+              <div className="font-medium">
+                A new version {appInfo.latestVersion} is available
+              </div>
+              <Button
+                variant="outline"
+                disabled={isCheckingOrDownloading}
+                onClick={() => {
+                  handleManualUpdate()
+                }}
+              >
+                <Download className="size-4" /> {getButtonText()}
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+    </div>
   )
 }

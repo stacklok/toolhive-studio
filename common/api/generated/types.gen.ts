@@ -1539,6 +1539,10 @@ export type V1InstallSkillRequest = {
    * Name or OCI reference of the skill to install
    */
   name?: string
+  /**
+   * ProjectRoot is the project root path for project-scoped installs
+   */
+  project_root?: string
   scope?: SkillsScope
   /**
    * Version to install (empty means latest)
@@ -2775,6 +2779,14 @@ export type GetApiV1BetaSkillsData = {
      * Filter by scope (user or project)
      */
     scope?: 'user' | 'project'
+    /**
+     * Filter by client app
+     */
+    client?: string
+    /**
+     * Filter by project root path
+     */
+    project_root?: string
   }
   url: '/api/v1beta/skills'
 }
@@ -2972,6 +2984,10 @@ export type DeleteApiV1BetaSkillsByNameData = {
      * Scope to uninstall from (user or project)
      */
     scope?: 'user' | 'project'
+    /**
+     * Project root path for project-scoped skills
+     */
+    project_root?: string
   }
   url: '/api/v1beta/skills/{name}'
 }
@@ -3017,6 +3033,10 @@ export type GetApiV1BetaSkillsByNameData = {
      * Filter by scope (user or project)
      */
     scope?: 'user' | 'project'
+    /**
+     * Project root path for project-scoped skills
+     */
+    project_root?: string
   }
   url: '/api/v1beta/skills/{name}'
 }

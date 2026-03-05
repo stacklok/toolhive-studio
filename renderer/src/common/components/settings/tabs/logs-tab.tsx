@@ -2,6 +2,8 @@ import { Button } from '../../ui/button'
 import { Download } from 'lucide-react'
 import { useDownloadFile } from '../../../hooks/use-download-file'
 import { CodeBlockWithCopy } from '../../code-block-with-copy'
+import { Separator } from '../../ui/separator'
+import { SettingsSectionTitle } from './components/settings-section-title'
 
 const LOG_PATHS = {
   darwin: '~/Library/Logs/ToolHive/main.log',
@@ -22,34 +24,33 @@ export function LogsTab() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold">Application Logs</h2>
-
-        {logPath ? (
-          <div>
-            <p className="text-muted-foreground text-sm">
-              Application logs are stored locally on your system. You can find
-              them in:
-            </p>
-            <CodeBlockWithCopy code={logPath} />
-            {logPath && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDownloadLog}
-                disabled={isDownloading}
-                className="mt-3 w-fit"
-              >
-                <Download className="mr-2 size-4" />
-                {isDownloading ? 'Loading...' : 'Save log file'}
-              </Button>
-            )}
-          </div>
-        ) : (
-          <div>Failed to get log path</div>
-        )}
+    <div className="space-y-3">
+      <div className="flex flex-col gap-2">
+        <SettingsSectionTitle>Logs</SettingsSectionTitle>
+        <p className="text-muted-foreground text-sm leading-5.5">
+          Application logs are stored locally on your system. You can find them
+          in...
+        </p>
       </div>
+
+      {logPath ? (
+        <>
+          <div className="flex flex-col gap-3 py-1">
+            <CodeBlockWithCopy code={logPath} />
+            <Separator />
+          </div>
+          <Button
+            variant="action"
+            onClick={handleDownloadLog}
+            disabled={isDownloading}
+          >
+            <Download className="size-4" />
+            {isDownloading ? 'Loading...' : 'Save log file'}
+          </Button>
+        </>
+      ) : (
+        <p className="text-muted-foreground text-sm">Failed to get log path</p>
+      )}
     </div>
   )
 }
