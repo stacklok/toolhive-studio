@@ -18,6 +18,7 @@ import './index.css'
 import { PromptProvider } from './common/contexts/prompt/provider'
 import { trackPageView } from './common/lib/analytics'
 import { queryClient } from './common/lib/query-client'
+import { ipcFetch } from './common/lib/ipc-fetch'
 // Import feature flags to bind them to window for developer tools access
 import './common/lib/feature-flags'
 
@@ -71,22 +72,26 @@ Sentry.init({
   },
 })
 
-if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
-  log.error('ToolHive port API not available in renderer')
+if (!window.electronAPI || !window.electronAPI.apiFetch) {
+  log.error('ToolHive API bridge not available in renderer')
 }
 
 ;(async () => {
   try {
-    const port = await window.electronAPI.getToolhivePort()
+    // All API requests are routed through the main process via IPC. The main
+    // process forwards them to the thv server over a UNIX socket (or TCP
+    // fallback). The baseUrl is a dummy used only for URL construction inside
+    // the hey-api client; the ipcFetch adapter strips it and sends only the
+    // path + query to the main process.
     const telemetryHeaders = await window.electronAPI.getTelemetryHeaders()
-    const baseUrl = `http://localhost:${port}`
 
     client.setConfig({
-      baseUrl,
+      baseUrl: 'http://localhost',
+      fetch: ipcFetch,
       headers: telemetryHeaders,
     })
   } catch (e) {
-    log.error('Failed to get ToolHive port from main process: ', e)
+    log.error('Failed to configure ToolHive API client: ', e)
     throw e
   }
 

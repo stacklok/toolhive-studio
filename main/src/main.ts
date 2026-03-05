@@ -45,11 +45,16 @@ import {
   restartToolhive,
   stopToolhive,
   getToolhivePort,
+  getToolhiveSocketPath,
   isToolhiveRunning,
   binPath,
   getToolhiveMcpPort,
   isUsingCustomPort,
 } from './toolhive-manager'
+import {
+  registerApiFetchHandlers,
+  createMainProcessFetch,
+} from './unix-socket-fetch'
 import log from './logger'
 import { getInstanceId, isOfficialReleaseBuild } from './util'
 import { delay } from '../../utils/delay'
@@ -208,10 +213,7 @@ export async function blockQuit(source: string, event?: Electron.Event) {
   }
 
   try {
-    const port = getToolhivePort()
-    if (port) {
-      await stopAllServers(binPath, port)
-    }
+    await stopAllServers(binPath, { createFetch: createMainProcessFetch })
   } catch (err) {
     log.error('Teardown failed: ', err)
   } finally {
@@ -316,6 +318,9 @@ app.whenReady().then(async () => {
   // Start ToolHive with tray reference
   await startToolhive()
 
+  // Register IPC handlers for renderer -> main -> thv API bridge
+  registerApiFetchHandlers()
+
   // Create main window
   try {
     const mainWindow = await createMainWindow()
@@ -378,10 +383,9 @@ app.whenReady().then(async () => {
     if (process.env.NODE_ENV === 'development') {
       return callback({ responseHeaders: details.responseHeaders })
     }
+    // When using UNIX sockets, API requests go through IPC so no port is
+    // needed in connect-src. Pass the port only when available (TCP fallback).
     const port = getToolhivePort()
-    if (port == null) {
-      throw new Error('[content-security-policy] ToolHive port is not set')
-    }
     return callback({
       responseHeaders: {
         ...details.responseHeaders,
@@ -489,10 +493,7 @@ app.on('quit', () => {
     setQuittingState(true)
     log.info(`[${sig}] delaying exit for teardown...`)
     try {
-      const port = getToolhivePort()
-      if (port) {
-        await stopAllServers(binPath, port)
-      }
+      await stopAllServers(binPath, { createFetch: createMainProcessFetch })
     } finally {
       stopToolhive()
       safeTrayDestroy()
@@ -569,6 +570,7 @@ ipcMain.handle('set-skip-quit-confirmation', (_e, skip: boolean) =>
 
 ipcMain.handle('get-toolhive-port', () => getToolhivePort())
 ipcMain.handle('get-toolhive-mcp-port', () => getToolhiveMcpPort())
+ipcMain.handle('get-toolhive-socket-path', () => getToolhiveSocketPath())
 ipcMain.handle('is-toolhive-running', () => isToolhiveRunning())
 ipcMain.handle('is-using-custom-port', () => isUsingCustomPort())
 
