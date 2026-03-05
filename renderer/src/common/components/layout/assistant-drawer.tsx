@@ -1,15 +1,43 @@
+import { useEffect, useState } from 'react'
 import { PanelRightClose, MessageCircle } from 'lucide-react'
 import { ChatInterface } from '@/features/chat/components/chat-interface'
 import { useAssistantDrawer } from '@/common/hooks/use-assistant-drawer'
 import { cn } from '@/common/lib/utils'
 import { WindowControls } from './top-nav/window-controls'
 
+const ANIMATION_DURATION_MS = 200
+
 export function AssistantDrawer() {
   const { isOpen, close } = useAssistantDrawer()
+  const [isMounted, setIsMounted] = useState(false)
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    if (isOpen) {
+      let frame2: number | undefined
+      const frame1 = requestAnimationFrame(() => {
+        setIsMounted(true)
+        frame2 = requestAnimationFrame(() => setIsVisible(true))
+      })
+      return () => {
+        cancelAnimationFrame(frame1)
+        if (frame2 !== undefined) cancelAnimationFrame(frame2)
+      }
+    } else {
+      const frame = requestAnimationFrame(() => setIsVisible(false))
+      const timer = setTimeout(() => setIsMounted(false), ANIMATION_DURATION_MS)
+      return () => {
+        cancelAnimationFrame(frame)
+        clearTimeout(timer)
+      }
+    }
+  }, [isOpen])
+
+  if (!isMounted) return null
 
   return (
     <>
-      {isOpen && (
+      {isVisible && (
         <div
           className="fixed inset-0 z-40 bg-black/40"
           onClick={close}
@@ -22,7 +50,7 @@ export function AssistantDrawer() {
           'fixed top-0 right-0 z-50 flex h-dvh flex-col',
           'w-[700px] max-w-full',
           'transform-gpu transition-transform duration-200 ease-linear',
-          isOpen ? 'translate-x-0' : 'translate-x-full'
+          isVisible ? 'translate-x-0' : 'translate-x-full'
         )}
         aria-label="Assistant"
       >
@@ -54,7 +82,7 @@ export function AssistantDrawer() {
             >
               <PanelRightClose className="size-5" />
             </button>
-            <div className="pr-4">
+            <div className="pr-6">
               <WindowControls />
             </div>
           </div>
