@@ -4,7 +4,7 @@ import { twMerge } from 'tailwind-merge'
 function getPlatformSpecificHeaderClasses() {
   const platformClasses = {
     darwin: 'pl-26 pt-0.5', // Left padding for traffic light buttons + top offset for title bar
-    win32: 'pr-2', // Right padding for visual spacing with window edge
+    win32: '', // Window controls are flush to the right edge
     linux: '', // No padding needed - custom controls are part of the layout
   }
 
@@ -23,7 +23,7 @@ export function TopNavContainer(props: HTMLProps<HTMLElement>) {
         props.className,
         'bg-nav-background',
         'border-nav-border h-16 border-b',
-        'px-6',
+        'pl-6',
         'grid grid-cols-[auto_1fr_auto] items-center gap-7',
         'app-region-drag',
         'w-full min-w-full',

@@ -54,7 +54,9 @@ export function AssistantDrawer() {
             >
               <PanelRightClose className="size-5" />
             </button>
-            <WindowControls />
+            <div className="pr-4">
+              <WindowControls />
+            </div>
           </div>
         </div>
         <div

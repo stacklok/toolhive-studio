@@ -155,7 +155,6 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
             'app-region-no-drag',
             'flex size-16 shrink-0 items-center justify-center',
             'border-nav-border border-l',
-            window.electronAPI.isMac && '-mr-6',
             'text-white/90 transition-colors hover:bg-white/10 hover:text-white',
             isAssistantOpen &&
               'bg-nav-button-active-bg text-nav-button-active-text'
