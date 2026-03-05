@@ -95,6 +95,7 @@ import { telemetryStore } from './telemetry-store'
 import {
   restartToolhive,
   getToolhivePort,
+  getToolhiveSocketPath,
   isToolhiveRunning,
   binPath,
   getToolhiveMcpPort,
@@ -195,6 +196,7 @@ ipcMain.handle('set-skip-quit-confirmation', (_e, skip: boolean) =>
 
 ipcMain.handle('get-toolhive-port', () => getToolhivePort())
 ipcMain.handle('get-toolhive-mcp-port', () => getToolhiveMcpPort())
+ipcMain.handle('get-toolhive-socket-path', () => getToolhiveSocketPath())
 ipcMain.handle('is-toolhive-running', () => isToolhiveRunning())
 ipcMain.handle('is-using-custom-port', () => isUsingCustomPort())
 

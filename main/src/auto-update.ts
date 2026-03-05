@@ -2,12 +2,8 @@ import { app, autoUpdater, dialog, ipcMain, type BrowserWindow } from 'electron'
 import { updateElectronApp } from 'update-electron-app'
 import * as Sentry from '@sentry/electron/main'
 import { stopAllServers } from './graceful-exit'
-import {
-  stopToolhive,
-  getToolhivePort,
-  binPath,
-  isToolhiveRunning,
-} from './toolhive-manager'
+import { stopToolhive, binPath, isToolhiveRunning } from './toolhive-manager'
+import { createMainProcessFetch } from './unix-socket-fetch'
 import { safeTrayDestroy } from './system-tray'
 import { getAppVersion, pollWindowReady } from './util'
 import { delay } from '../../utils/delay'
@@ -37,14 +33,7 @@ let updateState: UpdateState = 'none'
 
 async function safeServerShutdown(): Promise<boolean> {
   try {
-    const port = getToolhivePort()
-    if (!port) {
-      log.info('[update] No ToolHive port available, skipping server shutdown')
-      return true
-    }
-
-    await stopAllServers(binPath, port)
-
+    await stopAllServers(binPath, { createFetch: createMainProcessFetch })
     log.info('[update] All servers stopped successfully')
     return true
   } catch (error) {
