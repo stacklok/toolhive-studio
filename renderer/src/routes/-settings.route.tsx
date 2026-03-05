@@ -5,5 +5,6 @@ import { Route } from './settings'
 export default function SettingsRouteComponent() {
   const { tab } = useSearch({ from: Route.id })
 
+  console.log('SettingsRouteComponent UPSTREAM')
   return <SettingsTabs defaultTab={tab} />
 }
