@@ -1,7 +1,13 @@
-const getCspMap = (port: number, sentryDsn?: string) => {
-  // In production with Sentry enabled, allow blob workers for replay
+const getCspMap = (port: number | undefined, sentryDsn?: string) => {
   const hasSentry = Boolean(sentryDsn)
   const workerSrc = hasSentry ? "'self' blob:" : "'self'"
+
+  // When using UNIX sockets the renderer never makes direct HTTP requests
+  // to the thv server, so no localhost entry is needed in connect-src.
+  const connectParts = ["'self'"]
+  if (port != null) connectParts.push(`http://localhost:${port}`)
+  connectParts.push('https://api.hsforms.com')
+  if (hasSentry) connectParts.push('https://*.sentry.io')
 
   return {
     'default-src': "'self'",
@@ -9,7 +15,7 @@ const getCspMap = (port: number, sentryDsn?: string) => {
     'style-src': "'self' 'unsafe-inline'",
     'img-src': "'self' data: blob:",
     'font-src': "'self' data:",
-    'connect-src': `'self' http://localhost:${port} https://api.hsforms.com${hasSentry ? ' https://*.sentry.io' : ''}`,
+    'connect-src': connectParts.join(' '),
     'frame-src': "'none'",
     'object-src': "'none'",
     'base-uri': "'self'",
@@ -17,13 +23,12 @@ const getCspMap = (port: number, sentryDsn?: string) => {
     'frame-ancestors': "'none'",
     'manifest-src': "'self'",
     'media-src': "'self' blob: data:",
-    // Allow blob: workers only when Sentry is configured
     'worker-src': workerSrc,
     'child-src': "'none'",
   }
 }
 
-export const getCspString = (port: number, sentryDsn?: string) =>
+export const getCspString = (port: number | undefined, sentryDsn?: string) =>
   Object.entries(getCspMap(port, sentryDsn))
     .map(([key, value]) => `${key} ${value}`)
     .join('; ')
