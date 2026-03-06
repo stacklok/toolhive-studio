@@ -19,27 +19,27 @@ const featureFlagOptions: Record<FeatureFlagKey, FeatureFlagOptions> = {
   [featureFlagKeys.SQLITE_READS_SETTINGS]: {
     isDisabled: false,
     defaultValue: false,
-    isExperimental: true,
+    isExperimental: false,
   },
   [featureFlagKeys.SQLITE_READS_THREADS]: {
     isDisabled: false,
     defaultValue: false,
-    isExperimental: true,
+    isExperimental: false,
   },
   [featureFlagKeys.SQLITE_READS_CHAT_SETTINGS]: {
     isDisabled: false,
     defaultValue: false,
-    isExperimental: true,
+    isExperimental: false,
   },
   [featureFlagKeys.SQLITE_READS_FEATURE_FLAGS]: {
     isDisabled: false,
     defaultValue: false,
-    isExperimental: true,
+    isExperimental: false,
   },
   [featureFlagKeys.SQLITE_READS_SHUTDOWN]: {
     isDisabled: false,
     defaultValue: false,
-    isExperimental: true,
+    isExperimental: false,
   },
 }
 

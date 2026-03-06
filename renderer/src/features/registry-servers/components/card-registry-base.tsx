@@ -5,6 +5,11 @@ import {
   CardContent,
   CardFooter,
 } from '@/common/components/ui/card'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/common/components/ui/tooltip'
 import { cn } from '@/common/lib/utils'
 import type { ReactNode } from 'react'
 
@@ -36,13 +41,18 @@ export function CardRegistryBase({
           className="grid grid-cols-[auto_calc(var(--spacing)_*_5)] items-center
             text-xl"
         >
-          <button
-            className="truncate text-left !outline-none select-none"
-            onClick={() => onClick?.()}
-          >
-            {title}
-            <span className="absolute inset-0 rounded-md" />
-          </button>
+          <Tooltip onlyWhenTruncated>
+            <TooltipTrigger asChild>
+              <button
+                className="truncate text-left !outline-none select-none"
+                onClick={() => onClick?.()}
+              >
+                {title}
+                <span className="absolute inset-0 rounded-md" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">{title}</TooltipContent>
+          </Tooltip>
         </CardTitle>
         {badge}
       </CardHeader>

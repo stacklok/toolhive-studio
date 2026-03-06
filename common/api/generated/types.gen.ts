@@ -535,6 +535,7 @@ export type CoreWorkload = {
 export type GroupsGroup = {
   name?: string
   registered_clients?: Array<string>
+  skills?: Array<string>
 }
 
 /**
@@ -1535,6 +1536,10 @@ export type V1InstallSkillRequest = {
    * Force allows overwriting unmanaged skill directories
    */
   force?: boolean
+  /**
+   * Group is the group name to add the skill to after installation
+   */
+  group?: string
   /**
    * Name or OCI reference of the skill to install
    */
@@ -2787,6 +2792,10 @@ export type GetApiV1BetaSkillsData = {
      * Filter by project root path
      */
     project_root?: string
+    /**
+     * Filter by group name
+     */
+    group?: string
   }
   url: '/api/v1beta/skills'
 }

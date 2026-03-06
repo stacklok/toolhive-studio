@@ -106,7 +106,7 @@ const config: ForgeConfig = {
       config: {
         bucket: 'toolhive-studio-releases',
         folder: `${isPrerelease() ? 'pre-release' : 'stable'}/${packageJson.version}`,
-        public: true,
+        public: false,
       },
     },
   ],
