@@ -124,7 +124,7 @@ describe('graceful-exit', () => {
         createMockWorkloadsResponse([])
       )
 
-      await stopAllServers('', 3000)
+      await stopAllServers('', { port: 3000 })
 
       expect(mockLog.info).toHaveBeenCalledWith(
         'No running servers – teardown complete'
@@ -147,7 +147,7 @@ describe('graceful-exit', () => {
 
       mockPostApiV1BetaWorkloadsStop.mockResolvedValue(createMockStopResponse())
 
-      await stopAllServers('', 3000)
+      await stopAllServers('', { port: 3000 })
 
       expect(mockPostApiV1BetaWorkloadsStop).toHaveBeenCalledTimes(1)
       expect(mockPostApiV1BetaWorkloadsStop).toHaveBeenCalledWith({
@@ -172,7 +172,7 @@ describe('graceful-exit', () => {
 
       mockPostApiV1BetaWorkloadsStop.mockResolvedValue(createMockStopResponse())
 
-      await stopAllServers('', 3000)
+      await stopAllServers('', { port: 3000 })
 
       expect(mockLog.info).toHaveBeenCalledWith(
         'All servers have reached final state'
@@ -189,7 +189,9 @@ describe('graceful-exit', () => {
         new Error('Stop failed')
       )
 
-      await expect(stopAllServers('', 3000)).rejects.toThrow('Stop failed')
+      await expect(stopAllServers('', { port: 3000 })).rejects.toThrow(
+        'Stop failed'
+      )
     })
 
     it('handles timeout when servers do not stop', async () => {
@@ -208,7 +210,7 @@ describe('graceful-exit', () => {
 
       mockPostApiV1BetaWorkloadsStop.mockResolvedValue(createMockStopResponse())
 
-      await expect(stopAllServers('', 3000)).rejects.toThrow(
+      await expect(stopAllServers('', { port: 3000 })).rejects.toThrow(
         'Some servers failed to stop within timeout'
       )
     })
@@ -220,7 +222,7 @@ describe('graceful-exit', () => {
 
       mockPostApiV1BetaWorkloadsStop.mockResolvedValue(createMockStopResponse())
 
-      await stopAllServers('', 3000)
+      await stopAllServers('', { port: 3000 })
 
       expect(mockStoreInstance.set).toHaveBeenCalledWith(
         'lastShutdownServers',
@@ -244,7 +246,7 @@ describe('graceful-exit', () => {
 
       mockPostApiV1BetaWorkloadsStop.mockResolvedValue(createMockStopResponse())
 
-      await stopAllServers('', 3000)
+      await stopAllServers('', { port: 3000 })
 
       // Should only include the server with a name in the batch call
       expect(mockPostApiV1BetaWorkloadsStop).toHaveBeenCalledTimes(1)
@@ -311,7 +313,7 @@ describe('graceful-exit', () => {
 
       mockPostApiV1BetaWorkloadsStop.mockResolvedValue(createMockStopResponse())
 
-      await stopAllServers('', 3000)
+      await stopAllServers('', { port: 3000 })
 
       expect(mockLog.info).toHaveBeenCalledWith(
         'Still waiting for 1 servers to reach final state: server1(stopping)'
@@ -337,7 +339,7 @@ describe('graceful-exit', () => {
 
       mockPostApiV1BetaWorkloadsStop.mockResolvedValue(createMockStopResponse())
 
-      await stopAllServers('', 3000)
+      await stopAllServers('', { port: 3000 })
 
       // Should call delay between polling attempts (not on first attempt)
       expect(mockDelay).toHaveBeenCalledWith(2000)

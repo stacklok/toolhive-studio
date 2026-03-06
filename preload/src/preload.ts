@@ -36,9 +36,21 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   getInstanceId: () => ipcRenderer.invoke('get-instance-id'),
 
-  // ToolHive port
+  // ToolHive connection
   getToolhivePort: () => ipcRenderer.invoke('get-toolhive-port'),
   getToolhiveMcpPort: () => ipcRenderer.invoke('get-toolhive-mcp-port'),
+  getToolhiveSocketPath: () => ipcRenderer.invoke('get-toolhive-socket-path'),
+
+  // API fetch bridge (renderer -> main -> thv over UNIX socket or TCP)
+  apiFetch: (req: {
+    requestId: string
+    method: string
+    path: string
+    headers: Record<string, string>
+    body?: string
+  }) => ipcRenderer.invoke('api-fetch', req),
+  apiFetchAbort: (requestId: string) =>
+    ipcRenderer.invoke('api-fetch-abort', requestId),
   getToolhiveVersion: () => TOOLHIVE_VERSION,
   // ToolHive is running
   isToolhiveRunning: () => ipcRenderer.invoke('is-toolhive-running'),
@@ -265,6 +277,19 @@ export interface ElectronAPI {
   quitApp: () => Promise<void>
   getToolhivePort: () => Promise<number | undefined>
   getToolhiveMcpPort: () => Promise<number | undefined>
+  getToolhiveSocketPath: () => Promise<string | undefined>
+  apiFetch: (req: {
+    requestId: string
+    method: string
+    path: string
+    headers: Record<string, string>
+    body?: string
+  }) => Promise<{
+    status: number
+    headers: Record<string, string>
+    body: string
+  }>
+  apiFetchAbort: (requestId: string) => Promise<void>
   getToolhiveVersion: () => string
   isToolhiveRunning: () => Promise<boolean>
   isUsingCustomPort: () => Promise<boolean>

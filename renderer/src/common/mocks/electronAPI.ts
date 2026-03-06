@@ -30,6 +30,10 @@ function createElectronStub(): Partial<ElectronAPI> {
       disable: vi.fn().mockResolvedValue(undefined),
       getAll: vi.fn().mockResolvedValue({}),
     } as ElectronAPI['featureFlags'],
+    apiFetch: vi
+      .fn()
+      .mockResolvedValue({ status: 200, headers: {}, body: '{}' }),
+    apiFetchAbort: vi.fn().mockResolvedValue(undefined),
     chat: {
       stream: vi.fn(),
     } as unknown as ElectronAPI['chat'],
