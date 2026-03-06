@@ -25,7 +25,9 @@ export const Route = createFileRoute('/settings')({
   validateSearch: (search: Record<string, unknown>): SettingsSearch => ({
     tab: isValidTab(search.tab) ? search.tab : undefined,
   }),
-  loader: async ({ context: { queryClient } }) =>
-    queryClient.ensureQueryData(getApiV1BetaSecretsDefaultKeysOptions()),
+  loader: ({ context: { queryClient } }) =>
+    // prefetchQuery (not ensureQueryData) so a secrets API failure doesn't
+    // break the entire Settings route when the user is on a different tab.
+    queryClient.prefetchQuery(getApiV1BetaSecretsDefaultKeysOptions()),
   component: SettingsRouteComponent,
 })
