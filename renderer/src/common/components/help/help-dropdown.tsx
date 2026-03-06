@@ -15,6 +15,7 @@ export function HelpDropdown({ className }: { className?: string }) {
         <Button
           variant="ghost"
           size="icon"
+          aria-label="Help"
           className={cn(
             `rounded-full text-white/90 hover:bg-white/10 hover:text-white
             dark:hover:bg-white/10`,
