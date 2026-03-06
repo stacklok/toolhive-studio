@@ -597,6 +597,13 @@
             },
             "type": "array",
             "uniqueItems": false
+          },
+          "skills": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": false
           }
         },
         "type": "object"
@@ -1782,6 +1789,10 @@
           "force": {
             "description": "Force allows overwriting unmanaged skill directories",
             "type": "boolean"
+          },
+          "group": {
+            "description": "Group is the group name to add the skill to after installation",
+            "type": "string"
           },
           "name": {
             "description": "Name or OCI reference of the skill to install",
@@ -3451,6 +3462,14 @@
             "description": "Filter by project root path",
             "in": "query",
             "name": "project_root",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by group name",
+            "in": "query",
+            "name": "group",
             "schema": {
               "type": "string"
             }
