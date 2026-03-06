@@ -17,7 +17,7 @@ export function ComplianceCheckMenuItem({
       onClick={onRecheck}
     >
       <ShieldCheck className="mr-2 h-4 w-4" />
-      Re-check MCP compliance
+      Check MCP compliance
     </DropdownMenuItem>
   )
 }

@@ -41,7 +41,7 @@ export type ComplianceStatus =
 
 export function deriveComplianceStatus(
   summary: ComplianceSummary
-): ComplianceStatus {
+): Extract<ComplianceStatus, 'non-compliant' | 'warnings' | 'compliant'> {
   if (summary.failed > 0) return 'non-compliant'
   if (summary.warnings > 0) return 'warnings'
   return 'compliant'

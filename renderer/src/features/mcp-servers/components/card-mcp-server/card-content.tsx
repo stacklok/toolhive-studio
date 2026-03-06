@@ -16,6 +16,7 @@ import { useUpdateVersion } from '../../hooks/use-update-version'
 import type { useComplianceCheck } from '../../hooks/use-compliance-check'
 import { trackEvent } from '@/common/lib/analytics'
 import { ArrowUpCircle } from 'lucide-react'
+import { Button } from '@/common/components/ui/button'
 
 function UpdateVersionButton({
   serverName,
@@ -41,7 +42,8 @@ function UpdateVersionButton({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <button
+        <Button
+          variant="ghost"
           onClick={(e) => {
             e.stopPropagation()
             void promptUpdate('card_button')
@@ -53,7 +55,7 @@ function UpdateVersionButton({
           aria-label={`Update to ${drift.registryTag}`}
         >
           <ArrowUpCircle className="size-5 text-amber-500" />
-        </button>
+        </Button>
       </TooltipTrigger>
       <TooltipContent className="max-w-xs">
         Update available: {drift.localTag} → {drift.registryTag}

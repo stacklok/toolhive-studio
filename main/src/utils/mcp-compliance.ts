@@ -3,6 +3,7 @@ import { promisify } from 'node:util'
 import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { z } from 'zod/v4'
 import type { CoreWorkload } from '@common/api/generated/types.gen'
 import type {
   ComplianceCheckResult,
@@ -13,29 +14,39 @@ import log from '../logger'
 
 const execFileAsync = promisify(execFile)
 const TIMEOUT_MS = 120_000
+const ALLOWED_PROTOCOLS = ['http:', 'https:']
 
-interface ConformanceCheck {
-  id: string
-  name: string
-  description: string
-  status: 'SUCCESS' | 'FAILURE' | 'WARNING' | 'SKIPPED' | 'INFO'
-  timestamp: string
-  errorMessage?: string
-  specReferences?: { id: string; url?: string }[]
-  details?: Record<string, unknown>
-}
+const conformanceCheckSchema = z.array(
+  z.object({
+    id: z.string(),
+    name: z.string(),
+    description: z.string(),
+    status: z.enum(['SUCCESS', 'FAILURE', 'WARNING', 'SKIPPED', 'INFO']),
+    timestamp: z.string(),
+    errorMessage: z.string().optional(),
+    specReferences: z
+      .array(z.object({ id: z.string(), url: z.string().optional() }))
+      .optional(),
+    details: z.record(z.string(), z.unknown()).optional(),
+  })
+)
+
+type ConformanceCheck = z.infer<typeof conformanceCheckSchema>[number]
 
 function getServerUrl(workload: CoreWorkload): string {
-  if (workload.url) return workload.url
-  return `http://localhost:${workload.port}/mcp`
+  const raw = workload.url ?? `http://localhost:${workload.port}/mcp`
+  const parsed = new URL(raw)
+  if (!ALLOWED_PROTOCOLS.includes(parsed.protocol)) {
+    throw new Error(`Unsupported protocol in server URL: ${parsed.protocol}`)
+  }
+  return parsed.href
 }
 
 function getConformanceBinPath(): string {
   // Resolve the conformance binary via require.resolve
   // This works both in dev (node_modules/.bin) and packaged (asar)
-  const pkgEntry = require.resolve(
-    '@modelcontextprotocol/conformance/dist/index.js'
-  )
+  const pkgEntry =
+    require.resolve('@modelcontextprotocol/conformance/dist/index.js')
   return pkgEntry
 }
 
@@ -140,10 +151,10 @@ export async function runComplianceChecks(
       const checksFile = path.join(outputDir, entry.name, 'checks.json')
       try {
         const content = await readFile(checksFile, 'utf-8')
-        const rawChecks: ConformanceCheck[] = JSON.parse(content)
+        const rawChecks = conformanceCheckSchema.parse(JSON.parse(content))
         allChecks.push(...mapChecks(rawChecks))
-      } catch {
-        // Skip directories without valid checks.json
+      } catch (parseError) {
+        log.warn(`Skipping invalid checks.json in ${entry.name}:`, parseError)
       }
     }
 
@@ -173,6 +184,8 @@ export async function runComplianceChecks(
     }
   } finally {
     // Clean up temp directory
-    rm(outputDir, { recursive: true, force: true }).catch(() => {})
+    rm(outputDir, { recursive: true, force: true }).catch((err) => {
+      log.warn(`Failed to clean up temp directory ${outputDir}:`, err)
+    })
   }
 }

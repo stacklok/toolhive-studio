@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { ShieldCheck, ShieldAlert, ShieldX, Loader2 } from 'lucide-react'
-import { Badge } from '@/common/components/ui/badge'
+import { ShieldAlert, Loader2 } from 'lucide-react'
+import { Button } from '@/common/components/ui/button'
 import {
   Tooltip,
   TooltipTrigger,
@@ -25,77 +25,35 @@ export function ComplianceBadge({
 
   if (isChecking) {
     return (
-      <Badge variant="secondary" className="gap-1">
+      <Button variant="ghost" size="xs" disabled>
         <Loader2 className="animate-spin" />
-        Checking…
-      </Badge>
+      </Button>
     )
   }
 
-  if (error && !report) {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Badge variant="destructive" className="gap-1">
-            <ShieldX />
-            Error
-          </Badge>
-        </TooltipTrigger>
-        <TooltipContent className="max-w-xs">{error.message}</TooltipContent>
-      </Tooltip>
-    )
-  }
+  if (error && !report) return null
 
   if (!report) return null
 
   const status = deriveComplianceStatus(report.summary)
 
-  const badge = (() => {
-    if (status === 'compliant') {
-      return (
-        <Badge
-          variant="success"
-          className="cursor-pointer gap-1"
-          onClick={() => setDialogOpen(true)}
-        >
-          <ShieldCheck />
-          Compliant
-        </Badge>
-      )
-    }
-
-    if (status === 'warnings') {
-      return (
-        <Badge
-          variant="secondary"
-          className="cursor-pointer gap-1"
-          onClick={() => setDialogOpen(true)}
-        >
-          <ShieldAlert />
-          {report.summary.warnings} warning
-          {report.summary.warnings !== 1 && 's'}
-        </Badge>
-      )
-    }
-
-    return (
-      <Badge
-        variant="destructive"
-        className="cursor-pointer gap-1"
-        onClick={() => setDialogOpen(true)}
-      >
-        <ShieldX />
-        {report.summary.failed} failed
-      </Badge>
-    )
-  })()
-
   return (
     <>
       <Tooltip>
-        <TooltipTrigger asChild>{badge}</TooltipTrigger>
+        {status !== 'compliant' && (
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={() => setDialogOpen(true)}
+            >
+              <ShieldAlert className="size-5" />
+            </Button>
+          </TooltipTrigger>
+        )}
         <TooltipContent className="max-w-xs">
-          See MCP Protocol Conformance Report 
+          See MCP Compliance Report
         </TooltipContent>
       </Tooltip>
       <ComplianceReportDialog
