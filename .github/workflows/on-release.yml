@@ -181,8 +181,7 @@ jobs:
           cat /tmp/RELEASES.json
 
           aws s3 cp /tmp/RELEASES.json "s3://${BUCKET}/${DST_PREFIX}/RELEASES.json" \
-            --content-type "application/json" \
-            --acl public-read
+            --content-type "application/json"
 
           echo "Uploaded RELEASES.json to s3://${BUCKET}/${DST_PREFIX}/RELEASES.json"
           echo "uploaded=true" >> "$GITHUB_OUTPUT"
@@ -206,7 +205,6 @@ jobs:
           # Note: RELEASES only contains the current full release entry; cumulative delta support
           # will be added alongside remoteReleases in MakerSquirrel in a follow-up PR.
           if aws s3 sync "${SRC}/" "${DST}/" \
-            --acl public-read \
             --delete \
             --exclude "*" \
             --include "RELEASES" \
