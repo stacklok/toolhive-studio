@@ -5,6 +5,7 @@ import { VersionTab } from './version-tab'
 import { LogsTab } from './logs-tab'
 import { CliTab } from './cli-tab'
 import { RegistryTab } from '../registry/registry-tab'
+import { SecretsTab } from './secrets-tab'
 import { useAppVersion } from '@/common/hooks/use-app-version'
 import {
   ArrowUpCircle,
@@ -14,14 +15,16 @@ import {
   ListEnd,
   type LucideIcon,
   Command,
+  KeyRound,
 } from 'lucide-react'
 
-type Tab = 'general' | 'registry' | 'cli' | 'version' | 'logs'
+type Tab = 'general' | 'registry' | 'secrets' | 'cli' | 'version' | 'logs'
 type TabItem = { label: string; value: Tab; icon: LucideIcon }
 
 const TABS: TabItem[] = [
   { label: 'General', value: 'general', icon: Wrench },
   { label: 'Registry', value: 'registry', icon: CloudDownload },
+  { label: 'Secrets', value: 'secrets', icon: KeyRound },
   { label: 'CLI', value: 'cli', icon: Command },
   { label: 'Version', value: 'version', icon: AppWindow },
   { label: 'Logs', value: 'logs', icon: ListEnd },
@@ -80,6 +83,10 @@ export function SettingsTabs({ defaultTab }: SettingsTabsProps) {
 
         <TabsContent value="registry" className="mt-0">
           <RegistryTab />
+        </TabsContent>
+
+        <TabsContent value="secrets" className="mt-0">
+          <SecretsTab />
         </TabsContent>
 
         <TabsContent value="cli" className="mt-0">

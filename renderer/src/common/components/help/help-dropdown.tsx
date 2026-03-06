@@ -14,14 +14,15 @@ export function HelpDropdown({ className }: { className?: string }) {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
+          size="icon"
+          aria-label="Help"
           className={cn(
             `rounded-full text-white/90 hover:bg-white/10 hover:text-white
             dark:hover:bg-white/10`,
             className
           )}
         >
-          <HelpCircle className="size-4" />
-          Help
+          <HelpCircle className="size-5" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">

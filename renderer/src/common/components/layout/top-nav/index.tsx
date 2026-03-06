@@ -13,31 +13,24 @@ import { TopNavContainer } from './container'
 import {
   Server,
   CloudDownload,
-  FlaskConical,
-  Lock,
   Settings as SettingsIcon,
   ArrowUpCircle,
+  MessageCircle,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useRouterState } from '@tanstack/react-router'
 import { useAppVersion } from '@/common/hooks/use-app-version'
 import { cn } from '@/common/lib/utils'
+import { useAssistantDrawer } from '@/common/hooks/use-assistant-drawer'
 
 interface NavButtonProps {
   to: string
   icon: LucideIcon
   children: React.ReactNode
   isActive?: boolean
-  badge?: React.ReactNode
 }
 
-function NavButton({
-  to,
-  icon: Icon,
-  children,
-  isActive,
-  badge,
-}: NavButtonProps) {
+function NavButton({ to, icon: Icon, children, isActive }: NavButtonProps) {
   return (
     <LinkViewTransition
       to={to}
@@ -50,26 +43,20 @@ function NavButton({
           : 'bg-transparent text-white/90 hover:bg-white/10 hover:text-white'
       )}
     >
-      <span className="relative">
-        <Icon className="size-4" />
-        {badge}
-      </span>
+      <Icon className="size-4" />
       {children}
     </LinkViewTransition>
   )
 }
 
-function TopNavLinks({ showUpdateBadge }: { showUpdateBadge?: boolean }) {
+function useIsActive() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
-
-  const isActive = (paths: string[]) =>
+  return (paths: string[]) =>
     paths.some((p) => pathname.startsWith(p) || pathname === p)
+}
 
-  const updateBadge = showUpdateBadge ? (
-    <span className="absolute -top-1 -right-1">
-      <ArrowUpCircle className="size-3 fill-blue-500" />
-    </span>
-  ) : null
+function TopNavLinks() {
+  const isActive = useIsActive()
 
   return (
     <NavigationMenu>
@@ -92,37 +79,6 @@ function TopNavLinks({ showUpdateBadge }: { showUpdateBadge?: boolean }) {
             Registry
           </NavButton>
         </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavButton
-            to="/playground"
-            icon={FlaskConical}
-            isActive={isActive(['/playground'])}
-          >
-            Playground
-          </NavButton>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavButton
-            to="/secrets"
-            icon={Lock}
-            isActive={isActive(['/secrets'])}
-          >
-            Secrets
-          </NavButton>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavButton
-            to="/settings"
-            icon={SettingsIcon}
-            isActive={isActive(['/settings'])}
-            badge={updateBadge}
-          >
-            Settings
-          </NavButton>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <HelpDropdown className="app-region-no-drag" />
-        </NavigationMenuItem>
       </NavigationMenuList>
     </NavigationMenu>
   )
@@ -131,6 +87,10 @@ function TopNavLinks({ showUpdateBadge }: { showUpdateBadge?: boolean }) {
 export function TopNav(props: HTMLProps<HTMLElement>) {
   const { data: appVersion } = useAppVersion()
   const isProduction = import.meta.env.MODE === 'production'
+  const isActive = useIsActive()
+  const showUpdateBadge = !!(appVersion?.isNewVersionAvailable && isProduction)
+  const { toggle: toggleAssistant, isOpen: isAssistantOpen } =
+    useAssistantDrawer()
 
   useEffect(() => {
     const cleanup = window.electronAPI.onUpdateDownloaded(() => {
@@ -163,14 +123,48 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
   return (
     <TopNavContainer {...props}>
       <div className="flex h-10 items-center">
-        <TopNavLinks
-          showUpdateBadge={
-            !!(appVersion?.isNewVersionAvailable && isProduction)
-          }
-        />
+        <TopNavLinks />
       </div>
-      <div className="flex items-center gap-2 justify-self-end">
-        <WindowControls />
+      <div className="flex items-center justify-self-end">
+        <div className="flex items-center gap-1 px-2">
+          <HelpDropdown className="app-region-no-drag" />
+          <LinkViewTransition
+            to="/settings"
+            aria-label="Settings"
+            className={cn(
+              'app-region-no-drag',
+              'relative flex size-10 items-center justify-center rounded-full',
+              `text-white/90 transition-colors hover:bg-white/10
+              hover:text-white`,
+              isActive(['/settings']) &&
+                'bg-nav-button-active-bg text-nav-button-active-text'
+            )}
+          >
+            <SettingsIcon className="size-5" />
+            {showUpdateBadge && (
+              <span className="absolute -top-0.5 -right-0.5">
+                <ArrowUpCircle className="size-3 fill-blue-500" />
+              </span>
+            )}
+          </LinkViewTransition>
+        </div>
+        <button
+          onClick={toggleAssistant}
+          aria-label="Assistant"
+          className={cn(
+            'app-region-no-drag',
+            'flex size-16 shrink-0 items-center justify-center',
+            'border-nav-border border-l',
+            'text-white/90 transition-colors hover:bg-white/10 hover:text-white',
+            isAssistantOpen &&
+              'bg-nav-button-active-bg text-nav-button-active-text'
+          )}
+        >
+          <MessageCircle className="size-5" />
+        </button>
+        {/* When the drawer is open it renders its own WindowControls in its
+            header, so we hide these to avoid duplicates. */}
+        {!isAssistantOpen && <WindowControls />}
       </div>
     </TopNavContainer>
   )
