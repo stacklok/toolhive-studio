@@ -117,8 +117,8 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2(@types/mdast@4.0.4)(micromark-util-types@2.0.2)(micromark@4.0.2)(react@19.2.4)(unified@11.0.5)
       '@streamdown/code':
-        specifier: ^1.0.2
-        version: 1.0.2(react@19.2.4)
+        specifier: ^1.1.0
+        version: 1.1.0(react@19.2.4)
       '@streamdown/mermaid':
         specifier: ^1.0.2
         version: 1.0.2(react@19.2.4)
@@ -3160,8 +3160,8 @@ packages:
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
 
-  '@streamdown/code@1.0.2':
-    resolution: {integrity: sha512-QKLS3sC8no5y0YvhGLA+ZjtNhznWU09IvFcjRKgSA35ulckMLw3b5T1ha+o1DaW8BS8l0zceLPFZa3/X9+agWQ==}
+  '@streamdown/code@1.1.0':
+    resolution: {integrity: sha512-swypCjtE6vv01bnEtPeaw2ew9cbL2nbsLc06HAIK3K6nYXj5WDA8VLR6GEiwdh7HLIPt5dGze+PJ0eJVkqesug==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
 
@@ -12115,7 +12115,7 @@ snapshots:
       - micromark-util-types
       - unified
 
-  '@streamdown/code@1.0.2(react@19.2.4)':
+  '@streamdown/code@1.1.0(react@19.2.4)':
     dependencies:
       react: 19.2.4
       shiki: 3.22.0
