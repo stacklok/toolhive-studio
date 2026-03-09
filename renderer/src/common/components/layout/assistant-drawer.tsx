@@ -69,7 +69,7 @@ export function AssistantDrawer() {
               Assistant
             </span>
           </div>
-          <div className="flex items-center">
+          <div className="flex h-full items-center px-2">
             {/* macOS: separator left of close button (no window controls on the right) */}
             {getOsDesignVariant() === 'mac' && (
               <div className="border-nav-border mx-4 self-stretch border-l" />
@@ -79,7 +79,7 @@ export function AssistantDrawer() {
               aria-label="Close Assistant"
               className={cn(
                 'app-region-no-drag',
-                'flex size-16 shrink-0 items-center justify-center',
+                'flex size-10 items-center justify-center rounded-full',
                 `text-white/90 transition-colors hover:bg-white/10
                 hover:text-white`
               )}
@@ -90,9 +90,7 @@ export function AssistantDrawer() {
             {getOsDesignVariant() !== 'mac' && (
               <div className="border-nav-border mx-4 self-stretch border-l" />
             )}
-            <div className="pr-6">
-              <WindowControls />
-            </div>
+            <WindowControls />
           </div>
         </div>
         <div

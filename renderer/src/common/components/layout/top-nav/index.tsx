@@ -126,7 +126,7 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
       <div className="flex h-10 items-center">
         <TopNavLinks />
       </div>
-      <div className="flex items-center justify-self-end">
+      <div className="flex h-full items-center justify-self-end">
         <div className="flex items-center gap-1 px-2">
           <HelpDropdown className="app-region-no-drag" />
           <LinkViewTransition
@@ -148,27 +148,24 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
               </span>
             )}
           </LinkViewTransition>
+          <button
+            onClick={toggleAssistant}
+            aria-label="Assistant"
+            className={cn(
+              'app-region-no-drag',
+              'flex size-10 items-center justify-center rounded-full',
+              `text-white/90 transition-colors hover:bg-white/10
+              hover:text-white`,
+              isAssistantOpen &&
+                'bg-nav-button-active-bg text-nav-button-active-text'
+            )}
+          >
+            <MessageCircle className="size-5" />
+          </button>
         </div>
-        {/* macOS: separator left of assistant (no window controls on the right) */}
-        {getOsDesignVariant() === 'mac' && (
-          <div className="border-nav-border mx-4 self-stretch border-l" />
-        )}
-        <button
-          onClick={toggleAssistant}
-          aria-label="Assistant"
-          className={cn(
-            'app-region-no-drag',
-            'flex size-16 shrink-0 items-center justify-center',
-            'text-white/90 transition-colors hover:bg-white/10 hover:text-white',
-            isAssistantOpen &&
-              'bg-nav-button-active-bg text-nav-button-active-text'
-          )}
-        >
-          <MessageCircle className="size-5" />
-        </button>
         {/* When the drawer is open it renders its own WindowControls in its
             header, so we hide these to avoid duplicates. */}
-        {/* Windows: separator right of assistant, only when window controls are visible */}
+        {/* Windows: separator between icon group and window controls */}
         {getOsDesignVariant() !== 'mac' && !isAssistantOpen && (
           <div className="border-nav-border mx-4 self-stretch border-l" />
         )}
