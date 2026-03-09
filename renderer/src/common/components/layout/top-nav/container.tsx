@@ -5,7 +5,7 @@ import { getOsDesignVariant } from '@/common/lib/os-design'
 function getPlatformSpecificHeaderClasses() {
   if (getOsDesignVariant() === 'mac') {
     // Left padding to clear the macOS traffic-light buttons
-    return 'pl-26'
+    return 'pl-26 pr-4'
   }
 
   // Windows needs a small right padding for visual spacing against the window
