@@ -5,7 +5,7 @@ import {
 import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { useQueryClient } from '@tanstack/react-query'
 
-export function useMutationCerateSecret() {
+export function useMutationCreateSecret() {
   const queryClient = useQueryClient()
   return useToastMutation({
     ...postApiV1BetaSecretsDefaultKeysMutation(),

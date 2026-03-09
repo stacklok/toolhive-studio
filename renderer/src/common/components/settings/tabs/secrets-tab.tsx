@@ -4,7 +4,7 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { DialogFormSecret } from '@/features/secrets/components/dialog-form-secret'
 import { Button } from '@/common/components/ui/button'
-import { useMutationCerateSecret } from '@/features/secrets/hooks/use-mutation-create-secret'
+import { useMutationCreateSecret } from '@/features/secrets/hooks/use-mutation-create-secret'
 import { useMutationUpdateSecret } from '@/features/secrets/hooks/use-mutation-update-secret'
 import { SettingsSectionTitle } from './components/settings-section-title'
 import { PlusIcon } from 'lucide-react'
@@ -15,7 +15,7 @@ export function SecretsTab() {
   } = useSuspenseQuery(getApiV1BetaSecretsDefaultKeysOptions())
   const [isSecretDialogOpen, setIsSecretDialogOpen] = useState(false)
   const [secretKey, setSecretKey] = useState<string | undefined>(undefined)
-  const { mutateAsync: createSecret } = useMutationCerateSecret()
+  const { mutateAsync: createSecret } = useMutationCreateSecret()
   const { mutateAsync: updateSecret } = useMutationUpdateSecret(secretKey ?? '')
 
   const onSubmit = async (data: { key?: string; value: string }) => {

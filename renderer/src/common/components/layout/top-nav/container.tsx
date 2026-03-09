@@ -27,7 +27,7 @@ export function TopNavContainer(props: HTMLProps<HTMLElement>) {
         'bg-nav-background',
         'border-nav-border h-16 border-b',
         'pl-6',
-        'grid grid-cols-[auto_3fr_auto] items-center',
+        'grid grid-cols-[auto_1fr] items-center',
         'app-region-drag',
         'w-full min-w-full',
         getPlatformSpecificHeaderClasses()
