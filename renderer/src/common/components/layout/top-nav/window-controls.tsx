@@ -8,7 +8,13 @@ export function WindowControls() {
 
   useEffect(() => {
     // Check initial maximized state
-    window.electronAPI.windowControls.isMaximized().then(setIsMaximized)
+    let cancelled = false
+    window.electronAPI.windowControls.isMaximized().then((v) => {
+      if (!cancelled) setIsMaximized(v)
+    })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const handleMinimize = async () => {

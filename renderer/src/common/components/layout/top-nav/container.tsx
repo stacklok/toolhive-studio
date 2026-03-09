@@ -1,5 +1,5 @@
 import type { HTMLProps } from 'react'
-import { twMerge } from 'tailwind-merge'
+import { cn } from '@/common/lib/utils'
 import { getOsDesignVariant } from '@/common/lib/os-design'
 
 function getPlatformSpecificHeaderClasses() {
@@ -22,7 +22,7 @@ export function TopNavContainer(props: HTMLProps<HTMLElement>) {
   return (
     <header
       {...props}
-      className={twMerge(
+      className={cn(
         props.className,
         'bg-nav-background',
         'border-nav-border h-16 border-b',
