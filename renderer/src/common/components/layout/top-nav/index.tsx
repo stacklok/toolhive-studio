@@ -125,7 +125,9 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
       <div className="flex h-10 items-center">
         <TopNavLinks />
       </div>
-      <div className="flex h-full items-center justify-self-end">
+      <div
+        className="app-region-no-drag flex h-full items-center justify-self-end"
+      >
         <div className="flex h-full items-center gap-1 pl-2">
           <HelpDropdown className="app-region-no-drag" />
           <NavIconButton
@@ -149,6 +151,7 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
             asChild
             isActive={isActive(['/playground'])}
             aria-label="Assistant"
+            aria-role="link"
             className="app-region-no-drag"
           >
             <LinkViewTransition to="/playground">
