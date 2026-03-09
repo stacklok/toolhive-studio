@@ -70,7 +70,7 @@ export function AssistantDrawer() {
               Assistant
             </span>
           </div>
-          <div className="flex h-full items-center px-2">
+          <div className="flex h-full items-center pl-2">
             {/* macOS: separator left of close button (no window controls on the right) */}
             {getOsDesignVariant() === 'mac' && <NavSeparator />}
             <button

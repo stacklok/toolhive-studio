@@ -31,7 +31,7 @@ export function WindowControls() {
   }
 
   return (
-    <div className="app-region-no-drag flex items-center gap-0 text-white">
+    <div className="app-region-no-drag flex items-center gap-0 pr-2 text-white">
       <Button
         variant="ghost"
         size="icon"

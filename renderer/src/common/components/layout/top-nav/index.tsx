@@ -24,6 +24,7 @@ import { cn } from '@/common/lib/utils'
 import { useAssistantDrawer } from '@/common/hooks/use-assistant-drawer'
 import { getOsDesignVariant } from '@/common/lib/os-design'
 import { NavSeparator } from './nav-separator'
+import { NavIconButton } from './nav-icon-button'
 
 interface NavButtonProps {
   to: string
@@ -130,40 +131,32 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
       <div className="flex h-full items-center justify-self-end">
         <div className="flex h-full items-center gap-1 pl-2">
           <HelpDropdown className="app-region-no-drag" />
-          <LinkViewTransition
-            to="/settings"
+          <NavIconButton
+            asChild
+            isActive={isActive(['/settings'])}
             aria-label="Settings"
-            className={cn(
-              'app-region-no-drag',
-              'relative flex size-10 items-center justify-center rounded-full',
-              `text-white/90 transition-colors hover:bg-white/10
-              hover:text-white`,
-              isActive(['/settings']) &&
-                'bg-nav-button-active-bg text-nav-button-active-text'
-            )}
+            className="app-region-no-drag relative"
           >
-            <SettingsIcon className="size-5" />
-            {showUpdateBadge && (
-              <span className="absolute -top-0.5 -right-0.5">
-                <ArrowUpCircle className="size-3 fill-blue-500" />
-              </span>
-            )}
-          </LinkViewTransition>
+            <LinkViewTransition to="/settings">
+              <SettingsIcon className="size-5" />
+              {showUpdateBadge && (
+                <span className="absolute -top-0.5 -right-0.5">
+                  <ArrowUpCircle className="size-3 fill-blue-500" />
+                </span>
+              )}
+            </LinkViewTransition>
+          </NavIconButton>
           {/* macOS: separator between settings and assistant (no window controls on the right) */}
           {getOsDesignVariant() === 'mac' && <NavSeparator />}
-          <button
+          <NavIconButton
             onClick={toggleAssistant}
             aria-label="Assistant"
             aria-expanded={isAssistantOpen}
-            className={cn(
-              'app-region-no-drag',
-              'flex size-10 items-center justify-center rounded-full',
-              'transition-colors',
-              'text-white/90 hover:bg-white/20 hover:text-white'
-            )}
+            isActive={isAssistantOpen}
+            className="app-region-no-drag"
           >
             <MessageCircle className="size-5" />
-          </button>
+          </NavIconButton>
         </div>
         {/* When the drawer is open it renders its own WindowControls in its
             header, so we hide these to avoid duplicates. */}
