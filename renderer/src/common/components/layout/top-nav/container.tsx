@@ -1,18 +1,10 @@
 import type { HTMLProps } from 'react'
 import { twMerge } from 'tailwind-merge'
+import { getOsDesignVariant } from '@/common/lib/os-design'
 
 function getPlatformSpecificHeaderClasses() {
-  const platformClasses = {
-    darwin: 'pl-26 pt-0.5', // Left padding for traffic light buttons + top offset for title bar
-    win32: '', // Window controls are flush to the right edge
-    linux: '', // No padding needed - custom controls are part of the layout
-  }
-
-  return (
-    platformClasses[
-      window.electronAPI.platform as keyof typeof platformClasses
-    ] || ''
-  )
+  // Left padding for macOS traffic-light buttons + top offset for title bar
+  return getOsDesignVariant() === 'mac' ? 'pl-26 pt-0.5' : ''
 }
 
 export function TopNavContainer(props: HTMLProps<HTMLElement>) {

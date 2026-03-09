@@ -1,6 +1,7 @@
 import { Button } from '../../ui/button'
 import { Minus, Square, X } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { getOsDesignVariant } from '@/common/lib/os-design'
 
 export function WindowControls() {
   const [isMaximized, setIsMaximized] = useState(false)
@@ -25,7 +26,7 @@ export function WindowControls() {
   }
 
   // Only show window controls on Windows and Linux (not macOS)
-  if (window.electronAPI.isMac) {
+  if (getOsDesignVariant() === 'mac') {
     return null
   }
 
