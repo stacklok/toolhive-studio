@@ -15,7 +15,6 @@ export function TopNavContainer(props: HTMLProps<HTMLElement>) {
         props.className,
         'bg-nav-background',
         'border-nav-border h-16 border-b',
-        'pl-6',
         'grid grid-cols-[auto_1fr_auto] items-center gap-7',
         'app-region-drag',
         'w-full min-w-full',

@@ -158,10 +158,10 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
             className={cn(
               'app-region-no-drag',
               'flex size-10 items-center justify-center rounded-full',
-              `text-white/90 transition-colors hover:bg-white/10
-              hover:text-white`,
-              isAssistantOpen &&
-                'bg-nav-button-active-bg text-nav-button-active-text'
+              'transition-colors',
+              isAssistantOpen
+                ? 'bg-nav-button-active-bg text-nav-button-active-text'
+                : 'bg-white/10 text-white/90 hover:bg-white/20 hover:text-white'
             )}
           >
             <MessageCircle className="size-5" />
