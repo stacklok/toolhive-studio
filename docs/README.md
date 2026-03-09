@@ -153,6 +153,29 @@ it as `VITE_API_URL` in the `.env` file (locally) or in the CI environment.
 | `SENTRY_ORG`                | `false`  | `true`     | `false`  | Sentry organization. Used for sourcemap uploads at build-time to enable readable stacktraces.         |
 | `SENTRY_PROJECT`            | `false`  | `true`     | `false`  | Sentry project name. Used for sourcemap uploads at build-time to enable readable stacktraces.         |
 
+## Developer notes: Simulating OS design variants
+
+The app renders different window chrome depending on the platform — macOS uses
+the system traffic-light buttons and extra left padding, while Windows/Linux
+renders custom min/max/close controls.
+
+To test either layout without switching machines, use the `OsDesign` helper
+exposed on `window` in the renderer DevTools console:
+
+```js
+OsDesign.setMac()      // macOS layout (traffic-light padding, no custom controls)
+OsDesign.setWindows()  // Windows/Linux layout (custom min/max/close buttons)
+OsDesign.reset()       // restore the real platform detection
+OsDesign.current()     // log the currently active variant
+```
+
+Each `set*` call writes to `sessionStorage` and reloads the page. The override
+is scoped to the current session and does not affect any behavioural logic (file
+paths, networking flags, etc.) — only the visual layout.
+
+> **Tip:** Open DevTools with `Ctrl+Shift+I` (or `Cmd+Option+I` on macOS), then
+> run the commands in the Console tab.
+
 ## Developer notes: Using a custom thv binary (dev only)
 
 During development, you can test the UI with a custom `thv` binary by running it
