@@ -21,7 +21,6 @@ import type { LucideIcon } from 'lucide-react'
 import { useRouterState } from '@tanstack/react-router'
 import { useAppVersion } from '@/common/hooks/use-app-version'
 import { cn } from '@/common/lib/utils'
-import { useAssistantDrawer } from '@/common/hooks/use-assistant-drawer'
 import { getOsDesignVariant } from '@/common/lib/os-design'
 import { NavSeparator } from './nav-separator'
 import { NavIconButton } from './nav-icon-button'
@@ -92,8 +91,6 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
   const isProduction = import.meta.env.MODE === 'production'
   const isActive = useIsActive()
   const showUpdateBadge = !!(appVersion?.isNewVersionAvailable && isProduction)
-  const { toggle: toggleAssistant, isOpen: isAssistantOpen } =
-    useAssistantDrawer()
 
   useEffect(() => {
     const cleanup = window.electronAPI.onUpdateDownloaded(() => {
@@ -149,20 +146,19 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
           {/* macOS: separator between settings and assistant (no window controls on the right) */}
           {getOsDesignVariant() === 'mac' && <NavSeparator />}
           <NavIconButton
-            onClick={toggleAssistant}
+            asChild
+            isActive={isActive(['/playground'])}
             aria-label="Assistant"
-            aria-expanded={isAssistantOpen}
-            isActive={isAssistantOpen}
             className="app-region-no-drag"
           >
-            <MessageCircle className="size-5" />
+            <LinkViewTransition to="/playground">
+              <MessageCircle className="size-5" />
+            </LinkViewTransition>
           </NavIconButton>
         </div>
-        {/* When the drawer is open it renders its own WindowControls in its
-            header, so we hide these to avoid duplicates. */}
         {/* Windows: separator between icon group and window controls */}
-        {getOsDesignVariant() !== 'mac' && !isAssistantOpen && <NavSeparator />}
-        {!isAssistantOpen && <WindowControls />}
+        {getOsDesignVariant() !== 'mac' && <NavSeparator />}
+        <WindowControls />
       </div>
     </TopNavContainer>
   )
