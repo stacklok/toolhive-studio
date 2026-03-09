@@ -184,8 +184,8 @@ ipcMain.handle('hide-app', () => {
   }
 })
 
-ipcMain.handle('quit-app', (e) => {
-  blockQuit('before-quit', e)
+ipcMain.handle('quit-app', () => {
+  blockQuit('before-quit')
 })
 
 ipcMain.handle('get-skip-quit-confirmation', () => getSkipQuitConfirmation())

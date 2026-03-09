@@ -1,4 +1,4 @@
-import { register as registerWhenReady } from './whenReady'
+import { register as registerWhenReady } from './when-ready'
 import { register as registerWindowAllClosed } from './window-all-closed'
 import { register as registerActivate } from './activate'
 import { register as registerWillFinishLaunching } from './will-finish-launching'
