@@ -163,10 +163,10 @@ To test either layout without switching machines, use the `OsDesign` helper
 exposed on `window` in the renderer DevTools console:
 
 ```js
-OsDesign.setMac()      // macOS layout (traffic-light padding, no custom controls)
-OsDesign.setWindows()  // Windows/Linux layout (custom min/max/close buttons)
-OsDesign.reset()       // restore the real platform detection
-OsDesign.current()     // log the currently active variant
+OsDesign.setMac() // macOS layout (traffic-light padding, no custom controls)
+OsDesign.setWindows() // Windows/Linux layout (custom min/max/close buttons)
+OsDesign.reset() // restore the real platform detection
+OsDesign.current() // log the currently active variant
 ```
 
 Each `set*` call writes to `sessionStorage` and reloads the page. The override

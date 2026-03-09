@@ -104,24 +104,16 @@ async function selectOllamaModel(window: Page): Promise<void> {
 }
 
 async function clearPlaygroundState(window: Page): Promise<void> {
-  await window.getByRole('button', { name: 'Assistant' }).click()
-  await expect(
-    window.getByRole('button', { name: 'Close Assistant' })
-  ).toBeVisible()
-
+  await window.getByRole('link', { name: 'Assistant' }).click()
   await waitForPlaygroundReady(window)
 
-  const clearChatButton = window.getByRole('button', {
-    name: /new conversation/i,
-  })
+  const clearChatButton = window.getByRole('button', { name: /clear chat/i })
   if (await clearChatButton.isVisible().catch(() => false)) {
     await clearChatButton.click()
     await window.getByRole('button', { name: /delete/i }).click()
   }
 
   await removeOllamaProvider(window)
-
-  await window.getByRole('button', { name: 'Close Assistant' }).click()
 }
 
 test.describe('Playground chat with Ollama', () => {
@@ -192,9 +184,9 @@ test.describe('Playground chat with Ollama', () => {
         .getByText('Running')
     ).toBeVisible({ timeout: 30_000 })
 
-    await window.getByRole('button', { name: 'Assistant' }).click()
+    await window.getByRole('link', { name: 'Assistant' }).click()
     await expect(
-      window.getByRole('button', { name: 'Close Assistant' })
+      window.getByRole('heading', { name: 'Playground', level: 1 })
     ).toBeVisible()
 
     await openProviderSettingsDialog(window)
