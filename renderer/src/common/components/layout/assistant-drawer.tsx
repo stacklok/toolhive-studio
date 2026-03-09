@@ -4,6 +4,7 @@ import { ChatInterface } from '@/features/chat/components/chat-interface'
 import { useAssistantDrawer } from '@/common/hooks/use-assistant-drawer'
 import { cn } from '@/common/lib/utils'
 import { WindowControls } from './top-nav/window-controls'
+import { getOsDesignVariant } from '@/common/lib/os-design'
 
 const ANIMATION_DURATION_MS = 200
 
@@ -69,19 +70,26 @@ export function AssistantDrawer() {
             </span>
           </div>
           <div className="flex items-center">
+            {/* macOS: separator left of close button (no window controls on the right) */}
+            {getOsDesignVariant() === 'mac' && (
+              <div className="border-nav-border mx-4 self-stretch border-l" />
+            )}
             <button
               onClick={close}
               aria-label="Close Assistant"
               className={cn(
                 'app-region-no-drag',
-                `border-nav-border flex size-16 shrink-0 items-center
-                justify-center border-l`,
+                'flex size-16 shrink-0 items-center justify-center',
                 `text-white/90 transition-colors hover:bg-white/10
                 hover:text-white`
               )}
             >
               <PanelRightClose className="size-5" />
             </button>
+            {/* Windows: separator right of close button, between it and window controls */}
+            {getOsDesignVariant() !== 'mac' && (
+              <div className="border-nav-border mx-4 self-stretch border-l" />
+            )}
             <div className="pr-6">
               <WindowControls />
             </div>

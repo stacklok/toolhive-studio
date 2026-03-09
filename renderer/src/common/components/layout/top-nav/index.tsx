@@ -22,6 +22,7 @@ import { useRouterState } from '@tanstack/react-router'
 import { useAppVersion } from '@/common/hooks/use-app-version'
 import { cn } from '@/common/lib/utils'
 import { useAssistantDrawer } from '@/common/hooks/use-assistant-drawer'
+import { getOsDesignVariant } from '@/common/lib/os-design'
 
 interface NavButtonProps {
   to: string
@@ -148,13 +149,16 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
             )}
           </LinkViewTransition>
         </div>
+        {/* macOS: separator left of assistant (no window controls on the right) */}
+        {getOsDesignVariant() === 'mac' && (
+          <div className="border-nav-border mx-4 self-stretch border-l" />
+        )}
         <button
           onClick={toggleAssistant}
           aria-label="Assistant"
           className={cn(
             'app-region-no-drag',
             'flex size-16 shrink-0 items-center justify-center',
-            'border-nav-border border-l',
             'text-white/90 transition-colors hover:bg-white/10 hover:text-white',
             isAssistantOpen &&
               'bg-nav-button-active-bg text-nav-button-active-text'
@@ -164,6 +168,10 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
         </button>
         {/* When the drawer is open it renders its own WindowControls in its
             header, so we hide these to avoid duplicates. */}
+        {/* Windows: separator right of assistant, only when window controls are visible */}
+        {getOsDesignVariant() !== 'mac' && !isAssistantOpen && (
+          <div className="border-nav-border mx-4 self-stretch border-l" />
+        )}
         {!isAssistantOpen && <WindowControls />}
       </div>
     </TopNavContainer>
