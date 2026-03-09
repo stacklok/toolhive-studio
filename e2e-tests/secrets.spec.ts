@@ -11,7 +11,7 @@ test('creates and deletes a secret', async ({ window }) => {
   await window.getByRole('link', { name: 'Settings' }).click()
   await window.getByRole('tab', { name: 'Secrets' }).click()
   await expect(
-    window.getByRole('heading', { name: 'Secrets', level: 2 })
+    window.getByRole('heading', { name: 'Secrets', level: 2, exact: true })
   ).toBeVisible()
 
   await window.getByRole('button', { name: /add.*secret/i }).click()

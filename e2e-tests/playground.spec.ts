@@ -105,6 +105,9 @@ async function selectOllamaModel(window: Page): Promise<void> {
 
 async function clearPlaygroundState(window: Page): Promise<void> {
   await window.getByRole('link', { name: 'Assistant' }).click()
+  await expect(
+    window.getByRole('heading', { name: 'Playground', level: 1 })
+  ).toBeVisible()
   await waitForPlaygroundReady(window)
 
   const clearChatButton = window.getByRole('button', { name: /clear chat/i })
