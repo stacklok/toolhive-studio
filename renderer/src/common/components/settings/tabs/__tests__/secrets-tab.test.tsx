@@ -1,10 +1,10 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createTestRouter } from '@/common/test/create-test-router'
-import { Secrets } from '../secrets'
+import { SecretsTab } from '../secrets-tab'
 import { renderRoute } from '@/common/test/render-route'
 
-const router = createTestRouter(Secrets)
+const router = createTestRouter(SecretsTab)
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -19,9 +19,9 @@ it('renders the table with secrets', async () => {
     ).toBeInTheDocument()
   })
   expect(
-    screen.getByRole('button', { name: /add secret/i })
+    screen.getByRole('button', { name: /new secret/i })
   ).toBeInTheDocument()
-  expect(screen.getByPlaceholderText('Search...')).toBeInTheDocument()
+  expect(screen.getByPlaceholderText('Search secrets')).toBeInTheDocument()
 
   expect(screen.getByText('Github')).toBeInTheDocument()
   expect(screen.getByText('Grafana')).toBeInTheDocument()
@@ -46,7 +46,7 @@ it('renders add secret dialog when clicking add secret button', async () => {
     ).toBeInTheDocument()
   })
 
-  const addSecretButton = screen.getByRole('button', { name: /add secret/i })
+  const addSecretButton = screen.getByRole('button', { name: /new secret/i })
   await userEvent.click(addSecretButton)
 
   expect(screen.getByPlaceholderText('Name')).toBeInTheDocument()

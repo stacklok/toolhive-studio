@@ -9,8 +9,6 @@ const ORDERED_ROUTES: Route[] = [
   '/mcp-optimizer',
   '/logs/$groupName/$serverName',
   '/registry',
-  '/playground',
-  '/secrets',
 ]
 
 type TransitionType = 'slide-left' | 'slide-right'

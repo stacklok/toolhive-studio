@@ -20,6 +20,8 @@ import { trackPageView } from './common/lib/analytics'
 import { queryClient } from './common/lib/query-client'
 // Import feature flags to bind them to window for developer tools access
 import './common/lib/feature-flags'
+// Import OS design devtools to bind OsDesign.setMac/setWindows/reset to window
+import './common/lib/os-design'
 
 // Sentry setup
 Sentry.init({

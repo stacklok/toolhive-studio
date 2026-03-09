@@ -17,7 +17,7 @@ import { useConfirm } from '@/common/hooks/use-confirm'
 import { TitlePage } from '@/common/components/title-page'
 import { hasCredentials } from '../lib/utils'
 
-export function ChatInterface() {
+export function ChatInterface({ hideTitle }: { hideTitle?: boolean }) {
   const {
     status,
     messages,
@@ -101,21 +101,40 @@ export function ChatInterface() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <TitlePage title="Playground">
-        {hasMessages && (
-          <Button
-            onClick={onClearMessages}
-            variant="outline"
-            className="cursor-pointer rounded-full"
-          >
-            Clear Chat
-            <Trash2 />
-          </Button>
-        )}
-      </TitlePage>
+      {!hideTitle && (
+        <TitlePage title="Playground">
+          {hasMessages && (
+            <Button
+              onClick={onClearMessages}
+              variant="outline"
+              className="cursor-pointer rounded-full"
+            >
+              Clear Chat
+              <Trash2 />
+            </Button>
+          )}
+        </TitlePage>
+      )}
+      {hideTitle && (
+        <div
+          className="border-border mb-2 flex items-center justify-end border-b
+            pb-4"
+        >
+          {hasMessages && (
+            <Button
+              onClick={onClearMessages}
+              variant="outline"
+              className="cursor-pointer rounded-full"
+            >
+              <Plus className="size-4" />
+              New conversation
+            </Button>
+          )}
+        </div>
+      )}
       <div className="min-h-0 flex-1">
         <div className="bg-background flex h-full flex-col">
-          {hasMessages && <Separator />}
+          {hasMessages && !hideTitle && <Separator />}
           {/* Messages Area */}
           <div className="relative flex-1 overflow-hidden">
             {isPersistentLoading && (

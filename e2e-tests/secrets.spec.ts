@@ -8,9 +8,10 @@ import {
 test('creates and deletes a secret', async ({ window }) => {
   deleteTestSecretViaCli() // Clean up leftover from previous failed runs
 
-  await window.getByRole('link', { name: 'Secrets' }).click()
+  await window.getByRole('link', { name: 'Settings' }).click()
+  await window.getByRole('tab', { name: 'Secrets' }).click()
   await expect(
-    window.getByRole('heading', { name: 'Secrets', level: 1 })
+    window.getByRole('heading', { name: 'Secrets', level: 2 })
   ).toBeVisible()
 
   await window.getByRole('button', { name: /add.*secret/i }).click()
