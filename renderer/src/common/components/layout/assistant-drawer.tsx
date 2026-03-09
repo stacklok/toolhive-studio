@@ -5,6 +5,7 @@ import { useAssistantDrawer } from '@/common/hooks/use-assistant-drawer'
 import { cn } from '@/common/lib/utils'
 import { WindowControls } from './top-nav/window-controls'
 import { getOsDesignVariant } from '@/common/lib/os-design'
+import { NavSeparator } from './top-nav/nav-separator'
 
 const ANIMATION_DURATION_MS = 200
 
@@ -71,9 +72,7 @@ export function AssistantDrawer() {
           </div>
           <div className="flex h-full items-center px-2">
             {/* macOS: separator left of close button (no window controls on the right) */}
-            {getOsDesignVariant() === 'mac' && (
-              <div className="border-nav-border mx-4 self-stretch border-l" />
-            )}
+            {getOsDesignVariant() === 'mac' && <NavSeparator />}
             <button
               onClick={close}
               aria-label="Close Assistant"
@@ -87,9 +86,7 @@ export function AssistantDrawer() {
               <PanelRightClose className="size-5" />
             </button>
             {/* Windows: separator right of close button, between it and window controls */}
-            {getOsDesignVariant() !== 'mac' && (
-              <div className="border-nav-border mx-4 self-stretch border-l" />
-            )}
+            {getOsDesignVariant() !== 'mac' && <NavSeparator />}
             <WindowControls />
           </div>
         </div>

@@ -15,7 +15,7 @@ import {
   ListEnd,
   type LucideIcon,
   Command,
-  KeyRound,
+  Lock,
 } from 'lucide-react'
 
 type Tab = 'general' | 'registry' | 'secrets' | 'cli' | 'version' | 'logs'
@@ -24,7 +24,7 @@ type TabItem = { label: string; value: Tab; icon: LucideIcon }
 const TABS: TabItem[] = [
   { label: 'General', value: 'general', icon: Wrench },
   { label: 'Registry', value: 'registry', icon: CloudDownload },
-  { label: 'Secrets', value: 'secrets', icon: KeyRound },
+  { label: 'Secrets', value: 'secrets', icon: Lock },
   { label: 'CLI', value: 'cli', icon: Command },
   { label: 'Version', value: 'version', icon: AppWindow },
   { label: 'Logs', value: 'logs', icon: ListEnd },

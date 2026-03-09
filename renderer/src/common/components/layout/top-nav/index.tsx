@@ -23,6 +23,7 @@ import { useAppVersion } from '@/common/hooks/use-app-version'
 import { cn } from '@/common/lib/utils'
 import { useAssistantDrawer } from '@/common/hooks/use-assistant-drawer'
 import { getOsDesignVariant } from '@/common/lib/os-design'
+import { NavSeparator } from './nav-separator'
 
 interface NavButtonProps {
   to: string
@@ -127,7 +128,7 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
         <TopNavLinks />
       </div>
       <div className="flex h-full items-center justify-self-end">
-        <div className="flex items-center gap-1 px-2">
+        <div className="flex h-full items-center gap-1 pl-2">
           <HelpDropdown className="app-region-no-drag" />
           <LinkViewTransition
             to="/settings"
@@ -148,9 +149,12 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
               </span>
             )}
           </LinkViewTransition>
+          {/* macOS: separator between settings and assistant (no window controls on the right) */}
+          {getOsDesignVariant() === 'mac' && <NavSeparator />}
           <button
             onClick={toggleAssistant}
             aria-label="Assistant"
+            aria-expanded={isAssistantOpen}
             className={cn(
               'app-region-no-drag',
               'flex size-10 items-center justify-center rounded-full',
@@ -166,9 +170,7 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
         {/* When the drawer is open it renders its own WindowControls in its
             header, so we hide these to avoid duplicates. */}
         {/* Windows: separator between icon group and window controls */}
-        {getOsDesignVariant() !== 'mac' && !isAssistantOpen && (
-          <div className="border-nav-border mx-4 self-stretch border-l" />
-        )}
+        {getOsDesignVariant() !== 'mac' && !isAssistantOpen && <NavSeparator />}
         {!isAssistantOpen && <WindowControls />}
       </div>
     </TopNavContainer>
