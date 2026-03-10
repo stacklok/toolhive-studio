@@ -15,9 +15,10 @@ test('creates and deletes a secret', async ({ window }) => {
   ).toBeVisible()
 
   await window.getByRole('button', { name: /add.*secret|new secret/i }).click()
-  await window.getByRole('dialog').waitFor()
-  await window.getByPlaceholder('Name').fill(TEST_SECRET_NAME)
-  await window.getByPlaceholder('Secret').fill('e2e-test-value')
+  const dialog = window.getByRole('dialog')
+  await dialog.waitFor()
+  await dialog.getByPlaceholder('Name').fill(TEST_SECRET_NAME)
+  await dialog.getByPlaceholder('Secret').fill('e2e-test-value')
   await window.getByRole('button', { name: 'Save' }).click()
 
   await window.getByRole('dialog').waitFor({ state: 'hidden' })
