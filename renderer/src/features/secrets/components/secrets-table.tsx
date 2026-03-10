@@ -10,6 +10,9 @@ import { SecretDropdown } from './secret-dropdown'
 import { useFilterSort } from '@/common/hooks/use-filter-sort'
 import type { V1SecretKeyResponse } from '@common/api/generated/types.gen'
 import { InputSearch } from '@/common/components/ui/input-search'
+import { Button } from '@/common/components/ui/button'
+import { PlusIcon } from 'lucide-react'
+
 interface SecretsTableProps {
   secrets: V1SecretKeyResponse[]
   setIsSecretDialogOpen: (open: boolean) => void
@@ -33,11 +36,23 @@ export function SecretsTable({
 
   return (
     <div className="space-y-6">
-      <InputSearch
-        value={filter}
-        onChange={(v) => setFilter(v)}
-        placeholder="Search..."
-      />
+      <div className="flex items-center justify-between">
+        <InputSearch
+          value={filter}
+          onChange={(v) => setFilter(v)}
+          placeholder="Search secrets"
+        />
+        <Button
+          variant="outline"
+          className="rounded-full"
+          onClick={() => {
+            setIsSecretDialogOpen(true)
+            setSecretKey('')
+          }}
+        >
+          <PlusIcon /> New secret
+        </Button>
+      </div>
       <div className="bg-card overflow-hidden rounded-md border">
         <Table className="">
           <TableHeader>

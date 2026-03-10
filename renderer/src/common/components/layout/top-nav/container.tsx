@@ -1,30 +1,33 @@
 import type { HTMLProps } from 'react'
-import { twMerge } from 'tailwind-merge'
+import { cn } from '@/common/lib/utils'
+import { getOsDesignVariant } from '@/common/lib/os-design'
 
 function getPlatformSpecificHeaderClasses() {
-  const platformClasses = {
-    darwin: 'pl-26 pt-0.5', // Left padding for traffic light buttons + top offset for title bar
-    win32: 'pr-2', // Right padding for visual spacing with window edge
-    linux: '', // No padding needed - custom controls are part of the layout
+  if (getOsDesignVariant() === 'mac') {
+    // Left padding to clear the macOS traffic-light buttons
+    return 'pl-26 pr-4'
   }
 
-  return (
-    platformClasses[
-      window.electronAPI.platform as keyof typeof platformClasses
-    ] || ''
-  )
+  // Windows needs a small right padding for visual spacing against the window
+  // edge. This is the only known design difference between Windows and Linux —
+  // both share the same 'windows' OS design variant for everything else.
+  if (window.electronAPI.platform === 'win32') {
+    return 'pr-2'
+  }
+
+  return ''
 }
 
 export function TopNavContainer(props: HTMLProps<HTMLElement>) {
   return (
     <header
       {...props}
-      className={twMerge(
+      className={cn(
         props.className,
         'bg-nav-background',
         'border-nav-border h-16 border-b',
-        'px-6',
-        'grid grid-cols-[auto_1fr_auto] items-center gap-7',
+        'pl-6',
+        'grid grid-cols-[auto_1fr] items-center',
         'app-region-drag',
         'w-full min-w-full',
         getPlatformSpecificHeaderClasses()

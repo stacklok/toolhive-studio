@@ -13,31 +13,26 @@ import { TopNavContainer } from './container'
 import {
   Server,
   CloudDownload,
-  FlaskConical,
-  Lock,
   Settings as SettingsIcon,
   ArrowUpCircle,
+  FlaskConical,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useRouterState } from '@tanstack/react-router'
 import { useAppVersion } from '@/common/hooks/use-app-version'
 import { cn } from '@/common/lib/utils'
+import { getOsDesignVariant } from '@/common/lib/os-design'
+import { NavSeparator } from './nav-separator'
+import { NavIconButton } from './nav-icon-button'
 
 interface NavButtonProps {
   to: string
   icon: LucideIcon
   children: React.ReactNode
   isActive?: boolean
-  badge?: React.ReactNode
 }
 
-function NavButton({
-  to,
-  icon: Icon,
-  children,
-  isActive,
-  badge,
-}: NavButtonProps) {
+function NavButton({ to, icon: Icon, children, isActive }: NavButtonProps) {
   return (
     <LinkViewTransition
       to={to}
@@ -50,26 +45,20 @@ function NavButton({
           : 'bg-transparent text-white/90 hover:bg-white/10 hover:text-white'
       )}
     >
-      <span className="relative">
-        <Icon className="size-4" />
-        {badge}
-      </span>
+      <Icon className="size-4" />
       {children}
     </LinkViewTransition>
   )
 }
 
-function TopNavLinks({ showUpdateBadge }: { showUpdateBadge?: boolean }) {
+function useIsActive() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
-
-  const isActive = (paths: string[]) =>
+  return (paths: string[]) =>
     paths.some((p) => pathname.startsWith(p) || pathname === p)
+}
 
-  const updateBadge = showUpdateBadge ? (
-    <span className="absolute -top-1 -right-1">
-      <ArrowUpCircle className="size-3 fill-blue-500" />
-    </span>
-  ) : null
+function TopNavLinks() {
+  const isActive = useIsActive()
 
   return (
     <NavigationMenu>
@@ -101,28 +90,6 @@ function TopNavLinks({ showUpdateBadge }: { showUpdateBadge?: boolean }) {
             Playground
           </NavButton>
         </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavButton
-            to="/secrets"
-            icon={Lock}
-            isActive={isActive(['/secrets'])}
-          >
-            Secrets
-          </NavButton>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavButton
-            to="/settings"
-            icon={SettingsIcon}
-            isActive={isActive(['/settings'])}
-            badge={updateBadge}
-          >
-            Settings
-          </NavButton>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <HelpDropdown className="app-region-no-drag" />
-        </NavigationMenuItem>
       </NavigationMenuList>
     </NavigationMenu>
   )
@@ -131,6 +98,8 @@ function TopNavLinks({ showUpdateBadge }: { showUpdateBadge?: boolean }) {
 export function TopNav(props: HTMLProps<HTMLElement>) {
   const { data: appVersion } = useAppVersion()
   const isProduction = import.meta.env.MODE === 'production'
+  const isActive = useIsActive()
+  const showUpdateBadge = !!(appVersion?.isNewVersionAvailable && isProduction)
 
   useEffect(() => {
     const cleanup = window.electronAPI.onUpdateDownloaded(() => {
@@ -163,13 +132,31 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
   return (
     <TopNavContainer {...props}>
       <div className="flex h-10 items-center">
-        <TopNavLinks
-          showUpdateBadge={
-            !!(appVersion?.isNewVersionAvailable && isProduction)
-          }
-        />
+        <TopNavLinks />
       </div>
-      <div className="flex items-center gap-2 justify-self-end">
+      <div
+        className="app-region-no-drag flex h-full items-center justify-self-end"
+      >
+        <div className="flex h-full items-center gap-1 pl-2">
+          <HelpDropdown className="app-region-no-drag" />
+          <NavIconButton
+            asChild
+            isActive={isActive(['/settings'])}
+            aria-label="Settings"
+            className="app-region-no-drag relative"
+          >
+            <LinkViewTransition to="/settings">
+              <SettingsIcon className="size-5" />
+              {showUpdateBadge && (
+                <span className="absolute -top-0.5 -right-0.5">
+                  <ArrowUpCircle className="size-3 fill-blue-500" />
+                </span>
+              )}
+            </LinkViewTransition>
+          </NavIconButton>
+        </div>
+        {/* Windows: separator between icon group and window controls */}
+        {getOsDesignVariant() !== 'mac' && <NavSeparator />}
         <WindowControls />
       </div>
     </TopNavContainer>
