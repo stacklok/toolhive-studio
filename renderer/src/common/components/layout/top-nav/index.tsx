@@ -15,7 +15,7 @@ import {
   CloudDownload,
   Settings as SettingsIcon,
   ArrowUpCircle,
-  MessageCircle,
+  FlaskConical,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useRouterState } from '@tanstack/react-router'
@@ -81,6 +81,15 @@ function TopNavLinks() {
             Registry
           </NavButton>
         </NavigationMenuItem>
+        <NavigationMenuItem>
+          <NavButton
+            to="/playground"
+            icon={FlaskConical}
+            isActive={isActive(['/playground'])}
+          >
+            Playground
+          </NavButton>
+        </NavigationMenuItem>
       </NavigationMenuList>
     </NavigationMenu>
   )
@@ -143,19 +152,6 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
                   <ArrowUpCircle className="size-3 fill-blue-500" />
                 </span>
               )}
-            </LinkViewTransition>
-          </NavIconButton>
-          {/* macOS: separator between settings and assistant (no window controls on the right) */}
-          {getOsDesignVariant() === 'mac' && <NavSeparator />}
-          <NavIconButton
-            asChild
-            isActive={isActive(['/playground'])}
-            aria-label="Assistant"
-            aria-role="link"
-            className="app-region-no-drag"
-          >
-            <LinkViewTransition to="/playground">
-              <MessageCircle className="size-5" />
             </LinkViewTransition>
           </NavIconButton>
         </div>

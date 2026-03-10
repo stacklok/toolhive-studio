@@ -38,7 +38,7 @@ async function warmupOllamaModel(): Promise<void> {
   }
 }
 
-async function waitForAssistantReady(window: Page): Promise<void> {
+async function waitForPlaygroundReady(window: Page): Promise<void> {
   const loadingText = window.getByText(/loading chat history/i)
   // May never appear if already loaded
   await loadingText
@@ -47,7 +47,7 @@ async function waitForAssistantReady(window: Page): Promise<void> {
 }
 
 async function openProviderSettingsDialog(window: Page): Promise<void> {
-  await waitForAssistantReady(window)
+  await waitForPlaygroundReady(window)
 
   const configureButton = window.getByRole('button', {
     name: /configure your providers/i,
@@ -103,12 +103,13 @@ async function selectOllamaModel(window: Page): Promise<void> {
   await modelItem.click()
 }
 
-async function clearAssistantState(window: Page): Promise<void> {
-  await window.getByRole('link', { name: 'Assistant' }).click()
+async function clearPlaygroundState(window: Page): Promise<void> {
+  await window.getByRole('link', { name: 'Playground' }).click()
   await expect(
-    window.getByRole('heading', { name: 'Assistant', level: 1 })
+    window.getByRole('heading', { name: 'Playground', level: 1 })
   ).toBeVisible()
-  await waitForAssistantReady(window)
+
+  await waitForPlaygroundReady(window)
 
   const clearChatButton = window.getByRole('button', { name: /clear chat/i })
   if (await clearChatButton.isVisible().catch(() => false)) {
@@ -119,7 +120,7 @@ async function clearAssistantState(window: Page): Promise<void> {
   await removeOllamaProvider(window)
 }
 
-test.describe('Assistant chat with Ollama', () => {
+test.describe('Playground chat with Ollama', () => {
   test.slow()
 
   let testServer: TestMcpServer
@@ -144,7 +145,7 @@ test.describe('Assistant chat with Ollama', () => {
   test('configures Ollama provider and sends chat message', async ({
     window,
   }) => {
-    await clearAssistantState(window)
+    await clearPlaygroundState(window)
 
     const serverName = generateRandomServerName()
 
@@ -187,9 +188,9 @@ test.describe('Assistant chat with Ollama', () => {
         .getByText('Running')
     ).toBeVisible({ timeout: 30_000 })
 
-    await window.getByRole('link', { name: 'Assistant' }).click()
+    await window.getByRole('link', { name: 'Playground' }).click()
     await expect(
-      window.getByRole('heading', { name: 'Assistant', level: 1 })
+      window.getByRole('heading', { name: 'Playground', level: 1 })
     ).toBeVisible()
 
     await openProviderSettingsDialog(window)
@@ -225,6 +226,6 @@ test.describe('Assistant chat with Ollama', () => {
       timeout: LONG_TIMEOUT,
     })
 
-    await clearAssistantState(window)
+    await clearPlaygroundState(window)
   })
 })
