@@ -2,6 +2,8 @@ import { getHealth, postApiV1BetaSecrets } from '@common/api/generated/sdk.gen'
 import { client } from '@common/api/generated/client.gen'
 import { Main } from '@/common/components/layout/main'
 import { TopNav } from '@/common/components/layout/top-nav'
+import { AssistantDrawer } from '@/common/components/layout/assistant-drawer'
+import { AssistantDrawerProvider } from '@/common/contexts/assistant-drawer'
 import { Error as ErrorComponent } from '@/common/components/error'
 import { NotFound } from '@/common/components/not-found'
 import type { QueryClient } from '@tanstack/react-query'
@@ -61,7 +63,7 @@ function RootComponent() {
   useRestartShutdownServers()
 
   return (
-    <>
+    <AssistantDrawerProvider>
       {!hideNav && <TopNav />}
       {!hideNav && import.meta.env.DEV && <CustomPortBanner />}
       <Main>
@@ -74,7 +76,8 @@ function RootComponent() {
         />
         <TanStackRouterDevtools />
       </Main>
-    </>
+      {!hideNav && <AssistantDrawer />}
+    </AssistantDrawerProvider>
   )
 }
 

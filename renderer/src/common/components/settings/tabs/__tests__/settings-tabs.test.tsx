@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { SettingsTabs } from '../settings-tabs'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
+import { Suspense } from 'react'
 
 const mockGetMainLogContent = vi.fn()
 const mockGetAppVersion = vi.fn()
@@ -64,7 +65,7 @@ const renderWithProviders = (component: React.ReactElement) => {
   return render(
     <PromptProvider>
       <QueryClientProvider client={queryClient}>
-        {component}
+        <Suspense fallback={null}>{component}</Suspense>
       </QueryClientProvider>
     </PromptProvider>
   )
@@ -131,9 +132,17 @@ describe('SettingsTabs', () => {
     renderWithProviders(<SettingsTabs />)
     expect(screen.getByRole('tab', { name: 'General' })).toBeVisible()
     expect(screen.getByRole('tab', { name: 'Registry' })).toBeVisible()
+    expect(screen.getByRole('tab', { name: 'Secrets' })).toBeVisible()
     expect(screen.getByRole('tab', { name: 'CLI' })).toBeVisible()
     expect(screen.getByRole('tab', { name: 'Version' })).toBeVisible()
     expect(screen.getByRole('tab', { name: 'Logs' })).toBeVisible()
+  })
+  it('shows Secrets tab when clicked', async () => {
+    renderWithProviders(<SettingsTabs />)
+    await userEvent.click(screen.getByRole('tab', { name: 'Secrets' }))
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /secrets/i })).toBeVisible()
+    })
   })
   it('shows General tab as default active tab', async () => {
     renderWithProviders(<SettingsTabs />)

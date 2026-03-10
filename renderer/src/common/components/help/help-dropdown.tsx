@@ -5,24 +5,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/common/components/ui/dropdown-menu'
-import { Button } from '@/common/components/ui/button'
-import { cn } from '@/common/lib/utils'
+import { NavIconButton } from '@/common/components/layout/top-nav/nav-icon-button'
 
 export function HelpDropdown({ className }: { className?: string }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className={cn(
-            `rounded-full text-white/90 hover:bg-white/10 hover:text-white
-            dark:hover:bg-white/10`,
-            className
-          )}
-        >
-          <HelpCircle className="size-4" />
-          Help
-        </Button>
+        <NavIconButton aria-label="Help" className={className}>
+          <HelpCircle className="size-5" />
+        </NavIconButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem asChild>
