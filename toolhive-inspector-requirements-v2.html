@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ToolHive MCP Inspector — Requirements v2</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    color: #1f2328;
+    line-height: 1.6;
+    font-size: 14px;
+  }
+  h1 { font-size: 2em; border-bottom: 1px solid #d1d9e0; padding-bottom: 0.3em; }
+  h2 { font-size: 1.5em; border-bottom: 1px solid #d1d9e0; padding-bottom: 0.3em; margin-top: 2em; }
+  h3 { font-size: 1.25em; margin-top: 1.5em; }
+  hr { border: none; border-top: 1px solid #d1d9e0; margin: 2em 0; }
+  blockquote {
+    margin: 1em 0;
+    padding: 0;
+    color: #1f2328;
+  }
+  blockquote p { margin: 0.5em 0; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+  }
+  th, td {
+    border: 1px solid #d1d9e0;
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #f6f8fa;
+    font-weight: 600;
+  }
+  tr:nth-child(even) { background: #f6f8fa; }
+  code {
+    background: #eff1f3;
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-size: 85%;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  }
+  pre {
+    background: #f6f8fa;
+    padding: 16px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 85%;
+  }
+  pre code { background: none; padding: 0; }
+  a { color: #0969da; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  ul { padding-left: 2em; }
+  li { margin: 0.25em 0; }
+  strong { font-weight: 600; }
+  .center { text-align: center; }
+</style>
+</head>
+<body>
+<h1>ToolHive MCP Inspector — Requirements v2 (Research-Based)</h1>
+<blockquote>
+<p><strong>Research conducted on:</strong> GitHub Issues/Discussions (modelcontextprotocol/inspector, /modelcontextprotocol, /python-sdk, /go-sdk, /servers, /typescript-sdk, anthropics/claude-code), CVE database (NVD, GHSA), security research (Oligo, Tenable, Invariant Labs, Snyk, JFrog, Palo Alto Unit 42, Check Point, Straiker, Adversa AI), OWASP MCP Top 10, Substack (mcpincontext), Reddit (r/ClaudeAI, r/LocalLLaMA, r/artificial), X/Twitter (developer sentiment), technical blog posts (Docker, Microsoft, Cisco, WorkOS, Auth0, Equixly, Astrix, AuthZed, Specmatic, Stainless, Red Hat, Trend Micro), MCP spec changelogs (2025-06-18, 2025-11-25, draft 2026), third-party tools (30+ analyzed).</p>
+<p><strong>UI Mockup:</strong> <a href="./inspector-mockup.html"><code>inspector-mockup.html</code></a> — interactive HTML prototype of the inspector (dark theme, Discovery, Tool Runner, Protocol Log, Compliance panels).</p>
+</blockquote>
+<hr>
+
+<h2>Context: Why an Inspector inside ToolHive</h2>
+<p>MCP debugging is described by the community as "a frustrating exercise in blind debugging" (WorkOS MCP Night 2.0). Recurring problems:</p>
+<ul>
+<li><strong>Opaque errors</strong>: "Connection Error" with no diagnostics (inspector#384, 10+ thumbs up)</li>
+<li><strong>"Works in stdio, breaks in HTTP"</strong>: the #1 pattern in the ecosystem</li>
+<li><strong>OAuth chaos</strong>: 11+ open issues on the official inspector alone, called "barely functional" (Cra.mr)</li>
+<li><strong>Silent failures</strong>: when MCP servers break, the AI model hallucinates instead of showing stack traces</li>
+<li><strong>Context window bloat</strong>: 10 servers with 212 tools = ~164K tokens, 82% of Claude's context (Medium, Jan 2026)</li>
+<li><strong>Security</strong>: 43% of tested MCP implementations contain command injection (audit Mar 2025)</li>
+<li><strong>"95% of MCP servers are utter garbage"</strong> (Reddit r/MCP, cited in StackOne, WorkOS, and others)</li>
+</ul>
+<p>ToolHive has a unique advantage: MCP servers already run in isolated containers. The inspector can leverage this to offer security, observability and debugging that no other tool can provide.</p>
+<hr>
+
+<h2>Document Structure</h2>
+<p>The document separates <strong>Inspector Core</strong> (what every MCP inspector must do — connect, discover, execute, log) from <strong>Product Features</strong> (why someone would choose ToolHive over the official inspector).</p>
+<ul>
+<li><strong>Inspector Core</strong>: functional baseline. What the official Inspector, MCPJam, and Postman MCP already do.</li>
+<li><strong>Product: Diagnostics</strong>: intelligent diagnostics, automatic health checks, compliance.</li>
+<li><strong>Product: Security</strong>: scanning, rug pull detection, supply chain scoring — the container runtime advantage.</li>
+</ul>
+<hr>
+
+<h2>Priority (P0 / P1 / P2)</h2>
+<table>
+<thead>
+<tr><th>Priority</th><th>#</th><th>Feature</th><th>Rationale</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>P0</strong></td><td>1</td><td>Connectivity — connect via stdio, SSE, streamable-http with auto-detection</td><td>Inspector doesn't work without it</td></tr>
+<tr><td><strong>P0</strong></td><td>2</td><td>Discovery — list tools, resources, prompts with JSON Schema viewer</td><td>Core function</td></tr>
+<tr><td><strong>P0</strong></td><td>3</td><td>Tool Call Runner — auto-generated form from schema, raw mode for invalid inputs</td><td>Core function</td></tr>
+<tr><td><strong>P0</strong></td><td>4</td><td>Protocol Log — bidirectional JSON-RPC log with credential redaction</td><td>Core debugging</td></tr>
+<tr><td><strong>P0</strong></td><td>6</td><td>Custom Headers + Diff — pass auth headers through proxy, show where they get lost</td><td>Can't connect to authenticated MCP servers without it</td></tr>
+<tr><td><strong>P0</strong></td><td>11</td><td>Spec Compliance Checker — validate MCP spec conformance, pass/fail report</td><td>Compliance differentiator</td></tr>
+<tr><td><strong>P0</strong></td><td>14</td><td>Tool Description Scanner — detect prompt injection, poisoning, suspicious patterns</td><td>Security differentiator</td></tr>
+<tr><td><strong>P1</strong></td><td>5</td><td>Mcp-Session-Id tracking — ensure session-id on all requests, highlight when missing</td><td>Spec compliance, simple to implement</td></tr>
+<tr><td><strong>P1</strong></td><td>8</td><td>Structured Content viewer — render JSON, images, audio, diff vs outputSchema</td><td>Applied-AI needs it</td></tr>
+<tr><td><strong>P1</strong></td><td>9</td><td>History + Replay — chronological action log with one-click replay</td><td>Regression detection</td></tr>
+<tr><td><strong>P1</strong></td><td>12</td><td>list_changed + Auto-refresh — react to tool/resource/prompt changes in real time</td><td>Dev experience applied-ai</td></tr>
+<tr><td><strong>P1</strong></td><td>15</td><td>Capabilities Diff — snapshot tools at discovery, alert on changes between sessions</td><td>Security differentiator</td></tr>
+<tr><td><strong>P1</strong></td><td>16</td><td>Supply Chain Scoring — SBOM, CVE check, trust score per server</td><td>Enterprise + applied-ai</td></tr>
+<tr><td><strong>P2</strong></td><td>7</td><td>Streamable HTTP fallback — correlate POST/GET SSE, reconnect with Last-Event-ID</td><td>Edge case</td></tr>
+<tr><td><strong>P2</strong></td><td>10</td><td>Cancellation support — cancel button for long-running tool calls</td><td>Nice to have</td></tr>
+<tr><td><strong>P2</strong></td><td>13</td><td>Progress vs Timeout — explain why a tool was killed despite sending progress</td><td>Niche, applied-ai only</td></tr>
+</tbody>
+</table>
+<p><strong>Summary</strong>: P0 = 7 features (inspector works and differentiates on compliance + security). P1 = 6 features (enterprise + applied-ai value). P2 = 3 features (polish and edge cases).</p>
+<hr>
+
+<h2>Inspector Core</h2>
+<blockquote>
+<p>Baseline capabilities that every MCP inspector must have. Without these, the inspector is not usable. These correspond to what the official Inspector, MCPJam (notably their <a href="https://github.com/MCPJam/inspector?tab=readme-ov-file#oauth-debugger">OAuth Debugger</a>), and Postman MCP offer.</p>
+</blockquote>
+<table>
+<thead>
+<tr><th>#</th><th>Feature</th><th>Description</th><th>Key Evidence</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td><strong>Connectivity (stdio / SSE / streamable-http)</strong></td><td>Supports all three MCP transports. User chooses type (stdio = command, SSE/streamable-http = URL). For HTTP transports, auto-detection: tries POST for streamable-http, falls back to GET for legacy SSE. Verifies endpoint, explains common errors (405 on GET = normal for streamable-http, SSE stream failure, session-id missing). Shows real-time diagnostic checklist with verbose error messages.</td><td>Inspector <a href="https://github.com/modelcontextprotocol/inspector/issues/384">#384</a> (10+ thumbs up): "Connection Error" with no diagnostics. Claude Code <a href="https://github.com/anthropics/claude-code/issues/18127">#18127</a>: useless error message.</td></tr>
+<tr><td>2</td><td><strong>Discovery: Tools / Resources / Prompts + schema viewer</strong></td><td>Lists everything with navigable JSON schema, annotations (readOnlyHint, destructiveHint, openWorldHint, idempotentHint), outputSchema, and icons (spec 2025-11-25). Full JSON Schema 2020-12 support.</td><td>Inspector <a href="https://github.com/modelcontextprotocol/inspector/issues/445">#445</a>/$defs and <a href="https://github.com/modelcontextprotocol/inspector/issues/496">#496</a>/allOf-oneOf not supported. Spec <a href="https://github.com/modelcontextprotocol/modelcontextprotocol/issues/834">#834</a> (10 reactions): JSON Schema 2020-12.</td></tr>
+<tr><td>3</td><td><strong>Tool Call Runner (JSON editor + validation)</strong></td><td>Auto-generated form from input schema with full $defs/allOf/oneOf/anyOf support. Client-side validation. "Raw" mode for intentionally testing invalid inputs. Result/error viewer with structured vs unstructured diff.</td><td>Inspector <a href="https://github.com/modelcontextprotocol/inspector/issues/888">#888</a>: needs debug mode to bypass validation.</td></tr>
+<tr><td>4</td><td><strong>Protocol Log (bidirectional JSON-RPC)</strong></td><td>Complete request/response/notification log with timing, session-id, transport type, progress tracking. Exportable as "bug bundle" (JSON + metadata). Filterable by type, server, error. <strong>Credential redaction</strong>: tokens, Bearer tokens, client secrets and API keys are automatically masked in all logs and views (never plaintext).</td><td>Inspector <a href="https://github.com/modelcontextprotocol/inspector/issues/384">#384</a>: "does not emit any error logs other than Connection Error."</td></tr>
+<tr><td>5</td><td><strong>Mcp-Session-Id tracking (spec-compliant)</strong></td><td>Ensures session-id is sent on ALL requests after init. Highlights when missing. Supports session persistence for horizontal scaling.</td><td>Inspector <a href="https://github.com/modelcontextprotocol/inspector/issues/905">#905</a>: violates the spec. Python-SDK <a href="https://github.com/modelcontextprotocol/python-sdk/issues/880">#880</a> (22 reactions): sessions lost behind load balancer.</td></tr>
+<tr><td>6</td><td><strong>Custom Headers passthrough + Headers Diff</strong></td><td>Custom headers (Authorization, X-API-Key) passed THROUGH the proxy to the server. Supports headers from CLI and UI. <strong>Headers Diff view</strong>: comparison between user-configured headers and headers actually sent to the server. On 401/403, the Protocol Log highlights if a configured header was not sent (pattern "header silently dropped"). With the ToolHive gateway, shows <strong>at which hop</strong> the header is lost (Client → Proxy → Gateway → Server).</td><td>Inspector <a href="https://github.com/modelcontextprotocol/inspector/issues/879">#879</a>: "headers authenticate TO the proxy, not THROUGH to the server." TS-SDK <a href="https://github.com/modelcontextprotocol/typescript-sdk/issues/436">#436</a> (9 reactions): SSE client silently drops custom headers.</td></tr>
+<tr><td>7</td><td><strong>Streamable HTTP: GET SSE fallback + reconnect</strong></td><td>Correlates responses from POST SSE and GET SSE stream. Reconnect with Last-Event-ID header. Supports distributed servers behind load balancer.</td><td>Inspector <a href="https://github.com/modelcontextprotocol/inspector/issues/614">#614</a>: timeout instead of correlating GET SSE. Inspector <a href="https://github.com/modelcontextprotocol/inspector/issues/920">#920</a>: doesn't send Last-Event-ID on reconnect.</td></tr>
+<tr><td>8</td><td><strong>Structured Content viewer</strong></td><td>Rendering for structuredContent (navigable JSON, MIME types for images/audio/files) + diff between declared outputSchema and actual output.</td><td>Spec 2025-06-18: structured content + outputSchema. Inspector <a href="https://github.com/modelcontextprotocol/inspector/issues/763">#763</a>.</td></tr>
+<tr><td>9</td><td><strong>History + Replay</strong></td><td>Chronological log of every action (tool call, resource read, prompt get) with timestamp, server, method, latency, status. One-click replay. Filterable by server, method, error.</td><td>Common pattern: "it worked yesterday, broken today" with no way to compare. MCPcat offers session replay for production.</td></tr>
+<tr><td>10</td><td><strong>Cancellation support</strong></td><td>UI button to cancel long-running operations via cancellation notification. Progress bar from progress notifications.</td><td>Inspector <a href="https://github.com/modelcontextprotocol/inspector/issues/591">#591</a> (7 reactions): no UI to cancel.</td></tr>
+</tbody>
+</table>
+<hr>
+
+<h2>Product: Diagnostics</h2>
+<blockquote>
+<p>Intelligent diagnostics that activate automatically. The inspector collects data in the background (Protocol Log, headers, timestamps) and when something breaks, it already has the context to explain <strong>why</strong>. No competing inspector offers this level of diagnostics.</p>
+</blockquote>
+<table>
+<thead>
+<tr><th>#</th><th>Feature</th><th>Description</th><th>Key Evidence</th></tr>
+</thead>
+<tbody>
+<tr><td>11</td><td><strong>Spec Compliance Checker</strong></td><td>Automatically validates that the server respects the MCP spec: correct error codes, notification handling, initialization sequence, capabilities declaration. Pass/fail report per spec version. Can integrate <a href="https://github.com/modelcontextprotocol/conformance">modelcontextprotocol/conformance</a> (official, v0.1.14, TypeScript), <a href="https://github.com/Janix-ai/mcp-protocol-validator">Janix MCP Validator</a> (73 stars, multi-version), or <a href="https://lib.rs/crates/mcp-tester">mcp-tester</a> (Rust, CLI).</td><td>Spec <a href="https://github.com/modelcontextprotocol/modelcontextprotocol/issues/1627">#1627</a> (5 reactions): SEP-1627 proposes conformance testing.</td></tr>
+<tr><td>12</td><td><strong>list_changed + Auto-refresh</strong></td><td>Automatically reacts to notifications/tools/list_changed, notifications/resources/list_changed, notifications/prompts/list_changed. Shows diff in real time.</td><td>Inspector <a href="https://github.com/modelcontextprotocol/inspector/issues/378">#378</a> (5 reactions): list_changed received but UI doesn't update. Critical for Applied-AI: during development, tools change constantly and developers need to see updates live without reconnecting.</td></tr>
+<tr><td>13</td><td><strong>Progress vs Timeout Correlation</strong></td><td>When a tool call times out, checks if the server was sending progress notifications. If so, explains that the client doesn't reset the timeout on progress and suggests <code>resetTimeoutOnProgress</code>.</td><td>TS-SDK <a href="https://github.com/modelcontextprotocol/typescript-sdk/issues/192">#192</a> (5 reactions): <code>resetTimeoutOnProgress</code> defaults to <code>false</code>. Long-running tool killed by timeout despite active progress.</td></tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>How they work</strong>: diagnostics checks activate automatically at connection, with no user action. Data comes from the Protocol Log (#4) and Connectivity (#1). When something breaks, the inspector already has the context to explain <strong>why</strong>.</p>
+</blockquote>
+
+<h3>Spec Compliance: Sequence diagram</h3>
+<div class="mermaid">
+sequenceDiagram
+    participant UI as Inspector UI
+    participant CR as Conformance Runner
+    participant S as MCP Server
+
+    UI->>CR: Run compliance (server URL)
+
+    rect rgb(230, 240, 250)
+    note right of CR: 1. Lifecycle
+    CR->>S: initialize (protocolVersion, clientInfo)
+    S-->>CR: (protocolVersion, serverInfo, capabilities)
+    CR->>CR: PASS - Verify response structure
+    CR->>S: notifications/initialized
+    end
+
+    rect rgb(230, 240, 250)
+    note right of CR: 2. Discovery
+    CR->>S: tools/list
+    S-->>CR: tools with inputSchema
+    CR->>CR: PASS - Valid JSON Schema, annotations
+    CR->>S: resources/list
+    S-->>CR: resources
+    CR->>S: prompts/list
+    S-->>CR: prompts
+    end
+
+    rect rgb(230, 240, 250)
+    note right of CR: 3. Tool call scenarios
+    CR->>S: tools/call (test_tool)
+    S-->>CR: content with text
+    CR->>CR: PASS - Verify content structure
+
+    CR->>S: tools/call (test_error)
+    S-->>CR: content with isError true
+    CR->>CR: PASS - isError flag present
+    end
+
+    rect rgb(230, 240, 250)
+    note right of CR: 4. Utilities
+    CR->>S: ping
+    S-->>CR: empty response
+    CR->>S: logging/setLevel (info)
+    S-->>CR: ok or -32601
+    CR->>CR: PASS - Matches declared capabilities
+    end
+
+    CR->>UI: ConformanceCheck results
+    UI->>UI: Render report Tier 1/2/3 pass/fail
+</div>
+<hr>
+
+<h2>Product: Security</h2>
+<blockquote>
+<p>ToolHive's unique advantage: MCP servers run in isolated containers. The inspector can verify not only what the server <strong>says</strong> it does (static analysis), but what it <strong>actually does</strong> (runtime analysis). No other inspector has this capability.</p>
+<p><strong>Reference tools for detection</strong>: <a href="https://github.com/snyk/agent-scan">Snyk agent-scan</a> (ex mcp-scan) — prompt injection, tool poisoning, rug pull via hash, data leak / destructive toxic flows. <a href="https://github.com/cisco-ai-defense/mcp-scanner">Cisco MCP Scanner</a> — prompt injection, tool poisoning via customizable YARA rules, 100% local.</p>
+</blockquote>
+<table>
+<thead>
+<tr><th>#</th><th>Feature</th><th>Description</th><th>Key Evidence</th></tr>
+</thead>
+<tbody>
+<tr><td>14</td><td><strong>Tool Description Scanner (anti-poisoning)</strong></td><td>Scans descriptions for: embedded instructions, external URLs, base64, prompt injection patterns, "ignore previous" patterns. Trust score + visual warning. Raw view to see exactly what the LLM receives.</td><td>Invariant Labs: WhatsApp exfiltration via tool poisoning. MCPTox benchmark: tool poisoning "alarmingly common" across 45 real servers.</td></tr>
+<tr><td>15</td><td><strong>Capabilities Diff (snapshot + rug pull detection)</strong></td><td>Snapshot at first discovery. On every reconnect: diff of added/removed/modified tools (schema + description). Hash-based change detection. Alert on suspicious changes.</td><td>CVE-2025-54136 (MCPoison): config approved, then silently modified. mcp-scan: tool pinning via hash.</td></tr>
+<tr><td>16</td><td><strong>Supply chain scoring</strong></td><td>Per server: SBOM (via <a href="https://github.com/aquasecurity/trivy">Trivy</a> or <a href="https://github.com/anchore/syft">Syft</a> + <a href="https://github.com/anchore/grype">Grype</a>), CVE check, trust score (age, maintainer, signing, test coverage, permission scope). Integration with BlueRock Trust Registry.</td><td>GitGuardian: Smithery.ai supply chain compromise → 3000+ servers exposed. OWASP MCP04.</td></tr>
+</tbody>
+</table>
+<p>Example of how the inspector shows scan results in the UI:</p>
+<table>
+<thead>
+<tr><th>Tool</th><th>Status</th><th>Detail</th></tr>
+</thead>
+<tbody>
+<tr><td><code>sum</code></td><td>⚠️ Warning</td><td>Tool description contains suspicious patterns</td></tr>
+<tr><td><code>multiply</code></td><td>✗ Error</td><td>Prompt injection detected</td></tr>
+<tr><td><code>get_comments</code></td><td>✓ OK</td><td></td></tr>
+<tr><td><code>get_api_key</code></td><td>✓ OK</td><td></td></tr>
+<tr><td><code>send_email</code></td><td>⚠️ Warning</td><td>Data leak toxic flow: can exfiltrate data read by other tools</td></tr>
+<tr><td><code>delete_file</code></td><td>⚠️ Warning</td><td>Destructive toxic flow: combined with other tools can cause damage</td></tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>ToolHive advantage</strong>: external scanners can only verify what the server <strong>says</strong> it does (static analysis of descriptions). ToolHive can verify what the server <strong>actually does</strong> (container runtime analysis): undeclared network calls, filesystem writes with <code>readOnlyHint: true</code>, silent description changes between sessions.</p>
+</blockquote>
+<hr>
+
+<h2>Personas</h2>
+
+<h3>1. OSS Developer</h3>
+<blockquote>
+<p>Individual developer or hobbyist who installs MCP servers from the registry and wants to test them before trusting them with their data.</p>
+</blockquote>
+<p><strong>Goal</strong>: "I found an MCP server on GitHub. Does it work? Can I call its tools? Is it safe?"</p>
+<p><strong>Key workflows</strong>:</p>
+<ul>
+<li>Connect to a running MCP server and explore tools/resources/prompts</li>
+<li>Call tools with different inputs, inspect responses</li>
+<li>Check the Protocol Log to understand what's happening under the hood</li>
+<li>Run spec compliance to verify the server follows the MCP spec</li>
+<li>See if tool descriptions contain anything suspicious (anti-poisoning scan)</li>
+</ul>
+<p><strong>Primary features</strong>: #1 Connectivity, #2 Discovery, #3 Tool Call Runner, #4 Protocol Log, #11 Spec Compliance Checker, #14 Tool Description Scanner</p>
+<hr>
+
+<h3>2. Enterprise Developer / Security Team</h3>
+<blockquote>
+<p>Developer or security engineer in an organization that manages an internal MCP server registry. Two main scenarios: debugging issues with MCP servers already in use, and evaluating new MCP servers before promoting them to the company-approved catalog.</p>
+</blockquote>
+
+<p><strong>Use Case A — Debug an issue with an existing MCP server</strong></p>
+<p><strong>Goal</strong>: "Our team is hitting errors with an approved MCP server. What's going wrong?"</p>
+<p><strong>Key workflows</strong>:</p>
+<ul>
+<li>Connect to the problematic MCP server via the Inspector</li>
+<li>Inspect the Protocol Log to understand request/response flow</li>
+<li>Check headers diff to spot silently dropped auth headers</li>
+<li>Call specific tools to reproduce the issue</li>
+<li>Use History + Replay to compare working vs broken behavior</li>
+</ul>
+<p><strong>Primary features</strong>: #1 Connectivity, #3 Tool Call Runner, #4 Protocol Log, #6 Custom Headers + Diff, #9 History + Replay</p>
+
+<p><strong>Use Case B — Evaluate and promote a new MCP server</strong></p>
+<p><strong>Goal</strong>: "We found a new MCP server. Is it spec-compliant? Is it secure? Can we add it to our internal registry?"</p>
+<p><strong>Key workflows</strong>:</p>
+<ul>
+<li>Connect to the MCP server and explore capabilities</li>
+<li>Run spec compliance checks against the MCP specification</li>
+<li>Scan tool descriptions for prompt injection, poisoning, suspicious patterns</li>
+<li>Evaluate supply chain trust (maintainer, CVEs, signing, SBOM)</li>
+<li>Generate compliance report and promote to the internal registry</li>
+<li>After approval: monitor capabilities diff to catch rug pulls</li>
+</ul>
+<p><strong>Primary features</strong>: #11 Spec Compliance Checker, #14 Tool Description Scanner, #15 Capabilities Diff, #16 Supply Chain Scoring</p>
+<hr>
+
+<h3>3. ToolHive Applied-AI Team</h3>
+<blockquote>
+<p>Internal team that builds and maintains MCP servers. They use the inspector as a development and QA tool to validate their own servers before release. Beyond internal use, they also deliver MCP servers to enterprise customers — so every server must meet the same compliance and security bar that enterprise teams expect before it ships.</p>
+</blockquote>
+<p><strong>Goal</strong>: "We just built/updated an MCP server. Does it work correctly? Does it pass compliance? Can we ship it to a customer?"</p>
+<p><strong>Key workflows</strong>:</p>
+<ul>
+<li>Connect to a local dev server and test all tools end-to-end</li>
+<li>Validate JSON Schema correctness for all tool inputs/outputs</li>
+<li>Run spec compliance to ensure the server is MCP-conformant</li>
+<li>Use History + Replay to catch regressions ("it worked yesterday")</li>
+<li>Check structured content rendering matches outputSchema</li>
+<li>Monitor the Protocol Log for unexpected errors or silent failures during QA</li>
+<li>Run the full security and compliance suite before delivering to enterprise customers (same checks that Persona #2 would run on the receiving end)</li>
+</ul>
+<p><strong>Primary features</strong>: #1 Connectivity, #3 Tool Call Runner, #8 Structured Content, #9 History + Replay, #11 Spec Compliance Checker, #12 list_changed + Auto-refresh</p>
+<hr>
+
+<h2>Feature Matrix (Persona x Feature)</h2>
+<blockquote>
+<p>Priority per persona: <strong>H</strong> = High (core workflow), <strong>M</strong> = Medium (useful), <strong>L</strong> = Low (nice-to-have), <strong>—</strong> = not relevant.</p>
+</blockquote>
+<table>
+<thead>
+<tr><th>#</th><th>Feature</th><th class="center">OSS Dev</th><th class="center">Enterprise</th><th class="center">Applied-AI</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>Connectivity</td><td class="center"><strong>H</strong></td><td class="center"><strong>H</strong></td><td class="center"><strong>H</strong></td></tr>
+<tr><td>2</td><td>Discovery</td><td class="center"><strong>H</strong></td><td class="center"><strong>H</strong></td><td class="center"><strong>H</strong></td></tr>
+<tr><td>11</td><td>Spec Compliance Checker</td><td class="center"><strong>H</strong></td><td class="center"><strong>H</strong></td><td class="center"><strong>H</strong></td></tr>
+<tr><td>3</td><td>Tool Call Runner</td><td class="center"><strong>H</strong></td><td class="center">M</td><td class="center"><strong>H</strong></td></tr>
+<tr><td>4</td><td>Protocol Log</td><td class="center"><strong>H</strong></td><td class="center">M</td><td class="center"><strong>H</strong></td></tr>
+<tr><td>14</td><td>Tool Description Scanner</td><td class="center"><strong>H</strong></td><td class="center"><strong>H</strong></td><td class="center">M</td></tr>
+<tr><td>16</td><td>Supply Chain Scoring</td><td class="center">M</td><td class="center"><strong>H</strong></td><td class="center"><strong>H</strong></td></tr>
+<tr><td>6</td><td>Custom Headers + Diff</td><td class="center">M</td><td class="center"><strong>H</strong></td><td class="center">M</td></tr>
+<tr><td>8</td><td>Structured Content viewer</td><td class="center">M</td><td class="center">L</td><td class="center"><strong>H</strong></td></tr>
+<tr><td>9</td><td>History + Replay</td><td class="center">M</td><td class="center">L</td><td class="center"><strong>H</strong></td></tr>
+<tr><td>12</td><td>list_changed + Auto-refresh</td><td class="center">M</td><td class="center">L</td><td class="center"><strong>H</strong></td></tr>
+<tr><td>15</td><td>Capabilities Diff (rug pull)</td><td class="center">M</td><td class="center"><strong>H</strong></td><td class="center">L</td></tr>
+<tr><td>5</td><td>Mcp-Session-Id tracking</td><td class="center">L</td><td class="center">M</td><td class="center">M</td></tr>
+<tr><td>7</td><td>Streamable HTTP fallback</td><td class="center">L</td><td class="center">M</td><td class="center">M</td></tr>
+<tr><td>10</td><td>Cancellation support</td><td class="center">M</td><td class="center">L</td><td class="center">M</td></tr>
+<tr><td>13</td><td>Progress vs Timeout</td><td class="center">L</td><td class="center">L</td><td class="center"><strong>H</strong></td></tr>
+</tbody>
+</table>
+<p><strong>Summary</strong>: OSS Dev focuses on <strong>explore + test + compliance</strong> (7 High). Enterprise focuses on <strong>compliance + security</strong> (6 High). Applied-AI focuses on <strong>build + QA</strong> (8 High).</p>
+<hr>
+
+<h2>User Journey Flow</h2>
+
+<h3>OSS Developer</h3>
+<div class="mermaid">
+graph TD
+    O1[Install MCP server] --> O2[Connect via Inspector]
+    O2 --> O3[Explore tools and resources]
+    O3 --> O4[Call tools and inspect results]
+    O4 --> O5[Check Protocol Log]
+    O5 --> O6[Run Spec Compliance]
+    O6 --> O7[Run anti-poisoning scan]
+    O7 --> O8{Safe and compliant?}
+    O8 -- Yes --> O9[Trust and use in production]
+    O8 -- No --> O10[Report or discard]
+</div>
+
+<h3>Enterprise Use Case A — Debug Issue</h3>
+<div class="mermaid">
+graph TD
+    EA1[Team reports MCP issue] --> EA2[Connect via Inspector]
+    EA2 --> EA3[Inspect Protocol Log]
+    EA3 --> EA4[Check Headers Diff]
+    EA4 --> EA5[Reproduce with Tool Runner]
+    EA5 --> EA6[Compare via History and Replay]
+    EA6 --> EA7{Root cause found?}
+    EA7 -- Yes --> EA8[Fix and verify]
+    EA8 --> EA10[Run Compliance and Security checks]
+    EA10 --> EA11[Promote release to platform team]
+    EA7 -- No --> EA9[Escalate with bug bundle]
+</div>
+
+<h3>Enterprise Use Case B — Evaluate and Promote</h3>
+<div class="mermaid">
+graph TD
+    EB1[Discover new MCP server] --> EB2[Connect via Inspector]
+    EB2 --> EB3[Run Spec Compliance]
+    EB3 --> EB4[Run Security Scans]
+    EB4 --> EB5[Check Supply Chain Score]
+    EB5 --> EB7{Compliant and Secure?}
+    EB7 -- Yes --> EB8[Promote to internal registry]
+    EB7 -- No --> EB9[Reject with report]
+    EB8 --> EB10[Monitor for rug pulls]
+</div>
+
+<h3>Applied-AI Team</h3>
+<div class="mermaid">
+graph TD
+    A1[Build or test MCP server] --> A3[Test all tools end-to-end]
+    A3 --> A4[Validate schemas and outputs]
+    A4 --> A5[Run Spec Compliance]
+    A5 --> A6[Compare with History - regression check]
+    A6 --> A7{All passing?}
+    A7 -- Yes --> A8[Promote to company registry]
+    A7 -- Yes --> A11[Deliver to enterprise customer]
+    A8 --> A10[Release to company production env]
+    A7 -- No --> A9[Fix and re-test]
+    A9 --> A3
+</div>
+
+<script>
+document.querySelectorAll('.mermaid').forEach(function(el) {
+  var code = el.textContent.trim();
+  var encoded = btoa(unescape(encodeURIComponent(code)));
+  var img = document.createElement('img');
+  img.src = 'https://mermaid.ink/img/' + encoded;
+  img.style.maxWidth = '100%';
+  img.alt = 'diagram';
+  el.textContent = '';
+  el.appendChild(img);
+});
+</script>
+</body>
+</html>

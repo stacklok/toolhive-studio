@@ -18,6 +18,7 @@ import {
   FlaskConical,
   PackageOpen,
   BookOpen,
+  ScanSearch,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useRouterState } from '@tanstack/react-router'
@@ -114,6 +115,15 @@ function TopNavLinks() {
             </NavButton>
           </NavigationMenuItem>
         )}
+        <NavigationMenuItem>
+          <NavButton
+            to="/inspector"
+            icon={ScanSearch}
+            isActive={isActive(['/inspector'])}
+          >
+            Inspector
+          </NavButton>
+        </NavigationMenuItem>
       </NavigationMenuList>
     </NavigationMenu>
   )

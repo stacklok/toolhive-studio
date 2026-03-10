@@ -14,6 +14,7 @@ import { Route as ShutdownRouteImport } from "./routes/shutdown"
 import { Route as SettingsRouteImport } from "./routes/settings"
 import { Route as PlaygroundRouteImport } from "./routes/playground"
 import { Route as McpOptimizerRouteImport } from "./routes/mcp-optimizer"
+import { Route as InspectorRouteImport } from "./routes/inspector"
 import { Route as CliIssueRouteImport } from "./routes/cli-issue"
 import { Route as IndexRouteImport } from "./routes/index"
 import { Route as GroupGroupNameRouteImport } from "./routes/group.$groupName"
@@ -46,6 +47,11 @@ const PlaygroundRoute = PlaygroundRouteImport.update({
 const McpOptimizerRoute = McpOptimizerRouteImport.update({
   id: "/mcp-optimizer",
   path: "/mcp-optimizer",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InspectorRoute = InspectorRouteImport.update({
+  id: "/inspector",
+  path: "/inspector",
   getParentRoute: () => rootRouteImport,
 } as any)
 const CliIssueRoute = CliIssueRouteImport.update({
@@ -94,6 +100,7 @@ const registryRegistryGroupNameRoute =
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
   "/cli-issue": typeof CliIssueRoute
+  "/inspector": typeof InspectorRoute
   "/mcp-optimizer": typeof McpOptimizerRoute
   "/playground": typeof PlaygroundRoute
   "/settings": typeof SettingsRoute
@@ -109,6 +116,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
   "/cli-issue": typeof CliIssueRoute
+  "/inspector": typeof InspectorRoute
   "/mcp-optimizer": typeof McpOptimizerRoute
   "/playground": typeof PlaygroundRoute
   "/settings": typeof SettingsRoute
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   "/": typeof IndexRoute
   "/cli-issue": typeof CliIssueRoute
+  "/inspector": typeof InspectorRoute
   "/mcp-optimizer": typeof McpOptimizerRoute
   "/playground": typeof PlaygroundRoute
   "/settings": typeof SettingsRoute
@@ -142,6 +151,7 @@ export interface FileRouteTypes {
   fullPaths:
     | "/"
     | "/cli-issue"
+    | "/inspector"
     | "/mcp-optimizer"
     | "/playground"
     | "/settings"
@@ -157,6 +167,7 @@ export interface FileRouteTypes {
   to:
     | "/"
     | "/cli-issue"
+    | "/inspector"
     | "/mcp-optimizer"
     | "/playground"
     | "/settings"
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | "__root__"
     | "/"
     | "/cli-issue"
+    | "/inspector"
     | "/mcp-optimizer"
     | "/playground"
     | "/settings"
@@ -188,6 +200,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CliIssueRoute: typeof CliIssueRoute
+  InspectorRoute: typeof InspectorRoute
   McpOptimizerRoute: typeof McpOptimizerRoute
   PlaygroundRoute: typeof PlaygroundRoute
   SettingsRoute: typeof SettingsRoute
@@ -236,6 +249,13 @@ declare module "@tanstack/react-router" {
       path: "/mcp-optimizer"
       fullPath: "/mcp-optimizer"
       preLoaderRoute: typeof McpOptimizerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/inspector": {
+      id: "/inspector"
+      path: "/inspector"
+      fullPath: "/inspector"
+      preLoaderRoute: typeof InspectorRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/cli-issue": {
@@ -300,6 +320,7 @@ declare module "@tanstack/react-router" {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CliIssueRoute: CliIssueRoute,
+  InspectorRoute: InspectorRoute,
   McpOptimizerRoute: McpOptimizerRoute,
   PlaygroundRoute: PlaygroundRoute,
   SettingsRoute: SettingsRoute,
