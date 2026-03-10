@@ -14,7 +14,7 @@ test('creates and deletes a secret', async ({ window }) => {
     window.getByRole('heading', { name: 'Secrets', level: 2, exact: true })
   ).toBeVisible()
 
-  await window.getByRole('button', { name: /add.*secret/i }).click()
+  await window.getByRole('button', { name: /add.*secret|new secret/i }).click()
   await window.getByRole('dialog').waitFor()
   await window.getByPlaceholder('Name').fill(TEST_SECRET_NAME)
   await window.getByPlaceholder('Secret').fill('e2e-test-value')
