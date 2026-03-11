@@ -23,10 +23,10 @@ export function initSentry() {
     replaysOnErrorSampleRate: 1.0,
     // It will send errors, exceptions and captured messages to Sentry only if the user has enabled telemetry
     beforeSend: async (event) =>
-      (await window.electronAPI.sentry.isEnabled) ? event : null,
+      (await window.electronAPI.sentry.isEnabled()) ? event : null,
     // It will send transactions to Sentry only if the user has enabled telemetry
     beforeSendTransaction: async (transaction) => {
-      if (!(await window.electronAPI.sentry.isEnabled)) {
+      if (!(await window.electronAPI.sentry.isEnabled())) {
         return null
       }
       if (!transaction?.contexts?.trace) return null
