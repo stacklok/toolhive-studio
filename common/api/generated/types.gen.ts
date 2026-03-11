@@ -150,6 +150,7 @@ export type AuthserverOAuth2UpstreamRunConfig = {
    * TokenEndpoint is the URL for the OAuth token endpoint.
    */
   token_endpoint?: string
+  token_response_mapping?: AuthserverTokenResponseMappingRunConfig
   userinfo?: AuthserverUserInfoRunConfig
 }
 
@@ -280,6 +281,30 @@ export type AuthserverTokenLifespanRunConfig = {
    * If empty, defaults to 7 days (168h).
    */
   refresh_token_lifespan?: string
+}
+
+/**
+ * TokenResponseMapping configures custom field extraction from non-standard token responses.
+ * When set, the token exchange bypasses golang.org/x/oauth2 and extracts fields using
+ * the configured dot-notation paths.
+ */
+export type AuthserverTokenResponseMappingRunConfig = {
+  /**
+   * AccessTokenPath is the dot-notation path to the access token (required).
+   */
+  access_token_path?: string
+  /**
+   * ExpiresInPath is the dot-notation path to the expires_in value. Defaults to "expires_in".
+   */
+  expires_in_path?: string
+  /**
+   * RefreshTokenPath is the dot-notation path to the refresh token. Defaults to "refresh_token".
+   */
+  refresh_token_path?: string
+  /**
+   * ScopePath is the dot-notation path to the scope. Defaults to "scope".
+   */
+  scope_path?: string
 }
 
 /**

@@ -58,6 +58,7 @@ export type {
   AuthserverRunConfig,
   AuthserverSigningKeyRunConfig,
   AuthserverTokenLifespanRunConfig,
+  AuthserverTokenResponseMappingRunConfig,
   AuthserverUpstreamProviderType,
   AuthserverUpstreamRunConfig,
   AuthserverUserInfoFieldMappingRunConfig,
