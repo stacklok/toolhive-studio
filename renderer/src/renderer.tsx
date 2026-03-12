@@ -1,4 +1,3 @@
-import { client } from '@common/api/generated/client.gen'
 import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 import {
@@ -9,7 +8,6 @@ import {
 import { routeTree } from './route-tree.gen'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { TooltipProvider } from '@radix-ui/react-tooltip'
-import * as Sentry from '@sentry/electron/renderer'
 import { ThemeProvider } from './common/components/theme/theme-provider'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import log from 'electron-log/renderer'
@@ -18,79 +16,21 @@ import './index.css'
 import { PromptProvider } from './common/contexts/prompt/provider'
 import { trackPageView } from './common/lib/analytics'
 import { queryClient } from './common/lib/query-client'
+import { initSentry } from './lib/sentry'
+import { configureClient } from './lib/client-config'
 // Import feature flags to bind them to window for developer tools access
 import './common/lib/feature-flags'
 // Import OS design devtools to bind OsDesign.setMac/setWindows/reset to window
 import './common/lib/os-design'
 
-// Sentry setup
-Sentry.init({
-  // Adds request headers and IP for users, for more info visit:
-  // https://docs.sentry.io/platforms/javascript/guides/electron/configuration/options/#sendDefaultPii
-  sendDefaultPii: true,
-  integrations: [
-    Sentry.browserTracingIntegration(),
-    Sentry.replayIntegration(),
-  ],
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for performance monitoring.
-  // We recommend adjusting this value in production
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
-  tracesSampleRate: 1.0,
-  // Capture Replay for 10% of all sessions,
-  // plus for 100% of sessions with an error
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
-  // It will send errors, exceptions and captured messages to Sentry only if the user has enabled telemetry
-  beforeSend: async (event) =>
-    (await window.electronAPI.sentry.isEnabled) ? event : null,
-  // It will send transactions to Sentry only if the user has enabled telemetry
-  beforeSendTransaction: async (transaction) => {
-    if (!(await window.electronAPI.sentry.isEnabled)) {
-      return null
-    }
-    if (!transaction?.contexts?.trace) return null
-
-    const instanceId = await window.electronAPI.getInstanceId()
-    const trace = transaction.contexts.trace
-
-    return {
-      ...transaction,
-      contexts: {
-        ...transaction.contexts,
-        trace: {
-          ...trace,
-          data: {
-            ...transaction.contexts.trace.data,
-            'custom.user_id': instanceId,
-          },
-        },
-      },
-    }
-  },
-})
+initSentry()
 
 if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
   log.error('ToolHive port API not available in renderer')
 }
 
 ;(async () => {
-  try {
-    const port = await window.electronAPI.getToolhivePort()
-    const telemetryHeaders = await window.electronAPI.getTelemetryHeaders()
-    const baseUrl = `http://localhost:${port}`
-
-    client.setConfig({
-      baseUrl,
-      headers: telemetryHeaders,
-    })
-  } catch (e) {
-    log.error('Failed to get ToolHive port from main process: ', e)
-    throw e
-  }
+  await configureClient()
 
   // One-time migration: sync the old localStorage quit-confirmation
   // preference into the main-process electron-store so existing users
