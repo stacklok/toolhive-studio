@@ -24,11 +24,15 @@ export const shutdownStore = new Store({
   },
 })
 
-/** Create API client for the given port */
-function createApiClient(port: number) {
+/**
+ * Create API client. When a custom fetch is provided (UNIX socket transport),
+ * the baseUrl is a dummy since the custom fetch handles routing.
+ */
+function createApiClient(opts: { port?: number; customFetch?: typeof fetch }) {
   return createClient({
-    baseUrl: `http://localhost:${port}`,
+    baseUrl: opts.port ? `http://localhost:${opts.port}` : 'http://localhost',
     headers: getHeaders(),
+    ...(opts.customFetch ? { fetch: opts.customFetch } : {}),
   })
 }
 
@@ -116,10 +120,11 @@ async function pollUntilAllStopped(
 
 /** Stop every running server in parallel and wait until *all* are down. */
 export async function stopAllServers(
-  _binPath: string, // Kept for backward compatibility
-  port: number
+  _binPath: string,
+  opts: { port?: number; createFetch?: () => typeof fetch }
 ): Promise<void> {
-  const client = createApiClient(port)
+  const customFetch = opts.createFetch?.()
+  const client = createApiClient({ port: opts.port, customFetch })
   const servers = await getRunningServers(client)
   log.info(
     `Found ${servers.length} running servers: `,

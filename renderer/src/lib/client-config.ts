@@ -1,18 +1,23 @@
 import { client } from '@common/api/generated/client.gen'
+import { ipcFetch } from '../common/lib/ipc-fetch'
 import log from 'electron-log/renderer'
 
 export async function configureClient() {
   try {
-    const port = await window.electronAPI.getToolhivePort()
+    // All API requests are routed through the main process via IPC. The main
+    // process forwards them to the thv server over a UNIX socket (or TCP
+    // fallback). The baseUrl is a dummy used only for URL construction inside
+    // the hey-api client; the ipcFetch adapter strips it and sends only the
+    // path + query to the main process.
     const telemetryHeaders = await window.electronAPI.getTelemetryHeaders()
-    const baseUrl = `http://localhost:${port}`
 
     client.setConfig({
-      baseUrl,
+      baseUrl: 'http://localhost',
+      fetch: ipcFetch,
       headers: telemetryHeaders,
     })
   } catch (e) {
-    log.error('Failed to get ToolHive port from main process: ', e)
+    log.error('Failed to configure ToolHive API client: ', e)
     throw e
   }
 }
