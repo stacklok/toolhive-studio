@@ -13,16 +13,16 @@ on:
 jobs:
   claude:
     if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-      (github.event_name == 'issues' && contains(github.event.issue.body, '@claude'))
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body || '', '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body || '', '@claude')) ||
+      (github.event_name == 'pull_request_review' && contains(github.event.review.body || '', '@claude')) ||
+      (github.event_name == 'issues' && contains(github.event.issue.body || '', '@claude'))
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
-      contents: read
-      pull-requests: read
-      issues: read
+      contents: write
+      pull-requests: write
+      issues: write
       id-token: write
       actions: read # Required for Claude to read CI results on PRs
     steps:
