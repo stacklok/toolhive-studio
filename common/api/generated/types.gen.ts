@@ -1000,10 +1000,27 @@ export type StorageRedisRunConfig = {
    */
   read_timeout?: string
   sentinel_config?: StorageSentinelRunConfig
+  sentinel_tls?: StorageRedisTlsRunConfig
+  tls?: StorageRedisTlsRunConfig
   /**
    * WriteTimeout is the timeout for write operations (e.g., "3s").
    */
   write_timeout?: string
+}
+
+/**
+ * SentinelTLS configures TLS for Sentinel connections.
+ * Falls back to TLS config when nil.
+ */
+export type StorageRedisTlsRunConfig = {
+  /**
+   * CACertFile is the path to a PEM-encoded CA certificate file.
+   */
+  ca_cert_file?: string
+  /**
+   * InsecureSkipVerify skips certificate verification.
+   */
+  insecure_skip_verify?: boolean
 }
 
 /**
