@@ -15,21 +15,6 @@ import { toolhiveApi, type ToolhiveAPI } from './api/toolhive'
 import { utilsApi, type UtilsAPI } from './api/utils'
 import { windowApi, type WindowAPI } from './api/window'
 
-contextBridge.exposeInMainWorld('electronAPI', {
-  ...appApi,
-  ...darkModeApi,
-  ...windowApi,
-  ...toolhiveApi,
-  ...telemetryApi,
-  ...autoUpdateApi,
-  ...dialogsApi,
-  ...featureFlagsApi,
-  ...chatApi,
-  ...cliApi,
-  ...utilsApi,
-  ...eventsApi,
-})
-
 export type ElectronAPI = AppAPI &
   DarkModeAPI &
   WindowAPI &
@@ -42,3 +27,20 @@ export type ElectronAPI = AppAPI &
   CliAPI &
   UtilsAPI &
   EventsAPI
+
+const electronAPI = {
+  ...appApi,
+  ...darkModeApi,
+  ...windowApi,
+  ...toolhiveApi,
+  ...telemetryApi,
+  ...autoUpdateApi,
+  ...dialogsApi,
+  ...featureFlagsApi,
+  ...chatApi,
+  ...cliApi,
+  ...utilsApi,
+  ...eventsApi,
+} satisfies ElectronAPI
+
+contextBridge.exposeInMainWorld('electronAPI', electronAPI)

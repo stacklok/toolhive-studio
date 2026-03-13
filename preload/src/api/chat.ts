@@ -208,10 +208,10 @@ export interface ChatAPI {
     }>
 
     getActiveThreadId: () => Promise<string | undefined>
-    setActiveThreadId: (threadId?: string) => {
+    setActiveThreadId: (threadId?: string) => Promise<{
       success: boolean
       error?: string
-    }
+    }>
 
     createChatThread: (
       title?: string,

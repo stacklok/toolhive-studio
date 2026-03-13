@@ -37,13 +37,4 @@ export interface AutoUpdateAPI {
   onUpdateDownloaded: (
     callback: (_event: Electron.IpcRendererEvent) => void
   ) => () => void
-  onUpdateAvailable: (
-    callback: (_event: Electron.IpcRendererEvent) => void
-  ) => () => void
-  onUpdateChecking: (
-    callback: (_event: Electron.IpcRendererEvent) => void
-  ) => () => void
-  onUpdateNotAvailable: (
-    callback: (_event: Electron.IpcRendererEvent) => void
-  ) => () => void
 }
