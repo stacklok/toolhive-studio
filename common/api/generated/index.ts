@@ -316,6 +316,7 @@ export type {
   SkillsValidationResult,
   StorageAclUserRunConfig,
   StorageRedisRunConfig,
+  StorageRedisTlsRunConfig,
   StorageRunConfig,
   StorageSentinelRunConfig,
   TelemetryConfig,
