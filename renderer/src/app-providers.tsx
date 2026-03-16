@@ -11,6 +11,7 @@ const TOOLTIP_DELAY_DURATION = 0
 
 interface AppProvidersProps {
   children: React.ReactNode
+  /** Override permission keys to selectively disable UI features. Unset keys default to `true`. */
   permissions?: Partial<Permissions>
 }
 
