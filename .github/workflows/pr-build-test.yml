@@ -11,6 +11,7 @@ concurrency:
 permissions:
   contents: read
   pull-requests: write
+  id-token: write
 
 jobs:
   # Gate job to check if we should run the build
@@ -22,6 +23,7 @@ jobs:
       pr_number: ${{ steps.pr-info.outputs.pr_number }}
       pr_sha: ${{ steps.pr-info.outputs.pr_sha }}
       sign_windows: ${{ steps.parse-flags.outputs.sign_windows }}
+      prerelease: ${{ steps.parse-flags.outputs.prerelease }}
       comment_id: ${{ steps.react.outputs.comment_id }}
     steps:
       - name: Parse command flags
@@ -31,9 +33,14 @@ jobs:
           script: |
             const comment = context.payload.comment.body;
             const signWindows = comment.includes('--sign-windows');
+            const prerelease = comment.includes('--prerelease');
             core.setOutput('sign_windows', signWindows ? 'true' : 'false');
+            core.setOutput('prerelease', prerelease ? 'true' : 'false');
             if (signWindows) {
               core.info('🔐 Windows signing enabled via --sign-windows flag');
+            }
+            if (prerelease) {
+              core.info('🧪 Pre-release build enabled via --prerelease flag');
             }
 
       - name: Check write permission
@@ -161,7 +168,11 @@ jobs:
         id: version
         shell: bash
         run: |
-          VERSION="0.0.0-pr.${{ env.PR_NUMBER }}"
+          if [ "${{ needs.check-trigger.outputs.prerelease }}" = "true" ]; then
+            VERSION="0.0.0-beta.${{ env.PR_NUMBER }}"
+          else
+            VERSION="0.0.0-pr.${{ env.PR_NUMBER }}"
+          fi
           echo "Setting version to: $VERSION"
           npm version $VERSION --no-git-tag-version --allow-same-version
           echo "version=$VERSION" >> $GITHUB_OUTPUT
@@ -191,6 +202,46 @@ jobs:
       - name: Setup Flatpak (Linux only)
         uses: ./.github/actions/setup-flatpak
         if: runner.os == 'Linux'
+
+      - name: Configure AWS Credentials
+        if: runner.os == 'Windows' && vars.AWS_ROLE_ARN != ''
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # v6
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      # TODO: remove after first successful pre-release — one-time backfill of nupkg to latest/ path
+      - name: Backfill Windows update artifacts to stable path
+        if: runner.os == 'Windows' && vars.AWS_ROLE_ARN != ''
+        shell: bash
+        run: |
+          if [ "${{ needs.check-trigger.outputs.prerelease }}" = "true" ]; then
+            CHANNEL="pre-release"
+          else
+            CHANNEL="stable"
+          fi
+          ARCH=${{ matrix.arch }}
+          BUCKET="toolhive-studio-releases"
+          DST="s3://${BUCKET}/${CHANNEL}/latest/win32/${ARCH}"
+
+          if aws s3 ls "${DST}/" | grep -q '\.nupkg$'; then
+            echo "nupkg already exists at ${DST} — skipping backfill"
+          else
+            echo "No nupkg at ${DST}, looking for latest versioned release..."
+            LATEST_VERSION=$(aws s3 ls "s3://${BUCKET}/${CHANNEL}/" --recursive \
+              | grep "win32/${ARCH}/.*\.nupkg$" \
+              | sort | tail -1 | awk '{print $NF}')
+
+            if [ -n "$LATEST_VERSION" ]; then
+              echo "Backfilling from s3://${BUCKET}/${LATEST_VERSION}"
+              aws s3 cp "s3://${BUCKET}/${LATEST_VERSION}" "${DST}/$(basename ${LATEST_VERSION})" --copy-props none
+
+              SRC_DIR=$(dirname "s3://${BUCKET}/${LATEST_VERSION}")
+              aws s3 cp "${SRC_DIR}/RELEASES" "${DST}/RELEASES" --copy-props none || true
+            else
+              echo "::warning::No nupkg found in any versioned path — skipping backfill"
+            fi
+          fi
 
       - name: Build App
         run: pnpm run make
