@@ -220,10 +220,10 @@ jobs:
 
             if [ -n "$LATEST_VERSION" ]; then
               echo "Backfilling from s3://${BUCKET}/${LATEST_VERSION}"
-              aws s3 cp "s3://${BUCKET}/${LATEST_VERSION}" "${DST}/$(basename ${LATEST_VERSION})"
+              aws s3 cp "s3://${BUCKET}/${LATEST_VERSION}" "${DST}/$(basename ${LATEST_VERSION})" --copy-props none
 
               SRC_DIR=$(dirname "s3://${BUCKET}/${LATEST_VERSION}")
-              aws s3 cp "${SRC_DIR}/RELEASES" "${DST}/RELEASES" || true
+              aws s3 cp "${SRC_DIR}/RELEASES" "${DST}/RELEASES" --copy-props none || true
             else
               echo "::warning::No nupkg found in any versioned path — skipping backfill"
             fi
