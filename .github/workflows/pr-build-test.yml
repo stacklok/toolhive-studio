@@ -22,6 +22,7 @@ jobs:
       pr_number: ${{ steps.pr-info.outputs.pr_number }}
       pr_sha: ${{ steps.pr-info.outputs.pr_sha }}
       sign_windows: ${{ steps.parse-flags.outputs.sign_windows }}
+      prerelease: ${{ steps.parse-flags.outputs.prerelease }}
       comment_id: ${{ steps.react.outputs.comment_id }}
     steps:
       - name: Parse command flags
@@ -31,9 +32,14 @@ jobs:
           script: |
             const comment = context.payload.comment.body;
             const signWindows = comment.includes('--sign-windows');
+            const prerelease = comment.includes('--prerelease');
             core.setOutput('sign_windows', signWindows ? 'true' : 'false');
+            core.setOutput('prerelease', prerelease ? 'true' : 'false');
             if (signWindows) {
               core.info('🔐 Windows signing enabled via --sign-windows flag');
+            }
+            if (prerelease) {
+              core.info('🧪 Pre-release build enabled via --prerelease flag');
             }
 
       - name: Check write permission
@@ -161,7 +167,11 @@ jobs:
         id: version
         shell: bash
         run: |
-          VERSION="0.0.0-pr.${{ env.PR_NUMBER }}"
+          if [ "${{ needs.check-trigger.outputs.prerelease }}" = "true" ]; then
+            VERSION="0.0.0-beta.${{ env.PR_NUMBER }}"
+          else
+            VERSION="0.0.0-pr.${{ env.PR_NUMBER }}"
+          fi
           echo "Setting version to: $VERSION"
           npm version $VERSION --no-git-tag-version --allow-same-version
           echo "version=$VERSION" >> $GITHUB_OUTPUT
