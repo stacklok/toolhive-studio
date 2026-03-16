@@ -8,16 +8,14 @@ import * as Sentry from '@sentry/electron/main'
 
 interface ReleasesJson {
   currentRelease: string
-  releases: {
-    version: string
-    updateTo: {
-      version: string
-      pub_date: string
-      name: string
-      url: string
-    }
-  }[]
 }
+
+interface LatestManifest {
+  tag: string
+}
+
+const GITHUB_PAGES_MANIFEST =
+  'https://stacklok.github.io/toolhive-studio/latest/index.json'
 
 function isCurrentVersionPrerelease(currentVersion: string): boolean {
   return (
@@ -31,20 +29,32 @@ function getChannel(currentVersion: string): string {
   return isCurrentVersionPrerelease(currentVersion) ? 'pre-release' : 'stable'
 }
 
+function getManifestUrl(currentVersion: string): string {
+  if (process.platform === 'linux') {
+    return GITHUB_PAGES_MANIFEST
+  }
+  const channel = getChannel(currentVersion)
+  return `https://releases.toolhive.dev/${channel}/latest/${process.platform}/${process.arch}/RELEASES.json`
+}
+
+function parseLatestVersion(
+  data: ReleasesJson | LatestManifest
+): string | undefined {
+  if ('currentRelease' in data) {
+    return data.currentRelease
+  }
+  return data.tag
+}
+
 export async function fetchLatestRelease(span: Sentry.Span) {
   const currentVersion = getAppVersion()
-  const channel = getChannel(currentVersion)
+  const url = getManifestUrl(currentVersion)
 
-  log.info('[update] checking CloudFront for ToolHive update...')
+  log.info('[update] checking for latest ToolHive release...')
 
-  const response = await fetch(
-    `https://releases.toolhive.dev/${channel}/latest/${process.platform}/${process.arch}/RELEASES.json`,
-    {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }
-  )
+  const response = await fetch(url, {
+    headers: { 'Content-Type': 'application/json' },
+  })
 
   if (!response.ok) {
     log.error(
@@ -62,8 +72,8 @@ export async function fetchLatestRelease(span: Sentry.Span) {
     }
   }
 
-  const data: ReleasesJson = await response.json()
-  const latestTag = data.currentRelease
+  const data = await response.json()
+  const latestTag = parseLatestVersion(data)
 
   const isNewVersion = isCurrentVersionOlder(
     normalizeVersion(currentVersion),

@@ -988,21 +988,11 @@ describe('auto-update', () => {
         global.fetch = originalFetch
       })
 
-      it('returns latest version when available for current platform', async () => {
-        const mockResponse = {
-          currentRelease: '1.5.0',
-          releases: [
-            {
-              version: '1.5.0',
-              updateTo: {
-                version: '1.5.0',
-                pub_date: '2024-01-01T00:00:00Z',
-                name: 'app-1.5.0.zip',
-                url: 'https://releases.toolhive.dev/stable/1.5.0/darwin/arm64/app-1.5.0.zip',
-              },
-            },
-          ],
-        }
+      it('returns latest version when available', async () => {
+        const mockResponse =
+          process.platform === 'linux'
+            ? { tag: 'v1.5.0', prerelease: false }
+            : { currentRelease: '1.5.0' }
 
         global.fetch = vi.fn().mockResolvedValue({
           ok: true,
@@ -1013,26 +1003,16 @@ describe('auto-update', () => {
 
         expect(result).toEqual({
           currentVersion: '1.0.0',
-          latestVersion: '1.5.0',
+          latestVersion: process.platform === 'linux' ? 'v1.5.0' : '1.5.0',
           isNewVersionAvailable: true,
         })
       })
 
       it('returns no update when latest version matches current', async () => {
-        const mockResponse = {
-          currentRelease: '1.0.0',
-          releases: [
-            {
-              version: '1.0.0',
-              updateTo: {
-                version: '1.0.0',
-                pub_date: '2024-01-01T00:00:00Z',
-                name: 'app-1.0.0.zip',
-                url: 'https://releases.toolhive.dev/stable/1.0.0/darwin/arm64/app-1.0.0.zip',
-              },
-            },
-          ],
-        }
+        const mockResponse =
+          process.platform === 'linux'
+            ? { tag: 'v1.0.0', prerelease: false }
+            : { currentRelease: '1.0.0' }
 
         global.fetch = vi.fn().mockResolvedValue({
           ok: true,
@@ -1043,7 +1023,7 @@ describe('auto-update', () => {
 
         expect(result).toEqual({
           currentVersion: '1.0.0',
-          latestVersion: '1.0.0',
+          latestVersion: process.platform === 'linux' ? 'v1.0.0' : '1.0.0',
           isNewVersionAvailable: false,
         })
       })
