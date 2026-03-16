@@ -30,12 +30,14 @@ vi.mock('electron', () => {
   const mockApp = new EventEmitter() as EventEmitter & {
     relaunch: (options?: unknown) => void
     quit: () => void
+    getVersion: () => string
     removeAllListeners: (event?: string | symbol) => EventEmitter
   }
   const originalRemoveAllListeners = mockApp.removeAllListeners.bind(mockApp)
   Object.assign(mockApp, {
     relaunch: vi.fn(),
     quit: vi.fn(),
+    getVersion: vi.fn(() => '1.0.0'),
     removeAllListeners: vi.fn((event?: string | symbol) => {
       originalRemoveAllListeners(event)
       return mockApp
@@ -94,6 +96,7 @@ vi.mock('@sentry/electron/main', () => ({
 // Mock update-electron-app
 vi.mock('update-electron-app', () => ({
   updateElectronApp: vi.fn(),
+  UpdateSourceType: { StaticStorage: 'StaticStorage' },
 }))
 
 // Mock electron-store
@@ -986,16 +989,18 @@ describe('auto-update', () => {
       })
 
       it('returns latest version when available for current platform', async () => {
-        const originalPlatform = process.platform
-        Object.defineProperty(process, 'platform', { value: 'darwin' })
-
         const mockResponse = {
-          tag: 'v1.5.0',
-          prerelease: false,
-          published_at: '2024-01-01',
-          base_url: 'https://example.com',
-          assets: [
-            { name: 'app-darwin-arm64.zip', url: '', size: 100, sha256: '' },
+          currentRelease: '1.5.0',
+          releases: [
+            {
+              version: '1.5.0',
+              updateTo: {
+                version: '1.5.0',
+                pub_date: '2024-01-01T00:00:00Z',
+                name: 'app-1.5.0.zip',
+                url: 'https://releases.toolhive.dev/stable/1.5.0/darwin/arm64/app-1.5.0.zip',
+              },
+            },
           ],
         }
 
@@ -1008,20 +1013,25 @@ describe('auto-update', () => {
 
         expect(result).toEqual({
           currentVersion: '1.0.0',
-          latestVersion: 'v1.5.0',
+          latestVersion: '1.5.0',
           isNewVersionAvailable: true,
         })
-
-        Object.defineProperty(process, 'platform', { value: originalPlatform })
       })
 
-      it('returns no update when latest version is not available for platform', async () => {
+      it('returns no update when latest version matches current', async () => {
         const mockResponse = {
-          tag: 'v1.5.0',
-          prerelease: false,
-          published_at: '2024-01-01',
-          base_url: 'https://example.com',
-          assets: [{ name: 'app-other.zip', url: '', size: 100, sha256: '' }],
+          currentRelease: '1.0.0',
+          releases: [
+            {
+              version: '1.0.0',
+              updateTo: {
+                version: '1.0.0',
+                pub_date: '2024-01-01T00:00:00Z',
+                name: 'app-1.0.0.zip',
+                url: 'https://releases.toolhive.dev/stable/1.0.0/darwin/arm64/app-1.0.0.zip',
+              },
+            },
+          ],
         }
 
         global.fetch = vi.fn().mockResolvedValue({
@@ -1033,7 +1043,7 @@ describe('auto-update', () => {
 
         expect(result).toEqual({
           currentVersion: '1.0.0',
-          latestVersion: undefined,
+          latestVersion: '1.0.0',
           isNewVersionAvailable: false,
         })
       })
