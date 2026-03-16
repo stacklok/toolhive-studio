@@ -83,7 +83,8 @@ jobs:
             else ARCH="x64"
             fi
 
-            CDN_URL="${CDN_BASE}/${PLATFORM}/${ARCH}/${NAME}"
+            ENCODED_NAME=$(jq -rn --arg n "$NAME" '$n | @uri')
+            CDN_URL="${CDN_BASE}/${PLATFORM}/${ARCH}/${ENCODED_NAME}"
             echo "Adding asset: $NAME -> $CDN_URL"
 
             jq --arg name "$NAME" \
