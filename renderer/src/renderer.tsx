@@ -6,14 +6,9 @@ import {
   createHashHistory,
 } from '@tanstack/react-router'
 import { routeTree } from './route-tree.gen'
-import { QueryClientProvider } from '@tanstack/react-query'
-import { TooltipProvider } from '@radix-ui/react-tooltip'
-import { ThemeProvider } from './common/components/theme/theme-provider'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import log from 'electron-log/renderer'
-
 import './index.css'
-import { PromptProvider } from './common/contexts/prompt/provider'
+import { AppProviders } from './app-providers'
 import { trackPageView } from './common/lib/analytics'
 import { queryClient } from './common/lib/query-client'
 import { initSentry } from './lib/sentry'
@@ -66,16 +61,9 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
 
   root.render(
     <StrictMode>
-      <ThemeProvider defaultTheme="system" storageKey="toolhive-ui-theme">
-        <PromptProvider>
-          <QueryClientProvider client={queryClient}>
-            <TooltipProvider delayDuration={0}>
-              <RouterProvider router={router} />
-            </TooltipProvider>
-            <ReactQueryDevtools initialIsOpen={false} />
-          </QueryClientProvider>
-        </PromptProvider>
-      </ThemeProvider>
+      <AppProviders>
+        <RouterProvider router={router} />
+      </AppProviders>
     </StrictMode>
   )
 
