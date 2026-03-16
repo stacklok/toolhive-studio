@@ -12,7 +12,6 @@
 
 # ToolHive Desktop UI
 
-
 **Run any Model Context Protocol (MCP) server — securely, instantly, anywhere.**
 
 ToolHive is the easiest way to discover, deploy, and manage MCP servers. Launch
