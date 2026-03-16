@@ -131,7 +131,7 @@ jobs:
           APPLE_ISSUER_ID: ${{ env.APPLE_ISSUER_ID }}
           APPLE_KEY_ID: ${{ env.APPLE_KEY_ID }}
 
-      - name: Generate and upload macOS update manifest
+      - name: Copy macOS update manifest to stable path
         id: macos-manifest
         if: runner.os == 'macOS' && vars.AWS_ROLE_ARN != ''
         shell: bash
@@ -141,50 +141,15 @@ jobs:
           CHANNEL=${{ github.event.release.prerelease == true && 'pre-release' || 'stable' }}
           ARCH=${{ matrix.arch }}
           BUCKET="toolhive-studio-releases"
-          SRC_PREFIX="${CHANNEL}/${VERSION}/darwin/${ARCH}"
-          DST_PREFIX="${CHANNEL}/latest/darwin/${ARCH}"
-          CDN_BASE="https://releases.toolhive.dev"
-          PUB_DATE=$(date -u +"%Y-%m-%dT%H:%M:%S+00:00")
+          SRC="s3://${BUCKET}/${CHANNEL}/${VERSION}/darwin/${ARCH}/RELEASES.json"
+          DST="s3://${BUCKET}/${CHANNEL}/latest/darwin/${ARCH}/RELEASES.json"
 
-          echo "Looking for ZIP artifacts at s3://${BUCKET}/${SRC_PREFIX}/"
-          ZIP_FILE=$(aws s3 ls "s3://${BUCKET}/${SRC_PREFIX}/" | grep '\.zip$' | awk '{print $NF}' | head -1)
-
-          if [ -z "$ZIP_FILE" ]; then
-            echo "::warning::No ZIP artifact found at s3://${BUCKET}/${SRC_PREFIX}/ — skipping RELEASES.json generation"
+          if aws s3 cp "${SRC}" "${DST}" --acl public-read; then
+            echo "uploaded=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::No RELEASES.json found at ${SRC} — skipping"
             echo "uploaded=false" >> "$GITHUB_OUTPUT"
-            exit 0
           fi
-
-          echo "Found ZIP: ${ZIP_FILE}"
-          DOWNLOAD_URL="${CDN_BASE}/${SRC_PREFIX}/${ZIP_FILE}"
-
-          jq -n \
-            --arg version "$VERSION" \
-            --arg pub_date "$PUB_DATE" \
-            --arg url "$DOWNLOAD_URL" \
-            '{
-              currentRelease: $version,
-              releases: [
-                {
-                  version: $version,
-                  updateTo: {
-                    version: $version,
-                    pub_date: $pub_date,
-                    name: $version,
-                    url: $url
-                  }
-                }
-              ]
-            }' > /tmp/RELEASES.json
-
-          echo "Generated RELEASES.json:"
-          cat /tmp/RELEASES.json
-
-          aws s3 cp /tmp/RELEASES.json "s3://${BUCKET}/${DST_PREFIX}/RELEASES.json" \
-            --content-type "application/json"
-
-          echo "Uploaded RELEASES.json to s3://${BUCKET}/${DST_PREFIX}/RELEASES.json"
-          echo "uploaded=true" >> "$GITHUB_OUTPUT"
 
       - name: Promote Windows update manifests to stable path
         id: windows-manifest
@@ -231,12 +196,3 @@ jobs:
           aws cloudfront create-invalidation \
             --distribution-id "$DIST_ID" \
             --paths "/${CHANNEL}/latest/${PLATFORM}/${ARCH}/*"
-
-  mirror-pages:
-    name: Mirror release to GitHub Pages
-    needs: [build-and-release]
-    if: ${{ always() && needs.build-and-release.result == 'success' }}
-    uses: ./.github/workflows/mirror-to-gh-pages.yml
-    with:
-      tag: ${{ github.ref_name }}
-    secrets: inherit

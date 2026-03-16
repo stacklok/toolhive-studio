@@ -1,3 +1,6 @@
+# Superseded by CloudFront-based update manifests (releases.toolhive.dev).
+# This workflow is no longer called from on-release.yml and can be removed
+# once GitHub Pages is fully decommissioned.
 name: Mirror latest release to GitHub Pages
 
 on:
