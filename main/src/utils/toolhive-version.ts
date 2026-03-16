@@ -65,11 +65,10 @@ export async function fetchLatestRelease(span: Sentry.Span) {
   const data: ReleasesJson = await response.json()
   const latestTag = data.currentRelease
 
-  const currentIsPrerelease = isCurrentVersionPrerelease(currentVersion)
-
-  const isNewVersion = currentIsPrerelease
-    ? latestTag !== undefined
-    : isCurrentVersionOlder(currentVersion, normalizeVersion(latestTag ?? ''))
+  const isNewVersion = isCurrentVersionOlder(
+    normalizeVersion(currentVersion),
+    normalizeVersion(latestTag ?? '')
+  )
 
   span.setAttribute('latest_version', latestTag ?? 'unknown')
   span.setAttribute('is_new_version_available', isNewVersion)

@@ -173,7 +173,7 @@ jobs:
           SRC="s3://${BUCKET}/${CHANNEL}/${VERSION}/darwin/${ARCH}/RELEASES.json"
           DST="s3://${BUCKET}/${CHANNEL}/latest/darwin/${ARCH}/RELEASES.json"
 
-          if aws s3 cp "${SRC}" "${DST}" --acl public-read; then
+          if aws s3 cp "${SRC}" "${DST}"; then
             echo "uploaded=true" >> "$GITHUB_OUTPUT"
           else
             echo "::warning::No RELEASES.json found at ${SRC} — skipping"
