@@ -93,7 +93,7 @@ export const test = base.extend<ElectronFixtures>({
 
     const app = await electron.launch({
       executablePath: getExecutablePath(),
-      recordVideo: { dir: 'test-videos' },
+      ...(process.env.CI ? { recordVideo: { dir: 'test-videos' } } : {}),
       args: ['--no-sandbox'],
       env: {
         ...process.env,
