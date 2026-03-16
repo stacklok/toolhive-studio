@@ -167,8 +167,6 @@ jobs:
           echo "Promoting Windows update files from ${SRC} to ${DST}"
 
           # --delete ensures stale nupkg files from previous releases don't accumulate in latest/
-          # Note: RELEASES only contains the current full release entry; cumulative delta support
-          # will be added alongside remoteReleases in MakerSquirrel in a follow-up PR.
           if aws s3 sync "${SRC}/" "${DST}/" \
             --delete \
             --exclude "*" \
@@ -196,3 +194,12 @@ jobs:
           aws cloudfront create-invalidation \
             --distribution-id "$DIST_ID" \
             --paths "/${CHANNEL}/latest/${PLATFORM}/${ARCH}/*"
+
+  mirror-pages:
+    name: Mirror release to GitHub Pages
+    needs: [build-and-release]
+    if: ${{ always() && needs.build-and-release.result == 'success' }}
+    uses: ./.github/workflows/mirror-to-gh-pages.yml
+    with:
+      tag: ${{ github.ref_name }}
+    secrets: inherit
