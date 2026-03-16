@@ -1,7 +1,5 @@
 import 'dotenv/config'
 import type { ForgeConfig } from '@electron-forge/shared-types'
-import { MakerSquirrel } from '@electron-forge/maker-squirrel'
-import { MakerZIP } from '@electron-forge/maker-zip'
 import { MakerDeb } from '@electron-forge/maker-deb'
 import { MakerRpm } from '@electron-forge/maker-rpm'
 import MakerFlatpakBuilder from './utils/forge-makers/MakerFlatpakBuilder'
@@ -112,22 +110,22 @@ const config: ForgeConfig = {
   ],
 
   makers: [
-    new MakerSquirrel({
-      // Windows Squirrel installer configuration
-      setupIcon: './icons/icon.ico', // Setup.exe icon
-      setupExe: 'ToolHive Setup.exe',
-      noMsi: true, // Don't create MSI installer
-      authors: 'Stacklok',
-      exe: 'ToolHive.exe',
-      name: 'ToolHive',
-      // Use DigiCert KeyLocker for signing the installer
-      windowsSign:
-        process.env.SM_HOST && process.env.SM_API_KEY
-          ? {
-              hookModulePath: './utils/digicert-hook.js',
-            }
-          : undefined,
-    }),
+    {
+      name: '@electron-forge/maker-squirrel',
+      config: (arch: string) => ({
+        setupIcon: './icons/icon.ico',
+        setupExe: 'ToolHive Setup.exe',
+        noMsi: true,
+        authors: 'Stacklok',
+        exe: 'ToolHive.exe',
+        name: 'ToolHive',
+        remoteReleases: `https://releases.toolhive.dev/${isPrerelease() ? 'pre-release' : 'stable'}/latest/win32/${arch}`,
+        windowsSign:
+          process.env.SM_HOST && process.env.SM_API_KEY
+            ? { hookModulePath: './utils/digicert-hook.js' }
+            : undefined,
+      }),
+    },
     new MakerDMGWithArch(
       {
         name: 'ToolHive',
@@ -146,7 +144,13 @@ const config: ForgeConfig = {
       },
       ['darwin']
     ),
-    new MakerZIP({}, ['darwin', 'win32']),
+    {
+      name: '@electron-forge/maker-zip',
+      platforms: ['darwin', 'win32'],
+      config: (arch: string) => ({
+        macUpdateManifestBaseUrl: `https://releases.toolhive.dev/${isPrerelease() ? 'pre-release' : 'stable'}/${packageJson.version}/darwin/${arch}`,
+      }),
+    },
     new MakerTarGz({}, ['linux']),
     new MakerRpm({
       options: {

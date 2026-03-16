@@ -6,78 +6,56 @@ import { getAppVersion } from '../util'
 import log from '../logger'
 import * as Sentry from '@sentry/electron/main'
 
-interface ReleaseAsset {
-  name: string
-  url: string
-  size: number
-  sha256: string
+interface ReleasesJson {
+  currentRelease: string
 }
 
-interface ReleaseInfo {
+interface LatestManifest {
   tag: string
-  prerelease: boolean
-  published_at: string
-  base_url: string
-  assets: ReleaseAsset[]
 }
 
-/**
- * Gets all download assets for the current platform
- * @param releaseInfo - The release information from the API
- * @returns The tag of the release
- */
-function getAssetsTagByPlatform(releaseInfo: ReleaseInfo): string | undefined {
-  const platform = process.platform
+const GITHUB_PAGES_MANIFEST =
+  'https://stacklok.github.io/toolhive-studio/latest/index.json'
 
-  // Map platform to asset name patterns
-  const assetPatterns: Record<string, string[]> = {
-    darwin: ['darwin-arm64', 'darwin-x64'],
-    win32: ['win32-x64', 'Setup.exe'],
-    linux: ['linux-x64', 'amd64'],
-  }
-
-  const patterns = assetPatterns[platform]
-  if (!patterns) {
-    log.error(`[update] Unsupported platform: ${platform}`)
-    return
-  }
-
-  const assets = releaseInfo.assets.filter((asset) => {
-    const assetName = asset.name.toLowerCase()
-    return patterns.some((pattern) => assetName.includes(pattern.toLowerCase()))
-  })
-
-  if (assets.length > 0) {
-    return releaseInfo.tag
-  } else {
-    log.error(`[update] No assets found for patterns: ${patterns.join(', ')}`)
-    return
-  }
-}
-
-function isCurrentVersionPrerelease(
-  currentVersion: string,
-  releaseData: ReleaseInfo
-): boolean {
+function isCurrentVersionPrerelease(currentVersion: string): boolean {
   return (
     currentVersion.includes('-beta') ||
     currentVersion.includes('-alpha') ||
-    currentVersion.includes('-rc') ||
-    releaseData.prerelease === true
+    currentVersion.includes('-rc')
   )
+}
+
+function getChannel(currentVersion: string): string {
+  return isCurrentVersionPrerelease(currentVersion) ? 'pre-release' : 'stable'
+}
+
+function getManifestUrl(currentVersion: string): string {
+  if (process.platform === 'linux') {
+    return GITHUB_PAGES_MANIFEST
+  }
+  const channel = getChannel(currentVersion)
+  return `https://releases.toolhive.dev/${channel}/latest/${process.platform}/${process.arch}/RELEASES.json`
+}
+
+function parseLatestVersion(
+  data: ReleasesJson | LatestManifest
+): string | undefined {
+  if ('currentRelease' in data) {
+    return data.currentRelease
+  }
+  return data.tag
 }
 
 export async function fetchLatestRelease(span: Sentry.Span) {
   const currentVersion = getAppVersion()
-  log.info('[update] checking github pages for ToolHive update...')
-  const response = await fetch(
-    'https://stacklok.github.io/toolhive-studio/latest',
-    {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }
-  )
+  const url = getManifestUrl(currentVersion)
+
+  log.info('[update] checking for latest ToolHive release...')
+
+  const response = await fetch(url, {
+    headers: { 'Content-Type': 'application/json' },
+  })
+
   if (!response.ok) {
     log.error(
       '[update] Failed to check for ToolHive update: ',
@@ -88,30 +66,26 @@ export async function fetchLatestRelease(span: Sentry.Span) {
       message: `HTTP ${response.status}: ${response.statusText}`,
     })
     return {
-      currentVersion: currentVersion,
+      currentVersion,
       latestVersion: undefined,
       isNewVersionAvailable: false,
     }
   }
 
   const data = await response.json()
-  const latestTag = getAssetsTagByPlatform(data)
+  const latestTag = parseLatestVersion(data)
 
-  // If current version is a prerelease (contains -beta, -alpha, -rc) OR data.prerelease is true,
-  // always consider it as older than ANY latest version
-  // This allows testing updates even when running a prerelease build
-  const currentIsPrerelease = isCurrentVersionPrerelease(currentVersion, data)
-
-  const isNewVersion = currentIsPrerelease
-    ? latestTag !== undefined // If prerelease, any latest tag is considered new
-    : isCurrentVersionOlder(currentVersion, normalizeVersion(latestTag ?? ''))
+  const isNewVersion = isCurrentVersionOlder(
+    normalizeVersion(currentVersion),
+    normalizeVersion(latestTag ?? '')
+  )
 
   span.setAttribute('latest_version', latestTag ?? 'unknown')
   span.setAttribute('is_new_version_available', isNewVersion)
   span.setStatus({ code: 1 })
 
   return {
-    currentVersion: currentVersion,
+    currentVersion,
     latestVersion: latestTag,
     isNewVersionAvailable: isNewVersion,
   }

@@ -30,12 +30,14 @@ vi.mock('electron', () => {
   const mockApp = new EventEmitter() as EventEmitter & {
     relaunch: (options?: unknown) => void
     quit: () => void
+    getVersion: () => string
     removeAllListeners: (event?: string | symbol) => EventEmitter
   }
   const originalRemoveAllListeners = mockApp.removeAllListeners.bind(mockApp)
   Object.assign(mockApp, {
     relaunch: vi.fn(),
     quit: vi.fn(),
+    getVersion: vi.fn(() => '1.0.0'),
     removeAllListeners: vi.fn((event?: string | symbol) => {
       originalRemoveAllListeners(event)
       return mockApp
@@ -94,6 +96,7 @@ vi.mock('@sentry/electron/main', () => ({
 // Mock update-electron-app
 vi.mock('update-electron-app', () => ({
   updateElectronApp: vi.fn(),
+  UpdateSourceType: { StaticStorage: 'StaticStorage' },
 }))
 
 // Mock electron-store
@@ -985,19 +988,11 @@ describe('auto-update', () => {
         global.fetch = originalFetch
       })
 
-      it('returns latest version when available for current platform', async () => {
-        const originalPlatform = process.platform
-        Object.defineProperty(process, 'platform', { value: 'darwin' })
-
-        const mockResponse = {
-          tag: 'v1.5.0',
-          prerelease: false,
-          published_at: '2024-01-01',
-          base_url: 'https://example.com',
-          assets: [
-            { name: 'app-darwin-arm64.zip', url: '', size: 100, sha256: '' },
-          ],
-        }
+      it('returns latest version when available', async () => {
+        const mockResponse =
+          process.platform === 'linux'
+            ? { tag: 'v1.5.0', prerelease: false }
+            : { currentRelease: '1.5.0' }
 
         global.fetch = vi.fn().mockResolvedValue({
           ok: true,
@@ -1008,21 +1003,16 @@ describe('auto-update', () => {
 
         expect(result).toEqual({
           currentVersion: '1.0.0',
-          latestVersion: 'v1.5.0',
+          latestVersion: process.platform === 'linux' ? 'v1.5.0' : '1.5.0',
           isNewVersionAvailable: true,
         })
-
-        Object.defineProperty(process, 'platform', { value: originalPlatform })
       })
 
-      it('returns no update when latest version is not available for platform', async () => {
-        const mockResponse = {
-          tag: 'v1.5.0',
-          prerelease: false,
-          published_at: '2024-01-01',
-          base_url: 'https://example.com',
-          assets: [{ name: 'app-other.zip', url: '', size: 100, sha256: '' }],
-        }
+      it('returns no update when latest version matches current', async () => {
+        const mockResponse =
+          process.platform === 'linux'
+            ? { tag: 'v1.0.0', prerelease: false }
+            : { currentRelease: '1.0.0' }
 
         global.fetch = vi.fn().mockResolvedValue({
           ok: true,
@@ -1033,7 +1023,7 @@ describe('auto-update', () => {
 
         expect(result).toEqual({
           currentVersion: '1.0.0',
-          latestVersion: undefined,
+          latestVersion: process.platform === 'linux' ? 'v1.0.0' : '1.0.0',
           isNewVersionAvailable: false,
         })
       })

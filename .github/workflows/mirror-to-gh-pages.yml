@@ -40,61 +40,61 @@ jobs:
         run: |
           echo "::notice::Skipping prerelease ${{ steps.release.outputs.tag }} - only stable releases are mirrored to GitHub Pages"
 
-      - name: Generate manifest from GitHub Releases
+      - name: Generate manifest from CDN
         if: steps.release.outputs.prerelease != 'true'
         run: |
           TAG="${{ steps.release.outputs.tag }}"
+          VERSION="${TAG#v}"
           BASE_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
-          RELEASE_URL="https://github.com/${{ github.repository }}/releases/download/$TAG"
+          CDN_BASE="https://releases.toolhive.dev/stable/${VERSION}"
           TIMESTAMP=$(date +%s)
 
-          # Create directory for manifest
           mkdir -p "latest"
           cd "latest"
 
-          # Get release metadata from GitHub API
           RELEASE_DATA=$(gh api "repos/${{ github.repository }}/releases/tags/$TAG")
 
-          # Create manifest pointing to GitHub Releases
           jq -n \
             --arg tag "$TAG" \
             --arg published_at "${{ steps.release.outputs.published_at }}" \
             --argjson prerelease ${{ steps.release.outputs.prerelease }} \
             --arg base_url "$BASE_URL" \
             --arg timestamp "$TIMESTAMP" \
-            '
-            {
+            '{
               tag: $tag,
               prerelease: $prerelease,
               published_at: $published_at,
               base_url: $base_url,
               assets: []
-            }
-            ' > index.json
+            }' > index.json
 
-          # Add asset info to manifest and create redirect pages
           echo "$RELEASE_DATA" | jq -r '.assets[] | @json' | while read -r asset; do
             NAME=$(echo "$asset" | jq -r '.name')
             SIZE=$(echo "$asset" | jq -r '.size')
-            DOWNLOAD_URL=$(echo "$asset" | jq -r '.browser_download_url')
-            
-            echo "Adding asset: $NAME (${SIZE} bytes) -> $DOWNLOAD_URL"
-            
-            # Add to manifest with direct GitHub Releases URL
+
+            # Infer platform from asset name
+            if echo "$NAME" | grep -qi "darwin"; then PLATFORM="darwin"
+            elif echo "$NAME" | grep -qi "Setup\|\.nupkg\|^RELEASES$\|win32"; then PLATFORM="win32"
+            else PLATFORM="linux"
+            fi
+
+            # Infer arch from asset name
+            if echo "$NAME" | grep -qi "arm64\|aarch64"; then ARCH="arm64"
+            else ARCH="x64"
+            fi
+
+            ENCODED_NAME=$(jq -rn --arg n "$NAME" '$n | @uri')
+            CDN_URL="${CDN_BASE}/${PLATFORM}/${ARCH}/${ENCODED_NAME}"
+            echo "Adding asset: $NAME -> $CDN_URL"
+
             jq --arg name "$NAME" \
-               --arg url "$DOWNLOAD_URL" \
+               --arg url "$CDN_URL" \
                --argjson size "$SIZE" \
                '.assets += [{name: $name, url: $url, size: $size}]' \
                index.json > tmp.json && mv tmp.json index.json
           done
 
-          # Go back to parent to create 404.html that handles file redirects
-          cd ..
-          printf '%s\n' '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Redirecting...</title><script>(function(){var p=window.location.pathname;var m=p.match(/\/latest\/(.+)$/);if(m&&m[1]){var f=m[1];var t="'"$TAG"'";var r="'"${{ github.repository }}"'";var u="https://github.com/"+r+"/releases/download/"+t+"/"+f;window.location.replace(u);}else{document.body.innerHTML="<h1>404 - Not Found</h1>";}})();</script></head><body><p>Redirecting...</p></body></html>' > 404.html
-          cd latest
-
           echo "Generated manifest with $(jq '.assets | length' index.json) assets"
-          echo "Manifest content:"
           cat index.json
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
