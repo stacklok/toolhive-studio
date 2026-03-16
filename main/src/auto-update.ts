@@ -1,5 +1,5 @@
 import { app, autoUpdater, dialog, ipcMain, type BrowserWindow } from 'electron'
-import { updateElectronApp } from 'update-electron-app'
+import { updateElectronApp, UpdateSourceType } from 'update-electron-app'
 import * as Sentry from '@sentry/electron/main'
 import { stopAllServers } from './graceful-exit'
 import {
@@ -567,7 +567,15 @@ export function initAutoUpdate({
         autoUpdater.removeAllListeners()
         ipcMain.removeHandler('install-update-and-restart')
 
+        const channel = app.getVersion().match(/-(alpha|beta|rc)/)
+          ? 'pre-release'
+          : 'stable'
+
         updateElectronApp({
+          updateSource: {
+            type: UpdateSourceType.StaticStorage,
+            baseUrl: `https://releases.toolhive.dev/${channel}/latest/${process.platform}/${process.arch}`,
+          },
           logger: log,
           notifyUser: false,
           updateInterval: isManualUpdate ? '5 minutes' : '10 minutes',
