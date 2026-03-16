@@ -34,6 +34,8 @@ export default {
   ],
   ignoreDependencies: [
     '@electron-forge/maker-dmg', // Used indirectly in MakerDMGWithArch
+    '@electron-forge/maker-squirrel', // Referenced by name in forge.config.ts
+    '@electron-forge/maker-zip', // Referenced by name in forge.config.ts
     '@electron-forge/publisher-github',
     '@electron-forge/publisher-s3',
     '@electron-forge/maker-base',
