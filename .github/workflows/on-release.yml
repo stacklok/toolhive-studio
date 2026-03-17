@@ -167,8 +167,10 @@ jobs:
           echo "Promoting Windows update files from ${SRC} to ${DST}"
 
           # --delete ensures stale nupkg files from previous releases don't accumulate in latest/
+          # --copy-props none avoids s3:GetObjectTagging calls that the IAM role lacks
           if aws s3 sync "${SRC}/" "${DST}/" \
             --delete \
+            --copy-props none \
             --exclude "*" \
             --include "RELEASES" \
             --include "*.nupkg"; then
