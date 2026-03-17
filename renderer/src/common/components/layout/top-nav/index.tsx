@@ -146,7 +146,7 @@ export function TopNav({ isEnterprise = false, ...props }: TopNavProps) {
         {!isEnterprise && (
           <Button
             variant="success"
-            className="app-region-no-drag rounded-full"
+            className="app-region-no-drag rounded-full font-normal"
             size="sm"
             asChild
           >
