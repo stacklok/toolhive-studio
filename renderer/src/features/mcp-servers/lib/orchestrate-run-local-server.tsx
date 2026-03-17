@@ -1,7 +1,7 @@
 import {
-  type CoreWorkload,
-  type SecretsSecretParameter,
-  type V1ListSecretsResponse,
+  type GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload,
+  type GithubComStacklokToolhivePkgSecretsSecretParameter as SecretsSecretParameter,
+  type PkgApiV1ListSecretsResponse as V1ListSecretsResponse,
 } from '@common/api/generated/types.gen'
 import type {
   PermissionsOutboundNetworkPermissions,
@@ -204,20 +204,20 @@ export function convertCreateRequestToFormData(
     target_port: transport === 'stdio' ? 0 : createRequest.target_port,
     cmd_arguments: createRequest.cmd_arguments || [],
     envVars: Object.entries(createRequest.env_vars || {}).map(
-      ([name, value]) => ({ name, value })
+      ([name, value]: [string, string]) => ({ name, value })
     ),
     secrets,
     networkIsolation: createRequest.network_isolation || false,
     allowedHosts:
       createRequest.permission_profile?.network?.outbound?.allow_host?.map(
-        (value) => ({ value })
+        (value: string) => ({ value })
       ) || [],
     allowedPorts:
       createRequest.permission_profile?.network?.outbound?.allow_port?.map(
-        (port) => ({ value: port.toString() })
+        (port: number) => ({ value: port.toString() })
       ) || [],
     volumes:
-      createRequest.volumes?.map((vol) => {
+      createRequest.volumes?.map((vol: string) => {
         // Parse volume string format "host:container:mode"
         const parts = vol.split(':')
         return {

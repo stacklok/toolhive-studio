@@ -1,6 +1,6 @@
 import { getDb } from '../database'
 import { withDbSpan } from '../telemetry'
-import type { CoreWorkload } from '@common/api/generated/types.gen'
+import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
 
 export function readShutdownServers(): CoreWorkload[] {
   return withDbSpan('DB read shutdown servers', 'db.read', {}, () => {

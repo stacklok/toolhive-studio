@@ -6,8 +6,8 @@ import {
   getApiV1BetaWorkloadsByNameQueryKey,
 } from '@common/api/generated/@tanstack/react-query.gen'
 import type {
-  V1UpdateRequest,
-  V1WorkloadListResponse,
+  PkgApiV1UpdateRequest as V1UpdateRequest,
+  PkgApiV1WorkloadListResponse as V1WorkloadListResponse,
 } from '@common/api/generated/types.gen'
 
 export const useMutationUpdateWorkload = () => {

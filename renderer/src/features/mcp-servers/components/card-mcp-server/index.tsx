@@ -5,7 +5,7 @@ import {
   CardTitle,
 } from '@/common/components/ui/card'
 
-import type { CoreWorkload } from '@common/api/generated/types.gen'
+import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
 import type { RegistryEnvVar } from '@common/api/registry-types'
 import { ActionsMcpServer } from '../actions-mcp-server'
 import { useMutationRestartServer } from '../../hooks/use-mutation-restart-server'

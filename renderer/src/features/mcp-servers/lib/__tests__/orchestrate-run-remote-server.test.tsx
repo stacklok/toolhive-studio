@@ -6,8 +6,8 @@ import {
   convertCreateRequestToFormData,
 } from '../orchestrate-run-remote-server'
 import type {
-  V1CreateRequest,
-  V1ListSecretsResponse,
+  PkgApiV1CreateRequest as V1CreateRequest,
+  PkgApiV1ListSecretsResponse as V1ListSecretsResponse,
 } from '@common/api/generated/types.gen'
 
 beforeEach(() => {

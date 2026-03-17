@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { getEnvVarsDrift } from '../get-env-vars-drift'
-import type { V1CreateRequest } from '@common/api/generated/types.gen'
+import type { PkgApiV1CreateRequest as V1CreateRequest } from '@common/api/generated/types.gen'
 import type { RegistryEnvVar } from '@common/api/registry-types'
 
 describe('getEnvVarsDrift', () => {

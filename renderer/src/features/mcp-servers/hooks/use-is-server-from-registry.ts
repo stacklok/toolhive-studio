@@ -3,7 +3,11 @@ import {
   getApiV1BetaWorkloadsByNameOptions,
 } from '@common/api/generated/@tanstack/react-query.gen'
 import { useQuery } from '@tanstack/react-query'
-import type { V1ListServersResponse } from '@common/api/registry-types'
+import type {
+  RegistryImageMetadata,
+  RegistryRemoteServerMetadata,
+  V1ListServersResponse,
+} from '@common/api/registry-types'
 
 export interface IsFromRegistryToolDiff {
   hasExactMatch: boolean
@@ -41,10 +45,12 @@ export function useIsServerFromRegistry(serverName: string) {
 
   // If workload has a URL defined, it's a remote server - match by URL
   const matchedRegistryItem = workload?.url
-    ? remoteServersList.find((item) => item.url === workload.url)
+    ? remoteServersList.find(
+        (item: RegistryRemoteServerMetadata) => item.url === workload.url
+      )
     : workload?.image?.length
       ? serversList.find(
-          (item) =>
+          (item: RegistryImageMetadata) =>
             getImageNameWithoutTag(item.image) ===
             getImageNameWithoutTag(workload?.image)
         )
@@ -98,7 +104,9 @@ export function useIsServerFromRegistry(serverName: string) {
     }
 
     // Calculate diff if no exact match
-    const registryToolsSet = new Set(matchedRegistryItem.tools)
+    const registryToolsSet = new Set<string>(
+      matchedRegistryItem.tools as string[]
+    )
     const serverToolsSet = new Set(tools)
 
     // Tools in server but not in registry (deduplicated)

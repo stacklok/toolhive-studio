@@ -10,8 +10,8 @@ import * as headers from '../headers'
 import * as logger from '../logger'
 import * as delay from '../../../utils/delay'
 import type {
-  CoreWorkload,
-  V1WorkloadListResponse,
+  GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload,
+  PkgApiV1WorkloadListResponse as V1WorkloadListResponse,
 } from '@common/api/generated/types.gen'
 
 vi.mock('@sentry/electron/main', () => ({

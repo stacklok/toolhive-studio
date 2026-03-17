@@ -11,7 +11,7 @@ import {
   getApiV1BetaWorkloadsByNameStatusOptions,
   getApiV1BetaWorkloadsQueryKey,
 } from '@common/api/generated/@tanstack/react-query.gen'
-import type { CoreWorkload } from '@common/api/generated/types.gen'
+import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
 
 /**
  * Detects servers in transition statuses (e.g. from CLI actions) and polls

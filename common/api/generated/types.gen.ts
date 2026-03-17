@@ -6,59 +6,6 @@ export type ClientOptions = {
 
 /**
  * DEPRECATED: Middleware configuration.
- * AuditConfig contains the audit logging configuration
- */
-export type AuditConfig = {
-  /**
-   * Component is the component name to use in audit events.
-   * +optional
-   */
-  component?: string
-  /**
-   * Enabled controls whether audit logging is enabled.
-   * When true, enables audit logging with the configured options.
-   * +kubebuilder:default=false
-   * +optional
-   */
-  enabled?: boolean
-  /**
-   * EventTypes specifies which event types to audit. If empty, all events are audited.
-   * +optional
-   */
-  eventTypes?: Array<string>
-  /**
-   * ExcludeEventTypes specifies which event types to exclude from auditing.
-   * This takes precedence over EventTypes.
-   * +optional
-   */
-  excludeEventTypes?: Array<string>
-  /**
-   * IncludeRequestData determines whether to include request data in audit logs.
-   * +kubebuilder:default=false
-   * +optional
-   */
-  includeRequestData?: boolean
-  /**
-   * IncludeResponseData determines whether to include response data in audit logs.
-   * +kubebuilder:default=false
-   * +optional
-   */
-  includeResponseData?: boolean
-  /**
-   * LogFile specifies the file path for audit logs. If empty, logs to stdout.
-   * +optional
-   */
-  logFile?: string
-  /**
-   * MaxDataSize limits the size of request/response data included in audit logs (in bytes).
-   * +kubebuilder:default=1024
-   * +optional
-   */
-  maxDataSize?: number
-}
-
-/**
- * DEPRECATED: Middleware configuration.
  * OIDCConfig contains OIDC configuration
  */
 export type AuthTokenValidatorConfig = {
@@ -115,282 +62,93 @@ export type AuthTokenValidatorConfig = {
 }
 
 /**
- * OAuth2Config contains OAuth 2.0-specific configuration.
- * Required when Type is "oauth2", must be nil when Type is "oidc".
+ * Full registry data
  */
-export type AuthserverOAuth2UpstreamRunConfig = {
+export type GithubComStacklokToolhiveCoreRegistryTypesRegistry = {
   /**
-   * AuthorizationEndpoint is the URL for the OAuth authorization endpoint.
+   * Groups is a slice of group definitions containing related MCP servers
    */
-  authorization_endpoint?: string
+  groups?: Array<RegistryGroup>
   /**
-   * ClientID is the OAuth 2.0 client identifier registered with the upstream IDP.
+   * LastUpdated is the timestamp when the registry was last updated, in RFC3339 format
    */
-  client_id?: string
+  last_updated?: string
   /**
-   * ClientSecretEnvVar is the name of an environment variable containing the client secret.
-   * Mutually exclusive with ClientSecretFile. Optional for public clients using PKCE.
+   * RemoteServers is a map of server names to their corresponding remote server definitions
+   * These are MCP servers accessed via HTTP/HTTPS using the thv proxy command
    */
-  client_secret_env_var?: string
-  /**
-   * ClientSecretFile is the path to a file containing the OAuth 2.0 client secret.
-   * Mutually exclusive with ClientSecretEnvVar. Optional for public clients using PKCE.
-   */
-  client_secret_file?: string
-  /**
-   * RedirectURI is the callback URL where the upstream IDP will redirect after authentication.
-   * When not specified, defaults to `{issuer}/oauth/callback`.
-   */
-  redirect_uri?: string
-  /**
-   * Scopes are the OAuth scopes to request from the upstream IDP.
-   */
-  scopes?: Array<string>
-  /**
-   * TokenEndpoint is the URL for the OAuth token endpoint.
-   */
-  token_endpoint?: string
-  token_response_mapping?: AuthserverTokenResponseMappingRunConfig
-  userinfo?: AuthserverUserInfoRunConfig
-}
-
-/**
- * OIDCConfig contains OIDC-specific configuration.
- * Required when Type is "oidc", must be nil when Type is "oauth2".
- */
-export type AuthserverOidcUpstreamRunConfig = {
-  /**
-   * ClientID is the OAuth 2.0 client identifier registered with the upstream IDP.
-   */
-  client_id?: string
-  /**
-   * ClientSecretEnvVar is the name of an environment variable containing the client secret.
-   * Mutually exclusive with ClientSecretFile. Optional for public clients using PKCE.
-   */
-  client_secret_env_var?: string
-  /**
-   * ClientSecretFile is the path to a file containing the OAuth 2.0 client secret.
-   * Mutually exclusive with ClientSecretEnvVar. Optional for public clients using PKCE.
-   */
-  client_secret_file?: string
-  /**
-   * IssuerURL is the OIDC issuer URL for automatic endpoint discovery.
-   * Must be a valid HTTPS URL.
-   */
-  issuer_url?: string
-  /**
-   * RedirectURI is the callback URL where the upstream IDP will redirect after authentication.
-   * When not specified, defaults to `{issuer}/oauth/callback`.
-   */
-  redirect_uri?: string
-  /**
-   * Scopes are the OAuth scopes to request from the upstream IDP.
-   * If not specified, defaults to ["openid", "offline_access"].
-   */
-  scopes?: Array<string>
-  userinfo_override?: AuthserverUserInfoRunConfig
-}
-
-/**
- * EmbeddedAuthServerConfig contains configuration for the embedded OAuth2/OIDC authorization server.
- * When set, the proxy runner will start an embedded auth server that delegates to upstream IDPs.
- * This is the serializable RunConfig; secrets are referenced by file paths or env var names.
- */
-export type AuthserverRunConfig = {
-  /**
-   * AllowedAudiences is the list of valid resource URIs that tokens can be issued for.
-   * Per RFC 8707, the "resource" parameter in authorization and token requests is
-   * validated against this list. Required for MCP compliance.
-   */
-  allowed_audiences?: Array<string>
-  /**
-   * HMACSecretFiles contains file paths to HMAC secrets for signing authorization codes
-   * and refresh tokens (opaque tokens).
-   * First file is the current secret (must be at least 32 bytes), subsequent files
-   * are for rotation/verification of existing tokens.
-   * If empty, an ephemeral secret will be auto-generated (development only).
-   */
-  hmac_secret_files?: Array<string>
-  /**
-   * Issuer is the issuer identifier for this authorization server.
-   * This will be included in the "iss" claim of issued tokens.
-   * Must be a valid HTTPS URL (or HTTP for localhost) without query, fragment, or trailing slash.
-   */
-  issuer?: string
-  /**
-   * SchemaVersion is the version of the RunConfig schema.
-   */
-  schema_version?: string
-  /**
-   * ScopesSupported lists the OAuth 2.0 scope values advertised in discovery documents.
-   * If empty, defaults to registration.DefaultScopes (["openid", "profile", "email", "offline_access"]).
-   */
-  scopes_supported?: Array<string>
-  signing_key_config?: AuthserverSigningKeyRunConfig
-  storage?: StorageRunConfig
-  token_lifespans?: AuthserverTokenLifespanRunConfig
-  /**
-   * Upstreams configures connections to upstream Identity Providers.
-   * At least one upstream is required - the server delegates authentication to these providers.
-   * Currently only a single upstream is supported.
-   */
-  upstreams?: Array<AuthserverUpstreamRunConfig>
-}
-
-/**
- * SigningKeyConfig configures the signing key provider for JWT operations.
- * If nil or empty, an ephemeral signing key will be auto-generated (development only).
- */
-export type AuthserverSigningKeyRunConfig = {
-  /**
-   * FallbackKeyFiles are filenames of additional keys for verification (relative to KeyDir).
-   * These keys are included in the JWKS endpoint for token verification but are NOT
-   * used for signing new tokens. Useful for key rotation.
-   */
-  fallback_key_files?: Array<string>
-  /**
-   * KeyDir is the directory containing PEM-encoded private key files.
-   * All key filenames are relative to this directory.
-   * In Kubernetes, this is typically a mounted Secret volume.
-   */
-  key_dir?: string
-  /**
-   * SigningKeyFile is the filename of the primary signing key (relative to KeyDir).
-   * This key is used for signing new tokens.
-   */
-  signing_key_file?: string
-}
-
-/**
- * TokenLifespans configures the duration that various tokens are valid.
- * If nil, defaults are applied (access: 1h, refresh: 7d, authCode: 10m).
- */
-export type AuthserverTokenLifespanRunConfig = {
-  /**
-   * AccessTokenLifespan is the duration that access tokens are valid.
-   * If empty, defaults to 1 hour.
-   */
-  access_token_lifespan?: string
-  /**
-   * AuthCodeLifespan is the duration that authorization codes are valid.
-   * If empty, defaults to 10 minutes.
-   */
-  auth_code_lifespan?: string
-  /**
-   * RefreshTokenLifespan is the duration that refresh tokens are valid.
-   * If empty, defaults to 7 days (168h).
-   */
-  refresh_token_lifespan?: string
-}
-
-/**
- * TokenResponseMapping configures custom field extraction from non-standard token responses.
- * When set, the token exchange bypasses golang.org/x/oauth2 and extracts fields using
- * the configured dot-notation paths.
- */
-export type AuthserverTokenResponseMappingRunConfig = {
-  /**
-   * AccessTokenPath is the dot-notation path to the access token (required).
-   */
-  access_token_path?: string
-  /**
-   * ExpiresInPath is the dot-notation path to the expires_in value. Defaults to "expires_in".
-   */
-  expires_in_path?: string
-  /**
-   * RefreshTokenPath is the dot-notation path to the refresh token. Defaults to "refresh_token".
-   */
-  refresh_token_path?: string
-  /**
-   * ScopePath is the dot-notation path to the scope. Defaults to "scope".
-   */
-  scope_path?: string
-}
-
-/**
- * Type specifies the provider type: "oidc" or "oauth2".
- */
-export type AuthserverUpstreamProviderType = 'oidc' | 'oauth2'
-
-export type AuthserverUpstreamRunConfig = {
-  /**
-   * Name uniquely identifies this upstream.
-   * Used for routing decisions and session binding in multi-upstream scenarios.
-   * If empty when only one upstream is configured, defaults to "default".
-   */
-  name?: string
-  oauth2_config?: AuthserverOAuth2UpstreamRunConfig
-  oidc_config?: AuthserverOidcUpstreamRunConfig
-  type?: AuthserverUpstreamProviderType
-}
-
-/**
- * FieldMapping contains custom field mapping configuration for non-standard providers.
- * If nil, standard OIDC field names are used ("sub", "name", "email").
- */
-export type AuthserverUserInfoFieldMappingRunConfig = {
-  /**
-   * EmailFields is an ordered list of field names to try for the email address.
-   * The first non-empty value found will be used.
-   * Default: ["email"]
-   */
-  email_fields?: Array<string>
-  /**
-   * NameFields is an ordered list of field names to try for the display name.
-   * The first non-empty value found will be used.
-   * Default: ["name"]
-   */
-  name_fields?: Array<string>
-  /**
-   * SubjectFields is an ordered list of field names to try for the user ID.
-   * The first non-empty value found will be used.
-   * Default: ["sub"]
-   */
-  subject_fields?: Array<string>
-}
-
-/**
- * UserInfo contains configuration for fetching user information (required for OAuth2).
- */
-export type AuthserverUserInfoRunConfig = {
-  /**
-   * AdditionalHeaders contains extra headers to include in the userinfo request.
-   * Useful for providers that require specific headers (e.g., GitHub's Accept header).
-   */
-  additional_headers?: {
-    [key: string]: string
+  remote_servers?: {
+    [key: string]: RegistryRemoteServerMetadata
   }
   /**
-   * EndpointURL is the URL of the userinfo endpoint.
+   * Servers is a map of server names to their corresponding server definitions
    */
-  endpoint_url?: string
-  field_mapping?: AuthserverUserInfoFieldMappingRunConfig
+  servers?: {
+    [key: string]: RegistryImageMetadata
+  }
   /**
-   * HTTPMethod is the HTTP method to use for the userinfo request.
-   * If not specified, defaults to GET.
-   */
-  http_method?: string
-}
-
-/**
- * DEPRECATED: Middleware configuration.
- * AuthzConfig contains the authorization configuration
- */
-export type AuthzConfig = {
-  /**
-   * Type is the type of authorization configuration (e.g., "cedarv1").
-   */
-  type?: string
-  /**
-   * Version is the version of the configuration format.
+   * Version is the schema version of the registry
    */
   version?: string
 }
 
 /**
+ * DEPRECATED: Middleware configuration.
+ * AuditConfig contains the audit logging configuration
+ */
+export type GithubComStacklokToolhivePkgAuditConfig = {
+  /**
+   * Component is the component name to use in audit events.
+   * +optional
+   */
+  component?: string
+  /**
+   * Enabled controls whether audit logging is enabled.
+   * When true, enables audit logging with the configured options.
+   * +kubebuilder:default=false
+   * +optional
+   */
+  enabled?: boolean
+  /**
+   * EventTypes specifies which event types to audit. If empty, all events are audited.
+   * +optional
+   */
+  eventTypes?: Array<string>
+  /**
+   * ExcludeEventTypes specifies which event types to exclude from auditing.
+   * This takes precedence over EventTypes.
+   * +optional
+   */
+  excludeEventTypes?: Array<string>
+  /**
+   * IncludeRequestData determines whether to include request data in audit logs.
+   * +kubebuilder:default=false
+   * +optional
+   */
+  includeRequestData?: boolean
+  /**
+   * IncludeResponseData determines whether to include response data in audit logs.
+   * +kubebuilder:default=false
+   * +optional
+   */
+  includeResponseData?: boolean
+  /**
+   * LogFile specifies the file path for audit logs. If empty, logs to stdout.
+   * +optional
+   */
+  logFile?: string
+  /**
+   * MaxDataSize limits the size of request/response data included in audit logs (in bytes).
+   * +kubebuilder:default=1024
+   * +optional
+   */
+  maxDataSize?: number
+}
+
+/**
  * AWSStsConfig contains AWS STS token exchange configuration for accessing AWS services
  */
-export type AwsstsConfig = {
+export type GithubComStacklokToolhivePkgAuthAwsstsConfig = {
   /**
    * FallbackRoleArn is the IAM role ARN to assume when no role mapping matches.
    */
@@ -406,7 +164,7 @@ export type AwsstsConfig = {
   /**
    * RoleMappings maps JWT claim values to IAM roles with priority.
    */
-  role_mappings?: Array<AwsstsRoleMapping>
+  role_mappings?: Array<GithubComStacklokToolhivePkgAuthAwsstsRoleMapping>
   /**
    * Service is the AWS service name for SigV4 signing (default: "aws-mcp").
    */
@@ -421,7 +179,7 @@ export type AwsstsConfig = {
   session_name_claim?: string
 }
 
-export type AwsstsRoleMapping = {
+export type GithubComStacklokToolhivePkgAuthAwsstsRoleMapping = {
   /**
    * Claim is the simple claim value to match (e.g., group name).
    * Internally compiles to a CEL expression: "<claim_value>" in claims["<role_claim>"]
@@ -451,136 +209,9 @@ export type AwsstsRoleMapping = {
 }
 
 /**
- * ClientType is the type of MCP client
- */
-export type ClientClientApp =
-  | 'roo-code'
-  | 'cline'
-  | 'cursor'
-  | 'vscode-insider'
-  | 'vscode'
-  | 'claude-code'
-  | 'windsurf'
-  | 'windsurf-jetbrains'
-  | 'amp-cli'
-  | 'amp-vscode'
-  | 'amp-cursor'
-  | 'amp-vscode-insider'
-  | 'amp-windsurf'
-  | 'lm-studio'
-  | 'goose'
-  | 'trae'
-  | 'continue'
-  | 'opencode'
-  | 'kiro'
-  | 'antigravity'
-  | 'zed'
-  | 'gemini-cli'
-  | 'vscode-server'
-  | 'mistral-vibe'
-  | 'codex'
-
-export type ClientClientAppStatus = {
-  client_type?: ClientClientApp
-  /**
-   * Installed indicates whether the client is installed on the system
-   */
-  installed?: boolean
-  /**
-   * Registered indicates whether the client is registered in the ToolHive configuration
-   */
-  registered?: boolean
-}
-
-export type ClientRegisteredClient = {
-  groups?: Array<string>
-  name?: ClientClientApp
-}
-
-export type CoreWorkload = {
-  /**
-   * CreatedAt is the timestamp when the workload was created.
-   */
-  created_at?: string
-  /**
-   * Group is the name of the group this workload belongs to, if any.
-   */
-  group?: string
-  /**
-   * Labels are the container labels (excluding standard ToolHive labels)
-   */
-  labels?: {
-    [key: string]: string
-  }
-  /**
-   * Name is the name of the workload.
-   * It is used as a unique identifier.
-   */
-  name?: string
-  /**
-   * Package specifies the Workload Package used to create this Workload.
-   */
-  package?: string
-  /**
-   * Port is the port on which the workload is exposed.
-   * This is embedded in the URL.
-   */
-  port?: number
-  /**
-   * ProxyMode is the proxy mode that clients should use to connect.
-   * For stdio transports, this will be the proxy mode (sse or streamable-http).
-   * For direct transports (sse/streamable-http), this will be the same as TransportType.
-   */
-  proxy_mode?: string
-  /**
-   * Remote indicates whether this is a remote workload (true) or a container workload (false).
-   */
-  remote?: boolean
-  /**
-   * StartedAt is when the container was last started (changes on restart)
-   */
-  started_at?: string
-  status?: RuntimeWorkloadStatus
-  /**
-   * StatusContext provides additional context about the workload's status.
-   * The exact meaning is determined by the status and the underlying runtime.
-   */
-  status_context?: string
-  /**
-   * ToolsFilter is the filter on tools applied to the workload.
-   */
-  tools?: Array<string>
-  transport_type?: TypesTransportType
-  /**
-   * URL is the URL of the workload exposed by the ToolHive proxy.
-   */
-  url?: string
-}
-
-export type GroupsGroup = {
-  name?: string
-  registered_clients?: Array<string>
-  skills?: Array<string>
-}
-
-/**
- * IgnoreConfig contains configuration for ignore processing
- */
-export type IgnoreConfig = {
-  /**
-   * Whether to load global ignore patterns
-   */
-  loadGlobal?: boolean
-  /**
-   * Whether to print resolved overlay paths for debugging
-   */
-  printOverlays?: boolean
-}
-
-/**
  * RemoteAuthConfig contains OAuth configuration for remote MCP servers
  */
-export type RemoteConfig = {
+export type GithubComStacklokToolhivePkgAuthRemoteConfig = {
   authorize_url?: string
   /**
    * Bearer token configuration (alternative to OAuth)
@@ -638,9 +269,489 @@ export type RemoteConfig = {
 }
 
 /**
+ * TokenExchangeConfig contains token exchange configuration for external authentication
+ */
+export type GithubComStacklokToolhivePkgAuthTokenexchangeConfig = {
+  /**
+   * Audience is the target audience for the exchanged token
+   */
+  audience?: string
+  /**
+   * ClientID is the OAuth 2.0 client identifier
+   */
+  client_id?: string
+  /**
+   * ClientSecret is the OAuth 2.0 client secret
+   */
+  client_secret?: string
+  /**
+   * ExternalTokenHeaderName is the name of the custom header to use when HeaderStrategy is "custom"
+   */
+  external_token_header_name?: string
+  /**
+   * HeaderStrategy determines how to inject the token
+   * Valid values: HeaderStrategyReplace (default), HeaderStrategyCustom
+   */
+  header_strategy?: string
+  /**
+   * Scopes is the list of scopes to request for the exchanged token
+   */
+  scopes?: Array<string>
+  /**
+   * SubjectTokenType specifies the type of the subject token being exchanged.
+   * Common values: tokenTypeAccessToken (default), tokenTypeIDToken, tokenTypeJWT.
+   * If empty, defaults to tokenTypeAccessToken.
+   */
+  subject_token_type?: string
+  /**
+   * TokenURL is the OAuth 2.0 token endpoint URL
+   */
+  token_url?: string
+}
+
+/**
+ * UpstreamSwapConfig contains configuration for upstream token swap middleware.
+ * When set along with EmbeddedAuthServerConfig, this middleware exchanges ToolHive JWTs
+ * for upstream IdP tokens before forwarding requests to the MCP server.
+ */
+export type GithubComStacklokToolhivePkgAuthUpstreamswapConfig = {
+  /**
+   * CustomHeaderName is the header name when HeaderStrategy is "custom".
+   */
+  custom_header_name?: string
+  /**
+   * HeaderStrategy determines how to inject the token: "replace" (default) or "custom".
+   */
+  header_strategy?: string
+}
+
+/**
+ * OAuth2Config contains OAuth 2.0-specific configuration.
+ * Required when Type is "oauth2", must be nil when Type is "oidc".
+ */
+export type GithubComStacklokToolhivePkgAuthserverOAuth2UpstreamRunConfig = {
+  /**
+   * AuthorizationEndpoint is the URL for the OAuth authorization endpoint.
+   */
+  authorization_endpoint?: string
+  /**
+   * ClientID is the OAuth 2.0 client identifier registered with the upstream IDP.
+   */
+  client_id?: string
+  /**
+   * ClientSecretEnvVar is the name of an environment variable containing the client secret.
+   * Mutually exclusive with ClientSecretFile. Optional for public clients using PKCE.
+   */
+  client_secret_env_var?: string
+  /**
+   * ClientSecretFile is the path to a file containing the OAuth 2.0 client secret.
+   * Mutually exclusive with ClientSecretEnvVar. Optional for public clients using PKCE.
+   */
+  client_secret_file?: string
+  /**
+   * RedirectURI is the callback URL where the upstream IDP will redirect after authentication.
+   * When not specified, defaults to `{issuer}/oauth/callback`.
+   */
+  redirect_uri?: string
+  /**
+   * Scopes are the OAuth scopes to request from the upstream IDP.
+   */
+  scopes?: Array<string>
+  /**
+   * TokenEndpoint is the URL for the OAuth token endpoint.
+   */
+  token_endpoint?: string
+  token_response_mapping?: GithubComStacklokToolhivePkgAuthserverTokenResponseMappingRunConfig
+  userinfo?: GithubComStacklokToolhivePkgAuthserverUserInfoRunConfig
+}
+
+/**
+ * OIDCConfig contains OIDC-specific configuration.
+ * Required when Type is "oidc", must be nil when Type is "oauth2".
+ */
+export type GithubComStacklokToolhivePkgAuthserverOidcUpstreamRunConfig = {
+  /**
+   * ClientID is the OAuth 2.0 client identifier registered with the upstream IDP.
+   */
+  client_id?: string
+  /**
+   * ClientSecretEnvVar is the name of an environment variable containing the client secret.
+   * Mutually exclusive with ClientSecretFile. Optional for public clients using PKCE.
+   */
+  client_secret_env_var?: string
+  /**
+   * ClientSecretFile is the path to a file containing the OAuth 2.0 client secret.
+   * Mutually exclusive with ClientSecretEnvVar. Optional for public clients using PKCE.
+   */
+  client_secret_file?: string
+  /**
+   * IssuerURL is the OIDC issuer URL for automatic endpoint discovery.
+   * Must be a valid HTTPS URL.
+   */
+  issuer_url?: string
+  /**
+   * RedirectURI is the callback URL where the upstream IDP will redirect after authentication.
+   * When not specified, defaults to `{issuer}/oauth/callback`.
+   */
+  redirect_uri?: string
+  /**
+   * Scopes are the OAuth scopes to request from the upstream IDP.
+   * If not specified, defaults to ["openid", "offline_access"].
+   */
+  scopes?: Array<string>
+  userinfo_override?: GithubComStacklokToolhivePkgAuthserverUserInfoRunConfig
+}
+
+/**
+ * EmbeddedAuthServerConfig contains configuration for the embedded OAuth2/OIDC authorization server.
+ * When set, the proxy runner will start an embedded auth server that delegates to upstream IDPs.
+ * This is the serializable RunConfig; secrets are referenced by file paths or env var names.
+ */
+export type GithubComStacklokToolhivePkgAuthserverRunConfig = {
+  /**
+   * AllowedAudiences is the list of valid resource URIs that tokens can be issued for.
+   * Per RFC 8707, the "resource" parameter in authorization and token requests is
+   * validated against this list. Required for MCP compliance.
+   */
+  allowed_audiences?: Array<string>
+  /**
+   * HMACSecretFiles contains file paths to HMAC secrets for signing authorization codes
+   * and refresh tokens (opaque tokens).
+   * First file is the current secret (must be at least 32 bytes), subsequent files
+   * are for rotation/verification of existing tokens.
+   * If empty, an ephemeral secret will be auto-generated (development only).
+   */
+  hmac_secret_files?: Array<string>
+  /**
+   * Issuer is the issuer identifier for this authorization server.
+   * This will be included in the "iss" claim of issued tokens.
+   * Must be a valid HTTPS URL (or HTTP for localhost) without query, fragment, or trailing slash.
+   */
+  issuer?: string
+  /**
+   * SchemaVersion is the version of the RunConfig schema.
+   */
+  schema_version?: string
+  /**
+   * ScopesSupported lists the OAuth 2.0 scope values advertised in discovery documents.
+   * If empty, defaults to registration.DefaultScopes (["openid", "profile", "email", "offline_access"]).
+   */
+  scopes_supported?: Array<string>
+  signing_key_config?: GithubComStacklokToolhivePkgAuthserverSigningKeyRunConfig
+  storage?: StorageRunConfig
+  token_lifespans?: GithubComStacklokToolhivePkgAuthserverTokenLifespanRunConfig
+  /**
+   * Upstreams configures connections to upstream Identity Providers.
+   * At least one upstream is required - the server delegates authentication to these providers.
+   * Currently only a single upstream is supported.
+   */
+  upstreams?: Array<GithubComStacklokToolhivePkgAuthserverUpstreamRunConfig>
+}
+
+/**
+ * SigningKeyConfig configures the signing key provider for JWT operations.
+ * If nil or empty, an ephemeral signing key will be auto-generated (development only).
+ */
+export type GithubComStacklokToolhivePkgAuthserverSigningKeyRunConfig = {
+  /**
+   * FallbackKeyFiles are filenames of additional keys for verification (relative to KeyDir).
+   * These keys are included in the JWKS endpoint for token verification but are NOT
+   * used for signing new tokens. Useful for key rotation.
+   */
+  fallback_key_files?: Array<string>
+  /**
+   * KeyDir is the directory containing PEM-encoded private key files.
+   * All key filenames are relative to this directory.
+   * In Kubernetes, this is typically a mounted Secret volume.
+   */
+  key_dir?: string
+  /**
+   * SigningKeyFile is the filename of the primary signing key (relative to KeyDir).
+   * This key is used for signing new tokens.
+   */
+  signing_key_file?: string
+}
+
+/**
+ * TokenLifespans configures the duration that various tokens are valid.
+ * If nil, defaults are applied (access: 1h, refresh: 7d, authCode: 10m).
+ */
+export type GithubComStacklokToolhivePkgAuthserverTokenLifespanRunConfig = {
+  /**
+   * AccessTokenLifespan is the duration that access tokens are valid.
+   * If empty, defaults to 1 hour.
+   */
+  access_token_lifespan?: string
+  /**
+   * AuthCodeLifespan is the duration that authorization codes are valid.
+   * If empty, defaults to 10 minutes.
+   */
+  auth_code_lifespan?: string
+  /**
+   * RefreshTokenLifespan is the duration that refresh tokens are valid.
+   * If empty, defaults to 7 days (168h).
+   */
+  refresh_token_lifespan?: string
+}
+
+/**
+ * TokenResponseMapping configures custom field extraction from non-standard token responses.
+ * When set, the token exchange bypasses golang.org/x/oauth2 and extracts fields using
+ * the configured dot-notation paths.
+ */
+export type GithubComStacklokToolhivePkgAuthserverTokenResponseMappingRunConfig =
+  {
+    /**
+     * AccessTokenPath is the dot-notation path to the access token (required).
+     */
+    access_token_path?: string
+    /**
+     * ExpiresInPath is the dot-notation path to the expires_in value. Defaults to "expires_in".
+     */
+    expires_in_path?: string
+    /**
+     * RefreshTokenPath is the dot-notation path to the refresh token. Defaults to "refresh_token".
+     */
+    refresh_token_path?: string
+    /**
+     * ScopePath is the dot-notation path to the scope. Defaults to "scope".
+     */
+    scope_path?: string
+  }
+
+/**
+ * Type specifies the provider type: "oidc" or "oauth2".
+ */
+export type GithubComStacklokToolhivePkgAuthserverUpstreamProviderType =
+  | 'oidc'
+  | 'oauth2'
+
+export type GithubComStacklokToolhivePkgAuthserverUpstreamRunConfig = {
+  /**
+   * Name uniquely identifies this upstream.
+   * Used for routing decisions and session binding in multi-upstream scenarios.
+   * If empty when only one upstream is configured, defaults to "default".
+   */
+  name?: string
+  oauth2_config?: GithubComStacklokToolhivePkgAuthserverOAuth2UpstreamRunConfig
+  oidc_config?: GithubComStacklokToolhivePkgAuthserverOidcUpstreamRunConfig
+  type?: GithubComStacklokToolhivePkgAuthserverUpstreamProviderType
+}
+
+/**
+ * FieldMapping contains custom field mapping configuration for non-standard providers.
+ * If nil, standard OIDC field names are used ("sub", "name", "email").
+ */
+export type GithubComStacklokToolhivePkgAuthserverUserInfoFieldMappingRunConfig =
+  {
+    /**
+     * EmailFields is an ordered list of field names to try for the email address.
+     * The first non-empty value found will be used.
+     * Default: ["email"]
+     */
+    email_fields?: Array<string>
+    /**
+     * NameFields is an ordered list of field names to try for the display name.
+     * The first non-empty value found will be used.
+     * Default: ["name"]
+     */
+    name_fields?: Array<string>
+    /**
+     * SubjectFields is an ordered list of field names to try for the user ID.
+     * The first non-empty value found will be used.
+     * Default: ["sub"]
+     */
+    subject_fields?: Array<string>
+  }
+
+/**
+ * UserInfo contains configuration for fetching user information (required for OAuth2).
+ */
+export type GithubComStacklokToolhivePkgAuthserverUserInfoRunConfig = {
+  /**
+   * AdditionalHeaders contains extra headers to include in the userinfo request.
+   * Useful for providers that require specific headers (e.g., GitHub's Accept header).
+   */
+  additional_headers?: {
+    [key: string]: string
+  }
+  /**
+   * EndpointURL is the URL of the userinfo endpoint.
+   */
+  endpoint_url?: string
+  field_mapping?: GithubComStacklokToolhivePkgAuthserverUserInfoFieldMappingRunConfig
+  /**
+   * HTTPMethod is the HTTP method to use for the userinfo request.
+   * If not specified, defaults to GET.
+   */
+  http_method?: string
+}
+
+/**
+ * DEPRECATED: Middleware configuration.
+ * AuthzConfig contains the authorization configuration
+ */
+export type GithubComStacklokToolhivePkgAuthzConfig = {
+  /**
+   * Type is the type of authorization configuration (e.g., "cedarv1").
+   */
+  type?: string
+  /**
+   * Version is the version of the configuration format.
+   */
+  version?: string
+}
+
+/**
+ * ClientType is the type of MCP client
+ */
+export type GithubComStacklokToolhivePkgClientClientApp =
+  | 'roo-code'
+  | 'cline'
+  | 'cursor'
+  | 'vscode-insider'
+  | 'vscode'
+  | 'claude-code'
+  | 'windsurf'
+  | 'windsurf-jetbrains'
+  | 'amp-cli'
+  | 'amp-vscode'
+  | 'amp-cursor'
+  | 'amp-vscode-insider'
+  | 'amp-windsurf'
+  | 'lm-studio'
+  | 'goose'
+  | 'trae'
+  | 'continue'
+  | 'opencode'
+  | 'kiro'
+  | 'antigravity'
+  | 'zed'
+  | 'gemini-cli'
+  | 'vscode-server'
+  | 'mistral-vibe'
+  | 'codex'
+
+export type GithubComStacklokToolhivePkgClientClientAppStatus = {
+  client_type?: GithubComStacklokToolhivePkgClientClientApp
+  /**
+   * Installed indicates whether the client is installed on the system
+   */
+  installed?: boolean
+  /**
+   * Registered indicates whether the client is registered in the ToolHive configuration
+   */
+  registered?: boolean
+}
+
+export type GithubComStacklokToolhivePkgClientRegisteredClient = {
+  groups?: Array<string>
+  name?: GithubComStacklokToolhivePkgClientClientApp
+}
+
+/**
+ * RuntimeConfig allows overriding the default runtime configuration
+ * for this specific workload (base images and packages)
+ */
+export type GithubComStacklokToolhivePkgContainerTemplatesRuntimeConfig = {
+  /**
+   * AdditionalPackages lists extra packages to install in builder stage
+   * Examples for Alpine: ["git", "make", "gcc"]
+   * Examples for Debian: ["git", "build-essential"]
+   */
+  additional_packages?: Array<string>
+  /**
+   * BuilderImage is the full image reference for the builder stage
+   * Examples: "golang:1.25-alpine", "node:22-alpine", "python:3.13-slim"
+   */
+  builder_image?: string
+}
+
+export type GithubComStacklokToolhivePkgCoreWorkload = {
+  /**
+   * CreatedAt is the timestamp when the workload was created.
+   */
+  created_at?: string
+  /**
+   * Group is the name of the group this workload belongs to, if any.
+   */
+  group?: string
+  /**
+   * Labels are the container labels (excluding standard ToolHive labels)
+   */
+  labels?: {
+    [key: string]: string
+  }
+  /**
+   * Name is the name of the workload.
+   * It is used as a unique identifier.
+   */
+  name?: string
+  /**
+   * Package specifies the Workload Package used to create this Workload.
+   */
+  package?: string
+  /**
+   * Port is the port on which the workload is exposed.
+   * This is embedded in the URL.
+   */
+  port?: number
+  /**
+   * ProxyMode is the proxy mode that clients should use to connect.
+   * For stdio transports, this will be the proxy mode (sse or streamable-http).
+   * For direct transports (sse/streamable-http), this will be the same as TransportType.
+   */
+  proxy_mode?: string
+  /**
+   * Remote indicates whether this is a remote workload (true) or a container workload (false).
+   */
+  remote?: boolean
+  /**
+   * StartedAt is when the container was last started (changes on restart)
+   */
+  started_at?: string
+  /**
+   * Status is the current status of the workload.
+   */
+  status?:
+    | 'running'
+    | 'stopped'
+    | 'error'
+    | 'starting'
+    | 'stopping'
+    | 'unhealthy'
+    | 'removing'
+    | 'unknown'
+    | 'unauthenticated'
+  /**
+   * StatusContext provides additional context about the workload's status.
+   * The exact meaning is determined by the status and the underlying runtime.
+   */
+  status_context?: string
+  /**
+   * ToolsFilter is the filter on tools applied to the workload.
+   */
+  tools?: Array<string>
+  /**
+   * TransportType is the type of transport used for this workload.
+   */
+  transport_type?: 'stdio' | 'sse' | 'streamable-http' | 'inspector'
+  /**
+   * URL is the URL of the workload exposed by the ToolHive proxy.
+   */
+  url?: string
+}
+
+export type GithubComStacklokToolhivePkgGroupsGroup = {
+  name?: string
+  registered_clients?: Array<string>
+  skills?: Array<string>
+}
+
+/**
  * HeaderForward contains configuration for injecting headers into requests to remote servers.
  */
-export type RunnerHeaderForwardConfig = {
+export type GithubComStacklokToolhivePkgRunnerHeaderForwardConfig = {
   /**
    * AddHeadersFromSecret is a map of header names to secret names.
    * The key is the header name, the value is the secret name in ToolHive's secrets manager.
@@ -660,20 +771,20 @@ export type RunnerHeaderForwardConfig = {
   }
 }
 
-export type RunnerRunConfig = {
-  audit_config?: AuditConfig
+export type GithubComStacklokToolhivePkgRunnerRunConfig = {
+  audit_config?: GithubComStacklokToolhivePkgAuditConfig
   /**
    * DEPRECATED: Middleware configuration.
    * AuditConfigPath is the path to the audit configuration file
    */
   audit_config_path?: string
-  authz_config?: AuthzConfig
+  authz_config?: GithubComStacklokToolhivePkgAuthzConfig
   /**
    * DEPRECATED: Middleware configuration.
    * AuthzConfigPath is the path to the authorization configuration file
    */
   authz_config_path?: string
-  aws_sts_config?: AwsstsConfig
+  aws_sts_config?: GithubComStacklokToolhivePkgAuthAwsstsConfig
   /**
    * BaseName is the base name used for the container (without prefixes)
    */
@@ -696,7 +807,7 @@ export type RunnerRunConfig = {
    * Debug indicates whether debug mode is enabled
    */
   debug?: boolean
-  embedded_auth_server_config?: AuthserverRunConfig
+  embedded_auth_server_config?: GithubComStacklokToolhivePkgAuthserverRunConfig
   /**
    * EndpointPrefix is an explicit prefix to prepend to SSE endpoint URLs.
    * This is used to handle path-based ingress routing scenarios.
@@ -717,7 +828,7 @@ export type RunnerRunConfig = {
    * Group is the name of the group this workload belongs to, if any
    */
   group?: string
-  header_forward?: RunnerHeaderForwardConfig
+  header_forward?: GithubComStacklokToolhivePkgRunnerHeaderForwardConfig
   /**
    * Host is the host for the HTTP proxy
    */
@@ -759,13 +870,17 @@ export type RunnerRunConfig = {
    * Port is the port for the HTTP proxy to listen on (host port)
    */
   port?: number
-  proxy_mode?: TypesProxyMode
-  remote_auth_config?: RemoteConfig
+  /**
+   * ProxyMode is the proxy mode for stdio transport ("sse" or "streamable-http")
+   * Note: "sse" is deprecated; use "streamable-http" instead.
+   */
+  proxy_mode?: 'sse' | 'streamable-http'
+  remote_auth_config?: GithubComStacklokToolhivePkgAuthRemoteConfig
   /**
    * RemoteURL is the URL of the remote MCP server (if running remotely)
    */
   remote_url?: string
-  runtime_config?: TemplatesRuntimeConfig
+  runtime_config?: GithubComStacklokToolhivePkgContainerTemplatesRuntimeConfig
   /**
    * SchemaVersion is the version of the RunConfig schema
    */
@@ -783,13 +898,13 @@ export type RunnerRunConfig = {
    * TargetPort is the port for the container to expose (only applicable to SSE transport)
    */
   target_port?: number
-  telemetry_config?: TelemetryConfig
+  telemetry_config?: GithubComStacklokToolhivePkgTelemetryConfig
   /**
    * DEPRECATED: No longer appears to be used.
    * ThvCABundle is the path to the CA certificate bundle for ToolHive HTTP operations
    */
   thv_ca_bundle?: string
-  token_exchange_config?: TokenexchangeConfig
+  token_exchange_config?: GithubComStacklokToolhivePkgAuthTokenexchangeConfig
   /**
    * DEPRECATED: Middleware configuration.
    * ToolsFilter is the list of tools to filter
@@ -800,14 +915,17 @@ export type RunnerRunConfig = {
    * ToolsOverride is a map from an actual tool to its overridden name and/or description
    */
   tools_override?: {
-    [key: string]: RunnerToolOverride
+    [key: string]: GithubComStacklokToolhivePkgRunnerToolOverride
   }
-  transport?: TypesTransportType
+  /**
+   * Transport is the transport mode (stdio, sse, or streamable-http)
+   */
+  transport?: 'stdio' | 'sse' | 'streamable-http' | 'inspector'
   /**
    * TrustProxyHeaders indicates whether to trust X-Forwarded-* headers from reverse proxies
    */
   trust_proxy_headers?: boolean
-  upstream_swap_config?: UpstreamswapConfig
+  upstream_swap_config?: GithubComStacklokToolhivePkgAuthUpstreamswapConfig
   /**
    * Volumes are the directory mounts to pass to the container
    * Format: "host-path:container-path[:ro]"
@@ -815,7 +933,7 @@ export type RunnerRunConfig = {
   volumes?: Array<string>
 }
 
-export type RunnerToolOverride = {
+export type GithubComStacklokToolhivePkgRunnerToolOverride = {
   /**
    * Description is the redefined description of the tool
    */
@@ -827,35 +945,21 @@ export type RunnerToolOverride = {
 }
 
 /**
- * Current status of the workload
- */
-export type RuntimeWorkloadStatus =
-  | 'running'
-  | 'stopped'
-  | 'error'
-  | 'starting'
-  | 'stopping'
-  | 'unhealthy'
-  | 'removing'
-  | 'unknown'
-  | 'unauthenticated'
-
-/**
  * Bearer token for authentication (alternative to OAuth)
  */
-export type SecretsSecretParameter = {
+export type GithubComStacklokToolhivePkgSecretsSecretParameter = {
   name?: string
   target?: string
 }
 
-export type SkillsBuildResult = {
+export type GithubComStacklokToolhivePkgSkillsBuildResult = {
   /**
    * Reference is the OCI reference of the built skill artifact.
    */
   reference?: string
 }
 
-export type SkillsDependency = {
+export type GithubComStacklokToolhivePkgSkillsDependency = {
   /**
    * Digest is the OCI digest for upgrade detection.
    */
@@ -873,12 +977,15 @@ export type SkillsDependency = {
 /**
  * Status is the current installation status.
  */
-export type SkillsInstallStatus = 'installed' | 'pending' | 'failed'
+export type GithubComStacklokToolhivePkgSkillsInstallStatus =
+  | 'installed'
+  | 'pending'
+  | 'failed'
 
 /**
  * InstalledSkill contains the full installation record.
  */
-export type SkillsInstalledSkill = {
+export type GithubComStacklokToolhivePkgSkillsInstalledSkill = {
   /**
    * Clients is the list of client identifiers the skill is installed for.
    * TODO: Refactor client.ClientApp to a shared package so it can be used here instead of []string.
@@ -887,7 +994,7 @@ export type SkillsInstalledSkill = {
   /**
    * Dependencies is the list of external skill dependencies.
    */
-  dependencies?: Array<SkillsDependency>
+  dependencies?: Array<GithubComStacklokToolhivePkgSkillsDependency>
   /**
    * Digest is the OCI digest (sha256:...) for upgrade detection.
    */
@@ -896,7 +1003,7 @@ export type SkillsInstalledSkill = {
    * InstalledAt is the timestamp when the skill was installed.
    */
   installed_at?: string
-  metadata?: SkillsSkillMetadata
+  metadata?: GithubComStacklokToolhivePkgSkillsSkillMetadata
   /**
    * ProjectRoot is the project root path for project-scoped skills. Empty for user-scoped.
    */
@@ -905,8 +1012,8 @@ export type SkillsInstalledSkill = {
    * Reference is the full OCI reference (e.g. ghcr.io/org/skill:v1).
    */
   reference?: string
-  scope?: SkillsScope
-  status?: SkillsInstallStatus
+  scope?: GithubComStacklokToolhivePkgSkillsScope
+  status?: GithubComStacklokToolhivePkgSkillsInstallStatus
   /**
    * Tag is the OCI tag (e.g. v1.0.0).
    */
@@ -916,17 +1023,17 @@ export type SkillsInstalledSkill = {
 /**
  * Scope for the installation
  */
-export type SkillsScope = 'user' | 'project'
+export type GithubComStacklokToolhivePkgSkillsScope = 'user' | 'project'
 
-export type SkillsSkillInfo = {
-  installed_skill?: SkillsInstalledSkill
-  metadata?: SkillsSkillMetadata
+export type GithubComStacklokToolhivePkgSkillsSkillInfo = {
+  installed_skill?: GithubComStacklokToolhivePkgSkillsInstalledSkill
+  metadata?: GithubComStacklokToolhivePkgSkillsSkillMetadata
 }
 
 /**
  * Metadata contains the skill's metadata.
  */
-export type SkillsSkillMetadata = {
+export type GithubComStacklokToolhivePkgSkillsSkillMetadata = {
   /**
    * Author is the skill author or maintainer.
    */
@@ -949,7 +1056,7 @@ export type SkillsSkillMetadata = {
   version?: string
 }
 
-export type SkillsValidationResult = {
+export type GithubComStacklokToolhivePkgSkillsValidationResult = {
   /**
    * Errors is a list of validation errors, if any.
    */
@@ -962,6 +1069,1306 @@ export type SkillsValidationResult = {
    * Warnings is a list of non-blocking validation warnings, if any.
    */
   warnings?: Array<string>
+}
+
+/**
+ * DEPRECATED: Middleware configuration.
+ * TelemetryConfig contains the OpenTelemetry configuration
+ */
+export type GithubComStacklokToolhivePkgTelemetryConfig = {
+  /**
+   * CustomAttributes contains custom resource attributes to be added to all telemetry signals.
+   * These are parsed from CLI flags (--otel-custom-attributes) or environment variables
+   * (OTEL_RESOURCE_ATTRIBUTES) as key=value pairs.
+   * +optional
+   */
+  customAttributes?: {
+    [key: string]: string
+  }
+  /**
+   * EnablePrometheusMetricsPath controls whether to expose Prometheus-style /metrics endpoint.
+   * The metrics are served on the main transport port at /metrics.
+   * This is separate from OTLP metrics which are sent to the Endpoint.
+   * +kubebuilder:default=false
+   * +optional
+   */
+  enablePrometheusMetricsPath?: boolean
+  /**
+   * Endpoint is the OTLP endpoint URL
+   * +optional
+   */
+  endpoint?: string
+  /**
+   * EnvironmentVariables is a list of environment variable names that should be
+   * included in telemetry spans as attributes. Only variables in this list will
+   * be read from the host machine and included in spans for observability.
+   * Example: ["NODE_ENV", "DEPLOYMENT_ENV", "SERVICE_VERSION"]
+   * +optional
+   */
+  environmentVariables?: Array<string>
+  /**
+   * Headers contains authentication headers for the OTLP endpoint.
+   * +optional
+   */
+  headers?: {
+    [key: string]: string
+  }
+  /**
+   * Insecure indicates whether to use HTTP instead of HTTPS for the OTLP endpoint.
+   * +kubebuilder:default=false
+   * +optional
+   */
+  insecure?: boolean
+  /**
+   * MetricsEnabled controls whether OTLP metrics are enabled.
+   * When false, OTLP metrics are not sent even if an endpoint is configured.
+   * This is independent of EnablePrometheusMetricsPath.
+   * +kubebuilder:default=false
+   * +optional
+   */
+  metricsEnabled?: boolean
+  /**
+   * SamplingRate is the trace sampling rate (0.0-1.0) as a string.
+   * Only used when TracingEnabled is true.
+   * Example: "0.05" for 5% sampling.
+   * +kubebuilder:default="0.05"
+   * +optional
+   */
+  samplingRate?: string
+  /**
+   * ServiceName is the service name for telemetry.
+   * When omitted, defaults to the server name (e.g., VirtualMCPServer name).
+   * +optional
+   */
+  serviceName?: string
+  /**
+   * ServiceVersion is the service version for telemetry.
+   * When omitted, defaults to the ToolHive version.
+   * +optional
+   */
+  serviceVersion?: string
+  /**
+   * TracingEnabled controls whether distributed tracing is enabled.
+   * When false, no tracer provider is created even if an endpoint is configured.
+   * +kubebuilder:default=false
+   * +optional
+   */
+  tracingEnabled?: boolean
+  /**
+   * UseLegacyAttributes controls whether legacy (pre-MCP OTEL semconv) attribute names
+   * are emitted alongside the new standard attribute names. When true, spans include both
+   * old and new attribute names for backward compatibility with existing dashboards.
+   * Currently defaults to true; this will change to false in a future release.
+   * +kubebuilder:default=true
+   * +optional
+   */
+  useLegacyAttributes?: boolean
+}
+
+/**
+ * IgnoreConfig contains configuration for ignore processing
+ */
+export type IgnoreConfig = {
+  /**
+   * Whether to load global ignore patterns
+   */
+  loadGlobal?: boolean
+  /**
+   * Whether to print resolved overlay paths for debugging
+   */
+  printOverlays?: boolean
+}
+
+/**
+ * Inbound defines inbound network permissions
+ */
+export type PermissionsInboundNetworkPermissions = {
+  /**
+   * AllowHost is a list of allowed hosts for inbound connections
+   */
+  allow_host?: Array<string>
+}
+
+/**
+ * Network defines network permissions
+ */
+export type PermissionsNetworkPermissions = {
+  inbound?: PermissionsInboundNetworkPermissions
+  /**
+   * Mode specifies the network mode for the container (e.g., "host", "bridge", "none")
+   * When empty, the default container runtime network mode is used
+   */
+  mode?: string
+  outbound?: PermissionsOutboundNetworkPermissions
+}
+
+/**
+ * Outbound defines outbound network permissions
+ */
+export type PermissionsOutboundNetworkPermissions = {
+  /**
+   * AllowHost is a list of allowed hosts
+   */
+  allow_host?: Array<string>
+  /**
+   * AllowPort is a list of allowed ports
+   */
+  allow_port?: Array<number>
+  /**
+   * InsecureAllowAll allows all outbound network connections
+   */
+  insecure_allow_all?: boolean
+}
+
+/**
+ * Permission profile to apply
+ */
+export type PermissionsProfile = {
+  /**
+   * Name is the name of the profile
+   */
+  name?: string
+  network?: PermissionsNetworkPermissions
+  /**
+   * Privileged indicates whether the container should run in privileged mode
+   * When true, the container has access to all host devices and capabilities
+   * Use with extreme caution as this removes most security isolation
+   */
+  privileged?: boolean
+  /**
+   * Read is a list of mount declarations that the container can read from
+   * These can be in the following formats:
+   * - A single path: The same path will be mounted from host to container
+   * - host-path:container-path: Different paths for host and container
+   * - resource-uri:container-path: Mount a resource identified by URI to a container path
+   */
+  read?: Array<string>
+  /**
+   * Write is a list of mount declarations that the container can write to
+   * These follow the same format as Read mounts but with write permissions
+   */
+  write?: Array<string>
+}
+
+/**
+ * Type of registry (file, url, or default)
+ */
+export type PkgApiV1RegistryType = 'file' | 'url' | 'api' | 'default'
+
+/**
+ * Request containing registry configuration updates
+ */
+export type PkgApiV1UpdateRegistryRequest = {
+  /**
+   * Allow private IP addresses for registry URL or API URL
+   */
+  allow_private_ip?: boolean
+  /**
+   * MCP Registry API URL
+   */
+  api_url?: string
+  /**
+   * Local registry file path
+   */
+  local_path?: string
+  /**
+   * Registry URL (for remote registries)
+   */
+  url?: string
+}
+
+/**
+ * Response containing update result
+ */
+export type PkgApiV1UpdateRegistryResponse = {
+  /**
+   * Registry type after update
+   */
+  type?: string
+}
+
+/**
+ * Request to build a skill from a local directory
+ */
+export type PkgApiV1BuildSkillRequest = {
+  /**
+   * Path to the skill definition directory
+   */
+  path?: string
+  /**
+   * OCI tag for the built artifact
+   */
+  tag?: string
+}
+
+export type PkgApiV1BulkClientRequest = {
+  /**
+   * Groups is the list of groups configured on the client.
+   */
+  groups?: Array<string>
+  /**
+   * Names is the list of client names to operate on.
+   */
+  names?: Array<GithubComStacklokToolhivePkgClientClientApp>
+}
+
+export type PkgApiV1BulkOperationRequest = {
+  /**
+   * Group name to operate on (mutually exclusive with names)
+   */
+  group?: string
+  /**
+   * Names of the workloads to operate on
+   */
+  names?: Array<string>
+}
+
+export type PkgApiV1ClientStatusResponse = {
+  clients?: Array<GithubComStacklokToolhivePkgClientClientAppStatus>
+}
+
+export type PkgApiV1CreateClientRequest = {
+  /**
+   * Groups is the list of groups configured on the client.
+   */
+  groups?: Array<string>
+  name?: GithubComStacklokToolhivePkgClientClientApp
+}
+
+export type PkgApiV1CreateClientResponse = {
+  /**
+   * Groups is the list of groups configured on the client.
+   */
+  groups?: Array<string>
+  name?: GithubComStacklokToolhivePkgClientClientApp
+}
+
+export type PkgApiV1CreateGroupRequest = {
+  /**
+   * Name of the group to create
+   */
+  name?: string
+}
+
+export type PkgApiV1CreateGroupResponse = {
+  /**
+   * Name of the created group
+   */
+  name?: string
+}
+
+/**
+ * Request to create a new workload
+ */
+export type PkgApiV1CreateRequest = {
+  /**
+   * Authorization configuration
+   */
+  authz_config?: string
+  /**
+   * Command arguments to pass to the container
+   */
+  cmd_arguments?: Array<string>
+  /**
+   * Environment variables to set in the container
+   */
+  env_vars?: {
+    [key: string]: string
+  }
+  /**
+   * Group name this workload belongs to
+   */
+  group?: string
+  header_forward?: PkgApiV1HeaderForwardConfig
+  headers?: Array<RegistryHeader>
+  /**
+   * Host to bind to
+   */
+  host?: string
+  /**
+   * Docker image to use
+   */
+  image?: string
+  /**
+   * Name of the workload
+   */
+  name?: string
+  /**
+   * Whether network isolation is turned on. This applies the rules in the permission profile.
+   */
+  network_isolation?: boolean
+  oauth_config?: PkgApiV1RemoteOAuthConfig
+  oidc?: PkgApiV1OidcOptions
+  permission_profile?: PermissionsProfile
+  /**
+   * Proxy mode to use
+   */
+  proxy_mode?: string
+  /**
+   * Port for the HTTP proxy to listen on
+   */
+  proxy_port?: number
+  /**
+   * Secret parameters to inject
+   */
+  secrets?: Array<GithubComStacklokToolhivePkgSecretsSecretParameter>
+  /**
+   * Port to expose from the container
+   */
+  target_port?: number
+  /**
+   * Tools filter
+   */
+  tools?: Array<string>
+  /**
+   * Tools override
+   */
+  tools_override?: {
+    [key: string]: PkgApiV1ToolOverride
+  }
+  /**
+   * Transport configuration
+   */
+  transport?: string
+  /**
+   * Whether to trust X-Forwarded-* headers from reverse proxies
+   */
+  trust_proxy_headers?: boolean
+  /**
+   * Remote server specific fields
+   */
+  url?: string
+  /**
+   * Volume mounts
+   */
+  volumes?: Array<string>
+}
+
+/**
+ * Request to create a new secret
+ */
+export type PkgApiV1CreateSecretRequest = {
+  /**
+   * Secret key name
+   */
+  key?: string
+  /**
+   * Secret value
+   */
+  value?: string
+}
+
+/**
+ * Response after creating a secret
+ */
+export type PkgApiV1CreateSecretResponse = {
+  /**
+   * Secret key that was created
+   */
+  key?: string
+  /**
+   * Success message
+   */
+  message?: string
+}
+
+/**
+ * Response after successfully creating a workload
+ */
+export type PkgApiV1CreateWorkloadResponse = {
+  /**
+   * Name of the created workload
+   */
+  name?: string
+  /**
+   * Port the workload is listening on
+   */
+  port?: number
+}
+
+/**
+ * Response containing registry details
+ */
+export type PkgApiV1GetRegistryResponse = {
+  /**
+   * Last updated timestamp
+   */
+  last_updated?: string
+  /**
+   * Name of the registry
+   */
+  name?: string
+  registry?: GithubComStacklokToolhiveCoreRegistryTypesRegistry
+  /**
+   * Number of servers in the registry
+   */
+  server_count?: number
+  /**
+   * Source of the registry (URL, file path, or empty string for built-in)
+   */
+  source?: string
+  type?: PkgApiV1RegistryType
+  /**
+   * Version of the registry schema
+   */
+  version?: string
+}
+
+/**
+ * Response containing secrets provider details
+ */
+export type PkgApiV1GetSecretsProviderResponse = {
+  capabilities?: PkgApiV1ProviderCapabilitiesResponse
+  /**
+   * Name of the secrets provider
+   */
+  name?: string
+  /**
+   * Type of the secrets provider
+   */
+  provider_type?: string
+}
+
+/**
+ * Response containing server details
+ */
+export type PkgApiV1GetServerResponse = {
+  /**
+   * Indicates if this is a remote server
+   */
+  is_remote?: boolean
+  remote_server?: RegistryRemoteServerMetadata
+  server?: RegistryImageMetadata
+}
+
+export type PkgApiV1GroupListResponse = {
+  /**
+   * List of groups
+   */
+  groups?: Array<GithubComStacklokToolhivePkgGroupsGroup>
+}
+
+/**
+ * HeaderForward configures headers to inject into requests to remote MCP servers.
+ * Use this to add custom headers like X-Tenant-ID or correlation IDs.
+ */
+export type PkgApiV1HeaderForwardConfig = {
+  /**
+   * AddHeadersFromSecret maps header names to secret names in ToolHive's secrets manager.
+   * Key: HTTP header name, Value: secret name in the secrets manager
+   */
+  add_headers_from_secret?: {
+    [key: string]: string
+  }
+  /**
+   * AddPlaintextHeaders contains literal header values to inject.
+   * WARNING: These values are stored and transmitted in plaintext.
+   * Use AddHeadersFromSecret for sensitive data like API keys.
+   */
+  add_plaintext_headers?: {
+    [key: string]: string
+  }
+}
+
+/**
+ * Request to install a skill
+ */
+export type PkgApiV1InstallSkillRequest = {
+  /**
+   * Client is the target client (e.g., "claude-code")
+   */
+  client?: string
+  /**
+   * Force allows overwriting unmanaged skill directories
+   */
+  force?: boolean
+  /**
+   * Group is the group name to add the skill to after installation
+   */
+  group?: string
+  /**
+   * Name or OCI reference of the skill to install
+   */
+  name?: string
+  /**
+   * ProjectRoot is the project root path for project-scoped installs
+   */
+  project_root?: string
+  scope?: GithubComStacklokToolhivePkgSkillsScope
+  /**
+   * Version to install (empty means latest)
+   */
+  version?: string
+}
+
+/**
+ * Response after successfully installing a skill
+ */
+export type PkgApiV1InstallSkillResponse = {
+  skill?: GithubComStacklokToolhivePkgSkillsInstalledSkill
+}
+
+/**
+ * Response containing a list of secret keys
+ */
+export type PkgApiV1ListSecretsResponse = {
+  /**
+   * List of secret keys
+   */
+  keys?: Array<PkgApiV1SecretKeyResponse>
+}
+
+/**
+ * Response containing a list of servers
+ */
+export type PkgApiV1ListServersResponse = {
+  /**
+   * List of remote servers in the registry (if any)
+   */
+  remote_servers?: Array<RegistryRemoteServerMetadata>
+  /**
+   * List of container servers in the registry
+   */
+  servers?: Array<RegistryImageMetadata>
+}
+
+/**
+ * OIDC configuration options
+ */
+export type PkgApiV1OidcOptions = {
+  /**
+   * Expected audience
+   */
+  audience?: string
+  /**
+   * OAuth2 client ID
+   */
+  client_id?: string
+  /**
+   * OAuth2 client secret
+   */
+  client_secret?: string
+  /**
+   * Token introspection URL for OIDC
+   */
+  introspection_url?: string
+  /**
+   * OIDC issuer URL
+   */
+  issuer?: string
+  /**
+   * JWKS URL for key verification
+   */
+  jwks_url?: string
+  /**
+   * OAuth scopes to advertise in well-known endpoint (RFC 9728)
+   */
+  scopes?: Array<string>
+}
+
+/**
+ * Capabilities of the secrets provider
+ */
+export type PkgApiV1ProviderCapabilitiesResponse = {
+  /**
+   * Whether the provider can cleanup all secrets
+   */
+  can_cleanup?: boolean
+  /**
+   * Whether the provider can delete secrets
+   */
+  can_delete?: boolean
+  /**
+   * Whether the provider can list secrets
+   */
+  can_list?: boolean
+  /**
+   * Whether the provider can read secrets
+   */
+  can_read?: boolean
+  /**
+   * Whether the provider can write secrets
+   */
+  can_write?: boolean
+}
+
+/**
+ * Request to push a built skill artifact
+ */
+export type PkgApiV1PushSkillRequest = {
+  /**
+   * OCI reference to push
+   */
+  reference?: string
+}
+
+/**
+ * Basic information about a registry
+ */
+export type PkgApiV1RegistryInfo = {
+  /**
+   * Last updated timestamp
+   */
+  last_updated?: string
+  /**
+   * Name of the registry
+   */
+  name?: string
+  /**
+   * Number of servers in the registry
+   */
+  server_count?: number
+  /**
+   * Source of the registry (URL, file path, or empty string for built-in)
+   */
+  source?: string
+  type?: PkgApiV1RegistryType
+  /**
+   * Version of the registry schema
+   */
+  version?: string
+}
+
+/**
+ * Response containing a list of registries
+ */
+export type PkgApiV1RegistryListResponse = {
+  /**
+   * List of registries
+   */
+  registries?: Array<PkgApiV1RegistryInfo>
+}
+
+/**
+ * OAuth configuration for remote server authentication
+ */
+export type PkgApiV1RemoteOAuthConfig = {
+  /**
+   * OAuth authorization endpoint URL (alternative to issuer for non-OIDC OAuth)
+   */
+  authorize_url?: string
+  bearer_token?: GithubComStacklokToolhivePkgSecretsSecretParameter
+  /**
+   * Specific port for OAuth callback server
+   */
+  callback_port?: number
+  /**
+   * OAuth client ID for authentication
+   */
+  client_id?: string
+  client_secret?: GithubComStacklokToolhivePkgSecretsSecretParameter
+  /**
+   * OAuth/OIDC issuer URL (e.g., https://accounts.google.com)
+   */
+  issuer?: string
+  /**
+   * Additional OAuth parameters for server-specific customization
+   */
+  oauth_params?: {
+    [key: string]: string
+  }
+  /**
+   * OAuth 2.0 resource indicator (RFC 8707)
+   */
+  resource?: string
+  /**
+   * OAuth scopes to request
+   */
+  scopes?: Array<string>
+  /**
+   * Whether to skip opening browser for OAuth flow (defaults to false)
+   */
+  skip_browser?: boolean
+  /**
+   * OAuth token endpoint URL (alternative to issuer for non-OIDC OAuth)
+   */
+  token_url?: string
+  /**
+   * Whether to use PKCE for the OAuth flow
+   */
+  use_pkce?: boolean
+}
+
+/**
+ * Secret key information
+ */
+export type PkgApiV1SecretKeyResponse = {
+  /**
+   * Optional description of the secret
+   */
+  description?: string
+  /**
+   * Secret key name
+   */
+  key?: string
+}
+
+/**
+ * Request to setup a secrets provider
+ */
+export type PkgApiV1SetupSecretsRequest = {
+  /**
+   * Password for encrypted provider (optional, can be set via environment variable)
+   * TODO Review environment variable for this
+   */
+  password?: string
+  /**
+   * Type of the secrets provider (encrypted, 1password, environment)
+   */
+  provider_type?: string
+}
+
+/**
+ * Response after initializing a secrets provider
+ */
+export type PkgApiV1SetupSecretsResponse = {
+  /**
+   * Success message
+   */
+  message?: string
+  /**
+   * Type of the secrets provider that was setup
+   */
+  provider_type?: string
+}
+
+/**
+ * Response containing a list of installed skills
+ */
+export type PkgApiV1SkillListResponse = {
+  /**
+   * List of installed skills
+   */
+  skills?: Array<GithubComStacklokToolhivePkgSkillsInstalledSkill>
+}
+
+/**
+ * Tool override
+ */
+export type PkgApiV1ToolOverride = {
+  /**
+   * Description of the tool
+   */
+  description?: string
+  /**
+   * Name of the tool
+   */
+  name?: string
+}
+
+/**
+ * Request to update an existing workload (name cannot be changed)
+ */
+export type PkgApiV1UpdateRequest = {
+  /**
+   * Authorization configuration
+   */
+  authz_config?: string
+  /**
+   * Command arguments to pass to the container
+   */
+  cmd_arguments?: Array<string>
+  /**
+   * Environment variables to set in the container
+   */
+  env_vars?: {
+    [key: string]: string
+  }
+  /**
+   * Group name this workload belongs to
+   */
+  group?: string
+  header_forward?: PkgApiV1HeaderForwardConfig
+  headers?: Array<RegistryHeader>
+  /**
+   * Host to bind to
+   */
+  host?: string
+  /**
+   * Docker image to use
+   */
+  image?: string
+  /**
+   * Whether network isolation is turned on. This applies the rules in the permission profile.
+   */
+  network_isolation?: boolean
+  oauth_config?: PkgApiV1RemoteOAuthConfig
+  oidc?: PkgApiV1OidcOptions
+  permission_profile?: PermissionsProfile
+  /**
+   * Proxy mode to use
+   */
+  proxy_mode?: string
+  /**
+   * Port for the HTTP proxy to listen on
+   */
+  proxy_port?: number
+  /**
+   * Secret parameters to inject
+   */
+  secrets?: Array<GithubComStacklokToolhivePkgSecretsSecretParameter>
+  /**
+   * Port to expose from the container
+   */
+  target_port?: number
+  /**
+   * Tools filter
+   */
+  tools?: Array<string>
+  /**
+   * Tools override
+   */
+  tools_override?: {
+    [key: string]: PkgApiV1ToolOverride
+  }
+  /**
+   * Transport configuration
+   */
+  transport?: string
+  /**
+   * Whether to trust X-Forwarded-* headers from reverse proxies
+   */
+  trust_proxy_headers?: boolean
+  /**
+   * Remote server specific fields
+   */
+  url?: string
+  /**
+   * Volume mounts
+   */
+  volumes?: Array<string>
+}
+
+/**
+ * Request to update an existing secret
+ */
+export type PkgApiV1UpdateSecretRequest = {
+  /**
+   * New secret value
+   */
+  value?: string
+}
+
+/**
+ * Response after updating a secret
+ */
+export type PkgApiV1UpdateSecretResponse = {
+  /**
+   * Secret key that was updated
+   */
+  key?: string
+  /**
+   * Success message
+   */
+  message?: string
+}
+
+/**
+ * Request to validate a skill definition
+ */
+export type PkgApiV1ValidateSkillRequest = {
+  /**
+   * Path to the skill definition directory
+   */
+  path?: string
+}
+
+export type PkgApiV1VersionResponse = {
+  version?: string
+}
+
+/**
+ * Response containing a list of workloads
+ */
+export type PkgApiV1WorkloadListResponse = {
+  /**
+   * List of container information for each workload
+   */
+  workloads?: Array<GithubComStacklokToolhivePkgCoreWorkload>
+}
+
+/**
+ * Response containing workload status information
+ */
+export type PkgApiV1WorkloadStatusResponse = {
+  /**
+   * Current status of the workload
+   */
+  status?:
+    | 'running'
+    | 'stopped'
+    | 'error'
+    | 'starting'
+    | 'stopping'
+    | 'unhealthy'
+    | 'removing'
+    | 'unknown'
+    | 'unauthenticated'
+}
+
+export type RegistryEnvVar = {
+  /**
+   * Default is the value to use if the environment variable is not explicitly provided
+   * Only used for non-required variables
+   */
+  default?: string
+  /**
+   * Description is a human-readable explanation of the variable's purpose
+   */
+  description?: string
+  /**
+   * Name is the environment variable name (e.g., API_KEY)
+   */
+  name?: string
+  /**
+   * Required indicates whether this environment variable must be provided
+   * If true and not provided via command line or secrets, the user will be prompted for a value
+   */
+  required?: boolean
+  /**
+   * Secret indicates whether this environment variable contains sensitive information
+   * If true, the value will be stored as a secret rather than as a plain environment variable
+   */
+  secret?: boolean
+}
+
+export type RegistryGroup = {
+  /**
+   * Description is a human-readable description of the group's purpose and functionality
+   */
+  description?: string
+  /**
+   * Name is the identifier for the group, used when referencing the group in commands
+   */
+  name?: string
+  /**
+   * RemoteServers is a map of server names to their corresponding remote server definitions within this group
+   */
+  remote_servers?: {
+    [key: string]: RegistryRemoteServerMetadata
+  }
+  /**
+   * Servers is a map of server names to their corresponding server definitions within this group
+   */
+  servers?: {
+    [key: string]: RegistryImageMetadata
+  }
+}
+
+export type RegistryHeader = {
+  /**
+   * Choices provides a list of valid values for the header (optional)
+   */
+  choices?: Array<string>
+  /**
+   * Default is the value to use if the header is not explicitly provided
+   * Only used for non-required headers
+   */
+  default?: string
+  /**
+   * Description is a human-readable explanation of the header's purpose
+   */
+  description?: string
+  /**
+   * Name is the header name (e.g., X-API-Key, Authorization)
+   */
+  name?: string
+  /**
+   * Required indicates whether this header must be provided
+   * If true and not provided via command line or secrets, the user will be prompted for a value
+   */
+  required?: boolean
+  /**
+   * Secret indicates whether this header contains sensitive information
+   * If true, the value will be stored as a secret rather than as plain text
+   */
+  secret?: boolean
+}
+
+/**
+ * Container server details (if it's a container server)
+ */
+export type RegistryImageMetadata = {
+  /**
+   * Args are the default command-line arguments to pass to the MCP server container.
+   * These arguments will be used only if no command-line arguments are provided by the user.
+   * If the user provides arguments, they will override these defaults.
+   */
+  args?: Array<string>
+  /**
+   * CustomMetadata allows for additional user-defined metadata
+   */
+  custom_metadata?: {
+    [key: string]: unknown
+  }
+  /**
+   * Description is a human-readable description of the server's purpose and functionality
+   */
+  description?: string
+  /**
+   * DockerTags lists the available Docker tags for this server image
+   */
+  docker_tags?: Array<string>
+  /**
+   * EnvVars defines environment variables that can be passed to the server
+   */
+  env_vars?: Array<RegistryEnvVar>
+  /**
+   * Image is the Docker image reference for the MCP server
+   */
+  image?: string
+  metadata?: RegistryMetadata
+  /**
+   * Name is the identifier for the MCP server, used when referencing the server in commands
+   * If not provided, it will be auto-generated from the registry key
+   */
+  name?: string
+  /**
+   * Overview is a longer Markdown-formatted description for web display.
+   * Unlike the Description field (limited to 500 chars), this supports
+   * full Markdown and is intended for rich rendering on catalog pages.
+   */
+  overview?: string
+  permissions?: PermissionsProfile
+  provenance?: RegistryProvenance
+  /**
+   * ProxyPort is the port for the HTTP proxy to listen on (host port)
+   * If not specified, a random available port will be assigned
+   */
+  proxy_port?: number
+  /**
+   * RepositoryURL is the URL to the source code repository for the server
+   */
+  repository_url?: string
+  /**
+   * Status indicates whether the server is currently active or deprecated
+   */
+  status?: string
+  /**
+   * Tags are categorization labels for the server to aid in discovery and filtering
+   */
+  tags?: Array<string>
+  /**
+   * TargetPort is the port for the container to expose (only applicable to SSE and Streamable HTTP transports)
+   */
+  target_port?: number
+  /**
+   * Tier represents the tier classification level of the server, e.g., "Official" or "Community"
+   */
+  tier?: string
+  /**
+   * Title is an optional human-readable display name for the server.
+   * If not provided, the Name field is used for display purposes.
+   */
+  title?: string
+  /**
+   * Tools is a list of tool names provided by this MCP server
+   */
+  tools?: Array<string>
+  /**
+   * Transport defines the communication protocol for the server
+   * For containers: stdio, sse, or streamable-http
+   * For remote servers: sse or streamable-http (stdio not supported)
+   */
+  transport?: string
+}
+
+/**
+ * Kubernetes contains Kubernetes-specific metadata when the MCP server is deployed in a cluster.
+ * This field is optional and only populated when:
+ * - The server is served from ToolHive Registry Server
+ * - The server was auto-discovered from a Kubernetes deployment
+ * - The Kubernetes resource has the required registry annotations
+ */
+export type RegistryKubernetesMetadata = {
+  /**
+   * Image is the container image used by the Kubernetes workload (applicable to MCPServer)
+   */
+  image?: string
+  /**
+   * Kind is the Kubernetes resource kind (e.g., MCPServer, VirtualMCPServer, MCPRemoteProxy)
+   */
+  kind?: string
+  /**
+   * Name is the Kubernetes resource name
+   */
+  name?: string
+  /**
+   * Namespace is the Kubernetes namespace where the resource is deployed
+   */
+  namespace?: string
+  /**
+   * Transport is the transport type configured for the Kubernetes workload (applicable to MCPServer)
+   */
+  transport?: string
+  /**
+   * UID is the Kubernetes resource UID
+   */
+  uid?: string
+}
+
+/**
+ * Metadata contains additional information about the server such as popularity metrics
+ */
+export type RegistryMetadata = {
+  kubernetes?: RegistryKubernetesMetadata
+  /**
+   * LastUpdated is the timestamp when the server was last updated, in RFC3339 format
+   */
+  last_updated?: string
+  /**
+   * Stars represents the popularity rating or number of stars for the server
+   */
+  stars?: number
+}
+
+/**
+ * OAuthConfig provides OAuth/OIDC configuration for authentication to the remote server
+ * Used with the thv proxy command's --remote-auth flags
+ */
+export type RegistryOAuthConfig = {
+  /**
+   * AuthorizeURL is the OAuth authorization endpoint URL
+   * Used for non-OIDC OAuth flows when issuer is not provided
+   */
+  authorize_url?: string
+  /**
+   * CallbackPort is the specific port to use for the OAuth callback server
+   * If not specified, a random available port will be used
+   */
+  callback_port?: number
+  /**
+   * ClientID is the OAuth client ID for authentication
+   */
+  client_id?: string
+  /**
+   * Issuer is the OAuth/OIDC issuer URL (e.g., https://accounts.google.com)
+   * Used for OIDC discovery to find authorization and token endpoints
+   */
+  issuer?: string
+  /**
+   * OAuthParams contains additional OAuth parameters to include in the authorization request
+   * These are server-specific parameters like "prompt", "response_mode", etc.
+   */
+  oauth_params?: {
+    [key: string]: string
+  }
+  /**
+   * Resource is the OAuth 2.0 resource indicator (RFC 8707)
+   */
+  resource?: string
+  /**
+   * Scopes are the OAuth scopes to request
+   * If not specified, defaults to ["openid", "profile", "email"] for OIDC
+   */
+  scopes?: Array<string>
+  /**
+   * TokenURL is the OAuth token endpoint URL
+   * Used for non-OIDC OAuth flows when issuer is not provided
+   */
+  token_url?: string
+  /**
+   * UsePKCE indicates whether to use PKCE for the OAuth flow
+   * Defaults to true for enhanced security
+   */
+  use_pkce?: boolean
+}
+
+/**
+ * Provenance contains verification and signing metadata
+ */
+export type RegistryProvenance = {
+  attestation?: RegistryVerifiedAttestation
+  cert_issuer?: string
+  repository_ref?: string
+  repository_uri?: string
+  runner_environment?: string
+  signer_identity?: string
+  sigstore_url?: string
+}
+
+/**
+ * Remote server details (if it's a remote server)
+ */
+export type RegistryRemoteServerMetadata = {
+  /**
+   * CustomMetadata allows for additional user-defined metadata
+   */
+  custom_metadata?: {
+    [key: string]: unknown
+  }
+  /**
+   * Description is a human-readable description of the server's purpose and functionality
+   */
+  description?: string
+  /**
+   * EnvVars defines environment variables that can be passed to configure the client
+   * These might be needed for client-side configuration when connecting to the remote server
+   */
+  env_vars?: Array<RegistryEnvVar>
+  /**
+   * Headers defines HTTP headers that can be passed to the remote server for authentication
+   * These are used with the thv proxy command's authentication features
+   */
+  headers?: Array<RegistryHeader>
+  metadata?: RegistryMetadata
+  /**
+   * Name is the identifier for the MCP server, used when referencing the server in commands
+   * If not provided, it will be auto-generated from the registry key
+   */
+  name?: string
+  oauth_config?: RegistryOAuthConfig
+  /**
+   * Overview is a longer Markdown-formatted description for web display.
+   * Unlike the Description field (limited to 500 chars), this supports
+   * full Markdown and is intended for rich rendering on catalog pages.
+   */
+  overview?: string
+  /**
+   * ProxyPort is the port for the HTTP proxy to listen on (host port)
+   * If not specified, a random available port will be assigned
+   */
+  proxy_port?: number
+  /**
+   * RepositoryURL is the URL to the source code repository for the server
+   */
+  repository_url?: string
+  /**
+   * Status indicates whether the server is currently active or deprecated
+   */
+  status?: string
+  /**
+   * Tags are categorization labels for the server to aid in discovery and filtering
+   */
+  tags?: Array<string>
+  /**
+   * Tier represents the tier classification level of the server, e.g., "Official" or "Community"
+   */
+  tier?: string
+  /**
+   * Title is an optional human-readable display name for the server.
+   * If not provided, the Name field is used for display purposes.
+   */
+  title?: string
+  /**
+   * Tools is a list of tool names provided by this MCP server
+   */
+  tools?: Array<string>
+  /**
+   * Transport defines the communication protocol for the server
+   * For containers: stdio, sse, or streamable-http
+   * For remote servers: sse or streamable-http (stdio not supported)
+   */
+  transport?: string
+  /**
+   * URL is the endpoint URL for the remote MCP server (e.g., https://api.example.com/mcp)
+   */
+  url?: string
+}
+
+export type RegistryVerifiedAttestation = {
+  predicate?: unknown
+  predicate_type?: string
 }
 
 /**
@@ -1053,159 +2460,6 @@ export type StorageSentinelRunConfig = {
   sentinel_addrs?: Array<string>
 }
 
-/**
- * DEPRECATED: Middleware configuration.
- * TelemetryConfig contains the OpenTelemetry configuration
- */
-export type TelemetryConfig = {
-  /**
-   * CustomAttributes contains custom resource attributes to be added to all telemetry signals.
-   * These are parsed from CLI flags (--otel-custom-attributes) or environment variables
-   * (OTEL_RESOURCE_ATTRIBUTES) as key=value pairs.
-   * +optional
-   */
-  customAttributes?: {
-    [key: string]: string
-  }
-  /**
-   * EnablePrometheusMetricsPath controls whether to expose Prometheus-style /metrics endpoint.
-   * The metrics are served on the main transport port at /metrics.
-   * This is separate from OTLP metrics which are sent to the Endpoint.
-   * +kubebuilder:default=false
-   * +optional
-   */
-  enablePrometheusMetricsPath?: boolean
-  /**
-   * Endpoint is the OTLP endpoint URL
-   * +optional
-   */
-  endpoint?: string
-  /**
-   * EnvironmentVariables is a list of environment variable names that should be
-   * included in telemetry spans as attributes. Only variables in this list will
-   * be read from the host machine and included in spans for observability.
-   * Example: ["NODE_ENV", "DEPLOYMENT_ENV", "SERVICE_VERSION"]
-   * +optional
-   */
-  environmentVariables?: Array<string>
-  /**
-   * Headers contains authentication headers for the OTLP endpoint.
-   * +optional
-   */
-  headers?: {
-    [key: string]: string
-  }
-  /**
-   * Insecure indicates whether to use HTTP instead of HTTPS for the OTLP endpoint.
-   * +kubebuilder:default=false
-   * +optional
-   */
-  insecure?: boolean
-  /**
-   * MetricsEnabled controls whether OTLP metrics are enabled.
-   * When false, OTLP metrics are not sent even if an endpoint is configured.
-   * This is independent of EnablePrometheusMetricsPath.
-   * +kubebuilder:default=false
-   * +optional
-   */
-  metricsEnabled?: boolean
-  /**
-   * SamplingRate is the trace sampling rate (0.0-1.0) as a string.
-   * Only used when TracingEnabled is true.
-   * Example: "0.05" for 5% sampling.
-   * +kubebuilder:default="0.05"
-   * +optional
-   */
-  samplingRate?: string
-  /**
-   * ServiceName is the service name for telemetry.
-   * When omitted, defaults to the server name (e.g., VirtualMCPServer name).
-   * +optional
-   */
-  serviceName?: string
-  /**
-   * ServiceVersion is the service version for telemetry.
-   * When omitted, defaults to the ToolHive version.
-   * +optional
-   */
-  serviceVersion?: string
-  /**
-   * TracingEnabled controls whether distributed tracing is enabled.
-   * When false, no tracer provider is created even if an endpoint is configured.
-   * +kubebuilder:default=false
-   * +optional
-   */
-  tracingEnabled?: boolean
-  /**
-   * UseLegacyAttributes controls whether legacy (pre-MCP OTEL semconv) attribute names
-   * are emitted alongside the new standard attribute names. When true, spans include both
-   * old and new attribute names for backward compatibility with existing dashboards.
-   * Currently defaults to true; this will change to false in a future release.
-   * +kubebuilder:default=true
-   * +optional
-   */
-  useLegacyAttributes?: boolean
-}
-
-/**
- * RuntimeConfig allows overriding the default runtime configuration
- * for this specific workload (base images and packages)
- */
-export type TemplatesRuntimeConfig = {
-  /**
-   * AdditionalPackages lists extra packages to install in builder stage
-   * Examples for Alpine: ["git", "make", "gcc"]
-   * Examples for Debian: ["git", "build-essential"]
-   */
-  additional_packages?: Array<string>
-  /**
-   * BuilderImage is the full image reference for the builder stage
-   * Examples: "golang:1.25-alpine", "node:22-alpine", "python:3.13-slim"
-   */
-  builder_image?: string
-}
-
-/**
- * TokenExchangeConfig contains token exchange configuration for external authentication
- */
-export type TokenexchangeConfig = {
-  /**
-   * Audience is the target audience for the exchanged token
-   */
-  audience?: string
-  /**
-   * ClientID is the OAuth 2.0 client identifier
-   */
-  client_id?: string
-  /**
-   * ClientSecret is the OAuth 2.0 client secret
-   */
-  client_secret?: string
-  /**
-   * ExternalTokenHeaderName is the name of the custom header to use when HeaderStrategy is "custom"
-   */
-  external_token_header_name?: string
-  /**
-   * HeaderStrategy determines how to inject the token
-   * Valid values: HeaderStrategyReplace (default), HeaderStrategyCustom
-   */
-  header_strategy?: string
-  /**
-   * Scopes is the list of scopes to request for the exchanged token
-   */
-  scopes?: Array<string>
-  /**
-   * SubjectTokenType specifies the type of the subject token being exchanged.
-   * Common values: tokenTypeAccessToken (default), tokenTypeIDToken, tokenTypeJWT.
-   * If empty, defaults to tokenTypeAccessToken.
-   */
-  subject_token_type?: string
-  /**
-   * TokenURL is the OAuth 2.0 token endpoint URL
-   */
-  token_url?: string
-}
-
 export type TypesMiddlewareConfig = {
   /**
    * Parameters is a JSON object containing the middleware parameters.
@@ -1218,767 +2472,6 @@ export type TypesMiddlewareConfig = {
    * Type is a string representing the middleware type.
    */
   type?: string
-}
-
-/**
- * ProxyMode is the proxy mode for stdio transport ("sse" or "streamable-http")
- * Note: "sse" is deprecated; use "streamable-http" instead.
- */
-export type TypesProxyMode = 'sse' | 'streamable-http'
-
-/**
- * Transport is the transport mode (stdio, sse, or streamable-http)
- */
-export type TypesTransportType =
-  | 'stdio'
-  | 'sse'
-  | 'streamable-http'
-  | 'inspector'
-
-/**
- * UpstreamSwapConfig contains configuration for upstream token swap middleware.
- * When set along with EmbeddedAuthServerConfig, this middleware exchanges ToolHive JWTs
- * for upstream IdP tokens before forwarding requests to the MCP server.
- */
-export type UpstreamswapConfig = {
-  /**
-   * CustomHeaderName is the header name when HeaderStrategy is "custom".
-   */
-  custom_header_name?: string
-  /**
-   * HeaderStrategy determines how to inject the token: "replace" (default) or "custom".
-   */
-  header_strategy?: string
-}
-
-/**
- * Type of registry (file, url, or default)
- */
-export type V1RegistryType = 'file' | 'url' | 'api' | 'default'
-
-/**
- * Request containing registry configuration updates
- */
-export type V1UpdateRegistryRequest = {
-  /**
-   * Allow private IP addresses for registry URL or API URL
-   */
-  allow_private_ip?: boolean
-  /**
-   * MCP Registry API URL
-   */
-  api_url?: string
-  /**
-   * Local registry file path
-   */
-  local_path?: string
-  /**
-   * Registry URL (for remote registries)
-   */
-  url?: string
-}
-
-/**
- * Response containing update result
- */
-export type V1UpdateRegistryResponse = {
-  /**
-   * Registry type after update
-   */
-  type?: string
-}
-
-/**
- * Request to build a skill from a local directory
- */
-export type V1BuildSkillRequest = {
-  /**
-   * Path to the skill definition directory
-   */
-  path?: string
-  /**
-   * OCI tag for the built artifact
-   */
-  tag?: string
-}
-
-export type V1BulkClientRequest = {
-  /**
-   * Groups is the list of groups configured on the client.
-   */
-  groups?: Array<string>
-  /**
-   * Names is the list of client names to operate on.
-   */
-  names?: Array<ClientClientApp>
-}
-
-export type V1BulkOperationRequest = {
-  /**
-   * Group name to operate on (mutually exclusive with names)
-   */
-  group?: string
-  /**
-   * Names of the workloads to operate on
-   */
-  names?: Array<string>
-}
-
-export type V1ClientStatusResponse = {
-  clients?: Array<ClientClientAppStatus>
-}
-
-export type V1CreateClientRequest = {
-  /**
-   * Groups is the list of groups configured on the client.
-   */
-  groups?: Array<string>
-  name?: ClientClientApp
-}
-
-export type V1CreateClientResponse = {
-  /**
-   * Groups is the list of groups configured on the client.
-   */
-  groups?: Array<string>
-  name?: ClientClientApp
-}
-
-export type V1CreateGroupRequest = {
-  /**
-   * Name of the group to create
-   */
-  name?: string
-}
-
-export type V1CreateGroupResponse = {
-  /**
-   * Name of the created group
-   */
-  name?: string
-}
-
-/**
- * Request to create a new workload
- */
-export type V1CreateRequest = {
-  /**
-   * Authorization configuration
-   */
-  authz_config?: string
-  /**
-   * Command arguments to pass to the container
-   */
-  cmd_arguments?: Array<string>
-  /**
-   * Environment variables to set in the container
-   */
-  env_vars?: {
-    [key: string]: string
-  }
-  /**
-   * Group name this workload belongs to
-   */
-  group?: string
-  header_forward?: V1HeaderForwardConfig
-  /**
-   * Host to bind to
-   */
-  host?: string
-  /**
-   * Docker image to use
-   */
-  image?: string
-  /**
-   * Name of the workload
-   */
-  name?: string
-  /**
-   * Whether network isolation is turned on. This applies the rules in the permission profile.
-   */
-  network_isolation?: boolean
-  oauth_config?: V1RemoteOAuthConfig
-  oidc?: V1OidcOptions
-  /**
-   * Proxy mode to use
-   */
-  proxy_mode?: string
-  /**
-   * Port for the HTTP proxy to listen on
-   */
-  proxy_port?: number
-  /**
-   * Secret parameters to inject
-   */
-  secrets?: Array<SecretsSecretParameter>
-  /**
-   * Port to expose from the container
-   */
-  target_port?: number
-  /**
-   * Tools filter
-   */
-  tools?: Array<string>
-  /**
-   * Tools override
-   */
-  tools_override?: {
-    [key: string]: V1ToolOverride
-  }
-  /**
-   * Transport configuration
-   */
-  transport?: string
-  /**
-   * Whether to trust X-Forwarded-* headers from reverse proxies
-   */
-  trust_proxy_headers?: boolean
-  /**
-   * Remote server specific fields
-   */
-  url?: string
-  /**
-   * Volume mounts
-   */
-  volumes?: Array<string>
-}
-
-/**
- * Request to create a new secret
- */
-export type V1CreateSecretRequest = {
-  /**
-   * Secret key name
-   */
-  key?: string
-  /**
-   * Secret value
-   */
-  value?: string
-}
-
-/**
- * Response after creating a secret
- */
-export type V1CreateSecretResponse = {
-  /**
-   * Secret key that was created
-   */
-  key?: string
-  /**
-   * Success message
-   */
-  message?: string
-}
-
-/**
- * Response after successfully creating a workload
- */
-export type V1CreateWorkloadResponse = {
-  /**
-   * Name of the created workload
-   */
-  name?: string
-  /**
-   * Port the workload is listening on
-   */
-  port?: number
-}
-
-/**
- * Response containing registry details
- */
-export type V1GetRegistryResponse = {
-  /**
-   * Last updated timestamp
-   */
-  last_updated?: string
-  /**
-   * Name of the registry
-   */
-  name?: string
-  /**
-   * Number of servers in the registry
-   */
-  server_count?: number
-  /**
-   * Source of the registry (URL, file path, or empty string for built-in)
-   */
-  source?: string
-  type?: V1RegistryType
-  /**
-   * Version of the registry schema
-   */
-  version?: string
-}
-
-/**
- * Response containing secrets provider details
- */
-export type V1GetSecretsProviderResponse = {
-  capabilities?: V1ProviderCapabilitiesResponse
-  /**
-   * Name of the secrets provider
-   */
-  name?: string
-  /**
-   * Type of the secrets provider
-   */
-  provider_type?: string
-}
-
-/**
- * Response containing server details
- */
-export type V1GetServerResponse = {
-  /**
-   * Indicates if this is a remote server
-   */
-  is_remote?: boolean
-}
-
-export type V1GroupListResponse = {
-  /**
-   * List of groups
-   */
-  groups?: Array<GroupsGroup>
-}
-
-/**
- * HeaderForward configures headers to inject into requests to remote MCP servers.
- * Use this to add custom headers like X-Tenant-ID or correlation IDs.
- */
-export type V1HeaderForwardConfig = {
-  /**
-   * AddHeadersFromSecret maps header names to secret names in ToolHive's secrets manager.
-   * Key: HTTP header name, Value: secret name in the secrets manager
-   */
-  add_headers_from_secret?: {
-    [key: string]: string
-  }
-  /**
-   * AddPlaintextHeaders contains literal header values to inject.
-   * WARNING: These values are stored and transmitted in plaintext.
-   * Use AddHeadersFromSecret for sensitive data like API keys.
-   */
-  add_plaintext_headers?: {
-    [key: string]: string
-  }
-}
-
-/**
- * Request to install a skill
- */
-export type V1InstallSkillRequest = {
-  /**
-   * Client is the target client (e.g., "claude-code")
-   */
-  client?: string
-  /**
-   * Force allows overwriting unmanaged skill directories
-   */
-  force?: boolean
-  /**
-   * Group is the group name to add the skill to after installation
-   */
-  group?: string
-  /**
-   * Name or OCI reference of the skill to install
-   */
-  name?: string
-  /**
-   * ProjectRoot is the project root path for project-scoped installs
-   */
-  project_root?: string
-  scope?: SkillsScope
-  /**
-   * Version to install (empty means latest)
-   */
-  version?: string
-}
-
-/**
- * Response after successfully installing a skill
- */
-export type V1InstallSkillResponse = {
-  skill?: SkillsInstalledSkill
-}
-
-/**
- * Response containing a list of secret keys
- */
-export type V1ListSecretsResponse = {
-  /**
-   * List of secret keys
-   */
-  keys?: Array<V1SecretKeyResponse>
-}
-
-/**
- * Response containing a list of servers
- */
-export type V1ListServersResponse = {
-  [key: string]: unknown
-}
-
-/**
- * OIDC configuration options
- */
-export type V1OidcOptions = {
-  /**
-   * Expected audience
-   */
-  audience?: string
-  /**
-   * OAuth2 client ID
-   */
-  client_id?: string
-  /**
-   * OAuth2 client secret
-   */
-  client_secret?: string
-  /**
-   * Token introspection URL for OIDC
-   */
-  introspection_url?: string
-  /**
-   * OIDC issuer URL
-   */
-  issuer?: string
-  /**
-   * JWKS URL for key verification
-   */
-  jwks_url?: string
-  /**
-   * OAuth scopes to advertise in well-known endpoint (RFC 9728)
-   */
-  scopes?: Array<string>
-}
-
-/**
- * Capabilities of the secrets provider
- */
-export type V1ProviderCapabilitiesResponse = {
-  /**
-   * Whether the provider can cleanup all secrets
-   */
-  can_cleanup?: boolean
-  /**
-   * Whether the provider can delete secrets
-   */
-  can_delete?: boolean
-  /**
-   * Whether the provider can list secrets
-   */
-  can_list?: boolean
-  /**
-   * Whether the provider can read secrets
-   */
-  can_read?: boolean
-  /**
-   * Whether the provider can write secrets
-   */
-  can_write?: boolean
-}
-
-/**
- * Request to push a built skill artifact
- */
-export type V1PushSkillRequest = {
-  /**
-   * OCI reference to push
-   */
-  reference?: string
-}
-
-/**
- * Basic information about a registry
- */
-export type V1RegistryInfo = {
-  /**
-   * Last updated timestamp
-   */
-  last_updated?: string
-  /**
-   * Name of the registry
-   */
-  name?: string
-  /**
-   * Number of servers in the registry
-   */
-  server_count?: number
-  /**
-   * Source of the registry (URL, file path, or empty string for built-in)
-   */
-  source?: string
-  type?: V1RegistryType
-  /**
-   * Version of the registry schema
-   */
-  version?: string
-}
-
-/**
- * Response containing a list of registries
- */
-export type V1RegistryListResponse = {
-  /**
-   * List of registries
-   */
-  registries?: Array<V1RegistryInfo>
-}
-
-/**
- * OAuth configuration for remote server authentication
- */
-export type V1RemoteOAuthConfig = {
-  /**
-   * OAuth authorization endpoint URL (alternative to issuer for non-OIDC OAuth)
-   */
-  authorize_url?: string
-  bearer_token?: SecretsSecretParameter
-  /**
-   * Specific port for OAuth callback server
-   */
-  callback_port?: number
-  /**
-   * OAuth client ID for authentication
-   */
-  client_id?: string
-  client_secret?: SecretsSecretParameter
-  /**
-   * OAuth/OIDC issuer URL (e.g., https://accounts.google.com)
-   */
-  issuer?: string
-  /**
-   * Additional OAuth parameters for server-specific customization
-   */
-  oauth_params?: {
-    [key: string]: string
-  }
-  /**
-   * OAuth 2.0 resource indicator (RFC 8707)
-   */
-  resource?: string
-  /**
-   * OAuth scopes to request
-   */
-  scopes?: Array<string>
-  /**
-   * Whether to skip opening browser for OAuth flow (defaults to false)
-   */
-  skip_browser?: boolean
-  /**
-   * OAuth token endpoint URL (alternative to issuer for non-OIDC OAuth)
-   */
-  token_url?: string
-  /**
-   * Whether to use PKCE for the OAuth flow
-   */
-  use_pkce?: boolean
-}
-
-/**
- * Secret key information
- */
-export type V1SecretKeyResponse = {
-  /**
-   * Optional description of the secret
-   */
-  description?: string
-  /**
-   * Secret key name
-   */
-  key?: string
-}
-
-/**
- * Request to setup a secrets provider
- */
-export type V1SetupSecretsRequest = {
-  /**
-   * Password for encrypted provider (optional, can be set via environment variable)
-   * TODO Review environment variable for this
-   */
-  password?: string
-  /**
-   * Type of the secrets provider (encrypted, 1password, environment)
-   */
-  provider_type?: string
-}
-
-/**
- * Response after initializing a secrets provider
- */
-export type V1SetupSecretsResponse = {
-  /**
-   * Success message
-   */
-  message?: string
-  /**
-   * Type of the secrets provider that was setup
-   */
-  provider_type?: string
-}
-
-/**
- * Response containing a list of installed skills
- */
-export type V1SkillListResponse = {
-  /**
-   * List of installed skills
-   */
-  skills?: Array<SkillsInstalledSkill>
-}
-
-/**
- * Tool override
- */
-export type V1ToolOverride = {
-  /**
-   * Description of the tool
-   */
-  description?: string
-  /**
-   * Name of the tool
-   */
-  name?: string
-}
-
-/**
- * Request to update an existing workload (name cannot be changed)
- */
-export type V1UpdateRequest = {
-  /**
-   * Authorization configuration
-   */
-  authz_config?: string
-  /**
-   * Command arguments to pass to the container
-   */
-  cmd_arguments?: Array<string>
-  /**
-   * Environment variables to set in the container
-   */
-  env_vars?: {
-    [key: string]: string
-  }
-  /**
-   * Group name this workload belongs to
-   */
-  group?: string
-  header_forward?: V1HeaderForwardConfig
-  /**
-   * Host to bind to
-   */
-  host?: string
-  /**
-   * Docker image to use
-   */
-  image?: string
-  /**
-   * Whether network isolation is turned on. This applies the rules in the permission profile.
-   */
-  network_isolation?: boolean
-  oauth_config?: V1RemoteOAuthConfig
-  oidc?: V1OidcOptions
-  /**
-   * Proxy mode to use
-   */
-  proxy_mode?: string
-  /**
-   * Port for the HTTP proxy to listen on
-   */
-  proxy_port?: number
-  /**
-   * Secret parameters to inject
-   */
-  secrets?: Array<SecretsSecretParameter>
-  /**
-   * Port to expose from the container
-   */
-  target_port?: number
-  /**
-   * Tools filter
-   */
-  tools?: Array<string>
-  /**
-   * Tools override
-   */
-  tools_override?: {
-    [key: string]: V1ToolOverride
-  }
-  /**
-   * Transport configuration
-   */
-  transport?: string
-  /**
-   * Whether to trust X-Forwarded-* headers from reverse proxies
-   */
-  trust_proxy_headers?: boolean
-  /**
-   * Remote server specific fields
-   */
-  url?: string
-  /**
-   * Volume mounts
-   */
-  volumes?: Array<string>
-}
-
-/**
- * Request to update an existing secret
- */
-export type V1UpdateSecretRequest = {
-  /**
-   * New secret value
-   */
-  value?: string
-}
-
-/**
- * Response after updating a secret
- */
-export type V1UpdateSecretResponse = {
-  /**
-   * Secret key that was updated
-   */
-  key?: string
-  /**
-   * Success message
-   */
-  message?: string
-}
-
-/**
- * Request to validate a skill definition
- */
-export type V1ValidateSkillRequest = {
-  /**
-   * Path to the skill definition directory
-   */
-  path?: string
-}
-
-export type V1VersionResponse = {
-  version?: string
-}
-
-/**
- * Response containing a list of workloads
- */
-export type V1WorkloadListResponse = {
-  /**
-   * List of container information for each workload
-   */
-  workloads?: Array<CoreWorkload>
-}
-
-/**
- * Response containing workload status information
- */
-export type V1WorkloadStatusResponse = {
-  status?: RuntimeWorkloadStatus
 }
 
 export type GetApiOpenapiJsonData = {
@@ -2011,7 +2504,7 @@ export type GetApiV1BetaClientsResponses = {
   /**
    * OK
    */
-  200: Array<ClientRegisteredClient>
+  200: Array<GithubComStacklokToolhivePkgClientRegisteredClient>
 }
 
 export type GetApiV1BetaClientsResponse =
@@ -2025,7 +2518,7 @@ export type PostApiV1BetaClientsData = {
     | {
         [key: string]: unknown
       }
-    | V1CreateClientRequest
+    | PkgApiV1CreateClientRequest
   path?: never
   query?: never
   url: '/api/v1beta/clients'
@@ -2045,7 +2538,7 @@ export type PostApiV1BetaClientsResponses = {
   /**
    * OK
    */
-  200: V1CreateClientResponse
+  200: PkgApiV1CreateClientResponse
 }
 
 export type PostApiV1BetaClientsResponse =
@@ -2059,7 +2552,7 @@ export type PostApiV1BetaClientsRegisterData = {
     | {
         [key: string]: unknown
       }
-    | V1BulkClientRequest
+    | PkgApiV1BulkClientRequest
   path?: never
   query?: never
   url: '/api/v1beta/clients/register'
@@ -2079,7 +2572,7 @@ export type PostApiV1BetaClientsRegisterResponses = {
   /**
    * OK
    */
-  200: Array<V1CreateClientResponse>
+  200: Array<PkgApiV1CreateClientResponse>
 }
 
 export type PostApiV1BetaClientsRegisterResponse =
@@ -2093,7 +2586,7 @@ export type PostApiV1BetaClientsUnregisterData = {
     | {
         [key: string]: unknown
       }
-    | V1BulkClientRequest
+    | PkgApiV1BulkClientRequest
   path?: never
   query?: never
   url: '/api/v1beta/clients/unregister'
@@ -2202,7 +2695,7 @@ export type GetApiV1BetaDiscoveryClientsResponses = {
   /**
    * OK
    */
-  200: V1ClientStatusResponse
+  200: PkgApiV1ClientStatusResponse
 }
 
 export type GetApiV1BetaDiscoveryClientsResponse =
@@ -2229,7 +2722,7 @@ export type GetApiV1BetaGroupsResponses = {
   /**
    * OK
    */
-  200: V1GroupListResponse
+  200: PkgApiV1GroupListResponse
 }
 
 export type GetApiV1BetaGroupsResponse =
@@ -2243,7 +2736,7 @@ export type PostApiV1BetaGroupsData = {
     | {
         [key: string]: unknown
       }
-    | V1CreateGroupRequest
+    | PkgApiV1CreateGroupRequest
   path?: never
   query?: never
   url: '/api/v1beta/groups'
@@ -2271,7 +2764,7 @@ export type PostApiV1BetaGroupsResponses = {
   /**
    * Created
    */
-  201: V1CreateGroupResponse
+  201: PkgApiV1CreateGroupResponse
 }
 
 export type PostApiV1BetaGroupsResponse =
@@ -2348,7 +2841,7 @@ export type GetApiV1BetaGroupsByNameResponses = {
   /**
    * OK
    */
-  200: GroupsGroup
+  200: GithubComStacklokToolhivePkgGroupsGroup
 }
 
 export type GetApiV1BetaGroupsByNameResponse =
@@ -2365,7 +2858,7 @@ export type GetApiV1BetaRegistryResponses = {
   /**
    * OK
    */
-  200: V1RegistryListResponse
+  200: PkgApiV1RegistryListResponse
 }
 
 export type GetApiV1BetaRegistryResponse =
@@ -2448,7 +2941,7 @@ export type GetApiV1BetaRegistryByNameResponses = {
   /**
    * OK
    */
-  200: V1GetRegistryResponse
+  200: PkgApiV1GetRegistryResponse
 }
 
 export type GetApiV1BetaRegistryByNameResponse =
@@ -2462,7 +2955,7 @@ export type PutApiV1BetaRegistryByNameData = {
     | {
         [key: string]: unknown
       }
-    | V1UpdateRegistryRequest
+    | PkgApiV1UpdateRegistryRequest
   path: {
     /**
      * Registry name (must be 'default')
@@ -2499,7 +2992,7 @@ export type PutApiV1BetaRegistryByNameResponses = {
   /**
    * OK
    */
-  200: V1UpdateRegistryResponse
+  200: PkgApiV1UpdateRegistryResponse
 }
 
 export type PutApiV1BetaRegistryByNameResponse =
@@ -2531,7 +3024,7 @@ export type GetApiV1BetaRegistryByNameServersResponses = {
   /**
    * OK
    */
-  200: V1ListServersResponse
+  200: PkgApiV1ListServersResponse
 }
 
 export type GetApiV1BetaRegistryByNameServersResponse =
@@ -2567,7 +3060,7 @@ export type GetApiV1BetaRegistryByNameServersByServerNameResponses = {
   /**
    * OK
    */
-  200: V1GetServerResponse
+  200: PkgApiV1GetServerResponse
 }
 
 export type GetApiV1BetaRegistryByNameServersByServerNameResponse =
@@ -2581,7 +3074,7 @@ export type PostApiV1BetaSecretsData = {
     | {
         [key: string]: unknown
       }
-    | V1SetupSecretsRequest
+    | PkgApiV1SetupSecretsRequest
   path?: never
   query?: never
   url: '/api/v1beta/secrets'
@@ -2605,7 +3098,7 @@ export type PostApiV1BetaSecretsResponses = {
   /**
    * Created
    */
-  201: V1SetupSecretsResponse
+  201: PkgApiV1SetupSecretsResponse
 }
 
 export type PostApiV1BetaSecretsResponse =
@@ -2636,7 +3129,7 @@ export type GetApiV1BetaSecretsDefaultResponses = {
   /**
    * OK
    */
-  200: V1GetSecretsProviderResponse
+  200: PkgApiV1GetSecretsProviderResponse
 }
 
 export type GetApiV1BetaSecretsDefaultResponse =
@@ -2671,7 +3164,7 @@ export type GetApiV1BetaSecretsDefaultKeysResponses = {
   /**
    * OK
    */
-  200: V1ListSecretsResponse
+  200: PkgApiV1ListSecretsResponse
 }
 
 export type GetApiV1BetaSecretsDefaultKeysResponse =
@@ -2685,7 +3178,7 @@ export type PostApiV1BetaSecretsDefaultKeysData = {
     | {
         [key: string]: unknown
       }
-    | V1CreateSecretRequest
+    | PkgApiV1CreateSecretRequest
   path?: never
   query?: never
   url: '/api/v1beta/secrets/default/keys'
@@ -2721,7 +3214,7 @@ export type PostApiV1BetaSecretsDefaultKeysResponses = {
   /**
    * Created
    */
-  201: V1CreateSecretResponse
+  201: PkgApiV1CreateSecretResponse
 }
 
 export type PostApiV1BetaSecretsDefaultKeysResponse =
@@ -2775,7 +3268,7 @@ export type PutApiV1BetaSecretsDefaultKeysByKeyData = {
     | {
         [key: string]: unknown
       }
-    | V1UpdateSecretRequest
+    | PkgApiV1UpdateSecretRequest
   path: {
     /**
      * Secret key
@@ -2812,7 +3305,7 @@ export type PutApiV1BetaSecretsDefaultKeysByKeyResponses = {
   /**
    * OK
    */
-  200: V1UpdateSecretResponse
+  200: PkgApiV1UpdateSecretResponse
 }
 
 export type PutApiV1BetaSecretsDefaultKeysByKeyResponse =
@@ -2856,7 +3349,7 @@ export type GetApiV1BetaSkillsResponses = {
   /**
    * OK
    */
-  200: V1SkillListResponse
+  200: PkgApiV1SkillListResponse
 }
 
 export type GetApiV1BetaSkillsResponse =
@@ -2870,7 +3363,7 @@ export type PostApiV1BetaSkillsData = {
     | {
         [key: string]: unknown
       }
-    | V1InstallSkillRequest
+    | PkgApiV1InstallSkillRequest
   path?: never
   query?: never
   url: '/api/v1beta/skills'
@@ -2898,7 +3391,7 @@ export type PostApiV1BetaSkillsResponses = {
   /**
    * Created
    */
-  201: V1InstallSkillResponse
+  201: PkgApiV1InstallSkillResponse
 }
 
 export type PostApiV1BetaSkillsResponse =
@@ -2912,7 +3405,7 @@ export type PostApiV1BetaSkillsBuildData = {
     | {
         [key: string]: unknown
       }
-    | V1BuildSkillRequest
+    | PkgApiV1BuildSkillRequest
   path?: never
   query?: never
   url: '/api/v1beta/skills/build'
@@ -2936,7 +3429,7 @@ export type PostApiV1BetaSkillsBuildResponses = {
   /**
    * OK
    */
-  200: SkillsBuildResult
+  200: GithubComStacklokToolhivePkgSkillsBuildResult
 }
 
 export type PostApiV1BetaSkillsBuildResponse =
@@ -2950,7 +3443,7 @@ export type PostApiV1BetaSkillsPushData = {
     | {
         [key: string]: unknown
       }
-    | V1PushSkillRequest
+    | PkgApiV1PushSkillRequest
   path?: never
   query?: never
   url: '/api/v1beta/skills/push'
@@ -2992,7 +3485,7 @@ export type PostApiV1BetaSkillsValidateData = {
     | {
         [key: string]: unknown
       }
-    | V1ValidateSkillRequest
+    | PkgApiV1ValidateSkillRequest
   path?: never
   query?: never
   url: '/api/v1beta/skills/validate'
@@ -3016,7 +3509,7 @@ export type PostApiV1BetaSkillsValidateResponses = {
   /**
    * OK
    */
-  200: SkillsValidationResult
+  200: GithubComStacklokToolhivePkgSkillsValidationResult
 }
 
 export type PostApiV1BetaSkillsValidateResponse =
@@ -3114,7 +3607,7 @@ export type GetApiV1BetaSkillsByNameResponses = {
   /**
    * OK
    */
-  200: SkillsSkillInfo
+  200: GithubComStacklokToolhivePkgSkillsSkillInfo
 }
 
 export type GetApiV1BetaSkillsByNameResponse =
@@ -3131,7 +3624,7 @@ export type GetApiV1BetaVersionResponses = {
   /**
    * OK
    */
-  200: V1VersionResponse
+  200: PkgApiV1VersionResponse
 }
 
 export type GetApiV1BetaVersionResponse =
@@ -3167,7 +3660,7 @@ export type GetApiV1BetaWorkloadsResponses = {
   /**
    * OK
    */
-  200: V1WorkloadListResponse
+  200: PkgApiV1WorkloadListResponse
 }
 
 export type GetApiV1BetaWorkloadsResponse =
@@ -3181,7 +3674,7 @@ export type PostApiV1BetaWorkloadsData = {
     | {
         [key: string]: unknown
       }
-    | V1CreateRequest
+    | PkgApiV1CreateRequest
   path?: never
   query?: never
   url: '/api/v1beta/workloads'
@@ -3205,7 +3698,7 @@ export type PostApiV1BetaWorkloadsResponses = {
   /**
    * Created
    */
-  201: V1CreateWorkloadResponse
+  201: PkgApiV1CreateWorkloadResponse
 }
 
 export type PostApiV1BetaWorkloadsResponse =
@@ -3219,7 +3712,7 @@ export type PostApiV1BetaWorkloadsDeleteData = {
     | {
         [key: string]: unknown
       }
-    | V1BulkOperationRequest
+    | PkgApiV1BulkOperationRequest
   path?: never
   query?: never
   url: '/api/v1beta/workloads/delete'
@@ -3253,7 +3746,7 @@ export type PostApiV1BetaWorkloadsRestartData = {
     | {
         [key: string]: unknown
       }
-    | V1BulkOperationRequest
+    | PkgApiV1BulkOperationRequest
   path?: never
   query?: never
   url: '/api/v1beta/workloads/restart'
@@ -3287,7 +3780,7 @@ export type PostApiV1BetaWorkloadsStopData = {
     | {
         [key: string]: unknown
       }
-    | V1BulkOperationRequest
+    | PkgApiV1BulkOperationRequest
   path?: never
   query?: never
   url: '/api/v1beta/workloads/stop'
@@ -3375,7 +3868,7 @@ export type GetApiV1BetaWorkloadsByNameResponses = {
   /**
    * OK
    */
-  200: V1CreateRequest
+  200: PkgApiV1CreateRequest
 }
 
 export type GetApiV1BetaWorkloadsByNameResponse =
@@ -3389,7 +3882,7 @@ export type PostApiV1BetaWorkloadsByNameEditData = {
     | {
         [key: string]: unknown
       }
-    | V1UpdateRequest
+    | PkgApiV1UpdateRequest
   path: {
     /**
      * Workload name
@@ -3418,7 +3911,7 @@ export type PostApiV1BetaWorkloadsByNameEditResponses = {
   /**
    * OK
    */
-  200: V1CreateWorkloadResponse
+  200: PkgApiV1CreateWorkloadResponse
 }
 
 export type PostApiV1BetaWorkloadsByNameEditResponse =
@@ -3450,7 +3943,7 @@ export type GetApiV1BetaWorkloadsByNameExportResponses = {
   /**
    * OK
    */
-  200: RunnerRunConfig
+  200: GithubComStacklokToolhivePkgRunnerRunConfig
 }
 
 export type GetApiV1BetaWorkloadsByNameExportResponse =
@@ -3590,7 +4083,7 @@ export type GetApiV1BetaWorkloadsByNameStatusResponses = {
   /**
    * OK
    */
-  200: V1WorkloadStatusResponse
+  200: PkgApiV1WorkloadStatusResponse
 }
 
 export type GetApiV1BetaWorkloadsByNameStatusResponse =

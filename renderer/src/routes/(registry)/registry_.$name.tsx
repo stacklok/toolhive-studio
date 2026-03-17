@@ -173,7 +173,7 @@ export function RegistryServerDetail() {
           <div className="flex w-3/5 flex-3 flex-col gap-2">
             <p className="text-base font-bold">Tools listed</p>
             <div className="flex flex-wrap gap-2">
-              {toolsToShow?.map((tool) => (
+              {toolsToShow?.map((tool: string) => (
                 <Badge key={tool} variant="outline">
                   {tool}
                 </Badge>

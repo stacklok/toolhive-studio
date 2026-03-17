@@ -1,9 +1,9 @@
 import {
-  type SecretsSecretParameter,
-  type V1CreateRequest,
-  type V1HeaderForwardConfig,
-  type V1ListSecretsResponse,
-  type V1UpdateRequest,
+  type GithubComStacklokToolhivePkgSecretsSecretParameter as SecretsSecretParameter,
+  type PkgApiV1CreateRequest as V1CreateRequest,
+  type PkgApiV1HeaderForwardConfig as V1HeaderForwardConfig,
+  type PkgApiV1ListSecretsResponse as V1ListSecretsResponse,
+  type PkgApiV1UpdateRequest as V1UpdateRequest,
 } from '@common/api/generated/types.gen'
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
 import { omit } from '@/common/lib/utils'
@@ -108,7 +108,7 @@ function transformHeaderForwardToForm(
   return {
     add_plaintext_headers: headerForward.add_plaintext_headers
       ? Object.entries(headerForward.add_plaintext_headers).map(
-          ([header_name, header_value]) => ({
+          ([header_name, header_value]: [string, string]) => ({
             header_name,
             header_value,
           })
@@ -116,7 +116,7 @@ function transformHeaderForwardToForm(
       : [],
     add_headers_from_secret: headerForward.add_headers_from_secret
       ? Object.entries(headerForward.add_headers_from_secret).map(
-          ([header_name, secret_name]) => ({
+          ([header_name, secret_name]: [string, string]) => ({
             header_name,
             secret: {
               name: secret_name,
@@ -251,24 +251,26 @@ export function convertCreateRequestToFormData(
   availableSecrets?: V1ListSecretsResponse
 ): FormSchemaRemoteMcp {
   // Convert secrets from API format to form format
-  const availableSecretKeys = new Set(
+  const availableSecretKeys = new Set<string>(
     availableSecrets?.keys
-      ?.map((key) => key.key)
+      ?.map((key: { key?: string }) => key.key)
       .filter((key): key is string => Boolean(key)) || []
   )
 
-  const secrets = (createRequest.secrets || []).map((secret) => {
-    const secretKey = secret.name || ''
-    const isFromStore = availableSecretKeys.has(secretKey)
+  const secrets = (createRequest.secrets || []).map(
+    (secret: { name?: string; target?: string }) => {
+      const secretKey = secret.name || ''
+      const isFromStore = availableSecretKeys.has(secretKey)
 
-    return {
-      name: secret.target || '',
-      value: {
-        secret: secretKey,
-        isFromStore,
-      },
+      return {
+        name: secret.target || '',
+        value: {
+          secret: secretKey,
+          isFromStore,
+        },
+      }
     }
-  })
+  )
 
   const authType = getRemoteAuthFieldType(createRequest.oauth_config)
 

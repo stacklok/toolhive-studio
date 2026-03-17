@@ -7,9 +7,9 @@ import {
   prepareUpdateLocalWorkloadData,
 } from '../orchestrate-run-local-server'
 import type {
-  SecretsSecretParameter,
-  CoreWorkload,
-  V1ListSecretsResponse,
+  GithubComStacklokToolhivePkgSecretsSecretParameter as SecretsSecretParameter,
+  GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload,
+  PkgApiV1ListSecretsResponse as V1ListSecretsResponse,
 } from '@common/api/generated/types.gen'
 import type { V1CreateRequest } from '@common/api/registry-types'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'

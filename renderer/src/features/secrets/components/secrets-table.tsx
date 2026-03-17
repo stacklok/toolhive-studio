@@ -8,7 +8,7 @@ import {
 } from '@/common/components/ui/table'
 import { SecretDropdown } from './secret-dropdown'
 import { useFilterSort } from '@/common/hooks/use-filter-sort'
-import type { V1SecretKeyResponse } from '@common/api/generated/types.gen'
+import type { PkgApiV1SecretKeyResponse as V1SecretKeyResponse } from '@common/api/generated/types.gen'
 import { InputSearch } from '@/common/components/ui/input-search'
 import { Button } from '@/common/components/ui/button'
 import { PlusIcon } from 'lucide-react'
