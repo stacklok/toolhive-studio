@@ -92,6 +92,44 @@ describe('Groups in Registry', () => {
   })
 })
 
+describe('Promo Card', () => {
+  it('renders promo card on the default registry', async () => {
+    mockedGetApiV1BetaRegistryByName.override((data) => ({
+      ...data,
+      name: 'default',
+    }))
+
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.getByText('Build a custom registry')).toBeVisible()
+    })
+
+    const link = screen.getByRole('link', { name: /learn how/i })
+    expect(link).toHaveAttribute(
+      'href',
+      'https://docs.stacklok.com/toolhive/guides-registry/'
+    )
+  })
+
+  it('does not render promo card on a custom registry', async () => {
+    mockedGetApiV1BetaRegistryByName.override((data) => ({
+      ...data,
+      name: 'custom-registry',
+    }))
+
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.queryByText('dev-toolkit')).toBeVisible()
+    })
+
+    expect(
+      screen.queryByText('Build a custom registry')
+    ).not.toBeInTheDocument()
+  })
+})
+
 describe('Meta-MCP Server Filtering', () => {
   it('hides meta-mcp server when using default registry and META_OPTIMIZER is enabled', async () => {
     setFeatureFlags({ meta_optimizer: true })
