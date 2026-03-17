@@ -177,7 +177,8 @@
       "hono": ">=4.12.7",
       "tar": ">=7.5.7",
       "rollup": ">=4.59.0",
-      "express-rate-limit": ">=8.2.2"
+      "express-rate-limit": ">=8.2.2",
+      "undici": ">=7.24.0"
     },
     "patchedDependencies": {
       "electron-installer-redhat@3.4.0": "patches/electron-installer-redhat@3.4.0.patch"
