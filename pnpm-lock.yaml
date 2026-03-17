@@ -147,7 +147,7 @@ importers:
         version: 6.0.116(zod@4.3.6)
       ai-sdk-ollama:
         specifier: ^3.8.0
-        version: 3.8.0(ai@6.0.116(zod@4.3.6))(zod@4.3.6)
+        version: 3.8.1(ai@6.0.116(zod@4.3.6))(zod@4.3.6)
       better-sqlite3:
         specifier: ^12.6.2
         version: 12.6.2
@@ -4088,11 +4088,11 @@ packages:
     resolution: {integrity: sha512-4I7Td01quW/RpocfNayFdFVk1qSuoh0E7JrbRJ16nH01HhKFQ88INq9Sd+nd72zqRySlr9BmDA8xlEJ6vJMrYA==}
     engines: {node: '>=8'}
 
-  ai-sdk-ollama@3.8.0:
-    resolution: {integrity: sha512-Nlla8FpK8QFMNh9m8sPCZoNqnr+n+Ud0QTqpXNds4j/b/lbVZGaji13ZcRuuFvBwPwd4xnFkNrijJzi70Ih1Tg==}
+  ai-sdk-ollama@3.8.1:
+    resolution: {integrity: sha512-DeNG88t3Knsu0AFNU8qe20tp82W+9yczgjduSltIEFWvo2mKuR3MeUNjg5/iGz2IBOkYKnni8pDoI19OxOCN/Q==}
     engines: {node: '>=22'}
     peerDependencies:
-      ai: ^6.0.89
+      ai: ^6.0.116
 
   ai@6.0.116:
     resolution: {integrity: sha512-7yM+cTmyRLeNIXwt4Vj+mrrJgVQ9RMIW5WO0ydoLoYkewIvsMcvUmqS4j2RJTUXaF1HphwmSKUMQ/HypNRGOmA==}
@@ -6160,8 +6160,8 @@ packages:
     resolution: {integrity: sha512-p/nXbhSEcu3pZRdkW1OfJhpsVtW1gd4Wa1fnQc9YLiTfAjn0312eMKimbdIQzuZl9aa9xUGaRlP9T/CJE/ditQ==}
     engines: {node: '>=0.10.0'}
 
-  jsonrepair@3.13.2:
-    resolution: {integrity: sha512-Leuly0nbM4R+S5SVJk3VHfw1oxnlEK9KygdZvfUtEtTawNDyzB4qa1xWTmFt1aeoA7sXZkVTRuIixJ8bAvqVUg==}
+  jsonrepair@3.13.3:
+    resolution: {integrity: sha512-BTznj0owIt2CBAH/LTo7+1I5pMvl1e1033LRl/HUowlZmJOIhzC0zbX5bxMngLkfT4WnzPP26QnW5wMr2g9tsQ==}
     hasBin: true
 
   junk@3.1.0:
@@ -13196,12 +13196,12 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ai-sdk-ollama@3.8.0(ai@6.0.116(zod@4.3.6))(zod@4.3.6):
+  ai-sdk-ollama@3.8.1(ai@6.0.116(zod@4.3.6))(zod@4.3.6):
     dependencies:
       '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.19(zod@4.3.6)
       ai: 6.0.116(zod@4.3.6)
-      jsonrepair: 3.13.2
+      jsonrepair: 3.13.3
       ollama: 0.6.3
     transitivePeerDependencies:
       - zod
@@ -15604,7 +15604,7 @@ snapshots:
   jsonpointer@5.0.1:
     optional: true
 
-  jsonrepair@3.13.2: {}
+  jsonrepair@3.13.3: {}
 
   junk@3.1.0: {}
 
