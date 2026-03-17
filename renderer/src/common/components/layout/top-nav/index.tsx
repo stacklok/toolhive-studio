@@ -16,10 +16,12 @@ import {
   Settings as SettingsIcon,
   ArrowUpCircle,
   FlaskConical,
+  PackageOpen,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useRouterState } from '@tanstack/react-router'
 import { useAppVersion } from '@/common/hooks/use-app-version'
+import { Button } from '@/common/components/ui/button'
 import { cn } from '@/common/lib/utils'
 import { getOsDesignVariant } from '@/common/lib/os-design'
 import { NavSeparator } from './nav-separator'
@@ -95,7 +97,11 @@ function TopNavLinks() {
   )
 }
 
-export function TopNav(props: HTMLProps<HTMLElement>) {
+interface TopNavProps extends HTMLProps<HTMLElement> {
+  isEnterprise?: boolean
+}
+
+export function TopNav({ isEnterprise = false, ...props }: TopNavProps) {
   const { data: appVersion } = useAppVersion()
   const isProduction = import.meta.env.MODE === 'production'
   const isActive = useIsActive()
@@ -137,6 +143,23 @@ export function TopNav(props: HTMLProps<HTMLElement>) {
       <div
         className="app-region-no-drag flex h-full items-center justify-self-end"
       >
+        {!isEnterprise && (
+          <Button
+            variant="success"
+            className="app-region-no-drag rounded-full"
+            size="sm"
+            asChild
+          >
+            <a
+              href="https://docs.stacklok.com/toolhive/enterprise"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <PackageOpen className="size-4" />
+              Upgrade to Enterprise
+            </a>
+          </Button>
+        )}
         <div className="flex h-full items-center gap-1 pl-2">
           <HelpDropdown className="app-region-no-drag" />
           <NavIconButton
