@@ -5,11 +5,11 @@
  */
 
 import type {
-  V1GetRegistryResponse as BaseV1GetRegistryResponse,
-  V1GetServerResponse as BaseV1GetServerResponse,
-  V1ListServersResponse as BaseV1ListServersResponse,
-  V1CreateRequest as BaseV1CreateRequest,
-  V1UpdateRequest as BaseV1UpdateRequest,
+  PkgApiV1GetRegistryResponse as BaseV1GetRegistryResponse,
+  PkgApiV1GetServerResponse as BaseV1GetServerResponse,
+  PkgApiV1ListServersResponse as BaseV1ListServersResponse,
+  PkgApiV1CreateRequest as BaseV1CreateRequest,
+  PkgApiV1UpdateRequest as BaseV1UpdateRequest,
 } from './generated/types.gen'
 
 export type PermissionsInboundNetworkPermissions = {

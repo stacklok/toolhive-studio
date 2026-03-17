@@ -1,4 +1,4 @@
-import { type SecretsSecretParameter } from '@common/api/generated/types.gen'
+import { type GithubComStacklokToolhivePkgSecretsSecretParameter as SecretsSecretParameter } from '@common/api/generated/types.gen'
 import type {
   PermissionsOutboundNetworkPermissions,
   RegistryImageMetadata,

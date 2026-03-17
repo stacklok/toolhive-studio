@@ -10,7 +10,7 @@ import {
   getApiV1BetaWorkloadsQueryKey,
   getApiV1BetaWorkloadsOptions,
 } from '@common/api/generated/@tanstack/react-query.gen'
-import type { V1WorkloadListResponse } from '@common/api/generated/types.gen'
+import type { PkgApiV1WorkloadListResponse as V1WorkloadListResponse } from '@common/api/generated/types.gen'
 import { mockedGetApiV1BetaWorkloads } from '@/common/mocks/fixtures/workloads/get'
 import { useRestartShutdownServers } from '../use-restart-shutdown-servers'
 

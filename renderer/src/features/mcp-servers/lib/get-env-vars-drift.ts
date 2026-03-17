@@ -1,4 +1,4 @@
-import type { V1CreateRequest } from '@common/api/generated/types.gen'
+import type { PkgApiV1CreateRequest as V1CreateRequest } from '@common/api/generated/types.gen'
 import type { RegistryEnvVar } from '@common/api/registry-types'
 
 export interface EnvVarDriftItem {

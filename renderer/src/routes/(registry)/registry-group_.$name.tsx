@@ -1,7 +1,12 @@
 import { createFileRoute, useParams } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { getApiV1BetaRegistryByNameOptions } from '@common/api/generated/@tanstack/react-query.gen'
-import type { V1GetRegistryResponse } from '@common/api/registry-types'
+import type {
+  RegistryGroup,
+  RegistryImageMetadata,
+  RegistryRemoteServerMetadata,
+  V1GetRegistryResponse,
+} from '@common/api/registry-types'
 import { Badge } from '@/common/components/ui/badge'
 import { RegistryDetailHeader } from '@/features/registry-servers/components/registry-detail-header'
 import { Separator } from '@/common/components/ui/separator'
@@ -33,7 +38,7 @@ export function RegistryGroupDetail() {
   )
   const group = (
     registryData as V1GetRegistryResponse | undefined
-  )?.registry?.groups?.find((g) => g.name === name)
+  )?.registry?.groups?.find((g: RegistryGroup) => g.name === name)
 
   const hasServers =
     Object.keys(group?.servers ?? {}).length > 0 ||
@@ -68,16 +73,18 @@ export function RegistryGroupDetail() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {Object.entries(group?.servers ?? {}).map(([key, srv]) => (
-                  <TableRow key={`local-${key}`}>
-                    <TableCell className="text-foreground">
-                      {srv.name}
-                    </TableCell>
-                    <TableCell>{srv.description}</TableCell>
-                  </TableRow>
-                ))}
+                {Object.entries(group?.servers ?? {}).map(
+                  ([key, srv]: [string, RegistryImageMetadata]) => (
+                    <TableRow key={`local-${key}`}>
+                      <TableCell className="text-foreground">
+                        {srv.name}
+                      </TableCell>
+                      <TableCell>{srv.description}</TableCell>
+                    </TableRow>
+                  )
+                )}
                 {Object.entries(group?.remote_servers ?? {}).map(
-                  ([key, srv]) => (
+                  ([key, srv]: [string, RegistryRemoteServerMetadata]) => (
                     <TableRow key={`remote-${key}`}>
                       <TableCell className="text-foreground">
                         {srv.name}

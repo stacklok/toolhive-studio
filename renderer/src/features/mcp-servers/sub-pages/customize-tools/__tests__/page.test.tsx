@@ -6,8 +6,8 @@ import { mockedGetApiV1BetaWorkloadsByName } from '@mocks/fixtures/workloads_nam
 import { mockedGetApiV1BetaSecretsDefaultKeys } from '@mocks/fixtures/secrets_default_keys/get'
 import { mockedGetApiV1BetaRegistryByNameServers } from '@mocks/fixtures/registry_name_servers/get'
 import type {
-  CoreWorkload,
-  V1CreateRequest,
+  GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload,
+  PkgApiV1CreateRequest as V1CreateRequest,
 } from '@common/api/generated/types.gen'
 import * as orchestrateRunLocalServer from '@/features/mcp-servers/lib/orchestrate-run-local-server'
 import * as orchestrateRunRemoteServer from '@/features/mcp-servers/lib/orchestrate-run-remote-server'

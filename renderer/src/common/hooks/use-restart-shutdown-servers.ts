@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react'
 import type {
-  V1WorkloadListResponse,
-  CoreWorkload,
-  V1BulkOperationRequest,
+  PkgApiV1WorkloadListResponse as V1WorkloadListResponse,
+  GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload,
+  PkgApiV1BulkOperationRequest as V1BulkOperationRequest,
 } from '@common/api/generated/types.gen'
 import {
   getApiV1BetaWorkloadsQueryKey,

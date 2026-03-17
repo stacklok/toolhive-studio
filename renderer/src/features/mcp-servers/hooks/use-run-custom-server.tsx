@@ -2,8 +2,8 @@ import { postApiV1BetaWorkloadsMutation } from '@common/api/generated/@tanstack/
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   type PostApiV1BetaSecretsDefaultKeysData,
-  type SecretsSecretParameter,
-  type V1CreateRequest,
+  type GithubComStacklokToolhivePkgSecretsSecretParameter as SecretsSecretParameter,
+  type PkgApiV1CreateRequest as V1CreateRequest,
 } from '@common/api/generated/types.gen'
 import type { Options } from '@common/api/generated/client'
 import { restartClientNotification } from '../lib/restart-client-notification'

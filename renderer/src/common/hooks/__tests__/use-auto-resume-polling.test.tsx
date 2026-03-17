@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, act } from '@testing-library/react'
 import { useAutoResumePolling } from '../use-auto-resume-polling'
 import * as polling from '../../lib/polling'
-import type { CoreWorkload } from '@common/api/generated/types.gen'
+import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
 
 /** Flush React effects and pending promise chains */
 const flushAsync = () =>

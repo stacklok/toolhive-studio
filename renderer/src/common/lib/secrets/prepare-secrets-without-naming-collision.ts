@@ -1,4 +1,4 @@
-import type { V1ListSecretsResponse } from '@common/api/generated/types.gen'
+import type { PkgApiV1ListSecretsResponse as V1ListSecretsResponse } from '@common/api/generated/types.gen'
 import { SECRET_NAME_REGEX } from '../../../features/registry-servers/lib/secret-name-regex'
 import type { SecretFieldValue, PreparedSecret } from '@/common/types/secrets'
 
@@ -21,10 +21,10 @@ export function prepareSecretsWithoutNamingCollision(
   fetchedSecrets: V1ListSecretsResponse
 ): PreparedSecret[] {
   // A map is the most efficient way to check for existing keys
-  const keyMap = new Set(
+  const keyMap = new Set<string>(
     fetchedSecrets.keys
-      ?.filter((k) => k != null)
-      .map((secret) => secret.key || '') || []
+      ?.filter((k: { key?: string } | null | undefined) => k != null)
+      .map((secret: { key?: string }) => secret.key || '') || []
   )
 
   return secrets.map((secret) => {

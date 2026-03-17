@@ -3,8 +3,8 @@ import { postApiV1BetaSecretsDefaultKeysMutation } from '@common/api/generated/@
 import { getApiV1BetaSecretsDefaultKeys } from '@common/api/generated/sdk.gen'
 import type {
   PostApiV1BetaSecretsDefaultKeysData,
-  SecretsSecretParameter,
-  V1CreateSecretResponse,
+  GithubComStacklokToolhivePkgSecretsSecretParameter as SecretsSecretParameter,
+  PkgApiV1CreateSecretResponse as V1CreateSecretResponse,
 } from '@common/api/generated/types.gen'
 import type { Options } from '@common/api/generated/client'
 import { prepareSecretsWithoutNamingCollision } from '@/common/lib/secrets/prepare-secrets-without-naming-collision'

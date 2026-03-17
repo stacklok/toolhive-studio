@@ -9,7 +9,7 @@ import {
 } from '@common/api/generated/@tanstack/react-query.gen'
 import { queryClient } from '@/common/lib/query-client'
 import log from 'electron-log/renderer'
-import type { GroupsGroup } from '@common/api/generated/types.gen'
+import type { GithubComStacklokToolhivePkgGroupsGroup as GroupsGroup } from '@common/api/generated/types.gen'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 import { trackEvent } from '@/common/lib/analytics'
 

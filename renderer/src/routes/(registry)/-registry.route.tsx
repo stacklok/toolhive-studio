@@ -4,6 +4,7 @@ import {
 } from '@common/api/generated/@tanstack/react-query.gen'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import type {
+  RegistryGroup,
   V1GetRegistryResponse,
   V1ListServersResponse,
 } from '@common/api/registry-types'
@@ -62,7 +63,10 @@ export default function RegistryRouteComponent() {
       : servers
 
   const items: RegistryItem[] = [
-    ...groups.map((group) => ({ ...group, type: 'group' as const })),
+    ...groups.map((group: RegistryGroup) => ({
+      ...group,
+      type: 'group' as const,
+    })),
     ...filteredServers.map((server) => ({
       ...server,
       type: 'server' as const,

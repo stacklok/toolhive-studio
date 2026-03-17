@@ -1,4 +1,4 @@
-import type { CoreWorkload } from '@common/api/generated/types.gen'
+import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
 import type { PermissionsProfile } from '@common/api/registry-types'
 import { z } from 'zod/v4'
 

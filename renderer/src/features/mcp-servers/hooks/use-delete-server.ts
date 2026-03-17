@@ -1,6 +1,6 @@
 import type {
-  V1WorkloadListResponse,
-  CoreWorkload,
+  PkgApiV1WorkloadListResponse as V1WorkloadListResponse,
+  GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload,
 } from '@common/api/generated/types.gen'
 import {
   deleteApiV1BetaWorkloadsByNameMutation,
