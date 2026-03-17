@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron'
-import type { CoreWorkload } from '@common/api/generated/types.gen'
+import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
 import { TOOLHIVE_VERSION } from '../../../utils/constants'
 
 export const toolhiveApi = {
