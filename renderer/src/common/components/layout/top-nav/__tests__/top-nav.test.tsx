@@ -68,7 +68,7 @@ describe('TopNav', () => {
         })
         expect(link).toHaveAttribute(
           'href',
-          'https://docs.stacklok.com/toolhive/enterprise'
+          'https://docs.stacklok.com/toolhive/enterprise?utm_source=toolhive-studio'
         )
       })
     })

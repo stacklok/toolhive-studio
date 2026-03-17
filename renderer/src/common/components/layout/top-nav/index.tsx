@@ -24,6 +24,7 @@ import { useAppVersion } from '@/common/hooks/use-app-version'
 import { Button } from '@/common/components/ui/button'
 import { cn } from '@/common/lib/utils'
 import { getOsDesignVariant } from '@/common/lib/os-design'
+import { trackEvent } from '@/common/lib/analytics'
 import { NavSeparator } from './nav-separator'
 import { NavIconButton } from './nav-icon-button'
 
@@ -151,9 +152,12 @@ export function TopNav({ isEnterprise = false, ...props }: TopNavProps) {
             asChild
           >
             <a
-              href="https://docs.stacklok.com/toolhive/enterprise"
+              href="https://docs.stacklok.com/toolhive/enterprise?utm_source=toolhive-studio"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() =>
+                trackEvent('Onramp: Upgrade to Enterprise clicked')
+              }
             >
               <PackageOpen className="size-4" />
               Upgrade to Enterprise
