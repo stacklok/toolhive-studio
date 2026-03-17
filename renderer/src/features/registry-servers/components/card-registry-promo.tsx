@@ -8,7 +8,8 @@ import {
 import { Button } from '@/common/components/ui/button'
 import { trackEvent } from '@/common/lib/analytics'
 
-const REGISTRY_DOCS_URL = 'https://docs.stacklok.com/toolhive/guides-registry/'
+const REGISTRY_DOCS_URL =
+  'https://docs.stacklok.com/toolhive/guides-registry/?utm_source=toolhive-studio'
 
 export function CardRegistryPromo() {
   return (
@@ -28,8 +29,8 @@ export function CardRegistryPromo() {
           <a
             href={REGISTRY_DOCS_URL}
             target="_blank"
-            rel="noreferrer"
-            onClick={() => trackEvent('Registry: custom registry CTA clicked')}
+            rel="noopener noreferrer"
+            onClick={() => trackEvent('Onramp: custom registry docs clicked')}
           >
             Learn how
           </a>
