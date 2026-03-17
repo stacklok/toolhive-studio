@@ -106,7 +106,7 @@ export default function RegistryRouteComponent() {
           illustration={IllustrationNoConnection}
         />
       ) : (
-        <GridCardsRegistry items={filteredData} />
+        <GridCardsRegistry items={filteredData} showPromo={isDefaultRegistry} />
       )}
     </>
   )
