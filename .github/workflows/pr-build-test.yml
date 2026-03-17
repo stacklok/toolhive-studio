@@ -203,46 +203,6 @@ jobs:
         uses: ./.github/actions/setup-flatpak
         if: runner.os == 'Linux'
 
-      - name: Configure AWS Credentials
-        if: runner.os == 'Windows' && vars.AWS_ROLE_ARN != ''
-        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # v6
-        with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
-          aws-region: us-east-1
-
-      # TODO: remove after first successful pre-release — one-time backfill of nupkg to latest/ path
-      - name: Backfill Windows update artifacts to stable path
-        if: runner.os == 'Windows' && vars.AWS_ROLE_ARN != ''
-        shell: bash
-        run: |
-          if [ "${{ needs.check-trigger.outputs.prerelease }}" = "true" ]; then
-            CHANNEL="pre-release"
-          else
-            CHANNEL="stable"
-          fi
-          ARCH=${{ matrix.arch }}
-          BUCKET="toolhive-studio-releases"
-          DST="s3://${BUCKET}/${CHANNEL}/latest/win32/${ARCH}"
-
-          if aws s3 ls "${DST}/" | grep -q '\.nupkg$'; then
-            echo "nupkg already exists at ${DST} — skipping backfill"
-          else
-            echo "No nupkg at ${DST}, looking for latest versioned release..."
-            LATEST_VERSION=$(aws s3 ls "s3://${BUCKET}/${CHANNEL}/" --recursive \
-              | grep "win32/${ARCH}/.*\.nupkg$" \
-              | sort | tail -1 | awk '{print $NF}')
-
-            if [ -n "$LATEST_VERSION" ]; then
-              echo "Backfilling from s3://${BUCKET}/${LATEST_VERSION}"
-              aws s3 cp "s3://${BUCKET}/${LATEST_VERSION}" "${DST}/$(basename ${LATEST_VERSION})" --copy-props none
-
-              SRC_DIR=$(dirname "s3://${BUCKET}/${LATEST_VERSION}")
-              aws s3 cp "${SRC_DIR}/RELEASES" "${DST}/RELEASES" --copy-props none || true
-            else
-              echo "::warning::No nupkg found in any versioned path — skipping backfill"
-            fi
-          fi
-
       - name: Build App
         run: pnpm run make
         env:
