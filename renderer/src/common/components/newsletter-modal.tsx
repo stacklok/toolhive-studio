@@ -137,27 +137,32 @@ function NewsletterDialog({
       }}
     >
       <DialogContent
-        className="bg-[#CBE1E7] text-gray-900
-          **:data-[slot=dialog-close]:text-gray-900
-          **:data-[slot=dialog-close]:opacity-70 sm:max-w-md
-          dark:border-gray-300 dark:bg-[#CBE1E7] dark:text-gray-900"
+        className="bg-brand-blue-light text-brand-blue-dark
+          dark:bg-brand-blue-light dark:text-brand-blue-dark
+          **:data-[slot=dialog-close]:text-brand-blue-dark
+          border-brand-blue-mid/20 p-8 **:data-[slot=dialog-close]:opacity-70
+          sm:max-w-md"
       >
         {successMessage ? (
           <DialogHeader>
-            <DialogTitle className="font-serif text-3xl font-light">
+            <DialogTitle
+              className="text-brand-blue-mid font-serif text-3xl font-light"
+            >
               Thank you!
             </DialogTitle>
-            <DialogDescription className="text-gray-600 dark:text-gray-600">
+            <DialogDescription className="text-primary">
               {successMessage}
             </DialogDescription>
           </DialogHeader>
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle className="font-serif text-3xl font-light">
+              <DialogTitle
+                className="text-brand-blue-mid font-serif text-3xl font-light"
+              >
                 Stay up to date with improvements to ToolHive
               </DialogTitle>
-              <DialogDescription className="text-gray-600 dark:text-gray-600">
+              <DialogDescription className="text-primary">
                 Subscribe to our quarterly email showing you all the new product
                 improvements to ToolHive
               </DialogDescription>
@@ -178,17 +183,14 @@ function NewsletterDialog({
                   }}
                   aria-invalid={!!error}
                   disabled={isSubmitting}
-                  className="flex-1 border-gray-300 bg-white text-gray-900
-                    placeholder:text-gray-400 dark:border-gray-300 dark:bg-white
-                    dark:text-gray-900"
+                  className="border-brand-blue-mid/20 bg-background
+                    text-foreground placeholder:text-brand-blue-dark/40 flex-1"
                 />
                 <Button
                   type="submit"
-                  variant="action"
                   disabled={isSubmitting || !email.trim()}
-                  className="rounded-full bg-gray-900 text-white
-                    hover:bg-gray-800 dark:bg-gray-900 dark:text-white
-                    dark:hover:bg-gray-800"
+                  className="bg-brand-blue-dark text-brand-blue-light
+                    hover:bg-brand-blue-dark/90 rounded-full"
                 >
                   {isSubmitting ? (
                     <Loader2 className="animate-spin" />
