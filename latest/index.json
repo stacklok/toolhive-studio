@@ -21,7 +21,7 @@
     },
     {
       "name": "RELEASES.json",
-      "url": "https://releases.toolhive.dev/stable/0.24.0/linux/x64/RELEASES.json",
+      "url": "https://releases.toolhive.dev/stable/0.24.0/darwin/x64/RELEASES.json",
       "size": 267
     },
     {
@@ -46,7 +46,7 @@
     },
     {
       "name": "ToolHive-arm64.dmg",
-      "url": "https://releases.toolhive.dev/stable/0.24.0/linux/arm64/ToolHive-arm64.dmg",
+      "url": "https://releases.toolhive.dev/stable/0.24.0/darwin/arm64/ToolHive-arm64.dmg",
       "size": 163075512
     },
     {
@@ -76,7 +76,7 @@
     },
     {
       "name": "ToolHive-x64.dmg",
-      "url": "https://releases.toolhive.dev/stable/0.24.0/linux/x64/ToolHive-x64.dmg",
+      "url": "https://releases.toolhive.dev/stable/0.24.0/darwin/x64/ToolHive-x64.dmg",
       "size": 172876959
     },
     {
