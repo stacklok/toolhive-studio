@@ -11,6 +11,11 @@ import {
   getSkipQuitConfirmation,
   setSkipQuitConfirmation,
 } from '../quit-confirmation'
+import {
+  getNewsletterState,
+  setNewsletterSubscribed,
+  setNewsletterDismissedAt,
+} from '../newsletter'
 import { updateTrayStatus } from '../system-tray'
 import { isToolhiveRunning } from '../toolhive-manager'
 
@@ -48,6 +53,14 @@ export function register() {
   ipcMain.handle('get-skip-quit-confirmation', () => getSkipQuitConfirmation())
   ipcMain.handle('set-skip-quit-confirmation', (_e, skip: boolean) =>
     setSkipQuitConfirmation(skip)
+  )
+
+  ipcMain.handle('get-newsletter-state', () => getNewsletterState())
+  ipcMain.handle('set-newsletter-subscribed', (_e, subscribed: boolean) =>
+    setNewsletterSubscribed(subscribed)
+  )
+  ipcMain.handle('set-newsletter-dismissed-at', (_e, dismissedAt: string) =>
+    setNewsletterDismissedAt(dismissedAt)
   )
 
   ipcMain.handle(
