@@ -12,12 +12,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from './ui/dialog'
+import { Checkbox } from './ui/checkbox'
 import { Input } from './ui/input'
 import { Button } from './ui/button'
 
 const HUBSPOT_PORTAL_ID = '42544743'
 const HUBSPOT_FORM_ID = '8f75a6a3-bf6d-4cd0-8da5-0092ecfda250'
 const DISMISS_DAYS = 15
+const PRIVACY_POLICY_URL = 'https://www.iubenda.com/privacy-policy/29074746'
+
+const CONSENT_PROCESSING_TEXT =
+  'In order to provide you the content requested, we need to store and process your personal data. If you consent to us storing your personal data for this purpose, please tick the checkbox below.'
 
 function shouldShowModal(subscribed: boolean, dismissedAt: string): boolean {
   if (subscribed) return false
@@ -29,7 +34,10 @@ function shouldShowModal(subscribed: boolean, dismissedAt: string): boolean {
   return daysSinceDismissal >= DISMISS_DAYS
 }
 
-async function submitToHubSpot(email: string): Promise<string | undefined> {
+async function submitToHubSpot(
+  email: string,
+  consentToProcess: boolean
+): Promise<string | undefined> {
   const response = await fetch(
     `https://api.hsforms.com/submissions/v3/integration/submit/${HUBSPOT_PORTAL_ID}/${HUBSPOT_FORM_ID}`,
     {
@@ -39,6 +47,12 @@ async function submitToHubSpot(email: string): Promise<string | undefined> {
         fields: [{ name: 'email', value: email }],
         context: {
           pageName: 'ToolHive Desktop - Newsletter Signup',
+        },
+        legalConsentOptions: {
+          consent: {
+            consentToProcess,
+            text: CONSENT_PROCESSING_TEXT,
+          },
         },
       }),
     }
@@ -51,9 +65,9 @@ async function submitToHubSpot(email: string): Promise<string | undefined> {
 
   try {
     const data = await response.json()
-    return typeof data?.inlineMessage === 'string'
-      ? data.inlineMessage
-      : undefined
+    if (typeof data?.inlineMessage !== 'string') return undefined
+    const doc = new DOMParser().parseFromString(data.inlineMessage, 'text/html')
+    return doc.body.textContent?.trim() || undefined
   } catch {
     return undefined
   }
@@ -74,6 +88,7 @@ function NewsletterDialog({
 }) {
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
+  const [consentToProcess, setConsentToProcess] = useState(false)
 
   useEffect(() => {
     trackEvent('Newsletter modal shown')
@@ -81,7 +96,7 @@ function NewsletterDialog({
 
   const { mutate: subscribe, isPending: isSubmitting } = useMutation({
     mutationFn: async (emailValue: string) => {
-      const inlineMessage = await submitToHubSpot(emailValue)
+      const inlineMessage = await submitToHubSpot(emailValue, consentToProcess)
       await window.electronAPI.setNewsletterSubscribed(true)
       return inlineMessage
     },
@@ -137,6 +152,7 @@ function NewsletterDialog({
       }}
     >
       <DialogContent
+        onInteractOutside={(e) => e.preventDefault()}
         className="bg-brand-blue-light text-brand-blue-dark
           dark:bg-brand-blue-light dark:text-brand-blue-dark
           **:data-[slot=dialog-close]:text-brand-blue-dark
@@ -148,7 +164,7 @@ function NewsletterDialog({
             <DialogTitle
               className="text-brand-blue-mid font-serif text-3xl font-light"
             >
-              Thank you!
+              Success!
             </DialogTitle>
             <DialogDescription className="text-primary">
               {successMessage}
@@ -170,36 +186,72 @@ function NewsletterDialog({
             <form
               noValidate
               onSubmit={handleSubmit}
-              className="flex flex-col gap-1.5"
+              className="flex flex-col gap-4"
             >
-              <div className="flex items-center gap-2">
-                <Input
-                  type="email"
-                  placeholder="name@domain.com"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value)
-                    if (error) setError('')
-                  }}
-                  aria-invalid={!!error}
+              <label className="flex cursor-pointer items-start gap-2.5">
+                <Checkbox
+                  checked={consentToProcess}
+                  onCheckedChange={(checked) =>
+                    setConsentToProcess(checked === true)
+                  }
                   disabled={isSubmitting}
-                  className="border-brand-blue-mid/20 bg-background
-                    text-foreground placeholder:text-brand-blue-dark/40 flex-1"
+                  required
+                  className="border-brand-blue-dark/40 mt-0.5 shrink-0"
                 />
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || !email.trim()}
-                  className="bg-brand-blue-dark text-brand-blue-light
-                    hover:bg-brand-blue-dark/90 rounded-full"
-                >
-                  {isSubmitting ? (
-                    <Loader2 className="animate-spin" />
-                  ) : (
-                    'Sign up'
-                  )}
-                </Button>
+                <span className="text-xs leading-relaxed">
+                  I agree to allow Stacklok to store and process my personal
+                  data.{' '}
+                  <span className="text-brand-blue-dark/60">(required)</span>
+                </span>
+              </label>
+
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="email"
+                    placeholder="name@domain.com"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      if (error) setError('')
+                    }}
+                    aria-invalid={!!error}
+                    disabled={isSubmitting}
+                    className="border-brand-blue-mid/20 bg-background
+                      text-foreground placeholder:text-brand-blue-dark/40
+                      flex-1"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={
+                      isSubmitting || !email.trim() || !consentToProcess
+                    }
+                    className="bg-brand-blue-dark text-brand-blue-light
+                      hover:bg-brand-blue-dark/90 rounded-full"
+                  >
+                    {isSubmitting ? (
+                      <Loader2 className="animate-spin" />
+                    ) : (
+                      'Sign up'
+                    )}
+                  </Button>
+                </div>
+                {error && <p className="text-sm text-red-600">{error}</p>}
               </div>
-              {error && <p className="text-sm text-red-600">{error}</p>}
+
+              <p className="text-brand-blue-dark/50 text-xs leading-relaxed">
+                You can unsubscribe at any time. For more information on how to
+                unsubscribe and our privacy practices, please review our{' '}
+                <a
+                  href={PRIVACY_POLICY_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline underline-offset-2"
+                >
+                  Privacy Policy
+                </a>
+                .
+              </p>
             </form>
           </>
         )}

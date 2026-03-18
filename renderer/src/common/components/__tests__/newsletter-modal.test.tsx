@@ -23,6 +23,22 @@ const renderWithProviders = (component: React.ReactElement) => {
   )
 }
 
+async function fillAndSubmitForm(email: string) {
+  await waitFor(() => {
+    expect(screen.getByPlaceholderText('name@domain.com')).toBeVisible()
+  })
+
+  await userEvent.type(screen.getByPlaceholderText('name@domain.com'), email)
+
+  await userEvent.click(
+    screen.getByRole('checkbox', {
+      name: /store and process my personal data/i,
+    })
+  )
+
+  await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
+}
+
 describe('NewsletterModal', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -116,6 +132,11 @@ describe('NewsletterModal', () => {
 
       const input = screen.getByPlaceholderText('name@domain.com')
       await userEvent.type(input, 'not-an-email')
+      await userEvent.click(
+        screen.getByRole('checkbox', {
+          name: /store and process my personal data/i,
+        })
+      )
       await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
 
       await waitFor(() => {
@@ -134,6 +155,11 @@ describe('NewsletterModal', () => {
 
       const input = screen.getByPlaceholderText('name@domain.com')
       await userEvent.type(input, 'bad')
+      await userEvent.click(
+        screen.getByRole('checkbox', {
+          name: /store and process my personal data/i,
+        })
+      )
       await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
 
       await waitFor(() => {
@@ -150,21 +176,30 @@ describe('NewsletterModal', () => {
         ).not.toBeInTheDocument()
       })
     })
-  })
 
-  describe('submission', () => {
-    it('calls HubSpot API, marks as subscribed, and shows success message', async () => {
-      const rec = recordRequests()
-
+    it('disables submit button when processing consent is not checked', async () => {
       renderWithProviders(<NewsletterModal />)
 
       await waitFor(() => {
         expect(screen.getByPlaceholderText('name@domain.com')).toBeVisible()
       })
 
-      const input = screen.getByPlaceholderText('name@domain.com')
-      await userEvent.type(input, 'user@example.com')
-      await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
+      await userEvent.type(
+        screen.getByPlaceholderText('name@domain.com'),
+        'user@example.com'
+      )
+
+      expect(screen.getByRole('button', { name: /sign up/i })).toBeDisabled()
+    })
+  })
+
+  describe('submission', () => {
+    it('calls HubSpot API with consent, marks as subscribed, and shows success message', async () => {
+      const rec = recordRequests()
+
+      renderWithProviders(<NewsletterModal />)
+
+      await fillAndSubmitForm('user@example.com')
 
       await waitFor(() => {
         expect(window.electronAPI.setNewsletterSubscribed).toHaveBeenCalledWith(
@@ -186,6 +221,12 @@ describe('NewsletterModal', () => {
         context: {
           pageName: 'ToolHive Desktop - Newsletter Signup',
         },
+        legalConsentOptions: {
+          consent: {
+            consentToProcess: true,
+            text: expect.any(String),
+          },
+        },
       })
     })
 
@@ -196,13 +237,7 @@ describe('NewsletterModal', () => {
 
       renderWithProviders(<NewsletterModal />)
 
-      await waitFor(() => {
-        expect(screen.getByPlaceholderText('name@domain.com')).toBeVisible()
-      })
-
-      const input = screen.getByPlaceholderText('name@domain.com')
-      await userEvent.type(input, 'user@example.com')
-      await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
+      await fillAndSubmitForm('user@example.com')
 
       await waitFor(() => {
         expect(
