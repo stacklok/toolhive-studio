@@ -13,19 +13,28 @@ const REGISTRY_DOCS_URL =
 
 export function CardRegistryPromo() {
   return (
-    <Card className="bg-success border-none">
-      <CardHeader>
-        <CardTitle className="font-serif text-[1.375rem] font-light text-white">
+    <Card className="bg-brand-green-mid gap-0 border-none p-4">
+      <CardHeader className="px-0">
+        <CardTitle
+          className="text-brand-green-light font-serif text-[1.375rem]
+            font-light"
+        >
           Build a custom registry
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <p className="text-sm text-white/80">
+      <CardContent className="px-0">
+        <p className="text-brand-green-light/80 text-sm">
           Connect your teams to a single trusted source of MCP servers
         </p>
       </CardContent>
-      <CardFooter className="mt-auto">
-        <Button asChild size="sm" variant="action" className="rounded-full">
+      <CardFooter className="mt-3 px-0">
+        <Button
+          asChild
+          size="sm"
+          variant="action"
+          className="bg-brand-green-dark text-brand-green-light
+            hover:bg-brand-green-dark/90 rounded-full p-4 font-medium"
+        >
           <a
             href={REGISTRY_DOCS_URL}
             target="_blank"
