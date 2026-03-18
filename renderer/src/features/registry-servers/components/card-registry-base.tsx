@@ -38,13 +38,13 @@ export function CardRegistryBase({
     >
       <CardHeader>
         <CardTitle
-          className="grid grid-cols-[auto_calc(var(--spacing)_*_5)] items-center
+          className="grid grid-cols-[auto_calc(var(--spacing)*5)] items-center
             text-xl"
         >
           <Tooltip onlyWhenTruncated>
             <TooltipTrigger asChild>
               <button
-                className="truncate text-left !outline-none select-none"
+                className="truncate text-left outline-none! select-none"
                 onClick={() => onClick?.()}
               >
                 {title}
