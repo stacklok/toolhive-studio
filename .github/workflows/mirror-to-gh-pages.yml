@@ -73,13 +73,13 @@ jobs:
             SIZE=$(echo "$asset" | jq -r '.size')
 
             # Infer platform from asset name
-            if echo "$NAME" | grep -qi "darwin"; then PLATFORM="darwin"
-            elif echo "$NAME" | grep -qi "Setup\|\.nupkg\|^RELEASES$\|win32"; then PLATFORM="win32"
+            if echo "$NAME" | grep -qiE "darwin|\.dmg|RELEASES\.json"; then PLATFORM="darwin"
+            elif echo "$NAME" | grep -qiE "Setup|\.nupkg|\.exe|win32|^RELEASES$"; then PLATFORM="win32"
             else PLATFORM="linux"
             fi
 
             # Infer arch from asset name
-            if echo "$NAME" | grep -qi "arm64\|aarch64"; then ARCH="arm64"
+            if echo "$NAME" | grep -qiE "arm64|aarch64"; then ARCH="arm64"
             else ARCH="x64"
             fi
 
