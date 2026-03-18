@@ -83,7 +83,10 @@ jobs:
             else ARCH="x64"
             fi
 
-            ENCODED_NAME=$(jq -rn --arg n "$NAME" '$n | @uri')
+            # GitHub replaces spaces with dots in release asset filenames;
+            # reverse for the S3 path which uses the original filename.
+            S3_NAME=$(echo "$NAME" | sed 's/\.Setup\.exe/ Setup.exe/')
+            ENCODED_NAME=$(jq -rn --arg n "$S3_NAME" '$n | @uri')
             CDN_URL="${CDN_BASE}/${PLATFORM}/${ARCH}/${ENCODED_NAME}"
             echo "Adding asset: $NAME -> $CDN_URL"
 
