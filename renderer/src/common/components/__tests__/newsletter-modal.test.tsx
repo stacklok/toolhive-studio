@@ -207,7 +207,7 @@ describe('NewsletterModal', () => {
         )
       })
 
-      expect(screen.getByText('Thank you!')).toBeVisible()
+      expect(screen.getByText('Success!')).toBeVisible()
       expect(screen.getByText('Thanks!')).toBeVisible()
 
       const hubspotRequest = rec.recordedRequests.find(

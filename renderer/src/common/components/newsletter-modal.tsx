@@ -29,8 +29,9 @@ function shouldShowModal(subscribed: boolean, dismissedAt: string): boolean {
   if (!dismissedAt) return true
 
   const dismissed = new Date(dismissedAt).getTime()
-  const now = Date.now()
-  const daysSinceDismissal = (now - dismissed) / (1000 * 60 * 60 * 24)
+  if (Number.isNaN(dismissed)) return true
+
+  const daysSinceDismissal = (Date.now() - dismissed) / (1000 * 60 * 60 * 24)
   return daysSinceDismissal >= DISMISS_DAYS
 }
 
@@ -104,14 +105,14 @@ function NewsletterDialog({
       onSubscribed(inlineMessage ?? 'Thanks for subscribing!')
       trackEvent('Newsletter subscribed')
     },
-    onError: (err) => {
+    onError: (err: unknown) => {
       setError('Something went wrong. Please try again.')
       log.error('[Newsletter] HubSpot submission failed:', err)
       Sentry.captureException(err, {
         tags: { feature: 'newsletter' },
       })
       trackEvent('Newsletter subscription failed', {
-        'error.message': err.message,
+        'error.message': err instanceof Error ? err.message : String(err),
       })
     },
   })
