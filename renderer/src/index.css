@@ -61,6 +61,14 @@
 
   /* Status colors */
   --color-success: var(--success);
+
+  /* Brand colors */
+  --color-brand-green-light: var(--brand-green-light);
+  --color-brand-green-mid: var(--brand-green-mid);
+  --color-brand-green-dark: var(--brand-green-dark);
+  --color-brand-blue-light: var(--brand-blue-light);
+  --color-brand-blue-mid: var(--brand-blue-mid);
+  --color-brand-blue-dark: var(--brand-blue-dark);
 }
 
 :root {
@@ -107,6 +115,14 @@
 
   /* Status colors */
   --success: oklch(0.5849 0.095 159.91);
+
+  /* Brand colors */
+  --brand-green-light: oklch(0.9522 0.0524 164.20);
+  --brand-green-mid: oklch(0.5849 0.0950 159.91);
+  --brand-green-dark: oklch(0.3591 0.0901 154.26);
+  --brand-blue-light: oklch(0.8953 0.0248 215.92);
+  --brand-blue-mid: oklch(0.4282 0.0561 216.14);
+  --brand-blue-dark: oklch(0.3516 0.0612 220.22);
 }
 
 .dark {
@@ -152,6 +168,14 @@
 
   /* Status colors */
   --success: oklch(0.724 0.1091 160.66);
+
+  /* Brand colors */
+  --brand-green-light: oklch(0.3262 0.0342 161.99);
+  --brand-green-mid: oklch(0.8045 0.0559 163.17);
+  --brand-green-dark: oklch(0.9843 0.0222 164.54);
+  --brand-blue-light: oklch(0.3213 0.0281 214.30);
+  --brand-blue-mid: oklch(0.8371 0.0345 212.88);
+  --brand-blue-dark: oklch(0.8907 0.0321 213.90);
 }
 
 @layer base {
