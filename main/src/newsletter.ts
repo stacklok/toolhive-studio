@@ -24,6 +24,10 @@ export const newsletterStore = new Store<NewsletterStore>({
 })
 
 export function getNewsletterState(): NewsletterState {
+  if (process.env.TOOLHIVE_E2E === 'true') {
+    return { subscribed: true, dismissedAt: '' }
+  }
+
   if (getFeatureFlag(featureFlagKeys.SQLITE_READS_SETTINGS)) {
     try {
       const subscribed = readSetting('newsletterSubscribed')
