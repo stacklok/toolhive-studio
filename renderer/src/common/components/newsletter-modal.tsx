@@ -12,30 +12,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from './ui/dialog'
-<<<<<<< HEAD
 import { Checkbox } from './ui/checkbox'
-=======
->>>>>>> de1a7422 (feat(newsletter): add newsletter signup modal with HubSpot submission and analytics)
 import { Input } from './ui/input'
 import { Button } from './ui/button'
 
 const HUBSPOT_PORTAL_ID = '42544743'
 const HUBSPOT_FORM_ID = '8f75a6a3-bf6d-4cd0-8da5-0092ecfda250'
 const DISMISS_DAYS = 15
-<<<<<<< HEAD
 const PRIVACY_POLICY_URL = 'https://www.iubenda.com/privacy-policy/29074746'
 
 const CONSENT_PROCESSING_TEXT =
   'In order to provide you the content requested, we need to store and process your personal data. If you consent to us storing your personal data for this purpose, please tick the checkbox below.'
-=======
->>>>>>> de1a7422 (feat(newsletter): add newsletter signup modal with HubSpot submission and analytics)
 
 function shouldShowModal(subscribed: boolean, dismissedAt: string): boolean {
   if (subscribed) return false
   if (!dismissedAt) return true
 
   const dismissed = new Date(dismissedAt).getTime()
-<<<<<<< HEAD
   if (Number.isNaN(dismissed)) return true
 
   const daysSinceDismissal = (Date.now() - dismissed) / (1000 * 60 * 60 * 24)
@@ -46,14 +39,6 @@ async function submitToHubSpot(
   email: string,
   consentToProcess: boolean
 ): Promise<string | undefined> {
-=======
-  const now = Date.now()
-  const daysSinceDismissal = (now - dismissed) / (1000 * 60 * 60 * 24)
-  return daysSinceDismissal >= DISMISS_DAYS
-}
-
-async function submitToHubSpot(email: string): Promise<string | undefined> {
->>>>>>> de1a7422 (feat(newsletter): add newsletter signup modal with HubSpot submission and analytics)
   const response = await fetch(
     `https://api.hsforms.com/submissions/v3/integration/submit/${HUBSPOT_PORTAL_ID}/${HUBSPOT_FORM_ID}`,
     {
