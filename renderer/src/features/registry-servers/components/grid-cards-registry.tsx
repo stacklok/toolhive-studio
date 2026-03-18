@@ -1,10 +1,35 @@
 import { CardRegistry } from './card-registry'
+import { CardRegistryPromo } from './card-registry-promo'
 import { useNavigate } from '@tanstack/react-router'
 import { cn } from '@/common/lib/utils'
 import type { RegistryItem } from '../types'
 
-export function GridCardsRegistry({ items }: { items: RegistryItem[] }) {
+const PROMO_INDEX = 6
+
+export function GridCardsRegistry({
+  items,
+  showPromo,
+}: {
+  items: RegistryItem[]
+  showPromo?: boolean
+}) {
   const navigate = useNavigate()
+
+  const renderCard = (item: RegistryItem) => (
+    <CardRegistry
+      key={item.name}
+      item={item}
+      onClick={() => {
+        navigate({
+          to:
+            item.type === 'group' ? '/registry-group/$name' : '/registry/$name',
+          params: { name: item.name! },
+        })
+      }}
+    />
+  )
+
+  const insertAt = Math.min(PROMO_INDEX, items.length)
 
   return (
     <div className="space-y-6">
@@ -16,21 +41,9 @@ export function GridCardsRegistry({ items }: { items: RegistryItem[] }) {
             : 'grid-cols-[repeat(auto-fit,minmax(max(200px,min(300px,100%)),1fr))]'
         )}
       >
-        {items.map((item) => (
-          <CardRegistry
-            key={item.name}
-            item={item}
-            onClick={() => {
-              navigate({
-                to:
-                  item.type === 'group'
-                    ? '/registry-group/$name'
-                    : '/registry/$name',
-                params: { name: item.name! },
-              })
-            }}
-          />
-        ))}
+        {items.slice(0, insertAt).map(renderCard)}
+        {showPromo && <CardRegistryPromo />}
+        {items.slice(insertAt).map(renderCard)}
       </div>
       {items.length === 0 && (
         <div className="text-muted-foreground py-12 text-center">

@@ -1,5 +1,7 @@
 import { screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { expect, it, vi, beforeEach, describe } from 'vitest'
+import * as analytics from '@/common/lib/analytics'
 import type { V1GetRegistryResponse } from '@common/api/registry-types'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
@@ -89,6 +91,65 @@ describe('Groups in Registry', () => {
 
     const groupBadges = screen.queryAllByText('Group')
     expect(groupBadges.length).toBe(0)
+  })
+})
+
+describe('Promo Card', () => {
+  it('renders promo card on the default registry', async () => {
+    mockedGetApiV1BetaRegistryByName.override((data) => ({
+      ...data,
+      name: 'default',
+    }))
+
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.getByText('Build a custom registry')).toBeVisible()
+    })
+
+    const link = screen.getByRole('link', { name: /learn how/i })
+    expect(link).toHaveAttribute(
+      'href',
+      'https://docs.stacklok.com/toolhive/guides-registry/?utm_source=toolhive-studio'
+    )
+  })
+
+  it('tracks event when CTA is clicked', async () => {
+    const trackEventSpy = vi.spyOn(analytics, 'trackEvent')
+
+    mockedGetApiV1BetaRegistryByName.override((data) => ({
+      ...data,
+      name: 'default',
+    }))
+
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.getByText('Build a custom registry')).toBeVisible()
+    })
+
+    await userEvent.click(screen.getByRole('link', { name: /learn how/i }))
+
+    expect(trackEventSpy).toHaveBeenCalledWith(
+      'Onramp: custom registry docs clicked'
+    )
+  })
+
+  it('does not render promo card on a custom registry', async () => {
+    mockedGetApiV1BetaRegistryByName.override((data) => ({
+      ...data,
+      name: 'custom-registry',
+    }))
+
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.queryByText('dev-toolkit')).toBeVisible()
+    })
+
+    expect(
+      screen.queryByText('Build a custom registry')
+    ).not.toBeInTheDocument()
   })
 })
 
