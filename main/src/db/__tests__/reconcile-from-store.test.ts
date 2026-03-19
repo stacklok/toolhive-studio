@@ -82,6 +82,9 @@ vi.mock('../../graceful-exit', () => ({
 vi.mock('../../newsletter', () => ({
   newsletterStore: createMockStore('newsletter'),
 }))
+vi.mock('../../expert-consultation', () => ({
+  expertConsultationStore: createMockStore('expert-consultation'),
+}))
 
 import { reconcileFromStore } from '../reconcile-from-store'
 
@@ -119,6 +122,26 @@ describe('reconcileFromStore', () => {
     expect(settingsMap.get('newsletterSubscribed')).toBe('true')
     expect(settingsMap.get('newsletterDismissedAt')).toBe(
       '2026-01-15T00:00:00.000Z'
+    )
+  })
+
+  it('syncs expert consultation settings from electron-store to SQLite', () => {
+    mockStoreData['expert-consultation'] = {
+      expertConsultationSubmitted: true,
+      expertConsultationDismissedAt: '2026-02-20T00:00:00.000Z',
+    }
+
+    reconcileFromStore()
+
+    const settings = testDb.prepare('SELECT * FROM settings').all() as {
+      key: string
+      value: string
+    }[]
+    const settingsMap = new Map(settings.map((s) => [s.key, s.value]))
+
+    expect(settingsMap.get('expertConsultationSubmitted')).toBe('true')
+    expect(settingsMap.get('expertConsultationDismissedAt')).toBe(
+      '2026-02-20T00:00:00.000Z'
     )
   })
 

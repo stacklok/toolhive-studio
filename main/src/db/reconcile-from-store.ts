@@ -20,6 +20,7 @@ import { telemetryStore } from '../telemetry-store'
 import { autoUpdateStore } from '../auto-update'
 import { quitConfirmationStore } from '../quit-confirmation'
 import { newsletterStore } from '../newsletter'
+import { expertConsultationStore } from '../expert-consultation'
 import { featureFlagStore } from '../feature-flags/flags'
 import { chatSettingsStore } from '../chat/settings-storage'
 import { threadsStore } from '../chat/threads-storage'
@@ -46,6 +47,21 @@ function syncSettings(): void {
 
   const newsletterDismissedAt = newsletterStore.get('newsletterDismissedAt', '')
   writeSetting('newsletterDismissedAt', newsletterDismissedAt)
+
+  const expertConsultationSubmitted = expertConsultationStore.get(
+    'expertConsultationSubmitted',
+    false
+  )
+  writeSetting(
+    'expertConsultationSubmitted',
+    String(expertConsultationSubmitted)
+  )
+
+  const expertConsultationDismissedAt = expertConsultationStore.get(
+    'expertConsultationDismissedAt',
+    ''
+  )
+  writeSetting('expertConsultationDismissedAt', expertConsultationDismissedAt)
 }
 
 function syncFeatureFlags(): void {

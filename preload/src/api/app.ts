@@ -23,6 +23,15 @@ export const appApi = {
   setNewsletterDismissedAt: (dismissedAt: string): Promise<void> =>
     ipcRenderer.invoke('set-newsletter-dismissed-at', dismissedAt),
 
+  getExpertConsultationState: (): Promise<{
+    submitted: boolean
+    dismissedAt: string
+  }> => ipcRenderer.invoke('get-expert-consultation-state'),
+  setExpertConsultationSubmitted: (submitted: boolean): Promise<void> =>
+    ipcRenderer.invoke('set-expert-consultation-submitted', submitted),
+  setExpertConsultationDismissedAt: (dismissedAt: string): Promise<void> =>
+    ipcRenderer.invoke('set-expert-consultation-dismissed-at', dismissedAt),
+
   getMainLogContent: () => ipcRenderer.invoke('get-main-log-content'),
 
   isMac: process.platform === 'darwin',
@@ -45,6 +54,12 @@ export interface AppAPI {
   }>
   setNewsletterSubscribed: (subscribed: boolean) => Promise<void>
   setNewsletterDismissedAt: (dismissedAt: string) => Promise<void>
+  getExpertConsultationState: () => Promise<{
+    submitted: boolean
+    dismissedAt: string
+  }>
+  setExpertConsultationSubmitted: (submitted: boolean) => Promise<void>
+  setExpertConsultationDismissedAt: (dismissedAt: string) => Promise<void>
   getMainLogContent: () => Promise<string>
   isMac: boolean
   isWindows: boolean
