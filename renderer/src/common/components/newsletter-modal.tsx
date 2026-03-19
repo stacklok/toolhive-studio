@@ -5,74 +5,25 @@ import { z } from 'zod/v4'
 import * as Sentry from '@sentry/electron/renderer'
 import log from 'electron-log/renderer'
 import { trackEvent } from '../lib/analytics'
+import { shouldShowAfterDismissal } from '../lib/hubspot'
+import { useHubSpotForm } from '../hooks/use-hubspot-form'
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from './ui/dialog'
-import { Checkbox } from './ui/checkbox'
 import { Input } from './ui/input'
 import { Button } from './ui/button'
+import {
+  HubSpotDialogContent,
+  SuccessDialogContent,
+  ConsentCheckbox,
+  PrivacyFooter,
+} from './hubspot-form-parts'
 
-const HUBSPOT_PORTAL_ID = '42544743'
 const HUBSPOT_FORM_ID = '8f75a6a3-bf6d-4cd0-8da5-0092ecfda250'
 const DISMISS_DAYS = 15
-const PRIVACY_POLICY_URL = 'https://www.iubenda.com/privacy-policy/29074746'
-
-const CONSENT_PROCESSING_TEXT =
-  'In order to provide you the content requested, we need to store and process your personal data. If you consent to us storing your personal data for this purpose, please tick the checkbox below.'
-
-function shouldShowModal(subscribed: boolean, dismissedAt: string): boolean {
-  if (subscribed) return false
-  if (!dismissedAt) return true
-
-  const dismissed = new Date(dismissedAt).getTime()
-  if (Number.isNaN(dismissed)) return true
-
-  const daysSinceDismissal = (Date.now() - dismissed) / (1000 * 60 * 60 * 24)
-  return daysSinceDismissal >= DISMISS_DAYS
-}
-
-async function submitToHubSpot(
-  email: string,
-  consentToProcess: boolean
-): Promise<string | undefined> {
-  const response = await fetch(
-    `https://api.hsforms.com/submissions/v3/integration/submit/${HUBSPOT_PORTAL_ID}/${HUBSPOT_FORM_ID}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fields: [{ name: 'email', value: email }],
-        context: {
-          pageName: 'ToolHive Desktop - Newsletter Signup',
-        },
-        legalConsentOptions: {
-          consent: {
-            consentToProcess,
-            text: CONSENT_PROCESSING_TEXT,
-          },
-        },
-      }),
-    }
-  )
-
-  if (!response.ok) {
-    const text = await response.text()
-    throw new Error(`HubSpot submission failed (${response.status}): ${text}`)
-  }
-
-  try {
-    const data = await response.json()
-    if (typeof data?.inlineMessage !== 'string') return undefined
-    const doc = new DOMParser().parseFromString(data.inlineMessage, 'text/html')
-    return doc.body.textContent?.trim() || undefined
-  } catch {
-    return undefined
-  }
-}
 
 const emailSchema = z.email('Please enter a valid email address')
 
@@ -89,7 +40,11 @@ function NewsletterDialog({
 }) {
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
-  const [consentToProcess, setConsentToProcess] = useState(false)
+
+  const { consentToProcess, setConsentToProcess, submit } = useHubSpotForm(
+    HUBSPOT_FORM_ID,
+    'ToolHive Desktop - Newsletter Signup'
+  )
 
   useEffect(() => {
     trackEvent('Newsletter modal shown')
@@ -97,7 +52,7 @@ function NewsletterDialog({
 
   const { mutate: subscribe, isPending: isSubmitting } = useMutation({
     mutationFn: async (emailValue: string) => {
-      const inlineMessage = await submitToHubSpot(emailValue, consentToProcess)
+      const inlineMessage = await submit([{ name: 'email', value: emailValue }])
       await window.electronAPI.setNewsletterSubscribed(true)
       return inlineMessage
     },
@@ -152,25 +107,9 @@ function NewsletterDialog({
         }
       }}
     >
-      <DialogContent
-        onInteractOutside={(e) => e.preventDefault()}
-        className="bg-brand-blue-light text-brand-blue-dark
-          dark:bg-brand-blue-light dark:text-brand-blue-dark
-          **:data-[slot=dialog-close]:text-brand-blue-dark
-          border-brand-blue-mid/20 p-8 **:data-[slot=dialog-close]:opacity-70
-          sm:max-w-md"
-      >
+      <HubSpotDialogContent>
         {successMessage ? (
-          <DialogHeader>
-            <DialogTitle
-              className="text-brand-blue-mid font-serif text-3xl font-light"
-            >
-              Success!
-            </DialogTitle>
-            <DialogDescription className="text-primary">
-              {successMessage}
-            </DialogDescription>
-          </DialogHeader>
+          <SuccessDialogContent message={successMessage} />
         ) : (
           <>
             <DialogHeader>
@@ -189,22 +128,11 @@ function NewsletterDialog({
               onSubmit={handleSubmit}
               className="flex flex-col gap-4"
             >
-              <label className="flex cursor-pointer items-start gap-2.5">
-                <Checkbox
-                  checked={consentToProcess}
-                  onCheckedChange={(checked) =>
-                    setConsentToProcess(checked === true)
-                  }
-                  disabled={isSubmitting}
-                  required
-                  className="border-brand-blue-dark/40 mt-0.5 shrink-0"
-                />
-                <span className="text-xs leading-relaxed">
-                  I agree to allow Stacklok to store and process my personal
-                  data.{' '}
-                  <span className="text-brand-blue-dark/60">(required)</span>
-                </span>
-              </label>
+              <ConsentCheckbox
+                checked={consentToProcess}
+                onCheckedChange={setConsentToProcess}
+                disabled={isSubmitting}
+              />
 
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center gap-2">
@@ -240,23 +168,14 @@ function NewsletterDialog({
                 {error && <p className="text-sm text-red-600">{error}</p>}
               </div>
 
-              <p className="text-brand-blue-dark/50 text-xs leading-relaxed">
+              <PrivacyFooter>
                 You can unsubscribe at any time. For more information on how to
-                unsubscribe and our privacy practices, please review our{' '}
-                <a
-                  href={PRIVACY_POLICY_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="underline underline-offset-2"
-                >
-                  Privacy Policy
-                </a>
-                .
-              </p>
+                unsubscribe and our privacy practices, please review our
+              </PrivacyFooter>
             </form>
           </>
         )}
-      </DialogContent>
+      </HubSpotDialogContent>
     </Dialog>
   )
 }
@@ -275,7 +194,11 @@ export function NewsletterModal() {
 
   if (
     !successMessage &&
-    !shouldShowModal(newsletterState.subscribed, newsletterState.dismissedAt)
+    !shouldShowAfterDismissal(
+      newsletterState.subscribed,
+      newsletterState.dismissedAt,
+      DISMISS_DAYS
+    )
   ) {
     return null
   }
