@@ -217,7 +217,10 @@ describe('NewsletterModal', () => {
       )
       expect(hubspotRequest).toBeDefined()
       expect(hubspotRequest?.payload).toEqual({
-        fields: [{ name: 'email', value: 'user@example.com' }],
+        fields: [
+          { name: 'email', value: 'user@example.com' },
+          { name: 'instance_id', value: 'test-instance-id' },
+        ],
         context: {
           pageName: 'ToolHive Desktop - Newsletter Signup',
         },
