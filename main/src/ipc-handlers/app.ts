@@ -16,6 +16,11 @@ import {
   setNewsletterSubscribed,
   setNewsletterDismissedAt,
 } from '../newsletter'
+import {
+  getExpertConsultationState,
+  setExpertConsultationSubmitted,
+  setExpertConsultationDismissedAt,
+} from '../expert-consultation'
 import { updateTrayStatus } from '../system-tray'
 import { isToolhiveRunning } from '../toolhive-manager'
 
@@ -61,6 +66,18 @@ export function register() {
   )
   ipcMain.handle('set-newsletter-dismissed-at', (_e, dismissedAt: string) =>
     setNewsletterDismissedAt(dismissedAt)
+  )
+
+  ipcMain.handle('get-expert-consultation-state', () =>
+    getExpertConsultationState()
+  )
+  ipcMain.handle(
+    'set-expert-consultation-submitted',
+    (_e, submitted: boolean) => setExpertConsultationSubmitted(submitted)
+  )
+  ipcMain.handle(
+    'set-expert-consultation-dismissed-at',
+    (_e, dismissedAt: string) => setExpertConsultationDismissedAt(dismissedAt)
   )
 
   ipcMain.handle(
