@@ -4,22 +4,21 @@ on:
 permissions:
   contents: read
 jobs:
-  trivy:
-    name: Trivy
+  grype:
+    name: Grype
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Scan repo
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
+        id: grype-scan
+        uses: anchore/scan-action@7037fa011853d5a11690026fb85feee79f4c946c # v7.3.2
         with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          scanners: 'vuln,secret,config'
-          exit-code: '1'
-          ignore-unfixed: 'true'
-          severity: 'MEDIUM,HIGH,CRITICAL'
+          path: "."
+          fail-build: true
+          only-fixed: true
+          severity-cutoff: "medium"
 
   npm-audit:
     name: PNPM Audit
