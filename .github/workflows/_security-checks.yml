@@ -19,6 +19,7 @@ jobs:
           fail-build: true
           only-fixed: true
           severity-cutoff: "medium"
+          output-format: "table"
 
   npm-audit:
     name: PNPM Audit
