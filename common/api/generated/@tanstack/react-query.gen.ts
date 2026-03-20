@@ -659,9 +659,11 @@ export const postApiV1BetaRegistryMutation = (
 }
 
 /**
- * Registry login
+ * Login to registry
  *
- * Trigger an interactive OAuth flow to authenticate with the configured registry. Only available in serve mode.
+ * Trigger an interactive OAuth flow to authenticate with the configured registry.
+ * OAuth must be configured first via PUT /api/v1beta/registry/{name} with an auth body.
+ * Only available in serve mode (designed for desktop clients with a local browser).
  */
 export const postApiV1BetaRegistryAuthLoginMutation = (
   options?: Partial<Options<PostApiV1BetaRegistryAuthLoginData>>
@@ -688,9 +690,10 @@ export const postApiV1BetaRegistryAuthLoginMutation = (
 }
 
 /**
- * Registry logout
+ * Logout from registry
  *
- * Clear cached OAuth tokens for the configured registry. Only available in serve mode.
+ * Clear cached OAuth tokens for the configured registry.
+ * Only available in serve mode.
  */
 export const postApiV1BetaRegistryAuthLogoutMutation = (
   options?: Partial<Options<PostApiV1BetaRegistryAuthLogoutData>>

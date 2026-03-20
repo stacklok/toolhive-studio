@@ -21,8 +21,8 @@ export function useToastMutation<
   ...options
 }: UseMutationOptions<TData, TError, TVariables, TContext> & {
   successMsg?: ((variables: TVariables) => string | null) | string | null
-  loadingMsg?: string
-  errorMsg?: string
+  loadingMsg?: ((variables: TVariables) => string) | string
+  errorMsg?: ((error: unknown) => string) | string
   toastId?: string
 }) {
   const {
@@ -42,12 +42,17 @@ export function useToastMutation<
 
       const resolvedSuccessMsg =
         typeof successMsg === 'function' ? successMsg(variables) : successMsg
+      const resolvedLoadingMsg =
+        typeof loadingMsg === 'function'
+          ? loadingMsg(variables)
+          : (loadingMsg ?? 'Loading...')
 
       if (resolvedSuccessMsg !== null) {
         toast.promise(promise, {
           success: resolvedSuccessMsg,
-          loading: loadingMsg ?? 'Loading...',
+          loading: resolvedLoadingMsg,
           error: (e: TError) => {
+            if (typeof errorMsg === 'function') return errorMsg(e)
             if (errorMsg) return errorMsg
 
             if (typeof e.detail == 'string') {

@@ -17,9 +17,12 @@ export function RegistryTypeField({
   isPending: boolean
   form: UseFormReturn<RegistryFormData>
 }) {
-  const { type, source } = form.formState.defaultValues ?? {
+  const { type, source, client_id, issuer_url } = form.formState
+    .defaultValues ?? {
     type: 'default',
     source: '',
+    client_id: '',
+    issuer_url: '',
   }
 
   return (
@@ -33,9 +36,20 @@ export function RegistryTypeField({
               field.onChange(value)
 
               if (value === type) {
-                form.setValue('source', source)
+                form.setValue('source', source ?? '')
+                if (value === 'api_url') {
+                  form.setValue('client_id', client_id ?? '')
+                  form.setValue('issuer_url', issuer_url ?? '')
+                }
               } else {
                 form.setValue('source', '')
+                if (value === 'api_url') {
+                  form.setValue('client_id', client_id ?? '')
+                  form.setValue('issuer_url', issuer_url ?? '')
+                } else {
+                  form.setValue('client_id', '')
+                  form.setValue('issuer_url', '')
+                }
               }
             }}
             value={field.value}

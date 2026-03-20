@@ -1,32 +1,39 @@
 import { z } from 'zod/v4'
-import { REGISTRY_FORM_TYPES } from './utils'
+import { REGISTRY_FORM_TYPES, REGISTRY_FORM_TYPE } from './utils'
 
 export const registryFormSchema = z
   .object({
-    type: z.enum(REGISTRY_FORM_TYPES).default('default'),
+    type: z.enum(REGISTRY_FORM_TYPES).default(REGISTRY_FORM_TYPE.DEFAULT),
     source: z.string().optional(),
     allow_private_ip: z.boolean().optional(),
+    client_id: z.string().optional(),
+    issuer_url: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     const requiresSource =
-      data.type === 'local_path' ||
-      data.type === 'url' ||
-      data.type === 'api_url'
+      data.type === REGISTRY_FORM_TYPE.LOCAL_PATH ||
+      data.type === REGISTRY_FORM_TYPE.URL ||
+      data.type === REGISTRY_FORM_TYPE.API_URL
 
     if (requiresSource && (!data.source || data.source.trim().length === 0)) {
       ctx.addIssue({
         code: 'custom',
         path: ['source'],
         message:
-          data.type === 'local_path'
+          data.type === REGISTRY_FORM_TYPE.LOCAL_PATH
             ? 'File path is required'
-            : 'Registry URL is required',
+            : data.type === REGISTRY_FORM_TYPE.API_URL
+              ? 'Registry Server API URL is required'
+              : 'Registry URL is required',
       })
     }
   })
   .refine(
     (data) => {
-      if (data.type === 'local_path' || data.type === 'url') {
+      if (
+        data.type === REGISTRY_FORM_TYPE.LOCAL_PATH ||
+        data.type === REGISTRY_FORM_TYPE.URL
+      ) {
         return data.source?.endsWith('.json')
       }
       return true
@@ -38,7 +45,7 @@ export const registryFormSchema = z
   )
   .refine(
     (data) => {
-      if (data.type === 'url' && data.source) {
+      if (data.type === REGISTRY_FORM_TYPE.URL && data.source) {
         if (!data.source.startsWith('https://')) {
           return false
         }
@@ -58,7 +65,7 @@ export const registryFormSchema = z
   )
   .refine(
     (data) => {
-      if (data.type === 'api_url' && data.source) {
+      if (data.type === REGISTRY_FORM_TYPE.API_URL && data.source) {
         try {
           new URL(data.source)
           return true
@@ -71,6 +78,24 @@ export const registryFormSchema = z
     {
       message: 'Registry Server API must be a valid URL',
       path: ['source'],
+    }
+  )
+  .refine(
+    (data) => {
+      const issuer = data.issuer_url?.trim()
+      if (data.type !== REGISTRY_FORM_TYPE.API_URL || !issuer) {
+        return true
+      }
+      try {
+        new URL(issuer)
+        return true
+      } catch {
+        return false
+      }
+    },
+    {
+      message: 'Issuer URL must be a valid URL',
+      path: ['issuer_url'],
     }
   )
 

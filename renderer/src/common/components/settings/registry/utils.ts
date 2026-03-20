@@ -11,6 +11,13 @@ export const REGISTRY_FORM_TYPES = [
 
 type RegistryFormType = (typeof REGISTRY_FORM_TYPES)[number]
 
+export const REGISTRY_FORM_TYPE = {
+  LOCAL_PATH: 'local_path',
+  URL: 'url',
+  DEFAULT: 'default',
+  API_URL: 'api_url',
+} as const satisfies Record<string, RegistryFormType>
+
 export const REGISTRY_TYPE_OPTIONS = [
   { value: 'default', label: 'Default Registry' },
   { value: 'url', label: 'Remote Registry (JSON URL)' },
@@ -22,6 +29,18 @@ export const REGISTRY_TYPE_OPTIONS = [
 }>
 
 export type RegistryInputType = Exclude<RegistryFormType, 'default'>
+
+import type { PkgApiV1RegistryInfo } from '@common/api/generated/types.gen'
+
+export function registryAuthFromRegistryInfo(
+  registry: PkgApiV1RegistryInfo | undefined
+): { client_id: string; issuer_url: string } {
+  const auth = registry?.auth_config
+  return {
+    client_id: (auth as Record<string, string> | undefined)?.client_id ?? '',
+    issuer_url: (auth as Record<string, string> | undefined)?.issuer ?? '',
+  }
+}
 
 /**
  * Maps GET response type to form type for populating the form from API data.

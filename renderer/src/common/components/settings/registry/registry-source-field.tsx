@@ -12,6 +12,7 @@ import type { RegistryFormData } from './schema'
 import { FilePickerInput } from '../../ui/file-picker-input'
 import { Button } from '../../ui/button'
 import type { RegistryInputType } from './utils'
+import { resolveRegistryListLoadErrorMessage } from './registry-list-error'
 
 const REGISTRY_INPUT_CONFIG = {
   local_path: {
@@ -45,7 +46,7 @@ const REGISTRY_INPUT_CONFIG = {
     label: 'Registry Server API URL',
     placeholder: 'https://domain.com:8080/api/registry',
     useFilePicker: false,
-    description: 'Provide the HTTPS URL of a registry server API.',
+    description: 'Provide the HTTPS URL of a registry server API',
   },
 } as const satisfies Record<
   RegistryInputType,
@@ -101,10 +102,12 @@ export function RegistrySourceField({
   isPending,
   form,
   hasRegistryError,
+  registryAuthRequiredMessage,
 }: {
   isPending: boolean
   form: UseFormReturn<RegistryFormData>
   hasRegistryError: boolean
+  registryAuthRequiredMessage?: string
 }) {
   const registryType = form.watch('type')
 
@@ -119,7 +122,7 @@ export function RegistrySourceField({
     <FormField
       control={form.control}
       name="source"
-      render={({ field }) => {
+      render={({ field, fieldState }) => {
         return (
           <FormItem className="w-full">
             <FormLabel required>{config.label}</FormLabel>
@@ -129,12 +132,20 @@ export function RegistrySourceField({
               placeholder={config.placeholder}
               field={field}
               disabled={isPending}
-              hasRegistryError={hasRegistryError}
+              hasRegistryError={
+                fieldState.invalid ||
+                (hasRegistryError &&
+                  !(
+                    registryType === 'api_url' && !!registryAuthRequiredMessage
+                  ))
+              }
             />
-            {hasRegistryError ? (
+            {hasRegistryError && registryType !== 'api_url' ? (
               <p className="text-destructive text-sm">
-                Failed to load registry configuration. The registry source may
-                be misconfigured or unavailable.
+                {resolveRegistryListLoadErrorMessage(
+                  registryType,
+                  registryAuthRequiredMessage
+                )}
               </p>
             ) : (
               <FormMessage />
