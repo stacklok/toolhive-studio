@@ -14,6 +14,15 @@ export const appApi = {
   setSkipQuitConfirmation: (skip: boolean): Promise<void> =>
     ipcRenderer.invoke('set-skip-quit-confirmation', skip),
 
+  getNewsletterState: (): Promise<{
+    subscribed: boolean
+    dismissedAt: string
+  }> => ipcRenderer.invoke('get-newsletter-state'),
+  setNewsletterSubscribed: (subscribed: boolean): Promise<void> =>
+    ipcRenderer.invoke('set-newsletter-subscribed', subscribed),
+  setNewsletterDismissedAt: (dismissedAt: string): Promise<void> =>
+    ipcRenderer.invoke('set-newsletter-dismissed-at', dismissedAt),
+
   getMainLogContent: () => ipcRenderer.invoke('get-main-log-content'),
 
   isMac: process.platform === 'darwin',
@@ -30,6 +39,12 @@ export interface AppAPI {
   quitApp: () => Promise<void>
   getSkipQuitConfirmation: () => Promise<boolean>
   setSkipQuitConfirmation: (skip: boolean) => Promise<void>
+  getNewsletterState: () => Promise<{
+    subscribed: boolean
+    dismissedAt: string
+  }>
+  setNewsletterSubscribed: (subscribed: boolean) => Promise<void>
+  setNewsletterDismissedAt: (dismissedAt: string) => Promise<void>
   getMainLogContent: () => Promise<string>
   isMac: boolean
   isWindows: boolean
