@@ -93,6 +93,12 @@ import type {
   PostApiV1BetaGroupsData,
   PostApiV1BetaGroupsErrors,
   PostApiV1BetaGroupsResponses,
+  PostApiV1BetaRegistryAuthLoginData,
+  PostApiV1BetaRegistryAuthLoginErrors,
+  PostApiV1BetaRegistryAuthLoginResponses,
+  PostApiV1BetaRegistryAuthLogoutData,
+  PostApiV1BetaRegistryAuthLogoutErrors,
+  PostApiV1BetaRegistryAuthLogoutResponses,
   PostApiV1BetaRegistryData,
   PostApiV1BetaRegistryErrors,
   PostApiV1BetaSecretsData,
@@ -401,6 +407,41 @@ export const postApiV1BetaRegistry = <ThrowOnError extends boolean = false>(
       ...options?.headers,
     },
   })
+
+/**
+ * Login to registry
+ *
+ * Trigger an interactive OAuth flow to authenticate with the configured registry.
+ * OAuth must be configured first via PUT /api/v1beta/registry/{name} with an auth body.
+ * Only available in serve mode (designed for desktop clients with a local browser).
+ */
+export const postApiV1BetaRegistryAuthLogin = <
+  ThrowOnError extends boolean = false,
+>(
+  options?: Options<PostApiV1BetaRegistryAuthLoginData, ThrowOnError>
+) =>
+  (options?.client ?? client).post<
+    PostApiV1BetaRegistryAuthLoginResponses,
+    PostApiV1BetaRegistryAuthLoginErrors,
+    ThrowOnError
+  >({ url: '/api/v1beta/registry/auth/login', ...options })
+
+/**
+ * Logout from registry
+ *
+ * Clear cached OAuth tokens for the configured registry.
+ * Only available in serve mode.
+ */
+export const postApiV1BetaRegistryAuthLogout = <
+  ThrowOnError extends boolean = false,
+>(
+  options?: Options<PostApiV1BetaRegistryAuthLogoutData, ThrowOnError>
+) =>
+  (options?.client ?? client).post<
+    PostApiV1BetaRegistryAuthLogoutResponses,
+    PostApiV1BetaRegistryAuthLogoutErrors,
+    ThrowOnError
+  >({ url: '/api/v1beta/registry/auth/logout', ...options })
 
 /**
  * Remove a registry

@@ -25,5 +25,5 @@ export const Route = createFileRoute('/(registry)/registry')({
     return Promise.all([serversPromise, registryPromise])
   },
   component: RegistryRouteComponent,
-  errorComponent: () => <RegistryError />,
+  errorComponent: ({ error }) => <RegistryError error={error} />,
 })

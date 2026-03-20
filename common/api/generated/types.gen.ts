@@ -749,6 +749,17 @@ export type GithubComStacklokToolhivePkgGroupsGroup = {
 }
 
 /**
+ * AuthConfig contains the non-secret OAuth configuration when auth is configured.
+ * Nil when auth_status is "none".
+ */
+export type GithubComStacklokToolhivePkgRegistryOAuthPublicConfig = {
+  audience?: string
+  client_id?: string
+  issuer?: string
+  scopes?: Array<string>
+}
+
+/**
  * HeaderForward contains configuration for injecting headers into requests to remote servers.
  */
 export type GithubComStacklokToolhivePkgRunnerHeaderForwardConfig = {
@@ -1256,6 +1267,28 @@ export type PermissionsProfile = {
 export type PkgApiV1RegistryType = 'file' | 'url' | 'api' | 'default'
 
 /**
+ * OAuth authentication configuration (optional)
+ */
+export type PkgApiV1UpdateRegistryAuthRequest = {
+  /**
+   * OAuth audience (optional)
+   */
+  audience?: string
+  /**
+   * OAuth client ID
+   */
+  client_id?: string
+  /**
+   * OIDC issuer URL
+   */
+  issuer?: string
+  /**
+   * OAuth scopes (optional)
+   */
+  scopes?: Array<string>
+}
+
+/**
  * Request containing registry configuration updates
  */
 export type PkgApiV1UpdateRegistryRequest = {
@@ -1267,6 +1300,7 @@ export type PkgApiV1UpdateRegistryRequest = {
    * MCP Registry API URL
    */
   api_url?: string
+  auth?: PkgApiV1UpdateRegistryAuthRequest
   /**
    * Local registry file path
    */
@@ -1490,6 +1524,17 @@ export type PkgApiV1CreateWorkloadResponse = {
  * Response containing registry details
  */
 export type PkgApiV1GetRegistryResponse = {
+  auth_config?: GithubComStacklokToolhivePkgRegistryOAuthPublicConfig
+  /**
+   * AuthStatus is one of: "none", "configured", "authenticated".
+   * Intentionally omits omitempty — see registryInfo for rationale.
+   */
+  auth_status?: string
+  /**
+   * AuthType is "oauth", "bearer" (future), or empty string when no auth.
+   * Intentionally omits omitempty — see registryInfo for rationale.
+   */
+  auth_type?: string
   /**
    * Last updated timestamp
    */
@@ -1706,6 +1751,19 @@ export type PkgApiV1PushSkillRequest = {
  * Basic information about a registry
  */
 export type PkgApiV1RegistryInfo = {
+  auth_config?: GithubComStacklokToolhivePkgRegistryOAuthPublicConfig
+  /**
+   * AuthStatus is one of: "none", "configured", "authenticated".
+   * Intentionally omits omitempty so clients always receive the field,
+   * even when the value is "none" (the zero-value equivalent).
+   */
+  auth_status?: string
+  /**
+   * AuthType is "oauth", "bearer" (future), or empty string when no auth.
+   * Intentionally omits omitempty so clients can distinguish "no auth
+   * configured" (empty string) from "field missing" without extra logic.
+   */
+  auth_type?: string
   /**
    * Last updated timestamp
    */
@@ -2882,6 +2940,72 @@ export type PostApiV1BetaRegistryErrors = {
 
 export type PostApiV1BetaRegistryError =
   PostApiV1BetaRegistryErrors[keyof PostApiV1BetaRegistryErrors]
+
+export type PostApiV1BetaRegistryAuthLoginData = {
+  body?: never
+  path?: never
+  query?: never
+  url: '/api/v1beta/registry/auth/login'
+}
+
+export type PostApiV1BetaRegistryAuthLoginErrors = {
+  /**
+   * Registry OAuth not configured
+   */
+  400: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type PostApiV1BetaRegistryAuthLoginError =
+  PostApiV1BetaRegistryAuthLoginErrors[keyof PostApiV1BetaRegistryAuthLoginErrors]
+
+export type PostApiV1BetaRegistryAuthLoginResponses = {
+  /**
+   * authenticated
+   */
+  200: {
+    [key: string]: string
+  }
+}
+
+export type PostApiV1BetaRegistryAuthLoginResponse =
+  PostApiV1BetaRegistryAuthLoginResponses[keyof PostApiV1BetaRegistryAuthLoginResponses]
+
+export type PostApiV1BetaRegistryAuthLogoutData = {
+  body?: never
+  path?: never
+  query?: never
+  url: '/api/v1beta/registry/auth/logout'
+}
+
+export type PostApiV1BetaRegistryAuthLogoutErrors = {
+  /**
+   * Registry OAuth not configured
+   */
+  400: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type PostApiV1BetaRegistryAuthLogoutError =
+  PostApiV1BetaRegistryAuthLogoutErrors[keyof PostApiV1BetaRegistryAuthLogoutErrors]
+
+export type PostApiV1BetaRegistryAuthLogoutResponses = {
+  /**
+   * logged_out
+   */
+  200: {
+    [key: string]: string
+  }
+}
+
+export type PostApiV1BetaRegistryAuthLogoutResponse =
+  PostApiV1BetaRegistryAuthLogoutResponses[keyof PostApiV1BetaRegistryAuthLogoutResponses]
 
 export type DeleteApiV1BetaRegistryByNameData = {
   body?: never
