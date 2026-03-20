@@ -10,6 +10,7 @@ export const mockedGetApiV1BetaRegistryByName = AutoAPIMock<
   GetApiV1BetaRegistryByNameData
 >({
   name: 'default',
+  type: 'default',
   version: '1.0.0',
   last_updated: '2025-08-06T00:24:28Z',
   server_count: 2,
