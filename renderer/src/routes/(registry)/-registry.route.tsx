@@ -55,7 +55,8 @@ export default function RegistryRouteComponent() {
     (server) => !SKIP_META_MCP.includes(server.name ?? '')
   )
 
-  const isDefaultRegistry = registryData?.name === DEFAULT_REGISTRY_NAME
+  const isDefaultRegistry =
+    !registryData?.type || registryData.type === 'default'
 
   const filteredServers =
     isMetaOptimizerEnabled && isDefaultRegistry

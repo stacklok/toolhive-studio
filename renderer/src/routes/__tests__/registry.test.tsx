@@ -98,7 +98,7 @@ describe('Promo Card', () => {
   it('renders promo card on the default registry', async () => {
     mockedGetApiV1BetaRegistryByName.override((data) => ({
       ...data,
-      name: 'default',
+      type: 'default',
     }))
 
     renderRoute(router)
@@ -119,7 +119,7 @@ describe('Promo Card', () => {
 
     mockedGetApiV1BetaRegistryByName.override((data) => ({
       ...data,
-      name: 'default',
+      type: 'default',
     }))
 
     renderRoute(router)
@@ -138,7 +138,7 @@ describe('Promo Card', () => {
   it('does not render promo card on a custom registry', async () => {
     mockedGetApiV1BetaRegistryByName.override((data) => ({
       ...data,
-      name: 'custom-registry',
+      type: 'url',
     }))
 
     renderRoute(router)
@@ -170,7 +170,7 @@ describe('Meta-MCP Server Filtering', () => {
 
     mockedGetApiV1BetaRegistryByName.override((data) => ({
       ...data,
-      name: 'default',
+      type: 'default',
     }))
 
     renderRoute(router)
@@ -198,7 +198,7 @@ describe('Meta-MCP Server Filtering', () => {
 
     mockedGetApiV1BetaRegistryByName.override((data) => ({
       ...data,
-      name: 'custom-registry',
+      type: 'url',
     }))
 
     renderRoute(router)
