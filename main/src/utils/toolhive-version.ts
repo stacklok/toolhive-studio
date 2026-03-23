@@ -40,8 +40,9 @@ export function getManifestUrl(currentVersion: string): string {
 export function parseVersionFromSquirrelReleases(
   text: string
 ): string | undefined {
-  const match = text.match(/ToolHive-(.+?)-full\.nupkg/)
-  return match?.[1]
+  const matches = Array.from(text.matchAll(/ToolHive-(.+?)-full\.nupkg/g))
+  const lastMatch = matches.at(-1)
+  return lastMatch?.[1]
 }
 
 function parseLatestVersion(
@@ -57,7 +58,12 @@ async function fetchLatestVersionFromUrl(
   url: string
 ): Promise<string | undefined> {
   const response = await fetch(url)
-  if (!response.ok) return undefined
+  if (!response.ok) {
+    log.error(
+      `[update] manifest fetch failed: ${response.status} ${response.statusText} from ${url}`
+    )
+    return undefined
+  }
 
   if (url.endsWith('/RELEASES')) {
     const text = await response.text()

@@ -45,8 +45,16 @@ describe('toolhive-version', () => {
   const originalFetch = global.fetch
 
   afterEach(() => {
-    Object.defineProperty(process, 'platform', { value: originalPlatform })
-    Object.defineProperty(process, 'arch', { value: originalArch })
+    Object.defineProperty(process, 'platform', {
+      value: originalPlatform,
+      configurable: true,
+      writable: false,
+    })
+    Object.defineProperty(process, 'arch', {
+      value: originalArch,
+      configurable: true,
+      writable: false,
+    })
     global.fetch = originalFetch
   })
 
@@ -72,8 +80,14 @@ describe('toolhive-version', () => {
 
   describe('getManifestUrl', () => {
     it('returns S3 RELEASES.json for macOS stable', () => {
-      Object.defineProperty(process, 'platform', { value: 'darwin' })
-      Object.defineProperty(process, 'arch', { value: 'arm64' })
+      Object.defineProperty(process, 'platform', {
+        value: 'darwin',
+        configurable: true,
+      })
+      Object.defineProperty(process, 'arch', {
+        value: 'arm64',
+        configurable: true,
+      })
 
       expect(getManifestUrl('1.0.0')).toBe(
         'https://releases.toolhive.dev/stable/latest/darwin/arm64/RELEASES.json'
@@ -81,8 +95,14 @@ describe('toolhive-version', () => {
     })
 
     it('returns S3 RELEASES.json for macOS pre-release', () => {
-      Object.defineProperty(process, 'platform', { value: 'darwin' })
-      Object.defineProperty(process, 'arch', { value: 'x64' })
+      Object.defineProperty(process, 'platform', {
+        value: 'darwin',
+        configurable: true,
+      })
+      Object.defineProperty(process, 'arch', {
+        value: 'x64',
+        configurable: true,
+      })
 
       expect(getManifestUrl('1.0.0-beta.1')).toBe(
         'https://releases.toolhive.dev/pre-release/latest/darwin/x64/RELEASES.json'
@@ -90,8 +110,14 @@ describe('toolhive-version', () => {
     })
 
     it('returns S3 Squirrel RELEASES for Windows stable', () => {
-      Object.defineProperty(process, 'platform', { value: 'win32' })
-      Object.defineProperty(process, 'arch', { value: 'x64' })
+      Object.defineProperty(process, 'platform', {
+        value: 'win32',
+        configurable: true,
+      })
+      Object.defineProperty(process, 'arch', {
+        value: 'x64',
+        configurable: true,
+      })
 
       expect(getManifestUrl('1.0.0')).toBe(
         'https://releases.toolhive.dev/stable/latest/win32/x64/RELEASES'
@@ -99,8 +125,14 @@ describe('toolhive-version', () => {
     })
 
     it('returns S3 Squirrel RELEASES for Windows pre-release', () => {
-      Object.defineProperty(process, 'platform', { value: 'win32' })
-      Object.defineProperty(process, 'arch', { value: 'x64' })
+      Object.defineProperty(process, 'platform', {
+        value: 'win32',
+        configurable: true,
+      })
+      Object.defineProperty(process, 'arch', {
+        value: 'x64',
+        configurable: true,
+      })
 
       expect(getManifestUrl('0.22.1-rc.0')).toBe(
         'https://releases.toolhive.dev/pre-release/latest/win32/x64/RELEASES'
@@ -108,7 +140,10 @@ describe('toolhive-version', () => {
     })
 
     it('returns GitHub Pages manifest for Linux', () => {
-      Object.defineProperty(process, 'platform', { value: 'linux' })
+      Object.defineProperty(process, 'platform', {
+        value: 'linux',
+        configurable: true,
+      })
 
       expect(getManifestUrl('1.0.0')).toBe(
         'https://stacklok.github.io/toolhive-studio/latest/index.json'
@@ -116,7 +151,10 @@ describe('toolhive-version', () => {
     })
 
     it('returns GitHub Pages manifest for Linux even for pre-release', () => {
-      Object.defineProperty(process, 'platform', { value: 'linux' })
+      Object.defineProperty(process, 'platform', {
+        value: 'linux',
+        configurable: true,
+      })
 
       expect(getManifestUrl('1.0.0-alpha.1')).toBe(
         'https://stacklok.github.io/toolhive-studio/latest/index.json'
@@ -136,13 +174,13 @@ describe('toolhive-version', () => {
       expect(parseVersionFromSquirrelReleases(content)).toBe('1.5.0-rc.1')
     })
 
-    it('picks version from multi-line RELEASES (last full entry)', () => {
+    it('picks the latest full entry from multi-line RELEASES', () => {
       const content = [
         'AAAA ToolHive-0.23.0-full.nupkg 183390001',
         'BBBB ToolHive-0.24.0-delta.nupkg 12391027',
         'CCCC ToolHive-0.24.0-full.nupkg 183478042',
       ].join('\n')
-      expect(parseVersionFromSquirrelReleases(content)).toBe('0.23.0')
+      expect(parseVersionFromSquirrelReleases(content)).toBe('0.24.0')
     })
 
     it('returns undefined for empty content', () => {
@@ -161,7 +199,10 @@ describe('toolhive-version', () => {
     }
 
     it('fetches and parses RELEASES.json on macOS', async () => {
-      Object.defineProperty(process, 'platform', { value: 'darwin' })
+      Object.defineProperty(process, 'platform', {
+        value: 'darwin',
+        configurable: true,
+      })
 
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
@@ -178,7 +219,10 @@ describe('toolhive-version', () => {
     })
 
     it('fetches and parses Squirrel RELEASES on Windows', async () => {
-      Object.defineProperty(process, 'platform', { value: 'win32' })
+      Object.defineProperty(process, 'platform', {
+        value: 'win32',
+        configurable: true,
+      })
 
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
@@ -196,7 +240,10 @@ describe('toolhive-version', () => {
     })
 
     it('fetches and parses GitHub Pages manifest on Linux', async () => {
-      Object.defineProperty(process, 'platform', { value: 'linux' })
+      Object.defineProperty(process, 'platform', {
+        value: 'linux',
+        configurable: true,
+      })
 
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
@@ -213,7 +260,10 @@ describe('toolhive-version', () => {
     })
 
     it('returns no update when version matches current', async () => {
-      Object.defineProperty(process, 'platform', { value: 'darwin' })
+      Object.defineProperty(process, 'platform', {
+        value: 'darwin',
+        configurable: true,
+      })
 
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
@@ -232,6 +282,7 @@ describe('toolhive-version', () => {
     it('handles non-ok response', async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: false,
+        status: 404,
         statusText: 'Not Found',
       })
 
@@ -243,8 +294,7 @@ describe('toolhive-version', () => {
         isNewVersionAvailable: false,
       })
       expect(vi.mocked(log).error).toHaveBeenCalledWith(
-        '[update] Failed to check for ToolHive update from: ',
-        expect.any(String)
+        expect.stringContaining('manifest fetch failed: 404 Not Found')
       )
     })
   })
