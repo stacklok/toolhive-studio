@@ -19,6 +19,7 @@ import type { ChatSettingsThread } from '../chat/threads-storage'
 import { telemetryStore } from '../telemetry-store'
 import { autoUpdateStore } from '../auto-update'
 import { quitConfirmationStore } from '../quit-confirmation'
+import { newsletterStore } from '../newsletter'
 import { featureFlagStore } from '../feature-flags/flags'
 import { chatSettingsStore } from '../chat/settings-storage'
 import { threadsStore } from '../chat/threads-storage'
@@ -36,6 +37,15 @@ function syncSettings(): void {
     false
   )
   writeSetting('skipQuitConfirmation', String(skipQuitConfirmation))
+
+  const newsletterSubscribed = newsletterStore.get(
+    'newsletterSubscribed',
+    false
+  )
+  writeSetting('newsletterSubscribed', String(newsletterSubscribed))
+
+  const newsletterDismissedAt = newsletterStore.get('newsletterDismissedAt', '')
+  writeSetting('newsletterDismissedAt', newsletterDismissedAt)
 }
 
 function syncFeatureFlags(): void {

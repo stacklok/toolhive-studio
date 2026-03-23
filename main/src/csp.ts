@@ -9,7 +9,7 @@ const getCspMap = (port: number, sentryDsn?: string) => {
     'style-src': "'self' 'unsafe-inline'",
     'img-src': "'self' data: blob:",
     'font-src': "'self' data:",
-    'connect-src': `'self' http://localhost:${port}${hasSentry ? ' https://*.sentry.io' : ''}`,
+    'connect-src': `'self' http://localhost:${port} https://api.hsforms.com${hasSentry ? ' https://*.sentry.io' : ''}`,
     'frame-src': "'none'",
     'object-src': "'none'",
     'base-uri': "'self'",

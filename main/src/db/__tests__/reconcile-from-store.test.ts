@@ -79,6 +79,9 @@ vi.mock('../../chat/settings-storage', () => ({
 vi.mock('../../graceful-exit', () => ({
   shutdownStore: createMockStore('server-shutdown'),
 }))
+vi.mock('../../newsletter', () => ({
+  newsletterStore: createMockStore('newsletter'),
+}))
 
 import { reconcileFromStore } from '../reconcile-from-store'
 
@@ -97,6 +100,10 @@ describe('reconcileFromStore', () => {
     mockStoreData['default'] = { isTelemetryEnabled: false }
     mockStoreData['auto-update'] = { isAutoUpdateEnabled: false }
     mockStoreData['quit-confirmation'] = { skipQuitConfirmation: true }
+    mockStoreData['newsletter'] = {
+      newsletterSubscribed: true,
+      newsletterDismissedAt: '2026-01-15T00:00:00.000Z',
+    }
 
     reconcileFromStore()
 
@@ -109,6 +116,10 @@ describe('reconcileFromStore', () => {
     expect(settingsMap.get('isTelemetryEnabled')).toBe('false')
     expect(settingsMap.get('isAutoUpdateEnabled')).toBe('false')
     expect(settingsMap.get('skipQuitConfirmation')).toBe('true')
+    expect(settingsMap.get('newsletterSubscribed')).toBe('true')
+    expect(settingsMap.get('newsletterDismissedAt')).toBe(
+      '2026-01-15T00:00:00.000Z'
+    )
   })
 
   it('syncs feature flags from electron-store to SQLite', () => {

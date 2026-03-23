@@ -10,6 +10,11 @@ function createElectronStub(): Partial<ElectronAPI> {
     onDeepLinkNavigation: () => () => {},
     getSkipQuitConfirmation: vi.fn().mockResolvedValue(false),
     setSkipQuitConfirmation: vi.fn().mockResolvedValue(undefined),
+    getNewsletterState: vi
+      .fn()
+      .mockResolvedValue({ subscribed: false, dismissedAt: '' }),
+    setNewsletterSubscribed: vi.fn().mockResolvedValue(undefined),
+    setNewsletterDismissedAt: vi.fn().mockResolvedValue(undefined),
     shutdownStore: {
       getLastShutdownServers: async () => [],
       clearShutdownHistory: async () => ({ success: true }),

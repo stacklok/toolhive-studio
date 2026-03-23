@@ -26,6 +26,7 @@ import log from 'electron-log/renderer'
 import * as Sentry from '@sentry/electron/renderer'
 import { StartingToolHive } from '@/common/components/starting-toolhive'
 import { CustomPortBanner } from '@/common/components/custom-port-banner'
+import { NewsletterModal } from '@/common/components/newsletter-modal'
 
 async function setupSecretProvider(queryClient: QueryClient) {
   const createEncryptedProvider = async () =>
@@ -74,6 +75,7 @@ function RootComponent() {
         />
         <TanStackRouterDevtools />
       </Main>
+      {!hideNav && <NewsletterModal />}
     </>
   )
 }
