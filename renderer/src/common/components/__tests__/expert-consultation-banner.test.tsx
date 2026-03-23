@@ -400,6 +400,7 @@ describe('ExpertConsultationBanner', () => {
           { name: 'email', value: 'user@example.com' },
           { name: 'company', value: 'Acme Inc' },
           { name: 'message', value: 'Need help with auth' },
+          { name: 'instance_id', value: 'test-instance-id' },
         ],
         context: {
           pageName: 'ToolHive Desktop - Expert Consultation',

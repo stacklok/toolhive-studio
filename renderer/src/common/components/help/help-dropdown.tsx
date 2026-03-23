@@ -58,7 +58,7 @@ export function HelpDropdown({ className }: { className?: string }) {
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <a
-            href="https://www.iubenda.com/privacy-policy/29074746"
+            href="https://www.iubenda.com/privacy-policy/78678281"
             target="_blank"
             rel="noopener noreferrer"
             className="cursor-pointer"

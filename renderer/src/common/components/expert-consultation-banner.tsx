@@ -8,37 +8,27 @@ import log from 'electron-log/renderer'
 import { getApiV1BetaWorkloadsOptions } from '@common/api/generated/@tanstack/react-query.gen'
 import type { GithubComStacklokToolhivePkgCoreWorkload } from '@common/api/generated/types.gen'
 import { trackEvent } from '../lib/analytics'
+import { shouldShowAfterDismissal } from '../lib/hubspot'
+import { useHubSpotForm } from '../hooks/use-hubspot-form'
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from './ui/dialog'
-import { Checkbox } from './ui/checkbox'
 import { Input } from './ui/input'
 import { Textarea } from './ui/textarea'
 import { Button } from './ui/button'
+import {
+  HubSpotDialogContent,
+  SuccessDialogContent,
+  ConsentCheckbox,
+  PrivacyFooter,
+} from './hubspot-form-parts'
 
-const HUBSPOT_PORTAL_ID = '42544743'
 const HUBSPOT_FORM_ID = '5f1a7a2c-5069-44b7-9444-d952c55ce89c'
 const DISMISS_DAYS = 30
 const MIN_SERVERS_IN_GROUP = 3
-const PRIVACY_POLICY_URL = 'https://www.iubenda.com/privacy-policy/29074746'
-
-const CONSENT_PROCESSING_TEXT =
-  'In order to provide you the content requested, we need to store and process your personal data. If you consent to us storing your personal data for this purpose, please tick the checkbox below.'
-
-function shouldShowBanner(submitted: boolean, dismissedAt: string): boolean {
-  if (submitted) return false
-  if (!dismissedAt) return true
-
-  const dismissed = new Date(dismissedAt).getTime()
-  if (Number.isNaN(dismissed)) return true
-
-  const daysSinceDismissal = (Date.now() - dismissed) / (1000 * 60 * 60 * 24)
-  return daysSinceDismissal >= DISMISS_DAYS
-}
 
 function hasGroupWithEnoughServers(
   workloads: GithubComStacklokToolhivePkgCoreWorkload[]
@@ -52,57 +42,6 @@ function hasGroupWithEnoughServers(
     if (count > MIN_SERVERS_IN_GROUP) return true
   }
   return false
-}
-
-async function submitToHubSpot(
-  fields: {
-    firstname: string
-    lastname: string
-    email: string
-    company: string
-    message: string
-  },
-  consentToProcess: boolean
-): Promise<string | undefined> {
-  const response = await fetch(
-    `https://api.hsforms.com/submissions/v3/integration/submit/${HUBSPOT_PORTAL_ID}/${HUBSPOT_FORM_ID}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fields: [
-          { name: 'firstname', value: fields.firstname },
-          { name: 'lastname', value: fields.lastname },
-          { name: 'email', value: fields.email },
-          { name: 'company', value: fields.company },
-          { name: 'message', value: fields.message },
-        ],
-        context: {
-          pageName: 'ToolHive Desktop - Expert Consultation',
-        },
-        legalConsentOptions: {
-          consent: {
-            consentToProcess,
-            text: CONSENT_PROCESSING_TEXT,
-          },
-        },
-      }),
-    }
-  )
-
-  if (!response.ok) {
-    const text = await response.text()
-    throw new Error(`HubSpot submission failed (${response.status}): ${text}`)
-  }
-
-  try {
-    const data = await response.json()
-    if (typeof data?.inlineMessage !== 'string') return undefined
-    const doc = new DOMParser().parseFromString(data.inlineMessage, 'text/html')
-    return doc.body.textContent?.trim() || undefined
-  } catch {
-    return undefined
-  }
 }
 
 const formSchema = z.object({
@@ -130,13 +69,15 @@ function ExpertConsultationDialog({
   const [company, setCompany] = useState('')
   const [message, setMessage] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [consentToProcess, setConsentToProcess] = useState(false)
+
+  const { consentToProcess, setConsentToProcess, isReady, submit } =
+    useHubSpotForm(HUBSPOT_FORM_ID, 'ToolHive Desktop - Expert Consultation')
 
   useEffect(() => {
     trackEvent('Expert consultation modal shown')
   }, [])
 
-  const { mutate: submit, isPending: isSubmitting } = useMutation({
+  const { mutate: submitForm, isPending: isSubmitting } = useMutation({
     mutationFn: async (fields: {
       firstname: string
       lastname: string
@@ -144,7 +85,13 @@ function ExpertConsultationDialog({
       company: string
       message: string
     }) => {
-      const inlineMessage = await submitToHubSpot(fields, consentToProcess)
+      const inlineMessage = await submit([
+        { name: 'firstname', value: fields.firstname },
+        { name: 'lastname', value: fields.lastname },
+        { name: 'email', value: fields.email },
+        { name: 'company', value: fields.company },
+        { name: 'message', value: fields.message },
+      ])
       await window.electronAPI.setExpertConsultationSubmitted(true)
       return inlineMessage
     },
@@ -198,7 +145,7 @@ function ExpertConsultationDialog({
       return
     }
     setErrors({})
-    submit(result.data)
+    submitForm(result.data)
   }
 
   return (
@@ -214,25 +161,9 @@ function ExpertConsultationDialog({
         }
       }}
     >
-      <DialogContent
-        onInteractOutside={(e) => e.preventDefault()}
-        className="bg-brand-blue-light text-brand-blue-dark
-          dark:bg-brand-blue-light dark:text-brand-blue-dark
-          **:data-[slot=dialog-close]:text-brand-blue-dark
-          border-brand-blue-mid/20 p-8 **:data-[slot=dialog-close]:opacity-70
-          sm:max-w-md"
-      >
+      <HubSpotDialogContent>
         {successMessage ? (
-          <DialogHeader>
-            <DialogTitle
-              className="text-brand-blue-mid font-serif text-3xl font-light"
-            >
-              Success!
-            </DialogTitle>
-            <DialogDescription className="text-primary">
-              {successMessage}
-            </DialogDescription>
-          </DialogHeader>
+          <SuccessDialogContent message={successMessage} />
         ) : (
           <>
             <DialogHeader>
@@ -348,26 +279,16 @@ function ExpertConsultationDialog({
                 />
               </div>
 
-              <label className="flex cursor-pointer items-start gap-2.5">
-                <Checkbox
-                  checked={consentToProcess}
-                  onCheckedChange={(checked) =>
-                    setConsentToProcess(checked === true)
-                  }
-                  disabled={isSubmitting}
-                  required
-                  className="border-brand-blue-dark/40 mt-0.5 shrink-0"
-                />
-                <span className="text-xs leading-relaxed">
-                  I agree to allow Stacklok to store and process my personal
-                  data.{' '}
-                  <span className="text-brand-blue-dark/60">(required)</span>
-                </span>
-              </label>
+              <ConsentCheckbox
+                checked={consentToProcess}
+                onCheckedChange={setConsentToProcess}
+                disabled={isSubmitting}
+              />
 
               <Button
                 type="submit"
                 disabled={
+                  !isReady ||
                   isSubmitting ||
                   !firstname.trim() ||
                   !lastname.trim() ||
@@ -380,22 +301,13 @@ function ExpertConsultationDialog({
                 {isSubmitting ? <Loader2 className="animate-spin" /> : 'Submit'}
               </Button>
 
-              <p className="text-brand-blue-dark/50 text-xs leading-relaxed">
-                By submitting this form, you agree to our{' '}
-                <a
-                  href={PRIVACY_POLICY_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="underline underline-offset-2"
-                >
-                  Privacy Policy
-                </a>
-                .
-              </p>
+              <PrivacyFooter>
+                By submitting this form, you agree to our
+              </PrivacyFooter>
             </form>
           </>
         )}
-      </DialogContent>
+      </HubSpotDialogContent>
     </Dialog>
   )
 }
@@ -470,7 +382,11 @@ export function ExpertConsultationBanner() {
 
   const isEligible =
     isDataReady &&
-    shouldShowBanner(consultationState.submitted, consultationState.dismissedAt)
+    shouldShowAfterDismissal(
+      consultationState.submitted,
+      consultationState.dismissedAt,
+      DISMISS_DAYS
+    )
 
   const isNewsletterModalVisible =
     isDataReady && !newsletterState.subscribed && !newsletterState.dismissedAt
