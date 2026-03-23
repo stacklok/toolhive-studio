@@ -16,9 +16,8 @@ interface RegistryFormProps {
   registryAuthRequiredMessage?: string
 }
 
-function getSubmitLabel(isLoading: boolean, isAuthType: boolean): string {
-  if (isLoading) return 'Signing in...'
-  if (isAuthType) return 'Save & Sign in'
+function getSubmitLabel(isLoading: boolean, hasOAuthFields: boolean): string {
+  if (isLoading) return hasOAuthFields ? 'Signing in...' : 'Saving...'
   return 'Save'
 }
 
@@ -29,7 +28,13 @@ export function RegistryForm({
   hasRegistryError,
   registryAuthRequiredMessage,
 }: RegistryFormProps) {
-  const isAuthRegistryType = form.watch('type') === 'api_url'
+  const [type, clientId, issuerUrl] = form.watch([
+    'type',
+    'client_id',
+    'issuer_url',
+  ])
+  const hasOAuthFields =
+    type === 'api_url' && !!(clientId?.trim() && issuerUrl?.trim())
   return (
     <Form {...form}>
       <form
@@ -56,7 +61,7 @@ export function RegistryForm({
         </div>
         <Button variant="action" type="submit" disabled={isLoading}>
           {isLoading && <Loader2 className="size-4 animate-spin" />}
-          {getSubmitLabel(isLoading, isAuthRegistryType)}
+          {getSubmitLabel(isLoading, hasOAuthFields)}
         </Button>
       </form>
     </Form>

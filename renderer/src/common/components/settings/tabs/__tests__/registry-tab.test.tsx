@@ -354,9 +354,7 @@ describe('RegistryTab', () => {
     await userEvent.type(screen.getByLabelText(/Client ID/i), clientId)
     await userEvent.type(screen.getByLabelText(/Issuer URL/i), issuerUrl)
 
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Save & Sign in' })
-    )
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() => {
       const putRequests = rec.recordedRequests.filter(
@@ -404,9 +402,7 @@ describe('RegistryTab', () => {
       screen.getByLabelText(/Registry Server API URL/i),
       apiUrl
     )
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Save & Sign in' })
-    )
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() => {
       const putRequests = rec.recordedRequests.filter(
@@ -450,9 +446,7 @@ describe('RegistryTab', () => {
       expect(screen.getByText('Registry Server API URL')).toBeVisible()
     })
 
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Save & Sign in' })
-    )
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() => {
       expect(
@@ -491,9 +485,7 @@ describe('RegistryTab', () => {
     const apiUrlInput = screen.getByLabelText(/Registry Server API URL/i)
     await userEvent.type(apiUrlInput, 'not-a-valid-url')
 
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Save & Sign in' })
-    )
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() => {
       expect(
@@ -528,7 +520,7 @@ describe('RegistryTab', () => {
       )
     })
 
-    expect(screen.getByRole('button', { name: 'Save & Sign in' })).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Save' })).toBeVisible()
 
     // All fields empty → general OIDC box message shown, no field-level text
     await waitFor(() => {
@@ -625,9 +617,7 @@ describe('RegistryTab', () => {
       'https://issuer.example.com'
     )
 
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Save & Sign in' })
-    )
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() => {
       const logoutRequests = rec.recordedRequests.filter(
@@ -639,9 +629,7 @@ describe('RegistryTab', () => {
     })
 
     await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: 'Save & Sign in' })
-      ).not.toBeDisabled()
+      expect(screen.getByRole('button', { name: 'Save' })).not.toBeDisabled()
     })
 
     // Field-level error shown on client_id
@@ -730,9 +718,7 @@ describe('RegistryTab', () => {
       'https://wrong-issuer.example.com'
     )
 
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Save & Sign in' })
-    )
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() => {
       expect(
@@ -817,9 +803,7 @@ describe('RegistryTab', () => {
       'https://issuer.example.com'
     )
 
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Save & Sign in' })
-    )
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() => {
       expect(screen.getByText(REGISTRY_WRONG_AUTH_TOAST)).toBeVisible()
@@ -856,9 +840,7 @@ describe('RegistryTab', () => {
       'not-a-valid-url'
     )
 
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Save & Sign in' })
-    )
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() => {
       expect(screen.getByText('Issuer URL must be a valid URL')).toBeVisible()
@@ -911,9 +893,7 @@ describe('RegistryTab', () => {
     })
 
     // Submit → login fails → GET invalidated → returns 401
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Save & Sign in' })
-    )
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     // Field-level error on client_id, not general OIDC box message
     await waitFor(() => {
@@ -951,9 +931,7 @@ describe('RegistryTab', () => {
     const apiUrlInput = screen.getByLabelText(/Registry Server API URL/i)
     await userEvent.type(apiUrlInput, apiUrl)
 
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Save & Sign in' })
-    )
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Registry Server API URL/i)).toHaveValue(
