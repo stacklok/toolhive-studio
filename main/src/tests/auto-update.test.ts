@@ -10,7 +10,6 @@ import {
   getUpdateState,
   setAutoUpdateEnabled,
   manualUpdate,
-  getLatestAvailableVersion,
 } from '../auto-update'
 
 vi.mock('electron', () => {
@@ -977,89 +976,6 @@ describe('auto-update', () => {
         // Should have logged shutdown failure warning
         expect(vi.mocked(log.warn)).toHaveBeenCalledWith(
           '[update] Server shutdown failed, proceeding with update anyway'
-        )
-      })
-    })
-
-    describe('getLatestAvailableVersion', () => {
-      const originalFetch = global.fetch
-
-      afterEach(() => {
-        global.fetch = originalFetch
-      })
-
-      it('returns latest version when available', async () => {
-        const mockResponse =
-          process.platform === 'linux'
-            ? { tag: 'v1.5.0', prerelease: false }
-            : { currentRelease: '1.5.0' }
-
-        global.fetch = vi.fn().mockResolvedValue({
-          ok: true,
-          json: async () => mockResponse,
-        })
-
-        const result = await getLatestAvailableVersion()
-
-        expect(result).toEqual({
-          currentVersion: '1.0.0',
-          latestVersion: process.platform === 'linux' ? 'v1.5.0' : '1.5.0',
-          isNewVersionAvailable: true,
-        })
-      })
-
-      it('returns no update when latest version matches current', async () => {
-        const mockResponse =
-          process.platform === 'linux'
-            ? { tag: 'v1.0.0', prerelease: false }
-            : { currentRelease: '1.0.0' }
-
-        global.fetch = vi.fn().mockResolvedValue({
-          ok: true,
-          json: async () => mockResponse,
-        })
-
-        const result = await getLatestAvailableVersion()
-
-        expect(result).toEqual({
-          currentVersion: '1.0.0',
-          latestVersion: process.platform === 'linux' ? 'v1.0.0' : '1.0.0',
-          isNewVersionAvailable: false,
-        })
-      })
-
-      it('handles fetch failure gracefully', async () => {
-        global.fetch = vi.fn().mockRejectedValue(new Error('Network error'))
-
-        const result = await getLatestAvailableVersion()
-
-        expect(result).toEqual({
-          currentVersion: '1.0.0',
-          latestVersion: undefined,
-          isNewVersionAvailable: false,
-        })
-        expect(vi.mocked(log).error).toHaveBeenCalledWith(
-          '[update] Failed to check for ToolHive update: ',
-          expect.any(Error)
-        )
-      })
-
-      it('handles non-ok response', async () => {
-        global.fetch = vi.fn().mockResolvedValue({
-          ok: false,
-          statusText: 'Not Found',
-        })
-
-        const result = await getLatestAvailableVersion()
-
-        expect(result).toEqual({
-          currentVersion: '1.0.0',
-          latestVersion: undefined,
-          isNewVersionAvailable: false,
-        })
-        expect(vi.mocked(log).error).toHaveBeenCalledWith(
-          '[update] Failed to check for ToolHive update: ',
-          'Not Found'
         )
       })
     })
