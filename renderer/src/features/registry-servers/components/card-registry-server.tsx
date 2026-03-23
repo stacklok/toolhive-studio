@@ -78,7 +78,7 @@ export function CardRegistryServer({
 
   return (
     <CardRegistryBase
-      title={server.name!}
+      title={server?.title ?? server.name!}
       description={server.description}
       badge={badge}
       footer={footer}
