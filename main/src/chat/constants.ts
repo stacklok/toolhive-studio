@@ -18,10 +18,19 @@ export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
     id: 'openai',
     name: 'OpenAI',
     models: [
-      // GPT-5.2 (newest)
+      // GPT-5.4 (newest)
+      'gpt-5.4',
+      'gpt-5.4-pro',
+
+      // GPT-5.3
+      'gpt-5.3-chat-latest',
+      'gpt-5.3-codex',
+
+      // GPT-5.2
       'gpt-5.2',
       'gpt-5.2-chat-latest',
       'gpt-5.2-pro',
+      'gpt-5.2-codex',
 
       // GPT-5.1
       'gpt-5.1',
@@ -46,16 +55,12 @@ export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
       // GPT-4o
       'gpt-4o',
       'gpt-4o-mini',
-      'chatgpt-4o-latest',
-
-      // GPT-4
-      'gpt-4',
-      'gpt-4-turbo',
 
       // GPT-3.5 (legacy)
       'gpt-3.5-turbo',
 
       // O-series reasoning models
+      'o4-mini',
       'o3',
       'o3-mini',
       'o1',
@@ -65,36 +70,23 @@ export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
     id: 'anthropic',
     name: 'Anthropic',
     models: [
-      // Claude 4.6 models (newest)
+      // Claude 4.6 (newest)
       'claude-opus-4-6',
+      'claude-sonnet-4-6',
 
-      // Claude 4.5 models
+      // Claude 4.5
       'claude-opus-4-5',
-      'claude-opus-4-5-20251101',
       'claude-sonnet-4-5',
-      'claude-sonnet-4-5-20250929',
       'claude-haiku-4-5',
-      'claude-haiku-4-5-20251001',
 
-      // Claude 4.1 models
+      // Claude 4.1
       'claude-opus-4-1',
-      'claude-opus-4-1-20250805',
 
-      // Claude 4.0 models
+      // Claude 4.0
       'claude-opus-4-0',
-      'claude-opus-4-20250514',
       'claude-sonnet-4-0',
-      'claude-sonnet-4-20250514',
 
-      // Claude 3.7 models
-      'claude-3-7-sonnet-latest',
-      'claude-3-7-sonnet-20250219',
-
-      // Claude 3.5 models
-      'claude-3-5-haiku-latest',
-      'claude-3-5-haiku-20241022',
-
-      // Claude 3 models (legacy)
+      // Claude 3 (legacy)
       'claude-3-haiku-20240307',
     ],
   },
@@ -102,15 +94,26 @@ export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
     id: 'google',
     name: 'Google',
     models: [
+      // Gemini 3.1 (newest)
+      'gemini-3.1-pro-preview',
+      'gemini-3.1-flash-image-preview',
+      'gemini-3.1-flash-lite-preview',
+
+      // Gemini 3
+      'gemini-3-pro-preview',
+      'gemini-3-pro-image-preview',
+      'gemini-3-flash-preview',
+
+      // Gemini 2.5
       'gemini-2.5-pro',
       'gemini-2.5-flash',
+      'gemini-2.5-flash-image',
       'gemini-2.5-flash-lite',
+      'gemini-2.5-computer-use-preview-10-2025',
+
+      // Gemini 2.0
       'gemini-2.0-flash',
       'gemini-2.0-flash-lite',
-      'gemini-2.5-flash-thinking',
-      'gemini-2.5-flash-lite-thinking',
-      'gemini-imagen-4',
-      'gemini-imagen-4-ultra',
     ],
   },
   {
@@ -133,26 +136,10 @@ export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
       // Grok 3
       'grok-3',
       'grok-3-latest',
-      'grok-3-fast',
-      'grok-3-fast-latest',
 
       // Grok 3 Mini
       'grok-3-mini',
       'grok-3-mini-latest',
-      'grok-3-mini-fast',
-      'grok-3-mini-fast-latest',
-
-      // Grok 2 Vision
-      'grok-2-vision',
-      'grok-2-vision-latest',
-
-      // Grok 2 Image
-      'grok-2-image',
-      'grok-2-image-latest',
-
-      // Grok 2
-      'grok-2',
-      'grok-2-latest',
     ],
   },
   {
@@ -173,8 +160,12 @@ export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
       // Fallback models for when API is unavailable:
 
       // OpenAI models via OpenRouter
+      'openai/gpt-5.4',
+      'openai/gpt-5.4-pro',
+      'openai/gpt-5.3-codex',
       'openai/gpt-5.2',
       'openai/gpt-5.2-pro',
+      'openai/gpt-5.2-codex',
       'openai/gpt-5.1',
       'openai/gpt-5.1-codex',
       'openai/gpt-5',
@@ -184,29 +175,31 @@ export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
       'openai/gpt-4.1-mini',
       'openai/gpt-4o',
       'openai/gpt-4o-mini',
+      'openai/o4-mini',
       'openai/o3',
       'openai/o3-mini',
       'openai/o1',
 
       // Anthropic models via OpenRouter
       'anthropic/claude-opus-4-6',
+      'anthropic/claude-sonnet-4-6',
       'anthropic/claude-opus-4-5',
       'anthropic/claude-sonnet-4-5',
       'anthropic/claude-haiku-4-5',
       'anthropic/claude-opus-4-1',
+      'anthropic/claude-opus-4-0',
       'anthropic/claude-sonnet-4-0',
-      'anthropic/claude-3-7-sonnet-latest',
-      'anthropic/claude-3-5-haiku-20241022',
       'anthropic/claude-3-haiku-20240307',
 
       // Google models via OpenRouter
+      'google/gemini-3.1-pro-preview',
+      'google/gemini-3-pro-preview',
+      'google/gemini-3-flash-preview',
       'google/gemini-2.5-pro',
       'google/gemini-2.5-flash',
       'google/gemini-2.5-flash-lite',
       'google/gemini-2.0-flash',
       'google/gemini-2.0-flash-lite',
-      'google/gemini-2.5-flash-thinking',
-      'google/gemini-2.5-flash-lite-thinking',
 
       // xAI models via OpenRouter
       'xai/grok-4-1-fast-reasoning',
@@ -214,11 +207,7 @@ export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
       'xai/grok-4-fast-reasoning',
       'xai/grok-code-fast-1',
       'xai/grok-3',
-      'xai/grok-3-fast',
       'xai/grok-3-mini',
-      'xai/grok-3-mini-fast',
-      'xai/grok-2-vision',
-      'xai/grok-2',
 
       // Meta (Llama) models
       'meta-llama/llama-3.3-70b-instruct',
