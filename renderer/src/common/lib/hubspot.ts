@@ -1,7 +1,7 @@
 export const HUBSPOT_PORTAL_ID = '42544743'
 
 export const PRIVACY_POLICY_URL =
-  'https://www.iubenda.com/privacy-policy/29074746'
+  'https://www.iubenda.com/privacy-policy/78678281'
 
 export const CONSENT_PROCESSING_TEXT =
   'In order to provide you the content requested, we need to store and process your personal data. If you consent to us storing your personal data for this purpose, please tick the checkbox below.'
