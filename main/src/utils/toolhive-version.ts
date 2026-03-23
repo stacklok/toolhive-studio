@@ -17,24 +17,31 @@ interface LatestManifest {
 const GITHUB_PAGES_MANIFEST =
   'https://stacklok.github.io/toolhive-studio/latest/index.json'
 
-function isCurrentVersionPrerelease(currentVersion: string): boolean {
-  return (
+export function getChannel(currentVersion: string): string {
+  const isPrerelease =
     currentVersion.includes('-beta') ||
     currentVersion.includes('-alpha') ||
     currentVersion.includes('-rc')
-  )
+  return isPrerelease ? 'pre-release' : 'stable'
 }
 
-function getChannel(currentVersion: string): string {
-  return isCurrentVersionPrerelease(currentVersion) ? 'pre-release' : 'stable'
-}
-
-function getManifestUrl(currentVersion: string): string {
-  if (process.platform === 'linux') {
-    return GITHUB_PAGES_MANIFEST
-  }
+export function getManifestUrl(currentVersion: string): string {
   const channel = getChannel(currentVersion)
-  return `https://releases.toolhive.dev/${channel}/latest/${process.platform}/${process.arch}/RELEASES.json`
+  switch (process.platform) {
+    case 'darwin':
+      return `https://releases.toolhive.dev/${channel}/latest/darwin/${process.arch}/RELEASES.json`
+    case 'win32':
+      return `https://releases.toolhive.dev/${channel}/latest/win32/${process.arch}/RELEASES`
+    default:
+      return GITHUB_PAGES_MANIFEST
+  }
+}
+
+export function parseVersionFromSquirrelReleases(
+  text: string
+): string | undefined {
+  const match = text.match(/ToolHive-(.+?)-full\.nupkg/)
+  return match?.[1]
 }
 
 function parseLatestVersion(
@@ -46,24 +53,34 @@ function parseLatestVersion(
   return data.tag
 }
 
+async function fetchLatestVersionFromUrl(
+  url: string
+): Promise<string | undefined> {
+  const response = await fetch(url)
+  if (!response.ok) return undefined
+
+  if (url.endsWith('/RELEASES')) {
+    const text = await response.text()
+    return parseVersionFromSquirrelReleases(text)
+  }
+
+  const data = await response.json()
+  return parseLatestVersion(data)
+}
+
 export async function fetchLatestRelease(span: Sentry.Span) {
   const currentVersion = getAppVersion()
   const url = getManifestUrl(currentVersion)
 
   log.info('[update] checking for latest ToolHive release...')
 
-  const response = await fetch(url, {
-    headers: { 'Content-Type': 'application/json' },
-  })
+  const latestTag = await fetchLatestVersionFromUrl(url)
 
-  if (!response.ok) {
-    log.error(
-      '[update] Failed to check for ToolHive update: ',
-      response.statusText
-    )
+  if (!latestTag) {
+    log.error('[update] Failed to check for ToolHive update from: ', url)
     span.setStatus({
       code: 2,
-      message: `HTTP ${response.status}: ${response.statusText}`,
+      message: `Failed to fetch latest version from ${url}`,
     })
     return {
       currentVersion,
@@ -71,9 +88,6 @@ export async function fetchLatestRelease(span: Sentry.Span) {
       isNewVersionAvailable: false,
     }
   }
-
-  const data = await response.json()
-  const latestTag = parseLatestVersion(data)
 
   const isNewVersion = isCurrentVersionOlder(
     normalizeVersion(currentVersion),
