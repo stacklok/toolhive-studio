@@ -70,10 +70,8 @@ function ExpertConsultationDialog({
   const [message, setMessage] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const { consentToProcess, setConsentToProcess, submit } = useHubSpotForm(
-    HUBSPOT_FORM_ID,
-    'ToolHive Desktop - Expert Consultation'
-  )
+  const { consentToProcess, setConsentToProcess, isReady, submit } =
+    useHubSpotForm(HUBSPOT_FORM_ID, 'ToolHive Desktop - Expert Consultation')
 
   useEffect(() => {
     trackEvent('Expert consultation modal shown')
@@ -290,6 +288,7 @@ function ExpertConsultationDialog({
               <Button
                 type="submit"
                 disabled={
+                  !isReady ||
                   isSubmitting ||
                   !firstname.trim() ||
                   !lastname.trim() ||

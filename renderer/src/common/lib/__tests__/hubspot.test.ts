@@ -46,6 +46,13 @@ describe('shouldShowAfterDismissal', () => {
     expect(shouldShowAfterDismissal(false, exactlyThirtyDaysAgo, 30)).toBe(true)
   })
 
+  it('returns true when dismissedAt is in the future (clock skew)', () => {
+    const tomorrow = new Date(
+      Date.now() + 1 * 24 * 60 * 60 * 1000
+    ).toISOString()
+    expect(shouldShowAfterDismissal(false, tomorrow, 30)).toBe(true)
+  })
+
   it('respects different dismissDays values', () => {
     const tenDaysAgo = new Date(
       Date.now() - 10 * 24 * 60 * 60 * 1000

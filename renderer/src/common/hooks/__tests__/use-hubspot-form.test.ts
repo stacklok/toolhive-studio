@@ -61,14 +61,39 @@ describe('useHubSpotForm', () => {
     expect(result.current.consentToProcess).toBe(true)
   })
 
-  it('fetches instanceId from electronAPI', async () => {
+  it('fetches instanceId from electronAPI and becomes ready', async () => {
+    const { result } = renderHook(
+      () => useHubSpotForm(TEST_FORM_ID, TEST_PAGE_NAME),
+      { wrapper: createWrapper() }
+    )
+
+    expect(result.current.isReady).toBe(false)
+    await waitFor(() => {
+      expect(result.current.isReady).toBe(true)
+    })
+  })
+
+  it('isReady is false while instanceId is loading', () => {
+    window.electronAPI.getInstanceId = vi
+      .fn()
+      .mockReturnValue(new Promise(() => {}))
+
+    const { result } = renderHook(
+      () => useHubSpotForm(TEST_FORM_ID, TEST_PAGE_NAME),
+      { wrapper: createWrapper() }
+    )
+
+    expect(result.current.isReady).toBe(false)
+  })
+
+  it('isReady becomes true once instanceId is fetched', async () => {
     const { result } = renderHook(
       () => useHubSpotForm(TEST_FORM_ID, TEST_PAGE_NAME),
       { wrapper: createWrapper() }
     )
 
     await waitFor(() => {
-      expect(result.current.instanceId).toBe('test-instance-id')
+      expect(result.current.isReady).toBe(true)
     })
   })
 
@@ -81,7 +106,7 @@ describe('useHubSpotForm', () => {
     )
 
     await waitFor(() => {
-      expect(result.current.instanceId).toBe('test-instance-id')
+      expect(result.current.isReady).toBe(true)
     })
 
     act(() => {

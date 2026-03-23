@@ -41,10 +41,8 @@ function NewsletterDialog({
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
 
-  const { consentToProcess, setConsentToProcess, submit } = useHubSpotForm(
-    HUBSPOT_FORM_ID,
-    'ToolHive Desktop - Newsletter Signup'
-  )
+  const { consentToProcess, setConsentToProcess, isReady, submit } =
+    useHubSpotForm(HUBSPOT_FORM_ID, 'ToolHive Desktop - Newsletter Signup')
 
   useEffect(() => {
     trackEvent('Newsletter modal shown')
@@ -153,7 +151,10 @@ function NewsletterDialog({
                   <Button
                     type="submit"
                     disabled={
-                      isSubmitting || !email.trim() || !consentToProcess
+                      !isReady ||
+                      isSubmitting ||
+                      !email.trim() ||
+                      !consentToProcess
                     }
                     className="bg-brand-blue-dark text-brand-blue-light
                       hover:bg-brand-blue-dark/90 rounded-full"

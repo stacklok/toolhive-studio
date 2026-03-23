@@ -5,18 +5,20 @@ import { submitToHubSpot } from '../lib/hubspot'
 export function useHubSpotForm(formId: string, pageName: string) {
   const [consentToProcess, setConsentToProcess] = useState(false)
 
-  const { data: instanceId = '' } = useQuery({
+  const { data: instanceId, isFetched } = useQuery({
     queryKey: ['instance-id'],
     queryFn: () => window.electronAPI.getInstanceId(),
   })
 
+  const isReady = isFetched && !!instanceId
+
   const submit = (fields: { name: string; value: string }[]) =>
     submitToHubSpot({
       formId,
-      fields: [...fields, { name: 'instance_id', value: instanceId }],
+      fields: [...fields, { name: 'instance_id', value: instanceId! }],
       pageName,
       consentToProcess,
     })
 
-  return { consentToProcess, setConsentToProcess, instanceId, submit }
+  return { consentToProcess, setConsentToProcess, isReady, submit }
 }

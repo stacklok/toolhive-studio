@@ -4,7 +4,7 @@ export const PRIVACY_POLICY_URL =
   'https://www.iubenda.com/privacy-policy/78678281'
 
 export const CONSENT_PROCESSING_TEXT =
-  'In order to provide you the content requested, we need to store and process your personal data. If you consent to us storing your personal data for this purpose, please tick the checkbox below.'
+  'I agree to allow Stacklok to store and process my personal data.'
 
 export function shouldShowAfterDismissal(
   flag: boolean,
@@ -16,6 +16,7 @@ export function shouldShowAfterDismissal(
 
   const dismissed = new Date(dismissedAt).getTime()
   if (Number.isNaN(dismissed)) return true
+  if (dismissed > Date.now()) return true
 
   const daysSinceDismissal = (Date.now() - dismissed) / (1000 * 60 * 60 * 24)
   return daysSinceDismissal >= dismissDays
