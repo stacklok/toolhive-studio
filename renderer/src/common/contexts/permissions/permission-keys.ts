@@ -10,7 +10,9 @@
  *   PLAYGROUND: 'playground',
  * } as const
  */
-export const PERMISSION_KEYS = {} as const
+export const PERMISSION_KEYS = {
+  AUTO_UPDATE: 'auto-update',
+} as const
 
 export type PermissionKey =
   (typeof PERMISSION_KEYS)[keyof typeof PERMISSION_KEYS]
