@@ -15,6 +15,11 @@ function createElectronStub(): Partial<ElectronAPI> {
       .mockResolvedValue({ subscribed: false, dismissedAt: '' }),
     setNewsletterSubscribed: vi.fn().mockResolvedValue(undefined),
     setNewsletterDismissedAt: vi.fn().mockResolvedValue(undefined),
+    getExpertConsultationState: vi
+      .fn()
+      .mockResolvedValue({ submitted: false, dismissedAt: '' }),
+    setExpertConsultationSubmitted: vi.fn().mockResolvedValue(undefined),
+    setExpertConsultationDismissedAt: vi.fn().mockResolvedValue(undefined),
     shutdownStore: {
       getLastShutdownServers: async () => [],
       clearShutdownHistory: async () => ({ success: true }),
