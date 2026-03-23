@@ -18,8 +18,8 @@ export const TEST_SECRET_NAME = 'E2E_TEST_SECRET'
 /** Default timeout for most operations (10 seconds) */
 export const DEFAULT_TIMEOUT = 10_000
 
-/** Long timeout for operations that may take a while, like server installation (60 seconds) */
-export const LONG_TIMEOUT = 60_000
+/** Long timeout for operations that may take a while, like LLM inference on CI (180 seconds) */
+export const LONG_TIMEOUT = 180_000
 
 function getExecutablePath(): string {
   const platform = process.platform

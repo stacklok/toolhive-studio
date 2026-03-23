@@ -5,6 +5,7 @@ on:
 env:
   OLLAMA_BASE_URL: http://localhost:11434
   OLLAMA_MODEL: qwen2.5:1.5b
+  OLLAMA_VERSION: 0.18.2
 
 jobs:
   test:
@@ -29,7 +30,7 @@ jobs:
         uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
         with:
           path: /home/runner/.ollama/models
-          key: ollama-${{ env.OLLAMA_MODEL }}-v2
+          key: ollama-${{ env.OLLAMA_MODEL }}-${{ env.OLLAMA_VERSION }}
 
       - name: Start Ollama via Docker
         run: |
@@ -38,7 +39,7 @@ jobs:
             -v /home/runner/.ollama/models:/root/.ollama/models \
             -p 11434:11434 \
             --name ollama \
-            ollama/ollama:0.15.4
+            ollama/ollama:${{ env.OLLAMA_VERSION }}
           # Wait for Ollama to be ready
           for i in {1..30}; do
             curl -sf http://localhost:11434/api/tags && break
