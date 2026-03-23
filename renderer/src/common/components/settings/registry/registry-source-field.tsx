@@ -11,6 +11,7 @@ import { Input } from '../../ui/input'
 import type { RegistryFormData } from './schema'
 import { FilePickerInput } from '../../ui/file-picker-input'
 import { Button } from '../../ui/button'
+import { REGISTRY_FORM_TYPE } from './utils'
 import type { RegistryInputType } from './utils'
 import { resolveRegistryListLoadErrorMessage } from './registry-list-error'
 
@@ -111,7 +112,7 @@ export function RegistrySourceField({
 }) {
   const registryType = form.watch('type')
 
-  if (registryType === 'default') {
+  if (registryType === REGISTRY_FORM_TYPE.DEFAULT) {
     return null
   }
 

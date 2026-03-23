@@ -1,4 +1,4 @@
-import type { UseFormReturn } from 'react-hook-form'
+import type { ControllerRenderProps, UseFormReturn } from 'react-hook-form'
 import {
   FormField,
   FormItem,
@@ -10,6 +10,57 @@ import {
 import { Input } from '../../ui/input'
 import type { RegistryFormData } from './schema'
 import { resolveRegistryListLoadErrorMessage } from './registry-list-error'
+import { REGISTRY_FORM_TYPE } from './utils'
+
+const OAUTH_FIELDS = [
+  {
+    name: 'client_id' as const,
+    label: 'Client ID',
+    description: 'OAuth client ID for the registry API',
+    placeholder: 'my-oauth-client',
+    className: 'my-4 w-full max-w-xl',
+  },
+  {
+    name: 'issuer_url' as const,
+    label: 'Issuer URL',
+    description: 'OIDC issuer URL for registry authentication',
+    placeholder: 'https://accounts.example.com',
+    className: 'w-full max-w-xl',
+  },
+]
+
+function OAuthField({
+  field,
+  label,
+  description,
+  placeholder,
+  className,
+  isPending,
+}: {
+  field: ControllerRenderProps<RegistryFormData, 'client_id' | 'issuer_url'>
+  label: string
+  description: string
+  placeholder: string
+  className: string
+  isPending: boolean
+}) {
+  return (
+    <FormItem className={className}>
+      <FormLabel>{label}</FormLabel>
+      <FormDescription>{description}</FormDescription>
+      <FormControl>
+        <Input
+          placeholder={placeholder}
+          {...field}
+          value={field.value ?? ''}
+          disabled={isPending}
+          autoComplete="off"
+        />
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )
+}
 
 export function RegistryApiOAuthFields({
   isPending,
@@ -24,7 +75,7 @@ export function RegistryApiOAuthFields({
 }) {
   const registryType = form.watch('type')
 
-  if (registryType !== 'api_url') {
+  if (registryType !== REGISTRY_FORM_TYPE.API_URL) {
     return null
   }
 
@@ -42,50 +93,16 @@ export function RegistryApiOAuthFields({
           )}
         </p>
       )}
-      <FormField
-        control={form.control}
-        name="client_id"
-        render={({ field }) => (
-          <FormItem className="my-4 w-full max-w-xl">
-            <FormLabel>Client ID</FormLabel>
-            <FormDescription>
-              OAuth client ID for the registry API
-            </FormDescription>
-            <FormControl>
-              <Input
-                placeholder="my-oauth-client"
-                {...field}
-                value={field.value ?? ''}
-                disabled={isPending}
-                autoComplete="off"
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="issuer_url"
-        render={({ field }) => (
-          <FormItem className="w-full max-w-xl">
-            <FormLabel>Issuer URL</FormLabel>
-            <FormDescription>
-              OIDC issuer URL for registry authentication
-            </FormDescription>
-            <FormControl>
-              <Input
-                placeholder="https://accounts.example.com"
-                {...field}
-                value={field.value ?? ''}
-                disabled={isPending}
-                autoComplete="off"
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {OAUTH_FIELDS.map(({ name, ...fieldProps }) => (
+        <FormField
+          key={name}
+          control={form.control}
+          name={name}
+          render={({ field }) => (
+            <OAuthField field={field} isPending={isPending} {...fieldProps} />
+          )}
+        />
+      ))}
     </div>
   )
 }

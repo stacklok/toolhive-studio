@@ -1,4 +1,5 @@
 import type { RegistryFormData } from './schema'
+import { REGISTRY_FORM_TYPE } from './utils'
 
 export const REGISTRY_WRONG_AUTH_TOAST =
   'Authentication failed. Check your Client ID'
@@ -46,7 +47,10 @@ export function resolveRegistryListLoadErrorMessage(
   registryType: RegistryFormData['type'],
   registryAuthRequiredMessage?: string
 ): string {
-  if (registryType === 'api_url' && registryAuthRequiredMessage) {
+  if (
+    registryType === REGISTRY_FORM_TYPE.API_URL &&
+    registryAuthRequiredMessage
+  ) {
     return registryAuthRequiredMessage
   }
   return REGISTRY_LIST_LOAD_FALLBACK_MESSAGE
