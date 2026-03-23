@@ -980,9 +980,6 @@ describe('auto-update', () => {
       })
     })
 
-    // Version checking tests (getLatestAvailableVersion / fetchLatestRelease)
-    // are in main/src/utils/__tests__/toolhive-version.test.ts
-
     describe('setAutoUpdateEnabled', () => {
       it('disables auto-update and clears state', () => {
         // First enable it
