@@ -23,7 +23,7 @@ export const REGISTRY_AUTH_REQUIRED_UI_MESSAGE =
   'There is an issue with your registry configuration. Please check your authentication configuration (Server URL, Client ID and Issuer), then try again.'
 
 /** Fallback when GET /api/v1beta/registry fails for any other reason (or non-api_url types). */
-export const REGISTRY_LIST_LOAD_FALLBACK_MESSAGE =
+const REGISTRY_LIST_LOAD_FALLBACK_MESSAGE =
   'Failed to load registry configuration. The registry source may be misconfigured or unavailable.'
 
 function getErrorCode(error: unknown): string | undefined {

@@ -26,12 +26,6 @@ import {
   REGISTRY_AUTH_FIELDS_REQUIRED_TOAST,
 } from './registry-list-error'
 
-export {
-  REGISTRY_WRONG_AUTH_TOAST,
-  REGISTRY_WRONG_ISSUER_TOAST,
-  REGISTRY_AUTH_FIELDS_REQUIRED_TOAST,
-}
-
 const REGISTRY_DEFAULT_PATH = { name: 'default' } as const
 
 function buildRegistryAuth(data: RegistryFormData) {
