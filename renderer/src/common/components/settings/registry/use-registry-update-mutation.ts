@@ -28,6 +28,12 @@ import {
 
 const REGISTRY_DEFAULT_PATH = { name: 'default' } as const
 
+const KNOWN_TOAST_MESSAGES: string[] = [
+  REGISTRY_WRONG_ISSUER_TOAST,
+  REGISTRY_WRONG_AUTH_TOAST,
+  REGISTRY_AUTH_FIELDS_REQUIRED_TOAST,
+]
+
 function buildRegistryAuth(data: RegistryFormData) {
   const clientId = data.client_id?.trim()
   const issuer = data.issuer_url?.trim()
@@ -135,15 +141,8 @@ export function useRegistryUpdateMutation() {
     },
     successMsg: 'Registry updated successfully',
     errorMsg: (e) => {
-      if (e instanceof Error && e.message === REGISTRY_WRONG_ISSUER_TOAST)
-        return REGISTRY_WRONG_ISSUER_TOAST
-      if (e instanceof Error && e.message === REGISTRY_WRONG_AUTH_TOAST)
-        return REGISTRY_WRONG_AUTH_TOAST
-      if (
-        e instanceof Error &&
-        e.message === REGISTRY_AUTH_FIELDS_REQUIRED_TOAST
-      )
-        return REGISTRY_AUTH_FIELDS_REQUIRED_TOAST
+      if (e instanceof Error && KNOWN_TOAST_MESSAGES.includes(e.message))
+        return e.message
       return 'Failed to update registry'
     },
     loadingMsg: (data) =>

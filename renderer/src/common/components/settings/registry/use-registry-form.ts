@@ -141,6 +141,5 @@ export function useRegistryForm() {
     isLoading,
     hasRegistryError,
     registryAuthRequiredMessage,
-    registryUnavailableMessage,
   }
 }

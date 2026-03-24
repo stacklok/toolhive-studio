@@ -35,21 +35,15 @@ export function RegistryTypeField({
             onValueChange={(value) => {
               field.onChange(value)
 
-              if (value === type) {
-                form.setValue('source', source ?? '')
-                if (value === 'api_url') {
-                  form.setValue('client_id', client_id ?? '')
-                  form.setValue('issuer_url', issuer_url ?? '')
-                }
+              const isOriginalType = value === type
+              form.setValue('source', isOriginalType ? (source ?? '') : '')
+
+              if (value === 'api_url') {
+                form.setValue('client_id', client_id ?? '')
+                form.setValue('issuer_url', issuer_url ?? '')
               } else {
-                form.setValue('source', '')
-                if (value === 'api_url') {
-                  form.setValue('client_id', client_id ?? '')
-                  form.setValue('issuer_url', issuer_url ?? '')
-                } else {
-                  form.setValue('client_id', '')
-                  form.setValue('issuer_url', '')
-                }
+                form.setValue('client_id', '')
+                form.setValue('issuer_url', '')
               }
             }}
             value={field.value}

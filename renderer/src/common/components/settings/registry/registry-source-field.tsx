@@ -124,6 +124,12 @@ export function RegistrySourceField({
       control={form.control}
       name="source"
       render={({ field, fieldState }) => {
+        const isAuthErrorHandledByOAuthBox =
+          registryType === 'api_url' && !!registryAuthRequiredMessage
+        const showSourceError =
+          fieldState.invalid ||
+          (hasRegistryError && !isAuthErrorHandledByOAuthBox)
+
         return (
           <FormItem className="w-full">
             <FormLabel required>{config.label}</FormLabel>
@@ -133,13 +139,7 @@ export function RegistrySourceField({
               placeholder={config.placeholder}
               field={field}
               disabled={isPending}
-              hasRegistryError={
-                fieldState.invalid ||
-                (hasRegistryError &&
-                  !(
-                    registryType === 'api_url' && !!registryAuthRequiredMessage
-                  ))
-              }
+              hasRegistryError={showSourceError}
             />
             {hasRegistryError && registryType !== 'api_url' ? (
               <p className="text-destructive text-sm">
