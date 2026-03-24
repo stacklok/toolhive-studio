@@ -99,13 +99,13 @@ async function authenticateWithRegistry(
 }
 
 function buildRegistryBody(
-  data: RegistryFormData
+  data: RegistryFormData,
+  auth: ReturnType<typeof buildRegistryAuth>
 ): PkgApiV1UpdateRegistryRequest {
   const { type } = data
   if (type === REGISTRY_FORM_TYPE.DEFAULT) return {}
   const source = data.source?.trim()
   if (type !== REGISTRY_FORM_TYPE.API_URL) return { [type]: source }
-  const auth = buildRegistryAuth(data)
   return { api_url: source, allow_private_ip: true, ...(auth ? { auth } : {}) }
 }
 
@@ -115,16 +115,16 @@ export function useRegistryUpdateMutation() {
   return useToastMutation({
     mutationFn: async (data: RegistryFormData) => {
       const { type } = data
-      const body = buildRegistryBody(data)
       const auth =
         type === REGISTRY_FORM_TYPE.API_URL
           ? buildRegistryAuth(data)
           : undefined
+      const body = buildRegistryBody(data, auth)
 
       await delay(500)
       await putRegistry(body, type)
 
-      if (type === REGISTRY_FORM_TYPE.API_URL && auth) {
+      if (auth) {
         await authenticateWithRegistry(queryClient)
       }
     },
