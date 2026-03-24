@@ -323,6 +323,11 @@ export type GithubComStacklokToolhivePkgAuthUpstreamswapConfig = {
    * HeaderStrategy determines how to inject the token: "replace" (default) or "custom".
    */
   header_strategy?: string
+  /**
+   * ProviderName identifies which upstream provider's tokens to retrieve for injection.
+   * This is required and must match a configured upstream provider name.
+   */
+  provider_name?: string
 }
 
 /**
@@ -443,7 +448,7 @@ export type GithubComStacklokToolhivePkgAuthserverRunConfig = {
   /**
    * Upstreams configures connections to upstream Identity Providers.
    * At least one upstream is required - the server delegates authentication to these providers.
-   * Currently only a single upstream is supported.
+   * Multiple upstreams are supported for sequential authorization chains.
    */
   upstreams?: Array<GithubComStacklokToolhivePkgAuthserverUpstreamRunConfig>
 }
@@ -749,6 +754,17 @@ export type GithubComStacklokToolhivePkgGroupsGroup = {
 }
 
 /**
+ * AuthConfig contains the non-secret OAuth configuration when auth is configured.
+ * Nil when auth_status is "none".
+ */
+export type GithubComStacklokToolhivePkgRegistryOAuthPublicConfig = {
+  audience?: string
+  client_id?: string
+  issuer?: string
+  scopes?: Array<string>
+}
+
+/**
  * HeaderForward contains configuration for injecting headers into requests to remote servers.
  */
 export type GithubComStacklokToolhivePkgRunnerHeaderForwardConfig = {
@@ -881,6 +897,7 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
    */
   remote_url?: string
   runtime_config?: GithubComStacklokToolhivePkgContainerTemplatesRuntimeConfig
+  scaling_config?: GithubComStacklokToolhivePkgRunnerScalingConfig
   /**
    * SchemaVersion is the version of the RunConfig schema
    */
@@ -931,6 +948,25 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
    * Format: "host-path:container-path[:ro]"
    */
   volumes?: Array<string>
+}
+
+/**
+ * ScalingConfig contains configuration for horizontal scaling of the proxy runner.
+ * Only applicable when running in Kubernetes with the ToolHive operator.
+ * When nil, no scaling configuration is applied (single-replica default behavior).
+ */
+export type GithubComStacklokToolhivePkgRunnerScalingConfig = {
+  /**
+   * BackendReplicas is the desired StatefulSet replica count for the proxy runner backend.
+   * When nil, replicas are unmanaged (preserving HPA or manual kubectl control).
+   * When set (including 0), the value is an explicit replica count.
+   */
+  backend_replicas?: number
+  /**
+   * SessionCacheSize is the maximum number of sessions held in the local LRU cache.
+   * When nil, consuming code applies a sensible default (e.g. 1000).
+   */
+  session_cache_size?: number
 }
 
 export type GithubComStacklokToolhivePkgRunnerToolOverride = {
@@ -1256,6 +1292,28 @@ export type PermissionsProfile = {
 export type PkgApiV1RegistryType = 'file' | 'url' | 'api' | 'default'
 
 /**
+ * OAuth authentication configuration (optional)
+ */
+export type PkgApiV1UpdateRegistryAuthRequest = {
+  /**
+   * OAuth audience (optional)
+   */
+  audience?: string
+  /**
+   * OAuth client ID
+   */
+  client_id?: string
+  /**
+   * OIDC issuer URL
+   */
+  issuer?: string
+  /**
+   * OAuth scopes (optional)
+   */
+  scopes?: Array<string>
+}
+
+/**
  * Request containing registry configuration updates
  */
 export type PkgApiV1UpdateRegistryRequest = {
@@ -1267,6 +1325,7 @@ export type PkgApiV1UpdateRegistryRequest = {
    * MCP Registry API URL
    */
   api_url?: string
+  auth?: PkgApiV1UpdateRegistryAuthRequest
   /**
    * Local registry file path
    */
@@ -1490,6 +1549,17 @@ export type PkgApiV1CreateWorkloadResponse = {
  * Response containing registry details
  */
 export type PkgApiV1GetRegistryResponse = {
+  auth_config?: GithubComStacklokToolhivePkgRegistryOAuthPublicConfig
+  /**
+   * AuthStatus is one of: "none", "configured", "authenticated".
+   * Intentionally omits omitempty — see registryInfo for rationale.
+   */
+  auth_status?: string
+  /**
+   * AuthType is "oauth", "bearer" (future), or empty string when no auth.
+   * Intentionally omits omitempty — see registryInfo for rationale.
+   */
+  auth_type?: string
   /**
    * Last updated timestamp
    */
@@ -1706,6 +1776,19 @@ export type PkgApiV1PushSkillRequest = {
  * Basic information about a registry
  */
 export type PkgApiV1RegistryInfo = {
+  auth_config?: GithubComStacklokToolhivePkgRegistryOAuthPublicConfig
+  /**
+   * AuthStatus is one of: "none", "configured", "authenticated".
+   * Intentionally omits omitempty so clients always receive the field,
+   * even when the value is "none" (the zero-value equivalent).
+   */
+  auth_status?: string
+  /**
+   * AuthType is "oauth", "bearer" (future), or empty string when no auth.
+   * Intentionally omits omitempty so clients can distinguish "no auth
+   * configured" (empty string) from "field missing" without extra logic.
+   */
+  auth_type?: string
   /**
    * Last updated timestamp
    */
@@ -2882,6 +2965,72 @@ export type PostApiV1BetaRegistryErrors = {
 
 export type PostApiV1BetaRegistryError =
   PostApiV1BetaRegistryErrors[keyof PostApiV1BetaRegistryErrors]
+
+export type PostApiV1BetaRegistryAuthLoginData = {
+  body?: never
+  path?: never
+  query?: never
+  url: '/api/v1beta/registry/auth/login'
+}
+
+export type PostApiV1BetaRegistryAuthLoginErrors = {
+  /**
+   * Bad Request - Registry OAuth not configured
+   */
+  400: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type PostApiV1BetaRegistryAuthLoginError =
+  PostApiV1BetaRegistryAuthLoginErrors[keyof PostApiV1BetaRegistryAuthLoginErrors]
+
+export type PostApiV1BetaRegistryAuthLoginResponses = {
+  /**
+   * Authenticated successfully
+   */
+  200: {
+    [key: string]: string
+  }
+}
+
+export type PostApiV1BetaRegistryAuthLoginResponse =
+  PostApiV1BetaRegistryAuthLoginResponses[keyof PostApiV1BetaRegistryAuthLoginResponses]
+
+export type PostApiV1BetaRegistryAuthLogoutData = {
+  body?: never
+  path?: never
+  query?: never
+  url: '/api/v1beta/registry/auth/logout'
+}
+
+export type PostApiV1BetaRegistryAuthLogoutErrors = {
+  /**
+   * Bad Request - Registry OAuth not configured
+   */
+  400: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type PostApiV1BetaRegistryAuthLogoutError =
+  PostApiV1BetaRegistryAuthLogoutErrors[keyof PostApiV1BetaRegistryAuthLogoutErrors]
+
+export type PostApiV1BetaRegistryAuthLogoutResponses = {
+  /**
+   * Logged out successfully
+   */
+  200: {
+    [key: string]: string
+  }
+}
+
+export type PostApiV1BetaRegistryAuthLogoutResponse =
+  PostApiV1BetaRegistryAuthLogoutResponses[keyof PostApiV1BetaRegistryAuthLogoutResponses]
 
 export type DeleteApiV1BetaRegistryByNameData = {
   body?: never

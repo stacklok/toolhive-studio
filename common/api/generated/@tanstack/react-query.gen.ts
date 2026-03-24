@@ -42,6 +42,8 @@ import {
   postApiV1BetaClientsUnregister,
   postApiV1BetaGroups,
   postApiV1BetaRegistry,
+  postApiV1BetaRegistryAuthLogin,
+  postApiV1BetaRegistryAuthLogout,
   postApiV1BetaSecrets,
   postApiV1BetaSecretsDefaultKeys,
   postApiV1BetaSkills,
@@ -149,6 +151,12 @@ import type {
   PostApiV1BetaGroupsData,
   PostApiV1BetaGroupsError,
   PostApiV1BetaGroupsResponse,
+  PostApiV1BetaRegistryAuthLoginData,
+  PostApiV1BetaRegistryAuthLoginError,
+  PostApiV1BetaRegistryAuthLoginResponse,
+  PostApiV1BetaRegistryAuthLogoutData,
+  PostApiV1BetaRegistryAuthLogoutError,
+  PostApiV1BetaRegistryAuthLogoutResponse,
   PostApiV1BetaRegistryData,
   PostApiV1BetaRegistryError,
   PostApiV1BetaSecretsData,
@@ -640,6 +648,64 @@ export const postApiV1BetaRegistryMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await postApiV1BetaRegistry({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Registry login
+ *
+ * Trigger an interactive OAuth flow to authenticate with the configured registry. Only available in serve mode.
+ */
+export const postApiV1BetaRegistryAuthLoginMutation = (
+  options?: Partial<Options<PostApiV1BetaRegistryAuthLoginData>>
+): UseMutationOptions<
+  PostApiV1BetaRegistryAuthLoginResponse,
+  PostApiV1BetaRegistryAuthLoginError,
+  Options<PostApiV1BetaRegistryAuthLoginData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaRegistryAuthLoginResponse,
+    PostApiV1BetaRegistryAuthLoginError,
+    Options<PostApiV1BetaRegistryAuthLoginData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1BetaRegistryAuthLogin({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Registry logout
+ *
+ * Clear cached OAuth tokens for the configured registry. Only available in serve mode.
+ */
+export const postApiV1BetaRegistryAuthLogoutMutation = (
+  options?: Partial<Options<PostApiV1BetaRegistryAuthLogoutData>>
+): UseMutationOptions<
+  PostApiV1BetaRegistryAuthLogoutResponse,
+  PostApiV1BetaRegistryAuthLogoutError,
+  Options<PostApiV1BetaRegistryAuthLogoutData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaRegistryAuthLogoutResponse,
+    PostApiV1BetaRegistryAuthLogoutError,
+    Options<PostApiV1BetaRegistryAuthLogoutData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1BetaRegistryAuthLogout({
         ...options,
         ...fnOptions,
         throwOnError: true,
