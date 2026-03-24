@@ -15,8 +15,6 @@ import {
   readActiveThreadId as readActiveThreadIdFromDb,
   readThreadCount as readThreadCountFromDb,
 } from '../db/readers/threads-reader'
-import { getFeatureFlag } from '../feature-flags/flags'
-import { featureFlagKeys } from '../../../utils/feature-flags'
 
 export interface ChatSettingsThread {
   id: string
@@ -31,36 +29,7 @@ interface ChatSettingsThreads {
   activeThreadId?: string
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
-function isUIMessage(value: unknown): boolean {
-  if (!isRecord(value)) return false
-  if (typeof value.id !== 'string') return false
-  if (typeof value.role !== 'string') return false
-  if (!Array.isArray(value.parts)) return false
-
-  return true
-}
-
-function isThread(value: unknown): value is ChatSettingsThread {
-  if (!isRecord(value)) return false
-  if (typeof value.id !== 'string') return false
-  if (typeof value.lastEditTimestamp !== 'number') return false
-  if (typeof value.createdAt !== 'number') return false
-  if (!Array.isArray(value.messages)) return false
-
-  return value.messages.every((msg) => isUIMessage(msg))
-}
-
-function isThreadsRecord(
-  value: unknown
-): value is ChatSettingsThreads['threads'] {
-  if (!isRecord(value)) return false
-  return Object.values(value).every((thread) => isThread(thread))
-}
-
+// Kept for one-time reconciliation migration; remove after migration grace period
 export const threadsStore = new Store<ChatSettingsThreads>({
   name: 'chat-threads',
   encryptionKey: 'toolhive-threads-encryption-key',
@@ -91,18 +60,15 @@ export function createThread(
       createdAt: now,
     }
 
-    const threads = threadsStore.get('threads')
-    const typedThreads = isThreadsRecord(threads) ? threads : {}
-    typedThreads[threadId] = newThread
-
-    threadsStore.set('threads', typedThreads)
-    threadsStore.set('activeThreadId', threadId)
-
     try {
       writeThread(newThread)
       writeActiveThread(threadId)
     } catch (err) {
-      log.error('[DB] Failed to dual-write thread:', err)
+      log.error('[DB] Failed to write thread:', err)
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : 'Unknown error',
+      }
     }
 
     return { success: true, threadId }
@@ -117,48 +83,18 @@ export function createThread(
 
 export function getThread(threadId: string): ChatSettingsThread | null {
   try {
-    if (getFeatureFlag(featureFlagKeys.SQLITE_READS_THREADS)) {
-      try {
-        return readThreadFromDb(threadId)
-      } catch (err) {
-        log.error(
-          '[DB] SQLite read failed, falling back to electron-store:',
-          err
-        )
-      }
-    }
-    const threads = threadsStore.get('threads')
-    if (isThreadsRecord(threads)) {
-      return threads[threadId] || null
-    }
-    return null
-  } catch (error) {
-    log.error(`[THREADS] Failed to get thread ${threadId}:`, error)
+    return readThreadFromDb(threadId)
+  } catch (err) {
+    log.error(`[THREADS] Failed to get thread ${threadId}:`, err)
     return null
   }
 }
 
 export function getAllThreads(): ChatSettingsThread[] {
   try {
-    if (getFeatureFlag(featureFlagKeys.SQLITE_READS_THREADS)) {
-      try {
-        return readAllThreadsFromDb()
-      } catch (err) {
-        log.error(
-          '[DB] SQLite read failed, falling back to electron-store:',
-          err
-        )
-      }
-    }
-    const threads = threadsStore.get('threads')
-    if (isThreadsRecord(threads)) {
-      return Object.values(threads).sort(
-        (a, b) => b.lastEditTimestamp - a.lastEditTimestamp
-      )
-    }
-    return threads
-  } catch (error) {
-    log.error('[THREADS] Failed to get all threads:', error)
+    return readAllThreadsFromDb()
+  } catch (err) {
+    log.error('[THREADS] Failed to get all threads:', err)
     return []
   }
 }
@@ -168,28 +104,18 @@ export function updateThread(
   updates: Partial<Omit<ChatSettingsThread, 'id' | 'createdAt'>>
 ): { success: boolean; error?: string } {
   try {
-    const threads = threadsStore.get('threads')
-    const typedThreads = isThreadsRecord(threads) ? threads : {}
-
-    if (!typedThreads[threadId]) {
+    const existing = readThreadFromDb(threadId)
+    if (!existing) {
       return { success: false, error: 'Thread not found' }
     }
 
     const updatedThread: ChatSettingsThread = {
-      ...typedThreads[threadId],
+      ...existing,
       ...updates,
       lastEditTimestamp: Date.now(),
     }
 
-    typedThreads[threadId] = updatedThread
-    threadsStore.set('threads', typedThreads)
-
-    try {
-      writeThread(updatedThread)
-    } catch (err) {
-      log.error('[DB] Failed to dual-write thread update:', err)
-    }
-
+    writeThread(updatedThread)
     return { success: true }
   } catch (error) {
     log.error(`[THREADS] Failed to update thread ${threadId}:`, error)
@@ -212,30 +138,18 @@ export function addMessageToThread(
   }>
 ): { success: boolean; error?: string } {
   try {
-    const threads = threadsStore.get('threads')
-    const typedThreads = isThreadsRecord(threads) ? threads : {}
-
-    if (!typedThreads[threadId]) {
+    const existing = readThreadFromDb(threadId)
+    if (!existing) {
       return { success: false, error: 'Thread not found' }
     }
 
-    const updatedMessages = [...typedThreads[threadId].messages, message]
-
     const updatedThread: ChatSettingsThread = {
-      ...typedThreads[threadId],
-      messages: updatedMessages,
+      ...existing,
+      messages: [...existing.messages, message],
       lastEditTimestamp: Date.now(),
     }
 
-    typedThreads[threadId] = updatedThread
-    threadsStore.set('threads', typedThreads)
-
-    try {
-      writeThread(updatedThread)
-    } catch (err) {
-      log.error('[DB] Failed to dual-write message addition:', err)
-    }
-
+    writeThread(updatedThread)
     return { success: true }
   } catch (error) {
     log.error(`[THREADS] Failed to add message to thread ${threadId}:`, error)
@@ -251,29 +165,19 @@ export function updateThreadMessages(
   messages: ChatSettingsThread['messages']
 ): { success: boolean; error?: string } {
   try {
-    const threads = threadsStore.get('threads')
-    const typedThreads = isThreadsRecord(threads) ? threads : {}
-
-    if (!typedThreads[threadId]) {
+    const existing = readThreadFromDb(threadId)
+    if (!existing) {
       log.info('Thread not found')
       return { success: false, error: 'Thread not found' }
     }
 
     const updatedThread: ChatSettingsThread = {
-      ...typedThreads[threadId],
+      ...existing,
       messages,
       lastEditTimestamp: Date.now(),
     }
 
-    typedThreads[threadId] = updatedThread
-    threadsStore.set('threads', typedThreads)
-
-    try {
-      writeThread(updatedThread)
-    } catch (err) {
-      log.error('[DB] Failed to dual-write thread messages:', err)
-    }
-
+    writeThread(updatedThread)
     return { success: true }
   } catch (error) {
     log.error(
@@ -292,26 +196,17 @@ export function deleteThread(threadId: string): {
   error?: string
 } {
   try {
-    const threads = threadsStore.get('threads')
-    const typedThreads = isThreadsRecord(threads) ? threads : {}
-
-    if (!typedThreads[threadId]) {
+    const existing = readThreadFromDb(threadId)
+    if (!existing) {
       return { success: false, error: 'Thread not found' }
     }
 
-    delete typedThreads[threadId]
-    threadsStore.set('threads', typedThreads)
-
-    try {
-      deleteThreadFromDb(threadId)
-    } catch (err) {
-      log.error('[DB] Failed to dual-write thread deletion:', err)
-    }
+    deleteThreadFromDb(threadId)
 
     // If this was the active thread, clear the active thread
-    const activeThreadId = threadsStore.get('activeThreadId')
+    const activeThreadId = readActiveThreadIdFromDb()
     if (activeThreadId === threadId) {
-      threadsStore.set('activeThreadId', undefined)
+      writeActiveThread(undefined)
     }
 
     return { success: true }
@@ -326,17 +221,7 @@ export function deleteThread(threadId: string): {
 
 export function getActiveThreadId(): string | undefined {
   try {
-    if (getFeatureFlag(featureFlagKeys.SQLITE_READS_THREADS)) {
-      try {
-        return readActiveThreadIdFromDb()
-      } catch (err) {
-        log.error(
-          '[DB] SQLite read failed, falling back to electron-store:',
-          err
-        )
-      }
-    }
-    return threadsStore.get('activeThreadId')
+    return readActiveThreadIdFromDb() ?? undefined
   } catch (error) {
     log.error('[THREADS] Failed to get active thread ID:', error)
     return undefined
@@ -356,14 +241,7 @@ export function setActiveThreadId(threadId: string | undefined): {
       }
     }
 
-    threadsStore.set('activeThreadId', threadId)
-
-    try {
-      writeActiveThread(threadId)
-    } catch (err) {
-      log.error('[DB] Failed to dual-write active thread:', err)
-    }
-
+    writeActiveThread(threadId)
     return { success: true }
   } catch (error) {
     log.error('[THREADS] Failed to set active thread ID:', error)
@@ -376,15 +254,7 @@ export function setActiveThreadId(threadId: string | undefined): {
 
 export function clearAllThreads(): { success: boolean; error?: string } {
   try {
-    threadsStore.set('threads', {})
-    threadsStore.set('activeThreadId', undefined)
-
-    try {
-      clearAllThreadsFromDb()
-    } catch (err) {
-      log.error('[DB] Failed to dual-write clear all threads:', err)
-    }
-
+    clearAllThreadsFromDb()
     return { success: true }
   } catch (error) {
     log.error('[THREADS] Failed to clear all threads:', error)
@@ -397,21 +267,7 @@ export function clearAllThreads(): { success: boolean; error?: string } {
 
 export function getThreadCount(): number {
   try {
-    if (getFeatureFlag(featureFlagKeys.SQLITE_READS_THREADS)) {
-      try {
-        return readThreadCountFromDb()
-      } catch (err) {
-        log.error(
-          '[DB] SQLite read failed, falling back to electron-store:',
-          err
-        )
-      }
-    }
-    const threads = threadsStore.get('threads')
-    if (isThreadsRecord(threads)) {
-      return Object.keys(threads).length
-    }
-    return 0
+    return readThreadCountFromDb()
   } catch (error) {
     log.error('[THREADS] Failed to get thread count:', error)
     return 0
