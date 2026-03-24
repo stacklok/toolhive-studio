@@ -37,8 +37,8 @@ export function registryAuthFromRegistryInfo(
 ): { client_id: string; issuer_url: string } {
   const auth = registry?.auth_config
   return {
-    client_id: (auth as Record<string, string> | undefined)?.client_id ?? '',
-    issuer_url: (auth as Record<string, string> | undefined)?.issuer ?? '',
+    client_id: auth?.client_id ?? '',
+    issuer_url: auth?.issuer ?? '',
   }
 }
 
