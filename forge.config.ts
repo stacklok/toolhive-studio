@@ -11,6 +11,7 @@ import { ensureThv } from './utils/fetch-thv'
 import MakerTarGz from './utils/forge-makers/MakerTarGz'
 import MakerDMGWithArch from './utils/forge-makers/MakerDMGWithArch'
 import { isPrerelease } from './utils/pre-release'
+import { stripBomFromReleasesFiles } from './utils/forge-makers/strip-bom-from-releases'
 import packageJson from './package.json'
 
 function isValidPlatform(platform: string): platform is NodeJS.Platform {
@@ -112,14 +113,14 @@ const config: ForgeConfig = {
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
-      config: (arch: string) => ({
+      config: () => ({
         setupIcon: './icons/icon.ico',
         setupExe: 'ToolHive Setup.exe',
         noMsi: true,
         authors: 'Stacklok',
         exe: 'ToolHive.exe',
         name: 'ToolHive',
-        remoteReleases: `https://releases.toolhive.dev/${isPrerelease() ? 'pre-release' : 'stable'}/latest/win32/${arch}`,
+        noDelta: true,
         windowsSign:
           process.env.SM_HOST && process.env.SM_API_KEY
             ? { hookModulePath: './utils/digicert-hook.js' }
@@ -217,6 +218,10 @@ const config: ForgeConfig = {
   ],
 
   hooks: {
+    postMake: async (_config, makeResults) => {
+      await stripBomFromReleasesFiles(makeResults)
+      return makeResults
+    },
     // copy sqlite deps that already compiled
     packageAfterCopy: async (_config, buildPath) => {
       const fs = await import('node:fs')
