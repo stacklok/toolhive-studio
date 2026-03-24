@@ -184,8 +184,12 @@ export function reconcileFromStore(): void {
         syncEnabledMcpTools()
         syncShutdownServers()
         syncThreads(db)
-        // Mark migration as complete
-        writeSetting(MIGRATION_SENTINEL, 'true')
+        // Write sentinel directly via db.prepare to bypass the writer's
+        // internal try/catch — if this fails, the transaction rolls back
+        // and the migration will be retried on next launch.
+        db.prepare(
+          'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)'
+        ).run(MIGRATION_SENTINEL, 'true')
       })()
     })
     log.info('[DB] Reconciliation complete')
