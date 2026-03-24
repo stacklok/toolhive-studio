@@ -1,18 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { featureFlagKeys } from '../../../../utils/feature-flags'
 
-const { mockStoreInstance } = vi.hoisted(() => ({
-  mockStoreInstance: {
-    get: vi.fn((_key: string, defaultValue?: unknown) => defaultValue ?? false),
-    set: vi.fn(),
-    delete: vi.fn(),
-  },
-}))
-
 vi.mock('electron-store', () => {
   return {
     default: vi.fn(function ElectronStore() {
-      return mockStoreInstance
+      return { get: vi.fn(), set: vi.fn(), delete: vi.fn(), store: {} }
     }),
   }
 })
@@ -42,6 +34,11 @@ import {
   enableFeatureFlag,
   disableFeatureFlag,
 } from '../flags'
+import {
+  writeFeatureFlag,
+  deleteFeatureFlag,
+} from '../../db/writers/feature-flags-writer'
+import { readFeatureFlag } from '../../db/readers/feature-flags-reader'
 
 describe('Feature Flags', () => {
   beforeEach(() => {
@@ -70,26 +67,30 @@ describe('Feature Flags', () => {
       'should return default value for %s when not stored',
       (_name, key) => {
         const result = getFeatureFlag(key)
-        // All flags default to false unless explicitly enabled
         expect(typeof result).toBe('boolean')
       }
     )
 
-    it('should return stored value when flag is enabled in store', () => {
-      // First call: readFromElectronStore(SQLITE_READS_FEATURE_FLAGS) -> false (default)
-      // Second call: readFromElectronStore(meta_optimizer) -> true
-      mockStoreInstance.get
-        .mockReturnValueOnce(false) // SQLITE_READS_FEATURE_FLAGS check
-        .mockReturnValueOnce(true) // actual flag value
+    it('should return value from SQLite when available', () => {
+      vi.mocked(readFeatureFlag).mockReturnValueOnce(true)
+
       const result = getFeatureFlag(featureFlagKeys.META_OPTIMIZER)
       expect(result).toBe(true)
     })
 
-    it('should return false when flag is disabled in store', () => {
-      mockStoreInstance.get.mockReturnValueOnce(false)
-      const flagKeys = Object.values(featureFlagKeys)
-      // We know there's at least one flag defined
-      const result = getFeatureFlag(flagKeys[0]!)
+    it('should return false (default) when SQLite returns undefined', () => {
+      vi.mocked(readFeatureFlag).mockReturnValueOnce(undefined)
+
+      const result = getFeatureFlag(featureFlagKeys.META_OPTIMIZER)
+      expect(result).toBe(false)
+    })
+
+    it('should return false (default) when SQLite read throws', () => {
+      vi.mocked(readFeatureFlag).mockImplementationOnce(() => {
+        throw new Error('DB error')
+      })
+
+      const result = getFeatureFlag(featureFlagKeys.META_OPTIMIZER)
       expect(result).toBe(false)
     })
   })
@@ -110,7 +111,6 @@ describe('Feature Flags', () => {
       Object.values(flags).forEach((flag) => {
         expect(flag).toHaveProperty('enabled')
         expect(typeof flag.enabled).toBe('boolean')
-        // Optional properties should be boolean or undefined
         if (flag.isDisabled !== undefined) {
           expect(typeof flag.isDisabled).toBe('boolean')
         }
@@ -132,11 +132,11 @@ describe('Feature Flags', () => {
 
   describe('enableFeatureFlag', () => {
     it.each(Object.entries(featureFlagKeys))(
-      'should store true for %s when enabled',
+      'should write true to SQLite for %s when enabled',
       (_name, key) => {
         enableFeatureFlag(key)
 
-        expect(mockStoreInstance.set).toHaveBeenCalledWith(
+        expect(writeFeatureFlag).toHaveBeenCalledWith(
           `feature_flag_${key}`,
           true
         )
@@ -146,13 +146,11 @@ describe('Feature Flags', () => {
 
   describe('disableFeatureFlag', () => {
     it.each(Object.entries(featureFlagKeys))(
-      'should delete stored value for %s when disabled',
+      'should delete from SQLite for %s when disabled',
       (_name, key) => {
         disableFeatureFlag(key)
 
-        expect(mockStoreInstance.delete).toHaveBeenCalledWith(
-          `feature_flag_${key}`
-        )
+        expect(deleteFeatureFlag).toHaveBeenCalledWith(`feature_flag_${key}`)
       }
     )
   })
