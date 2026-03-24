@@ -1,9 +1,4 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import {
-  stopAllServers,
-  getLastShutdownServers,
-  clearShutdownHistory,
-} from '../graceful-exit'
 import * as sdkGen from '@common/api/generated/sdk.gen'
 import * as clientGen from '@common/api/generated/client'
 import * as headers from '../headers'
@@ -13,6 +8,16 @@ import type {
   GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload,
   PkgApiV1WorkloadListResponse as V1WorkloadListResponse,
 } from '@common/api/generated/types.gen'
+
+const {
+  mockWriteShutdownServers,
+  mockReadShutdownServers,
+  mockClearShutdownServersFromDb,
+} = vi.hoisted(() => ({
+  mockWriteShutdownServers: vi.fn(),
+  mockReadShutdownServers: vi.fn(() => [] as unknown[]),
+  mockClearShutdownServersFromDb: vi.fn(),
+}))
 
 vi.mock('@sentry/electron/main', () => ({
   startSpan: vi.fn((_opts: unknown, cb: (span: unknown) => unknown) =>
@@ -25,12 +30,31 @@ vi.mock('@common/api/generated/client')
 vi.mock('../headers')
 vi.mock('../logger')
 vi.mock('../../../utils/delay')
-vi.mock('electron-store')
+vi.mock('electron-store', () => ({
+  default: vi.fn(function ElectronStore() {
+    return { get: vi.fn(), set: vi.fn() }
+  }),
+}))
 vi.mock('electron', () => ({
   app: {
     isPackaged: false,
   },
 }))
+
+vi.mock('../db/writers/shutdown-writer', () => ({
+  writeShutdownServers: mockWriteShutdownServers,
+  clearShutdownServersFromDb: mockClearShutdownServersFromDb,
+}))
+
+vi.mock('../db/readers/shutdown-reader', () => ({
+  readShutdownServers: mockReadShutdownServers,
+}))
+
+import {
+  stopAllServers,
+  getLastShutdownServers,
+  clearShutdownHistory,
+} from '../graceful-exit'
 
 const mockGetApiV1BetaWorkloads = vi.mocked(sdkGen.getApiV1BetaWorkloads)
 const mockPostApiV1BetaWorkloadsStop = vi.mocked(
@@ -41,27 +65,6 @@ const mockGetHeaders = vi.mocked(headers.getHeaders)
 const mockLog = vi.mocked(logger.default)
 const mockDelay = vi.mocked(delay.delay)
 
-// Mock electron-store
-vi.mock('electron-store', () => {
-  const mockStoreInstance = {
-    get: vi.fn(),
-    set: vi.fn(),
-  }
-
-  // Export the instance so we can access it in tests
-  ;(
-    globalThis as typeof globalThis & {
-      __mockStoreInstance: typeof mockStoreInstance
-    }
-  ).__mockStoreInstance = mockStoreInstance
-
-  return {
-    default: vi.fn(function ElectronStore() {
-      return mockStoreInstance
-    }),
-  }
-})
-
 describe('graceful-exit', () => {
   const mockClient = {} as ReturnType<typeof clientGen.createClient>
   const mockHeaders = {
@@ -70,16 +73,6 @@ describe('graceful-exit', () => {
     'X-Client-Platform': 'darwin' as NodeJS.Platform,
     'X-Client-Release-Build': false,
   }
-
-  // Get reference to the mocked store instance
-  const mockStoreInstance = (
-    globalThis as typeof globalThis & {
-      __mockStoreInstance: {
-        get: ReturnType<typeof vi.fn>
-        set: ReturnType<typeof vi.fn>
-      }
-    }
-  ).__mockStoreInstance
 
   const createMockWorkloadsResponse = (workloads: CoreWorkload[]) => ({
     data: { workloads } as V1WorkloadListResponse,
@@ -213,7 +206,7 @@ describe('graceful-exit', () => {
       )
     })
 
-    it('stores shutdown servers in electron store', async () => {
+    it('writes shutdown servers to SQLite', async () => {
       mockGetApiV1BetaWorkloads
         .mockResolvedValueOnce(createMockWorkloadsResponse(mockRunningServers))
         .mockResolvedValueOnce(createMockWorkloadsResponse(mockStoppedServers))
@@ -222,10 +215,7 @@ describe('graceful-exit', () => {
 
       await stopAllServers('', 3000)
 
-      expect(mockStoreInstance.set).toHaveBeenCalledWith(
-        'lastShutdownServers',
-        mockRunningServers
-      )
+      expect(mockWriteShutdownServers).toHaveBeenCalledWith(mockRunningServers)
     })
 
     it('handles servers without names', async () => {
@@ -256,21 +246,23 @@ describe('graceful-exit', () => {
   })
 
   describe('getLastShutdownServers', () => {
-    it('returns servers from electron store', () => {
-      const mockServers = ['server1', 'server2']
-      mockStoreInstance.get.mockReturnValue(mockServers)
+    it('returns servers from SQLite', () => {
+      const mockServers: CoreWorkload[] = [
+        { name: 'server1', status: 'running', port: 3001 },
+        { name: 'server2', status: 'running', port: 3002 },
+      ]
+      mockReadShutdownServers.mockReturnValue(mockServers)
 
       const result = getLastShutdownServers()
 
       expect(result).toEqual(mockServers)
-      expect(mockStoreInstance.get).toHaveBeenCalledWith(
-        'lastShutdownServers',
-        []
-      )
+      expect(mockReadShutdownServers).toHaveBeenCalled()
     })
 
-    it('returns empty array when no servers in store', () => {
-      mockStoreInstance.get.mockReturnValue([])
+    it('returns empty array when SQLite read throws', () => {
+      mockReadShutdownServers.mockImplementation(() => {
+        throw new Error('DB error')
+      })
 
       const result = getLastShutdownServers()
 
@@ -279,13 +271,10 @@ describe('graceful-exit', () => {
   })
 
   describe('clearShutdownHistory', () => {
-    it('clears shutdown history in electron store', () => {
+    it('clears shutdown history in SQLite', () => {
       clearShutdownHistory()
 
-      expect(mockStoreInstance.set).toHaveBeenCalledWith(
-        'lastShutdownServers',
-        []
-      )
+      expect(mockClearShutdownServersFromDb).toHaveBeenCalled()
       expect(mockLog.info).toHaveBeenCalledWith('Shutdown history cleared')
     })
   })
