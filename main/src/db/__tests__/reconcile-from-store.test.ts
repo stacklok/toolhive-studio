@@ -99,6 +99,37 @@ afterEach(() => {
 })
 
 describe('reconcileFromStore', () => {
+  it('runs as a one-time migration and sets the sentinel on first run', () => {
+    mockStoreData['auto-update'] = { isAutoUpdateEnabled: true }
+
+    reconcileFromStore()
+
+    const sentinel = testDb
+      .prepare(
+        "SELECT value FROM settings WHERE key = 'migration_from_store_complete'"
+      )
+      .get() as { value: string } | undefined
+    expect(sentinel?.value).toBe('true')
+  })
+
+  it('skips reconciliation when sentinel is already set', () => {
+    testDb
+      .prepare(
+        "INSERT INTO settings (key, value) VALUES ('migration_from_store_complete', 'true')"
+      )
+      .run()
+
+    mockStoreData['auto-update'] = { isAutoUpdateEnabled: false }
+
+    reconcileFromStore()
+
+    // isAutoUpdateEnabled should NOT have been synced since migration was already done
+    const setting = testDb
+      .prepare("SELECT value FROM settings WHERE key = 'isAutoUpdateEnabled'")
+      .get() as { value: string } | undefined
+    expect(setting).toBeUndefined()
+  })
+
   it('syncs settings from electron-store to SQLite', () => {
     mockStoreData['default'] = { isTelemetryEnabled: false }
     mockStoreData['auto-update'] = { isAutoUpdateEnabled: false }
