@@ -18,6 +18,8 @@ import { Separator } from '../../ui/separator'
 import { SettingsSectionTitle } from './components/settings-section-title'
 import { SettingsRow } from './components/settings-row'
 import { WrapperField } from './components/wrapper-field'
+import { usePermissions } from '@/common/contexts/permissions'
+import { PERMISSION_KEYS } from '@/common/contexts/permissions/permission-keys'
 
 interface VersionTabProps {
   appInfo: AppVersionInfo | undefined
@@ -42,6 +44,7 @@ function VersionBadge({
 
 export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
   const isProduction = import.meta.env.MODE === 'production'
+  const { canShow } = usePermissions()
   const { data: updateState, isLoading: isUpdateStateLoading } =
     useCurrentUpdateState()
   const isCheckingOrDownloading =
@@ -150,25 +153,30 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
         <Separator />
       </div>
 
-      <SettingsSectionTitle>Updates</SettingsSectionTitle>
-      <div className="flex flex-col gap-3 py-1">
-        <WrapperField
-          label="Downloads"
-          description="Automatically download and install ToolHive updates when a new release is available."
-          htmlFor="auto-update"
-        >
-          <Switch
-            id="auto-update"
-            checked={isAutoUpdateEnabled ?? true}
-            onCheckedChange={() => {
-              if (isAutoUpdateEnabledLoading || isSetAutoUpdatePending) return
-              setAutoUpdate(!isAutoUpdateEnabled)
-            }}
-            disabled={isAutoUpdateEnabledLoading || isSetAutoUpdatePending}
-          />
-        </WrapperField>
-        <Separator />
-      </div>
+      {canShow(PERMISSION_KEYS.AUTO_UPDATE) && (
+        <>
+          <SettingsSectionTitle>Updates</SettingsSectionTitle>
+          <div className="flex flex-col gap-3 py-1">
+            <WrapperField
+              label="Downloads"
+              description="Automatically download and install ToolHive updates when a new release is available."
+              htmlFor="auto-update"
+            >
+              <Switch
+                id="auto-update"
+                checked={isAutoUpdateEnabled ?? true}
+                onCheckedChange={() => {
+                  if (isAutoUpdateEnabledLoading || isSetAutoUpdatePending)
+                    return
+                  setAutoUpdate(!isAutoUpdateEnabled)
+                }}
+                disabled={isAutoUpdateEnabledLoading || isSetAutoUpdatePending}
+              />
+            </WrapperField>
+            <Separator />
+          </div>
+        </>
+      )}
 
       {appInfo.isNewVersionAvailable && isProduction && (
         <Alert className="flex h-full items-center">

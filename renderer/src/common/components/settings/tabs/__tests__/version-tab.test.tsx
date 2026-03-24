@@ -6,13 +6,18 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { AppVersionInfo } from '@/common/hooks/use-app-version'
 import userEvent from '@testing-library/user-event'
 import { toast } from 'sonner'
+import { PermissionsProvider } from '@/common/contexts/permissions/permissions-provider'
+import type { Permissions } from '@/common/contexts/permissions'
 
 const mockIsAutoUpdateEnabled = vi.fn()
 const mockSetAutoUpdate = vi.fn()
 const mockManualUpdate = vi.fn()
 const mockGetUpdateState = vi.fn()
 
-const renderWithProviders = (component: React.ReactElement) => {
+const renderWithProviders = (
+  component: React.ReactElement,
+  permissions?: Partial<Permissions>
+) => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -25,11 +30,13 @@ const renderWithProviders = (component: React.ReactElement) => {
   queryClient.setQueryData(['auto-update-enabled'], true)
 
   return render(
-    <PromptProvider>
-      <QueryClientProvider client={queryClient}>
-        {component}
-      </QueryClientProvider>
-    </PromptProvider>
+    <PermissionsProvider value={permissions}>
+      <PromptProvider>
+        <QueryClientProvider client={queryClient}>
+          {component}
+        </QueryClientProvider>
+      </PromptProvider>
+    </PermissionsProvider>
   )
 }
 
@@ -372,6 +379,25 @@ describe('VersionTab', () => {
     const button = screen.getByRole('button', { name: /Checking/i })
     expect(button).toBeVisible()
     expect(button).toBeDisabled()
+  })
+
+  describe('auto-update permission', () => {
+    it('shows the Updates section by default', () => {
+      renderWithProviders(
+        <VersionTab appInfo={mockAppInfo} isLoading={false} error={null} />
+      )
+
+      expect(screen.getByText('Updates')).toBeVisible()
+    })
+
+    it('hides the Updates section when auto-update permission is false', () => {
+      renderWithProviders(
+        <VersionTab appInfo={mockAppInfo} isLoading={false} error={null} />,
+        { 'auto-update': false } as Partial<Permissions>
+      )
+
+      expect(screen.queryByText('Updates')).not.toBeInTheDocument()
+    })
   })
 
   it('shows "Downloading..." when update state is downloading', () => {
