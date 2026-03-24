@@ -1,6 +1,7 @@
 import type Database from 'better-sqlite3'
 import { getDb, isDbWritable } from './database'
 import { writeSetting } from './writers/settings-writer'
+import { readSetting } from './readers/settings-reader'
 import { writeFeatureFlag } from './writers/feature-flags-writer'
 import {
   writeProvider,
@@ -25,6 +26,8 @@ import { featureFlagStore } from '../feature-flags/flags'
 import { chatSettingsStore } from '../chat/settings-storage'
 import { threadsStore } from '../chat/threads-storage'
 import { shutdownStore } from '../graceful-exit'
+
+const MIGRATION_SENTINEL = 'migration_from_store_complete'
 
 function syncSettings(): void {
   const telemetryEnabled = telemetryStore.get('isTelemetryEnabled', true)
@@ -153,8 +156,23 @@ export function reconcileFromStore(): void {
     return
   }
 
+  // One-time migration: skip if already completed
+  try {
+    const alreadyMigrated = readSetting(MIGRATION_SENTINEL)
+    if (alreadyMigrated === 'true') {
+      log.info(
+        '[DB] Store migration already completed, skipping reconciliation'
+      )
+      return
+    }
+  } catch (err) {
+    log.warn('[DB] Could not check migration sentinel, proceeding:', err)
+  }
+
   const db = getDb()
-  log.info('[DB] Reconciling SQLite from electron-store...')
+  log.info(
+    '[DB] Reconciling SQLite from electron-store (one-time migration)...'
+  )
 
   try {
     withDbSpan('DB reconcile from store', 'db.reconcile', {}, () => {
@@ -166,6 +184,12 @@ export function reconcileFromStore(): void {
         syncEnabledMcpTools()
         syncShutdownServers()
         syncThreads(db)
+        // Write sentinel directly via db.prepare to bypass the writer's
+        // internal try/catch — if this fails, the transaction rolls back
+        // and the migration will be retried on next launch.
+        db.prepare(
+          'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)'
+        ).run(MIGRATION_SENTINEL, 'true')
       })()
     })
     log.info('[DB] Reconciliation complete')

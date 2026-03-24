@@ -17,8 +17,6 @@ import Store from 'electron-store'
 import { fetchLatestRelease } from './utils/toolhive-version'
 import { writeSetting } from './db/writers/settings-writer'
 import { readSetting } from './db/readers/settings-reader'
-import { getFeatureFlag } from './feature-flags/flags'
-import { featureFlagKeys } from '../../utils/feature-flags'
 
 export type UpdateState =
   | 'checking'
@@ -533,7 +531,7 @@ export function initAutoUpdate({
   mainWindowGetter: () => BrowserWindow | null
   windowCreator: () => Promise<BrowserWindow>
 }) {
-  const isAutoUpdateEnabled = autoUpdateStore.get('isAutoUpdateEnabled')
+  const isAutoUpdateEnabled = getIsAutoUpdateEnabled()
   return Sentry.startSpanManual(
     {
       name: 'Auto-update initialization',
@@ -650,11 +648,10 @@ export function setAutoUpdateEnabled(enabled: boolean) {
     `[update] Auto update ${enabled ? 'enabled' : 'disabled'} dynamically`
   )
 
-  autoUpdateStore.set('isAutoUpdateEnabled', enabled)
   try {
     writeSetting('isAutoUpdateEnabled', String(enabled))
   } catch (err) {
-    log.error('[DB] Failed to dual-write isAutoUpdateEnabled:', err)
+    log.error('[DB] Failed to write isAutoUpdateEnabled:', err)
   }
 
   if (!enabled) {
@@ -691,19 +688,17 @@ export function getUpdateState() {
 }
 
 export function getIsAutoUpdateEnabled() {
-  if (getFeatureFlag(featureFlagKeys.SQLITE_READS_SETTINGS)) {
-    try {
-      const value = readSetting('isAutoUpdateEnabled')
-      if (value !== undefined) return value === 'true'
-    } catch (err) {
-      log.error('[DB] SQLite read failed, falling back to electron-store:', err)
-    }
+  try {
+    const value = readSetting('isAutoUpdateEnabled')
+    if (value !== undefined) return value === 'true'
+  } catch (err) {
+    log.error('[DB] SQLite read failed:', err)
   }
-  return autoUpdateStore.get('isAutoUpdateEnabled')
+  return true
 }
 
 export async function getLatestAvailableVersion() {
-  const isAutoUpdateEnabled = autoUpdateStore.get('isAutoUpdateEnabled')
+  const isAutoUpdateEnabled = getIsAutoUpdateEnabled()
   return Sentry.startSpanManual(
     {
       name: 'Check for latest version',
@@ -748,7 +743,7 @@ export async function getLatestAvailableVersion() {
 }
 
 export function manualUpdate() {
-  const isAutoUpdateEnabled = autoUpdateStore.get('isAutoUpdateEnabled')
+  const isAutoUpdateEnabled = getIsAutoUpdateEnabled()
   return Sentry.startSpanManual(
     {
       name: 'Manual update triggered',

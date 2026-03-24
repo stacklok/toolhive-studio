@@ -16,44 +16,13 @@ const featureFlagOptions: Record<FeatureFlagKey, FeatureFlagOptions> = {
     defaultValue: false,
     isExperimental: true,
   },
-  [featureFlagKeys.SQLITE_READS_SETTINGS]: {
-    isDisabled: false,
-    defaultValue: false,
-    isExperimental: false,
-  },
-  [featureFlagKeys.SQLITE_READS_THREADS]: {
-    isDisabled: false,
-    defaultValue: false,
-    isExperimental: false,
-  },
-  [featureFlagKeys.SQLITE_READS_CHAT_SETTINGS]: {
-    isDisabled: false,
-    defaultValue: false,
-    isExperimental: false,
-  },
-  [featureFlagKeys.SQLITE_READS_FEATURE_FLAGS]: {
-    isDisabled: false,
-    defaultValue: false,
-    isExperimental: false,
-  },
-  [featureFlagKeys.SQLITE_READS_SHUTDOWN]: {
-    isDisabled: false,
-    defaultValue: false,
-    isExperimental: false,
-  },
 }
 
-// Create a dedicated store for feature flags
+// Kept for one-time reconciliation migration; remove after migration grace period
 export const featureFlagStore = new Store<Record<string, boolean>>({
   name: 'feature-flags',
   defaults: {},
 })
-
-function readFromElectronStore(key: FeatureFlagKey): boolean {
-  const options = featureFlagOptions[key] ?? {}
-  const storeKey = `${FLAG_STORE_PREFIX}${key}`
-  return featureFlagStore.get(storeKey, options.defaultValue ?? false)
-}
 
 export function getFeatureFlag(key: FeatureFlagKey): boolean {
   const options = featureFlagOptions[key] ?? {}
@@ -62,29 +31,19 @@ export function getFeatureFlag(key: FeatureFlagKey): boolean {
     return false
   }
 
-  // sqlite_reads_* flags always come from electron-store to avoid circularity
-  if (key.startsWith('sqlite_reads_')) {
-    const value = readFromElectronStore(key)
-    log.debug(`Getting feature flag ${key}: ${value}`)
-    return value
-  }
-
-  // For other flags, check if SQLite reads are enabled for the feature-flags domain
-  if (readFromElectronStore(featureFlagKeys.SQLITE_READS_FEATURE_FLAGS)) {
-    try {
-      const dbValue = readFeatureFlagFromDb(`${FLAG_STORE_PREFIX}${key}`)
-      if (dbValue !== undefined) {
-        log.debug(`Getting feature flag ${key} from SQLite: ${dbValue}`)
-        return dbValue
-      }
-    } catch (err) {
-      log.error('[DB] SQLite read failed for feature flag, falling back:', err)
+  try {
+    const dbValue = readFeatureFlagFromDb(`${FLAG_STORE_PREFIX}${key}`)
+    if (dbValue !== undefined) {
+      log.debug(`Getting feature flag ${key} from SQLite: ${dbValue}`)
+      return dbValue
     }
+  } catch (err) {
+    log.error('[DB] SQLite read failed for feature flag:', err)
   }
 
-  const value = readFromElectronStore(key)
-  log.debug(`Getting feature flag ${key}: ${value}`)
-  return value
+  const defaultValue = options.defaultValue ?? false
+  log.debug(`Getting feature flag ${key}: ${defaultValue}`)
+  return defaultValue
 }
 
 export function enableFeatureFlag(key: FeatureFlagKey): void {
@@ -96,12 +55,10 @@ export function enableFeatureFlag(key: FeatureFlagKey): void {
   }
 
   const storeKey = `${FLAG_STORE_PREFIX}${key}`
-  featureFlagStore.set(storeKey, true)
-
   try {
     writeFeatureFlag(storeKey, true)
   } catch (err) {
-    log.error('[DB] Failed to dual-write feature flag:', err)
+    log.error('[DB] Failed to write feature flag:', err)
   }
 
   log.info(`Enabled feature flag: ${key}`)
@@ -109,12 +66,11 @@ export function enableFeatureFlag(key: FeatureFlagKey): void {
 
 export function disableFeatureFlag(key: FeatureFlagKey): void {
   const storeKey = `${FLAG_STORE_PREFIX}${key}`
-  featureFlagStore.delete(storeKey)
 
   try {
     deleteFeatureFlagFromDb(storeKey)
   } catch (err) {
-    log.error('[DB] Failed to dual-write feature flag deletion:', err)
+    log.error('[DB] Failed to delete feature flag:', err)
   }
 
   log.info(`Disabled feature flag: ${key}`)

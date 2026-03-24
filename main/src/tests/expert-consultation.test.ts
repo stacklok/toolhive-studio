@@ -1,15 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const storeDefaults: Record<string, unknown> = {
-  expertConsultationSubmitted: false,
-  expertConsultationDismissedAt: '',
-}
-
-const { mockStoreInstance, mockWriteSetting } = vi.hoisted(() => ({
-  mockStoreInstance: {
-    get: vi.fn(),
-    set: vi.fn(),
-  },
+const { mockReadSetting, mockWriteSetting } = vi.hoisted(() => ({
+  mockReadSetting: vi.fn(),
   mockWriteSetting: vi.fn(),
 }))
 
@@ -17,12 +9,6 @@ vi.mock('@sentry/electron/main', () => ({
   startSpan: vi.fn((_opts: unknown, cb: (span: unknown) => unknown) =>
     cb({ setStatus: vi.fn(), setAttribute: vi.fn(), setAttributes: vi.fn() })
   ),
-}))
-
-vi.mock('electron-store', () => ({
-  default: vi.fn(function ElectronStore() {
-    return mockStoreInstance
-  }),
 }))
 
 vi.mock('../logger', () => ({
@@ -39,11 +25,13 @@ vi.mock('../db/writers/settings-writer', () => ({
 }))
 
 vi.mock('../db/readers/settings-reader', () => ({
-  readSetting: vi.fn(),
+  readSetting: mockReadSetting,
 }))
 
-vi.mock('../feature-flags/flags', () => ({
-  getFeatureFlag: vi.fn(() => false),
+vi.mock('electron-store', () => ({
+  default: vi.fn(function ElectronStore() {
+    return { get: vi.fn(), set: vi.fn() }
+  }),
 }))
 
 import {
@@ -55,16 +43,12 @@ import {
 describe('expert-consultation', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockStoreInstance.get.mockImplementation(
-      (key: string, defaultValue?: unknown) =>
-        defaultValue ?? storeDefaults[key]
-    )
   })
 
   describe('getExpertConsultationState', () => {
-    it('returns state from the store', () => {
-      mockStoreInstance.get
-        .mockReturnValueOnce(true)
+    it('returns state from SQLite', () => {
+      mockReadSetting
+        .mockReturnValueOnce('true')
         .mockReturnValueOnce('2026-01-01T00:00:00.000Z')
 
       const state = getExpertConsultationState()
@@ -73,15 +57,27 @@ describe('expert-consultation', () => {
         submitted: true,
         dismissedAt: '2026-01-01T00:00:00.000Z',
       })
-      expect(mockStoreInstance.get).toHaveBeenCalledWith(
+      expect(mockReadSetting).toHaveBeenCalledWith(
         'expertConsultationSubmitted'
       )
-      expect(mockStoreInstance.get).toHaveBeenCalledWith(
+      expect(mockReadSetting).toHaveBeenCalledWith(
         'expertConsultationDismissedAt'
       )
     })
 
-    it('returns defaults when store is empty', () => {
+    it('returns defaults when SQLite returns undefined', () => {
+      mockReadSetting.mockReturnValue(undefined)
+
+      const state = getExpertConsultationState()
+
+      expect(state).toEqual({ submitted: false, dismissedAt: '' })
+    })
+
+    it('returns defaults when SQLite read throws', () => {
+      mockReadSetting.mockImplementation(() => {
+        throw new Error('DB error')
+      })
+
       const state = getExpertConsultationState()
 
       expect(state).toEqual({ submitted: false, dismissedAt: '' })
@@ -89,13 +85,9 @@ describe('expert-consultation', () => {
   })
 
   describe('setExpertConsultationSubmitted', () => {
-    it('writes to both electron-store and SQLite', () => {
+    it('writes to SQLite', () => {
       setExpertConsultationSubmitted(true)
 
-      expect(mockStoreInstance.set).toHaveBeenCalledWith(
-        'expertConsultationSubmitted',
-        true
-      )
       expect(mockWriteSetting).toHaveBeenCalledWith(
         'expertConsultationSubmitted',
         'true'
@@ -108,22 +100,14 @@ describe('expert-consultation', () => {
       })
 
       expect(() => setExpertConsultationSubmitted(true)).not.toThrow()
-      expect(mockStoreInstance.set).toHaveBeenCalledWith(
-        'expertConsultationSubmitted',
-        true
-      )
     })
   })
 
   describe('setExpertConsultationDismissedAt', () => {
-    it('writes to both electron-store and SQLite', () => {
+    it('writes to SQLite', () => {
       const timestamp = '2026-03-18T10:00:00.000Z'
       setExpertConsultationDismissedAt(timestamp)
 
-      expect(mockStoreInstance.set).toHaveBeenCalledWith(
-        'expertConsultationDismissedAt',
-        timestamp
-      )
       expect(mockWriteSetting).toHaveBeenCalledWith(
         'expertConsultationDismissedAt',
         timestamp

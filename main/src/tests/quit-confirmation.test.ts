@@ -1,13 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// Hoist mocks so they're available before module evaluation
-const { mockStoreInstance, mockShowMessageBox } = vi.hoisted(() => ({
-  mockStoreInstance: {
-    get: vi.fn((_key: string, defaultValue?: unknown) => defaultValue ?? false),
-    set: vi.fn(),
-  },
-  mockShowMessageBox: vi.fn(),
-}))
+const { mockReadSetting, mockWriteSetting, mockShowMessageBox } = vi.hoisted(
+  () => ({
+    mockReadSetting: vi.fn(),
+    mockWriteSetting: vi.fn(),
+    mockShowMessageBox: vi.fn(),
+  })
+)
 
 vi.mock('@sentry/electron/main', () => ({
   startSpan: vi.fn((_opts: unknown, cb: (span: unknown) => unknown) =>
@@ -17,7 +16,7 @@ vi.mock('@sentry/electron/main', () => ({
 
 vi.mock('electron-store', () => ({
   default: vi.fn(function ElectronStore() {
-    return mockStoreInstance
+    return { get: vi.fn(), set: vi.fn() }
   }),
 }))
 
@@ -36,6 +35,14 @@ vi.mock('../logger', () => ({
   },
 }))
 
+vi.mock('../db/writers/settings-writer', () => ({
+  writeSetting: mockWriteSetting,
+}))
+
+vi.mock('../db/readers/settings-reader', () => ({
+  readSetting: mockReadSetting,
+}))
+
 import {
   getSkipQuitConfirmation,
   setSkipQuitConfirmation,
@@ -48,28 +55,50 @@ describe('quit-confirmation', () => {
   })
 
   describe('getSkipQuitConfirmation', () => {
-    it('returns the stored value', () => {
-      mockStoreInstance.get.mockReturnValue(true)
+    it('returns true when SQLite has the value set', () => {
+      mockReadSetting.mockReturnValue('true')
 
       expect(getSkipQuitConfirmation()).toBe(true)
-      expect(mockStoreInstance.get).toHaveBeenCalledWith('skipQuitConfirmation')
+      expect(mockReadSetting).toHaveBeenCalledWith('skipQuitConfirmation')
+    })
+
+    it('returns false when SQLite returns undefined', () => {
+      mockReadSetting.mockReturnValue(undefined)
+
+      expect(getSkipQuitConfirmation()).toBe(false)
+    })
+
+    it('returns false when SQLite read throws', () => {
+      mockReadSetting.mockImplementation(() => {
+        throw new Error('DB error')
+      })
+
+      expect(getSkipQuitConfirmation()).toBe(false)
     })
   })
 
   describe('setSkipQuitConfirmation', () => {
-    it('persists the preference', () => {
+    it('persists the preference to SQLite', () => {
       setSkipQuitConfirmation(true)
 
-      expect(mockStoreInstance.set).toHaveBeenCalledWith(
+      expect(mockWriteSetting).toHaveBeenCalledWith(
         'skipQuitConfirmation',
-        true
+        'true'
       )
+    })
+
+    it('does not throw when SQLite write fails', () => {
+      mockWriteSetting.mockImplementation(() => {
+        throw new Error('DB write failed')
+      })
+
+      expect(() => setSkipQuitConfirmation(true)).not.toThrow()
     })
   })
 
   describe('showNativeQuitConfirmation', () => {
     it('returns true immediately when skipQuitConfirmation is set', async () => {
-      mockStoreInstance.get.mockReturnValue(true)
+      mockReadSetting.mockReturnValue('true')
 
       const result = await showNativeQuitConfirmation()
 
@@ -78,7 +107,7 @@ describe('quit-confirmation', () => {
     })
 
     it('shows dialog and returns true when user clicks Quit', async () => {
-      mockStoreInstance.get.mockReturnValue(false)
+      mockReadSetting.mockReturnValue(undefined)
       mockShowMessageBox.mockResolvedValue({
         response: 0,
         checkboxChecked: false,
@@ -91,7 +120,7 @@ describe('quit-confirmation', () => {
     })
 
     it('shows dialog and returns false when user clicks Cancel', async () => {
-      mockStoreInstance.get.mockReturnValue(false)
+      mockReadSetting.mockReturnValue(undefined)
       mockShowMessageBox.mockResolvedValue({
         response: 1,
         checkboxChecked: false,
@@ -104,7 +133,7 @@ describe('quit-confirmation', () => {
     })
 
     it('persists preference when checkbox is checked and user confirms', async () => {
-      mockStoreInstance.get.mockReturnValue(false)
+      mockReadSetting.mockReturnValue(undefined)
       mockShowMessageBox.mockResolvedValue({
         response: 0,
         checkboxChecked: true,
@@ -113,14 +142,14 @@ describe('quit-confirmation', () => {
       const result = await showNativeQuitConfirmation()
 
       expect(result).toBe(true)
-      expect(mockStoreInstance.set).toHaveBeenCalledWith(
+      expect(mockWriteSetting).toHaveBeenCalledWith(
         'skipQuitConfirmation',
-        true
+        'true'
       )
     })
 
     it('does not persist preference when checkbox is checked but user cancels', async () => {
-      mockStoreInstance.get.mockReturnValue(false)
+      mockReadSetting.mockReturnValue(undefined)
       mockShowMessageBox.mockResolvedValue({
         response: 1,
         checkboxChecked: true,
@@ -129,11 +158,11 @@ describe('quit-confirmation', () => {
       const result = await showNativeQuitConfirmation()
 
       expect(result).toBe(false)
-      expect(mockStoreInstance.set).not.toHaveBeenCalled()
+      expect(mockWriteSetting).not.toHaveBeenCalled()
     })
 
     it('returns true (fail open) when dialog.showMessageBox rejects', async () => {
-      mockStoreInstance.get.mockReturnValue(false)
+      mockReadSetting.mockReturnValue(undefined)
       mockShowMessageBox.mockRejectedValue(new Error('Dialog failed'))
 
       const result = await showNativeQuitConfirmation()
