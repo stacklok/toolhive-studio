@@ -4,16 +4,21 @@ import { EmptyState } from '../empty-state'
 import { Link } from '@tanstack/react-router'
 import {
   isRegistryAuthRequiredError,
+  isRegistryUnavailableError,
   REGISTRY_AUTH_REQUIRED_UI_MESSAGE,
 } from '../settings/registry/registry-list-error'
 import { IllustrationLock } from '../illustrations/illustration-lock'
 import { IllustrationError } from '../illustrations/illustration-error'
 
+const REGISTRY_UNAVAILABLE_UI_MESSAGE =
+  'The upstream registry is unreachable or the API URL is misconfigured. Please check your Registry Server API URL in the settings.'
+
 export function RegistryError({ error }: { error: unknown }) {
   const isAuthRequired = isRegistryAuthRequiredError(error)
+  const isUnavailable = isRegistryUnavailableError(error)
 
   const registrySettingsButton = (
-    <Button asChild variant="secondary" className="rounded-full" size="lg">
+    <Button asChild variant="secondary" className="mt-6 rounded-full" size="lg">
       <Link
         to="/settings"
         search={{ tab: 'registry' }}
@@ -35,7 +40,15 @@ export function RegistryError({ error }: { error: unknown }) {
           title="Authentication error"
           body={REGISTRY_AUTH_REQUIRED_UI_MESSAGE}
         >
-          <div className="mt-8 flex gap-3">{registrySettingsButton}</div>
+          {registrySettingsButton}
+        </EmptyState>
+      ) : isUnavailable ? (
+        <EmptyState
+          illustration={IllustrationError}
+          title="Registry unavailable"
+          body={REGISTRY_UNAVAILABLE_UI_MESSAGE}
+        >
+          {registrySettingsButton}
         </EmptyState>
       ) : (
         <EmptyState
@@ -48,9 +61,7 @@ export function RegistryError({ error }: { error: unknown }) {
               If issues persist, contact the ToolHive team via{' '}
               <LinkErrorDiscord />
             </p>
-            <div className="grid grid-cols-2 gap-2">
-              {registrySettingsButton}
-            </div>
+            {registrySettingsButton}
           </div>
         </EmptyState>
       )}

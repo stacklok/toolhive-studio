@@ -22,9 +22,15 @@ import {
   REGISTRY_WRONG_AUTH_TOAST,
   REGISTRY_WRONG_ISSUER_TOAST,
   OIDC_DISCOVERY_PATTERN,
+  AUTH_FIELDS_REQUIRED_PATTERN,
+  REGISTRY_AUTH_FIELDS_REQUIRED_TOAST,
 } from './registry-list-error'
 
-export { REGISTRY_WRONG_AUTH_TOAST, REGISTRY_WRONG_ISSUER_TOAST }
+export {
+  REGISTRY_WRONG_AUTH_TOAST,
+  REGISTRY_WRONG_ISSUER_TOAST,
+  REGISTRY_AUTH_FIELDS_REQUIRED_TOAST,
+}
 
 const REGISTRY_DEFAULT_PATH = { name: 'default' } as const
 
@@ -44,11 +50,13 @@ async function putRegistry(body: PkgApiV1UpdateRegistryRequest, type: string) {
     body,
     throwOnError: true,
   }).catch((e) => {
-    throw type === REGISTRY_FORM_TYPE.API_URL &&
-      typeof e === 'string' &&
-      e.includes(OIDC_DISCOVERY_PATTERN)
-      ? new Error(REGISTRY_WRONG_ISSUER_TOAST)
-      : e
+    if (type === REGISTRY_FORM_TYPE.API_URL && typeof e === 'string') {
+      if (e.includes(OIDC_DISCOVERY_PATTERN))
+        throw new Error(REGISTRY_WRONG_ISSUER_TOAST)
+      if (e.includes(AUTH_FIELDS_REQUIRED_PATTERN))
+        throw new Error(REGISTRY_AUTH_FIELDS_REQUIRED_TOAST)
+    }
+    throw e
   })
 }
 
@@ -137,6 +145,11 @@ export function useRegistryUpdateMutation() {
         return REGISTRY_WRONG_ISSUER_TOAST
       if (e instanceof Error && e.message === REGISTRY_WRONG_AUTH_TOAST)
         return REGISTRY_WRONG_AUTH_TOAST
+      if (
+        e instanceof Error &&
+        e.message === REGISTRY_AUTH_FIELDS_REQUIRED_TOAST
+      )
+        return REGISTRY_AUTH_FIELDS_REQUIRED_TOAST
       return 'Failed to update registry'
     },
     loadingMsg: (data) =>

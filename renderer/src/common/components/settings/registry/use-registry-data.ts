@@ -3,7 +3,10 @@ import { getApiV1BetaRegistryOptions } from '@common/api/generated/@tanstack/rea
 import { useRegistryUpdateMutation } from './use-registry-update-mutation'
 import {
   getRegistryAuthRequiredMessage,
+  getRegistryUnavailableMessage,
+  getRegistryUnavailableUrl,
   isRegistryAuthRequiredError,
+  isRegistryUnavailableError,
 } from './registry-list-error'
 
 export function useRegistryData() {
@@ -26,7 +29,10 @@ export function useRegistryData() {
   return {
     defaultRegistry: registryListData?.registries?.[0],
     isAuthRequiredError: isRegistryAuthRequiredError(registryError),
+    isUnavailableError: isRegistryUnavailableError(registryError),
     registryAuthRequiredMessage: getRegistryAuthRequiredMessage(registryError),
+    registryUnavailableMessage: getRegistryUnavailableMessage(registryError),
+    registryUnavailableUrl: getRegistryUnavailableUrl(registryError),
     isLoading: isPendingRegistry || isPendingUpdate,
     hasError: !!registryError,
     isMutationError,

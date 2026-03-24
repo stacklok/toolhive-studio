@@ -5,6 +5,9 @@ import { REGISTRY_AUTH_REQUIRED_UI_MESSAGE } from '../../settings/registry/regis
 import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
 
+const REGISTRY_UNAVAILABLE_UI_MESSAGE =
+  'The upstream registry is unreachable or the API URL is misconfigured. Please check your Registry Server API URL in the settings.'
+
 function renderRegistryError(error: unknown) {
   const router = createTestRouter(() => <RegistryError error={error} />)
   return renderRoute(router)
@@ -12,31 +15,72 @@ function renderRegistryError(error: unknown) {
 
 describe('RegistryError', () => {
   describe('registry_auth_required error', () => {
-    it('shows authentication required title and message', async () => {
+    it('shows authentication error title and message', async () => {
       renderRegistryError({ code: 'registry_auth_required' })
 
       await waitFor(() => {
-        expect(screen.getByText('Authentication required')).toBeVisible()
+        expect(screen.getByText('Authentication error')).toBeVisible()
       })
       expect(screen.getByText(REGISTRY_AUTH_REQUIRED_UI_MESSAGE)).toBeVisible()
     })
 
-    it('renders Registry Settings and Try Again buttons', async () => {
+    it('renders Resolve issues button', async () => {
       renderRegistryError({ code: 'registry_auth_required' })
 
       await waitFor(() => {
-        expect(screen.getByText('Authentication required')).toBeVisible()
+        expect(screen.getByText('Authentication error')).toBeVisible()
       })
-      expect(screen.getByText('Registry Settings')).toBeVisible()
-      expect(screen.getByRole('button', { name: /Try Again/i })).toBeVisible()
+      expect(screen.getByText('Resolve issues')).toBeVisible()
     })
 
     it('does not show generic error message or Discord link', async () => {
       renderRegistryError({ code: 'registry_auth_required' })
 
       await waitFor(() => {
-        expect(screen.getByText('Authentication required')).toBeVisible()
+        expect(screen.getByText('Authentication error')).toBeVisible()
       })
+      expect(
+        screen.queryByText(/something went wrong while loading the registry/i)
+      ).not.toBeInTheDocument()
+      expect(screen.queryByText('Discord')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('registry_unavailable error', () => {
+    it('shows registry unavailable title and message', async () => {
+      renderRegistryError({
+        code: 'registry_unavailable',
+        message: 'upstream registry at https://example.com is unavailable: 404',
+      })
+
+      await waitFor(() => {
+        expect(screen.getByText('Registry unavailable')).toBeVisible()
+      })
+      expect(screen.getByText(REGISTRY_UNAVAILABLE_UI_MESSAGE)).toBeVisible()
+    })
+
+    it('renders Resolve issues button', async () => {
+      renderRegistryError({
+        code: 'registry_unavailable',
+        message: 'upstream registry at https://example.com is unavailable: 404',
+      })
+
+      await waitFor(() => {
+        expect(screen.getByText('Registry unavailable')).toBeVisible()
+      })
+      expect(screen.getByText('Resolve issues')).toBeVisible()
+    })
+
+    it('does not show auth error or generic error content', async () => {
+      renderRegistryError({
+        code: 'registry_unavailable',
+        message: 'upstream registry at https://example.com is unavailable: 404',
+      })
+
+      await waitFor(() => {
+        expect(screen.getByText('Registry unavailable')).toBeVisible()
+      })
+      expect(screen.queryByText('Authentication error')).not.toBeInTheDocument()
       expect(
         screen.queryByText(/something went wrong while loading the registry/i)
       ).not.toBeInTheDocument()
@@ -56,26 +100,24 @@ describe('RegistryError', () => {
       ).toBeVisible()
     })
 
-    it('renders Discord link, Try Again and Registry Settings buttons', async () => {
+    it('renders Discord link and Resolve issues button', async () => {
       renderRegistryError({ code: 'other_error' })
 
       await waitFor(() => {
         expect(screen.getByText('Failed to load registry')).toBeVisible()
       })
       expect(screen.getByText('Discord')).toBeVisible()
-      expect(screen.getByRole('button', { name: /Try Again/i })).toBeVisible()
-      expect(screen.getByText('Registry Settings')).toBeVisible()
+      expect(screen.getByText('Resolve issues')).toBeVisible()
     })
 
-    it('does not show authentication required content', async () => {
+    it('does not show authentication or unavailable content', async () => {
       renderRegistryError(new Error('some error'))
 
       await waitFor(() => {
         expect(screen.getByText('Failed to load registry')).toBeVisible()
       })
-      expect(
-        screen.queryByText('Authentication required')
-      ).not.toBeInTheDocument()
+      expect(screen.queryByText('Authentication error')).not.toBeInTheDocument()
+      expect(screen.queryByText('Registry unavailable')).not.toBeInTheDocument()
       expect(
         screen.queryByText(REGISTRY_AUTH_REQUIRED_UI_MESSAGE)
       ).not.toBeInTheDocument()

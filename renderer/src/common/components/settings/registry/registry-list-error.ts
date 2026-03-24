@@ -9,21 +9,39 @@ export const REGISTRY_WRONG_ISSUER_TOAST =
 
 export const OIDC_DISCOVERY_PATTERN = 'OIDC discovery failed'
 
+export const AUTH_FIELDS_REQUIRED_PATTERN =
+  'auth.issuer and auth.client_id are required'
+
+export const REGISTRY_AUTH_FIELDS_REQUIRED_TOAST =
+  'Both Client ID and Issuer URL are required'
+
 const REGISTRY_AUTH_REQUIRED_CODE = 'registry_auth_required'
+const REGISTRY_UNAVAILABLE_CODE = 'registry_unavailable'
 
 /** Shown when GET /api/v1beta/registry fails with `code: registry_auth_required` (API Server API + OAuth). */
 export const REGISTRY_AUTH_REQUIRED_UI_MESSAGE =
-  'There is an issue with your registry configuration. Please check your authentication configuration (Client ID and Issuer), then try again.'
+  'There is an issue with your registry configuration. Please check your authentication configuration (Server URL, Client ID and Issuer), then try again.'
 
 /** Fallback when GET /api/v1beta/registry fails for any other reason (or non-api_url types). */
 export const REGISTRY_LIST_LOAD_FALLBACK_MESSAGE =
   'Failed to load registry configuration. The registry source may be misconfigured or unavailable.'
 
+function getErrorCode(error: unknown): string | undefined {
+  if (!error || typeof error !== 'object') return undefined
+  return (error as Record<string, unknown>).code as string | undefined
+}
+
+function getErrorMessage(error: unknown): string | undefined {
+  if (!error || typeof error !== 'object') return undefined
+  return (error as Record<string, unknown>).message as string | undefined
+}
+
 export function isRegistryAuthRequiredError(error: unknown): boolean {
-  if (!error || typeof error !== 'object') {
-    return false
-  }
-  return (error as Record<string, unknown>).code === REGISTRY_AUTH_REQUIRED_CODE
+  return getErrorCode(error) === REGISTRY_AUTH_REQUIRED_CODE
+}
+
+export function isRegistryUnavailableError(error: unknown): boolean {
+  return getErrorCode(error) === REGISTRY_UNAVAILABLE_CODE
 }
 
 /**
@@ -37,6 +55,22 @@ export function getRegistryAuthRequiredMessage(
     return REGISTRY_AUTH_REQUIRED_UI_MESSAGE
   }
   return undefined
+}
+
+/** Returns a user-friendly message from a `registry_unavailable` 503 response. */
+export function getRegistryUnavailableMessage(
+  error: unknown
+): string | undefined {
+  if (!isRegistryUnavailableError(error)) return undefined
+  return 'The Registry Server API URL is not correct. Make sure it points to a valid MCP Registry API endpoint.'
+}
+
+/** Extracts the misconfigured registry URL from the raw API error message. */
+export function getRegistryUnavailableUrl(error: unknown): string | undefined {
+  if (!isRegistryUnavailableError(error)) return undefined
+  const raw = getErrorMessage(error) ?? ''
+  const match = raw.match(/upstream registry at (\S+) is unavailable/)
+  return match?.[1]
 }
 
 /**
