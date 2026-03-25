@@ -22,6 +22,7 @@ export function createTestRouter(component: () => JSX.Element, path = '/') {
   const router = new Router({
     routeTree: rootRoute.addChildren([testRoute]),
     history: createMemoryHistory({ initialEntries: [path] }),
+    defaultNotFoundComponent: () => null,
   })
 
   return router
