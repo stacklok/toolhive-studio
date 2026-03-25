@@ -8,7 +8,7 @@ interface ExpertConsultationStore {
   expertConsultationDismissedAt: string
 }
 
-export interface ExpertConsultationState {
+interface ExpertConsultationState {
   submitted: boolean
   dismissedAt: string
 }

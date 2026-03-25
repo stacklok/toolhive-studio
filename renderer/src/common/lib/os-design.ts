@@ -12,7 +12,7 @@
 
 const STORAGE_KEY = '__thv_os_design_variant'
 
-export type OsDesignVariant = 'mac' | 'windows'
+type OsDesignVariant = 'mac' | 'windows'
 
 function detectVariant(): OsDesignVariant {
   const stored = sessionStorage.getItem(STORAGE_KEY)
