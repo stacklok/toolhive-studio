@@ -17,11 +17,7 @@ export default {
   },
   ignore: [
     'renderer/src/route-tree.gen.ts',
-    'renderer/src/routes/store.tsx',
-    'renderer/src/routes/clients.tsx',
     'renderer/src/common/components/illustrations/**',
-    'renderer/src/common/hooks/use-servers.ts',
-    'renderer/src/common/lib/utils.ts',
     'renderer/src/common/components/ui/**',
     'renderer/src/common/components/ai-elements/**',
     'renderer/src/features/chat/components/mcp-server-badge.tsx',
@@ -29,8 +25,6 @@ export default {
     'renderer/src/vite-env.d.ts',
     'renderer/src/types/global.d.ts',
     'main/src/vite-env.d.ts',
-    'renderer/src/features/meta-mcp/components/loading-state-dialog.tsx',
-    'renderer/src/common/lib/constants.ts',
     'renderer/src/common/contexts/permissions/**',
   ],
   ignoreDependencies: [
@@ -42,9 +36,7 @@ export default {
     '@electron-forge/maker-base',
     '@tailwindcss/vite',
   ],
-  ignoreBinaries: [
-    'run', // False positive from "pnpm run vitest:electron -- run"
-  ],
+  ignoreBinaries: [],
   compilers: {
     // this is needed to support css entry files
     // see: https://knip.dev/features/compilers#css
