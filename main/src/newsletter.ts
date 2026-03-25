@@ -8,7 +8,7 @@ interface NewsletterStore {
   newsletterDismissedAt: string
 }
 
-export interface NewsletterState {
+interface NewsletterState {
   subscribed: boolean
   dismissedAt: string
 }
