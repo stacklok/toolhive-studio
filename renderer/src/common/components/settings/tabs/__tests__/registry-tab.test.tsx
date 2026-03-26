@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -23,13 +23,16 @@ const renderWithProviders = (component: React.ReactElement) => {
     },
   })
 
-  return render(
-    <PromptProvider>
-      <QueryClientProvider client={queryClient}>
-        {component}
-      </QueryClientProvider>
-    </PromptProvider>
-  )
+  return {
+    ...render(
+      <PromptProvider>
+        <QueryClientProvider client={queryClient}>
+          {component}
+        </QueryClientProvider>
+      </PromptProvider>
+    ),
+    queryClient,
+  }
 }
 
 Object.defineProperty(Element.prototype, 'hasPointerCapture', {
@@ -899,6 +902,131 @@ describe('RegistryTab', () => {
       expect(screen.getByText(REGISTRY_WRONG_AUTH_TOAST)).toBeVisible()
     })
     expect(screen.getByText(REGISTRY_AUTH_REQUIRED_UI_MESSAGE)).toBeVisible()
+  })
+
+  it('pre-selects Registry Server API and shows source error when GET returns registry_unavailable', async () => {
+    const misconfiguredUrl = 'https://wrong-host.example.com/'
+
+    mockedGetApiV1BetaRegistry.overrideHandler(() =>
+      HttpResponse.json(
+        {
+          code: 'registry_unavailable',
+          message: `upstream registry at ${misconfiguredUrl} is unavailable: registry API returned status 404`,
+        },
+        { status: 503 }
+      )
+    )
+
+    renderWithProviders(<RegistryTab />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('combobox')).toHaveTextContent(
+        'Registry Server API'
+      )
+    })
+
+    expect(
+      screen.getByText(
+        'The Registry Server API URL is not correct. Make sure it points to a valid MCP Registry API endpoint.'
+      )
+    ).toBeVisible()
+
+    expect(screen.getByLabelText(/Registry Server API URL/i)).toHaveValue(
+      misconfiguredUrl
+    )
+  })
+
+  it('shows only OIDC box message when GET returns registry_auth_required with existing auth config', async () => {
+    const apiUrl = 'http://localhost:8080/api/registry'
+
+    let getCallCount = 0
+    mockedGetApiV1BetaRegistry.overrideHandler(() => {
+      getCallCount++
+      if (getCallCount === 1) {
+        return HttpResponse.json({
+          registries: [
+            {
+              name: 'default',
+              type: 'api',
+              source: apiUrl,
+              auth_config: {
+                client_id: 'my-client',
+                issuer: 'https://issuer.example.com',
+              },
+            },
+          ],
+        })
+      }
+      return HttpResponse.json(
+        {
+          code: 'registry_auth_required',
+          message: 'Registry authentication required.',
+        },
+        { status: 401 }
+      )
+    })
+
+    const { queryClient } = renderWithProviders(<RegistryTab />)
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Registry Server API URL/i)).toHaveValue(
+        apiUrl
+      )
+    })
+
+    await act(async () => {
+      await queryClient.invalidateQueries()
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText(REGISTRY_AUTH_REQUIRED_UI_MESSAGE)).toBeVisible()
+    })
+
+    expect(
+      screen.queryByText(REGISTRY_WRONG_AUTH_TOAST)
+    ).not.toBeInTheDocument()
+  })
+
+  it('shows field-specific errors when submitting api_url with missing auth fields', async () => {
+    const apiUrl = 'http://localhost:8080/api/registry'
+
+    mockedPutApiV1BetaRegistryByName.overrideHandler(
+      () =>
+        new HttpResponse(
+          'auth.issuer and auth.client_id are required when using OAuth',
+          {
+            status: 400,
+            headers: { 'Content-Type': 'text/plain' },
+          }
+        )
+    )
+
+    renderWithProviders(<RegistryTab />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Save' })).toBeVisible()
+    })
+
+    await userEvent.click(screen.getByRole('combobox'))
+    await userEvent.click(
+      screen.getByRole('option', { name: 'Registry Server API' })
+    )
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Registry Server API URL/i)).toBeVisible()
+    })
+
+    await userEvent.type(
+      screen.getByLabelText(/Registry Server API URL/i),
+      apiUrl
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Client ID is required')).toBeVisible()
+    })
+    expect(screen.getByText('Issuer URL is required')).toBeVisible()
   })
 
   it('updates cache with correct type mapping after mutation', async () => {

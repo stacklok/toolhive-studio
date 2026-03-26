@@ -142,7 +142,7 @@ export function RegistrySourceField({
               hasRegistryError={showSourceError}
             />
             {hasRegistryError && registryType !== 'api_url' ? (
-              <p className="text-destructive text-sm">
+              <p className="text-destructive w-full text-sm">
                 {resolveRegistryListLoadErrorMessage(
                   registryType,
                   registryAuthRequiredMessage
