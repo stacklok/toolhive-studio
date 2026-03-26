@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: Copyright 2025 Stacklok, Inc.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Grype configuration for toolhive-react.
+# - node_modules/: lock file is the source of truth; scanning installed packages is redundant.
+# - dist/:         build artifacts, not source packages.
+
+exclude:
+  - '**/node_modules/**'
+  - '**/dist/**'
+  - '**/bin/**'
+  - '**/out/**'
+  - '**/.webpack/**'
+  - '**/coverage/**'
+  - '**/playwright-report/**'
+  - '**/test-results/**'
+  - '**/test-videos/**'
+  - '**/.vite/**'
+  - '**/.cache/**'
