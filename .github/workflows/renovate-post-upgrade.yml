@@ -8,7 +8,7 @@ on:
       - 'package.json'
 
 permissions:
-  contents: write
+  contents: read
   pull-requests: read
 
 jobs:
@@ -17,10 +17,17 @@ jobs:
     runs-on: ubuntu-latest
     if: github.actor == 'renovate[bot]'
     steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.TOOLHIVE_STUDIO_CI_APP_ID }}
+          private-key: ${{ secrets.TOOLHIVE_STUDIO_CI_APP_KEY }}
+
       - name: Check what was updated
         id: check
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           DIFF=$(gh pr diff ${{ github.event.pull_request.number }} --repo ${{ github.repository }}) || exit 1
           echo "toolhive=$(echo "$DIFF" | grep -q 'TOOLHIVE_VERSION' && echo true || echo false)" >> $GITHUB_OUTPUT
@@ -31,7 +38,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ github.head_ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Setup pnpm and Node.js
         if: steps.check.outputs.toolhive == 'true' || steps.check.outputs.heyapi == 'true'
