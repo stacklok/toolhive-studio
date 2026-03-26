@@ -47,16 +47,16 @@ importers:
         specifier: ^3.0.74
         version: 3.0.74(zod@4.3.6)
       '@fontsource-variable/inter':
-        specifier: ^5.2.6
+        specifier: ^5.2.8
         version: 5.2.8
       '@fontsource-variable/merriweather':
         specifier: ^5.2.6
         version: 5.2.6
       '@fontsource/atkinson-hyperlegible':
-        specifier: ^5.2.6
+        specifier: ^5.2.8
         version: 5.2.8
       '@fontsource/space-mono':
-        specifier: ^5.2.7
+        specifier: ^5.2.9
         version: 5.2.9
       '@modelcontextprotocol/sdk':
         specifier: ^1.27.1
