@@ -20,7 +20,7 @@ const REGISTRY_UNAVAILABLE_CODE = 'registry_unavailable'
 
 /** Shown when GET /api/v1beta/registry fails with `code: registry_auth_required` (API Server API + OAuth). */
 export const REGISTRY_AUTH_REQUIRED_UI_MESSAGE =
-  'There is an issue with your registry configuration. Please check your authentication configuration (Server URL, Client ID and Issuer), then try again.'
+  'The configured registry server requires authentication. Please provide your Server URL, Client ID and Issuer URL to authenticate.'
 
 /** Fallback when GET /api/v1beta/registry fails for any other reason (or non-api_url types). */
 const REGISTRY_LIST_LOAD_FALLBACK_MESSAGE =

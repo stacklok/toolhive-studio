@@ -35,13 +35,9 @@ function applySubmitFieldErrors(
       break
     case REGISTRY_AUTH_FIELDS_REQUIRED_TOAST:
       if (!data.client_id?.trim())
-        form.setError('client_id', {
-          message: REGISTRY_AUTH_FIELDS_REQUIRED_TOAST,
-        })
+        form.setError('client_id', { message: 'Client ID is required' })
       if (!data.issuer_url?.trim())
-        form.setError('issuer_url', {
-          message: REGISTRY_AUTH_FIELDS_REQUIRED_TOAST,
-        })
+        form.setError('issuer_url', { message: 'Issuer URL is required' })
       break
   }
 }
@@ -87,18 +83,16 @@ export function useRegistryForm() {
   const currentType = useWatch({ control: form.control, name: 'type' })
 
   useEffect(() => {
+    form.clearErrors(['source', 'client_id', 'issuer_url'])
+
     if (isUnavailableError && registryUnavailableMessage) {
       form.setError('source', { message: registryUnavailableMessage })
       return
     }
-    if (isAuthRequiredError) {
-      if (!initialClientId && !initialIssuerUrl) {
-        form.setError('source', { message: '' })
-        form.setError('client_id', { message: '' })
-        form.setError('issuer_url', { message: '' })
-      } else {
-        form.setError('client_id', { message: REGISTRY_WRONG_AUTH_TOAST })
-      }
+    if (isAuthRequiredError && !initialClientId && !initialIssuerUrl) {
+      form.setError('source', { message: '' })
+      form.setError('client_id', { message: '' })
+      form.setError('issuer_url', { message: '' })
     }
   }, [
     isAuthRequiredError,
@@ -129,10 +123,7 @@ export function useRegistryForm() {
     }
   }
 
-  const hasRegistryError =
-    hasError &&
-    !isUnavailableError &&
-    (!isAuthRequiredError || (!initialClientId && !initialIssuerUrl))
+  const hasRegistryError = hasError && !isUnavailableError
 
   return {
     form,

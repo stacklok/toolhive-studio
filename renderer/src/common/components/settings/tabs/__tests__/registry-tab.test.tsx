@@ -525,7 +525,9 @@ describe('RegistryTab', () => {
     // All fields empty → general OIDC box message shown, no field-level text
     await waitFor(() => {
       expect(
-        screen.getByText(/There is an issue with your registry configuration/)
+        screen.getByText(
+          /The configured registry server requires authentication/
+        )
       ).toBeVisible()
     })
     expect(
@@ -847,7 +849,7 @@ describe('RegistryTab', () => {
     })
   })
 
-  it('shows client_id field error when login fails after GET registry_auth_required with existing config', async () => {
+  it('shows client_id field error and OIDC box when login fails after GET registry_auth_required with existing config', async () => {
     const apiUrl = 'http://localhost:8080/api/registry'
 
     let getCallCount = 0
@@ -885,23 +887,18 @@ describe('RegistryTab', () => {
 
     renderWithProviders(<RegistryTab />)
 
-    // Form pre-populated from existing auth config
     await waitFor(() => {
       expect(screen.getByLabelText(/Registry Server API URL/i)).toHaveValue(
         apiUrl
       )
     })
 
-    // Submit → login fails → GET invalidated → returns 401
     await userEvent.click(screen.getByRole('button', { name: 'Save' }))
 
-    // Field-level error on client_id, not general OIDC box message
     await waitFor(() => {
       expect(screen.getByText(REGISTRY_WRONG_AUTH_TOAST)).toBeVisible()
     })
-    expect(
-      screen.queryByText(REGISTRY_AUTH_REQUIRED_UI_MESSAGE)
-    ).not.toBeInTheDocument()
+    expect(screen.getByText(REGISTRY_AUTH_REQUIRED_UI_MESSAGE)).toBeVisible()
   })
 
   it('updates cache with correct type mapping after mutation', async () => {
