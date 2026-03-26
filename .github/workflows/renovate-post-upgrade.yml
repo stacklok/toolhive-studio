@@ -17,21 +17,22 @@ jobs:
     runs-on: ubuntu-latest
     if: github.actor == 'renovate[bot]'
     steps:
-      - name: Generate GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@v2
-        with:
-          app-id: ${{ secrets.TOOLHIVE_STUDIO_CI_APP_ID }}
-          private-key: ${{ secrets.TOOLHIVE_STUDIO_CI_APP_KEY }}
-
       - name: Check what was updated
         id: check
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           DIFF=$(gh pr diff ${{ github.event.pull_request.number }} --repo ${{ github.repository }}) || exit 1
           echo "toolhive=$(echo "$DIFF" | grep -q 'TOOLHIVE_VERSION' && echo true || echo false)" >> $GITHUB_OUTPUT
           echo "heyapi=$(echo "$DIFF" | grep -q '@hey-api/openapi-ts' && echo true || echo false)" >> $GITHUB_OUTPUT
+
+      - name: Generate GitHub App token
+        if: steps.check.outputs.toolhive == 'true' || steps.check.outputs.heyapi == 'true'
+        id: app-token
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        with:
+          app-id: ${{ secrets.TOOLHIVE_STUDIO_CI_APP_ID }}
+          private-key: ${{ secrets.TOOLHIVE_STUDIO_CI_APP_KEY }}
 
       - name: Checkout PR branch
         if: steps.check.outputs.toolhive == 'true' || steps.check.outputs.heyapi == 'true'
