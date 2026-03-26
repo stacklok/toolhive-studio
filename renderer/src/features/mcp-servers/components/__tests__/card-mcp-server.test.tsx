@@ -44,6 +44,7 @@ function createCardMcpServerTestRouter() {
   const router = new Router({
     routeTree: rootRoute.addChildren([groupRoute]),
     history: createMemoryHistory({ initialEntries: ['/group/default'] }),
+    defaultNotFoundComponent: () => null,
   })
 
   return router
@@ -53,8 +54,11 @@ const router = createCardMcpServerTestRouter() as unknown as ReturnType<
   typeof createTestRouter
 >
 
-beforeEach(() => {
-  router.navigate({ to: '/group/$groupName', params: { groupName: 'default' } })
+beforeEach(async () => {
+  await router.navigate({
+    to: '/group/$groupName',
+    params: { groupName: 'default' },
+  })
 })
 
 it('navigates to logs page when logs menu item is clicked', async () => {
@@ -280,6 +284,7 @@ it('stays on the same group page after deleting a server', async () => {
   const testRouter = new Router({
     routeTree: rootRoute.addChildren([groupRoute]),
     history: createMemoryHistory({ initialEntries: ['/group/g1'] }),
+    defaultNotFoundComponent: () => null,
   }) as unknown as ReturnType<typeof createTestRouter>
 
   renderRoute(testRouter)
@@ -328,6 +333,7 @@ describe('version drift', () => {
     return new Router({
       routeTree: rootRoute.addChildren([groupRoute]),
       history: createMemoryHistory({ initialEntries: ['/group/default'] }),
+      defaultNotFoundComponent: () => null,
     }) as unknown as ReturnType<typeof createTestRouter>
   }
 
