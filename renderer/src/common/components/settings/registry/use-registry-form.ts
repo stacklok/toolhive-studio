@@ -12,6 +12,7 @@ import {
   REGISTRY_WRONG_AUTH_TOAST,
   REGISTRY_WRONG_ISSUER_TOAST,
   REGISTRY_AUTH_FIELDS_REQUIRED_TOAST,
+  REGISTRY_UNAVAILABLE_SOURCE_MESSAGE,
 } from './registry-list-error'
 import { useRegistryData } from './use-registry-data'
 
@@ -48,7 +49,6 @@ export function useRegistryForm() {
     isAuthRequiredError,
     isUnavailableError,
     registryAuthRequiredMessage,
-    registryUnavailableMessage,
     registryUnavailableUrl,
     isLoading,
     hasError,
@@ -85,8 +85,8 @@ export function useRegistryForm() {
   useEffect(() => {
     form.clearErrors(['source', 'client_id', 'issuer_url'])
 
-    if (isUnavailableError && registryUnavailableMessage) {
-      form.setError('source', { message: registryUnavailableMessage })
+    if (isUnavailableError) {
+      form.setError('source', { message: REGISTRY_UNAVAILABLE_SOURCE_MESSAGE })
       return
     }
     if (isAuthRequiredError && !initialClientId && !initialIssuerUrl) {
@@ -97,7 +97,6 @@ export function useRegistryForm() {
   }, [
     isAuthRequiredError,
     isUnavailableError,
-    registryUnavailableMessage,
     form,
     initialClientId,
     initialIssuerUrl,

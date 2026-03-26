@@ -26,22 +26,17 @@ export const REGISTRY_AUTH_REQUIRED_UI_MESSAGE =
 const REGISTRY_LIST_LOAD_FALLBACK_MESSAGE =
   'Failed to load registry configuration. The registry source may be misconfigured or unavailable.'
 
-function getErrorCode(error: unknown): string | undefined {
+function getErrorField(error: unknown, field: string): string | undefined {
   if (!error || typeof error !== 'object') return undefined
-  return (error as Record<string, unknown>).code as string | undefined
-}
-
-function getErrorMessage(error: unknown): string | undefined {
-  if (!error || typeof error !== 'object') return undefined
-  return (error as Record<string, unknown>).message as string | undefined
+  return (error as Record<string, unknown>)[field] as string | undefined
 }
 
 export function isRegistryAuthRequiredError(error: unknown): boolean {
-  return getErrorCode(error) === REGISTRY_AUTH_REQUIRED_CODE
+  return getErrorField(error, 'code') === REGISTRY_AUTH_REQUIRED_CODE
 }
 
 export function isRegistryUnavailableError(error: unknown): boolean {
-  return getErrorCode(error) === REGISTRY_UNAVAILABLE_CODE
+  return getErrorField(error, 'code') === REGISTRY_UNAVAILABLE_CODE
 }
 
 /**
@@ -57,18 +52,13 @@ export function getRegistryAuthRequiredMessage(
   return undefined
 }
 
-/** Returns a user-friendly message from a `registry_unavailable` 503 response. */
-export function getRegistryUnavailableMessage(
-  error: unknown
-): string | undefined {
-  if (!isRegistryUnavailableError(error)) return undefined
-  return 'The Registry Server API URL is not correct. Make sure it points to a valid MCP Registry API endpoint.'
-}
+export const REGISTRY_UNAVAILABLE_SOURCE_MESSAGE =
+  'The Registry Server API URL is not correct. Make sure it points to a valid MCP Registry API endpoint.'
 
 /** Extracts the misconfigured registry URL from the raw API error message. */
 export function getRegistryUnavailableUrl(error: unknown): string | undefined {
   if (!isRegistryUnavailableError(error)) return undefined
-  const raw = getErrorMessage(error) ?? ''
+  const raw = getErrorField(error, 'message') ?? ''
   const match = raw.match(/upstream registry at (\S+) is unavailable/)
   return match?.[1]
 }
