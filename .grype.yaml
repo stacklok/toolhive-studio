@@ -5,6 +5,8 @@
 # - node_modules/: lock file is the source of truth; scanning installed packages is redundant.
 # - dist/:         build artifacts, not source packages.
 
+only-fixed: true
+
 exclude:
   - '**/node_modules/**'
   - '**/dist/**'
