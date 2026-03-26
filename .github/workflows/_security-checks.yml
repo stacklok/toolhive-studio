@@ -15,11 +15,11 @@ jobs:
         id: grype-scan
         uses: anchore/scan-action@7037fa011853d5a11690026fb85feee79f4c946c # v7.3.2
         with:
-          path: "."
+          path: '.'
           fail-build: true
           only-fixed: true
-          severity-cutoff: "medium"
-          output-format: "table"
+          severity-cutoff: 'medium'
+          output-format: 'table'
 
   npm-audit:
     name: PNPM Audit
