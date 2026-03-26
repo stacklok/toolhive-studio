@@ -69,8 +69,7 @@ export function useRegistryForm() {
       : mapResponseTypeToFormType(defaultRegistry?.type)
 
   const formSource =
-    defaultRegistry?.source ??
-    (isUnavailableError ? registryUnavailableUrl : undefined) ??
+    (isUnavailableError ? registryUnavailableUrl : defaultRegistry?.source) ??
     ''
 
   const form = useForm<RegistryFormData>({
