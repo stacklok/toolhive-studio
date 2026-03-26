@@ -5,6 +5,7 @@
 # - node_modules/: lock file is the source of truth; scanning installed packages is redundant.
 # - dist/:         build artifacts, not source packages.
 
+# Only report vulnerabilities that have a fix available — unfixed ones are noise with no actionable remedy.
 only-fixed: true
 
 exclude:
