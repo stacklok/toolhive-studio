@@ -1,4 +1,4 @@
-#!/usr/bin/env ts-node
+#!/usr/bin/env tsx
 
 import { copyFile } from 'node:fs'
 import { join } from 'node:path'

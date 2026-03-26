@@ -1,4 +1,4 @@
-#!/usr/bin/env ts-node
+#!/usr/bin/env tsx
 import { writeFile } from 'node:fs/promises'
 import * as path from 'node:path'
 import { TOOLHIVE_VERSION } from '../utils/constants'
