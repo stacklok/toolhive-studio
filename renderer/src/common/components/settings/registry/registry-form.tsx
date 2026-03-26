@@ -1,4 +1,4 @@
-import { Loader2 } from 'lucide-react'
+import { Loader2, RotateCcw } from 'lucide-react'
 import type { UseFormReturn } from 'react-hook-form'
 import { Form } from '../../ui/form'
 import { RegistrySourceField } from './registry-source-field'
@@ -11,7 +11,9 @@ import type { RegistryFormData } from './schema'
 interface RegistryFormProps {
   form: UseFormReturn<RegistryFormData>
   onSubmit: (data: RegistryFormData) => void
+  onReset: () => void
   isLoading: boolean
+  isResetting: boolean
   hasRegistryError: boolean
   registryAuthRequiredMessage?: string
 }
@@ -24,7 +26,9 @@ function getSubmitLabel(isLoading: boolean, hasOAuthFields: boolean): string {
 export function RegistryForm({
   form,
   onSubmit,
+  onReset,
   isLoading,
+  isResetting,
   hasRegistryError,
   registryAuthRequiredMessage,
 }: RegistryFormProps) {
@@ -35,6 +39,8 @@ export function RegistryForm({
   ])
   const hasOAuthFields =
     type === 'api_url' && !!(clientId?.trim() && issuerUrl?.trim())
+  const isDefault = type === 'default'
+  const isSaving = isLoading && !isResetting
   return (
     <Form {...form}>
       <form
@@ -59,10 +65,27 @@ export function RegistryForm({
           />
           <Separator className="my-1 w-full" />
         </div>
-        <Button variant="action" type="submit" disabled={isLoading}>
-          {isLoading && <Loader2 className="size-4 animate-spin" />}
-          {getSubmitLabel(isLoading, hasOAuthFields)}
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="action" type="submit" disabled={isLoading}>
+            {isSaving && <Loader2 className="size-4 animate-spin" />}
+            {getSubmitLabel(isSaving, hasOAuthFields)}
+          </Button>
+          {!isDefault && (
+            <Button
+              variant="outline"
+              type="button"
+              disabled={isLoading}
+              onClick={onReset}
+            >
+              {isResetting ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <RotateCcw className="size-4" />
+              )}
+              {isResetting ? 'Resetting...' : 'Reset Registry'}
+            </Button>
+          )}
+        </div>
       </form>
     </Form>
   )

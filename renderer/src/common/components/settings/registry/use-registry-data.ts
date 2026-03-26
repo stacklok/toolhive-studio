@@ -23,6 +23,7 @@ export function useRegistryData() {
     mutateAsync: updateRegistry,
     isPending: isPendingUpdate,
     isError: isMutationError,
+    variables: mutationVariables,
   } = useRegistryUpdateMutation()
 
   return {
@@ -35,5 +36,6 @@ export function useRegistryData() {
     hasError: !!registryError,
     isMutationError,
     updateRegistry,
+    mutationVariables,
   }
 }

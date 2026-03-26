@@ -22,6 +22,10 @@ const REGISTRY_UNAVAILABLE_CODE = 'registry_unavailable'
 export const REGISTRY_AUTH_REQUIRED_UI_MESSAGE =
   'The configured registry server requires authentication. Please provide your Server URL, Client ID and Issuer URL to authenticate.'
 
+/** Persistent toast shown when the app detects the registry auth error on startup. */
+export const REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE =
+  'The configured registry requires authentication. The app will not work correctly until the registry is fixed or reset to default.'
+
 /** Fallback when GET /api/v1beta/registry fails for any other reason (or non-api_url types). */
 const REGISTRY_LIST_LOAD_FALLBACK_MESSAGE =
   'Failed to load registry configuration. The registry source may be misconfigured or unavailable.'

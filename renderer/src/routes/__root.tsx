@@ -160,6 +160,21 @@ export const Route = createRootRouteWithContext<{
       retryDelay: 500,
       staleTime: 0,
     })
+
+    const toolhiveStatus = await window.electronAPI.getToolhiveStatus()
+    const alreadyNotified = queryClient.getQueryData<boolean>([
+      'registry-auth-redirected',
+    ])
+    if (
+      toolhiveStatus.exitReason === 'registry-auth-required' &&
+      !alreadyNotified &&
+      location.pathname !== '/settings'
+    ) {
+      queryClient.setQueryData(['registry-auth-redirected'], true)
+      log.info('[beforeLoad] Registry auth required, redirecting to settings')
+      throw redirect({ to: '/settings', search: { tab: 'registry' } })
+    }
+
     try {
       await queryClient.ensureQueryData({
         queryKey: ['health'],
@@ -170,20 +185,20 @@ export const Route = createRootRouteWithContext<{
         gcTime: 0,
       })
     } catch (error) {
-      const [isToolhiveRunning, containerEngineStatus] = await Promise.all([
-        window.electronAPI.isToolhiveRunning(),
-        window.electronAPI.checkContainerEngine(),
-      ])
+      const containerEngineStatus =
+        await window.electronAPI.checkContainerEngine()
 
       const clientConfig = client.getConfig()
 
       log.error(
         `[beforeLoad] Client baseUrl: ${clientConfig.baseUrl || 'NOT SET'}`
       )
-      log.error(`[beforeLoad] ToolHive process running: ${isToolhiveRunning}`)
+      log.error(
+        `[beforeLoad] ToolHive status: running=${toolhiveStatus.isRunning}, exitReason=${toolhiveStatus.exitReason ?? 'none'}`
+      )
 
       if (
-        !isToolhiveRunning ||
+        !toolhiveStatus.isRunning ||
         !containerEngineStatus.available ||
         !clientConfig.baseUrl
       ) {
@@ -194,7 +209,8 @@ export const Route = createRootRouteWithContext<{
             phase: 'beforeLoad',
           },
           extra: {
-            toolhive_running: `${isToolhiveRunning}`,
+            toolhive_running: `${toolhiveStatus.isRunning}`,
+            toolhive_exit_reason: toolhiveStatus.exitReason,
             client_base_url: clientConfig.baseUrl,
             client_configured: `${!!clientConfig.baseUrl}`,
             container_engine: {
@@ -207,20 +223,25 @@ export const Route = createRootRouteWithContext<{
             'toolhive-not-running',
             'container-engine-not-available',
             'client-base-url-not-set',
-            isToolhiveRunning ? 'process-running' : 'process-not-running',
+            toolhiveStatus.isRunning
+              ? 'process-running'
+              : 'process-not-running',
           ],
         })
       }
 
       throw new Error('Health check failed', {
         cause: {
-          isToolhiveRunning,
+          isToolhiveRunning: toolhiveStatus.isRunning,
           containerEngineAvailable: containerEngineStatus.available,
+          exitReason: toolhiveStatus.exitReason,
         },
       })
     }
   },
   loader: async ({ context: { queryClient } }) => {
+    const isRunning = await window.electronAPI.isToolhiveRunning()
+    if (!isRunning) return
     await setupSecretProvider(queryClient)
   },
 })

@@ -7,12 +7,14 @@ import {
   REGISTRY_FORM_TYPE,
   registryAuthFromRegistryInfo,
 } from './utils'
+import { toast } from 'sonner'
 import { trackEvent } from '@/common/lib/analytics'
 import {
   REGISTRY_WRONG_AUTH_TOAST,
   REGISTRY_WRONG_ISSUER_TOAST,
   REGISTRY_AUTH_FIELDS_REQUIRED_TOAST,
   REGISTRY_UNAVAILABLE_SOURCE_MESSAGE,
+  REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE,
 } from './registry-list-error'
 import { useRegistryData } from './use-registry-data'
 
@@ -54,6 +56,7 @@ export function useRegistryForm() {
     hasError,
     isMutationError,
     updateRegistry,
+    mutationVariables,
   } = useRegistryData()
 
   const { client_id: initialClientId, issuer_url: initialIssuerUrl } =
@@ -89,10 +92,17 @@ export function useRegistryForm() {
       form.setError('source', { message: REGISTRY_UNAVAILABLE_SOURCE_MESSAGE })
       return
     }
-    if (isAuthRequiredError && !initialClientId && !initialIssuerUrl) {
-      form.setError('source', { message: '' })
-      form.setError('client_id', { message: '' })
-      form.setError('issuer_url', { message: '' })
+    if (isAuthRequiredError) {
+      toast.error(REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE, {
+        id: 'registry-auth-required',
+        duration: Infinity,
+        dismissible: true,
+      })
+      if (!initialClientId && !initialIssuerUrl) {
+        form.setError('source', { message: '' })
+        form.setError('client_id', { message: '' })
+        form.setError('issuer_url', { message: '' })
+      }
     }
   }, [
     isAuthRequiredError,
@@ -122,12 +132,28 @@ export function useRegistryForm() {
     }
   }
 
+  const onReset = async () => {
+    form.clearErrors()
+    try {
+      await updateRegistry({ type: REGISTRY_FORM_TYPE.DEFAULT })
+      trackEvent('Registry reset to default')
+    } catch (e) {
+      applySubmitFieldErrors(form, e, {
+        type: REGISTRY_FORM_TYPE.DEFAULT,
+      })
+    }
+  }
+
+  const isResetting =
+    isLoading && mutationVariables?.type === REGISTRY_FORM_TYPE.DEFAULT
   const hasRegistryError = hasError && !isUnavailableError
 
   return {
     form,
     onSubmit,
+    onReset,
     isLoading,
+    isResetting,
     hasRegistryError,
     registryAuthRequiredMessage,
   }

@@ -6,7 +6,9 @@ export function RegistryTab() {
   const {
     form,
     onSubmit,
+    onReset,
     isLoading,
+    isResetting,
     hasRegistryError,
     registryAuthRequiredMessage,
   } = useRegistryForm()
@@ -24,7 +26,9 @@ export function RegistryTab() {
       <RegistryForm
         form={form}
         onSubmit={onSubmit}
+        onReset={onReset}
         isLoading={isLoading}
+        isResetting={isResetting}
         hasRegistryError={hasRegistryError}
         registryAuthRequiredMessage={registryAuthRequiredMessage}
       />
