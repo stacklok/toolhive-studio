@@ -660,13 +660,15 @@ export type GithubComStacklokToolhivePkgClientRegisteredClient = {
  */
 export type GithubComStacklokToolhivePkgContainerTemplatesRuntimeConfig = {
   /**
-   * AdditionalPackages lists extra packages to install in builder stage
+   * AdditionalPackages lists extra packages to install in the builder and
+   * runtime stages.
    * Examples for Alpine: ["git", "make", "gcc"]
    * Examples for Debian: ["git", "build-essential"]
    */
   additional_packages?: Array<string>
   /**
-   * BuilderImage is the full image reference for the builder stage
+   * BuilderImage is the full image reference for the builder stage.
+   * An empty string signals "use the default for this transport type" during config merging.
    * Examples: "golang:1.25-alpine", "node:22-alpine", "python:3.13-slim"
    */
   builder_image?: string
@@ -891,6 +893,10 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
    * Note: "sse" is deprecated; use "streamable-http" instead.
    */
   proxy_mode?: 'sse' | 'streamable-http'
+  /**
+   * Publish lists ports to publish to the host in format "hostPort:containerPort"
+   */
+  publish?: Array<string>
   remote_auth_config?: GithubComStacklokToolhivePkgAuthRemoteConfig
   /**
    * RemoteURL is the URL of the remote MCP server (if running remotely)
@@ -944,6 +950,10 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
   trust_proxy_headers?: boolean
   upstream_swap_config?: GithubComStacklokToolhivePkgAuthUpstreamswapConfig
   /**
+   * ValidatingWebhooks contains the configuration for validating webhook middleware.
+   */
+  validating_webhooks?: Array<GithubComStacklokToolhivePkgWebhookConfig>
+  /**
    * Volumes are the directory mounts to pass to the container
    * Format: "host-path:container-path[:ro]"
    */
@@ -962,11 +972,28 @@ export type GithubComStacklokToolhivePkgRunnerScalingConfig = {
    * When set (including 0), the value is an explicit replica count.
    */
   backend_replicas?: number
+  session_redis?: GithubComStacklokToolhivePkgRunnerSessionRedisConfig
+}
+
+/**
+ * SessionRedis holds non-sensitive Redis connection parameters for distributed session storage.
+ * Populated only when MCPServer.spec.sessionStorage.provider == "redis".
+ * The Redis password is not included — it is injected as env var THV_SESSION_REDIS_PASSWORD.
+ * +optional
+ */
+export type GithubComStacklokToolhivePkgRunnerSessionRedisConfig = {
   /**
-   * SessionCacheSize is the maximum number of sessions held in the local LRU cache.
-   * When nil, consuming code applies a sensible default (e.g. 1000).
+   * Address is the Redis server address (host:port).
    */
-  session_cache_size?: number
+  address?: string
+  /**
+   * DB is the Redis database number.
+   */
+  db?: number
+  /**
+   * KeyPrefix is an optional prefix applied to all Redis keys used by ToolHive.
+   */
+  key_prefix?: string
 }
 
 export type GithubComStacklokToolhivePkgRunnerToolOverride = {
@@ -1199,6 +1226,55 @@ export type GithubComStacklokToolhivePkgTelemetryConfig = {
    * +optional
    */
   useLegacyAttributes?: boolean
+}
+
+export type GithubComStacklokToolhivePkgWebhookConfig = {
+  failure_policy?: GithubComStacklokToolhivePkgWebhookFailurePolicy
+  /**
+   * HMACSecretRef is an optional reference to an HMAC secret for payload signing.
+   */
+  hmac_secret_ref?: string
+  /**
+   * Name is a unique identifier for this webhook.
+   */
+  name?: string
+  /**
+   * Timeout is the maximum time to wait for a webhook response.
+   */
+  timeout?: number
+  tls_config?: GithubComStacklokToolhivePkgWebhookTlsConfig
+  /**
+   * URL is the HTTPS endpoint to call.
+   */
+  url?: string
+}
+
+/**
+ * FailurePolicy determines behavior when the webhook call fails.
+ */
+export type GithubComStacklokToolhivePkgWebhookFailurePolicy = 'fail' | 'ignore'
+
+/**
+ * TLSConfig holds optional TLS configuration (CA bundles, client certs).
+ */
+export type GithubComStacklokToolhivePkgWebhookTlsConfig = {
+  /**
+   * CABundlePath is the path to a CA certificate bundle for server verification.
+   */
+  ca_bundle_path?: string
+  /**
+   * ClientCertPath is the path to a client certificate for mTLS.
+   */
+  client_cert_path?: string
+  /**
+   * ClientKeyPath is the path to a client key for mTLS.
+   */
+  client_key_path?: string
+  /**
+   * InsecureSkipVerify disables server certificate verification.
+   * WARNING: This should only be used for development/testing.
+   */
+  insecure_skip_verify?: boolean
 }
 
 /**
