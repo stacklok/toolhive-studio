@@ -6,17 +6,12 @@ settings:
 
 overrides:
   fast-xml-parser: '>=5.5.9'
-  lodash: '>=4.17.23'
   lodash-es: '>=4.17.23'
-  hono: '>=4.12.7'
   tar: '>=7.5.7'
-  express-rate-limit: '>=8.2.2'
   picomatch: '>=4.0.4'
   tmp: '>=0.2.4'
   '@tootallnate/once': '>=3.0.1'
   serialize-javascript: '>=7.0.3'
-  smol-toml: '>=1.6.1'
-  yaml: '>=2.8.3'
 
 patchedDependencies:
   electron-installer-redhat@3.4.0:
@@ -1255,7 +1250,7 @@ packages:
     resolution: {integrity: sha512-dr8/3zEaB+p0D2n/IUrlPF1HZm586qgJNXK1a9fhg/PzdtkK7Ksd5l312tJX2yBuALqDYBlG20QEbayqPyxn+g==}
     engines: {node: '>=18.14.1'}
     peerDependencies:
-      hono: '>=4.12.7'
+      hono: ^4
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -8422,7 +8417,7 @@ packages:
       sugarss: ^5.0.0
       terser: ^5.16.0
       tsx: ^4.8.1
-      yaml: '>=2.8.3'
+      yaml: ^2.4.2
     peerDependenciesMeta:
       '@types/node':
         optional: true
