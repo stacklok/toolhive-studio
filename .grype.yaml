@@ -1,0 +1,25 @@
+# SPDX-FileCopyrightText: Copyright 2025 Stacklok, Inc.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Grype configuration for toolhive-react.
+# - node_modules/:        lock file is the source of truth; scanning installed packages is redundant.
+# - dist/, out/:          build artifacts produced by Vite / Electron Forge.
+# - bin/:                 downloaded binaries (e.g. thv), scanned by their own pipelines.
+# - .webpack/, .vite/, .cache/: build-tool caches, not source packages.
+# - coverage/, playwright-report/, test-results/, test-videos/: test output, not source packages.
+
+# Only report vulnerabilities that have a fix available — unfixed ones are noise with no actionable remedy.
+only-fixed: true
+
+exclude:
+  - '**/node_modules/**'
+  - '**/dist/**'
+  - '**/bin/**'
+  - '**/out/**'
+  - '**/.webpack/**'
+  - '**/coverage/**'
+  - '**/playwright-report/**'
+  - '**/test-results/**'
+  - '**/test-videos/**'
+  - '**/.vite/**'
+  - '**/.cache/**'
