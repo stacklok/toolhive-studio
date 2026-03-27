@@ -145,8 +145,8 @@ Also write a concise `pr-body.md` for the pull request description using this ex
 
 ## Changes
 
-| CVE | Package | Severity | Production | Action | Verified |
-|-----|---------|----------|------------|--------|----------|
+| CVE | Package | Severity | Production | Action | Verified  |
+| --- | ------- | -------- | ---------- | ------ | --------- |
 | ... | ...     | ...      | Yes/No     | ...    | Pass/Fail |
 
 ## Files Modified
