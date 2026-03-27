@@ -90,6 +90,7 @@ jobs:
              Run pnpm install after changes to regenerate the lockfile.
              Re-run grype . --config .grype.yaml to verify each fix.
              Update remediation-plan.md with verification results.
+             Write a concise pr-body.md for the pull request description (see skill for format).
              Write a conventional-commit-style PR title to remediation-title.txt (see skill for format).
              Do NOT run git, gh, or modify .env files."
 
@@ -126,7 +127,7 @@ jobs:
           BRANCH="${{ steps.push.outputs.branch }}"
           BASE="${{ github.event.repository.default_branch }}"
           TITLE=$(cat remediation-title.txt 2>/dev/null || echo "fix(security): auto-remediate vulnerabilities")
-          BODY=$(cat remediation-plan.md 2>/dev/null || echo "Automated security vulnerability remediation.")
+          BODY=$(cat pr-body.md 2>/dev/null || cat remediation-plan.md 2>/dev/null || echo "Automated security vulnerability remediation.")
           FOOTER="<!-- fingerprint:${{ steps.fingerprint.outputs.hash }} -->"
           BODY="${BODY}
 

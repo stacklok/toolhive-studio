@@ -134,7 +134,35 @@ For each vulnerability processed, write a summary containing:
 
 When running in **plan mode** (Phase 1): write all findings and proposed actions to `remediation-plan.md` in the repository root. Do not modify project files.
 
-When running in **implementation mode** (Phase 2): read `remediation-plan.md`, apply the changes to `package.json`, `pnpm-lock.yaml`, and `.grype.yaml` as needed, then verify with grype. Update `remediation-plan.md` with verification results. Also write a single-line conventional-commit-style title to `remediation-title.txt` summarizing the specific changes, for example:
+When running in **implementation mode** (Phase 2): read `remediation-plan.md`, apply the changes to `package.json`, `pnpm-lock.yaml`, and `.grype.yaml` as needed, then verify with grype. Update `remediation-plan.md` with verification results.
+
+Also write a concise `pr-body.md` for the pull request description using this exact structure:
+
+```markdown
+## Summary
+
+<1-2 sentence description of what was fixed and why>
+
+## Changes
+
+| CVE | Package | Severity | Production | Action | Verified |
+|-----|---------|----------|------------|--------|----------|
+| ... | ...     | ...      | Yes/No     | ...    | Pass/Fail |
+
+## Files Modified
+
+- `package.json`: <what changed>
+- `.grype.yaml`: <what changed, if applicable>
+
+## Verification
+
+- `pnpm audit --prod`: <Pass/Fail>
+- `grype . --config .grype.yaml`: <Pass/Fail>
+```
+
+Keep the PR body short and scannable. The full analysis stays in `remediation-plan.md` for reference but is not used in the PR.
+
+Also write a single-line conventional-commit-style title to `remediation-title.txt` summarizing the specific changes, for example:
 
 - `fix(security): upgrade tar to 7.5.7, override lodash (CVE-2025-1234, CVE-2025-5678)`
 - `fix(security): add grype ignore for tmp (dev-only, CVE-2025-9999)`
