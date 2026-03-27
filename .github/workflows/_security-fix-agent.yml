@@ -116,7 +116,7 @@ jobs:
           [ -f remediation-title.txt ] && git add remediation-title.txt
           git diff --cached --quiet && exit 0
           git commit -m "$TITLE"
-          git push --force-with-lease -u origin "$BRANCH"
+          git push --force -u origin "$BRANCH"
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
 
       - name: Create or update Pull Request
