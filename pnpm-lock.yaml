@@ -238,7 +238,7 @@ importers:
         version: 7.11.1
       '@electron-forge/plugin-fuses':
         specifier: ^7.11.1
-        version: 7.11.1(@electron/fuses@2.1.0)
+        version: 7.11.1(@electron/fuses@2.1.1)
       '@electron-forge/plugin-vite':
         specifier: ^7.11.1
         version: 7.11.1
@@ -252,8 +252,8 @@ importers:
         specifier: ^7.11.1
         version: 7.11.1
       '@electron/fuses':
-        specifier: ^2.1.0
-        version: 2.1.0
+        specifier: ^2.1.1
+        version: 2.1.1
       '@electron/rebuild':
         specifier: ^4.0.3
         version: 4.0.3
@@ -900,8 +900,8 @@ packages:
     engines: {node: '>=10.12.0'}
     hasBin: true
 
-  '@electron/fuses@2.1.0':
-    resolution: {integrity: sha512-6Mhtz2xYPkiZrunCBo2RoXYSx+yGj/km6n6rTOi71srw0LFpRkfMJ7EpjMuPrXOZv7fCos81idf1lYDqwHALqw==}
+  '@electron/fuses@2.1.1':
+    resolution: {integrity: sha512-38ho27/mtUV/LpsZ1LCDJUomKBBSUZDk/qBH4FNNtoN5fmnkmWDcIp5pm1Kv3InqhRjKZKs7Jzx+wWZNMArHrA==}
     engines: {node: '>=22.12.0'}
     hasBin: true
 
@@ -9610,11 +9610,11 @@ snapshots:
       - bluebird
       - supports-color
 
-  '@electron-forge/plugin-fuses@7.11.1(@electron/fuses@2.1.0)':
+  '@electron-forge/plugin-fuses@7.11.1(@electron/fuses@2.1.1)':
     dependencies:
       '@electron-forge/plugin-base': 7.11.1
       '@electron-forge/shared-types': 7.11.1
-      '@electron/fuses': 2.1.0
+      '@electron/fuses': 2.1.1
     transitivePeerDependencies:
       - bluebird
       - supports-color
@@ -9752,7 +9752,7 @@ snapshots:
       glob: 7.2.3
       minimatch: 3.1.5
 
-  '@electron/fuses@2.1.0': {}
+  '@electron/fuses@2.1.1': {}
 
   '@electron/get@2.0.3':
     dependencies:
