@@ -1,6 +1,6 @@
-export type ToolhiveExitReason = 'registry-auth-required'
+export type ToolhiveProcessError = 'registry-auth-required'
 
 export interface ToolhiveStatus {
   isRunning: boolean
-  exitReason?: ToolhiveExitReason
+  processError?: ToolhiveProcessError
 }

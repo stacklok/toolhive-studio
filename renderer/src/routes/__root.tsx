@@ -166,7 +166,7 @@ export const Route = createRootRouteWithContext<{
       'registry-auth-redirected',
     ])
     if (
-      toolhiveStatus.exitReason === 'registry-auth-required' &&
+      toolhiveStatus.processError === 'registry-auth-required' &&
       !alreadyNotified &&
       location.pathname !== '/settings'
     ) {
@@ -194,7 +194,7 @@ export const Route = createRootRouteWithContext<{
         `[beforeLoad] Client baseUrl: ${clientConfig.baseUrl || 'NOT SET'}`
       )
       log.error(
-        `[beforeLoad] ToolHive status: running=${toolhiveStatus.isRunning}, exitReason=${toolhiveStatus.exitReason ?? 'none'}`
+        `[beforeLoad] ToolHive status: running=${toolhiveStatus.isRunning}, processError=${toolhiveStatus.processError ?? 'none'}`
       )
 
       if (
@@ -210,7 +210,7 @@ export const Route = createRootRouteWithContext<{
           },
           extra: {
             toolhive_running: `${toolhiveStatus.isRunning}`,
-            toolhive_exit_reason: toolhiveStatus.exitReason,
+            toolhive_process_error: toolhiveStatus.processError,
             client_base_url: clientConfig.baseUrl,
             client_configured: `${!!clientConfig.baseUrl}`,
             container_engine: {
@@ -234,7 +234,7 @@ export const Route = createRootRouteWithContext<{
         cause: {
           isToolhiveRunning: toolhiveStatus.isRunning,
           containerEngineAvailable: containerEngineStatus.available,
-          exitReason: toolhiveStatus.exitReason,
+          processError: toolhiveStatus.processError,
         },
       })
     }

@@ -8,7 +8,7 @@ import log from './logger'
 import * as Sentry from '@sentry/electron/main'
 import { getQuittingState } from './app-state'
 import type {
-  ToolhiveExitReason,
+  ToolhiveProcessError,
   ToolhiveStatus,
 } from '../../common/types/toolhive-status'
 
@@ -34,7 +34,7 @@ let toolhivePort: number | undefined
 let toolhiveMcpPort: number | undefined
 let isRestarting = false
 let killTimer: NodeJS.Timeout | undefined
-let exitReason: ToolhiveExitReason | undefined
+let processError: ToolhiveProcessError | undefined
 
 export function getToolhivePort(): number | undefined {
   return toolhivePort
@@ -52,7 +52,7 @@ export function isToolhiveRunning(): boolean {
 export function getToolhiveStatus(): ToolhiveStatus {
   return {
     isRunning: isToolhiveRunning(),
-    exitReason,
+    processError,
   }
 }
 
@@ -143,7 +143,7 @@ export async function startToolhive(): Promise<void> {
       return
     }
 
-    exitReason = undefined
+    processError = undefined
     toolhiveMcpPort = await findFreePort()
     toolhivePort = await findFreePort(50000, 50100)
     log.info(
@@ -192,7 +192,7 @@ export async function startToolhive(): Promise<void> {
           return
         }
         if (output.includes('registry authentication required')) {
-          exitReason = 'registry-auth-required'
+          processError = 'registry-auth-required'
         }
         log.info(`[ToolHive stderr] ${output}`)
         scope.addBreadcrumb({
