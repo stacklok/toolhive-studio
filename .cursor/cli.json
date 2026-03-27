@@ -13,10 +13,6 @@
       "Shell(cat)",
       "Shell(ls)"
     ],
-    "deny": [
-      "Shell(git)",
-      "Shell(gh)",
-      "Write(.env*)"
-    ]
+    "deny": ["Shell(git)", "Shell(gh)", "Write(.env*)"]
   }
 }
