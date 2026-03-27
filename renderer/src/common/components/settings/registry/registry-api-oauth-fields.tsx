@@ -47,6 +47,7 @@ function OAuthField({
   highlightEmpty: boolean
 }) {
   const isEmpty = !field.value?.trim()
+  const showRequiredError = highlightEmpty && isEmpty
   return (
     <FormItem className={className}>
       <FormLabel>{label}</FormLabel>
@@ -58,10 +59,14 @@ function OAuthField({
           value={field.value ?? ''}
           disabled={isPending}
           autoComplete="off"
-          aria-invalid={(highlightEmpty && isEmpty) || undefined}
+          aria-invalid={showRequiredError || undefined}
         />
       </FormControl>
-      <FormMessage />
+      {showRequiredError ? (
+        <p className="text-destructive text-sm">{label} is required</p>
+      ) : (
+        <FormMessage />
+      )}
     </FormItem>
   )
 }
