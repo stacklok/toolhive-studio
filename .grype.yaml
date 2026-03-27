@@ -11,6 +11,15 @@
 # Only report vulnerabilities that have a fix available — unfixed ones are noise with no actionable remedy.
 only-fixed: true
 
+ignore:
+  # brace-expansion v1.x/v2.x are only present in devDependencies (electron-forge, eslint, etc.).
+  # The production dependency tree uses v5.x which is patched via pnpm.overrides.
+  # pnpm audit --prod confirms no production vulnerability.
+  - vulnerability: GHSA-f886-m6hf-6m8v
+    package:
+      name: brace-expansion
+      type: npm
+
 exclude:
   - '**/node_modules/**'
   - '**/dist/**'
