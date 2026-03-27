@@ -24,7 +24,9 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Install Grype
-        uses: anchore/scan-action/download-grype@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7.4.0
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+          grype version
 
       - name: Install Cursor CLI
         run: |
@@ -43,11 +45,11 @@ jobs:
              Write a detailed remediation-plan.md with your full analysis and proposed fixes.
              Do NOT modify any project files — only create remediation-plan.md."
 
-      - name: 'Phase 2: Implement Fixes (Sonnet 4.6 High)'
+      - name: 'Phase 2: Implement Fixes (Claude 4.6 Sonnet High)'
         env:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
         run: |
-          agent -p --force --model sonnet-4.6-high --trust \
+          agent -p --force --model claude-4.6-sonnet-high-thinking --trust \
             "Read .cursor/skills/security-vuln-remediation/SKILL.md and remediation-plan.md.
              Implement every fix described in the remediation plan:
              - Upgrade packages where a patch/minor fix is available.
