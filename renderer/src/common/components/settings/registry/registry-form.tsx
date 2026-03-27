@@ -1,4 +1,4 @@
-import { Loader2, RotateCcw } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import type { UseFormReturn } from 'react-hook-form'
 import { Form } from '../../ui/form'
 import { RegistrySourceField } from './registry-source-field'
@@ -72,16 +72,13 @@ export function RegistryForm({
           </Button>
           {!isDefault && (
             <Button
-              variant="outline"
+              variant="secondary"
+              className="rounded-full"
               type="button"
               disabled={isLoading}
               onClick={onReset}
             >
-              {isResetting ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <RotateCcw className="size-4" />
-              )}
+              {isResetting && <Loader2 className="size-4 animate-spin" />}
               {isResetting ? 'Resetting...' : 'Reset Registry'}
             </Button>
           )}

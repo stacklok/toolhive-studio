@@ -86,37 +86,36 @@ export function useRegistryForm() {
   const currentType = useWatch({ control: form.control, name: 'type' })
 
   useEffect(() => {
-    form.clearErrors(['source', 'client_id', 'issuer_url'])
+    form.clearErrors()
 
     if (isUnavailableError) {
       form.setError('source', { message: REGISTRY_UNAVAILABLE_SOURCE_MESSAGE })
       return
     }
+
     if (isAuthRequiredError) {
       toast.error(REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE, {
         id: 'registry-auth-required',
         duration: Infinity,
         dismissible: true,
       })
-      if (!initialClientId && !initialIssuerUrl) {
-        form.setError('source', { message: '' })
-        form.setError('client_id', { message: '' })
-        form.setError('issuer_url', { message: '' })
-      }
+    }
+    const hasMissingCredentials =
+      isAuthRequiredError && !initialClientId && !initialIssuerUrl
+
+    if (hasMissingCredentials) {
+      form.setError('source', { message: '' })
+      form.setError('client_id', { message: '' })
+      form.setError('issuer_url', { message: '' })
     }
   }, [
+    currentType,
     isAuthRequiredError,
     isUnavailableError,
     form,
     initialClientId,
     initialIssuerUrl,
   ])
-
-  useEffect(() => {
-    if (!isUnavailableError && !isAuthRequiredError) {
-      form.clearErrors()
-    }
-  }, [currentType, form, isUnavailableError, isAuthRequiredError])
 
   const onSubmit = async (data: RegistryFormData) => {
     form.clearErrors(['source', 'client_id', 'issuer_url'])
