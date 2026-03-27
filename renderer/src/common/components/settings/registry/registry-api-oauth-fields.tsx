@@ -36,6 +36,7 @@ function OAuthField({
   placeholder,
   className,
   isPending,
+  highlightEmpty,
 }: {
   field: ControllerRenderProps<RegistryFormData, 'client_id' | 'issuer_url'>
   label: string
@@ -43,7 +44,9 @@ function OAuthField({
   placeholder: string
   className: string
   isPending: boolean
+  highlightEmpty: boolean
 }) {
+  const isEmpty = !field.value?.trim()
   return (
     <FormItem className={className}>
       <FormLabel>{label}</FormLabel>
@@ -55,6 +58,7 @@ function OAuthField({
           value={field.value ?? ''}
           disabled={isPending}
           autoComplete="off"
+          aria-invalid={(highlightEmpty && isEmpty) || undefined}
         />
       </FormControl>
       <FormMessage />
@@ -79,6 +83,9 @@ export function RegistryApiOAuthFields({
     return null
   }
 
+  const highlightEmptyCredentials =
+    !!hasRegistryError && !!registryAuthRequiredMessage
+
   return (
     <div
       className="border-border mt-2 flex w-full flex-col gap-3 rounded-md border
@@ -99,7 +106,12 @@ export function RegistryApiOAuthFields({
           control={form.control}
           name={name}
           render={({ field }) => (
-            <OAuthField field={field} isPending={isPending} {...fieldProps} />
+            <OAuthField
+              field={field}
+              isPending={isPending}
+              highlightEmpty={highlightEmptyCredentials}
+              {...fieldProps}
+            />
           )}
         />
       ))}

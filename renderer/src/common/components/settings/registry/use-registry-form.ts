@@ -60,10 +60,19 @@ export function useRegistryForm() {
   const { client_id: initialClientId, issuer_url: initialIssuerUrl } =
     registryAuthFromRegistryInfo(defaultRegistry)
 
-  const formType =
-    isAuthRequiredError || isUnavailableError || isMutationError
-      ? REGISTRY_FORM_TYPE.API_URL
-      : mapResponseTypeToFormType(defaultRegistry?.type)
+  // Scoped to api_url mutations only — a failed PUT for url/local_path
+  // should not force the form to switch to "Registry Server API".
+  const isMutationErrorForApiUrl =
+    isMutationError && mutationVariables?.type === REGISTRY_FORM_TYPE.API_URL
+
+  // Force the form to show the API URL fields when there's a registry error
+  // that the user needs to fix (auth required, unreachable, or failed login).
+  const shouldForceApiUrlType =
+    isAuthRequiredError || isUnavailableError || isMutationErrorForApiUrl
+
+  const formType = shouldForceApiUrlType
+    ? REGISTRY_FORM_TYPE.API_URL
+    : mapResponseTypeToFormType(defaultRegistry?.type)
 
   const formSource =
     (isUnavailableError ? registryUnavailableUrl : defaultRegistry?.source) ??

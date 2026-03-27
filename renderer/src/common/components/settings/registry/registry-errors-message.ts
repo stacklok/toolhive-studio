@@ -20,7 +20,7 @@ export const REGISTRY_AUTH_TOAST_ID = 'registry-auth-required'
 const REGISTRY_AUTH_REQUIRED_CODE = 'registry_auth_required'
 const REGISTRY_UNAVAILABLE_CODE = 'registry_unavailable'
 
-/** Shown when GET /api/v1beta/registry fails with `code: registry_auth_required` (API Server API + OAuth). */
+/** Shown when GET /api/v1beta/registry fails with `code: registry_auth_required` (Registry Server API + OAuth). */
 export const REGISTRY_AUTH_REQUIRED_UI_MESSAGE =
   'The configured registry server requires authentication. Please provide your Server URL, Client ID and Issuer URL to authenticate.'
 
