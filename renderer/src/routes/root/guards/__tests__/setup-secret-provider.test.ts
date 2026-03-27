@@ -28,7 +28,9 @@ describe('setupSecretProvider', () => {
 
   it('does nothing when provider is already encrypted', async () => {
     vi.mocked(getApiV1BetaSecretsDefaultOptions).mockReturnValue({
-      queryKey: ['secrets-default'],
+      queryKey: ['secrets-default'] as ReturnType<
+        typeof getApiV1BetaSecretsDefaultOptions
+      >['queryKey'],
       queryFn: vi.fn().mockResolvedValue({ provider_type: 'encrypted' }),
     })
 
@@ -39,7 +41,9 @@ describe('setupSecretProvider', () => {
 
   it('creates encrypted provider when current type differs', async () => {
     vi.mocked(getApiV1BetaSecretsDefaultOptions).mockReturnValue({
-      queryKey: ['secrets-default-2'],
+      queryKey: ['secrets-default-2'] as ReturnType<
+        typeof getApiV1BetaSecretsDefaultOptions
+      >['queryKey'],
       queryFn: vi.fn().mockResolvedValue({ provider_type: 'plaintext' }),
     })
 
@@ -53,7 +57,9 @@ describe('setupSecretProvider', () => {
 
   it('creates encrypted provider on query error (fallback)', async () => {
     vi.mocked(getApiV1BetaSecretsDefaultOptions).mockReturnValue({
-      queryKey: ['secrets-default-3'],
+      queryKey: ['secrets-default-3'] as ReturnType<
+        typeof getApiV1BetaSecretsDefaultOptions
+      >['queryKey'],
       queryFn: vi.fn().mockRejectedValue(new Error('network error')),
     })
 

@@ -28,10 +28,6 @@ export const REGISTRY_AUTH_REQUIRED_UI_MESSAGE =
 export const REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE =
   'The configured registry requires authentication. The app will not work correctly until the registry is fixed or reset to default.'
 
-/** Persistent toast shown when the registry is unreachable or OAuth login fails on startup. */
-export const REGISTRY_UNAVAILABLE_TOAST_MESSAGE =
-  'The configured registry is unreachable or login failed. The app will not work correctly until the registry is fixed or reset to default.'
-
 /** Fallback when GET /api/v1beta/registry fails for any other reason (or non-api_url types). */
 const REGISTRY_LIST_LOAD_FALLBACK_MESSAGE =
   'Failed to load registry configuration. The registry source may be misconfigured or unavailable.'

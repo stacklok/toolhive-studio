@@ -6,19 +6,13 @@ import log from 'electron-log/renderer'
 import {
   REGISTRY_AUTH_TOAST_ID,
   REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE,
-  REGISTRY_UNAVAILABLE_TOAST_MESSAGE,
 } from '@/common/components/settings/registry/registry-errors-message'
 
-const REGISTRY_REDIRECTED_KEY = ['registry-auth-redirected']
-
-const TOAST_MESSAGE_BY_ERROR = {
-  'registry-auth-required': REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE,
-  'registry-unavailable': REGISTRY_UNAVAILABLE_TOAST_MESSAGE,
-} as const
+const REGISTRY_AUTH_REDIRECTED_KEY = ['registry-auth-redirected']
 
 /**
- * Fetches the ToolHive process status and checks whether the backend has a
- * registry-level error (auth required, login failed, or upstream unreachable).
+ * Fetches the ToolHive process status and checks whether the backend exited
+ * because the configured registry requires OAuth authentication.
  * On first detection (not already notified, not already on /settings), shows
  * a persistent error toast and redirects to Settings > Registry so the user
  * can provide credentials or reset.
@@ -29,22 +23,19 @@ export async function handleRegistryAuthRedirect(
   pathname: string
 ): Promise<ToolhiveStatus> {
   const toolhiveStatus = await window.electronAPI.getToolhiveStatus()
-  const { processError } = toolhiveStatus
-
-  const hasRegistryError =
-    processError === 'registry-auth-required' ||
-    processError === 'registry-unavailable'
 
   const alreadyNotified = queryClient.getQueryData<boolean>(
-    REGISTRY_REDIRECTED_KEY
+    REGISTRY_AUTH_REDIRECTED_KEY
   )
 
-  if (hasRegistryError && !alreadyNotified && pathname !== '/settings') {
-    queryClient.setQueryData(REGISTRY_REDIRECTED_KEY, true)
-    log.info(
-      `[beforeLoad] Registry error (${processError}), redirecting to settings`
-    )
-    toast.error(TOAST_MESSAGE_BY_ERROR[processError], {
+  if (
+    toolhiveStatus.processError === 'registry-auth-required' &&
+    !alreadyNotified &&
+    pathname !== '/settings'
+  ) {
+    queryClient.setQueryData(REGISTRY_AUTH_REDIRECTED_KEY, true)
+    log.info('[beforeLoad] Registry auth required, redirecting to settings')
+    toast.error(REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE, {
       id: REGISTRY_AUTH_TOAST_ID,
       duration: Infinity,
       dismissible: true,

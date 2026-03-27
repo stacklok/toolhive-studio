@@ -6,7 +6,6 @@ import type { ToolhiveStatus } from '@common/types/toolhive-status'
 import {
   REGISTRY_AUTH_TOAST_ID,
   REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE,
-  REGISTRY_UNAVAILABLE_TOAST_MESSAGE,
 } from '@/common/components/settings/registry/registry-errors-message'
 
 describe('handleRegistryAuthRedirect', () => {
@@ -21,11 +20,6 @@ describe('handleRegistryAuthRedirect', () => {
   const statusWithAuthError: ToolhiveStatus = {
     isRunning: false,
     processError: 'registry-auth-required',
-  }
-
-  const statusWithUnavailable: ToolhiveStatus = {
-    isRunning: false,
-    processError: 'registry-unavailable',
   }
 
   const healthyStatus: ToolhiveStatus = {
@@ -45,27 +39,6 @@ describe('handleRegistryAuthRedirect', () => {
 
     expect(toast.error).toHaveBeenCalledWith(
       REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE,
-      {
-        id: REGISTRY_AUTH_TOAST_ID,
-        duration: Infinity,
-        dismissible: true,
-      }
-    )
-  })
-
-  it('redirects to /settings with toast on registry-unavailable', async () => {
-    window.electronAPI.getToolhiveStatus = vi
-      .fn()
-      .mockResolvedValue(statusWithUnavailable)
-
-    await expect(
-      handleRegistryAuthRedirect(queryClient, '/')
-    ).rejects.toMatchObject({
-      options: { to: '/settings', search: { tab: 'registry' } },
-    })
-
-    expect(toast.error).toHaveBeenCalledWith(
-      REGISTRY_UNAVAILABLE_TOAST_MESSAGE,
       {
         id: REGISTRY_AUTH_TOAST_ID,
         duration: Infinity,
@@ -98,7 +71,7 @@ describe('handleRegistryAuthRedirect', () => {
     expect(toast.error).not.toHaveBeenCalled()
   })
 
-  it('returns status without redirect when no registry error', async () => {
+  it('returns status without redirect when no auth error', async () => {
     window.electronAPI.getToolhiveStatus = vi
       .fn()
       .mockResolvedValue(healthyStatus)

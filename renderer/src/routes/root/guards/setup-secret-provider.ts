@@ -25,11 +25,11 @@ export async function setupSecretProvider(
         await createEncryptedProvider()
       }
     })
-    .catch((err) => {
+    .catch(async (err) => {
       log.info(
         'Error setting up secret provider, creating encrypted provider',
         JSON.stringify(err)
       )
-      return createEncryptedProvider()
+      await createEncryptedProvider()
     })
 }
