@@ -110,7 +110,7 @@ ignore:
     reason: >-
       <package-name> is a dev-only dependency (used by <parent-package> for <purpose>).
       <CVE-ID> requires <attack-vector> which does not apply to this Electron desktop app.
-      No fix is available / fix requires breaking major upgrade of <parent>.
+      Fix requires a breaking major upgrade of <parent> that cannot be safely applied.
 ```
 
 Every ignore MUST include a `reason` explaining why it is safe to suppress.

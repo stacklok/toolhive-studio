@@ -64,7 +64,7 @@ jobs:
       - name: Check for changes
         id: changes
         run: |
-          if git diff --quiet && [ ! -f remediation-plan.md ]; then
+          if git diff --quiet -- package.json pnpm-lock.yaml .grype.yaml; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
           else
             echo "has_changes=true" >> $GITHUB_OUTPUT
@@ -78,7 +78,9 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -B "$BRANCH"
           TITLE=$(cat remediation-title.txt 2>/dev/null || echo "fix(security): auto-remediate vulnerabilities")
-          git add package.json pnpm-lock.yaml .grype.yaml remediation-plan.md remediation-title.txt
+          git add package.json pnpm-lock.yaml .grype.yaml
+          [ -f remediation-plan.md ] && git add remediation-plan.md
+          [ -f remediation-title.txt ] && git add remediation-title.txt
           git diff --cached --quiet && exit 0
           git commit -m "$TITLE"
           git push -u origin "$BRANCH"
