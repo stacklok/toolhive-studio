@@ -3,6 +3,10 @@ name: Security Fix Agent
 on:
   workflow_call:
 
+concurrency:
+  group: security-fix-agent
+  cancel-in-progress: true
+
 jobs:
   remediate:
     name: Auto-Remediate Vulnerabilities
@@ -72,8 +76,9 @@ jobs:
 
       - name: Create branch and commit
         if: steps.changes.outputs.has_changes == 'true'
+        id: push
         run: |
-          BRANCH="security/fix-vuln-${{ github.run_id }}"
+          BRANCH="security/auto-remediate-vulns"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -B "$BRANCH"
@@ -83,20 +88,28 @@ jobs:
           [ -f remediation-title.txt ] && git add remediation-title.txt
           git diff --cached --quiet && exit 0
           git commit -m "$TITLE"
-          git push -u origin "$BRANCH"
+          git push --force-with-lease -u origin "$BRANCH"
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
-        id: push
 
-      - name: Open Pull Request
+      - name: Create or update Pull Request
         if: steps.changes.outputs.has_changes == 'true'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
+          BRANCH="${{ steps.push.outputs.branch }}"
+          BASE="${{ github.event.repository.default_branch }}"
           TITLE=$(cat remediation-title.txt 2>/dev/null || echo "fix(security): auto-remediate vulnerabilities")
           BODY=$(cat remediation-plan.md 2>/dev/null || echo "Automated security vulnerability remediation.")
-          gh pr create \
-            --title "$TITLE" \
-            --body "$BODY" \
-            --base "${{ github.event.repository.default_branch }}" \
-            --head "${{ steps.push.outputs.branch }}" \
-            --label "security"
+
+          EXISTING_PR=$(gh pr list --head "$BRANCH" --base "$BASE" --state open --json number --jq '.[0].number // empty')
+
+          if [ -n "$EXISTING_PR" ]; then
+            gh pr edit "$EXISTING_PR" --title "$TITLE" --body "$BODY"
+          else
+            gh pr create \
+              --title "$TITLE" \
+              --body "$BODY" \
+              --base "$BASE" \
+              --head "$BRANCH" \
+              --label "security"
+          fi
