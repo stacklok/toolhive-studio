@@ -23,3 +23,20 @@ exclude:
   - '**/test-videos/**'
   - '**/.vite/**'
   - '**/.cache/**'
+
+ignore:
+  # brace-expansion@1.1.13 and @2.0.3 are the patched versions within their
+  # respective semver ranges per the npm advisory for GHSA-f886-m6hf-6m8v
+  # (pnpm audit reports >=1.1.13 and >=2.0.3 as fixed).  Grype's GHSA
+  # mapping only records v5.0.5 as the canonical fix, which is a breaking
+  # API change incompatible with their callers (minimatch@3/4 uses the v1/v2
+  # function-as-default-export API).  Both instances are dev-only paths
+  # (electron-forge toolchain); neither is shipped in the packaged app.
+  - vulnerability: GHSA-f886-m6hf-6m8v
+    package:
+      name: brace-expansion
+      version: 1.1.13
+  - vulnerability: GHSA-f886-m6hf-6m8v
+    package:
+      name: brace-expansion
+      version: 2.0.3
