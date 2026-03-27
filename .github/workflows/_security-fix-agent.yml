@@ -49,11 +49,11 @@ jobs:
              Write a detailed remediation-plan.md with your full analysis and proposed fixes.
              Do NOT modify any project files — only create remediation-plan.md."
 
-      - name: 'Phase 2: Implement Fixes (Claude 4.6 Sonnet High)'
+      - name: 'Phase 2: Implement Fixes (Claude 4.6 Sonnet)'
         env:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
         run: |
-          agent -p --force --model claude-4.6-sonnet-high-thinking --trust \
+          agent -p --force --model claude-4.6-sonnet-medium-thinking --trust \
             "Read .cursor/skills/security-vuln-remediation/SKILL.md and remediation-plan.md.
              Implement every fix described in the remediation plan:
              - Upgrade packages where a patch/minor fix is available.
