@@ -23,3 +23,32 @@ exclude:
   - '**/test-videos/**'
   - '**/.vite/**'
   - '**/.cache/**'
+
+ignore:
+  - vulnerability: GHSA-f886-m6hf-6m8v
+    package:
+      name: brace-expansion
+      version: 1.1.12
+      type: npm
+    reason: >-
+      brace-expansion@1.1.12 is a dev-only dependency used by the Electron Forge
+      packaging and ESLint toolchains. The authoritative npm/GitHub advisory
+      range for GHSA-f886-m6hf-6m8v is >=4.0.0 <5.0.5; version 1.1.12 is
+      outside that range and is not affected. Grype is overmatching on a broad
+      <5.0.5 matcher without the lower bound. A blanket override to >=5.0.5
+      would break minimatch@3.x (which requires brace-expansion@^1) and cannot
+      be safely applied. This package is not shipped with the Electron runtime.
+  - vulnerability: GHSA-f886-m6hf-6m8v
+    package:
+      name: brace-expansion
+      version: 2.0.2
+      type: npm
+    reason: >-
+      brace-expansion@2.0.2 is a dev-only dependency used by @electron/rebuild
+      and the Electron Forge packaging chain. The authoritative npm/GitHub
+      advisory range for GHSA-f886-m6hf-6m8v is >=4.0.0 <5.0.5; version 2.0.2
+      is outside that range and is not affected. Grype is overmatching on a
+      broad <5.0.5 matcher without the lower bound. A blanket override to
+      >=5.0.5 would break minimatch@9.x and minimatch@5.x (which require
+      brace-expansion@^2) and cannot be safely applied. This package is not
+      shipped with the Electron runtime.
