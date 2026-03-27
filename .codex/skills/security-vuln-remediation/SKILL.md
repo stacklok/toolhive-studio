@@ -30,6 +30,7 @@ pnpm audit --prod --audit-level=moderate
 ```
 
 For each finding, record:
+
 - CVE ID (e.g. `CVE-2024-12345`)
 - Affected package and installed version
 - Fixed version (if available)
@@ -45,6 +46,7 @@ pnpm why <package-name>
 ```
 
 Record:
+
 - Which direct dependency depends on it
 - How many versions of the package are installed
 - Whether it appears under `dependencies` (production) or `devDependencies` (dev-only)
@@ -60,6 +62,7 @@ pnpm update <direct-dependency>
 Or, if the vulnerable package is a direct dependency itself, update its version range in `package.json`.
 
 After the change:
+
 1. Run `pnpm install` to regenerate the lockfile
 2. Re-run `grype . --config .grype.yaml` to verify the vulnerability is gone
 
@@ -84,12 +87,14 @@ Add or update an entry in `pnpm.overrides` inside `package.json`:
 Use the `>=` prefix to allow future patches. Follow the existing pattern in the project (see current overrides for examples).
 
 After the change:
+
 1. Run `pnpm install` to regenerate the lockfile
 2. Re-run `grype . --config .grype.yaml` to verify the vulnerability is gone
 
 ### Step 5 — Add a Grype Ignore (Last Resort)
 
 Only if ALL of the following are true:
+
 - The upgrade/override did not resolve the issue or would break functionality
 - The vulnerable package is **not** a production dependency (only in `devDependencies` tree)
 - The vulnerability's attack vector does not apply to a desktop Electron app
@@ -114,22 +119,23 @@ Every ignore MUST include a `reason` explaining why it is safe to suppress.
 
 For each vulnerability processed, write a summary containing:
 
-| Field | Description |
-|-------|-------------|
-| CVE ID | The vulnerability identifier |
-| Package | Affected package name and version |
-| Severity | Critical / High / Medium |
-| CVSS Score | Numeric score if available |
-| Attack Vector | Network / Local / Adjacent / Physical |
+| Field             | Description                                   |
+| ----------------- | --------------------------------------------- |
+| CVE ID            | The vulnerability identifier                  |
+| Package           | Affected package name and version             |
+| Severity          | Critical / High / Medium                      |
+| CVSS Score        | Numeric score if available                    |
+| Attack Vector     | Network / Local / Adjacent / Physical         |
 | Production Impact | Yes (in `dependencies` tree) or No (dev-only) |
-| Action Taken | Upgraded / Overridden / Ignored |
-| Verification | Whether grype/audit passes after the fix |
+| Action Taken      | Upgraded / Overridden / Ignored               |
+| Verification      | Whether grype/audit passes after the fix      |
 
 ## Output
 
 When running in **plan mode** (Phase 1): write all findings and proposed actions to `remediation-plan.md` in the repository root. Do not modify project files.
 
 When running in **implementation mode** (Phase 2): read `remediation-plan.md`, apply the changes to `package.json`, `pnpm-lock.yaml`, and `.grype.yaml` as needed, then verify with grype. Update `remediation-plan.md` with verification results. Also write a single-line conventional-commit-style title to `remediation-title.txt` summarizing the specific changes, for example:
+
 - `fix(security): upgrade tar to 7.5.7, override lodash (CVE-2025-1234, CVE-2025-5678)`
 - `fix(security): add grype ignore for tmp (dev-only, CVE-2025-9999)`
 - `fix(security): override fast-xml-parser >=5.5.9 (CVE-2025-4321)`
