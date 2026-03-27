@@ -1,0 +1,98 @@
+name: Security Fix Agent
+
+on:
+  workflow_call:
+
+jobs:
+  remediate:
+    name: Auto-Remediate Vulnerabilities
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        with:
+          app-id: ${{ secrets.TOOLHIVE_STUDIO_CI_APP_ID }}
+          private-key: ${{ secrets.TOOLHIVE_STUDIO_CI_APP_KEY }}
+
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Install Grype
+        uses: anchore/scan-action/download-grype@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7.4.0
+
+      - name: Install Cursor CLI
+        run: |
+          curl https://cursor.com/install -fsS | bash
+          echo "$HOME/.cursor/bin" >> $GITHUB_PATH
+
+      - name: 'Phase 1: Analyze and Plan (GPT-5.4 High Fast)'
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+        run: |
+          agent -p --model gpt-5.4-high-fast --mode=plan --trust \
+            "Read .cursor/skills/security-vuln-remediation/SKILL.md and follow it.
+             Run grype and pnpm audit to identify all current vulnerabilities.
+             For each vulnerability, run pnpm why on the affected package.
+             Analyze the impact of each vulnerability (CVSS, attack vector, production vs dev).
+             Write a detailed remediation-plan.md with your full analysis and proposed fixes.
+             Do NOT modify any project files — only create remediation-plan.md."
+
+      - name: 'Phase 2: Implement Fixes (Sonnet 4.6 High)'
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+        run: |
+          agent -p --force --model sonnet-4.6-high --trust \
+            "Read .cursor/skills/security-vuln-remediation/SKILL.md and remediation-plan.md.
+             Implement every fix described in the remediation plan:
+             - Upgrade packages where a patch/minor fix is available.
+             - Add pnpm overrides in package.json where an upgrade is not feasible.
+             - Add grype ignores in .grype.yaml only for dev-only packages with no fix.
+             Run pnpm install after changes to regenerate the lockfile.
+             Re-run grype . --config .grype.yaml to verify each fix.
+             Update remediation-plan.md with verification results.
+             Write a conventional-commit-style PR title to remediation-title.txt (see skill for format).
+             Do NOT run git, gh, or modify .env files."
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet && [ ! -f remediation-plan.md ]; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create branch and commit
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          BRANCH="security/fix-vuln-${{ github.run_id }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          TITLE=$(cat remediation-title.txt 2>/dev/null || echo "fix(security): auto-remediate vulnerabilities")
+          git add package.json pnpm-lock.yaml .grype.yaml remediation-plan.md remediation-title.txt
+          git diff --cached --quiet && exit 0
+          git commit -m "$TITLE"
+          git push -u origin "$BRANCH"
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+        id: push
+
+      - name: Open Pull Request
+        if: steps.changes.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          TITLE=$(cat remediation-title.txt 2>/dev/null || echo "fix(security): auto-remediate vulnerabilities")
+          BODY=$(cat remediation-plan.md 2>/dev/null || echo "Automated security vulnerability remediation.")
+          gh pr create \
+            --title "$TITLE" \
+            --body "$BODY" \
+            --base "${{ github.event.repository.default_branch }}" \
+            --head "${{ steps.push.outputs.branch }}" \
+            --label "security"
