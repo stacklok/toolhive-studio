@@ -420,6 +420,13 @@ export type GithubComStacklokToolhivePkgAuthserverRunConfig = {
    */
   allowed_audiences?: Array<string>
   /**
+   * AuthorizationEndpointBaseURL overrides the base URL used for the authorization_endpoint
+   * in the OAuth discovery document. When set, the discovery document will advertise
+   * `{authorization_endpoint_base_url}/oauth/authorize` instead of `{issuer}/oauth/authorize`.
+   * All other endpoints remain derived from the issuer.
+   */
+  authorization_endpoint_base_url?: string
+  /**
    * HMACSecretFiles contains file paths to HMAC secrets for signing authorization codes
    * and refresh tokens (opaque tokens).
    * First file is the current secret (must be at least 32 bytes), subsequent files
@@ -790,6 +797,13 @@ export type GithubComStacklokToolhivePkgRunnerHeaderForwardConfig = {
 }
 
 export type GithubComStacklokToolhivePkgRunnerRunConfig = {
+  /**
+   * AllowDockerGateway permits outbound connections to Docker gateway addresses
+   * (host.docker.internal, gateway.docker.internal, 172.17.0.1). These are
+   * blocked by default in the egress proxy even when InsecureAllowAll is set.
+   * Only applicable to Docker deployments with network isolation enabled.
+   */
+  allow_docker_gateway?: boolean
   audit_config?: GithubComStacklokToolhivePkgAuditConfig
   /**
    * DEPRECATED: Middleware configuration.
