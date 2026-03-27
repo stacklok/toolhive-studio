@@ -112,8 +112,6 @@ jobs:
           git checkout -B "$BRANCH"
           TITLE=$(cat remediation-title.txt 2>/dev/null || echo "fix(security): auto-remediate vulnerabilities")
           git add package.json pnpm-lock.yaml .grype.yaml
-          [ -f remediation-plan.md ] && git add remediation-plan.md
-          [ -f remediation-title.txt ] && git add remediation-title.txt
           git diff --cached --quiet && exit 0
           git commit -m "$TITLE"
           git push --force -u origin "$BRANCH"
