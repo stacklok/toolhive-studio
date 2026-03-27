@@ -62,12 +62,12 @@ jobs:
           curl https://cursor.com/install -fsS | bash
           echo "$HOME/.cursor/bin" >> $GITHUB_PATH
 
-      - name: 'Phase 1: Analyze and Plan (Claude 4.6 Opus)'
+      - name: 'Phase 1: Analyze and Plan (GPT-5.4 High Fast)'
         if: steps.existing.outputs.skip != 'true'
         env:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
         run: |
-          agent -p --model claude-4.6-opus-high-thinking --mode=plan --trust \
+          agent -p --model gpt-5.4-high-fast --mode=plan --trust \
             "Read .cursor/skills/security-vuln-remediation/SKILL.md and follow it.
              Run grype and pnpm audit to identify all current vulnerabilities.
              For each vulnerability, run pnpm why on the affected package.
