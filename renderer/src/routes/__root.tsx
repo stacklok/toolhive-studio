@@ -1,24 +1,15 @@
-import { getHealth, postApiV1BetaSecrets } from '@common/api/generated/sdk.gen'
-import { client } from '@common/api/generated/client.gen'
 import { Main } from '@/common/components/layout/main'
 import { TopNav } from '@/common/components/layout/top-nav'
-import { Error as ErrorComponent } from '@/common/components/error'
 import { NotFound } from '@/common/components/not-found'
+import { RootErrorComponent } from './root/root-error'
 import type { QueryClient } from '@tanstack/react-query'
 import {
   createRootRouteWithContext,
   Outlet,
-  redirect,
   useMatches,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { Toaster } from '@/common/components/ui/sonner'
-import { toast } from 'sonner'
-import {
-  REGISTRY_AUTH_TOAST_ID,
-  REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE,
-} from '@/common/components/settings/registry/registry-errors-message'
-import { getApiV1BetaSecretsDefaultOptions } from '@common/api/generated/@tanstack/react-query.gen'
 import { useRestartShutdownServers } from '@/common/hooks/use-restart-shutdown-servers'
 import '@fontsource/space-mono/400.css'
 import '@fontsource/atkinson-hyperlegible/400.css'
@@ -28,34 +19,15 @@ import '@fontsource/atkinson-hyperlegible/700-italic.css'
 import '@fontsource-variable/inter/wght.css'
 import '@fontsource-variable/merriweather/wght.css'
 import log from 'electron-log/renderer'
-import * as Sentry from '@sentry/electron/renderer'
-import { StartingToolHive } from '@/common/components/starting-toolhive'
 import { CustomPortBanner } from '@/common/components/custom-port-banner'
 import { NewsletterModal } from '@/common/components/newsletter-modal'
 import { ExpertConsultationBanner } from '@/common/components/expert-consultation-banner'
-
-async function setupSecretProvider(queryClient: QueryClient) {
-  const createEncryptedProvider = async () =>
-    postApiV1BetaSecrets({
-      body: { provider_type: 'encrypted' },
-      throwOnError: true,
-    })
-
-  return queryClient
-    .ensureQueryData(getApiV1BetaSecretsDefaultOptions())
-    .then(async (res) => {
-      if (res?.provider_type !== 'encrypted') {
-        await createEncryptedProvider()
-      }
-    })
-    .catch((err) => {
-      log.info(
-        'Error setting up secret provider, creating encrypted provider',
-        JSON.stringify(err)
-      )
-      return createEncryptedProvider()
-    })
-}
+import { checkUpdateInProgress } from './root/guards/check-update-in-progress'
+import { validateCliAlignment } from './root/guards/validate-cli-alignment'
+import { ensureToolhiveRunning } from './root/guards/ensure-toolhive-running'
+import { handleRegistryAuthRedirect } from './root/guards/handle-registry-auth-redirect'
+import { checkHealth } from './root/guards/check-health'
+import { setupSecretProvider } from './root/guards/setup-secret-provider'
 
 function RootComponent() {
   const matches = useMatches()
@@ -91,163 +63,20 @@ export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
 }>()({
   component: RootComponent,
-  errorComponent: ({ error }) => {
-    const errorData = error as Error & {
-      cause?: { containerEngineAvailable?: boolean }
-    }
-    const cause = errorData instanceof Error ? errorData.cause : undefined
-
-    if (
-      cause &&
-      typeof cause === 'object' &&
-      'isToolhiveRunning' in cause &&
-      'containerEngineAvailable' in cause &&
-      cause.isToolhiveRunning &&
-      cause.containerEngineAvailable
-    ) {
-      log.info(`[HealthCheckError] Server not ready`)
-      return <StartingToolHive />
-    }
-
-    log.error(`[ErrorComponent] Error occurred`, errorData)
-    return <ErrorComponent error={errorData} />
-  },
+  errorComponent: RootErrorComponent,
   notFoundComponent: () => <NotFound />,
   onError: (error) => {
     log.error(error)
   },
   beforeLoad: async ({ context: { queryClient }, location }) => {
-    let isUpdateInProgress = false
-
-    try {
-      isUpdateInProgress = await window.electronAPI.isUpdateInProgress()
-    } catch (e) {
-      log.debug(`[beforeLoad] Update check API not available: ${e}`)
-    }
-
-    if (isUpdateInProgress) {
-      log.info(`[beforeLoad] Skipping health API check - update in progress`)
-      return
-    }
-
-    // Check CLI validation status (skip if already on cli-issue or shutdown routes)
-    const isCliOrShutdownRoute =
-      location.pathname === '/cli-issue' || location.pathname === '/shutdown'
-    if (!isCliOrShutdownRoute) {
-      const validationResult =
-        await window.electronAPI.cliAlignment.getValidationResult()
-      const actionableStatuses = [
-        'external-cli-found',
-        'symlink-broken',
-        'symlink-tampered',
-      ]
-      if (
-        validationResult &&
-        actionableStatuses.includes(validationResult.status)
-      ) {
-        log.info(
-          `[beforeLoad] CLI validation issue: ${validationResult.status}, redirecting to /cli-issue`
-        )
-        throw redirect({ to: '/cli-issue' })
-      }
-    }
-
-    await queryClient.ensureQueryData({
-      queryKey: ['is-toolhive-running'],
-      queryFn: async () => {
-        const res = await window.electronAPI.isToolhiveRunning()
-        if (!res) {
-          log.error('ToolHive is not running')
-        }
-        return res
-      },
-      retry: 5,
-      retryDelay: 500,
-      staleTime: 0,
-    })
-
-    const toolhiveStatus = await window.electronAPI.getToolhiveStatus()
-    const alreadyNotified = queryClient.getQueryData<boolean>([
-      'registry-auth-redirected',
-    ])
-    if (
-      toolhiveStatus.processError === 'registry-auth-required' &&
-      !alreadyNotified &&
-      location.pathname !== '/settings'
-    ) {
-      queryClient.setQueryData(['registry-auth-redirected'], true)
-      log.info('[beforeLoad] Registry auth required, redirecting to settings')
-      toast.error(REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE, {
-        id: REGISTRY_AUTH_TOAST_ID,
-        duration: Infinity,
-        dismissible: true,
-      })
-      throw redirect({ to: '/settings', search: { tab: 'registry' } })
-    }
-
-    try {
-      await queryClient.ensureQueryData({
-        queryKey: ['health'],
-        queryFn: () => getHealth({ throwOnError: true }),
-        retry: 2,
-        retryDelay: 200,
-        staleTime: 0,
-        gcTime: 0,
-      })
-    } catch (error) {
-      const containerEngineStatus =
-        await window.electronAPI.checkContainerEngine()
-
-      const clientConfig = client.getConfig()
-
-      log.error(
-        `[beforeLoad] Client baseUrl: ${clientConfig.baseUrl || 'NOT SET'}`
-      )
-      log.error(
-        `[beforeLoad] ToolHive status: running=${toolhiveStatus.isRunning}, processError=${toolhiveStatus.processError ?? 'none'}`
-      )
-
-      if (
-        !toolhiveStatus.isRunning ||
-        !containerEngineStatus.available ||
-        !clientConfig.baseUrl
-      ) {
-        Sentry.captureException(error, {
-          level: 'error',
-          tags: {
-            component: 'root-route',
-            phase: 'beforeLoad',
-          },
-          extra: {
-            toolhive_running: `${toolhiveStatus.isRunning}`,
-            toolhive_process_error: toolhiveStatus.processError,
-            client_base_url: clientConfig.baseUrl,
-            client_configured: `${!!clientConfig.baseUrl}`,
-            container_engine: {
-              available: `${containerEngineStatus.available}`,
-            },
-            error_message:
-              error instanceof Error ? error.message : JSON.stringify(error),
-          },
-          fingerprint: [
-            'toolhive-not-running',
-            'container-engine-not-available',
-            'client-base-url-not-set',
-            toolhiveStatus.isRunning
-              ? 'process-running'
-              : 'process-not-running',
-          ],
-        })
-      }
-
-      throw new Error('Health check failed', {
-        cause: {
-          isToolhiveRunning: toolhiveStatus.isRunning,
-          containerEngineAvailable: containerEngineStatus.available,
-          processError: toolhiveStatus.processError,
-        },
-      })
-    }
+    if (await checkUpdateInProgress()) return
+    await validateCliAlignment(location.pathname)
+    await ensureToolhiveRunning(queryClient)
+    const toolhiveStatus = await handleRegistryAuthRedirect(
+      queryClient,
+      location.pathname
+    )
+    await checkHealth(queryClient, toolhiveStatus)
   },
   loader: async ({ context: { queryClient } }) => {
     const isRunning = await window.electronAPI.isToolhiveRunning()

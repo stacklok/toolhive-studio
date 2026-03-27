@@ -1,4 +1,6 @@
-export type ToolhiveProcessError = 'registry-auth-required'
+export type ToolhiveProcessError =
+  | 'registry-auth-required'
+  | 'registry-unavailable'
 
 export interface ToolhiveStatus {
   isRunning: boolean

@@ -194,6 +194,12 @@ export async function startToolhive(): Promise<void> {
         if (output.includes('registry authentication required')) {
           processError = 'registry-auth-required'
         }
+        if (
+          output.includes('registry login failed') ||
+          output.includes('upstream registry unavailable')
+        ) {
+          processError = 'registry-unavailable'
+        }
         log.info(`[ToolHive stderr] ${output}`)
         scope.addBreadcrumb({
           category: 'debug',
