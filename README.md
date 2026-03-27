@@ -25,7 +25,7 @@ setup, no security headaches, no runtime hassles.
 
 ## Quick links
 
-- 🚀 [Quickstart](https://docs.stacklok.com/toolhive/tutorials/quickstart-ui) -
+- 🚀 [Quickstart](https://docs.stacklok.com/toolhive/guides-ui/quickstart) -
   install ToolHive and run your first MCP server
 - 📚 [Documentation](https://docs.stacklok.com/toolhive/) - learn more about
   ToolHive's features
@@ -66,7 +66,7 @@ setup, no security headaches, no runtime hassles.
 
 To get started with ToolHive, download the latest release from
 [the website](https://toolhive.dev/download/) and follow the
-[quickstart guide](https://docs.stacklok.com/toolhive/tutorials/quickstart-ui).
+[quickstart guide](https://docs.stacklok.com/toolhive/guides-ui/quickstart).
 
 ---
 
