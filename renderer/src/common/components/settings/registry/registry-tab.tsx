@@ -10,6 +10,7 @@ export function RegistryTab() {
     isLoading,
     isResetting,
     hasRegistryError,
+    isUnavailableError,
     registryAuthRequiredMessage,
   } = useRegistryForm()
 
@@ -30,6 +31,7 @@ export function RegistryTab() {
         isLoading={isLoading}
         isResetting={isResetting}
         hasRegistryError={hasRegistryError}
+        isUnavailableError={isUnavailableError}
         registryAuthRequiredMessage={registryAuthRequiredMessage}
       />
     </div>

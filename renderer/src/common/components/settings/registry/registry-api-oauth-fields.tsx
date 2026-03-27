@@ -9,7 +9,7 @@ import {
 } from '../../ui/form'
 import { Input } from '../../ui/input'
 import type { RegistryFormData } from './schema'
-import { resolveRegistryListLoadErrorMessage } from './registry-errors'
+import { resolveRegistryListLoadErrorMessage } from './registry-errors-message'
 import { REGISTRY_FORM_TYPE } from './utils'
 
 const OAUTH_FIELDS = [

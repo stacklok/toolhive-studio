@@ -13,7 +13,10 @@ import { FilePickerInput } from '../../ui/file-picker-input'
 import { Button } from '../../ui/button'
 import { REGISTRY_FORM_TYPE } from './utils'
 import type { RegistryInputType } from './utils'
-import { resolveRegistryListLoadErrorMessage } from './registry-errors'
+import {
+  resolveRegistryListLoadErrorMessage,
+  REGISTRY_UNAVAILABLE_SOURCE_MESSAGE,
+} from './registry-errors-message'
 
 const REGISTRY_INPUT_CONFIG = {
   local_path: {
@@ -103,11 +106,13 @@ export function RegistrySourceField({
   isPending,
   form,
   hasRegistryError,
+  isUnavailableError,
   registryAuthRequiredMessage,
 }: {
   isPending: boolean
   form: UseFormReturn<RegistryFormData>
   hasRegistryError: boolean
+  isUnavailableError: boolean
   registryAuthRequiredMessage?: string
 }) {
   const registryType = form.watch('type')
@@ -128,6 +133,7 @@ export function RegistrySourceField({
           registryType === 'api_url' && !!registryAuthRequiredMessage
         const showSourceError =
           fieldState.invalid ||
+          isUnavailableError ||
           (hasRegistryError && !isAuthErrorHandledByOAuthBox)
 
         return (
@@ -141,7 +147,11 @@ export function RegistrySourceField({
               disabled={isPending}
               hasRegistryError={showSourceError}
             />
-            {hasRegistryError && registryType !== 'api_url' ? (
+            {isUnavailableError ? (
+              <p className="text-destructive w-full text-sm">
+                {REGISTRY_UNAVAILABLE_SOURCE_MESSAGE}
+              </p>
+            ) : hasRegistryError && registryType !== 'api_url' ? (
               <p className="text-destructive w-full text-sm">
                 {resolveRegistryListLoadErrorMessage(
                   registryType,

@@ -13,6 +13,11 @@ import {
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { Toaster } from '@/common/components/ui/sonner'
+import { toast } from 'sonner'
+import {
+  REGISTRY_AUTH_TOAST_ID,
+  REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE,
+} from '@/common/components/settings/registry/registry-errors-message'
 import { getApiV1BetaSecretsDefaultOptions } from '@common/api/generated/@tanstack/react-query.gen'
 import { useRestartShutdownServers } from '@/common/hooks/use-restart-shutdown-servers'
 import '@fontsource/space-mono/400.css'
@@ -172,6 +177,11 @@ export const Route = createRootRouteWithContext<{
     ) {
       queryClient.setQueryData(['registry-auth-redirected'], true)
       log.info('[beforeLoad] Registry auth required, redirecting to settings')
+      toast.error(REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE, {
+        id: REGISTRY_AUTH_TOAST_ID,
+        duration: Infinity,
+        dismissible: true,
+      })
       throw redirect({ to: '/settings', search: { tab: 'registry' } })
     }
 

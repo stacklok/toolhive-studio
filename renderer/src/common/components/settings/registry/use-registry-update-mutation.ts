@@ -24,7 +24,7 @@ import {
   OIDC_DISCOVERY_PATTERN,
   AUTH_FIELDS_REQUIRED_PATTERN,
   REGISTRY_AUTH_FIELDS_REQUIRED_TOAST,
-} from './registry-errors'
+} from './registry-errors-message'
 
 const REGISTRY_DEFAULT_PATH = { name: 'default' } as const
 
@@ -121,7 +121,7 @@ export function useRegistryUpdateMutation() {
           : undefined
       const body = buildRegistryBody(data, auth)
 
-      await delay(500)
+      await delay(300)
       await putRegistry(body, type)
 
       if (auth) {
@@ -131,6 +131,10 @@ export function useRegistryUpdateMutation() {
     onSuccess: (_, variables) => {
       if (variables.type !== REGISTRY_FORM_TYPE.API_URL) {
         updateRegistryCache(queryClient, variables)
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: getApiV1BetaRegistryQueryKey(),
+        })
       }
 
       queryClient.removeQueries({

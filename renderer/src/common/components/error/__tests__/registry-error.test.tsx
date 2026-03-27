@@ -4,7 +4,7 @@ import { RegistryError } from '../registry-error'
 import {
   REGISTRY_AUTH_REQUIRED_UI_MESSAGE,
   REGISTRY_UNAVAILABLE_UI_MESSAGE,
-} from '../../settings/registry/registry-errors'
+} from '../../settings/registry/registry-errors-message'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
 

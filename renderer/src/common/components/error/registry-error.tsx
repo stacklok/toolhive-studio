@@ -7,7 +7,7 @@ import {
   isRegistryUnavailableError,
   REGISTRY_AUTH_REQUIRED_UI_MESSAGE,
   REGISTRY_UNAVAILABLE_UI_MESSAGE,
-} from '../settings/registry/registry-errors'
+} from '../settings/registry/registry-errors-message'
 import { IllustrationLock } from '../illustrations/illustration-lock'
 import { IllustrationError } from '../illustrations/illustration-error'
 

@@ -47,6 +47,7 @@ export function RegistryTypeField({
         <FormItem className="w-full">
           <Select
             onValueChange={(value) => {
+              form.clearErrors()
               field.onChange(value)
               restoreFieldsForType(value)
             }}

@@ -15,6 +15,8 @@ export const AUTH_FIELDS_REQUIRED_PATTERN =
 export const REGISTRY_AUTH_FIELDS_REQUIRED_TOAST =
   'Both Client ID and Issuer URL are required'
 
+export const REGISTRY_AUTH_TOAST_ID = 'registry-auth-required'
+
 const REGISTRY_AUTH_REQUIRED_CODE = 'registry_auth_required'
 const REGISTRY_UNAVAILABLE_CODE = 'registry_unavailable'
 

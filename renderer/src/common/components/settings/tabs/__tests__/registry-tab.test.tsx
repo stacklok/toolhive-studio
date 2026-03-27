@@ -13,7 +13,7 @@ import { mockedPostApiV1BetaRegistryAuthLogin } from '@/common/mocks/fixtures/re
 import {
   REGISTRY_WRONG_AUTH_TOAST,
   REGISTRY_AUTH_REQUIRED_UI_MESSAGE,
-} from '../../registry/registry-errors'
+} from '../../registry/registry-errors-message'
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({

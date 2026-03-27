@@ -1,5 +1,4 @@
-import { useEffect } from 'react'
-import { useForm, useWatch } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { registryFormSchema, type RegistryFormData } from './schema'
 import {
@@ -13,9 +12,8 @@ import {
   REGISTRY_WRONG_AUTH_TOAST,
   REGISTRY_WRONG_ISSUER_TOAST,
   REGISTRY_AUTH_FIELDS_REQUIRED_TOAST,
-  REGISTRY_UNAVAILABLE_SOURCE_MESSAGE,
-  REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE,
-} from './registry-errors'
+  REGISTRY_AUTH_TOAST_ID,
+} from './registry-errors-message'
 import { useRegistryData } from './use-registry-data'
 
 type FormRef = ReturnType<typeof useForm<RegistryFormData>>
@@ -83,44 +81,11 @@ export function useRegistryForm() {
     mode: 'onSubmit',
   })
 
-  const currentType = useWatch({ control: form.control, name: 'type' })
-
-  useEffect(() => {
-    form.clearErrors()
-
-    if (isUnavailableError) {
-      form.setError('source', { message: REGISTRY_UNAVAILABLE_SOURCE_MESSAGE })
-      return
-    }
-
-    if (isAuthRequiredError) {
-      toast.error(REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE, {
-        id: 'registry-auth-required',
-        duration: Infinity,
-        dismissible: true,
-      })
-    }
-    const hasMissingCredentials =
-      isAuthRequiredError && !initialClientId && !initialIssuerUrl
-
-    if (hasMissingCredentials) {
-      form.setError('source', { message: '' })
-      form.setError('client_id', { message: '' })
-      form.setError('issuer_url', { message: '' })
-    }
-  }, [
-    currentType,
-    isAuthRequiredError,
-    isUnavailableError,
-    form,
-    initialClientId,
-    initialIssuerUrl,
-  ])
-
   const onSubmit = async (data: RegistryFormData) => {
     form.clearErrors(['source', 'client_id', 'issuer_url'])
     try {
       await updateRegistry(data)
+      toast.dismiss(REGISTRY_AUTH_TOAST_ID)
       trackEvent('Registry updated', {
         registry_type: data.type,
         registry_source:
@@ -135,6 +100,7 @@ export function useRegistryForm() {
     form.clearErrors()
     try {
       await updateRegistry({ type: REGISTRY_FORM_TYPE.DEFAULT })
+      toast.dismiss(REGISTRY_AUTH_TOAST_ID)
       trackEvent('Registry reset to default')
     } catch (e) {
       applySubmitFieldErrors(form, e, {
@@ -154,6 +120,7 @@ export function useRegistryForm() {
     isLoading,
     isResetting,
     hasRegistryError,
+    isUnavailableError,
     registryAuthRequiredMessage,
   }
 }

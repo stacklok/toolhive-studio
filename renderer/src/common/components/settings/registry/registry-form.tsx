@@ -15,6 +15,7 @@ interface RegistryFormProps {
   isLoading: boolean
   isResetting: boolean
   hasRegistryError: boolean
+  isUnavailableError: boolean
   registryAuthRequiredMessage?: string
 }
 
@@ -30,6 +31,7 @@ export function RegistryForm({
   isLoading,
   isResetting,
   hasRegistryError,
+  isUnavailableError,
   registryAuthRequiredMessage,
 }: RegistryFormProps) {
   const [type, clientId, issuerUrl] = form.watch([
@@ -54,6 +56,7 @@ export function RegistryForm({
               isPending={isLoading}
               form={form}
               hasRegistryError={hasRegistryError}
+              isUnavailableError={isUnavailableError}
               registryAuthRequiredMessage={registryAuthRequiredMessage}
             />
           </div>
