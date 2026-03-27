@@ -15,7 +15,7 @@ import {
   REGISTRY_AUTH_FIELDS_REQUIRED_TOAST,
   REGISTRY_UNAVAILABLE_SOURCE_MESSAGE,
   REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE,
-} from './registry-list-error'
+} from './registry-errors'
 import { useRegistryData } from './use-registry-data'
 
 type FormRef = ReturnType<typeof useForm<RegistryFormData>>

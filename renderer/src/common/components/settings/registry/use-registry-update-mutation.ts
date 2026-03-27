@@ -24,7 +24,7 @@ import {
   OIDC_DISCOVERY_PATTERN,
   AUTH_FIELDS_REQUIRED_PATTERN,
   REGISTRY_AUTH_FIELDS_REQUIRED_TOAST,
-} from './registry-list-error'
+} from './registry-errors'
 
 const REGISTRY_DEFAULT_PATH = { name: 'default' } as const
 

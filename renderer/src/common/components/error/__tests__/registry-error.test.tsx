@@ -1,12 +1,12 @@
 import { screen, waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { RegistryError } from '../registry-error'
-import { REGISTRY_AUTH_REQUIRED_UI_MESSAGE } from '../../settings/registry/registry-list-error'
+import {
+  REGISTRY_AUTH_REQUIRED_UI_MESSAGE,
+  REGISTRY_UNAVAILABLE_UI_MESSAGE,
+} from '../../settings/registry/registry-errors'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
-
-const REGISTRY_UNAVAILABLE_UI_MESSAGE =
-  'The upstream registry is unreachable or the API URL is misconfigured. Please check your Registry Server API URL in the settings.'
 
 function renderRegistryError(error: unknown) {
   const router = createTestRouter(() => <RegistryError error={error} />)

@@ -10,6 +10,13 @@ import { FormField, FormItem, FormControl, FormMessage } from '../../ui/form'
 import type { RegistryFormData } from './schema'
 import { REGISTRY_TYPE_OPTIONS } from './utils'
 
+const EMPTY_REGISTRY_DEFAULTS: RegistryFormData = {
+  type: 'default',
+  source: '',
+  client_id: '',
+  issuer_url: '',
+}
+
 export function RegistryTypeField({
   isPending,
   form,
@@ -17,12 +24,19 @@ export function RegistryTypeField({
   isPending: boolean
   form: UseFormReturn<RegistryFormData>
 }) {
-  const { type, source, client_id, issuer_url } = form.formState
-    .defaultValues ?? {
-    type: 'default',
-    source: '',
-    client_id: '',
-    issuer_url: '',
+  const defaults = form.formState.defaultValues ?? EMPTY_REGISTRY_DEFAULTS
+
+  function restoreFieldsForType(selectedType: string) {
+    const isOriginalType = selectedType === defaults.type
+    form.setValue('source', isOriginalType ? (defaults.source ?? '') : '')
+
+    if (selectedType === 'api_url') {
+      form.setValue('client_id', defaults.client_id ?? '')
+      form.setValue('issuer_url', defaults.issuer_url ?? '')
+    } else {
+      form.setValue('client_id', '')
+      form.setValue('issuer_url', '')
+    }
   }
 
   return (
@@ -34,17 +48,7 @@ export function RegistryTypeField({
           <Select
             onValueChange={(value) => {
               field.onChange(value)
-
-              const isOriginalType = value === type
-              form.setValue('source', isOriginalType ? (source ?? '') : '')
-
-              if (value === 'api_url') {
-                form.setValue('client_id', client_id ?? '')
-                form.setValue('issuer_url', issuer_url ?? '')
-              } else {
-                form.setValue('client_id', '')
-                form.setValue('issuer_url', '')
-              }
+              restoreFieldsForType(value)
             }}
             value={field.value}
           >

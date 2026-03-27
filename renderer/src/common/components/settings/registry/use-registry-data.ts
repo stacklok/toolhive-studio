@@ -6,7 +6,7 @@ import {
   getRegistryUnavailableUrl,
   isRegistryAuthRequiredError,
   isRegistryUnavailableError,
-} from './registry-list-error'
+} from './registry-errors'
 
 export function useRegistryData() {
   const {

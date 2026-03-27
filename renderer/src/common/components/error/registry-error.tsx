@@ -6,12 +6,10 @@ import {
   isRegistryAuthRequiredError,
   isRegistryUnavailableError,
   REGISTRY_AUTH_REQUIRED_UI_MESSAGE,
-} from '../settings/registry/registry-list-error'
+  REGISTRY_UNAVAILABLE_UI_MESSAGE,
+} from '../settings/registry/registry-errors'
 import { IllustrationLock } from '../illustrations/illustration-lock'
 import { IllustrationError } from '../illustrations/illustration-error'
-
-const REGISTRY_UNAVAILABLE_UI_MESSAGE =
-  'The upstream registry is unreachable or the API URL is misconfigured. Please check your Registry Server API URL in the settings.'
 
 export function RegistryError({ error }: { error: unknown }) {
   const isAuthRequired = isRegistryAuthRequiredError(error)

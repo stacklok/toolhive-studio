@@ -56,6 +56,10 @@ export function getRegistryAuthRequiredMessage(
   return undefined
 }
 
+/** Shown in the registry error page when the upstream registry is unreachable. */
+export const REGISTRY_UNAVAILABLE_UI_MESSAGE =
+  'The upstream registry is unreachable or the API URL is misconfigured. Please check your Registry Server API URL in the settings.'
+
 export const REGISTRY_UNAVAILABLE_SOURCE_MESSAGE =
   'The Registry Server API URL is not correct. Make sure it points to a valid MCP Registry API endpoint.'
 
