@@ -15,7 +15,7 @@ jobs:
   regenerate-artifacts:
     name: Regenerate Artifacts
     runs-on: ubuntu-latest
-    if: github.actor == 'renovate[bot]'
+    if: github.event.pull_request.user.login == 'renovate[bot]'
     steps:
       - name: Check what was updated
         id: check
