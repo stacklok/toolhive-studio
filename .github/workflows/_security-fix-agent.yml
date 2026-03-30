@@ -67,6 +67,7 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           claude -p --model opus \
+            --dangerously-skip-permissions \
             --allowedTools "Read,Bash(grype *),Bash(pnpm audit *),Bash(pnpm why *),Bash(pnpm view *),Bash(cat *),Bash(ls *),Edit" \
             --max-turns 30 \
             "Read .claude/skills/security-vuln-remediation/SKILL.md and follow it.
@@ -82,6 +83,7 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           claude -p --model sonnet \
+            --dangerously-skip-permissions \
             --allowedTools "Read,Edit,Bash(grype *),Bash(pnpm install *),Bash(pnpm audit *),Bash(pnpm why *),Bash(pnpm view *),Bash(cat *),Bash(ls *)" \
             --max-turns 40 \
             "Read .claude/skills/security-vuln-remediation/SKILL.md and remediation-plan.md.
