@@ -467,6 +467,94 @@ describe('DialogFormRemoteMcp', () => {
     })
   })
 
+  it('re-saving a server with remote OAuth auth does not corrupt client_secret (issue #1821)', async () => {
+    const user = userEvent.setup({ delay: null })
+    const rec = recordRequests()
+
+    mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+      ...data,
+      name: 'github-remote',
+      url: 'https://api.github.com/mcp',
+      transport: 'streamable-http',
+      oauth_config: {
+        authorize_url: 'https://github.com/login/oauth/authorize',
+        token_url: 'https://github.com/login/oauth/access_token',
+        client_id: 'my-github-client-id',
+        client_secret: {
+          name: 'OAUTH_CLIENT_SECRET_GITHUB_REMOTE',
+          target: 'oauth_secret',
+        },
+        scopes: ['repo'],
+        skip_browser: false,
+        use_pkce: true,
+        callback_port: 8080,
+        oauth_params: {},
+      },
+      group: 'default',
+    }))
+
+    mockedGetApiV1BetaSecretsDefaultKeys.override(() => ({
+      keys: [{ key: 'OAUTH_CLIENT_SECRET_GITHUB_REMOTE' }],
+    }))
+
+    mockedPostApiV1BetaWorkloadsByNameEdit.override(() => ({
+      name: 'github-remote',
+      port: 0,
+    }))
+
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRemoteMcp
+          isOpen
+          closeDialog={vi.fn()}
+          groupName="default"
+          serverToEdit="github-remote"
+        />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Wait for the form to be populated with the existing server data
+    await waitFor(() => {
+      expect(screen.getByRole('textbox', { name: /server url/i })).toHaveValue(
+        'https://api.github.com/mcp'
+      )
+    })
+
+    // Save without making any changes (the exact scenario in issue #1821)
+    await user.click(screen.getByRole('button', { name: /update server/i }))
+
+    await waitFor(() => {
+      const editCall = rec.recordedRequests.find(
+        (r) =>
+          r.method === 'POST' &&
+          r.pathname.includes('/workloads/') &&
+          r.pathname.includes('/edit')
+      )
+      expect(editCall).toBeDefined()
+
+      // The client_secret must reference the existing store key — not a re-created or corrupted one
+      expect(editCall?.payload).toMatchObject({
+        oauth_config: expect.objectContaining({
+          client_secret: {
+            name: 'OAUTH_CLIENT_SECRET_GITHUB_REMOTE',
+            target: 'OAUTH_CLIENT_SECRET_GITHUB_REMOTE',
+          },
+        }),
+      })
+    })
+
+    // No new secret must have been created — the secret already exists in the store
+    const secretCreationRequests = rec.recordedRequests.filter(
+      (r) =>
+        r.method === 'POST' && r.pathname === '/api/v1beta/secrets/default/keys'
+    )
+    expect(secretCreationRequests).toHaveLength(0)
+  })
+
   it('submits bearer token auth with correct oauth_config', async () => {
     const user = userEvent.setup({ delay: null })
     const rec = recordRequests()
