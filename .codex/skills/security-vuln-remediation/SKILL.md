@@ -72,19 +72,33 @@ If the upgrade resolves it, this step is complete. Move to the next vulnerabilit
 
 If no non-breaking upgrade is available, or the fix requires a major version bump of a transitive dependency that is safe to force:
 
-Add or update an entry in `pnpm.overrides` inside `package.json`:
+Add or update an entry in `pnpm.overrides` inside `package.json`. You MUST follow the existing override style used in the project. Current overrides look like this:
 
 ```json
 {
   "pnpm": {
     "overrides": {
-      "<vulnerable-package>": ">=<fixed-version>"
+      "fast-xml-parser": ">=5.5.9",
+      "lodash-es": ">=4.17.23",
+      "tar": ">=7.5.7"
     }
   }
 }
 ```
 
-Use the `>=` prefix to allow future patches. Follow the existing pattern in the project (see current overrides for examples).
+Rules for overrides (follow strictly):
+
+1. **Always use the `>=` prefix** — this allows future patches. Example: `"brace-expansion": ">=5.0.5"`.
+2. **Use a simple top-level override when the fix is within the same major** — if the vulnerable package has one major line in use (e.g. only `5.x`), a single `"package": ">=fixed"` entry is sufficient.
+3. **Use scoped overrides only when multiple incompatible majors exist** — if `pnpm why` shows multiple major versions (e.g. `1.x`, `2.x`, `5.x`) and a blanket override would break older consumers, use pnpm's parent selector syntax to scope the override to the specific dependency path:
+   ```json
+   {
+     "minimatch>brace-expansion": ">=5.0.5"
+   }
+   ```
+   This only overrides `brace-expansion` when required by `minimatch`, leaving other consumers on their compatible version.
+4. **Never use `@^` version selectors in override keys** — use the simple `"package": ">=version"` or `"parent>package": ">=version"` syntax only.
+5. **Do not split one vulnerability into per-major-line overrides** — if `brace-expansion@1.x` and `@2.x` are outside the advisory's vulnerable range, they do not need overrides. Only override the actually vulnerable version.
 
 After the change:
 
