@@ -8,6 +8,7 @@ import {
   Link,
   notFound,
   useParams,
+  useSearch,
 } from '@tanstack/react-router'
 import { Cloud, GithubIcon, Monitor, ShieldCheck, Wrench } from 'lucide-react'
 import { getApiV1BetaRegistryByNameServersByServerNameOptions } from '@common/api/generated/@tanstack/react-query.gen'
@@ -20,7 +21,7 @@ import type {
   RegistryRemoteServerMetadata,
   V1GetServerResponse,
 } from '@common/api/registry-types'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Tooltip,
   TooltipContent,
@@ -59,6 +60,9 @@ function RegistryServerNotFound() {
 }
 
 export const Route = createFileRoute('/(registry)/registry_/$name')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    install: search.install === true,
+  }),
   loader: async ({ context: { queryClient }, params }) => {
     const pathOptions = {
       path: { name: 'default' as const, serverName: params.name },
@@ -98,11 +102,25 @@ export function RegistryServerDetail() {
     rawData as V1GetServerResponse
   const server = localServer || remoteServer
   const isRemoteServer = !!remoteServer
+  const { install } = useSearch({ from: '/(registry)/registry_/$name' })
   const [showAllTools, setShowAllTools] = useState(false)
   const [selectedServer, setSelectedServer] = useState<
     RegistryImageMetadata | RegistryRemoteServerMetadata | null
-  >(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  >(install ? (server ?? null) : null)
+  const [isModalOpen, setIsModalOpen] = useState(install ?? false)
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { serverName } = (e as CustomEvent<{ serverName: string }>).detail
+      if (serverName === name) {
+        setSelectedServer(server ?? null)
+        setIsModalOpen(true)
+      }
+    }
+    window.addEventListener('toolhive:open-install-modal', handler)
+    return () =>
+      window.removeEventListener('toolhive:open-install-modal', handler)
+  }, [name, server])
 
   if (!server) return null
 

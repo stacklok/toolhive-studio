@@ -54,6 +54,13 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
   const deepLinkCleanup = window.electronAPI.onDeepLinkNavigation((target) => {
     log.info(`[deep-link] Navigating to: ${target.to}`, target.params)
     router.navigate(target)
+    if (target.search?.install && target.params?.name) {
+      window.dispatchEvent(
+        new CustomEvent('toolhive:open-install-modal', {
+          detail: { serverName: target.params.name },
+        })
+      )
+    }
   })
 
   const rootElement = document.getElementById('root')!

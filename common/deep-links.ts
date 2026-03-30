@@ -9,7 +9,11 @@ export const DEEP_LINK_PROTOCOL = 'toolhive-gui'
 
 const VERSION = 'v1'
 
-export type NavigateTarget = { to: string; params?: Record<string, string> }
+export type NavigateTarget = {
+  to: string
+  params?: Record<string, string>
+  search?: Record<string, unknown>
+}
 
 /**
  * Define a v1 deep link with its Zod schema and navigation handler
@@ -56,9 +60,23 @@ export const showNotFound = v1DeepLink({
   navigate: () => ({ to: '/deep-link-not-found' }),
 })
 
+export const openRegistryServerInstall = v1DeepLink({
+  intent: 'open-registry-server-install',
+  params: z.object({ serverName: safeIdentifier }),
+  navigate: (params) => ({
+    to: '/registry/$name',
+    params: { name: params.serverName },
+    search: { install: true },
+  }),
+})
+
 // ── Registry ───────────────────────────────────────────────────────────
 
-const allDeepLinks = [openRegistryServerDetail, showNotFound] as const
+const allDeepLinks = [
+  openRegistryServerDetail,
+  openRegistryServerInstall,
+  showNotFound,
+] as const
 
 type DeepLinkDef = (typeof allDeepLinks)[number]
 
@@ -68,6 +86,7 @@ const deepLinksByIntent: ReadonlyMap<string, DeepLinkDef> = new Map(
 
 export const deepLinkSchema = z.discriminatedUnion('intent', [
   openRegistryServerDetail.schema,
+  openRegistryServerInstall.schema,
   showNotFound.schema,
 ])
 
