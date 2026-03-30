@@ -262,7 +262,7 @@ importers:
         specifier: ^4.0.3
         version: 4.0.3
       '@eslint/js':
-        specifier: ^9.25.0
+        specifier: ^9.39.4
         version: 9.39.4
       '@hey-api/openapi-ts':
         specifier: 0.94.5
@@ -322,7 +322,7 @@ importers:
         specifier: 40.8.4
         version: 40.8.4
       eslint:
-        specifier: ^9.25.0
+        specifier: ^9.39.4
         version: 9.39.4(jiti@2.6.1)
       eslint-plugin-react-hooks:
         specifier: ^7.0.1
