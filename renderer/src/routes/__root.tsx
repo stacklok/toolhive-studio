@@ -28,6 +28,7 @@ import { ensureToolhiveRunning } from './root/guards/ensure-toolhive-running'
 import { handleRegistryAuthRedirect } from './root/guards/handle-registry-auth-redirect'
 import { checkHealth } from './root/guards/check-health'
 import { setupSecretProvider } from './root/guards/setup-secret-provider'
+import { useRegistryErrorToast } from './root/hooks/use-registry-error-toast'
 
 function RootComponent() {
   const matches = useMatches()
@@ -38,6 +39,7 @@ function RootComponent() {
   const hideNav = isShutdownRoute || isCliIssueRoute
 
   useRestartShutdownServers()
+  useRegistryErrorToast()
 
   return (
     <>

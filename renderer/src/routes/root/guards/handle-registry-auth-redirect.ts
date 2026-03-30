@@ -4,16 +4,15 @@ import {
   type ToolhiveStatus,
 } from '@common/types/toolhive-status'
 import { redirect } from '@tanstack/react-router'
-import { toast } from 'sonner'
 import log from 'electron-log/renderer'
 import { getApiV1BetaRegistry } from '@common/api/generated/sdk.gen'
 import {
   getRegistryErrorToastMessage,
-  REGISTRY_AUTH_TOAST_ID,
   REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE,
 } from '@/common/components/settings/registry/registry-errors-message'
 
 const REGISTRY_AUTH_REDIRECTED_KEY = ['registry-auth-redirected']
+export const REGISTRY_PENDING_TOAST_KEY = ['registry-pending-toast']
 
 function shouldRedirect(queryClient: QueryClient, pathname: string): boolean {
   if (pathname === '/settings') return false
@@ -22,12 +21,8 @@ function shouldRedirect(queryClient: QueryClient, pathname: string): boolean {
 
 function performRedirect(queryClient: QueryClient, message: string): never {
   queryClient.setQueryData(REGISTRY_AUTH_REDIRECTED_KEY, true)
+  queryClient.setQueryData(REGISTRY_PENDING_TOAST_KEY, message)
   log.info('[beforeLoad] Registry misconfigured, redirecting to settings')
-  toast.error(message, {
-    id: REGISTRY_AUTH_TOAST_ID,
-    duration: Infinity,
-    dismissible: true,
-  })
   throw redirect({ to: '/settings', search: { tab: 'registry' } })
 }
 
