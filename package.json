@@ -68,7 +68,7 @@
     "@types/regexp.escape": "^2.0.0",
     "@types/unzipper": "^0.10.11",
     "@vitejs/plugin-react-swc": "^4.3.0",
-    "@vitest/coverage-v8": "^4.0.16",
+    "@vitest/coverage-v8": "^4.1.2",
     "autoprefixer": "^10.4.21",
     "dotenv": "^17.0.0",
     "electron": "40.8.4",
@@ -95,7 +95,7 @@
     "typescript-eslint": "^8.57.2",
     "unzipper": "^0.12.3",
     "vite": "^8.0.0",
-    "vitest": "^4.0.16",
+    "vitest": "^4.1.2",
     "vitest-fail-on-console": "^0.10.0"
   },
   "dependencies": {
