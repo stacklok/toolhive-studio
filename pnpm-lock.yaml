@@ -168,7 +168,7 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       electron-log:
-        specifier: ^5.4.1
+        specifier: ^5.4.3
         version: 5.4.3
       electron-squirrel-startup:
         specifier: ^1.0.1
