@@ -96,7 +96,7 @@
     "unzipper": "^0.12.3",
     "vite": "^8.0.3",
     "vitest": "^4.1.2",
-    "vitest-fail-on-console": "^0.10.0"
+    "vitest-fail-on-console": "^0.10.1"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.64",
