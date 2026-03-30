@@ -24,3 +24,10 @@ jobs:
     name: End-to-end tests
     uses: ./.github/workflows/_e2e.yml
     secrets: inherit
+
+  security-fix:
+    name: Security Fix Agent
+    needs: security
+    if: ${{ always() && needs.security.result == 'failure' }}
+    uses: ./.github/workflows/_security-fix-agent.yml
+    secrets: inherit

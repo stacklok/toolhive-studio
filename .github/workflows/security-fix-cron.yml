@@ -1,0 +1,21 @@
+name: Security Fix (Scheduled)
+
+on:
+  schedule:
+    - cron: '0 7 * * 1-5' # weekdays at 07:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  security:
+    name: Security Checks
+    uses: ./.github/workflows/_security-checks.yml
+
+  security-fix:
+    name: Security Fix Agent
+    needs: security
+    if: ${{ always() && needs.security.result == 'failure' }}
+    uses: ./.github/workflows/_security-fix-agent.yml
+    secrets: inherit
