@@ -65,7 +65,10 @@ export function DialogInstallSkill({
 }: DialogInstallSkillProps) {
   const { mutateAsync: installSkill, isPending } = useMutationInstallSkill()
 
-  const { data: clientsData } = useQuery(getApiV1BetaDiscoveryClientsOptions())
+  const { data: clientsData } = useQuery({
+    ...getApiV1BetaDiscoveryClientsOptions(),
+    enabled: open,
+  })
   const installedClients = (
     clientsData?.clients?.filter((c) => c.installed && c.client_type) ?? []
   ).sort((a, b) => a.client_type!.localeCompare(b.client_type!))
@@ -96,17 +99,21 @@ export function DialogInstallSkill({
   }
 
   async function onSubmit(values: FormSchema) {
-    await installSkill({
-      body: {
-        name: values.name,
-        scope: values.scope,
-        project_root:
-          values.scope === 'project' ? values.project_root : undefined,
-        client: values.client || undefined,
-        version: values.version || undefined,
-      },
-    })
-    handleClose()
+    try {
+      await installSkill({
+        body: {
+          name: values.name,
+          scope: values.scope,
+          project_root:
+            values.scope === 'project' ? values.project_root : undefined,
+          client: values.client || undefined,
+          version: values.version || undefined,
+        },
+      })
+      handleClose()
+    } catch {
+      // Error toast is handled by useMutationInstallSkill onError
+    }
   }
 
   return (

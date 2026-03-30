@@ -27,14 +27,18 @@ export function DialogUninstallSkill({
 
   async function handleConfirm() {
     if (!skillName) return
-    await uninstallSkill({
-      path: { name: skillName },
-      query: {
-        scope: skill?.scope,
-        project_root: skill?.project_root ?? undefined,
-      },
-    })
-    onOpenChange(false)
+    try {
+      await uninstallSkill({
+        path: { name: skillName },
+        query: {
+          scope: skill?.scope,
+          project_root: skill?.project_root ?? undefined,
+        },
+      })
+      onOpenChange(false)
+    } catch {
+      // Error toast is handled by useMutationUninstallSkill onError
+    }
   }
 
   return (

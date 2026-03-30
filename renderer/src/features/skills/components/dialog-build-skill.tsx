@@ -66,28 +66,33 @@ export function DialogBuildSkill({
   }
 
   async function onSubmit(values: FormSchema) {
-    const result = await buildSkill({
-      body: {
-        path: values.path,
-        tag: values.tag || undefined,
-      },
-    })
-
-    const reference = result?.reference
-    handleClose()
-
-    if (reference) {
-      setBuiltReference(reference)
-      toast.success(`Skill built: ${reference}`, {
-        duration: 10_000,
-        closeButton: true,
-        action: {
-          label: 'Install now',
-          onClick: () => setInstallOpen(true),
+    try {
+      const result = await buildSkill({
+        body: {
+          path: values.path,
+          tag: values.tag || undefined,
         },
       })
-    } else {
-      toast.success('Skill built successfully')
+
+      const reference = result?.reference
+      handleClose()
+
+      if (reference) {
+        setBuiltReference(reference)
+        toast.success(`Skill built: ${reference}`, {
+          duration: 10_000,
+          closeButton: true,
+          action: {
+            label: 'Install now',
+            onClick: () => setInstallOpen(true),
+          },
+        })
+      } else {
+        toast.success('Skill built successfully')
+      }
+    } catch {
+      // Error toast is handled by useMutationBuildSkill onError
+      // Keep the dialog open on failure
     }
   }
 

@@ -20,9 +20,9 @@ export function GridCardsSkills({ skills }: { skills: InstalledSkill[] }) {
           : 'grid-cols-[repeat(auto-fit,minmax(max(200px,min(300px,100%)),1fr))]'
       )}
     >
-      {skills.map((skill) => (
+      {skills.map((skill, index) => (
         <CardSkill
-          key={skill.reference ?? skill.metadata?.name}
+          key={skill.reference ?? skill.metadata?.name ?? `skill-${index}`}
           skill={skill}
         />
       ))}
