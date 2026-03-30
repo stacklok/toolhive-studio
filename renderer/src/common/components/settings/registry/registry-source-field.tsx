@@ -11,7 +11,12 @@ import { Input } from '../../ui/input'
 import type { RegistryFormData } from './schema'
 import { FilePickerInput } from '../../ui/file-picker-input'
 import { Button } from '../../ui/button'
+import { REGISTRY_FORM_TYPE } from './utils'
 import type { RegistryInputType } from './utils'
+import {
+  resolveRegistryListLoadErrorMessage,
+  REGISTRY_UNAVAILABLE_SOURCE_MESSAGE,
+} from './registry-errors-message'
 
 const REGISTRY_INPUT_CONFIG = {
   local_path: {
@@ -45,7 +50,7 @@ const REGISTRY_INPUT_CONFIG = {
     label: 'Registry Server API URL',
     placeholder: 'https://domain.com:8080/api/registry',
     useFilePicker: false,
-    description: 'Provide the HTTPS URL of a registry server API.',
+    description: 'Provide the HTTPS URL of a registry server API',
   },
 } as const satisfies Record<
   RegistryInputType,
@@ -101,14 +106,18 @@ export function RegistrySourceField({
   isPending,
   form,
   hasRegistryError,
+  isUnavailableError,
+  registryAuthRequiredMessage,
 }: {
   isPending: boolean
   form: UseFormReturn<RegistryFormData>
   hasRegistryError: boolean
+  isUnavailableError: boolean
+  registryAuthRequiredMessage?: string
 }) {
   const registryType = form.watch('type')
 
-  if (registryType === 'default') {
+  if (registryType === REGISTRY_FORM_TYPE.DEFAULT) {
     return null
   }
 
@@ -119,7 +128,14 @@ export function RegistrySourceField({
     <FormField
       control={form.control}
       name="source"
-      render={({ field }) => {
+      render={({ field, fieldState }) => {
+        const isAuthErrorHandledByOAuthBox =
+          registryType === 'api_url' && !!registryAuthRequiredMessage
+        const showSourceError =
+          fieldState.invalid ||
+          isUnavailableError ||
+          (hasRegistryError && !isAuthErrorHandledByOAuthBox)
+
         return (
           <FormItem className="w-full">
             <FormLabel required>{config.label}</FormLabel>
@@ -129,12 +145,18 @@ export function RegistrySourceField({
               placeholder={config.placeholder}
               field={field}
               disabled={isPending}
-              hasRegistryError={hasRegistryError}
+              hasRegistryError={showSourceError}
             />
-            {hasRegistryError ? (
-              <p className="text-destructive text-sm">
-                Failed to load registry configuration. The registry source may
-                be misconfigured or unavailable.
+            {isUnavailableError ? (
+              <p className="text-destructive w-full text-sm">
+                {REGISTRY_UNAVAILABLE_SOURCE_MESSAGE}
+              </p>
+            ) : hasRegistryError && registryType !== 'api_url' ? (
+              <p className="text-destructive w-full text-sm">
+                {resolveRegistryListLoadErrorMessage(
+                  registryType,
+                  registryAuthRequiredMessage
+                )}
               </p>
             ) : (
               <FormMessage />

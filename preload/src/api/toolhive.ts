@@ -1,12 +1,14 @@
 import { ipcRenderer } from 'electron'
 import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
 import { TOOLHIVE_VERSION } from '../../../utils/constants'
+import type { ToolhiveStatus } from '../../../common/types/toolhive-status'
 
 export const toolhiveApi = {
   getToolhivePort: () => ipcRenderer.invoke('get-toolhive-port'),
   getToolhiveMcpPort: () => ipcRenderer.invoke('get-toolhive-mcp-port'),
   getToolhiveVersion: () => TOOLHIVE_VERSION,
   isToolhiveRunning: () => ipcRenderer.invoke('is-toolhive-running'),
+  getToolhiveStatus: () => ipcRenderer.invoke('get-toolhive-status'),
   isUsingCustomPort: () => ipcRenderer.invoke('is-using-custom-port'),
   checkContainerEngine: () => ipcRenderer.invoke('check-container-engine'),
   restartToolhive: () => ipcRenderer.invoke('restart-toolhive'),
@@ -24,6 +26,7 @@ export interface ToolhiveAPI {
   getToolhiveMcpPort: () => Promise<number | undefined>
   getToolhiveVersion: () => string
   isToolhiveRunning: () => Promise<boolean>
+  getToolhiveStatus: () => Promise<ToolhiveStatus>
   isUsingCustomPort: () => Promise<boolean>
   checkContainerEngine: () => Promise<{
     docker: boolean

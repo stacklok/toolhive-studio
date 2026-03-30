@@ -7,6 +7,11 @@ import { updateTrayStatus } from './system-tray'
 import log from './logger'
 import * as Sentry from '@sentry/electron/main'
 import { getQuittingState } from './app-state'
+import {
+  REGISTRY_AUTH_REQUIRED,
+  type ToolhiveProcessError,
+  type ToolhiveStatus,
+} from '../../common/types/toolhive-status'
 
 const binName = process.platform === 'win32' ? 'thv.exe' : 'thv'
 const binPath = app.isPackaged
@@ -30,6 +35,7 @@ let toolhivePort: number | undefined
 let toolhiveMcpPort: number | undefined
 let isRestarting = false
 let killTimer: NodeJS.Timeout | undefined
+let processError: ToolhiveProcessError | undefined
 
 export function getToolhivePort(): number | undefined {
   return toolhivePort
@@ -42,6 +48,13 @@ export function getToolhiveMcpPort(): number | undefined {
 export function isToolhiveRunning(): boolean {
   const isRunning = !!toolhiveProcess && !toolhiveProcess.killed
   return isRunning
+}
+
+export function getToolhiveStatus(): ToolhiveStatus {
+  return {
+    isRunning: isToolhiveRunning(),
+    processError,
+  }
 }
 
 /**
@@ -131,6 +144,7 @@ export async function startToolhive(): Promise<void> {
       return
     }
 
+    processError = undefined
     toolhiveMcpPort = await findFreePort()
     toolhivePort = await findFreePort(50000, 50100)
     log.info(
@@ -177,6 +191,9 @@ export async function startToolhive(): Promise<void> {
         if (!output) return
         if (output.includes('A new version of ToolHive is available')) {
           return
+        }
+        if (output.includes('registry authentication required')) {
+          processError = REGISTRY_AUTH_REQUIRED
         }
         log.info(`[ToolHive stderr] ${output}`)
         scope.addBreadcrumb({

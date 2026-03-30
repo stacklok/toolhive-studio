@@ -3,6 +3,7 @@ import {
   restartToolhive,
   getToolhivePort,
   isToolhiveRunning,
+  getToolhiveStatus,
   getToolhiveMcpPort,
   isUsingCustomPort,
 } from '../toolhive-manager'
@@ -14,6 +15,7 @@ export function register() {
   ipcMain.handle('get-toolhive-port', () => getToolhivePort())
   ipcMain.handle('get-toolhive-mcp-port', () => getToolhiveMcpPort())
   ipcMain.handle('is-toolhive-running', () => isToolhiveRunning())
+  ipcMain.handle('get-toolhive-status', () => getToolhiveStatus())
   ipcMain.handle('is-using-custom-port', () => isUsingCustomPort())
 
   ipcMain.handle('check-container-engine', async () => {
