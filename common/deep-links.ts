@@ -13,7 +13,6 @@ export type NavigateTarget = {
   to: string
   params?: Record<string, string>
   search?: Record<string, unknown>
-  openInstall?: boolean
 }
 
 /**
@@ -68,7 +67,6 @@ export const openRegistryServerInstall = v1DeepLink({
     to: '/registry/$name',
     params: { name: params.serverName },
     search: { install: true },
-    openInstall: true,
   }),
 })
 
