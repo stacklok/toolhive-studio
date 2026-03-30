@@ -17,6 +17,7 @@ import {
   ArrowUpCircle,
   FlaskConical,
   PackageOpen,
+  BookOpen,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useRouterState } from '@tanstack/react-router'
@@ -27,6 +28,8 @@ import { getOsDesignVariant } from '@/common/lib/os-design'
 import { trackEvent } from '@/common/lib/analytics'
 import { NavSeparator } from './nav-separator'
 import { NavIconButton } from './nav-icon-button'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { featureFlagKeys } from '@utils/feature-flags'
 
 interface NavButtonProps {
   to: string
@@ -62,10 +65,22 @@ function useIsActive() {
 
 function TopNavLinks() {
   const isActive = useIsActive()
+  const isSkillsEnabled = useFeatureFlag(featureFlagKeys.SKILLS)
 
   return (
     <NavigationMenu>
       <NavigationMenuList className="gap-2">
+        {isSkillsEnabled && (
+          <NavigationMenuItem>
+            <NavButton
+              to="/skills"
+              icon={BookOpen}
+              isActive={isActive(['/skills'])}
+            >
+              Skills
+            </NavButton>
+          </NavigationMenuItem>
+        )}
         <NavigationMenuItem>
           <NavButton
             to="/group/default"
