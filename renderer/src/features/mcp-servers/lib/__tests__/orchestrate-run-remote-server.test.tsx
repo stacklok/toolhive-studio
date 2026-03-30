@@ -446,8 +446,9 @@ describe('convertCreateRequestToFormData', () => {
         token_url: 'https://oauth.example.com/token',
         client_id: 'my-client-id',
         client_secret: {
-          name: 'oauth-secret',
-          target: 'MY_SECRET_123',
+          // name is the secret store key; target is the config property it maps to
+          name: 'MY_SECRET_123',
+          target: 'oauth_secret',
         },
         scopes: ['read', 'write', 'admin'],
         use_pkce: true,
@@ -478,7 +479,7 @@ describe('convertCreateRequestToFormData', () => {
         token_url: 'https://oauth.example.com/token',
         client_id: 'my-client-id',
         client_secret: {
-          name: 'oauth-secret',
+          name: 'MY_SECRET_123',
           value: {
             secret: 'MY_SECRET_123',
             isFromStore: true,
@@ -500,6 +501,44 @@ describe('convertCreateRequestToFormData', () => {
       group: 'production',
       tools: undefined,
       tools_override: undefined,
+    })
+  })
+
+  it('identifies client_secret as from-store using name when name differs from target (issue #1821)', () => {
+    const createRequest: V1CreateRequest = {
+      name: 'github-remote',
+      url: 'https://api.github.com/mcp',
+      transport: 'sse',
+      proxy_mode: 'streamable-http',
+      oauth_config: {
+        authorize_url: 'https://github.com/login/oauth/authorize',
+        client_id: 'my-github-client-id',
+        // name is the secret store key; target is the config property it maps to
+        client_secret: {
+          name: 'OAUTH_CLIENT_SECRET_GITHUB_REMOTE',
+          target: 'oauth_secret',
+        },
+        use_pkce: true,
+        skip_browser: false,
+      },
+    }
+
+    const availableSecrets: V1ListSecretsResponse = {
+      keys: [{ key: 'OAUTH_CLIENT_SECRET_GITHUB_REMOTE' }],
+    }
+
+    const result = convertCreateRequestToFormData(
+      createRequest,
+      availableSecrets
+    )
+
+    // Must use name (the store key) — not target — for both value.secret and isFromStore
+    expect(result.oauth_config.client_secret).toEqual({
+      name: 'OAUTH_CLIENT_SECRET_GITHUB_REMOTE',
+      value: {
+        secret: 'OAUTH_CLIENT_SECRET_GITHUB_REMOTE',
+        isFromStore: true,
+      },
     })
   })
 
@@ -532,10 +571,11 @@ describe('convertCreateRequestToFormData', () => {
     )
 
     expect(result.oauth_config).toBeDefined()
+    // value.secret and isFromStore use name (the store key), not target
     expect(result.oauth_config.client_secret).toEqual({
       name: 'NEW_SECRET-name',
       value: {
-        secret: 'NEW_SECRET-key',
+        secret: 'NEW_SECRET-name',
         isFromStore: false,
       },
     })

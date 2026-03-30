@@ -289,9 +289,9 @@ export function convertCreateRequestToFormData(
         ? {
             name: createRequest.oauth_config.client_secret.name || '',
             value: {
-              secret: createRequest.oauth_config.client_secret.target || '',
+              secret: createRequest.oauth_config.client_secret.name || '',
               isFromStore: availableSecretKeys.has(
-                createRequest.oauth_config.client_secret.target || ''
+                createRequest.oauth_config.client_secret.name || ''
               ),
             },
           }
@@ -300,9 +300,9 @@ export function convertCreateRequestToFormData(
         ? {
             name: createRequest.oauth_config.bearer_token.name || '',
             value: {
-              secret: createRequest.oauth_config.bearer_token.target || '',
+              secret: createRequest.oauth_config.bearer_token.name || '',
               isFromStore: availableSecretKeys.has(
-                createRequest.oauth_config.bearer_token.target || ''
+                createRequest.oauth_config.bearer_token.name || ''
               ),
             },
           }
