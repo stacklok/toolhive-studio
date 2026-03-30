@@ -153,7 +153,7 @@ importers:
         specifier: ^3.8.2
         version: 3.8.2(ai@6.0.141(zod@4.3.6))(zod@4.3.6)
       better-sqlite3:
-        specifier: ^12.6.2
+        specifier: ^12.8.0
         version: 12.8.0
       class-variance-authority:
         specifier: ^0.7.1
