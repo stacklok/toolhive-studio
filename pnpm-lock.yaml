@@ -331,7 +331,7 @@ importers:
         specifier: ^0.4.19
         version: 0.4.26(eslint@9.39.4(jiti@2.6.1))
       globals:
-        specifier: ^17.0.0
+        specifier: ^17.4.0
         version: 17.4.0
       husky:
         specifier: ^9.1.7
