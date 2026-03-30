@@ -7,7 +7,7 @@ settings:
 overrides:
   fast-xml-parser: '>=5.5.9'
   lodash-es: '>=4.17.23'
-  tar: '>=7.5.7'
+  tar: '>=7.5.13'
   picomatch: '>=4.0.4'
   tmp: '>=0.2.4'
   '@tootallnate/once': '>=3.0.1'
@@ -373,7 +373,7 @@ importers:
         specifier: ^6.1.3
         version: 6.1.3
       tar:
-        specifier: '>=7.5.7'
+        specifier: '>=7.5.13'
         version: 7.5.13
       tsx:
         specifier: ^4.21.0
