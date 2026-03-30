@@ -340,7 +340,7 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       jsdom:
-        specifier: ^29.0.0
+        specifier: ^29.0.1
         version: 29.0.1
       json-schema-faker:
         specifier: ^0.5.9
