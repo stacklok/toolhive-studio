@@ -56,9 +56,23 @@ export const showNotFound = v1DeepLink({
   navigate: () => ({ to: '/deep-link-not-found' }),
 })
 
+export const openRegistryServerInstall = v1DeepLink({
+  intent: 'open-registry-server-install',
+  params: z.object({ serverName: safeIdentifier }),
+  navigate: (params) => ({
+    to: '/registry/$name',
+    params: { name: params.serverName },
+    search: { install: true },
+  }),
+})
+
 // ── Registry ───────────────────────────────────────────────────────────
 
-const allDeepLinks = [openRegistryServerDetail, showNotFound] as const
+const allDeepLinks = [
+  openRegistryServerDetail,
+  openRegistryServerInstall,
+  showNotFound,
+] as const
 
 type DeepLinkDef = (typeof allDeepLinks)[number]
 
@@ -68,6 +82,7 @@ const deepLinksByIntent: ReadonlyMap<string, DeepLinkDef> = new Map(
 
 export const deepLinkSchema = z.discriminatedUnion('intent', [
   openRegistryServerDetail.schema,
+  openRegistryServerInstall.schema,
   showNotFound.schema,
 ])
 

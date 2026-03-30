@@ -1,15 +1,18 @@
 import { screen, waitFor } from '@testing-library/react'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { RegistryServerDetail } from '@/routes/(registry)/registry_.$name'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
 import userEvent from '@testing-library/user-event'
+
+const mockUseSearch = vi.fn().mockReturnValue({})
 
 vi.mock('@tanstack/react-router', async () => {
   const actual = await vi.importActual('@tanstack/react-router')
   return {
     ...actual,
     useParams: () => ({ name: 'time' }),
+    useSearch: () => mockUseSearch(),
   }
 })
 
@@ -22,6 +25,10 @@ function WrapperComponent() {
 }
 
 describe('Registry Server Detail Route', () => {
+  beforeEach(() => {
+    mockUseSearch.mockReturnValue({})
+  })
+
   it('displays server details correctly', async () => {
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
@@ -64,6 +71,17 @@ describe('Registry Server Detail Route', () => {
 
     await waitFor(() => {
       expect(router.state.location.pathname).toBe('/registry')
+    })
+  })
+
+  it('opens the install dialog immediately when install search param is true', async () => {
+    mockUseSearch.mockReturnValue({ install: true })
+
+    const router = createTestRouter(WrapperComponent)
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
     })
   })
 
