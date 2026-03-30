@@ -59,7 +59,7 @@ jobs:
 
       - name: Install Claude Code
         if: steps.existing.outputs.skip != 'true'
-        run: npm install -g @anthropic-ai/claude-code
+        run: pnpm add -g @anthropic-ai/claude-code
 
       - name: 'Phase 1: Analyze and Plan (Opus)'
         if: steps.existing.outputs.skip != 'true'
