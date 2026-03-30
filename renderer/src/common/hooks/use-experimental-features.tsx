@@ -27,6 +27,10 @@ function formatFeatureFlagName(key: string): string {
     return 'MCP Optimizer'
   }
 
+  if (key === featureFlagKeys.SKILLS) {
+    return 'Skills'
+  }
+
   return key
     .split('_')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -49,6 +53,10 @@ function formatFeatureFlagDescription(key: string): React.ReactNode {
         </a>
       </>
     )
+  }
+
+  if (key === featureFlagKeys.SKILLS) {
+    return 'Browse and manage AI agent skills installed via ToolHive.'
   }
 
   return `Enable ${formatFeatureFlagName(key)} feature`
