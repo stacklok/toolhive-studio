@@ -7,9 +7,10 @@ import { updateTrayStatus } from './system-tray'
 import log from './logger'
 import * as Sentry from '@sentry/electron/main'
 import { getQuittingState } from './app-state'
-import type {
-  ToolhiveProcessError,
-  ToolhiveStatus,
+import {
+  REGISTRY_AUTH_REQUIRED,
+  type ToolhiveProcessError,
+  type ToolhiveStatus,
 } from '../../common/types/toolhive-status'
 
 const binName = process.platform === 'win32' ? 'thv.exe' : 'thv'
@@ -192,7 +193,7 @@ export async function startToolhive(): Promise<void> {
           return
         }
         if (output.includes('registry authentication required')) {
-          processError = 'registry-auth-required'
+          processError = REGISTRY_AUTH_REQUIRED
         }
         log.info(`[ToolHive stderr] ${output}`)
         scope.addBreadcrumb({

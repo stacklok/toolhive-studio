@@ -1,22 +1,48 @@
 import type { QueryClient } from '@tanstack/react-query'
-import type { ToolhiveStatus } from '@common/types/toolhive-status'
+import {
+  REGISTRY_AUTH_REQUIRED,
+  type ToolhiveStatus,
+} from '@common/types/toolhive-status'
 import { redirect } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import log from 'electron-log/renderer'
+import { getApiV1BetaRegistry } from '@common/api/generated/sdk.gen'
 import {
+  getRegistryErrorToastMessage,
   REGISTRY_AUTH_TOAST_ID,
   REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE,
 } from '@/common/components/settings/registry/registry-errors-message'
 
 const REGISTRY_AUTH_REDIRECTED_KEY = ['registry-auth-redirected']
 
+function shouldRedirect(queryClient: QueryClient, pathname: string): boolean {
+  if (pathname === '/settings') return false
+  return !queryClient.getQueryData<boolean>(REGISTRY_AUTH_REDIRECTED_KEY)
+}
+
+function performRedirect(queryClient: QueryClient, message: string): never {
+  queryClient.setQueryData(REGISTRY_AUTH_REDIRECTED_KEY, true)
+  log.info('[beforeLoad] Registry misconfigured, redirecting to settings')
+  toast.error(message, {
+    id: REGISTRY_AUTH_TOAST_ID,
+    duration: Infinity,
+    dismissible: true,
+  })
+  throw redirect({ to: '/settings', search: { tab: 'registry' } })
+}
+
 /**
- * Fetches the ToolHive process status and checks whether the backend exited
- * because the configured registry requires OAuth authentication.
+ * Checks whether the configured registry is misconfigured (auth required or
+ * unreachable).
+ *
+ * Two detection paths (first match wins):
+ * 1. Process-level: thv wrote "registry authentication required" to stderr
+ *    before the HTTP server was ready (caught by toolhive-manager).
+ * 2. API-level: GET /api/v1beta/registry returns 503 with
+ *    code "registry_auth_required" or "registry_unavailable".
+ *
  * On first detection (not already notified, not already on /settings), shows
- * a persistent error toast and redirects to Settings > Registry so the user
- * can provide credentials or reset.
- * Always returns the ToolhiveStatus for downstream guards (e.g. checkHealth).
+ * a persistent error toast and redirects to Settings > Registry.
  */
 export async function handleRegistryAuthRedirect(
   queryClient: QueryClient,
@@ -24,23 +50,20 @@ export async function handleRegistryAuthRedirect(
 ): Promise<ToolhiveStatus> {
   const toolhiveStatus = await window.electronAPI.getToolhiveStatus()
 
-  const alreadyNotified = queryClient.getQueryData<boolean>(
-    REGISTRY_AUTH_REDIRECTED_KEY
-  )
-
   if (
-    toolhiveStatus.processError === 'registry-auth-required' &&
-    !alreadyNotified &&
-    pathname !== '/settings'
+    toolhiveStatus.processError === REGISTRY_AUTH_REQUIRED &&
+    shouldRedirect(queryClient, pathname)
   ) {
-    queryClient.setQueryData(REGISTRY_AUTH_REDIRECTED_KEY, true)
-    log.info('[beforeLoad] Registry auth required, redirecting to settings')
-    toast.error(REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE, {
-      id: REGISTRY_AUTH_TOAST_ID,
-      duration: Infinity,
-      dismissible: true,
-    })
-    throw redirect({ to: '/settings', search: { tab: 'registry' } })
+    performRedirect(queryClient, REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE)
+  }
+
+  try {
+    await getApiV1BetaRegistry({ throwOnError: true })
+  } catch (error) {
+    const toastMessage = getRegistryErrorToastMessage(error)
+    if (toastMessage && shouldRedirect(queryClient, pathname)) {
+      performRedirect(queryClient, toastMessage)
+    }
   }
 
   return toolhiveStatus
