@@ -6,7 +6,7 @@
 
 import openapi from '@common/api/openapi.json'
 import fs from 'fs'
-import { JSONSchemaFaker as jsf } from 'json-schema-faker'
+import { generate as jsfGenerate } from 'json-schema-faker'
 import { http, HttpResponse } from 'msw'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -20,12 +20,13 @@ const FOLDER_PATH = __dirname
 const FIXTURES_PATH = `${FOLDER_PATH}/fixtures`
 const FIXTURE_EXT = 'ts'
 
-jsf.option({ alwaysFakeOptionals: true })
-jsf.option({ fillProperties: true })
-jsf.option({ minItems: 1 })
-jsf.option({ maxItems: 3 })
-jsf.option({ failOnInvalidTypes: false })
-jsf.option({ failOnInvalidFormat: false })
+const JSF_OPTIONS = {
+  alwaysFakeOptionals: true,
+  fillProperties: true,
+  minItems: 1,
+  maxItems: 3,
+  failOnInvalidTypes: false,
+} as const
 
 function toFileSafe(s: string): string {
   return s.replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '')
@@ -126,7 +127,7 @@ function autoGenerateHandlers() {
               if (schema) {
                 try {
                   const resolved = derefSchema(schema)
-                  payload = jsf.generate(resolved)
+                  payload = await jsfGenerate(resolved, JSF_OPTIONS)
                 } catch (e) {
                   console.warn(
                     '[auto-mocker] jsf.generate failed for',
