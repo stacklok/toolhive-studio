@@ -484,11 +484,7 @@ describe('DialogFormRemoteMcp', () => {
           name: 'OAUTH_CLIENT_SECRET_GITHUB_REMOTE',
           target: 'oauth_secret',
         },
-        scopes: ['repo'],
-        skip_browser: false,
-        use_pkce: true,
         callback_port: 8080,
-        oauth_params: {},
       },
       group: 'default',
     }))
