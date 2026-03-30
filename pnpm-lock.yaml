@@ -349,7 +349,7 @@ importers:
         specifier: ^6.1.0
         version: 6.1.0
       lint-staged:
-        specifier: ^16.0.0
+        specifier: ^16.4.0
         version: 16.4.0
       memfs:
         specifier: ^4.50.0
@@ -17635,7 +17635,7 @@ snapshots:
     dependencies:
       eastasianwidth: 0.2.0
       emoji-regex: 9.2.2
-      strip-ansi: 7.1.2
+      strip-ansi: 7.2.0
 
   string-width@7.2.0:
     dependencies:
