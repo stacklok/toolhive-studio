@@ -88,17 +88,25 @@ Add or update an entry in `pnpm.overrides` inside `package.json`. You MUST follo
 
 Rules for overrides (follow strictly):
 
-1. **Always use the `>=` prefix** — this allows future patches. Example: `"brace-expansion": ">=5.0.5"`.
-2. **Use a simple top-level override when the fix is within the same major** — if the vulnerable package has one major line in use (e.g. only `5.x`), a single `"package": ">=fixed"` entry is sufficient.
-3. **Use scoped overrides only when multiple incompatible majors exist** — if `pnpm why` shows multiple major versions (e.g. `1.x`, `2.x`, `5.x`) and a blanket override would break older consumers, use pnpm's parent selector syntax to scope the override to the specific dependency path:
+1. **Always use the `>=` prefix for values** — this allows future patches. Example: `">=1.2.3"`.
+2. **BEFORE writing any override, check `pnpm why <package>` for multiple major versions.** This is mandatory. If the tree contains more than one major line, an unscoped override would force ALL consumers onto the overridden version, breaking packages that expect a different major.
+3. **Use a simple top-level override ONLY when one major line exists** — if every installation of the package is on the same major, a single `"package": ">=fixed"` entry is safe:
    ```json
-   {
-     "minimatch>brace-expansion": ">=5.0.5"
-   }
+   { "some-package": ">=1.2.3" }
    ```
-   This only overrides `brace-expansion` when required by `minimatch`, leaving other consumers on their compatible version.
-4. **Never use `@^` version selectors in override keys** — use the simple `"package": ">=version"` or `"parent>package": ">=version"` syntax only.
-5. **Do not split one vulnerability into per-major-line overrides** — if `brace-expansion@1.x` and `@2.x` are outside the advisory's vulnerable range, they do not need overrides. Only override the actually vulnerable version.
+4. **Use parent-scoped overrides when multiple majors coexist** — scope the override to the dependency path that pulls in the vulnerable version using `"parent>package"` syntax:
+   ```json
+   { "parent-pkg>vulnerable-pkg": ">=2.0.1" }
+   ```
+   This only overrides `vulnerable-pkg` when required by `parent-pkg`, leaving other consumers on their compatible major. Pick the nearest direct parent that exclusively uses the vulnerable major line.
+   
+   **WRONG** — never use an unscoped override when multiple majors exist:
+   ```json
+   { "vulnerable-pkg": ">=2.0.1" }
+   ```
+   This would force every consumer onto v2, breaking those that depend on v1.
+5. **Only override actually vulnerable versions** — if `pnpm why` shows multiple major lines but only one is in the advisory's vulnerable range, override only that version's path. Do not add overrides for versions that are not vulnerable.
+6. **Use only `"package"` or `"parent>package"` as override keys** — do not use version-range selectors like `@>=1.0.0 <2.0.0` in keys. Scope via parent instead.
 
 After the change:
 
