@@ -316,7 +316,7 @@ importers:
         specifier: ^10.4.27
         version: 10.4.27(postcss@8.5.8)
       dotenv:
-        specifier: ^17.0.0
+        specifier: ^17.3.1
         version: 17.3.1
       electron:
         specifier: 40.8.5
