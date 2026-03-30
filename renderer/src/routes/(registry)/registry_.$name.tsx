@@ -21,7 +21,7 @@ import type {
   RegistryRemoteServerMetadata,
   V1GetServerResponse,
 } from '@common/api/registry-types'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Tooltip,
   TooltipContent,
@@ -108,6 +108,19 @@ export function RegistryServerDetail() {
     RegistryImageMetadata | RegistryRemoteServerMetadata | null
   >(install ? (server ?? null) : null)
   const [isModalOpen, setIsModalOpen] = useState(install ?? false)
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { serverName } = (e as CustomEvent<{ serverName: string }>).detail
+      if (serverName === name) {
+        setSelectedServer(server ?? null)
+        setIsModalOpen(true)
+      }
+    }
+    window.addEventListener('toolhive:open-install-modal', handler)
+    return () =>
+      window.removeEventListener('toolhive:open-install-modal', handler)
+  }, [name, server])
 
   if (!server) return null
 

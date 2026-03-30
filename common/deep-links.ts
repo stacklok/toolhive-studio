@@ -9,7 +9,12 @@ export const DEEP_LINK_PROTOCOL = 'toolhive-gui'
 
 const VERSION = 'v1'
 
-export type NavigateTarget = { to: string; params?: Record<string, string> }
+export type NavigateTarget = {
+  to: string
+  params?: Record<string, string>
+  search?: Record<string, unknown>
+  openInstall?: boolean
+}
 
 /**
  * Define a v1 deep link with its Zod schema and navigation handler
@@ -63,6 +68,7 @@ export const openRegistryServerInstall = v1DeepLink({
     to: '/registry/$name',
     params: { name: params.serverName },
     search: { install: true },
+    openInstall: true,
   }),
 })
 

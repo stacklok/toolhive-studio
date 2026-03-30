@@ -1,4 +1,5 @@
 import { screen, waitFor } from '@testing-library/react'
+import { act } from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { RegistryServerDetail } from '@/routes/(registry)/registry_.$name'
 import { createTestRouter } from '@/common/test/create-test-router'
@@ -79,6 +80,29 @@ describe('Registry Server Detail Route', () => {
 
     const router = createTestRouter(WrapperComponent)
     renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+  })
+
+  it('opens the install dialog when deep link event fires while already on the page', async () => {
+    const router = createTestRouter(WrapperComponent)
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'time' })).toBeVisible()
+    })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+
+    // Simulate the deep link IPC handler dispatching the event while already on the page
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent('toolhive:open-install-modal', {
+          detail: { serverName: 'time' },
+        })
+      )
+    })
 
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
