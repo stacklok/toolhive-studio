@@ -79,7 +79,7 @@
     "husky": "^9.1.7",
     "icon-gen": "^5.0.0",
     "jsdom": "^29.0.1",
-    "json-schema-faker": "^0.5.9",
+    "json-schema-faker": "^0.6.0",
     "knip": "^6.1.0",
     "lint-staged": "^16.0.0",
     "memfs": "^4.50.0",
