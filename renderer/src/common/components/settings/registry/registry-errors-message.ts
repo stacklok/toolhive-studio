@@ -32,11 +32,6 @@ export const REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE =
 export const REGISTRY_UNAVAILABLE_TOAST_MESSAGE =
   'The configured registry is unreachable. The app will not work correctly until the registry URL is fixed or reset to default.'
 
-/** Returns true if the error is a registry configuration issue that requires user action. */
-export function isRegistryConfigError(error: unknown): boolean {
-  return isRegistryAuthRequiredError(error) || isRegistryUnavailableError(error)
-}
-
 /** Returns the appropriate toast message for a registry config error. */
 export function getRegistryErrorToastMessage(
   error: unknown
