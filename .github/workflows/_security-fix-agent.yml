@@ -57,32 +57,34 @@ jobs:
           curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
           grype version
 
-      - name: Install Cursor CLI
+      - name: Install Claude Code
         if: steps.existing.outputs.skip != 'true'
-        run: |
-          curl https://cursor.com/install -fsS | bash
-          echo "$HOME/.cursor/bin" >> $GITHUB_PATH
+        run: npm install -g @anthropic-ai/claude-code
 
-      - name: 'Phase 1: Analyze and Plan (GPT-5.4 High Fast)'
+      - name: 'Phase 1: Analyze and Plan (Opus)'
         if: steps.existing.outputs.skip != 'true'
         env:
-          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          agent -p --model gpt-5.4-high-fast --mode=plan --trust \
-            "Read .cursor/skills/security-vuln-remediation/SKILL.md and follow it.
+          claude -p --model opus \
+            --allowedTools "Read,Bash(grype *),Bash(pnpm audit *),Bash(pnpm why *),Bash(pnpm view *),Bash(cat *),Bash(ls *),Edit" \
+            --max-turns 30 \
+            "Read .claude/skills/security-vuln-remediation/SKILL.md and follow it.
              Run grype and pnpm audit to identify all current vulnerabilities.
              For each vulnerability, run pnpm why on the affected package.
              Analyze the impact of each vulnerability (CVSS, attack vector, production vs dev).
              Write a detailed remediation-plan.md with your full analysis and proposed fixes.
              Do NOT modify any project files — only create remediation-plan.md."
 
-      - name: 'Phase 2: Implement Fixes (Claude 4.6 Sonnet)'
+      - name: 'Phase 2: Implement Fixes (Sonnet)'
         if: steps.existing.outputs.skip != 'true'
         env:
-          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          agent -p --force --model claude-4.6-sonnet-medium-thinking --trust \
-            "Read .cursor/skills/security-vuln-remediation/SKILL.md and remediation-plan.md.
+          claude -p --model sonnet \
+            --allowedTools "Read,Edit,Bash(grype *),Bash(pnpm install *),Bash(pnpm audit *),Bash(pnpm why *),Bash(pnpm view *),Bash(cat *),Bash(ls *)" \
+            --max-turns 40 \
+            "Read .claude/skills/security-vuln-remediation/SKILL.md and remediation-plan.md.
              Implement every fix described in the remediation plan:
              - Upgrade packages where a patch/minor fix is available.
              - Add pnpm overrides in package.json where an upgrade is not feasible.
