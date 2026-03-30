@@ -95,16 +95,21 @@ Rules for overrides (follow strictly):
    { "some-package": ">=1.2.3" }
    ```
 4. **Use parent-scoped overrides when multiple majors coexist** — scope the override to the dependency path that pulls in the vulnerable version using `"parent>package"` syntax:
+
    ```json
    { "parent-pkg>vulnerable-pkg": ">=2.0.1" }
    ```
+
    This only overrides `vulnerable-pkg` when required by `parent-pkg`, leaving other consumers on their compatible major. Pick the nearest direct parent that exclusively uses the vulnerable major line.
-   
+
    **WRONG** — never use an unscoped override when multiple majors exist:
+
    ```json
    { "vulnerable-pkg": ">=2.0.1" }
    ```
+
    This would force every consumer onto v2, breaking those that depend on v1.
+
 5. **Only override actually vulnerable versions** — if `pnpm why` shows multiple major lines but only one is in the advisory's vulnerable range, override only that version's path. Do not add overrides for versions that are not vulnerable.
 6. **Use only `"package"` or `"parent>package"` as override keys** — do not use version-range selectors like `@>=1.0.0 <2.0.0` in keys. Scope via parent instead.
 
