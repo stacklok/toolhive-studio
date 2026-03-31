@@ -21,6 +21,7 @@ import '@fontsource-variable/merriweather/wght.css'
 import log from 'electron-log/renderer'
 import { CustomPortBanner } from '@/common/components/custom-port-banner'
 import { NewsletterModal } from '@/common/components/newsletter-modal'
+import { NewsletterModalProvider } from '@/common/contexts/newsletter-modal-provider'
 import { ExpertConsultationBanner } from '@/common/components/expert-consultation-banner'
 import { checkUpdateInProgress } from './root/guards/check-update-in-progress'
 import { validateCliAlignment } from './root/guards/validate-cli-alignment'
@@ -42,7 +43,7 @@ function RootComponent() {
   useRegistryErrorToast()
 
   return (
-    <>
+    <NewsletterModalProvider>
       {!hideNav && <TopNav />}
       {!hideNav && import.meta.env.DEV && <CustomPortBanner />}
       <Main>
@@ -57,7 +58,7 @@ function RootComponent() {
       </Main>
       {!hideNav && <NewsletterModal />}
       <ExpertConsultationBanner />
-    </>
+    </NewsletterModalProvider>
   )
 }
 
