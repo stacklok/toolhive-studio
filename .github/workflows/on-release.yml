@@ -18,8 +18,8 @@ jobs:
         shell: bash
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
-          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
-            echo "::error::Tag '$TAG' must start with 'v' followed by semver (e.g. v1.2.3)"
+          if [[ ! "$TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-([0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*))?(\+([0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*))?$ ]]; then
+            echo "::error::Tag '$TAG' is not valid semver (e.g. v1.2.3, v1.2.3-rc.1)"
             exit 1
           fi
           echo "Valid tag: $TAG"
