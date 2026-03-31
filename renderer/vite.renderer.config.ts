@@ -1,7 +1,7 @@
 import path from 'path'
 import { defineConfig } from 'vite'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
-import react from '@vitejs/plugin-react-swc'
+import react from '@vitejs/plugin-react'
 import autoprefixer from 'autoprefixer'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import tailwindcss from '@tailwindcss/postcss'
