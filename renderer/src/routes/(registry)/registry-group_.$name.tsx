@@ -31,7 +31,7 @@ export const Route = createFileRoute('/(registry)/registry-group_/$name')({
   component: RegistryGroupDetail,
 })
 
-export function RegistryGroupDetail() {
+function RegistryGroupDetail() {
   const { name } = useParams({ from: '/(registry)/registry-group_/$name' })
   const { data: registryData } = useSuspenseQuery(
     getApiV1BetaRegistryByNameOptions({ path: { name: 'default' } })

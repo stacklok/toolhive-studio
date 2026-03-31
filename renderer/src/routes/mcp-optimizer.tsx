@@ -128,7 +128,7 @@ function McpOptimizerContent() {
   )
 }
 
-export function McpOptimizerRoute() {
+function McpOptimizerRoute() {
   return (
     <EditServerDialogProvider>
       <McpOptimizerContent />
