@@ -275,7 +275,12 @@ export function ConfigurationTabContent({
       <FormFieldsArrayVolumes<FormSchemaRegistryMcp> form={form} />
 
       <section className="mb-6">
-        <Label className="mb-2">Secrets</Label>
+        <Label
+          className="mb-2"
+          htmlFor={predefinedSecretsCount > 0 ? 'secrets.0.value' : undefined}
+        >
+          Secrets
+        </Label>
         <p className="text-muted-foreground mb-6 text-sm">
           All secrets are encrypted and securely stored by ToolHive.
         </p>
@@ -386,7 +391,12 @@ export function ConfigurationTabContent({
       </section>
 
       <section className="mb-6">
-        <Label className="mb-2">Environment variables</Label>
+        <Label
+          className="mb-2"
+          htmlFor={predefinedEnvVarsCount > 0 ? 'envVars.0.value' : undefined}
+        >
+          Environment variables
+        </Label>
         <p className="text-muted-foreground mb-6 text-sm">
           Environment variables are used to pass configuration settings to the
           server.
