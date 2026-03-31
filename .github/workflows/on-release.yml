@@ -10,6 +10,20 @@ permissions:
   id-token: write # Required for AWS OIDC authentication
 
 jobs:
+  validate-tag:
+    name: Validate Tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate tag format
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          if [[ ! "$TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-([0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*))?(\+([0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*))?$ ]]; then
+            echo "::error::Tag '$TAG' is not valid semver (e.g. v1.2.3, v1.2.3-rc.1)"
+            exit 1
+          fi
+          echo "Valid tag: $TAG"
+
   validate-prerelease:
     name: Validate Prerelease Tag
     runs-on: ubuntu-latest
@@ -27,18 +41,18 @@ jobs:
 
   security:
     name: Security Checks
-    needs: [validate-prerelease]
+    needs: [validate-tag, validate-prerelease]
     uses: ./.github/workflows/_security-checks.yml
 
   static-checks:
     name: Static Checks
-    needs: [validate-prerelease]
+    needs: [validate-tag, validate-prerelease]
     uses: ./.github/workflows/_static-checks.yml
     secrets: inherit
 
   unit-tests:
     name: Unit Tests
-    needs: [validate-prerelease]
+    needs: [validate-tag, validate-prerelease]
     uses: ./.github/workflows/_unit-tests.yml
 
   build-and-release:
