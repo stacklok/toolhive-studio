@@ -85,7 +85,7 @@
     "memfs": "^4.57.1",
     "msw": "^2.12.14",
     "prettier": "3.8.1",
-    "prettier-plugin-classnames": "^0.9.0",
+    "prettier-plugin-classnames": "^0.10.1",
     "prettier-plugin-merge": "^0.10.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "rimraf": "^6.1.3",
