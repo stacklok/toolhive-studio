@@ -150,7 +150,7 @@
     "electron-squirrel-startup": "^1.0.1",
     "electron-store": "10.1.0",
     "lucide-react": "^0.576.0",
-    "nanoid": "^5.1.6",
+    "nanoid": "^5.1.7",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-hook-form": "7.71.2",
