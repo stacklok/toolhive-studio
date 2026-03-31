@@ -1733,4 +1733,213 @@ describe('Storage Volumes', () => {
     expect(mockElectronAPI.selectFolder).toHaveBeenCalled()
     window.electronAPI = originalElectronAPI
   })
+
+  describe('custom env vars and secrets', () => {
+    const SERVER_NO_ENV_VARS: RegistryImageMetadata = {
+      ...REGISTRY_SERVER,
+      env_vars: [],
+    }
+
+    it('shows add buttons when server has no pre-defined env vars', async () => {
+      renderWithProviders(
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={SERVER_NO_ENV_VARS}
+          actionsSubmitLabel="Install server"
+        />
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      expect(
+        screen.getByRole('button', { name: 'Add secret' })
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: 'Add environment variable' })
+      ).toBeInTheDocument()
+    })
+
+    it('shows add buttons alongside pre-defined env vars', async () => {
+      const server = { ...REGISTRY_SERVER }
+      server.env_vars = ENV_VARS_OPTIONAL
+
+      renderWithProviders(
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={server}
+          actionsSubmitLabel="Install server"
+        />
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      // Pre-defined fields should be visible
+      expect(screen.getByLabelText('SECRET value')).toBeInTheDocument()
+      expect(screen.getByLabelText('ENV_VAR value')).toBeInTheDocument()
+
+      // Add buttons should also be visible
+      expect(
+        screen.getByRole('button', { name: 'Add secret' })
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: 'Add environment variable' })
+      ).toBeInTheDocument()
+    })
+
+    it('adds a custom environment variable row when clicking add button', async () => {
+      renderWithProviders(
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={SERVER_NO_ENV_VARS}
+          actionsSubmitLabel="Install server"
+        />
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Add environment variable' })
+      )
+
+      expect(
+        screen.getByLabelText('Environment variable name 1')
+      ).toBeInTheDocument()
+      expect(
+        screen.getByLabelText('Environment variable value 1')
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: 'Remove environment variable 1' })
+      ).toBeInTheDocument()
+    })
+
+    it('adds a custom secret row when clicking add button', async () => {
+      renderWithProviders(
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={SERVER_NO_ENV_VARS}
+          actionsSubmitLabel="Install server"
+        />
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      await userEvent.click(screen.getByRole('button', { name: 'Add secret' }))
+
+      expect(screen.getByLabelText('Secret name 1')).toBeInTheDocument()
+      expect(screen.getByLabelText('Secret value 1')).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: 'Remove secret 1' })
+      ).toBeInTheDocument()
+    })
+
+    it('removes a custom environment variable row', async () => {
+      renderWithProviders(
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={SERVER_NO_ENV_VARS}
+          actionsSubmitLabel="Install server"
+        />
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Add environment variable' })
+      )
+
+      expect(
+        screen.getByLabelText('Environment variable name 1')
+      ).toBeInTheDocument()
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Remove environment variable 1' })
+      )
+
+      expect(
+        screen.queryByLabelText('Environment variable name 1')
+      ).not.toBeInTheDocument()
+    })
+
+    it('submits custom env vars and secrets in payload', async () => {
+      const mockInstallServerMutation = vi.fn()
+      mockUseRunFromRegistry.mockReturnValue({
+        installServerMutation: mockInstallServerMutation,
+        isErrorSecrets: false,
+        isPendingSecrets: false,
+      })
+
+      renderWithProviders(
+        <FormRunFromRegistry
+          isOpen={true}
+          onOpenChange={vi.fn()}
+          server={SERVER_NO_ENV_VARS}
+          actionsSubmitLabel="Install server"
+        />
+      )
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeVisible()
+      })
+
+      // Fill server name
+      await userEvent.type(screen.getByLabelText('Server name'), 'my-server', {
+        initialSelectionStart: 0,
+        initialSelectionEnd: SERVER_NO_ENV_VARS.name?.length,
+      })
+
+      // Add custom env var
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Add environment variable' })
+      )
+      await userEvent.type(
+        screen.getByLabelText('Environment variable name 1'),
+        'DEBUG'
+      )
+      await userEvent.type(
+        screen.getByLabelText('Environment variable value 1'),
+        '1'
+      )
+
+      // Add custom secret
+      await userEvent.click(screen.getByRole('button', { name: 'Add secret' }))
+      await userEvent.type(screen.getByLabelText('Secret name 1'), 'MY_TOKEN')
+      await userEvent.type(screen.getByLabelText('Secret value 1'), 'secret123')
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Install server' })
+      )
+
+      await waitFor(() => {
+        expect(mockInstallServerMutation).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({
+              envVars: [{ name: 'DEBUG', value: '1' }],
+              secrets: [
+                {
+                  name: 'MY_TOKEN',
+                  value: { secret: 'secret123', isFromStore: false },
+                },
+              ],
+            }),
+          }),
+          expect.any(Object)
+        )
+      })
+    })
+  })
 })
