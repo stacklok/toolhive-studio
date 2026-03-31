@@ -193,21 +193,20 @@ export function NewsletterModal() {
     queryFn: () => window.electronAPI.getNewsletterState(),
   })
 
-  if (isLoading || !newsletterState) return null
+  if (!forceOpen && (isLoading || !newsletterState)) return null
+  if (forceOpen && newsletterState?.subscribed) return null
 
-  if (!forceOpen) {
-    if (closed) return null
-    if (
-      !successMessage &&
-      !shouldShowAfterDismissal(
-        newsletterState.subscribed,
-        newsletterState.dismissedAt,
-        DISMISS_DAYS
-      )
-    ) {
-      return null
-    }
-  }
+  const shouldHideBecauseClosed = !forceOpen && closed
+  const shouldHideBecauseDismissed =
+    !forceOpen &&
+    !successMessage &&
+    !shouldShowAfterDismissal(
+      newsletterState!.subscribed,
+      newsletterState!.dismissedAt,
+      DISMISS_DAYS
+    )
+
+  if (shouldHideBecauseClosed || shouldHideBecauseDismissed) return null
 
   return (
     <NewsletterDialog
