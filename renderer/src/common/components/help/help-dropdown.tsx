@@ -6,8 +6,11 @@ import {
   DropdownMenuTrigger,
 } from '@/common/components/ui/dropdown-menu'
 import { NavIconButton } from '@/common/components/layout/top-nav/nav-icon-button'
+import { useNewsletterModal } from '@/common/contexts/newsletter-modal-context'
 
 export function HelpDropdown({ className }: { className?: string }) {
+  const { openNewsletterModal } = useNewsletterModal()
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -55,6 +58,12 @@ export function HelpDropdown({ className }: { className?: string }) {
           >
             GitHub Repository
           </a>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onSelect={openNewsletterModal}
+          className="cursor-pointer"
+        >
+          Newsletter
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <a

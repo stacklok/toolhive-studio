@@ -3,6 +3,7 @@ import { RouterProvider } from '@tanstack/react-router'
 import { render } from '@testing-library/react'
 import { createTestRouter } from './create-test-router'
 import { PromptProvider } from '../contexts/prompt/provider'
+import { NewsletterModalProvider } from '../contexts/newsletter-modal-provider'
 
 // NOTE: This is used only to infer a type for the router
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -18,10 +19,12 @@ export function renderRoute(router: typeof _router) {
   })
 
   return render(
-    <PromptProvider>
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-      </QueryClientProvider>
-    </PromptProvider>
+    <NewsletterModalProvider>
+      <PromptProvider>
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} />
+        </QueryClientProvider>
+      </PromptProvider>
+    </NewsletterModalProvider>
   )
 }

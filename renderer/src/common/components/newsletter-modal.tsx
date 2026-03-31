@@ -7,6 +7,7 @@ import log from 'electron-log/renderer'
 import { trackEvent } from '../lib/analytics'
 import { shouldShowAfterDismissal } from '../lib/hubspot'
 import { useHubSpotForm } from '../hooks/use-hubspot-form'
+import { useNewsletterModal } from '../contexts/newsletter-modal-context'
 import {
   Dialog,
   DialogDescription,
@@ -185,33 +186,40 @@ export function NewsletterModal() {
   const [closed, setClosed] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const queryClient = useQueryClient()
+  const { forceOpen, closeNewsletterModal } = useNewsletterModal()
 
   const { data: newsletterState, isLoading } = useQuery({
     queryKey: ['newsletter-state'],
     queryFn: () => window.electronAPI.getNewsletterState(),
   })
 
-  if (closed || isLoading || !newsletterState) return null
+  if (!forceOpen && (isLoading || !newsletterState)) return null
+  if (forceOpen && newsletterState?.subscribed) return null
 
-  if (
+  const shouldHideBecauseClosed = !forceOpen && closed
+  const shouldHideBecauseDismissed =
+    !forceOpen &&
     !successMessage &&
     !shouldShowAfterDismissal(
-      newsletterState.subscribed,
-      newsletterState.dismissedAt,
+      newsletterState!.subscribed,
+      newsletterState!.dismissedAt,
       DISMISS_DAYS
     )
-  ) {
-    return null
-  }
+
+  if (shouldHideBecauseClosed || shouldHideBecauseDismissed) return null
 
   return (
     <NewsletterDialog
       successMessage={successMessage}
       onSubscribed={(message) => setSuccessMessage(message)}
       onDismiss={() => {
+        closeNewsletterModal()
         queryClient.invalidateQueries({ queryKey: ['newsletter-state'] })
       }}
-      onClose={() => setClosed(true)}
+      onClose={() => {
+        closeNewsletterModal()
+        setClosed(true)
+      }}
     />
   )
 }
