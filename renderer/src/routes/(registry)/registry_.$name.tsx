@@ -88,7 +88,7 @@ export const Route = createFileRoute('/(registry)/registry_/$name')({
   notFoundComponent: RegistryServerNotFound,
 })
 
-export function RegistryServerDetail() {
+function RegistryServerDetail() {
   const { name } = useParams({ from: '/(registry)/registry_/$name' })
   const { data: rawData } = useSuspenseQuery(
     getApiV1BetaRegistryByNameServersByServerNameOptions({

@@ -19,7 +19,7 @@ export default defineConfig({
       routesDirectory: path.resolve(__dirname, './src/routes'),
       generatedRouteTree: path.resolve(__dirname, './src/route-tree.gen.ts'),
       quoteStyle: 'double',
-      routeFileIgnorePattern: '(__tests__|root/)',
+      routeFileIgnorePattern: '(__tests__|guards|hooks|root-error)',
     }),
     react(),
     sentryVitePlugin({
