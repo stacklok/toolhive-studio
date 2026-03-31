@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react'
 
-export type NewsletterModalContextType = {
+type NewsletterModalContextType = {
   forceOpen: boolean
   openNewsletterModal: () => void
   closeNewsletterModal: () => void
