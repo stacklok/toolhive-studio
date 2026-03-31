@@ -1,7 +1,8 @@
+import type { JSX } from 'react'
 import { screen, waitFor } from '@testing-library/react'
 import { act } from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { RegistryServerDetail } from '@/routes/(registry)/registry_.$name'
+import { Route } from '@/routes/(registry)/registry_.$name'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
 import userEvent from '@testing-library/user-event'
@@ -16,6 +17,8 @@ vi.mock('@tanstack/react-router', async () => {
     useSearch: () => mockUseSearch(),
   }
 })
+
+const RegistryServerDetail = Route.options.component as () => JSX.Element
 
 function WrapperComponent() {
   return (

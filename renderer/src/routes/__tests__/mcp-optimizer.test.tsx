@@ -1,7 +1,8 @@
+import type { JSX } from 'react'
 import { screen, waitFor } from '@testing-library/react'
 import { beforeEach, it, expect, vi } from 'vitest'
 import { createTestRouter } from '@/common/test/create-test-router'
-import { McpOptimizerRoute } from '../mcp-optimizer'
+import { Route } from '../mcp-optimizer'
 import { renderRoute } from '@/common/test/render-route'
 import { recordRequests } from '@/common/mocks/node'
 import { HttpResponse } from 'msw'
@@ -14,7 +15,10 @@ import {
 } from '@/common/lib/constants'
 import userEvent from '@testing-library/user-event'
 
-const router = createTestRouter(McpOptimizerRoute, '/mcp-optimizer')
+const router = createTestRouter(
+  Route.options.component as () => JSX.Element,
+  '/mcp-optimizer'
+)
 
 beforeEach(() => {
   vi.clearAllMocks()

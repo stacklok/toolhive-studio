@@ -33,6 +33,7 @@ vi.mock('@/common/hooks/use-check-server-status', () => ({
   }),
 }))
 
+import type { JSX } from 'react'
 import {
   screen,
   waitFor,
@@ -41,7 +42,7 @@ import {
 } from '@testing-library/react'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import type { V1GetRegistryResponse } from '@common/api/registry-types'
-import { RegistryGroupDetail } from '@/routes/(registry)/registry-group_.$name'
+import { Route } from '@/routes/(registry)/registry-group_.$name'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
 import { recordRequests } from '@/common/mocks/node'
@@ -66,6 +67,8 @@ vi.mock('@tanstack/react-router', async () => {
     useParams: () => mockUseParams(),
   }
 })
+
+const RegistryGroupDetail = Route.options.component as () => JSX.Element
 
 function WrapperComponent() {
   return (
