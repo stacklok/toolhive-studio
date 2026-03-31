@@ -96,6 +96,7 @@ beforeAll(() => {
     fetch,
   })
 
+  window.scrollTo = vi.fn() as unknown as typeof window.scrollTo
   window.HTMLElement.prototype.scrollIntoView = function () {}
   window.HTMLElement.prototype.hasPointerCapture = vi.fn()
   window.HTMLElement.prototype.releasePointerCapture = vi.fn()
