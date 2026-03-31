@@ -297,13 +297,7 @@ export function ConfigurationTabContent({
           ))}
         </section>
       ) : (
-        <FormFieldsArrayCustomEnvVars
-          form={
-            form as unknown as UseFormReturn<{
-              envVars: Array<{ name: string; value: string }>
-            }>
-          }
-        />
+        <FormFieldsArrayCustomEnvVars form={form} />
       )}
     </div>
   )

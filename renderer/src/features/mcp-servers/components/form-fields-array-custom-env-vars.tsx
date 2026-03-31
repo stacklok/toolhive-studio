@@ -16,7 +16,7 @@ import { DynamicArrayField } from '@/features/registry-servers/components/dynami
 type FormWithEnvVars = {
   envVars: Array<{
     name: string
-    value: string
+    value?: string
   }>
 }
 
