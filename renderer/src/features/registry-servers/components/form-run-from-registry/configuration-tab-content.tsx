@@ -18,6 +18,8 @@ import { CommandArgumentsField } from '@/common/components/workload-cmd-arg/comm
 import { FormFieldsArrayVolumes } from '@/features/mcp-servers/components/form-fields-array-custom-volumes'
 import { FormFieldsProxy } from '@/common/components/workloads/form-fields-proxy'
 import type { FormSchemaRegistryMcp } from '../../lib/form-schema-registry-mcp'
+import { FormFieldsArrayCustomEnvVars } from '@/features/mcp-servers/components/form-fields-array-custom-env-vars'
+import { FormFieldsArrayCustomSecrets } from '@/features/mcp-servers/components/form-fields-array-custom-secrets'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
 import {
   Select,
@@ -270,7 +272,9 @@ export function ConfigurationTabContent({
             />
           ))}
         </section>
-      ) : null}
+      ) : (
+        <FormFieldsArrayCustomSecrets form={form} />
+      )}
 
       {groupedEnvVars.envVars[0] ? (
         <section className="mb-6">
@@ -292,7 +296,15 @@ export function ConfigurationTabContent({
             />
           ))}
         </section>
-      ) : null}
+      ) : (
+        <FormFieldsArrayCustomEnvVars
+          form={
+            form as unknown as UseFormReturn<{
+              envVars: Array<{ name: string; value: string }>
+            }>
+          }
+        />
+      )}
     </div>
   )
 }
