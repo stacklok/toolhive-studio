@@ -8,7 +8,9 @@ import {
 } from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
 import { Label } from '@/common/components/ui/label'
-import type { UseFormReturn } from 'react-hook-form'
+import { Button } from '@/common/components/ui/button'
+import { useFieldArray, type UseFormReturn } from 'react-hook-form'
+import { Plus, Trash2 } from 'lucide-react'
 import type { GroupedEnvVars } from '../../lib/group-env-vars'
 import type { RegistryEnvVar } from '@common/api/registry-types'
 import { cn } from '@/common/lib/utils'
@@ -187,6 +189,27 @@ export function ConfigurationTabContent({
   const { data: groupsData } = useGroups()
   const groups = groupsData?.groups ?? []
 
+  const predefinedSecretsCount = groupedEnvVars.secrets.length
+  const predefinedEnvVarsCount = groupedEnvVars.envVars.length
+
+  const {
+    fields: secretFields,
+    append: appendSecret,
+    remove: removeSecret,
+  } = useFieldArray({
+    control: form.control,
+    name: 'secrets',
+  })
+
+  const {
+    fields: envVarFields,
+    append: appendEnvVar,
+    remove: removeEnvVar,
+  } = useFieldArray({
+    control: form.control,
+    name: 'envVars',
+  })
+
   return (
     <div className="flex-1 space-y-4 overflow-y-auto px-6">
       <FormField
@@ -251,48 +274,210 @@ export function ConfigurationTabContent({
 
       <FormFieldsArrayVolumes<FormSchemaRegistryMcp> form={form} />
 
-      {groupedEnvVars.secrets[0] ? (
-        <section className="mb-6">
-          <Label className="mb-2" htmlFor="secrets.0.value">
-            Secrets
-          </Label>
+      <section className="mb-6">
+        <Label
+          className="mb-2"
+          htmlFor={predefinedSecretsCount > 0 ? 'secrets.0.value' : undefined}
+        >
+          Secrets
+        </Label>
+        <p className="text-muted-foreground mb-6 text-sm">
+          All secrets are encrypted and securely stored by ToolHive.
+        </p>
 
-          <p className="text-muted-foreground mb-6 text-sm">
-            All secrets are encrypted and securely stored by ToolHive.
-          </p>
+        {groupedEnvVars.secrets.map((secret, index) => (
+          <SecretRow
+            form={form}
+            secret={secret}
+            index={index}
+            key={secret.name}
+          />
+        ))}
 
-          {groupedEnvVars.secrets.map((secret, index) => (
-            <SecretRow
-              form={form}
-              secret={secret}
-              index={index}
-              key={secret.name}
-            />
-          ))}
-        </section>
-      ) : null}
+        {secretFields.slice(predefinedSecretsCount).map((field, relIdx) => {
+          const index = predefinedSecretsCount + relIdx
+          return (
+            <div
+              key={field.id}
+              className="mb-2 grid grid-cols-[1fr_1fr_auto] gap-4"
+            >
+              <FormField
+                control={form.control}
+                name={`secrets.${index}.name`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        className="font-mono"
+                        placeholder="e.g. API_KEY"
+                        aria-label={`Secret name ${relIdx + 1}`}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name={`secrets.${index}.value`}
+                render={({ field }) => (
+                  <FormItem>
+                    <div
+                      className="grid grid-cols-[auto_calc(var(--spacing)_*_9)]"
+                    >
+                      <FormControl>
+                        <Input
+                          type="password"
+                          className="rounded-tr-none rounded-br-none border-r-0
+                            font-mono focus-visible:z-10"
+                          autoComplete="off"
+                          data-1p-ignore
+                          value={
+                            field.value.isFromStore
+                              ? 'foo-bar-123-xzy'
+                              : field.value.secret
+                          }
+                          onChange={(e) =>
+                            field.onChange({
+                              secret: e.target.value,
+                              isFromStore: false,
+                            })
+                          }
+                          aria-label={`Secret value ${relIdx + 1}`}
+                        />
+                      </FormControl>
+                      <SecretStoreCombobox
+                        value={field.value.secret}
+                        onChange={(secretKey) =>
+                          field.onChange({
+                            secret: secretKey,
+                            isFromStore: true,
+                          })
+                        }
+                      />
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                aria-label={`Remove secret ${relIdx + 1}`}
+                onClick={() => removeSecret(index)}
+              >
+                <Trash2 />
+              </Button>
+            </div>
+          )
+        })}
 
-      {groupedEnvVars.envVars[0] ? (
-        <section className="mb-6">
-          <Label className="mb-2" htmlFor="envVars.0.value">
-            Environment variables
-          </Label>
+        <Button
+          type="button"
+          variant="secondary"
+          className="mt-1 w-fit"
+          onClick={() =>
+            appendSecret({
+              name: '',
+              value: { secret: '', isFromStore: false },
+            })
+          }
+        >
+          <Plus />
+          Add secret
+        </Button>
+      </section>
 
-          <p className="text-muted-foreground mb-6 text-sm">
-            Environment variables are used to pass configuration settings to the
-            server.
-          </p>
+      <section className="mb-6">
+        <Label
+          className="mb-2"
+          htmlFor={predefinedEnvVarsCount > 0 ? 'envVars.0.value' : undefined}
+        >
+          Environment variables
+        </Label>
+        <p className="text-muted-foreground mb-6 text-sm">
+          Environment variables are used to pass configuration settings to the
+          server.
+        </p>
 
-          {groupedEnvVars.envVars.map((envVar, index) => (
-            <EnvVarRow
-              form={form}
-              envVar={envVar}
-              index={index}
-              key={envVar.name}
-            />
-          ))}
-        </section>
-      ) : null}
+        {groupedEnvVars.envVars.map((envVar, index) => (
+          <EnvVarRow
+            form={form}
+            envVar={envVar}
+            index={index}
+            key={envVar.name}
+          />
+        ))}
+
+        {envVarFields.slice(predefinedEnvVarsCount).map((field, relIdx) => {
+          const index = predefinedEnvVarsCount + relIdx
+          return (
+            <div
+              key={field.id}
+              className="mb-2 grid grid-cols-[1fr_1fr_auto] gap-4"
+            >
+              <FormField
+                control={form.control}
+                name={`envVars.${index}.name`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        className="font-mono"
+                        placeholder="e.g. DEBUG"
+                        aria-label={`Environment variable name ${relIdx + 1}`}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name={`envVars.${index}.value`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        value={field.value ?? ''}
+                        onChange={field.onChange}
+                        className="font-mono"
+                        autoComplete="off"
+                        data-1p-ignore
+                        placeholder="e.g. 1"
+                        aria-label={`Environment variable value ${relIdx + 1}`}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                aria-label={`Remove environment variable ${relIdx + 1}`}
+                onClick={() => removeEnvVar(index)}
+              >
+                <Trash2 />
+              </Button>
+            </div>
+          )
+        })}
+
+        <Button
+          type="button"
+          variant="secondary"
+          className="mt-1 w-fit"
+          onClick={() => appendEnvVar({ name: '', value: '' })}
+        >
+          <Plus />
+          Add environment variable
+        </Button>
+      </section>
     </div>
   )
 }

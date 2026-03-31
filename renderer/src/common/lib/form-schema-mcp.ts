@@ -220,21 +220,18 @@ export const addNetworkValidation = (ctx: z.RefinementCtx, data: unknown) => {
 }
 
 // Utility functions for dynamic schema creation
-const createDynamicNameSchema = (names: string[]) => {
-  return names.length === 0
-    ? z.string()
-    : z.union(names.map((name) => z.literal(name)))
+const createDynamicNameSchema = () => {
+  return z.string()
 }
 
 // --------
 // REGISTRY SERVER
 
 const createRegistrySecretsSchema = (
-  secretNames: string[],
   secrets: Array<{ name?: string; required?: boolean }>,
   isEmptyValueFn: (value: unknown) => boolean
 ) => {
-  const secretNameSchema = createDynamicNameSchema(secretNames)
+  const secretNameSchema = createDynamicNameSchema()
 
   const secretObjSchema = z
     .object({
@@ -264,11 +261,10 @@ const createRegistrySecretsSchema = (
 }
 
 const createRegistryEnvVarsSchema = (
-  envVarNames: string[],
   envVars: Array<{ name?: string; required?: boolean }>,
   isEmptyValueFn: (value: unknown) => boolean
 ) => {
-  const envVarNameSchema = createDynamicNameSchema(envVarNames)
+  const envVarNameSchema = createDynamicNameSchema()
 
   const envVarSchema = z
     .object({
@@ -300,28 +296,9 @@ export const createRegistrySchema = (
   secrets: Array<{ name?: string; required?: boolean }>,
   isEmptyValueFn: (value: unknown) => boolean
 ) => {
-  const isNonEmptyString = (v: unknown): v is string =>
-    typeof v === 'string' && v.length > 0
-
-  const secretNames = Array.from(
-    new Set(secrets.map(({ name }) => name).filter(isNonEmptyString))
-  )
-
-  const envVarNames = Array.from(
-    new Set(envVars.map(({ name }) => name).filter(isNonEmptyString))
-  )
-
   const nameSchema = createNameSchema(workloads)
-  const secretsSchema = createRegistrySecretsSchema(
-    secretNames,
-    secrets,
-    isEmptyValueFn
-  )
-  const envVarsSchema = createRegistryEnvVarsSchema(
-    envVarNames,
-    envVars,
-    isEmptyValueFn
-  )
+  const secretsSchema = createRegistrySecretsSchema(secrets, isEmptyValueFn)
+  const envVarsSchema = createRegistryEnvVarsSchema(envVars, isEmptyValueFn)
   const commandArgsSchema = createCommandArgumentsSchema()
   const networkSchema = createNetworkConfigSchema()
   const volumesSchema = createVolumesSchema()
