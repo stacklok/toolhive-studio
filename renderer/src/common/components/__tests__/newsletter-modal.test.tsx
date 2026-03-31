@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/common/mocks/node'
 import { recordRequests } from '@/common/mocks/node'
+import { NewsletterModalProvider } from '@/common/contexts/newsletter-modal-provider'
 import { NewsletterModal } from '../newsletter-modal'
 
 const HUBSPOT_URL =
@@ -19,7 +20,11 @@ const renderWithProviders = (component: React.ReactElement) => {
   })
 
   return render(
-    <QueryClientProvider client={queryClient}>{component}</QueryClientProvider>
+    <NewsletterModalProvider>
+      <QueryClientProvider client={queryClient}>
+        {component}
+      </QueryClientProvider>
+    </NewsletterModalProvider>
   )
 }
 

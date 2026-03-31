@@ -1,11 +1,20 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { NewsletterModalProvider } from '@/common/contexts/newsletter-modal-provider'
 import { HelpDropdown } from '../help-dropdown'
+
+function renderHelpDropdown() {
+  return render(
+    <NewsletterModalProvider>
+      <HelpDropdown />
+    </NewsletterModalProvider>
+  )
+}
 
 describe('HelpDropdown', () => {
   it('renders documentation link with correct href', async () => {
     const user = userEvent.setup()
-    render(<HelpDropdown />)
+    renderHelpDropdown()
 
     const helpButton = screen.getByRole('button', { name: /help/i })
     await user.click(helpButton)
@@ -23,7 +32,7 @@ describe('HelpDropdown', () => {
 
   it('renders Discord link with correct href', async () => {
     const user = userEvent.setup()
-    render(<HelpDropdown />)
+    renderHelpDropdown()
 
     const helpButton = screen.getByRole('button', { name: /help/i })
     await user.click(helpButton)
@@ -38,7 +47,7 @@ describe('HelpDropdown', () => {
 
   it('renders feedback link with correct href', async () => {
     const user = userEvent.setup()
-    render(<HelpDropdown />)
+    renderHelpDropdown()
 
     const helpButton = screen.getByRole('button', { name: /help/i })
     await user.click(helpButton)
@@ -56,7 +65,7 @@ describe('HelpDropdown', () => {
 
   it('renders GitHub repository link with correct href', async () => {
     const user = userEvent.setup()
-    render(<HelpDropdown />)
+    renderHelpDropdown()
 
     const helpButton = screen.getByRole('button', { name: /help/i })
     await user.click(helpButton)
@@ -70,5 +79,17 @@ describe('HelpDropdown', () => {
     )
     expect(githubLink).toHaveAttribute('target', '_blank')
     expect(githubLink).toHaveAttribute('rel', 'noopener noreferrer')
+  })
+
+  it('renders newsletter menu item', async () => {
+    const user = userEvent.setup()
+    renderHelpDropdown()
+
+    const helpButton = screen.getByRole('button', { name: /help/i })
+    await user.click(helpButton)
+
+    expect(
+      screen.getByRole('menuitem', { name: /newsletter/i })
+    ).toBeInTheDocument()
   })
 })
