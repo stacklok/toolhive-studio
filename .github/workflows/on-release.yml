@@ -10,8 +10,8 @@ permissions:
   id-token: write # Required for AWS OIDC authentication
 
 jobs:
-  validate-prerelease:
-    name: Validate Prerelease Tag
+  validate-tag:
+    name: Validate Tag
     runs-on: ubuntu-latest
     steps:
       - name: Validate tag format
@@ -24,8 +24,12 @@ jobs:
           fi
           echo "Valid tag: $TAG"
 
+  validate-prerelease:
+    name: Validate Prerelease Tag
+    runs-on: ubuntu-latest
+    if: ${{ github.event.release.prerelease == true }}
+    steps:
       - name: Validate prerelease tag
-        if: ${{ github.event.release.prerelease == true }}
         shell: bash
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
@@ -37,18 +41,21 @@ jobs:
 
   security:
     name: Security Checks
-    needs: [validate-prerelease]
+    needs: [validate-tag, validate-prerelease]
+    if: ${{ !cancelled() && needs.validate-tag.result == 'success' && (needs.validate-prerelease.result == 'success' || needs.validate-prerelease.result == 'skipped') }}
     uses: ./.github/workflows/_security-checks.yml
 
   static-checks:
     name: Static Checks
-    needs: [validate-prerelease]
+    needs: [validate-tag, validate-prerelease]
+    if: ${{ !cancelled() && needs.validate-tag.result == 'success' && (needs.validate-prerelease.result == 'success' || needs.validate-prerelease.result == 'skipped') }}
     uses: ./.github/workflows/_static-checks.yml
     secrets: inherit
 
   unit-tests:
     name: Unit Tests
-    needs: [validate-prerelease]
+    needs: [validate-tag, validate-prerelease]
+    if: ${{ !cancelled() && needs.validate-tag.result == 'success' && (needs.validate-prerelease.result == 'success' || needs.validate-prerelease.result == 'skipped') }}
     uses: ./.github/workflows/_unit-tests.yml
 
   build-and-release:
