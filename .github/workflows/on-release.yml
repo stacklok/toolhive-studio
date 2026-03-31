@@ -27,13 +27,13 @@ jobs:
   validate-prerelease:
     name: Validate Prerelease Tag
     runs-on: ubuntu-latest
-    if: ${{ github.event.release.prerelease == true }}
     steps:
       - name: Validate prerelease tag
+        if: ${{ github.event.release.prerelease == true }}
         shell: bash
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
-          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta|rc)(\.[0-9]+)?$ ]]; then
+          if [[ ! "$TAG" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta|rc)(\.[0-9]+)?$ ]]; then
             echo "::error::Invalid prerelease tag '$TAG'. Allowed identifiers: alpha, beta, rc"
             exit 1
           fi
@@ -42,20 +42,17 @@ jobs:
   security:
     name: Security Checks
     needs: [validate-tag, validate-prerelease]
-    if: ${{ !cancelled() && needs.validate-tag.result == 'success' && (needs.validate-prerelease.result == 'success' || needs.validate-prerelease.result == 'skipped') }}
     uses: ./.github/workflows/_security-checks.yml
 
   static-checks:
     name: Static Checks
     needs: [validate-tag, validate-prerelease]
-    if: ${{ !cancelled() && needs.validate-tag.result == 'success' && (needs.validate-prerelease.result == 'success' || needs.validate-prerelease.result == 'skipped') }}
     uses: ./.github/workflows/_static-checks.yml
     secrets: inherit
 
   unit-tests:
     name: Unit Tests
     needs: [validate-tag, validate-prerelease]
-    if: ${{ !cancelled() && needs.validate-tag.result == 'success' && (needs.validate-prerelease.result == 'success' || needs.validate-prerelease.result == 'skipped') }}
     uses: ./.github/workflows/_unit-tests.yml
 
   build-and-release:
