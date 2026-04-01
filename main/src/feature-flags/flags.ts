@@ -16,6 +16,11 @@ const featureFlagOptions: Record<FeatureFlagKey, FeatureFlagOptions> = {
     defaultValue: false,
     isExperimental: true,
   },
+  [featureFlagKeys.SKILLS]: {
+    isDisabled: false,
+    defaultValue: false,
+    isExperimental: true,
+  },
 }
 
 // Kept for one-time reconciliation migration; remove after migration grace period

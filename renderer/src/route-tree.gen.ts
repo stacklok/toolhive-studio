@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from "./routes/__root"
+import { Route as SkillsRouteImport } from "./routes/skills"
 import { Route as ShutdownRouteImport } from "./routes/shutdown"
 import { Route as SettingsRouteImport } from "./routes/settings"
 import { Route as PlaygroundRouteImport } from "./routes/playground"
@@ -22,6 +23,11 @@ import { Route as LogsGroupNameServerNameRouteImport } from "./routes/logs.$grou
 import { Route as registryRegistryNameRouteImport } from "./routes/(registry)/registry_.$name"
 import { Route as registryRegistryGroupNameRouteImport } from "./routes/(registry)/registry-group_.$name"
 
+const SkillsRoute = SkillsRouteImport.update({
+  id: "/skills",
+  path: "/skills",
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShutdownRoute = ShutdownRouteImport.update({
   id: "/shutdown",
   path: "/shutdown",
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   "/playground": typeof PlaygroundRoute
   "/settings": typeof SettingsRoute
   "/shutdown": typeof ShutdownRoute
+  "/skills": typeof SkillsRoute
   "/registry": typeof registryRegistryRoute
   "/customize-tools/$serverName": typeof CustomizeToolsServerNameRoute
   "/group/$groupName": typeof GroupGroupNameRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   "/playground": typeof PlaygroundRoute
   "/settings": typeof SettingsRoute
   "/shutdown": typeof ShutdownRoute
+  "/skills": typeof SkillsRoute
   "/registry": typeof registryRegistryRoute
   "/customize-tools/$serverName": typeof CustomizeToolsServerNameRoute
   "/group/$groupName": typeof GroupGroupNameRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   "/playground": typeof PlaygroundRoute
   "/settings": typeof SettingsRoute
   "/shutdown": typeof ShutdownRoute
+  "/skills": typeof SkillsRoute
   "/(registry)/registry": typeof registryRegistryRoute
   "/customize-tools/$serverName": typeof CustomizeToolsServerNameRoute
   "/group/$groupName": typeof GroupGroupNameRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | "/playground"
     | "/settings"
     | "/shutdown"
+    | "/skills"
     | "/registry"
     | "/customize-tools/$serverName"
     | "/group/$groupName"
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | "/playground"
     | "/settings"
     | "/shutdown"
+    | "/skills"
     | "/registry"
     | "/customize-tools/$serverName"
     | "/group/$groupName"
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | "/playground"
     | "/settings"
     | "/shutdown"
+    | "/skills"
     | "/(registry)/registry"
     | "/customize-tools/$serverName"
     | "/group/$groupName"
@@ -180,6 +192,7 @@ export interface RootRouteChildren {
   PlaygroundRoute: typeof PlaygroundRoute
   SettingsRoute: typeof SettingsRoute
   ShutdownRoute: typeof ShutdownRoute
+  SkillsRoute: typeof SkillsRoute
   registryRegistryRoute: typeof registryRegistryRoute
   CustomizeToolsServerNameRoute: typeof CustomizeToolsServerNameRoute
   GroupGroupNameRoute: typeof GroupGroupNameRoute
@@ -190,6 +203,13 @@ export interface RootRouteChildren {
 
 declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
+    "/skills": {
+      id: "/skills"
+      path: "/skills"
+      fullPath: "/skills"
+      preLoaderRoute: typeof SkillsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     "/shutdown": {
       id: "/shutdown"
       path: "/shutdown"
@@ -284,6 +304,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlaygroundRoute: PlaygroundRoute,
   SettingsRoute: SettingsRoute,
   ShutdownRoute: ShutdownRoute,
+  SkillsRoute: SkillsRoute,
   registryRegistryRoute: registryRegistryRoute,
   CustomizeToolsServerNameRoute: CustomizeToolsServerNameRoute,
   GroupGroupNameRoute: GroupGroupNameRoute,
