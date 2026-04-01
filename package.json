@@ -171,6 +171,7 @@
   },
   "pnpm": {
     "overrides": {
+      "@xmldom/xmldom": ">=0.8.12",
       "fast-xml-parser": ">=5.5.9",
       "lodash-es": ">=4.17.23",
       "tar": ">=7.5.13",
