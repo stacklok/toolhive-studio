@@ -175,7 +175,7 @@
       "lodash-es": ">=4.17.23",
       "tar": ">=7.5.13",
       "picomatch": ">=4.0.4",
-      "tmp": ">=0.2.4",
+      "tmp": ">=0.2.5",
       "@tootallnate/once": ">=3.0.1",
       "serialize-javascript": ">=7.0.5",
       "path-to-regexp@>=8.0.0 <8.4.0": "8.4.1",
