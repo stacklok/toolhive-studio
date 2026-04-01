@@ -5,6 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
+  '@xmldom/xmldom': '>=0.8.12'
   fast-xml-parser: '>=5.5.9'
   lodash-es: '>=4.17.23'
   tar: '>=7.5.13'
@@ -21,6 +22,9 @@ patchedDependencies:
   electron-installer-redhat@3.4.0:
     hash: 8fe238a56db4de235c10dd7f02c6a523c6ac3010edcc1d547dbc5c6416b89a37
     path: patches/electron-installer-redhat@3.4.0.patch
+  plist@3.1.0:
+    hash: 5e96a8183577f236291776ff1f850b331c49e31e1a49a8886503ce66ae3499e5
+    path: patches/plist@3.1.0.patch
 
 importers:
 
@@ -3980,10 +3984,9 @@ packages:
   '@webassemblyjs/wast-printer@1.14.1':
     resolution: {integrity: sha512-kPSSXE6De1XOR820C90RIo2ogvZG+c3KiHzqUoO/F34Y2shGzesfqv7o57xrxovZJH/MetF5UjroJ/R/3isoiw==}
 
-  '@xmldom/xmldom@0.8.11':
-    resolution: {integrity: sha512-cQzWCtO6C8TQiYl1ruKNn2U6Ao4o4WBBcbL61yJl84x+j5sOWWFU9X7DpND8XZG3daDppSsigMdfAIl2upQBRw==}
-    engines: {node: '>=10.0.0'}
-    deprecated: this version has critical issues, please update to the latest version
+  '@xmldom/xmldom@0.9.9':
+    resolution: {integrity: sha512-qycIHAucxy/LXAYIjmLmtQ8q9GPnMbnjG1KXhWm9o5sCr6pOYDATkMPiTNa6/v8eELyqOQ2FsEqeoFYmgv/gJg==}
+    engines: {node: '>=14.6'}
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
@@ -9679,7 +9682,7 @@ snapshots:
       fs-extra: 10.1.0
       isbinaryfile: 4.0.10
       minimist: 1.2.8
-      plist: 3.1.0
+      plist: 3.1.0(patch_hash=5e96a8183577f236291776ff1f850b331c49e31e1a49a8886503ce66ae3499e5)
     transitivePeerDependencies:
       - supports-color
 
@@ -9700,7 +9703,7 @@ snapshots:
       get-package-info: 1.0.0
       junk: 3.1.0
       parse-author: 2.0.0
-      plist: 3.1.0
+      plist: 3.1.0(patch_hash=5e96a8183577f236291776ff1f850b331c49e31e1a49a8886503ce66ae3499e5)
       prettier: 3.8.1
       resedit: 2.0.3
       resolve: 1.22.11
@@ -9755,7 +9758,7 @@ snapshots:
       dir-compare: 4.2.0
       fs-extra: 11.3.3
       minimatch: 9.0.9
-      plist: 3.1.0
+      plist: 3.1.0(patch_hash=5e96a8183577f236291776ff1f850b331c49e31e1a49a8886503ce66ae3499e5)
     transitivePeerDependencies:
       - supports-color
 
@@ -12923,7 +12926,7 @@ snapshots:
       '@webassemblyjs/ast': 1.14.1
       '@xtuc/long': 4.2.2
 
-  '@xmldom/xmldom@0.8.11': {}
+  '@xmldom/xmldom@0.9.9': {}
 
   '@xtuc/ieee754@1.2.0': {}
 
@@ -16541,9 +16544,9 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.2
 
-  plist@3.1.0:
+  plist@3.1.0(patch_hash=5e96a8183577f236291776ff1f850b331c49e31e1a49a8886503ce66ae3499e5):
     dependencies:
-      '@xmldom/xmldom': 0.8.11
+      '@xmldom/xmldom': 0.9.9
       base64-js: 1.5.1
       xmlbuilder: 15.1.1
 

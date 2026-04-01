@@ -171,6 +171,7 @@
   },
   "pnpm": {
     "overrides": {
+      "@xmldom/xmldom": ">=0.8.12",
       "fast-xml-parser": ">=5.5.9",
       "lodash-es": ">=4.17.23",
       "tar": ">=7.5.13",
@@ -184,7 +185,8 @@
       "brace-expansion@<1.1.13": "1.1.13"
     },
     "patchedDependencies": {
-      "electron-installer-redhat@3.4.0": "patches/electron-installer-redhat@3.4.0.patch"
+      "electron-installer-redhat@3.4.0": "patches/electron-installer-redhat@3.4.0.patch",
+      "plist@3.1.0": "patches/plist@3.1.0.patch"
     }
   }
 }
