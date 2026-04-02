@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs'
 import { ScrollArea } from '../../ui/scroll-area'
 import { GeneralTab } from './general-tab'
@@ -56,15 +55,10 @@ export function SettingsTabs({ defaultTab }: SettingsTabsProps) {
   const isNewVersionAvailable = appInfo?.isNewVersionAvailable && isProduction
   const { canShow } = usePermissions()
 
-  const { visibleTabs, visibleTabValues } = useMemo(() => {
-    const tabs = TABS.filter(
-      (tab) => !tab.permissionKey || canShow(tab.permissionKey)
-    )
-    return {
-      visibleTabs: tabs,
-      visibleTabValues: new Set(tabs.map((t) => t.value)),
-    }
-  }, [canShow])
+  const visibleTabs = TABS.filter(
+    (tab) => !tab.permissionKey || canShow(tab.permissionKey)
+  )
+  const visibleTabValues = new Set(visibleTabs.map((t) => t.value))
 
   const effectiveDefaultTab =
     defaultTab && visibleTabValues.has(defaultTab)
