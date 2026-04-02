@@ -12,6 +12,8 @@
  */
 export const PERMISSION_KEYS = {
   AUTO_UPDATE: 'auto-update',
+  PLAYGROUND_MENU: 'playground-menu',
+  SETTINGS_REGISTRY_TAB: 'settings-registry-tab',
 } as const
 
 export type PermissionKey =

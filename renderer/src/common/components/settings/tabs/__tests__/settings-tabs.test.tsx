@@ -4,6 +4,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { SettingsTabs } from '../settings-tabs'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
+import { PermissionsProvider } from '@/common/contexts/permissions/permissions-provider'
+import { PERMISSION_KEYS } from '@/common/contexts/permissions/permission-keys'
 import { Suspense } from 'react'
 
 const mockGetMainLogContent = vi.fn()
@@ -54,7 +56,10 @@ vi.mock('@/common/hooks/use-app-version', () => ({
   useCurrentUpdateState: () => mockUseCurrentUpdateState(),
 }))
 
-const renderWithProviders = (component: React.ReactElement) => {
+const renderWithProviders = (
+  component: React.ReactElement,
+  options?: { permissions?: Record<string, boolean> }
+) => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -63,11 +68,13 @@ const renderWithProviders = (component: React.ReactElement) => {
   })
 
   return render(
-    <PromptProvider>
-      <QueryClientProvider client={queryClient}>
-        <Suspense fallback={null}>{component}</Suspense>
-      </QueryClientProvider>
-    </PromptProvider>
+    <PermissionsProvider value={options?.permissions}>
+      <PromptProvider>
+        <QueryClientProvider client={queryClient}>
+          <Suspense fallback={null}>{component}</Suspense>
+        </QueryClientProvider>
+      </PromptProvider>
+    </PermissionsProvider>
   )
 }
 
@@ -234,6 +241,21 @@ describe('SettingsTabs', () => {
 
     const updateIcon = versionTab.querySelector('svg.text-blue-500')
     expect(updateIcon).not.toBeInTheDocument()
+  })
+
+  it('hides Registry tab when SETTINGS_REGISTRY_TAB permission is disabled', () => {
+    renderWithProviders(<SettingsTabs />, {
+      permissions: { [PERMISSION_KEYS.SETTINGS_REGISTRY_TAB]: false },
+    })
+
+    expect(
+      screen.queryByRole('tab', { name: 'Registry' })
+    ).not.toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'General' })).toBeVisible()
+    expect(screen.getByRole('tab', { name: 'Secrets' })).toBeVisible()
+    expect(screen.getByRole('tab', { name: 'CLI' })).toBeVisible()
+    expect(screen.getByRole('tab', { name: 'Version' })).toBeVisible()
+    expect(screen.getByRole('tab', { name: 'Logs' })).toBeVisible()
   })
 
   it('does not show update icon on other tabs', async () => {

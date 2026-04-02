@@ -30,6 +30,8 @@ import { NavSeparator } from './nav-separator'
 import { NavIconButton } from './nav-icon-button'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '@utils/feature-flags'
+import { usePermissions } from '@/common/contexts/permissions'
+import { PERMISSION_KEYS } from '@/common/contexts/permissions/permission-keys'
 
 interface NavButtonProps {
   to: string
@@ -66,6 +68,7 @@ function useIsActive() {
 function TopNavLinks() {
   const isActive = useIsActive()
   const isSkillsEnabled = useFeatureFlag(featureFlagKeys.SKILLS)
+  const { canShow } = usePermissions()
 
   return (
     <NavigationMenu>
@@ -99,15 +102,17 @@ function TopNavLinks() {
             Registry
           </NavButton>
         </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavButton
-            to="/playground"
-            icon={FlaskConical}
-            isActive={isActive(['/playground'])}
-          >
-            Playground
-          </NavButton>
-        </NavigationMenuItem>
+        {canShow(PERMISSION_KEYS.PLAYGROUND_MENU) && (
+          <NavigationMenuItem>
+            <NavButton
+              to="/playground"
+              icon={FlaskConical}
+              isActive={isActive(['/playground'])}
+            >
+              Playground
+            </NavButton>
+          </NavigationMenuItem>
+        )}
       </NavigationMenuList>
     </NavigationMenu>
   )
