@@ -56,16 +56,15 @@ export function SettingsTabs({ defaultTab }: SettingsTabsProps) {
   const isNewVersionAvailable = appInfo?.isNewVersionAvailable && isProduction
   const { canShow } = usePermissions()
 
-  const visibleTabs = useMemo(
-    () =>
-      TABS.filter((tab) => !tab.permissionKey || canShow(tab.permissionKey)),
-    [canShow]
-  )
-
-  const visibleTabValues = useMemo(
-    () => new Set(visibleTabs.map((t) => t.value)),
-    [visibleTabs]
-  )
+  const { visibleTabs, visibleTabValues } = useMemo(() => {
+    const tabs = TABS.filter(
+      (tab) => !tab.permissionKey || canShow(tab.permissionKey)
+    )
+    return {
+      visibleTabs: tabs,
+      visibleTabValues: new Set(tabs.map((t) => t.value)),
+    }
+  }, [canShow])
 
   const effectiveDefaultTab =
     defaultTab && visibleTabValues.has(defaultTab)
