@@ -12,3 +12,9 @@ export const UI_POST_SUBMIT_DELAY_MS = 1000
  */
 export const MCP_OPTIMIZER_IMAGE_VERSION = '0.2.7'
 export const MCP_OPTIMIZER_BASE_IMAGE = 'ghcr.io/stackloklabs/mcp-optimizer'
+
+export const MCP_OPTIMIZER_BANNER_ROUTES = [
+  '/group/$groupName',
+  '/mcp-optimizer',
+]
+export const MCP_OPTIMIZER_BANNER_HEIGHT_REM = '4rem'
