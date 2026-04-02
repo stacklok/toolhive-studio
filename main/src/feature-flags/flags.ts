@@ -19,7 +19,7 @@ const featureFlagOptions: Record<FeatureFlagKey, FeatureFlagOptions> = {
   [featureFlagKeys.SKILLS]: {
     isDisabled: false,
     defaultValue: false,
-    isExperimental: true,
+    isExperimental: false,
   },
 }
 
