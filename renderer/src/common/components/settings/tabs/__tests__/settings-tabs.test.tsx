@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { SettingsTabs } from '../settings-tabs'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
 import { PermissionsProvider } from '@/common/contexts/permissions/permissions-provider'
+import type { Permissions } from '@/common/contexts/permissions'
 import { PERMISSION_KEYS } from '@/common/contexts/permissions/permission-keys'
 import { Suspense } from 'react'
 
@@ -58,7 +59,7 @@ vi.mock('@/common/hooks/use-app-version', () => ({
 
 const renderWithProviders = (
   component: React.ReactElement,
-  options?: { permissions?: Record<string, boolean> }
+  options?: { permissions?: Partial<Permissions> }
 ) => {
   const queryClient = new QueryClient({
     defaultOptions: {

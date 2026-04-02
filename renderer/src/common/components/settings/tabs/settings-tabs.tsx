@@ -67,9 +67,14 @@ export function SettingsTabs({ defaultTab }: SettingsTabsProps) {
     [visibleTabs]
   )
 
+  const effectiveDefaultTab =
+    defaultTab && visibleTabValues.has(defaultTab)
+      ? defaultTab
+      : (visibleTabs[0]?.value ?? 'general')
+
   return (
     <Tabs
-      defaultValue={defaultTab || 'general'}
+      defaultValue={effectiveDefaultTab}
       orientation="vertical"
       className="-mx-8 flex h-full flex-row"
     >

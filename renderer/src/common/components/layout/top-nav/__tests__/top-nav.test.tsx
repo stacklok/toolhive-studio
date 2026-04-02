@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { TopNav } from '..'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
+import type { Permissions } from '@/common/contexts/permissions'
 import { PERMISSION_KEYS } from '@/common/contexts/permissions/permission-keys'
 
 vi.mock('../window-controls', () => ({
@@ -24,7 +25,7 @@ describe('TopNav', () => {
   }
 
   function renderTopNavWithPermissions(
-    permissions: Record<string, boolean>,
+    permissions: Partial<Permissions>,
     props: { isEnterprise?: boolean } = {}
   ) {
     const router = createTestRouter(() => <TopNav {...props} />)
