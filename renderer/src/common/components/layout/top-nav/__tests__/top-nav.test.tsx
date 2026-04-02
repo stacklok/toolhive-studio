@@ -3,6 +3,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { TopNav } from '..'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
+import type { Permissions } from '@/common/contexts/permissions'
+import { PERMISSION_KEYS } from '@/common/contexts/permissions/permission-keys'
 
 vi.mock('../window-controls', () => ({
   WindowControls: () => null,
@@ -20,6 +22,14 @@ describe('TopNav', () => {
   function renderTopNav(props: { isEnterprise?: boolean } = {}) {
     const router = createTestRouter(() => <TopNav {...props} />)
     return renderRoute(router)
+  }
+
+  function renderTopNavWithPermissions(
+    permissions: Partial<Permissions>,
+    props: { isEnterprise?: boolean } = {}
+  ) {
+    const router = createTestRouter(() => <TopNav {...props} />)
+    return renderRoute(router, { permissions })
   }
 
   it('renders MCP Servers navigation link', async () => {
@@ -41,6 +51,16 @@ describe('TopNav', () => {
     await waitFor(() => {
       expect(screen.getByText('Playground')).toBeInTheDocument()
     })
+  })
+
+  it('hides Playground when PLAYGROUND_MENU permission is disabled', async () => {
+    renderTopNavWithPermissions({
+      [PERMISSION_KEYS.PLAYGROUND_MENU]: false,
+    })
+    await waitFor(() => {
+      expect(screen.getByText('MCP Servers')).toBeInTheDocument()
+    })
+    expect(screen.queryByText('Playground')).not.toBeInTheDocument()
   })
 
   it('renders Settings button', async () => {

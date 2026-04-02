@@ -7,6 +7,11 @@ import { CliTab } from './cli-tab'
 import { RegistryTab } from '../registry/registry-tab'
 import { SecretsTab } from './secrets-tab'
 import { useAppVersion } from '@/common/hooks/use-app-version'
+import { usePermissions } from '@/common/contexts/permissions'
+import {
+  PERMISSION_KEYS,
+  type PermissionKey,
+} from '@/common/contexts/permissions/permission-keys'
 import {
   ArrowUpCircle,
   Wrench,
@@ -19,11 +24,21 @@ import {
 } from 'lucide-react'
 
 type Tab = 'general' | 'registry' | 'secrets' | 'cli' | 'version' | 'logs'
-type TabItem = { label: string; value: Tab; icon: LucideIcon }
+type TabItem = {
+  label: string
+  value: Tab
+  icon: LucideIcon
+  permissionKey?: PermissionKey
+}
 
 const TABS: TabItem[] = [
   { label: 'General', value: 'general', icon: Wrench },
-  { label: 'Registry', value: 'registry', icon: CloudDownload },
+  {
+    label: 'Registry',
+    value: 'registry',
+    icon: CloudDownload,
+    permissionKey: PERMISSION_KEYS.SETTINGS_REGISTRY_TAB,
+  },
   { label: 'Secrets', value: 'secrets', icon: Lock },
   { label: 'CLI', value: 'cli', icon: Command },
   { label: 'Version', value: 'version', icon: AppWindow },
@@ -38,10 +53,21 @@ export function SettingsTabs({ defaultTab }: SettingsTabsProps) {
   const { data: appInfo, isLoading, error } = useAppVersion()
   const isProduction = import.meta.env.MODE === 'production'
   const isNewVersionAvailable = appInfo?.isNewVersionAvailable && isProduction
+  const { canShow } = usePermissions()
+
+  const visibleTabs = TABS.filter(
+    (tab) => !tab.permissionKey || canShow(tab.permissionKey)
+  )
+  const visibleTabValues = new Set(visibleTabs.map((t) => t.value))
+
+  const effectiveDefaultTab =
+    defaultTab && visibleTabValues.has(defaultTab)
+      ? defaultTab
+      : (visibleTabs[0]?.value ?? 'general')
 
   return (
     <Tabs
-      defaultValue={defaultTab || 'general'}
+      defaultValue={effectiveDefaultTab}
       orientation="vertical"
       className="-mx-8 flex h-full flex-row"
     >
@@ -50,7 +76,7 @@ export function SettingsTabs({ defaultTab }: SettingsTabsProps) {
           className="flex h-fit w-48 flex-col items-stretch justify-start gap-1
             border-none bg-transparent p-0"
         >
-          {TABS.map((tab) => {
+          {visibleTabs.map((tab) => {
             const Icon = tab.icon
             return (
               <TabsTrigger
@@ -81,9 +107,11 @@ export function SettingsTabs({ defaultTab }: SettingsTabsProps) {
           <GeneralTab />
         </TabsContent>
 
-        <TabsContent value="registry" className="mt-0">
-          <RegistryTab />
-        </TabsContent>
+        {visibleTabValues.has('registry') && (
+          <TabsContent value="registry" className="mt-0">
+            <RegistryTab />
+          </TabsContent>
+        )}
 
         <TabsContent value="secrets" className="mt-0">
           <SecretsTab />
