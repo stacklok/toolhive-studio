@@ -9,10 +9,9 @@ import {
   flatpakFilesystemEntries,
   parseThvClients,
 } from '../flatpak-client-paths'
+import { FLATPAK_APP_ID as APP_ID } from '../../app-info'
 
 const execFileAsync = promisify(execFile)
-
-const APP_ID = 'com.stacklok.ToolHive'
 const RUNTIME_VERSION = '24.08'
 
 function runCommand(cmd: string, args: string[], cwd?: string): Promise<void> {

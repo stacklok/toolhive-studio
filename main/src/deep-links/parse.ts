@@ -1,10 +1,7 @@
 import { z } from 'zod/v4'
 import log from '../logger'
-import {
-  DEEP_LINK_PROTOCOL,
-  deepLinkSchema,
-  type DeepLinkIntent,
-} from '@common/deep-links'
+import { deepLinkSchema, type DeepLinkIntent } from '@common/deep-links'
+import { DEEP_LINK_PROTOCOL } from '@app-info'
 
 type ParseResult =
   | { ok: true; deepLink: DeepLinkIntent }

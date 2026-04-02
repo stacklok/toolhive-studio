@@ -20,6 +20,7 @@
     "noUncheckedIndexedAccess": true,
     "types": ["node"],
     "paths": {
+      "@app-info": ["./app-info.ts"],
       "@common/*": ["./common/*"],
       "@utils/*": ["./utils/*"]
     }
@@ -30,7 +31,9 @@
     "main/src",
     "preload/src",
     "forge.env.d.ts",
-    "utils"
+    "utils",
+    "scripts",
+    "common"
   ],
   "exclude": ["node_modules"]
 }

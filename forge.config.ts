@@ -2,12 +2,14 @@ import 'dotenv/config'
 import type { ForgeConfig } from '@electron-forge/shared-types'
 import { MakerDeb } from '@electron-forge/maker-deb'
 import { MakerRpm } from '@electron-forge/maker-rpm'
+import { DEEP_LINK_PROTOCOL } from './app-info'
 import MakerFlatpakBuilder from './utils/forge-makers/MakerFlatpakBuilder'
 import { VitePlugin } from '@electron-forge/plugin-vite'
 import { FusesPlugin } from '@electron-forge/plugin-fuses'
 import { FuseV1Options, FuseVersion } from '@electron/fuses'
 import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-natives'
 import { ensureThv } from './utils/fetch-thv'
+import { generateFlatpakAssets } from './utils/generate-flatpak-assets'
 import MakerTarGz from './utils/forge-makers/MakerTarGz'
 import MakerDMGWithArch from './utils/forge-makers/MakerDMGWithArch'
 import { isPrerelease } from './utils/pre-release'
@@ -37,7 +39,7 @@ const config: ForgeConfig = {
     protocols: [
       {
         name: 'ToolHive Studio',
-        schemes: ['toolhive-gui'],
+        schemes: [DEEP_LINK_PROTOCOL],
       },
     ],
     // Windows specific options
@@ -162,7 +164,7 @@ const config: ForgeConfig = {
         requires: ['docker >= 20.10'],
         license: 'Apache-2.0',
         bin: 'ToolHive',
-        mimeType: ['x-scheme-handler/toolhive-gui'],
+        mimeType: [`x-scheme-handler/${DEEP_LINK_PROTOCOL}`],
       },
     }),
     new MakerDeb({
@@ -176,7 +178,7 @@ const config: ForgeConfig = {
         homepage: 'https://github.com/stacklok/toolhive-studio',
         section: 'devel',
         bin: 'ToolHive',
-        mimeType: ['x-scheme-handler/toolhive-gui'],
+        mimeType: [`x-scheme-handler/${DEEP_LINK_PROTOCOL}`],
       },
     }),
     new MakerFlatpakBuilder({}, ['linux']),
@@ -244,6 +246,12 @@ const config: ForgeConfig = {
 
       // Download/cache the exact binary needed for this build target
       await ensureThv(platform, arch)
+
+      // Generate flatpak assets from app-info so protocol name and app ID
+      // stay in sync with constants in app-info.ts
+      if (platform === 'linux') {
+        await generateFlatpakAssets()
+      }
     },
   },
 }

@@ -23,8 +23,7 @@ import { readMarkerFile } from './marker-file'
 import { binPath } from '../toolhive-manager'
 import type { SymlinkCheckResult, Platform } from './types'
 import log from '../logger'
-
-const FLATPAK_APP_ID = 'com.stacklok.ToolHive'
+import { FLATPAK_APP_ID } from '@app-info'
 
 function getFlatpakCliPath(): string {
   if (process.arch !== 'x64' && process.arch !== 'arm64') {
