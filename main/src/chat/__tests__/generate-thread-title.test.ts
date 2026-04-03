@@ -207,13 +207,13 @@ describe('generateThreadTitle', () => {
       )
     })
 
-    it('calls generateText with the correct system prompt and maxTokens', async () => {
+    it('calls generateText with the correct system prompt and maxOutputTokens', async () => {
       await generateThreadTitle('thread-1')
       expect(mockGenerateText).toHaveBeenCalledWith(
         expect.objectContaining({
           model: fakeModel,
           messages: fakeConvertedMessages,
-          maxTokens: 20,
+          maxOutputTokens: 20,
           system: expect.stringContaining('6 words or fewer'),
         })
       )

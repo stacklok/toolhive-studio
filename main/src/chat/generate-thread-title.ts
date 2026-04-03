@@ -6,6 +6,7 @@ import { readSelectedModel } from '../db/readers/chat-settings-reader'
 import { readChatProvider } from '../db/readers/chat-settings-reader'
 import { LOCAL_PROVIDER_IDS } from './constants'
 import { getThread, updateThread } from './threads-storage'
+import type { ChatRequest } from './types'
 
 const TITLE_SYSTEM_PROMPT =
   'You are a concise assistant. Summarize the following conversation in 6 words or fewer using title case. Reply with only the title — no punctuation, no quotes, no explanation.'
@@ -49,21 +50,23 @@ export async function generateThreadTitle(
       return { success: false, error: 'Provider settings not found' }
     }
 
-    const request = isLocalProvider(selected.provider)
-      ? {
-          chatId: threadId,
-          messages: contextMessages,
-          provider: selected.provider,
-          model: selected.model,
-          endpointURL: providerSettings.endpointURL ?? '',
-        }
-      : {
-          chatId: threadId,
-          messages: contextMessages,
-          provider: selected.provider,
-          model: selected.model,
-          apiKey: providerSettings.apiKey ?? '',
-        }
+    const request = (
+      isLocalProvider(selected.provider)
+        ? {
+            chatId: threadId,
+            messages: contextMessages,
+            provider: selected.provider,
+            model: selected.model,
+            endpointURL: providerSettings.endpointURL ?? '',
+          }
+        : {
+            chatId: threadId,
+            messages: contextMessages,
+            provider: selected.provider,
+            model: selected.model,
+            apiKey: providerSettings.apiKey ?? '',
+          }
+    ) as ChatRequest
 
     const model = createModelFromRequest(provider, request)
 
@@ -71,7 +74,7 @@ export async function generateThreadTitle(
       model,
       system: TITLE_SYSTEM_PROMPT,
       messages: await convertToModelMessages(contextMessages),
-      maxTokens: 20,
+      maxOutputTokens: 20,
     })
 
     const title = text

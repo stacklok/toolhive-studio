@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import React from 'react'
 import { PlaygroundSidebar } from '../playground-sidebar'
 import type { PlaygroundThread } from '../../hooks/use-playground-threads'
 

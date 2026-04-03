@@ -1,7 +1,6 @@
 import type { JSX } from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { screen, waitFor } from '@testing-library/react'
-import React from 'react'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { PERMISSION_KEYS } from '@/common/contexts/permissions/permission-keys'
