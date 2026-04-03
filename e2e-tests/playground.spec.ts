@@ -105,18 +105,7 @@ async function selectOllamaModel(window: Page): Promise<void> {
 
 async function clearPlaygroundState(window: Page): Promise<void> {
   await window.getByRole('link', { name: 'Playground' }).click()
-  await expect(
-    window.getByRole('heading', { name: 'Playground', level: 1 })
-  ).toBeVisible()
-
   await waitForPlaygroundReady(window)
-
-  const clearChatButton = window.getByRole('button', { name: /clear chat/i })
-  if (await clearChatButton.isVisible().catch(() => false)) {
-    await clearChatButton.click()
-    await window.getByRole('button', { name: /delete/i }).click()
-  }
-
   await removeOllamaProvider(window)
 }
 
@@ -189,9 +178,7 @@ test.describe('Playground chat with Ollama', () => {
     ).toBeVisible({ timeout: 30_000 })
 
     await window.getByRole('link', { name: 'Playground' }).click()
-    await expect(
-      window.getByRole('heading', { name: 'Playground', level: 1 })
-    ).toBeVisible()
+    await waitForPlaygroundReady(window)
 
     await openProviderSettingsDialog(window)
 
