@@ -151,29 +151,37 @@ export async function startToolhive(): Promise<void> {
       `Starting ToolHive from: ${binPath} on port ${toolhivePort}, MCP on port ${toolhiveMcpPort}`
     )
 
-    toolhiveProcess = spawn(
-      binPath,
-      [
-        'serve',
-        '--openapi',
-        '--experimental-mcp',
-        '--experimental-mcp-host=127.0.0.1',
-        `--experimental-mcp-port=${toolhiveMcpPort}`,
-        '--host=127.0.0.1',
-        `--port=${toolhivePort}`,
-      ],
-      {
-        stdio: ['ignore', 'ignore', 'pipe'],
-        detached: false,
-        // Ensure child process is killed when parent exits
-        // On Windows, this creates a job object to enforce cleanup
-        windowsHide: true,
-        env: {
-          ...process.env,
-          TOOLHIVE_SKIP_DESKTOP_CHECK: 'true',
-        },
-      }
-    )
+    const serveArgs = [
+      'serve',
+      '--openapi',
+      '--experimental-mcp',
+      '--experimental-mcp-host=127.0.0.1',
+      `--experimental-mcp-port=${toolhiveMcpPort}`,
+      '--host=127.0.0.1',
+      `--port=${toolhivePort}`,
+    ]
+
+    const sentryDsn = import.meta.env.VITE_SENTRY_THV_DSN
+    if (sentryDsn) {
+      const sentryEnvironment = app.isPackaged ? 'production' : 'development'
+      serveArgs.push(
+        `--sentry-dsn=${sentryDsn}`,
+        `--sentry-environment=${sentryEnvironment}`,
+        `--sentry-traces-sample-rate=1.0`
+      )
+    }
+
+    toolhiveProcess = spawn(binPath, serveArgs, {
+      stdio: ['ignore', 'ignore', 'pipe'],
+      detached: false,
+      // Ensure child process is killed when parent exits
+      // On Windows, this creates a job object to enforce cleanup
+      windowsHide: true,
+      env: {
+        ...process.env,
+        TOOLHIVE_SKIP_DESKTOP_CHECK: 'true',
+      },
+    })
     log.info(`[startToolhive] Process spawned with PID: ${toolhiveProcess.pid}`)
 
     scope.addBreadcrumb({
