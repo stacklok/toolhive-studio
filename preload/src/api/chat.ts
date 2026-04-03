@@ -76,6 +76,8 @@ export const chatApi = {
       ipcRenderer.invoke('chat:get-thread-info', threadId),
     ensureThreadExists: (threadId?: string, title?: string) =>
       ipcRenderer.invoke('chat:ensure-thread-exists', threadId, title),
+    generateThreadTitle: (threadId: string) =>
+      ipcRenderer.invoke('chat:generate-thread-title', threadId),
   },
 }
 
@@ -162,6 +164,8 @@ export interface ChatAPI {
     getThread: (threadId: string) => Promise<{
       id: string
       title?: string
+      titleEditedByUser?: boolean
+      starred?: boolean
       messages: ChatUIMessage[]
       lastEditTimestamp: number
       createdAt: number
@@ -170,6 +174,8 @@ export interface ChatAPI {
       Array<{
         id: string
         title?: string
+        titleEditedByUser?: boolean
+        starred?: boolean
         messages: ChatUIMessage[]
         lastEditTimestamp: number
         createdAt: number
@@ -251,6 +257,11 @@ export interface ChatAPI {
       threadId?: string
       error?: string
       isNew?: boolean
+    }>
+    generateThreadTitle: (threadId: string) => Promise<{
+      success: boolean
+      title?: string
+      error?: string
     }>
   }
 }
