@@ -10,6 +10,9 @@ export interface PlaygroundThread {
   createdAt: number
 }
 
+const sortByRecent = (a: PlaygroundThread, b: PlaygroundThread) =>
+  b.lastEditTimestamp - a.lastEditTimestamp
+
 export function usePlaygroundThreads() {
   const queryClient = useQueryClient()
   const [threads, setThreads] = useState<PlaygroundThread[]>([])
@@ -110,9 +113,11 @@ export function usePlaygroundThreads() {
 
   const updateThreadTitle = useCallback((threadId: string, title: string) => {
     setThreads((prev) =>
-      prev.map((t) =>
-        t.id === threadId ? { ...t, title, lastEditTimestamp: Date.now() } : t
-      )
+      prev
+        .map((t) =>
+          t.id === threadId ? { ...t, title, lastEditTimestamp: Date.now() } : t
+        )
+        .sort(sortByRecent)
     )
   }, [])
 
@@ -130,12 +135,13 @@ export function usePlaygroundThreads() {
       setThreads((prev) => {
         const exists = prev.some((t) => t.id === threadId)
         if (!exists) {
-          // New thread discovered — select it automatically
           setActiveThreadId(threadId)
           window.electronAPI.chat.setActiveThreadId(threadId)
-          return [lightweight, ...prev]
+          return [lightweight, ...prev].sort(sortByRecent)
         }
-        return prev.map((t) => (t.id === threadId ? lightweight : t))
+        return prev
+          .map((t) => (t.id === threadId ? lightweight : t))
+          .sort(sortByRecent)
       })
     } catch (err) {
       log.error('[usePlaygroundThreads] Failed to refresh thread:', err)
