@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import { existsSync } from 'node:fs'
+import { existsSync, unlinkSync } from 'node:fs'
 import path from 'node:path'
 import net from 'node:net'
 import { app } from 'electron'
@@ -33,6 +33,7 @@ const binPath = app.isPackaged
 let toolhiveProcess: ReturnType<typeof spawn> | undefined
 let toolhivePort: number | undefined
 let toolhiveMcpPort: number | undefined
+let toolhiveSocketPath: string | undefined
 let isRestarting = false
 let killTimer: NodeJS.Timeout | undefined
 let processError: ToolhiveProcessError | undefined
@@ -43,6 +44,10 @@ export function getToolhivePort(): number | undefined {
 
 export function getToolhiveMcpPort(): number | undefined {
   return toolhiveMcpPort
+}
+
+export function getToolhiveSocketPath(): string | undefined {
+  return toolhiveSocketPath
 }
 
 export function isToolhiveRunning(): boolean {
@@ -121,6 +126,21 @@ async function findFreePort(
   return await getRandomPort()
 }
 
+function generateSocketPath(): string {
+  const socketName = `toolhive-${process.pid}.sock`
+  return path.join(app.getPath('temp'), socketName)
+}
+
+function cleanupSocketFile(socketPath: string): void {
+  try {
+    if (existsSync(socketPath)) {
+      unlinkSync(socketPath)
+    }
+  } catch {
+    // Ignore cleanup errors
+  }
+}
+
 export async function startToolhive(): Promise<void> {
   Sentry.withScope<Promise<void>>(async (scope) => {
     if (isUsingCustomPort()) {
@@ -132,6 +152,7 @@ export async function startToolhive(): Promise<void> {
         return
       }
       toolhivePort = customPort
+      toolhiveSocketPath = undefined
       toolhiveMcpPort = process.env.THV_MCP_PORT
         ? parseInt(process.env.THV_MCP_PORT!, 10)
         : undefined
@@ -146,9 +167,11 @@ export async function startToolhive(): Promise<void> {
 
     processError = undefined
     toolhiveMcpPort = await findFreePort()
-    toolhivePort = await findFreePort(50000, 50100)
+    toolhiveSocketPath = generateSocketPath()
+    cleanupSocketFile(toolhiveSocketPath)
+
     log.info(
-      `Starting ToolHive from: ${binPath} on port ${toolhivePort}, MCP on port ${toolhiveMcpPort}`
+      `Starting ToolHive from: ${binPath} on socket ${toolhiveSocketPath}, MCP on port ${toolhiveMcpPort}`
     )
 
     toolhiveProcess = spawn(
@@ -159,14 +182,11 @@ export async function startToolhive(): Promise<void> {
         '--experimental-mcp',
         '--experimental-mcp-host=127.0.0.1',
         `--experimental-mcp-port=${toolhiveMcpPort}`,
-        '--host=127.0.0.1',
-        `--port=${toolhivePort}`,
+        `--socket=${toolhiveSocketPath}`,
       ],
       {
         stdio: ['ignore', 'ignore', 'pipe'],
         detached: false,
-        // Ensure child process is killed when parent exits
-        // On Windows, this creates a job object to enforce cleanup
         windowsHide: true,
         env: {
           ...process.env,
@@ -178,7 +198,7 @@ export async function startToolhive(): Promise<void> {
 
     scope.addBreadcrumb({
       category: 'debug',
-      message: `Starting ToolHive from: ${binPath} on port ${toolhivePort}, MCP on port ${toolhiveMcpPort}, PID: ${toolhiveProcess.pid}`,
+      message: `Starting ToolHive from: ${binPath} on socket ${toolhiveSocketPath}, MCP on port ${toolhiveMcpPort}, PID: ${toolhiveProcess.pid}`,
     })
 
     updateTrayStatus(!!toolhiveProcess)
@@ -331,6 +351,10 @@ export function stopToolhive(options?: { force?: boolean }): void {
   // For graceful shutdown, schedule delayed force kill
   if (!force && pidToKill !== undefined) {
     scheduleForceKill(processToKill, pidToKill)
+  }
+
+  if (toolhiveSocketPath) {
+    cleanupSocketFile(toolhiveSocketPath)
   }
 
   log.info(`[stopToolhive] Process cleanup completed`)
