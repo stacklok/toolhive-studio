@@ -43,7 +43,7 @@ export function useAutoScroll({
     isProgrammaticScrollRef.current = true
     el.scrollTo({
       top: el.scrollHeight,
-      behavior: instant ? 'instant' : 'smooth',
+      behavior: instant ? 'auto' : 'smooth',
     })
   }, [])
 
@@ -54,7 +54,7 @@ export function useAutoScroll({
     if (pendingRestoreRef.current !== null) {
       const el = containerRef.current
       if (el && el.scrollHeight > el.clientHeight) {
-        el.scrollTo({ top: pendingRestoreRef.current, behavior: 'instant' })
+        el.scrollTo({ top: pendingRestoreRef.current, behavior: 'auto' })
         pendingRestoreRef.current = null
       }
       return
@@ -133,7 +133,7 @@ export function useAutoScroll({
         if (pendingRestoreRef.current !== null) {
           container.scrollTo({
             top: pendingRestoreRef.current,
-            behavior: 'instant',
+            behavior: 'auto',
           })
           pendingRestoreRef.current = null
         } else if (!userScrolledRef.current) {
