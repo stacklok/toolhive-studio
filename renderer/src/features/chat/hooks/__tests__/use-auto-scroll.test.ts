@@ -27,10 +27,11 @@ function makeScrollContainer(
     },
   })
 
-  el.scrollTo = vi.fn(({ top }: ScrollToOptions = {}) => {
+  el.scrollTo = vi.fn((...args: [ScrollToOptions] | [number, number]) => {
+    const top = typeof args[0] === 'object' ? args[0].top : args[1]
     if (top !== undefined) _scrollTop = top
     el.dispatchEvent(new Event('scroll'))
-  })
+  }) as HTMLDivElement['scrollTo']
 
   return el
 }

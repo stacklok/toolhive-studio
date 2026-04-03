@@ -61,7 +61,7 @@ export function ThreadTitleBar({
   }, [isRenaming])
 
   return (
-    <div className="flex items-center gap-1 px-2 pt-4 pb-3">
+    <div className="flex items-center gap-1 px-4 pt-4 pb-3">
       {isRenaming ? (
         <input
           ref={inputRef}

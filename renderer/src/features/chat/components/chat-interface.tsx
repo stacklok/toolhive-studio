@@ -76,8 +76,8 @@ export function ChatInterface({
           onDelete={onDeleteThread}
         />
       )}
-      <div className="bg-background flex min-h-0 flex-1 flex-col">
-        {hasMessages && <Separator />}
+      {hasMessages && <Separator />}
+      <div className="bg-background flex min-h-0 flex-1 flex-col px-4">
         {/* Messages Area */}
         <div className="relative min-h-0 flex-1 overflow-hidden">
           {isPersistentLoading && (
@@ -246,7 +246,7 @@ export function ChatInterface({
         {hasMessages && (
           <div
             className="bg-background before:to-background relative mx-auto
-              w-full pt-4 pb-2 before:pointer-events-none before:absolute
+              w-full px-6 pt-4 pb-2 before:pointer-events-none before:absolute
               before:inset-x-0 before:-top-12 before:h-12 before:bg-linear-to-b
               before:from-transparent before:content-['']"
           >
