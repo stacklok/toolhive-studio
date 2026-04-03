@@ -82,6 +82,15 @@ export async function generateThreadTitle(
       return { success: false, error: 'Empty title generated' }
     }
 
+    // Re-check before writing — the user may have renamed during the LLM round-trip
+    const latestThread = getThread(threadId)
+    if (latestThread?.titleEditedByUser) {
+      log.info(
+        `[THREADS] Skipped auto-generated title for thread ${threadId} — manually edited during generation`
+      )
+      return { success: true, title: latestThread.title }
+    }
+
     updateThread(threadId, { title, titleEditedByUser: false })
     log.info(
       `[THREADS] Auto-generated title for thread ${threadId}: "${title}"`
