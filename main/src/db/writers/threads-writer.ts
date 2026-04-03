@@ -15,13 +15,15 @@ export function writeThread(thread: ChatSettingsThread): void {
       const db = getDb()
       db.transaction(() => {
         db.prepare(
-          `INSERT OR REPLACE INTO threads (id, title, created_at, last_edit_timestamp)
-         VALUES (?, ?, ?, ?)`
+          `INSERT OR REPLACE INTO threads (id, title, created_at, last_edit_timestamp, title_edited_by_user, starred)
+         VALUES (?, ?, ?, ?, ?, ?)`
         ).run(
           thread.id,
           thread.title ?? null,
           thread.createdAt,
-          thread.lastEditTimestamp
+          thread.lastEditTimestamp,
+          thread.titleEditedByUser ? 1 : 0,
+          thread.starred ? 1 : 0
         )
 
         db.prepare('DELETE FROM thread_messages WHERE thread_id = ?').run(

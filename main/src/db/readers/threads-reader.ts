@@ -7,6 +7,8 @@ interface DbThread {
   title: string | null
   created_at: number
   last_edit_timestamp: number
+  title_edited_by_user: number
+  starred: number
 }
 
 interface DbMessage {
@@ -29,6 +31,8 @@ function hydrateThread(row: DbThread): ChatSettingsThread {
   return {
     id: row.id,
     title: row.title ?? undefined,
+    titleEditedByUser: row.title_edited_by_user === 1,
+    starred: row.starred === 1,
     createdAt: row.created_at,
     lastEditTimestamp: row.last_edit_timestamp,
     messages: messages.map((m) => ({
