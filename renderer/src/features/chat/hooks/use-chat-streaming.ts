@@ -87,6 +87,24 @@ export function useChatStreaming(externalThreadId?: string | null) {
   // React to streaming completion: publish a signal and auto-title the thread via LLM
   const prevStatusRef = useRef(status)
   const titledThreadsRef = useRef<Set<string>>(new Set())
+
+  /** Extracts plain text from a ChatUIMessage's parts */
+  function extractUserText(msg: ChatUIMessage): string {
+    return msg.parts
+      .filter((p): p is { type: 'text'; text: string } => p.type === 'text')
+      .map((p) => p.text)
+      .join(' ')
+      .trim()
+  }
+
+  /** Emits the streamingComplete cache signal so subscribers refresh the thread */
+  function signalStreamingComplete(threadId: string) {
+    queryClient.setQueryData(['chat', 'streamingComplete'], {
+      threadId,
+      timestamp: Date.now(),
+    })
+  }
+
   useEffect(() => {
     const wasStreaming =
       prevStatusRef.current === 'streaming' ||
@@ -97,33 +115,50 @@ export function useChatStreaming(externalThreadId?: string | null) {
       return
     if (!currentThreadId) return
 
-    // Publish a cache signal so other hooks can react without prop-drilling
-    queryClient.setQueryData(['chat', 'streamingComplete'], {
-      threadId: currentThreadId,
-      timestamp: Date.now(),
-    })
+    // Publish initial signal so message list / loading state updates
+    signalStreamingComplete(currentThreadId)
 
-    // Auto-generate a title via LLM (once per thread per session)
+    // Auto-title: run once per thread per session (guard against concurrent calls)
     if (titledThreadsRef.current.has(currentThreadId)) return
+    titledThreadsRef.current.add(currentThreadId)
 
     const threadIdAtCompletion = currentThreadId
+
     window.electronAPI.chat
       .getThread(threadIdAtCompletion)
-      .then((thread) => {
+      .then(async (thread) => {
         // Respect manually-edited titles
         if (thread?.titleEditedByUser) return
 
-        titledThreadsRef.current.add(threadIdAtCompletion)
+        // Optimistic placeholder: first user-message text, visible immediately
+        const firstUserMsg = messages.find((m) => m.role === 'user')
+        if (firstUserMsg) {
+          const optimisticTitle = extractUserText(firstUserMsg).slice(0, 60)
+          if (optimisticTitle) {
+            await window.electronAPI.chat.updateThread(threadIdAtCompletion, {
+              title: optimisticTitle,
+              titleEditedByUser: false,
+            })
+            signalStreamingComplete(threadIdAtCompletion)
+          }
+        }
+
         return window.electronAPI.chat.generateThreadTitle(threadIdAtCompletion)
       })
       .then((result) => {
         if (result && !result.success) {
           log.warn('[useChatStreaming] Title generation failed:', result.error)
+          return
+        }
+        // Re-publish after LLM title is written to DB
+        if (result?.success) {
+          signalStreamingComplete(threadIdAtCompletion)
         }
       })
       .catch((err) =>
         log.error('[useChatStreaming] Failed to auto-title thread:', err)
       )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, currentThreadId, queryClient])
 
   const clearMessages = useCallback(async () => {
