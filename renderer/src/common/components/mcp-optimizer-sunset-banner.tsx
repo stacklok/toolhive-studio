@@ -3,7 +3,7 @@ import { Alert, AlertDescription } from './ui/alert'
 import { useMcpOptimizerBannerVisible } from '@/common/hooks/use-mcp-optimizer-banner-visible'
 
 const BLOG_POST_URL =
-  'https://stacklok.com/blog/mcp-optimizer-sunset?utm_source=toolhive-studio'
+  'https://stacklok.com/blog/mcp-optimizer-is-now-built-into-the-stacklok-platform/?utm_source=toolhive-studio'
 
 export function McpOptimizerSunsetBanner() {
   const isVisible = useMcpOptimizerBannerVisible()
