@@ -247,8 +247,9 @@ describe('ChatInterface', () => {
       setMessages([{ id: 'msg-1', role: 'user', parts: [] }])
       mockShowScrollToBottom = true
       renderInterface()
-      // The ChevronDown button
-      expect(screen.getByRole('button', { name: '' })).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: 'Scroll to bottom' })
+      ).toBeInTheDocument()
     })
 
     it('does not show scroll-to-bottom button when showScrollToBottom is false', () => {

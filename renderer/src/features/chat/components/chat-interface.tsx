@@ -234,6 +234,8 @@ export function ChatInterface({
                 bottom-0 left-1/2 z-50 h-10 w-10 cursor-pointer rounded-full p-0
                 duration-200"
               onClick={() => scrollToBottom()}
+              aria-label="Scroll to bottom"
+              title="Scroll to bottom"
             >
               <ChevronDown className="h-4 w-4" />
             </Button>
