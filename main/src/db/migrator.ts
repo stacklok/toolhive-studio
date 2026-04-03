@@ -10,9 +10,13 @@ interface Migration {
 }
 
 import * as m001 from './migrations/001-initial-schema'
+import * as m002 from './migrations/002-thread-title-flag'
+import * as m003 from './migrations/003-thread-starred'
 
 const migrations: Migration[] = [
   { id: 1, name: '001-initial-schema', up: m001.up },
+  { id: 2, name: '002-thread-title-flag', up: m002.up },
+  { id: 3, name: '003-thread-starred', up: m003.up },
 ]
 
 export function runMigrations(): void {
