@@ -2,13 +2,22 @@ import { useState, useEffect, useCallback } from 'react'
 import log from 'electron-log/renderer'
 import type { ChatUIMessage } from '../types'
 
-export function useThreadManagement() {
-  const [currentThreadId, setCurrentThreadId] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+export function useThreadManagement(externalThreadId?: string | null) {
+  const [currentThreadId, setCurrentThreadId] = useState<string | null>(
+    externalThreadId ?? null
+  )
+  const [isLoading, setIsLoading] = useState(externalThreadId === undefined)
   const [error, setError] = useState<string | null>(null)
 
-  // Get the current thread ID (most recent or create new) Temporary until we have threads
   useEffect(() => {
+    // If an external threadId is provided, use it directly
+    if (externalThreadId !== undefined) {
+      setCurrentThreadId(externalThreadId)
+      setIsLoading(false)
+      return
+    }
+
+    // Legacy auto-select behavior (used when no threadId is passed)
     async function getCurrentThread() {
       try {
         setIsLoading(true)
@@ -17,7 +26,6 @@ export function useThreadManagement() {
         const allThreads = await window.electronAPI.chat.getAllThreads()
 
         if (allThreads && allThreads.length > 0) {
-          // Find the thread with the latest lastEditTimestamp
           const mostRecentThread = allThreads.reduce((latest, current) => {
             return current.lastEditTimestamp > latest.lastEditTimestamp
               ? current
@@ -27,7 +35,6 @@ export function useThreadManagement() {
           setCurrentThreadId(mostRecentThread.id)
           window.electronAPI.chat.setActiveThreadId(mostRecentThread.id)
         } else {
-          // Create new thread only if none exist
           const result = await window.electronAPI.chat.createChatThread('Chat')
           if (result.success && result.threadId) {
             setCurrentThreadId(result.threadId)
@@ -47,9 +54,8 @@ export function useThreadManagement() {
     }
 
     getCurrentThread()
-  }, [])
+  }, [externalThreadId])
 
-  // Load messages from the current thread
   const loadMessages = useCallback(async (): Promise<ChatUIMessage[]> => {
     if (!currentThreadId) {
       return []
@@ -67,7 +73,6 @@ export function useThreadManagement() {
     }
   }, [currentThreadId])
 
-  // Clear messages in the current thread
   const clearMessages = useCallback(async () => {
     if (!currentThreadId) return
 
