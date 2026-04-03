@@ -11,10 +11,7 @@ export function McpOptimizerSunsetBanner() {
   if (!isVisible) return null
 
   return (
-    <Alert
-      variant="destructive"
-      className={'flex justify-center rounded-none border-x-0'}
-    >
+    <Alert className={'flex justify-center rounded-none border-x-0'}>
       <Info />
       <AlertDescription>
         <p>
