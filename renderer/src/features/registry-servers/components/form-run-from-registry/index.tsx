@@ -119,7 +119,7 @@ export function FormRunFromRegistry({
   const form = useForm<FormSchemaRegistryMcp>({
     resolver: zodV4Resolver(formSchema),
     defaultValues: {
-      name: server?.name || '',
+      name: (server?.name || '').split('/').pop() || '',
       group: 'default',
       proxy_mode: 'streamable-http',
       proxy_port: undefined,
