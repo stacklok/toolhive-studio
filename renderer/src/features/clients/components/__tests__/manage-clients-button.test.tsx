@@ -120,12 +120,12 @@ describe('ManageClientsButton – BDD flows', () => {
       {
         method: 'POST',
         path: '/api/v1beta/clients',
-        body: { name: 'vscode', groups: ['default'] },
+        body: { name: 'cursor', groups: ['default'] },
       },
       {
         method: 'POST',
         path: '/api/v1beta/clients',
-        body: { name: 'cursor', groups: ['default'] },
+        body: { name: 'vscode', groups: ['default'] },
       },
     ])
     // no-op: global recorder persists; we reset via recordRequests() per test
@@ -254,11 +254,11 @@ describe('ManageClientsButton – BDD flows', () => {
       )
       .map(({ method, pathname }) => ({ method, path: pathname }))
     expect(snapshot).toEqual([
-      { method: 'DELETE', path: '/api/v1beta/clients/cursor/groups/default' },
       {
         method: 'DELETE',
         path: '/api/v1beta/clients/claude-code/groups/default',
       },
+      { method: 'DELETE', path: '/api/v1beta/clients/cursor/groups/default' },
     ])
     // no-op
   })
