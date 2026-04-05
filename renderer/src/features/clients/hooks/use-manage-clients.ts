@@ -35,7 +35,7 @@ export function useManageClients(groupName: string) {
     clientsData?.clients?.filter(
       (client) => client.installed && client.client_type
     ) ?? []
-  ).sort((a, b) => a.client_type!.localeCompare(b.client_type!))
+  ).toSorted((a, b) => a.client_type!.localeCompare(b.client_type!))
 
   const getClientFieldName = (clientType: string): string =>
     `enable${clientType
