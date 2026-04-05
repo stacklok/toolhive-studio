@@ -151,6 +151,28 @@ describe('FormRunFromRegistry', () => {
     ).toBeInTheDocument()
   })
 
+  it('strips namespace prefix from server name', async () => {
+    const server = {
+      ...REGISTRY_SERVER,
+      name: 'io.github.stacklok/fetch',
+      env_vars: ENV_VARS_OPTIONAL,
+    }
+
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+        actionsSubmitLabel="Install server"
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    expect(screen.getByLabelText('Server name')).toHaveValue('fetch')
+  })
+
   it('renders storage volumes field on configuration tab', async () => {
     const server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
