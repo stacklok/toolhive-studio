@@ -7,7 +7,7 @@ export function convertCreateRequestToFormData(
 ): FormSchemaRemoteMcp {
   const authType = getRemoteAuthFieldType(createRequest.oauth_config)
   const baseFormData: FormSchemaRemoteMcp = {
-    name: createRequest.name || '',
+    name: (createRequest.name || '').split('/').pop() || '',
     url: createRequest.url || '',
     transport: createRequest.transport as 'sse' | 'streamable-http',
     proxy_port: undefined,
