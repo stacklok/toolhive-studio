@@ -14,7 +14,7 @@ overrides:
   tmp: '>=0.2.5'
   '@tootallnate/once': '>=3.0.1'
   serialize-javascript: '>=7.0.5'
-  defu: '>=6.1.5'
+  defu: '>=6.1.6'
   path-to-regexp@>=8.0.0 <8.4.0: 8.4.1
   brace-expansion@>=4.0.0 <5.0.5: 5.0.5
   brace-expansion@>=2.0.0 <2.0.3: 2.0.3
