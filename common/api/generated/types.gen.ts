@@ -5,63 +5,6 @@ export type ClientOptions = {
 }
 
 /**
- * DEPRECATED: Middleware configuration.
- * OIDCConfig contains OIDC configuration
- */
-export type AuthTokenValidatorConfig = {
-  /**
-   * AllowPrivateIP allows JWKS/OIDC endpoints on private IP addresses
-   */
-  allowPrivateIP?: boolean
-  /**
-   * Audience is the expected audience for the token
-   */
-  audience?: string
-  /**
-   * AuthTokenFile is the path to file containing bearer token for authentication
-   */
-  authTokenFile?: string
-  /**
-   * CACertPath is the path to the CA certificate bundle for HTTPS requests
-   */
-  cacertPath?: string
-  /**
-   * ClientID is the OIDC client ID
-   */
-  clientID?: string
-  /**
-   * ClientSecret is the optional OIDC client secret for introspection
-   */
-  clientSecret?: string
-  /**
-   * InsecureAllowHTTP allows HTTP (non-HTTPS) OIDC issuers for development/testing
-   * WARNING: This is insecure and should NEVER be used in production
-   */
-  insecureAllowHTTP?: boolean
-  /**
-   * IntrospectionURL is the optional introspection endpoint for validating tokens
-   */
-  introspectionURL?: string
-  /**
-   * Issuer is the OIDC issuer URL (e.g., https://accounts.google.com)
-   */
-  issuer?: string
-  /**
-   * JWKSURL is the URL to fetch the JWKS from
-   */
-  jwksurl?: string
-  /**
-   * ResourceURL is the explicit resource URL for OAuth discovery (RFC 9728)
-   */
-  resourceURL?: string
-  /**
-   * Scopes is the list of OAuth scopes to advertise in the well-known endpoint (RFC 9728)
-   * If empty, defaults to ["openid"]
-   */
-  scopes?: Array<string>
-}
-
-/**
  * Full registry data
  */
 export type GithubComStacklokToolhiveCoreRegistryTypesRegistry = {
@@ -143,6 +86,63 @@ export type GithubComStacklokToolhivePkgAuditConfig = {
    * +optional
    */
   maxDataSize?: number
+}
+
+/**
+ * DEPRECATED: Middleware configuration.
+ * OIDCConfig contains OIDC configuration
+ */
+export type GithubComStacklokToolhivePkgAuthTokenValidatorConfig = {
+  /**
+   * AllowPrivateIP allows JWKS/OIDC endpoints on private IP addresses
+   */
+  allowPrivateIP?: boolean
+  /**
+   * Audience is the expected audience for the token
+   */
+  audience?: string
+  /**
+   * AuthTokenFile is the path to file containing bearer token for authentication
+   */
+  authTokenFile?: string
+  /**
+   * CACertPath is the path to the CA certificate bundle for HTTPS requests
+   */
+  cacertPath?: string
+  /**
+   * ClientID is the OIDC client ID
+   */
+  clientID?: string
+  /**
+   * ClientSecret is the optional OIDC client secret for introspection
+   */
+  clientSecret?: string
+  /**
+   * InsecureAllowHTTP allows HTTP (non-HTTPS) OIDC issuers for development/testing
+   * WARNING: This is insecure and should NEVER be used in production
+   */
+  insecureAllowHTTP?: boolean
+  /**
+   * IntrospectionURL is the optional introspection endpoint for validating tokens
+   */
+  introspectionURL?: string
+  /**
+   * Issuer is the OIDC issuer URL (e.g., https://accounts.google.com)
+   */
+  issuer?: string
+  /**
+   * JWKSURL is the URL to fetch the JWKS from
+   */
+  jwksurl?: string
+  /**
+   * ResourceURL is the explicit resource URL for OAuth discovery (RFC 9728)
+   */
+  resourceURL?: string
+  /**
+   * Scopes is the list of OAuth scopes to advertise in the well-known endpoint (RFC 9728)
+   * If empty, defaults to ["openid"]
+   */
+  scopes?: Array<string>
 }
 
 /**
@@ -450,7 +450,7 @@ export type GithubComStacklokToolhivePkgAuthserverRunConfig = {
    */
   scopes_supported?: Array<string>
   signing_key_config?: GithubComStacklokToolhivePkgAuthserverSigningKeyRunConfig
-  storage?: StorageRunConfig
+  storage?: GithubComStacklokToolhivePkgAuthserverStorageRunConfig
   token_lifespans?: GithubComStacklokToolhivePkgAuthserverTokenLifespanRunConfig
   /**
    * Upstreams configures connections to upstream Identity Providers.
@@ -600,6 +600,95 @@ export type GithubComStacklokToolhivePkgAuthserverUserInfoRunConfig = {
 }
 
 /**
+ * ACLUserConfig contains ACL user authentication configuration.
+ */
+export type GithubComStacklokToolhivePkgAuthserverStorageAclUserRunConfig = {
+  /**
+   * PasswordEnvVar is the environment variable containing the Redis password.
+   */
+  password_env_var?: string
+  /**
+   * UsernameEnvVar is the environment variable containing the Redis username.
+   */
+  username_env_var?: string
+}
+
+/**
+ * RedisConfig is the Redis-specific configuration when Type is "redis".
+ */
+export type GithubComStacklokToolhivePkgAuthserverStorageRedisRunConfig = {
+  acl_user_config?: GithubComStacklokToolhivePkgAuthserverStorageAclUserRunConfig
+  /**
+   * AuthType must be "aclUser" - only ACL user authentication is supported.
+   */
+  auth_type?: string
+  /**
+   * DialTimeout is the timeout for establishing connections (e.g., "5s").
+   */
+  dial_timeout?: string
+  /**
+   * KeyPrefix for multi-tenancy, typically "thv:auth:{ns}:{name}:".
+   */
+  key_prefix?: string
+  /**
+   * ReadTimeout is the timeout for read operations (e.g., "3s").
+   */
+  read_timeout?: string
+  sentinel_config?: GithubComStacklokToolhivePkgAuthserverStorageSentinelRunConfig
+  sentinel_tls?: GithubComStacklokToolhivePkgAuthserverStorageRedisTlsRunConfig
+  tls?: GithubComStacklokToolhivePkgAuthserverStorageRedisTlsRunConfig
+  /**
+   * WriteTimeout is the timeout for write operations (e.g., "3s").
+   */
+  write_timeout?: string
+}
+
+/**
+ * SentinelTLS configures TLS for Sentinel connections.
+ * Falls back to TLS config when nil.
+ */
+export type GithubComStacklokToolhivePkgAuthserverStorageRedisTlsRunConfig = {
+  /**
+   * CACertFile is the path to a PEM-encoded CA certificate file.
+   */
+  ca_cert_file?: string
+  /**
+   * InsecureSkipVerify skips certificate verification.
+   */
+  insecure_skip_verify?: boolean
+}
+
+/**
+ * Storage configures the storage backend for the auth server.
+ * If nil, defaults to in-memory storage.
+ */
+export type GithubComStacklokToolhivePkgAuthserverStorageRunConfig = {
+  redis_config?: GithubComStacklokToolhivePkgAuthserverStorageRedisRunConfig
+  /**
+   * Type specifies the storage backend type. Defaults to "memory".
+   */
+  type?: string
+}
+
+/**
+ * SentinelConfig contains Sentinel-specific configuration.
+ */
+export type GithubComStacklokToolhivePkgAuthserverStorageSentinelRunConfig = {
+  /**
+   * DB is the Redis database number (default: 0).
+   */
+  db?: number
+  /**
+   * MasterName is the name of the Redis Sentinel master.
+   */
+  master_name?: string
+  /**
+   * SentinelAddrs is the list of Sentinel addresses (host:port).
+   */
+  sentinel_addrs?: Array<string>
+}
+
+/**
  * DEPRECATED: Middleware configuration.
  * AuthzConfig contains the authorization configuration
  */
@@ -660,6 +749,38 @@ export type GithubComStacklokToolhivePkgClientRegisteredClient = {
   groups?: Array<string>
   name?: GithubComStacklokToolhivePkgClientClientApp
 }
+
+/**
+ * Current status of the workload
+ */
+export type GithubComStacklokToolhivePkgContainerRuntimeWorkloadStatus =
+  | 'running'
+  | 'stopped'
+  | 'error'
+  | 'starting'
+  | 'stopping'
+  | 'unhealthy'
+  | 'removing'
+  | 'unknown'
+  | 'unauthenticated'
+  | 'running'
+  | 'stopped'
+  | 'error'
+  | 'starting'
+  | 'stopping'
+  | 'unhealthy'
+  | 'removing'
+  | 'unknown'
+  | 'unauthenticated'
+  | 'running'
+  | 'stopped'
+  | 'error'
+  | 'starting'
+  | 'stopping'
+  | 'unhealthy'
+  | 'removing'
+  | 'unknown'
+  | 'unauthenticated'
 
 /**
  * RuntimeConfig allows overriding the default runtime configuration
@@ -724,19 +845,7 @@ export type GithubComStacklokToolhivePkgCoreWorkload = {
    * StartedAt is when the container was last started (changes on restart)
    */
   started_at?: string
-  /**
-   * Status is the current status of the workload.
-   */
-  status?:
-    | 'running'
-    | 'stopped'
-    | 'error'
-    | 'starting'
-    | 'stopping'
-    | 'unhealthy'
-    | 'removing'
-    | 'unknown'
-    | 'unauthenticated'
+  status?: GithubComStacklokToolhivePkgContainerRuntimeWorkloadStatus
   /**
    * StatusContext provides additional context about the workload's status.
    * The exact meaning is determined by the status and the underlying runtime.
@@ -746,10 +855,7 @@ export type GithubComStacklokToolhivePkgCoreWorkload = {
    * ToolsFilter is the filter on tools applied to the workload.
    */
   tools?: Array<string>
-  /**
-   * TransportType is the type of transport used for this workload.
-   */
-  transport_type?: 'stdio' | 'sse' | 'streamable-http' | 'inspector'
+  transport_type?: GithubComStacklokToolhivePkgTransportTypesTransportType
   /**
    * URL is the URL of the workload exposed by the ToolHive proxy.
    */
@@ -760,6 +866,20 @@ export type GithubComStacklokToolhivePkgGroupsGroup = {
   name?: string
   registered_clients?: Array<string>
   skills?: Array<string>
+}
+
+/**
+ * IgnoreConfig contains configuration for ignore processing
+ */
+export type GithubComStacklokToolhivePkgIgnoreConfig = {
+  /**
+   * Whether to load global ignore patterns
+   */
+  loadGlobal?: boolean
+  /**
+   * Whether to print resolved overlay paths for debugging
+   */
+  printOverlays?: boolean
 }
 
 /**
@@ -865,7 +985,7 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
    * Host is the host for the HTTP proxy
    */
   host?: string
-  ignore_config?: IgnoreConfig
+  ignore_config?: GithubComStacklokToolhivePkgIgnoreConfig
   /**
    * Image is the Docker image to run
    */
@@ -888,12 +1008,12 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
    * MiddlewareConfigs contains the list of middleware to apply to the transport
    * and the configuration for each middleware.
    */
-  middleware_configs?: Array<TypesMiddlewareConfig>
+  middleware_configs?: Array<GithubComStacklokToolhivePkgTransportTypesMiddlewareConfig>
   /**
    * Name is the name of the MCP server
    */
   name?: string
-  oidc_config?: AuthTokenValidatorConfig
+  oidc_config?: GithubComStacklokToolhivePkgAuthTokenValidatorConfig
   /**
    * PermissionProfileNameOrPath is the name or path of the permission profile
    */
@@ -902,11 +1022,7 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
    * Port is the port for the HTTP proxy to listen on (host port)
    */
   port?: number
-  /**
-   * ProxyMode is the proxy mode for stdio transport ("sse" or "streamable-http")
-   * Note: "sse" is deprecated; use "streamable-http" instead.
-   */
-  proxy_mode?: 'sse' | 'streamable-http'
+  proxy_mode?: GithubComStacklokToolhivePkgTransportTypesProxyMode
   /**
    * Publish lists ports to publish to the host in format "hostPort:containerPort"
    */
@@ -954,10 +1070,7 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
   tools_override?: {
     [key: string]: GithubComStacklokToolhivePkgRunnerToolOverride
   }
-  /**
-   * Transport is the transport mode (stdio, sse, or streamable-http)
-   */
-  transport?: 'stdio' | 'sse' | 'streamable-http' | 'inspector'
+  transport?: GithubComStacklokToolhivePkgTransportTypesTransportType
   /**
    * TrustProxyHeaders indicates whether to trust X-Forwarded-* headers from reverse proxies
    */
@@ -1242,6 +1355,49 @@ export type GithubComStacklokToolhivePkgTelemetryConfig = {
   useLegacyAttributes?: boolean
 }
 
+export type GithubComStacklokToolhivePkgTransportTypesMiddlewareConfig = {
+  /**
+   * Parameters is a JSON object containing the middleware parameters.
+   * It is stored as a raw message to allow flexible parameter types.
+   */
+  parameters?: {
+    [key: string]: unknown
+  }
+  /**
+   * Type is a string representing the middleware type.
+   */
+  type?: string
+}
+
+/**
+ * ProxyMode is the effective HTTP protocol the proxy uses.
+ * For stdio transports, this is the configured mode (sse or streamable-http).
+ * For direct transports (sse/streamable-http), this matches the transport type.
+ * Note: "sse" is deprecated; use "streamable-http" instead.
+ */
+export type GithubComStacklokToolhivePkgTransportTypesProxyMode =
+  | 'sse'
+  | 'streamable-http'
+  | 'sse'
+  | 'streamable-http'
+
+/**
+ * Transport is the transport mode (stdio, sse, or streamable-http)
+ */
+export type GithubComStacklokToolhivePkgTransportTypesTransportType =
+  | 'stdio'
+  | 'sse'
+  | 'streamable-http'
+  | 'inspector'
+  | 'stdio'
+  | 'sse'
+  | 'streamable-http'
+  | 'inspector'
+  | 'stdio'
+  | 'sse'
+  | 'streamable-http'
+  | 'inspector'
+
 export type GithubComStacklokToolhivePkgWebhookConfig = {
   failure_policy?: GithubComStacklokToolhivePkgWebhookFailurePolicy
   /**
@@ -1289,20 +1445,6 @@ export type GithubComStacklokToolhivePkgWebhookTlsConfig = {
    * WARNING: This should only be used for development/testing.
    */
   insecure_skip_verify?: boolean
-}
-
-/**
- * IgnoreConfig contains configuration for ignore processing
- */
-export type IgnoreConfig = {
-  /**
-   * Whether to load global ignore patterns
-   */
-  loadGlobal?: boolean
-  /**
-   * Whether to print resolved overlay paths for debugging
-   */
-  printOverlays?: boolean
 }
 
 /**
@@ -2164,19 +2306,7 @@ export type PkgApiV1WorkloadListResponse = {
  * Response containing workload status information
  */
 export type PkgApiV1WorkloadStatusResponse = {
-  /**
-   * Current status of the workload
-   */
-  status?:
-    | 'running'
-    | 'stopped'
-    | 'error'
-    | 'starting'
-    | 'stopping'
-    | 'unhealthy'
-    | 'removing'
-    | 'unknown'
-    | 'unauthenticated'
+  status?: GithubComStacklokToolhivePkgContainerRuntimeWorkloadStatus
 }
 
 export type RegistryEnvVar = {
@@ -2542,109 +2672,6 @@ export type RegistryRemoteServerMetadata = {
 export type RegistryVerifiedAttestation = {
   predicate?: unknown
   predicate_type?: string
-}
-
-/**
- * ACLUserConfig contains ACL user authentication configuration.
- */
-export type StorageAclUserRunConfig = {
-  /**
-   * PasswordEnvVar is the environment variable containing the Redis password.
-   */
-  password_env_var?: string
-  /**
-   * UsernameEnvVar is the environment variable containing the Redis username.
-   */
-  username_env_var?: string
-}
-
-/**
- * RedisConfig is the Redis-specific configuration when Type is "redis".
- */
-export type StorageRedisRunConfig = {
-  acl_user_config?: StorageAclUserRunConfig
-  /**
-   * AuthType must be "aclUser" - only ACL user authentication is supported.
-   */
-  auth_type?: string
-  /**
-   * DialTimeout is the timeout for establishing connections (e.g., "5s").
-   */
-  dial_timeout?: string
-  /**
-   * KeyPrefix for multi-tenancy, typically "thv:auth:{ns}:{name}:".
-   */
-  key_prefix?: string
-  /**
-   * ReadTimeout is the timeout for read operations (e.g., "3s").
-   */
-  read_timeout?: string
-  sentinel_config?: StorageSentinelRunConfig
-  sentinel_tls?: StorageRedisTlsRunConfig
-  tls?: StorageRedisTlsRunConfig
-  /**
-   * WriteTimeout is the timeout for write operations (e.g., "3s").
-   */
-  write_timeout?: string
-}
-
-/**
- * SentinelTLS configures TLS for Sentinel connections.
- * Falls back to TLS config when nil.
- */
-export type StorageRedisTlsRunConfig = {
-  /**
-   * CACertFile is the path to a PEM-encoded CA certificate file.
-   */
-  ca_cert_file?: string
-  /**
-   * InsecureSkipVerify skips certificate verification.
-   */
-  insecure_skip_verify?: boolean
-}
-
-/**
- * Storage configures the storage backend for the auth server.
- * If nil, defaults to in-memory storage.
- */
-export type StorageRunConfig = {
-  redis_config?: StorageRedisRunConfig
-  /**
-   * Type specifies the storage backend type. Defaults to "memory".
-   */
-  type?: string
-}
-
-/**
- * SentinelConfig contains Sentinel-specific configuration.
- */
-export type StorageSentinelRunConfig = {
-  /**
-   * DB is the Redis database number (default: 0).
-   */
-  db?: number
-  /**
-   * MasterName is the name of the Redis Sentinel master.
-   */
-  master_name?: string
-  /**
-   * SentinelAddrs is the list of Sentinel addresses (host:port).
-   */
-  sentinel_addrs?: Array<string>
-}
-
-export type TypesMiddlewareConfig = {
-  /**
-   * Parameters is a JSON object containing the middleware parameters.
-   * It is stored as a raw message to allow flexible parameter types.
-   */
-  parameters?: {
-    [key: string]: unknown
-  }
-  /**
-   * Type is a string representing the middleware type.
-   */
-  type?: string
 }
 
 export type GetApiOpenapiJsonData = {
