@@ -30,7 +30,9 @@
     "main/src",
     "preload/src",
     "forge.env.d.ts",
-    "utils"
+    "utils",
+    "scripts",
+    "common"
   ],
   "exclude": ["node_modules"]
 }

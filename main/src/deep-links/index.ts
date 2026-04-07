@@ -5,11 +5,8 @@ import {
   waitForMainWindowReady,
 } from '../main-window'
 import { parseDeepLinkUrl } from './parse'
-import {
-  DEEP_LINK_PROTOCOL,
-  showNotFound,
-  resolveDeepLinkTarget,
-} from '@common/deep-links'
+import { showNotFound, resolveDeepLinkTarget } from '@common/deep-links'
+import { DEEP_LINK_PROTOCOL } from '@common/app-info'
 
 export { registerProtocolWithSquirrel } from './squirrel'
 
