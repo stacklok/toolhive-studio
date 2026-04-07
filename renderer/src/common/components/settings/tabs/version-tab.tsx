@@ -54,6 +54,9 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
     useAutoUpdateStatus()
   const { mutateAsync: setAutoUpdate, isPending: isSetAutoUpdatePending } =
     useSetAutoUpdate()
+  const canShowAutoUpdate = canShow(PERMISSION_KEYS.AUTO_UPDATE)
+  const canShowDownloadButton =
+    canShowAutoUpdate && appInfo?.isNewVersionAvailable && isProduction
 
   if (isLoading) {
     return (
@@ -139,7 +142,7 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
         <Separator />
       </div>
 
-      {canShow(PERMISSION_KEYS.AUTO_UPDATE) && (
+      {canShowAutoUpdate && (
         <>
           <SettingsSectionTitle>Updates</SettingsSectionTitle>
           <div className="flex flex-col gap-3 py-1">
@@ -164,7 +167,7 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
         </>
       )}
 
-      {appInfo.isNewVersionAvailable && isProduction && (
+      {canShowDownloadButton && (
         <Alert className="flex h-full items-center">
           <AlertDescription className="flex w-full items-center gap-2">
             <AlertCircleIcon className="flex size-4 items-center" />
