@@ -169,9 +169,9 @@ function ThreadItem({
         {/* Three-dot menu — visible on hover or when active */}
         <div
           className={cn(
-            'hidden shrink-0 pr-1',
-            'group-hover:flex',
-            isActive && 'flex'
+            'pointer-events-none flex shrink-0 pr-1 opacity-0',
+            'group-hover:pointer-events-auto group-hover:opacity-100',
+            isActive && 'pointer-events-auto opacity-100'
           )}
         >
           <DropdownMenu>
@@ -186,7 +186,7 @@ function ThreadItem({
                 <MoreHorizontal className="h-3.5 w-3.5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" side="right" className="w-40">
+            <DropdownMenuContent align="end" side="bottom" className="w-40">
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation()
@@ -281,8 +281,8 @@ export function PlaygroundSidebar({
 
   return (
     <aside
-      className="border-input text-sidebar-foreground w-sidebar fixed top-16
-        bottom-0 left-0 z-0 flex h-full flex-col border-r"
+      className="border-input text-sidebar-foreground w-sidebar flex h-full
+        shrink-0 flex-col border-r"
     >
       <div className="px-2 pt-3 pb-2">
         <Button
