@@ -10,6 +10,8 @@ const store = telemetryStore
 export function initSentry() {
   Sentry.init({
     dsn: isE2E ? undefined : import.meta.env.VITE_SENTRY_DSN,
+    propagateTraceparent: true,
+    tracePropagationTargets: ['localhost', /^https?:\/\/127\.0\.0\.1/],
     tracesSampleRate: 1.0,
     beforeSend: (event) =>
       store.get('isTelemetryEnabled', true) ? event : null,

@@ -17,6 +17,7 @@ import { updateTrayStatus } from '../system-tray'
 import log from '../logger'
 import * as Sentry from '@sentry/electron/main'
 import { getQuittingState } from '../app-state'
+import { readSetting } from '../db/readers/settings-reader'
 
 vi.mock('node:child_process', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:child_process')>()
@@ -54,6 +55,9 @@ vi.mock('electron', () => ({
 }))
 vi.mock('../system-tray')
 vi.mock('../logger')
+vi.mock('../db/readers/settings-reader', () => ({
+  readSetting: vi.fn(),
+}))
 vi.mock('../app-state', () => ({
   getQuittingState: vi.fn().mockReturnValue(false),
 }))
@@ -176,6 +180,7 @@ describe('toolhive-manager', () => {
   afterEach(() => {
     vi.useRealTimers()
     vi.clearAllTimers()
+    vi.unstubAllEnvs()
   })
 
   describe('startToolhive', () => {
@@ -416,6 +421,47 @@ describe('toolhive-manager', () => {
           }),
         }
       )
+    })
+
+    it('includes sentry flags when DSN is set and telemetry is enabled', async () => {
+      vi.stubEnv('VITE_SENTRY_THV_DSN', 'https://test@sentry.io/123')
+      vi.mocked(readSetting).mockReturnValue('true')
+
+      const startPromise = startToolhive()
+      await vi.advanceTimersByTimeAsync(50)
+      await startPromise
+
+      const spawnArgs = mockSpawn.mock.calls[0]![1] as string[]
+      expect(spawnArgs).toEqual(
+        expect.arrayContaining([
+          '--sentry-dsn=https://test@sentry.io/123',
+          '--sentry-environment=development',
+          '--sentry-traces-sample-rate=1.0',
+        ])
+      )
+    })
+
+    it('omits sentry flags when DSN is not set', async () => {
+      vi.stubEnv('VITE_SENTRY_THV_DSN', '')
+
+      const startPromise = startToolhive()
+      await vi.advanceTimersByTimeAsync(50)
+      await startPromise
+
+      const spawnArgs = mockSpawn.mock.calls[0]![1] as string[]
+      expect(spawnArgs.some((a) => a.startsWith('--sentry-'))).toBe(false)
+    })
+
+    it('omits sentry flags when telemetry is disabled', async () => {
+      vi.stubEnv('VITE_SENTRY_THV_DSN', 'https://test@sentry.io/123')
+      vi.mocked(readSetting).mockReturnValue('false')
+
+      const startPromise = startToolhive()
+      await vi.advanceTimersByTimeAsync(50)
+      await startPromise
+
+      const spawnArgs = mockSpawn.mock.calls[0]![1] as string[]
+      expect(spawnArgs.some((a) => a.startsWith('--sentry-'))).toBe(false)
     })
   })
 
