@@ -87,7 +87,7 @@ To update routes: add/modify files in `renderer/src/routes/`, the route tree reg
 ### Running a Single Test
 
 ```bash
-pnpm run vitest:electron run path/to/file.test.tsx
+pnpm run test run path/to/file.test.tsx
 ```
 
 ## Commit and PR Guidelines
