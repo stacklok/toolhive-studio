@@ -34,10 +34,7 @@ import {
   enableFeatureFlag,
   disableFeatureFlag,
 } from '../flags'
-import {
-  writeFeatureFlag,
-  deleteFeatureFlag,
-} from '../../db/writers/feature-flags-writer'
+import { writeFeatureFlag } from '../../db/writers/feature-flags-writer'
 import { readFeatureFlag } from '../../db/readers/feature-flags-reader'
 
 describe('Feature Flags', () => {
@@ -146,11 +143,14 @@ describe('Feature Flags', () => {
 
   describe('disableFeatureFlag', () => {
     it.each(Object.entries(featureFlagKeys))(
-      'should delete from SQLite for %s when disabled',
+      'should write false to SQLite for %s when disabled',
       (_name, key) => {
         disableFeatureFlag(key)
 
-        expect(deleteFeatureFlag).toHaveBeenCalledWith(`feature_flag_${key}`)
+        expect(writeFeatureFlag).toHaveBeenCalledWith(
+          `feature_flag_${key}`,
+          false
+        )
       }
     )
   })

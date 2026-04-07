@@ -98,6 +98,10 @@ export function useExperimentalFeatures() {
 
   const flags = Object.entries(allFlags ?? {})
     .filter(([, options]) => options.isExperimental && !options.isDisabled)
+    .filter(
+      ([key, options]) =>
+        key !== featureFlagKeys.META_OPTIMIZER || options.enabled
+    )
     .map(([key, options]) => ({ ...options, key })) as FeatureFlag[]
 
   const handleToggle = useCallback(
