@@ -5,7 +5,6 @@ import path from 'path'
 export default defineConfig({
   resolve: {
     alias: {
-      '@app-info': path.resolve(__dirname, '../app-info.ts'),
       '@utils': path.resolve(__dirname, '../utils'),
       '@common': path.resolve(__dirname, '../common'),
     },

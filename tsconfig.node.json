@@ -20,7 +20,6 @@
     "noUncheckedIndexedAccess": true,
     "types": ["node"],
     "paths": {
-      "@app-info": ["./app-info.ts"],
       "@common/*": ["./common/*"],
       "@utils/*": ["./utils/*"]
     }

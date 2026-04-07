@@ -12,7 +12,6 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@app-info': path.resolve(__dirname, '../app-info.ts'),
       '@common': path.resolve(__dirname, '../common'),
       '@utils': path.resolve(__dirname, '../utils'),
     },

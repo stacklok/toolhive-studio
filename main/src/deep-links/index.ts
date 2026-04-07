@@ -6,7 +6,7 @@ import {
 } from '../main-window'
 import { parseDeepLinkUrl } from './parse'
 import { showNotFound, resolveDeepLinkTarget } from '@common/deep-links'
-import { DEEP_LINK_PROTOCOL } from '@app-info'
+import { DEEP_LINK_PROTOCOL } from '@common/app-info'
 
 export { registerProtocolWithSquirrel } from './squirrel'
 

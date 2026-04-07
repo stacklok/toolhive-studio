@@ -8,7 +8,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './renderer/src'),
-      '@app-info': path.resolve(__dirname, './app-info.ts'),
       '@common': path.resolve(__dirname, './common'),
       '@utils': path.resolve(__dirname, './utils'),
       '@mocks': path.resolve(__dirname, './renderer/src/common/mocks'),

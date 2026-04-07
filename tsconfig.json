@@ -11,7 +11,6 @@
   "compilerOptions": {
     "paths": {
       "@/*": ["./renderer/src/*"],
-      "@app-info": ["./app-info.ts"],
       "@common/*": ["./common/*"],
       "@utils/*": ["./utils/*"],
       "@mocks": ["./renderer/src/common/mocks"],

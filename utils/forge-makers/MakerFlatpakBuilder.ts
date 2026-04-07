@@ -9,7 +9,7 @@ import {
   flatpakFilesystemEntries,
   parseThvClients,
 } from '../flatpak-client-paths'
-import { FLATPAK_APP_ID as APP_ID } from '../../app-info'
+import { FLATPAK_APP_ID as APP_ID } from '../../common/app-info'
 
 const execFileAsync = promisify(execFile)
 const RUNTIME_VERSION = '24.08'

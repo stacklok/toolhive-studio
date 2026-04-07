@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
-import { DEEP_LINK_PROTOCOL, FLATPAK_APP_ID } from '../app-info'
+import { DEEP_LINK_PROTOCOL, FLATPAK_APP_ID } from '../common/app-info'
 
 const FLATPAK_DIR = path.resolve(import.meta.dirname, '..', 'flatpak')
 
