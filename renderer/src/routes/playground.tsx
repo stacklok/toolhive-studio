@@ -53,49 +53,44 @@ function PlaygroundContent() {
     )
   }
 
-  if (!hasThreads) {
-    return (
-      <div className="absolute inset-0 flex flex-col overflow-hidden">
-        <ChatInterface />
-      </div>
-    )
-  }
+  const activeThread = hasThreads
+    ? threads.find((t) => t.id === activeThreadId)
+    : undefined
 
   return (
-    <div className="absolute inset-0 flex overflow-hidden">
-      <PlaygroundSidebar
-        threads={threads}
-        activeThreadId={activeThreadId}
-        onSelectThread={selectThread}
-        onCreateThread={createThread}
-        onDeleteThread={deleteThread}
-        onRenameThread={renameThread}
-        onToggleStar={toggleStarThread}
-      />
-      <div className="ml-sidebar flex min-w-0 flex-1 flex-col overflow-hidden">
-        {(() => {
-          const activeThread = threads.find((t) => t.id === activeThreadId)
-          return (
-            <ChatInterface
-              threadId={activeThreadId}
-              threadTitle={activeThread?.title}
-              threadStarred={activeThread?.starred}
-              onRenameThread={
-                activeThreadId
-                  ? (title) => renameThread(activeThreadId, title)
-                  : undefined
-              }
-              onToggleStar={
-                activeThreadId
-                  ? () => toggleStarThread(activeThreadId)
-                  : undefined
-              }
-              onDeleteThread={
-                activeThreadId ? () => deleteThread(activeThreadId) : undefined
-              }
-            />
-          )
-        })()}
+    <div className="absolute inset-0 flex">
+      {hasThreads && (
+        <PlaygroundSidebar
+          threads={threads}
+          activeThreadId={activeThreadId}
+          onSelectThread={selectThread}
+          onCreateThread={createThread}
+          onDeleteThread={deleteThread}
+          onRenameThread={renameThread}
+          onToggleStar={toggleStarThread}
+        />
+      )}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <ChatInterface
+          threadId={hasThreads ? activeThreadId : undefined}
+          threadTitle={activeThread?.title}
+          threadStarred={activeThread?.starred}
+          onRenameThread={
+            activeThreadId && hasThreads
+              ? (title) => renameThread(activeThreadId, title)
+              : undefined
+          }
+          onToggleStar={
+            activeThreadId && hasThreads
+              ? () => toggleStarThread(activeThreadId)
+              : undefined
+          }
+          onDeleteThread={
+            activeThreadId && hasThreads
+              ? () => deleteThread(activeThreadId)
+              : undefined
+          }
+        />
       </div>
     </div>
   )

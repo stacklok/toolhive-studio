@@ -190,7 +190,8 @@ export function usePlaygroundThreads() {
       if (
         event.type === 'updated' &&
         event.query.queryKey[0] === 'chat' &&
-        event.query.queryKey[1] === 'streamingComplete'
+        (event.query.queryKey[1] === 'streamingComplete' ||
+          event.query.queryKey[1] === 'threadStarted')
       ) {
         const data = event.query.state.data as
           | { threadId: string; timestamp: number }

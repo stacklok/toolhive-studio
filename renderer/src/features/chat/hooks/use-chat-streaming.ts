@@ -84,6 +84,16 @@ export function useChatStreaming(externalThreadId?: string | null) {
     isPersistentLoading ||
     isThreadLoading
 
+  // Publish a signal as soon as the user submits a message so the sidebar appears immediately
+  useEffect(() => {
+    if (status === 'submitted' && currentThreadId) {
+      queryClient.setQueryData(['chat', 'threadStarted'], {
+        threadId: currentThreadId,
+        timestamp: Date.now(),
+      })
+    }
+  }, [status, currentThreadId, queryClient])
+
   // React to streaming completion: publish a signal and auto-title the thread via LLM
   const prevStatusRef = useRef(status)
   const titledThreadsRef = useRef<Set<string>>(new Set())
