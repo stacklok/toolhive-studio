@@ -7,6 +7,7 @@ import { updateTrayStatus } from './system-tray'
 import log from './logger'
 import * as Sentry from '@sentry/electron/main'
 import { getQuittingState } from './app-state'
+import { readSetting } from './db/readers/settings-reader'
 import {
   REGISTRY_AUTH_REQUIRED,
   type ToolhiveProcessError,
@@ -161,8 +162,9 @@ export async function startToolhive(): Promise<void> {
       `--port=${toolhivePort}`,
     ]
 
-    const sentryDsn = import.meta.env.VITE_SENTRY_THV_DSN
-    if (sentryDsn) {
+    const isE2E = process.env.TOOLHIVE_E2E === 'true'
+    const sentryDsn = isE2E ? undefined : import.meta.env.VITE_SENTRY_THV_DSN
+    if (sentryDsn && readSetting('isTelemetryEnabled') !== 'false') {
       const sentryEnvironment = app.isPackaged ? 'production' : 'development'
       serveArgs.push(
         `--sentry-dsn=${sentryDsn}`,
