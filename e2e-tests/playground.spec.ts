@@ -39,11 +39,15 @@ async function warmupOllamaModel(): Promise<void> {
 }
 
 async function waitForPlaygroundReady(window: Page): Promise<void> {
-  const loadingText = window.getByText(/loading chat history/i)
-  // May never appear if already loaded
-  await loadingText
-    .waitFor({ state: 'hidden', timeout: 10_000 })
-    .catch(() => {})
+  // Wait past both the thread-list spinner (dots, no text) and the
+  // "Loading chat history..." phase by waiting for any interactive element
+  // that is visible in every possible ready state.
+  const readyLocator = window
+    .getByRole('button', { name: /configure your providers/i })
+    .or(window.getByTestId('model-selector'))
+    .or(window.getByPlaceholder(/type your message/i))
+
+  await readyLocator.first().waitFor({ state: 'visible', timeout: 15_000 })
 }
 
 async function openProviderSettingsDialog(window: Page): Promise<void> {
