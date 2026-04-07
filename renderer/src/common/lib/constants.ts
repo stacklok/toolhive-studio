@@ -17,4 +17,4 @@ export const MCP_OPTIMIZER_BANNER_ROUTES = [
   '/group/$groupName',
   '/mcp-optimizer',
 ]
-export const MCP_OPTIMIZER_BANNER_HEIGHT_REM = '4rem'
+export const MCP_OPTIMIZER_BANNER_HEIGHT_REM = '3rem'
