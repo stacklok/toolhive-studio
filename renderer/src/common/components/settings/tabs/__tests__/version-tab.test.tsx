@@ -354,6 +354,32 @@ describe('VersionTab', () => {
 
       expect(screen.queryByText('Updates')).not.toBeInTheDocument()
     })
+
+    it('hides the update-available banner when auto-update permission is false', () => {
+      import.meta.env.MODE = 'production'
+
+      const appInfoWithUpdate: AppVersionInfo = {
+        ...mockAppInfo,
+        latestVersion: '2.0.0',
+        isNewVersionAvailable: true,
+      }
+
+      renderWithProviders(
+        <VersionTab
+          appInfo={appInfoWithUpdate}
+          isLoading={false}
+          error={null}
+        />,
+        { 'auto-update': false } as Partial<Permissions>
+      )
+
+      expect(
+        screen.queryByText(/A new version 2.0.0 is available/i)
+      ).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole('button', { name: 'Download' })
+      ).not.toBeInTheDocument()
+    })
   })
 
   it('shows "Downloading..." when update state is downloading', () => {
