@@ -12,8 +12,6 @@ import { Button } from '../../ui/button'
 import { Alert, AlertDescription } from '../../ui/alert'
 import { AlertCircleIcon, Download } from 'lucide-react'
 import { trackEvent } from '@/common/lib/analytics'
-import { useEffect } from 'react'
-import { toast } from 'sonner'
 import { Separator } from '../../ui/separator'
 import { SettingsSectionTitle } from './components/settings-section-title'
 import { SettingsRow } from './components/settings-row'
@@ -50,24 +48,12 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
   const isCheckingOrDownloading =
     isUpdateStateLoading ||
     updateState === 'checking' ||
-    updateState === 'not-available' ||
     updateState === 'downloading'
 
   const { data: isAutoUpdateEnabled, isLoading: isAutoUpdateEnabledLoading } =
     useAutoUpdateStatus()
   const { mutateAsync: setAutoUpdate, isPending: isSetAutoUpdatePending } =
     useSetAutoUpdate()
-
-  useEffect(() => {
-    if (updateState === 'not-available') {
-      toast.info('Update not yet available', {
-        id: 'update-not-available',
-        description:
-          'The update server is still processing the latest release. Please try again in a few minutes.',
-        duration: 6000,
-      })
-    }
-  }, [updateState])
 
   if (isLoading) {
     return (
@@ -118,7 +104,7 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
   }
 
   const getButtonText = () => {
-    if (updateState === 'checking' || updateState === 'not-available') {
+    if (updateState === 'checking') {
       return 'Checking...'
     }
     if (updateState === 'downloading') {
