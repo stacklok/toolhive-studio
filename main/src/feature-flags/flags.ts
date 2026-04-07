@@ -2,10 +2,7 @@ import Store from 'electron-store'
 import log from '../logger'
 import { featureFlagKeys } from '../../../utils/feature-flags'
 import type { FeatureFlagKey, FeatureFlagOptions } from './types'
-import {
-  writeFeatureFlag,
-  deleteFeatureFlag as deleteFeatureFlagFromDb,
-} from '../db/writers/feature-flags-writer'
+import { writeFeatureFlag } from '../db/writers/feature-flags-writer'
 import { readFeatureFlag as readFeatureFlagFromDb } from '../db/readers/feature-flags-reader'
 
 const FLAG_STORE_PREFIX = 'feature_flag_'
@@ -73,9 +70,9 @@ export function disableFeatureFlag(key: FeatureFlagKey): void {
   const storeKey = `${FLAG_STORE_PREFIX}${key}`
 
   try {
-    deleteFeatureFlagFromDb(storeKey)
+    writeFeatureFlag(storeKey, false)
   } catch (err) {
-    log.error('[DB] Failed to delete feature flag:', err)
+    log.error('[DB] Failed to write feature flag:', err)
   }
 
   log.info(`Disabled feature flag: ${key}`)
