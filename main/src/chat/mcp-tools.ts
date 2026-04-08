@@ -1,6 +1,17 @@
 import { experimental_createMCPClient as createMCPClient } from '@ai-sdk/mcp'
 import type { ToolSet } from 'ai'
+import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
+import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js'
+import {
+  ReadResourceResultSchema,
+  CallToolResultSchema,
+} from '@modelcontextprotocol/sdk/types.js'
+import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js'
+import type {
+  McpUiResourceCsp,
+  McpUiResourcePermissions,
+} from '@modelcontextprotocol/ext-apps/app-bridge'
 import { createClient } from '@common/api/generated/client'
 import { getApiV1BetaWorkloads } from '@common/api/generated/sdk.gen'
 import { getHeaders } from '../headers'
@@ -15,6 +26,133 @@ import {
   isMcpToolDefinition,
 } from '../utils/mcp-tools'
 import { TOOLHIVE_MCP_SERVER_NAME } from '../utils/constants'
+import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
+
+// Advertised to MCP servers during initialize so they expose UI-enabled tools
+const MCP_UI_EXTENSION_CAPABILITY = {
+  'io.modelcontextprotocol/ui': { mimeTypes: ['text/html;profile=mcp-app'] },
+} as const
+
+export interface ToolUiMetadataEntry {
+  resourceUri: string
+  serverName: string
+}
+
+export interface UiResourceMetadata {
+  html: string
+  csp?: McpUiResourceCsp
+  permissions?: McpUiResourcePermissions
+  prefersBorder?: boolean
+}
+
+// Module-level cache populated by createMcpTools() on each chat stream
+let cachedUiMetadata: Record<string, ToolUiMetadataEntry> = {}
+
+export function getCachedUiMetadata(): Record<string, ToolUiMetadataEntry> {
+  return { ...cachedUiMetadata }
+}
+
+function createRawTransport(workload: CoreWorkload): Transport {
+  let transportType = workload.transport_type as string
+  if (transportType === 'stdio') {
+    transportType =
+      workload.proxy_mode === 'streamable-http' ? 'streamable-http' : 'sse'
+  }
+  if (transportType === 'streamable-http') {
+    const urlString = workload.url || `http://localhost:${workload.port}/mcp`
+    return new StreamableHTTPClientTransport(new URL(urlString))
+  }
+  const urlString = workload.url || `http://localhost:${workload.port}/sse`
+  return new SSEClientTransport(new URL(urlString))
+}
+
+async function createRawMcpClientForServer(
+  serverName: string
+): Promise<{ client: Client; close: () => Promise<void> }> {
+  const clientInfo = { name: 'toolhive-studio-mcp-apps', version: '1.0.0' }
+  const clientOptions = {
+    capabilities: { extensions: MCP_UI_EXTENSION_CAPABILITY },
+  }
+
+  if (serverName === TOOLHIVE_MCP_SERVER_NAME) {
+    const port = getToolhiveMcpPort()
+    if (!port) throw new Error('Toolhive MCP port not available')
+    const transport = new StreamableHTTPClientTransport(
+      new URL(`http://localhost:${port}/mcp`)
+    )
+    const client = new Client(clientInfo, clientOptions)
+    await client.connect(transport)
+    return { client, close: () => client.close() }
+  }
+
+  const port = getToolhivePort()
+  const apiClient = createClient({
+    baseUrl: `http://localhost:${port}`,
+    headers: getHeaders(),
+  })
+  const { data } = await getApiV1BetaWorkloads({ client: apiClient })
+  const workload = data?.workloads?.find((w) => w.name === serverName)
+  if (!workload) throw new Error(`Workload not found: ${serverName}`)
+
+  const rawTransport = createRawTransport(workload)
+  const client = new Client(clientInfo, clientOptions)
+  await client.connect(rawTransport)
+  return { client, close: () => client.close() }
+}
+
+export async function fetchUiResource(
+  serverName: string,
+  resourceUri: string
+): Promise<UiResourceMetadata> {
+  const { client, close } = await createRawMcpClientForServer(serverName)
+  try {
+    const result = await client.request(
+      { method: 'resources/read', params: { uri: resourceUri } },
+      ReadResourceResultSchema
+    )
+    const content = result.contents[0]
+    if (!content) throw new Error('Empty resource response')
+
+    let html: string
+    if ('text' in content && content.text) {
+      html = content.text
+    } else if ('blob' in content && content.blob) {
+      html = Buffer.from(content.blob, 'base64').toString('utf-8')
+    } else {
+      throw new Error('Resource content has no text or blob')
+    }
+
+    // Extract per-resource CSP and permission metadata from the response
+    const uiMeta = (content as { _meta?: { ui?: Record<string, unknown> } })
+      ._meta?.ui
+
+    return {
+      html,
+      csp: uiMeta?.csp as McpUiResourceCsp | undefined,
+      permissions: uiMeta?.permissions as McpUiResourcePermissions | undefined,
+      prefersBorder: uiMeta?.prefersBorder as boolean | undefined,
+    }
+  } finally {
+    await close()
+  }
+}
+
+export async function proxyMcpToolCall(
+  serverName: string,
+  toolName: string,
+  args: Record<string, unknown>
+): Promise<unknown> {
+  const { client, close } = await createRawMcpClientForServer(serverName)
+  try {
+    const result = await client.request(
+      { method: 'tools/call', params: { name: toolName, arguments: args } },
+      CallToolResultSchema
+    )
+    return result
+  } finally {
+    await close()
+  }
+}
 
 // Helper to safely extract properties
 function getToolParameters(inputSchema: unknown): Record<string, unknown> {
@@ -169,6 +307,8 @@ export async function createMcpTools(): Promise<{
   const mcpTools: ToolSet = {}
   const mcpClients: Awaited<ReturnType<typeof createMCPClient>>[] = []
   let enabledTools: Record<string, string[]> = {}
+  // Reset the UI metadata cache for this stream session
+  cachedUiMetadata = {}
 
   try {
     const port = getToolhivePort()
@@ -184,6 +324,7 @@ export async function createMcpTools(): Promise<{
           const toolhiveMcpConfig = {
             name: 'toolhive-mcp',
             transport: new StreamableHTTPClientTransport(toolhiveMcpUrl),
+            capabilities: { extensions: MCP_UI_EXTENSION_CAPABILITY },
           }
 
           const toolhiveMcpClient = await createMCPClient(toolhiveMcpConfig)
@@ -195,7 +336,23 @@ export async function createMcpTools(): Promise<{
           // Add all tools from Toolhive MCP (always enabled, cannot be disabled)
           for (const [toolName, toolDef] of Object.entries(toolhiveMcpTools)) {
             if (isMcpToolDefinition(toolDef)) {
+              const ui = (toolDef as { _meta?: Record<string, unknown> })
+                ._meta?.['ui'] as
+                | { resourceUri?: string; visibility?: string[] }
+                | undefined
+              // Skip app-only tools — they must not be exposed to the model
+              const visibility = ui?.visibility
+              if (visibility && !visibility.includes('model')) {
+                continue
+              }
               mcpTools[toolName] = toolDef
+              // Cache MCP App UI metadata if present
+              if (ui?.resourceUri) {
+                cachedUiMetadata[toolName] = {
+                  resourceUri: ui.resourceUri,
+                  serverName: TOOLHIVE_MCP_SERVER_NAME,
+                }
+              }
             }
           }
         } catch (error) {
@@ -236,7 +393,11 @@ export async function createMcpTools(): Promise<{
       log.debug(`Found MCP workload for ${serverName}:`, workload.package)
 
       try {
-        const config = createTransport(workload)
+        const baseConfig = createTransport(workload)
+        const config = {
+          ...baseConfig,
+          capabilities: { extensions: MCP_UI_EXTENSION_CAPABILITY },
+        }
 
         const mcpClient = await createMCPClient(config)
 
@@ -250,8 +411,24 @@ export async function createMcpTools(): Promise<{
         for (const toolName of toolNames) {
           const tool = serverMcpTools[toolName]
           if (tool && isMcpToolDefinition(tool)) {
+            const ui = (tool as { _meta?: Record<string, unknown> })._meta?.[
+              'ui'
+            ] as { resourceUri?: string; visibility?: string[] } | undefined
+            // Skip app-only tools — they must not be exposed to the model
+            const visibility = ui?.visibility
+            if (visibility && !visibility.includes('model')) {
+              log.debug(`Skipping app-only tool ${toolName} from ${serverName}`)
+              continue
+            }
             mcpTools[toolName] = tool
             addedToolsCount++
+            // Cache MCP App UI metadata if present
+            if (ui?.resourceUri) {
+              cachedUiMetadata[toolName] = {
+                resourceUri: ui.resourceUri,
+                serverName,
+              }
+            }
           } else if (tool) {
             log.warn(`Tool ${toolName} from ${serverName} failed validation`)
           } else {

@@ -54,6 +54,7 @@ export interface AvailableServer {
     description?: string
     parameters?: Record<string, unknown>
     enabled: boolean
+    uiResourceUri?: string
   }>
   isRunning: boolean
 }

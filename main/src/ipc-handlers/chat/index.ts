@@ -1,4 +1,5 @@
 import { register as registerMcpTools } from './mcp-tools'
+import { register as registerMcpApps } from './mcp-apps'
 import { register as registerProviders } from './providers'
 import { register as registerSettings } from './settings'
 import { register as registerStreaming } from './streaming'
@@ -9,5 +10,6 @@ export function register() {
   registerStreaming()
   registerSettings()
   registerMcpTools()
+  registerMcpApps()
   registerThreads()
 }
