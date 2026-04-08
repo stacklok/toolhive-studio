@@ -4,7 +4,7 @@ import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import { Experimental_StdioMCPTransport } from '@ai-sdk/mcp/mcp-stdio'
 
-vi.mock('../logger', () => ({
+vi.mock('../../logger', () => ({
   default: {
     error: vi.fn(),
     warn: vi.fn(),
