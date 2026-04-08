@@ -19,6 +19,9 @@ import {
 export interface ChatSettingsThread {
   id: string
   title?: string
+  /** When true, auto-title generation will never overwrite this title. */
+  titleEditedByUser?: boolean
+  starred?: boolean
   messages: ChatUIMessage[]
   lastEditTimestamp: number
   createdAt: number

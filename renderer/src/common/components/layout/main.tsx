@@ -10,7 +10,7 @@ export function Main(props: { children: ReactNode; className?: string }) {
     <main
       {...props}
       className={twMerge(
-        'flex min-h-0 w-full flex-1 flex-col',
+        'relative flex min-h-0 w-full flex-1 flex-col',
         'h-[calc(100dvh-calc(var(--spacing)_*_16))] overflow-y-auto',
         'px-8 py-5',
         '[view-transition-name:main-content]',

@@ -39,11 +39,15 @@ async function warmupOllamaModel(): Promise<void> {
 }
 
 async function waitForPlaygroundReady(window: Page): Promise<void> {
-  const loadingText = window.getByText(/loading chat history/i)
-  // May never appear if already loaded
-  await loadingText
-    .waitFor({ state: 'hidden', timeout: 10_000 })
-    .catch(() => {})
+  // Wait past both the thread-list spinner (dots, no text) and the
+  // "Loading chat history..." phase by waiting for any interactive element
+  // that is visible in every possible ready state.
+  const readyLocator = window
+    .getByRole('button', { name: /configure your providers/i })
+    .or(window.getByTestId('model-selector'))
+    .or(window.getByPlaceholder(/type your message/i))
+
+  await readyLocator.first().waitFor({ state: 'visible', timeout: 15_000 })
 }
 
 async function openProviderSettingsDialog(window: Page): Promise<void> {
@@ -105,18 +109,7 @@ async function selectOllamaModel(window: Page): Promise<void> {
 
 async function clearPlaygroundState(window: Page): Promise<void> {
   await window.getByRole('link', { name: 'Playground' }).click()
-  await expect(
-    window.getByRole('heading', { name: 'Playground', level: 1 })
-  ).toBeVisible()
-
   await waitForPlaygroundReady(window)
-
-  const clearChatButton = window.getByRole('button', { name: /clear chat/i })
-  if (await clearChatButton.isVisible().catch(() => false)) {
-    await clearChatButton.click()
-    await window.getByRole('button', { name: /delete/i }).click()
-  }
-
   await removeOllamaProvider(window)
 }
 
@@ -189,9 +182,7 @@ test.describe('Playground chat with Ollama', () => {
     ).toBeVisible({ timeout: 30_000 })
 
     await window.getByRole('link', { name: 'Playground' }).click()
-    await expect(
-      window.getByRole('heading', { name: 'Playground', level: 1 })
-    ).toBeVisible()
+    await waitForPlaygroundReady(window)
 
     await openProviderSettingsDialog(window)
 

@@ -280,6 +280,46 @@ describe('threads writer/reader', () => {
     expect(thread!.title).toBe('Updated Title')
     expect(thread!.lastEditTimestamp).toBe(5000)
   })
+
+  it('writes and reads titleEditedByUser: true', () => {
+    writeThread({ ...sampleThread, titleEditedByUser: true })
+    const thread = readThread('thread-1')
+    expect(thread!.titleEditedByUser).toBe(true)
+  })
+
+  it('defaults titleEditedByUser to false when not set', () => {
+    writeThread(sampleThread)
+    const thread = readThread('thread-1')
+    expect(thread!.titleEditedByUser).toBe(false)
+  })
+
+  it('writes and reads starred: true', () => {
+    writeThread({ ...sampleThread, starred: true })
+    const thread = readThread('thread-1')
+    expect(thread!.starred).toBe(true)
+  })
+
+  it('defaults starred to false when not set', () => {
+    writeThread(sampleThread)
+    const thread = readThread('thread-1')
+    expect(thread!.starred).toBe(false)
+  })
+
+  it('preserves starred and titleEditedByUser through an overwrite', () => {
+    writeThread({ ...sampleThread, starred: true, titleEditedByUser: true })
+    // Overwrite with updated title but keep flags
+    writeThread({
+      ...sampleThread,
+      title: 'New title',
+      lastEditTimestamp: 9000,
+      starred: true,
+      titleEditedByUser: true,
+    })
+    const thread = readThread('thread-1')
+    expect(thread!.title).toBe('New title')
+    expect(thread!.starred).toBe(true)
+    expect(thread!.titleEditedByUser).toBe(true)
+  })
 })
 
 describe('shutdown writer/reader', () => {

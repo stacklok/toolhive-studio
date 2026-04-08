@@ -1,8 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { ChatInterface } from '@/features/chat/components/chat-interface'
+import { PlaygroundSidebar } from '@/features/chat/components/playground-sidebar'
 import { NotFound } from '@/common/components/not-found'
 import { usePermissions } from '@/common/contexts/permissions'
 import { PERMISSION_KEYS } from '@/common/contexts/permissions/permission-keys'
+import { usePlaygroundThreads } from '@/features/chat/hooks/use-playground-threads'
 
 export const Route = createFileRoute('/playground')({
   component: Playground,
@@ -15,5 +17,81 @@ function Playground() {
     return <NotFound />
   }
 
-  return <ChatInterface />
+  return <PlaygroundContent />
+}
+
+function PlaygroundContent() {
+  const {
+    threads,
+    activeThreadId,
+    isLoading,
+    hasThreads,
+    createThread,
+    selectThread,
+    deleteThread,
+    renameThread,
+    toggleStarThread,
+  } = usePlaygroundThreads()
+
+  if (isLoading) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="flex space-x-1">
+          <div
+            className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full
+              [animation-delay:-0.3s]"
+          />
+          <div
+            className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full
+              [animation-delay:-0.15s]"
+          />
+          <div
+            className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full"
+          />
+        </div>
+      </div>
+    )
+  }
+
+  const activeThread = hasThreads
+    ? threads.find((t) => t.id === activeThreadId)
+    : undefined
+
+  return (
+    <div className="absolute inset-0 flex">
+      {hasThreads && (
+        <PlaygroundSidebar
+          threads={threads}
+          activeThreadId={activeThreadId}
+          onSelectThread={selectThread}
+          onCreateThread={createThread}
+          onDeleteThread={deleteThread}
+          onRenameThread={renameThread}
+          onToggleStar={toggleStarThread}
+        />
+      )}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <ChatInterface
+          threadId={hasThreads ? activeThreadId : undefined}
+          threadTitle={activeThread?.title}
+          threadStarred={activeThread?.starred}
+          onRenameThread={
+            activeThreadId && hasThreads
+              ? (title) => renameThread(activeThreadId, title)
+              : undefined
+          }
+          onToggleStar={
+            activeThreadId && hasThreads
+              ? () => toggleStarThread(activeThreadId)
+              : undefined
+          }
+          onDeleteThread={
+            activeThreadId && hasThreads
+              ? () => deleteThread(activeThreadId)
+              : undefined
+          }
+        />
+      </div>
+    </div>
+  )
 }

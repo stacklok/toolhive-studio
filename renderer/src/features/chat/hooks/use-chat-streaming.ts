@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useEffect, useState } from 'react'
+import { useCallback, useMemo, useEffect, useState, useRef } from 'react'
 import { useChat } from '@ai-sdk/react'
 import { useQueryClient } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
@@ -10,7 +10,7 @@ import type { FileUIPart } from 'ai'
 import { trackEvent } from '@/common/lib/analytics'
 import { hasValidCredentials } from '../lib/utils'
 
-export function useChatStreaming() {
+export function useChatStreaming(externalThreadId?: string | null) {
   const queryClient = useQueryClient()
   const [isPersistentLoading, setIsPersistentLoading] = useState(true)
   const [persistentError, setPersistentError] = useState<string | null>(null)
@@ -29,7 +29,7 @@ export function useChatStreaming() {
     error: threadError,
     loadMessages: loadThreadMessages,
     clearMessages: clearThreadMessages,
-  } = useThreadManagement()
+  } = useThreadManagement(externalThreadId)
 
   const ipcTransport = useMemo(
     () =>
@@ -83,6 +83,93 @@ export function useChatStreaming() {
     isSettingsLoading ||
     isPersistentLoading ||
     isThreadLoading
+
+  // Publish a signal as soon as the user submits a message so the sidebar appears immediately
+  useEffect(() => {
+    if (status === 'submitted' && currentThreadId) {
+      queryClient.setQueryData(['chat', 'threadStarted'], {
+        threadId: currentThreadId,
+        timestamp: Date.now(),
+      })
+    }
+  }, [status, currentThreadId, queryClient])
+
+  // React to streaming completion: publish a signal and auto-title the thread via LLM
+  const prevStatusRef = useRef(status)
+  const titledThreadsRef = useRef<Set<string>>(new Set())
+
+  /** Extracts plain text from a ChatUIMessage's parts */
+  function extractUserText(msg: ChatUIMessage): string {
+    return msg.parts
+      .filter((p): p is { type: 'text'; text: string } => p.type === 'text')
+      .map((p) => p.text)
+      .join(' ')
+      .trim()
+  }
+
+  /** Emits the streamingComplete cache signal so subscribers refresh the thread */
+  function signalStreamingComplete(threadId: string) {
+    queryClient.setQueryData(['chat', 'streamingComplete'], {
+      threadId,
+      timestamp: Date.now(),
+    })
+  }
+
+  useEffect(() => {
+    const wasStreaming =
+      prevStatusRef.current === 'streaming' ||
+      prevStatusRef.current === 'submitted'
+    prevStatusRef.current = status
+
+    if (!wasStreaming || status === 'streaming' || status === 'submitted')
+      return
+    if (!currentThreadId) return
+
+    // Publish initial signal so message list / loading state updates
+    signalStreamingComplete(currentThreadId)
+
+    // Auto-title: run once per thread per session (guard against concurrent calls)
+    if (titledThreadsRef.current.has(currentThreadId)) return
+    titledThreadsRef.current.add(currentThreadId)
+
+    const threadIdAtCompletion = currentThreadId
+
+    window.electronAPI.chat
+      .getThread(threadIdAtCompletion)
+      .then(async (thread) => {
+        // Respect manually-edited titles
+        if (thread?.titleEditedByUser) return
+
+        // Optimistic placeholder: first user-message text, visible immediately
+        const firstUserMsg = messages.find((m) => m.role === 'user')
+        if (firstUserMsg) {
+          const optimisticTitle = extractUserText(firstUserMsg).slice(0, 60)
+          if (optimisticTitle) {
+            await window.electronAPI.chat.updateThread(threadIdAtCompletion, {
+              title: optimisticTitle,
+              titleEditedByUser: false,
+            })
+            signalStreamingComplete(threadIdAtCompletion)
+          }
+        }
+
+        return window.electronAPI.chat.generateThreadTitle(threadIdAtCompletion)
+      })
+      .then((result) => {
+        if (result && !result.success) {
+          log.warn('[useChatStreaming] Title generation failed:', result.error)
+          return
+        }
+        // Re-publish after LLM title is written to DB
+        if (result?.success) {
+          signalStreamingComplete(threadIdAtCompletion)
+        }
+      })
+      .catch((err) =>
+        log.error('[useChatStreaming] Failed to auto-title thread:', err)
+      )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, currentThreadId, queryClient])
 
   const clearMessages = useCallback(async () => {
     try {
@@ -181,6 +268,7 @@ export function useChatStreaming() {
       updateEnabledTools,
       loadPersistedSettings,
       isPersistentLoading,
+      currentThreadId,
     }
   }, [
     status,
@@ -196,5 +284,6 @@ export function useChatStreaming() {
     isPersistentLoading,
     clearError,
     stop,
+    currentThreadId,
   ])
 }

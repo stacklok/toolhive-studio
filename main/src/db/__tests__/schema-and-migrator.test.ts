@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import Database from 'better-sqlite3'
 import { up as applyInitialSchema } from '../migrations/001-initial-schema'
+import { up as applyMigration002 } from '../migrations/002-thread-title-flag'
+import { up as applyMigration003 } from '../migrations/003-thread-starred'
 
 vi.mock('electron', () => ({
   app: { getPath: vi.fn(() => ':memory:') },
@@ -143,6 +145,100 @@ describe('001-initial-schema', () => {
     expect(Buffer.isBuffer(row.api_key_enc)).toBe(true)
     expect(row.api_key_enc.toString()).toBe('secret-key')
     expect(row.endpoint_url_enc.toString()).toBe('https://example.com')
+  })
+})
+
+describe('002-thread-title-flag migration', () => {
+  let db: Database.Database
+
+  beforeEach(() => {
+    db = new Database(':memory:')
+    db.pragma('foreign_keys = ON')
+    applyInitialSchema(db)
+  })
+
+  afterEach(() => {
+    db.close()
+  })
+
+  it('adds the title_edited_by_user column to threads', () => {
+    applyMigration002(db)
+    const cols = db.prepare("PRAGMA table_info('threads')").all() as {
+      name: string
+    }[]
+    const names = cols.map((c) => c.name)
+    expect(names).toContain('title_edited_by_user')
+  })
+
+  it('defaults title_edited_by_user to 0 for existing rows', () => {
+    db.prepare(
+      "INSERT INTO threads (id, title, created_at, last_edit_timestamp) VALUES ('t1', 'Hello', 1000, 2000)"
+    ).run()
+
+    applyMigration002(db)
+
+    const row = db
+      .prepare('SELECT title_edited_by_user FROM threads WHERE id = ?')
+      .get('t1') as { title_edited_by_user: number }
+    expect(row.title_edited_by_user).toBe(0)
+  })
+
+  it('allows new rows to store title_edited_by_user = 1', () => {
+    applyMigration002(db)
+    db.prepare(
+      "INSERT INTO threads (id, title, created_at, last_edit_timestamp, title_edited_by_user) VALUES ('t2', 'Hi', 1000, 2000, 1)"
+    ).run()
+    const row = db
+      .prepare('SELECT title_edited_by_user FROM threads WHERE id = ?')
+      .get('t2') as { title_edited_by_user: number }
+    expect(row.title_edited_by_user).toBe(1)
+  })
+})
+
+describe('003-thread-starred migration', () => {
+  let db: Database.Database
+
+  beforeEach(() => {
+    db = new Database(':memory:')
+    db.pragma('foreign_keys = ON')
+    applyInitialSchema(db)
+  })
+
+  afterEach(() => {
+    db.close()
+  })
+
+  it('adds the starred column to threads', () => {
+    applyMigration003(db)
+    const cols = db.prepare("PRAGMA table_info('threads')").all() as {
+      name: string
+    }[]
+    const names = cols.map((c) => c.name)
+    expect(names).toContain('starred')
+  })
+
+  it('defaults starred to 0 for existing rows', () => {
+    db.prepare(
+      "INSERT INTO threads (id, title, created_at, last_edit_timestamp) VALUES ('t1', 'Hello', 1000, 2000)"
+    ).run()
+
+    applyMigration003(db)
+
+    const row = db
+      .prepare('SELECT starred FROM threads WHERE id = ?')
+      .get('t1') as { starred: number }
+    expect(row.starred).toBe(0)
+  })
+
+  it('allows new rows to store starred = 1', () => {
+    applyMigration003(db)
+    db.prepare(
+      "INSERT INTO threads (id, title, created_at, last_edit_timestamp, starred) VALUES ('t2', 'Fav', 1000, 2000, 1)"
+    ).run()
+    const row = db
+      .prepare('SELECT starred FROM threads WHERE id = ?')
+      .get('t2') as { starred: number }
+    expect(row.starred).toBe(1)
   })
 })
 
