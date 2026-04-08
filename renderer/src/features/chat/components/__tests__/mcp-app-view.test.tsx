@@ -89,8 +89,8 @@ function renderView(options: RenderViewOptions = {}) {
 
 /** Fire the iframe load event to trigger setupBridge. */
 function triggerIframeLoad() {
-  const iframe = screen.getAllByTitle(/MCP App:/i)[0]
-  fireEvent.load(iframe)
+  const [iframe] = screen.getAllByTitle(/MCP App:/i)
+  fireEvent.load(iframe!)
 }
 
 // ---------------------------------------------------------------------------
