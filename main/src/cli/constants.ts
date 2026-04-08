@@ -58,11 +58,14 @@ export function getShellRcFiles(): Record<string, string[]> {
   const home = homedir()
 
   return {
-    bash: [path.join(home, '.bashrc'), path.join(home, '.bash_profile')],
+    bash: [path.join(home, '.bashrc')],
     zsh: [path.join(home, '.zshrc')],
     fish: [path.join(home, '.config', 'fish', 'config.fish')],
   }
 }
+
+/** Legacy bash_profile path - no longer written to, but checked during cleanup and removal */
+export const LEGACY_BASH_PROFILE_PATH = path.join(homedir(), '.bash_profile')
 
 export const SHELL_PATH_ENTRY = 'export PATH="$HOME/.toolhive/bin:$PATH"'
 
