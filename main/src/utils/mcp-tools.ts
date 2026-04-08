@@ -5,6 +5,8 @@ import {
 import { type Tool } from 'ai'
 import { Experimental_StdioMCPTransport as StdioMCPTransport } from '@ai-sdk/mcp/mcp-stdio'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
+import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js'
+import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js'
 import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
 import log from '../logger'
 
@@ -99,6 +101,23 @@ export function createTransport(workload: CoreWorkload): MCPClientConfig {
   const configBuilder =
     transportConfigs[transportType] || transportConfigs.default
   return configBuilder()
+}
+
+/**
+ * Builds a raw SDK `Transport` for a workload. Unlike `createTransport`, this
+ * returns a concrete transport instance suitable for `Client.connect()` from
+ * `@modelcontextprotocol/sdk` rather than the AI SDK client config shape.
+ */
+export function buildRawTransport(workload: CoreWorkload): Transport {
+  const config = createTransport(workload)
+  // For streamable-http, createTransport already returns a real SDK transport instance.
+  if (config.transport instanceof StreamableHTTPClientTransport) {
+    return config.transport
+  }
+  // For SSE (and fallback), createTransport returns an AI SDK config object with
+  // { type: 'sse', url }. We need a real SSEClientTransport for Client.connect().
+  const urlString = workload.url || `http://localhost:${workload.port}/sse`
+  return new SSEClientTransport(new URL(urlString))
 }
 
 // Get available tools from a workload
