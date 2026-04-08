@@ -18,6 +18,9 @@ import type {
   DeleteApiV1BetaSecretsDefaultKeysByKeyData,
   DeleteApiV1BetaSecretsDefaultKeysByKeyErrors,
   DeleteApiV1BetaSecretsDefaultKeysByKeyResponses,
+  DeleteApiV1BetaSkillsBuildsByTagData,
+  DeleteApiV1BetaSkillsBuildsByTagErrors,
+  DeleteApiV1BetaSkillsBuildsByTagResponses,
   DeleteApiV1BetaSkillsByNameData,
   DeleteApiV1BetaSkillsByNameErrors,
   DeleteApiV1BetaSkillsByNameResponses,
@@ -53,6 +56,9 @@ import type {
   GetApiV1BetaSecretsDefaultKeysErrors,
   GetApiV1BetaSecretsDefaultKeysResponses,
   GetApiV1BetaSecretsDefaultResponses,
+  GetApiV1BetaSkillsBuildsData,
+  GetApiV1BetaSkillsBuildsErrors,
+  GetApiV1BetaSkillsBuildsResponses,
   GetApiV1BetaSkillsByNameData,
   GetApiV1BetaSkillsByNameErrors,
   GetApiV1BetaSkillsByNameResponses,
@@ -700,6 +706,36 @@ export const postApiV1BetaSkillsBuild = <ThrowOnError extends boolean = false>(
       ...options.headers,
     },
   })
+
+/**
+ * List locally-built skill artifacts
+ *
+ * Get a list of all locally-built OCI skill artifacts in the local store
+ */
+export const getApiV1BetaSkillsBuilds = <ThrowOnError extends boolean = false>(
+  options?: Options<GetApiV1BetaSkillsBuildsData, ThrowOnError>
+) =>
+  (options?.client ?? client).get<
+    GetApiV1BetaSkillsBuildsResponses,
+    GetApiV1BetaSkillsBuildsErrors,
+    ThrowOnError
+  >({ url: '/api/v1beta/skills/builds', ...options })
+
+/**
+ * Delete a locally-built skill artifact
+ *
+ * Remove a locally-built OCI skill artifact and its blobs from the local store
+ */
+export const deleteApiV1BetaSkillsBuildsByTag = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<DeleteApiV1BetaSkillsBuildsByTagData, ThrowOnError>
+) =>
+  (options.client ?? client).delete<
+    DeleteApiV1BetaSkillsBuildsByTagResponses,
+    DeleteApiV1BetaSkillsBuildsByTagErrors,
+    ThrowOnError
+  >({ url: '/api/v1beta/skills/builds/{tag}', ...options })
 
 /**
  * Push a skill

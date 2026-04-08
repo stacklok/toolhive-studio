@@ -1027,6 +1027,16 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
    * Publish lists ports to publish to the host in format "hostPort:containerPort"
    */
   publish?: Array<string>
+  /**
+   * RegistryAPIURL is the registry API URL that served this server's metadata.
+   * Empty when the server was not discovered via registry lookup.
+   */
+  registry_api_url?: string
+  /**
+   * RegistryURL is the registry URL that served this server's metadata.
+   * Empty when the server was not discovered via registry lookup.
+   */
+  registry_url?: string
   remote_auth_config?: GithubComStacklokToolhivePkgAuthRemoteConfig
   /**
    * RemoteURL is the URL of the remote MCP server (if running remotely)
@@ -1208,6 +1218,29 @@ export type GithubComStacklokToolhivePkgSkillsInstalledSkill = {
    * Tag is the OCI tag (e.g. v1.0.0).
    */
   tag?: string
+}
+
+export type GithubComStacklokToolhivePkgSkillsLocalBuild = {
+  /**
+   * Description is the skill description extracted from the artifact metadata, if available.
+   */
+  description?: string
+  /**
+   * Digest is the OCI digest of the artifact (sha256:...).
+   */
+  digest?: string
+  /**
+   * Name is the skill name extracted from the artifact metadata, if available.
+   */
+  name?: string
+  /**
+   * Tag is the OCI tag or name used to reference the artifact.
+   */
+  tag?: string
+  /**
+   * Version is the skill version extracted from the artifact metadata, if available.
+   */
+  version?: string
 }
 
 /**
@@ -1576,6 +1609,16 @@ export type PkgApiV1UpdateRegistryResponse = {
    * Registry type after update
    */
   type?: string
+}
+
+/**
+ * Response containing a list of locally-built OCI skill artifacts
+ */
+export type PkgApiV1BuildListResponse = {
+  /**
+   * List of locally-built OCI skill artifacts
+   */
+  builds?: Array<GithubComStacklokToolhivePkgSkillsLocalBuild>
 }
 
 /**
@@ -3700,6 +3743,69 @@ export type PostApiV1BetaSkillsBuildResponses = {
 
 export type PostApiV1BetaSkillsBuildResponse =
   PostApiV1BetaSkillsBuildResponses[keyof PostApiV1BetaSkillsBuildResponses]
+
+export type GetApiV1BetaSkillsBuildsData = {
+  body?: never
+  path?: never
+  query?: never
+  url: '/api/v1beta/skills/builds'
+}
+
+export type GetApiV1BetaSkillsBuildsErrors = {
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type GetApiV1BetaSkillsBuildsError =
+  GetApiV1BetaSkillsBuildsErrors[keyof GetApiV1BetaSkillsBuildsErrors]
+
+export type GetApiV1BetaSkillsBuildsResponses = {
+  /**
+   * OK
+   */
+  200: PkgApiV1BuildListResponse
+}
+
+export type GetApiV1BetaSkillsBuildsResponse =
+  GetApiV1BetaSkillsBuildsResponses[keyof GetApiV1BetaSkillsBuildsResponses]
+
+export type DeleteApiV1BetaSkillsBuildsByTagData = {
+  body?: never
+  path: {
+    /**
+     * Artifact tag
+     */
+    tag: string
+  }
+  query?: never
+  url: '/api/v1beta/skills/builds/{tag}'
+}
+
+export type DeleteApiV1BetaSkillsBuildsByTagErrors = {
+  /**
+   * Not Found
+   */
+  404: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type DeleteApiV1BetaSkillsBuildsByTagError =
+  DeleteApiV1BetaSkillsBuildsByTagErrors[keyof DeleteApiV1BetaSkillsBuildsByTagErrors]
+
+export type DeleteApiV1BetaSkillsBuildsByTagResponses = {
+  /**
+   * No Content
+   */
+  204: string
+}
+
+export type DeleteApiV1BetaSkillsBuildsByTagResponse =
+  DeleteApiV1BetaSkillsBuildsByTagResponses[keyof DeleteApiV1BetaSkillsBuildsByTagResponses]
 
 export type PostApiV1BetaSkillsPushData = {
   /**
