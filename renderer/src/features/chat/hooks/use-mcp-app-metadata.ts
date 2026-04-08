@@ -28,21 +28,17 @@ export function useMcpAppMetadata(): Record<string, ToolUiMetadataEntry> {
       })
 
     // Listen for updates emitted at the start of each streaming session
-    const handleMetadataUpdate = (...args: unknown[]) => {
-      const data = args[0] as Record<string, ToolUiMetadataEntry>
-      if (data && typeof data === 'object') {
-        setMetadata(data)
+    const unsubscribe = window.electronAPI.on(
+      'chat:stream:tool-ui-metadata',
+      (...args: unknown[]) => {
+        const data = args[0] as Record<string, ToolUiMetadataEntry>
+        if (data && typeof data === 'object') {
+          setMetadata(data)
+        }
       }
-    }
+    )
 
-    window.electronAPI.on('chat:stream:tool-ui-metadata', handleMetadataUpdate)
-
-    return () => {
-      window.electronAPI.removeListener(
-        'chat:stream:tool-ui-metadata',
-        handleMetadataUpdate
-      )
-    }
+    return unsubscribe
   }, [])
 
   return metadata

@@ -10,12 +10,15 @@ const sampleMetadata: Record<string, ToolUiMetadataEntry> = {
 }
 
 describe('useMcpAppMetadata', () => {
+  const mockUnsubscribe = vi.fn()
+
   beforeEach(() => {
     window.electronAPI.chat = {
       ...window.electronAPI.chat,
       getToolUiMetadata: vi.fn().mockResolvedValue({}),
     }
-    window.electronAPI.on = vi.fn()
+    mockUnsubscribe.mockClear()
+    window.electronAPI.on = vi.fn().mockReturnValue(mockUnsubscribe)
     window.electronAPI.removeListener = vi.fn()
   })
 
@@ -113,17 +116,13 @@ describe('useMcpAppMetadata', () => {
     expect(result.current).toEqual(updated)
   })
 
-  it('calls removeListener with the same channel and handler on unmount', () => {
+  it('calls the unsubscribe function returned by electronAPI.on on unmount', () => {
     const { unmount } = renderHook(() => useMcpAppMetadata())
 
-    const onCalls = vi.mocked(window.electronAPI.on).mock.calls
-    const [, registeredHandler] = onCalls.find(([ch]) => ch === CHANNEL) ?? []
+    expect(mockUnsubscribe).not.toHaveBeenCalled()
 
     unmount()
 
-    expect(window.electronAPI.removeListener).toHaveBeenCalledWith(
-      CHANNEL,
-      registeredHandler
-    )
+    expect(mockUnsubscribe).toHaveBeenCalledOnce()
   })
 })
