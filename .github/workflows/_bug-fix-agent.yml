@@ -1,0 +1,258 @@
+name: Bug Fix Agent
+
+on:
+  workflow_call:
+    inputs:
+      issue-number:
+        required: true
+        type: number
+
+concurrency:
+  group: bug-fix-${{ inputs.issue-number }}
+  cancel-in-progress: true
+
+jobs:
+  fix:
+    name: TDD Bug Fix
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3
+        with:
+          app-id: ${{ secrets.TOOLHIVE_STUDIO_CI_APP_ID }}
+          private-key: ${{ secrets.TOOLHIVE_STUDIO_CI_APP_KEY }}
+
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Check for existing PR or previous failure
+        id: guard
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          BRANCH="fix/auto-${{ inputs.issue-number }}"
+          BASE="${{ github.event.repository.default_branch }}"
+          EXISTING_PR=$(gh pr list --head "$BRANCH" --base "$BASE" --state open --json number --jq '.[0].number // empty')
+
+          if [ -n "$EXISTING_PR" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "::notice::Open PR #${EXISTING_PR} already exists for issue #${{ inputs.issue-number }} — skipping"
+            exit 0
+          fi
+
+          # Check if the agent already gave up on this issue (final comment exists)
+          GAVE_UP=$(gh api "repos/${{ github.repository }}/issues/${{ inputs.issue-number }}/comments" \
+            --paginate --jq '[.[] | select(.body | contains("Bug Fix Agent"))] | length' 2>/dev/null || echo "0")
+          if [ "$GAVE_UP" -gt "0" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "::notice::Agent already exhausted all attempts for issue #${{ inputs.issue-number }} — skipping"
+            exit 0
+          fi
+
+          echo "skip=false" >> $GITHUB_OUTPUT
+
+      - name: Fetch issue body
+        if: steps.guard.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh issue view ${{ inputs.issue-number }} --json title,body,labels \
+            --template '# {{.title}}{{"\n\n"}}{{.body}}' > issue-body.md
+
+      - name: Setup
+        if: steps.guard.outputs.skip != 'true'
+        uses: ./.github/actions/setup
+
+      - name: Install Claude Code
+        if: steps.guard.outputs.skip != 'true'
+        run: pnpm add -g @anthropic-ai/claude-code
+
+      - name: 'TDD Bug Fix (up to 3 attempts)'
+        id: tdd
+        if: steps.guard.outputs.skip != 'true'
+        continue-on-error: true
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          BUG_ISSUE_NUMBER: ${{ inputs.issue-number }}
+        run: |
+          MAX_ATTEMPTS=3
+          SUCCESS=false
+
+          for ATTEMPT in $(seq 1 $MAX_ATTEMPTS); do
+            echo "::group::Attempt $ATTEMPT of $MAX_ATTEMPTS"
+
+            # Clean up previous attempt artifacts
+            rm -f bug-analysis.md pr-body.md fix-title.txt
+            git checkout -- . 2>/dev/null || true
+            git clean -fd -- '**/*.ts' '**/*.tsx' 2>/dev/null || true
+
+            # --- Phase 1: Analyze & Write Failing Test (Opus) ---
+            echo "::notice::Phase 1 — Writing failing test (attempt $ATTEMPT)"
+            if ! claude -p --model opus \
+              --dangerously-skip-permissions \
+              --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(cat *),Bash(ls *)" \
+              --max-turns 50 \
+              "Read .claude/skills/bug-fix-tdd/SKILL.md and follow it.
+               Read issue-body.md for the bug report.
+
+               Your task (Phase 1 — Analysis & Test):
+               1. Analyze the bug report: understand description, steps to reproduce, expected vs actual behavior.
+               2. Search the codebase to find the relevant source code.
+               3. Write a unit test that reproduces the bug — it MUST FAIL when you run it.
+               4. Run the test with: pnpm run test:nonInteractive -- <test-file-path>
+               5. Verify the test fails FOR THE RIGHT REASON (not import errors or unrelated failures).
+               6. If the test passes (bug not reproduced), try a different approach (max 5 attempts).
+
+               Output:
+               - The test file in the correct __tests__/ directory.
+               - bug-analysis.md with your findings (follow the format in the skill).
+
+               Do NOT modify any source files. Only create/edit test files and bug-analysis.md."; then
+              echo "::warning::Phase 1 failed on attempt $ATTEMPT"
+              echo "::endgroup::"
+              continue
+            fi
+
+            # --- Hard gate: verify test fails ---
+            if [ ! -f bug-analysis.md ]; then
+              echo "::warning::bug-analysis.md not found — skipping attempt $ATTEMPT"
+              echo "::endgroup::"
+              continue
+            fi
+
+            TEST_FILE=$(grep "^Test file:" bug-analysis.md | sed 's/^Test file: //')
+            if [ -z "$TEST_FILE" ]; then
+              echo "::warning::No 'Test file:' line found in bug-analysis.md — skipping attempt $ATTEMPT"
+              echo "::endgroup::"
+              continue
+            fi
+
+            if pnpm run test:nonInteractive -- "$TEST_FILE" 2>&1; then
+              echo "::warning::Test passed (bug not reproduced) — skipping attempt $ATTEMPT"
+              echo "::endgroup::"
+              continue
+            fi
+
+            echo "::notice::Test fails as expected — proceeding to Phase 2"
+
+            # --- Phase 2: Implement Fix (Sonnet) ---
+            export BUG_TEST_FILE="$TEST_FILE"
+            echo "::notice::Phase 2 — Implementing fix (attempt $ATTEMPT)"
+            if ! claude -p --model sonnet \
+              --dangerously-skip-permissions \
+              --allowedTools "Read,Grep,Glob,Edit,Bash(pnpm run test:nonInteractive *),Bash(pnpm run lint),Bash(pnpm run type-check),Bash(cat *),Bash(ls *)" \
+              --max-turns 80 \
+              "Read .claude/skills/bug-fix-tdd/SKILL.md and bug-analysis.md.
+
+               Your task (Phase 2 — Fix):
+               1. Read the failing test and understand what it expects.
+               2. Apply the MINIMUM fix to make the test pass.
+               3. Run the test to verify it passes: pnpm run test:nonInteractive -- $BUG_TEST_FILE
+               4. Run the full test suite: pnpm run test:nonInteractive
+               5. Run pnpm run lint and pnpm run type-check.
+               6. If any check fails, adjust the fix (max 5 attempts).
+               7. Write pr-body.md (include 'Fixes #$BUG_ISSUE_NUMBER') and fix-title.txt.
+
+               Do NOT run git, gh, or modify .env files.
+               Do NOT over-engineer — apply the smallest change that fixes the bug."; then
+              echo "::warning::Phase 2 failed on attempt $ATTEMPT"
+              echo "::endgroup::"
+              continue
+            fi
+
+            # --- Hard gate: verify all checks pass ---
+            if pnpm run test:nonInteractive && pnpm run lint && pnpm run type-check; then
+              echo "::notice::All checks pass on attempt $ATTEMPT"
+              SUCCESS=true
+              echo "::endgroup::"
+              break
+            else
+              echo "::warning::Verification failed on attempt $ATTEMPT"
+              echo "::endgroup::"
+              continue
+            fi
+          done
+
+          if [ "$SUCCESS" = "true" ]; then
+            echo "result=success" >> $GITHUB_OUTPUT
+            echo "test_file=$TEST_FILE" >> $GITHUB_OUTPUT
+          else
+            echo "result=failure" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for changes
+        if: steps.guard.outputs.skip != 'true' && steps.tdd.outputs.result == 'success'
+        id: changes
+        run: |
+          if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard -- '*.ts' '*.tsx')" ]; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create branch and commit
+        if: steps.guard.outputs.skip != 'true' && steps.tdd.outputs.result == 'success' && steps.changes.outputs.has_changes == 'true'
+        id: push
+        run: |
+          ISSUE_NUM="${{ inputs.issue-number }}"
+          BRANCH="fix/auto-${ISSUE_NUM}"
+          TITLE=$(cat fix-title.txt 2>/dev/null || echo "fix: auto-fix for #${ISSUE_NUM}")
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add -A -- '**/*.ts' '**/*.tsx'
+          git diff --cached --quiet && exit 0
+          git commit -m "$TITLE"
+          git push -u origin "$BRANCH"
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        if: steps.guard.outputs.skip != 'true' && steps.tdd.outputs.result == 'success' && steps.changes.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          BRANCH="${{ steps.push.outputs.branch }}"
+          BASE="${{ github.event.repository.default_branch }}"
+          TITLE=$(cat fix-title.txt 2>/dev/null || echo "fix: auto-fix for #${{ inputs.issue-number }}")
+
+          if [ ! -f pr-body.md ]; then
+            echo "Automated fix for #${{ inputs.issue-number }}." > pr-body.md
+          fi
+
+          gh label create auto-fix --description "Automated bug fix by TDD agent" --color 0E8A16 2>/dev/null || true
+          gh pr create \
+            --title "$TITLE" \
+            --body-file pr-body.md \
+            --base "$BASE" \
+            --head "$BRANCH" \
+            --label "auto-fix"
+
+      - name: Comment on issue (all attempts failed)
+        if: >-
+          always()
+          && steps.guard.outputs.skip != 'true'
+          && steps.tdd.outputs.result == 'failure'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          if [ -f bug-analysis.md ]; then
+            ANALYSIS=$(cat bug-analysis.md)
+          else
+            ANALYSIS="The agent could not analyze this bug. The issue may be too vague or involve behavior that cannot be captured in a unit test."
+          fi
+
+          printf '## Bug Fix Agent — Automated Analysis\n\n%s\n\n---\n*Automated analysis by Claude Code TDD Agent. All 3 attempts exhausted. A developer will review this issue manually.*\n' \
+            "$ANALYSIS" > /tmp/comment-body.md
+
+          gh issue comment "${{ inputs.issue-number }}" --body-file /tmp/comment-body.md

@@ -1,0 +1,19 @@
+name: Bug Fix (On Label)
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: read
+
+jobs:
+  bug-fix:
+    name: Bug Fix Agent
+    if: >-
+      github.event.label.name == 'auto-fix'
+      && contains(github.event.issue.labels.*.name, 'Bug')
+    uses: ./.github/workflows/_bug-fix-agent.yml
+    with:
+      issue-number: ${{ github.event.issue.number }}
+    secrets: inherit

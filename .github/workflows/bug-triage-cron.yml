@@ -1,0 +1,173 @@
+name: Bug Triage (Cron)
+
+on:
+  schedule:
+    - cron: '0 8 * * 1-5' # Weekdays at 08:00 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: bug-triage
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  triage:
+    name: Triage Bug Issues
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3
+        with:
+          app-id: ${{ secrets.TOOLHIVE_STUDIO_CI_APP_ID }}
+          private-key: ${{ secrets.TOOLHIVE_STUDIO_CI_APP_KEY }}
+
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Fetch candidate bug issues
+        id: candidates
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          # Get open Bug issues without auto-fix or auto-fix-skip labels
+          ISSUES=$(gh issue list \
+            --label "Bug" \
+            --state open \
+            --limit 50 \
+            --json number,title,body,labels,comments \
+            --jq '[.[] | select(
+              (.labels | map(.name) | (contains(["auto-fix"]) or contains(["auto-fix-skip"])) | not)
+              and (.comments | length == 0)
+            )]')
+
+          COUNT=$(echo "$ISSUES" | jq 'length')
+          echo "::notice::Found $COUNT candidate bug issues"
+
+          if [ "$COUNT" -eq "0" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "$ISSUES" > candidate-issues.json
+          fi
+
+      - name: Filter issues with existing PRs
+        id: filter
+        if: steps.candidates.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          # Batch-fetch all open fix/auto-* PRs in a single API call
+          OPEN_BRANCHES=$(gh pr list --state open --limit 200 --json headRefName \
+            --jq '[.[].headRefName | select(startswith("fix/auto-"))]')
+
+          FILTERED="[]"
+          for NUM in $(jq -r '.[].number' candidate-issues.json); do
+            # Skip if a fix PR already exists
+            BRANCH="fix/auto-${NUM}"
+            if echo "$OPEN_BRANCHES" | jq -e "index(\"$BRANCH\")" > /dev/null 2>&1; then
+              echo "::notice::Issue #${NUM}: skipped — open PR exists"
+              continue
+            fi
+
+            # Skip if a cross-repo issue/PR was closed or merged (fix lives in another repo)
+            CROSS_REF_CLOSED=$(gh api "repos/${{ github.repository }}/issues/${NUM}/timeline" --paginate 2>/dev/null \
+              | jq '[.[] | select(.event == "cross-referenced" and .source.issue.state == "closed")] | length' 2>/dev/null || echo "0")
+            if [ "$CROSS_REF_CLOSED" -gt "0" ]; then
+              echo "::notice::Issue #${NUM}: skipped — cross-referenced issue/PR closed in another repo"
+              continue
+            fi
+
+            ISSUE=$(jq ".[] | select(.number == $NUM)" candidate-issues.json)
+            FILTERED=$(echo "$FILTERED" | jq ". + [$ISSUE]")
+          done
+
+          echo "$FILTERED" > filtered-issues.json
+          COUNT=$(echo "$FILTERED" | jq 'length')
+          echo "::notice::$COUNT issues remain after PR dedup"
+
+          if [ "$COUNT" -eq "0" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install Node.js
+        if: steps.candidates.outputs.skip != 'true' && steps.filter.outputs.skip != 'true'
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: 24
+
+      - name: Install Claude Code
+        if: steps.candidates.outputs.skip != 'true' && steps.filter.outputs.skip != 'true'
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Evaluate issues with Claude (Sonnet)
+        if: steps.candidates.outputs.skip != 'true' && steps.filter.outputs.skip != 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          # Prepare issue summaries for Claude (limit to first 10 candidates)
+          jq -r '.[:10][] | "--- Issue #\(.number): \(.title)\n\(.body)\n"' filtered-issues.json > issues-for-triage.md
+
+          claude -p --model sonnet \
+            --dangerously-skip-permissions \
+            --allowedTools "Read,Grep,Glob" \
+            --max-turns 20 \
+            "Read issues-for-triage.md. These are open bug reports for a React + Electron desktop app.
+
+             Analyze each bug and decide if it is suitable for AUTOMATED fixing by an AI agent that:
+             - Can only write and run unit tests (Vitest + Testing Library + MSW)
+             - Cannot launch the Electron app or do visual testing
+             - Cannot test IPC, native modules, or platform-specific behavior
+
+             A bug IS suitable if:
+             - Has a clear error message or stack trace
+             - Mentions a specific component, page, or feature by name
+             - Is a UI bug (wrong text, missing state, incorrect condition, wrong rendering)
+             - Has clear steps to reproduce
+             - Can be reproduced in a jsdom unit test
+
+             A bug is NOT suitable if:
+             - Mentions IPC, Electron main process, or platform-specific behavior
+             - Involves timing, race conditions, or flaky behavior
+             - Is vague or lacks reproduction steps
+             - Requires manual testing or visual verification
+             - Involves packaging, code signing, or native modules
+             - Requires launching the app or E2E testing
+             - References a fix already merged or in progress in another repository (e.g., stacklok/toolhive). If the bug is caused by an upstream dependency and the fix lives outside this repo, it is NOT suitable.
+             - Mentions that the root cause is in a backend, CLI, or server component outside this React/Electron codebase
+
+             Search the codebase with Grep/Glob to verify the mentioned components/features exist.
+
+             Output ONLY a JSON array to triage-results.json, one object per issue:
+             [{\"issue\": <number>, \"suitable\": true/false, \"reason\": \"<one line>\"}]
+
+             Write the file triage-results.json with this array. Nothing else."
+
+      - name: Apply auto-fix label (max 3 per run)
+        if: steps.candidates.outputs.skip != 'true' && steps.filter.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          if [ ! -f triage-results.json ]; then
+            echo "::warning::triage-results.json not found — skipping label assignment"
+            exit 0
+          fi
+
+          SUITABLE=$(jq -r '[.[] | select(.suitable == true)] | .[:3]' triage-results.json)
+          COUNT=$(echo "$SUITABLE" | jq 'length')
+          echo "::notice::Labeling $COUNT issues as auto-fix"
+
+          echo "$SUITABLE" | jq -c '.[]' | while IFS= read -r ROW; do
+            NUM=$(echo "$ROW" | jq -r '.issue')
+            REASON=$(echo "$ROW" | jq -r '.reason')
+            echo "::notice::Issue #${NUM}: ${REASON}"
+            gh issue edit "$NUM" --add-label "auto-fix"
+          done
