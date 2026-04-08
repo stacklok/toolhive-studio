@@ -22,6 +22,7 @@ import { REMOTE_MCP_AUTH_TYPES } from '@/common/lib/form-schema-mcp'
 import { FormFieldsProxy } from './form-fields-proxy'
 import { Button } from '../ui/button'
 import { SecretStoreCombobox } from '../secrets/secret-store-combobox'
+import { DOCS_BASE_URL } from '@common/app-info'
 
 function FormFieldRemoteAuthType({
   control,
@@ -42,7 +43,7 @@ function FormFieldRemoteAuthType({
               <a
                 rel="noopener noreferrer"
                 className="flex cursor-pointer items-center gap-1 underline"
-                href="https://docs.stacklok.com/toolhive/guides-ui/run-mcp-servers?custom-type=custom_remote#install-a-custom-mcp-server"
+                href={`${DOCS_BASE_URL}/guides-ui/run-mcp-servers?custom-type=custom_remote#install-a-custom-mcp-server`}
                 target="_blank"
               >
                 documentation <ExternalLinkIcon size={12} />

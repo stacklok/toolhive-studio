@@ -3,6 +3,7 @@ import path from 'node:path'
 import { existsSync, writeFileSync, unlinkSync, mkdirSync } from 'node:fs'
 import { homedir } from 'node:os'
 import log from './logger'
+import { APP_NAME, AUTO_LAUNCH_DESKTOP_FILENAME } from '@common/app-info'
 
 interface DesktopEntry {
   Type: string
@@ -17,12 +18,12 @@ interface DesktopEntry {
 export function createDesktopEntry(execPath: string): string {
   const entry: DesktopEntry = {
     Type: 'Application',
-    Name: 'ToolHive',
+    Name: APP_NAME,
     Exec: `"${execPath}" --hidden`,
     Hidden: 'false',
     NoDisplay: 'false',
     'X-GNOME-Autostart-enabled': 'true',
-    Comment: 'ToolHive Auto-Launch',
+    Comment: `${APP_NAME} Auto-Launch`,
   }
 
   return Object.entries(entry)
@@ -50,7 +51,10 @@ export function setAutoLaunch(enabled: boolean) {
 
   if (process.platform === 'linux') {
     const desktopPath = path.join(homedir(), '.config', 'autostart')
-    const desktopFile = path.join(desktopPath, 'toolhive-studio.desktop')
+    const desktopFile = path.join(
+      desktopPath,
+      `${AUTO_LAUNCH_DESKTOP_FILENAME}.desktop`
+    )
 
     if (enabled) {
       if (!existsSync(desktopPath)) {
@@ -83,7 +87,7 @@ export function getAutoLaunchStatus(): boolean {
       homedir(),
       '.config',
       'autostart',
-      'toolhive-studio.desktop'
+      `${AUTO_LAUNCH_DESKTOP_FILENAME}.desktop`
     )
     return existsSync(desktopFile)
   }

@@ -24,6 +24,7 @@ import { META_MCP_SERVER_NAME } from '@/common/lib/constants'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '@utils/feature-flags'
 import type { RegistryItem } from '@/features/registry-servers/types'
+import { DOCS_BASE_URL } from '@common/app-info'
 
 const SKIP_META_MCP = [
   DEPRECATED_MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
@@ -100,7 +101,7 @@ export default function RegistryRouteComponent() {
           actions={[
             <Button asChild key="docs">
               <a
-                href="https://docs.stacklok.com/toolhive/guides-ui/registry#registry-settings"
+                href={`${DOCS_BASE_URL}/guides-ui/registry#registry-settings`}
                 target="_blank"
                 rel="noreferrer"
               >

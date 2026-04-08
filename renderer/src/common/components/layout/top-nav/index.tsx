@@ -32,6 +32,7 @@ import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '@utils/feature-flags'
 import { usePermissions } from '@/common/contexts/permissions'
 import { PERMISSION_KEYS } from '@/common/contexts/permissions/permission-keys'
+import { APP_IDENTIFIER, DOCS_BASE_URL } from '@common/app-info'
 
 interface NavButtonProps {
   to: string
@@ -172,7 +173,7 @@ export function TopNav({ isEnterprise = false, ...props }: TopNavProps) {
             asChild
           >
             <a
-              href="https://docs.stacklok.com/toolhive/enterprise?utm_source=toolhive-studio"
+              href={`${DOCS_BASE_URL}/enterprise?utm_source=${APP_IDENTIFIER}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() =>

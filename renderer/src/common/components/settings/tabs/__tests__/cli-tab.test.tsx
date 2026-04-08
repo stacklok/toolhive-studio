@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { CliTab } from '../cli-tab'
+import { APP_DISPLAY_NAME, DOCS_BASE_URL } from '@common/app-info'
 
 const mockGetStatus = vi.fn()
 const mockGetPathStatus = vi.fn()
@@ -95,7 +96,7 @@ describe('CliTab', () => {
       expect(screen.getByText('Install Method')).toBeVisible()
       expect(screen.getByText('Symlink')).toBeVisible()
       expect(screen.getByText('Managed by')).toBeVisible()
-      expect(screen.getByText('ToolHive UI')).toBeVisible()
+      expect(screen.getByText(APP_DISPLAY_NAME)).toBeVisible()
     })
 
     it('displays CLI location with symlink target', async () => {
@@ -160,7 +161,9 @@ describe('CliTab', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText(/CLI is not currently managed by ToolHive UI/)
+          screen.getByText(
+            new RegExp(`CLI is not currently managed by ${APP_DISPLAY_NAME}`)
+          )
         ).toBeVisible()
       })
     })
@@ -303,10 +306,7 @@ describe('CliTab', () => {
       })
 
       const docsLink = screen.getByRole('link', { name: /docs/i })
-      expect(docsLink).toHaveAttribute(
-        'href',
-        'https://docs.stacklok.com/toolhive/guides-cli/'
-      )
+      expect(docsLink).toHaveAttribute('href', `${DOCS_BASE_URL}/guides-cli/`)
       expect(docsLink).toHaveAttribute('target', '_blank')
     })
 

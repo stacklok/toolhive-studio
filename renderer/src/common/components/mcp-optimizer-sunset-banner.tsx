@@ -1,9 +1,9 @@
 import { Info } from 'lucide-react'
 import { Alert, AlertDescription } from './ui/alert'
 import { useMcpOptimizerBannerVisible } from '@/common/hooks/use-mcp-optimizer-banner-visible'
+import { APP_IDENTIFIER, MCP_OPTIMIZER_SUNSET_BLOG_URL } from '@common/app-info'
 
-const BLOG_POST_URL =
-  'https://stacklok.com/blog/mcp-optimizer-is-now-built-into-the-stacklok-platform/?utm_source=toolhive-studio'
+const BLOG_POST_URL = `${MCP_OPTIMIZER_SUNSET_BLOG_URL}?utm_source=${APP_IDENTIFIER}`
 
 export function McpOptimizerSunsetBanner() {
   const isVisible = useMcpOptimizerBannerVisible()

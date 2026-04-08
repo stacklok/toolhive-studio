@@ -5,6 +5,7 @@ import { getHealthOptions } from '@common/api/generated/@tanstack/react-query.ge
 import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import log from 'electron-log/renderer'
+import { APP_NAME } from '@common/app-info'
 import { useNavigate } from '@tanstack/react-router'
 import { GenericError } from './error/generic-error'
 
@@ -55,7 +56,7 @@ export function StartingToolHive() {
           </div>
 
           <CardTitle className="text-xl font-semibold">
-            Starting ToolHive configuration
+            Starting {APP_NAME} configuration
           </CardTitle>
         </CardHeader>
 
@@ -64,7 +65,7 @@ export function StartingToolHive() {
             items-center justify-center space-y-4 overflow-y-auto px-8"
         >
           <div className="text-muted-foreground text-center">
-            We're checking your ToolHive configuration to ensure it's set up
+            We're checking your {APP_NAME} configuration to ensure it's set up
             correctly.
           </div>
           <Loader className="size-10 animate-spin [animation-duration:1.5s]" />

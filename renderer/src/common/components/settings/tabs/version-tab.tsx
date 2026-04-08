@@ -18,6 +18,7 @@ import { SettingsRow } from './components/settings-row'
 import { WrapperField } from './components/wrapper-field'
 import { usePermissions } from '@/common/contexts/permissions'
 import { PERMISSION_KEYS } from '@/common/contexts/permissions/permission-keys'
+import { APP_NAME, GITHUB_RELEASES_URL } from '@common/app-info'
 
 interface VersionTabProps {
   appInfo: AppVersionInfo | undefined
@@ -83,7 +84,7 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
   const handleManualUpdate = () => {
     const isLinux = window.electronAPI?.isLinux
     if (isLinux) {
-      window.open('https://github.com/stacklok/toolhive-studio/releases/latest')
+      window.open(GITHUB_RELEASES_URL)
 
       trackEvent('redirect to github releases', {
         pageName: '/settings/version',
@@ -148,7 +149,7 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
           <div className="flex flex-col gap-3 py-1">
             <WrapperField
               label="Downloads"
-              description="Automatically download and install ToolHive updates when a new release is available."
+              description={`Automatically download and install ${APP_NAME} updates when a new release is available.`}
               htmlFor="auto-update"
             >
               <Switch

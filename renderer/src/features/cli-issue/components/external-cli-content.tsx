@@ -9,6 +9,7 @@ import { Button } from '@/common/components/ui/button'
 import { CodeBlockWithCopy } from '@/common/components/code-block-with-copy'
 import { getUninstallCommand, getSourceLabel } from '../lib/cli-issue-utils'
 import type { ExternalCliInfo } from '@common/types/cli'
+import { APP_DISPLAY_NAME, APP_NAME } from '@common/app-info'
 
 interface ExternalCliContentProps {
   cli: ExternalCliInfo
@@ -31,10 +32,10 @@ export function ExternalCliContent({
           <AlertTriangle className="text-destructive size-12" />
         </div>
         <CardTitle className="text-2xl font-semibold">
-          External ToolHive CLI Detected
+          External {APP_NAME} CLI Detected
         </CardTitle>
         <CardDescription>
-          ToolHive UI cannot run while an external CLI is installed.
+          {APP_DISPLAY_NAME} cannot run while an external CLI is installed.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -48,7 +49,7 @@ export function ExternalCliContent({
           </p>
         </div>
         <p className="text-muted-foreground text-sm">
-          ToolHive UI manages its own CLI installation to ensure version
+          {APP_DISPLAY_NAME} manages its own CLI installation to ensure version
           compatibility. Please uninstall the external CLI and click "Check
           Again".
         </p>
@@ -61,7 +62,7 @@ export function ExternalCliContent({
           </>
         ) : (
           <p className="text-muted-foreground text-sm">
-            Please manually remove the external ToolHive CLI installation.
+            Please manually remove the external {APP_NAME} CLI installation.
           </p>
         )}
         <Button

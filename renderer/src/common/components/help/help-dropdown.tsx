@@ -7,6 +7,13 @@ import {
 } from '@/common/components/ui/dropdown-menu'
 import { NavIconButton } from '@/common/components/layout/top-nav/nav-icon-button'
 import { useNewsletterModal } from '@/common/contexts/newsletter-modal-context'
+import {
+  DISCORD_URL,
+  DOCS_BASE_URL,
+  GITHUB_ISSUES_URL,
+  GITHUB_REPO_URL,
+  PRIVACY_POLICY_URL,
+} from '@common/app-info'
 
 export function HelpDropdown({ className }: { className?: string }) {
   const { openNewsletterModal } = useNewsletterModal()
@@ -21,7 +28,7 @@ export function HelpDropdown({ className }: { className?: string }) {
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem asChild>
           <a
-            href="https://docs.stacklok.com/toolhive"
+            href={DOCS_BASE_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="cursor-pointer"
@@ -31,7 +38,7 @@ export function HelpDropdown({ className }: { className?: string }) {
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <a
-            href="https://discord.gg/stacklok"
+            href={DISCORD_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="cursor-pointer"
@@ -41,7 +48,7 @@ export function HelpDropdown({ className }: { className?: string }) {
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <a
-            href="https://github.com/stacklok/toolhive-studio/issues"
+            href={GITHUB_ISSUES_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="cursor-pointer"
@@ -51,7 +58,7 @@ export function HelpDropdown({ className }: { className?: string }) {
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <a
-            href="https://github.com/stacklok/toolhive-studio"
+            href={GITHUB_REPO_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="cursor-pointer"
@@ -67,7 +74,7 @@ export function HelpDropdown({ className }: { className?: string }) {
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <a
-            href="https://www.iubenda.com/privacy-policy/78678281"
+            href={PRIVACY_POLICY_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="cursor-pointer"

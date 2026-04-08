@@ -5,6 +5,7 @@ import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
 import type { Permissions } from '@/common/contexts/permissions'
 import { PERMISSION_KEYS } from '@/common/contexts/permissions/permission-keys'
+import { APP_IDENTIFIER, DOCS_BASE_URL } from '@common/app-info'
 
 vi.mock('../window-controls', () => ({
   WindowControls: () => null,
@@ -88,7 +89,7 @@ describe('TopNav', () => {
         })
         expect(link).toHaveAttribute(
           'href',
-          'https://docs.stacklok.com/toolhive/enterprise?utm_source=toolhive-studio'
+          `${DOCS_BASE_URL}/enterprise?utm_source=${APP_IDENTIFIER}`
         )
       })
     })

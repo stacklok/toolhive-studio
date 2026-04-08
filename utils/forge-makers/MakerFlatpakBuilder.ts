@@ -9,7 +9,12 @@ import {
   flatpakFilesystemEntries,
   parseThvClients,
 } from '../flatpak-client-paths'
-import { FLATPAK_APP_ID as APP_ID } from '../../common/app-info'
+import {
+  EXECUTABLE_NAME,
+  FLATPAK_APP_ID as APP_ID,
+  FLATPAK_MODULE_DIR,
+  FLATPAK_WRAPPER_NAME,
+} from '../../common/app-info'
 
 const execFileAsync = promisify(execFile)
 const RUNTIME_VERSION = '24.08'
@@ -146,7 +151,7 @@ export default class MakerFlatpakBuilder extends MakerBase<
       runtime: 'org.freedesktop.Platform',
       'runtime-version': RUNTIME_VERSION,
       sdk: 'org.freedesktop.Sdk',
-      command: 'toolhive-wrapper',
+      command: FLATPAK_WRAPPER_NAME,
       'separate-locales': false,
       'finish-args': [
         '--share=ipc',
@@ -180,23 +185,23 @@ export default class MakerFlatpakBuilder extends MakerBase<
       ],
       modules: [
         {
-          name: 'toolhive',
+          name: FLATPAK_MODULE_DIR,
           buildsystem: 'simple',
           'build-commands': [
-            'mkdir -p ${FLATPAK_DEST}/toolhive',
-            'cp -a toolhive-app/. ${FLATPAK_DEST}/toolhive/',
-            'chmod +x ${FLATPAK_DEST}/toolhive/ToolHive',
-            'install -Dm755 toolhive-wrapper.sh ${FLATPAK_DEST}/bin/toolhive-wrapper',
+            `mkdir -p \${FLATPAK_DEST}/${FLATPAK_MODULE_DIR}`,
+            `cp -a toolhive-app/. \${FLATPAK_DEST}/${FLATPAK_MODULE_DIR}/`,
+            `chmod +x \${FLATPAK_DEST}/${FLATPAK_MODULE_DIR}/${EXECUTABLE_NAME}`,
+            `install -Dm755 ${FLATPAK_WRAPPER_NAME}.sh \${FLATPAK_DEST}/bin/${FLATPAK_WRAPPER_NAME}`,
             `install -Dm644 ${APP_ID}.desktop \${FLATPAK_DEST}/share/applications/\${FLATPAK_ID}.desktop`,
             `install -Dm644 ${APP_ID}.metainfo.xml \${FLATPAK_DEST}/share/metainfo/\${FLATPAK_ID}.metainfo.xml`,
             'install -Dm644 icon.png ${FLATPAK_DEST}/share/icons/hicolor/256x256/apps/${FLATPAK_ID}.png',
-            'patch-desktop-filename ${FLATPAK_DEST}/toolhive/resources/app.asar',
+            `patch-desktop-filename \${FLATPAK_DEST}/${FLATPAK_MODULE_DIR}/resources/app.asar`,
           ],
           sources: [
             { type: 'dir', path: appDir, dest: 'toolhive-app' },
             {
               type: 'file',
-              path: path.join(flatpakDir, 'toolhive-wrapper.sh'),
+              path: path.join(flatpakDir, `${FLATPAK_WRAPPER_NAME}.sh`),
             },
             {
               type: 'file',

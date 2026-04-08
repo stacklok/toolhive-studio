@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { McpOptimizerSunsetBanner } from '../mcp-optimizer-sunset-banner'
+import { MCP_OPTIMIZER_SUNSET_BLOG_URL } from '@common/app-info'
 
 const mockUseMcpOptimizerBannerVisible = vi.fn()
 vi.mock('@/common/hooks/use-mcp-optimizer-banner-visible', () => ({
@@ -44,7 +45,7 @@ describe('McpOptimizerSunsetBanner', () => {
       expect(link).toBeVisible()
       expect(link).toHaveAttribute(
         'href',
-        expect.stringContaining('stacklok.com/blog')
+        expect.stringContaining(MCP_OPTIMIZER_SUNSET_BLOG_URL)
       )
     })
 

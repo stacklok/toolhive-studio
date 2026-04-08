@@ -5,6 +5,7 @@ import {
 import { getAppVersion } from '../util'
 import log from '../logger'
 import * as Sentry from '@sentry/electron/main'
+import { GITHUB_PAGES_MANIFEST_URL, RELEASES_BASE_URL } from '@common/app-info'
 
 interface ReleasesJson {
   currentRelease: string
@@ -14,8 +15,7 @@ interface LatestManifest {
   tag: string
 }
 
-const GITHUB_PAGES_MANIFEST =
-  'https://stacklok.github.io/toolhive-studio/latest/index.json'
+const GITHUB_PAGES_MANIFEST = GITHUB_PAGES_MANIFEST_URL
 
 export function getChannel(currentVersion: string): string {
   const isPrerelease =
@@ -29,9 +29,9 @@ export function getManifestUrl(currentVersion: string): string {
   const channel = getChannel(currentVersion)
   switch (process.platform) {
     case 'darwin':
-      return `https://releases.toolhive.dev/${channel}/latest/darwin/${process.arch}/RELEASES.json`
+      return `${RELEASES_BASE_URL}/${channel}/latest/darwin/${process.arch}/RELEASES.json`
     case 'win32':
-      return `https://releases.toolhive.dev/${channel}/latest/win32/${process.arch}/RELEASES`
+      return `${RELEASES_BASE_URL}/${channel}/latest/win32/${process.arch}/RELEASES`
     default:
       return GITHUB_PAGES_MANIFEST
   }

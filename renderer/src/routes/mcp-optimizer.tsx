@@ -21,6 +21,7 @@ import { useEditServerDialog } from '@/features/mcp-servers/hooks/use-edit-serve
 import { WrapperDialogFormMcp } from '@/features/mcp-servers/components/wrapper-dialog-mcp'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
 import { useOptimizedGroupName } from '@/common/hooks/use-optimize-group-name'
+import { DOCS_BASE_URL } from '@common/app-info'
 
 export const Route = createFileRoute('/mcp-optimizer')({
   component: McpOptimizerRoute,
@@ -54,7 +55,7 @@ function McpOptimizerContent() {
                 rel="noopener noreferrer"
                 className="inline-flex cursor-pointer items-center gap-1
                   underline"
-                href="https://docs.stacklok.com/toolhive/guides-ui/mcp-optimizer"
+                href={`${DOCS_BASE_URL}/guides-ui/mcp-optimizer`}
                 target="_blank"
               >
                 documentation <ExternalLinkIcon size={12} />

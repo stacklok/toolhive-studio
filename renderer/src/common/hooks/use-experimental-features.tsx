@@ -14,6 +14,7 @@ import {
 import { getApiV1BetaWorkloadsByNameQueryKey } from '@common/api/generated/@tanstack/react-query.gen'
 import { ExternalLinkIcon } from 'lucide-react'
 import { trackEvent } from '../lib/analytics'
+import { DOCS_BASE_URL } from '@common/app-info'
 
 interface FeatureFlag {
   key: string
@@ -46,7 +47,7 @@ function formatFeatureFlagDescription(key: string): React.ReactNode {
         <a
           rel="noopener noreferrer"
           className="inline-flex cursor-pointer items-center gap-1 underline"
-          href="https://docs.stacklok.com/toolhive/guides-ui/mcp-optimizer"
+          href={`${DOCS_BASE_URL}/guides-ui/mcp-optimizer`}
           target="_blank"
         >
           documentation <ExternalLinkIcon size={12} />

@@ -19,8 +19,9 @@ import { Alert, AlertDescription } from '../../ui/alert'
 import { Separator } from '../../ui/separator'
 import { SettingsSectionTitle } from './components/settings-section-title'
 import { useAppVersion } from '@/common/hooks/use-app-version'
+import { APP_DISPLAY_NAME, DOCS_BASE_URL } from '@common/app-info'
 
-const CLI_DOCS_URL = 'https://docs.stacklok.com/toolhive/guides-cli/'
+const CLI_DOCS_URL = `${DOCS_BASE_URL}/guides-cli/`
 
 export function CliTab() {
   const { data: appInfo } = useAppVersion()
@@ -212,7 +213,7 @@ export function CliTab() {
           <>
             <SettingsRow label="Managed by">
               <span className="text-muted-foreground text-sm leading-5.5">
-                ToolHive UI
+                {APP_DISPLAY_NAME}
               </span>
             </SettingsRow>
             <Separator />
@@ -224,7 +225,7 @@ export function CliTab() {
         <Alert>
           <AlertCircle className="size-4" />
           <AlertDescription>
-            CLI is not currently managed by ToolHive UI. Click
+            CLI is not currently managed by {APP_DISPLAY_NAME}. Click
             &quot;Reinstall&quot; to set up CLI management.
           </AlertDescription>
         </Alert>

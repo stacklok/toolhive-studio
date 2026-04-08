@@ -25,8 +25,11 @@ import {
   ConsentCheckbox,
   PrivacyFooter,
 } from './hubspot-form-parts'
-
-const HUBSPOT_FORM_ID = '5f1a7a2c-5069-44b7-9444-d952c55ce89c'
+import {
+  APP_DISPLAY_NAME,
+  DEMO_URL,
+  HUBSPOT_EXPERT_CONSULTATION_FORM_ID,
+} from '@common/app-info'
 const DISMISS_DAYS = 30
 const MIN_SERVERS_IN_GROUP = 3
 
@@ -71,7 +74,10 @@ function ExpertConsultationDialog({
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const { consentToProcess, setConsentToProcess, isReady, submit } =
-    useHubSpotForm(HUBSPOT_FORM_ID, 'ToolHive Desktop - Expert Consultation')
+    useHubSpotForm(
+      HUBSPOT_EXPERT_CONSULTATION_FORM_ID,
+      `${APP_DISPLAY_NAME} - Expert Consultation`
+    )
 
   useEffect(() => {
     trackEvent('Expert consultation modal shown')
@@ -186,12 +192,12 @@ function ExpertConsultationDialog({
                 <p className="text-sm text-red-600">
                   Something went wrong. Please try submitting via{' '}
                   <a
-                    href="https://stacklok.com/demo/"
+                    href={DEMO_URL}
                     target="_blank"
                     rel="noreferrer"
                     className="underline underline-offset-2"
                   >
-                    stacklok.com/demo
+                    {DEMO_URL.replace(/^https?:\/\//, '').replace(/\/$/, '')}
                   </a>
                   .
                 </p>

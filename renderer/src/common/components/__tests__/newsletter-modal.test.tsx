@@ -7,9 +7,13 @@ import { server } from '@/common/mocks/node'
 import { recordRequests } from '@/common/mocks/node'
 import { NewsletterModalProvider } from '@/common/contexts/newsletter-modal-provider'
 import { NewsletterModal } from '../newsletter-modal'
+import {
+  APP_DISPLAY_NAME,
+  HUBSPOT_NEWSLETTER_FORM_ID,
+  HUBSPOT_PORTAL_ID,
+} from '@common/app-info'
 
-const HUBSPOT_URL =
-  'https://api.hsforms.com/submissions/v3/integration/submit/42544743/8f75a6a3-bf6d-4cd0-8da5-0092ecfda250'
+const HUBSPOT_URL = `https://api.hsforms.com/submissions/v3/integration/submit/${HUBSPOT_PORTAL_ID}/${HUBSPOT_NEWSLETTER_FORM_ID}`
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -227,7 +231,7 @@ describe('NewsletterModal', () => {
           { name: 'instance_id', value: 'test-instance-id' },
         ],
         context: {
-          pageName: 'ToolHive Desktop - Newsletter Signup',
+          pageName: `${APP_DISPLAY_NAME} - Newsletter Signup`,
         },
         legalConsentOptions: {
           consent: {

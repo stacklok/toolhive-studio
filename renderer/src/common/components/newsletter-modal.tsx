@@ -22,8 +22,11 @@ import {
   ConsentCheckbox,
   PrivacyFooter,
 } from './hubspot-form-parts'
-
-const HUBSPOT_FORM_ID = '8f75a6a3-bf6d-4cd0-8da5-0092ecfda250'
+import {
+  APP_NAME,
+  APP_DISPLAY_NAME,
+  HUBSPOT_NEWSLETTER_FORM_ID,
+} from '@common/app-info'
 const DISMISS_DAYS = 15
 
 const emailSchema = z.email('Please enter a valid email address')
@@ -43,7 +46,10 @@ function NewsletterDialog({
   const [error, setError] = useState('')
 
   const { consentToProcess, setConsentToProcess, isReady, submit } =
-    useHubSpotForm(HUBSPOT_FORM_ID, 'ToolHive Desktop - Newsletter Signup')
+    useHubSpotForm(
+      HUBSPOT_NEWSLETTER_FORM_ID,
+      `${APP_DISPLAY_NAME} - Newsletter Signup`
+    )
 
   useEffect(() => {
     trackEvent('Newsletter modal shown')
@@ -115,11 +121,11 @@ function NewsletterDialog({
               <DialogTitle
                 className="text-brand-blue-mid font-serif text-3xl font-light"
               >
-                Stay up to date with improvements to ToolHive
+                Stay up to date with improvements to {APP_NAME}
               </DialogTitle>
               <DialogDescription className="text-primary">
                 Subscribe to our quarterly email showing you all the new product
-                improvements to ToolHive
+                improvements to {APP_NAME}
               </DialogDescription>
             </DialogHeader>
             <form

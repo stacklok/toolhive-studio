@@ -13,6 +13,7 @@ import { getAppVersion, pollWindowReady } from './util'
 import { delay } from '../../utils/delay'
 import log from './logger'
 import { setQuittingState, setTearingDownState } from './app-state'
+import { RELEASES_BASE_URL } from '@common/app-info'
 import Store from 'electron-store'
 import { fetchLatestRelease } from './utils/toolhive-version'
 import { writeSetting } from './db/writers/settings-writer'
@@ -572,7 +573,7 @@ export function initAutoUpdate({
         updateElectronApp({
           updateSource: {
             type: UpdateSourceType.StaticStorage,
-            baseUrl: `https://releases.toolhive.dev/${channel}/latest/${process.platform}/${process.arch}`,
+            baseUrl: `${RELEASES_BASE_URL}/${channel}/latest/${process.platform}/${process.arch}`,
           },
           logger: log,
           notifyUser: false,

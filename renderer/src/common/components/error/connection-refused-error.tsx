@@ -7,6 +7,7 @@ import { BaseErrorScreen } from './base-error-screen'
 import { IllustrationPackage } from '../illustrations/illustration-package'
 import { withMinimumDelay } from './utils'
 import log from 'electron-log/renderer'
+import { DISCORD_URL } from '@common/app-info'
 
 interface ExternalLinkButtonProps {
   href: string
@@ -90,7 +91,7 @@ export function ConnectionRefusedError() {
             problem.
           </p>
 
-          <ExternalLinkButton href="https://discord.gg/stacklok">
+          <ExternalLinkButton href={DISCORD_URL}>
             Join Discord Support
           </ExternalLinkButton>
         </div>
