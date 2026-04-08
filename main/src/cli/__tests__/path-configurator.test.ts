@@ -267,6 +267,26 @@ export PATH="$HOME/.toolhive/bin:$PATH"
       expect(profile).not.toContain('# Added by ToolHive UI')
     })
 
+    it('bash user: does not modify .bash_profile when it has no ToolHive block', async () => {
+      vi.stubGlobal('process', {
+        ...process,
+        platform: 'darwin',
+        env: { ...process.env, SHELL: '/bin/bash' },
+      })
+
+      vol.fromJSON({
+        '/home/testuser/.bashrc': '# bash config',
+        '/home/testuser/.bash_profile': '# profile config - no toolhive block',
+      })
+
+      await configureShellPath()
+
+      // .bash_profile should be byte-for-byte unchanged
+      expect(vol.readFileSync('/home/testuser/.bash_profile', 'utf8')).toBe(
+        '# profile config - no toolhive block'
+      )
+    })
+
     it('bash user: creates .bashrc when neither file exists', async () => {
       vi.stubGlobal('process', {
         ...process,

@@ -231,7 +231,11 @@ export async function configureShellPath(): Promise<{
 
       // Clean up legacy .bash_profile PATH block from previous versions
       // that wrote to both .bashrc and .bash_profile
-      if (removePathFromFile(LEGACY_BASH_PROFILE_PATH)) {
+      if (
+        existsSync(LEGACY_BASH_PROFILE_PATH) &&
+        contentHasPathConfig(readFileSync(LEGACY_BASH_PROFILE_PATH, 'utf8'))
+      ) {
+        removePathFromFile(LEGACY_BASH_PROFILE_PATH)
         log.info('Cleaned up legacy PATH block from .bash_profile')
       }
 
