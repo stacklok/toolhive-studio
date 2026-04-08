@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createTransport } from './mcp-tools'
+import { createTransport } from '../mcp-tools'
 import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import { Experimental_StdioMCPTransport } from '@ai-sdk/mcp/mcp-stdio'
