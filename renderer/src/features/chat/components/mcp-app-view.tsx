@@ -101,7 +101,17 @@ export function McpAppView({
   const [displayMode, setDisplayMode] = useState<McpUiDisplayMode>('inline')
   const { theme } = useContext(ThemeProviderContext)
 
-  // Fetch the HTML for the MCP App view, inject per-resource CSP
+  // Fetch the HTML for the MCP App view, inject per-resource CSP.
+  // State is keyed off the deps so a dependency change resets to initial values.
+  const fetchKey = `${serverName}:${resourceUri}`
+  const [prevFetchKey, setPrevFetchKey] = useState(fetchKey)
+  if (fetchKey !== prevFetchKey) {
+    setPrevFetchKey(fetchKey)
+    setLoading(true)
+    setHtml(null)
+    setError(null)
+  }
+
   useEffect(() => {
     let cancelled = false
 
