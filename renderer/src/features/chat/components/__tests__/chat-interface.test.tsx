@@ -79,6 +79,10 @@ vi.mock('../../hooks/use-chat-streaming', () => ({
   useChatStreaming: () => mockStreamingReturn,
 }))
 
+vi.mock('../../hooks/use-mcp-app-metadata', () => ({
+  useMcpAppMetadata: () => ({}),
+}))
+
 vi.mock('../../lib/utils', () => ({
   hasCredentials: (settings: Record<string, unknown>) =>
     !!settings.apiKey || !!settings.endpointURL,
