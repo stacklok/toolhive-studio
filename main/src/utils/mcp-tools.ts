@@ -110,14 +110,23 @@ export function createTransport(workload: CoreWorkload): MCPClientConfig {
  */
 export function buildRawTransport(workload: CoreWorkload): Transport {
   const config = createTransport(workload)
-  // For streamable-http, createTransport already returns a real SDK transport instance.
-  if (config.transport instanceof StreamableHTTPClientTransport) {
-    return config.transport
+  const { transport } = config
+  if (transport instanceof StreamableHTTPClientTransport) {
+    return transport
   }
-  // For SSE (and fallback), createTransport returns an AI SDK config object with
-  // { type: 'sse', url }. We need a real SSEClientTransport for Client.connect().
-  const urlString = workload.url || `http://localhost:${workload.port}/sse`
-  return new SSEClientTransport(new URL(urlString))
+  // For SSE, createTransport returns { type: 'sse', url }. Build a real
+  // SSEClientTransport from the resolved URL to stay consistent.
+  const sseTransport = transport as { type?: string; url?: string | URL }
+  if (sseTransport.type === 'sse' && sseTransport.url) {
+    const url =
+      sseTransport.url instanceof URL
+        ? sseTransport.url
+        : new URL(sseTransport.url)
+    return new SSEClientTransport(url)
+  }
+  throw new Error(
+    `Unsupported raw transport for workload ${workload.name ?? 'unknown'}`
+  )
 }
 
 // Get available tools from a workload
