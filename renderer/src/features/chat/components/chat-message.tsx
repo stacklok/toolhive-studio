@@ -22,11 +22,12 @@ import { Fragment, useState } from 'react'
 import type { ChatUIMessage } from '../types'
 import { getProviderIconByModel } from './provider-icons'
 import type { ChatStatus } from 'ai'
-import { useMcpAppMetadata } from '../hooks/use-mcp-app-metadata'
+import type { ToolUiMetadataEntry } from '../hooks/use-mcp-app-metadata'
 
 interface ChatMessageProps {
   message: ChatUIMessage
   status: ChatStatus
+  toolUiMetadata: Record<string, ToolUiMetadataEntry>
 }
 
 // Helper function to render reasoning steps
@@ -412,9 +413,12 @@ function ToolCallComponent({
   )
 }
 
-export function ChatMessage({ message, status }: ChatMessageProps) {
+export function ChatMessage({
+  message,
+  status,
+  toolUiMetadata: uiMetadata,
+}: ChatMessageProps) {
   const isUser = message.role === 'user'
-  const uiMetadata = useMcpAppMetadata()
 
   const providerIcon =
     message.metadata?.model &&

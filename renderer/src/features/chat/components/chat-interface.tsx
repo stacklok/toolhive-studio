@@ -11,6 +11,7 @@ import { DialogProviderSettings } from './dialog-provider-settings'
 import { ErrorAlert } from './error-alert'
 import { useChatStreaming } from '../hooks/use-chat-streaming'
 import { useAutoScroll } from '../hooks/use-auto-scroll'
+import { useMcpAppMetadata } from '../hooks/use-mcp-app-metadata'
 import { ChatInputPrompt } from './chat-input-prompt'
 import { Separator } from '@/common/components/ui/separator'
 import { ThreadTitleBar } from './thread-title-bar'
@@ -47,6 +48,7 @@ export function ChatInterface({
   } = useChatStreaming(threadId)
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const toolUiMetadata = useMcpAppMetadata()
 
   const { containerRef, showScrollToBottom, scrollToBottom } = useAutoScroll({
     resetDep: threadId,
@@ -127,7 +129,11 @@ export function ChatInterface({
                       animationFillMode: 'both',
                     }}
                   >
-                    <ChatMessage status={status} message={message} />
+                    <ChatMessage
+                      status={status}
+                      message={message}
+                      toolUiMetadata={toolUiMetadata}
+                    />
                   </div>
                 ))}
                 {isLoading && (
