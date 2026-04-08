@@ -50,8 +50,9 @@ export function register() {
 
   ipcMain.handle('chat:open-external-link', async (_, url: string) => {
     try {
-      if (url.startsWith('https://') || url.startsWith('http://')) {
-        await shell.openExternal(url)
+      const parsed = new URL(url)
+      if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+        await shell.openExternal(parsed.toString())
         return { success: true }
       }
       return { success: false, error: 'Only http/https URLs are allowed' }
