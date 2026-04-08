@@ -17,6 +17,7 @@ import { promisify } from 'node:util'
 import * as Sentry from '@sentry/electron/main'
 import {
   getShellRcFiles,
+  LEGACY_BASH_PROFILE_PATH,
   SHELL_PATH_ENTRY,
   SHELL_PATH_MARKERS,
   FISH_PATH_ENTRY,
@@ -228,6 +229,12 @@ export async function configureShellPath(): Promise<{
         }
       }
 
+      // Clean up legacy .bash_profile PATH block from previous versions
+      // that wrote to both .bashrc and .bash_profile
+      if (removePathFromFile(LEGACY_BASH_PROFILE_PATH)) {
+        log.info('Cleaned up legacy PATH block from .bash_profile')
+      }
+
       span.setAttributes({
         'cli.path_configured': true,
         'cli.modified_files_count': modifiedFiles.length,
@@ -275,6 +282,11 @@ export async function removeShellPath(): Promise<{
 
   const allFiles = Object.values(shellRcFiles).flat()
 
+  // Include legacy .bash_profile in removal sweep
+  if (!allFiles.includes(LEGACY_BASH_PROFILE_PATH)) {
+    allFiles.push(LEGACY_BASH_PROFILE_PATH)
+  }
+
   for (const rcFile of allFiles) {
     if (removePathFromFile(rcFile)) {
       modifiedFiles.push(rcFile)
@@ -319,17 +331,22 @@ export async function checkPathConfiguration(): Promise<PathConfigStatus> {
   }
 
   const shellRcFiles = getShellRcFiles()
-  const configuredFiles = Object.values(shellRcFiles)
-    .flat()
-    .filter((filePath) => {
-      if (!existsSync(filePath)) return false
-      try {
-        const content = readFileSync(filePath, 'utf8')
-        return contentHasPathConfig(content)
-      } catch {
-        return false
-      }
-    })
+  const allFiles = Object.values(shellRcFiles).flat()
+
+  // Include legacy .bash_profile in check sweep
+  if (!allFiles.includes(LEGACY_BASH_PROFILE_PATH)) {
+    allFiles.push(LEGACY_BASH_PROFILE_PATH)
+  }
+
+  const configuredFiles = allFiles.filter((filePath) => {
+    if (!existsSync(filePath)) return false
+    try {
+      const content = readFileSync(filePath, 'utf8')
+      return contentHasPathConfig(content)
+    } catch {
+      return false
+    }
+  })
 
   return {
     isConfigured: configuredFiles.length > 0,
