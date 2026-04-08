@@ -9,10 +9,11 @@ import {
   GITHUB_REPO_URL,
 } from '@common/app-info'
 
-function renderHelpDropdown() {
+function renderHelpDropdown(options?: { isEnterprise?: boolean }) {
+  const isEnterprise = options?.isEnterprise ?? false
   return render(
     <NewsletterModalProvider>
-      <HelpDropdown />
+      <HelpDropdown isEnterprise={isEnterprise} />
     </NewsletterModalProvider>
   )
 }
@@ -88,5 +89,17 @@ describe('HelpDropdown', () => {
     expect(
       screen.getByRole('menuitem', { name: /newsletter/i })
     ).toBeInTheDocument()
+  })
+
+  it('does not render newsletter menu item when isEnterprise is true', async () => {
+    const user = userEvent.setup()
+    renderHelpDropdown({ isEnterprise: true })
+
+    const helpButton = screen.getByRole('button', { name: /help/i })
+    await user.click(helpButton)
+
+    expect(
+      screen.queryByRole('menuitem', { name: /newsletter/i })
+    ).not.toBeInTheDocument()
   })
 })
