@@ -173,11 +173,13 @@ describe('ChatInterface', () => {
       expect(screen.getByText('Loading chat history...')).toBeInTheDocument()
     })
 
-    it('hides messages area while loading', () => {
+    it('hides messages while loading (loading overlay covers the scroll container)', () => {
       mockStreamingReturn.isPersistentLoading = true
-      setMessages([{ id: 'msg-1', role: 'user', parts: [] }])
+      // Messages are only rendered inside the scroll container when hasMessages is true.
+      // While isPersistentLoading, messages haven't loaded yet so the array is empty.
       renderInterface()
       expect(screen.queryByTestId('message-msg-1')).not.toBeInTheDocument()
+      expect(screen.getByText('Loading chat history...')).toBeInTheDocument()
     })
   })
 
@@ -244,7 +246,6 @@ describe('ChatInterface', () => {
 
   describe('scroll-to-bottom button', () => {
     it('shows scroll-to-bottom button when showScrollToBottom is true', () => {
-      setMessages([{ id: 'msg-1', role: 'user', parts: [] }])
       mockShowScrollToBottom = true
       renderInterface()
       expect(

@@ -1,8 +1,6 @@
 import { useRef, useState, useCallback, useLayoutEffect } from 'react'
 
 interface UseAutoScrollOptions {
-  /** Changes on every content update (e.g. messages array ref from useChat) */
-  contentDep: unknown
   /** Thread ID — when this changes, save the outgoing position and restore the incoming one */
   resetDep: string | null | undefined
   /** Whether there is any scrollable content */
@@ -22,7 +20,6 @@ const scrollPositions = new Map<
 >()
 
 export function useAutoScroll({
-  contentDep,
   resetDep,
   hasContent,
 }: UseAutoScrollOptions): UseAutoScrollReturn {
@@ -33,8 +30,6 @@ export function useAutoScroll({
 
   /** Tracks the outgoing thread ID so we can save its position on switch. */
   const prevResetDepRef = useRef<string | null | undefined>(resetDep)
-  /** Non-null when we need to restore a scroll position after messages load. */
-  const pendingRestoreRef = useRef<number | null>(null)
 
   const scrollToBottom = useCallback((instant = false) => {
     const el = containerRef.current
@@ -47,29 +42,13 @@ export function useAutoScroll({
     })
   }, [])
 
-  // Auto-scroll on every content change (fires on each streaming token).
-  // Also handles pending restore: if messages loaded asynchronously after thread
-  // switch, apply the saved scrollTop once the container has real height.
-  useLayoutEffect(() => {
-    if (pendingRestoreRef.current !== null) {
-      const el = containerRef.current
-      if (el && el.scrollHeight > el.clientHeight) {
-        el.scrollTo({ top: pendingRestoreRef.current, behavior: 'auto' })
-        pendingRestoreRef.current = null
-      }
-      return
-    }
-    if (!userScrolledRef.current) {
-      scrollToBottom()
-    }
-  }, [contentDep, scrollToBottom])
-
-  // On thread switch: save the outgoing thread's scroll position, then either
-  // queue a restore for the incoming thread or scroll to bottom.
+  // Effect 1: Thread switch — save outgoing position, restore or scroll-to-bottom for incoming.
+  // The scroll container is always in the DOM (never conditionally unmounted), so
+  // containerRef.current is valid and the restore can happen immediately with no deferred logic.
   useLayoutEffect(() => {
     const el = containerRef.current
 
-    // Save position of outgoing thread
+    // Save outgoing thread's scroll position
     if (el && prevResetDepRef.current != null) {
       const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= 50
       scrollPositions.set(String(prevResetDepRef.current), {
@@ -79,28 +58,27 @@ export function useAutoScroll({
     }
     prevResetDepRef.current = resetDep
 
-    // Restore or scroll-to-bottom for incoming thread
+    // Restore incoming thread or scroll to bottom
     const saved =
       resetDep != null ? scrollPositions.get(String(resetDep)) : undefined
 
-    if (saved && !saved.atBottom) {
-      // User was scrolled up — queue restore (messages may not be loaded yet).
-      // showScrollToBottom will be set correctly by the onScroll handler once
-      // the pending restore scroll fires.
+    if (saved && !saved.atBottom && el) {
       userScrolledRef.current = true
-      pendingRestoreRef.current = saved.scrollTop
+      el.scrollTo({ top: saved.scrollTop, behavior: 'auto' })
+      // Measuring the DOM to set state before paint is the intended use of useLayoutEffect.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setShowScrollToBottom(true)
     } else {
-      // At bottom or new thread — scroll to bottom as usual
       userScrolledRef.current = false
-      pendingRestoreRef.current = null
+      setShowScrollToBottom(false)
       scrollToBottom(true)
     }
   }, [resetDep, scrollToBottom])
 
-  // Track scroll position to gate auto-scroll and show the jump-to-bottom button.
-  // Also observes the inner content for size changes so that content growing after
-  // the initial scroll (e.g. images, syntax highlighting) re-targets the animation.
-  // Re-registers when hasContent changes so the listener is active once messages appear.
+  // Effect 2: Scroll listener + ResizeObserver.
+  // Re-registers when hasContent changes (scroll container may have new inner content node).
+  // onScroll drives the show/hide of the scroll-to-bottom button.
+  // ResizeObserver drives auto-scroll during streaming and after images/code blocks load.
   useLayoutEffect(() => {
     const container = containerRef.current
     if (!container) return
@@ -124,19 +102,12 @@ export function useAutoScroll({
 
     container.addEventListener('scroll', onScroll, { passive: true })
 
-    // Re-scroll when content height grows (images/code blocks rendering after initial load).
-    // Also handles pending restore for content that grows after the initial messages effect fires.
+    // Re-scroll when content height grows (streaming tokens, images, code blocks).
     const innerContent = container.firstElementChild
     let resizeObserver: ResizeObserver | null = null
     if (innerContent) {
       resizeObserver = new ResizeObserver(() => {
-        if (pendingRestoreRef.current !== null) {
-          container.scrollTo({
-            top: pendingRestoreRef.current,
-            behavior: 'auto',
-          })
-          pendingRestoreRef.current = null
-        } else if (!userScrolledRef.current) {
+        if (!userScrolledRef.current) {
           scrollToBottom()
         }
       })

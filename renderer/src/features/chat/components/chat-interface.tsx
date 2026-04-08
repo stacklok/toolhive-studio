@@ -49,7 +49,6 @@ export function ChatInterface({
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
   const { containerRef, showScrollToBottom, scrollToBottom } = useAutoScroll({
-    contentDep: messages,
     resetDep: threadId,
     hasContent: messages.length > 0,
   })
@@ -80,10 +79,11 @@ export function ChatInterface({
       <div className="bg-background flex min-h-0 flex-1 flex-col px-4">
         {/* Messages Area */}
         <div className="relative min-h-0 flex-1 overflow-hidden">
+          {/* Loading overlay — sits above scroll container so ref stays stable */}
           {isPersistentLoading && (
             <div
-              className="flex h-full items-center justify-center
-                [view-transition-name:chat-loading-state]
+              className="bg-background absolute inset-0 z-10 flex items-center
+                justify-center [view-transition-name:chat-loading-state]
                 motion-safe:transition-all motion-safe:duration-300"
             >
               <div className="flex items-center space-x-3">
@@ -108,13 +108,14 @@ export function ChatInterface({
             </div>
           )}
 
-          {!isPersistentLoading && hasMessages && (
-            <div
-              ref={containerRef}
-              className="h-full w-full overflow-y-auto scroll-smooth
-                [view-transition-name:chat-messages-view]
-                motion-safe:transition-all motion-safe:duration-300"
-            >
+          {/* Scroll container — always in DOM so containerRef is never null */}
+          <div
+            ref={containerRef}
+            className="h-full w-full overflow-y-auto scroll-smooth
+              [view-transition-name:chat-messages-view]
+              motion-safe:transition-all motion-safe:duration-300"
+          >
+            {hasMessages && (
               <div className="space-y-6 pt-8 pr-2 pb-24">
                 {messages.map((message, index: number) => (
                   <div
@@ -166,12 +167,13 @@ export function ChatInterface({
                   </div>
                 )}
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
+          {/* Empty state overlay */}
           {!isPersistentLoading && !hasMessages && (
             <div
-              className="flex h-full items-center justify-center px-6
+              className="absolute inset-0 flex items-center justify-center px-6
                 [view-transition-name:chat-empty-state]
                 motion-safe:transition-all motion-safe:duration-300"
             >
@@ -226,6 +228,8 @@ export function ChatInterface({
               </div>
             </div>
           )}
+
+          {/* Scroll-to-bottom button — simple guard, hook manages state correctly */}
           {showScrollToBottom && (
             <Button
               size="sm"
