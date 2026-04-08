@@ -4,6 +4,7 @@ import { vi, beforeEach, describe, it, expect } from 'vitest'
 import { createTestRouter } from '@/common/test/create-test-router'
 import { renderRoute } from '@/common/test/render-route'
 import { CliIssuePage } from '../cli-issue-page'
+import { APP_NAME } from '@common/app-info'
 
 const mockGetValidationResult = vi.fn()
 const mockValidate = vi.fn()
@@ -62,7 +63,9 @@ describe('CliIssuePage', () => {
       renderCliIssuePage()
 
       await waitFor(() => {
-        expect(screen.getByText('External ToolHive CLI Detected')).toBeVisible()
+        expect(
+          screen.getByText(`External ${APP_NAME} CLI Detected`)
+        ).toBeVisible()
       })
 
       expect(screen.getByText(/\/opt\/homebrew\/bin\/thv/)).toBeVisible()
@@ -85,7 +88,9 @@ describe('CliIssuePage', () => {
       renderCliIssuePage()
 
       await waitFor(() => {
-        expect(screen.getByText('External ToolHive CLI Detected')).toBeVisible()
+        expect(
+          screen.getByText(`External ${APP_NAME} CLI Detected`)
+        ).toBeVisible()
       })
 
       expect(screen.getByText('Winget')).toBeVisible()
@@ -105,13 +110,15 @@ describe('CliIssuePage', () => {
       renderCliIssuePage()
 
       await waitFor(() => {
-        expect(screen.getByText('External ToolHive CLI Detected')).toBeVisible()
+        expect(
+          screen.getByText(`External ${APP_NAME} CLI Detected`)
+        ).toBeVisible()
       })
 
       expect(screen.getByText('Manual installation')).toBeVisible()
       expect(
         screen.getByText(
-          'Please manually remove the external ToolHive CLI installation.'
+          `Please manually remove the external ${APP_NAME} CLI installation.`
         )
       ).toBeVisible()
     })
@@ -159,7 +166,7 @@ describe('CliIssuePage', () => {
       })
 
       expect(
-        screen.getByText('The ToolHive CLI symlink is broken.')
+        screen.getByText(`The ${APP_NAME} CLI symlink is broken.`)
       ).toBeVisible()
       expect(screen.getByText('Was pointing to:')).toBeVisible()
       expect(screen.getByText('/old/path/to/thv')).toBeVisible()
@@ -224,7 +231,7 @@ describe('CliIssuePage', () => {
       })
 
       expect(
-        screen.getByText('The ToolHive CLI has been modified externally.')
+        screen.getByText(`The ${APP_NAME} CLI has been modified externally.`)
       ).toBeVisible()
       expect(screen.getByText('Currently pointing to:')).toBeVisible()
       expect(screen.getByText('/wrong/path/to/thv')).toBeVisible()

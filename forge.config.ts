@@ -2,7 +2,19 @@ import 'dotenv/config'
 import type { ForgeConfig } from '@electron-forge/shared-types'
 import { MakerDeb } from '@electron-forge/maker-deb'
 import { MakerRpm } from '@electron-forge/maker-rpm'
-import { DEEP_LINK_PROTOCOL } from './common/app-info'
+import {
+  APP_DISPLAY_NAME,
+  APP_NAME,
+  COMPANY_NAME,
+  DEEP_LINK_PROTOCOL,
+  EXECUTABLE_NAME,
+  GITHUB_OWNER,
+  GITHUB_REPO,
+  GITHUB_REPO_URL,
+  MACOS_BUNDLE_ID,
+  RELEASES_BASE_URL,
+  RELEASES_S3_BUCKET,
+} from './common/app-info'
 import MakerFlatpakBuilder from './utils/forge-makers/MakerFlatpakBuilder'
 import { VitePlugin } from '@electron-forge/plugin-vite'
 import { FusesPlugin } from '@electron-forge/plugin-fuses'
@@ -28,7 +40,8 @@ const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     icon: './icons/icon',
-    executableName: 'ToolHive',
+    executableName: EXECUTABLE_NAME,
+    appBundleId: MACOS_BUNDLE_ID,
     /**
      * Everything under bin/ is copied into
      * <app>/Contents/Resources/bin/ (macOS)
@@ -38,17 +51,17 @@ const config: ForgeConfig = {
     // Deep link protocol registration (generates Info.plist on macOS)
     protocols: [
       {
-        name: 'ToolHive Studio',
+        name: APP_DISPLAY_NAME,
         schemes: [DEEP_LINK_PROTOCOL],
       },
     ],
     // Windows specific options
     win32metadata: {
-      CompanyName: 'Stacklok',
-      FileDescription: 'ToolHive',
-      OriginalFilename: 'ToolHive.exe',
-      ProductName: 'ToolHive',
-      InternalName: 'ToolHive',
+      CompanyName: COMPANY_NAME,
+      FileDescription: APP_NAME,
+      OriginalFilename: `${EXECUTABLE_NAME}.exe`,
+      ProductName: APP_NAME,
+      InternalName: EXECUTABLE_NAME,
     },
 
     // MacOS Code Signing Configuration
@@ -95,8 +108,8 @@ const config: ForgeConfig = {
       name: '@electron-forge/publisher-github',
       config: {
         repository: {
-          owner: 'stacklok',
-          name: 'toolhive-studio',
+          owner: GITHUB_OWNER,
+          name: GITHUB_REPO,
         },
         draft: false,
         prerelease: isPrerelease(),
@@ -105,7 +118,7 @@ const config: ForgeConfig = {
     {
       name: '@electron-forge/publisher-s3',
       config: {
-        bucket: 'toolhive-studio-releases',
+        bucket: RELEASES_S3_BUCKET,
         folder: `${isPrerelease() ? 'pre-release' : 'stable'}/${packageJson.version}`,
         public: false,
       },
@@ -117,11 +130,11 @@ const config: ForgeConfig = {
       name: '@electron-forge/maker-squirrel',
       config: () => ({
         setupIcon: './icons/icon.ico',
-        setupExe: 'ToolHive Setup.exe',
+        setupExe: `${APP_NAME} Setup.exe`,
         noMsi: true,
-        authors: 'Stacklok',
-        exe: 'ToolHive.exe',
-        name: 'ToolHive',
+        authors: COMPANY_NAME,
+        exe: `${EXECUTABLE_NAME}.exe`,
+        name: APP_NAME,
         noDelta: true,
         windowsSign:
           process.env.SM_HOST && process.env.SM_API_KEY
@@ -131,8 +144,8 @@ const config: ForgeConfig = {
     },
     new MakerDMGWithArch(
       {
-        name: 'ToolHive',
-        title: 'ToolHive',
+        name: APP_NAME,
+        title: APP_NAME,
         icon: './icons/icon.icns',
         overwrite: true,
         background: './assets/dmg-installer-background.png',
@@ -151,33 +164,33 @@ const config: ForgeConfig = {
       name: '@electron-forge/maker-zip',
       platforms: ['darwin', 'win32'],
       config: (arch: string) => ({
-        macUpdateManifestBaseUrl: `https://releases.toolhive.dev/${isPrerelease() ? 'pre-release' : 'stable'}/${packageJson.version}/darwin/${arch}`,
+        macUpdateManifestBaseUrl: `${RELEASES_BASE_URL}/${isPrerelease() ? 'pre-release' : 'stable'}/${packageJson.version}/darwin/${arch}`,
       }),
     },
     new MakerTarGz({}, ['linux']),
     new MakerRpm({
       options: {
-        name: 'ToolHive',
-        productName: 'ToolHive',
-        genericName: 'ToolHive',
+        name: APP_NAME,
+        productName: APP_NAME,
+        genericName: APP_NAME,
         icon: './icons/icon.png',
         requires: ['docker >= 20.10'],
         license: 'Apache-2.0',
-        bin: 'ToolHive',
+        bin: EXECUTABLE_NAME,
         mimeType: [`x-scheme-handler/${DEEP_LINK_PROTOCOL}`],
       },
     }),
     new MakerDeb({
       options: {
-        name: 'ToolHive',
-        productName: 'ToolHive',
-        genericName: 'ToolHive',
+        name: APP_NAME,
+        productName: APP_NAME,
+        genericName: APP_NAME,
         icon: './icons/icon.png',
         depends: [],
-        maintainer: 'Stacklok',
-        homepage: 'https://github.com/stacklok/toolhive-studio',
+        maintainer: COMPANY_NAME,
+        homepage: GITHUB_REPO_URL,
         section: 'devel',
-        bin: 'ToolHive',
+        bin: EXECUTABLE_NAME,
         mimeType: [`x-scheme-handler/${DEEP_LINK_PROTOCOL}`],
       },
     }),

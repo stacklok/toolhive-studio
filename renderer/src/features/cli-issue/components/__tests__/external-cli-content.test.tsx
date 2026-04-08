@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ExternalCliContent } from '../external-cli-content'
+import { APP_DISPLAY_NAME, APP_NAME } from '@common/app-info'
 
 const mockWriteText = vi.fn()
 
@@ -31,10 +32,10 @@ describe('ExternalCliContent', () => {
   it('renders the title and description', () => {
     render(<ExternalCliContent {...defaultProps} />)
 
-    expect(screen.getByText('External ToolHive CLI Detected')).toBeVisible()
+    expect(screen.getByText(`External ${APP_NAME} CLI Detected`)).toBeVisible()
     expect(
       screen.getByText(
-        'ToolHive UI cannot run while an external CLI is installed.'
+        `${APP_DISPLAY_NAME} cannot run while an external CLI is installed.`
       )
     ).toBeVisible()
   })
@@ -103,7 +104,7 @@ describe('ExternalCliContent', () => {
     expect(screen.getByText('Manual installation')).toBeVisible()
     expect(
       screen.getByText(
-        'Please manually remove the external ToolHive CLI installation.'
+        `Please manually remove the external ${APP_NAME} CLI installation.`
       )
     ).toBeVisible()
   })

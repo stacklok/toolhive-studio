@@ -2,6 +2,12 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { NewsletterModalProvider } from '@/common/contexts/newsletter-modal-provider'
 import { HelpDropdown } from '../help-dropdown'
+import {
+  DISCORD_URL,
+  DOCS_BASE_URL,
+  GITHUB_ISSUES_URL,
+  GITHUB_REPO_URL,
+} from '@common/app-info'
 
 function renderHelpDropdown() {
   return render(
@@ -22,10 +28,7 @@ describe('HelpDropdown', () => {
     const documentationLink = screen.getByRole('menuitem', {
       name: /documentation/i,
     })
-    expect(documentationLink).toHaveAttribute(
-      'href',
-      'https://docs.stacklok.com/toolhive'
-    )
+    expect(documentationLink).toHaveAttribute('href', DOCS_BASE_URL)
     expect(documentationLink).toHaveAttribute('target', '_blank')
     expect(documentationLink).toHaveAttribute('rel', 'noopener noreferrer')
   })
@@ -40,7 +43,7 @@ describe('HelpDropdown', () => {
     const discordLink = screen.getByRole('menuitem', {
       name: /discord community/i,
     })
-    expect(discordLink).toHaveAttribute('href', 'https://discord.gg/stacklok')
+    expect(discordLink).toHaveAttribute('href', DISCORD_URL)
     expect(discordLink).toHaveAttribute('target', '_blank')
     expect(discordLink).toHaveAttribute('rel', 'noopener noreferrer')
   })
@@ -55,10 +58,7 @@ describe('HelpDropdown', () => {
     const feedbackLink = screen.getByRole('menuitem', {
       name: /send feedback/i,
     })
-    expect(feedbackLink).toHaveAttribute(
-      'href',
-      'https://github.com/stacklok/toolhive-studio/issues'
-    )
+    expect(feedbackLink).toHaveAttribute('href', GITHUB_ISSUES_URL)
     expect(feedbackLink).toHaveAttribute('target', '_blank')
     expect(feedbackLink).toHaveAttribute('rel', 'noopener noreferrer')
   })
@@ -73,10 +73,7 @@ describe('HelpDropdown', () => {
     const githubLink = screen.getByRole('menuitem', {
       name: /github repository/i,
     })
-    expect(githubLink).toHaveAttribute(
-      'href',
-      'https://github.com/stacklok/toolhive-studio'
-    )
+    expect(githubLink).toHaveAttribute('href', GITHUB_REPO_URL)
     expect(githubLink).toHaveAttribute('target', '_blank')
     expect(githubLink).toHaveAttribute('rel', 'noopener noreferrer')
   })

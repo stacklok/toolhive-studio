@@ -1,4 +1,5 @@
 import { Menu, Tray, app, nativeImage, BrowserWindow } from 'electron'
+import { APP_NAME } from '@common/app-info'
 import path from 'node:path'
 import { getAutoLaunchStatus, setAutoLaunch } from './auto-launch'
 import { createApplicationMenu } from './menu'
@@ -134,8 +135,8 @@ const handleStartOnLogin = async (toolHiveIsRunning: boolean) => {
 
 const createStatusMenuItem = (toolHiveIsRunning: boolean) => ({
   label: toolHiveIsRunning
-    ? '🟢 ToolHive is running'
-    : '🔴 ToolHive is stopped',
+    ? `🟢 ${APP_NAME} is running`
+    : `🔴 ${APP_NAME} is stopped`,
   type: 'normal' as const,
   enabled: false,
 })
@@ -187,7 +188,7 @@ const createHideMenuItem = () => ({
 })
 
 const createQuitMenuItem = () => ({
-  label: 'Quit ToolHive',
+  label: `Quit ${APP_NAME}`,
   type: 'normal' as const,
   click: () => {
     // Triggers the 'before-quit' event, which shows the native
@@ -248,7 +249,7 @@ function setupTrayMenu(toolHiveIsRunning: boolean) {
   const menuTemplate = createMenuTemplate(toolHiveIsRunning)
   const contextMenu = Menu.buildFromTemplate(menuTemplate)
 
-  tray.setToolTip('ToolHive')
+  tray.setToolTip(APP_NAME)
   tray.setContextMenu(contextMenu)
 
   // Windows-specific click handling

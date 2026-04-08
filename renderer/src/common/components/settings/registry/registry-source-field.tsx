@@ -17,6 +17,7 @@ import {
   resolveRegistryListLoadErrorMessage,
   REGISTRY_UNAVAILABLE_SOURCE_MESSAGE,
 } from './registry-errors-message'
+import { DEFAULT_REGISTRY_JSON_URL } from '@common/app-info'
 
 const REGISTRY_INPUT_CONFIG = {
   local_path: {
@@ -35,7 +36,7 @@ const REGISTRY_INPUT_CONFIG = {
         Provide the HTTPS URL of a remote registry (
         <Button asChild variant="link" size="sm" className="h-auto p-0">
           <a
-            href="https://raw.githubusercontent.com/stacklok/toolhive/refs/heads/main/pkg/registry/data/registry.json"
+            href={DEFAULT_REGISTRY_JSON_URL}
             target="_blank"
             rel="noopener noreferrer"
           >

@@ -2,6 +2,7 @@ import { dialog, shell } from 'electron'
 import log from '../logger'
 import { getAppVersion } from '../util'
 import { getLatestAvailableVersion, manualUpdate } from '../auto-update'
+import { APP_NAME, GITHUB_RELEASES_URL } from '@common/app-info'
 
 /**
  * Check for updates and show appropriate dialogs to the user
@@ -27,9 +28,7 @@ export async function handleCheckForUpdates(): Promise<boolean> {
       if (response.response === 0) {
         const isLinux = process.platform === 'linux'
         if (isLinux) {
-          shell.openExternal(
-            'https://github.com/stacklok/toolhive-studio/releases/latest'
-          )
+          shell.openExternal(GITHUB_RELEASES_URL)
           return true
         }
         log.info(
@@ -46,7 +45,7 @@ export async function handleCheckForUpdates(): Promise<boolean> {
         type: 'info',
         title: 'No Update Available',
         message: 'You are already using the latest version.',
-        detail: `Current version: ${currentVersion}\n\nYou have the latest version of ToolHive installed.`,
+        detail: `Current version: ${currentVersion}\n\nYou have the latest version of ${APP_NAME} installed.`,
         buttons: ['OK'],
         defaultId: 0,
       })

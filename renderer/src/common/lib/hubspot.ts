@@ -1,10 +1,12 @@
-export const HUBSPOT_PORTAL_ID = '42544743'
+import {
+  HUBSPOT_PORTAL_ID,
+  PRIVACY_POLICY_URL,
+  COMPANY_NAME,
+} from '@common/app-info'
 
-export const PRIVACY_POLICY_URL =
-  'https://www.iubenda.com/privacy-policy/78678281'
+export { HUBSPOT_PORTAL_ID, PRIVACY_POLICY_URL }
 
-export const CONSENT_PROCESSING_TEXT =
-  'I agree to allow Stacklok to store and process my personal data.'
+export const CONSENT_PROCESSING_TEXT = `I agree to allow ${COMPANY_NAME} to store and process my personal data.`
 
 export function shouldShowAfterDismissal(
   flag: boolean,

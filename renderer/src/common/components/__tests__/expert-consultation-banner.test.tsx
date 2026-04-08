@@ -6,6 +6,12 @@ import { http, HttpResponse } from 'msw'
 import { server } from '@/common/mocks/node'
 import { recordRequests } from '@/common/mocks/node'
 import { mockedGetApiV1BetaWorkloads } from '@mocks/fixtures/workloads/get'
+import {
+  APP_DISPLAY_NAME,
+  DEMO_URL,
+  HUBSPOT_EXPERT_CONSULTATION_FORM_ID,
+  HUBSPOT_PORTAL_ID,
+} from '@common/app-info'
 
 const mockUseMatches = vi.fn()
 vi.mock('@tanstack/react-router', () => ({
@@ -14,8 +20,7 @@ vi.mock('@tanstack/react-router', () => ({
 
 import { ExpertConsultationBanner } from '../expert-consultation-banner'
 
-const HUBSPOT_URL =
-  'https://api.hsforms.com/submissions/v3/integration/submit/42544743/5f1a7a2c-5069-44b7-9444-d952c55ce89c'
+const HUBSPOT_URL = `https://api.hsforms.com/submissions/v3/integration/submit/${HUBSPOT_PORTAL_ID}/${HUBSPOT_EXPERT_CONSULTATION_FORM_ID}`
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -403,7 +408,7 @@ describe('ExpertConsultationBanner', () => {
           { name: 'instance_id', value: 'test-instance-id' },
         ],
         context: {
-          pageName: 'ToolHive Desktop - Expert Consultation',
+          pageName: `${APP_DISPLAY_NAME} - Expert Consultation`,
         },
         legalConsentOptions: {
           consent: {
@@ -428,7 +433,7 @@ describe('ExpertConsultationBanner', () => {
       })
       expect(
         screen.getByRole('link', { name: /stacklok\.com\/demo/i })
-      ).toHaveAttribute('href', 'https://stacklok.com/demo/')
+      ).toHaveAttribute('href', DEMO_URL)
 
       expect(
         window.electronAPI.setExpertConsultationSubmitted

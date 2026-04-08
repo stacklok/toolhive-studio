@@ -7,6 +7,7 @@ import type { AppVersionInfo } from '@/common/hooks/use-app-version'
 import userEvent from '@testing-library/user-event'
 import { PermissionsProvider } from '@/common/contexts/permissions/permissions-provider'
 import type { Permissions } from '@/common/contexts/permissions'
+import { GITHUB_RELEASES_URL } from '@common/app-info'
 
 const mockIsAutoUpdateEnabled = vi.fn()
 const mockSetAutoUpdate = vi.fn()
@@ -216,9 +217,7 @@ describe('VersionTab', () => {
     const downloadButton = screen.getByRole('button', { name: 'Download' })
     await user.click(downloadButton)
 
-    expect(window.open).toHaveBeenCalledWith(
-      'https://github.com/stacklok/toolhive-studio/releases/latest'
-    )
+    expect(window.open).toHaveBeenCalledWith(GITHUB_RELEASES_URL)
     expect(mockManualUpdate).not.toHaveBeenCalled()
   })
 

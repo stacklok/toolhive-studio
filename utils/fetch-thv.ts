@@ -11,6 +11,7 @@ import {
   normalizeVersion,
   isCurrentVersionOlder,
 } from './parse-release-version'
+import { TOOLHIVE_CLI_OWNER, TOOLHIVE_CLI_REPO } from '../common/app-info'
 
 const execFileAsync = promisify(execFile)
 
@@ -25,8 +26,7 @@ const ARCH_MAP: Record<string, string> = {
   arm64: 'arm64',
 } as const
 
-const GITHUB_API_URL =
-  'https://api.github.com/repos/stacklok/toolhive/releases/latest'
+const GITHUB_API_URL = `https://api.github.com/repos/${TOOLHIVE_CLI_OWNER}/${TOOLHIVE_CLI_REPO}/releases/latest`
 
 async function fetchLatestRelease(): Promise<string | null> {
   try {
@@ -56,7 +56,7 @@ async function checkBinaryVersion(binPath: string): Promise<boolean> {
         `A new version of ToolHive is available: ${latestTag} (current: v${constantThvVersion})`
       )
       console.log(
-        'Visit https://github.com/stacklok/toolhive/releases/latest for details'
+        `Visit https://github.com/${TOOLHIVE_CLI_OWNER}/${TOOLHIVE_CLI_REPO}/releases/latest for details`
       )
     }
 
@@ -144,7 +144,7 @@ function createBinaryPath(
   const versionNum = normalizeVersion(TOOLHIVE_VERSION)
 
   const assetName = `toolhive_${versionNum}_${os}_${cpu}.${extension}`
-  const downloadUrl = `https://github.com/stacklok/toolhive/releases/download/${tag}/${assetName}`
+  const downloadUrl = `https://github.com/${TOOLHIVE_CLI_OWNER}/${TOOLHIVE_CLI_REPO}/releases/download/${tag}/${assetName}`
 
   const binDir = path.resolve(__dirname, '..', 'bin', `${platform}-${arch}`)
   const binPath = path.join(binDir, isWindows ? 'thv.exe' : 'thv')

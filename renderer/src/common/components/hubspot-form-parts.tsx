@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from './ui/dialog'
 import { Checkbox } from './ui/checkbox'
-import { PRIVACY_POLICY_URL } from '../lib/hubspot'
+import { PRIVACY_POLICY_URL, CONSENT_PROCESSING_TEXT } from '../lib/hubspot'
 
 export function HubSpotDialogContent({ children }: { children: ReactNode }) {
   return (
@@ -55,7 +55,7 @@ export function ConsentCheckbox({
         className="border-brand-blue-dark/40 mt-0.5 shrink-0"
       />
       <span className="text-xs leading-relaxed">
-        I agree to allow Stacklok to store and process my personal data.{' '}
+        {CONSENT_PROCESSING_TEXT}{' '}
         <span className="text-brand-blue-dark/60">(required)</span>
       </span>
     </label>

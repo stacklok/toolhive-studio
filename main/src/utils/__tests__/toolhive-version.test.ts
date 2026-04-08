@@ -5,6 +5,7 @@ import {
   parseVersionFromSquirrelReleases,
   fetchLatestRelease,
 } from '../toolhive-version'
+import { GITHUB_PAGES_MANIFEST_URL } from '@common/app-info'
 
 vi.mock('@sentry/electron/main', () => ({
   startSpan: vi.fn((_, callback) => {
@@ -145,9 +146,7 @@ describe('toolhive-version', () => {
         configurable: true,
       })
 
-      expect(getManifestUrl('1.0.0')).toBe(
-        'https://stacklok.github.io/toolhive-studio/latest/index.json'
-      )
+      expect(getManifestUrl('1.0.0')).toBe(GITHUB_PAGES_MANIFEST_URL)
     })
 
     it('returns GitHub Pages manifest for Linux even for pre-release', () => {
@@ -156,9 +155,7 @@ describe('toolhive-version', () => {
         configurable: true,
       })
 
-      expect(getManifestUrl('1.0.0-alpha.1')).toBe(
-        'https://stacklok.github.io/toolhive-studio/latest/index.json'
-      )
+      expect(getManifestUrl('1.0.0-alpha.1')).toBe(GITHUB_PAGES_MANIFEST_URL)
     })
   })
 

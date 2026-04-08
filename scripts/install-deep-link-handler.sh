@@ -11,6 +11,11 @@
 
 set -euo pipefail
 
+# These default values must match DEEP_LINK_PROTOCOL and EXECUTABLE_NAME in common/app-info.ts.
+# Override via environment variable for white-label builds.
+DEEP_LINK_PROTOCOL="${DEEP_LINK_PROTOCOL:-toolhive-gui}"
+EXECUTABLE_NAME="${EXECUTABLE_NAME:-ToolHive}"
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 DEB_DIR="$PROJECT_ROOT/out/make/deb/x64"
@@ -42,8 +47,8 @@ fi
 echo "==> Found .desktop file: $DESKTOP_FILE"
 
 # Verify that MimeType is present
-if ! grep -q 'MimeType=.*x-scheme-handler/toolhive-gui' "$DESKTOP_FILE"; then
-  echo "WARNING: .desktop file does not contain x-scheme-handler/toolhive-gui MimeType"
+if ! grep -q "MimeType=.*x-scheme-handler/${DEEP_LINK_PROTOCOL}" "$DESKTOP_FILE"; then
+  echo "WARNING: .desktop file does not contain x-scheme-handler/${DEEP_LINK_PROTOCOL} MimeType"
   echo "Contents:"
   cat "$DESKTOP_FILE"
   exit 1
@@ -55,7 +60,7 @@ INSTALLED_NAME=$(basename "$DESKTOP_FILE")
 # A real .deb install would have the binary at /usr/lib/toolhive/ToolHive
 # with a symlink from /usr/bin/toolhive, but we only extracted the .desktop
 # file so we rewrite Exec to use the local packaged build instead.
-PACKAGED_BIN="$PROJECT_ROOT/out/ToolHive-linux-x64/ToolHive"
+PACKAGED_BIN="$PROJECT_ROOT/out/${EXECUTABLE_NAME}-linux-x64/${EXECUTABLE_NAME}"
 if [ ! -x "$PACKAGED_BIN" ]; then
   echo "ERROR: Packaged binary not found at $PACKAGED_BIN"
   exit 1
@@ -70,9 +75,9 @@ echo "==> Rebuilding desktop file database..."
 sudo update-desktop-database "$SYSTEM_APPLICATIONS_DIR"
 
 echo "==> Verifying protocol handler registration..."
-HANDLER=$(xdg-mime query default x-scheme-handler/toolhive-gui)
+HANDLER=$(xdg-mime query default "x-scheme-handler/${DEEP_LINK_PROTOCOL}")
 if [ "$HANDLER" = "$INSTALLED_NAME" ]; then
-  echo "==> Done! x-scheme-handler/toolhive-gui -> $HANDLER"
+  echo "==> Done! x-scheme-handler/${DEEP_LINK_PROTOCOL} -> $HANDLER"
 else
   echo "WARNING: Expected handler '$INSTALLED_NAME' but got '$HANDLER'"
   echo "The protocol handler may not be registered correctly."

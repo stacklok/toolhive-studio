@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi } from 'vitest'
 import { SymlinkIssueContent } from '../symlink-issue-content'
+import { APP_DISPLAY_NAME, APP_NAME } from '@common/app-info'
 
 describe('SymlinkIssueContent', () => {
   const defaultProps = {
@@ -22,7 +23,7 @@ describe('SymlinkIssueContent', () => {
       render(<SymlinkIssueContent {...defaultProps} type="broken" />)
 
       expect(
-        screen.getByText('The ToolHive CLI symlink is broken.')
+        screen.getByText(`The ${APP_NAME} CLI symlink is broken.`)
       ).toBeVisible()
     })
 
@@ -42,7 +43,9 @@ describe('SymlinkIssueContent', () => {
       render(<SymlinkIssueContent {...defaultProps} type="broken" />)
 
       expect(
-        screen.getByText(/This can happen if ToolHive UI was moved/)
+        screen.getByText(
+          new RegExp(`This can happen if ${APP_DISPLAY_NAME} was moved`)
+        )
       ).toBeVisible()
     })
 
@@ -64,7 +67,7 @@ describe('SymlinkIssueContent', () => {
       render(<SymlinkIssueContent {...defaultProps} type="tampered" />)
 
       expect(
-        screen.getByText('The ToolHive CLI has been modified externally.')
+        screen.getByText(`The ${APP_NAME} CLI has been modified externally.`)
       ).toBeVisible()
     })
 

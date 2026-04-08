@@ -7,6 +7,7 @@ import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
 import RegistryRouteComponent from '../(registry)/-registry.route'
 import { META_MCP_SERVER_NAME } from '@/common/lib/constants'
+import { APP_IDENTIFIER, DOCS_BASE_URL } from '@common/app-info'
 import { mockedGetApiV1BetaRegistryByName } from '@/common/mocks/fixtures/registry_name/get'
 import { mockedGetApiV1BetaRegistryByNameServers } from '@/common/mocks/fixtures/registry_name_servers/get'
 import { setFeatureFlags } from '@mocks/electronAPI'
@@ -110,7 +111,7 @@ describe('Promo Card', () => {
     const link = screen.getByRole('link', { name: /learn how/i })
     expect(link).toHaveAttribute(
       'href',
-      'https://docs.stacklok.com/toolhive/guides-registry/?utm_source=toolhive-studio'
+      `${DOCS_BASE_URL}/guides-registry/?utm_source=${APP_IDENTIFIER}`
     )
   })
 

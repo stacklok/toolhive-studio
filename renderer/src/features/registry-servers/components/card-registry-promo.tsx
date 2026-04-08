@@ -7,9 +7,9 @@ import {
 } from '@/common/components/ui/card'
 import { Button } from '@/common/components/ui/button'
 import { trackEvent } from '@/common/lib/analytics'
+import { APP_IDENTIFIER, DOCS_BASE_URL } from '@common/app-info'
 
-const REGISTRY_DOCS_URL =
-  'https://docs.stacklok.com/toolhive/guides-registry/?utm_source=toolhive-studio'
+const REGISTRY_DOCS_URL = `${DOCS_BASE_URL}/guides-registry/?utm_source=${APP_IDENTIFIER}`
 
 export function CardRegistryPromo() {
   return (
