@@ -21,7 +21,12 @@ export const eventsApi = {
   },
 
   on: (channel: string, listener: (...args: unknown[]) => void) => {
-    ipcRenderer.on(channel, (_, ...args) => listener(...args))
+    const wrapped = (_: Electron.IpcRendererEvent, ...args: unknown[]) =>
+      listener(...args)
+    ipcRenderer.on(channel, wrapped)
+    return () => {
+      ipcRenderer.removeListener(channel, wrapped)
+    }
   },
   removeListener: (channel: string, listener: (...args: unknown[]) => void) => {
     ipcRenderer.removeListener(channel, listener)
@@ -33,7 +38,7 @@ export interface EventsAPI {
   onDeepLinkNavigation: (
     callback: (target: NavigateTarget) => void
   ) => () => void
-  on: (channel: string, listener: (...args: unknown[]) => void) => void
+  on: (channel: string, listener: (...args: unknown[]) => void) => () => void
   removeListener: (
     channel: string,
     listener: (...args: unknown[]) => void

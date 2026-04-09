@@ -10,7 +10,7 @@ const getCspMap = (port: number, sentryDsn?: string) => {
     'img-src': "'self' data: blob:",
     'font-src': "'self' data:",
     'connect-src': `'self' http://localhost:${port} https://api.hsforms.com${hasSentry ? ' https://*.sentry.io' : ''}`,
-    'frame-src': "'none'",
+    'frame-src': "'self' blob:",
     'object-src': "'none'",
     'base-uri': "'self'",
     'form-action': "'self'",
@@ -19,7 +19,7 @@ const getCspMap = (port: number, sentryDsn?: string) => {
     'media-src': "'self' blob: data:",
     // Allow blob: workers only when Sentry is configured
     'worker-src': workerSrc,
-    'child-src': "'none'",
+    'child-src': "'self' blob:",
   }
 }
 

@@ -1,6 +1,15 @@
 import { experimental_createMCPClient as createMCPClient } from '@ai-sdk/mcp'
 import type { ToolSet } from 'ai'
+import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
+import {
+  ReadResourceResultSchema,
+  CallToolResultSchema,
+} from '@modelcontextprotocol/sdk/types.js'
+import type {
+  McpUiResourceCsp,
+  McpUiResourcePermissions,
+} from '@modelcontextprotocol/ext-apps/app-bridge'
 import { createClient } from '@common/api/generated/client'
 import { getApiV1BetaWorkloads } from '@common/api/generated/sdk.gen'
 import { getHeaders } from '../headers'
@@ -10,11 +19,153 @@ import type { AvailableServer } from './types'
 import { getEnabledMcpTools } from './settings-storage'
 import {
   type McpToolDefinition,
+  buildRawTransport,
   createTransport,
   getWorkloadAvailableTools,
   isMcpToolDefinition,
 } from '../utils/mcp-tools'
 import { TOOLHIVE_MCP_SERVER_NAME } from '../utils/constants'
+import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
+
+// Advertised to MCP servers during initialize so they expose UI-enabled tools
+const MCP_UI_EXTENSION_CAPABILITY = {
+  'io.modelcontextprotocol/ui': { mimeTypes: ['text/html;profile=mcp-app'] },
+} as const
+
+interface ToolUiMetadataEntry {
+  resourceUri: string
+  serverName: string
+}
+
+interface UiResourceMetadata {
+  html: string
+  csp?: McpUiResourceCsp
+  permissions?: McpUiResourcePermissions
+  prefersBorder?: boolean
+}
+
+// Module-level cache populated by createMcpTools() on each chat stream
+let cachedUiMetadata: Record<string, ToolUiMetadataEntry> = {}
+
+export function getCachedUiMetadata(): Record<string, ToolUiMetadataEntry> {
+  return { ...cachedUiMetadata }
+}
+
+// ---------------------------------------------------------------------------
+// Private helpers
+// ---------------------------------------------------------------------------
+
+/** Returns a transport for the ToolHive-internal MCP server. */
+function createToolhiveMcpTransport(): StreamableHTTPClientTransport {
+  const port = getToolhiveMcpPort()
+  if (!port) throw new Error('Toolhive MCP port not available')
+  return new StreamableHTTPClientTransport(
+    new URL(`http://localhost:${port}/mcp`)
+  )
+}
+
+/** Fetches all workloads from the ToolHive API. */
+async function fetchWorkloads(): Promise<CoreWorkload[]> {
+  const port = getToolhivePort()
+  const client = createClient({
+    baseUrl: `http://localhost:${port}`,
+    headers: getHeaders(),
+  })
+  const { data } = await getApiV1BetaWorkloads({ client })
+  return data?.workloads ?? []
+}
+
+/** Extracts the `_meta.ui` block from a raw tool definition. */
+function extractToolUiMeta(
+  toolDef: unknown
+): { resourceUri?: string; visibility?: string[] } | undefined {
+  return (toolDef as { _meta?: Record<string, unknown> })?._meta?.['ui'] as
+    | { resourceUri?: string; visibility?: string[] }
+    | undefined
+}
+
+/** Returns true when a tool is app-only and must not be exposed to the model. */
+function shouldSkipAppOnlyTool(
+  ui: { resourceUri?: string; visibility?: string[] } | undefined
+): boolean {
+  return !!ui?.visibility && !ui.visibility.includes('model')
+}
+
+async function createRawMcpClientForServer(
+  serverName: string
+): Promise<{ client: Client; close: () => Promise<void> }> {
+  const clientInfo = { name: 'toolhive-studio-mcp-apps', version: '1.0.0' }
+  const clientOptions = {
+    capabilities: { extensions: MCP_UI_EXTENSION_CAPABILITY },
+  }
+
+  if (serverName === TOOLHIVE_MCP_SERVER_NAME) {
+    const client = new Client(clientInfo, clientOptions)
+    await client.connect(createToolhiveMcpTransport())
+    return { client, close: () => client.close() }
+  }
+
+  const workload = (await fetchWorkloads()).find((w) => w.name === serverName)
+  if (!workload) throw new Error(`Workload not found: ${serverName}`)
+
+  const client = new Client(clientInfo, clientOptions)
+  await client.connect(buildRawTransport(workload))
+  return { client, close: () => client.close() }
+}
+
+export async function fetchUiResource(
+  serverName: string,
+  resourceUri: string
+): Promise<UiResourceMetadata> {
+  const { client, close } = await createRawMcpClientForServer(serverName)
+  try {
+    const result = await client.request(
+      { method: 'resources/read', params: { uri: resourceUri } },
+      ReadResourceResultSchema
+    )
+    const content = result.contents[0]
+    if (!content) throw new Error('Empty resource response')
+
+    let html: string
+    if ('text' in content && content.text) {
+      html = content.text
+    } else if ('blob' in content && content.blob) {
+      html = Buffer.from(content.blob, 'base64').toString('utf-8')
+    } else {
+      throw new Error('Resource content has no text or blob')
+    }
+
+    // Extract per-resource CSP and permission metadata from the response
+    const uiMeta = (content as { _meta?: { ui?: Record<string, unknown> } })
+      ._meta?.ui
+
+    return {
+      html,
+      csp: uiMeta?.csp as McpUiResourceCsp | undefined,
+      permissions: uiMeta?.permissions as McpUiResourcePermissions | undefined,
+      prefersBorder: uiMeta?.prefersBorder as boolean | undefined,
+    }
+  } finally {
+    await close()
+  }
+}
+
+export async function proxyMcpToolCall(
+  serverName: string,
+  toolName: string,
+  args: Record<string, unknown>
+): Promise<unknown> {
+  const { client, close } = await createRawMcpClientForServer(serverName)
+  try {
+    const result = await client.request(
+      { method: 'tools/call', params: { name: toolName, arguments: args } },
+      CallToolResultSchema
+    )
+    return result
+  } finally {
+    await close()
+  }
+}
 
 // Helper to safely extract properties
 function getToolParameters(inputSchema: unknown): Record<string, unknown> {
@@ -35,7 +186,6 @@ function getToolParameters(inputSchema: unknown): Record<string, unknown> {
 export async function getToolhiveMcpInfo(
   enabledToolNames: string[] = []
 ): Promise<AvailableServer> {
-  const toolhiveMcpPort = getToolhiveMcpPort()
   const base = {
     serverName: TOOLHIVE_MCP_SERVER_NAME,
     serverPackage: 'toolhive-mcp',
@@ -43,18 +193,16 @@ export async function getToolhiveMcpInfo(
     isRunning: false,
   }
 
-  if (!toolhiveMcpPort) {
+  if (!getToolhiveMcpPort()) {
     return { ...base, isRunning: false }
   }
 
   try {
-    const toolhiveMcpUrl = new URL(`http://localhost:${toolhiveMcpPort}/mcp`)
-    const toolhiveMcpConfig = {
+    const toolhiveMcpClient = await createMCPClient({
       name: 'mcp_toolhive',
-      transport: new StreamableHTTPClientTransport(toolhiveMcpUrl),
-    }
-
-    const toolhiveMcpClient = await createMCPClient(toolhiveMcpConfig)
+      transport: createToolhiveMcpTransport(),
+      capabilities: { extensions: MCP_UI_EXTENSION_CAPABILITY },
+    })
     const toolhiveMcpTools = await toolhiveMcpClient.tools()
     await toolhiveMcpClient.close()
 
@@ -97,19 +245,8 @@ export async function getMcpServerTools(
     log.error('getMcpServerTools: serverName is not passed')
   }
 
-  const port = getToolhivePort()
-  const client = createClient({
-    baseUrl: `http://localhost:${port}`,
-    headers: getHeaders(),
-  })
-
-  const { data } = await getApiV1BetaWorkloads({
-    client,
-  })
-  const workloads = data?.workloads
-
-  // Get server tools for specific server
-  const workload = (workloads || []).find((w) => w.name === serverName)
+  const workloads = await fetchWorkloads()
+  const workload = workloads.find((w) => w.name === serverName)
 
   // Get enabled tools for this server
   const enabledTools = await getEnabledMcpTools()
@@ -169,62 +306,57 @@ export async function createMcpTools(): Promise<{
   const mcpTools: ToolSet = {}
   const mcpClients: Awaited<ReturnType<typeof createMCPClient>>[] = []
   let enabledTools: Record<string, string[]> = {}
+  // Reset the UI metadata cache for this stream session
+  cachedUiMetadata = {}
+
+  /** Registers a validated tool and caches its UI metadata if present. */
+  const registerTool = (
+    toolName: string,
+    toolDef: unknown,
+    serverName: string
+  ): boolean => {
+    if (!isMcpToolDefinition(toolDef)) return false
+    const ui = extractToolUiMeta(toolDef)
+    if (shouldSkipAppOnlyTool(ui)) return false
+    mcpTools[toolName] = toolDef
+    if (ui?.resourceUri) {
+      cachedUiMetadata[toolName] = { resourceUri: ui.resourceUri, serverName }
+    }
+    return true
+  }
+
+  const addToolhiveMcpTools = async () => {
+    if (!getToolhiveMcpPort()) return
+    try {
+      const toolhiveMcpClient = await createMCPClient({
+        name: 'toolhive-mcp',
+        transport: createToolhiveMcpTransport(),
+        capabilities: { extensions: MCP_UI_EXTENSION_CAPABILITY },
+      })
+      mcpClients.push(toolhiveMcpClient)
+      const toolhiveMcpTools = await toolhiveMcpClient.tools()
+      for (const [toolName, toolDef] of Object.entries(toolhiveMcpTools)) {
+        registerTool(toolName, toolDef, TOOLHIVE_MCP_SERVER_NAME)
+      }
+    } catch (error) {
+      log.error('Failed to create Toolhive MCP client:', error)
+    }
+  }
 
   try {
-    const port = getToolhivePort()
-    const toolhiveMcpPort = getToolhiveMcpPort()
+    const [workloads, resolvedEnabledTools] = await Promise.all([
+      fetchWorkloads(),
+      getEnabledMcpTools(),
+    ])
+    enabledTools = resolvedEnabledTools
 
-    const getToolhiveMcpTools = async () => {
-      // Add default Toolhive MCP client if toolhiveMcpPort is available
-      if (toolhiveMcpPort) {
-        try {
-          const toolhiveMcpUrl = new URL(
-            `http://localhost:${toolhiveMcpPort}/mcp`
-          )
-          const toolhiveMcpConfig = {
-            name: 'toolhive-mcp',
-            transport: new StreamableHTTPClientTransport(toolhiveMcpUrl),
-          }
-
-          const toolhiveMcpClient = await createMCPClient(toolhiveMcpConfig)
-          mcpClients.push(toolhiveMcpClient)
-
-          // Get all tools from the Toolhive MCP server
-          const toolhiveMcpTools = await toolhiveMcpClient.tools()
-
-          // Add all tools from Toolhive MCP (always enabled, cannot be disabled)
-          for (const [toolName, toolDef] of Object.entries(toolhiveMcpTools)) {
-            if (isMcpToolDefinition(toolDef)) {
-              mcpTools[toolName] = toolDef
-            }
-          }
-        } catch (error) {
-          log.error('Failed to create Toolhive MCP client:', error)
-        }
-      }
-    }
-
-    const client = createClient({
-      baseUrl: `http://localhost:${port}`,
-      headers: getHeaders(),
-    })
-
-    const { data } = await getApiV1BetaWorkloads({
-      client,
-    })
-    const workloads = data?.workloads
-
-    // Get enabled tools from storage
-    enabledTools = await getEnabledMcpTools()
-
-    // Create MCP clients for each server with enabled tools
     for (const [serverName, toolNames] of Object.entries(enabledTools)) {
       if (toolNames.length === 0) continue
 
-      const workload = workloads?.find((w) => w.name === serverName)
+      const workload = workloads.find((w) => w.name === serverName)
 
       if (!workload && serverName === TOOLHIVE_MCP_SERVER_NAME) {
-        await getToolhiveMcpTools()
+        await addToolhiveMcpTools()
         continue
       }
 
@@ -236,29 +368,26 @@ export async function createMcpTools(): Promise<{
       log.debug(`Found MCP workload for ${serverName}:`, workload.package)
 
       try {
-        const config = createTransport(workload)
-
-        const mcpClient = await createMCPClient(config)
-
+        const mcpClient = await createMCPClient({
+          ...createTransport(workload),
+          capabilities: { extensions: MCP_UI_EXTENSION_CAPABILITY },
+        })
         mcpClients.push(mcpClient)
 
-        // Get all tools from the MCP server using schema discovery
         const serverMcpTools = await mcpClient.tools()
-
-        // Add only the enabled tools from this server
         let addedToolsCount = 0
         for (const toolName of toolNames) {
           const tool = serverMcpTools[toolName]
-          if (tool && isMcpToolDefinition(tool)) {
-            mcpTools[toolName] = tool
-            addedToolsCount++
-          } else if (tool) {
-            log.warn(`Tool ${toolName} from ${serverName} failed validation`)
-          } else {
+          if (tool === undefined) {
             log.warn(`Tool ${toolName} not found in server ${serverName}`)
+          } else if (registerTool(toolName, tool, serverName)) {
+            addedToolsCount++
+          } else if (shouldSkipAppOnlyTool(extractToolUiMeta(tool))) {
+            log.debug(`Skipping app-only tool ${toolName} from ${serverName}`)
+          } else {
+            log.warn(`Tool ${toolName} from ${serverName} failed validation`)
           }
         }
-
         log.debug(
           `Added ${addedToolsCount}/${toolNames.length} tools from ${serverName}`
         )
@@ -266,8 +395,6 @@ export async function createMcpTools(): Promise<{
         log.error(`Failed to create MCP client for ${serverName}:`, error)
       }
     }
-
-    // MCP tools created
   } catch (error) {
     log.error('Failed to create MCP tools:', error)
   }

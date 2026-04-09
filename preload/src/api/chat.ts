@@ -46,6 +46,22 @@ export const chatApi = {
         enabledTools
       ),
     getToolhiveMcpInfo: () => ipcRenderer.invoke('chat:get-toolhive-mcp-info'),
+    getToolUiMetadata: () => ipcRenderer.invoke('chat:get-tool-ui-metadata'),
+    fetchUiResource: (serverName: string, resourceUri: string) =>
+      ipcRenderer.invoke('chat:fetch-ui-resource', serverName, resourceUri),
+    proxyMcpToolCall: (
+      serverName: string,
+      toolName: string,
+      args: Record<string, unknown>
+    ) =>
+      ipcRenderer.invoke(
+        'chat:proxy-mcp-tool-call',
+        serverName,
+        toolName,
+        args
+      ),
+    openExternalLink: (url: string) =>
+      ipcRenderer.invoke('chat:open-external-link', url),
 
     createThread: (title?: string, initialMessages?: unknown[]) =>
       ipcRenderer.invoke('chat:create-thread', title, initialMessages),
@@ -152,6 +168,38 @@ export interface ChatAPI {
       enabledTools: string[]
     ) => Promise<{ success: boolean; error?: string }>
     getToolhiveMcpInfo: () => Promise<AvailableServer>
+    getToolUiMetadata: () => Promise<
+      Record<string, { resourceUri: string; serverName: string }>
+    >
+    fetchUiResource: (
+      serverName: string,
+      resourceUri: string
+    ) => Promise<{
+      success: boolean
+      html?: string
+      csp?: {
+        connectDomains?: string[]
+        resourceDomains?: string[]
+        frameDomains?: string[]
+        baseUriDomains?: string[]
+      }
+      permissions?: {
+        camera?: object
+        microphone?: object
+        geolocation?: object
+        clipboardWrite?: object
+      }
+      prefersBorder?: boolean
+      error?: string
+    }>
+    proxyMcpToolCall: (
+      serverName: string,
+      toolName: string,
+      args: Record<string, unknown>
+    ) => Promise<{ success: boolean; result?: unknown; error?: string }>
+    openExternalLink: (
+      url: string
+    ) => Promise<{ success: boolean; error?: string }>
 
     createThread: (
       title?: string,

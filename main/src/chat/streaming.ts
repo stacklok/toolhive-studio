@@ -9,7 +9,7 @@ import * as Sentry from '@sentry/electron/main'
 import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 import log from '../logger'
 import { CHAT_PROVIDERS } from './providers'
-import { createMcpTools } from './mcp-tools'
+import { createMcpTools, getCachedUiMetadata } from './mcp-tools'
 import { streamUIMessagesOverIPC } from './stream-utils'
 import type { ChatRequest } from './types'
 import { updateThreadMessages } from './threads-storage'
@@ -53,6 +53,9 @@ export async function handleChatStreamRealtime(
           clients: mcpClients,
           enabledTools,
         } = await createMcpTools()
+
+        // Emit UI metadata so the renderer can identify MCP App tools
+        sender.send('chat:stream:tool-ui-metadata', getCachedUiMetadata())
 
         try {
           const result = streamText({

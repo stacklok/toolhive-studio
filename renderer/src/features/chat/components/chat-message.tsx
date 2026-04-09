@@ -17,14 +17,17 @@ import { cjk } from '@streamdown/cjk'
 import { TokenUsage } from './token-usage'
 import { NoContentMessage } from './no-content-message'
 import { AttachmentPreview } from './attachment-preview'
-import { useState } from 'react'
+import { McpAppView } from './mcp-app-view'
+import { Fragment, useState } from 'react'
 import type { ChatUIMessage } from '../types'
 import { getProviderIconByModel } from './provider-icons'
 import type { ChatStatus } from 'ai'
+import type { ToolUiMetadataEntry } from '../hooks/use-mcp-app-metadata'
 
 interface ChatMessageProps {
   message: ChatUIMessage
   status: ChatStatus
+  toolUiMetadata: Record<string, ToolUiMetadataEntry>
 }
 
 // Helper function to render reasoning steps
@@ -410,7 +413,11 @@ function ToolCallComponent({
   )
 }
 
-export function ChatMessage({ message, status }: ChatMessageProps) {
+export function ChatMessage({
+  message,
+  status,
+  toolUiMetadata: uiMetadata,
+}: ChatMessageProps) {
   const isUser = message.role === 'user'
 
   const providerIcon =
@@ -524,14 +531,33 @@ export function ChatMessage({ message, status }: ChatMessageProps) {
                   />
                 )
 
-              case 'dynamic-tool':
+              case 'dynamic-tool': {
+                const dynToolName =
+                  'toolName' in part ? String(part.toolName) : null
+                const dynUi = dynToolName ? uiMetadata[dynToolName] : undefined
                 return (
-                  <ToolCallComponent
-                    key={`dynamic-tool-${index}`}
-                    part={part}
-                    status={status}
-                  />
+                  <Fragment key={`dynamic-tool-${index}`}>
+                    <ToolCallComponent part={part} status={status} />
+                    {dynUi &&
+                      'state' in part &&
+                      part.state === 'output-available' && (
+                        <McpAppView
+                          toolName={dynToolName!}
+                          serverName={dynUi.serverName}
+                          resourceUri={dynUi.resourceUri}
+                          toolInput={
+                            'input' in part && part.input !== undefined
+                              ? (part.input as Record<string, unknown>)
+                              : {}
+                          }
+                          toolResult={
+                            'output' in part ? part.output : undefined
+                          }
+                        />
+                      )}
+                  </Fragment>
                 )
+              }
 
               case 'file':
                 return (
@@ -591,12 +617,29 @@ export function ChatMessage({ message, status }: ChatMessageProps) {
 
                 // Handle all tool-* parts
                 if (part.type.startsWith('tool-')) {
+                  const staticToolName = part.type.replace('tool-', '')
+                  const staticUi = uiMetadata[staticToolName]
                   return (
-                    <ToolCallComponent
-                      key={`tool-${index}`}
-                      part={part}
-                      status={status}
-                    />
+                    <Fragment key={`tool-${index}`}>
+                      <ToolCallComponent part={part} status={status} />
+                      {staticUi &&
+                        'state' in part &&
+                        part.state === 'output-available' && (
+                          <McpAppView
+                            toolName={staticToolName}
+                            serverName={staticUi.serverName}
+                            resourceUri={staticUi.resourceUri}
+                            toolInput={
+                              'input' in part && part.input !== undefined
+                                ? (part.input as Record<string, unknown>)
+                                : {}
+                            }
+                            toolResult={
+                              'output' in part ? part.output : undefined
+                            }
+                          />
+                        )}
+                    </Fragment>
                   )
                 }
                 // Only log truly unknown part types (exclude text, source-*, data-*, image)
