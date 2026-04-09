@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/electron/main'
 import { experimental_createMCPClient as createMCPClient } from '@ai-sdk/mcp'
 import type { ToolSet } from 'ai'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
@@ -397,6 +398,16 @@ export async function createMcpTools(): Promise<{
     }
   } catch (error) {
     log.error('Failed to create MCP tools:', error)
+  }
+
+  const uiToolCount = Object.keys(cachedUiMetadata).length
+  if (uiToolCount > 0) {
+    Sentry.addBreadcrumb({
+      category: 'mcp-apps',
+      message: `Discovered ${uiToolCount} UI-enabled tool(s)`,
+      level: 'info',
+      data: { tools: Object.keys(cachedUiMetadata) },
+    })
   }
 
   return { tools: mcpTools, clients: mcpClients, enabledTools }
