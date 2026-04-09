@@ -11,10 +11,10 @@ import { CardBuild } from './card-build'
 
 interface GridCardsBuildsProps {
   filter: string
-  onInstall: () => void
+  onBuild: () => void
 }
 
-export function GridCardsBuilds({ filter, onInstall }: GridCardsBuildsProps) {
+export function GridCardsBuilds({ filter, onBuild }: GridCardsBuildsProps) {
   const { data } = useQuery(getApiV1BetaSkillsBuildsOptions())
   const builds: LocalBuild[] = useMemo(() => data?.builds ?? [], [data])
   const filteredData = useMemo(() => {
@@ -32,9 +32,9 @@ export function GridCardsBuilds({ filter, onInstall }: GridCardsBuildsProps) {
         body="Build a skill from a local directory to see it here."
         illustration={IllustrationPackage}
         actions={[
-          <Button key="install" variant="action" onClick={onInstall}>
+          <Button key="build" variant="action" onClick={onBuild}>
             <HammerIcon className="size-4" />
-            Install skill
+            Build skill
           </Button>,
         ]}
       />

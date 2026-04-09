@@ -118,7 +118,7 @@ export function SkillsPage() {
         <TabsContent value="builds">
           <GridCardsBuilds
             filter={buildsFilter}
-            onInstall={() => setInstallOpen(true)}
+            onBuild={() => setBuildOpen(true)}
           />
         </TabsContent>
       </Tabs>
