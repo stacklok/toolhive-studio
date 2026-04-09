@@ -13,6 +13,7 @@ import {
   deleteApiV1BetaGroupsByName,
   deleteApiV1BetaRegistryByName,
   deleteApiV1BetaSecretsDefaultKeysByKey,
+  deleteApiV1BetaSkillsBuildsByTag,
   deleteApiV1BetaSkillsByName,
   deleteApiV1BetaWorkloadsByName,
   getApiOpenapiJson,
@@ -27,6 +28,7 @@ import {
   getApiV1BetaSecretsDefault,
   getApiV1BetaSecretsDefaultKeys,
   getApiV1BetaSkills,
+  getApiV1BetaSkillsBuilds,
   getApiV1BetaSkillsByName,
   getApiV1BetaVersion,
   getApiV1BetaWorkloads,
@@ -76,6 +78,9 @@ import type {
   DeleteApiV1BetaSecretsDefaultKeysByKeyData,
   DeleteApiV1BetaSecretsDefaultKeysByKeyError,
   DeleteApiV1BetaSecretsDefaultKeysByKeyResponse,
+  DeleteApiV1BetaSkillsBuildsByTagData,
+  DeleteApiV1BetaSkillsBuildsByTagError,
+  DeleteApiV1BetaSkillsBuildsByTagResponse,
   DeleteApiV1BetaSkillsByNameData,
   DeleteApiV1BetaSkillsByNameError,
   DeleteApiV1BetaSkillsByNameResponse,
@@ -111,6 +116,9 @@ import type {
   GetApiV1BetaSecretsDefaultKeysError,
   GetApiV1BetaSecretsDefaultKeysResponse,
   GetApiV1BetaSecretsDefaultResponse,
+  GetApiV1BetaSkillsBuildsData,
+  GetApiV1BetaSkillsBuildsError,
+  GetApiV1BetaSkillsBuildsResponse,
   GetApiV1BetaSkillsByNameData,
   GetApiV1BetaSkillsByNameError,
   GetApiV1BetaSkillsByNameResponse,
@@ -1118,6 +1126,65 @@ export const postApiV1BetaSkillsBuildMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await postApiV1BetaSkillsBuild({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+export const getApiV1BetaSkillsBuildsQueryKey = (
+  options?: Options<GetApiV1BetaSkillsBuildsData>
+) => createQueryKey('getApiV1BetaSkillsBuilds', options)
+
+/**
+ * List locally-built skill artifacts
+ *
+ * Get a list of all locally-built OCI skill artifacts in the local store
+ */
+export const getApiV1BetaSkillsBuildsOptions = (
+  options?: Options<GetApiV1BetaSkillsBuildsData>
+) =>
+  queryOptions<
+    GetApiV1BetaSkillsBuildsResponse,
+    GetApiV1BetaSkillsBuildsError,
+    GetApiV1BetaSkillsBuildsResponse,
+    ReturnType<typeof getApiV1BetaSkillsBuildsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1BetaSkillsBuilds({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: getApiV1BetaSkillsBuildsQueryKey(options),
+  })
+
+/**
+ * Delete a locally-built skill artifact
+ *
+ * Remove a locally-built OCI skill artifact and its blobs from the local store
+ */
+export const deleteApiV1BetaSkillsBuildsByTagMutation = (
+  options?: Partial<Options<DeleteApiV1BetaSkillsBuildsByTagData>>
+): UseMutationOptions<
+  DeleteApiV1BetaSkillsBuildsByTagResponse,
+  DeleteApiV1BetaSkillsBuildsByTagError,
+  Options<DeleteApiV1BetaSkillsBuildsByTagData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    DeleteApiV1BetaSkillsBuildsByTagResponse,
+    DeleteApiV1BetaSkillsBuildsByTagError,
+    Options<DeleteApiV1BetaSkillsBuildsByTagData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await deleteApiV1BetaSkillsBuildsByTag({
         ...options,
         ...fnOptions,
         throwOnError: true,
