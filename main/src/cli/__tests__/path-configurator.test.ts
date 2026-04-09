@@ -53,10 +53,11 @@ vi.mock('node:os', async (importOriginal) => {
 
 vi.mock('../constants', () => ({
   getShellRcFiles: () => ({
-    bash: ['/home/testuser/.bashrc', '/home/testuser/.bash_profile'],
+    bash: ['/home/testuser/.bashrc'],
     zsh: ['/home/testuser/.zshrc'],
     fish: ['/home/testuser/.config/fish/config.fish'],
   }),
+  LEGACY_BASH_PROFILE_PATH: '/home/testuser/.bash_profile',
   SHELL_PATH_ENTRY: 'export PATH="$HOME/.toolhive/bin:$PATH"',
   SHELL_PATH_MARKERS: {
     start: '# Added by ToolHive UI - do not modify this block',
@@ -202,6 +203,129 @@ export PATH="$HOME/.toolhive/bin:$PATH"
       expect(result.success).toBe(true)
       expect(vol.existsSync('/home/testuser/.config/fish')).toBe(true)
     })
+
+    it('bash user: only writes to .bashrc, not .bash_profile', async () => {
+      vi.stubGlobal('process', {
+        ...process,
+        platform: 'darwin',
+        env: { ...process.env, SHELL: '/bin/bash' },
+      })
+
+      vol.fromJSON({
+        '/home/testuser/.bashrc': '# bash config',
+        '/home/testuser/.bash_profile': '# profile config',
+      })
+
+      const result = await configureShellPath()
+
+      expect(result.success).toBe(true)
+      const bashrc = vol.readFileSync('/home/testuser/.bashrc', 'utf8')
+      expect(bashrc).toContain('# Added by ToolHive UI')
+
+      const profile = vol.readFileSync(
+        '/home/testuser/.bash_profile',
+        'utf8'
+      ) as string
+      expect(profile).not.toContain('# Added by ToolHive UI')
+      expect(profile).toBe('# profile config')
+    })
+
+    it('bash user: cleans up legacy .bash_profile block', async () => {
+      vi.stubGlobal('process', {
+        ...process,
+        platform: 'darwin',
+        env: { ...process.env, SHELL: '/bin/bash' },
+      })
+
+      const pathBlock = `
+# Added by ToolHive UI - do not modify this block
+export PATH="$HOME/.toolhive/bin:$PATH"
+# End ToolHive UI
+`
+      vol.fromJSON({
+        '/home/testuser/.bashrc': `# bash config${pathBlock}`,
+        '/home/testuser/.bash_profile': `# profile config${pathBlock}`,
+      })
+
+      const result = await configureShellPath()
+
+      expect(result.success).toBe(true)
+
+      const bashrc = vol.readFileSync(
+        '/home/testuser/.bashrc',
+        'utf8'
+      ) as string
+      expect(bashrc).toContain('# Added by ToolHive UI')
+      const bashrcMarkers = (bashrc.match(/# Added by ToolHive UI/g) || [])
+        .length
+      expect(bashrcMarkers).toBe(1)
+
+      const profile = vol.readFileSync(
+        '/home/testuser/.bash_profile',
+        'utf8'
+      ) as string
+      expect(profile).not.toContain('# Added by ToolHive UI')
+    })
+
+    it('bash user: does not modify .bash_profile when it has no ToolHive block', async () => {
+      vi.stubGlobal('process', {
+        ...process,
+        platform: 'darwin',
+        env: { ...process.env, SHELL: '/bin/bash' },
+      })
+
+      vol.fromJSON({
+        '/home/testuser/.bashrc': '# bash config',
+        '/home/testuser/.bash_profile': '# profile config - no toolhive block',
+      })
+
+      await configureShellPath()
+
+      // .bash_profile should be byte-for-byte unchanged
+      expect(vol.readFileSync('/home/testuser/.bash_profile', 'utf8')).toBe(
+        '# profile config - no toolhive block'
+      )
+    })
+
+    it('bash user: creates .bashrc when neither file exists', async () => {
+      vi.stubGlobal('process', {
+        ...process,
+        platform: 'darwin',
+        env: { ...process.env, SHELL: '/bin/bash' },
+      })
+
+      vol.fromJSON({})
+
+      const result = await configureShellPath()
+
+      expect(result.success).toBe(true)
+      expect(vol.existsSync('/home/testuser/.bashrc')).toBe(true)
+      expect(vol.existsSync('/home/testuser/.bash_profile')).toBe(false)
+
+      const bashrc = vol.readFileSync('/home/testuser/.bashrc', 'utf8')
+      expect(bashrc).toContain('# Added by ToolHive UI')
+    })
+
+    it('non-default shell with existing .bashrc writes to .bashrc only', async () => {
+      vol.fromJSON({
+        '/home/testuser/.zshrc': '# zsh config',
+        '/home/testuser/.bashrc': '# bash config',
+        '/home/testuser/.bash_profile': '# profile config',
+      })
+
+      const result = await configureShellPath()
+
+      expect(result.success).toBe(true)
+      expect(result.modifiedFiles).toContain('/home/testuser/.zshrc')
+      expect(result.modifiedFiles).toContain('/home/testuser/.bashrc')
+
+      const profile = vol.readFileSync(
+        '/home/testuser/.bash_profile',
+        'utf8'
+      ) as string
+      expect(profile).not.toContain('# Added by ToolHive UI')
+      expect(profile).toBe('# profile config')
+    })
   })
 
   describe('removeShellPath', () => {
@@ -256,7 +380,6 @@ export PATH="$HOME/.toolhive/bin:$PATH"
       vol.fromJSON({
         '/home/testuser/.zshrc': `# zsh${blockContent}`,
         '/home/testuser/.bashrc': `# bash${blockContent}`,
-        '/home/testuser/.bash_profile': `# profile${blockContent}`,
       })
 
       const result = await removeShellPath()
@@ -265,6 +388,43 @@ export PATH="$HOME/.toolhive/bin:$PATH"
       expect(vol.readFileSync('/home/testuser/.zshrc', 'utf8')).not.toContain(
         '# Added by ToolHive UI'
       )
+      expect(vol.readFileSync('/home/testuser/.bashrc', 'utf8')).not.toContain(
+        '# Added by ToolHive UI'
+      )
+    })
+
+    it('removes legacy .bash_profile block even though it is not in getShellRcFiles', async () => {
+      const blockContent = `
+# Added by ToolHive UI - do not modify this block
+export PATH="$HOME/.toolhive/bin:$PATH"
+# End ToolHive UI
+`
+      vol.fromJSON({
+        '/home/testuser/.bash_profile': `# profile${blockContent}`,
+      })
+
+      const result = await removeShellPath()
+
+      expect(result.success).toBe(true)
+      expect(
+        vol.readFileSync('/home/testuser/.bash_profile', 'utf8')
+      ).not.toContain('# Added by ToolHive UI')
+    })
+
+    it('removes from both .bashrc and legacy .bash_profile', async () => {
+      const blockContent = `
+# Added by ToolHive UI - do not modify this block
+export PATH="$HOME/.toolhive/bin:$PATH"
+# End ToolHive UI
+`
+      vol.fromJSON({
+        '/home/testuser/.bashrc': `# bash${blockContent}`,
+        '/home/testuser/.bash_profile': `# profile${blockContent}`,
+      })
+
+      const result = await removeShellPath()
+
+      expect(result.success).toBe(true)
       expect(vol.readFileSync('/home/testuser/.bashrc', 'utf8')).not.toContain(
         '# Added by ToolHive UI'
       )
@@ -332,6 +492,39 @@ export PATH="$HOME/.toolhive/bin:$PATH"
       const result = await checkPathConfiguration()
 
       expect(result.pathEntry).toBe('export PATH="$HOME/.toolhive/bin:$PATH"')
+    })
+
+    it('detects legacy .bash_profile configuration', async () => {
+      vol.fromJSON({
+        '/home/testuser/.bash_profile': `# profile
+# Added by ToolHive UI - do not modify this block
+export PATH="$HOME/.toolhive/bin:$PATH"
+# End ToolHive UI
+`,
+      })
+
+      const result = await checkPathConfiguration()
+
+      expect(result.isConfigured).toBe(true)
+      expect(result.modifiedFiles).toContain('/home/testuser/.bash_profile')
+    })
+
+    it('reports both files if .bashrc and legacy .bash_profile have blocks', async () => {
+      const pathBlock = `
+# Added by ToolHive UI - do not modify this block
+export PATH="$HOME/.toolhive/bin:$PATH"
+# End ToolHive UI
+`
+      vol.fromJSON({
+        '/home/testuser/.bashrc': `# bash${pathBlock}`,
+        '/home/testuser/.bash_profile': `# profile${pathBlock}`,
+      })
+
+      const result = await checkPathConfiguration()
+
+      expect(result.isConfigured).toBe(true)
+      expect(result.modifiedFiles).toContain('/home/testuser/.bashrc')
+      expect(result.modifiedFiles).toContain('/home/testuser/.bash_profile')
     })
   })
 

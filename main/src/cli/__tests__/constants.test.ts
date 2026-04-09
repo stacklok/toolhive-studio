@@ -83,10 +83,11 @@ describe('constants', () => {
   })
 
   describe('getShellRcFiles', () => {
-    it('returns bash RC files', () => {
+    it('returns only .bashrc for bash (not .bash_profile)', () => {
       const files = getShellRcFiles()
       expect(files.bash).toContain('/home/testuser/.bashrc')
-      expect(files.bash).toContain('/home/testuser/.bash_profile')
+      expect(files.bash).not.toContain('/home/testuser/.bash_profile')
+      expect(files.bash).toHaveLength(1)
     })
 
     it('returns zsh RC files', () => {
