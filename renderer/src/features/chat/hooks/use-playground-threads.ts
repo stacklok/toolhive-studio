@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
+import { trackEvent } from '@/common/lib/analytics'
 
 export interface PlaygroundThread {
   id: string
@@ -72,6 +73,7 @@ export function usePlaygroundThreads() {
       setThreads((prev) => [newThread, ...prev])
       setActiveThreadId(result.threadId)
       window.electronAPI.chat.setActiveThreadId(result.threadId)
+      trackEvent('Playground: create thread')
     } catch (err) {
       log.error('[usePlaygroundThreads] Failed to create thread:', err)
     }
@@ -80,6 +82,7 @@ export function usePlaygroundThreads() {
   const selectThread = useCallback((threadId: string) => {
     setActiveThreadId(threadId)
     window.electronAPI.chat.setActiveThreadId(threadId)
+    trackEvent('Playground: switch thread')
   }, [])
 
   const deleteThread = useCallback(
@@ -93,6 +96,9 @@ export function usePlaygroundThreads() {
           )
           return
         }
+        trackEvent('Playground: delete thread', {
+          'thread.was_active': activeThreadId === threadId,
+        })
         setThreads((prev) => {
           const updated = prev.filter((t) => t.id !== threadId)
           if (activeThreadId === threadId) {
@@ -156,6 +162,7 @@ export function usePlaygroundThreads() {
           titleEditedByUser: true,
         })
         await refreshThread(threadId)
+        trackEvent('Playground: rename thread')
       } catch (err) {
         log.error('[usePlaygroundThreads] Failed to rename thread:', err)
       }
@@ -177,6 +184,9 @@ export function usePlaygroundThreads() {
             t.id === threadId ? { ...t, starred: newStarred } : t
           )
         )
+        trackEvent('Playground: toggle star', {
+          'thread.starred': newStarred,
+        })
       } catch (err) {
         log.error('[usePlaygroundThreads] Failed to toggle star:', err)
       }
