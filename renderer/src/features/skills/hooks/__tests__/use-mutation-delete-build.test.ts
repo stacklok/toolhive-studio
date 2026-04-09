@@ -3,9 +3,9 @@ import { expect, it, vi, describe } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 import { toast } from 'sonner'
-import { useMutationBuildSkill } from '../use-mutation-build-skill'
+import { useMutationDeleteBuild } from '../use-mutation-delete-build'
 import { recordRequests } from '@/common/mocks/node'
-import { mockedPostApiV1BetaSkillsBuild } from '@/common/mocks/fixtures/skills_build/post'
+import { mockedDeleteApiV1BetaSkillsBuildsByTag } from '@/common/mocks/fixtures/skills_builds_tag/delete'
 
 const createQueryClientWrapper = () => {
   const queryClient = new QueryClient({
@@ -21,78 +21,78 @@ const createQueryClientWrapper = () => {
   return { queryClient, Wrapper }
 }
 
-describe('useMutationBuildSkill', () => {
-  it('sends POST to /api/v1beta/skills/build with correct body', async () => {
+describe('useMutationDeleteBuild', () => {
+  it('sends DELETE to /api/v1beta/skills/builds/{tag} with correct path param', async () => {
     const rec = recordRequests()
     const { Wrapper } = createQueryClientWrapper()
 
-    const { result } = renderHook(() => useMutationBuildSkill(), {
+    const { result } = renderHook(() => useMutationDeleteBuild(), {
       wrapper: Wrapper,
     })
 
     result.current.mutateAsync({
-      body: { path: '/home/user/my-skill', tag: 'v1.0.0' },
+      path: { tag: 'localhost/my-skill:v1.0.0' },
     })
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true)
     })
 
-    const postCall = rec.recordedRequests.find(
-      (r) => r.method === 'POST' && r.pathname === '/api/v1beta/skills/build'
+    const deleteCall = rec.recordedRequests.find(
+      (r) =>
+        r.method === 'DELETE' &&
+        r.pathname.includes('/api/v1beta/skills/builds/')
     )
-    expect(postCall).toBeDefined()
-    expect(postCall?.payload).toMatchObject({
-      path: '/home/user/my-skill',
-      tag: 'v1.0.0',
-    })
+    expect(deleteCall).toBeDefined()
   })
 
-  it('returns build result with reference', async () => {
+  it('shows success toast with tag on success', async () => {
     const { Wrapper } = createQueryClientWrapper()
 
-    const { result } = renderHook(() => useMutationBuildSkill(), {
+    const { result } = renderHook(() => useMutationDeleteBuild(), {
       wrapper: Wrapper,
     })
 
-    result.current.mutateAsync({ body: { path: '/home/user/my-skill' } })
+    result.current.mutateAsync({ path: { tag: 'localhost/my-skill:v1.0.0' } })
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true)
     })
 
-    expect(result.current.data?.reference).toBe('ghcr.io/org/skill-one:v1')
+    expect(toast.success).toHaveBeenCalledWith(
+      expect.stringContaining('localhost/my-skill:v1.0.0')
+    )
   })
 
   it('shows error toast on failure', async () => {
-    mockedPostApiV1BetaSkillsBuild.activateScenario('server-error')
+    mockedDeleteApiV1BetaSkillsBuildsByTag.activateScenario('server-error')
 
     const { Wrapper } = createQueryClientWrapper()
 
-    const { result } = renderHook(() => useMutationBuildSkill(), {
+    const { result } = renderHook(() => useMutationDeleteBuild(), {
       wrapper: Wrapper,
     })
 
     result.current
-      .mutateAsync({ body: { path: '/home/user/my-skill' } })
+      .mutateAsync({ path: { tag: 'localhost/my-skill:v1.0.0' } })
       .catch(() => {})
 
     await waitFor(() => {
       expect(result.current.isError).toBe(true)
     })
 
-    expect(toast.error).toHaveBeenCalledWith('Failed to build skill')
+    expect(toast.error).toHaveBeenCalledWith('Failed to remove build')
   })
 
   it('invalidates builds list query on success', async () => {
     const { queryClient, Wrapper } = createQueryClientWrapper()
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
 
-    const { result } = renderHook(() => useMutationBuildSkill(), {
+    const { result } = renderHook(() => useMutationDeleteBuild(), {
       wrapper: Wrapper,
     })
 
-    result.current.mutateAsync({ body: { path: '/home/user/my-skill' } })
+    result.current.mutateAsync({ path: { tag: 'localhost/my-skill:v1.0.0' } })
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true)
