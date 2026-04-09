@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { getApiV1BetaSkillsBuildsOptions } from '@common/api/generated/@tanstack/react-query.gen'
 import { EmptyState } from '@/common/components/empty-state'
 import { IllustrationPackage } from '@/common/components/illustrations/illustration-package'
@@ -15,7 +15,7 @@ interface GridCardsBuildsProps {
 }
 
 export function GridCardsBuilds({ filter, onBuild }: GridCardsBuildsProps) {
-  const { data } = useQuery(getApiV1BetaSkillsBuildsOptions())
+  const { data } = useSuspenseQuery(getApiV1BetaSkillsBuildsOptions())
   const builds: LocalBuild[] = useMemo(() => data?.builds ?? [], [data])
   const filteredData = useMemo(() => {
     return builds.filter((build) =>
