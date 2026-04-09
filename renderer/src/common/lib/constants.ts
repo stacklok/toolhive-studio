@@ -10,7 +10,7 @@ export const UI_POST_SUBMIT_DELAY_MS = 1000
  * This is managed by Renovate and updated automatically when new versions are released.
  * renovate: datasource=docker depName=ghcr.io/stackloklabs/mcp-optimizer versioning=docker
  */
-export const MCP_OPTIMIZER_IMAGE_VERSION = '0.2.7'
+export const MCP_OPTIMIZER_IMAGE_VERSION = '0.3.0'
 export { MCP_OPTIMIZER_IMAGE as MCP_OPTIMIZER_BASE_IMAGE } from '@common/app-info'
 
 export const MCP_OPTIMIZER_BANNER_ROUTES = [
