@@ -75,6 +75,14 @@ vi.mock('../../utils/mcp-tools', async (importOriginal) => {
   }
 })
 
+vi.mock('@sentry/electron/main', () => ({
+  addBreadcrumb: vi.fn(),
+  startSpan: vi.fn(
+    (_opts: unknown, fn: (span: { setStatus: () => void }) => unknown) =>
+      fn({ setStatus: vi.fn() })
+  ),
+}))
+
 vi.mock('@ai-sdk/mcp', () => ({
   experimental_createMCPClient: mockCreateMCPClient,
 }))
@@ -105,6 +113,7 @@ vi.mock('../../logger', () => ({
 // Module under test (imported after all vi.mock() calls)
 // ---------------------------------------------------------------------------
 
+import * as Sentry from '@sentry/electron/main'
 import {
   getCachedUiMetadata,
   fetchUiResource,
@@ -541,6 +550,7 @@ describe('createMcpTools', () => {
     expect(tools).toEqual({})
     expect(clients).toHaveLength(0)
     expect(enabledTools).toEqual({})
+    expect(Sentry.addBreadcrumb).not.toHaveBeenCalled()
   })
 
   it('resets cachedUiMetadata at the start of each call', async () => {
@@ -679,6 +689,14 @@ describe('createMcpTools', () => {
     expect(getCachedUiMetadata()).toEqual({
       'ui-tool': { resourceUri: 'res://ui-tool', serverName: 'test-server' },
     })
+    expect(Sentry.addBreadcrumb).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category: 'mcp-apps',
+        message: 'Discovered 1 UI-enabled tool(s)',
+        level: 'info',
+        data: { tools: ['ui-tool'] },
+      })
+    )
   })
 
   it('does not cache UI metadata for tools without resourceUri', async () => {
@@ -696,6 +714,7 @@ describe('createMcpTools', () => {
     await createMcpTools()
 
     expect(getCachedUiMetadata()).toEqual({})
+    expect(Sentry.addBreadcrumb).not.toHaveBeenCalled()
   })
 
   it('logs and skips servers whose workload is not found', async () => {
