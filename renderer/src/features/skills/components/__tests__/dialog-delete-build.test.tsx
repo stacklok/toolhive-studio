@@ -50,10 +50,12 @@ describe('DialogDeleteBuild', () => {
       const deleteCall = rec.recordedRequests.find(
         (r) =>
           r.method === 'DELETE' &&
-          r.pathname.includes('/api/v1beta/skills/builds/')
+          r.pathname.startsWith('/api/v1beta/skills/builds/')
       )
       expect(deleteCall).toBeDefined()
-      expect(deleteCall?.pathname).toContain('localhost%2Fmy-skill%3Av1.0.0')
+      expect(deleteCall?.pathname).toBe(
+        '/api/v1beta/skills/builds/localhost/my-skill:v1.0.0'
+      )
     })
   })
 

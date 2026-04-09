@@ -100,6 +100,7 @@ describe('CardBuild', () => {
 
     await user.click(screen.getByRole('button', { name: /remove my-skill/i }))
 
-    expect(screen.getByText(/my-skill/)).toBeInTheDocument()
+    const dialog = screen.getByRole('dialog')
+    expect(dialog).toHaveTextContent('my-skill')
   })
 })
