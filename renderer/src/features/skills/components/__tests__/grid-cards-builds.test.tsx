@@ -24,7 +24,7 @@ beforeEach(() => {
 
 describe('GridCardsBuilds', () => {
   it('renders a card for each build', async () => {
-    renderWithProviders(<GridCardsBuilds filter="" onInstall={vi.fn()} />)
+    renderWithProviders(<GridCardsBuilds filter="" onBuild={vi.fn()} />)
 
     await waitFor(() => {
       expect(screen.getByText('my-skill')).toBeInTheDocument()
@@ -35,32 +35,32 @@ describe('GridCardsBuilds', () => {
   it('shows empty state when there are no builds', async () => {
     mockedGetApiV1BetaSkillsBuilds.activateScenario('empty')
 
-    renderWithProviders(<GridCardsBuilds filter="" onInstall={vi.fn()} />)
+    renderWithProviders(<GridCardsBuilds filter="" onBuild={vi.fn()} />)
 
     await waitFor(() => {
       expect(screen.getByText('No local builds')).toBeInTheDocument()
     })
   })
 
-  it('calls onInstall when the Install skill button in empty state is clicked', async () => {
+  it('calls onBuild when the Build skill button in empty state is clicked', async () => {
     mockedGetApiV1BetaSkillsBuilds.activateScenario('empty')
     const user = userEvent.setup()
-    const onInstall = vi.fn()
+    const onBuild = vi.fn()
 
-    renderWithProviders(<GridCardsBuilds filter="" onInstall={onInstall} />)
+    renderWithProviders(<GridCardsBuilds filter="" onBuild={onBuild} />)
 
     await waitFor(() => {
       expect(screen.getByText('No local builds')).toBeInTheDocument()
     })
 
-    await user.click(screen.getByRole('button', { name: /install skill/i }))
+    await user.click(screen.getByRole('button', { name: /build skill/i }))
 
-    expect(onInstall).toHaveBeenCalledTimes(1)
+    expect(onBuild).toHaveBeenCalledTimes(1)
   })
 
   it('shows filtered-empty message when filter matches nothing', async () => {
     renderWithProviders(
-      <GridCardsBuilds filter="zzz-no-match-zzz" onInstall={vi.fn()} />
+      <GridCardsBuilds filter="zzz-no-match-zzz" onBuild={vi.fn()} />
     )
 
     await waitFor(() => {
@@ -71,9 +71,7 @@ describe('GridCardsBuilds', () => {
   })
 
   it('filters builds by name', async () => {
-    renderWithProviders(
-      <GridCardsBuilds filter="my-skill" onInstall={vi.fn()} />
-    )
+    renderWithProviders(<GridCardsBuilds filter="my-skill" onBuild={vi.fn()} />)
 
     await waitFor(() => {
       expect(screen.getByText('my-skill')).toBeInTheDocument()
