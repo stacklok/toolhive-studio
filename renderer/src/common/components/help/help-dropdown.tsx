@@ -15,9 +15,22 @@ import {
   PRIVACY_POLICY_URL,
 } from '@common/app-info'
 
-export function HelpDropdown({ className }: { className?: string }) {
+function NewsletterMenuItem() {
   const { openNewsletterModal } = useNewsletterModal()
+  return (
+    <DropdownMenuItem onSelect={openNewsletterModal} className="cursor-pointer">
+      Newsletter
+    </DropdownMenuItem>
+  )
+}
 
+export function HelpDropdown({
+  className,
+  isEnterprise,
+}: {
+  className?: string
+  isEnterprise: boolean
+}) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -66,12 +79,7 @@ export function HelpDropdown({ className }: { className?: string }) {
             GitHub Repository
           </a>
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onSelect={openNewsletterModal}
-          className="cursor-pointer"
-        >
-          Newsletter
-        </DropdownMenuItem>
+        {!isEnterprise && <NewsletterMenuItem />}
         <DropdownMenuItem asChild>
           <a
             href={PRIVACY_POLICY_URL}

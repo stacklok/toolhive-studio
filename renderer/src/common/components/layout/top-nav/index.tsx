@@ -186,7 +186,10 @@ export function TopNav({ isEnterprise = false, ...props }: TopNavProps) {
           </Button>
         )}
         <div className="flex h-full items-center gap-1 pl-2">
-          <HelpDropdown className="app-region-no-drag" />
+          <HelpDropdown
+            className="app-region-no-drag"
+            isEnterprise={isEnterprise}
+          />
           <NavIconButton
             asChild
             isActive={isActive(['/settings'])}
