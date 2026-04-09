@@ -29,6 +29,7 @@ vi.mock('../symlink-manager', () => ({
 vi.mock('../path-configurator', () => ({
   configureShellPath: vi.fn(),
   checkPathConfiguration: vi.fn(),
+  cleanupLegacyBashProfile: vi.fn(),
 }))
 
 vi.mock('../constants', () => ({
@@ -69,6 +70,7 @@ import {
 import {
   configureShellPath,
   checkPathConfiguration,
+  cleanupLegacyBashProfile,
 } from '../path-configurator'
 import type { ExternalCliInfo } from '@common/types/cli'
 
@@ -84,6 +86,7 @@ const mockCreateMarkerForDesktopInstall = vi.mocked(
 )
 const mockConfigureShellPath = vi.mocked(configureShellPath)
 const mockCheckPathConfiguration = vi.mocked(checkPathConfiguration)
+const mockCleanupLegacyBashProfile = vi.mocked(cleanupLegacyBashProfile)
 
 describe('validation', () => {
   beforeEach(() => {
@@ -212,10 +215,17 @@ describe('validation', () => {
         target: '/app/resources/bin/thv',
         isOurBinary: true,
       })
+      mockCheckPathConfiguration.mockResolvedValue({
+        isConfigured: true,
+        modifiedFiles: ['/home/testuser/.bashrc'],
+        pathEntry: 'export PATH="$HOME/.toolhive/bin:$PATH"',
+      })
 
       const result = await validateCliAlignment('darwin')
 
       expect(result.status).toBe('valid')
+      // Cleanup must run unconditionally, even when PATH is already configured
+      expect(mockCleanupLegacyBashProfile).toHaveBeenCalledOnce()
     })
   })
 
