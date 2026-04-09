@@ -15,7 +15,11 @@ import {
   isFlatpak,
   repairSymlink,
 } from './symlink-manager'
-import { configureShellPath, checkPathConfiguration } from './path-configurator'
+import {
+  configureShellPath,
+  checkPathConfiguration,
+  cleanupLegacyBashProfile,
+} from './path-configurator'
 import { getDesktopCliPath } from './constants'
 import type { ValidationResult } from '@common/types/cli'
 import type { CliAlignmentStatus, Platform } from './types'
@@ -89,6 +93,9 @@ export async function validateCliAlignment(
           target: symlink.target ?? 'unknown',
         }
       }
+
+      // Always clean up legacy .bash_profile block regardless of PATH status
+      cleanupLegacyBashProfile()
 
       // Check and configure PATH if needed
       const pathStatus = await checkPathConfiguration()

@@ -171,6 +171,21 @@ async function configureWindowsPath(): Promise<{
   }
 }
 
+/**
+ * Removes the legacy ToolHive PATH block from .bash_profile if present.
+ * Previous versions wrote to both .bashrc and .bash_profile for bash users,
+ * causing duplicate PATH entries. This runs unconditionally on every launch.
+ */
+export function cleanupLegacyBashProfile(): void {
+  if (
+    existsSync(LEGACY_BASH_PROFILE_PATH) &&
+    contentHasPathConfig(readFileSync(LEGACY_BASH_PROFILE_PATH, 'utf8'))
+  ) {
+    removePathFromFile(LEGACY_BASH_PROFILE_PATH)
+    log.info('Cleaned up legacy PATH block from .bash_profile')
+  }
+}
+
 export async function configureShellPath(): Promise<{
   success: boolean
   modifiedFiles: string[]
@@ -229,15 +244,7 @@ export async function configureShellPath(): Promise<{
         }
       }
 
-      // Clean up legacy .bash_profile PATH block from previous versions
-      // that wrote to both .bashrc and .bash_profile
-      if (
-        existsSync(LEGACY_BASH_PROFILE_PATH) &&
-        contentHasPathConfig(readFileSync(LEGACY_BASH_PROFILE_PATH, 'utf8'))
-      ) {
-        removePathFromFile(LEGACY_BASH_PROFILE_PATH)
-        log.info('Cleaned up legacy PATH block from .bash_profile')
-      }
+      cleanupLegacyBashProfile()
 
       span.setAttributes({
         'cli.path_configured': true,
