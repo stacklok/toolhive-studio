@@ -173,7 +173,7 @@ function QuitConfirmationField() {
 }
 
 export function GeneralTabWrapper({
-  children,
+  children = null,
 }: {
   children?: React.ReactNode
 }) {
