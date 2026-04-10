@@ -1,4 +1,6 @@
 import path from 'path'
+import fs from 'fs'
+import os from 'os'
 import { execSync } from 'child_process'
 import {
   test as base,
@@ -91,26 +93,32 @@ export const test = base.extend<ElectronFixtures>({
   electronApp: async ({}, use) => {
     deleteTestGroupViaCli()
 
-    const app = await electron.launch({
-      executablePath: getExecutablePath(),
-      ...(process.env.CI ? { recordVideo: { dir: 'test-videos' } } : {}),
-      args: ['--no-sandbox'],
-      env: {
-        ...process.env,
-        TOOLHIVE_E2E: 'true',
-      },
-    })
+    const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'toolhive-e2e-'))
 
-    await use(app)
+    try {
+      const app = await electron.launch({
+        executablePath: getExecutablePath(),
+        ...(process.env.CI ? { recordVideo: { dir: 'test-videos' } } : {}),
+        args: ['--no-sandbox', `--user-data-dir=${userDataDir}`],
+        env: {
+          ...process.env,
+          TOOLHIVE_E2E: 'true',
+        },
+      })
 
-    // Disable quit confirmation dialog to prevent hang on close
-    const window = await app.firstWindow()
-    await window.evaluate(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (globalThis as any).electronAPI.setSkipQuitConfirmation(true)
-    })
+      await use(app)
 
-    await app.close()
+      // Disable quit confirmation dialog to prevent hang on close
+      const window = await app.firstWindow()
+      await window.evaluate(async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (globalThis as any).electronAPI.setSkipQuitConfirmation(true)
+      })
+
+      await app.close()
+    } finally {
+      fs.rmSync(userDataDir, { recursive: true, force: true })
+    }
   },
 
   window: async ({ electronApp }, use) => {
