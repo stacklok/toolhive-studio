@@ -11,7 +11,6 @@ import {
   GITHUB_OWNER,
   GITHUB_REPO,
   GITHUB_REPO_URL,
-  MACOS_BUNDLE_ID,
   RELEASES_BASE_URL,
   RELEASES_S3_BUCKET,
 } from './common/app-info'
@@ -41,7 +40,6 @@ const config: ForgeConfig = {
     asar: true,
     icon: './icons/icon',
     executableName: EXECUTABLE_NAME,
-    appBundleId: MACOS_BUNDLE_ID,
     /**
      * Everything under bin/ is copied into
      * <app>/Contents/Resources/bin/ (macOS)

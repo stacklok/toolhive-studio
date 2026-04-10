@@ -16,7 +16,6 @@ export const DEVELOPER_ID = 'com.stacklok'
 
 export const DEEP_LINK_PROTOCOL = 'toolhive-gui'
 export const FLATPAK_APP_ID = 'com.stacklok.ToolHive'
-export const MACOS_BUNDLE_ID = 'com.stacklok.ToolHive'
 export const WINDOWS_APP_USER_MODEL_ID = 'com.stacklok.ToolHive'
 export const SINGLE_INSTANCE_LOCK_KEY = 'com.stacklok.ToolHive'
 export const AUTO_LAUNCH_DESKTOP_FILENAME = 'toolhive-studio'
