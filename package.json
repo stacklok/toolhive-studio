@@ -174,7 +174,7 @@
     "overrides": {
       "@hono/node-server": ">=1.19.13",
       "@xmldom/xmldom": ">=0.8.12",
-      "fast-xml-parser": ">=5.5.9",
+      "fast-xml-parser": ">=5.5.10",
       "hono": ">=4.12.12",
       "lodash": ">=4.18.0",
       "lodash-es": ">=4.18.0",
