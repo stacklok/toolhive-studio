@@ -6,7 +6,7 @@ import {
   AlignJustify,
   Clock,
 } from 'lucide-react'
-import type { CoreWorkload } from '@common/api/generated/types.gen'
+import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
 import type { ActivePanel, McpServerData } from '../types'
 
 interface InspectorSidebarProps {
