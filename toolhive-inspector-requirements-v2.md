@@ -34,24 +34,24 @@ The document separates **Inspector Core** (what every MCP inspector must do — 
 
 ## Priority (P0 / P1 / P2)
 
-| Priority | # | Feature | Rationale |
-|----------|---|---------|-----------|
-| **P0** | 1 | Connectivity — connect via stdio, SSE, streamable-http with auto-detection | Inspector doesn't work without it |
-| **P0** | 2 | Discovery — list tools, resources, prompts with JSON Schema viewer | Core function |
-| **P0** | 3 | Tool Call Runner — auto-generated form from schema, raw mode for invalid inputs | Core function |
-| **P0** | 4 | Protocol Log — bidirectional JSON-RPC log with credential redaction | Core debugging |
-| **P0** | 6 | Custom Headers + Diff — pass auth headers through proxy, show where they get lost | Can't connect to authenticated MCP servers without it |
-| **P0** | 11 | Spec Compliance Checker — validate MCP spec conformance, pass/fail report | Compliance differentiator |
-| **P0** | 14 | Tool Description Scanner — detect prompt injection, poisoning, suspicious patterns | Security differentiator |
-| **P1** | 5 | Mcp-Session-Id tracking — ensure session-id on all requests, highlight when missing | Spec compliance, simple to implement |
-| **P1** | 8 | Structured Content viewer — render JSON, images, audio, diff vs outputSchema | Applied-AI needs it |
-| **P1** | 9 | History + Replay — chronological action log with one-click replay | Regression detection |
-| **P1** | 12 | list_changed + Auto-refresh — react to tool/resource/prompt changes in real time | Dev experience applied-ai |
-| **P1** | 15 | Capabilities Diff — snapshot tools at discovery, alert on changes between sessions | Security differentiator |
-| **P1** | 16 | Supply Chain Scoring — SBOM, CVE check, trust score per server | Enterprise + applied-ai |
-| **P2** | 7 | Streamable HTTP fallback — correlate POST/GET SSE, reconnect with Last-Event-ID | Edge case |
-| **P2** | 10 | Cancellation support — cancel button for long-running tool calls | Nice to have |
-| **P2** | 13 | Progress vs Timeout — explain why a tool was killed despite sending progress | Niche, applied-ai only |
+| Priority | #   | Feature                                                                             | Rationale                                             |
+| -------- | --- | ----------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| **P0**   | 1   | Connectivity — connect via stdio, SSE, streamable-http with auto-detection          | Inspector doesn't work without it                     |
+| **P0**   | 2   | Discovery — list tools, resources, prompts with JSON Schema viewer                  | Core function                                         |
+| **P0**   | 3   | Tool Call Runner — auto-generated form from schema, raw mode for invalid inputs     | Core function                                         |
+| **P0**   | 4   | Protocol Log — bidirectional JSON-RPC log with credential redaction                 | Core debugging                                        |
+| **P0**   | 6   | Custom Headers + Diff — pass auth headers through proxy, show where they get lost   | Can't connect to authenticated MCP servers without it |
+| **P0**   | 11  | Spec Compliance Checker — validate MCP spec conformance, pass/fail report           | Compliance differentiator                             |
+| **P0**   | 14  | Tool Description Scanner — detect prompt injection, poisoning, suspicious patterns  | Security differentiator                               |
+| **P1**   | 5   | Mcp-Session-Id tracking — ensure session-id on all requests, highlight when missing | Spec compliance, simple to implement                  |
+| **P1**   | 8   | Structured Content viewer — render JSON, images, audio, diff vs outputSchema        | Applied-AI needs it                                   |
+| **P1**   | 9   | History + Replay — chronological action log with one-click replay                   | Regression detection                                  |
+| **P1**   | 12  | list_changed + Auto-refresh — react to tool/resource/prompt changes in real time    | Dev experience applied-ai                             |
+| **P1**   | 15  | Capabilities Diff — snapshot tools at discovery, alert on changes between sessions  | Security differentiator                               |
+| **P1**   | 16  | Supply Chain Scoring — SBOM, CVE check, trust score per server                      | Enterprise + applied-ai                               |
+| **P2**   | 7   | Streamable HTTP fallback — correlate POST/GET SSE, reconnect with Last-Event-ID     | Edge case                                             |
+| **P2**   | 10  | Cancellation support — cancel button for long-running tool calls                    | Nice to have                                          |
+| **P2**   | 13  | Progress vs Timeout — explain why a tool was killed despite sending progress        | Niche, applied-ai only                                |
 
 **Summary**: P0 = 7 features (inspector works and differentiates on compliance + security). P1 = 6 features (enterprise + applied-ai value). P2 = 3 features (polish and edge cases).
 
@@ -61,18 +61,18 @@ The document separates **Inspector Core** (what every MCP inspector must do — 
 
 > Baseline capabilities that every MCP inspector must have. Without these, the inspector is not usable. These correspond to what the official Inspector, MCPJam (notably their [OAuth Debugger](https://github.com/MCPJam/inspector?tab=readme-ov-file#oauth-debugger)), and Postman MCP offer.
 
-| # | Feature | Description | Key Evidence |
-|---|---------|-------------|--------------|
-| 1 | **Connectivity (stdio / SSE / streamable-http)** | Supports all three MCP transports. User chooses type (stdio = command, SSE/streamable-http = URL). For HTTP transports, auto-detection: tries POST for streamable-http, falls back to GET for legacy SSE. Verifies endpoint, explains common errors (405 on GET = normal for streamable-http, SSE stream failure, session-id missing). Shows real-time diagnostic checklist with verbose error messages. | Inspector [#384](https://github.com/modelcontextprotocol/inspector/issues/384) (10+ thumbs up): "Connection Error" with no diagnostics. Claude Code [#18127](https://github.com/anthropics/claude-code/issues/18127): useless error message. |
-| 2 | **Discovery: Tools / Resources / Prompts + schema viewer** | Lists everything with navigable JSON schema, annotations (readOnlyHint, destructiveHint, openWorldHint, idempotentHint), outputSchema, and icons (spec 2025-11-25). Full JSON Schema 2020-12 support. | Inspector [#445](https://github.com/modelcontextprotocol/inspector/issues/445)/$defs and [#496](https://github.com/modelcontextprotocol/inspector/issues/496)/allOf-oneOf not supported. Spec [#834](https://github.com/modelcontextprotocol/modelcontextprotocol/issues/834) (10 reactions): JSON Schema 2020-12. |
-| 3 | **Tool Call Runner (JSON editor + validation)** | Auto-generated form from input schema with full $defs/allOf/oneOf/anyOf support. Client-side validation. "Raw" mode for intentionally testing invalid inputs. Result/error viewer with structured vs unstructured diff. | Inspector [#888](https://github.com/modelcontextprotocol/inspector/issues/888): needs debug mode to bypass validation. |
-| 4 | **Protocol Log (bidirectional JSON-RPC)** | Complete request/response/notification log with timing, session-id, transport type, progress tracking. Exportable as "bug bundle" (JSON + metadata). Filterable by type, server, error. **Credential redaction**: tokens, Bearer tokens, client secrets and API keys are automatically masked in all logs and views (never plaintext). | Inspector [#384](https://github.com/modelcontextprotocol/inspector/issues/384): "does not emit any error logs other than Connection Error." |
-| 5 | **Mcp-Session-Id tracking (spec-compliant)** | Ensures session-id is sent on ALL requests after init. Highlights when missing. Supports session persistence for horizontal scaling. | Inspector [#905](https://github.com/modelcontextprotocol/inspector/issues/905): violates the spec. Python-SDK [#880](https://github.com/modelcontextprotocol/python-sdk/issues/880) (22 reactions): sessions lost behind load balancer. |
-| 6 | **Custom Headers passthrough + Headers Diff** | Custom headers (Authorization, X-API-Key) passed THROUGH the proxy to the server. Supports headers from CLI and UI. **Headers Diff view**: comparison between user-configured headers and headers actually sent to the server. On 401/403, the Protocol Log highlights if a configured header was not sent (pattern "header silently dropped"). With the ToolHive gateway, shows **at which hop** the header is lost (Client → Proxy → Gateway → Server). | Inspector [#879](https://github.com/modelcontextprotocol/inspector/issues/879): "headers authenticate TO the proxy, not THROUGH to the server." TS-SDK [#436](https://github.com/modelcontextprotocol/typescript-sdk/issues/436) (9 reactions): SSE client silently drops custom headers. |
-| 7 | **Streamable HTTP: GET SSE fallback + reconnect** | Correlates responses from POST SSE and GET SSE stream. Reconnect with Last-Event-ID header. Supports distributed servers behind load balancer. | Inspector [#614](https://github.com/modelcontextprotocol/inspector/issues/614): timeout instead of correlating GET SSE. Inspector [#920](https://github.com/modelcontextprotocol/inspector/issues/920): doesn't send Last-Event-ID on reconnect. |
-| 8 | **Structured Content viewer** | Rendering for structuredContent (navigable JSON, MIME types for images/audio/files) + diff between declared outputSchema and actual output. | Spec 2025-06-18: structured content + outputSchema. Inspector [#763](https://github.com/modelcontextprotocol/inspector/issues/763). |
-| 9 | **History + Replay** | Chronological log of every action (tool call, resource read, prompt get) with timestamp, server, method, latency, status. One-click replay. Filterable by server, method, error. | Common pattern: "it worked yesterday, broken today" with no way to compare. MCPcat offers session replay for production. |
-| 10 | **Cancellation support** | UI button to cancel long-running operations via cancellation notification. Progress bar from progress notifications. | Inspector [#591](https://github.com/modelcontextprotocol/inspector/issues/591) (7 reactions): no UI to cancel. |
+| #   | Feature                                                    | Description                                                                                                                                                                                                                                                                                                                                                                                                                                               | Key Evidence                                                                                                                                                                                                                                                                                                       |
+| --- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | **Connectivity (stdio / SSE / streamable-http)**           | Supports all three MCP transports. User chooses type (stdio = command, SSE/streamable-http = URL). For HTTP transports, auto-detection: tries POST for streamable-http, falls back to GET for legacy SSE. Verifies endpoint, explains common errors (405 on GET = normal for streamable-http, SSE stream failure, session-id missing). Shows real-time diagnostic checklist with verbose error messages.                                                  | Inspector [#384](https://github.com/modelcontextprotocol/inspector/issues/384) (10+ thumbs up): "Connection Error" with no diagnostics. Claude Code [#18127](https://github.com/anthropics/claude-code/issues/18127): useless error message.                                                                       |
+| 2   | **Discovery: Tools / Resources / Prompts + schema viewer** | Lists everything with navigable JSON schema, annotations (readOnlyHint, destructiveHint, openWorldHint, idempotentHint), outputSchema, and icons (spec 2025-11-25). Full JSON Schema 2020-12 support.                                                                                                                                                                                                                                                     | Inspector [#445](https://github.com/modelcontextprotocol/inspector/issues/445)/$defs and [#496](https://github.com/modelcontextprotocol/inspector/issues/496)/allOf-oneOf not supported. Spec [#834](https://github.com/modelcontextprotocol/modelcontextprotocol/issues/834) (10 reactions): JSON Schema 2020-12. |
+| 3   | **Tool Call Runner (JSON editor + validation)**            | Auto-generated form from input schema with full $defs/allOf/oneOf/anyOf support. Client-side validation. "Raw" mode for intentionally testing invalid inputs. Result/error viewer with structured vs unstructured diff.                                                                                                                                                                                                                                   | Inspector [#888](https://github.com/modelcontextprotocol/inspector/issues/888): needs debug mode to bypass validation.                                                                                                                                                                                             |
+| 4   | **Protocol Log (bidirectional JSON-RPC)**                  | Complete request/response/notification log with timing, session-id, transport type, progress tracking. Exportable as "bug bundle" (JSON + metadata). Filterable by type, server, error. **Credential redaction**: tokens, Bearer tokens, client secrets and API keys are automatically masked in all logs and views (never plaintext).                                                                                                                    | Inspector [#384](https://github.com/modelcontextprotocol/inspector/issues/384): "does not emit any error logs other than Connection Error."                                                                                                                                                                        |
+| 5   | **Mcp-Session-Id tracking (spec-compliant)**               | Ensures session-id is sent on ALL requests after init. Highlights when missing. Supports session persistence for horizontal scaling.                                                                                                                                                                                                                                                                                                                      | Inspector [#905](https://github.com/modelcontextprotocol/inspector/issues/905): violates the spec. Python-SDK [#880](https://github.com/modelcontextprotocol/python-sdk/issues/880) (22 reactions): sessions lost behind load balancer.                                                                            |
+| 6   | **Custom Headers passthrough + Headers Diff**              | Custom headers (Authorization, X-API-Key) passed THROUGH the proxy to the server. Supports headers from CLI and UI. **Headers Diff view**: comparison between user-configured headers and headers actually sent to the server. On 401/403, the Protocol Log highlights if a configured header was not sent (pattern "header silently dropped"). With the ToolHive gateway, shows **at which hop** the header is lost (Client → Proxy → Gateway → Server). | Inspector [#879](https://github.com/modelcontextprotocol/inspector/issues/879): "headers authenticate TO the proxy, not THROUGH to the server." TS-SDK [#436](https://github.com/modelcontextprotocol/typescript-sdk/issues/436) (9 reactions): SSE client silently drops custom headers.                          |
+| 7   | **Streamable HTTP: GET SSE fallback + reconnect**          | Correlates responses from POST SSE and GET SSE stream. Reconnect with Last-Event-ID header. Supports distributed servers behind load balancer.                                                                                                                                                                                                                                                                                                            | Inspector [#614](https://github.com/modelcontextprotocol/inspector/issues/614): timeout instead of correlating GET SSE. Inspector [#920](https://github.com/modelcontextprotocol/inspector/issues/920): doesn't send Last-Event-ID on reconnect.                                                                   |
+| 8   | **Structured Content viewer**                              | Rendering for structuredContent (navigable JSON, MIME types for images/audio/files) + diff between declared outputSchema and actual output.                                                                                                                                                                                                                                                                                                               | Spec 2025-06-18: structured content + outputSchema. Inspector [#763](https://github.com/modelcontextprotocol/inspector/issues/763).                                                                                                                                                                                |
+| 9   | **History + Replay**                                       | Chronological log of every action (tool call, resource read, prompt get) with timestamp, server, method, latency, status. One-click replay. Filterable by server, method, error.                                                                                                                                                                                                                                                                          | Common pattern: "it worked yesterday, broken today" with no way to compare. MCPcat offers session replay for production.                                                                                                                                                                                           |
+| 10  | **Cancellation support**                                   | UI button to cancel long-running operations via cancellation notification. Progress bar from progress notifications.                                                                                                                                                                                                                                                                                                                                      | Inspector [#591](https://github.com/modelcontextprotocol/inspector/issues/591) (7 reactions): no UI to cancel.                                                                                                                                                                                                     |
 
 ---
 
@@ -80,11 +80,11 @@ The document separates **Inspector Core** (what every MCP inspector must do — 
 
 > Intelligent diagnostics that activate automatically. The inspector collects data in the background (Protocol Log, headers, timestamps) and when something breaks, it already has the context to explain **why**. No competing inspector offers this level of diagnostics.
 
-| # | Feature | Description | Key Evidence |
-|---|---------|-------------|--------------|
-| 11 | **Spec Compliance Checker** | Automatically validates that the server respects the MCP spec: correct error codes, notification handling, initialization sequence, capabilities declaration. Pass/fail report per spec version. Can integrate [modelcontextprotocol/conformance](https://github.com/modelcontextprotocol/conformance) (official, v0.1.14, TypeScript), [Janix MCP Validator](https://github.com/Janix-ai/mcp-protocol-validator) (73 stars, multi-version), or [mcp-tester](https://lib.rs/crates/mcp-tester) (Rust, CLI). | Spec [#1627](https://github.com/modelcontextprotocol/modelcontextprotocol/issues/1627) (5 reactions): SEP-1627 proposes conformance testing. |
-| 12 | **list_changed + Auto-refresh** | Automatically reacts to notifications/tools/list_changed, notifications/resources/list_changed, notifications/prompts/list_changed. Shows diff in real time. | Inspector [#378](https://github.com/modelcontextprotocol/inspector/issues/378) (5 reactions): list_changed received but UI doesn't update. Critical for Applied-AI: during development, tools change constantly and developers need to see updates live without reconnecting. |
-| 13 | **Progress vs Timeout Correlation** | When a tool call times out, checks if the server was sending progress notifications. If so, explains that the client doesn't reset the timeout on progress and suggests `resetTimeoutOnProgress`. | TS-SDK [#192](https://github.com/modelcontextprotocol/typescript-sdk/issues/192) (5 reactions): `resetTimeoutOnProgress` defaults to `false`. Long-running tool killed by timeout despite active progress. |
+| #   | Feature                             | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Key Evidence                                                                                                                                                                                                                                                                  |
+| --- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 11  | **Spec Compliance Checker**         | Automatically validates that the server respects the MCP spec: correct error codes, notification handling, initialization sequence, capabilities declaration. Pass/fail report per spec version. Can integrate [modelcontextprotocol/conformance](https://github.com/modelcontextprotocol/conformance) (official, v0.1.14, TypeScript), [Janix MCP Validator](https://github.com/Janix-ai/mcp-protocol-validator) (73 stars, multi-version), or [mcp-tester](https://lib.rs/crates/mcp-tester) (Rust, CLI). | Spec [#1627](https://github.com/modelcontextprotocol/modelcontextprotocol/issues/1627) (5 reactions): SEP-1627 proposes conformance testing.                                                                                                                                  |
+| 12  | **list_changed + Auto-refresh**     | Automatically reacts to notifications/tools/list_changed, notifications/resources/list_changed, notifications/prompts/list_changed. Shows diff in real time.                                                                                                                                                                                                                                                                                                                                                | Inspector [#378](https://github.com/modelcontextprotocol/inspector/issues/378) (5 reactions): list_changed received but UI doesn't update. Critical for Applied-AI: during development, tools change constantly and developers need to see updates live without reconnecting. |
+| 13  | **Progress vs Timeout Correlation** | When a tool call times out, checks if the server was sending progress notifications. If so, explains that the client doesn't reset the timeout on progress and suggests `resetTimeoutOnProgress`.                                                                                                                                                                                                                                                                                                           | TS-SDK [#192](https://github.com/modelcontextprotocol/typescript-sdk/issues/192) (5 reactions): `resetTimeoutOnProgress` defaults to `false`. Long-running tool killed by timeout despite active progress.                                                                    |
 
 > **How they work**: diagnostics checks activate automatically at connection, with no user action. Data comes from the Protocol Log (#4) and Connectivity (#1). When something breaks, the inspector already has the context to explain **why**.
 
@@ -149,22 +149,22 @@ sequenceDiagram
 >
 > **Reference tools for detection**: [Snyk agent-scan](https://github.com/snyk/agent-scan) (ex mcp-scan) — prompt injection, tool poisoning, rug pull via hash, data leak / destructive toxic flows. [Cisco MCP Scanner](https://github.com/cisco-ai-defense/mcp-scanner) — prompt injection, tool poisoning via customizable YARA rules, 100% local.
 
-| # | Feature | Description | Key Evidence |
-|---|---------|-------------|--------------|
-| 14 | **Tool Description Scanner (anti-poisoning)** | Scans descriptions for: embedded instructions, external URLs, base64, prompt injection patterns, "ignore previous" patterns. Trust score + visual warning. Raw view to see exactly what the LLM receives. | Invariant Labs: WhatsApp exfiltration via tool poisoning. MCPTox benchmark: tool poisoning "alarmingly common" across 45 real servers. |
-| 15 | **Capabilities Diff (snapshot + rug pull detection)** | Snapshot at first discovery. On every reconnect: diff of added/removed/modified tools (schema + description). Hash-based change detection. Alert on suspicious changes. | CVE-2025-54136 (MCPoison): config approved, then silently modified. mcp-scan: tool pinning via hash. |
-| 16 | **Supply chain scoring** | Per server: SBOM (via [Trivy](https://github.com/aquasecurity/trivy) or [Syft](https://github.com/anchore/syft) + [Grype](https://github.com/anchore/grype)), CVE check, trust score (age, maintainer, signing, test coverage, permission scope). Integration with BlueRock Trust Registry. | GitGuardian: Smithery.ai supply chain compromise → 3000+ servers exposed. OWASP MCP04. |
+| #   | Feature                                               | Description                                                                                                                                                                                                                                                                                 | Key Evidence                                                                                                                           |
+| --- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| 14  | **Tool Description Scanner (anti-poisoning)**         | Scans descriptions for: embedded instructions, external URLs, base64, prompt injection patterns, "ignore previous" patterns. Trust score + visual warning. Raw view to see exactly what the LLM receives.                                                                                   | Invariant Labs: WhatsApp exfiltration via tool poisoning. MCPTox benchmark: tool poisoning "alarmingly common" across 45 real servers. |
+| 15  | **Capabilities Diff (snapshot + rug pull detection)** | Snapshot at first discovery. On every reconnect: diff of added/removed/modified tools (schema + description). Hash-based change detection. Alert on suspicious changes.                                                                                                                     | CVE-2025-54136 (MCPoison): config approved, then silently modified. mcp-scan: tool pinning via hash.                                   |
+| 16  | **Supply chain scoring**                              | Per server: SBOM (via [Trivy](https://github.com/aquasecurity/trivy) or [Syft](https://github.com/anchore/syft) + [Grype](https://github.com/anchore/grype)), CVE check, trust score (age, maintainer, signing, test coverage, permission scope). Integration with BlueRock Trust Registry. | GitGuardian: Smithery.ai supply chain compromise → 3000+ servers exposed. OWASP MCP04.                                                 |
 
 Example of how the inspector shows scan results in the UI:
 
-| Tool | Status | Detail |
-|------|--------|--------|
-| `sum` | ⚠️ Warning | Tool description contains suspicious patterns |
-| `multiply` | ✗ Error | Prompt injection detected |
-| `get_comments` | ✓ OK | |
-| `get_api_key` | ✓ OK | |
-| `send_email` | ⚠️ Warning | Data leak toxic flow: can exfiltrate data read by other tools |
-| `delete_file` | ⚠️ Warning | Destructive toxic flow: combined with other tools can cause damage |
+| Tool           | Status     | Detail                                                             |
+| -------------- | ---------- | ------------------------------------------------------------------ |
+| `sum`          | ⚠️ Warning | Tool description contains suspicious patterns                      |
+| `multiply`     | ✗ Error    | Prompt injection detected                                          |
+| `get_comments` | ✓ OK       |                                                                    |
+| `get_api_key`  | ✓ OK       |                                                                    |
+| `send_email`   | ⚠️ Warning | Data leak toxic flow: can exfiltrate data read by other tools      |
+| `delete_file`  | ⚠️ Warning | Destructive toxic flow: combined with other tools can cause damage |
 
 > **ToolHive advantage**: external scanners can only verify what the server **says** it does (static analysis of descriptions). ToolHive can verify what the server **actually does** (container runtime analysis): undeclared network calls, filesystem writes with `readOnlyHint: true`, silent description changes between sessions.
 
@@ -179,6 +179,7 @@ Example of how the inspector shows scan results in the UI:
 **Goal**: "I found an MCP server on GitHub. Does it work? Can I call its tools? Is it safe?"
 
 **Key workflows**:
+
 - Connect to a running MCP server and explore tools/resources/prompts
 - Call tools with different inputs, inspect responses
 - Check the Protocol Log to understand what's happening under the hood
@@ -198,6 +199,7 @@ Example of how the inspector shows scan results in the UI:
 **Goal**: "Our team is hitting errors with an approved MCP server. What's going wrong?"
 
 **Key workflows**:
+
 - Connect to the problematic MCP server via the Inspector
 - Inspect the Protocol Log to understand request/response flow
 - Check headers diff to spot silently dropped auth headers
@@ -211,6 +213,7 @@ Example of how the inspector shows scan results in the UI:
 **Goal**: "We found a new MCP server. Is it spec-compliant? Is it secure? Can we add it to our internal registry?"
 
 **Key workflows**:
+
 - Connect to the MCP server and explore capabilities
 - Run spec compliance checks against the MCP specification
 - Scan tool descriptions for prompt injection, poisoning, suspicious patterns
@@ -229,6 +232,7 @@ Example of how the inspector shows scan results in the UI:
 **Goal**: "We just built/updated an MCP server. Does it work correctly? Does it pass compliance? Can we ship it to a customer?"
 
 **Key workflows**:
+
 - Connect to a local dev server and test all tools end-to-end
 - Validate JSON Schema correctness for all tool inputs/outputs
 - Run spec compliance to ensure the server is MCP-conformant
@@ -245,24 +249,24 @@ Example of how the inspector shows scan results in the UI:
 
 > Priority per persona: **H** = High (core workflow), **M** = Medium (useful), **L** = Low (nice-to-have), **—** = not relevant.
 
-| # | Feature | OSS Dev | Enterprise | Applied-AI |
-|---|---------|:-------:|:----------:|:----------:|
-| 1 | Connectivity | **H** | **H** | **H** |
-| 2 | Discovery | **H** | **H** | **H** |
-| 11 | Spec Compliance Checker | **H** | **H** | **H** |
-| 3 | Tool Call Runner | **H** | M | **H** |
-| 4 | Protocol Log | **H** | M | **H** |
-| 14 | Tool Description Scanner | **H** | **H** | M |
-| 16 | Supply Chain Scoring | M | **H** | **H** |
-| 6 | Custom Headers + Diff | M | **H** | M |
-| 8 | Structured Content viewer | M | L | **H** |
-| 9 | History + Replay | M | L | **H** |
-| 12 | list_changed + Auto-refresh | M | L | **H** |
-| 15 | Capabilities Diff (rug pull) | M | **H** | L |
-| 5 | Mcp-Session-Id tracking | L | M | M |
-| 7 | Streamable HTTP fallback | L | M | M |
-| 10 | Cancellation support | M | L | M |
-| 13 | Progress vs Timeout | L | L | **H** |
+| #   | Feature                      | OSS Dev | Enterprise | Applied-AI |
+| --- | ---------------------------- | :-----: | :--------: | :--------: |
+| 1   | Connectivity                 |  **H**  |   **H**    |   **H**    |
+| 2   | Discovery                    |  **H**  |   **H**    |   **H**    |
+| 11  | Spec Compliance Checker      |  **H**  |   **H**    |   **H**    |
+| 3   | Tool Call Runner             |  **H**  |     M      |   **H**    |
+| 4   | Protocol Log                 |  **H**  |     M      |   **H**    |
+| 14  | Tool Description Scanner     |  **H**  |   **H**    |     M      |
+| 16  | Supply Chain Scoring         |    M    |   **H**    |   **H**    |
+| 6   | Custom Headers + Diff        |    M    |   **H**    |     M      |
+| 8   | Structured Content viewer    |    M    |     L      |   **H**    |
+| 9   | History + Replay             |    M    |     L      |   **H**    |
+| 12  | list_changed + Auto-refresh  |    M    |     L      |   **H**    |
+| 15  | Capabilities Diff (rug pull) |    M    |   **H**    |     L      |
+| 5   | Mcp-Session-Id tracking      |    L    |     M      |     M      |
+| 7   | Streamable HTTP fallback     |    L    |     M      |     M      |
+| 10  | Cancellation support         |    M    |     L      |     M      |
+| 13  | Progress vs Timeout          |    L    |     L      |   **H**    |
 
 **Summary**: OSS Dev focuses on **explore + test + compliance** (7 High). Enterprise focuses on **compliance + security** (6 High). Applied-AI focuses on **build + QA** (8 High).
 
